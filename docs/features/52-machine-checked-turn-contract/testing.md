@@ -1,6 +1,6 @@
 # Testing — 52-machine-checked-turn-contract
 
-Artifact revision: `52-plan-1`.
+Artifact revision: `52-plan-2`.
 
 ## Test layers
 
@@ -13,12 +13,16 @@ Artifact revision: `52-plan-1`.
   canned JSON for the box4 cases (`pr-not-open`, `pr-head-mismatch`,
   `pr-unreachable`, open-PR pass). A no-tree-mutation assertion diffs
   `git status --porcelain` around every invocation. Coverage is the
-  D-52-9-proportionate set: per-box pass/fail/n-a, `--help`, unknown flag,
+  D-52-9-proportionate set: per-box pass/fail/n-a (box2's `acceptance-missing`
+  and `phase-lint-failed` named among the codes — the phase-lint clause is
+  engine-only, ED-52-3), `--help`, unknown flag,
   subdirectory, no-mutation — no flag × state combinatorial sweep.
 - **Integration — hook suite:** `template/.agentic-workflow/hooks/tests/test-turn-contract.sh`
   follows the house helper pattern of `test-command-guard.sh` (PE-008): the
   same fixture-repo matrix driven through the bash shim, plus the AC12 grep
-  guard (no node/bun/npm/npx token in the shim).
+  guard (`grep -n -e node -e bun -e npm -e npx template/.agentic-workflow/hooks/turn-contract.sh`
+  → no matches — repeated `-e` patterns; the escaped-pipe form matches the
+  literal string and cannot fail, PLAN52-F1).
 - **Parity:** `packages/agentic-workflow/test/turn-contract.parity.test.mjs`
   runs the same fixture-repo matrix through both engines and asserts
   byte-identical stdout lines and exit codes (AC7). This is the drift gate

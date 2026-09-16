@@ -4,7 +4,7 @@ Three implementation phases (receipt surface → verifier engine → hardening &
 PR). The box semantics, reason codes, exit contract, grammar, and profile
 wording are frozen in `SPEC.md` (`## Engineering half` → `### Design`); this
 file narrates the same cut for the executor. Artifact revision of this plan
-set: `52-plan-1`.
+set: `52-plan-2`.
 
 Phase order note (ED-52-1): the design sketch listed "engines →
 profile/registration", but the frozen phase-lint prefix table maps
@@ -44,6 +44,12 @@ registration, the skill release mechanics, and the two docs pointers.
   stated (recite as today); boxes 6–11 are unchanged; the closing `→ Next:`
   block may be echoed from the workflow-status envelope's `next.recommended`
   + `next.alternatives` preserving the fixed block shape (D-52-8, PE-002).
+  The profile section's regressions run in P1 (SPEC §Open questions risk 1 —
+  detect at the phase that grows the file, not only at P3's gate):
+  `bun scripts/check-skill-context.mjs` → exit 0 (budget headroom after the
+  ≤ 20-line section — AC11's P1 leg, O3) and `node --test
+  scripts/workflow-status-sensor.test.mjs` → exit 0 (the echo clause maps
+  the envelope's `next` fields — AC10, O15).
 - `CLAUDE.md`'s normative-surfaces table gains the row
   `turn-contract-receipt | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:turn-contract-receipt@1 | n/a | no`
   (machine `n/a` is an accepted cell with standing precedent — PE-009).
@@ -55,9 +61,11 @@ registration, the skill release mechanics, and the two docs pointers.
   `docs/workflow/FEATURE_WORKFLOW.md` (AC14 — exactly one per file, no
   grammar restatement anywhere).
 
-Done-when: the hook suite exits 0 and `node --test
-scripts/normative-drift.test.mjs` stays green (the new CLAUDE.md row and the
-new fenced block both parse).
+Done-when: the hook suite exits 0, `node --test
+scripts/normative-drift.test.mjs` and `node --test
+scripts/workflow-status-sensor.test.mjs` stay green (the new CLAUDE.md row
+and the new fenced block both parse), and `bun scripts/check-skill-context.mjs`
+exits 0.
 
 ## P2 — Implement the turn-contract verifier engine
 
