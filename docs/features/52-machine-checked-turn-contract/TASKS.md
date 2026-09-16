@@ -31,8 +31,8 @@ Layer: hardening · Done-when: `git status --porcelain` → empty.
 
 - [x] Exercise the SPEC §Dev scenarios failure matrix as edge fixtures in both suites
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #226`
 - [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
