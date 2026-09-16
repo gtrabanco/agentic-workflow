@@ -305,3 +305,12 @@ would otherwise guess. Evidence rows live in `planning-evidence.md`.
   skill entry and the `design-feature:*` routes its own text grows. `PLAN.md`'s P4
   wording ("budgets re-based ... now that all skill text is final") stays true for
   the skills P4 touches; the split is recorded here rather than silently diverging.
+
+## 2026-09-16 — Execution decision (P5)
+
+- **E-59-14 — Pi package re-bundle ships as a patch bump.** Re-bundling the final
+  skill tree changes the committed mirror `packages/pi-agentic-workflow/skills/`,
+  so the package is touched: `0.10.5 → 0.10.6` with a CHANGELOG row, per the
+  repo's same-PR version rule. The package had no `node_modules` in this
+  checkout; `bun install --frozen-lockfile` was run from the committed
+  `bun.lock` (lockfile unchanged) so its suite could run.
