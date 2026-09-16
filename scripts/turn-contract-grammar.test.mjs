@@ -107,4 +107,7 @@ for (const c of [...receiptCases(ctx), ...engineOnlyCases(ctx)]) {
   test(`engine output conforms: ${c.name}`, () => {
     assertConforms("engine", ctx.runEngine(c.dir, c.args ?? [], c.env ?? {}), c.name);
   });
+  test(`shim output conforms: ${c.name}`, () => {
+    assertConforms("shim", ctx.runShim(c.dir, c.args ?? [], c.env ?? {}), c.name);
+  });
 }
