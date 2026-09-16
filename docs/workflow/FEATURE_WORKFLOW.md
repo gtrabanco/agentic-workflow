@@ -206,8 +206,8 @@ atomic behavior and executes exactly that phase:
 
 > Boxes 1–5 of the canonical turn contract are machine-checked: the profile in
 > `skills/orchestration-envelope/references/TURN_CONTRACT.md` demonstrates them by
-> pasting the verifier's one-line receipt (`TURN-CONTRACT ok` /
-> `TURN-CONTRACT fail box<N>: <code>`) instead of reciting them.
+> pasting the verifier's one-line receipt beside the git/gh evidence instead of
+> reciting them.
 
 **Fresh context is a phase boundary, not a user-intervention boundary.** A
 capable agent uses a fresh subagent/worker for each phase while the outer unit

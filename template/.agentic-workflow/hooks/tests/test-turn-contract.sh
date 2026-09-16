@@ -82,6 +82,18 @@ new_branch "$plain_repo" main
 gitc -C "$plain_repo" checkout -q -b chore/plain
 commit_file "$plain_repo" note.txt 'x'
 
+# empty: unborn branch with no commits (dev scenario verifier:empty-repo).
+empty_repo=$tmp/empty
+gitc init -q -b feature/x "$empty_repo"
+
+# unicode: dirty tree with spaces / unicode filenames (verifier:oversized-status).
+unicode_repo=$tmp/unicode
+new_branch "$unicode_repo" main
+gitc -C "$unicode_repo" checkout -q -b feat/unicode
+commit_file "$unicode_repo" docs/features/unicode/ACCEPTANCE.md 'frozen'
+printf 'x\n' > "$unicode_repo/a b.txt"
+printf 'x\n' > "$unicode_repo/café.txt"
+
 # dirty: the ok fixture plus an unstaged edit.
 dirty_repo=$tmp/dirty
 new_branch "$dirty_repo" main
@@ -98,6 +110,17 @@ gitc init -q --bare "$tmp/ahead-remote.git"
 gitc -C "$ahead_repo" remote add origin "$tmp/ahead-remote.git"
 gitc -C "$ahead_repo" push -qu origin feat/ahead
 commit_file "$ahead_repo" extra.txt 'local only'
+
+# dirtyahead: dirty AND ahead simultaneously (dirty wins inside box5).
+dirtyahead_repo=$tmp/dirtyahead
+new_branch "$dirtyahead_repo" main
+gitc -C "$dirtyahead_repo" checkout -q -b feat/dirtyahead
+commit_file "$dirtyahead_repo" docs/features/dirtyahead/ACCEPTANCE.md 'frozen'
+gitc init -q --bare "$tmp/da-remote.git"
+gitc -C "$dirtyahead_repo" remote add origin "$tmp/da-remote.git"
+gitc -C "$dirtyahead_repo" push -qu origin feat/dirtyahead
+commit_file "$dirtyahead_repo" extra.txt 'local only'
+printf 'dirty\n' >> "$dirtyahead_repo/README.md"
 
 # box4 fixtures: branch with an upstream (a bare remote), clean.
 b4_repo=$tmp/b4
@@ -147,6 +170,10 @@ run_dir=$nocommits_repo
 run
 assert "box3 no commits" 1 'TURN-CONTRACT fail box3: no-commits'
 
+run_dir=$empty_repo
+run
+assert "box3 empty repo" 1 'TURN-CONTRACT fail box3: no-commits'
+
 # ---- box4 ------------------------------------------------------------------
 
 run_dir=$ok_repo
@@ -184,6 +211,14 @@ run_dir=$ahead_repo
 run
 assert "box5 ahead of remote" 1 'TURN-CONTRACT fail box5: ahead-of-remote'
 
+run_dir=$dirtyahead_repo
+run
+assert "box5 dirty precedes ahead" 1 'TURN-CONTRACT fail box5: dirty-tree'
+
+run_dir=$unicode_repo
+run
+assert "box5 unicode/space names" 1 'TURN-CONTRACT fail box5: dirty-tree'
+
 # ---- read-only + cwd -------------------------------------------------------
 
 before=$(gitc -C "$ok_repo" status --porcelain --untracked-files=all)
@@ -205,6 +240,20 @@ run_dir=$ok_repo/subdir
 run
 assert "subdirectory invocation" 0 'TURN-CONTRACT ok'
 
+# ---- plumbing --------------------------------------------------------------
+
+if [ "$(id -u)" -ne 0 ]; then
+  plumbing_repo=$tmp/plumbing
+  new_branch "$plumbing_repo" main
+  gitc -C "$plumbing_repo" checkout -q -b feat/plumbing
+  commit_file "$plumbing_repo" docs/features/plumbing/ACCEPTANCE.md 'frozen'
+  chmod 000 "$plumbing_repo/.git"
+  run_dir=$plumbing_repo
+  run
+  assert "unreadable .git fails closed" 1 'TURN-CONTRACT fail box1: not-a-repo'
+  chmod 755 "$plumbing_repo/.git"
+fi
+
 # ---- flags -----------------------------------------------------------------
 
 run_dir=$ok_repo
@@ -223,4 +272,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 18 cases\n'
+printf 'PASS turn contract: 22 cases\n'

@@ -62,3 +62,22 @@ Artifact revision: `52-plan-2`.
 - `node --test scripts/workflow-status-sensor.test.mjs` → exit 0, 56/56.
 - `bun scripts/check-skill-context.mjs` → exit 0, `PASS context budgets: 40 skills`.
 - `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0, 7/7.
+
+## P3 executed (2026-09-16)
+
+Dev-scenario edge corpus in both suites: `verifier:empty-repo` (unborn branch →
+box3 `no-commits`), `verifier:plumbing-denied` (unreadable `.git` → box1
+`not-a-repo`, root-skipped), `verifier:gh-outage` (PATH-stubbed gh nonzero →
+box4 `pr-unreachable`), `verifier:dirty-ordering` (dirty + ahead → `dirty-tree`
+precedence), `verifier:oversized-status` (space/unicode filenames → one
+`dirty-tree` line). `verifier:concurrent` and `verifier:threshold` stay `n/a`
+by design (stateless/read-only; the only threshold is box3's, covered by
+`verifier:empty-repo`).
+
+Full gate (all exit 0): hook suite 22 cases · `bun test packages/agentic-workflow/test/`
+40 pass · `node --test packages/agentic-workflow/test/*.test.mjs` 40/40 ·
+`node --test scripts/turn-contract-grammar.test.mjs` 20 · `node --test
+scripts/normative-drift.test.mjs` 17 · `node --test scripts/workflow-status-sensor.test.mjs`
+56 · `bun scripts/check-skill-context.mjs` PASS 40 skills · `node --test
+packages/pi-agentic-workflow/test/skill-parity.test.mjs` 7 · `bun run test` in
+`packages/pi-agentic-workflow` 214 · `npx skills add . --list` exit 0.
