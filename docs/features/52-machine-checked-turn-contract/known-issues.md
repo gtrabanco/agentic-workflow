@@ -28,3 +28,17 @@
   on disk, but a pasted receipt in a transcript describes the moment it
   was printed. Rules for persisted/verifiable compliance evidence remain
   #172/#35 territory, unchanged by this feature.
+
+## Execution-discovered limitations (P2)
+
+- **The frozen AC2/AC7 validator form is unsatisfiable on the pinned Node.**
+  `node --test packages/agentic-workflow/test/` (directory mode) is not a
+  supported invocation on Node ≥ 22; the repo pins `.node-version` v22.23.1
+  and the environment default is v24.19.0, both of which resolve the
+  directory as a module and fail with `Cannot find module`. Planning
+  evidence PE-005 asserted the opposite and is false (finding `PLAN52-F9`).
+  The suite itself is green — `node --test packages/agentic-workflow/test/*.test.mjs`
+  → 40/40, and the same directory command passes on Node 20. Fixing the
+  frozen validator string is a SPEC `## Amendments` + replacement
+  `ACCEPTANCE.md` change and requires explicit user approval (verification
+  contract); it is not applied here.
