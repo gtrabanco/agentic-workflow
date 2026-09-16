@@ -54,13 +54,13 @@ Done-when: `node --test scripts/normative-drift.test.mjs` → exit 0 with the re
 
 Layer: docs · fingerprint `P4:docs:7:batched-design-interview` · Phase-lint: PASS (8/8)
 
-- [ ] Rewrite `skills/design-feature/references/INTERVIEW.md` §3 with the bounded form protocol — one compact form-turn over the six fixed rubric slots, each carrying a recommended default the user accepts with one word, with at most 2 follow-up turns for genuine ambiguity
-- [ ] Delete the superseded one-question-per-turn rule from `skills/design-feature/references/INTERVIEW.md` — no second live protocol remains beside the form-turn
-- [ ] Restate the unchanged interview semantics in `skills/design-feature/references/INTERVIEW.md` — the vagueness rubric (six fixed slots), the mandatory-question rule, and the ask-nothing-the-docs-answer rule carry over verbatim, as do the deferred-decision and `NEEDS_INPUT` escalation behaviors
-- [ ] Update `skills/design-feature/SKILL.md` step 3 and the progressive-loading table to describe the form protocol (batch turn + ≤ 2 follow-ups) with the upsert mode and review mode text untouched
-- [ ] Update the golden-fixture expectations in `docs/workflow/GOLDEN_FIXTURE.md` — the fixed pass criteria gain the form-turn shape boxes per the file's own add-don't-replace rule; the run-log table stays unchanged
-- [ ] Re-base the touched skills' budget entries in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` via the tool's own declared re-basis (`ceil(measured × 1.10)`, growth source named in `policy.declared`)
-- [ ] Run the budget gate green: `node scripts/check-skill-context.mjs` → exit 0
+- [x] Rewrite `skills/design-feature/references/INTERVIEW.md` §3 with the bounded form protocol — one compact form-turn over the six fixed rubric slots, each carrying a recommended default the user accepts with one word, with at most 2 follow-up turns for genuine ambiguity — evidence: the §3 text quoted in the P4 handoff
+- [x] Delete the superseded one-question-per-turn rule from `skills/design-feature/references/INTERVIEW.md` — no second live protocol remains beside the form-turn — evidence: `grep -c 'One question per turn'` → 0
+- [x] Restate the unchanged interview semantics in `skills/design-feature/references/INTERVIEW.md` — the vagueness rubric (six fixed slots), the mandatory-question rule, and the ask-nothing-the-docs-answer rule carry over verbatim, as do the deferred-decision and `NEEDS_INPUT` escalation behaviors — evidence: the six slots, mandatory-question rule, and escalation paragraph carried verbatim in §3
+- [x] Update `skills/design-feature/SKILL.md` step 3 and the progressive-loading table to describe the form protocol (batch turn + ≤ 2 follow-ups) with the upsert mode and review mode text untouched — evidence: hard-stop paragraph + progressive-loading row quoted in the P4 handoff; upsert/review rows untouched
+- [x] Update the golden-fixture expectations in `docs/workflow/GOLDEN_FIXTURE.md` — the fixed pass criteria gain the form-turn shape boxes per the file's own add-don't-replace rule; the run-log table stays unchanged — evidence: the new "Form-turn shape (`design-feature`) — add-don't-replace" subsection; run-log table untouched
+- [x] Re-base the touched skills' budget entries in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` via the tool's own declared re-basis (`ceil(measured × 1.10)`, growth source named in `policy.declared`) — evidence: `design-feature:product` 16731→16914/1154→1163 and `design-feature:repair` 27188→27371/1829→1837, `sources` + `policy.declared` updated (the `design-feature` skill entry stayed under its 3400 ceiling)
+- [x] Run the budget gate green: `node scripts/check-skill-context.mjs` → exit 0 — evidence: exit 0, PASS context budgets: 40 skills; `--routes` PASS 22 routes; full root suite 435 pass / 0 fail
 
 Done-when: `node scripts/check-skill-context.mjs` → exit 0 after the declared re-basis with the form-protocol text landed in both design-feature files.
 

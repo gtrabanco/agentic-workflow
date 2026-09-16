@@ -185,6 +185,22 @@ Any unchecked box = **FAIL**. The fix is a wording tightening of the skill
 (a separate, targeted change) — per feature 08's dependency-direction note,
 this procedure only surfaces the regression, it never edits the skill itself.
 
+### Form-turn shape (`design-feature`) — add-don't-replace
+
+Feature 59 batches the raw-idea interview into one compact form. These boxes
+**join** the fixed pass criteria above; they never replace one, and the run-log
+table below stays unchanged. A `design-feature` run passes this shape only if:
+
+- ✓ The first interview turn presents ONE compact form covering the ≤ 6 fixed
+  rubric slots plus the identity rows, each row carrying a recommended default —
+  never a series of one-question-per-turn asks.
+- ✓ Accepting every default with one word resolves the interview in that single
+  form-turn.
+- ✓ Genuine ambiguity receives at most **2 follow-up turns**, then the rubric's own
+  `NEEDS_INPUT` escalation — no third ask.
+- ✓ The vagueness rubric (six fixed slots), the mandatory-question rule, and
+  "ask nothing the docs or the instruction already answer" are unchanged.
+
 ## Audit-evidence provenance fixture
 
 Audit-path skills only (`product-audit`) — the CSV fixture above drives the
