@@ -267,3 +267,28 @@ would otherwise guess. Evidence rows live in `planning-evidence.md`.
   refusal vocabulary is closed at four codes (D-59-5); a malformed evidence
   token is a token the emitter cannot check, so it takes the
   `precondition-uncheckable` code rather than adding a fifth "evidence" code.
+
+## 2026-09-16 — Execution decisions (P2)
+
+- **E-59-10 — Drift-gate alignment moved from P3 to P2.** Adding
+  `next.continuation` to the envelope makes the root `normative-drift` suite
+  refuse the tree until the turn contract orders the key: the
+  `hand-off-fields@1` block gained `next | continuation` and the drift test's
+  expected `next` list gained `continuation` in the P2 commit. This is the
+  smallest change strictly required to land P2's task (the reader/writer of the
+  new envelope key are the drift gate's closed set), not a scope expansion. P3
+  keeps the rest of its atomic deliverable — the `CLAUDE.md`
+  `normative-surfaces@1` refusal row, the `schema-export:` grammar extractor,
+  and the five quote surfaces. `PLAN.md`'s phase topology, fingerprints, and
+  validators are unchanged; `TASKS.md` records the row as landed in P2.
+- **E-59-11 — Evidence artifact is the unit's `progress.md`.** The class table's
+  "receipt/report digest" is bound to `<unitDir>/progress.md` (the file that
+  carries the receipt block), read from the sensed project and hashed with the
+  package's `sha256HexSync` at emit time. A `progress.md` the sensor cannot read
+  is the `precondition-uncheckable` refusal — the emitter's precondition is
+  "evidence-bindable", and it never guesses a digest.
+- **E-59-12 — `sha256HexSync` is re-exported from the package root.** The
+  sensor consumes the built schema runtime through `scripts/schema-runtime.mjs`
+  (index-only), so the evidence digest must be reachable from the package entry.
+  The re-export is additive; the internal `dist/sha256.js` import the package
+  suite uses is unchanged.

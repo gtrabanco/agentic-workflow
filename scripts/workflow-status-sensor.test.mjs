@@ -28,7 +28,7 @@ const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 
 /** The built schema runtime — the same loader the script must consume (A:8). */
 const { loadSchemaRuntime } = await import("./schema-runtime.mjs");
-const { validateEnvelope } = await loadSchemaRuntime();
+const { validateEnvelope, sha256HexSync } = await loadSchemaRuntime();
 
 // ---------------------------------------------------------------------------
 // Fixture builders
@@ -1158,3 +1158,103 @@ test("a current fix-unit plan receipt senses current, not missing (#221)", () =>
     `no gate blocker for fix-221: ${JSON.stringify(envelope.blockers)}`);
 });
 
+
+// ===========================================================================
+// Feature 59 — `next.continuation` emission, refusals, and statelessness
+// ===========================================================================
+
+const CONTINUATION_PROGRESS = "# Progress\n";
+
+test("59: a non-terminal fixture unit emits a well-formed continuation", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/progress.md": CONTINUATION_PROGRESS },
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const continuation = envelope.next.continuation;
+  assert.ok(continuation, `a receipt-class recommendation emits a continuation: ${JSON.stringify(envelope.next)}`);
+  assert.deepEqual(continuation.argv, ["/review-spec", "90-alpha"]);
+  assert.equal(continuation.rendering, "/review-spec 90-alpha");
+  assert.equal(continuation.convergence, "detail.pre_execution.spec.label");
+  assert.ok(
+    continuation.preconditions.every((row) => typeof row.id === "string" && typeof row.check === "string" && typeof row.satisfied === "boolean"),
+    `every precondition carries an at-emit evaluation: ${JSON.stringify(continuation.preconditions)}`,
+  );
+  assert.deepEqual(continuation.evidence, {
+    artifact: "docs/features/90-alpha/progress.md",
+    digest: sha256HexSync(CONTINUATION_PROGRESS),
+  });
+  // The evidence token is receiver-verifiable and the continuation is schema-valid.
+  assert.equal(validateEnvelope(envelope).ok, true);
+  assert.equal("continuation_refusal" in envelope.detail, false, "an emitted continuation is not a refusal");
+});
+
+test("59: an uncheckable precondition emits no continuation and the typed refusal", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal("continuation" in envelope.next, false, "no field on the refusal path");
+  assert.equal(envelope.detail.continuation_refusal, "precondition-uncheckable");
+});
+
+test("59: offline forge state refuses with sensor-degraded, never a guessed command", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/progress.md": CONTINUATION_PROGRESS },
+    ghMode: "fail-fast",
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal("continuation" in envelope.next, false, "offline forge must not emit a command");
+  assert.equal(envelope.detail.continuation_refusal, "sensor-degraded");
+});
+
+test("59: the empty state emits no continuation and exits 0 (continuation:empty-state)", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done | — | shipped |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal("continuation" in envelope.next, false);
+  assert.equal(envelope.detail.continuation_refusal, "no-decision-available");
+});
+
+test("59: a command outside the closed v1 class set refuses instead of guessing", () => {
+  const { run } = makeFixture({
+    nrs: "# Normalized repository state\n\nStatus: draft\n\nSnapshot: fix-1",
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(envelope.next.recommended, "/discover-repository-state");
+  assert.equal("continuation" in envelope.next, false, "an unknown class is a refusal, not an emission");
+  assert.equal(envelope.detail.continuation_refusal, "no-decision-available");
+});
+
+test("59: two consecutive runs emit byte-identical envelopes with no continuation store (continuation:concurrent-emit)", () => {
+  const { run, dir } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/progress.md": CONTINUATION_PROGRESS },
+  });
+  const first = run();
+  const second = run();
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(second.stdout, first.stdout, "a stateless projection is byte-identical across runs");
+  const envelope = parseEnvelope(first.stdout);
+  assert.ok(envelope.next.continuation, "the fixture does emit a continuation, so the pin is not vacuous");
+  // No continuation store exists: two runs write nothing into the sensed tree.
+  const porcelain = execFileSync("git", ["status", "--porcelain"], { cwd: dir, encoding: "utf8" });
+  assert.equal(porcelain.trim(), "", `the sensor wrote to the sensed tree: ${porcelain}`);
+
+  const source = read("scripts/workflow-status.mjs");
+  const mutation = /(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)/;
+  const hits = source.split("\n").filter((line) => mutation.test(line));
+  assert.deepEqual(hits, [], `emission must stay read-only: ${hits.join(" | ")}`);
+});
