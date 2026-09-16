@@ -264,3 +264,9 @@ Notes:
 - Commit: pending · Gate: full ladder (exit 0; root 84/84 on the named suites, schema 707/707, pi 214/214, budgets PASS) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
 - Next: close-out (PR + roadmap link) · Attempts: 1
 - Reconciliation: P4 commit resolved to `5910afaa`.
+
+## Close-out — 2026-09-16
+
+- PR: [#238](https://github.com/gtrabanco/agentic-workflow/pull/238) (open, base `main`, head `feat/59-executable-continuations-fixture`). The PR already existed for this branch carrying the design-phase title/body; its title and body were updated to the full execution summary via the REST API with `--body-file` (`gh pr edit` fails on this repository's classic-projects GraphQL surface).
+- Roadmap row 59 flipped `planned` → `done · [#238](https://github.com/gtrabanco/agentic-workflow/pull/238)`; this commit is `docs: link PR #238`.
+- All five phases complete; unit-loop receipts P1–P5 recorded above; acceptance blob `d046f0b537da92251c6d81893e816bbc0de1a252` unchanged.
