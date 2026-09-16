@@ -24,12 +24,13 @@
 
 Boxes 1–5 are mechanical. Demonstrate them by running the verifier — the
 scaffold shim `template/.agentic-workflow/hooks/turn-contract.sh` (bash + git +
-gh) or the producer-crate engine
-`packages/agentic-workflow/bin/turn-contract.mjs` — and pasting its one-line
-receipt beside the git/gh evidence. When the receipt is pasted, reciting boxes
-1–5 in prose is **not** required. Verifier unavailable (no bash, or no
-shim/engine in the project)? Recite boxes 1–5 exactly as before — the profile
-never weakens a box, and a turn with neither receipt nor recitation is
+gh; presence-only box2 — the conditional phase-lint clause is engine-only, so
+a shim receipt leaves that clause unverified, ED-52-3) or the producer-crate
+engine `packages/agentic-workflow/bin/turn-contract.mjs` — and pasting its
+one-line receipt beside the git/gh evidence. When the receipt is pasted,
+reciting boxes 1–5 in prose is **not** required. Verifier unavailable (no bash,
+or no shim/engine in the project)? Recite boxes 1–5 exactly as before — the
+profile never weakens a box, and a turn with neither receipt nor recitation is
 unverified. Boxes 6–11 are unchanged: they stay agent-attested judgment calls
 no script may speak for. The closing `→ Next:` block may be echoed from the
 `workflow-status` envelope instead of hand-authored: `next.recommended`
