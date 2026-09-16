@@ -80,8 +80,9 @@ Soft dependencies:
 
 ## Product half
 
-Written by `design-feature` (2026-09-16). Complete: `## Design status` below
-reads `designed`.
+Written by `design-feature` (2026-09-16); revised same day by the spec-review
+repair batch (findings F1–F3, mechanical class — see `decisions.md`). Complete:
+`## Design status` below reads `designed`.
 
 ### Context
 
@@ -130,17 +131,24 @@ per-class discipline proof, and the batched interview protocol.
 3. Sensor emission (`scripts/workflow-status.mjs` + schema runtime): computes
    the class-routed continuation from the existing decision table for
    non-terminal states → AC2, AC3.
-4. Quote-not-author adoption for the v1 classes' owning surfaces
-   (`workflow-status` skill + the gate-re-run and review-receipt-refresh
-   routes): skills quote `rendering`/argv from the envelope instead of
-   authoring prose; humans keep rendered prose → AC9, AC10.
+4. Quote-not-author adoption for the v1 classes' owning surfaces, pinned to
+   concrete files: status refresh → the `workflow-status` skill text
+   (`skills/workflow-status/SKILL.md`); planning-gate re-run → the
+   stale-receipt re-run route
+   (`skills/workflow-status/references/PRE_EXECUTION.md`, the `stale` label
+   row and its re-run sentence); review-receipt refresh → the
+   receipt-persistence surfaces (`skills/review-spec/references/OUTPUT.md`,
+   `skills/review-plan/references/OUTPUT.md`,
+   `skills/review-change/references/PERSIST_AND_DECIDE.md`). Skills quote
+   `rendering`/argv from the envelope instead of authoring prose; humans keep
+   rendered prose → AC10.
 5. Per-class discipline tests (3 fixture repos): command parses (argv
    well-formed), preconditions checkable at emit time, executing it advances
    the named `convergence` field → AC3, AC4, AC5.
 6. Bounded form protocol in `design-feature` (`INTERVIEW.md` §3 rewrite +
    `SKILL.md` step-3/progressive-loading text): one form-turn ≤ 6 fixed slots
    with one-word defaults, ≤ 2 ambiguity follow-ups; rubric, mandatory-question
-   rule, ask-nothing-docs-answer, upsert/review modes unchanged → AC8.
+   rule, ask-nothing-docs-answer, upsert/review modes unchanged → AC8, AC9.
 7. Golden-fixture expectations updated for the form protocol; context budgets
    re-checked; Pi mirror re-bundled byte-identically in the same PR → AC11,
    AC12.
@@ -166,14 +174,19 @@ per-class discipline proof, and the batched interview protocol.
 - **The executable golden fixture (#230)** — stays row 55's scope after the
   owner's consolidation ruling; not part of 59 (see decisions.md, superseded
   consolidation).
+- **A token-savings measurement protocol** for either capability — the measured
+  waste is grounded at design time (research-gate evidence rows) and enforced by
+  the discipline tests; the protocol itself was deliberately dropped with no
+  owner, the same disposition as #226's audit (Expectation-sweep row 15).
 
 ### Capability closure
 
 Three fixed checklists. This is a docs-and-scripts repository: "UI entry
 point" means the surface an agent, driver, or human touches (command, envelope
 field, doc section); "API" means the invocation/configuration surface; roles
-and the capability inventory are the derived ones recorded below and in
-`decisions.md`.
+and the capability inventory are the derived ones recorded in this section —
+the role matrix below is the unit's only role list (`decisions.md` carries the
+open offer to seed `docs/CAPABILITIES.md` from it, not a separate role list).
 
 **1. Entity closure** — entities this feature introduces or touches:
 
@@ -261,9 +274,10 @@ plus the codebase (recorded; seeding the real file is offered in
 - Sensor — the emission target; `next` fields confirmed as the quote source ·
   test: AC2, AC3
 
-**3. Role matrix** — derived roles (recorded in `decisions.md`):
-`executor-agent`, `authoring-agent`, `review-agent`, `driver` (orchestrator),
-`human-owner`. Every role decided for every capability:
+**3. Role matrix** — derived roles (recorded here, in this matrix — the
+unit's only role list): `executor-agent`, `authoring-agent`, `review-agent`,
+`driver` (orchestrator), `human-owner`. Every role decided for every
+capability:
 
 For EACH capability:
 
@@ -360,10 +374,15 @@ throwaway git repos built by the suites) or labelled `read-verified`.
   progressive-loading table describe the form protocol (batch turn + ≤ 2
   follow-ups) and keep the upsert/review modes untouched.
 - **AC10 (read-verified)**: the quote rule is stated at the consuming surfaces
-  — `workflow-status` skill text and the gate-re-run/review-receipt-refresh
-  routes say "quote the emitted `next.continuation` (`rendering` for display),
-  never author exact tokens"; `FEATURE_WORKFLOW.md` carries exactly one
-  pointer; prose `→ Next:` blocks remain for humans.
+  — the `workflow-status` skill text (`skills/workflow-status/SKILL.md`), the
+  stale-receipt re-run route
+  (`skills/workflow-status/references/PRE_EXECUTION.md`), and the
+  receipt-persistence surfaces (`skills/review-spec/references/OUTPUT.md`,
+  `skills/review-plan/references/OUTPUT.md`,
+  `skills/review-change/references/PERSIST_AND_DECIDE.md`) say "quote the
+  emitted `next.continuation` (`rendering` for display), never author exact
+  tokens"; `FEATURE_WORKFLOW.md` carries exactly one pointer; prose
+  `→ Next:` blocks remain for humans.
 - **AC11 (command)**: golden-fixture expectations updated —
   `docs/workflow/GOLDEN_FIXTURE.md` pass criteria include the form-turn shape
   (read-verified for the manual protocol part); the run-log table unchanged.
@@ -429,7 +448,7 @@ Product boxes:
       `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
       over the Product half returns nothing (closure rows instantiated; the
       refusal codes and object keys are literals, not placeholders).
-- [x] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — 10 bullets.
+- [x] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — 11 bullets.
 - [x] Every Capability closure row is filled or `n/a: <reason>` — zero blank
       rows (E1–E4 × CRUD/transitions; 11 inventory subsystems; 5 roles × 5
       capabilities).
@@ -450,8 +469,9 @@ Product boxes:
 ## Design status
 
 `designed` — capability closure complete (zero blank rows), product spec-lint
-boxes all tick, readiness preflight `READY-FOR-REVIEW` (see closing block).
-Awaiting independent review by `review-spec`.
+boxes all tick after the F1–F3 repair batch (mechanical, intent-preserving —
+see `decisions.md`), readiness preflight `READY-FOR-REVIEW` (see closing
+block). Awaiting independent re-review by `review-spec`.
 
 ---
 

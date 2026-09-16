@@ -159,3 +159,50 @@ curl). Offline / unanswered material question: none.
   roles used by this SPEC's integration/role closures (same derived set as
   feature 52's design turn). Not done now — the file is a maintained substrate
   and the skill requires user confirmation to seed it.
+
+## 2026-09-16 — Spec-review repair batch: findings F1 + F2 + F3 resolved (mechanical, intent-preserving)
+
+- **What**: One repair batch over the whole open findings set of receipt
+  `SPEC-REVIEW-59-1` (verdict `spec-review-fail`, snapshot `55a70fd3…`), all
+  `class: product`, all repaired as mechanical/intent-preserving — reviewed
+  product intent is unchanged:
+  - **F1** — the measurement-protocol exclusion existed only inside
+    Expectation-sweep row 15's pointer; it is now also the 11th
+    `#### Out of scope / non-goals` bullet (the drop disposition itself was
+    made in the original design turn and is unchanged).
+  - **F2** — in-scope item 4 and AC10 named the quote-rule consuming surfaces
+    by route labels no repository file carries (`gate-re-run`,
+    `review-receipt-refresh`); both now pin concrete files, verified present
+    this turn: the `workflow-status` skill text
+    (`skills/workflow-status/SKILL.md`), the stale-receipt re-run route
+    (`skills/workflow-status/references/PRE_EXECUTION.md`, `stale` label row +
+    re-run sentence), and the receipt-persistence surfaces
+    (`skills/review-spec/references/OUTPUT.md`,
+    `skills/review-plan/references/OUTPUT.md`,
+    `skills/review-change/references/PERSIST_AND_DECIDE.md`). The
+    class-to-surface mapping stays 1:1 with D-59-5's three classes — no
+    surface added or removed. Adjacent mechanical fix disclosed: item 4's AC
+    pointer listed AC9 (the interview-protocol criterion); the quote-rule
+    criterion is AC10, and AC9 is owned by in-scope item 6, whose pointer now
+    reads AC8, AC9 (the two files its text already covers).
+  - **F3** — the role-matrix preamble (and the capability-closure intro)
+    pointed at `decisions.md` for the derived role list, but decisions.md
+    records no role list; the pointer now resolves to the SPEC's own matrix,
+    stated as the unit's only role list. The five-role set is unchanged.
+- **Why**: Owner instruction ("one repair batch for F1 + F2 + F3: add the
+  missing out-of-scope bullet recording the measurement-protocol drop; pin
+  AC10/in-scope-4 consuming surfaces to concrete files (workflow-status
+  PRE_EXECUTION.md stale route; review-spec/review-plan/review-change receipt
+  surfaces); fix the roles provenance pointer") plus the reviewer's evidence
+  in `planning-findings.md`.
+- **Repair classes**: F1 mechanical · F2 mechanical (AC-pointer correction
+  disclosed above) · F3 mechanical. Receipt blocks untouched; no finding
+  severity edited; no new issue filed.
+
+Evidence rows added this turn (same fixed column order as the grounding table
+above):
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The quote rule's consuming surfaces exist at the paths the repaired item 4 / AC10 pin (skill text; stale-receipt re-run route; three receipt-persistence surfaces) | repository | `skills/workflow-status/SKILL.md:121` (today's next-command echo); `skills/workflow-status/references/PRE_EXECUTION.md:44,52` (`stale` label + re-run sentence); `skills/review-spec/references/OUTPUT.md:3`; `skills/review-plan/references/OUTPUT.md:3`; `skills/review-change/references/PERSIST_AND_DECIDE.md:3` | main @ repair turn | current | proven | — |
+| decisions.md records no role list — the SPEC's role matrix is the unit's only role record | ledger | finding F3, `docs/features/59-executable-continuations/planning-findings.md` (snapshot `55a70fd3…`) | receipt SPEC-REVIEW-59-1 | current | proven | — |
