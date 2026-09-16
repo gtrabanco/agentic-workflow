@@ -30,3 +30,17 @@ cited locations; the delta escalated to a full pass — width trigger: 4 files
 outside the cited union and the grammar-test hunk at :110 >50 lines from cited
 lines 4–6). New fix-now rows F5–F7; refuted candidates live in the cycle-2 chat
 report only.
+
+F6 DISPUTED (fold cycle 2, 2026-09-16) — row stays `folded: no` pending a user
+decision. The row's stated defect (engine fails / shim passes on a >1 MiB
+porcelain listing) does not reproduce: in a fixture whose `git status
+--porcelain` is 1 147 992 bytes, BOTH engines print `TURN-CONTRACT fail box5:
+dirty-tree` and exit 1, byte-identical — the engine throws on Node's 1 MiB
+`maxBuffer`, the shim buffers the listing and then fails on non-empty, so the
+verdict is the same in every observable case and the parity invariant (D-52-2)
+holds. The residual — the shim's uncapped in-memory capture — changes no
+behavior, and a bounded read admits no red-first regression test, so it cannot
+meet the definition-of-fixed bar for a behavioral row. Cycle-2's verification
+had inferred the shim side instead of running it; the reproducer above is the
+measured result. User decides: drop it, or route the residual to `triage-issue`
+as a perf nit.
