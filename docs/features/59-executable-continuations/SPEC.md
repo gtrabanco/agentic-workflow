@@ -479,7 +479,9 @@ block). Awaiting independent re-review by `review-spec`.
 
 Written by `plan-feature` / `plan-feature-scaffold` after the Product-review
 gate passed (receipt SPEC-REVIEW-59-2, snapshot `2e2d00d6…ebc7f0e`). Product
-bytes are untouched; the artifact revision of this plan set is `59-plan-1`.
+bytes are untouched; the artifact revision of this plan set is `59-plan-3`
+(rotated on 2026-09-16 by the F4–F6 repair batch, re-rotated on 2026-09-16 by
+the F7 repair batch; initial cut `59-plan-1` by `plan-feature-scaffold`).
 
 ### Technical goals
 
@@ -751,7 +753,7 @@ this unit's `next.continuation` satisfies early. See `docs/features/ROADMAP.md`.
 - `docs/features/59-executable-continuations/ACCEPTANCE.md` — frozen acceptance
   manifest (AC-01…AC-12)
 - `docs/features/59-executable-continuations/planning-evidence.md` — PE-001…PE-020
-- `docs/features/59-executable-continuations/planning-obligations.md` — O1…O17
+- `docs/features/59-executable-continuations/planning-obligations.md` — O1…O19
 - `docs/features/59-executable-continuations/testing.md` — validation ladder
 - `docs/features/59-executable-continuations/known-issues.md` — tracked boundaries
 - `docs/features/59-executable-continuations/architecture-notes.md` — layer impact
