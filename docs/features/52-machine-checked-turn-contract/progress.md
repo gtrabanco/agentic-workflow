@@ -181,3 +181,17 @@ unticked until then.
 - Gotchas: `node --test <dir>` is not a Node ≥ 22 interface — use `bun test <dir>` (default) or the glob (`node --test packages/agentic-workflow/test/*.test.mjs`); the engine's `process.exitCode` (never `process.exit`) avoids pipe-truncated receipts; `bun test` supports directory args, `node` needs the glob
 - Files: packages/agentic-workflow/bin/turn-contract.mjs, packages/agentic-workflow/test/fixtures.mjs, packages/agentic-workflow/test/turn-contract.engine.test.mjs, packages/agentic-workflow/test/turn-contract.parity.test.mjs, scripts/turn-contract-grammar.test.mjs, SPEC.md, ACCEPTANCE.md, TASKS.md, PLAN.md, testing.md, planning-evidence.md, planning-obligations.md, planning-findings.md, known-issues.md, decisions.md
 - Next: P3 — Hardening & PR
+
+## P3 gate (2026-09-16) — full verification gate PASS
+- `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` → exit 0 (22 cases)
+- `bun test packages/agentic-workflow/test/` → exit 0 (40 pass, 0 fail)
+- `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0 (40/40, Node 24 fallback)
+- `node --test scripts/turn-contract-grammar.test.mjs` → exit 0 (20 pass)
+- `node --test scripts/normative-drift.test.mjs` → exit 0 (17 pass)
+- `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (56 pass)
+- `bun scripts/check-skill-context.mjs` → exit 0 (PASS context budgets: 40 skills)
+- `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 (7 pass)
+- `bun run test` in `packages/pi-agentic-workflow` → exit 0 (214 pass)
+- `npx skills add . --list` → exit 0 (all skills discovered)
+- AC12 grep → no matches; AC14 pointers 1 per file; AC14 restatement check → canonical `TURN_CONTRACT.md` + this unit's records only (FEATURE_WORKFLOW.md pointer trimmed to stop restating the grammar)
+- O13 schema diff (`git diff main...HEAD -- packages/agentic-workflow-schema`) → empty; O16 `dependenc` 0, `private: true` 1
