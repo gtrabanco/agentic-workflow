@@ -87,11 +87,15 @@ fi
 
 # box5 — clean tree, then not ahead of the configured upstream. A status
 # query that cannot be answered is never proof of a clean tree: it fails
-# closed as dirty-tree.
-status_out=$(git -C "$repo_root" status --porcelain 2>/dev/null) || fail 5 dirty-tree
-if [ -n "$status_out" ]; then
-  fail 5 dirty-tree
-fi
+# closed as dirty-tree. The listing is read to its first byte only — any output
+# at all means "dirty", so a huge listing (generated-tree scale) is never
+# buffered (F6, fold cycle 2). `${PIPESTATUS[@]}` must be cloned as the VERY
+# NEXT command: any command in between resets it, git's own status is lost, and
+# the shim would print a fake ok on an unanswerable query.
+git -C "$repo_root" status --porcelain 2>/dev/null | { IFS= read -r -n 1; }
+status_ps=("${PIPESTATUS[@]}")
+[ "${status_ps[0]}" -eq 0 ] || fail 5 dirty-tree
+[ "${status_ps[1]}" -ne 0 ] || fail 5 dirty-tree
 upstream=$(git -C "$repo_root" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
 if [ -n "$upstream" ]; then
   ahead=$(git -C "$repo_root" rev-list --count "$upstream..HEAD" 2>/dev/null) || ahead=1

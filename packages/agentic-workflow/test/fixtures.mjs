@@ -143,6 +143,14 @@ function buildFixtures(root) {
   fx.corrupt = unitBranch(root, "corrupt", "feat/corrupt");
   writeFileSync(path.join(fx.corrupt, ".git/index"), "not a git index\n");
 
+  // Listing past the engine's 1 MiB read cap and past the shim's pipe buffer:
+  // both truncate, and both must still fail closed (F6, fold cycle 2). Long
+  // path segments keep the fixture cheap — 320 files ≈ 1.2 MB of porcelain.
+  fx.bigstatus = unitBranch(root, "bigstatus", "feat/bigstatus");
+  const longDir = Array.from({ length: 19 }, () => "d".repeat(200)).join("/");
+  commitFile(fx.bigstatus, `${longDir}/tracked.txt`, "x\n");
+  for (let i = 0; i < 320; i += 1) writeFileSync(path.join(fx.bigstatus, longDir, `f${i}`), "x\n");
+
   // Engine-only: the phase-lint clause of box2 (the shim cannot run it).
   fx.lintfail = unitBranch(root, "lintfail", "feat/lintfail");
   commitFile(fx.lintfail, "docs/features/lintfail/TASKS.md", "# TASKS\n");
@@ -233,6 +241,7 @@ export function receiptCases(ctx) {
     { name: "box5 dirty precedes ahead", dir: ctx.fx.dirtyahead, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 unicode/space names", dir: ctx.fx.unicode, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 unreadable status fails closed", dir: ctx.fx.corrupt, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    { name: "box5 huge listing fails closed", dir: ctx.fx.bigstatus, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "clean feature branch", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
   ];
 }
