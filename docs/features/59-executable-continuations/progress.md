@@ -140,3 +140,41 @@ Notes:
 - No-progress/convergence: this repeat is sanctioned — the prior FAIL receipt's repair produced a changed snapshot by design (POLICY §4). Warning for the owner: this FAIL opens a **second** plan repair/re-review cycle; the next re-review must print the `CONVERGENCE-ANOMALY` block before any further edit, then route to `plan-feature`.
 - Self-check (POLICY §8, reviewer is consumer zero): `bun scripts/pre-execution-snapshot.mjs verify --stage plan --unit 59-executable-continuations --dir docs/features/59-executable-continuations --unit-kind feature --artifact-revision 59-plan-2 --parent 2e2d00d6…7f0e` → `digestMatches: true` (observed `8237e6c2…4ab5d` = bound), `structural.fresh: true`, `changedPaths: []`, `exit 4` — verdict persisted as a FAIL (not a PASS), the sanctioned form; the `--artifact-revision` flag is required on verify because the planner carried an explicit revision id instead of the sensor's derived default (the commit sha) — without it the sensor answers `stale-artifact-revision` against its own default, not against the bound bytes.
 - Ledger writes this turn: this receipt block + `planning-findings.md` row F7 only; no reviewed plan artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, `testing.md`, `decisions.md`, `architecture-notes.md`, `ROADMAP.md`) modified.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-59-3 · Snapshot: 6da9bdd824a9636050851ab4237b59d89a6bec0c3165a08fd4ca2abab23e5664 · Verdict: plan-review-pass
+- Unit: 59-executable-continuations · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 2e2d00d62a70a64490312f3d651ae9899c8758c0389540f1b4aa44612ebc7f0e · Parent Product receipt: SPEC-REVIEW-59-2
+- Source revision: f25b46cee15c80015562ddff96e96a2c115b60a3 · Artifact revision: 59-plan-3
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (2026-09-16 authoring + F4–F7 repair turns)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-16T20:48Z/2026-09-16T21:13Z · Findings: 1 (material open: 0)
+- Ledgers read: planning-evidence 20 rows · obligations 19 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): PLAN-REVIEW-59-2 @ 8237e6c2bcf4e14996a4fcf2fc66069483c873934eeac4fe693ce457fd64ab5d
+```
+
+Notes:
+- CONVERGENCE-ANOMALY — 59-executable-continuations plan (second repair/re-review cycle, printed before any further edit per POLICY §4; the anomaly is reported and routed, never a stop, and the repair it routes has already run):
+  ```text
+  CONVERGENCE-ANOMALY — 59-executable-continuations plan
+  - Finding ids: repeated: none / new: F7 (now resolved)
+  - Snapshots: 8237e6c2bcf4e14996a4fcf2fc66069483c873934eeac4fe693ce457fd64ab5d → 6da9bdd824a9636050851ab4237b59d89a6bec0c3165a08fd4ca2abab23e5664 (artifactRevisionId 59-plan-2 → 59-plan-3)
+  - Missed: two Engineering-half restatements in SPEC.md (identity line `:482`, artifacts list `:754`) left unaligned by the F4–F6 repair batch's plan-set rotation
+  - Owning stage: plan
+  - Why the prior repair failed: the F4–F6 batch rotated the plan set to `59-plan-2` but did not sweep the SPEC's Engineering-half restatements, so the SPEC's identity line contradicted PLAN.md's rotation and its artifacts list contradicted the 19-row ledger
+  - Route to owner: plan-feature (owner performed the F7 repair batch; artifact revision `59-plan-3`)
+  ```
+- Snapshot built with the recipe owner at one revision (`git rev-parse HEAD` = `f25b46ce…0a3`, tree clean): all 9 applicable artifact rows present and bound whole-file (M unit — ledgers are separate files, no XS/S embed), contexts `architectural-invariants` absent (NRS F010) / NRS + project-guide present, `--artifact-revision 59-plan-3` taken from the planner handoff (PLAN.md revision line, rotated by the F7 repair); digest `6da9bdd8…5664` pasted above.
+- L1 parent currency: parent receipt SPEC-REVIEW-59-2 snapshot `2e2d00d6…7f0e` equals the snapshot's `parentSpecSnapshotDigest`; the decisive recomputation per POLICY §7 re-derived the pinned Product selector from current bytes with the schema package's `selectSpecProduct` = 26199 bytes, sha256 `15f99f5e4295cecefb5dbc40f0dd89fe941bc603809e5ebd64b3f8282a11470e` — equal to the recorded pin (claimed beside recomputed). Product bytes and context rows unmoved; parent state: current.
+- Phase-lint re-run at this revision (P9 evidence): `node scripts/phase-lint.mjs docs/features/59-executable-continuations/PLAN.md` → verdict PASS, exit 0 (8/8 × 5); per-phase fingerprints match PLAN.md/TASKS.md exactly; whole-set fingerprint `1a3bf1481e923fa03b105fa9b133b4a0be1182862f2a0c3d5ade6cec063583dc` unchanged across all three cycles. Frozen acceptance verified: `git hash-object ACCEPTANCE.md` = `d046f0b537da92251c6d81893e816bbc0de1a252`, equal to the recorded blob.
+- Dependency closure re-verified live on the forge this turn (P2 evidence): PRs #143/#144/#212/#213 (rows 24/25/37/38) all `state: MERGED` with merge dates — the SPEC's `MERGED (PR #N)` claims hold; row 59 `Depends on: —`.
+- P12 at HEAD: `git diff --stat b228ff95..HEAD` over every cited surface shows only the sanctioned roadmap row-59 status line changed — the repository bytes behind all 20 PE rows are unchanged since the planning baseline; 8 load-bearing rows (PE-001/002/003/006/007/008/011/012/013/016) re-verified line-exact first-hand this turn (`resolveNext()` at `scripts/workflow-status.mjs:961`, attach at `:1192`, router at `:759`, `pre_execution` vocabulary at `:1219`); the AC10/AC8 greps can fail as required (`next.continuation` absent in FEATURE_WORKFLOW.md → 0; `One question per turn` present in INTERVIEW.md → 1).
+- F7 resolution verified in the bound bytes: SPEC.md:482 now records `59-plan-3` in PLAN.md's own rotation-note form and PLAN.md's revision line reads `59-plan-3` — the POLICY §7 identity pairing holds (claimed = recomputed = `59-plan-3`); the artifacts list reads `planning-obligations.md — O1…O19` (SPEC.md:756), matching the 19-row ledger (`grep -c '^| O'` → 19) and the SPEC's own `### Obligations` restatement (SPEC.md:598); Product selector recomputed equal to the parent pin, so the parent receipt stays current.
+- Finding F8 (info, plan): the validator cells of O1/O3/O8 abbreviate their authority criterion's validator text (pin names and AC-06's two greps dropped; executable commands identical) — recorded for the executor and for wording alignment at the author's next touch; not material, no repair required, nothing unchecked at the manifest level.
+- No-progress/convergence: this repeat is sanctioned — the input is the F7 repair turn's changed snapshot (59-plan-2 → 59-plan-3), produced in response to the persisted FAIL receipt PLAN-REVIEW-59-2; per POLICY §4 no cycle cap or anomaly rule blocks or ends it.
+- Self-check (POLICY §8, reviewer is consumer zero): `bun scripts/pre-execution-snapshot.mjs verify --stage plan --unit 59-executable-continuations --dir docs/features/59-executable-continuations --unit-kind feature --artifact-revision 59-plan-3 --parent 2e2d00d62a70a64490312f3d651ae9899c8758c0389540f1b4aa44612ebc7f0e` → `digestMatches: true`, `structural.fresh: true`, `current: true`, `exit 0` — JSON pasted in the turn report beside the verdict block.
+- Ledger writes this turn: this receipt block + `planning-findings.md` row F8 only; no reviewed plan artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, `testing.md`, `decisions.md`, `architecture-notes.md`, `ROADMAP.md`) modified.
