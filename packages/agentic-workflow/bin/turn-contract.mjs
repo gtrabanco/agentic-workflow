@@ -11,7 +11,7 @@
 //                      or: TURN-CONTRACT fail box<N>: <code>
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 
 const USAGE =
@@ -32,6 +32,18 @@ function count(cwd, range) {
   const r = git(cwd, ["rev-list", "--count", range]);
   const n = r.ok ? Number.parseInt(r.out, 10) : Number.NaN;
   return Number.isFinite(n) ? n : null;
+}
+
+// box2 applies only when the unit path is a DIRECTORY: a path that exists as a
+// regular file means the unit directory does not exist, so the box is
+// not-applicable — the shim's `[ -d ]` semantics (F5, review cycle 2; SPEC
+// box2 row + ED-52-2).
+function isDir(p) {
+  try {
+    return statSync(p).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 // bun-else-node per the repository runtime convention.
@@ -86,7 +98,7 @@ function main(argv) {
   let unitDir = "";
   if (currentBranch.startsWith("feat/")) unitDir = `docs/features/${currentBranch.slice("feat/".length)}`;
   else if (currentBranch.startsWith("fix/")) unitDir = `docs/fix/${currentBranch.slice("fix/".length)}`;
-  if (unitDir !== "" && existsSync(path.join(root, unitDir))) {
+  if (unitDir !== "" && isDir(path.join(root, unitDir))) {
     if (!git(root, ["cat-file", "-e", `HEAD:${unitDir}/ACCEPTANCE.md`]).ok) return fail(2, "acceptance-missing");
     const lint = path.join(root, "scripts", "phase-lint.mjs");
     const tasks = path.join(root, unitDir, "TASKS.md");
