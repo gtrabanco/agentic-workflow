@@ -51,7 +51,7 @@ const REQUIRED_SCRIPTS = [
   "gate:pre-execution",
 ];
 
-const DOC_FILES = ["README.md", "README.es.md"];
+const DOC_FILES = ["README.md"];
 
 function run(...args) {
   return execFileSync(args[0], args.slice(1), { cwd: PACKAGE_ROOT, encoding: "utf8" });
@@ -164,4 +164,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(`PASS · ${manifest.name}@${manifest.version} ships both pre-execution projections,`);
-console.log("       the compiled surface, the documentation pair, and every exports target");
+console.log("       the compiled surface, the documentation, and every exports target");

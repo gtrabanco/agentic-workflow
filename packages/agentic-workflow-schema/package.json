@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -48,7 +48,6 @@
     "pre-execution-artifact-snapshot.schema.json",
     "pre-execution-review-receipt.schema.json",
     "README.md",
-    "README.es.md",
     "LICENSE"
   ],
   "engines": {
