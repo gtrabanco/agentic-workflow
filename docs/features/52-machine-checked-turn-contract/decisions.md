@@ -247,3 +247,22 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   into this PR.
 - **Authority**: repo hygiene / turn-contract box 5; not a deliverable of this
   unit.
+
+## 2026-09-16 — ED-52-7: P2 gate blocked by the frozen validator's Node form
+
+- **What**: The P2 gate command `node --test packages/agentic-workflow/test/`
+  (AC2, AC7, TASKS P2 done-when) cannot pass on the repository's pinned Node
+  (`v22.23.1`) or the environment default (`v24.19.0`): Node ≥ 22 resolves the
+  directory positional as a module and exits `Cannot find module`. The suite
+  passes under the documented form `node --test packages/agentic-workflow/test/*.test.mjs`
+  (40/40) and under the directory form on Node 20 (41 pass).
+- **Why**: Planning-evidence **PE-005** ("node v22.23.1 supports `node --test
+  <dir>` directory mode") is false — Node's own v22 docs accept files or glob
+  patterns, and the repo's `test:node` scripts already use the glob form. This
+  is a **Plan-level validator defect** (implementation-discovery question 6
+  contradiction), not a source/test defect: no engine or suite byte is wrong.
+- **Authority**: discovered at execution; routed as finding `PLAN52-F9`. The
+  frozen `ACCEPTANCE.md` may only change through the verification contract's
+  amendment path (explicit user approval → dated SPEC `## Amendments` row →
+  replacement manifest → fresh receipt); the executor does not self-authorize
+  it.
