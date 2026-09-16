@@ -109,6 +109,24 @@ gitc -C "$corrupt_repo" checkout -q -b feat/corrupt
 commit_file "$corrupt_repo" docs/features/corrupt/ACCEPTANCE.md 'frozen'
 printf 'not a git index\n' > "$corrupt_repo/.git/index"
 
+# bigstatus: porcelain past the engine's 1 MiB read cap and past the shim's pipe
+# buffer -> the truncating reads must still fail closed (F6, fold cycle 2).
+bigstatus_repo=$tmp/bigstatus
+new_branch "$bigstatus_repo" main
+gitc -C "$bigstatus_repo" checkout -q -b feat/bigstatus
+commit_file "$bigstatus_repo" docs/features/bigstatus/ACCEPTANCE.md 'frozen'
+seg=$(printf 'd%.0s' $(seq 1 200))
+long_dir=$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg
+mkdir -p "$bigstatus_repo/$long_dir"
+printf 'x\n' > "$bigstatus_repo/$long_dir/tracked.txt"
+gitc -C "$bigstatus_repo" add "$long_dir/tracked.txt"
+gitc -C "$bigstatus_repo" commit -qm 'add long dir'
+i=0
+while [ "$i" -lt 320 ]; do
+  printf 'x\n' > "$bigstatus_repo/$long_dir/f$i"
+  i=$((i + 1))
+done
+
 # dirty: the ok fixture plus an unstaged edit.
 dirty_repo=$tmp/dirty
 new_branch "$dirty_repo" main
@@ -242,6 +260,10 @@ run_dir=$corrupt_repo
 run
 assert "box5 unreadable status fails closed" 1 'TURN-CONTRACT fail box5: dirty-tree'
 
+run_dir=$bigstatus_repo
+run
+assert "box5 huge listing fails closed" 1 'TURN-CONTRACT fail box5: dirty-tree'
+
 # ---- read-only + cwd -------------------------------------------------------
 
 before=$(gitc -C "$ok_repo" status --porcelain --untracked-files=all)
@@ -295,4 +317,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 24 cases\n'
+printf 'PASS turn contract: 25 cases\n'
