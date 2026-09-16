@@ -298,7 +298,8 @@ a route it may hand off to. Feature 28's AC15 binds each of those to the machine
 surface that accepts it — the schema package's published vocabularies
 (`packages/agentic-workflow-schema/src/`), the `argument-hint:` frontmatter of each
 skill, and the skill directory itself. The gate reads **versioned grammar only**:
-a `block:` id, a `fenced:` fixed-output contract, a `table:` section, or frontmatter.
+a `block:` id, a `fenced:` fixed-output contract, a `table:` section, a
+`schema-export:` published const read from committed source, or frontmatter.
 It never parses a sentence, so a surface with no fixed grammar in the `grammar` cell
 is the defect this table exists to prevent, and `scripts/normative-drift.test.mjs`
 fails closed on it. `machine` names the vocabulary the surface's tokens resolve
@@ -328,6 +329,7 @@ ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block
 ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:review-mark@1 | n/a | no
 ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:finding-mark@1 | n/a | no
 sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
+continuation-refusal-vocabulary | packages/agentic-workflow-schema/src/continuation.ts | schema-export:CONTINUATION_REFUSALS | continuation-refusal-type | yes
 turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
 turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
 ```

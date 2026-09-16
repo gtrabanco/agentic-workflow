@@ -8,7 +8,9 @@ each finding row to the unit's `planning-findings.md`** with
 create the file from that contract when the unit has none. A findings ledger the
 reviewer cannot write is not a ledger. Any later write to a reviewed artifact
 rotates `artifactRevisionId` and makes this receipt stale — that is the contract
-working, not a mistake.
+working, not a mistake. When a missing or stale receipt is the reason for re-entry,
+the re-entry command is the **emitted** `next.continuation` (`rendering` for display):
+quote it, never author exact command tokens.
 
 One `PreExecutionReviewReceipt v1`
 (`agentic-workflow/pre-execution-review-receipt@1`) per review, in a fenced block:
