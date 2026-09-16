@@ -6,7 +6,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { makeContext, receiptCases, engineOnlyCases, git, newRepo, commitFile } from "./fixtures.mjs";
@@ -58,6 +58,22 @@ test("the verifier is read-only", () => {
   const after = git(ctx.fx.ok, "status", "--porcelain", "--untracked-files=all");
   assert.equal(r.stdout, "TURN-CONTRACT ok\n");
   assert.equal(after, before, "the verifier must not mutate tree or index");
+});
+
+test("the status read does not rewrite .git/index", () => {
+  const dir = newRepo(ctx.root, "readonlyindex", "feat/readonlyindex");
+  commitFile(dir, "docs/features/readonlyindex/ACCEPTANCE.md", "frozen\n");
+  // A stale mtime on a tracked file makes `git status` want to refresh the
+  // index; the read must not write it (F10, fold cycle 3 — a porcelain-only
+  // before/after comparison cannot observe that write).
+  const stale = new Date("2020-01-01T00:00:00.000Z");
+  utimesSync(path.join(dir, "README.md"), stale, stale);
+  const index = path.join(dir, ".git", "index");
+  const before = readFileSync(index);
+  const r = ctx.runEngine(dir);
+  assert.equal(r.stdout, "TURN-CONTRACT ok\n");
+  assert.equal(r.code, 0);
+  assert.deepEqual(readFileSync(index), before, "git status must not refresh (rewrite) .git/index");
 });
 
 test("the box2 phase-lint clause is read-only", () => {

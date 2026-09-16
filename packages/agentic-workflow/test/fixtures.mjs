@@ -70,7 +70,24 @@ function ghStub(root) {
   const file = path.join(dir, "gh");
   writeFileSync(
     file,
-    '#!/usr/bin/env bash\nprintf \'%s\\n\' "${GH_STUB_JSON:-}"\n[ "${GH_STUB_EXIT:-0}" -eq 0 ] || exit "${GH_STUB_EXIT}"\n',
+    [
+      "#!/usr/bin/env bash",
+      "# PATH-stub for gh. `pr list --head <branch>` answers with $GH_STUB_JSON (the",
+      "# pull requests of that branch); `pr view <arg>` answers with",
+      "# $GH_STUB_VIEW_JSON — real gh reads an all-numeric argument as a PR NUMBER",
+      "# and exits nonzero when no pull request matches the branch.",
+      "# $GH_STUB_EXIT forces a failure exit from either invocation;",
+      "# $GH_STUB_VIEW_EXIT forces one from `pr view` only (the real 'no PR for",
+      "# this branch' answer, which is what makes a missing PR",
+      "# indistinguishable from an unreachable gh in the pre-F9 query).",
+      'case "$1 $2" in',
+      '  "pr list")\n    printf \'%s\\n\' "${GH_STUB_JSON:-[]}"\n    exit_code="${GH_STUB_EXIT:-0}"\n    ;;',
+      '  "pr view")\n    printf \'%s\\n\' "${GH_STUB_VIEW_JSON:-}"\n    exit_code="${GH_STUB_VIEW_EXIT:-${GH_STUB_EXIT:-0}}"\n    ;;',
+      "  *) exit 3 ;;",
+      "esac",
+      '[ "$exit_code" -eq 0 ] || exit "$exit_code"',
+      "",
+    ].join("\n"),
   );
   chmodSync(file, 0o755);
   return dir;
@@ -151,6 +168,20 @@ function buildFixtures(root) {
   commitFile(fx.bigstatus, `${longDir}/tracked.txt`, "x\n");
   for (let i = 0; i < 320; i += 1) writeFileSync(path.join(fx.bigstatus, longDir, `f${i}`), "x\n");
 
+  // Repo-local `status.showUntrackedFiles=no` must not hide an untracked file
+  // from box5 (F8, fold cycle 3).
+  fx.hidden = unitBranch(root, "hidden", "feat/hidden");
+  git(fx.hidden, "config", "status.showUntrackedFiles", "no");
+  writeFileSync(path.join(fx.hidden, "untracked.txt"), "x\n");
+
+  // All-numeric branch name: a bare `gh pr view <branch>` argument is read by
+  // gh as a PR NUMBER, so box4 would judge the unrelated PR that shares the
+  // name instead of this branch (F11, fold cycle 3).
+  fx.numeric = newRepo(root, "numeric", "main");
+  git(fx.numeric, "checkout", "-q", "-b", "123");
+  commitFile(fx.numeric, "note.txt", "x\n");
+  bareRemote(root, fx.numeric, "123");
+
   // Engine-only: the phase-lint clause of box2 (the shim cannot run it).
   fx.lintfail = unitBranch(root, "lintfail", "feat/lintfail");
   commitFile(fx.lintfail, "docs/features/lintfail/TASKS.md", "# TASKS\n");
@@ -221,10 +252,32 @@ export function receiptCases(ctx) {
       line: "TURN-CONTRACT fail box4: pr-unreachable",
     },
     {
+      name: "box4 no PR for the branch",
+      dir: ctx.fx.b4,
+      args: ["--finished"],
+      // The branch is pushed and has no PR: `pr list` answers that with exit 0
+      // and an empty result; the pre-F9 query (`pr view`) exits nonzero for the
+      // same state, which is why it reports a missing PR as pr-unreachable.
+      env: { GH_STUB_JSON: "[]", GH_STUB_VIEW_EXIT: "1" },
+      code: 1,
+      line: "TURN-CONTRACT fail box4: pr-not-open",
+    },
+    {
+      name: "box4 merged PR is not an open PR",
+      dir: ctx.fx.b4,
+      args: ["--finished"],
+      env: {
+        GH_STUB_JSON: JSON.stringify([{ headRefOid: head, state: "MERGED" }]),
+        GH_STUB_VIEW_JSON: JSON.stringify({ headRefOid: head, state: "MERGED" }),
+      },
+      code: 1,
+      line: "TURN-CONTRACT fail box4: pr-not-open",
+    },
+    {
       name: "box4 head mismatch",
       dir: ctx.fx.b4,
       args: ["--finished"],
-      env: { GH_STUB_JSON: JSON.stringify({ headRefOid: "0".repeat(40), state: "OPEN" }) },
+      env: { GH_STUB_JSON: JSON.stringify([{ headRefOid: "0".repeat(40), state: "OPEN" }]) },
       code: 1,
       line: "TURN-CONTRACT fail box4: pr-head-mismatch",
     },
@@ -232,14 +285,31 @@ export function receiptCases(ctx) {
       name: "box4 open PR at HEAD",
       dir: ctx.fx.b4,
       args: ["--finished"],
-      env: { GH_STUB_JSON: JSON.stringify({ headRefOid: head, state: "OPEN" }) },
+      env: { GH_STUB_JSON: JSON.stringify([{ headRefOid: head, state: "OPEN" }]) },
       code: 0,
       line: "TURN-CONTRACT ok",
+    },
+    {
+      name: "box4 numeric branch is not a PR number",
+      dir: ctx.fx.numeric,
+      args: ["--finished"],
+      env: {
+        GH_STUB_JSON: "[]",
+        GH_STUB_VIEW_JSON: JSON.stringify({ headRefOid: "0".repeat(40), state: "OPEN" }),
+      },
+      code: 1,
+      line: "TURN-CONTRACT fail box4: pr-not-open",
     },
     { name: "box5 dirty tree", dir: ctx.fx.dirty, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 ahead of remote", dir: ctx.fx.ahead, code: 1, line: "TURN-CONTRACT fail box5: ahead-of-remote" },
     { name: "box5 dirty precedes ahead", dir: ctx.fx.dirtyahead, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 unicode/space names", dir: ctx.fx.unicode, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    {
+      name: "box5 ignores status.showUntrackedFiles=no",
+      dir: ctx.fx.hidden,
+      code: 1,
+      line: "TURN-CONTRACT fail box5: dirty-tree",
+    },
     { name: "box5 unreadable status fails closed", dir: ctx.fx.corrupt, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 huge listing fails closed", dir: ctx.fx.bigstatus, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "clean feature branch", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
