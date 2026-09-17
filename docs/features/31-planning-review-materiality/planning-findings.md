@@ -83,3 +83,44 @@ with `resolving-artifact-revision: 31-spec-2` — see SPEC `## Amendments`
 rows R31-01/R31-02/R31-03 stay open for `plan-feature`'s re-derivation batch
 (plan re-cut + `ACCEPTANCE.md` re-freeze once a fresh `SPEC-REVIEW-PASS`
 receipt exists).
+
+---
+
+## Re-review (`spec-review-31-3`, 2026-09-17)
+
+Cycle-2 re-review of the Product half the `31-spec-2` repair batch rewrote — the
+route `spec-review-31-2` named for N31-003 (`class: product` → Product-half
+repair, then re-review). Fresh context; this conversation never authored or
+edited the Product half, its ledgers, or its acceptance manifest.
+
+Snapshot `b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7` @
+source revision `3e4c7c2d5cbdde6e241db77d37f14906afd88b5e` (`spec-product-v1`
+digest `5cdbd2f3f2039b1089c14cdce9a3367df9a92720eb0122de822e1693a07f502e`,
+33332 bytes). Verdict: `spec-review-pass` — **14/14 checks pass, zero new
+findings**. No row was appended: N31-001/N31-002/N31-003 remain `resolved` at
+`resolving-artifact-revision: 31-spec-2` (their resolutions re-verified on disk
+here), and the plan-stage rows R31-01/R31-02/R31-03 stay `open` for
+`plan-feature`'s re-derivation batch, which owns them.
+
+What this re-review verified, in one line each:
+
+- **N31-003 (medium, product)** — AC8's allowed set now carries its third
+  declared group (the workflow-mutated record surfaces:
+  `docs/features/31-planning-review-materiality/**`, the unit's
+  `docs/features/ROADMAP.md` row, `docs/LOGS.md` appends), and the mechanical
+  pathspec anchor
+  (`git diff main --name-only -- . ':(exclude)…'` ×3) verifiably reduces the
+  13-path branch diff to the governed + derived set (exit 0, no path listed) at
+  the reviewed revision; the `ROADMAP.md` hunk is row 31 only. Resolved.
+- **N31-001 (info, product)** — SPEC §Context now quotes POLICY §4's actual
+  wording, and the `decisions.md` code-side-cap row cites
+  `REVIEW_PROCESS.md:169` for `LOOP CAP REACHED` (re-read on disk). Resolved.
+- **N31-002 (info, product)** — E2's `Read/list` names both stages'
+  frozen-evidence homes. Resolved.
+
+The cycle-2 `CONVERGENCE-ANOMALY` (POLICY §4) was reported by the `31-spec-2`
+repair batch on entry and is reproduced in `progress.md`; it grants no PASS and
+is not a stop. `plan-feature` may now re-derive the Engineering half against
+this receipt: the plan-side mirrors of AC8 (`ACCEPTANCE.md` AC8, obligation O8,
+`PLAN.md`/`TASKS.md` P4 task 5) remain `plan-feature`'s to re-cut, closing
+R31-02 + R31-03 and re-freezing `ACCEPTANCE.md`.
