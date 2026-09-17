@@ -310,3 +310,14 @@ the full roadmap status machine. No new finding rows appended to
 - Gotchas: the suite imports `scripts/schema-runtime.mjs` at module scope, so a missing `packages/agentic-workflow-schema/dist/` fails the whole file loudly naming the build step — the intended fail-closed precondition (PE-010). `bun scripts/golden-fixture.test.mjs` is refused by bun ("Cannot use test outside of the test runner"), exactly like the rest of the root family; the bun-compatible form is `bun test scripts/golden-fixture.test.mjs` (green). The `runLogGrammar` cut-off accepts `invented <k>` as either `none` or a digit count and `shape` as `ok` or a lowercase fail-code, per D-55-6
 - Files: `scripts/golden-fixture.test.mjs`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
 - Next: P4 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: verification ladder (see the P4 entry) + `git status --porcelain -- docs/` → empty · Acceptance blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b
+- Next: close-out (push, PR, roadmap link) · Attempts: 1
+
+## P4 — 2026-09-17
+- Done: verification ladder green — `npx skills add . --list` exit 0; `node scripts/check-skill-context.mjs` → `PASS context budgets: 40 skills`; `node --test scripts/*.test.mjs` → exit 0 (496 pass / 0 fail); `node --test scripts/golden-fixture.test.mjs` → exit 0 (9 pass); `bun test scripts/golden-fixture.test.mjs` → 9 pass / 0 fail; AC1 diff empty; AC2 exit 1 with `verdict BLOCKED` + 6 `box-<n>` lines; AC5 pipeline empty, doc 149 ≤ 150; AC8 grep empty and `unshare -rn node --test scripts/golden-fixture.test.mjs` → exit 0 (offline); AC9 both registration lines present. Pending-docs check satisfied at close-out (`git status --porcelain -- docs/` → empty right after this commit); roadmap row 55 flipped to `done`
+- Remains: `git push`, open the PR, link it in the roadmap row (the follow-up commit)
+- Gotchas: the acceptance blob re-checked at this phase still equals 2b832ac98ae7749a0e286051b4b0bc29f4db735b — the frozen finish line never moved. The suite's schema-runtime import means `packages/agentic-workflow-schema/dist/` must exist for the root gate; it does (built), and a missing build fails loudly naming the step (PE-010)
+- Files: `docs/features/ROADMAP.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
+- Next: unit finished
