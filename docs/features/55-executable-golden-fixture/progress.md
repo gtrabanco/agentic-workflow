@@ -288,3 +288,14 @@ the full roadmap status machine. No new finding rows appended to
 - Gotchas: the envelope pair differs in exactly one field (`state`) per ED-55-5; `RUN_LOG_NOTES.md` carries a one-paragraph provenance header above the three verbatim blocks; the doc still holds its embedded copies until P2 removes them
 - Files: `scripts/fixtures/golden-fixture/**`, `docs/features/ROADMAP.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
 - Next: P2 — Slim the golden-fixture procedure doc
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → 149 (≤ 150) + the AC5 exemption pipeline → no output · Acceptance blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b
+- Next: P3 · Attempts: 1 · Checkpoint triggers since baseline: layer boundary (P1 `config/infra` → P2 `docs`; recorded, whole-unit mode continues)
+
+## P2 — 2026-09-17
+- Done: slimmed `docs/workflow/GOLDEN_FIXTURE.md` from 383 to 149 lines (protocol + smoke precondition + fixed pass criteria + form-turn shape + audit pointer + the 43-row run log); removed both embedded ```markdown blocks and the audit-target build/prose (they live in the fixture tree now); updated the `docs/workflow/README.md` index line and the `CLAUDE.md` verification list to name the executable suite
+- Remains: P3 assertion suite, P4 Hardening & PR
+- Gotchas: the frozen assembly measure was 148; the committed doc is 149 (one line of slack under the ≤150 cap) because the fixture file list is denser than the per-section probe assumed — the cap, not the exact 148, is the criterion (PE-017/AC5). The 43 run-log rows are byte-identical to the pre-slim bytes and no live `csv-export-command` slug survives outside them
+- Files: `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/README.md`, `CLAUDE.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
+- Next: P3 — Author the golden-fixture assertion suite

@@ -721,12 +721,12 @@ Layer: `config/infra`. Done-when: `node scripts/phase-lint.mjs scripts/fixtures/
 
 Layer: `docs`. Done-when: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → ≤ 150, and `grep -n "Tool-calling smoke test" docs/workflow/GOLDEN_FIXTURE.md` → a match.
 
-- [ ] Slim `docs/workflow/GOLDEN_FIXTURE.md` to the frozen live-surface shape — purpose, the ~100-word judgment protocol, the tool-calling smoke test, the fixed pass criteria, the run log, and the fixture pointers — applying the §Design move/re-join/condense ledger to 148 lines (PE-006, PE-017; O10)
-- [ ] Remove the embedded toy SPEC and manifest blocks from `docs/workflow/GOLDEN_FIXTURE.md`, leaving one pointer at the fixture tree (PE-006, PE-007; O10)
-- [ ] Remove the audit-target build, the four traps, and the old scope-boundary prose from `docs/workflow/GOLDEN_FIXTURE.md`, leaving pointers to `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md` and `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` (ED-55-3; O10)
-- [ ] Update the `docs/workflow/README.md` index line so it names the judgment protocol alongside the executable suite (PE-013; O11)
-- [ ] Extend `CLAUDE.md`'s verification list so it names the executable suite beside the existing root regressions (PE-012; O11)
-- [ ] Verify `docs/workflow/GOLDEN_FIXTURE.md` carries no live toy slug outside the grandfathered run-log rows and that its 43 rows are byte-identical to the pre-slim bytes (PE-007; O10)
+- [x] Slim `docs/workflow/GOLDEN_FIXTURE.md` to the frozen live-surface shape — purpose, the ~100-word judgment protocol, the tool-calling smoke test, the fixed pass criteria, the run log, and the fixture pointers — applying the §Design move/re-join/condense ledger to 148 lines (PE-006, PE-017; O10) — evidence: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → 149 (≤ 150; the fixture-pointer list is one line shorter than the frozen assembly and the prose carries no `fix`-only filler)
+- [x] Remove the embedded toy SPEC and manifest blocks from `docs/workflow/GOLDEN_FIXTURE.md`, leaving one pointer at the fixture tree (PE-006, PE-007; O10) — evidence: no ```markdown fence remains in the doc; it points at `scripts/fixtures/golden-fixture/`
+- [x] Remove the audit-target build, the four traps, and the old scope-boundary prose from `docs/workflow/GOLDEN_FIXTURE.md`, leaving pointers to `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md` and `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` (ED-55-3; O10)
+- [x] Update the `docs/workflow/README.md` index line so it names the judgment protocol alongside the executable suite (PE-013; O11) — evidence: `grep -n "golden-fixture" docs/workflow/README.md` → one line naming `scripts/golden-fixture.test.mjs`
+- [x] Extend `CLAUDE.md`'s verification list so it names the executable suite beside the existing root regressions (PE-012; O11) — evidence: `grep -n "golden-fixture" CLAUDE.md` → one line naming the suite under `## Verification`
+- [x] Verify `docs/workflow/GOLDEN_FIXTURE.md` carries no live toy slug outside the grandfathered run-log rows and that its 43 rows are byte-identical to the pre-slim bytes (PE-007; O10) — evidence: the AC5 exemption pipeline prints nothing; `diff` of the 43 `| 20…` rows against `HEAD:docs/workflow/GOLDEN_FIXTURE.md` → empty
 
 #### P3 — Author the golden-fixture assertion suite
 
