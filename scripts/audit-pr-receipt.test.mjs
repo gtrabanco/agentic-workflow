@@ -10,94 +10,23 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const auditSkill = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/SKILL.md"), "utf8");
 const auditProcess = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/references/03_AUDIT_PROCESS.md"), "utf8");
 
-const REVIEW_CONTRACT = "v1";
-const REVIEW_MARKER_RE = /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ ]+) -->/;
-const AUDIT_MARKER_RE = /<!-- audit-pr:merge-ready sha=([0-9a-f]{40}) -->/;
+// The contract lives in the runtimes the skills call. This file used to define
+// `parseReview`, `newestReceipt`, `receiptStatus`, `GATE_NAMES`, `auditVerdict`,
+// `newestAuditComment` and `mergeCommentAction` locally — it proved a copy of
+// the rule while `review-change` and `audit-pr` executed prose. The assertions
+// below are unchanged; only their subject is, so a regression in the runtime the
+// workflow actually runs now fails here (#182).
+import {
+  GATE_NAMES,
+  auditVerdict,
+  hygieneFromState,
+  mergeCommentAction,
+  newestAuditComment,
+} from "./audit-pr-gate.mjs";
+import { receiptStatus, renderReceiptBody } from "./review-receipt.mjs";
 
-const reviewBody = ({ sha, scope, axes, coverage, invariants, proposals, manual }) =>
-  [
-    `<!-- review-change:pass sha=${sha} contract=${REVIEW_CONTRACT} -->`,
-    "## review-change: REVIEW-PASS",
-    "",
-    `- Reviewed head: \`${sha}\``,
-    `- Scope and applicable axes: ${scope}`,
-    `- Acceptance coverage: ${coverage}`,
-    `- Architectural invariants: ${invariants}`,
-    "- Current-unit findings open: 0",
-    `- Future-capability proposals: ${proposals}`,
-    `- Manual verification: ${manual}`,
-    "",
-  ].join("\n");
-
-const parseReview = (body) => {
-  const match = REVIEW_MARKER_RE.exec(body ?? "");
-  if (!match) return null;
-  return { sha: match[1], contract: match[2] };
-};
-
-const newestReceipt = (comments) => {
-  const list = comments ?? [];
-  for (let i = list.length - 1; i >= 0; i--) {
-    const receipt = parseReview(list[i].body);
-    if (receipt && receipt.contract === REVIEW_CONTRACT) return receipt;
-  }
-  return null;
-};
-
-const receiptStatus = (comments, headSha) => {
-  const receipt = newestReceipt(comments);
-  if (!receipt) return { status: "absent", reason: "no REVIEW-PASS marker" };
-  if (receipt.sha !== headSha) return { status: "stale", reason: `receipt at ${receipt.sha}, head is ${headSha}` };
-  return { status: "current", reason: `receipt current at ${headSha}` };
-};
-
-const GATE_NAMES = [
-  "acceptance-coverage",
-  "phases-complete",
-  "scope-creep",
-  "docs-updated",
-  "traceability",
-  "ci",
-  "mergeability",
-  "closure",
-  "descope",
-  "invariants",
-];
-
-const auditVerdict = ({ comments, headSha, gates = {} }) => {
-  const status = receiptStatus(comments, headSha);
-  if (status.status !== "current") {
-    return {
-      verdict: "BLOCKED",
-      reason: status.reason,
-      route: "/review-change",
-      gatesEvaluated: false,
-      blockers: [status.reason],
-    };
-  }
-  const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass")
-    .map((name) => `gate ${name} failed`);
-  if (blockers.length > 0) {
-    return { verdict: "BLOCKED", reason: blockers.join("; "), route: null, gatesEvaluated: true, blockers };
-  }
-  return { verdict: "MERGE-READY", reason: "receipt current; every applicable gate passes", route: null, gatesEvaluated: true, blockers: [] };
-};
-
-const newestAuditComment = (comments) => {
-  const list = comments ?? [];
-  for (let i = list.length - 1; i >= 0; i--) {
-    const match = AUDIT_MARKER_RE.exec(list[i].body ?? "");
-    if (match) return match[1];
-  }
-  return null;
-};
-
-const mergeCommentAction = ({ verdict, comments, headSha }) => {
-  if (verdict !== "MERGE-READY") return { action: "none", reason: "BLOCKED posts no comment (no stale green flag)" };
-  const marker = newestAuditComment(comments);
-  if (marker === headSha) return { action: "skip", reason: "same SHA already commented — idempotent by SHA marker" };
-  return { action: "post", reason: "newest marker wins; older SHA re-comments" };
-};
+/** The receipt body builder, by its historical name in this file. */
+const reviewBody = renderReceiptBody;
 
 const EMPTY = {};
 
@@ -235,3 +164,52 @@ test("pure: identical inputs yield identical verdicts and actions (no forge stat
 });
 
 console.log("PASS audit-pr receipt: current/absent/stale verdicts, gate evaluation, idempotent SHA-bound comment, zero re-review, zero forge calls");
+
+// ---------------------------------------------------------------------------
+// Terminal hygiene (issue #182) — the gates that had no owner at merge time
+// ---------------------------------------------------------------------------
+
+test("hygiene gates are part of the closed gate set, so an unread one fails closed", () => {
+  for (const name of ["tree-clean", "branch-pushed", "pr-ready"]) {
+    assert.ok(GATE_NAMES.includes(name), `${name} is a required gate`);
+  }
+  const sha = "a".repeat(40);
+  const reviews = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const allPass = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const dirty = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "tree-clean": "fail" } });
+  assert.equal(dirty.verdict, "BLOCKED");
+  assert.deepEqual(dirty.blockers, ["gate tree-clean failed"]);
+  // Omitting hygiene entirely is the same failure, never a silent pass.
+  const omitted = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "pr-ready": undefined } });
+  assert.deepEqual(omitted.blockers, ["gate pr-ready failed"]);
+});
+
+test("hygieneFromState: a clean, pushed, ready terminal state passes every hygiene gate", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: false });
+  assert.deepEqual(state.gates, { "tree-clean": "pass", "branch-pushed": "pass", "pr-ready": "pass" });
+  assert.deepEqual(state.blockers, []);
+  assert.deepEqual(state.repairs, []);
+});
+
+test("hygieneFromState: a dirty tree names every path and offers no repair — it is the author's to fix", () => {
+  const state = hygieneFromState({ treePorcelain: " M docs/LOGS.md\n?? tmp/scratch\n", branchAhead: 0, isDraft: false });
+  assert.equal(state.gates["tree-clean"], "fail");
+  assert.equal(state.blockers.length, 1);
+  assert.match(state.blockers[0], /docs\/LOGS\.md/);
+  assert.match(state.blockers[0], /tmp\/scratch/);
+  assert.deepEqual(state.repairs, [], "only the draft flag has a mechanical repair");
+});
+
+test("hygieneFromState: an unpushed branch blocks and is not silently pushed", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 3, isDraft: false });
+  assert.equal(state.gates["branch-pushed"], "fail");
+  assert.match(state.blockers[0], /3 commit/);
+  assert.deepEqual(state.repairs, []);
+});
+
+test("hygieneFromState: a draft PR blocks and offers the one mechanical repair", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: true });
+  assert.equal(state.gates["pr-ready"], "fail");
+  assert.ok(state.blockers.some((b) => /draft/i.test(b)));
+  assert.deepEqual(state.repairs, ["gh pr ready"], "audit-pr flips the draft flag rather than reporting it");
+});

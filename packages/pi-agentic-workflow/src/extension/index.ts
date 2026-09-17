@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -127,11 +128,22 @@ function toRegistrar(pi: ExtensionAPI): CommandRegistrar<PiModel> {
   };
 }
 
+/**
+ * `git status --porcelain` for the settled-turn hygiene notice. A directory that
+ * is not a repository, or a missing git, reads as clean: the notice is
+ * best-effort and must never fail a turn.
+ */
+function readGitStatus(cwd: string): string {
+  const result = spawnSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8" });
+  if (result.error || result.status !== 0) return "";
+  return result.stdout ?? "";
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
 
-  const { router } = createExtension<PiModel>({
+  const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi),
     // Resolved per call: the router must never hold a session-bound object
     // between turns, because Pi can hand a new session to the same extension.
@@ -162,7 +174,20 @@ export default function extension(pi: ExtensionAPI): void {
 
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
-  pi.on("agent_settled", (_event, ctx) => void router.settle(toInvocationContext(ctx)));
+  // The inline-receipt path is impossible: a `gh pr comment` carrying a
+  // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
+  // names the script that proves the receipt landed (issue #182).
+  pi.on("tool_call", (event) => {
+    const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    return guards.receiptGuard({ toolName: event.toolName, command });
+  });
+  pi.on("agent_settled", (_event, ctx) => {
+    void router.settle(toInvocationContext(ctx));
+    // Terminal hygiene is said out loud once the turn is over; a clean tree
+    // stays silent. This never blocks and is best-effort by construction.
+    const warning = guards.dirtyWorktreeWarning(readGitStatus(ctx.cwd));
+    if (warning) ctx.ui.notify(warning, "warning");
+  });
 }
 
 // Exported so the settings console (P4) names the same command without relisting it.

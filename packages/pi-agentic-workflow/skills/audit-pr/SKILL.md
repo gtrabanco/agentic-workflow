@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 5.1.0
+version: 5.2.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -34,6 +34,8 @@ independently evaluates only the delivery gates below.
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
   acceptance coverage/manual checks acknowledged without re-review
+✓ Terminal hygiene was read from state, not assumed: tree clean, branch pushed,
+  PR not a draft (`bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply`)
 ✓ Upstream lineage was re-verified (current plan receipt + parent spec receipt,
   digests recomputed), every obligation row is `verified`/`n/a`, and no planning
   finding is open — stale or missing lineage is a blocker, never a formality
