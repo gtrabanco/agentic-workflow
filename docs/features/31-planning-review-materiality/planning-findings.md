@@ -362,3 +362,32 @@ that section's sentences. Repair owner: `design-feature
 revision. The plan-stage rows R31-01/R31-02/R31-03 stay `open` for
 `plan-feature`'s re-derivation batch (plan re-cut + `ACCEPTANCE.md` re-freeze
 once a fresh `SPEC-REVIEW-PASS` receipt exists).
+
+---
+
+## Re-review (`spec-review-31-9`, 2026-09-17)
+
+Cycle-6 independent re-review of the Product half the `31-spec-8` repair batch
+rewrote — the route `spec-review-31-8` named for N31-014. Fresh context; this
+conversation never authored or edited the Product half → `contextClean: true`.
+Snapshot `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507` @
+source revision `6084983b99dceccaaab316c89c1f99e7438a28f2` (`spec-product-v1`
+digest `9f22563ea1148fac99806ef9847b4e9b48e72e6c5a7e1d1619a5f67540f79474`,
+46004 bytes); handoff label `31-spec-8`. Verdict: **`spec-review-pass`** —
+14/14 checks pass, **zero findings**, `material open: 0`. N31-014 is verified
+repaired at `31-spec-8`: AC7's new `grep -n "no cycle cap or anomaly rule"
+skills/pre-execution-review/references/POLICY.md` hits `POLICY.md:82` (exit 0,
+fragment unique in `skills/`) with the sentence standing, so it discriminates
+removal alongside the `:61` and `:83` greps; the §3 grep (`:42`), both
+`CHECKS.md`, both `OUTPUT.md`, `LEDGERS.md` §3 and REPAIR §4 (`:64`/`:71`)
+likewise all discriminate. N31-012/N31-013 stay `resolved` at `31-spec-7`;
+N31-009/N31-010/N31-011 at `31-spec-6`; N31-006/N31-007/N31-008 at
+`31-spec-5`; N31-004/N31-005 at `31-spec-4`; N31-001/N31-002/N31-003 at
+`31-spec-2`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+
+No finding row: this review found no gap in the Product half. The plan-stage
+rows R31-01/R31-02/R31-03 stay `open` for `plan-feature`'s re-derivation batch
+(plan re-cut + `ACCEPTANCE.md` re-freeze), which this PASS receipt now unlocks.
