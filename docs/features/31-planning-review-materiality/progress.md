@@ -1475,3 +1475,72 @@ cycle requires the user's instruction.
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
 
 
+
+## Repair batch (`31-spec-5`, 2026-09-17)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "repair N31-006 + N31-007 + N31-008: make AC7's two
+POLICY §4 removal greps discriminate (targets are line-wrapped — match a
+single-line fragment), add a criterion for the four skill version: bumps +
+README cells, and correct In-scope 5's \"keep only\" framing to name the
+authored remainder". Trigger: the `spec-review-31-5` receipt (FAIL, checks
+C1/C8/C10; N31-006 medium + N31-007 low + N31-008 info, all product). One
+batch over the whole open spec-stage set; the plan-stage rows R31-01/02/03
+stay with `plan-feature`.
+
+**Cycle accounting (D-31-7):** this is the third consecutive unconverged cycle
+of the window the carrier amendment opened (FAIL `spec-review-31-4` → repair
+`31-spec-4` → FAIL `spec-review-31-5` → this batch). The commission above is
+the explicit user instruction D-31-7 requires for a third cycle, issued in
+answer to the `spec-review-31-5` hand-off that named exactly this command and
+gate. The window's `CONVERGENCE-ANOMALY` block was printed on entry to cycle
+2 (reproduced in the `spec-review-31-5` receipt); POLICY §4's anomaly rule
+scopes to second-cycle entry, so no new block is due for the user-keyed third
+cycle (REPAIR §4: a repair responding to a persisted verdict is never a loop
+defect).
+
+Repairs (classes in SPEC `## Amendments` `31-spec-5` + `decisions.md`):
+
+- **N31-006** — AC7's two POLICY §4 removal greps re-pointed at single-line
+  fragments verified present at `4cf755ab` (`POLICY.md:83`, `POLICY.md:61`;
+  both unique in `skills/`, both exit 0 with the sentences standing) — the
+  greps now discriminate removal.
+- **N31-007** — new **AC14** (four skill `version:` bumps via pathspec-limited
+  diff ≥ 8 hunk lines, semver-minor per #176, CHANGELOG rows, README
+  `## The skills` cells); In-scope 7 pointer + Integration row
+  "Versioning/release surfaces" + Spec-lint AC list updated.
+- **N31-008** — In-scope 5 reframed to the **authored remainder** (authored
+  fresh: materiality line, report-note persistence, anti-deflation,
+  third-cycle rule; preserved byte-unchanged: `CONVERGENCE-ANOMALY` block +
+  receipt-literal lines); AC7 kept-side greps untouched.
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`, head
+`4cf755ab`): `node scripts/pre-execution-snapshot.mjs verify --stage spec
+--unit 31-planning-review-materiality` → exit 4 (receipt not current — the
+open FAIL receipt is this batch's input), `digestMatches: true` (the FAIL
+receipt binds the bytes on disk). Architectural invariants: `n/a: no project
+invariants declared` (NRS F010); AD-008 preserved by D-31-5 (unchanged). The
+frozen `ACCEPTANCE.md` is not touched (plan-feature's owning artifact,
+superseded set, re-cut on a fresh PASS).
+
+Spec-lint product boxes re-run after the edits: all PASS (placeholders none;
+out-of-scope 7 bullets; closure rows complete; integration 14/14 derived
+subsystems; role matrix 5×5; sweep 19/19 resolved; every in-scope item → ≥ 1
+AC — item 7 now AC10 + AC11 + AC14; every AC runnable or `read-verified`;
+deferred decisions `none`).
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-5 · Rows checked: 8 evidence rows (batch) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact revision rotates `31-spec-4` → **`31-spec-5`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+
+Post-edit selector check (readiness box 1): `node
+scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+31-planning-review-materiality` re-derived the `spec-product-v1` projection
+from the new bytes (observedDigest `b9d4d6f6…`), reporting exactly the
+declared by-design state — `fresh: false`, "bound artifact bytes moved since
+the receipt", `changedPaths: [SPEC.md]`.

@@ -386,3 +386,88 @@ unchanged.
 | `LEDGERS.md` §3 carries "`info` is the only immaterial one." | repository | `skills/pre-execution-review/references/LEDGERS.md:93` (sole hit) | `c5a6e173` @ 2026-09-17 | current | proven | — |
 | `normative-drift` reads POLICY.md's versioned blocks, skill `SKILL.md` hand-offs and the turn contract — neither CHECKS.md nor OUTPUT.md, and no materiality sentence | repository | `scripts/normative-drift.test.mjs:76,324,343,366` | `c5a6e173` @ 2026-09-17 | current | proven | — |
 | `check-skill-context.mjs` checks context budgets only (the corrected Integration row names it for that role) | repository | `scripts/check-skill-context.mjs` (budget walk); N31-004 finding evidence | `c5a6e173` @ 2026-09-17 | current | proven | — |
+
+## 2026-09-17 — Product repair batch (design-feature, artifact revision `31-spec-5`)
+
+Trigger: `spec-review-31-5` returned `SPEC-REVIEW-FAIL` (failed checks C1, C8,
+C10) with N31-006 (medium) + N31-007 (low) + N31-008 (info), all `product` —
+one batch over the whole set, repair owner `design-feature`, user-commissioned
+as "repair N31-006 + N31-007 + N31-008: make AC7's two POLICY §4 removal
+greps discriminate (targets are line-wrapped — match a single-line fragment),
+add a criterion for the four skill version: bumps + README cells, and correct
+In-scope 5's \"keep only\" framing to name the authored remainder".
+
+**Cycle authorization (D-31-7).** This is the spec stage's third consecutive
+unconverged cycle in the window the carrier amendment opened
+(`spec-review-31-4` FAIL #1 → `31-spec-4` batch → `spec-review-31-5` FAIL #2 →
+this batch). D-31-7 keys a third cycle to explicit user instruction; the
+commission quoted above is that instruction, issued in direct answer to the
+`spec-review-31-5` receipt's hand-off (which named this exact command and the
+third-cycle gate). Recorded per REPAIR §4: a repair responding to a persisted
+verdict is never a loop defect; the window's `CONVERGENCE-ANOMALY` block was
+printed on entry to cycle 2 and is reproduced in the `spec-review-31-5`
+receipt — POLICY §4's anomaly rule scopes to second-cycle entry, so no new
+block is due for a user-keyed third cycle.
+
+Repair classes (REPAIR §2):
+
+- **N31-006 — closure completion (autonomous; reviewed product intent
+  unchanged).** AC7's two POLICY §4 removal greps could not match their
+  line-wrapped targets, so they passed whether or not the sentences were
+  removed. They now match single-line fragments verified present at branch
+  head `4cf755ab` (evidence rows below): `grep -n "no cap converts a verdict
+  into a"` hits `POLICY.md:83` (the sentence's tail "dead end." wraps to
+  `:84`), and `grep -n "cycle is allowed when correctness needs it"` hits
+  `POLICY.md:61` — the second line of the wrapped "Entering a **second** cycle
+  is allowed …" sentence (`:60-61`) and the fragment tied to the permissive
+  semantics the shrink removes, so the authored cap text does not resurrect
+  it. Both fragments are unique in `skills/`. Each grep now exits 0 while the
+  sentence stands and non-zero after the shrink — the criterion discriminates.
+  The full-sentence patterns are gone from the AC (they were the defect).
+- **N31-007 — closure completion (the obligation was already In-scope 7's
+  declared content; only its criterion was missing).** New **AC14**: a
+  pathspec-limited `git diff main` over the four touched `SKILL.md` files must
+  carry one removed + one added `version:` line per file (≥ 8 hunk lines — a
+  skill whose version did not move contributes no hunk; `bump-skill`'s
+  guardrail keeps everything else out of those files, so the hunk is exactly
+  the bump), each old→new pair a semver-minor increment per the #176 freeze,
+  `CHANGELOG.md` gaining one per-skill row per bumped skill (the AC10
+  `normative-drift` version-tables check recomputes those tables against the
+  frontmatter `version:` lines, so a moved version without its row fails
+  AC10), and the README `## The skills` cells for the four touched skills
+  accurate post-shrink (`bump-skill`'s update-not-rewrite surface;
+  `pre-execution-review` is narrative-only in README — no version cells exist
+  in README, the cells are description-accuracy cells). In-scope 7's AC
+  pointer (`AC10 + AC11 + AC14`) and the Integration-closure row
+  "Versioning/release surfaces" Test cell carry the new criterion. No scope
+  widened: the bumps/CHANGELOG/README surfaces were already In-scope 7 and the
+  derived-surfaces declaration.
+- **N31-008 — mechanical, intent-preserving.** In-scope 5's "keep only"
+  framing presented authored prose as preserved prose. The item now names the
+  **authored remainder**: the anti-deflation judgment ("`medium` minimum"),
+  the human-keyed third-cycle rule and the report-note persistence contract
+  (with the planning materiality line — material = `medium`+; `low` is a
+  report-note — replacing the removed sentences) are written fresh by this
+  feature; only the `CONVERGENCE-ANOMALY` block and the receipt-literal lines
+  are preserved byte-unchanged. This row also corrects the prior decisions'
+  "stays" framing by record (decisions are append-only): the remainder of
+  In-scope item 5 is authored, not preserved — the earlier batches' intent was
+  always the authored state AC7's kept-side greps require; only the wording
+  misstated it. AC7's kept-side greps are unchanged (the reviewer verified
+  they are correct).
+
+No new product decision is taken: the repairs stay inside intent the SPEC
+already records (In-scope items 5 and 7, AC7, D-31-2/D-31-7); the decision set
+D-31-1…D-31-8 is unchanged.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| POLICY §4's "no cap converts a verdict into a (dead end.)" sentence wraps across `:83-84`; the fragment "no cap converts a verdict into a" sits wholly on `:83` and is unique in `skills/` — the replacement AC7 grep exits 0 with the sentence standing | repository | `grep -n "no cap converts a verdict into a" skills/pre-execution-review/references/POLICY.md` → `83:` (exit 0, sole hit); `sed -n '83,84p'` (wrapped sentence) | branch head `4cf755ab` @ 2026-09-17 | current | proven | — |
+| POLICY §4's "Entering a **second** cycle is allowed when correctness needs it …" sentence wraps across `:60-61`; the fragment "cycle is allowed when correctness needs it" sits wholly on `:61`, is unique in `skills/`, and carries the permissive semantics the cap replaces — the replacement AC7 grep exits 0 with the sentence standing | repository | `grep -n "cycle is allowed when correctness needs it" skills/pre-execution-review/references/POLICY.md` → `61:` (exit 0, sole hit); `sed -n '60,61p'` (wrapped sentence) | `4cf755ab` @ 2026-09-17 | current | proven | — |
+| The four touched skills' current `version:` lines: `pre-execution-review` 2.2.1, `review-spec` 1.7.1, `review-plan` 1.6.1, `design-feature` 3.4.0 — AC14's ≥ 8 hunk-line anchor discriminates because `bump-skill` changes nothing else in a SKILL.md, so a non-bumped skill contributes no `^[+-]version: ` hunk | repository | `grep -m1 '^version:' skills/<name>/SKILL.md` ×4; `skills/bump-skill/SKILL.md` guardrail "Never change anything in a SKILL.md except the `version:` line" | `4cf755ab` @ 2026-09-17 | current | proven | — |
+| `CHANGELOG.md`'s per-skill tables are the source of truth for per-version changes, and `normative-drift` recomputes the version tables against the frontmatter `version:` lines (rendered-facts `version-tables` claim) — so a moved version without a CHANGELOG row fails AC10's pack, and AC14's row check reads the diff | repository | `CHANGELOG.md:3-5` (per-skill tables preamble); `CLAUDE.md` rendered-facts table (`CHANGELOG.md \| version-tables \| frontmatter:version \| equals-each`); `scripts/normative-drift.test.mjs` | `4cf755ab` @ 2026-09-17 | current | proven | — |
+| README has no version cells: the "skills tables" are the per-stage description tables (`## The skills`) — `design-feature` (table cell), `review-spec`, `review-plan` (table cells), `pre-execution-review` (narrative-only, `user-invocable: false`) — and `bump-skill` keeps them accurate (update-not-rewrite) — AC14's README leg is a description-accuracy walk, not a version read | repository | `README.md:84-147` (per-stage tables; `pre-execution-review` narrative at `:89`); `skills/bump-skill/SKILL.md` ("The `README.md` skills and model tables are accurate"; "prefer updating over rewriting") | `4cf755ab` @ 2026-09-17 | current | proven | — |
+| Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-5` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `4cf755ab`) | `4cf755ab` @ 2026-09-17 | current | proven | — |
+| Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the 31-spec-4 batch — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batch `31-spec-4`, 2026-09-17) | — | current | proven | — |
