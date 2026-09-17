@@ -23,10 +23,13 @@ rotates). Basis: issue [#171](https://github.com/gtrabanco/agentic-workflow/issu
 
 ## Size
 
-`M` — one concern (planning-side loop rules) spread across several skill
-reference files plus their test pins; full artifact set in planning. No split
-trigger fires: well under 5 phases, one layer (docs + test pins), and every
-product decision is resolved by the issue (D-31-1…D-31-5).
+`M` — one concern (planning-side loop rules) whose carrier is now **code**
+(D-31-6): the schema package's finding record + materiality predicate, the
+snapshot verify exit code and closed freshness codes, the orchestrator's cap
+refusal, phase-lint, plus the prose shrink to the non-computable remainder and
+their pins. Full artifact set in planning. No split trigger fires: well under 5
+phases, one concern across code + docs layers, and every product decision is
+resolved by the issue and ruling (D-31-1…D-31-5 + D-31-6…D-31-8).
 
 ## Dependencies
 
@@ -88,6 +91,21 @@ encodes: **minor findings are recorded and visible; only substantive findings
 gate**; and a loop that cannot converge stops and asks a human instead of
 cycling.
 
+**Carrier ruling (D-31-6, 2026-09-17).** After the 2026-09-17 review-cost audit,
+the owner ruled that the materiality predicate, the two-cycle cap and the
+wording-only route move **into code**: the finding record's
+`class`/`severity`/`reproducer` plus `pre-execution-snapshot.mjs verify`'s exit
+code and closed reason codes carry the predicate; the orchestrator's transition
+decider refuses to advance past the cap; phase-lint keeps the plan layer honest;
+prose shrinks to what is not computable (the anti-deflation judgment, the
+human-keyed third cycle, the intent half of a wording-only determination). The
+four frozen semantics are unchanged and restated verbatim in Scope. The domain
+already runs review this way at the machine layer: required status checks must
+pass before a pull request can be merged (GitHub Docs, fetched 2026-09-17), and
+static-analysis findings are machine-computed and surfaced inside human review
+at platform scale (Tricorder, https://research.google/pubs/pub43322/, fetched
+2026-09-17).
+
 ### Business goals
 
 Internal/technical feature; the outcome it serves is workflow economics and
@@ -105,349 +123,407 @@ review honesty, not a market:
 
 #### In scope
 
-Affected surfaces (the issue's list, verified on this branch): the
-`planning-findings` severity semantics in
-`skills/pre-execution-review/references/LEDGERS.md`; the pass conditions in
-`skills/review-spec/references/CHECKS.md` + `skills/review-plan/references/CHECKS.md`
-(both currently say "Material = anything above `info`"); the verdict/loop text in
-`skills/review-spec/references/OUTPUT.md` + `skills/review-plan/references/OUTPUT.md`;
-`skills/pre-execution-review/references/POLICY.md` §3 (wording-only consequence)
-and §4 (hard cap); `skills/design-feature/references/REPAIR.md` §4; the
-discipline-test pins in `scripts/review-loop-discipline.test.mjs` (updated,
-never weakened); per-skill version bumps + CHANGELOG rows; the README
-`## References` append at shipping time.
+Primary carrier — the machine surfaces D-31-6 names (all verified at branch head
+`a400b978`):
 
-Plus the **derived surfaces** every one of those edits drags in, declared here
-so AC8's scope guard walks them instead of reporting them as violations: the Pi
-package mirror (`packages/pi-agentic-workflow/skills/**`, written only by the
-bundler), the four edited skills' `version:` lines, the README skill-table cells
-the `bump-skill` step rewrites, and the `CHANGELOG.md` rows.
-
-Plus the **workflow-mutated record surfaces** the workflow itself writes into
-every unit PR, declared per `verification-contract` §Validator stability (a
-diff-based validator never gates on surfaces other workflow actors mutate; it
-excludes them explicitly) so AC8's whole-diff guard is satisfiable by the
-correct implementation and stays closed: the unit's own records under
-`docs/features/31-planning-review-materiality/**` (SPEC, plan set, planning
-ledgers, `progress.md`, `testing.md`), the unit's `docs/features/ROADMAP.md`
-row, and `docs/LOGS.md` session-log appends. Every path in the PR diff must
-belong to one of the three declared groups; any path outside them remains a
-scope violation.
-
-1. **Materiality line moves on the planning side**: in the `planning-findings`
-   ledger semantics, material = `medium`+; a `low` finding becomes a
-   **report-note** — persisted and visible in the ledger, non-blocking, and
-   never a re-review trigger by itself; `info` stays immaterial → AC1 + AC2.
-2. **Anti-deflation carries over verbatim**: a real defect mislabeled `low`
-   classifies at `medium` minimum, and deflating a severity to dodge a review
-   is itself a review defect — stated in the planning-side surfaces → AC3.
-3. **Hard two-cycle cap** on the spec/plan repair loop: the second cycle prints
-   the existing `CONVERGENCE-ANOMALY` block (shape unchanged) before any
-   further edit; a third cycle never starts without explicit user instruction;
-   an unconverged loop ends in `NEEDS-DESIGN` routed to the human (existing
-   verdict vocabulary, no new terminal label) → AC4 + AC5 + AC7.
-4. **Wording-only route**: a POLICY §3 wording-only determination (intent,
-   obligation identity, phase topology, validators, and authority all
-   unchanged) routes a cosmetic repair batch **without** a full snapshot
-   re-review; the determination is recorded in the unit's evidence and
-   `artifactRevisionId` still rotates → AC6.
-5. **Discipline-test pins updated, never weakened, and provably present**: the
-   planning-side pins (report-note semantics, cap, anti-deflation, wording-only
-   route) are added to `scripts/review-loop-discipline.test.mjs` as rows of one
-   declared pin table carrying a row floor and a discrimination leg — every pin
-   must **reject the sentence it supersedes**, so a pin that is absent, empty,
-   or trivially true cannot leave the suite green — and a frozen validator
-   checks the table's presence at the PR head; every existing assertion keeps
-   its strength → AC9 + AC11 + AC14.
-6. **Bibliography obligation** (issue #171): when this ships, the Jin & Chen
+1. **The schema finding record carries the materiality predicate**: the finding
+   record in `packages/agentic-workflow-schema/src/pre-execution-contract.ts`
+   (`PreExecutionReviewFindingV1`: `severity` `info|low|medium|high|critical`,
+   `class` `product|plan|source|environment|runtime`, `claim`, `evidenceRefs`,
+   `verification`, `resolution`) gains a bounded **`reproducer`** field (the
+   machine-checkable way to re-demonstrate the finding), and the runtime rule
+   that computes materiality (`pre-execution.ts` `const material =
+   finding.severity !== "info"`) becomes **material = `medium`+** — a PASS may
+   coexist with open/unverified `low` rows (report-notes) but never with an
+   open/unverified `medium`+ row → AC1 + AC2 + AC3.
+2. **The wording-only route rides the closed freshness/reason codes**: the
+   snapshot verify distinguishes, through `PRE_EXECUTION_FRESHNESS_CODES` (10
+   closed codes) and its exit codes (0 current · 3 no receipt · 4 receipt not
+   current · 1 usage), a **wording-only movement** (revision rotated,
+   determination recorded, acceptance fingerprint and bound material bytes
+   unmoved → still current, no re-review owed) from **material movement**
+   (`stale-artifact-content` → re-review owed); the determination record and
+   the `artifactRevisionId` rotation are enforced by the same predicate —
+   neither is skippable → AC4.
+3. **The orchestrator refuses to advance past the cap**: the transition decider
+   (`decideWorkflowAction` over `WORKFLOW_TRANSITION_TABLE`, rows
+   `review-spec`/`review-plan`) refuses a third consecutive unconverged
+   review→repair→re-review cycle (stop + the human route named); a PASS resets
+   the count; an unconverged loop ends in the existing `needs-design` verdict
+   where the verdict vocabulary sanctions it (spec stage) and in the refusal +
+   `design-feature` routing at the plan stage (the machine map does not
+   sanction a plan-stage `needs-design` receipt — fix/162) → AC5 + AC7.
+4. **Phase-lint keeps the plan layer honest**: the re-cut plan set expresses
+   the loop rules through machine-checkable done-whens (run-and-paste
+   `pre-execution-snapshot.mjs verify` exit codes), and the plan set passes
+   `bun scripts/phase-lint.mjs` at the PR head — plans mirror machine
+   surfaces, never prose recitations → AC6.
+5. **Prose shrinks to the non-computable remainder**: `POLICY.md` §3/§4, both
+   `CHECKS.md`, both `OUTPUT.md`, `LEDGERS.md` §3 and
+   `design-feature/references/REPAIR.md` §4 lose the sentences the machine now
+   owns ("`info` is the only immaterial one", "Material = anything above
+   `info`", the unbounded-cycle sentences, the mandate of a re-review for every
+   batch) and keep only: the anti-deflation judgment ("`medium` minimum";
+   deflation is itself a review defect), the human-keyed third-cycle rule
+   ("third cycle never starts without explicit user instruction"), the
+   report-note persistence contract in the ledger, the `CONVERGENCE-ANOMALY`
+   block (byte-unchanged), and the receipt-literal lines (byte-unchanged)
+   → AC7.
+6. **Discipline pins re-aimed at the code, never weakened**: the planning-side
+   pins in `scripts/review-loop-discipline.test.mjs` keep the machine rule
+   honest (they pin the schema predicate, the verify outcomes, the decider
+   refusal — not prose sentences); every existing assertion keeps its strength
+   → AC8 + AC9.
+7. **Version bumps + release surfaces**: the schema package (additive minor)
+   and the touched skills (`pre-execution-review`, `review-spec`,
+   `review-plan`, `design-feature` — minor per the #176 freeze) bump in the
+   same PR with CHANGELOG rows and README skill-table cells; the Pi mirror is
+   re-bundled from the package that owns the bundler
+   (`cd packages/pi-agentic-workflow && bun run bundle:skills`) → AC10 + AC11.
+8. **Bibliography obligation** (issue #171): when this ships, the Jin & Chen
    entry appends to `README.md` under a bottom `## References` section (created
    if absent, deduped against other features' entries) — in the implementation
-   PR, never before → AC13.
+   PR, never before → AC12.
+
+Plus the **declared allowed-set groups** the PR diff may carry, declared so the
+scope guard walks them instead of reporting them as violations → AC13:
+
+- **Code carriers**: `packages/agentic-workflow-schema/**` (sources, tests, and
+  the generated Draft-07 projections the package's generators rewrite),
+  `scripts/pre-execution-snapshot.mjs`,
+  `scripts/review-loop-discipline.test.mjs`, `scripts/phase-lint.mjs`.
+- **Prose-shrink surfaces + derived surfaces**: the named skill reference files
+  under `skills/**`; the touched skills' `version:` lines; the README
+  skill-table cells; `CHANGELOG.md`; the Pi mirror under
+  `packages/pi-agentic-workflow/skills/**` (written only by the bundler).
+- **Workflow-mutated record surfaces** (per `verification-contract`
+  §Validator stability): the unit's own records under
+  `docs/features/31-planning-review-materiality/**`, the unit's
+  `docs/features/ROADMAP.md` row, and `docs/LOGS.md` session-log appends.
+
+Every path in the PR diff must belong to one of the three declared groups; any
+path outside them remains a scope violation.
 
 #### Out of scope / non-goals
 
-- The **union rule** (one material finding from one reviewer keeps the set
-  open), **counter-evidence dismissal** (POLICY §2), **reviewer independence**
-  (§1), and **snapshot binding** are preserved — the POLICY diff touches only
-  §3/§4 hunks → AC8.
-- **No new severity vocabulary**: the receipt severity set
-  (`info|low|medium|high|critical`) and the schema package stay untouched; only
-  the materiality line moves (`info` **and** `low` become immaterial; material
-  = `medium`+) → AC10.
+- **No new vocabulary values anywhere**: the severity set
+  (`info|low|medium|high|critical`), the five verdicts, the freshness codes, and
+  the decider's stop/sense codes keep their values (additions only where this
+  SPEC names them: the finding record's `reproducer` field and the cap-refusal
+  outcome); no contract-id rotation (`pre-execution-review-receipt@1` stays)
+  → AC9.
 - **Code-side review/fold behavior** (`review-change`, `review-implementation`,
   `fold-findings`, the review→fold loop) — unchanged; fix #159 owns it, and
-  `fold-findings` still never repairs a planning artifact (the boundary sentence
-  stays pinned).
-- **Repair-batch discipline unchanged**: one root-caused batch per findings
-  set; only the re-review consequence (item 4) and the loop bound (item 3)
-  change.
+  `fold-findings` still never repairs a planning artifact (the boundary
+  sentence stays pinned).
+- **Receipt binding and honesty machinery unchanged**: snapshots still bind
+  exact bytes with digest + artifact revision; author exclusion, context-clean
+  evidence, counter-evidence-bound dismissal, and reviewer independence are the
+  validator's existing rules — this amendment moves the materiality line and
+  the cap, nothing else in the receipt contract.
 - **No retroactive reclassification**: `low` rows already persisted in existing
   units' `planning-findings.md` keep their recorded semantics; units adopt the
-  new line at their next review cycle (legacy adoption stays
-  construct-never-coerce, POLICY §6).
+  new machine line at their next review cycle.
+- **The superseded plan set is not repaired**: `31-plan-1`/`31-plan-2`
+  (`PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`,
+  `planning-obligations.md`, `testing.md`) and its findings (`F01–F03`,
+  `R31-01…R31-03`) die with the carrier they describe; `plan-feature` re-cuts
+  the set from scratch (D-31-6).
 - **No aspirational citation**: nothing is appended to `README.md` before the
   implementation PR ships (evidence-grounding forward-looking-claim rule).
-- **Sensor/verify mechanics unchanged**: `pre-execution-snapshot.mjs` exit
-  codes, receipt schema, gate-rejection vocabulary, and the `verify --stage`
-  self-check keep their contracts; the wording-only route rides the existing
-  `artifactRevisionId` rotation rather than any new machinery.
+- **No tutorial edit**: `docs/workflow/` carries no severity statement today;
+  `audit-docs` owns inventory↔docs drift.
 
 ### Capability closure
 
-This repository ships workflow skills and their substrate — there is no UI and
-no API. A "surface" below is the skill reference text, ledger, or script that
-owns the behavior; the "test" is the deterministic pin or suite that guards it.
-Entities, capabilities, roles, and the integration inventory are the workflow's
-own; the derived inventory is recorded under Integration closure.
+This repository ships workflow skills plus the deterministic package and
+scripts that govern them — there is no UI and no API. A "surface" below is the
+schema type, script, ledger, or skill reference text that owns the behavior;
+the "test" is the deterministic suite or pin that guards it. Entities,
+capabilities, roles, and the integration inventory are the workflow's own; the
+derived inventory is recorded under Integration closure.
 
-**1. Entity closure** — three entities, all ledger/state records of the
-planning review loop:
+**1. Entity closure** — three entities, all records of the planning review loop:
 
-**E1 — Planning finding row (`planning-findings.md`)**
+**E1 — Planning finding record (schema `PreExecutionReviewFindingV1` + the
+`planning-findings.md` ledger row)**
 
-- Create (append) — reviewer turn appends rows, including `low` rows, which
-  become persisted, visible report-notes. Surface: `LEDGERS.md` §3 severity
-  semantics (column set unchanged; the materiality sentence moves; writer map
-  unchanged). Test: `bun test scripts/pre-execution-quality.test.mjs` +
-  the planning-side pins in `scripts/review-loop-discipline.test.mjs`.
-- Read/list — re-reviewing reviewer, the stage's author skill, and `audit-pr`
-  read the ledger. Surface: `LEDGERS.md` ownership-map row `planning-findings`
-  (unchanged readers). Test: `bun test scripts/ledger-ownership.test.mjs
-  scripts/ledger-provenance.test.mjs`.
-- Update (resolve) — only the stage's author resolves rows (unchanged); a
-  `low` report-note is resolvable by the author without any re-review. Surface:
-  `LEDGERS.md` §3 status semantics + the repair text of
-  `review-spec`/`review-plan`. Test: `review-loop-discipline` planning-side pin
-  (added by AC9).
-- Delete — n/a: reviewed rows are never deleted or edited to disappear
-  (`LEDGERS.md` §3); the append-only contract is what makes cycle counting
-  computable.
+- Create (file) — the reviewer turn files findings into the receipt (≤ 64,
+  unchanged) and appends ledger rows; `low` rows are persisted report-notes in
+  both, each carrying the bounded `reproducer` (the machine-checkable
+  re-demonstration of the claim). Surface: the finding record's fields in
+  `pre-execution-contract.ts` (`FINDING_SPEC`) + `LEDGERS.md` §3 writer map
+  (unchanged). Test: schema suite vectors (receipt validation; a finding
+  without evidence or a malformed reproducer is refused) +
+  `review-loop-discipline` pins.
+- Read/list — reviewers, the stage's author, and `audit-pr` read the ledger;
+  the machine reads the receipt record (snapshot builder, `verify`, sensor,
+  transition decider). Surface: `LEDGERS.md` ownership-map row
+  `planning-findings` (unchanged readers) + the snapshot/verify report. Test:
+  `ledger-ownership`/`ledger-provenance`/`pre-execution-sensor` suites.
+- Update (resolve) — only the stage's author resolves (unchanged); a `low`
+  report-note resolves without any re-review, and the machine enforces the
+  coexistence: a PASS with open/unverified `low` rows is valid, the same PASS
+  with an open/unverified `medium`+ row is refused (`verdict-mismatch`).
+  Surface: the runtime materiality rule in `pre-execution.ts` +
+  `pass-requires-resolved-material-findings`. Test: schema vectors (AC1) +
+  planning pins (AC8).
+- Delete — n/a: the ledger is append-only (`LEDGERS.md` §3) and receipts are
+  content-bound (immutable); nothing deletes a finding.
 - State transitions — status set stays `open | resolved | dismissed`; dismissal
-  still requires recorded counter-evidence (POLICY §2 unchanged). New semantic
-  transition only: severity `low` ⇒ report-note (non-material) — same row
-  shape, no new state, no new severity value. Test: AC1 + AC3 pins.
+  still requires recorded counter-evidence (validator rule
+  `dismissal-needs-counter-evidence`, unchanged). The only semantic change:
+  severity `low` ⇒ report-note (non-material) — same row shape, no new state,
+  no new severity value. Test: AC1 + AC2 + AC8.
 
-**E2 — Wording-only determination record**
+**E2 — Wording-only determination (machine half + judgment half)**
 
-- Create — the repair turn records the determination in the unit's frozen
-  evidence (a planning-evidence row) when it routes a cosmetic batch without a
-  re-review. Surface: `POLICY.md` §3 wording-only row (consequence updated) +
-  `LEDGERS.md` §1 planning-evidence home (existing). Test: AC6 anchor +
-  `review-loop-discipline` pin (added).
-- Read/list — reviewers, `audit-pr`, and later cycles read the recorded
-  determination from the frozen evidence rows. Surface: plan stage — the
-  unit's `planning-evidence.md` (M/L) or the SPEC's planning-evidence section
-  (XS/S); spec stage — the evidence rows in `decisions.md` (ledger ownership
-  map: the `decisions` ledger, writer `design-feature:product-decisions`).
-  Test: `bun test scripts/pre-execution-quality.test.mjs` (ledger home rules).
-- Update — n/a: evidence rows freeze at the write that minted them; a new
-  determination is a new row at a new revision.
-- Delete — n/a: append-only evidence; nothing prunes a determination.
-- State transitions — n/a: a determination is a record, not a stateful entity;
-  the only transition is record-once-at-repair-time.
+- Create — the repair turn produces both halves: the **machine half** is
+  computed (revision rotated, determination recorded, acceptance fingerprint
+  and bound material bytes unmoved → verify stays current without a re-review)
+  and the **judgment half** (intent and authority unchanged) is recorded as a
+  frozen evidence row in the unit's evidence home (plan stage:
+  `planning-evidence.md` M/L or the SPEC section XS/S; spec stage:
+  `decisions.md` evidence rows, writer `design-feature:product-decisions`).
+  Surface: `pre-execution-snapshot.mjs` verify + `PRE_EXECUTION_FRESHNESS_CODES`
+  + `LEDGERS.md` §1 evidence homes. Test: `pre-execution-sensor`/
+  `pre-execution-attribution` vectors (AC4).
+- Read/list — `verify`, the sensor, the orchestrator, and `audit-pr` read the
+  determination from the verify report and the frozen evidence. Surface: the
+  verify report (exit code + structural reason) + the evidence rows. Test:
+  AC4 + sensor suite.
+- Update — n/a: evidence rows freeze at the write that minted them; the
+  machine half is derived, recomputed at each verify run.
+- Delete — n/a: append-only evidence; derived values are never deleted.
+- State transitions — record-once-at-repair-time; the only observable
+  transition is the verify outcome flipping when a later material change moves
+  bound bytes (`stale-artifact-content` → re-review owed).
 
-**E3 — Repair/re-review cycle counter (spec and plan stages)**
+**E3 — Repair/re-review cycle state (spec and plan stages)**
 
-- Create — cycle count derives from persisted marks/receipts (review verdict
-  receipts and repair records across `progress.md` / `planning-findings.md`);
-  no new store, no new ledger. Surface: `POLICY.md` §4 cap text names its
-  counting basis. Test: `review-loop-discipline` cap pin (added).
-- Read/list — reviewer turns and drivers read the cycle number from the
-  persisted receipts before starting a cycle (mirrors `review-change`'s
-  "state the cycle" discipline). Surface: `review-plan/references/OUTPUT.md`
-  re-review field (`none — first cycle` exists today; `review-spec` equivalent).
-  Test: AC7 cap-mirror grep + AC9 pins.
-- Update — n/a: derived value, recomputed from persisted marks each cycle;
-  nothing writes a counter.
+- Create — the cycle count derives from persisted stage receipts (consecutive
+  FAIL-verdict receipts since the last PASS verdict for the stage); no new
+  store, no counter write. Surface: the receipts index `verify` already reads
+  + the decider's input. Test: cap vectors (AC5).
+- Read/list — reviewer turns and drivers read the count from the persisted
+  receipts; the orchestrator refuses on it; the sensor renders it. Surface:
+  `decideWorkflowAction` over the `review-spec`/`review-plan` table rows.
+  Test: AC5 + the schema transition suite.
+- Update — n/a: derived value, recomputed from persisted receipts.
 - Delete — n/a: derived value.
-- State transitions — cycle 1 → cycle 2 prints the existing
-  `CONVERGENCE-ANOMALY` block before any further edit; cycle 3 never starts
-  without explicit user instruction; an unconverged loop terminates in
-  `NEEDS-DESIGN` routed to the human (existing `pre-execution-verdict`
-  vocabulary — no new terminal label). Test: AC4 + AC5 + AC7.
+- State transitions — cycle N → N+1 while unconverged; the second unconverged
+  cycle prints the existing `CONVERGENCE-ANOMALY` block before any further
+  edit; a third never starts: the orchestrator refuses and names the human
+  route (explicit user instruction); an unconverged loop ends in the existing
+  **`needs-design`** verdict routed to the human where the verdict vocabulary
+  sanctions it (spec stage — `VERDICTS_BY_STAGE.spec`), and in the refusal +
+  `design-feature` routing at the plan stage (the machine map narrowed
+  plan-stage `needs-design` — fix/162); a PASS resets the count (D-31-7).
+  Test: AC5 + AC7.
 
 **2. Integration closure** — no live `docs/CAPABILITIES.md` exists (the file
 is the unseeded template), so the inventory below is **derived** from
 `CLAUDE.md` (repository layout, verification, packages, normalizer inventory)
 plus the `LEDGERS.md` ownership map, and walked one row per subsystem. Seeding
 `docs/CAPABILITIES.md` from the template is offered in this turn's closing
-block (user confirms; upsert-safe). Roles are derived in the role matrix below
-from the same sources.
+block (user confirms; upsert-safe).
 
 | Subsystem (derived) | Exists | How this feature integrates | Test |
 |---|---|---|---|
-| Skill reference docs (`skills/*/SKILL.md` + `references/`) | yes | `LEDGERS.md` severity semantics; `POLICY.md` §3 consequence + §4 cap; `review-spec`/`review-plan` CHECKS materiality line + pass conditions; `review-spec`/`review-plan` OUTPUT loop text; `design-feature` `REPAIR.md` §4 cap mirror | `bun scripts/check-skill-context.mjs` + `scripts/normative-drift.test.mjs` + AC1–AC7 greps |
-| Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | severity semantics move (low ⇒ report-note); row columns, writers, resolvers unchanged | `scripts/ledger-ownership.test.mjs` + `scripts/pre-execution-quality.test.mjs` + `scripts/ledger-provenance.test.mjs` |
-| Receipt/snapshot machinery (`pre-execution-snapshot.mjs`, schema package, sensor) | yes (read-only integration) | untouched: verdict blocks keep digest + `artifactRevisionId`; the wording-only route rotates the revision so mutate-and-revert stays detectable — no new machinery | schema suite + `scripts/pre-execution-sensor.test.mjs` green; AC10 |
-| Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` gains the planning-side pin table (report-note, cap, anti-deflation, wording-only) with its row floor and discrimination leg; existing pins keep strength | AC9 + AC11 + AC14 |
-| Normative surfaces (`CLAUDE.md` grammar tables) | yes (verify-only) | no new grammar: the `NEEDS-DESIGN` verdict and the `CONVERGENCE-ANOMALY` block are already machine-pinned; the cap introduces no new fenced block (verified at engineering — a new block would re-enter scope as a plan-time finding) | `scripts/normative-drift.test.mjs` green |
-| Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | `cd packages/pi-agentic-workflow && bun run bundle:skills` re-run after the last `skills/` edit, same PR (the bundler script lives in the package; no root `package.json`) | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC12) |
-| Schema package (`packages/agentic-workflow-schema/`) | yes (negative integration) | severity vocabularies untouched; no schema change of any kind | AC10 (diff empty + suite green) |
-| Versioning/release surfaces (per-skill `version:`, `CHANGELOG.md`, README tables) | yes | `bump-skill` run for each edited skill (minor bumps per the #176 freeze: breaking changes ship as minor with a BREAKING CHANGE footer; none expected here), CHANGELOG rows, README skill-table cells | AC13 + rendered-facts consistency (bump-skill output) |
-| README references (bibliography) | yes | the issue's citation obligation lands as a bottom `## References` append in the implementation PR — never before | AC13 grep at PR head |
-| Workflow tutorial + site guides (`docs/workflow/*`, `docs/site/guides/`) | partial | no severity statement exists in `docs/workflow/REVIEW_AND_CLASSIFY.md` (grep empty, 2026-09-17); generated guides change only if `docs/workflow/` prose changes | n/a here; `audit-docs` owns inventory↔docs drift |
-| GitHub templates / forge surfaces (`.github/`, issue/PR forms) | no | untouched by this feature | n/a — no surface exists to integrate with |
+| Schema package (`packages/agentic-workflow-schema/`) | yes | **Primary carrier**: finding record gains `reproducer`; materiality rule becomes `medium`+; decider refuses past the cap; additive minor release; projections regenerated by the package's own generators | schema suite + projection drift checks (`check:pre-execution-schemas`) |
+| Snapshot/verify machinery (`scripts/pre-execution-snapshot.mjs` + `PRE_EXECUTION_FRESHNESS_CODES`) | yes | **Primary carrier**: verify distinguishes wording-only movement from material movement; determination recorded; rotation enforced | `pre-execution-sensor` + `pre-execution-attribution` suites (AC4) |
+| Orchestrator decider + sensor (`decideWorkflowAction`, `WORKFLOW_TRANSITION_TABLE`, `scripts/workflow-status.mjs`) | yes | **Primary carrier**: cap refusal past two consecutive unconverged cycles; human route named; table rows `review-spec`/`review-plan` otherwise unchanged | schema transition vectors (AC5) + `workflow-status-pre-execution` suite |
+| Phase-lint (`scripts/phase-lint.mjs`, rule owner `skills/phase-contract/SKILL.md`) | yes | **Plan-layer carrier**: the re-cut plan set expresses loop rules as machine-checkable done-whens and passes the linter at the PR head | `bun scripts/phase-lint.mjs` on the unit's plan (AC6) |
+| Skill reference docs (`skills/*/references/`) | yes | Shrink-only: the computable sentences leave `POLICY.md` §3/§4, both `CHECKS.md`, both `OUTPUT.md`, `LEDGERS.md` §3, `REPAIR.md` §4; the judgment remainder stays | AC7 greps + `normative-drift` + context budgets |
+| Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | Persists `low` report-notes (append-only contract unchanged); row shape, writers, resolvers unchanged | `ledger-ownership` + `ledger-provenance` + `pre-execution-quality` suites |
+| Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` planning pins re-aim at the code carriers; existing assertions keep strength | AC8 + AC9 (no-weakening walk) |
+| Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | Re-bundled after the last `skills/` edit, from the package that owns the script | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC11) |
+| Versioning/release surfaces (package + skill `version:`s, `CHANGELOG.md`, README tables) | yes | Schema package minor bump; four skill minor bumps; CHANGELOG rows + README cells via `bump-skill` | AC10 + rendered-facts consistency |
+| README references (bibliography) | yes | The issue's citation obligation lands as a bottom `## References` append in the implementation PR — never before | AC12 grep at PR head |
+| Workflow tutorial + site guides (`docs/workflow/*`, `docs/site/guides/`) | partial | No severity statement exists today; no edit; generated guides change only if `docs/workflow/` prose changes (it does not) | n/a here; `audit-docs` owns drift |
+| GitHub templates / forge surfaces (`.github/`, issue/PR forms) | no | Untouched by this feature | n/a — no surface exists to integrate with |
 
 **3. Role matrix** — every capability's matrix lists every derived role
-explicitly. Roles (derived inventory — no `docs/CAPABILITIES.md` roles table
-exists): `human owner` (project lead), `author turn`
-(`design-feature`/`plan-feature`/`plan-fix`), `reviewer turn`
+explicitly. Roles (derived inventory): `human owner` (project lead), `author
+turn` (`design-feature`/`plan-feature`/`plan-fix`), `reviewer turn`
 (`review-spec`/`review-plan`), `executor turn` (`execute-phase`), `drivers &
-sensors` (deterministic scripts, CI, `workflow-status`).
+sensors` (deterministic scripts, CI, `workflow-status` — they validate and
+refuse; they never author findings).
 
-- **C1 — File a `low` planning finding (report-note).** Entry point: the
-  findings step of `review-spec`/`review-plan` (the findings-ledger check).
-  Roles: reviewer turn allowed · author turn denied (authors never file
-  findings against their own artifact) · human owner denied (owner input routes
-  through design, not review findings) · executor turn denied · drivers &
-  sensors denied (they read ledgers, never write findings).
+- **C1 — File a planning finding (any severity, incl. `low` report-notes).**
+  Entry point: the findings step of `review-spec`/`review-plan`. Roles:
+  reviewer turn allowed · author turn denied (authors never file findings
+  against their own artifact) · human owner denied (owner input routes through
+  design, not review findings) · executor turn denied · drivers & sensors
+  denied (they validate receipts and refuse invalid ones; they never write
+  findings).
 - **C2 — Resolve a `low` report-note without a re-review.** Entry point: the
-  stage author's repair pass (`REPAIR.md` / planner repair step). Roles: author
-  turn allowed · reviewer turn denied (a reviewer re-verifies, never resolves)
-  · human owner denied (not their act; they instruct when asked) · executor
-  turn denied · drivers & sensors denied.
-- **C3 — Run a wording-only repair batch with no full snapshot re-review.**
-  Entry point: `POLICY.md` §3 wording-only row as applied by the author's
-  repair pass. Roles: author turn allowed (determination recorded, revision
-  rotated) · reviewer turn denied (nothing to re-review on that route; the
+  stage author's repair pass; the machine enforces validity (a PASS with open
+  `low` rows stands). Roles: author turn allowed · reviewer turn denied (a
+  reviewer re-verifies, never resolves) · human owner denied · executor turn
+  denied · drivers & sensors allowed as validators only (the validator accepts
+  what the machine rule accepts — it never authors resolutions).
+- **C3 — Run a wording-only repair batch without the full snapshot re-review.**
+  Entry point: the repair turn records the judgment half and rotates the
+  revision; `verify` computes the machine half. Roles: author turn allowed ·
+  drivers & sensors allowed as validators (they compute and record the machine
+  half; the route is refused when the determination record or rotation is
+  missing) · reviewer turn denied (nothing to re-review on that route; the
   next material change re-opens review) · human owner denied · executor turn
-  denied · drivers & sensors denied.
-- **C4 — Start a third repair/re-review cycle.** Entry point: explicit user
-  instruction to the author/reviewer turn after the cap block. Roles: human
-  owner allowed (the only key) · author turn denied without it · reviewer turn
-  denied without it · executor turn denied · drivers & sensors denied.
-- **C5 — End an unconverged loop in `NEEDS-DESIGN`.** Entry point: the
-  reviewer's verdict set (existing `NEEDS-DESIGN` verdict block). Roles:
-  reviewer turn allowed · author turn denied as issuer (receives it and routes
-  the human through `design-feature`/`plan-feature`) · human owner denied as
+  denied.
+- **C4 — Start a third consecutive unconverged repair/re-review cycle.** Entry
+  point: explicit user instruction after the orchestrator's refusal. Roles:
+  human owner allowed (the only key) · drivers & sensors denied (they refuse,
+  never authorize) · author turn denied without the instruction · reviewer
+  turn denied without it · executor turn denied.
+- **C5 — End an unconverged loop in `needs-design` / refusal + route.** Entry
+  point: the reviewer's verdict set (spec stage) and the decider's stop +
+  route (plan stage). Roles: reviewer turn allowed as issuer (spec-stage
+  verdict) · drivers & sensors allowed as refusers (plan-stage stop naming the
+  human route) · author turn denied as issuer (receives it and routes the
+  human through `design-feature`/`plan-feature`) · human owner denied as
   issuer, allowed as decision-maker (decides through the routed skill) ·
-  executor turn denied · drivers & sensors denied.
+  executor turn denied.
 
 ### Expectation sweep
 
 What a competent workflow maintainer would assume ships with a
-"planning-side materiality alignment" without being told. 17 candidate
-expectations, each resolved to exactly one resolution:
+"planning-side materiality alignment carried in code" without being told.
+19 candidate expectations, each resolved to exactly one resolution:
 
 | # | Expectation | Resolution | Pointer |
 |---|---|---|---|
-| 1 | Immaterial findings stay visible in the ledger, never silently dropped | in-scope | In scope 1 (persisted report-note) |
-| 2 | A real defect mislabeled `low` still blocks — the mislabel re-classifies at `medium` minimum | in-scope | In scope 2 |
-| 3 | Deflating a severity to dodge a review is itself a review defect | in-scope | In scope 2 |
-| 4 | A `low` report-note alone never forces a repair batch or a re-review | in-scope | In scope 1 + In scope 4 (author resolves without re-review) |
-| 5 | One material finding from one reviewer still keeps the findings set open (union, never majority) | in-scope | Out of scope bullet 1 (preserved) |
-| 6 | Dismissing any finding — including a report-note — still requires recorded counter-evidence | in-scope | Out of scope bullet 1 (POLICY §2 unchanged) |
-| 7 | The second cycle still prints `CONVERGENCE-ANOMALY` before any further edit | in-scope | In scope 3 |
-| 8 | The loop never ends silently — the cap terminates in a printed `NEEDS-DESIGN` routed to the human | in-scope | In scope 3 |
-| 9 | A third cycle remains possible behind an explicit user instruction (the cap is user-gated, not absolute) | in-scope | In scope 3 |
-| 10 | The wording-only determination is recorded in the unit's evidence even when the re-review is skipped | in-scope | In scope 4 |
-| 11 | Every repair write rotates `artifactRevisionId` — mutate-and-revert cannot resurrect a stale PASS, including on the wording-only route | in-scope | In scope 4 + Out of scope (sensor mechanics unchanged) |
-| 12 | Review verdicts keep binding to exact snapshots with digest + artifact revision (receipt shape unchanged) | in-scope | Out of scope bullet 7 |
-| 13 | Code-side review/fold behavior is untouched by this feature | out-of-scope | Out of scope bullet 3 |
-| 14 | Severity vocabulary and the schema package stay unchanged | out-of-scope | Out of scope bullet 2 |
-| 15 | Existing `low` rows in already-persisted planning ledgers are not retroactively reclassified | out-of-scope | Out of scope bullet 5 |
-| 16 | A reviewer can still escalate a taste-level claim to material when a rule is actually violated (the floor works in both directions) | in-scope | In scope 2 (anti-deflation) |
-| 17 | The unit's PR diff necessarily carries the unit's own planning records, the roadmap row update, and session-log appends — the whole-diff scope guard accepts those workflow-mutated records instead of failing an otherwise-correct implementation | in-scope | In scope (workflow-mutated record surfaces) + AC8 |
+| 1 | Immaterial findings stay visible in the ledger and the receipt, never silently dropped | in-scope | In scope 1 + 5 (persisted report-note; the findings array keeps `low` rows) |
+| 2 | A real defect mislabeled `low` still blocks — the mislabel re-classifies at `medium` minimum | in-scope | In scope 5 (anti-deflation judgment stays prose) + In scope 1 |
+| 3 | Deflating a severity to dodge a review is itself a review defect | in-scope | In scope 5 (anti-deflation sentence stays) |
+| 4 | A `low` report-note alone never forces a repair batch or a re-review — the machine accepts a PASS that coexists with open `low` rows | in-scope | In scope 1 + AC1 |
+| 5 | One material finding from one reviewer still keeps the findings set open (union, never majority) | in-scope | In scope 1 (PASS refused while any open/unverified `medium`+ row exists) |
+| 6 | Dismissing any finding — including a report-note — still requires recorded counter-evidence | in-scope | Out of scope bullet 3 (validator rule unchanged) |
+| 7 | The second cycle still prints `CONVERGENCE-ANOMALY` before any further edit | in-scope | In scope 5 (block byte-unchanged) + AC7 |
+| 8 | The loop never ends silently — the cap ends it in a printed `needs-design` routed to the human (spec stage) or the orchestrator's refusal naming the human route (plan stage) | in-scope | In scope 3 + AC5 + AC7 |
+| 9 | A third cycle remains possible behind an explicit user instruction (the cap is user-gated, not absolute) | in-scope | In scope 3 + In scope 5 (human-keyed sentence stays) |
+| 10 | The wording-only determination is recorded even when the re-review is skipped — machine half and judgment half | in-scope | In scope 2 + AC4 |
+| 11 | Every repair write rotates `artifactRevisionId` — the freshness predicate itself refuses an unrecorded rotation (`stale-artifact-revision`), including on the wording-only route | in-scope | In scope 2 + AC4 |
+| 12 | Review verdicts keep binding to exact snapshots with digest + artifact revision (receipt shape otherwise unchanged) | in-scope | Out of scope bullet 3 + AC9 |
+| 13 | Code-side review/fold behavior is untouched by this feature | out-of-scope | Out of scope bullet 2 |
+| 14 | Severity/verdict/code values stay unchanged — additions only where this SPEC names them (`reproducer` field, cap-refusal outcome) | out-of-scope | Out of scope bullet 1 + AC9 |
+| 15 | Existing `low` rows in already-persisted planning ledgers are not retroactively reclassified | out-of-scope | Out of scope bullet 4 |
+| 16 | A reviewer can still escalate a taste-level claim to material when a rule is actually violated (the floor works in both directions) | in-scope | In scope 1 (the machine line is a floor, not a ceiling) |
+| 17 | The unit's PR diff necessarily carries the unit's own planning records, the roadmap row update, and session-log appends — the scope guard accepts those workflow-mutated records | in-scope | In scope (workflow-mutated group) + AC13 |
+| 18 | If the implementation changes what a PASS means (policy version bump), earlier receipts answer `stale-policy` and re-review at their next cycle — named, bounded, deliberate | in-scope | Compatibility boundary (Engineering half, re-cut) + AC9 |
+| 19 | Plans carry the loop rules through machine-checkable done-whens (run-and-paste verify exit codes), never prose recitation — phase-lint governs the plan layer | in-scope | In scope 4 + AC6 |
 
 ### Acceptance criteria
 
 Command-checkable at the PR head unless labelled `read-verified`.
 
-- **AC1** (command): `grep -n "only immaterial"
-  skills/pre-execution-review/references/LEDGERS.md` exits non-zero, and
-  `grep -niE "report-note" skills/pre-execution-review/references/LEDGERS.md`
-  exits zero with the rule that a `low` finding is persisted, visible,
-  non-blocking, and never a re-review trigger by itself. The report-note rule
-  is a row of the planning pin table (AC14).
-- **AC2** (command): `grep -n "anything above \`info\`"
-  skills/review-spec/references/CHECKS.md
-  skills/review-plan/references/CHECKS.md` exits non-zero, and both files
-  state material = `medium`+ (`grep -n "medium"` hits the new materiality
-  sentence in each). Both restatements are rows of the planning pin table
-  (AC14).
-- **AC3** (command): the anti-deflation rule appears in the planning-side
-  surfaces — `grep -rn "medium\` minimum" skills/pre-execution-review/references/
-  skills/review-spec/ skills/review-plan/` exits zero, and the matched text
-  includes that deflating a real defect to dodge a review is itself a review
-  defect. Pinned as a table row (AC14).
-- **AC4** (command + `read-verified`): `grep -n "third cycle never"
-  skills/pre-execution-review/references/POLICY.md` exits zero; the §4 text
-  ends an unconverged loop in `NEEDS-DESIGN` absent explicit user instruction
-  (`read-verified`); the `CONVERGENCE-ANOMALY` block text is unchanged
-  (`read-verified` against the §4 diff hunk). The cap is a row of the planning
-  pin table (AC14).
-- **AC5** (command): `grep -n "More cycles stay allowed"
-  skills/design-feature/references/REPAIR.md` exits non-zero, and
-  `grep -n "third cycle never" skills/design-feature/references/REPAIR.md`
-  exits zero.
-- **AC6** (`read-verified`, command-anchored): POLICY §3 states the
-  wording-only route skips the full snapshot re-review, records the
-  determination in the unit's evidence, and rotates `artifactRevisionId` —
-  anchored by `grep -n "Wording-only"
-  skills/pre-execution-review/references/POLICY.md`. Pinned as a table row
-  (AC14).
-- **AC7** (command): `grep -n "third cycle never"
-  skills/review-spec/references/OUTPUT.md
-  skills/review-plan/references/OUTPUT.md` exits zero (the verdict-side loop
-  text mirrors the cap). Both mirrors are rows of the planning pin table
-  (AC14).
-- **AC8** (command + `read-verified`): at the PR head, every path in
-  `git diff main --stat` belongs to the declared allowed set — the In-scope
-  surfaces (the governed files named above), the declared derived-surface set
-  (the Pi mirror under `packages/pi-agentic-workflow/skills/**`, the four
-  edited skills' `version:` lines, the README skill-table cells, and
-  `CHANGELOG.md`), and the declared workflow-mutated record surfaces
-  (`docs/features/31-planning-review-materiality/**`, the unit's
-  `docs/features/ROADMAP.md` row, and `docs/LOGS.md` session-log appends) —
-  and no path outside it; mechanical anchor (documented git pathspec
-  semantics): `git diff main --name-only -- .
+- **AC1** (command + `read-verified`): the machine materiality predicate is
+  `medium`+ — `grep -n 'severity !== "info"'
+  packages/agentic-workflow-schema/src/pre-execution.ts` exits non-zero, and
+  `cd packages/agentic-workflow-schema && bun run test` passes with vectors
+  proving: a PASS receipt carrying an open/unverified `low` row validates, and
+  the same receipt with an open/unverified `medium` row is refused
+  (`verdict-mismatch`) (vector walk `read-verified`). Restates: `low` =
+  report-note (persisted, visible, non-blocking, never a re-review trigger by
+  itself); material = `medium`+.
+- **AC2** (command): the schema's own prose matches the predicate —
+  `grep -rn "the only immaterial" packages/agentic-workflow-schema/src/` exits
+  non-zero, and `grep -n "medium"
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts` hits the
+  finding-record severity description stating the new line (material =
+  `medium`+; `low` is a report-note).
+- **AC3** (command): the finding record carries the bounded `reproducer` —
+  `grep -n "reproducer"
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts` exits zero,
+  and the suite proves back-compatibility (a receipt whose findings carry no
+  `reproducer` still validates); the receipt contract id is unchanged
+  (`grep -c "agentic-workflow/pre-execution-review-receipt@1"
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts` ≥ 1).
+- **AC4** (command + `read-verified`): the wording-only route is
+  machine-recorded — `bun test scripts/pre-execution-sensor.test.mjs
+  scripts/pre-execution-attribution.test.mjs` passes with `wording-only`
+  vectors for both outcomes (`grep -rn "wording-only"
+  scripts/pre-execution-sensor.test.mjs
+  scripts/pre-execution-attribution.test.mjs` exits zero): revision rotated +
+  determination recorded + no material movement → verify stays current without
+  a new review receipt; material byte movement → `stale-artifact-content`
+  (exit 4); a rotation without the recorded determination is refused (the
+  record and the rotation are not skippable). Vector semantics walked at the
+  PR head (`read-verified`).
+- **AC5** (command): the orchestrator refuses to advance past the cap —
+  `cd packages/agentic-workflow-schema && bun run test` passes with a
+  transition-decider refusal vector named for this rule (`grep -rln
+  "review-loop-cap" packages/agentic-workflow-schema/test/` exits zero)
+  proving: after two consecutive unconverged review→repair→re-review cycles, a
+  decision to invoke `review-spec`/`review-plan` again is refused (stop, human
+  route named); a PASS resets the count; `needs-design` routes to
+  `design-feature` (table rows otherwise unchanged).
+- **AC6** (command + `read-verified`): the plan layer is lint-governed —
+  `bun scripts/phase-lint.mjs
+  docs/features/31-planning-review-materiality/PLAN.md` exits 0 with PASS
+  verdicts at the PR head, and the re-cut plan's loop phases verify through
+  run-and-paste `pre-execution-snapshot.mjs verify` exit codes (machine
+  done-whens, not prose recitation) (`read-verified` against the re-cut plan).
+- **AC7** (command + `read-verified`): prose shrinks to the non-computable
+  remainder — `grep -rn "More cycles stay allowed" skills/` exits non-zero;
+  `grep -n "no cap converts a verdict into a dead end"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero;
+  `grep -n "Entering a \*\*second\*\* cycle is allowed"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero; the
+  remainder stays: `grep -n "third cycle never"
+  skills/pre-execution-review/references/POLICY.md` exits zero,
+  `grep -niE "report-note"
+  skills/pre-execution-review/references/LEDGERS.md` exits zero,
+  `grep -rn "medium\` minimum" skills/pre-execution-review/references/
+  skills/review-spec/ skills/review-plan/` exits zero (anti-deflation), and
+  the `CONVERGENCE-ANOMALY` block plus the receipt-literal lines are
+  byte-unchanged (`read-verified` against the diff hunks).
+- **AC8** (command + `read-verified`): the discipline pins keep the machine
+  rule honest — `bun test scripts/review-loop-discipline.test.mjs` passes at
+  the PR head, the suite reads the code carriers (`grep -n
+  "packages/agentic-workflow-schema" scripts/review-loop-discipline.test.mjs`
+  exits zero), and `git diff main -- scripts/review-loop-discipline.test.mjs`
+  removes no existing assertion (additions or equal-strength rewrites only)
+  (`read-verified`).
+- **AC9** (command + `read-verified`): additive schema release —
+  `cd packages/agentic-workflow-schema && bun run gate:pre-execution` passes
+  at the PR head (suite + projection drift checks + package check + docs
+  test); the package `version:` is bumped (minor per the #176 freeze) with a
+  CHANGELOG row; the schema diffs remove no enum value and no contract id
+  (`read-verified` walk of the vocabulary diffs).
+- **AC10** (command): the repo gate pack is green — `bun test
+  scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs
+  scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs
+  scripts/workflow-status-pre-execution.test.mjs && bun
+  scripts/check-skill-context.mjs` exits 0 at the PR head (budgets updated for
+  the shrink if it moves sizes).
+- **AC11** (command): mirror parity — `cd packages/pi-agentic-workflow && bun
+  run bundle:skills && bun run test` passes (the bundler script lives in the
+  package; this repository has no root `package.json`).
+- **AC12** (command): `grep -n "2603.00539" README.md` exits zero at the PR
+  head (References append, in the implementation PR — never before).
+- **AC13** (command + `read-verified`): at the PR head, every path in
+  `git diff main --name-only` belongs to one of the three declared groups
+  (code carriers; prose-shrink + derived surfaces; workflow-mutated records)
+  and no path outside them — mechanical anchor: `git diff main --name-only -- .
   ':(exclude)docs/features/31-planning-review-materiality'
-  ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists no
-  path beyond the governed + derived sets; `git diff main --
-  skills/pre-execution-review/references/POLICY.md` produces hunks scoped to
-  §3 and §4, and the `docs/features/ROADMAP.md` hunk touches only row 31
-  (`read-verified`: §1, §2, §5–§8 byte-identical to `main`).
-- **AC9** (command): `bun test scripts/review-loop-discipline.test.mjs` passes
-  at the PR head, and `git diff main -- scripts/review-loop-discipline.test.mjs`
-  removes no existing assertion (additions or equal-strength rewrites only).
-  The planning pin table's floor and discrimination legs are green in the same
-  run (AC14).
-- **AC10** (command): `git diff main --stat -- packages/agentic-workflow-schema`
-  is empty, and `cd packages/agentic-workflow-schema && bun run test` passes.
-- **AC11** (command): `bun test scripts/ledger-ownership.test.mjs
-  scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
-  scripts/normative-drift.test.mjs && bun scripts/check-skill-context.mjs`
-  is green at the PR head (the machine-pinned LEDGERS blocks survive the edit).
-  The pin table's presence and discrimination legs (AC14) are part of this
-  head-level green.
-- **AC12** (command): the mirror was re-bundled after the last `skills/` edit
-  **from the package that owns the script** — `cd packages/pi-agentic-workflow
-  && bun run bundle:skills` (this repository has no root `package.json`, so the
-  bare `bun run bundle:skills` at the repository root exits non-zero) — and
-  `bun run test` passes from the same package root (mirror parity).
-- **AC13** (command + `read-verified`): `grep -n "2603.00539" README.md` exits
-  zero at the PR head (References append), and each edited skill's `version:`
-  is bumped with a CHANGELOG row (`read-verified` against the bump-skill diff).
-- **AC14** (command): the planning-side pins are mechanically present and
-  discriminating at the PR head — the discipline suite declares the planning pin
-  table (`grep -q "PLANNING_PIN_TABLE"
-  scripts/review-loop-discipline.test.mjs` exits zero), executes the
-  discrimination leg (`grep -q "assertDiscriminating("
-  scripts/review-loop-discipline.test.mjs` exits zero), states the frozen row
-  floor (`grep -q "PLANNING_PIN_FLOOR = 9"
-  scripts/review-loop-discipline.test.mjs` exits zero), and
-  `bun test scripts/review-loop-discipline.test.mjs` passes — so an absent,
-  empty, or trivially-true pin set can no longer satisfy any criterion that
-  depends on it.
+  ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists only
+  paths of the first two groups; the schema vocabulary diffs remove no value
+  (`read-verified`).
 
 ### Tooling
 
 - No external skill or MCP dependency — this feature is authored and executed
   with the repository's own workflow skills.
+- The code carrier is exercised locally: the schema package gate
+  (`cd packages/agentic-workflow-schema && bun run gate:pre-execution`), the
+  snapshot CLI (`bun scripts/pre-execution-snapshot.mjs build|verify …`), the
+  discipline pins (`bun test scripts/review-loop-discipline.test.mjs`), and the
+  linter (`bun scripts/phase-lint.mjs <plan-path>`) — bun first, node fallback
+  per the runtime convention.
 - `bump-skill` (repository-internal, `user-invocable: false`) runs at execution
-  for the version bumps; the bundler runs from the package that owns it — `cd
-  packages/pi-agentic-workflow && bun run bundle:skills` per the normalizer
-  inventory's bundler step.
+  for the skill version bumps; the bundler runs from the package that owns it —
+  `cd packages/pi-agentic-workflow && bun run bundle:skills`.
 
 ### Product decisions
 
@@ -457,7 +533,7 @@ Recorded in full (with authority and rationale) in
 - **D-31-1** planning-side `low` rows **persist** as report-notes (the code
   side's `low` is never persisted) — the planning ledger is the prose-review
   audit trail; hiding rows there would break the no-silent-dismissal contract.
-- **D-31-2** the cap terminates in the **existing** `NEEDS-DESIGN` verdict —
+- **D-31-2** the cap terminates in the **existing** `needs-design` verdict —
   no new terminal label, no new grammar; mirrors `review-change`'s user-gated
   third-cycle rule.
 - **D-31-3** the wording-only route skips only the re-review act — the
@@ -466,8 +542,21 @@ Recorded in full (with authority and rationale) in
   `medium`+; no stage-specific thresholds.
 - **D-31-5** REPOSITORY_STATE AD-008 ("never cycle-count-bound") is reconciled,
   not contradicted: the cap routes to a human decision instead of qualifying by
-  cycle count; if `review-spec` reads a contradiction, `resolve-repository-state`
-  owns the wording amendment at execution time.
+  cycle count; if `review-spec` reads a contradiction,
+  `resolve-repository-state` owns the wording amendment at execution time.
+- **D-31-6** (owner ruling 2026-09-17) the predicate, the cap and the
+  wording-only route are implemented **in code** — the finding record's
+  `class`/`severity`/`reproducer`, verify's exit code + closed reason codes,
+  the orchestrator's cap refusal, phase-lint; prose shrinks to what is not
+  computable; the `31-plan-1/2` plan set is superseded, never repaired.
+- **D-31-7** the cap counts **consecutive unconverged** review→repair→re-review
+  cycles (FAIL-verdict receipts since the last PASS verdict for the stage) and
+  a PASS resets it — mirroring `review-change`'s loop; the ruling-authorized
+  re-review after this carrier amendment is cycle 1, never a third cycle.
+- **D-31-8** the cap's unconverged exit is stage-scoped to the machine map:
+  `needs-design` where the verdict vocabulary sanctions it (spec stage), the
+  refusal + `design-feature` routing at the plan stage (fix/162 narrowed
+  plan-stage `needs-design`; the flat verdict vocabulary keeps the token).
 
 ### Deferred decisions
 
@@ -484,35 +573,35 @@ Product boxes:
       `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
       over the Product half returns nothing (closure rows instantiated;
       severities, verdicts, and file paths are literals, not placeholders).
-- [x] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — 7 bullets.
+- [x] The Out-of-scope section has ≥ 1 concrete bullet — 7 bullets.
 - [x] Every Capability closure row is filled or an explicit `n/a` with reason —
-      zero blank rows (E1–E3 × CRUD/transitions; 11 derived subsystems; 5
+      zero blank rows (E1–E3 × CRUD/transitions; 12 derived subsystems; 5
       capabilities × 5 roles).
 - [x] Integration closure has one row per subsystem of the derived inventory
       (recorded above; `docs/CAPABILITIES.md` absent as a live file) — zero
       subsystems skipped.
 - [x] Every capability's role matrix lists EVERY derived role with an explicit
       `allowed`/`denied` — 5 roles × 5 capabilities, none unlisted.
-- [x] `### Expectation sweep` has 17 resolved rows (≥ 10 for M); every row
+- [x] The Expectation sweep has 19 resolved rows (≥ 10 for M); every row
       resolves to exactly one of `in-scope`, `out-of-scope`, or `deferred`
       with a pointer — zero unresolved rows.
-- [x] Every `#### In scope` bullet maps to ≥ 1 acceptance criterion — explicit
-      AC pointers on each bullet.
+- [x] Every In-scope bullet maps to ≥ 1 acceptance criterion — explicit
+      AC pointers on each item and group.
 - [x] Every acceptance criterion is a runnable command OR labelled
-      `read-verified` — AC1–AC3, AC5, AC7–AC14 commands; AC4 and AC6 labelled
-      where judgement-only.
+      `read-verified` — AC1–AC3, AC5, AC10–AC12 pure commands; AC4, AC6–AC9,
+      AC13 command + `read-verified` where judgement-only.
 - [x] `### Deferred decisions` exists and reads `none`.
 
 ## Design status
 
-`designed` — capability closure complete (zero blank rows), Spec-lint product
-boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
-**`31-spec-2`** (the `N31-003` repair batch, 2026-09-17 — see `## Amendments`).
-Awaiting independent re-review by `review-spec`; `plan-feature` may re-derive
-the Engineering half only on a current `SPEC-REVIEW-PASS` receipt (the
-plan-side mirrors of AC8 — `ACCEPTANCE.md`, `PLAN.md`/`TASKS.md` P4 task 5,
-obligation O8 — are re-derived there).
-
+`designed` — carrier amendment applied (D-31-6 + D-31-7/D-31-8): capability
+closure complete (zero blank rows), Spec-lint product boxes all PASS, readiness
+preflight `READY-FOR-REVIEW` at artifact revision **`31-spec-3`** (2026-09-17 —
+see `## Amendments`). This write moves the Product half's bound bytes, so the
+`spec-review-31-3` receipt goes `stale-artifact-content` — authorized by the
+ruling as a carrier change: the spec stage reopens, the next `review-spec` run
+is cycle 1 (D-31-7), and `plan-feature` re-cuts the plan set (`31-plan-1/2`
+superseded, never repaired) only on a current `SPEC-REVIEW-PASS` receipt.
 ---
 
 ## Engineering half
@@ -938,3 +1027,29 @@ set (`SPEC.md`, `decisions.md`, `planning-findings.md`). The frozen
 `ACCEPTANCE.md` is deliberately untouched in this batch (blob `d85e217a…`
 recomputed intact): it is `plan-feature`'s owning artifact, re-derived with
 obligation O8 and P4 task 5 once a fresh `SPEC-REVIEW-PASS` receipt exists.
+
+### `31-spec-3` — carrier amendment for D-31-6 (redesign, owner-authorized)
+
+User-commissioned amendment (2026-09-17), commissioned as "carrier amendment
+for D-31-6". Repair class per `REPAIR.md` §2: **redesign (carrier move)** —
+the Product half is re-scoped to the code carrier the ruling names and its
+frozen semantics are restated verbatim (low = report-note; material =
+`medium`+; two-cycle cap → `needs-design`; wording-only skips only the
+re-review). Product intent (D-31-1…D-31-5) unchanged; two new product
+decisions record the machine-facing resolutions the carrier forces (D-31-7
+consecutive-cycle counting with PASS reset; D-31-8 stage-scoped cap exit
+against the fix/162 machine map).
+
+| Change | Class | Where |
+|---|---|---|
+| Scope re-cut to the code carrier: schema finding record (`reproducer` + materiality `medium`+), snapshot verify wording-only route over the closed freshness codes, orchestrator cap refusal, phase-lint plan-layer gate; prose shrink declared; pins re-aimed | product · carrier redesign | `## Scope` (In/Out + allowed-set groups), `### Capability closure` (E1–E3 + integration + roles), `### Expectation sweep` (19 rows), `### Acceptance criteria` (AC1–AC13) |
+| New decisions D-31-7/D-31-8 + 18 amendment evidence rows (two fresh external fetches) | product · decision | `decisions.md` (append-only) |
+| Roadmap row 31 summary updated (status stays `defined`); progress record | product · record | `docs/features/ROADMAP.md`, `progress.md` |
+
+Artifact revision rotates `31-spec-2` → **`31-spec-3`** for the whole Product
+set (`SPEC.md`, `decisions.md`, `progress.md`, the roadmap row). The
+`spec-review-31-3` receipt is superseded **by design** (bound Product bytes
+moved — `stale-artifact-content`, verified post-write): the spec stage reopens
+and the next `/review-spec` run is cycle 1 (D-31-7). The Engineering half
+keeps its superseded bytes untouched (`31-plan-2`) — `plan-feature` re-cuts it
+after a fresh PASS receipt.
