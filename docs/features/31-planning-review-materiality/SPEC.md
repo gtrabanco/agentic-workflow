@@ -438,10 +438,15 @@ Command-checkable at the PR head unless labelled `read-verified`.
   itself); material = `medium`+.
 - **AC2** (command): the schema's own prose matches the predicate —
   `grep -rn "the only immaterial" packages/agentic-workflow-schema/src/` exits
-  non-zero, and `grep -n "medium"
-  packages/agentic-workflow-schema/src/pre-execution-contract.ts` hits the
-  finding-record severity description stating the new line (material =
-  `medium`+; `low` is a report-note).
+  non-zero, and the finding-record severity description states the new line
+  (material = `medium`+; `low` is a report-note) via two fragments that exist
+  only in that rewritten description: `grep -nE 'material = .medium'
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts` exits zero
+  and `grep -n "report-note"
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts` exits zero
+  (the bare word `medium` matches the severity enum literal at `:103` and
+  proves nothing; neither new fragment can match it — both exit non-zero at
+  branch head `bccc95fd`, so the criterion discriminates the rewrite).
 - **AC3** (command): the finding record carries the bounded `reproducer` —
   `grep -n "reproducer"
   packages/agentic-workflow-schema/src/pre-execution-contract.ts` exits zero,
@@ -477,6 +482,10 @@ Command-checkable at the PR head unless labelled `read-verified`.
 - **AC7** (command + `read-verified`): prose shrinks to the non-computable
   remainder — the machine-owned sentences leave **every** declared surface:
   `grep -rn "More cycles stay allowed" skills/` exits non-zero;
+  `grep -n "no cycle cap converts"
+  skills/design-feature/references/REPAIR.md` exits non-zero (§4's second
+  unbounded-cycle sentence sits wholly on `:71` and is unique in the file, so
+  the pattern matches while the sentence stands and disappears with it);
   `grep -n "no cap converts a verdict into a"
   skills/pre-execution-review/references/POLICY.md` exits non-zero (the §4
   sentence is line-wrapped across `:83-84`, so the pattern is its
@@ -632,23 +641,23 @@ Product boxes:
 - [x] Every In-scope bullet maps to ≥ 1 acceptance criterion — explicit
       AC pointers on each item and group.
 - [x] Every acceptance criterion is a runnable command OR labelled
-      `read-verified` — AC1–AC3, AC5, AC10–AC12 pure commands; AC4, AC6–AC9,
-      AC13–AC14 command + `read-verified` where judgement-only.
+      `read-verified` — AC2–AC3, AC5, AC10–AC12 pure commands; AC1, AC4,
+      AC6–AC9, AC13–AC14 command + `read-verified` where judgement-only.
 - [x] `### Deferred decisions` exists and reads `none`.
 
 ## Design status
 
-`designed` — repair batch for `spec-review-31-5` applied (N31-006 + N31-007 +
-N31-008, one batch): capability closure complete (zero blank rows), Spec-lint
+`designed` — repair batch for `spec-review-31-6` applied (N31-009 + N31-010 +
+N31-011, one batch): capability closure complete (zero blank rows), Spec-lint
 product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact
-revision **`31-spec-5`** (2026-09-17 — see `## Amendments`). This write moves
-the Product half's bound bytes, so the `spec-review-31-5` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run is the **third
+revision **`31-spec-6`** (2026-09-17 — see `## Amendments`). This write moves
+the Product half's bound bytes, so the `spec-review-31-6` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run is the **fourth
 consecutive cycle** of the window D-31-7 opened at the carrier amendment, and
 it starts under the explicit user instruction that commissioned this batch
-(D-31-7's user-keyed third cycle — the instruction is quoted in `decisions.md`
-and `progress.md`; the window's `CONVERGENCE-ANOMALY` block preceded the
-cycle-2 edits and is reproduced in the `spec-review-31-5` receipt).
+(D-31-7's user-keyed cycle — the instruction is quoted in `decisions.md` and
+`progress.md`; the window's `CONVERGENCE-ANOMALY` block preceded the cycle-2
+edits and is reproduced in the `spec-review-31-6` receipt).
 `plan-feature` re-cuts the plan set (`31-plan-1/2` superseded, never repaired)
 only on a current `SPEC-REVIEW-PASS` receipt.
 ---
@@ -1162,3 +1171,37 @@ Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
 `spec-review-31-5` receipt is superseded by design (bound Product bytes moved
 — `stale-artifact-content`): the next `/review-spec` run is the user-keyed
 third cycle (D-31-7).
+
+### `31-spec-6` — repair batch for `spec-review-31-6` (N31-009 + N31-010 + N31-011)
+
+User-commissioned repair batch (2026-09-17), commissioned as "repair N31-009
++ N31-010 + N31-011: make AC2's contract-prose check discriminate (grep the
+description for a new-line fragment such as material = \`medium\`/report-note,
+not the bare word medium, or move the clause to read-verified), cover
+REPAIR.md §4's second sentence in AC7 (grep -n \"no cycle cap converts\"
+skills/design-feature/references/REPAIR.md` exits non-zero), and fix the
+Spec-lint AC1 classification". Trigger: `spec-review-31-6` returned
+`SPEC-REVIEW-FAIL` (failed checks C8, C9; 12/14 pass) with two medium
+`product` rows (N31-009, N31-010) and one open `info` row (N31-011) — one
+batch over the whole set, repair owner `design-feature`. This is the **fourth
+consecutive cycle** of the window D-31-7 opened at the carrier amendment
+(`spec-review-31-4` FAIL #1, `spec-review-31-5` FAIL #2, `spec-review-31-6`
+FAIL #3); per D-31-7 it starts only under explicit user instruction, which
+this commission is — the instruction is quoted verbatim in `decisions.md` and
+`progress.md` (REPAIR §4: a repair responding to a persisted verdict is never
+a loop defect). Repair classes (REPAIR §2):
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-009 | product · medium | AC2's second anchor is replaced by two discriminating greps over the same file — `grep -nE 'material = .medium'` and `grep -n "report-note"` on `packages/agentic-workflow-schema/src/pre-execution-contract.ts`, both exit zero — whose fragments exist only in the rewritten finding-record severity description stating the new line (material = `medium`+; `low` is a report-note). The bare-word `medium` anchor it replaces matched the severity enum literal at `:103` (exit 0 today, rewrite or not — verified at branch head `bccc95fd`); neither new fragment can match it, and both exit non-zero at `bccc95fd`, so the criterion discriminates the rewrite. The commission's alternative (move the clause to `read-verified`) was not taken: a discriminating command anchor keeps AC2 `(command)` and objective. Repair class: **closure completion** (the criterion verified nothing about the replacement before; reviewed product intent — the schema prose states the predicate — unchanged). | AC2 |
+| N31-010 | product · medium | AC7 gains the removal grep for REPAIR.md §4's second unbounded-cycle sentence: `grep -n "no cycle cap converts" skills/design-feature/references/REPAIR.md` exits non-zero. The fragment sits wholly on `:71`, is unique in the file, and exits 0 with the sentence standing at `bccc95fd` — it matches while the sentence stands and disappears with it, the same discrimination N31-006 gave the other removal greps. Repair class: **closure completion** (In-scope 5 already declared REPAIR.md §4 among the shrunk surfaces; only this sentence's criterion was missing). | AC7 |
+| N31-011 | product · info | The Spec-lint product box re-files AC1 into the group its own label declares: the box now reads "AC2–AC3, AC5, AC10–AC12 pure commands; AC1, AC4, AC6–AC9, AC13–AC14 command + `read-verified` where judgement-only". No criterion text changes. Repair class: **mechanical, intent-preserving**. | `### Spec-lint` product box |
+
+Artifact revision rotates `31-spec-5` → **`31-spec-6`** for the whole touched
+Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
+`progress.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded
+`31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
+`spec-review-31-6` receipt is superseded by design (bound Product bytes moved
+— `stale-artifact-content`): the next `/review-spec` run is the user-keyed
+fourth cycle of the window (D-31-7).
