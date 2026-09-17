@@ -923,3 +923,45 @@ SPEC-REVIEW-PASS — 31-planning-review-materiality
 - Material findings open: 0 · Read-only: no reviewed artifact modified
 - Authority: planning may bind this receipt as its Product parent
 ```
+
+## Redesign & replan — owner ruling 2026-09-17
+
+The plan stage is stopped **by decision, not by repair**. State at the ruling
+(`2ca960fd`): five review receipts on the unit — `spec-review-31-1` PASS,
+`plan-review-31-1` FAIL (F01–F03), `plan-review-31-2` FAIL (R31-01…R31-03),
+`spec-review-31-2` FAIL (N31-003), `spec-review-31-3` PASS — with the plan set
+`31-plan-2` still carrying open findings and **no implementation phase started**.
+
+Why the plan is not repaired: its subject is skill-reference prose
+(`LEDGERS.md`, `CHECKS.md`, `OUTPUT.md`, `POLICY.md`, `REPAIR.md` plus their test
+pins), and D-31-6 moves that carrier into code. A repair batch would spend the
+plan stage's third cycle (user-only under the cap) perfecting an artifact whose
+target is superseded — the second cycle already produced new findings
+(`R31-01…R31-03`) about the wrong surface.
+
+Superseded by this ruling (kept on disk as evidence, never deleted; the replan
+rewrites them):
+
+| Artifact | State | Disposition |
+|---|---|---|
+| `PLAN.md`, `TASKS.md`, `planning-obligations.md`, `planning-evidence.md`, `testing.md` | `31-plan-2` | re-cut by `plan-feature` |
+| `ACCEPTANCE.md` | frozen manifest | re-frozen by the replan — a manifest change is the planner's act, never a repair |
+| `planning-findings.md` rows `F01–F03`, `R31-01…R31-03` | `open` | die with the plan set; re-raised only if they survive against the new cut. The ledger's closed vocabulary (`open \| resolved \| dismissed`) has no `superseded` value, so they stay `open` and this note is their disposition |
+| `plan-review-31-1`, `plan-review-31-2` receipts | FAIL against `31-plan-2` | void with the set; the replan's `/review-plan` opens a fresh lineage |
+
+Not superseded — verified, not assumed:
+
+- `spec-review-31-3` is still `current: true`
+  (`bun scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+  31-planning-review-materiality`, exit 0). The Product half is untouched by
+  this ruling.
+- Digest-invariance proof: appending bytes to the `## Engineering half` and
+  re-running `build --stage spec` left the bound artifact digest at
+  `5cdbd2f3f2039b1089c14cdce9a3367df9a92720eb0122de822e1693a07f502e` (bytes
+  33332 unchanged) — `spec-product-v1` excludes the Engineering half, so the
+  PASS survives the engineering rewrite. The experiment was reverted; `SPEC.md`
+  is byte-identical to `2ca960fd`.
+
+Next: `/plan-feature 31` → `/review-plan 31` → `/execute-phase 31`. Roadmap row
+31 is back to `defined` (routing data, deliberately unbound) until the new set
+is cut.
