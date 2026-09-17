@@ -1270,3 +1270,208 @@ window D-31-7 opened (a third cycle would need explicit user instruction
 behind the orchestrator's cap). `ACCEPTANCE.md` stays frozen untouched (it is
 `plan-feature`'s owning artifact, re-derived with the superseded `31-plan-1/2`
 re-cut only after a fresh `SPEC-REVIEW-PASS` receipt).
+
+---
+
+# Spec re-review (`review-spec`), 2026-09-17
+
+Cycle-2 re-review of the Product half the `31-spec-4` repair batch rewrote —
+the route `spec-review-31-4` named for N31-004 (`class: product` →
+Product-half repair, then re-review). This concludes the D-31-7 window's
+second repair/re-review cycle; the `CONVERGENCE-ANOMALY` block was reported by
+the `31-spec-4` repair batch on entry (decisions.md §"Product repair batch
+(design-feature, artifact revision `31-spec-4`)"). Fresh context; this
+conversation never authored or edited the Product half, its ledgers, or its
+acceptance manifest.
+
+Pre-state observed before this reviewer wrote anything (`verify --stage spec`):
+`fresh: false / stale-artifact-content`, `changedPaths: [SPEC.md]` —
+`spec-review-31-4` binds `d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa`
+while the Product bytes now sit at `fef66d09…`.
+
+Snapshot built by the recipe owner before any check
+(`bun scripts/pre-execution-snapshot.mjs build --stage spec --unit 31-planning-review-materiality`;
+stdout first line pasted):
+
+```text
+b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a
+```
+
+- `stage: spec` · `unitKind: feature` · `unitId: 31-planning-review-materiality`
+- `sourceRevision` = `artifactRevisionId` = `fef66d093f850888454ea095e8dc6de8509be681`
+- `artifacts`: `docs/features/31-planning-review-materiality/SPEC.md` · selector
+  `spec-product-v1` · bytes 41678 · digest
+  `bd05875641c632ca88533e2de8a85fa1c68942d03531bae8e922af8c65a871ab`
+- `parentSpecSnapshotDigest`: null · contexts:
+  `architectural-invariants: absent` ·
+  `normalized-repository-state: present (e1b81e29…)` ·
+  `project-guide: present (ff24d7e4…)`
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality spec @ fef66d09
+- 3 specific product decisions a hostile reader could call invented rather than
+  recorded:
+    1. In-scope 2's wording-only machine half — "acceptance fingerprint and
+       bound material bytes unmoved → still current". `acceptanceFingerprint` is
+       a #138 concept in the verification-receipt/candidate-snapshot schemas; the
+       pre-execution spec snapshot binds only SPEC.md, so presenting the
+       acceptance fingerprint as the wording-only discriminator is forward design
+       (the code the unit is chartered to write), evidence-set `decision` under
+       D-31-6 — not a claim about an existing pre-execution surface. No finding.
+    2. In-scope 5's "keep only" remainder: the anti-deflation judgment
+       ("`medium` minimum"), the third-cycle sentence ("third cycle never"), and
+       the ledger "report-note" wording are presented as preserved text, but none
+       exists in the named planning surfaces today — they are new prose. → N31-008.
+    3. In-scope 7's four skill minor bumps + README skill-table cells, mapped to
+       AC10 + AC11: no criterion observes the version bump (AC9 names the schema
+       package; AC10/AC11 verify the gate pack and mirror parity). → N31-007.
+- The user outcome the SPEC promises that has no observable check: AC7's removal
+  of the two POLICY §4 sentences ("no cap converts a verdict into a dead end",
+  "Entering a **second** cycle is allowed") — both greps cannot match the
+  sentences actually on disk (line-wrapped), so the criterion is false-green
+  (N31-006); and the version-bump outcome (N31-007).
+- One role the matrix leaves unspecified for a capability it does list: none
+  found — 5 derived roles × 5 capabilities (C1–C5) are all explicit; `audit-pr`
+  sits inside E1's declared reader classes.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? AC7's two POLICY removal greps would have to be able to match the
+  sentences they claim removed — they cannot: `POLICY.md:60-61` wraps
+  "Entering a **second**\ncycle is allowed …" and `:83-84` wraps "… no cap
+  converts a verdict into a\ndead end.", so both greps exit 1 today and would
+  still exit 1 with the sentences left in place. → CONFIRMED-GAPS.
+- Verdict stance before checking: CONFIRMED-GAPS
+```
+
+## Checks — one result each
+
+Snapshot `b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a` @
+source revision `fef66d093f850888454ea095e8dc6de8509be681`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | finding | In-scope 7 declares the four skill minor bumps + README cells, but its AC pointer (AC10 + AC11) observes neither: AC10 runs the gate pack + context budgets, AC11 runs the mirror/package suite, AC9 names only the schema package `version:`. No criterion makes the skill-bump outcome observable. → N31-007 |
+| C2 | Actors and roles | pass | 5 derived roles (human owner / author turn / reviewer turn / executor turn / drivers & sensors) × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied`; no unlisted role; `audit-pr` appears only inside E1's declared reader classes |
+| C3 | Entity closure | pass | E1 (finding record/ledger row), E2 (wording-only determination), E3 (cycle state) each resolve create/read/update/delete/transitions to a named surface + test; every `n/a` carries a reason (append-only / derived value); zero blank rows |
+| C4 | Limits and failure states | pass | Size `M`; limit = the two-cycle cap; failure states resolved — unconverged loop → stage-scoped human stop (spec `NEEDS-DESIGN`, plan refusal + `design-feature` route), mislabeled defect → `medium` minimum (anti-deflation), wording-only misroute → recorded determination + rotation, vacuous pin set → floor + discrimination leg |
+| C5 | Scope and non-goals | pass | 7 non-goals, each naming the preserved contract, the owning feature (#159, code side), or an explicit exclusion (schema-package values, retroactive rows, sensor mechanics); nothing excluded by silence |
+| C6 | Integration closure | pass | `docs/CAPABILITIES.md` is the unseeded template (placeholder rows only), so the 12-row derived inventory is recorded and walked one row per subsystem; the "Skill reference docs" Test now matches the repo — re-verified here that `normative-drift.test.mjs` reads neither CHECKS.md nor OUTPUT.md for materiality and `check-skill-context.mjs` checks budgets only (N31-004's second half) |
+| C7 | Expectation sweep | pass | 19 resolved rows (≥10 for `M`), each forced to exactly one of `in-scope`/`out-of-scope` with a pointer; zero unresolved |
+| C8 | Acceptance objectivity | finding | AC7's removal clause for the two POLICY §4 sentences cannot verify the removal: `grep -n "no cap converts a verdict into a dead end" …` and `grep -n "Entering a \*\*second\*\* cycle is allowed" …` both exit 1 today because the sentences are line-wrapped (`POLICY.md:60-61`, `:83-84`), so the criterion is green whether or not the sentence survives — a false-green validator that lets the shipped POLICY.md keep prose contradicting the machine cap. → N31-006 |
+| C9 | Internal contradiction | pass | The materiality line (material = `medium`+) is consistent across Goal, Business goals, In-scope 1/2/5, D-31-1/D-31-4, Out-of-scope 2 and the capability/role matrix; the terminal verdict stays the existing stage-scoped `needs-design`/refusal (D-31-8, matching `VERDICTS_BY_STAGE` — re-read: plan carries no `needs-design`); the four preserved contracts appear as preserved-only in both In-scope and Out-of-scope |
+| C10 | Repository contradiction | finding | In-scope 5 presents the anti-deflation judgment ("`medium` minimum"), the third-cycle sentence ("third cycle never"), and the ledger "report-note" wording as remainder the shrink `keep[s] only`, but none exists in the named planning surfaces today (`grep -rn 'medium` minimum' skills/pre-execution-review/references/ skills/review-spec/ skills/review-plan/` → exit 1; the judgment lives only code-side at `review-implementation/references/CLASSIFY.md:22` as "`med` minimum"; `grep -n 'third cycle never' …/POLICY.md` → exit 1; `grep -niE 'report-note' …/LEDGERS.md` → exit 1). They are authored additions, not preserved text. → N31-008 |
+| C11 | Evidence integrity | pass | Every `decisions.md` evidence row is `proven`/`decision` + `current` with a location; no `unknown`/`drifted`/`stale`; the carrier rows still hold — `git diff a400b978..HEAD --name-only` touches only this unit's docs + ROADMAP, so no cited code carrier moved; the 10 `PRE_EXECUTION_FRESHNESS_CODES`, `VERDICTS_BY_STAGE`, and the four skill versions (2.2.1/1.7.1/1.6.1/3.4.0) re-read on disk match |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` with an empty table; D-31-5's AD-008 reconciliation is owner-routed (`resolve-repository-state`) behind a conditional trigger, not an open product choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, architecture, or validator: AC anchors name carriers and frozen identifiers (`PLANNING_PIN_TABLE`, `PLANNING_PIN_FLOOR`, `review-loop-cap`) without assigning them to a phase or task; the phase cut stays `plan-feature`'s (the superseded plan set is declared re-cut, never repaired) |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: the README citation is in-unit (implementation PR, AC12), the bumps/pins in-unit (AC9/AC10/AC11/AC13), and the AD-008 amendment is conditional and owner-routed — not deferred work, not a future issue |
+
+Findings: 3 (material open: 1) — N31-006 (`medium`, product), N31-007
+(`low`, product), N31-008 (`info`, product) in `planning-findings.md`.
+N31-004/N31-005 verified repaired at `31-spec-4`; N31-001/N31-002/N31-003 stay
+`resolved`.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-5 · Snapshot: b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: fef66d093f850888454ea095e8dc6de8509be681 · Artifact revision: fef66d093f850888454ea095e8dc6de8509be681
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T13:58:00Z/2026-09-17T14:03:00Z · Findings: 3 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 41678 · digest bd05875641c632ca88533e2de8a85fa1c68942d03531bae8e922af8c65a871ab · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 11/14 pass (C1, C8, C10 findings); falsification CONFIRMED-GAPS; N31-006 is `medium` and blocks, N31-007/N31-008 route to design-feature without blocking
+```
+
+Artifact-revision notes:
+
+- The design handoff names the authoring label `31-spec-4` (SPEC `## Design
+  status`; decisions.md repair-batch header). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `fef66d09…` — the same reconciliation prior receipts
+  recorded; the label stays recorded here.
+- Reviewed bytes were committed at `fef66d09` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held; no reviewed
+  byte changed by this turn.
+- `spec-review-31-4` is superseded by design (its bound Product bytes moved at
+  `31-spec-4`); no other receipt's lineage is affected.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-5",
+    "verdict": "spec-review-fail",
+    "snapshot": "b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — the write landed, `structural.fresh: true`; `current` is false because
+the verdict is a FAIL, which is the expected emit result and routes per the
+verdict. An earlier draft of the receipt carried the `31-spec-4` label inside
+the `Artifact revision:` field and the sensor answered `fresh: false /
+stale-artifact-revision`; the field now carries only the builder-derived value,
+as prior receipts do.)
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a · Artifact revision: fef66d093f850888454ea095e8dc6de8509be681
+- Failed checks: C1, C8, C10
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | N31-006 | medium | product | C8 | AC7's two POLICY §4 removal greps target line-wrapped sentences, so they exit non-zero whether or not the sentence is removed — a false-green criterion that can ship POLICY.md still stating the unbounded loop | AC7; `POLICY.md:60-61,83-84`; both greps run → exit 1 at `fef66d09` with the sentences present | verified |
+  | N31-007 | low | product | C1 | In-scope 7's four skill minor bumps + README cells map to AC10 + AC11, neither of which observes the version bump; no test reads README skill cells or asserts those `version:` lines | In-scope 7; AC9/AC10/AC11; Integration row "Versioning/release surfaces"; four `SKILL.md` versions; `scripts/normative-drift.test.mjs:701-713` | verified |
+  | N31-008 | info | product | C10 | In-scope 5 presents the anti-deflation judgment, the third-cycle sentence and the ledger "report-note" wording as preserved remainder, but none exists in the named planning surfaces today — they are authored additions | In-scope 5; AC7 kept-side greps; three observed exit-1 greps at `fef66d09`; `review-implementation/references/CLASSIFY.md:22-23`; `review-change/SKILL.md:161` | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+- Parent state: n/a (spec stage roots its own lineage)
+```
+
+CONVERGENCE-ANOMALY (POLICY §4, D-31-7) — reported on entry to this cycle by the
+`31-spec-4` repair batch and reproduced here for the record; it grants no PASS
+and is not a stop:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-004/N31-005 (repaired) / N31-006, N31-007, N31-008 (new)
+- Snapshots: d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa → b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a (artifactRevisionId 9a39c3fc → fef66d09)
+- Missed: the two POLICY §4 removal greps in AC7 are non-discriminating (line-wrapped targets); the four-skill bump has no criterion; the "keep only" remainder is authored, not preserved
+- Owning stage: product
+- Why the prior review failed: `spec-review-31-4` returned C8/medium on AC7's surface coverage; the `31-spec-4` repair added the missing CHECKS/OUTPUT/LEDGERS greps but left the two POLICY greps unable to match their targets
+- Route to owner: `design-feature` repair batch (fix the two greps / add a bump criterion / correct the remainder framing), then `review-spec`
+```
+
+Cap note (D-31-7): this is the second consecutive FAIL verdict for the spec
+stage in the window the carrier amendment opened (`spec-review-31-4` FAIL #1,
+this FAIL #2). A further repair/re-review is a **third cycle** and per
+D-31-6/D-31-7 never starts without explicit user instruction — the human route
+is the exit. The three rows above route to `design-feature`, but the next
+cycle requires the user's instruction.
+
+→ Next: /design-feature 31-planning-review-materiality "repair N31-006 + N31-007 + N31-008: make AC7's two POLICY §4 removal greps discriminate (the sentences are line-wrapped — use a pattern that matches the present text, e.g. `grep -n 'no cap converts a verdict into a'`), add a criterion for the four skill `version:` bumps + README cells, and correct In-scope 5's \"keep only\" framing to name the authored remainder" — then /review-spec 31-planning-review-materiality re-reviews the new artifact revision (third cycle: explicit user instruction required, D-31-7)
+  · a product choice is missing → answer it in the instruction; nothing here chooses for you
+  · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
+

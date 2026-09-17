@@ -159,3 +159,26 @@ acceptance set. Repair owner: `design-feature` (add the missing greps to AC7 —
 skills/review-plan/references/CHECKS.md` exits non-zero, the schema-side AC2
 pattern for `LEDGERS.md` — or re-scope item 5), then `/review-spec` re-judges
 the new revision.
+
+---
+
+## Re-review (`spec-review-31-5`, 2026-09-17)
+
+Cycle-2 re-review of the Product half the `31-spec-4` repair batch rewrote —
+the route `spec-review-31-4` named for N31-004. Fresh context; this
+conversation never authored or edited the Product half, its ledgers, or its
+acceptance manifest.
+
+Snapshot `b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a` @
+source revision `fef66d093f850888454ea095e8dc6de8509be681` (`spec-product-v1`
+digest `bd05875641c632ca88533e2de8a85fa1c68942d03531bae8e922af8c65a871ab`,
+41678 bytes). Verdict: `spec-review-fail` — 11/14 checks pass; C1, C8 and C10
+carry one row each. N31-004/N31-005 are verified repaired; N31-001/N31-002/
+N31-003 stay `resolved` at `resolving-artifact-revision: 31-spec-2`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-006 | spec | medium | product | b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a | AC7's removal clause for the two POLICY §4 sentences cannot verify the removal, so a correct-looking PR can ship POLICY.md still stating the unbounded loop while AC7 is green. `grep -n "no cap converts a verdict into a dead end" skills/pre-execution-review/references/POLICY.md` exits 1 because the sentence is line-wrapped (`:83-84` — "… no cap converts a verdict into a" / "dead end."); `grep -n "Entering a \*\*second\*\* cycle is allowed" …/POLICY.md` exits 1 because `:60-61` wraps it ("Entering a **second**" / "cycle is allowed …"). Both criteria are therefore satisfied whether or not the sentence survives — a false-green validator of the same class the second-cycle repair set out to close. | SPEC.md `### Acceptance criteria` AC7 (first three greps); `skills/pre-execution-review/references/POLICY.md:60-61,83-84`; observed `grep … ; echo $?` → exit 1 for both patterns at `fef66d09` (sentences present, wrapped); `grep -rn "More cycles stay allowed" skills/`, the CHECKS/OUTPUT/LEDGERS greps and the three kept-side greps all discriminate as intended | open | — | — |
+| N31-007 | spec | low | product | b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a | In-scope 7 declares the four touched skills bumped minor with CHANGELOG rows and README skill-table cells, but its AC pointer ("→ AC10 + AC11") observes none of it: AC9 names only the schema package `version:`; AC10 runs the gate pack + `check-skill-context.mjs`; AC11 runs the mirror/package suite. No test in `scripts/` reads README skill-table cells or asserts the four `version:` lines (`grep -rn "version: [0-9]" scripts/*.test.mjs` hits only `review-loop-discipline.test.mjs:278`, the fold-skill pin), and `normative-drift.test.mjs` checks restated-vs-actual consistency, so an unchanged version stays consistent and green. | SPEC.md `#### In scope` item 7; SPEC.md AC9/AC10/AC11; SPEC.md `### Capability closure` Integration-closure row "Versioning/release surfaces"; `skills/pre-execution-review/SKILL.md` (`version: 2.2.1`), `skills/review-spec/SKILL.md` (`1.7.1`), `skills/review-plan/SKILL.md` (`1.6.1`), `skills/design-feature/SKILL.md` (`3.4.0`); `scripts/normative-drift.test.mjs:701-713` (consistency, not bump); no README/version assertion in `scripts/` | open | — | — |
+| N31-008 | spec | info | product | b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a | In-scope 5 frames the planning remainder as text the shrink `keep[s] only`, but three of the named remainder items do not exist in the named planning surfaces today and must be authored: the anti-deflation judgment ("`medium` minimum") exists only code-side at `skills/review-implementation/references/CLASSIFY.md:22` ("`med` minimum"), not under `skills/pre-execution-review/references/`, `skills/review-spec/`, `skills/review-plan/`; "third cycle never" is absent from `POLICY.md` (it lives in `review-change` files); "report-note" is absent from `LEDGERS.md` §3. The AC7 kept-side greps correctly require the post-shrink state, so the defect is the half's "keep only"/decisions "stays" framing presenting authored prose as preserved prose, not the criterion. | SPEC.md `#### In scope` item 5; SPEC.md AC7 (kept-side greps); `grep -rn 'medium` minimum' skills/pre-execution-review/references/ skills/review-spec/ skills/review-plan/` → exit 1 at `fef66d09`; `grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 1; `grep -niE "report-note" skills/pre-execution-review/references/LEDGERS.md` → exit 1; `skills/review-implementation/references/CLASSIFY.md:22-23`; `skills/review-change/SKILL.md:161` | open | — | — |
+
