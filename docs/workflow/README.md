@@ -18,7 +18,7 @@ Notion ("Agentic Workflow").
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install + portable prompt to set this up in any project |
 | [MIGRATION.md](MIGRATION.md) | Upgrading an existing install from the previous skill set — what was renamed, what to delete |
-| [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Manual smoke test: after editing an executor-path skill, run it against a toy fixture with the weakest fleet model and check its contracted output still holds |
+| [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Golden fixture: the manual judgment protocol (run a changed executor-path skill against the committed toy fixture with the weakest fleet model) plus the executable `scripts/golden-fixture.test.mjs` suite that asserts its deterministic half |
 | [WORKFLOW_INVARIANTS.md](WORKFLOW_INVARIANTS.md) | Portable contract for optional project architectural invariants and their evidence-based evaluation |
 
 ## Core principles
