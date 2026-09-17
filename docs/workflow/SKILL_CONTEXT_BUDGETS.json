@@ -67,16 +67,22 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9552,
-      "routeLinesMax": 616
+      "routeEstimateMax": 9754,
+      "routeLinesMax": 609,
+      "sources": {
+        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)"
+      }
     },
     "audit-pr:fix": {
       "skills": [
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9552,
-      "routeLinesMax": 616
+      "routeEstimateMax": 9754,
+      "routeLinesMax": 609,
+      "sources": {
+        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)"
+      }
     },
     "design-feature:product": {
       "skills": [

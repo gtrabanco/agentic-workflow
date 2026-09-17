@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.5.1
+version: 3.6.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -24,14 +24,16 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
 For a final PR review, the turn is incomplete until this additional box passes:
 
 ```text
-✓ Decision: REVIEW-PASS + PR exists → `gh pr comment <N> --body-file <path>` RUN;
-  then `gh pr view <N> --json comments` RUN and the newest exact-HEAD
-  `review-change:pass` marker is confirmed before printing `→ Next:`
+✓ Decision: REVIEW-PASS + PR exists →
+  `bun scripts/review-receipt.mjs emit --pr <N> --head "$(git rev-parse HEAD)" …`
+  RUN and exited 0 — the script posts the SHA-bound comment, re-reads the PR
+  comments, and exits non-zero unless the newest exact-HEAD
+  `review-change:pass` marker is confirmed, so its exit code IS this box
 ```
 
 The receipt closeout is a precondition of the report, not a follow-up: do not
-print the fixed report block until the comment is current. A clean report
-without that current receipt must not recommend `/audit-pr`.
+print the fixed report block on a non-zero exit. A clean report without a
+current receipt must not recommend `/audit-pr`.
 
 For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the closing
 recommendation, joined with ` + `; the review must never hand off only the first
