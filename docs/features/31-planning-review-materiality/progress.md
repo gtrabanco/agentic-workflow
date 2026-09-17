@@ -3398,3 +3398,70 @@ Hand-off: a repaired plan is not an approved plan. The next step is
 `/review-plan 31-planning-review-materiality` — the new artifact revision is
 `31-plan-5` (`ecde13dc`), bound to parent snapshot `dd09372a…`, and the reviewer
 re-derives plan snapshot `b17009ea…`.
+
+---
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-31-4 · Snapshot: b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be · Verdict: plan-review-fail
+- Unit: 31-planning-review-materiality · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e · Parent Product receipt: spec-review-31-11
+- Source revision: ecde13dc2153ce96b28d36803c7cb110c2b19c8d · Artifact revision: ecde13dc2153ce96b28d36803c7cb110c2b19c8d
+- Reviewer: review-plan@pi · Session: pi-web-manual · Role: reviewer · Author: plan-feature (31-plan-5 re-derivation)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T23:30:00Z/2026-09-17T23:46:00Z · Findings: 5 (material open: 4)
+- Ledgers read: planning-evidence 32 rows · obligations 15 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): plan-review-31-3 @ e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f
+```
+
+Artifact-revision notes:
+
+- The planner's handoff label is `31-plan-5`. No runtime rotates
+  `artifactRevisionId` in this environment, so this receipt binds the builder's
+  digest-derived value `ecde13dc…` (the newest commit touching the bound paths),
+  the same reconciliation every prior receipt in this unit recorded. `HEAD` at
+  review start is `2300b0d7`, a `progress.md`-only commit (unbound), which is why
+  it does not move the content revision.
+- **Snapshot.** `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
+  31-planning-review-materiality --parent dd09372a…` printed
+  `b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be` — the digest
+  the handoff names. One revision, whole-file rows for `spec`, `acceptance`,
+  `plan`, `tasks`, `testing`, `decisions`, `architecture-notes`,
+  `planning-evidence`, `obligations`; `parentSpecSnapshotDigest` = `dd09372a…`.
+- **Lineage L1 (claimed beside recomputed).** The current Product receipt is
+  `spec-review-31-11` @ `dd09372a…`. Recomputed from the bytes on disk with the
+  receipt's own recorded revision (`build --stage spec --source-revision
+  e4887dac… --artifact-revision e4887dac…`) → the same `dd09372a…` and the same
+  `spec-product-v1` projection digest
+  `e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02` at 46362
+  bytes, with the three `CONTEXT_SOURCES` digests
+  (NRS `e1b81e29…`, `CLAUDE.md` `ff24d7e4…`, architectural-invariants absent)
+  unmoved. The Product bytes and contexts hold; the whole-file
+  `stale-source-revision` answer the CLI returns is the known false signal
+  `PE-003`/`plan-review-31-3` already recorded (the Engineering half lives in the
+  same `SPEC.md`), and no `class: product` row is owed for it.
+- **Cycle accounting (D-31-7).** This is the plan stage's **fourth** review of the
+  window `plan-review-31-1` opened (FAIL #1 → `31-plan-2` → FAIL #2 → `31-plan-3`
+  → FAIL #3 → `31-plan-4`/`31-plan-5`). It is not a blind re-review: the snapshot
+  moved (`e1a22768…` → `b17009ea…`) and the bound Product parent moved twice
+  (`spec-review-31-9` → `spec-review-31-11`), and it names findings no prior cycle
+  named (P31-07/P31-08). Under the live POLICY §4 the anomaly is printed and
+  routed, never a stop, so the verdict stands on the checks alone; the block below
+  records the (now fourth) cycle.
+- Reviewed bytes are committed at `2300b0d7` (clean worktree at review start:
+  `git status --porcelain` empty), so the builder's "commit the bound artifacts"
+  precondition held; the only writes this turn makes are to the unbound
+  `progress.md` and `planning-findings.md`, so none of the nine bound rows moves.
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality plan
+- Finding ids: P31-07 + P31-08 + P31-09 + P31-10 + P31-11 (new, this cycle) / R31-01…R31-03, F01…F03, P31-01…P31-05 (resolved at 31-plan-3/31-plan-4), P31-06 (resolved at 31-plan-5)
+- Snapshots: e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f → b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be (artifactRevisionId 31-plan-3/13ba789d → 31-plan-5/ecde13dc)
+- Missed: the two existing package gates P1's own done-when runs — the `4.2.0` version pins in `packages/agentic-workflow-schema/test/release-contract.test.mjs` and `verification-gates.test.mjs`, and `pre-execution-docs.test.mjs`'s "every published limit is documented" walk over `PRE_EXECUTION_LIMITS` (no planning-evidence row reads any of the three)
+- Owning stage: plan
+- Why the prior review failed: `plan-review-31-3` returned FAIL on P31-01…P31-05; the `31-plan-4` batch repaired them and the `31-plan-5` re-derivation re-parented the plan and closed P31-06 without re-deriving P1's edit set against the package suite it runs as its done-when
+- Route to owner: `plan-feature 31-planning-review-materiality` — one batch for P31-07 + P31-08 + P31-09 + P31-10 + P31-11, then `/review-plan` re-reviews the new artifact revision
+```
