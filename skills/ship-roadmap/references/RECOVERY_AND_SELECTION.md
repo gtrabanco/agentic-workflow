@@ -85,7 +85,7 @@ turns:
          stages (`plan-fix` → REVIEW-PLAN → EXECUTE (`--fix`) → PR → REVIEW → AUDIT), same
          budget caps, floors, and merge policy as features.
    6. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
-      #12 unblocks 05 and 07") and the resume command.
+      issue `#<n>` unblocks features `05` and `07`") and the resume command.
 
    `execute-phase`'s own dependency gate stays active inside every subagent —
    it's the belt to this braces. **The autopilot never passes `--force`:** a
