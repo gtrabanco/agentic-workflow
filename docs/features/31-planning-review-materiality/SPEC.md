@@ -168,11 +168,15 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    `design-feature/references/REPAIR.md` §4 lose the sentences the machine now
    owns ("`info` is the only immaterial one", "Material = anything above
    `info`", the unbounded-cycle sentences, the mandate of a re-review for every
-   batch) and keep only: the anti-deflation judgment ("`medium` minimum";
+   batch). The remainder this shrink leaves in those surfaces is **authored,
+   not preserved**: the anti-deflation judgment ("`medium` minimum";
    deflation is itself a review defect), the human-keyed third-cycle rule
-   ("third cycle never starts without explicit user instruction"), the
-   report-note persistence contract in the ledger, the `CONVERGENCE-ANOMALY`
-   block (byte-unchanged), and the receipt-literal lines (byte-unchanged)
+   ("third cycle never starts without explicit user instruction"), and the
+   report-note persistence contract in the ledger (with the planning
+   materiality line — material = `medium`+; `low` is a report-note — that
+   replaces the removed sentences) do not exist in the named planning surfaces
+   today and are written fresh by this feature; only the `CONVERGENCE-ANOMALY`
+   block and the receipt-literal lines are preserved byte-unchanged
    → AC7.
 6. **Discipline pins re-aimed at the code, never weakened**: the planning-side
    pins in `scripts/review-loop-discipline.test.mjs` keep the machine rule
@@ -184,7 +188,8 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    `review-plan`, `design-feature` — minor per the #176 freeze) bump in the
    same PR with CHANGELOG rows and README skill-table cells; the Pi mirror is
    re-bundled from the package that owns the bundler
-   (`cd packages/pi-agentic-workflow && bun run bundle:skills`) → AC10 + AC11.
+   (`cd packages/pi-agentic-workflow && bun run bundle:skills`) → AC10 + AC11
+   + AC14.
 8. **Bibliography obligation** (issue #171): when this ships, the Jin & Chen
    entry appends to `README.md` under a bottom `## References` section (created
    if absent, deduped against other features' entries) — in the implementation
@@ -343,7 +348,7 @@ block (user confirms; upsert-safe).
 | Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | Persists `low` report-notes (append-only contract unchanged); row shape, writers, resolvers unchanged | `ledger-ownership` + `ledger-provenance` + `pre-execution-quality` suites |
 | Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` planning pins re-aim at the code carriers; existing assertions keep strength | AC8 + AC9 (no-weakening walk) |
 | Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | Re-bundled after the last `skills/` edit, from the package that owns the script | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC11) |
-| Versioning/release surfaces (package + skill `version:`s, `CHANGELOG.md`, README tables) | yes | Schema package minor bump; four skill minor bumps; CHANGELOG rows + README cells via `bump-skill` | AC10 + rendered-facts consistency |
+| Versioning/release surfaces (package + skill `version:`s, `CHANGELOG.md`, README tables) | yes | Schema package minor bump; four skill minor bumps; CHANGELOG rows + README cells via `bump-skill` | AC10 + AC14 + rendered-facts consistency |
 | README references (bibliography) | yes | The issue's citation obligation lands as a bottom `## References` append in the implementation PR — never before | AC12 grep at PR head |
 | Workflow tutorial + site guides (`docs/workflow/*`, `docs/site/guides/`) | partial | No severity statement exists today; no edit; generated guides change only if `docs/workflow/` prose changes (it does not) | n/a here; `audit-docs` owns drift |
 | GitHub templates / forge surfaces (`.github/`, issue/PR forms) | no | Untouched by this feature | n/a — no surface exists to integrate with |
@@ -472,10 +477,15 @@ Command-checkable at the PR head unless labelled `read-verified`.
 - **AC7** (command + `read-verified`): prose shrinks to the non-computable
   remainder — the machine-owned sentences leave **every** declared surface:
   `grep -rn "More cycles stay allowed" skills/` exits non-zero;
-  `grep -n "no cap converts a verdict into a dead end"
-  skills/pre-execution-review/references/POLICY.md` exits non-zero;
-  `grep -n "Entering a \*\*second\*\* cycle is allowed"
-  skills/pre-execution-review/references/POLICY.md` exits non-zero;
+  `grep -n "no cap converts a verdict into a"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero (the §4
+  sentence is line-wrapped across `:83-84`, so the pattern is its
+  single-line fragment — it matches while the sentence stands and disappears
+  with it);
+  `grep -n "cycle is allowed when correctness needs it"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero (the
+  "Entering a **second** cycle is allowed" sentence wraps across `:60-61`;
+  the fragment is its second line, so it discriminates the same way);
   `grep -rn "Material = anything above"
   skills/review-spec/references/CHECKS.md
   skills/review-plan/references/CHECKS.md` exits non-zero (the materiality
@@ -528,6 +538,22 @@ Command-checkable at the PR head unless labelled `read-verified`.
   ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists only
   paths of the first two groups; the schema vocabulary diffs remove no value
   (`read-verified`).
+- **AC14** (command + `read-verified`): the four touched skills are bumped and
+  their release surfaces move in the same PR — `git diff main --
+  skills/pre-execution-review/SKILL.md skills/review-spec/SKILL.md
+  skills/review-plan/SKILL.md skills/design-feature/SKILL.md | grep -cE
+  '^[+-]version: '` returns ≥ 8 (one removed + one added `version:` line per
+  touched skill; a skill whose `version:` did not move contributes no such
+  hunk — each SKILL.md carries nothing but the `version:` change, per
+  `bump-skill`'s guardrail), and the walk verifies: each old→new pair is a
+  semver-minor increment (minor per the #176 freeze — no major);
+  `CHANGELOG.md` gains one per-skill row per bumped skill (newest first — the
+  `normative-drift` version-tables check in AC10's pack recomputes those
+  tables against the frontmatter `version:` lines, so a moved version without
+  its row fails AC10); and the README `## The skills` cells for the four
+  touched skills are accurate post-shrink (`bump-skill`'s
+  update-not-rewrite surface — `pre-execution-review` is narrative-only in
+  README) (`read-verified`).
 
 ### Tooling
 
@@ -607,21 +633,24 @@ Product boxes:
       AC pointers on each item and group.
 - [x] Every acceptance criterion is a runnable command OR labelled
       `read-verified` — AC1–AC3, AC5, AC10–AC12 pure commands; AC4, AC6–AC9,
-      AC13 command + `read-verified` where judgement-only.
+      AC13–AC14 command + `read-verified` where judgement-only.
 - [x] `### Deferred decisions` exists and reads `none`.
 
 ## Design status
 
-`designed` — repair batch for `spec-review-31-4` applied (N31-004 + N31-005,
-one batch): capability closure complete (zero blank rows), Spec-lint product
-boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
-**`31-spec-4`** (2026-09-17 — see `## Amendments`). This write moves the
-Product half's bound bytes, so the `spec-review-31-4` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run is cycle 2 of
-the window D-31-7 opened at the carrier amendment (the `CONVERGENCE-ANOMALY`
-block preceded this batch's edits — POLICY §4), and `plan-feature` re-cuts the
-plan set (`31-plan-1/2` superseded, never repaired) only on a current
-`SPEC-REVIEW-PASS` receipt.
+`designed` — repair batch for `spec-review-31-5` applied (N31-006 + N31-007 +
+N31-008, one batch): capability closure complete (zero blank rows), Spec-lint
+product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact
+revision **`31-spec-5`** (2026-09-17 — see `## Amendments`). This write moves
+the Product half's bound bytes, so the `spec-review-31-5` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run is the **third
+consecutive cycle** of the window D-31-7 opened at the carrier amendment, and
+it starts under the explicit user instruction that commissioned this batch
+(D-31-7's user-keyed third cycle — the instruction is quoted in `decisions.md`
+and `progress.md`; the window's `CONVERGENCE-ANOMALY` block preceded the
+cycle-2 edits and is reproduced in the `spec-review-31-5` receipt).
+`plan-feature` re-cuts the plan set (`31-plan-1/2` superseded, never repaired)
+only on a current `SPEC-REVIEW-PASS` receipt.
 ---
 
 ## Engineering half
@@ -1101,3 +1130,35 @@ Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
 `31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
 `spec-review-31-4` receipt is superseded by design (bound Product bytes moved
 — `stale-artifact-content`): the next `/review-spec` run is cycle 2 (D-31-7).
+
+### `31-spec-5` — repair batch for `spec-review-31-5` (N31-006 + N31-007 + N31-008)
+
+User-commissioned repair batch (2026-09-17), commissioned as "repair N31-006
++ N31-007 + N31-008: make AC7's two POLICY §4 removal greps discriminate
+(targets are line-wrapped — match a single-line fragment), add a criterion
+for the four skill version: bumps + README cells, and correct In-scope 5's
+\"keep only\" framing to name the authored remainder". Trigger:
+`spec-review-31-5` returned `SPEC-REVIEW-FAIL` (failed checks C1, C8, C10;
+11/14 pass) with one `medium`, one `low` and one `info` `product` row — one
+batch over the whole set, repair owner `design-feature`. This is the **third
+consecutive cycle** of the window D-31-7 opened at the carrier amendment
+(`spec-review-31-4` FAIL #1, `spec-review-31-5` FAIL #2): per D-31-7 it
+starts only under explicit user instruction, which this commission is — the
+instruction is quoted verbatim in `decisions.md` and `progress.md` (REPAIR §4:
+a repair responding to a persisted verdict is never a loop defect). Repair
+classes (REPAIR §2):
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-006 | product · medium | AC7's two POLICY §4 removal greps now match single-line fragments verified present today (`POLICY.md:83` for "no cap converts a verdict into a …"; `POLICY.md:61` — the second line of the wrapped "Entering a **second** cycle is allowed …" sentence — for "cycle is allowed when correctness needs it"; both unique in `skills/`, both exit 0 at branch head `4cf755ab` with the sentences standing), so each grep exits 0 before the shrink and non-zero after it — the criteria now discriminate. Repair class: **closure completion** (the criteria verified nothing before; reviewed product intent — the two sentences leave §4 — unchanged). | AC7 |
+| N31-007 | product · low | New **AC14** observes In-scope item 7's bump obligation: the pathspec-limited diff of the four touched `SKILL.md` files carries one removed + one added `version:` line each (≥ 8 hunk lines), each pair a semver-minor increment per the #176 freeze, with `CHANGELOG.md` per-skill rows (the AC10 `normative-drift` version-tables check recomputes them against frontmatter) and the README `## The skills` cells accurate post-shrink. In-scope item 7's pointer gains `AC14`; the Integration-closure row "Versioning/release surfaces" names it in its Test cell. Repair class: **closure completion** (the obligation was declared In-scope; only its criterion was missing). | AC14 (new) + In-scope 7 pointer + Integration-closure row "Versioning/release surfaces" + Spec-lint AC list |
+| N31-008 | product · info | In-scope item 5's "keep only" framing is corrected to name the **authored remainder**: the anti-deflation judgment, the human-keyed third-cycle rule and the report-note persistence contract (with the planning materiality line replacing the removed sentences) do not exist in the named planning surfaces today and are written fresh by this feature; only the `CONVERGENCE-ANOMALY` block and the receipt-literal lines are preserved byte-unchanged. AC7's kept-side greps were already correct and are unchanged. Repair class: **mechanical, intent-preserving** (framing words only — the post-shrink state the half requires is unchanged). | In-scope 5 |
+
+Artifact revision rotates `31-spec-4` → **`31-spec-5`** for the whole touched
+Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
+`progress.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded
+`31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
+`spec-review-31-5` receipt is superseded by design (bound Product bytes moved
+— `stale-artifact-content`): the next `/review-spec` run is the user-keyed
+third cycle (D-31-7).
