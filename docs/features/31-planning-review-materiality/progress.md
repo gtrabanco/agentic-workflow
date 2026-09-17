@@ -724,3 +724,202 @@ snippet is not the table's full projection, so this is recorded, not filed.
     then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
+---
+
+# Spec re-review — cycle 2 (`review-spec`), 2026-09-17
+
+Re-review of the Product half the `31-spec-2` repair batch rewrote — the route
+`spec-review-31-2` named for N31-003 (`class: product` → Product-half repair,
+then re-review). Fresh context; this conversation never authored or edited the
+Product half, its ledgers, or its acceptance manifest. No reviewed artifact was
+modified by this turn.
+
+## Cycle-2 entry (POLICY §4)
+
+Entering the spec stage's second repair/re-review cycle was reported by the
+`31-spec-2` repair batch before its edit (POLICY §4 — "printed and routed, never
+a stop"; a repair responding to a persisted verdict is never a loop defect). The
+block is reproduced here so the durable record carries it; the repair turn's own
+note is in `decisions.md` (Product repair batch section).
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-001 + N31-002 (repeated) / N31-003 (new)
+- Snapshots: d93328fe9bede0ecadb64081d5663b91259e2cd9681374657b7f59bda6277a2e → b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7 (artifactRevisionId a3012f86… → 3e4c7c2d…)
+- Missed: AC8's allowed set omitted the workflow-mutated record surfaces (`verification-contract` §Validator stability) — a criterion-stability gap, not a missing obligation
+- Owning stage: product
+- Why the prior repair failed: the `31-plan-2` batch widened AC8's In-scope + derived-surface groups without completing the criterion's allowed groups, leaving the whole-diff guard unsatisfiable
+- Route to owner: design-feature (`31-spec-2` repair batch) → /review-spec re-reviews the new revision
+```
+
+Pre-state observed before this reviewer wrote anything (`verify --stage spec`):
+`fresh: false / stale-source-revision`, `changedPaths: [SPEC.md]` —
+`spec-review-31-2` binds `d93328fe…` while the Product bytes now sit at
+`3e4c7c2d…` (`observedDigest: b1cafdbf…`, `digestMatches: false`). N31-003
+confirmed from the sensor, not from prose.
+
+Snapshot built by the recipe owner before any check
+(`bun scripts/pre-execution-snapshot.mjs build --stage spec --unit 31-planning-review-materiality`;
+stdout first line pasted):
+
+```text
+b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7
+```
+
+- `stage: spec` · `unitKind: feature` · `unitId: 31-planning-review-materiality`
+- `sourceRevision` = `artifactRevisionId` = `3e4c7c2d5cbdde6e241db77d37f14906afd88b5e`
+- `artifacts`: `docs/features/31-planning-review-materiality/SPEC.md` · selector
+  `spec-product-v1` · bytes 33332 · digest
+  `5cdbd2f3f2039b1089c14cdce9a3367df9a92720eb0122de822e1693a07f502e`
+- `parentSpecSnapshotDigest`: null · contexts:
+  `architectural-invariants: absent` ·
+  `normalized-repository-state: present (e1b81e29…)` ·
+  `project-guide: present (ff24d7e4…)`
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality spec @ 3e4c7c2d
+- 3 specific product decisions a hostile reader could call invented rather than recorded:
+    1. AC8's third declared group (the workflow-mutated record surfaces) — written
+       by the 31-spec-2 repair batch, not the original design; grounded in
+       `verification-contract` §Validator stability + feature 27 AC16 precedent
+       (decisions.md rows; SPEC `## Amendments` 31-spec-2).
+    2. Expectation sweep row 17 — added by the same repair; it restates AC8's
+       permitted set, not new intent (In-scope workflow-mutated paragraph).
+    3. AC14's mechanism constants (`PLANNING_PIN_TABLE`, `PLANNING_PIN_FLOOR = 9`,
+       `assertDiscriminating(`) — plan-stage text (E-D31-5) inside a Product-half
+       criterion; adjudicated under C13 (criterion-carries-its-command, feature 24
+       precedent), as the 31-plan-2 review recorded.
+    All three resolve to dated evidence rows; none is invented intent.
+- The user outcome the SPEC promises that has no observable check: none — every
+  In-scope bullet carries ≥1 AC (AC1–AC14), and sweep row 17 maps to AC8.
+- One role the matrix leaves unspecified for a capability it does list: none —
+  5 derived roles × 5 capabilities are all explicit.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true?
+    a) AC8's mechanical anchor would have to fail to reduce the branch diff to
+       the governed + derived set → false: `git diff main --name-only -- .
+       ':(exclude)docs/features/31-planning-review-materiality'
+       ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` exits 0
+       with no path listed at 3e4c7c2d (the 13-path diff is fully accounted for
+       by the excluded group).
+    b) the ROADMAP hunk would have to touch more than row 31 → false:
+       `git diff main -- docs/features/ROADMAP.md` is the single `idea`→`planned`
+       cell of row 31.
+    c) `verification-contract` §Validator stability would have to permit
+       whole-diff gating → false: `skills/verification-contract/SKILL.md:27-33`
+       (v1.2.1) forbids it and names exactly the exclusions AC8 encodes.
+    d) `LEDGERS.md:93` would have to have already moved → false: "`info` is the
+       only immaterial one" is still on disk.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+## Checks — one result each
+
+Snapshot `b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7` @
+source revision `3e4c7c2d5cbdde6e241db77d37f14906afd88b5e`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Each of the six In-scope bullets states an observable outcome with an AC pointer (report-note → AC1/AC2; anti-deflation → AC3; cap → AC4/AC5/AC7; wording-only → AC6; pins present + discriminating → AC9/AC11/AC14; bibliography → AC13), and sweep row 17 → AC8 |
+| C2 | Actors and roles | pass | 5 derived roles (human owner · author turn · reviewer turn · executor turn · drivers & sensors) × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied` (`### Capability closure` §3); no capability lists an unlisted role |
+| C3 | Entity closure | pass | E1–E3 resolve CRUD + state transitions to a named surface + test or an explicit `n/a: reason`; zero blank rows; E2's `Read/list` now names both stages' frozen-evidence homes (N31-002 resolved) |
+| C4 | Limits and failure states | pass | Size `M`; each failure state carries a resolution: unconverged loop → `NEEDS-DESIGN` (In-scope 3, AC4/AC5), wording-only misroute → recorded determination + rotation (In-scope 4, AC6), severity deflation → `medium` minimum (In-scope 2, AC3), vacuous pin set → floor + discrimination leg (In-scope 5, AC14) |
+| C5 | Scope and non-goals | pass | 7 non-goals, each naming the preserved contract (POLICY §1/§2, snapshot binding), the owning feature (#159, code side), or an explicit exclusion (schema package, retroactive rows, sensor mechanics) → AC8/AC10; nothing excluded by silence |
+| C6 | Integration closure | pass | `docs/CAPABILITIES.md` is the unseeded template (placeholder rows only), so the 11-row derived inventory is recorded and walked one row per subsystem; each resolves to a test, an `n/a` reason, or a named owner (`audit-docs`) |
+| C7 | Expectation sweep | pass | 17 rows (≥10 for `M`), each forced to exactly one of `in-scope`/`out-of-scope` with a pointer; zero unresolved; row 17 carries the workflow-mutated records |
+| C8 | Acceptance objectivity | pass | AC1–AC14 are objective and labelled (`read-verified` on AC4/AC6/AC8/AC13; command otherwise); every In-scope bullet maps to ≥1 criterion; AC8's allowed set is now complete — the In-scope, derived, and workflow-mutated record groups — and its mechanical anchor verifiably reduces the branch diff to the governed + derived set (N31-003 resolved) |
+| C9 | Internal contradiction | pass | The materiality line is consistent (Context · In-scope 1/2 · D-31-1 · D-31-4 · Out-of-scope 2 · AC14's 9-row floor vs the pin scope); the terminal verdict stays `NEEDS-DESIGN`; the four preserved contracts appear as preserved-only in both In-scope and Out-of-scope; the three allowed groups are declared once and referenced by AC8 + sweep row 17 |
+| C10 | Repository contradiction | pass | Claims re-read at `3e4c7c2d`: `LEDGERS.md:93` "`info` is the only immaterial one"; `CHECKS.md` material lines (`review-spec:104`, `review-plan:105`); POLICY §3 wording-only row `:47` + §4 "Entering a **second** cycle…" (`:60-61`) and "no cap converts a verdict into a dead end" (`:83`); `REPAIR.md:64-65`; `review-spec/review-plan OUTPUT.md:68/:83`; no root `package.json` and `bundle:skills` only in `packages/pi-agentic-workflow/package.json:46`; `REVIEW_PROCESS.md:169` `LOOP CAP REACHED`; ROADMAP row 29 `done · #175`; `docs/CAPABILITIES.md` template; no `docs/architecture/ARCHITECTURAL_INVARIANTS.md`; versions 2.2.1/1.7.1/1.6.1/3.4.0; `README.md` has no `## References` yet; `skills/verification-contract/SKILL.md` v1.2.1 §Validator stability; feature 27 AC16 enumerates its own unit dir + `ROADMAP.md`; the `31-spec-2` ROADMAP hunk is row 31 only; git 2.47.3 pathspec exclusion reduces the 13-path diff to empty |
+| C11 | Evidence integrity | pass | Every `decisions.md` evidence row is `proven`/`decision` + `current` with a location and observed revision; the `31-spec-2` batch's added rows (validator stability, feature 27 AC16, the 13-path diff observation, `LOGS.md`, git pathspec semantics, the exact-string row) all re-observed on disk; no `unknown`/`drifted`/`stale` row survives; the recorded roadmap status (`idea` @ d63e9b12) is a point-in-time observation of the deliberately unbound, status-machine-mutated `ROADMAP.md` and is not a defect (see out-of-scope observation below) |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` and its table is empty; D-31-5's AD-008 reconciliation is owner-routed (`resolve-repository-state`) behind a conditional trigger, not an open product choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, architecture, or validator. AC14 names acceptance anchors (`PLANNING_PIN_TABLE`, `PLANNING_PIN_FLOOR = 9`, `assertDiscriminating(`) but the pin rows' content, phase assignment and suite implementation stay in `PLAN.md`/`TASKS.md`; no Product authority over the plan's cut |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: the README citation is in-unit (AC13, implementation PR), bumps/pins in-unit (AC9/AC11/AC13), the AD-008 amendment conditional and owner-routed, and the plan-side mirrors of AC8 are named as re-derived by `plan-feature`, not deferred to a future unit |
+
+Findings: 0 (material open: 0). N31-001/N31-002/N31-003 stay `resolved` at
+`resolving-artifact-revision: 31-spec-2`; the plan-stage rows R31-01/R31-02/R31-03
+remain `open` for `plan-feature`'s re-derivation batch (out of this stage's
+scope). No new row was appended to `planning-findings.md` for this re-review.
+
+Out-of-scope observation (not a finding against this half; no row written):
+the `decisions.md` evidence row for roadmap row 31 records `status \`idea\``
+observed at `branch head d63e9b12`, while the row now reads `planned` (it read
+`defined` by the design commit `cf238040`). The observation was accurate at the
+revision it pins, and `docs/features/ROADMAP.md` is deliberately unbound from
+the snapshot (`scripts/pre-execution-contract.mjs` `CONTEXT_SOURCES`) precisely
+because the status machine mutates it (`idea → defined → planned`) — so this is
+ledger convention working, not a stale claim, and no C11 correction is due.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-3 · Snapshot: b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7 · Verdict: spec-review-pass
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 3e4c7c2d5cbdde6e241db77d37f14906afd88b5e · Artifact revision: 3e4c7c2d5cbdde6e241db77d37f14906afd88b5e
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature (31-spec-2 repair batch)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T11:14:00Z/2026-09-17T11:24:00Z · Findings: 0 (material open: 0)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 33332 · digest 5cdbd2f3f2039b1089c14cdce9a3367df9a92720eb0122de822e1693a07f502e · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Prior spec receipt (re-review only): spec-review-31-2 @ d93328fe9bede0ecadb64081d5663b91259e2cd9681374657b7f59bda6277a2e
+- Checks: 14/14 pass — C1–C14; falsification NO-CONFIRMED-GAPS
+```
+
+Artifact-revision notes:
+
+- The author label `31-spec-2` (`SPEC ## Design status`, `## Amendments`,
+  `decisions.md` header) is the repair revision; no runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `3e4c7c2d…` — the same reconciliation `review-spec`,
+  `review-plan` and features 37/52 recorded. The label stays recorded here.
+- `Parent: null` — a SPEC snapshot roots its own lineage; this PASS replaces
+  `spec-review-31-2`, which the sensor now reads as
+  `fresh: false / stale-source-revision` (SPEC.md moved).
+- Read-only on the reviewed artifact: `SPEC.md`, `decisions.md`, `ACCEPTANCE.md`
+  and the roadmap row are byte-identical after this turn. The only writes are
+  this receipt and the re-review note in `planning-findings.md` (the reviewer's
+  ledger home).
+- Entering this cycle was a `CONVERGENCE-ANOMALY` reported by the repair turn
+  (POLICY §4); it grants no PASS and is routed to `design-feature`, which is
+  exactly the turn that produced this revision.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-3",
+    "verdict": "spec-review-pass",
+    "snapshot": "b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — fresh and current; no fix-and-re-run round was needed.)
+
+## Verdict
+
+```text
+SPEC-REVIEW-PASS — 31-planning-review-materiality
+- Snapshot: b1cafdbfa468f95c7dceb849b0568b2fef57041ac94dfc712220ba65e79144c7 · Artifact revision: 3e4c7c2d5cbdde6e241db77d37f14906afd88b5e · Checks: 14/14
+- Material findings open: 0 · Read-only: no reviewed artifact modified
+- Authority: planning may bind this receipt as its Product parent
+```
