@@ -1560,8 +1560,8 @@ What the re-derivation changed: the plan snapshot's parent now binds
 edits by design, so AC13's scope walk is satisfiable); `E-D31-18`'s CHANGELOG-row
 allocation is corrected to the phase-lint-valid one (the schema package's 4.3.0
 companion row stays in P4, where the `docs` layer lives, and the `normative-drift`
-window P1→P4 is declared in `known-issues.md`); `known-issues.md` §9 is closed and
-its duplicate item numbering repaired. No phase, task, validator, or acceptance
+window P1→P4 is declared in `known-issues.md`); `known-issues.md` §10 (AC13's
+code-carrier gap) is closed and the duplicate item numbering repaired. No phase, task, validator, or acceptance
 criterion's required outcome changed: both Product patches were enumeration-only,
 so `ACCEPTANCE.md`'s validators are re-frozen byte-identical to their criterion
 text.
