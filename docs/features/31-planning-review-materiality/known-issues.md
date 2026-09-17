@@ -26,7 +26,8 @@ boundaries below are recorded so qualification and review do not rediscover them
 3. **No tutorial mirror.** `docs/workflow/` gains no materiality, cap or
    wording-only text in this unit (PE-015 of the superseded set is retired;
    AC13's scope guard keeps the path out). Tutorial drift is `audit-docs`'
-   inventory↔docs sweep.
+   inventory↔docs sweep. The only `docs/` paths this PR touches outside the three
+   AC13 groups' first two members are the unit's own records (group 3).
 
 4. **No retroactive reclassification.** `low` rows already persisted in existing
    units' `planning-findings.md` keep their recorded semantics; the new machine
@@ -35,17 +36,35 @@ boundaries below are recorded so qualification and review do not rediscover them
 
 5. **The wording-only route's judgment half stays prose.** The machine enforces
    the recorded determination, the rotated revision, the unmoved acceptance
-   fingerprint and the unmoved bound authorities; that "intent and authority are
-   unchanged" is a human statement in the determination block is deliberate —
-   the machine cannot judge wording, and the Product half keeps the judgment
-   half out of code (In scope item 5). A reviewer reading the block is the
-   second pair of eyes, not a second gate.
+   fingerprint and the unmoved bound context authorities; that "intent and
+   authority are unchanged" is a human statement in the determination block is
+   deliberate — the machine cannot judge wording, and the Product half keeps the
+   judgment half out of code (In scope item 5). A reviewer reading the block is
+   the second pair of eyes, not a second gate. The machine half's reach is
+   deliberately narrow: any movement that leaves the acceptance manifest and the
+   context authorities intact is exempted once a determination records the
+   post-movement revision, and a second movement is refused because the recorded
+   revision no longer matches (P31-01).
 
-6. **The determination block is author-written, never script-written.** Its
-   homes (`planning-evidence.md`, `decisions.md`, the SPEC's
-   `### Planning evidence`) sit under `LEDGERS.md`'s `# no-script-writer`
-   directive: `verify` and the sensor only read them. A future writer must go
-   through the owning authoring skill, never through a generator.
+6. **The determination block is author-written, never script-written, and lives
+   in the unbound `progress.md`.** `progress.md` is the one unit record neither
+   stage's `STAGE_ARTIFACTS` row binds, which is why the record survives its own
+   write: recording it in `planning-evidence.md`, `decisions.md` or the SPEC's
+   `### Planning evidence` section would rotate the `artifactRevisionId` the block
+   must name and make the identity check unsatisfiable (P31-01). Writer: the
+   stage's author; the ledger-ownership map is untouched, and
+   `scripts/ledger-ownership.test.mjs` still fails any script that writes a
+   durable ledger it does not own. Precedent for an agent-written record block in
+   this home: `## Dependency receipt v1`.
+
+7. **Feature 38's A:12 invariant is preserved, and now enforced by a gate.**
+   `decideWorkflowAction()` stays consumer-side: `scripts/workflow-status.mjs`
+   derives the count and projects it as `detail.review_loop_cycles`, and never
+   references the decider. The re-aimed `scripts/review-loop-discipline.test.mjs`
+   block — a code carrier inside AC10's pack — pins the `detail.review_loop_cycles`
+   projection and the decider's absence, so a future change cannot regress the
+   invariant unseen (P31-03). The behavioral emission stays an observation, not a
+   gate: see §10.
 
 7. **`stop-review-loop-cap` is additive only.** The transition table's rows and
    every pre-existing decider vocabulary value keep their spelling; a consumer
@@ -57,3 +76,24 @@ boundaries below are recorded so qualification and review do not rediscover them
    superseded `31-plan-2` blob (`d85e217acad1322d3caf4968715ef5d00e9189c0`) no
    longer gates anything; the live blob is recorded in `PLAN.md` and receipted in
    `progress.md`. Anyone holding the old blob must re-read the manifest.
+
+9. **AC13's code-carrier group is short of three paths this plan edits (open,
+   `class: product`).** The frozen Product half enumerates the code carriers as
+   `packages/agentic-workflow-schema/**`, `scripts/pre-execution-snapshot.mjs`,
+   `scripts/review-loop-discipline.test.mjs` and `scripts/phase-lint.mjs`, while
+   the plan edits `scripts/pre-execution-contract.mjs`,
+   `scripts/workflow-status.mjs` and `scripts/workflow-status-pre-execution.test.mjs` by
+   design — so AC13's scope walk reports them as violations until the Product
+   half's declaration is amended. Recorded as `planning-findings.md` P31-06 and
+   routed to `design-feature`; no plan write may widen it silently.
+
+10. **The feature-38 suite is outside every gate, and red at this head.**
+   `bun test scripts/workflow-status-sensor.test.mjs` → 59 pass / 3 fail at
+   `7ace8dbc` (two forge-hang harness timeouts at the 5 s bound, one exit-status
+   assertion on the same path). No phase done-when, AC10 pack or AC list runs that
+   suite, so the workflow cannot see it — the live proof of the validator-blind
+   class P31-06 names. This batch does **not** edit that suite and does not add it
+   to the pack (a red suite in a frozen gate makes the gate unsatisfiable); the
+   A:12 and projection invariants are pinned instead in the already-packed
+   `scripts/review-loop-discipline.test.mjs`, and the red suite is recorded here so
+   a future fix owns it deliberately.
