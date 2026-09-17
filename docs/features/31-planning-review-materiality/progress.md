@@ -2616,3 +2616,91 @@ scaffold commit `13ba789d`):
   repository touches a module this SPEC changes (`docs/fix/162`'s F12 is a
   progress-ledger re-review item and `docs/fix/214`'s F12 an audit-pr closure
   item; both live in other units). No dependency, no blocker.
+
+---
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-31-3 · Snapshot: e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f · Verdict: plan-review-fail
+- Unit: 31-planning-review-materiality · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507 · Parent Product receipt: spec-review-31-9
+- Source revision: 13ba789d5b8063c90501701fc525bd67087b1156 · Artifact revision: 13ba789d5b8063c90501701fc525bd67087b1156
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (31-plan-3 re-cut, 2026-09-17)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T22:05:00Z/2026-09-17T22:17:00Z · Findings: 5 (material open: 5)
+- Ledgers read: planning-evidence 23 rows · obligations 15 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): plan-review-31-2 @ e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a
+```
+
+Artifact-revision notes:
+
+- The planner's handoff label is `31-plan-3`. No runtime rotates `artifactRevisionId`
+  in this environment, so this receipt binds the builder's digest-derived value
+  `13ba789d…` (the newest commit touching the bound paths), which is the same
+  reconciliation every prior receipt in this unit recorded. The label stays
+  recorded here.
+- **Cycle accounting.** This is the plan stage's third review of the window
+  `plan-review-31-1` opened (FAIL #1 → `31-plan-2` → `plan-review-31-2` FAIL #2
+  → `31-plan-3`). The `31-plan-3` set is not a repair of `31-plan-2`: the owner
+  ruling D-31-6 (`SPEC.md` §Context, `decisions.md`) superseded that carrier and
+  commissioned the re-cut as an explicit user instruction, and the re-cut binds
+  the current Product receipt `spec-review-31-9`. Under the live POLICY §4 the
+  guards gate blind re-reviews and never a repair performed in response to a
+  persisted verdict; the anomaly is printed and routed, never a stop. Reported
+  here for the cycle record: it grants no PASS and is not a stop, and the verdict
+  stands on the checks alone.
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality plan
+- Finding ids: P31-01 + P31-02 + P31-03 (new, this cycle) / F01, F02, F03, R31-01, R31-02, R31-03 (all resolved at 31-plan-2 / 31-plan-3)
+- Snapshots: e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a → e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f (artifactRevisionId 31-plan-2/a3012f86 → 31-plan-3/13ba789d)
+- Missed: the wording-only route's identity contract (planning-evidence PE-013/PE-014 evidence) and feature 38's A:12 sensor invariant (no evidence row reads `scripts/workflow-status-sensor.test.mjs`)
+- Owning stage: plan
+- Why the prior review failed: `plan-review-31-2` returned FAIL on R31-01 (stale Product parent, class product) and R31-02; the carrier ruling then moved the plan set into code rather than repairing it
+- Route to owner: `plan-feature 31-planning-review-materiality` — one batch for P31-01 + P31-02 + P31-03 + P31-04 + P31-05, then `/review-plan` re-reviews the new artifact revision
+```
+
+- **L1 race check (POLICY §7).** Claimed parent digest
+  `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`; recomputed
+  from the bytes on disk with the receipt's own recorded revision
+  (`build --stage spec --source-revision 6084983b… --artifact-revision 6084983b…`)
+  → the same `e15374a3…`, and the `spec-product-v1` projection digest
+  `9f22563ea1148fac99806ef9847b4e9b48e72e6c5a7e1d1619a5f67540f79474` (46004 bytes)
+  plus the three context digests are byte-identical to the `spec-review-31-9`
+  artifact line. The CLI's default `verify --stage spec` answers
+  `stale-source-revision` because `SPEC.md`'s whole-file revision moved with the
+  Engineering half (`contentRevision` covers all bound paths, the projection does
+  not) — the Product *bytes/contexts* L1 keys on are unmoved, so the lineage
+  holds. Recorded as the claimed-beside-recomputed pairing §7 requires.
+- Reviewed bytes are committed at `13ba789d` (clean worktree at review start: `git status --porcelain` empty), so the builder's "commit the bound artifacts" precondition held; no reviewed byte changed by this turn.
+
+Self-check (`verify --stage plan`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "plan-review-31-3",
+    "verdict": "plan-review-fail",
+    "snapshot": "e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
