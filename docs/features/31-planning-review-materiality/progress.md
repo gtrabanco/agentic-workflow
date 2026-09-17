@@ -2470,3 +2470,117 @@ SPEC-REVIEW-PASS — 31-planning-review-materiality
 → Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
   · design changed underneath → re-run /review-spec 31-planning-review-materiality first
   · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
+
+---
+
+## Plan scaffold (`31-plan-3`, 2026-09-17)
+
+`plan-feature` ran its engineering-planning route over the designed, reviewed
+Product half and re-cut the plan set. The Product carrier ruling D-31-6
+("redesign + replan — the plan set cut as `31-plan-1/2` is superseded, never
+repaired") is the trigger; the Product half's own `## Design status` records the
+condition it had to wait for ("`plan-feature` re-cuts the plan set … only on a
+current `SPEC-REVIEW-PASS` receipt"), and `spec-review-31-9` is that receipt.
+
+Routing, in order:
+
+- Replan exemption probe: `node scripts/unit-route.mjs 31` → `route: execute`,
+  `open-rows: 0` — the router is the finding-ledger router, so it names no plan
+  work; the redirect gate's primary signal is the roadmap row, which read
+  `defined` before this turn's write.
+- Redirect gate: roadmap `defined` → Routing → designed scoped slug →
+  `plan-feature-scaffold`.
+- Product-review gate (`ROUTING.md`): the newest `## Pre-execution review receipt
+  v1 — spec` block is `spec-review-31-9`, contract
+  `agentic-workflow/pre-execution-review-receipt@1`, `stage: spec`, verdict
+  `spec-review-pass`, zero open/unverified material rows, `contextClean: true`;
+  the recomputed SPEC-stage snapshot from the bytes on disk is
+  `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`, equal to
+  the receipt's bound digest (`node scripts/pre-execution-snapshot.mjs verify
+  --stage spec --unit 31-planning-review-materiality` → `current: true`,
+  `digestMatches: true`, `structural.fresh: true`, exit 0). Gate passes.
+
+Scaffold write (docs only — no code, no branch):
+
+- Re-cut the Engineering half of `SPEC.md` and `PLAN.md`, `TASKS.md`,
+  `testing.md`, `known-issues.md`, `architecture-notes.md` against the code
+  carrier: five phases, P1 schema finding-record materiality → P2
+  transition-decider cap refusal → P3 snapshot wording-only route → P4
+  skill-reference prose shrink → P5 Hardening & PR.
+- Re-froze `ACCEPTANCE.md` from AC1…AC14 with code-anchored validators:
+  `git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` →
+  `3d7e7c9ee92314261e5529815c76b373e8ca2745` (the superseded `31-plan-2` blob
+  was `d85e217acad1322d3caf4968715ef5d00e9189c0`).
+- Re-cut `planning-evidence.md` (PE-001…PE-023, all `current`
+  `proven`/`decision`) and `planning-obligations.md` (O1…O14 mirror AC1…AC14,
+  O15 carries the AD-008 invariant; one phase and one task per row; no row
+  `deferred`).
+- Rotated the artifact revision label to **`31-plan-3`**; the Product half's
+  bound bytes did not move (the `spec-product-v1` selector ends at the first
+  level-2 heading after `## Design status`, so the Engineering half is outside
+  it): post-write `build --stage spec` still answers
+  `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`.
+- Resolved the plan-stage finding rows R31-01/R31-02/R31-03 in place
+  (`planning-findings.md`, resolving revision `31-plan-3`) and recorded
+  engineering decisions E-D31-8…E-D31-14 in `decisions.md` (E-D31-5 superseded
+  with its carrier). No finding row is left `open`.
+- Roadmap: row 31 `defined → planned`, re-read after the write → the row
+  literally reads `planned` (row 41).
+
+Phase-lint (stdout, pasted verbatim — `node scripts/phase-lint.mjs
+docs/features/31-planning-review-materiality/PLAN.md`, exit 0):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:schema-finding-record-materiality
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:transition-decider-cap-refusal
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: 7ae7a09036d9fafc8cffbbc735ec06f9dc8a03d632ca2d1141785ac555e8bce7
+```
+
+Spec-lint: PASS — product boxes re-run as the regression check the template
+requires (they still pass over the untouched Product half: 19 expectation rows,
+zero blank closure rows, five capabilities × five roles, `Deferred decisions`
+reads `none`, every criterion command-or-`read-verified` labelled); engineering
+boxes PASS (dev scenarios present with every fixed category walked, all five
+phases phase-lint clean with recorded fingerprints, `planning-evidence.md` and
+`planning-obligations.md` present with no blank cells, one obligation row per
+criterion with a phase and a validator, and no template placeholder anywhere in
+the file).
+
+Planning preflight (`planning-preflight`, two-stage contract):
+
+```text
+Preflight: Stage 1 — NRS consumed · arch: deferred
+Preflight: NRS consumed · invariant classification: n/a: no project invariants declared (F010) — AD-008 preserved (D-31-5)
+```
+
+Readiness preflight (`evidence-grounding/references/READINESS.md`, `stage: plan`):
+
+```text
+READINESS — 31-planning-review-materiality plan READY-FOR-REVIEW
+- Artifact revision: 31-plan-3 · Rows checked: 23 · Unknowns open: 0
+- Evidence: planning-evidence.md · Frozen: 2026-09-17
+```
+
+Box walk (all eleven tick): governing Product half `designed` with a current
+`spec-review-31-9` receipt for the exact parented snapshot; frozen
+`ACCEPTANCE.md` present with one stable ID per criterion, a named validator per
+row and the blob recorded; architecture impact names the affected surfaces with
+`path:line` evidence rows and carries the `n/a` classification beside AD-008's
+`preserves`; every obligation has exactly one row with phase, task, owner,
+validator, required evidence and a non-blank status; the planning-evidence table
+exists in its M/L home with every Engineering claim resolved; the scenario matrix
+covers each named failure category with its phase and validator; every phase
+passes the eight-box lint with its fingerprint recorded; the phase order matches
+the `Depends on:` closure with the hardening phase last; the compatibility
+boundary and rollback path are stated; no unresolved decision word remains and
+each risk carries an owner; every evidence row is `current` and no unknown is
+open.
+
+Hand-off: the plan set is written and frozen, and a planned unit is not an
+executable unit — the next step is the independent plan review
+(`/review-plan 31-planning-review-materiality`), never execution. Artifact
+revision `31-plan-3` is the id the reviewer binds.
