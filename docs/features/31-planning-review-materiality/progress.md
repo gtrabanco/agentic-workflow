@@ -1678,3 +1678,94 @@ SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
 - Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
 - Parent state: n/a (spec stage roots its own lineage)
 ```
+
+# Repair batch `31-spec-6` — design-feature authoring turn (2026-09-17)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "repair N31-009 + N31-010 + N31-011: make AC2's
+contract-prose check discriminate (grep the description for a new-line
+fragment such as material = \`medium\`/report-note, not the bare word medium,
+or move the clause to read-verified), cover REPAIR.md §4's second sentence in
+AC7 (grep -n \"no cycle cap converts\"
+skills/design-feature/references/REPAIR.md` exits non-zero), and fix the
+Spec-lint AC1 classification" — one repair batch for N31-009 + N31-010 +
+N31-011. Trigger: the `spec-review-31-6` receipt (FAIL, checks C8/C9; 12/14
+pass; N31-009 medium + N31-010 medium + N31-011 info, all product). One batch
+over the whole open spec-stage set; the plan-stage rows R31-01/02/03 stay with
+`plan-feature`.
+
+**Cycle accounting (D-31-7):** this is the fourth consecutive unconverged
+cycle of the window the carrier amendment opened (FAIL `spec-review-31-4` →
+repair `31-spec-4` → FAIL `spec-review-31-5` → repair `31-spec-5` → FAIL
+`spec-review-31-6` → this batch). The commission above is the explicit user
+instruction that keys a further cycle (the third was user-keyed the same way
+at `31-spec-5`), issued in answer to the `spec-review-31-6` hand-off that
+named exactly this command and batch. Under the live POLICY §4 the loop is
+uncapped — that is the defect this unit fixes — so the cycle is lawful on
+both readings. The window's `CONVERGENCE-ANOMALY` block was printed on entry
+to cycle 2 (reproduced in the `spec-review-31-5` and `spec-review-31-6`
+receipts); POLICY §4's anomaly rule scopes to second-cycle entry, so no new
+block is due for a user-keyed further cycle (REPAIR §4: a repair responding
+to a persisted verdict is never a loop defect). Reproduced for the cycle
+record:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-006/N31-007/N31-008 (repaired, 31-spec-5) / N31-009, N31-010, N31-011 (repaired, this batch)
+- Snapshots: b9cf60a8e4e6… → 95d1551379b7… → fb69ad0b83e9… (artifactRevisionId fef66d09 → bccc95fd → 31-spec-6 label)
+- Missed: AC2's `grep -n "medium"` anchor is non-discriminating (already satisfied by the enum literal); AC7 leaves REPAIR.md §4's second unbounded-cycle sentence uncriterioned; the Spec-lint box misfiles AC1
+```
+
+Repairs (classes in SPEC `## Amendments` `31-spec-6` + `decisions.md`):
+
+- **N31-009** — AC2's second anchor re-pointed at two discriminating greps
+  over `pre-execution-contract.ts` (`grep -nE 'material = .medium'`,
+  `grep -n "report-note"`; both exit 1 at `bccc95fd`, both turn 0 only when
+  the finding-record severity description states material = `medium`+;
+  `low` is a report-note) — the severity enum literal at `:103` can no longer
+  fake the pass; the read-verified alternative was not taken (a
+  discriminating command anchor keeps AC2 `(command)` and objective).
+- **N31-010** — AC7 gains the removal grep for REPAIR.md §4's second
+  unbounded-cycle sentence (`grep -n "no cycle cap converts"
+  skills/design-feature/references/REPAIR.md` → non-zero; fragment wholly on
+  `:71`, unique in the file, exit 0 with the sentence standing at
+  `bccc95fd`).
+- **N31-011** — the Spec-lint product box re-files AC1 into the
+  `command + read-verified` group its own label declares (AC2–AC3, AC5,
+  AC10–AC12 pure commands; AC1, AC4, AC6–AC9, AC13–AC14 command +
+  `read-verified`); no criterion text changes.
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`, head
+`bccc95fd`): `node scripts/pre-execution-snapshot.mjs verify --stage spec
+--unit 31-planning-review-materiality` → exit 4 (receipt not current — the
+open FAIL receipt is this batch's input), `digestMatches: true` (the FAIL
+receipt binds the bytes on disk). Architectural invariants: `n/a: no project
+invariants declared` (NRS F010); AD-008 preserved by D-31-5 (unchanged). The
+frozen `ACCEPTANCE.md` is not touched (plan-feature's owning artifact,
+superseded set, re-cut on a fresh PASS).
+
+Spec-lint product boxes re-run after the edits: all PASS (placeholders none —
+`grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
+over the Product half exits 1; out-of-scope 7 bullets; closure rows complete;
+integration 14/14 derived subsystems; role matrix 5×5; sweep 19/19 resolved;
+every in-scope item → ≥ 1 AC; every AC runnable or `read-verified` — AC2/3,
+AC5, AC10–AC12 pure commands, AC1/AC4/AC6–AC9/AC13–AC14 command +
+`read-verified`, matching every criterion's own label; deferred decisions
+`none`).
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-6 · Rows checked: 5 evidence rows (batch) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact revision rotates `31-spec-5` → **`31-spec-6`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+
+Post-edit selector check (readiness box 1): `node
+scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+31-planning-review-materiality` re-derived the projection from the new bytes
+(observedDigest `fb69ad0b83e9b8452834dadf047a57ce76e4221cd1f4d3aebee09a0da44b5dc9`,
+exit 4), reporting exactly the declared by-design state — `fresh: false`,
+reason `stale-artifact-content` ("bound artifact bytes moved since the
+receipt"), `changedPaths: [docs/features/31-planning-review-materiality/SPEC.md]`.
