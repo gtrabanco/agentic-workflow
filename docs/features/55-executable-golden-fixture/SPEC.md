@@ -415,31 +415,377 @@ one batch, no reviewed-intent change. Readiness re-run for re-review by
 
 ## Engineering half
 
-Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`.
+Written by `plan-feature` / `plan-feature-scaffold` on 2026-09-17, only after
+the Product half above was marked `designed` and its `spec-review-pass` receipt
+(`spec-review-55-20260917-3`, snapshot
+`c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2`) was
+re-verified against the bytes on disk. Grounded in `### Planning evidence`
+(PE-001…PE-016); obligations frozen in `### Obligations` (O1…O14). Plan
+artifact revision: `55-plan-1` (rotated by this write; the snapshot builder
+derives the git revision from the newest commit touching a bound path).
 
 ### Technical goals
 
+- The deterministic half of the golden fixture becomes executable: both toy
+trees live as committed bytes under `scripts/fixtures/golden-fixture/`, and one
+read-only `node --test` suite asserts the phase-lint verdicts, the envelope
+contract, the run-log Result grammar, the fixture cross-references, and the
+audit-target trap invariants — zero model calls, zero network, zero wall-clock,
+zero randomness.
+- The procedure doc drops to the judgment-only surface: the ~100-word protocol,
+the tool-calling smoke precondition, the fixed pass criteria, the verbatim run
+log, and pointers to the committed fixtures. The embedded toy SPEC/manifest and
+the audit-target build get exactly one live home (the fixture tree) instead of a
+second copy in the human-docs surface.
+- Run-log rows become machine-comparable from 2026-09-18 through the closed
+Result grammar `exact <n>/<n> · invented none|<k> · shape ok|<fail-code>`
+enforced by the suite; the 43 grandfathered rows stay byte-identical evidence.
+
 ### Architecture impact
+
+Surfaces touched: `scripts/fixtures/golden-fixture/**` (new fixture trees),
+`scripts/golden-fixture.test.mjs` (new root suite), `docs/workflow/GOLDEN_FIXTURE.md`
+(slimmed), `docs/workflow/README.md` (one index line), `CLAUDE.md` (one
+verification bullet), `docs/features/ROADMAP.md` (row 55 registration). Not
+touched: any `skills/**` text, the schema package, the Pi package mirror, the
+`template/` scaffold, and any CI workflow.
+
+- Evidence rows for every touched existing surface: `docs/workflow/GOLDEN_FIXTURE.md`
+(PE-006: 383 lines, 43 rows; PE-007: five exempt rows), `docs/workflow/README.md:21`
+(PE-013), `CLAUDE.md:238-258` (PE-012), `docs/features/ROADMAP.md:65` (PE-014),
+`scripts/phase-lint.mjs:232-238` (PE-003) and `:296-317` (PE-005),
+`scripts/schema-runtime.mjs:36-47` (PE-010), `scripts/phase-lint.test.mjs:1-40`
+(PE-011), `scripts/fixtures/unit-route/**` (PE-015), and
+`packages/agentic-workflow-schema/src/index.ts:270-482` (PE-009).
+
+- **Layer placement is the phase cut** (frozen prefix table PE-003: `scripts/`,
+`packages/`, `.github/`, `.agentic-workflow/` → `config/infra`; `skills/`,
+`docs/`, `template/`, any `.md` → `docs`). Since box 2 of the phase-lint forbids
+a mixed-layer phase, the fixture/suite work (config/infra) and the doc work
+(docs) cannot share one phase. The engineering half therefore cuts **four
+phases** where the Product half's size rationale sketched two — same
+deliverable, no product intent changed (ED-55-1, PE-003, PE-016).
+- Box 2 keys on each task's **first** path-like token outside a backticked
+command span (PE-004), so every task below leads with a path of its own phase's
+layer; a phrase that must name a fixture path inside a docs phase puts the docs
+path first.
+
+Invariants the implementation must hold:
+
+- **Read-only suite.** `scripts/golden-fixture.test.mjs` never writes inside the
+repository; the tamper case copies a tree to `fs.mkdtempSync(os.tmpdir())` and
+mutates the copy (O8, O13).
+- **Determinism.** No network call, no wall-clock read, no randomness, no model
+in the mechanical path (AC8, D-55-7).
+- **No skill-text change** — context budgets, the Pi mirror, and the skill
+surfaces are untouched (O11's boundary).
+- **English-only artifacts** (`CLAUDE.md` docs-language rule; bilingual
+restoration is feature 57).
+- **No schema vocabulary** — the suite consumes the published validator; the
+schema package is read-only here.
+
+Preflight: Stage 1 — NRS consumed · arch: deferred.
+Preflight: NRS consumed · invariant classification: n/a (no project invariants
+declared — `docs/architecture/ARCHITECTURAL_INVARIANTS.md` is absent, NRS F010).
 
 ### Design
 
+**Fixture layout** (every path relative to `scripts/fixtures/golden-fixture/`, the
+home fixed by D-55-1 and precedent PE-015):
+
+```text
+toy-plan.md                        phase-lint-clean two-phase toy plan (P1 domain, P2 hardening)
+toy-plan-nonatomic.md              deliberately non-atomic variant, expected verdict BLOCKED
+toy-spec.md                        the toy "99 — csv-export-command" SPEC, moved verbatim from the doc
+toy-acceptance.md                  the toy unit's acceptance manifest, moved verbatim from the doc
+expected/phase-lint-toy-plan.txt   byte-exact stdout of phase-lint over toy-plan.md
+envelope/valid.json                a complete, schema-valid Envelope v2 sample
+envelope/invalid.json              the same object with state set to BOGUS (rejected)
+RUN_LOG_NOTES.md                   the doc's interleaved historical prose blocks, moved verbatim
+audit-target/README.md             declares `make verify` as the gate, its last command the root suite
+audit-target/EXPECTED.md           the T1–T4 traps and the expected-report pass criteria
+audit-target/docs/fix/README.md    worklist index whose row `9 — stale-cache` reads `in-progress`
+audit-target/docs/adr/0047-transport.md   the terminal decision record
+audit-target/docs/audits/3-2026-06-30.md prior whole-product audit carrying finding `F2`
+```
+
+The two toy plans are already written and probed: `toy-plan.md` (a `P1 —
+implement export-csv` phase declaring `domain` with two tasks, plus a literal
+`P2 — Hardening & PR`) exits 0 with `P1 Phase-lint: PASS (8/8) · fingerprint
+P1:domain:2:implement-export-csv` / `P2 Phase-lint: PASS (8/8) · fingerprint
+P2:hardening:7:hardening-pr` / `verdict PASS`, fingerprint
+`c39665a9a270c456055430f65c66be1df7364a7d91aefa957ef9ce59e1bd4310` (PE-001).
+`toy-plan-nonatomic.md` (one 9-task phase whose title joins deliverables with
+`and`, mixes an `api` phase with a `docs/` target, carries a decision word, an
+inline manual gate, and a non-command `Done-when:`) exits 1 with `verdict
+BLOCKED: lint-blocked` and six `P<n> box-<n>:` finding lines, each carrying its reason (PE-002).
+Both probe runs are reproducible at HEAD `3133c5ca`.
+
+**Suite: `scripts/golden-fixture.test.mjs`.** `node:test` + `node:assert/strict`,
+`#!/usr/bin/env node`, part of the root `scripts/*.test.mjs` family (PE-011). Its
+checks are factored as **functions of a fixture root** so the tamper case
+re-runs a real check against a temporary copy instead of a re-implementation:
+`phaseLintPass(root)`, `phaseLintBlocked(root)`, `envelopeValidity(root)`,
+`runLogGrammar(docPath)`, `crossReferences(root)`, `auditTargetTraps(root)`. Each
+returns `{ ok, message }` and every failure message names the fixture path and
+the violated assertion (AC4's diagnosability requirement). The suite spawns the
+real tool with `process.execPath scripts/phase-lint.mjs <plan>` and loads the real
+validator through `scripts/schema-runtime.mjs` — no mocks, no stubs.
+
+| Check | Assertion | AC |
+|---|---|---|
+| `phaseLintPass` | exit 0 and stdout byte-identical to `expected/phase-lint-toy-plan.txt` (which also carries `verdict PASS`) | AC1 |
+| `phaseLintBlocked` | non-zero exit, `verdict BLOCKED`, at least one `box-\d+` finding token | AC2 |
+| `envelopeValidity` | `validateEnvelope(valid)` ok; `validateEnvelope(invalid)` not ok | AC3(b) |
+| `runLogGrammar` | every run-log row dated on/after 2026-09-18 matches the closed Result grammar; a synthetic post-cutoff row with a malformed Result is rejected, and a pre-cutoff free-text row is accepted | AC3(c) |
+| `crossReferences` | the doc's fixture-pointer line is present and every `scripts/fixtures/golden-fixture/...` path the doc names exists | AC3(d), AC7 |
+| `auditTargetTraps` | the worklist row `9 — stale-cache` reads `in-progress`; `docs/adr/` ends at `0047-transport.md`; `docs/audits/3-*.md` exists and mentions `F2` | AC3(e), AC6 |
+| tamper case | a temp copy of the fixture tree with one mutated byte makes `phaseLintPass` fail with a message naming the mutated path | AC4 |
+
+**Run-log Result grammar** (D-55-6): a row's Result cell must match
+`exact <n>/<n> · invented none|<k> · shape ok|<fail-code>` — mechanically
+`^exact \d+/\d+ · invented (?:none|\d+) · shape (?:ok|[a-z][a-z0-9-]*)$`. Rows dated
+before 2026-09-18 are grandfathered and never rewritten; the suite's synthetic
+post-cutoff case proves both the accept and the reject path today, so the rule is
+enforced now rather than only when a future row appears.
+
+**Doc slim.** The doc keeps only live surfaces: purpose, when-to-run, the
+~100-word judgment protocol, the tool-calling smoke test, the fixed pass
+criteria (executor path plus the audit expected-report pointer), the verbatim
+43-row run log, and the fixture pointers. Everything embedded or historical
+leaves the live surface: the toy SPEC/manifest fences (lines 44–115 and
+121–134) move to fixture files; the audit-target build (lines 204–268) moves to
+`audit-target/` plus `EXPECTED.md`; the interleaved prose blocks — the
+superseded `## Scope boundary` (lines 312–317), `Coverage note` (333–356), and
+`**Coverage addendum**` (357–380) — move verbatim to `RUN_LOG_NOTES.md`. The
+measured budget: 383 lines today; 173 embedded lines leave, 54 prose lines move,
+leaving the live surface plus 43 rows, which the P2 done-when caps at 150 lines
+(PE-006, PE-007).
+
+The run log stays append-only and byte-identical: the slim re-joins its rows into
+one contiguous table in their existing order (rows currently sit at 276–310,
+318–331, 381, 383 around the moved prose) without editing a single row's content.
+
 ### Planning evidence
+
+| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|---|---|
+| PE-001 | `phase-lint` accepts the drafted clean toy plan: exit 0, per-phase `PASS (8/8)`, `verdict PASS`, fingerprint `c39665a9…` | repository | `scripts/phase-lint.mjs` run over the drafted `toy-plan.md` (probe) | `3133c5ca` | AC1 · O1 · O3 | current | proven | — |
+| PE-002 | the drafted non-atomic variant yields exit 1, `verdict BLOCKED: lint-blocked`, and six `P<n> box-<n>:` finding lines | repository | same tool over the drafted `toy-plan-nonatomic.md` (probe) | `3133c5ca` | AC2 · O1 · O3 | current | proven | — |
+| PE-003 | the frozen prefix table maps `scripts/`+`packages/`+`.github/`+`.agentic-workflow/` → `config/infra` and `skills/`+`docs/`+`template/`+`*.md` → `docs` | repository | `scripts/phase-lint.mjs:232-238` | `3133c5ca` | phase cut (ED-55-1) | current | proven | — |
+| PE-004 | box 2 takes each task's first path-like token outside a backticked command span: a `docs`-declared phase whose task led with `scripts/fixtures/…` returned `box-2 … belongs to layer config/infra, not docs` | repository | probe over `scripts/phase-lint.mjs` | `3133c5ca` | phase cut (ED-55-1) · task wording | current | proven | — |
+| PE-005 | fenced code blocks contribute nothing to the phase-lint parse, so embedded plan text is inert | repository | `scripts/phase-lint.mjs:296-317` | `3133c5ca` | Design (embedding) | current | proven | — |
+| PE-006 | the doc is 383 lines with 43 run-log rows; embedded toy fences at 44–115 and 121–134; audit section 204–268; prose blocks at 312–317, 333–356, 357–380 | repository | `docs/workflow/GOLDEN_FIXTURE.md` + `wc -l`/`grep -n` at HEAD | `3133c5ca` | AC5 · O10 | current | proven | — |
+| PE-007 | exactly five run-log rows carry the toy slug (278, 279, 280, 298, 383), each starting `\| 20`, which is AC5's declared exemption | repository | `grep -n "csv-export-command" docs/workflow/GOLDEN_FIXTURE.md` | `3133c5ca` | AC5 · O10 | current | proven | — |
+| PE-008 | no live script or package test pins the doc's content | repository | `grep -rn GOLDEN_FIXTURE scripts/ packages/*/src packages/*/test` → no matches | `3133c5ca` | AC5 · ED-55-3 | current | proven | — |
+| PE-009 | `validateEnvelope` accepts a complete Envelope v2 and rejects the same object with `state: "BOGUS"` | repository | `packages/agentic-workflow-schema/src/index.ts:270-482` + probe through `scripts/schema-runtime.mjs` | `3133c5ca` | AC3(b) · O4 | current | proven | — |
+| PE-010 | `scripts/schema-runtime.mjs` throws at import when the package `dist/` is missing, naming the build step | repository | `scripts/schema-runtime.mjs:36-47` | `3133c5ca` | O4 · risk (suite precondition) | current | proven | — |
+| PE-011 | the root suite family is `scripts/*.test.mjs` run with `node --test`, `#!/usr/bin/env node`, embedding fixtures in temp dirs | repository | `scripts/phase-lint.test.mjs:1-40`; `CLAUDE.md` `## Verification` | `3133c5ca` | AC3 · O3 · O13 | current | proven | — |
+| PE-012 | `CLAUDE.md`'s verification list exists (lines 238–258) and does not yet name the new suite | repository | `CLAUDE.md` `## Verification` | `3133c5ca` | AC9 · O11 | current | proven | — |
+| PE-013 | `docs/workflow/README.md:21` carries the single index line describing the doc as a manual smoke test | repository | `docs/workflow/README.md:21` | `3133c5ca` | AC7 · AC9 · O11 | current | proven | — |
+| PE-014 | roadmap row 55 reads `defined` with `Depends on: —` | repository | `docs/features/ROADMAP.md:65` | `3133c5ca` | registration · O12 | current | proven | — |
+| PE-015 | `scripts/fixtures/unit-route/` is the committed-toy-repo precedent this layout follows | repository | `scripts/fixtures/unit-route/**` | `3133c5ca` | D-55-1 · O1 | current | proven | — |
+| PE-016 | unit 28's historical ledgers quote grep strings found inside `GOLDEN_FIXTURE.md`; no suite re-runs those strings | repository | `docs/features/28-evidence-grounded-spec-plan-review/{testing,planning-findings}.md` + `grep -rln` over `scripts/**` → none | `3133c5ca` | AC5 · ED-55-3 (disclosed) | current | proven | — |
 
 ### Obligations
 
+| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | SPEC §Scope item 1; PE-001, PE-002, PE-015 | the two committed toy trees exist as bytes and lint as designed | P1 | 1–8 | execute-phase | `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` and `…toy-plan-nonatomic.md` | exit 0 / exit 1 with the expected verdicts | planned |
+| O2 | SPEC §Scope item 2; AC6 | the audit-target tree reproduces the four traps as file facts | P1 | 6–7 | execute-phase | suite `auditTargetTraps` | three invariant assertions pass | planned |
+| O3 | SPEC §Scope item 3; AC1, AC2, AC3(a); PE-011 | the suite exercises the real phase-lint tool at its CLI boundary, both directions | P3 | 1–2 | execute-phase | `node --test scripts/golden-fixture.test.mjs` | PASS and BLOCKED assertions green | planned |
+| O4 | SPEC §Scope item 3; AC3(b); PE-009, PE-010 | envelope validity is proven from committed samples in both directions | P3 | 3 | execute-phase | suite `envelopeValidity` | valid accepted, invalid rejected | planned |
+| O5 | SPEC §Scope item 4; AC3(c); D-55-6 | every row dated on/after 2026-09-18 matches the closed Result grammar; earlier rows are grandfathered | P3 | 4 | execute-phase | suite `runLogGrammar` | accept and reject paths both asserted | planned |
+| O6 | SPEC §Scope item 3; AC3(d), AC7 | the doc's fixture pointer resolves and every referenced fixture path exists | P3 | 5 | execute-phase | suite `crossReferences` | pointer present, zero missing paths | planned |
+| O7 | SPEC §Scope item 2; AC6 | the T1–T4 trap invariants hold in the committed tree | P3 | 6 | execute-phase | suite `auditTargetTraps` | three assertions pass | planned |
+| O8 | SPEC §Scope item 3; AC4; Expectation 2 | a failing check names the mutated fixture path and the violated assertion, fail-closed | P3 | 7 | execute-phase | suite tamper case | tamper assertion fails with the path named, committed bytes untouched | planned |
+| O9 | SPEC AC8; D-55-7 | the suite is deterministic — no network, wall-clock, or randomness | P3 | 1–7 | execute-phase | `grep -nE "Date\.now\|Math\.random\|fetch\(\|https?://" scripts/golden-fixture.test.mjs` + read check | no matches, suite green offline | planned |
+| O10 | SPEC §Scope item 5; AC5; PE-006, PE-007 | the doc slims to the judgment surface, keeps the protocol and run log, and drops every embedded copy | P2 | 1–3, 5 | execute-phase | `wc -l` ≤ 150; the AC5 greps | budget met, both protocol greps match, no live slug | planned |
+| O11 | SPEC §Scope item 6; AC7, AC9; PE-012, PE-013 | the workflow index and the `CLAUDE.md` verification list name the executable suite | P2 | 3–4 | execute-phase | `grep -n` over both files | both name the suite and resolve | planned |
+| O12 | SPEC §Scope item 7; AC9; PE-014 | roadmap row 55 carries the corrected summary and the shipped status | P1–P2 | registration | plan-feature / execute-phase | re-read of `docs/features/ROADMAP.md` | rows read `planned` then `done` with the PR link | planned |
+| O13 | SPEC §Scope item 3; AC3, AC8; PE-011 | the suite is read-only over the working tree | P3 | 1, 7 | execute-phase | suite helpers + `git status --porcelain` after a run | committed fixtures byte-identical after the run | planned |
+| O14 | SPEC AC9; verification-contract | the unit's own finish line is frozen and receipted before any phase edits | P4 | 1–8 | execute-phase | `git hash-object docs/features/55-executable-golden-fixture/ACCEPTANCE.md` | blob matches the receipt | planned |
+
 ### Decisions to confirm
+
+All engineering decisions are made and recorded here; none is open. The Product
+decisions D-55-1…D-55-7 are inherited unchanged.
+
+- **ED-55-1 — four phases, not the Product half's two.** The size rationale
+  sketched `P1` plus `P2 — Hardening & PR`; a single implementation phase cannot
+  carry `scripts/**` and `docs/**` targets, because box 2 of the phase-lint
+  fails a phase whose task targets another layer (PE-003, PE-004). The cut is
+  therefore P1 corpus (config/infra) → P2 doc slim (docs) → P3 suite
+  (config/infra) → P4 hardening. Deliverable and acceptance criteria are
+  unchanged; only the phase boundaries move, and the docs phase sits between the
+  two config/infra phases so the suite's cross-reference check is non-vacuous.
+- **ED-55-2 — checks are functions of a fixture root.** This is what makes
+  AC4's built-in tamper case real: the same code path runs over a temp copy.
+  It also keeps the suite read-only over committed bytes (O13).
+- **ED-55-3 — the doc's interleaved prose moves verbatim to
+  `RUN_LOG_NOTES.md`.** The ≤150-line budget cannot hold the embedded blocks,
+  the 43 rows, and 54 lines of historical prose at once (PE-006). Moving the
+  prose preserves it while the run-log rows stay byte-identical in place.
+  Disclosed consequence: unit 28's historical ledger entries that quote grep
+  strings from that prose become stale historical records; no suite re-runs them
+  (PE-008, PE-016).
+- **ED-55-4 — the grammar is enforced today, not at the first future run.** The
+  suite asserts the accept and reject paths against synthetic rows, so the
+  cutoff date governs the committed log while the rule itself is proven
+  immediately.
+- **ED-55-5 — the invalid envelope sample differs from the valid one in exactly
+  one field** (`state`), so the check proves deliberate rejection rather than an
+  incidental shape error (PE-009).
+- **ED-55-6 — the audit expected report moves to `audit-target/EXPECTED.md`.**
+  The T1–T4 pass criteria are judgment checks for the manual audit run, so they
+  live with the toy target they describe; the doc keeps a one-line pointer
+  (Expectation 3–4's protocol greps are unaffected).
 
 ### Testing requirements
 
+Integration-first, no mocks: `scripts/golden-fixture.test.mjs` runs the real
+`scripts/phase-lint.mjs` through `process.execPath` and loads the real envelope
+validator through `scripts/schema-runtime.mjs` (whose missing-build error is the
+one stated precondition — PE-010). Fixtures are the committed trees; the tamper
+case is the only temp-directory use. Standing repo gates stay as they are:
+`bun scripts/check-skill-context.mjs` (unaffected — no skill text changes),
+`node --test scripts/phase-lint.test.mjs`, and `npx skills add . --list`.
+
 ### Dev scenarios
+
+The feature's runtime is a test suite, so the failure categories are exercised as
+suite cases rather than domain states.
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `suite:missing-fixture` | a committed fixture file absent (empty/zero-state input) | the check reads the path and fails naming it, never a bare exit code — P3 `phaseLintPass` |
+| `suite:tampered-tree` | one byte mutated in a temp copy (AC4) | `phaseLintPass` over the copy fails with the mutated path in the message — P3 tamper case |
+| `suite:invalid-envelope` | an object violating the envelope contract (invalid input) | `validateEnvelope(invalid)` rejects it through `schema-runtime.mjs` — P3 `envelopeValidity` |
+| `suite:grandfathered-row` | a pre-cutoff free-text Result cell (compatibility boundary) | `runLogGrammar` accepts it, proving the cutoff is honoured — P3 `runLogGrammar` |
+| `suite:post-cutoff-malformed` | a row dated on/after the cutoff with a malformed Result (limit/threshold) | `runLogGrammar` rejects the synthetic row — P3 `runLogGrammar` |
+| `suite:permission-denied` | an unreadable fixture path | n/a: the check surfaces the read error naming the path — P3 `crossReferences`; no separate orchestration exists or is needed |
+| `suite:dependency-outage` | the schema runtime `dist/` absent | n/a as a scenario: the import throws a message naming the build step (PE-010), the fail-closed behavior P3 `envelopeValidity` depends on; the package build runs in the gate |
+| `suite:concurrent` | two suites running at once | n/a: the suite is read-only and stateless — P3 checks share no state to race on |
+
+### Spec-lint (engineering boxes — the template's additional five)
+
+- [x] `### Dev scenarios` carries failure-mode rows — five concrete rows plus three explicit `n/a` rows, each naming the check that covers it.
+- [x] Every phase passes the 8-box phase-lint — pasted below as `verdict PASS`, four fingerprints.
+- [x] `### Planning evidence` and `### Obligations` are present in place with zero blank cells (PE-001…PE-016, O1…O14).
+- [x] Every normative SPEC behaviour, applicable invariant, affected use case, and required failure state has exactly one obligation row carrying a phase and a validator; no row is `deferred` and none points at a follow-up issue. No project invariant applies (NRS F010), so no invariant row is owed.
+- [x] No template placeholders left anywhere in the file — with one declared exemption: the frozen Product half's AC2 cites the phase-lint finding-line grammar `P<n> box-<n>: <reason>`, whose `<n>`/`<reason>` are grammar tokens of the tool's fixed output rather than unfilled template slots (the same exemption feature 52 recorded for `<N>`/`<code>`).
 
 ### Phases
 
+Phases are `P1, P2, …` and called phases. Planning is not a numbered phase;
+`P1` is the first implementation phase and also commits the planning artifacts.
+The last phase is always hardening. The phase cut and its rationale are
+ED-55-1; every phase below is linted with the canonical
+[phase contract](../../../skills/phase-contract/SKILL.md).
+
+#### P1 — Commit the golden-fixture corpus
+
+Layer: `config/infra`. Done-when: `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` → `verdict PASS`, and the same command over `scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` → `verdict BLOCKED`.
+
+- [ ] Commit `scripts/fixtures/golden-fixture/toy-plan.md` — the phase-lint-clean two-phase toy plan (PE-001; O1)
+- [ ] Commit `scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` — the expected-BLOCKED variant (PE-002; O1)
+- [ ] Commit `scripts/fixtures/golden-fixture/toy-spec.md` and `scripts/fixtures/golden-fixture/toy-acceptance.md` — the toy unit's two product artifacts, moved verbatim from the doc (PE-006; O1)
+- [ ] Commit `scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt` — the byte-exact stdout of the linter over the clean toy plan (PE-001; O1)
+- [ ] Commit `scripts/fixtures/golden-fixture/envelope/valid.json` and `scripts/fixtures/golden-fixture/envelope/invalid.json` — a complete Envelope v2 sample and its one-field-invalid twin (PE-009; O4)
+- [ ] Commit `scripts/fixtures/golden-fixture/audit-target/README.md`, `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md`, and `scripts/fixtures/golden-fixture/audit-target/docs/fix/README.md` — the toy target's gate declaration, its expected report, and its lagging worklist row `9 — stale-cache` (O2)
+- [ ] Commit `scripts/fixtures/golden-fixture/audit-target/docs/adr/0047-transport.md` and `scripts/fixtures/golden-fixture/audit-target/docs/audits/3-2026-06-30.md` — the terminal decision record and the prior whole-product audit carrying `F2` (O2)
+- [ ] Commit `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` — the doc's interleaved historical prose blocks, moved verbatim (PE-006; O10)
+
+#### P2 — Slim the golden-fixture procedure doc
+
+Layer: `docs`. Done-when: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → ≤ 150, and `grep -n "Tool-calling smoke test" docs/workflow/GOLDEN_FIXTURE.md` → a match.
+
+- [ ] Slim `docs/workflow/GOLDEN_FIXTURE.md` to its live surfaces — purpose, the ~100-word judgment protocol, the tool-calling smoke test, the fixed pass criteria, the run log, and the fixture pointers (PE-006; O10)
+- [ ] Remove the embedded toy SPEC and manifest blocks from `docs/workflow/GOLDEN_FIXTURE.md`, leaving one pointer at the fixture tree (PE-006, PE-007; O10)
+- [ ] Remove the audit-target build, the four traps, and the old scope-boundary prose from `docs/workflow/GOLDEN_FIXTURE.md`, leaving pointers to `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md` and `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` (ED-55-3; O10)
+- [ ] Update the `docs/workflow/README.md` index line so it names the judgment protocol alongside the executable suite (PE-013; O11)
+- [ ] Extend `CLAUDE.md`'s verification list so it names the executable suite beside the existing root regressions (PE-012; O11)
+- [ ] Verify `docs/workflow/GOLDEN_FIXTURE.md` carries no live toy slug outside the grandfathered run-log rows and that its 43 rows are byte-identical to the pre-slim bytes (PE-007; O10)
+
+#### P3 — Author the golden-fixture assertion suite
+
+Layer: `config/infra`. Done-when: `node --test scripts/golden-fixture.test.mjs` → exit 0.
+
+- [ ] Author `scripts/golden-fixture.test.mjs` with the read-only fixture-root helpers every check shares (ED-55-2; O3, O13)
+- [ ] Assert in `scripts/golden-fixture.test.mjs` the phase-lint PASS case byte-for-byte and the BLOCKED case (PE-001, PE-002; O3)
+- [ ] Assert in `scripts/golden-fixture.test.mjs` the envelope pair through `scripts/schema-runtime.mjs` — valid accepted, invalid rejected (PE-009, PE-010; O4)
+- [ ] Assert in `scripts/golden-fixture.test.mjs` the run-log Result grammar over `docs/workflow/GOLDEN_FIXTURE.md` with the 2026-09-18 cutoff, one grandfathered accept, and one synthetic reject (D-55-6; O5)
+- [ ] Assert from `scripts/golden-fixture.test.mjs` that `docs/workflow/GOLDEN_FIXTURE.md` carries its fixture pointer and names only fixture paths that exist (O6)
+- [ ] Assert from `scripts/golden-fixture.test.mjs` the audit-target trap invariants under `scripts/fixtures/golden-fixture/audit-target/` (O7)
+- [ ] Assert in `scripts/golden-fixture.test.mjs` the tamper case — a temp copy with one mutated byte fails, naming the mutated path (AC4, Expectation 2; O8)
+
+#### P4 — Hardening & PR
+
+Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the roadmap row status to `done` and commit the flip
+- [ ] `git push`
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<n>` and push
+
+#### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
+
+Run over the emitted plan (`node scripts/phase-lint.mjs docs/features/55-executable-golden-fixture/SPEC.md`):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:8:commit-golden-fixture-corpus
+P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:6:slim-golden-fixture-procedure-doc
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:author-golden-fixture-assertion-suite
+P4 Phase-lint: PASS (8/8) · fingerprint P4:hardening:8:hardening-pr
+verdict PASS
+fingerprint: 58fdb9db609f96bc36149d5260aafb83e5923a8a45ce97a2ef83bb8ffbcf9124
+```
+
 ### Deploy & rollback
+
+n/a — merging is enough. No schema migration, no feature flag, no config or
+environment change. Rollback = revert the PR; the suite and fixtures are additive
+and carry no persisted state, and the doc slim is reversible from git.
 
 ### Open questions / risks
 
+- **Risk — the ≤150-line budget is tight** once 43 rows stay verbatim (PE-006,
+  PE-007). Mitigation: P2's done-when is the measured budget and the prose moves
+  verbatim to `RUN_LOG_NOTES.md`, so an over-budget slim fails the phase instead
+  of surfacing in review. Owner: P2.
+- **Risk — the envelope check needs the built schema package** (`dist/`); a
+  fresh clone without it makes the suite fail loudly at import with the build
+  step named (PE-010). That fail-closed message is the intended behavior; the
+  package build is part of the verification gate the unit runs. Owner: P4.
+- **Disclosed — stale historical ledger strings.** Unit 28's
+  `testing.md`/`planning-findings.md` quote grep strings from doc prose that
+  moves to `RUN_LOG_NOTES.md` (PE-008, PE-016). No suite re-runs them; they stay
+  as historical records of that unit's own verification. Owner: none — the
+  disclosure is the mitigation.
+- Inherited open questions: none — the Product half records two Deferred
+  decisions, each with a decide-by trigger, and none blocks this plan.
+
 ### Deliverables
 
+- `scripts/fixtures/golden-fixture/` — both committed toy trees (executor corpus
+  plus audit target), the expected stdout snapshot, the envelope samples, the
+  moved product artifacts, and `RUN_LOG_NOTES.md`
+- `scripts/golden-fixture.test.mjs` — the read-only mechanical assertion suite
+- `docs/workflow/GOLDEN_FIXTURE.md` — the slimmed judgment protocol plus the
+  verbatim run log
+- `docs/workflow/README.md` — the updated index line
+- `CLAUDE.md` — the verification-list bullet naming the suite
+- `docs/features/ROADMAP.md` — row 55 registered, then closed out with the PR link
+- planning artifacts: this SPEC's Engineering half and
+  `docs/features/55-executable-golden-fixture/ACCEPTANCE.md`
+
 ### Post-merge next feature
+
+Per the 2026-09-15 bureaucracy-reduction execution order, Phase 0 ends with this
+unit (fix #224 · 52 · 59 · 55 all shipped). The next unit is **31
+`planning-review-materiality`** ([#171](https://github.com/gtrabanco/agentic-workflow/issues/171)),
+which opens Phase 1's loop-policy chain (`31 → 32 → 35 → 42 → 51 → 50`).
