@@ -3327,7 +3327,7 @@ fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
 - Plan snapshot at the repaired revision, parented to the current Product receipt:
   `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
   31-planning-review-materiality --parent dd09372a…` →
-  `7c08acab27c3dd7118cffd1bf6d161170e2d6d878be5f2c00cfc005bacea399e` (the
+  `b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be` (the
   `31-plan-4` bytes' parent-bound digest `e3e86e2a…` and the `31-plan-3` digest
   `e1a22768…` are superseded at this revision).
 - Re-frozen acceptance manifest: `git hash-object
@@ -3396,5 +3396,5 @@ blocker.
 
 Hand-off: a repaired plan is not an approved plan. The next step is
 `/review-plan 31-planning-review-materiality` — the new artifact revision is
-`31-plan-5` (`bbbb36a7`), bound to parent snapshot `dd09372a…`, and the reviewer
-re-derives plan snapshot `7c08acab…`.
+`31-plan-5` (`ecde13dc`), bound to parent snapshot `dd09372a…`, and the reviewer
+re-derives plan snapshot `b17009ea…`.
