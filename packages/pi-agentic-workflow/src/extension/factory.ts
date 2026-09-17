@@ -4,6 +4,7 @@ import { readCatalogue } from "../routing/catalogue.js";
 import type { Catalogue } from "../routing/catalogue.js";
 import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
+import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
 import { SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
@@ -55,6 +56,16 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
   router: Router<M>;
   catalogue: Catalogue;
+  /**
+   * The Pi-free predicates the adapter (`index.ts`) binds to Pi's lifecycle
+   * events: the inline-receipt block guard and the dirty-worktree notice. They
+   * travel with the handle so the entry stays a thin translation layer and the
+   * decisions are unit-tested with no session (issue #182).
+   */
+  guards: {
+    receiptGuard: typeof receiptGuard;
+    dirtyWorktreeWarning: typeof dirtyWorktreeWarning;
+  };
 }
 
 export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDeps<M>): ExtensionHandle<M> {
@@ -117,5 +128,5 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     handler: settingsHandler,
   });
 
-  return { router, catalogue };
+  return { router, catalogue, guards: { receiptGuard, dirtyWorktreeWarning } };
 }
