@@ -32,7 +32,7 @@ design-feature / plan-feature (author turn)
 | `skills/review-spec/references/CHECKS.md` / `skills/review-plan/references/CHECKS.md` | docs | materiality restatement + anti-deflation |
 | `skills/review-spec/references/OUTPUT.md` / `skills/review-plan/references/OUTPUT.md` | docs | cap mirror; receipt-literal lines + verdict grammar untouched |
 | `skills/design-feature/references/REPAIR.md` §4 | docs | cap mirror |
-| `scripts/review-loop-discipline.test.mjs` | config/infra (test) | additive planning-side pin sections; existing assertions untouched |
+| `scripts/review-loop-discipline.test.mjs` | config/infra (test) | additive planning-side pin table (`PLANNING_PIN_TABLE` + row floor + discrimination leg); existing assertions untouched |
 | schema package, sensor, snapshot builder | n/a | negative integration — untouched (AC10) |
 | `docs/workflow/*` tutorial | n/a | no edit (AC8 scope guard) |
 
