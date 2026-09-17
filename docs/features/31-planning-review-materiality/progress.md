@@ -386,3 +386,150 @@ these bytes): only a fresh `/review-plan 31-planning-review-materiality`
 restores currency. No source edit, no fold, no branch change, no `review-findings.md`
 write, and no `skills/` edit — so no Pi mirror re-bundle and no version bump
 belong to this batch.
+
+---
+
+# Plan re-review (`review-plan`), 2026-09-17
+
+Re-review of the `31-plan-2` repair batch — cycle 1's repair/re-review, no cycle
+cap consumed, so no `CONVERGENCE-ANOMALY` is due. Fresh context; this
+conversation never authored or replanned the reviewed Engineering half.
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality plan @ a3012f86
+- 3 Engineering claims a hostile reader could call invented rather than evidenced:
+    1. The SPEC Engineering half states the plan descends from `spec-review-31-1`
+       @ `735e758…` and that this was "verified fresh against the bytes on disk by
+       `pre-execution-snapshot.mjs verify --stage spec`". Re-deriving now
+       contradicts it: the `spec-product-v1` projection digest moved from
+       `14d2340…` to `c09b28aa…` because the `31-plan-2` repair edited the Product
+       half. → CONFIRMED GAP (R31-01).
+    2. `planning-obligations.md` `O15` claims one obligation over P1/P2/P3; the
+       frozen LEDGERS §2 row contract requires exactly one phase and one task.
+       → CONFIRMED GAP (R31-02).
+    3. AC14/E-D31-5 claim "a no-op suite can no longer satisfy AC1–AC3, AC9 or
+       AC11". The floor (≥9 rows) and liveness legs are real and the suite runs
+       them; the discrimination leg compares a `must` regex to an author-supplied
+       `superseded` sample, so a dishonest sample could stay vacuous — but the P4
+       read-verified suite-diff walk covers that residue. Not a confirmed gap: a
+       residual author-honesty limit, not a missing mechanism.
+- A SPEC obligation this plan cannot deliver, and where it silently died: AC8
+  (O8) — the scope walk is a whole-diff `git diff main --stat` but the branch diff
+  also carries the unit's own records and the ROADMAP row, which neither In-scope
+  nor the derived-surface set enumerates. → R31-03.
+- One phase whose deliverable could be accepted while its validator passes for
+  the wrong reason: P4's AC8 walk — the criterion is unsatisfiable as literally
+  worded, so a walk that silently excludes the unit's own files "passes" it.
+  → R31-03.
+- If every phase shipped exactly as written, what would still be broken, and is
+  that in scope? The plan would be executed against a Product parent that no
+  longer exists (L1) — in scope, and blocking.
+- Which failure state has no scenario, or a scenario no validator runs? The
+  feature's own failure states each have a scenario; the stale-parent lineage
+  failure is caught by L1, not by a scenario row — that is the gate working.
+- Verdict stance before checking: CONFIRMED-GAPS
+```
+
+## Checks — one result each
+
+Snapshot `e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a` @
+source revision `a3012f8617549fe5fd73f2e86cf80ab520370e43`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| L1 | Parent current | finding | `spec-review-31-1` binds `735e758…` and equals `parentSpecSnapshotDigest`, but the Product bytes moved after the receipt: `selectSpecProduct` digest is `c09b28aa82002cb075b62aa07b0b821fb6a1be8c1a8ce999cd358daa5d0960f2` now vs `14d23401222e9d8ab9090ac917cee3268bfb90fdcc7551f3ada9616328a094d9` at review time, because the `31-plan-2` repair edited the Product half. `verify --stage spec` answers `fresh: false / stale-source-revision` with `changedPaths: [SPEC.md]`. → R31-01 |
+| L2 | Evidence integrity | pass | PE-001…PE-019 all `current` + `proven`/`decision` (PE-013 `decision`); PE-016's obligation cell corrected to O10; PE-018/PE-019 added by the repair and re-read; every cited `path:line` re-read on disk (`LEDGERS.md:93`, `CHECKS.md:104`/`:105`, POLICY §3/§4, `REPAIR.md:64-65,71`, OUTPUT ×2, suite lines, ROADMAP row 29, no root `package.json`); no `unknown`/`drifted`/`stale` row |
+| L3 | Obligation completeness | pass | O1…O15: AC1…AC14 map one-to-one (AC14→O15) plus O14 for the AD-008 invariant; no missing or duplicated behaviour; no `deferred` row |
+| L4 | Obligation mapping | finding | O15 names three phases and three tasks (`P1 (table shell + floor 4), P2 (floor 8), P3 (floor 9)`); LEDGERS §2 requires exactly one phase and one task. → R31-02 |
+| L5 | Scenario ↔ validator ↔ phase closure | pass | the six failure categories are covered; every scenario names a phase + validator in `testing.md`; the pin validators can now fail (liveness + discrimination + floor legs, AC14 runs them) |
+| L6 | Findings ledger honest | pass | F01/F02/F03 `resolved` with `resolving-artifact-revision 31-plan-2`; N31-001/N31-002 `open`/`info`/product; no `dismissed`; no open material row from the prior cycle |
+| P1 | Architecture | pass | affected surfaces carry `path:line` rows (PE-001…PE-007); invariant classification line present: `Preflight: NRS consumed · invariant classification: n/a: no project invariants declared (F010) — AD-008 preserved (D-31-5)` |
+| P2 | Dependency closure | pass | hard dependency 29 is `done · #175` (merged, ancestor of HEAD); no other dependency; no phase depends on unwritten work |
+| P3 | Compatibility | pass | preserved contracts stated with proving rows: union/counter-evidence/independence (POLICY §1/§2 untouched), severity vocabulary + schema (AC10, PE-016), receipt literal + verdict grammar (PE-010, `normative-drift`), code-side loop (Out-of-scope 3) |
+| P4 | Security | n/a | docs-layer plan: no secret, input, authn/authz, PII or new dependency surface |
+| P5 | Migration | pass | forward path (bumped skills bind at the next planning review); legacy rule stated (no retroactive reclassification — Out-of-scope 5, `POLICY` §6); who runs it: `execute-phase` (P4); EN/ES sync n/a (English-only interim) |
+| P6 | Recovery | pass | one atomic commit per phase; red-first pins fail before the edit and the phase done-when gates the commit; `progress.md` is the per-phase receipt surface |
+| P7 | Rollback | pass | `Deploy & rollback` states the executable revert set (revert the PR, mirror included); no stored data; out-of-band limit stated |
+| P8 | Operability | pass | the deterministic pins and the AC1–AC14 greps surface the behaviour; sensor/`workflow-status` reporting unchanged |
+| P9 | Phase atomicity and order | pass | re-ran `node scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md`: P1–P4 PASS (8/8), aggregate `5465f0aa8251f530682fb74a0843c36d82561624c76ced06c2122cfa85e40798` byte-identical to the SPEC's pasted block; order matches the dependency closure; P4 is hardening |
+| P10 | Validators | finding | F01 fixed (every mirror now spells `cd packages/pi-agentic-workflow && bun run bundle:skills`) and F02 materially addressed (declared pin table + row floor + discrimination leg + AC14). Remaining defect: AC8's validator (whole-diff scope walk) cannot hold literally because the branch diff also carries the unit's own records and the `ROADMAP.md` row. → R31-03. All other gates verified real: discipline suite exit 0; `bun test scripts/{ledger-ownership,pre-execution-quality,ledger-provenance,normative-drift}.test.mjs` → 112 pass / 0 fail; `bun scripts/check-skill-context.mjs` → exit 0 (40 skills); phase-lint PASS |
+| P11 | Scenario coverage | pass | the six fixed categories are covered (empty/zero; invalid input ×2; permission denied; limit hit; concurrent/duplicate ×2) plus the derived surfaces; each maps to a phase + validator in `testing.md`; `outage/dependency failure` n/a with reason |
+| P12 | Source evidence | pass | file/version/status claims match `a3012f86`: `LEDGERS.md:93`, `CHECKS.md:104`/`:105`, POLICY §3/§4, `REPAIR.md:64-65,71`, OUTPUT ×2, versions 2.2.1/1.7.1/1.6.1/3.4.0, ROADMAP row 29 `done · #175`, no root `package.json`, the feature 29/59 bundler precedent. The parent-freshness identity claim is owned by L1 |
+
+Findings: 3 (material open: 2) — see `planning-findings.md` R31-01 (high),
+R31-02 (medium), R31-03 (info).
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-31-2 · Snapshot: e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a · Verdict: plan-review-fail
+- Unit: 31-planning-review-materiality · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 735e75876583d0deed58f22f2e05cfde516b4750cfa87ff6d0c088aece72170a · Parent Product receipt: spec-review-31-1
+- Source revision: a3012f8617549fe5fd73f2e86cf80ab520370e43 · Artifact revision: a3012f8617549fe5fd73f2e86cf80ab520370e43
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature (31-plan-2 repair batch, 2026-09-17)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T10:20:00Z/2026-09-17T10:31:48Z · Findings: 3 (material open: 2)
+- Ledgers read: planning-evidence 19 rows · obligations 15 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): plan-review-31-1 @ 459264b4a79b078f4731c6082a0e2e8c10d23cc1d6570dc74ece5d2822025a0b
+```
+
+Artifact-revision notes:
+
+- The planner's handoff label is `31-plan-2` (PLAN.md header, SPEC Engineering
+  half, decisions.md). No runtime rotates `artifactRevisionId` in this
+  environment, so this receipt binds the builder's digest-derived value
+  `a3012f86…` — the same reconciliation `review-spec` recorded for `31-spec-1`
+  and the prior plan receipt for `31-plan-1`. The label stays recorded here.
+- `Parent SPEC snapshot` records the receipt the plan was cut against; the
+  Product half has since moved, which is exactly finding R31-01.
+
+Self-check (`verify --stage plan`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "plan-review-31-2",
+    "verdict": "plan-review-fail",
+    "snapshot": "e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — the write landed, `structural.fresh: true`; `current` is false because
+the verdict is a FAIL, which is the expected emit result and routes per the
+verdict.)
+
+## Verdict
+
+```text
+PLAN-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: e1e6ddd80770cfd01cce16179a514c3323a57128986374e362f762a915fb1e9a · Artifact revision: a3012f8617549fe5fd73f2e86cf80ab520370e43
+- Failed checks: L1, L4, P10
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | R31-01 | high | product | L1 | The `31-plan-2` repair edited the Product half, so the plan descends from a stale `spec-review-31-1`: the `spec-product-v1` projection digest is `c09b28aa…` now vs the receipt's `14d2340…` | `git diff cf238040 a3012f86 -- SPEC.md` (Product-half hunks); `selectSpecProduct` before/after digests; `verify --stage spec` → `fresh:false / stale-source-revision` (`SPEC.md`) | verified |
+  | R31-02 | medium | plan | L4 | `O15` names three phases and three tasks in one row (`P1/P2/P3`), violating LEDGERS §2's "exactly one phase and one task" | `planning-obligations.md` O15 row + `## Closure`; `LEDGERS.md` §2 `phase`/`task` cell contract | verified |
+  | R31-03 | info | plan | P10 | AC8's whole-diff scope walk cannot hold literally: the branch diff also carries the unit's own planning records and the `ROADMAP.md` row, neither enumerated in In-scope nor in the declared derived-surface set | `ACCEPTANCE.md` AC8; SPEC `#### In scope` + E-D31-7; `PLAN.md`/`TASKS.md` P4 task 5; `git diff --stat main...HEAD` (13 files incl. the unit dir and `ROADMAP.md`) | verified |
+- Repair owner: `review-spec 31-planning-review-materiality` first (R31-01, class product → Product-half re-review), then `plan-feature 31-planning-review-materiality` — one batch for R31-02 + R31-03 over the re-derived plan
+- Parent state: stale-parent → review-spec first
+```
