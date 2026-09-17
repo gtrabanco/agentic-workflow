@@ -2032,3 +2032,176 @@ from the new bytes, reporting exactly the declared by-design state —
     independent review before any engineering planning (fifth user-keyed cycle of the window, D-31-7)
   · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys nothing,
       rotates the artifact revision)
+
+---
+
+## Re-review (`spec-review-31-8`, 2026-09-17)
+
+Cycle-5 independent re-review of the Product half the `31-spec-7` repair batch
+rewrote — the route `spec-review-31-7` named for N31-012/N31-013. Fresh
+context; this conversation never authored or edited the Product half, its
+ledgers, or its acceptance manifest → `contextClean: true`,
+`authorExclusion: not-enforceable`, `modelDiversity: not-applicable`.
+
+Snapshot `07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794` @
+source revision `12ddc2154f6f9a5c88361dee95e38b4726e8e190` (`spec-product-v1`
+digest `d4912d0cac1378f01f835a1629df4203ce7ceb3b6cd27fcf4cea2aba4e539153`,
+45546 bytes); handoff label `31-spec-7`. Verdict: `spec-review-fail` — 13/14
+checks pass; C8 carries one `product` row (N31-014 `medium`). N31-012 and
+N31-013 are verified repaired at `31-spec-7`; N31-009/N31-010/N31-011 stay
+`resolved` at `31-spec-6`; N31-006/N31-007/N31-008 at `31-spec-5`;
+N31-004/N31-005 at `31-spec-4`; N31-001/N31-002/N31-003 at `31-spec-2`.
+
+### Clean-context falsification (before the checks)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ 12ddc215
+- Name 3 specific product decisions a hostile reader could call invented rather
+  than recorded: (1) the `reproducer` field on the schema finding record
+  (In-scope 1 / AC3) — not in the issue text; authority is the D-31-6 carrier
+  ruling + the decisions.md carrier-amendment row (`authority-kind user`), so
+  recorded. (2) the stage-scoped cap exit: `needs-design` at the spec stage,
+  refusal + `design-feature` routing at the plan stage (D-31-8) — grounded in
+  `VERDICTS_BY_STAGE` read at `pre-execution-contract.ts:127-138` (plan carries
+  no `needs-design`) and fix/162; recorded. (3) the four skill `version:` bumps
+  + CHANGELOG/README release surfaces (In-scope 7 / AC14) — derived from
+  In-scope 7 and the #176 freeze (E-D31-1 + evidence row). None invented
+  without an authority row.
+- The user outcome the SPEC promises that has no observable check: the declared
+  shrink of POLICY §4's unbounded-cycle sentences. §4's third claim — "... a
+  repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new
+  snapshot by design, so no cycle cap or anomaly rule may block or end it."
+  (`POLICY.md:81-82`) — is matched by no criterion (AC7's only POLICY §4
+  fragments are `:61` and `:83`), so the shipped POLICY.md can still assert no
+  cap may end the loop with every AC green (N31-014).
+- One role the matrix leaves unspecified for a capability it does list: none —
+  5 derived roles × 5 capabilities, every cell explicit `allowed`/`denied`.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? For In-scope 5's POLICY §4 shrink to be fully criterioned, every
+  unbounded-cycle sentence in §4 would need a matching AC fragment. True that it
+  does not: `grep -n "no cycle cap or anomaly rule"
+  skills/pre-execution-review/references/POLICY.md` → `82:` exit 0 at
+  `12ddc215` (fragment unique in `skills/`), and the shipped rule (E3: "a third
+  never starts: the orchestrator refuses") contradicts it. Confirmed gap.
+- Verdict stance before checking: CONFIRMED-GAPS
+```
+
+## Checks — one result each
+
+Snapshot `07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794` @
+source revision `12ddc2154f6f9a5c88361dee95e38b4726e8e190`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Every in-scope item names an observable outcome and its AC anchor: 1→AC1/AC2/AC3, 2→AC4, 3→AC5/AC7, 4→AC6, 5→AC7, 6→AC8/AC9, 7→AC10/AC11/AC14, 8→AC12; the allowed-set groups→AC13. Business goals name machine behaviours (report-note coexistence, cap refusal, stage-scoped human route), not "improve X" |
+| C2 | Actors and roles | pass | 5 derived roles (human owner / author turn / reviewer turn / executor turn / drivers & sensors) × 5 capabilities (C1–C5); every cell explicit `allowed`/`denied`; no unlisted role; the role blurb ("drivers & sensors validate and refuse; they never author findings") matches every cell |
+| C3 | Entity closure | pass | E1–E3 resolve create/read/update/delete/state-transitions to a named surface + test; every `n/a` carries a reason (append-only ledger; derived machine/cycle value); zero blank rows |
+| C4 | Limits and failure states | pass | Limit = findings ≤ 64 (unchanged) + the two-cycle cap; failure states resolved — unconverged loop → stage-scoped human stop (spec `NEEDS-DESIGN` per `VERDICTS_BY_STAGE.spec`; plan refusal + `design-feature` route), unrecorded rotation → `stale-artifact-revision`, material byte move → `stale-artifact-content` (exit 4), mislabeled defect → `medium` minimum; size `M` |
+| C5 | Scope and non-goals | pass | 7 non-goals, each naming the preserved contract, the owning feature (#159, code side), or an explicit exclusion (new vocabulary, retroactive rows, receipt binding, superseded plan set, aspirational citation, tutorial edit) |
+| C6 | Integration closure | pass | `docs/CAPABILITIES.md` is the unseeded template (placeholder rows only), so the 12-row derived inventory is recorded and walked one row per subsystem (recounted: 12 data rows at `:343-356`); no `docs/architecture/ARCHITECTURAL_INVARIANTS.md` exists and the snapshot records that context `absent` |
+| C7 | Expectation sweep | pass | 19 rows (≥ 10 for `M`), each forced to exactly one resolution with a pointer: 16 `in-scope`, 3 `out-of-scope`, zero unresolved |
+| C8 | Acceptance objectivity | finding | AC3's two new bound anchors and AC7's POLICY §3 anchor discriminate at `12ddc215` (AC3: `grep -A8 'key: "reproducer"' … \| grep -c "maxLength"` → 0 and `grep -rln "reproducer" …/test/` → exit 1; AC7: `grep -n "re-review of the resulting snapshot" …/POLICY.md` → `42:` exit 0) — N31-012/N31-013 repaired. But In-scope 5 declares POLICY §4 loses "the unbounded-cycle sentences" and AC7 claims coverage of "every declared surface", while §4's third unbounded-cycle claim (`POLICY.md:82`, "no cycle cap or anomaly rule may block or end it") is matched by no criterion → N31-014 |
+| C9 | Internal contradiction | pass | Materiality (`medium`+), the stage-scoped unconverged exit, the wording-only route and the four preserved contracts are consistent across Goal/Business goals/Scope/D-31-1…D-31-8/E3; the uncriterioned §4 sentence is an acceptance-coverage gap (C8), not a second assertion inside the half |
+| C10 | Repository contradiction | pass | Claims re-read at `12ddc215`: `pre-execution.ts:1059` `severity !== "info"`; `FINDING_SPEC` fields at `pre-execution-contract.ts:455-500` carry no `reproducer`; severity enum `:102-105` (the bare `medium` literal at `:103`); `PRE_EXECUTION_FRESHNESS_CODES` = 10 (`pre-execution.ts:159-170`); `VERDICTS_BY_STAGE` `:127-138` (spec has `needs-design`, plan does not); `maxLength?` optional at `verification-contract.ts:51`; `POLICY.md:42,61,83`; `REPAIR.md:71`; both `CHECKS.md` old line (`:104`/`:105`); LEDGERS §3 old line (`:93`); four skill versions 2.2.1/1.7.1/1.6.1/3.4.0; `README.md` has no `## References`; no root `package.json`; `bundle:skills` + `test` in `packages/pi-agentic-workflow/package.json`; `gate:pre-execution` in the schema package; `docs/CAPABILITIES.md` template; ROADMAP row 29 `done · #175` |
+| C11 | Evidence integrity | pass | `decisions.md` carries 66 evidence rows (64 `proven` + 2 `decision`), every one at `current` freshness with a location; zero `unknown`/`drifted`/`stale` rows. The `31-spec-7` batch's rows (POLICY §3 wrap/uniqueness, the AC3 bound anchors and `maxLength` optionality, receipt state at authoring) re-verified `current` on disk here |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` with an empty table; D-31-5's AD-008 reconciliation is owner-routed (`resolve-repository-state`) behind a conditional trigger, not an open product choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, architecture, or validator: AC anchors name carriers and frozen identifiers as acceptance surfaces without assigning phases/tasks (the superseded plan set is declared re-cut) |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: README citation (AC12), bumps/pins (AC9/AC10/AC11/AC13/AC14) and the bibliography stay in-unit; the AD-008 amendment is conditional and owner-routed; the plan-stage rows R31-01/02/03 stay with `plan-feature`, not a future issue |
+
+Findings: 1 (material open: 1) — N31-014 (`medium`, product) in
+`planning-findings.md`.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-8 · Snapshot: 07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794 · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 12ddc2154f6f9a5c88361dee95e38b4726e8e190 · Artifact revision: 12ddc2154f6f9a5c88361dee95e38b4726e8e190
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T18:20:00Z/2026-09-17T18:34:00Z · Findings: 1 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 45546 · digest d4912d0cac1378f01f835a1629df4203ce7ceb3b6cd27fcf4cea2aba4e539153 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 13/14 pass (C8 one row); falsification CONFIRMED-GAPS; N31-014 `medium` blocks and routes to design-feature
+```
+
+Artifact-revision notes:
+
+- The design handoff names the authoring label `31-spec-7` (SPEC `## Design
+  status`; decisions.md repair-batch header). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `12ddc215…` — the same reconciliation every prior receipt
+  in this unit recorded; the label stays recorded here.
+- Reviewed bytes are committed at `12ddc215` (clean tree at review start), so the
+  builder's "commit the bound artifacts" precondition held; no reviewed byte
+  changed by this turn.
+
+CONVERGENCE-ANOMALY (POLICY §4, D-31-7) — this review is the spec stage's fifth
+consecutive unconverged cycle of the window the carrier amendment opened
+(`spec-review-31-4` FAIL #1 → `31-spec-4` → `spec-review-31-5` FAIL #2 →
+`31-spec-5` → `spec-review-31-6` FAIL #3 → `31-spec-6` → `spec-review-31-7`
+FAIL #4 → `31-spec-7` → this FAIL #5). The window's block was printed on
+cycle-2 entry and is reproduced in the `spec-review-31-7` receipt and the
+`31-spec-7` batch. POLICY §4's anomaly rule scopes to second-cycle entry; this
+is the user-keyed further cycle the `31-spec-7` hand-off commissioned, and under
+the live POLICY §4 the planning loop is still uncapped (the defect this unit
+fixes). Reported here for the cycle record; it grants no PASS and is not a stop:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-012/N31-013 (repaired at 31-spec-7) / N31-014 (new)
+- Snapshots: c9acd7885ea653c644f7df59484f0af68441ee7ba7c96323b723538f190e7fe3 → 07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794 (artifactRevisionId bfdd3b54 → 12ddc215; handoff label 31-spec-6 → 31-spec-7)
+- Missed: POLICY §4's third unbounded-cycle sentence ("no cycle cap or anomaly rule may block or end it", :82) left without a criterion while In-scope 5 declares §4's unbounded-cycle sentences removed
+```
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-8",
+    "verdict": "spec-review-fail",
+    "snapshot": "07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — the write landed, `structural.fresh: true`; `current` is false because
+the verdict is a FAIL, which is the expected emit result and routes per the
+verdict.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: 07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794 · Artifact revision: 12ddc2154f6f9a5c88361dee95e38b4726e8e190
+- Failed checks: C8
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | N31-014 | medium | product | C8 | In-scope 5 declares POLICY.md §4 among the surfaces losing "the unbounded-cycle sentences" and AC7 claims coverage of "every declared surface", but AC7's removal set covers only two of §4's three: `grep -n "cycle is allowed when correctness needs it"` (`:61`) and `grep -n "no cap converts a verdict into a"` (`:83`). §4's third — "a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by design, so no cycle cap or anomaly rule may block or end it." (`:81-82`) — is matched by no criterion, so a PR can ship POLICY.md still asserting no cap may end the loop with every AC green, while the shipped rule refuses a third unconverged cycle (E3/AC5) | In-scope 5; AC7; E3 state transitions; AC5; `skills/pre-execution-review/references/POLICY.md:80-84`; observed `grep -n "no cycle cap or anomaly rule" …/POLICY.md` → `82:` exit 0 at `12ddc215` (fragment unique in `skills/`) | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+- Parent state: n/a (spec stage roots its own lineage)
+```
+
+→ Next: /design-feature 31-planning-review-materiality "repair N31-014: give POLICY.md §4's third unbounded-cycle sentence ('… so no cycle cap or anomaly rule may block or end it.', :82) a criterion in AC7 so the declared §4 shrink is observable" — one repair batch for N31-014, then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
+  · a product choice is missing → answer it in the instruction; nothing here chooses for you
+  · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
