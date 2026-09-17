@@ -116,6 +116,12 @@ discipline-test pins in `scripts/review-loop-discipline.test.mjs` (updated,
 never weakened); per-skill version bumps + CHANGELOG rows; the README
 `## References` append at shipping time.
 
+Plus the **derived surfaces** every one of those edits drags in, declared here
+so AC8's scope guard walks them instead of reporting them as violations: the Pi
+package mirror (`packages/pi-agentic-workflow/skills/**`, written only by the
+bundler), the four edited skills' `version:` lines, the README skill-table cells
+the `bump-skill` step rewrites, and the `CHANGELOG.md` rows.
+
 1. **Materiality line moves on the planning side**: in the `planning-findings`
    ledger semantics, material = `medium`+; a `low` finding becomes a
    **report-note** — persisted and visible in the ledger, non-blocking, and
@@ -133,10 +139,14 @@ never weakened); per-skill version bumps + CHANGELOG rows; the README
    unchanged) routes a cosmetic repair batch **without** a full snapshot
    re-review; the determination is recorded in the unit's evidence and
    `artifactRevisionId` still rotates → AC6.
-5. **Discipline-test pins updated, never weakened**: the planning-side pins
-   (report-note semantics, cap, anti-deflation, wording-only route) are added
-   to `scripts/review-loop-discipline.test.mjs`; every existing assertion keeps
-   its strength → AC9 + AC11.
+5. **Discipline-test pins updated, never weakened, and provably present**: the
+   planning-side pins (report-note semantics, cap, anti-deflation, wording-only
+   route) are added to `scripts/review-loop-discipline.test.mjs` as rows of one
+   declared pin table carrying a row floor and a discrimination leg — every pin
+   must **reject the sentence it supersedes**, so a pin that is absent, empty,
+   or trivially true cannot leave the suite green — and a frozen validator
+   checks the table's presence at the PR head; every existing assertion keeps
+   its strength → AC9 + AC11 + AC14.
 6. **Bibliography obligation** (issue #171): when this ships, the Jin & Chen
    entry appends to `README.md` under a bottom `## References` section (created
    if absent, deduped against other features' entries) — in the implementation
@@ -255,9 +265,9 @@ from the same sources.
 | Skill reference docs (`skills/*/SKILL.md` + `references/`) | yes | `LEDGERS.md` severity semantics; `POLICY.md` §3 consequence + §4 cap; `review-spec`/`review-plan` CHECKS materiality line + pass conditions; `review-spec`/`review-plan` OUTPUT loop text; `design-feature` `REPAIR.md` §4 cap mirror | `bun scripts/check-skill-context.mjs` + `scripts/normative-drift.test.mjs` + AC1–AC7 greps |
 | Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | severity semantics move (low ⇒ report-note); row columns, writers, resolvers unchanged | `scripts/ledger-ownership.test.mjs` + `scripts/pre-execution-quality.test.mjs` + `scripts/ledger-provenance.test.mjs` |
 | Receipt/snapshot machinery (`pre-execution-snapshot.mjs`, schema package, sensor) | yes (read-only integration) | untouched: verdict blocks keep digest + `artifactRevisionId`; the wording-only route rotates the revision so mutate-and-revert stays detectable — no new machinery | schema suite + `scripts/pre-execution-sensor.test.mjs` green; AC10 |
-| Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` gains planning-side pins (report-note, cap, anti-deflation, wording-only); existing pins keep strength | AC9 + AC11 |
+| Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` gains the planning-side pin table (report-note, cap, anti-deflation, wording-only) with its row floor and discrimination leg; existing pins keep strength | AC9 + AC11 + AC14 |
 | Normative surfaces (`CLAUDE.md` grammar tables) | yes (verify-only) | no new grammar: the `NEEDS-DESIGN` verdict and the `CONVERGENCE-ANOMALY` block are already machine-pinned; the cap introduces no new fenced block (verified at engineering — a new block would re-enter scope as a plan-time finding) | `scripts/normative-drift.test.mjs` green |
-| Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | `bun run bundle:skills` re-run after the last `skills/` edit, same PR | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC12) |
+| Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | `cd packages/pi-agentic-workflow && bun run bundle:skills` re-run after the last `skills/` edit, same PR (the bundler script lives in the package; no root `package.json`) | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC12) |
 | Schema package (`packages/agentic-workflow-schema/`) | yes (negative integration) | severity vocabularies untouched; no schema change of any kind | AC10 (diff empty + suite green) |
 | Versioning/release surfaces (per-skill `version:`, `CHANGELOG.md`, README tables) | yes | `bump-skill` run for each edited skill (minor bumps per the #176 freeze: breaking changes ship as minor with a BREAKING CHANGE footer; none expected here), CHANGELOG rows, README skill-table cells | AC13 + rendered-facts consistency (bump-skill output) |
 | README references (bibliography) | yes | the issue's citation obligation lands as a bottom `## References` append in the implementation PR — never before | AC13 grep at PR head |
@@ -332,22 +342,25 @@ Command-checkable at the PR head unless labelled `read-verified`.
   skills/pre-execution-review/references/LEDGERS.md` exits non-zero, and
   `grep -niE "report-note" skills/pre-execution-review/references/LEDGERS.md`
   exits zero with the rule that a `low` finding is persisted, visible,
-  non-blocking, and never a re-review trigger by itself.
+  non-blocking, and never a re-review trigger by itself. The report-note rule
+  is a row of the planning pin table (AC14).
 - **AC2** (command): `grep -n "anything above \`info\`"
   skills/review-spec/references/CHECKS.md
   skills/review-plan/references/CHECKS.md` exits non-zero, and both files
   state material = `medium`+ (`grep -n "medium"` hits the new materiality
-  sentence in each).
+  sentence in each). Both restatements are rows of the planning pin table
+  (AC14).
 - **AC3** (command): the anti-deflation rule appears in the planning-side
   surfaces — `grep -rn "medium\` minimum" skills/pre-execution-review/references/
   skills/review-spec/ skills/review-plan/` exits zero, and the matched text
   includes that deflating a real defect to dodge a review is itself a review
-  defect.
+  defect. Pinned as a table row (AC14).
 - **AC4** (command + `read-verified`): `grep -n "third cycle never"
   skills/pre-execution-review/references/POLICY.md` exits zero; the §4 text
   ends an unconverged loop in `NEEDS-DESIGN` absent explicit user instruction
   (`read-verified`); the `CONVERGENCE-ANOMALY` block text is unchanged
-  (`read-verified` against the §4 diff hunk).
+  (`read-verified` against the §4 diff hunk). The cap is a row of the planning
+  pin table (AC14).
 - **AC5** (command): `grep -n "More cycles stay allowed"
   skills/design-feature/references/REPAIR.md` exits non-zero, and
   `grep -n "third cycle never" skills/design-feature/references/REPAIR.md`
@@ -356,37 +369,62 @@ Command-checkable at the PR head unless labelled `read-verified`.
   wording-only route skips the full snapshot re-review, records the
   determination in the unit's evidence, and rotates `artifactRevisionId` —
   anchored by `grep -n "Wording-only"
-  skills/pre-execution-review/references/POLICY.md`.
+  skills/pre-execution-review/references/POLICY.md`. Pinned as a table row
+  (AC14).
 - **AC7** (command): `grep -n "third cycle never"
   skills/review-spec/references/OUTPUT.md
   skills/review-plan/references/OUTPUT.md` exits zero (the verdict-side loop
-  text mirrors the cap).
+  text mirrors the cap). Both mirrors are rows of the planning pin table
+  (AC14).
 - **AC8** (command + `read-verified`): at the PR head, `git diff main --stat`
-  lists only the affected surfaces enumerated in In scope; `git diff main --
+  lists only the In-scope surfaces — the governed files named above **plus the
+  declared derived-surface set** (the Pi mirror under
+  `packages/pi-agentic-workflow/skills/**`, the four edited skills' `version:`
+  lines, the README skill-table cells, and `CHANGELOG.md`) — and nothing else;
+  `git diff main --
   skills/pre-execution-review/references/POLICY.md` produces hunks scoped to
   §3 and §4 (`read-verified`: §1, §2, §5–§8 byte-identical to `main`).
 - **AC9** (command): `bun test scripts/review-loop-discipline.test.mjs` passes
   at the PR head, and `git diff main -- scripts/review-loop-discipline.test.mjs`
   removes no existing assertion (additions or equal-strength rewrites only).
+  The planning pin table's floor and discrimination legs are green in the same
+  run (AC14).
 - **AC10** (command): `git diff main --stat -- packages/agentic-workflow-schema`
   is empty, and `cd packages/agentic-workflow-schema && bun run test` passes.
 - **AC11** (command): `bun test scripts/ledger-ownership.test.mjs
   scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
   scripts/normative-drift.test.mjs && bun scripts/check-skill-context.mjs`
   is green at the PR head (the machine-pinned LEDGERS blocks survive the edit).
-- **AC12** (command): `bun run bundle:skills` ran after the last `skills/`
-  edit, and `cd packages/pi-agentic-workflow && bun run test` passes (mirror
-  parity).
+  The pin table's presence and discrimination legs (AC14) are part of this
+  head-level green.
+- **AC12** (command): the mirror was re-bundled after the last `skills/` edit
+  **from the package that owns the script** — `cd packages/pi-agentic-workflow
+  && bun run bundle:skills` (this repository has no root `package.json`, so the
+  bare `bun run bundle:skills` at the repository root exits non-zero) — and
+  `bun run test` passes from the same package root (mirror parity).
 - **AC13** (command + `read-verified`): `grep -n "2603.00539" README.md` exits
   zero at the PR head (References append), and each edited skill's `version:`
   is bumped with a CHANGELOG row (`read-verified` against the bump-skill diff).
+- **AC14** (command): the planning-side pins are mechanically present and
+  discriminating at the PR head — the discipline suite declares the planning pin
+  table (`grep -q "PLANNING_PIN_TABLE"
+  scripts/review-loop-discipline.test.mjs` exits zero), executes the
+  discrimination leg (`grep -q "assertDiscriminating("
+  scripts/review-loop-discipline.test.mjs` exits zero), states the frozen row
+  floor (`grep -q "PLANNING_PIN_FLOOR = 9"
+  scripts/review-loop-discipline.test.mjs` exits zero), and
+  `bun test scripts/review-loop-discipline.test.mjs` passes — so an absent,
+  empty, or trivially-true pin set can no longer satisfy any criterion that
+  depends on it.
 
 ### Tooling
 
 - No external skill or MCP dependency — this feature is authored and executed
   with the repository's own workflow skills.
 - `bump-skill` (repository-internal, `user-invocable: false`) runs at execution
-  for the version bumps; `bun run bundle:skills` per the normalizer inventory.
+  for the version bumps; the bundler runs from the package that owns it — `cd
+  packages/pi-agentic-workflow && bun run bundle:skills` per the normalizer
+  inventory's bundler step.
 
 ### Product decisions
 
@@ -438,7 +476,7 @@ Product boxes:
 - [x] Every `#### In scope` bullet maps to ≥ 1 acceptance criterion — explicit
       AC pointers on each bullet.
 - [x] Every acceptance criterion is a runnable command OR labelled
-      `read-verified` — AC1–AC3, AC5, AC7–AC13 commands; AC4 and AC6 labelled
+      `read-verified` — AC1–AC3, AC5, AC7–AC14 commands; AC4 and AC6 labelled
       where judgement-only.
 - [x] `### Deferred decisions` exists and reads `none`.
 
@@ -459,7 +497,9 @@ once the Product half above was marked `designed` and independently reviewed
 (receipt `spec-review-31-1` @ snapshot
 `735e75876583d0deed58f22f2e05cfde516b4750cfa87ff6d0c088aece72170a` — verified
 fresh against the bytes on disk by `pre-execution-snapshot.mjs verify --stage
-spec` at this scaffold's Product-review gate).
+spec` at this scaffold's Product-review gate). Re-cut as artifact revision
+`31-plan-2` by the repair batch of 2026-09-17 after `review-plan` returned
+`PLAN-REVIEW-FAIL` (checks L5/P10, findings F01/F02/F03) — see `## Amendments`.
 
 ### Technical goals
 
@@ -600,12 +640,23 @@ anomaly-first ordering.
 **E6 — Discipline pins (`scripts/review-loop-discipline.test.mjs`).** A new
 planning-side pin section: new `read()` consts for `POLICY.md`, both
 `CHECKS.md`, and `REPAIR.md` (the suite already reads `LEDGERS.md` and both
-`OUTPUT.md` files), asserting — red-first per phase — the report-note
+`OUTPUT.md` files), asserting the report-note
 semantics, the `medium`+ materiality line in both CHECKS files, the
 anti-deflation rule, the cap (`third cycle never` + `NEEDS-DESIGN` end +
 unchanged `CONVERGENCE-ANOMALY` block), the verdict mirrors, and the
 wording-only route. Every existing assertion keeps its phrase or gains a
 strictly stronger assertion (AC9's no-weakening walk).
+
+The planning pins are declared as rows of one table, `PLANNING_PIN_TABLE`
+(`{ id, doc, must, superseded }`), never as loose `assert.match` calls: the
+suite executes three legs over it — **liveness** (every row's `must` matches
+the bytes on disk), **discrimination** (every row's `must` does **not** match
+the `superseded` sentence the pin replaces, so a pin that is trivially true or
+absent reddens the suite instead of passing vacuously), and **floor**
+(`assert.ok(PLANNING_PINS.length >= PLANNING_PIN_FLOOR)` — 4 after P1, 8 after
+P2, 9 at the PR head, so a truncated table cannot pass). The discrimination
+leg is a named call (`assertDiscriminating(<row>)`), which keeps it greppable
+by the frozen AC14 validator.
 
 **E7 — Version bumps (bump-skill).** `pre-execution-review` 2.2.1 → 2.3.0,
 `review-spec` 1.7.1 → 1.8.0, `review-plan` 1.6.1 → 1.7.0 (P1, the phases'
@@ -616,20 +667,20 @@ cells ride the `bump-skill` contract.
 ### Planning evidence
 
 see planning-evidence.md (M/L unit — the frozen table lives in
-`planning-evidence.md`; rows PE-001…PE-17, all `current`, `proven` or
+`planning-evidence.md`; rows PE-001…PE-019, all `current`, `proven` or
 `decision`).
 
 ### Obligations
 
-see planning-obligations.md (M/L unit — O1…O14, one row per acceptance
-criterion AC1…AC13 plus O14 for the AD-008 invariant; every row starts
+see planning-obligations.md (M/L unit — O1…O15, one row per acceptance
+criterion AC1…AC14 plus O14 for the AD-008 invariant; every row starts
 `planned`; no row is `deferred`).
 
 ### Decisions to confirm
 
 Engineering decisions recorded with rationale in `decisions.md`
-(E-D31-1…E-D31-4, 2026-09-17); the project lead may override any of them
-before execution:
+(E-D31-1…E-D31-4, 2026-09-17, plus E-D31-5…E-D31-7 added by the `31-plan-2`
+repair batch); the project lead may override any of them before execution:
 
 - **E-D31-1 — one version bump per skill per PR**, taken in the phase that
   first edits the skill; later phases re-editing the same PR's surfaces do
@@ -639,8 +690,18 @@ before execution:
 - **E-D31-3 — AD-008 classified `preserves`** (the cap routes to a human
   decision; D-31-5), recorded as obligation O14.
 - **E-D31-4 — planning-side pins live in the existing
-  `scripts/review-loop-discipline.test.mjs`** as additive sections, keeping
+  `scripts/review-loop-discipline.test.mjs`** as additive rows, keeping
   AC9's no-weakening walk a single diff.
+- **E-D31-5 — F02's repair: one declared pin table with a row floor and a
+  discrimination leg** (`PLANNING_PIN_TABLE`, `PLANNING_PIN_FLOOR = 4/8/9` per
+  phase, `assertDiscriminating(`), plus the frozen AC14 validator; keeps
+  E-D31-4 and adds no second test file.
+- **E-D31-6 — F01's repair: the bundler command is always spelled from the
+  package root** (`cd packages/pi-agentic-workflow && bun run bundle:skills`);
+  `CLAUDE.md`'s parsed `normalizer-inventory@1` row is not an editable surface.
+- **E-D31-7 — F03's repair: AC8 walks the declared derived-surface set** (Pi
+  mirror, four `version:` lines, README skill-table cells, `CHANGELOG.md`)
+  recorded per path instead of reported as a violation.
 
 ### Testing requirements
 
@@ -648,9 +709,14 @@ Docs-layer feature; the test layer is the deterministic pin suite plus the
 repository's machine gates — no new test file, no runtime code:
 
 - **Discipline pins (primary)**: `bun test scripts/review-loop-discipline.test.mjs`
-  gains the planning-side sections (red-first in P1–P3, green by each phase's
-  edit); every existing assertion keeps its strength (AC9). The suite must
-  pass under bun and node (runtime convention).
+  gains the planning-side pin table (red-first in P1–P3, green by each phase's
+  edit); every existing assertion keeps its strength (AC9). Each pin is a table
+  row carrying the sentence it supersedes, so the suite executes a
+  discrimination leg (a row that accepts its superseded sample fails) beside the
+  liveness leg (a row that does not match the live bytes fails) and a row floor
+  (`PLANNING_PIN_FLOOR`, 4 after P1, 8 after P2, 9 at the PR head) — the frozen
+  validator that checks the table exists is AC14. The suite must pass under bun
+  and node (runtime convention).
 - **Ledger truth classes**: `bun test scripts/ledger-ownership.test.mjs
   scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
   scripts/pre-execution-sensor.test.mjs` — the LEDGERS edit must not disturb
@@ -659,7 +725,9 @@ repository's machine gates — no new test file, no runtime code:
   new grammar, no stale version restatement (AC11).
 - **Context budgets**: `bun scripts/check-skill-context.mjs` after the four
   bumps, manifest updated for declared growth (AC11).
-- **Distribution parity**: `bun run bundle:skills` + Pi package suite (AC12).
+- **Distribution parity**: `cd packages/pi-agentic-workflow && bun run
+  bundle:skills && bun run test` (the bundler script lives in the package; there
+  is no root `package.json`) (AC12).
 - **Negative integration**: schema package diff empty + suite green (AC10).
 - **Read-verified walks** (judgement-only, recorded in the P4 phase entry):
   POLICY §3/§4 hunk scope, whole-diff surface list, no-weakening test diff,
@@ -681,6 +749,7 @@ Failure modes seeded from the fixed category list; each reaches through an
 | `loop:cap-hit` (limit/threshold hit) | the second cycle prints `CONVERGENCE-ANOMALY` before any further edit; a third cycle is refused without explicit user instruction; an unconverged loop ends in `NEEDS-DESIGN` | POLICY §4 cap over persisted receipts + repair records (the `none — first cycle` receipt field) |
 | `loop:wording-only-skip` (concurrent/duplicate action) | a recorded cosmetic repair batch skips the re-review while the determination row + rotated revision remain | POLICY §3 route over the planning-evidence home + `artifactRevisionId` rotation |
 | `loop:dup-finding` (concurrent/duplicate action) | the same finding re-reported in a later cycle keeps its stable id and gains a second resolution row | `finding-id` stability in `LEDGERS.md` §3 (§3 outside the edited hunks — AC8 walk) |
+| `loop:pin-vacuous` (invalid input) | a planning pin that is absent, empty, or trivially true leaves the discipline suite green — the validator would pass on a no-op | the pin table's row floor + the discrimination leg (every row must reject its superseded sentence), checked by the AC14 validator in P1–P3 and again at the PR head |
 | outage/dependency failure — n/a | no runtime dependency exists; every validator is a local command over repository bytes | n/a: all checks run locally (bun/node) |
 
 ### Phases
@@ -690,21 +759,26 @@ unit's hard dependency 29 is merged); the final phase is hardening.
 
 #### P1 — Move the planning materiality line to report-note semantics
 
-Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
-exit 0 with the report-note, CHECKS-materiality, and anti-deflation pins green
-and every existing assertion still passing.
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
+grep -q "PLANNING_PIN_TABLE" scripts/review-loop-discipline.test.mjs` → exit 0
+with the report-note, CHECKS-materiality, and anti-deflation pins green as the
+first four rows of the planning pin table (`PLANNING_PIN_FLOOR = 4`, liveness
+and discrimination legs green) and every existing assertion still passing.
 
 #### P2 — End the planning repair loop at a hard two-cycle cap
 
-Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
-exit 0 with the cap, verdict-mirror, and REPAIR-mirror pins green and every
-existing assertion still passing.
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
+grep -q "PLANNING_PIN_FLOOR = 8" scripts/review-loop-discipline.test.mjs` →
+exit 0 with the cap, verdict-mirror, and REPAIR-mirror pins green as table rows
+(floor raised to 8, discrimination leg green) and every existing assertion
+still passing.
 
 #### P3 — Route wording-only repairs past the full snapshot re-review
 
-Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
-exit 0 with the wording-only pin green and every existing assertion still
-passing.
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
+grep -q "PLANNING_PIN_FLOOR = 9" scripts/review-loop-discipline.test.mjs` →
+exit 0 with the wording-only pin green as the ninth table row (the frozen
+floor) and every existing assertion still passing.
 
 #### P4 — Qualify the planning-review-materiality unit
 
@@ -712,7 +786,9 @@ Layer: hardening. Done-when: `bun scripts/check-skill-context.mjs && bun test
 scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs
 scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
 scripts/normative-drift.test.mjs` → exit 0 with every frozen `ACCEPTANCE.md`
-validator green at the terminal HEAD and the PR open with `Closes #171`.
+validator green at the terminal HEAD (AC14's three `PLANNING_PIN_TABLE` /
+`assertDiscriminating(` / `PLANNING_PIN_FLOOR = 9` greps included) and the PR
+open with `Closes #171`.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
@@ -722,13 +798,18 @@ docs/features/31-planning-review-materiality/PLAN.md`, node fallback — stdout
 pasted verbatim):
 
 ```text
-P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:6:move-planning-materiality-line-to-report-note-semantics
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:8:move-planning-materiality-line-to-report-note-semantics
 P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:7:end-planning-repair-loop-at-hard-two-cycle-cap
 P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:3:route-wording-only-repairs-past-full-snapshot-re-review
 P4 Phase-lint: PASS (8/8) · fingerprint P4:hardening:10:qualify-planning-review-materiality-unit
 verdict PASS
-fingerprint: db27c41e198e86158ca0ed2cc400942325c205098d946eec5bafab746d16f406
+fingerprint: 5465f0aa8251f530682fb74a0843c36d82561624c76ced06c2122cfa85e40798
 ```
+
+Re-linted by the `31-plan-2` repair batch (2026-09-17): P1's task budget grew
+6 → 8 (the pin table + its discrimination leg), so its fingerprint changed;
+P2/P3/P4 keep their fingerprints and the aggregate moves from `db27c41e…` to
+`5465f0aa…`.
 
 ### Deploy & rollback
 
@@ -760,9 +841,11 @@ that runs the bumped skills. Rollback is reverting the PR.
   `architecture-notes.md`, engineering decisions in `decisions.md`.
 - The implementation PR (opened by P4) containing: the `LEDGERS.md` §3,
   POLICY §3/§4, both CHECKS, both OUTPUT, and `REPAIR.md` §4 edits; the
-  planning-side pin sections in `scripts/review-loop-discipline.test.mjs`;
+  planning-side pin table in `scripts/review-loop-discipline.test.mjs` (row
+  floor + discrimination leg + the frozen AC14 validator);
   four minor version bumps + CHANGELOG rows + README cells; the Pi mirror
-  re-bundle; the bottom `## References` append in `README.md` (AC13);
+  re-bundle (from the package root); the bottom `## References` append in
+  `README.md` (AC13);
   `Closes #171`.
 
 ### Post-merge next feature
@@ -771,3 +854,39 @@ that runs the bumped skills. Rollback is reverting the PR.
 chain; it depends on 30 + 31 and reworks the same POLICY/CLASSIFY surfaces
 one owner at a time. Rows 35/42 (and 46's coordination) chain after it per
 `docs/features/ROADMAP.md`.
+
+---
+
+## Amendments
+
+### `31-plan-2` — repair batch for `plan-review-31-1` (F01 + F02 + F03)
+
+User-authorized repair batch (2026-09-17), commissioned as "repair F01 + F02
+(+F03) — package-root `bundle:skills`, mechanical pin-existence validators, AC8
+derived-surface walk". Trigger: `plan-review-31-1` returned
+`PLAN-REVIEW-FAIL` (failed checks L5 + P10) with three findings on
+`planning-findings.md`, repair owner `plan-feature`, first cycle. No phase had
+been executed (the roadmap row reads `planned`, no `in-progress` transition, no
+phase commit), so every repair lands in the phase that owns the surface:
+`P1`–`P3` are re-cut in place (their done-whens and pin tasks), `P4` takes the
+command-form and scope-walk corrections, and no ledger-order change or new
+number is introduced.
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| F01 | plan · medium | The bundler invocation is spelled from the package that owns the script: `cd packages/pi-agentic-workflow && bun run bundle:skills` (no root `package.json` exists; root `bun run bundle:skills` exits non-zero). Evidence: `packages/pi-agentic-workflow/package.json` `scripts.bundle:skills`; feature 59 AC-12 + feature 29 `testing.md` precedent (PE-018). `CLAUDE.md`'s parsed `normalizer-inventory@1` row is **not** edited — `scripts/pre-execution-quality.test.mjs` reads that row, so the short step name stays and the invocation form is owned by these manifests (E-D31-6). | AC12 + `## Commands`, `### Testing requirements`, the Pi-mirror Integration-closure row, PE-012, PLAN.md P4 task 2, TASKS.md P4 task 2, testing.md, obligations O12 |
+| F02 | plan · medium | The planning pins are mechanically **present and discriminating**: one declared `PLANNING_PIN_TABLE` with a row floor (`PLANNING_PIN_FLOOR`, 4/8/9 per phase) and a discrimination leg (`assertDiscriminating(<row>)`) proving every pin rejects the sentence it supersedes, plus the frozen AC14 validator (`grep` for the table, the discrimination call, and the floor + suite green). A no-op suite can no longer satisfy AC1–AC3, AC9 or AC11 (E-D31-5). | AC14 (new) + AC1–AC4, AC6, AC7, AC9, AC11; In-scope 5; Design E6; `### Testing requirements`; the `loop:pin-vacuous` scenario row; P1–P3 done-whens and pin tasks; obligations O1–O4, O6, O7, O9, O11, O15 |
+| F03 | plan · info | AC8's scope guard walks the **declared derived-surface set** — the Pi mirror under `packages/pi-agentic-workflow/skills/**`, the four edited `version:` lines, the README skill-table cells, `CHANGELOG.md` — so P4's read-verified walk records them as in-scope instead of reporting them as violations (E-D31-7). | AC8 + In-scope derived surfaces; PLAN.md/TASKS.md P4 task 5; obligations O8 |
+
+Artifact revision: the whole touched set rotates to **`31-plan-2`**
+(`artifactRevisionId` duty, `replan-findings/references/PHASE_APPEND.md`); the
+Product-half receipt `spec-review-31-1` still binds unchanged Product bytes and
+remains the plan snapshot's Product parent. `ACCEPTANCE.md` was re-frozen as
+part of this batch (blob recorded in `PLAN.md`), because AC8's wording, AC12's
+validator and the new AC14 are acceptance surfaces. The plan receipt
+`plan-review-31-1` is invalidated by design: only a fresh `/review-plan`
+restores currency.
+
+Also touched by this batch (evidence integrity, same repair act): PE-016's
+obligation cell cited a non-existent `O15`, now corrected to `O10`; the
+obligation ledger gains O15 for AC14.

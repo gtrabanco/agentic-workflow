@@ -1,6 +1,9 @@
 # Decisions — 31-planning-review-materiality
 
 Product-half decisions recorded by `design-feature` (append-only; newest last).
+Engineering decisions recorded by `plan-feature` under the revision that took
+them: `31-plan-1` (first scaffold) and `31-plan-2` (repair batch for
+`plan-review-31-1`'s findings F01/F02/F03).
 
 ## Product decisions (2026-09-17, initial write `31-spec-1`)
 
@@ -75,6 +78,9 @@ block is introduced (Integration closure row 5).
 
 ## 2026-09-17 — Engineering decisions (plan-feature, artifact revision `31-plan-1`)
 
+Re-cut as `31-plan-2` by the repair batch below; E-D31-1…E-D31-4 keep their
+substance and their authority.
+
 ### E-D31-1: One version bump per skill per PR, taken in the phase that first edits it
 
 - **What**: P1 bumps `pre-execution-review` 2.2.1→2.3.0, `review-spec` 1.7.1→1.8.0,
@@ -125,3 +131,54 @@ block is introduced (Integration closure row 5).
 - **Authority**: SPEC §In scope 5 ("pins added to
   `scripts/review-loop-discipline.test.mjs`; every existing assertion keeps its
   strength").
+
+## 2026-09-17 — Engineering decisions, repair batch (plan-feature, artifact revision `31-plan-2`)
+
+### E-D31-5: F02's repair — one declared pin table with a floor and a discrimination leg
+
+- **What**: the planning-side pins become rows of one `PLANNING_PIN_TABLE`
+  (`{ id, doc, must, superseded }`) that the suite reads through three legs —
+  liveness (every `must` matches the live bytes), discrimination
+  (`assertDiscriminating(<row>)` fails any row whose `must` accepts its own
+  `superseded` sample) and a row floor (`PLANNING_PIN_FLOOR`, 4 after P1, 8
+  after P2, 9 at the PR head) — plus the frozen AC14 validator, which greps for
+  the table, the discrimination call and the floor before running the suite.
+- **Why**: F02 (medium, L5/P10) — the suite is a plain assertion script that
+  exits 0 over an unmodified file (`0 pass / 0 fail`, PE-019), so the old
+  done-whens were satisfied by the document edits alone and the enforcement
+  could be absent. A presence grep alone would still admit seven trivial
+  assertions; the discrimination leg is what makes a pin load-bearing, and the
+  floor is what makes the table non-empty. This keeps E-D31-4 (one suite, one
+  no-weakening diff) and adds no second test file.
+- **Authority**: AC14 (new, user-authorized in the repair batch) + AC1–AC4,
+  AC6, AC7, AC9, AC11; PE-019; the reviewer's F02 row.
+
+### E-D31-6: F01's repair — the bundler command is always spelled from the package root
+
+- **What**: every acceptance surface of this unit spells the bundler invocation
+  as `cd packages/pi-agentic-workflow && bun run bundle:skills` (plus
+  `bun run test` from the same root). `CLAUDE.md`'s `normalizer-inventory@1`
+  row is deliberately **not** edited.
+- **Why**: F01 (medium, P10) — this repository has no root `package.json`, so
+  the bare root form exits non-zero and the P4/TASKS/testing chain could never
+  produce AC12's outcome; the package's own manifest and features 29/59 spell
+  the command from the package root (PE-012, PE-018). The inventory row is
+  parsed by `scripts/pre-execution-quality.test.mjs` (pinned fixtures) and
+  carries only the short step name, so the invocation form is owned by the
+  manifests, not by that block. The plan's own P4 task is phrased through the
+  package's script names (box 2's single-layer rule), with the verbatim command
+  frozen in the acceptance manifest's Commands section.
+- **Authority**: AC12 + Commands; PE-012, PE-018; the reviewer's F01 row.
+
+### E-D31-7: F03's repair — AC8 walks the declared derived-surface set
+
+- **What**: the SPEC declares the derived surfaces the same edits drag in — the
+  Pi mirror under `packages/pi-agentic-workflow/skills/**`, the four edited
+  `version:` lines, the README skill-table cells, `CHANGELOG.md` — and AC8's
+  read-verified walk records each against that set instead of treating it as a
+  scope violation.
+- **Why**: F03 (info, P10) — the guard's wording named only the In-scope
+  enumeration while P4's writes also land the bump and mirror surfaces, so the
+  walk would have reported real, intended files as out of scope; declaring the
+  derived set keeps the guard strict and truthful at the same time.
+- **Authority**: AC8; PE-012; the reviewer's F03 row.

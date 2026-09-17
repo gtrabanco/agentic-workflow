@@ -311,3 +311,78 @@ PLAN-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
 - Repair owner: `plan-feature 31-planning-review-materiality` — one batch over this whole set
 - Parent state: current
 ```
+
+---
+
+# Plan repair batch (`31-plan-2`), 2026-09-17
+
+Route: `plan-feature 31-planning-review-materiality` — the repair owner
+`plan-review-31-1` named, commissioned by the user as one batch over F01 + F02
+(+F03). Loaded contract: `replan-findings` + its `references/PHASE_APPEND.md`
+(the finding already pins the scope; no planning preflight was consumed).
+
+Router disclosure (recorded, never silently worked around):
+`node scripts/unit-route.mjs 31-planning-review-materiality` answers
+`route: execute` (`open-rows: 0`) because it reads the unit's
+`review-findings.md` — the code-side fix-now fold ledger, which this unit does
+not have — and is blind to the stage-aware `planning-findings.md` where
+plan-class rows live. The unit's plan review is nevertheless a FAIL with two
+open material rows and `execute-phase`'s own pre-execution gate would refuse
+these bytes, so the commissioned repair followed the verdict's named repair
+owner instead of the router's line. This is a routing-surface gap in the
+`unit-route` family (its `replan` route is unreachable for plan-class rows),
+reported for triage rather than fixed in this unit's scope.
+
+No phase had executed (roadmap row `planned`, no `in-progress` transition, no
+phase commit), so each repair landed in the phase that owns the surface — an
+in-place re-cut, no ledger-order change, no new number:
+
+- **F01 (medium, P10)** — the bundler command is spelled from the package that
+  owns the script everywhere: AC12 + `## Commands`, `### Testing requirements`,
+  the Pi-mirror Integration-closure row, PE-012 (re-observed) + new PE-018,
+  `PLAN.md`/`TASKS.md` P4 task 2, `testing.md`, obligation O12. `CLAUDE.md`'s
+  parsed `normalizer-inventory@1` row stays untouched (E-D31-6).
+- **F02 (medium, L5)** — new AC14 and a declared `PLANNING_PIN_TABLE` with a
+  row floor (`PLANNING_PIN_FLOOR` 4 after P1, 8 after P2, 9 at the PR head) and
+  a discrimination leg (`assertDiscriminating(`), so an absent, empty,
+  truncated, or trivially-true pin set reddens the suite. P1 gained two tasks
+  (6 → 8), P2/P3 raise the floor, every done-when runs the presence check, P4
+  runs AC14. Carried by AC1–AC4, AC6, AC7, AC9, AC11, In-scope 5, Design E6,
+  `### Testing requirements`, the new `loop:pin-vacuous` scenario row, PE-019,
+  obligation O15 and E-D31-5.
+- **F03 (info, P10)** — the SPEC now declares the derived-surface set (Pi
+  mirror, four `version:` lines, README skill-table cells, `CHANGELOG.md`) and
+  AC8 + O8 + P4 task 5 walk it per path (E-D31-7).
+- **Evidence integrity, same act** — PE-016's obligation cell cited a
+  non-existent `O15`; corrected to `O10`. `decisions.md` gains E-D31-5…E-D31-7
+  and its header records the two revisions.
+
+Artifact revision: `31-plan-1` → **`31-plan-2`** (one write, one new id for the
+whole touched set; `PLAN.md` header, SPEC Engineering-half header, decisions.md).
+`planning-findings.md` rows F01/F02/F03 are `resolved` with
+`resolving-artifact-revision: 31-plan-2`; N31-001/N31-002 stay `open` (product
+class, `design-feature`'s owner).
+
+`ACCEPTANCE.md` re-freeze (user-authorized by the repair commission; SPEC
+`## Amendments`): AC1–AC4/AC6/AC7/AC9/AC11 anchored to the pin table, AC8
+widened to the derived-surface set, AC12 re-pointed to the package-root
+bundler, AC14 added. Blob: `git hash-object` →
+`d85e217acad1322d3caf4968715ef5d00e9189c0` (scaffold-time value
+`f220c1dd432125a9524dd37d7286202d58d8a731`), recorded in `PLAN.md`.
+
+Re-lint (`node scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md`):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:8:move-planning-materiality-line-to-report-note-semantics
+P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:7:end-planning-repair-loop-at-hard-two-cycle-cap
+P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:3:route-wording-only-repairs-past-full-snapshot-re-review
+P4 Phase-lint: PASS (8/8) · fingerprint P4:hardening:10:qualify-planning-review-materiality-unit
+verdict PASS
+fingerprint: 5465f0aa8251f530682fb74a0843c36d82561624c76ced06c2122cfa85e40798
+```
+
+`plan-review-31-1` is invalidated by design (its snapshot no longer describes
+these bytes): only a fresh `/review-plan 31-planning-review-materiality`
+restores currency. No source edit, no fold, no branch change, no `review-findings.md`
+write, and no `skills/` edit — so no Pi mirror re-bundle and no version bump
+belong to this batch.
