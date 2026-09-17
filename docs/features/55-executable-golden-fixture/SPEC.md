@@ -39,7 +39,7 @@ planning: a compact frozen `ACCEPTANCE.md` at scaffold, `P1` implementation +
 ## Dependencies
 
 No hard dependencies. The producers this feature reuses are all merged:
-feature 37 (`scripts/phase-lint.mjs`), feature 38
+feature 37 (`scripts/phase-lint.mjs`), feature 20
 (`scripts/check-skill-context.mjs`), feature 28 (`scripts/schema-runtime.mjs`;
 the schema package contracts it loads trace to feature 25, and
 `next.continuation` in Envelope v2 to feature 59), and the
@@ -64,12 +64,13 @@ script" — was an economy decision, later revisited by the bureaucracy-reductio
 plan: issue #230 (Phase 0 quick win) supersedes it **with owner approval**,
 because the doc is a test living in the human-docs surface.
 
-What changed since: feature 37/38 landed deterministic checkers
-(`phase-lint.mjs`, `check-skill-context.mjs`), feature 28 gave the repo a
-schema runtime (`scripts/schema-runtime.mjs`), feature 59 added
-`next.continuation` in Envelope v2, and feature 59 established the
-committed-toy-repo fixture pattern (`scripts/fixtures/unit-route/` +
-`scripts/continuation-discipline.test.mjs`). The mechanical half of the golden
+What changed since: feature 37 landed the deterministic plan checker
+(`scripts/phase-lint.mjs`) and feature 20 the skill-context checker
+(`scripts/check-skill-context.mjs`), feature 28 gave the repo a schema
+runtime (`scripts/schema-runtime.mjs`), feature 59 added `next.continuation`
+in Envelope v2 (with `scripts/continuation-discipline.test.mjs`), and fix
+#224 committed the toy-repo fixture pattern (`scripts/fixtures/unit-route/`)
+this feature's layout follows. The mechanical half of the golden
 fixture can now be asserted deterministically; only the weak-model judgment
 cannot. Issue #183's "golden-fixture machine-comparable result field" (its
 third item) is absorbed here as the run-log's Result grammar.
@@ -288,7 +289,7 @@ user-facing capability of this feature: **run the fixture smoke test**
 | # | Expectation | Resolution | Pointer |
 |---|---|---|---|
 | 1 | The suite runs offline with no wall-clock or randomness dependence | in-scope | AC8; D-55-7 |
-| 2 | A failing mechanical assertion names which fixture and which assertion failed (diagnosable, not a bare exit code) | in-scope | AC3 (suite output contract in Engineering half) |
+| 2 | A failing mechanical assertion names which fixture and which assertion failed (diagnosable, not a bare exit code) | in-scope | AC4 (tamper-case diagnostic assertion) |
 | 3 | The manual judgment protocol survives in the doc — weakest-model run, fixed pass criteria, no-invented-steps check | in-scope | AC5 (fixed-pass-criteria grep); In-scope item 5 |
 | 4 | The tool-calling smoke test (model precondition) stays reachable from the doc | in-scope | AC5 (smoke-test grep); In-scope item 5 |
 | 5 | Run-log history is preserved; past rows are never rewritten | in-scope | E4 Update/Delete rows; Out-of-scope (rewrite ban) |
@@ -320,10 +321,18 @@ runtime convention.
   existence, (e) audit-target trap invariants.
 - **AC4** — fail-closedness: the suite includes a built-in tamper case that
   copies a fixture tree to a temp dir, mutates one byte, and asserts the
-  corresponding check fails — proving detection without editing committed
-  files.
-- **AC5** — doc slim: `grep -rn "csv-export-command" docs/` returns no
-  matches; `docs/workflow/GOLDEN_FIXTURE.md` is ≤ 150 lines, contains the
+  corresponding check fails, with the failing check's message naming the
+  mutated fixture path and the violated assertion — proving diagnosable
+  detection (Expectation 2: a failing mechanical assertion names which
+  fixture and which assertion failed, not a bare exit code) without editing
+  committed files.
+- **AC5** — doc slim: the toy-feature slug is gone from the live docs surface
+  — `grep -rn "csv-export-command" docs/ | grep -vE
+  '^(docs/workflow/GOLDEN_FIXTURE\.md:[0-9]+:\| 20|docs/features/)'` returns
+  no output (the two exemptions are preserved evidence, not live prose: the
+  doc's dated run-log rows — the append-only log, E4, five grandfathered rows
+  carry the token — and the append-only unit ledgers under `docs/features/`);
+  `docs/workflow/GOLDEN_FIXTURE.md` is ≤ 150 lines, contains the
   judgment protocol and run log, and points at
   `scripts/fixtures/golden-fixture/`; and the slim is verified to preserve
   the protocol's fixed surface — `grep -n "Tool-calling smoke test"
@@ -397,7 +406,10 @@ Product boxes (run by `design-feature` before stamping `designed`):
 `designed` — capability closure complete (2026-09-17); every closure row is
 filled or explicitly `n/a`. Review batch SPEC55-F1…F5 (spec-review-fail,
 2026-09-16) repaired 2026-09-17 — five `product`-class findings, one batch,
-no reviewed-intent change. Readiness re-run for re-review by `review-spec`.
+no reviewed-intent change. Review batch SPEC55-F6…F10 (spec-review-fail,
+2026-09-17 second cycle) repaired 2026-09-17 — five `product`-class findings,
+one batch, no reviewed-intent change. Readiness re-run for re-review by
+`review-spec`.
 
 ---
 
