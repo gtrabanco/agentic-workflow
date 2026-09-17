@@ -7,11 +7,13 @@
  * `scripts/schema-runtime.mjs` (the envelope contract), plus the run-log Result
  * grammar, the doc's cross-references, and the audit-target trap invariants.
  *
- * Every check is a function of a fixture root, so the AC4 tamper case re-runs the
- * real code path over a temporary copy instead of a re-implementation. The suite
- * is read-only over the working tree (the tamper case's temp dir is the only
- * write) and deterministic: no network, no wall-clock, no randomness, no model
- * in the mechanical loop (AC8, D-55-7).
+ * Every fixture path is resolved against the fixture root, so the AC4 tamper case
+ * re-runs the real code path over a temporary copy instead of a re-implementation
+ * (the guide/index pointer half of `crossReferences` reads the repo's own docs —
+ * not fixture files, so they have no fixture-root form). The suite is read-only
+ * over the working tree (the tamper case's temp dir is the only write) and
+ * deterministic: no network, no wall-clock, no randomness, no model in the
+ * mechanical loop (AC8, D-55-7).
  */
 
 import test from "node:test";
@@ -199,20 +201,44 @@ export function committedLogCheck(docPath) {
 }
 
 const FIXTURE_TOKEN = /scripts\/fixtures\/golden-fixture\/[A-Za-z0-9._\-/]*/g;
+const FIXTURE_PREFIX = "scripts/fixtures/golden-fixture/";
 
-/** AC3(d), AC7 — the doc's fixture paths exist and the guide + workflow index point at the doc. */
+/**
+ * The fixture entries the doc's fixture list names, relative to the fixture root.
+ * Kept explicit so the doc and the committed tree are pinned to each other (AC7):
+ * an entry dropped from either side fails the check.
+ */
+export const DOC_FIXTURE_ENTRIES = [
+  "toy-spec.md",
+  "toy-acceptance.md",
+  "toy-plan.md",
+  "toy-plan-nonatomic.md",
+  "expected/phase-lint-toy-plan.txt",
+  "envelope",
+  "audit-target",
+  "RUN_LOG_NOTES.md",
+];
+
+/** AC3(d), AC7 — the doc's fixture paths exist under `root` and the guide + workflow index point at the doc. */
 export function crossReferences(root, docPath = DOC) {
   if (!fs.existsSync(docPath)) {
     return { ok: false, message: `crossReferences: ${showPath(docPath)} does not exist` };
   }
   const text = fs.readFileSync(docPath, "utf8");
-  if (!text.includes("scripts/fixtures/golden-fixture/")) {
-    return { ok: false, message: `crossReferences: ${showPath(docPath)} names no \`scripts/fixtures/golden-fixture/\` pointer` };
+  if (!text.includes(FIXTURE_PREFIX)) {
+    return { ok: false, message: `crossReferences: ${showPath(docPath)} names no \`${FIXTURE_PREFIX}\` pointer` };
   }
   const missing = new Set();
   for (const token of text.match(FIXTURE_TOKEN) ?? []) {
     const clean = token.replace(/[.,;:]+$/, "");
-    if (clean && !fs.existsSync(path.join(REPO, clean))) missing.add(clean);
+    const relative = clean.slice(FIXTURE_PREFIX.length);
+    if (relative && !fs.existsSync(path.join(root, relative))) missing.add(clean);
+  }
+  for (const entry of DOC_FIXTURE_ENTRIES) {
+    // The doc must name every declared entry, and the tree must carry it. A bare
+    // filename is a fixture path too: `FIXTURE_TOKEN` only sees the prefixed form (F3).
+    if (!text.includes(entry)) missing.add(`doc names no \`${entry}\``);
+    else if (!fs.existsSync(path.join(root, entry))) missing.add(entry);
   }
   if (missing.size > 0) {
     return {
@@ -336,6 +362,33 @@ test("AC3(c): a synthetic post-cutoff row with a malformed Result is rejected by
 test("AC3(d)/AC7: the doc's fixture pointer resolves, its fixture paths exist, and the guide + index point at it", () => {
   const result = crossReferences(FIXTURE_DIR, DOC);
   assert.equal(result.ok, true, result.message);
+});
+
+test("AC7/F2: crossReferences is a function of its fixture root and fails closed (F2)", () => {
+  const empty = withTempDir((dir) => crossReferences(dir, DOC));
+  assert.equal(empty.ok, false, "an empty fixture root must fail the cross-reference check");
+  const partial = withTempDir((dir) => {
+    const copy = path.join(dir, "golden-fixture");
+    copyTree(FIXTURE_DIR, copy);
+    for (const name of ["toy-spec.md", "toy-acceptance.md", "toy-plan.md"]) fs.rmSync(path.join(copy, name));
+    return crossReferences(copy, DOC);
+  });
+  assert.equal(partial.ok, false, "a fixture root missing named entries must fail the check");
+  assert.match(partial.message, /toy-spec\.md/, "the failure must name a missing fixture entry");
+});
+
+test("AC7/F3: crossReferences detects a doc-named fixture entry removed from the tree (F3)", () => {
+  const result = withTempDir((dir) => {
+    const copy = path.join(dir, "golden-fixture");
+    copyTree(FIXTURE_DIR, copy);
+    fs.renameSync(path.join(copy, "toy-spec.md"), path.join(copy, "toy-spec-RENAMED.md"));
+    fs.rmSync(path.join(copy, "toy-acceptance.md"));
+    fs.rmSync(path.join(copy, "RUN_LOG_NOTES.md"));
+    return crossReferences(copy, DOC);
+  });
+  assert.equal(result.ok, false, "removing doc-named fixture entries must fail the check");
+  assert.match(result.message, /toy-spec\.md/, "the failure must name the renamed entry");
+  assert.match(result.message, /RUN_LOG_NOTES\.md/, "the failure must name the removed entry");
 });
 
 test("AC3(e)/AC6: the audit-target trap invariants hold in the committed tree", () => {
