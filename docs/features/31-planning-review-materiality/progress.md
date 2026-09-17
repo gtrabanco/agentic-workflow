@@ -2205,3 +2205,98 @@ SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
 → Next: /design-feature 31-planning-review-materiality "repair N31-014: give POLICY.md §4's third unbounded-cycle sentence ('… so no cycle cap or anomaly rule may block or end it.', :82) a criterion in AC7 so the declared §4 shrink is observable" — one repair batch for N31-014, then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
+# Repair batch `31-spec-8` — design-feature authoring turn (2026-09-17)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "repair N31-014: give POLICY.md §4's third
+unbounded-cycle sentence ('… so no cycle cap or anomaly rule may block or end
+it.', :82) a criterion in AC7 so the declared §4 shrink is observable" — one
+repair batch for N31-014. Trigger: the `spec-review-31-8` receipt (FAIL,
+check C8; 13/14 pass; N31-014 `medium`, product). One batch over the whole
+open spec-stage set (N31-012/N31-013 verified repaired at `31-spec-7`; no
+other open product row; the plan-stage rows R31-01/02/03 stay with
+`plan-feature`).
+
+**Cycle accounting (D-31-7):** this is the sixth consecutive unconverged
+cycle of the window the carrier amendment opened (FAIL `spec-review-31-4` →
+repair `31-spec-4` → FAIL `spec-review-31-5` → repair `31-spec-5` → FAIL
+`spec-review-31-6` → repair `31-spec-6` → FAIL `spec-review-31-7` → repair
+`31-spec-7` → FAIL `spec-review-31-8` → this batch). The commission above is
+the explicit user instruction that keys a further cycle, issued in answer to
+the `spec-review-31-8` hand-off that named exactly this command and batch.
+Under the live POLICY §4 the loop is uncapped — that is the defect this unit
+fixes — so the cycle is lawful on both readings. The window's
+`CONVERGENCE-ANOMALY` block was printed on entry to cycle 2 (reproduced in
+the `spec-review-31-8` receipt); POLICY §4's anomaly rule scopes to
+second-cycle entry, so no new block is due for a user-keyed further cycle
+(REPAIR §4: a repair responding to a persisted verdict is never a loop
+defect). Reproduced for the cycle record:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-012/N31-013 (repaired, 31-spec-7) / N31-014 (repaired, this batch)
+- Snapshots: 07bdbf673ff2… → (this batch's bytes) (artifactRevisionId 12ddc215 → 31-spec-8 label)
+- Missed: POLICY §4's third unbounded-cycle sentence ("no cycle cap or anomaly rule may block or end it", :82) left without a criterion while In-scope 5 declares §4's unbounded-cycle sentences removed
+```
+
+Repairs (classes in SPEC `## Amendments` `31-spec-8` + `decisions.md`):
+
+- **N31-014** — AC7 gains the removal grep for POLICY.md §4's third
+  unbounded-cycle sentence (`grep -n "no cycle cap or anomaly rule"
+  skills/pre-execution-review/references/POLICY.md` → non-zero; the sentence
+  wraps across `:81-82`, the fragment is its single second line `:82`,
+  unique in the file (`grep -c` → 1) and in `skills/` (1 hit), exit 0 with
+  the sentence standing at branch head `12ddc215` — the same line-wrap
+  discrimination N31-006 gave the first two §4 greps and N31-012 the §3
+  grep). Repair class: **closure completion** — reviewed product intent
+  unchanged (In-scope 5 already declares §4's unbounded-cycle sentences
+  among the shrunk surfaces; only this sentence's criterion was missing).
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`,
+reviewer prerequisite commit `15c3b3c3` — the `spec-review-31-8` receipt +
+N31-014 finding row committed verbatim, no reviewed byte changed; repair
+batch written on top): `node scripts/pre-execution-snapshot.mjs verify
+--stage spec --unit 31-planning-review-materiality` → exit 4 (receipt not
+current — the open FAIL receipt is this batch's input), `digestMatches:
+true`. Architectural invariants: `n/a: no project invariants declared` (NRS
+F010); AD-008 preserved by D-31-5 (unchanged). The frozen `ACCEPTANCE.md` is
+not touched (plan-feature's owning artifact, superseded set, re-cut on a
+fresh PASS). ROADMAP row 31 stays `defined` (this write changes no scope or
+status).
+
+Spec-lint product boxes re-run after the edits: all PASS (placeholders none
+over the Product half; out-of-scope 7 bullets; closure rows complete —
+E1–E3 × CRUD/transitions, 12/12 derived integration subsystems, role matrix
+5×5; sweep 19/19 resolved; every in-scope item → ≥ 1 AC; every AC runnable
+or `read-verified` — AC7's label and kept-side anchors unchanged, one
+addition; deferred decisions `none`).
+
+Anchor discrimination re-verified at the post-edit head: all six AC7 removal
+fragments hit their standing sentences (`REPAIR.md:64`, `REPAIR.md:71`,
+`POLICY.md:83`, `POLICY.md:82` — the new fragment, `POLICY.md:61`,
+`POLICY.md:42`); the kept-side anchors are red today by design (the authored
+remainder does not exist pre-execution; they turn green at the shrink).
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-8 · Rows checked: 3 evidence rows (batch) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact revision rotates `31-spec-7` → **`31-spec-8`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+
+Post-edit selector check (readiness box 1): `node
+scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+31-planning-review-materiality` re-derived the `spec-product-v1` projection
+from the new bytes, reporting exactly the declared by-design state —
+`fresh: false` / `stale-artifact-content` ("bound artifact bytes moved since
+the receipt"), `changedPaths: [docs/features/31-planning-review-materiality/SPEC.md]`.
+
+→ Next: /review-spec 31-planning-review-materiality — product half designed and readiness-clean; it needs an
+    independent review before any engineering planning (sixth user-keyed cycle of the window, D-31-7)
+  · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys nothing,
+      rotates the artifact revision)
+
+---
