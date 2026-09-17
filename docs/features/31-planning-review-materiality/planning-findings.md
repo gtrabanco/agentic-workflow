@@ -263,3 +263,43 @@ artifact revision `31-spec-6`)". The plan-stage rows
 R31-01/R31-02/R31-03 stay `open` for `plan-feature`'s re-derivation batch
 (plan re-cut + `ACCEPTANCE.md` re-freeze once a fresh `SPEC-REVIEW-PASS`
 receipt exists).
+
+---
+
+## Re-review (`spec-review-31-7`, 2026-09-17)
+
+Cycle-4 independent re-review of the Product half the `31-spec-6` repair batch
+rewrote — the route `spec-review-31-6` named for N31-009/N31-010/N31-011. Fresh
+context; this conversation never authored or edited the Product half, its
+ledgers, or its acceptance manifest → `contextClean: true`.
+
+Snapshot `c9acd7885ea653c644f7df59484f0af68441ee7ba7c96323b723538f190e7fe3` @
+source revision `bfdd3b54475007c4d53e87fecbf71ae3893f6809` (`spec-product-v1`
+digest `542c5a44830af2fc7e23e1747d76206aca394d4de320b0c9f7ff29fdeb79dd8b`,
+44354 bytes); handoff label `31-spec-6`. Verdict: `spec-review-fail` — 12/14
+checks pass; C8 carries two `product` rows (N31-012 `medium`, N31-013 `low`).
+N31-009/N31-010/N31-011 are verified repaired at `31-spec-6` (AC2's two new
+fragments discriminate: both exit 1 today and turn 0 only on the rewrite; AC7
+gains the REPAIR.md §4 second-sentence grep; the Spec-lint AC1 refile matches
+the label). N31-006/N31-007/N31-008 stay `resolved` at `31-spec-5`;
+N31-004/N31-005 at `31-spec-4`; N31-001/N31-002/N31-003 at `31-spec-2`.
+
+The two new rows are the same acceptance-coverage class this unit's review loop
+keeps surfacing (N31-004, N31-006, N31-010): In-scope 5 declares a surface
+shrunk and no criterion observes that surface's sentence, so a correct-looking
+PR can ship the old rule with every AC green. N31-012 names the surface the
+half's own §Context calls the defect (`POLICY.md` §3); N31-013 names the one
+property of the `reproducer` field the criterion does not test (`bounded`).
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-012 | spec | medium | product | c9acd7885ea653c644f7df59484f0af68441ee7ba7c96323b723538f190e7fe3 | AC7 verifies the re-review-for-every-batch mandate in both `OUTPUT.md` files but not in `POLICY.md` §3, the surface In-scope 5 declares shrunk and §Context names as the defect the wording-only route fixes. `POLICY.md`'s opening §3 paragraph still reads "applies **one** evidence-bounded repair batch to the owning artifact(s) before a single re-review of the resulting snapshot" (`:41-42`), and **no** criterion (AC1–AC14) matches that sentence's removal or qualification: AC7's only re-review pattern (`re-review of the new snapshot\|re-reviews the new`) is scoped to the two `OUTPUT.md` files. A PR that adds the wording-only exemption but leaves POLICY §3's unconditional sentence — or removes it inconsistently — passes every AC while the shipped POLICY.md still mandates the re-review the machine no longer requires. Same false-green class as N31-004/N31-006/N31-010. Note the sentence wraps across `:41-42` (`single` ends `:41`), so a full-phrase grep would false-pass exactly as N31-006's did; the criterion needs a single-line fragment such as `grep -n "re-review of the resulting snapshot"` (exits 0 today at `:42`) or a fragment of the intended qualified sentence. | SPEC.md `#### In scope` item 5 (POLICY §3 "lose the sentences the machine now owns … the mandate of a re-review for every batch"); SPEC.md §Context 3rd bullet (quotes §3's sentence as the defect); SPEC.md AC7 (removal grep set); `skills/pre-execution-review/references/POLICY.md:39-42` (the sentence, wrapped `:41-42`); observed `grep -n "re-review of the resulting snapshot" skills/pre-execution-review/references/POLICY.md` → `42:` exit 0; observed `grep -rnE "re-review of the new snapshot\|re-reviews the new" skills/review-spec/references/OUTPUT.md skills/review-plan/references/OUTPUT.md` → the only AC7 re-review anchors, POLICY.md absent from the file list; `skills/review-spec/references/OUTPUT.md:109`; `skills/review-plan/references/OUTPUT.md:118` | open | — | — |
+| N31-013 | spec | low | product | c9acd7885ea653c644f7df59484f0af68441ee7ba7c96323b723538f190e7fe3 | AC3 claims the finding record carries the **bounded** `reproducer`, but its command only proves the token appears somewhere in `pre-execution-contract.ts` (`grep -n "reproducer"` exit 0) and its suite clause only proves back-compatibility (a receipt without `reproducer` still validates); no criterion verifies the bound. `VerificationObjectSpec`'s field type makes `maxLength` optional (`verification-contract.ts:51`), and no schema test asserts a bound for `reproducer`, so an unbounded `reproducer` can ship with AC3 green — the receipt's bounded-size contract (the section's whole point) is unverified for the new field. The presence anchor does discriminate at branch head (grep exits 1 today), so the defect is the missing bound check, not a pre-satisfied anchor. | SPEC.md AC3 ("the finding record carries the bounded `reproducer`"); `packages/agentic-workflow-schema/src/verification-contract.ts:51` (`readonly maxLength?: number`); observed `grep -n "reproducer" packages/agentic-workflow-schema/src/pre-execution-contract.ts` → exit 1 at `bfdd3b54` (presence discriminates); observed `grep -rn "reproducer" packages/agentic-workflow-schema/test/*.mjs` → no hits (no bound vector); `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs:116` ("full bounded structure" test walks vocabularies, not per-field `maxLength`) | open | — | — |
+
+The `medium` row is the product-side acceptance-coverage defect the `31-spec-6`
+batch's AC2/AC7 re-aiming left; the `low` row is the same root cause one field
+property deep. Both are `product` class → repair owner
+`design-feature 31-planning-review-materiality`, one batch over the whole set,
+then `/review-spec 31-planning-review-materiality` re-reviews the new artifact
+revision. The plan-stage rows R31-01/R31-02/R31-03 stay `open` for
+`plan-feature`.
