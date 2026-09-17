@@ -2849,3 +2849,19 @@ id is the commit that carries these bytes — this unit's receipt convention).
     re-cuts the plan set and resolves P31-06 against the widened group)
   · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys
       nothing, rotates the artifact revision)
+
+Post-commit observations (same turn, appended after the amendment commit
+`f0042c62`):
+
+- Spec-stage gate at the committed revision: `node
+  scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+  31-planning-review-materiality` → `current: false`,
+  `reasonCode: stale-source-revision` ("the artifacts were reviewed at
+  `6084983b…`, the bound bytes now sit at `f0042c62…`"),
+  `changedPaths: [docs/features/31-planning-review-materiality/SPEC.md]` —
+  exactly the declared by-design state: the amendment moved the Product
+  half's bound bytes, so `spec-review-31-9` is superseded and the next
+  `/review-spec` run re-derives and binds the new snapshot
+  (`observedDigest b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9`
+  at this revision). The open P31-06 row stays with `plan-feature`'s
+  re-derivation.
