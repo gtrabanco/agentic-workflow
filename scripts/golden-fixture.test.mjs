@@ -184,6 +184,20 @@ export function runLogGrammar(docPath) {
   return { ok: true, rows: rows.length, checked: rows.filter((row) => row.date >= RESULT_GRAMMAR_CUTOFF).length };
 }
 
+/**
+ * AC3(c) — the committed log parses and every post-cutoff row obeys the closed
+ * grammar. The check is a statement about the rows present, never about how many
+ * post-cutoff rows the append-only log happens to hold (F1).
+ */
+export function committedLogCheck(docPath) {
+  const result = runLogGrammar(docPath);
+  if (!result.ok) return result;
+  if (result.rows < 43) {
+    return { ok: false, message: `committedLogCheck: ${showPath(docPath)} carries only ${result.rows} rows (expected at least 43)` };
+  }
+  return result;
+}
+
 const FIXTURE_TOKEN = /scripts\/fixtures\/golden-fixture\/[A-Za-z0-9._\-/]*/g;
 
 /** AC3(d), AC7 — the doc's fixture paths exist and the guide + workflow index point at the doc. */
@@ -280,10 +294,21 @@ test("AC3(b): the envelope samples validate in both directions through scripts/s
 });
 
 test("AC3(c): the committed run log parses and every post-cutoff row obeys the closed grammar", () => {
-  const result = runLogGrammar(DOC);
+  const result = committedLogCheck(DOC);
   assert.equal(result.ok, true, result.message);
-  assert.ok(result.rows >= 43, `the committed run log must be read (saw ${result.rows} rows)`);
-  assert.equal(result.checked, 0, "no committed row is dated on/after the 2026-09-18 cutoff yet");
+});
+
+test("AC3(c): a valid post-cutoff row appended to a log copy keeps the committed-log check green (F1)", () => {
+  const result = withTempDir((dir) => {
+    const docPath = path.join(dir, "GOLDEN_FIXTURE.md");
+    fs.writeFileSync(
+      docPath,
+      `${fs.readFileSync(DOC, "utf8")}\n| 2026-09-18 | synthetic | \`test\` | exact 12/12 · invented none · shape ok | a valid post-cutoff row must not break the check |\n`,
+    );
+    return committedLogCheck(docPath);
+  });
+  assert.equal(result.ok, true, result.message);
+  assert.equal(result.checked, 1, "the appended post-cutoff row must be checked, not skipped");
 });
 
 test("AC3(c): the cutoff accepts a well-formed row and rejects a malformed one", () => {
