@@ -57,7 +57,7 @@ One row per material claim, fixed column order
 | POLICY §4 today: second cycle prints CONVERGENCE-ANOMALY; "more cycles stay allowed when correctness needs them"; "no cap converts a verdict into a dead end" — planning loop unbounded on paper | repository | `skills/pre-execution-review/references/POLICY.md` §4 | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
 | `design-feature` REPAIR §4 repeats "More cycles stay allowed when correctness needs them" | repository | `skills/design-feature/references/REPAIR.md` §4 | installed release @ 2026-09-17 | current | proven | — |
 | Code-side precedent, test-pinned: `low` = report-only, never persisted, never blocks; re-escalate at `med` minimum; deflation to dodge a review is itself a review defect | repository | `skills/review-implementation/references/CLASSIFY.md`; `scripts/review-loop-discipline.test.mjs` §1 (asserts) | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
-| Code-side loop cap, test-pinned: at most two review→fold cycles; `LOOP CAP REACHED`; third cycle never starts without explicit user instruction | repository | `skills/review-change/SKILL.md:159-163`; `scripts/review-loop-discipline.test.mjs` §4 (asserts) | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
+| Code-side loop cap, test-pinned: at most two review→fold cycles; `LOOP CAP REACHED`; third cycle never starts without explicit user instruction | repository | `skills/review-change/SKILL.md:159-163` (third-cycle rule); `skills/review-change/references/REVIEW_PROCESS.md:169` (`LOOP CAP REACHED` literal); `scripts/review-loop-discipline.test.mjs` §4 (asserts) | branch head b84d57e1 @ 2026-09-17 | current | proven | — |
 | Spec/plan verdicts key on "Material findings open: 0" — the pass condition already counts material findings, so only the materiality line moves | repository | `skills/review-spec/references/OUTPUT.md:66-70`; `skills/review-plan/references/OUTPUT.md:83` | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
 | Both CHECKS files fix the old line "Material = anything above `info`" | repository | `skills/review-spec/references/CHECKS.md:104-105`; `skills/review-plan/references/CHECKS.md:105-106` | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
 | review-plan OUTPUT carries the re-review cycle text + CONVERGENCE-ANOMALY routing the cap must extend | repository | `skills/review-plan/references/OUTPUT.md:125-126,165` | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
@@ -69,6 +69,12 @@ One row per material claim, fixed column order
 | `docs/CAPABILITIES.md` is the unseeded template (no live roles/subsystems) — integration closure walks a derived inventory | repository | `docs/CAPABILITIES.md` (template placeholders only, read 2026-09-17) | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
 | `docs/workflow/REVIEW_AND_CLASSIFY.md` carries no severity/immateriality statement — tutorial surface unaffected | repository | grep over `docs/workflow/REVIEW_AND_CLASSIFY.md` (empty, 2026-09-17) | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
 | Versioning freeze: no majors until #176 merges — edited skills bump minor | repository | `CLAUDE.md` "Version every change" + #209 freeze note | branch head d63e9b12 @ 2026-09-17 | current | proven | — |
+| Validator-stability rule: a validator must never gate on a surface other workflow actors mutate (the branch diff as a whole, the session log, progress entries, review ledgers, forge state); a diff-based validator enumerates the unit's paths or excludes the workflow-mutated surfaces explicitly (`docs/LOGS.md`, the unit's own docs directory, harness/toolstate) | repository | `skills/verification-contract/SKILL.md` §Validator stability | v1.2.1 @ 2026-09-17 | current | proven | — |
+| Whole-diff scope-guard precedent that enumerates its own records: feature 27's AC16 accepts `packages/pi-agentic-workflow/` + `docs/features/27-pi-agentic-workflow/` + `docs/features/ROADMAP.md` in `git diff main --stat` | repository | `docs/features/27-pi-agentic-workflow/ACCEPTANCE.md` AC16 | branch head b84d57e1 @ 2026-09-17 | current | proven | — |
+| Observed branch diff at the repair's HEAD: 13 paths — 12 under `docs/features/31-planning-review-materiality/` + `docs/features/ROADMAP.md`; none a governed or derived surface of this feature | repository | `git diff main --stat` (run 2026-09-17 at b84d57e1) | branch head b84d57e1 @ 2026-09-17 | current | proven | — |
+| Session-log surface exists and is workflow-mutated by log-session appends | repository | `docs/LOGS.md` (present; not part of the branch diff at b84d57e1) | branch head b84d57e1 @ 2026-09-17 | current | proven | — |
+| git diff pathspec exclusion (`:(exclude)<path>`) and `--name-only` path-list output are documented git semantics — the mechanical anchor the repaired AC8 encodes (verified runnable at git 2.47.3: the 13-path diff reduces to empty under the three exclusions) | document | https://git-scm.com/docs/git-diff.html (fetched 2026-09-17; pathspec magic per the git glossary it references) | current git docs @ 2026-09-17 | current | proven | — |
+| Exact planning-loop strings (N31-001 correction): POLICY §4 says "Entering a **second** cycle is allowed when correctness needs it" (:60-61) and "no cap converts a verdict into a dead end" (:83); `REPAIR.md` §4 says "More cycles stay allowed when correctness needs them" (:64-65); `LOOP CAP REACHED` lives in `REVIEW_PROCESS.md:169` | repository | `skills/pre-execution-review/references/POLICY.md:60-61,83`; `skills/design-feature/references/REPAIR.md:64-65`; `skills/review-change/references/REVIEW_PROCESS.md:169` | branch head b84d57e1 @ 2026-09-17 | current | proven | — |
 
 ## Open questions
 
@@ -182,3 +188,44 @@ substance and their authority.
   walk would have reported real, intended files as out of scope; declaring the
   derived set keeps the guard strict and truthful at the same time.
 - **Authority**: AC8; PE-012; the reviewer's F03 row.
+
+## 2026-09-17 — Product repair batch (design-feature, artifact revision `31-spec-2`)
+
+Trigger: `spec-review-31-2` returned `SPEC-REVIEW-FAIL` (failed check C8) with
+N31-003 (medium, product) material plus the open `info` rows N31-001/N31-002 —
+one batch over the whole set, repair owner `design-feature`, user-commissioned
+as "widen the AC8 scope guard". This enters the spec stage's second
+repair/re-review cycle, so the `CONVERGENCE-ANOMALY` block was printed before
+any edit (POLICY §4 — "printed and routed, never a stop"; a repair responding
+to a persisted verdict is never a loop defect). Repair classes (REPAIR §2):
+
+- **N31-003 — closure completion (autonomous; reviewed product intent
+  unchanged).** AC8's allowed set gains its third declared group: the
+  workflow-mutated record surfaces — the unit's own directory
+  (`docs/features/31-planning-review-materiality/**`), the unit's
+  `docs/features/ROADMAP.md` row, and `docs/LOGS.md` session-log appends —
+  exactly the exclusions `verification-contract` §Validator stability names for
+  a diff-based validator, with feature 27's AC16 as the repository precedent
+  and a mechanical pathspec-exclusion anchor (`git diff main --name-only -- .
+  ':(exclude)…'`, verified runnable at the repair's HEAD: the 13-path diff
+  reduces to empty under the three exclusions). The guard stays closed: any
+  path outside the three declared groups is still a violation, so the widening
+  trades nothing away — it makes the criterion mean what it always meant ("the
+  PR carries nothing beyond the feature's surfaces and the workflow's own
+  records") while becoming satisfiable. Intent is unchanged: goal, In/Out of
+  scope items, entities, roles, and all materiality semantics are untouched.
+- **N31-001 — mechanical, intent-preserving.** §Context now quotes POLICY §4's
+  actual wording ("Entering a **second** cycle is allowed when correctness
+  needs it"); the code-side-cap evidence row cites `REVIEW_PROCESS.md:169` for
+  the `LOOP CAP REACHED` literal (the `SKILL.md:159-163` citation keeps the
+  third-cycle rule).
+- **N31-002 — mechanical, intent-preserving.** E2's `Read/list` surface names
+  both stages' frozen-evidence homes (plan: `planning-evidence.md` M/L / SPEC
+  planning-evidence section XS/S; spec: `decisions.md` evidence rows, writer
+  `design-feature:product-decisions` per the ownership map).
+
+Out of this batch's scope, left open for their owner: R31-02 (medium, plan —
+O15's one-phase/one-task contract) and R31-03's plan facet — `plan-feature`
+re-derives the plan and re-freezes `ACCEPTANCE.md` (AC8 wording, obligation
+O8, P4 task 5) once a fresh `SPEC-REVIEW-PASS` receipt exists; the manifest
+stayed byte-frozen through this batch (blob `d85e217a…` recomputed intact).

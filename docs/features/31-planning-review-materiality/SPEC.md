@@ -69,11 +69,12 @@ re-reported, and the loop is bounded at two review→fold cycles with
   are all unchanged") but §3's opening paragraph still mandates "a single
   re-review of the resulting snapshot" for every repair batch — the cheap
   cosmetic route stops one step short.
-- POLICY §4 prints `CONVERGENCE-ANOMALY` on a second cycle but then says more
-  cycles "stay allowed when correctness needs them" and "no cap converts a
-  verdict into a dead end"; `design-feature/references/REPAIR.md` §4 repeats
-  "More cycles stay allowed when correctness needs them". The planning loop is
-  unbounded on paper — the exact structural defect #159 fixed on the code side.
+- POLICY §4 prints `CONVERGENCE-ANOMALY` on a second cycle but then says
+  "Entering a **second** cycle is allowed when correctness needs it" and "no cap
+  converts a verdict into a dead end"; `design-feature/references/REPAIR.md` §4
+  repeats "More cycles stay allowed when correctness needs them". The planning
+  loop is unbounded on paper — the exact structural defect #159 fixed on the
+  code side.
 
 Planning review is prose judged against prose with no executable arbiter —
 the setting where reviewer noise is most expensive. The study this issue is
@@ -121,6 +122,17 @@ so AC8's scope guard walks them instead of reporting them as violations: the Pi
 package mirror (`packages/pi-agentic-workflow/skills/**`, written only by the
 bundler), the four edited skills' `version:` lines, the README skill-table cells
 the `bump-skill` step rewrites, and the `CHANGELOG.md` rows.
+
+Plus the **workflow-mutated record surfaces** the workflow itself writes into
+every unit PR, declared per `verification-contract` §Validator stability (a
+diff-based validator never gates on surfaces other workflow actors mutate; it
+excludes them explicitly) so AC8's whole-diff guard is satisfiable by the
+correct implementation and stays closed: the unit's own records under
+`docs/features/31-planning-review-materiality/**` (SPEC, plan set, planning
+ledgers, `progress.md`, `testing.md`), the unit's `docs/features/ROADMAP.md`
+row, and `docs/LOGS.md` session-log appends. Every path in the PR diff must
+belong to one of the three declared groups; any path outside them remains a
+scope violation.
 
 1. **Materiality line moves on the planning side**: in the `planning-findings`
    ledger semantics, material = `medium`+; a `low` finding becomes a
@@ -223,8 +235,10 @@ planning review loop:
   `LEDGERS.md` §1 planning-evidence home (existing). Test: AC6 anchor +
   `review-loop-discipline` pin (added).
 - Read/list — reviewers, `audit-pr`, and later cycles read the recorded
-  determination from the frozen evidence rows. Surface: the unit's
-  `planning-evidence.md` (M/L) or the SPEC's planning-evidence section (XS/S).
+  determination from the frozen evidence rows. Surface: plan stage — the
+  unit's `planning-evidence.md` (M/L) or the SPEC's planning-evidence section
+  (XS/S); spec stage — the evidence rows in `decisions.md` (ledger ownership
+  map: the `decisions` ledger, writer `design-feature:product-decisions`).
   Test: `bun test scripts/pre-execution-quality.test.mjs` (ledger home rules).
 - Update — n/a: evidence rows freeze at the write that minted them; a new
   determination is a new row at a new revision.
@@ -312,7 +326,7 @@ sensors` (deterministic scripts, CI, `workflow-status`).
 ### Expectation sweep
 
 What a competent workflow maintainer would assume ships with a
-"planning-side materiality alignment" without being told. 16 candidate
+"planning-side materiality alignment" without being told. 17 candidate
 expectations, each resolved to exactly one resolution:
 
 | # | Expectation | Resolution | Pointer |
@@ -333,6 +347,7 @@ expectations, each resolved to exactly one resolution:
 | 14 | Severity vocabulary and the schema package stay unchanged | out-of-scope | Out of scope bullet 2 |
 | 15 | Existing `low` rows in already-persisted planning ledgers are not retroactively reclassified | out-of-scope | Out of scope bullet 5 |
 | 16 | A reviewer can still escalate a taste-level claim to material when a rule is actually violated (the floor works in both directions) | in-scope | In scope 2 (anti-deflation) |
+| 17 | The unit's PR diff necessarily carries the unit's own planning records, the roadmap row update, and session-log appends — the whole-diff scope guard accepts those workflow-mutated records instead of failing an otherwise-correct implementation | in-scope | In scope (workflow-mutated record surfaces) + AC8 |
 
 ### Acceptance criteria
 
@@ -376,14 +391,22 @@ Command-checkable at the PR head unless labelled `read-verified`.
   skills/review-plan/references/OUTPUT.md` exits zero (the verdict-side loop
   text mirrors the cap). Both mirrors are rows of the planning pin table
   (AC14).
-- **AC8** (command + `read-verified`): at the PR head, `git diff main --stat`
-  lists only the In-scope surfaces — the governed files named above **plus the
-  declared derived-surface set** (the Pi mirror under
-  `packages/pi-agentic-workflow/skills/**`, the four edited skills' `version:`
-  lines, the README skill-table cells, and `CHANGELOG.md`) — and nothing else;
-  `git diff main --
+- **AC8** (command + `read-verified`): at the PR head, every path in
+  `git diff main --stat` belongs to the declared allowed set — the In-scope
+  surfaces (the governed files named above), the declared derived-surface set
+  (the Pi mirror under `packages/pi-agentic-workflow/skills/**`, the four
+  edited skills' `version:` lines, the README skill-table cells, and
+  `CHANGELOG.md`), and the declared workflow-mutated record surfaces
+  (`docs/features/31-planning-review-materiality/**`, the unit's
+  `docs/features/ROADMAP.md` row, and `docs/LOGS.md` session-log appends) —
+  and no path outside it; mechanical anchor (documented git pathspec
+  semantics): `git diff main --name-only -- .
+  ':(exclude)docs/features/31-planning-review-materiality'
+  ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists no
+  path beyond the governed + derived sets; `git diff main --
   skills/pre-execution-review/references/POLICY.md` produces hunks scoped to
-  §3 and §4 (`read-verified`: §1, §2, §5–§8 byte-identical to `main`).
+  §3 and §4, and the `docs/features/ROADMAP.md` hunk touches only row 31
+  (`read-verified`: §1, §2, §5–§8 byte-identical to `main`).
 - **AC9** (command): `bun test scripts/review-loop-discipline.test.mjs` passes
   at the PR head, and `git diff main -- scripts/review-loop-discipline.test.mjs`
   removes no existing assertion (additions or equal-strength rewrites only).
@@ -470,7 +493,7 @@ Product boxes:
       subsystems skipped.
 - [x] Every capability's role matrix lists EVERY derived role with an explicit
       `allowed`/`denied` — 5 roles × 5 capabilities, none unlisted.
-- [x] `### Expectation sweep` has 16 resolved rows (≥ 10 for M); every row
+- [x] `### Expectation sweep` has 17 resolved rows (≥ 10 for M); every row
       resolves to exactly one of `in-scope`, `out-of-scope`, or `deferred`
       with a pointer — zero unresolved rows.
 - [x] Every `#### In scope` bullet maps to ≥ 1 acceptance criterion — explicit
@@ -484,9 +507,11 @@ Product boxes:
 
 `designed` — capability closure complete (zero blank rows), Spec-lint product
 boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
-`31-spec-1` (see closing block). Awaiting independent review by `review-spec`;
-`plan-feature` may fill the Engineering half only on a current
-`SPEC-REVIEW-PASS` receipt.
+**`31-spec-2`** (the `N31-003` repair batch, 2026-09-17 — see `## Amendments`).
+Awaiting independent re-review by `review-spec`; `plan-feature` may re-derive
+the Engineering half only on a current `SPEC-REVIEW-PASS` receipt (the
+plan-side mirrors of AC8 — `ACCEPTANCE.md`, `PLAN.md`/`TASKS.md` P4 task 5,
+obligation O8 — are re-derived there).
 
 ---
 
@@ -890,3 +915,26 @@ restores currency.
 Also touched by this batch (evidence integrity, same repair act): PE-016's
 obligation cell cited a non-existent `O15`, now corrected to `O10`; the
 obligation ledger gains O15 for AC14.
+
+### `31-spec-2` — repair batch for `spec-review-31-2` (N31-003 + N31-001 + N31-002)
+
+User-commissioned repair batch (2026-09-17), commissioned as "widen the AC8
+scope guard". Trigger: `spec-review-31-2` returned `SPEC-REVIEW-FAIL` (failed
+check C8) with one material `product` row (N31-003) plus the two open `info`
+product rows N31-001/N31-002 — one batch over the whole set, repair owner
+`design-feature` (product class; the plan-facet rows R31-02/R31-03 stay with
+`plan-feature`, per the repair sequence `plan-review-31-2` named). Entering the
+spec stage's second repair/re-review cycle, the `CONVERGENCE-ANOMALY` block was
+printed before any edit (POLICY §4; recorded in `decisions.md`).
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-003 | product · medium | AC8's allowed set is completed by its third declared group: the **workflow-mutated record surfaces** (`docs/features/31-planning-review-materiality/**`, the unit's `docs/features/ROADMAP.md` row, `docs/LOGS.md` session-log appends), per `verification-contract` §Validator stability, with feature 27's AC16 as the repository precedent and a mechanical pathspec-exclusion anchor; the `ROADMAP.md` hunk walk (row 31 only) added. The guard stays closed — any path outside the three groups is still a violation. Repair class: closure completion (reviewed product intent unchanged). | AC8 + In-scope workflow-mutated paragraph + Expectation sweep row 17 |
+| N31-001 | product · info | Citation precision: §Context now quotes POLICY §4's actual wording ("Entering a **second** cycle is allowed when correctness needs it"); the `decisions.md` code-side-cap evidence row cites `REVIEW_PROCESS.md:169` for the `LOOP CAP REACHED` literal. Repair class: mechanical, intent-preserving. | SPEC §Context bullet 3; decisions.md evidence row |
+| N31-002 | product · info | E2's `Read/list` surface now names both stages' frozen-evidence homes: plan stage (`planning-evidence.md` M/L / SPEC section XS/S) and spec stage (`decisions.md` evidence rows — writer `design-feature:product-decisions` per the ownership map). Repair class: mechanical, intent-preserving. | Capability closure E2 `Read/list` |
+
+Artifact revision rotates `31-spec-1` → **`31-spec-2`** for the whole touched
+set (`SPEC.md`, `decisions.md`, `planning-findings.md`). The frozen
+`ACCEPTANCE.md` is deliberately untouched in this batch (blob `d85e217a…`
+recomputed intact): it is `plan-feature`'s owning artifact, re-derived with
+obligation O8 and P4 task 5 once a fresh `SPEC-REVIEW-PASS` receipt exists.
