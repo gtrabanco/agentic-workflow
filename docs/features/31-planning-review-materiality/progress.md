@@ -3241,3 +3241,160 @@ by this turn.
 → Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
   · design changed underneath → re-run /review-spec 31-planning-review-materiality first
   · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
+
+---
+
+## Plan re-derivation (`31-plan-5`, 2026-09-17)
+
+`plan-feature` ran its engineering route over the designed Product half after the
+owner-commissioned Product patches `31-spec-9`/`31-spec-10`. The plan's parent was
+`spec-review-31-9` @ `e15374a3…`; those two patches moved the Product half's bound
+bytes (AC13's code-carrier group) and `spec-review-31-11` returned
+`spec-review-pass` on them, so the plan descended from a stale parent — the exact
+lineage class R31-01 named — and still carried the open plan-stage row P31-06.
+Repair owner: `plan-feature`, on the Product reviewer's own hand-off ("Product half
+reviewed; the plan binds this receipt").
+
+Routing, in order:
+
+- Replan exemption probe: `node scripts/unit-route.mjs 31` → `route: execute`,
+  `open-rows: 0` — the router is the code-review finding-ledger router: it reads
+  `review-findings.md`, which this unit does not have, and is blind to the
+  stage-aware `planning-findings.md` where P31-06's open row lives. Its `execute`
+  line cannot be followed here (no current Plan receipt exists and `execute-phase`'s
+  own pre-execution gate would refuse these bytes), so the recorded disclosure
+  stands and the re-derivation follows the state the ledgers carry, as in the
+  `31-plan-2`/`31-plan-4` turns. This is the same routing-surface gap already
+  reported for triage (`unit-route`'s `replan` route is unreachable for plan-class
+  rows); it is not fixed in this unit's scope.
+- Redirect gate: roadmap row 31 reads `planned`; the plan is re-derived, never
+  re-scaffolded.
+- Product-review gate (`ROUTING.md`): the newest `## Pre-execution review receipt
+  v1 — spec` block is `spec-review-31-11`, contract
+  `agentic-workflow/pre-execution-review-receipt@1`, `stage: spec`, verdict
+  `spec-review-pass`, 14/14 checks, zero open/unverified material findings,
+  `contextClean: true`; the recomputed SPEC-stage snapshot from the bytes on disk
+  is `dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`, equal to
+  the receipt's bound digest (`pre-execution-snapshot.mjs verify --stage spec` at
+  the clean turn-start revision → `current: true`, `structural.fresh: true`).
+
+What the re-derivation changed (no phase, task, validator, or acceptance
+criterion's required outcome: both Product patches were enumeration-only):
+
+- The plan snapshot's parent binds `spec-review-31-11` @ `dd09372a…` (E-D31-20).
+- `planning-findings.md` **P31-06** flips to `resolved`: AC13's declared
+  code-carrier group now enumerates every path the plan edits by design, so the
+  frozen scope walk (O13) is satisfiable.
+- `E-D31-18`'s CHANGELOG-row allocation and the `PLAN.md`/`TASKS.md` P4 task 8
+  parenthetical are corrected to the linter-valid one — the schema package's 4.3.0
+  companion row stays in the `docs` P4, because the canonical phase contract's box
+  2 refuses a `docs` target in the `config/infra` P1 — and `known-issues.md` gains
+  the `normative-drift` window P1→P4 declaration its own text already claimed
+  (E-D31-21, `known-issues.md` §12). The duplicate item numbering in
+  `known-issues.md` was repaired (`§11` is now the feature-38 red suite).
+- `ACCEPTANCE.md` is re-frozen against the new Product base; every validator is
+  byte-identical to the `31-plan-4` manifest's (the blob rotates only for the
+  recorded lineage).
+- Artifact revision rotates `31-plan-4` → **`31-plan-5`**; engineering decisions
+  E-D31-20/E-D31-21 and evidence rows PE-030…PE-032 record it.
+
+Preflight (`planning-preflight`, two-stage):
+
+```text
+Preflight: Stage 1 — NRS consumed · arch: deferred
+Preflight: NRS consumed · invariant classification: n/a: no project invariants declared (F010) — AD-008 preserved (D-31-5)
+```
+
+Gates run this turn, at the repaired revision:
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:schema-finding-record-materiality
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
+```
+
+- `bun test scripts/normative-drift.test.mjs scripts/pre-execution-quality.test.mjs
+  scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs
+  scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs
+  scripts/review-loop-discipline.test.mjs scripts/workflow-status-pre-execution.test.mjs`
+  → **144 pass / 0 fail** (exit 0).
+- `bun scripts/check-skill-context.mjs` → exit 0 (`PASS context budgets: 40 skills`);
+  no skill byte moved in this re-derivation.
+- Plan snapshot at the repaired revision, parented to the current Product receipt:
+  `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
+  31-planning-review-materiality --parent dd09372a…` →
+  `7c08acab27c3dd7118cffd1bf6d161170e2d6d878be5f2c00cfc005bacea399e` (the
+  `31-plan-4` bytes' parent-bound digest `e3e86e2a…` and the `31-plan-3` digest
+  `e1a22768…` are superseded at this revision).
+- Re-frozen acceptance manifest: `git hash-object
+  docs/features/31-planning-review-materiality/ACCEPTANCE.md` →
+  `849af5ae7bccc7bc815d60d8ca2a9e0400161df9` (the `31-plan-4` blob
+  `650c7c8b…` is superseded).
+- **Lineage L1 (claimed beside recomputed).** The current Product receipt is
+  `spec-review-31-11` @ snapshot `dd09372a…`, whose `spec-product-v1` artifact
+  line records digest
+  `e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02` at 46362
+  bytes. Recomputed from the bytes on disk with the receipt's own recorded
+  revision (`build --stage spec --source-revision e4887dac… --artifact-revision
+  e4887dac…`) → the same `dd09372a…` and the same `e9ce9abf…` projection: the
+  Product bytes and the three context authorities are unmoved. The CLI's
+  whole-file answer after the commit is `stale-source-revision` (exit 4,
+  `changedPaths: [SPEC.md]`) because the Engineering half lives in the same file
+  and `contentRevision` covers every bound path — the known false signal
+  `plan-review-31-3` already recorded; no `class: product` row is owed, and the
+  L1 keys (Product bytes/contexts) hold.
+- Artifact revision label rotated to **`31-plan-5`**.
+
+Readiness preflight (`evidence-grounding/references/READINESS.md`, `stage: plan`):
+
+```text
+READINESS — 31-planning-review-materiality plan READY-FOR-REVIEW
+- Artifact revision: 31-plan-5 · Rows checked: 32 · Unknowns open: 0
+- Evidence: planning-evidence.md · Frozen: 2026-09-17
+```
+
+Box walk (all eleven tick): (1) the governing Product half is `designed` and
+`spec-review-31-11` is a current `SPEC-REVIEW-PASS` receipt for the exact snapshot
+being parented (`dd09372a…`), with the projection recomputed above; (2)
+`ACCEPTANCE.md` is frozen with one stable ID per criterion, a named validator per
+row and blob `849af5ae…` recorded; (3) the SPEC's Architecture impact names the
+affected surfaces with `path:line` evidence rows and carries AD-008 `preserves`
+(D-31-5); (4) `planning-obligations.md` carries O1…O15, one phase and one task
+each, with implementation owner, validator, required evidence and a non-blank
+status; (5) `planning-evidence.md` exists (M/L), is compact, and every Engineering
+claim resolves to a row (PE-001…PE-032); (6) the scenario matrix covers each
+failure category with its phase and validator; (7) all five phases pass
+phase-lint, fingerprints recorded; (8) phase order matches the `Depends on`
+closure and P5 is the hardening/close-out phase; (9) the compatibility boundary
+and rollback path are stated and no unnamed public contract change exists; (10)
+`Open questions / risks` is resolved (the `31-plan-4` and `31-plan-5` bullets
+name their fixes) and no decision word remains; (11) every evidence row is
+`current` with zero unknowns.
+
+Cycle accounting (D-31-7): the plan-stage window `plan-review-31-1` opened has
+three reviews — `plan-review-31-1` FAIL (#1), `plan-review-31-2` FAIL (#2) and
+`plan-review-31-3` FAIL (#3, owner-commissioned under D-31-6), whose
+`CONVERGENCE-ANOMALY` block stands byte-unchanged. This re-derivation is not a
+blind re-review of unchanged bytes: the reviewed Product parent moved twice under
+it, so `31-plan-5` is a new artifact revision the Product review the owner
+commissioned owes, and the `/review-plan` it hands off to is the window's next
+cycle, started from the explicit user instruction that invoked `plan-feature`
+here rather than from an automatic loop.
+
+Dependency and blocker check (run this turn, before the recommended next step):
+hard dependency 29 reads `done · [#175](…/pull/175)` (merged) and soft dependency
+30 reads `done · [#188](…/pull/188)` (merged) — the closure is met. The fix index
+carries exactly one row (#179, `pending`), which depends on features 30/31/32
+rather than blocking 31, and no open issue or fix-now row in this repository
+touches a module this SPEC changes (#205 — the review-loop convergence feature —
+depends on 31, and #171 is this unit's own tracking issue). No dependency, no
+blocker.
+
+Hand-off: a repaired plan is not an approved plan. The next step is
+`/review-plan 31-planning-review-materiality` — the new artifact revision is
+`31-plan-5` (`bbbb36a7`), bound to parent snapshot `dd09372a…`, and the reviewer
+re-derives plan snapshot `7c08acab…`.
