@@ -748,10 +748,10 @@ Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and 
 - [x] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause) — evidence: `unshare -rn node --test scripts/golden-fixture.test.mjs` (new network namespace, no connectivity) → exit 0, 9 pass / 0 fail; `grep -nE "Date\.now|Math\.random|fetch\(|https?://" scripts/golden-fixture.test.mjs` → no matches
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty — evidence: empty immediately after the `docs(roadmap): mark 55 done (P4)` commit, i.e. no doc edit is left uncommitted at close-out
 - [x] Set the roadmap row status to `done` and commit the flip — evidence: `docs(roadmap): mark 55 done (P4)`
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] `git push` — evidence: `git push` → `62e22d7e..72700419 feat/55-executable-golden-fixture -> feat/55-executable-golden-fixture`, exit 0
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat — evidence: the branch's PR opened at the design turn is [#240](https://github.com/gtrabanco/agentic-workflow/pull/240) (`gh pr create` refused with "a pull request for branch … already exists"); its title and body were refreshed to the delivery description through the REST API after `gh pr edit` failed on the repo's classic-Projects GraphQL (environmental, not a permission error)
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)` — evidence: row 55 reads `done · [#240](https://github.com/gtrabanco/agentic-workflow/pull/240)`
+- [x] Commit `docs: link PR #<n>` and push — evidence: `docs: link PR #240`
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
