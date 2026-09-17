@@ -2584,3 +2584,35 @@ Hand-off: the plan set is written and frozen, and a planned unit is not an
 executable unit — the next step is the independent plan review
 (`/review-plan 31-planning-review-materiality`), never execution. Artifact
 revision `31-plan-3` is the id the reviewer binds.
+
+Replan provenance and post-commit observations (same turn, appended after the
+scaffold commit `13ba789d`):
+
+- Plan snapshot at this revision, built with the Product parent the receipt
+  binds: `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
+  31-planning-review-materiality --parent
+  e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507` →
+  `e1a227682e2c4bd8f00a8b5d9a373f6b5348825c0978d3b4a0acb5d60725753f`. The
+  reviewer binds **that** digest (and `--parent e15374a3…`, the digest the
+  `spec-review-31-9` receipt records), never a re-derived value.
+- The Product **bytes** are provably unmoved by this write: `selectSpecProduct`
+  over the committed `SPEC.md` answers digest
+  `9f22563ea1148fac99806ef9847b4e9b48e72e6c5a7e1d1619a5f67540f79474`, 46004
+  bytes — byte-identical to the artifact line `spec-review-31-9` records. The
+  Engineering half and `## Amendments` sit outside the selector's boundary
+  (PE-003/E-D31-11 evidence), so no Product criterion moved.
+- The CLI's spec-stage answer **after** the commit is `stale-source-revision`
+  (exit 4): the bound-path revision moved because the Engineering half lives in
+  `SPEC.md`, which is the revision dimension, not the Product bytes. Plan review
+  check L1 keys on "the Product bytes/contexts have not moved since", and both
+  are unmoved (the digest above; the three context authorities untouched) — so
+  the lineage holds and no `class: product` row is owed. Recorded here so the
+  reviewer reads the code and its meaning rather than the code alone.
+- Dependency and blocker check (run this turn, before the recommended next
+  step): hard dependency 29 reads `done · [#175](…/pull/175)` (merged), soft
+  dependency 30 reads `done · [#188](…/pull/188)` (merged) — the closure is met.
+  The fix index carries exactly one row (#179, `pending`), which depends on
+  features 30/31/32 rather than blocking 31, and no open fix-now row in this
+  repository touches a module this SPEC changes (`docs/fix/162`'s F12 is a
+  progress-ledger re-review item and `docs/fix/214`'s F12 an audit-pr closure
+  item; both live in other units). No dependency, no blocker.
