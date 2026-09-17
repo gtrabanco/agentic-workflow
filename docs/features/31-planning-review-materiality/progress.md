@@ -989,3 +989,158 @@ consequence; the spec stage reopens.
 Next: `/review-spec 31` (cycle 1, D-31-7) → `/plan-feature 31` (re-cut;
 `31-plan-1/2` superseded, never repaired) → `/review-plan 31` →
 `/execute-phase 31`.
+
+---
+
+# Review `spec-review-31-4` — carrier-amended Product half (2026-09-17)
+
+Product-half independent review (`review-spec`), 2026-09-17. Fresh context; this
+conversation never authored or edited the reviewed Product half, its ledgers, or
+its acceptance manifest. Cycle 1 of the fresh window D-31-7 declares: the last
+spec verdict was a PASS (`spec-review-31-3`), and the carrier move is an
+owner-authorized re-open, not a repair of that receipt.
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ 9a39c3fc
+- 3 product decisions a hostile reader could call invented rather than recorded:
+    1. D-31-7 the cap counts consecutive unconverged cycles and a PASS resets it
+       — recorded decisions.md D-31-7, authority D-31-6's authorization sentence
+       + the user instruction; mirrors review-change's loop semantics
+    2. D-31-8 the cap's unconverged exit is stage-scoped (spec: needs-design;
+       plan: refusal + design-feature routing) — recorded decisions.md D-31-8,
+       authority fix/162 Decision 11 + VERDICTS_BY_STAGE
+    3. the finding record's `reproducer` field — named by the owner ruling
+       D-31-6 and the user instruction; absent from D-31-1…D-31-5
+  → all three point to dated decisions.md rows with stated authority; none
+    invented. D-31-1…D-31-5 keep their original authority (issue #171).
+- User outcome with no observable check: business goal 1 ("cut the cost of a
+  planning review cycle") is economic; its proxies are AC1 (a `low` row no
+  longer gates) and AC4 (wording-only routes past the re-review). No finding
+  for the goal itself — but In-scope item 5's declared shrink of both CHECKS.md
+  and both OUTPUT.md (and the removal of the old line in LEDGERS.md §3) is
+  declared in scope with NO criterion verifying it → confirmed gap N31-004.
+- Role the matrix leaves unspecified for a capability it lists: none — 5
+  derived roles × 5 capabilities (C1–C5), every cell explicit allowed/denied.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true?:
+    a) the machine materiality rule already reads medium+ → false:
+       pre-execution.ts:1059 is `const material = finding.severity !== "info"`
+    b) the finding record already carries `reproducer` → false: grep over
+       packages/agentic-workflow-schema/src/ returns nothing
+    c) the plan stage already sanctions `needs-design` → false:
+       VERDICTS_BY_STAGE.plan is [plan-review-pass, plan-review-fail] only
+    d) dependency 29 is unmerged → false: ROADMAP row 29 reads done · #175
+    e) AC7 already verifies CHECKS.md/OUTPUT.md → false: no grep in AC7 (nor in
+       the normative-drift/quality suites) targets either file's materiality line
+    f) a root `package.json` exists (making the bare bundler spelling valid) →
+       false: no root package.json, so the package-root spelling is correct
+- Verdict stance before checking: CONFIRMED-GAPS (the AC7 coverage gap)
+```
+
+## Product checks — fixed list, one result each
+
+Snapshot `d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa` @
+source revision `9a39c3fc88379cea123dd4b85123caefb439363b` (`spec-product-v1`
+projection digest `c0dfc2598158ca0b9198b65af57279c8a19372864f67932bbe93810b9fbee4a8`,
+40400 bytes).
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Business goals state the outcomes (cost, structural termination, preserved honesty); each of the 8 In-scope items and the allowed-set group maps to an objective AC: 1→AC1/AC2/AC3, 2→AC4, 3→AC5/AC7, 4→AC6, 5→AC7, 6→AC8/AC9, 7→AC10/AC11, 8→AC12, groups→AC13 |
+| C2 | Actors and roles | pass | 5 derived roles (human owner / author turn / reviewer turn / executor turn / drivers & sensors) × 5 capabilities (C1–C5), every cell explicit allowed/denied; trigger owners named (reviewer files, author repairs, human keys cycle 3, decider refuses and routes) |
+| C3 | Entity closure | pass | E1 (finding record + ledger row), E2 (wording-only determination — machine half + judgment half), E3 (cycle state) each resolve create/read/update/delete/transitions to a named surface + test; zero blank rows; every n/a carries a reason (append-only / derived value) |
+| C4 | Limits and failure states | pass | Limits: the hard two-cycle cap, ≤64 findings, 10 closed freshness codes; failure states resolved — unconverged loop → needs-design (spec) or refusal+route (plan), mislabeled defect → reclassify at medium minimum, undetermined rotation → stale-artifact-revision refused, open medium+ row → verdict-mismatch, dismissal → counter-evidence required; size M stated |
+| C5 | Scope and non-goals | pass | 7 non-goals, each naming the preserved contract (vocabulary values, receipt binding, code-side loop) or an explicit exclusion (retroactive rows, superseded plan set, aspirational citation, tutorial); nothing excluded by silence |
+| C6 | Integration closure | pass | docs/CAPABILITIES.md is the unseeded template, so the 12-row derived inventory is recorded in the section and walked one row per subsystem; each row resolves to a test, an n/a with reason, or a named owner (audit-docs) |
+| C7 | Expectation sweep | pass | 19 resolved rows (≥10 for M), each forced to in-scope/out-of-scope with a pointer; zero unresolved rows |
+| C8 | Acceptance objectivity | finding | AC1–AC13 are objective and labelled, and every In-scope bullet maps to ≥1 criterion — but AC7 does not verify the CHECKS.md/OUTPUT.md/LEDGERS.md shrink In-scope item 5 declares, and the Integration-closure row claims AC7 covers it → N31-004 (medium, product) |
+| C9 | Internal contradiction | pass | The materiality line, cap, wording-only route and stage-scoped exit are consistent across In-scope, D-31-2, D-31-7, D-31-8 and E1–E3; D-31-8 explicitly reconciles the summary shorthand, which is filed as N31-005 (info) not a contradiction |
+| C10 | Repository contradiction | pass | Claims re-read at 9a39c3fc: pre-execution.ts:1059 material rule; no `reproducer` in src/; freshness codes :159–170 (10); verify exit codes; `stale-artifact-revision` at :1147; VERDICTS_BY_STAGE plan lacks needs-design (pre-execution-contract.ts:126–138); transition rows review-spec/review-plan allow design-feature; LEDGERS.md:93 old line; POLICY §3 re-review mandate (:46-47) and §4 sentences (:60-61, 83); REPAIR.md:64; both CHECKS.md old line (:104/:105); schema 4.2.0; ROADMAP 29 done·#175 and 30 done·#188; docs/CAPABILITIES.md template; no ARCHITECTURAL_INVARIANTS.md; no root package.json |
+| C11 | Evidence integrity | pass | Every decisions.md row is proven/decision + current with a location and revision (a400b978 / b84d57e1 / d63e9b12 / the 2026-09-17 fetches); no unknown, drifted or stale row survives; the carrier amendment's evidence table adds the machine facts this half asserts. One coverage claim is imprecise → folded into N31-004 |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none`; D-31-5 is a conditional invariant-reconciliation with a named owner (resolve-repository-state), not an open product choice |
+| C13 | Engineering leakage | pass | The Product half cuts no phases, tasks or plan topology; the code carriers it names are the owner-ruled carrier (D-31-6), and the phase cut/done-whens live in the (superseded) Engineering half only |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: the README citation is in-unit (AC12), version bumps/pins in-unit (AC8/AC9/AC10/AC11), the superseded plan set is a disposition not a deferral, and the AD-008 amendment is conditional and owner-routed |
+
+Findings: 2 — N31-004 (medium, product, material open: 1) and N31-005
+(info, product, immaterial). Recorded in `planning-findings.md`.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-4 · Snapshot: d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 9a39c3fc88379cea123dd4b85123caefb439363b · Artifact revision: 9a39c3fc88379cea123dd4b85123caefb439363b
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T13:02:00Z/2026-09-17T13:06:00Z · Findings: 2 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 40400 · digest c0dfc2598158ca0b9198b65af57279c8a19372864f67932bbe93810b9fbee4a8 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 13/14 pass — C1–C7 and C9–C14 pass; C8 carries the material row N31-004; N31-005 is `info`
+- Contexts: architectural-invariants absent · normalized-repository-state present e1b81e29138706dde46416cf93cfb0cb3a0605af384401f7d48a5e4ebb10d492 · project-guide present ff24d7e437646fa37cc3abe11d51715b4a1e4fb79e2c974fe2b952b0e1f80eb3
+```
+
+Artifact-revision notes:
+
+- The design handoff names the authoring label `31-spec-3` (SPEC `## Design
+  status`; roadmap row 31). As feature 37 precedent and the three earlier
+  spec receipts recorded, the receipt's `Artifact revision:` field binds the
+  builder's digest-derived value `9a39c3fc…` (the newest commit touching the
+  bound path), because the recipe owner's `verify` re-derives the same value;
+  the handoff label `31-spec-3` stays recorded here.
+- Governance issue #171 (OPEN) was read from the forge as routing data. The
+  builder's canonical context set binds `architectural-invariants` (absent),
+  `normalized-repository-state` and `project-guide`; the roadmap row is
+  deliberately unbound. No reviewed byte changed before the snapshot was built
+  (`git status --porcelain` clean at `9a39c3fc`).
+- Read-only: no reviewed artifact (`SPEC.md`, `decisions.md`, the roadmap row,
+  `ACCEPTANCE.md`) was modified by this turn; the only writes are this receipt
+  and the `planning-findings.md` rows the ledger contract assigns to this
+  stage.
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa · Artifact revision: 9a39c3fc88379cea123dd4b85123caefb439363b
+- Failed checks: C8
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | N31-004 | medium | product | C8 | AC7 omits three prose surfaces In-scope item 5 declares shrunk (both CHECKS.md, both OUTPUT.md, the old LEDGERS.md §3 line) while the Integration-closure row claims AC7 covers them — the declared scope can ship unverified with every AC green | SPEC.md `#### In scope` item 5; `### Acceptance criteria` AC7; Integration-closure row "Skill reference docs"; CHECKS.md:104 / CHECKS.md:105 / LEDGERS.md:93; normative-drift and pre-execution-quality reads | verified |
+  | N31-005 | info | product | C9 | Goal and Business goals state the loop's unconverged end is NEEDS-DESIGN stage-unqualified, while In-scope item 3 and D-31-8 scope it (plan stage = refusal + design-feature routing) | SPEC.md `## Goal`, `### Business goals`, `#### In scope` item 3, D-31-2/D-31-8; VERDICTS_BY_STAGE pre-execution-contract.ts:126-138 | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+```
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-4",
+    "verdict": "spec-review-fail",
+    "snapshot": "d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+`structural.fresh: true` — the mark landed (digest matches). `current: false`
+with `verdictIsPass: false` is the sanctioned emit result for a FAIL (exit 4):
+the verdict is the emit result, and the route is the repair owner below.

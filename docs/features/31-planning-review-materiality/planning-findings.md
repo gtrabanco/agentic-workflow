@@ -124,3 +124,38 @@ is not a stop. `plan-feature` may now re-derive the Engineering half against
 this receipt: the plan-side mirrors of AC8 (`ACCEPTANCE.md` AC8, obligation O8,
 `PLAN.md`/`TASKS.md` P4 task 5) remain `plan-feature`'s to re-cut, closing
 R31-02 + R31-03 and re-freezing `ACCEPTANCE.md`.
+
+---
+
+## Re-review (`spec-review-31-4`, 2026-09-17)
+
+Cycle-1 review of the carrier-amended Product half (`31-spec-3`) — the
+authorized re-open D-31-6/D-31-7 declared after `spec-review-31-3` (PASS) went
+`stale-artifact-content` on the carrier-move write. Fresh context; this
+conversation never authored or edited the Product half, its ledgers, or its
+acceptance manifest.
+
+Snapshot `d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa` @
+source revision `9a39c3fc88379cea123dd4b85123caefb439363b` (`spec-product-v1`
+digest `c0dfc2598158ca0b9198b65af57279c8a19372864f67932bbe93810b9fbee4a8`,
+40400 bytes); handoff label `31-spec-3`. Verdict: `spec-review-fail` — C8
+carries one material `product` row (N31-004) plus one open `info` row
+(N31-005). The three earlier spec rows (N31-001/N31-002/N31-003) stay
+`resolved` at `resolving-artifact-revision: 31-spec-2`; the plan-stage rows
+R31-01/R31-02/R31-03 stay `open` for `plan-feature`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-004 | spec | medium | product | d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa | AC7 does not verify three of the prose surfaces In-scope item 5 declares shrunk. It greps `POLICY.md` ("no cap converts a verdict into a dead end", "Entering a second cycle is allowed") and, via `grep -rn "More cycles stay allowed" skills/`, `REPAIR.md` §4 — but never `skills/review-spec/references/CHECKS.md` or `skills/review-plan/references/CHECKS.md` (both still read "Material = anything above `info`"), never either `OUTPUT.md`, and never the removal of "`info` is the only immaterial one" from `LEDGERS.md` §3 (AC7 only checks the new `report-note` sentence is present). The Integration-closure row "Skill reference docs" claims its Test is "AC7 greps + `normative-drift` + context budgets", but `scripts/normative-drift.test.mjs` reads neither CHECKS.md nor OUTPUT.md for materiality, `scripts/pre-execution-quality.test.mjs` reads CHECKS.md yet pins no materiality sentence, and `bun scripts/check-skill-context.mjs` checks budgets only. A correct implementation could therefore leave CHECKS.md/OUTPUT.md/LEDGERS.md still stating material = anything above `info` with every AC green — a documented rule contradicting the shipped machine predicate. | SPEC.md `#### In scope` item 5; SPEC.md `### Acceptance criteria` AC7; SPEC.md `### Capability closure` Integration-closure row "Skill reference docs"; `skills/review-spec/references/CHECKS.md:104`; `skills/review-plan/references/CHECKS.md:105`; `skills/pre-execution-review/references/LEDGERS.md:93`; `scripts/normative-drift.test.mjs` (no CHECKS/OUTPUT materiality read); `scripts/pre-execution-quality.test.mjs:30,500` (reads CHECKS.md, pins no materiality line) | open | — | — |
+| N31-005 | spec | info | product | d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa | Two summary sections state the loop's unconverged end is `NEEDS-DESIGN` without stage scoping, while In-scope item 3 and D-31-8 scope it: at the plan stage the exit is the orchestrator's refusal + `design-feature` routing (the machine map does not sanction a plan-stage `needs-design` receipt — fix/162). The Goal says "the spec/plan repair loop gets a hard two-cycle cap whose unconverged end is `NEEDS-DESIGN`" and the Business goals say "an unconverged planning loop asks the human (`NEEDS-DESIGN`)". D-31-2 already carries "(stage-scoped by D-31-8)", so these two summary instances are the only unqualified ones; the substantive mechanism sections are unambiguous, which is why this is `info`, not material. | SPEC.md `## Goal`; SPEC.md `### Business goals` bullet 2; SPEC.md `#### In scope` item 3; SPEC.md `### Product decisions` D-31-2/D-31-8; `packages/agentic-workflow-schema/src/pre-execution-contract.ts:126-138` (`VERDICTS_BY_STAGE` — plan stage carries no `needs-design`) | open | — | — |
+
+The medium row is the acceptance-coverage defect the carrier amendment's
+AC re-derivation introduced: the pre-carrier Product half verified each prose
+surface with its own criterion (old AC1/AC2 covered `LEDGERS.md` and both
+`CHECKS.md`); the re-derived AC7 keeps only the `POLICY.md`/`REPAIR.md`
+greps, so the same declared scope now ships with a smaller, non-covering
+acceptance set. Repair owner: `design-feature` (add the missing greps to AC7 —
+`grep -n "anything above \`info\`" skills/review-spec/references/CHECKS.md
+skills/review-plan/references/CHECKS.md` exits non-zero, the schema-side AC2
+pattern for `LEDGERS.md` — or re-scope item 5), then `/review-spec` re-judges
+the new revision.
