@@ -2865,3 +2865,156 @@ Post-commit observations (same turn, appended after the amendment commit
   (`observedDigest b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9`
   at this revision). The open P31-06 row stays with `plan-feature`'s
   re-derivation.
+
+---
+
+# Re-review `spec-review-31-10` — review-spec reviewer turn (2026-09-17)
+
+Independent re-review of the Product half the `31-spec-9` amendment rewrote (the
+`## Scope` **Code carriers** allowed-set group, triggered by the open P31-06
+row). Fresh context — this conversation never authored or edited the Product half
+→ `contextClean: true`; `authorExclusion: not-enforceable` (manual route);
+`modelDiversity: not-applicable` (single reviewer). Cycle accounting per D-31-7:
+`spec-review-31-9` returned PASS, so the consecutive-unconverged count reset to
+0 and this is **cycle 1** of a new window — no `CONVERGENCE-ANOMALY` is owed.
+
+Snapshot (built at the exact bytes read, one revision):
+
+```text
+digest   b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9
+source   f0042c6210702ba2c884c960137e14135057266f
+artifact f0042c6210702ba2c884c960137e14135057266f   (author handoff label `31-spec-9`)
+spec row docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · 46282 bytes · 3dba9a8fdd7c16244ed22bbaf4adf9f229a48c85824c1f9df5576377210e118b
+contexts project-guide CLAUDE.md ff24d7e4… present · normalized-repository-state docs/workflow/REPOSITORY_STATE.md e1b81e29… present · architectural-invariants docs/architecture/ARCHITECTURAL_INVARIANTS.md absent
+```
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ f0042c62
+- Name 3 specific product decisions in this half that a hostile reader could
+  call invented rather than recorded:
+  1. D-31-9's "the code-carrier group enumerates every path the plan edits by
+     design" (decisions.md amendment batch) — its evidence rows cite only the
+     three paths P31-06 named, never the full edited set (and the claim is
+     false: see the finding below).
+  2. Scope item 7's "the Pi mirror is re-bundled from the package that owns the
+     bundler" — a design statement; no bound evidence row enumerates the mirror
+     files.
+  3. `## Design status`'s "readiness preflight READY-FOR-REVIEW at artifact
+     revision `31-spec-9`" — the readiness block lives in the unbound
+     `progress.md`; the reviewed bytes carry the assertion only.
+- Name the user outcome the SPEC promises that has no observable check: none
+  found — each Business goal maps to AC1–AC14.
+- Name one role the matrix leaves unspecified for a capability it does list:
+  none — the 5 roles × 5 capabilities matrix (C1–C5) lists every role.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? That the plan edits paths outside the declared allowed-set groups.
+  TRUE: `PLAN.md:107-108` extends `scripts/pre-execution-attribution.test.mjs`
+  and `scripts/pre-execution-sensor.test.mjs`, and neither is in any declared
+  group (observed at `f0042c62`).
+- Verdict stance before checking: CONFIRMED-GAPS
+```
+
+## Checks — one result each
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Business goals name observable outcomes (cycle-cost cut, structural loop termination, preserved honesty props); each In-scope item maps to ACs (1→AC1–3, 2→AC4, 3→AC5/AC7, 4→AC6, 5→AC7, 6→AC8–9, 7→AC10/11/14, 8→AC12) |
+| C2 | Actors and roles | pass | Derived role inventory (human owner, author turn, reviewer turn, executor turn, drivers & sensors) appears for all five capabilities C1–C5, each role `allowed`/`denied`; no unlisted role |
+| C3 | Entity closure | pass | E1–E3 resolve Create/Read/Update/Delete/state-transitions; Delete is explicit `n/a: append-only ledger / derived value`; zero blank rows |
+| C4 | Limits and failure states | pass | Limits stated (cap = two consecutive unconverged cycles; ≤64 findings; `reproducer` maxLength); named failures (`verdict-mismatch`, `stale-artifact-content`, `needs-design`) each carry a resolution |
+| C5 | Scope and non-goals | pass | 7 out-of-scope bullets, each names a non-goal or an owner |
+| C6 | Integration closure | pass | 12 derived subsystems, one row each; `docs/CAPABILITIES.md` recorded absent (unseeded template) with the derivation stated |
+| C7 | Expectation sweep | pass | 19 rows (≥10 for M), each resolved in-scope/out-of-scope with a pointer |
+| C8 | Acceptance objectivity | pass | AC1–AC14 objective and labelled command / command+`read-verified`; every In-scope bullet maps to ≥1 AC; Spec-lint box re-files AC1 consistently |
+| C9 | Internal contradiction | **finding** | N31-015: AC4 (`SPEC.md:467-473`) requires `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → exit 0, i.e. both files must be edited, while AC13 (`SPEC.md:567`) + the `## Scope` code-carrier group (`SPEC.md:201-204`) forbid any diff path outside the declared groups and neither file is declared — the two criteria are mutually unsatisfiable |
+| C10 | Repository contradiction | **finding** | N31-015: `PLAN.md:107-108` (P3) extends the same two suites; the half's declared group claims to cover the plan's designed edits but omits them (both files carry zero `wording-only` hits at `f0042c62`). The three paths the `31-spec-9` amendment added do exist on disk; all other source claims re-verified at `f0042c62` hold |
+| C11 | Evidence integrity | pass | `decisions.md` carries 88 `current` evidence rows (87 `proven` + 1 `decision`), zero `unknown`/`drifted`/`stale`; every row names a location |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` with an empty table; the remaining open row (P31-06) is a plan-stage finding, not a deferred product choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, or architecture; the allowed-set groups are a scope declaration, not a plan |
+| C14 | Obligation containment | pass | No current-unit obligation is exported to a future issue; P31-06 routes to `plan-feature`'s re-derivation (its owner), and this review's N31-015 routes to `design-feature` |
+
+Findings: 1 (material open: 1).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-10 · Snapshot: b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9 · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: f0042c6210702ba2c884c960137e14135057266f · Artifact revision: f0042c6210702ba2c884c960137e14135057266f
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T23:00:00Z/2026-09-17T23:12:00Z · Findings: 1 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 46282 · digest 3dba9a8fdd7c16244ed22bbaf4adf9f229a48c85824c1f9df5576377210e118b · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 12/14 pass; C9 + C10 finding (N31-015); falsification CONFIRMED-GAPS
+```
+
+Artifact-revision notes:
+
+- The design handoff names the authoring label `31-spec-9` (SPEC `## Design
+  status`; `decisions.md` amendment header). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `f0042c62…` — the same reconciliation every prior receipt
+  in this unit recorded; the label stays recorded here.
+- Reviewed bytes are committed at `f0042c62` (clean tree at review start), so the
+  builder's "commit the bound artifacts" precondition held; the only writes this
+  turn makes are to the unbound `progress.md` and `planning-findings.md`, so the
+  bound digest is unchanged by them.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-10",
+    "verdict": "spec-review-fail",
+    "snapshot": "b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — a verdict persisted but not a PASS: the mark landed (`structural.fresh:
+true`, `digestMatches: true`) and the verdict itself is the emit result; route
+per the FAIL below.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9 · Artifact revision: f0042c6210702ba2c884c960137e14135057266f
+- Failed checks: C9, C10
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  | N31-015 | medium | product | C9, C10 | AC13's declared code-carrier group omits `scripts/pre-execution-attribution.test.mjs` and `scripts/pre-execution-sensor.test.mjs`, which AC4 requires to carry `wording-only` vectors and `PLAN.md` P3 edits — so AC4 and AC13 are mutually unsatisfiable; the same root cause P31-06 named, incompletely repaired by `31-spec-9` | SPEC.md `## Scope` code-carrier group (`:201-204`) vs AC4 (`:467-473`); `PLAN.md:107-108`; observed `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → no match at `f0042c62` | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+```
+
+All other checks (C1–C8, C11–C14) pass; the failure is the single `product` row
+above, and no reviewed artifact was modified by this turn.
+
+→ Next: /design-feature 31-planning-review-materiality "add scripts/pre-execution-attribution.test.mjs and scripts/pre-execution-sensor.test.mjs to AC13's code-carrier group" — one repair batch for N31-015,
+    then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
+  · a product choice is missing → answer it in the instruction; nothing here chooses for you
+  · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
+
