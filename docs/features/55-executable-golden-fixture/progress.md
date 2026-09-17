@@ -299,3 +299,14 @@ the full roadmap status machine. No new finding rows appended to
 - Gotchas: the frozen assembly measure was 148; the committed doc is 149 (one line of slack under the ≤150 cap) because the fixture file list is denser than the per-section probe assumed — the cap, not the exact 148, is the criterion (PE-017/AC5). The 43 run-log rows are byte-identical to the pre-slim bytes and no live `csv-export-command` slug survives outside them
 - Files: `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/README.md`, `CLAUDE.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
 - Next: P3 — Author the golden-fixture assertion suite
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `node --test scripts/golden-fixture.test.mjs` (exit 0, 9 pass / 0 fail) + `node --test scripts/*.test.mjs` (exit 0, 496 pass / 0 fail) · Acceptance blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b
+- Next: P4 · Attempts: 1 · Checkpoint triggers since baseline: layer boundary (P2 `docs` → P3 `config/infra`; recorded, whole-unit mode continues)
+
+## P3 — 2026-09-17
+- Done: authored `scripts/golden-fixture.test.mjs` — six fixture-root-parameterized checks (phase-lint PASS byte-for-byte + BLOCKED, envelope valid/invalid through `schema-runtime.mjs`, run-log Result grammar with the 2026-09-18 cutoff, doc cross-references, audit-target traps) plus the AC4 tamper case over a temp copy; 9 tests, all green under `node --test` and `bun test`
+- Remains: P4 Hardening & PR
+- Gotchas: the suite imports `scripts/schema-runtime.mjs` at module scope, so a missing `packages/agentic-workflow-schema/dist/` fails the whole file loudly naming the build step — the intended fail-closed precondition (PE-010). `bun scripts/golden-fixture.test.mjs` is refused by bun ("Cannot use test outside of the test runner"), exactly like the rest of the root family; the bun-compatible form is `bun test scripts/golden-fixture.test.mjs` (green). The `runLogGrammar` cut-off accepts `invented <k>` as either `none` or a digit count and `shape` as `ok` or a lowercase fail-code, per D-55-6
+- Files: `scripts/golden-fixture.test.mjs`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
+- Next: P4 — Hardening & PR

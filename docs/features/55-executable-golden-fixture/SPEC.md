@@ -732,13 +732,13 @@ Layer: `docs`. Done-when: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → ≤ 150, a
 
 Layer: `config/infra`. Done-when: `node --test scripts/golden-fixture.test.mjs` → exit 0.
 
-- [ ] Author `scripts/golden-fixture.test.mjs` with the read-only fixture-root helpers every check shares (ED-55-2; O3, O13)
-- [ ] Assert in `scripts/golden-fixture.test.mjs` the phase-lint PASS case byte-for-byte and the BLOCKED case (PE-001, PE-002; O3)
-- [ ] Assert in `scripts/golden-fixture.test.mjs` the envelope pair through `scripts/schema-runtime.mjs` — valid accepted, invalid rejected (PE-009, PE-010; O4)
-- [ ] Assert in `scripts/golden-fixture.test.mjs` the run-log Result grammar over `docs/workflow/GOLDEN_FIXTURE.md` with the 2026-09-18 cutoff, one grandfathered accept, and one synthetic reject (D-55-6; O5)
-- [ ] Assert from `scripts/golden-fixture.test.mjs` that `docs/workflow/GOLDEN_FIXTURE.md` carries its fixture pointer and names only fixture paths that exist (O6)
-- [ ] Assert from `scripts/golden-fixture.test.mjs` the audit-target trap invariants under `scripts/fixtures/golden-fixture/audit-target/` (O7)
-- [ ] Assert in `scripts/golden-fixture.test.mjs` the tamper case — a temp copy with one mutated byte fails, naming the mutated path (AC4, Expectation 2; O8)
+- [x] Author `scripts/golden-fixture.test.mjs` with the read-only fixture-root helpers every check shares (ED-55-2; O3, O13) — evidence: `runPhaseLint`/`showPath`/`copyTree`/`withTempDir` plus the six root-parameterized checks; writes only to `fs.mkdtempSync(os.tmpdir())`
+- [x] Assert in `scripts/golden-fixture.test.mjs` the phase-lint PASS case byte-for-byte and the BLOCKED case (PE-001, PE-002; O3) — evidence: `phaseLintPass`/`phaseLintBlocked`, both green
+- [x] Assert in `scripts/golden-fixture.test.mjs` the envelope pair through `scripts/schema-runtime.mjs` — valid accepted, invalid rejected (PE-009, PE-010; O4) — evidence: `envelopeValidity`
+- [x] Assert in `scripts/golden-fixture.test.mjs` the run-log Result grammar over `docs/workflow/GOLDEN_FIXTURE.md` with the 2026-09-18 cutoff, one grandfathered accept, and one synthetic reject (D-55-6; O5) — evidence: `runLogGrammar`/`resultVerdict`; 43 committed rows read, 0 post-cutoff, synthetic accept+reject paths asserted
+- [x] Assert from `scripts/golden-fixture.test.mjs` that `docs/workflow/GOLDEN_FIXTURE.md` carries its fixture pointer and names only fixture paths that exist (O6) — evidence: `crossReferences` (doc + `CLAUDE.md` + `docs/workflow/README.md`)
+- [x] Assert from `scripts/golden-fixture.test.mjs` the audit-target trap invariants under `scripts/fixtures/golden-fixture/audit-target/` (O7) — evidence: `auditTargetTraps`
+- [x] Assert in `scripts/golden-fixture.test.mjs` the tamper case — a temp copy with one mutated byte fails, naming the mutated path (AC4, Expectation 2; O8) — evidence: the AC4 test asserts the failure message names `expected/phase-lint-toy-plan.txt` and the violated snapshot assertion, and the committed snapshot is unchanged
 
 #### P4 — Hardening & PR
 
