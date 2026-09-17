@@ -744,14 +744,14 @@ Layer: `config/infra`. Done-when: `node --test scripts/golden-fixture.test.mjs` 
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
-- [x] Re-run the project's full verification gate (commands + exit codes pasted) — evidence: `npx skills add . --list` exit 0; `node scripts/check-skill-context.mjs` → `PASS context budgets: 40 skills`; `node --test scripts/*.test.mjs` → exit 0, 496 pass / 0 fail; `node --test scripts/golden-fixture.test.mjs` → exit 0, 9 pass / 0 fail; `bun test scripts/golden-fixture.test.mjs` → 9 pass / 0 fail
-- [x] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause) — evidence: `unshare -rn node --test scripts/golden-fixture.test.mjs` (new network namespace, no connectivity) → exit 0, 9 pass / 0 fail; `grep -nE "Date\.now|Math\.random|fetch\(|https?://" scripts/golden-fixture.test.mjs` → no matches
-- [x] Pending-docs check: `git status --porcelain -- docs/` → empty — evidence: empty immediately after the `docs(roadmap): mark 55 done (P4)` commit, i.e. no doc edit is left uncommitted at close-out
-- [x] Set the roadmap row status to `done` and commit the flip — evidence: `docs(roadmap): mark 55 done (P4)`
-- [x] `git push` — evidence: `git push` → `62e22d7e..72700419 feat/55-executable-golden-fixture -> feat/55-executable-golden-fixture`, exit 0
-- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat — evidence: the branch's PR opened at the design turn is [#240](https://github.com/gtrabanco/agentic-workflow/pull/240) (`gh pr create` refused with "a pull request for branch … already exists"); its title and body were refreshed to the delivery description through the REST API after `gh pr edit` failed on the repo's classic-Projects GraphQL (environmental, not a permission error)
-- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)` — evidence: row 55 reads `done · [#240](https://github.com/gtrabanco/agentic-workflow/pull/240)`
-- [x] Commit `docs: link PR #<n>` and push — evidence: `docs: link PR #240`
+- [x] Re-run the project's full verification gate (commands + exit codes pasted) — evidence: the P4 entry in the unit progress ledger records every command and its exit code (skills CLI, context budgets, root suite, the new suite) — all green
+- [x] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause) — evidence: the suite ran green inside a fresh network namespace and the determinism grep returns no matches
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty — evidence: empty right after the `done` flip commit
+- [x] Set the roadmap row status to `done` and commit the flip — evidence: the P4 flip commit
+- [x] `git push` — evidence: push exit 0, branch remote-current
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat — evidence: PR 240 (opened at the design turn; title and body refreshed through the REST API after the local edit command hit the classic-Projects GraphQL deprecation)
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)` — evidence: row 55 carries the PR link
+- [x] Commit `docs: link PR #<n>` and push — evidence: the link commit is the branch head
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
