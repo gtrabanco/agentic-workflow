@@ -471,3 +471,81 @@ D-31-1…D-31-8 is unchanged.
 | README has no version cells: the "skills tables" are the per-stage description tables (`## The skills`) — `design-feature` (table cell), `review-spec`, `review-plan` (table cells), `pre-execution-review` (narrative-only, `user-invocable: false`) — and `bump-skill` keeps them accurate (update-not-rewrite) — AC14's README leg is a description-accuracy walk, not a version read | repository | `README.md:84-147` (per-stage tables; `pre-execution-review` narrative at `:89`); `skills/bump-skill/SKILL.md` ("The `README.md` skills and model tables are accurate"; "prefer updating over rewriting") | `4cf755ab` @ 2026-09-17 | current | proven | — |
 | Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-5` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `4cf755ab`) | `4cf755ab` @ 2026-09-17 | current | proven | — |
 | Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the 31-spec-4 batch — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batch `31-spec-4`, 2026-09-17) | — | current | proven | — |
+
+## 2026-09-17 — Product repair batch (design-feature, artifact revision `31-spec-6`)
+
+Trigger: `spec-review-31-6` returned `SPEC-REVIEW-FAIL` (failed checks C8, C9;
+12/14 pass) with N31-009 (medium) + N31-010 (medium) + N31-011 (info), all
+`product` — one batch over the whole set, repair owner `design-feature`,
+user-commissioned as "repair N31-009 + N31-010 + N31-011: make AC2's
+contract-prose check discriminate (grep the description for a new-line
+fragment such as material = \`medium\`/report-note, not the bare word medium,
+or move the clause to read-verified), cover REPAIR.md §4's second sentence in
+AC7 (grep -n \"no cycle cap converts\"
+skills/design-feature/references/REPAIR.md` exits non-zero), and fix the
+Spec-lint AC1 classification" — one repair batch for N31-009 + N31-010 +
+N31-011.
+
+**Cycle authorization (D-31-7).** This is the spec stage's fourth consecutive
+unconverged cycle in the window the carrier amendment opened
+(`spec-review-31-4` FAIL #1 → `31-spec-4` batch → `spec-review-31-5` FAIL #2 →
+`31-spec-5` batch → `spec-review-31-6` FAIL #3 → this batch). D-31-7 keys a
+further cycle to explicit user instruction; the commission quoted above is
+that instruction, issued in direct answer to the `spec-review-31-6` receipt's
+hand-off (which named this exact command and batch). Under the live POLICY §4
+the planning loop is still uncapped — that is the defect this unit fixes — so
+the cycle is lawful on both readings; the window's `CONVERGENCE-ANOMALY` block
+was printed on entry to cycle 2 and is reproduced in the `spec-review-31-6`
+receipt — POLICY §4's anomaly rule scopes to second-cycle entry, so no new
+block is due for a user-keyed further cycle. Recorded per REPAIR §4: a repair
+responding to a persisted verdict is never a loop defect.
+
+Repair classes (REPAIR §2):
+
+- **N31-009 — closure completion (autonomous; reviewed product intent
+  unchanged).** AC2's second anchor `grep -n "medium"
+  .../pre-execution-contract.ts` matched the severity enum literal at `:103`
+  (observed: 1 hit, exit 0 at `bccc95fd`) whether or not the finding-record
+  severity description (`:459`, today "`info` is the only immaterial row.")
+  was rewritten — the requirement it was the only anchor for (the description
+  states material = `medium`+; `low` is a report-note) could ship unfulfilled
+  with AC2 green. The anchor is replaced by two greps over the same file whose
+  fragments exist only in the rewritten description: `grep -nE 'material =
+  .medium'` and `grep -n "report-note"`. Both exit 1 at `bccc95fd` (no
+  "material = " and no "report-note" text exists in the file) and turn 0 only
+  when the rewrite lands, so the enum literal can no longer fake a pass; the
+  removal grep (`the only immaterial` → non-zero) is unchanged. The
+  commission's alternative — move the clause to `read-verified` — was not
+  taken: a discriminating command anchor keeps AC2 `(command)` and objective,
+  strictly stronger than a judgement-only walk.
+- **N31-010 — closure completion (In-scope 5 already declared REPAIR.md §4
+  among the shrunk surfaces; only this sentence's criterion was missing).**
+  AC7 gains the removal grep for §4's second unbounded-cycle sentence:
+  `grep -n "no cycle cap converts"
+  skills/design-feature/references/REPAIR.md` exits non-zero. The fragment
+  sits wholly on `:71` ("… and no cycle cap converts its verdict into a dead
+  end."), is unique in the file, and exits 0 with the sentence standing at
+  `bccc95fd` — it matches while the sentence stands and disappears with it,
+  the same discrimination N31-006 gave the other removal greps. The authored
+  cap mirror that replaces the sentence does not contain the fragment, so the
+  grep cannot false-fail the post-shrink state.
+- **N31-011 — mechanical, intent-preserving.** The Spec-lint box's AC
+  classification re-files AC1 into the group its own label declares: the box
+  now reads "AC2–AC3, AC5, AC10–AC12 pure commands; AC1, AC4, AC6–AC9,
+  AC13–AC14 command + `read-verified` where judgement-only". No criterion
+  text changes; every other criterion already matched its group (per the
+  finding's own walk).
+
+No new product decision is taken: the repairs stay inside intent the SPEC
+already records (In-scope items 1 and 5, AC2, AC7, D-31-1/D-31-2); the
+decision set D-31-1…D-31-8 is unchanged.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| `pre-execution-contract.ts` carries the severity enum literal ("info", "low", "medium", "high", "critical",) at `:103` and the finding-record severity description "`info` is the only immaterial row." at `:459`; the bare `grep -n "medium"` over the file hits only `:103` — N31-009's false-green anchor, verified | repository | `sed -n '103p;459p' packages/agentic-workflow-schema/src/pre-execution-contract.ts`; observed `grep -n "medium" packages/agentic-workflow-schema/src/pre-execution-contract.ts` → 1 hit (`:103`), exit 0 | branch head `bccc95fd` @ 2026-09-17 | current | proven | — |
+| The replacement AC2 fragments discriminate: `grep -nE 'material = .medium'` and `grep -n "report-note"` over `pre-execution-contract.ts` both exit 1 today (no "material = " and no "report-note" text exists in the file) and turn 0 only when the rewritten description adds them — a PR cannot satisfy AC2 while the description still reads "`info` is the only immaterial row." | repository | observed `grep -nE 'material = .medium' packages/agentic-workflow-schema/src/pre-execution-contract.ts` → exit 1; `grep -n "report-note" packages/agentic-workflow-schema/src/pre-execution-contract.ts` → exit 1 (at `bccc95fd`) | `bccc95fd` @ 2026-09-17 | current | proven | — |
+| REPAIR.md §4's second unbounded-cycle sentence sits wholly on `:71` ("… and no cycle cap converts its verdict into a dead end."); the fragment "no cycle cap converts" is unique in the file and exits 0 with the sentence standing — the replacement AC7 grep discriminates removal | repository | `grep -n "no cycle cap converts" skills/design-feature/references/REPAIR.md` → `71:` (exit 0, sole hit at `bccc95fd`) | `bccc95fd` @ 2026-09-17 | current | proven | — |
+| Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-6` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `bccc95fd`) | `bccc95fd` @ 2026-09-17 | current | proven | — |
+| Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the earlier batches — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batches `31-spec-4`/`31-spec-5`, 2026-09-17) | — | current | proven | — |
