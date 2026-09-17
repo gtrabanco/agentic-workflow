@@ -204,3 +204,35 @@ SPEC `## Amendments` (`31-spec-5`) and `decisions.md` §"Product repair batch
 R31-01/R31-02/R31-03 stay `open` for `plan-feature`'s re-derivation batch
 (plan re-cut + `ACCEPTANCE.md` re-freeze once a fresh `SPEC-REVIEW-PASS`
 receipt exists).
+
+---
+
+## Re-review (`spec-review-31-6`, 2026-09-17)
+
+Cycle-3 independent re-review of the Product half the `31-spec-5` repair batch
+rewrote — the route `spec-review-31-5` named for N31-006/N31-007/N31-008. Fresh
+context; this conversation never authored or edited the Product half, its
+ledgers, or its acceptance manifest → `contextClean: true`.
+
+Snapshot `95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa` @
+source revision `bccc95fd2debbce4748668f80f1b490c56178990` (`spec-product-v1`
+digest `98fa0ae18bd44f27f344854e5e5a5a6b6df9b350f6c2b22aa7e8c599710c1272`,
+43682 bytes). Verdict: `spec-review-fail` — 12/14 checks pass; C8 carries two
+material `product` rows (N31-009, N31-010) and C9 one open `info` row
+(N31-011). N31-006/N31-007/N31-008 are verified repaired at `31-spec-5`;
+N31-004/N31-005 stay `resolved` at `31-spec-4`; N31-001/N31-002/N31-003 stay
+`resolved` at `31-spec-2`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-009 | spec | medium | product | 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa | AC2's second command cannot verify the requirement it is the only anchor for. `grep -n "medium" packages/agentic-workflow-schema/src/pre-execution-contract.ts` already matches the severity enum literal at line 103 (`"info", "low", "medium", "high", "critical",`) and therefore exits 0 whether or not the finding-record severity description is rewritten. AC2 claims the hit is "the finding-record severity description stating the new line", but the bare command cannot distinguish the enum hit from a description hit; the criterion is labelled `(command)` and is not objective. The first AC2 grep (`the only immaterial`) discriminates for the phrase's removal but proves nothing about the replacement text, so a PR can satisfy AC2 while the schema's field description still does not state material = `medium`+ — the declared requirement "the schema's own prose matches the predicate" ships unfulfilled with every criterion green. | SPEC.md `### Acceptance criteria` AC2; `packages/agentic-workflow-schema/src/pre-execution-contract.ts:103` (severity enum literal, already contains `medium`) and `:459` (finding-record severity description, today "`info` is the only immaterial row."); observed `grep -n "medium" packages/agentic-workflow-schema/src/pre-execution-contract.ts` → 1 hit (line 103), exit 0 at HEAD `bccc95fd`; `grep -rn "the only immaterial" …/src/` → exit 0 (three hits, `:101,:459`) — removal-only | open | — | — |
+| N31-010 | spec | medium | product | 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa | AC7 declares `design-feature/references/REPAIR.md` §4 among the surfaces losing "the unbounded-cycle sentences" (In-scope 5) but verifies only one of that section's two. `grep -rn "More cycles stay allowed" skills/` covers `REPAIR.md:64-65`; the second unbounded-cycle sentence at `REPAIR.md:71` — "no cycle cap converts its verdict into a dead end." — is matched by no criterion (AC7's other cap grep `no cap converts a verdict into a` is scoped to `POLICY.md` only). A PR that removes the first sentence and leaves the second ships a documented rule still asserting the loop is uncapped while AC7 is green — the same false-green class N31-004/N31-006 closed for the other declared surfaces. | SPEC.md `#### In scope` item 5; SPEC.md `### Acceptance criteria` AC7 (the `skills/` grep + the POLICY-scoped `no cap converts` grep); `skills/design-feature/references/REPAIR.md:64-65,71`; SPEC.md `## Amendments` E5 (the `31-plan-2` design names both REPAIR §4 sentences for replacement); observed `grep -n "no cycle cap converts" skills/design-feature/references/REPAIR.md` → exit 0 with the sentence standing at HEAD `bccc95fd` | open | — | — |
+| N31-011 | spec | info | product | 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa | The Spec-lint product box gives AC1 an incompatible classification from AC1's own label: the box reads "AC1–AC3, AC5, AC10–AC12 pure commands" while AC1 is labelled `(command + read-verified)`. Every other criterion matches its group (AC2/AC3/AC5/AC10–AC12 pure command; AC4/AC6–AC9/AC13–AC14 command + read-verified), so AC1 is the single misfiled entry. Non-blocking: AC1's own label already carries the read-verified requirement, so the outcome is unaffected. | SPEC.md `## Spec-lint (mechanical — presence checks only)` product box (`AC1–AC3, AC5, AC10–AC12 pure commands; AC4, AC6–AC9, AC13–AC14 command + read-verified where judgement-only`); SPEC.md AC1 label (line 430: `(command + read-verified)`) | open | — | — |
+
+The two `medium` rows are acceptance-coverage defects in the criteria the
+`31-spec-5` batch added or re-aimed: N31-006's discriminating-fragment repair is
+verified correct for the five greps it touched, but the same discrimination
+standard exposes AC2's added `grep -n "medium"` anchor and AC7's uncovered
+second REPAIR §4 sentence. Both are `product` class → repair owner
+`design-feature 31-planning-review-materiality`, one batch over the whole set;
+N31-011 (`info`) routes to the same owner without blocking.

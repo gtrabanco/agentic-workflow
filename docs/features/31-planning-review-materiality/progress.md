@@ -1544,3 +1544,137 @@ scripts/pre-execution-snapshot.mjs verify --stage spec --unit
 from the new bytes (observedDigest `b9d4d6f6…`), reporting exactly the
 declared by-design state — `fresh: false`, "bound artifact bytes moved since
 the receipt", `changedPaths: [SPEC.md]`.
+
+# Review `spec-review-31-6` — cycle-3 re-review of the `31-spec-5` Product half (2026-09-17)
+
+Cycle-3 independent re-review of the Product half the user-keyed `31-spec-5`
+repair batch rewrote (`spec-review-31-5` → N31-006 + N31-007 + N31-008). Fresh
+context; this conversation never authored or edited the Product half, its
+ledgers, or its acceptance manifest. Cycle authorization: D-31-7's user-keyed
+third cycle, whose commission is quoted in `decisions.md` §"Product repair
+batch (`31-spec-5`)" and in the `31-spec-5` section of `planning-findings.md`.
+
+Snapshot `95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa` @
+source revision `bccc95fd2debbce4748668f80f1b490c56178990` (`spec-product-v1`
+digest `98fa0ae18bd44f27f344854e5e5a5a6b6df9b350f6c2b22aa7e8c599710c1272`,
+43682 bytes); handoff label `31-spec-5`. Verdict: `spec-review-fail` — 12/14
+checks pass; C8 carries two material `product` rows (N31-009, N31-010); C9 one
+open `info` row (N31-011). N31-006/N31-007/N31-008 verified repaired at
+`31-spec-5`.
+
+## Checks — one result each
+
+Snapshot `95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa` @
+source revision `bccc95fd2debbce4748668f80f1b490c56178990`.
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Every in-scope item names an observable outcome and its AC anchor: 1→AC1/AC2/AC3, 2→AC4, 3→AC5/AC7, 4→AC6, 5→AC7, 6→AC8/AC9, 7→AC10/AC11/**AC14**, 8→AC12; the allowed-set groups→AC13. N31-007's gap (In-scope 7's four skill bumps + README cells observed by no criterion) is closed: AC14 makes the bump observable via the pathspec-limited `version:` diff + CHANGELOG/README walk |
+| C2 | Actors and roles | pass | 5 derived roles (human owner / author turn / reviewer turn / executor turn / drivers & sensors) × 5 capabilities (C1–C5); every cell explicit `allowed`/`denied`; no unlisted role; the role blurb ("drivers & sensors validate and refuse; they never author findings") matches every cell |
+| C3 | Entity closure | pass | E1–E3 each resolve create/read/update/delete/state-transitions to a named surface + test; every `n/a` carries a reason (append-only ledger; derived machine/cycle value); zero blank rows |
+| C4 | Limits and failure states | pass | Limit = the two-cycle cap; failure states resolved — unconverged loop → stage-scoped human stop (spec `NEEDS-DESIGN` per `VERDICTS_BY_STAGE.spec`; plan refusal + `design-feature` route), mislabeled defect → `medium` minimum, wording-only misroute → recorded determination + rotation, vacuous pin → floor + discrimination leg; size `M` |
+| C5 | Scope and non-goals | pass | 7 non-goals, each naming the preserved contract, the owning feature (#159, code side), or an explicit exclusion (new vocabulary, retroactive rows, unrecorded receipt binding, superseded plan set, aspirational citation, tutorial edit); nothing excluded by silence |
+| C6 | Integration closure | pass | `docs/CAPABILITIES.md` is the unseeded template (placeholders only), so the 12-row derived inventory is recorded and walked one row per subsystem; the "Skill reference docs" Test matches the repo (AC7's greps verify the shrink; `check-skill-context.mjs` checks budgets; `normative-drift` guards versioned blocks, not the materiality prose) |
+| C7 | Expectation sweep | pass | 19 rows (≥ 10 for `M`), forced to exactly one resolution each with a pointer: 16 `in-scope`, 3 `out-of-scope`, zero unresolved |
+| C8 | Acceptance objectivity | finding | AC2's added second grep cannot verify its own assertion: `grep -n "medium" …/pre-execution-contract.ts` already matches the severity enum literal (`:103`) so it exits 0 whether or not the finding-record severity description is rewritten — the "states the new line" clause is unverifiable by a command labelled `(command)` → N31-009. AC7 verifies only one of the two unbounded-cycle sentences In-scope 5 declares leaving `REPAIR.md` §4 (`More cycles stay allowed` at `:64`; "no cycle cap converts its verdict into a dead end" at `:71` is matched by no criterion) → N31-010. N31-006's POLICY-fragment repair is verified discriminating (both fragments exit 0 at HEAD) |
+| C9 | Internal contradiction | finding | The Spec-lint product box lists AC1 among the "pure commands" (`AC1–AC3, AC5, AC10–AC12 pure commands`) while AC1's own label is `(command + read-verified)`; every other criterion matches its group, so AC1 is the single misfiled entry → N31-011. Materiality, cap, stage-scoped exit, wording-only and the four preserved contracts are otherwise consistent across Goal/Business goals/Scope/D-31-x/E1–E3 |
+| C10 | Repository contradiction | finding | The half's claims match the repository: `LEDGERS.md:93` "`info` is the only immaterial one" (sole hit); both `CHECKS.md` "Material = anything above `info`"; `POLICY.md:60-61,83` and `REPAIR.md:64-65,71` unbounded-cycle sentences; `pre-execution.ts:1059` `severity !== "info"`; `FINDING_SPEC` fields lack `reproducer`; `PRE_EXECUTION_FRESHNESS_CODES` = 10; `VERDICTS_BY_STAGE.spec` has `needs-design`, plan does not; four skill versions 2.2.1/1.7.1/1.6.1/3.4.0; `git diff a400b978..HEAD` touches only this unit's docs + `ROADMAP.md`, so every carrier observed at `a400b978` still holds. The one inconsistency (In-scope 5's shrink declaration vs AC7's coverage) is filed under C8 as N31-010, not here |
+| C11 | Evidence integrity | pass | Every `decisions.md` evidence row resolves to a `proven`/`decision` row at `current` freshness with a location; no `unknown`/`drifted`/`stale`; the 31-spec-5 batch's new rows (POLICY fragments, four skill versions, CHANGELOG/README, receipt-state-at-authoring) are `current`. N31-008's three absence greps were re-run and remain exit 1 today, confirming the authored-remainder framing |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` with an empty table; D-31-5's AD-008 reconciliation is owner-routed (`resolve-repository-state`) behind a conditional trigger, not an open product choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, architecture, or validator: AC anchors name carriers and frozen identifiers as acceptance surfaces without assigning phases/tasks (the re-cut plan set is declared superseded and re-cut) |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: README citation (AC12), bumps/pins (AC9/AC10/AC11/AC13/AC14) and the bibliography are in-unit; the AD-008 amendment is conditional and owner-routed |
+
+Findings: 3 (material open: 2) — N31-009 (`medium`, product), N31-010
+(`medium`, product), N31-011 (`info`, product) in `planning-findings.md`.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-6 · Snapshot: 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: bccc95fd2debbce4748668f80f1b490c56178990 · Artifact revision: bccc95fd2debbce4748668f80f1b490c56178990
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T14:52:00Z/2026-09-17T15:01:00Z · Findings: 3 (material open: 2)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 43682 · digest 98fa0ae18bd44f27f344854e5e5a5a6b6df9b350f6c2b22aa7e8c599710c1272 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 12/14 pass (C8 two material rows, C9 one info row); falsification CONFIRMED-GAPS; N31-009/N31-010 are `medium` and block, N31-011 routes to design-feature without blocking
+```
+
+Artifact-revision notes:
+
+- The design handoff names the authoring label `31-spec-5` (SPEC `## Design
+  status`; decisions.md repair-batch header). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `bccc95fd…` — the same reconciliation prior receipts
+  recorded; the label stays recorded here.
+- Reviewed bytes were committed at `bccc95fd` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held; no reviewed
+  byte changed by this turn.
+- `spec-review-31-5` is superseded by design (its bound Product bytes moved at
+  `31-spec-5`); no other receipt's lineage is affected.
+
+CONVERGENCE-ANOMALY (POLICY §4, D-31-7) — this review is the spec stage's third
+consecutive unconverged cycle of the window the carrier amendment opened
+(`spec-review-31-4` FAIL #1 → `31-spec-4` → `spec-review-31-5` FAIL #2 →
+`31-spec-5` → this FAIL #3). The window's block was printed on cycle-2 entry and
+is reproduced in the `spec-review-31-5` receipt; this re-review is the
+user-keyed third cycle D-31-7/§4 sanctions, so no new block is owed on entry.
+Reported here for the cycle record; it grants no PASS and is not a stop:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-006/N31-007/N31-008 (repaired) / N31-009, N31-010, N31-011 (new)
+- Snapshots: b9cf60a8e4e64bc197b7d1ced093b8875d43055392f8c59d5dc7555d14d3b10a → 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa (artifactRevisionId fef66d09 → bccc95fd)
+- Missed: AC2's `grep -n "medium"` anchor is non-discriminating (already satisfied by the enum literal); AC7 leaves REPAIR.md §4's second unbounded-cycle sentence uncriterioned; the Spec-lint box misfiles AC1
+```
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-6",
+    "verdict": "spec-review-fail",
+    "snapshot": "95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — the write landed, `structural.fresh: true`; `current` is false because
+the verdict is a FAIL, which is the expected emit result and routes per the
+verdict.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: 95d1551379b7573c2577a63e2be978a11b782d131de5a783b65b81223b681cfa · Artifact revision: bccc95fd2debbce4748668f80f1b490c56178990
+- Failed checks: C8, C9
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | N31-009 | medium | product | C8 | AC2's second command `grep -n "medium" …/pre-execution-contract.ts` already matches the severity enum literal (`:103`), so it exits 0 whether or not the finding-record severity description is rewritten — the "states the new line (material = `medium`+; `low` is a report-note)" assertion is unverifiable, and the schema prose can ship not stating the predicate while AC2 is green | SPEC AC2; `pre-execution-contract.ts:103` (enum literal already contains `medium`), `:459` (description today "`info` is the only immaterial row."); observed `grep -n "medium"` → 1 hit (line 103) at `bccc95fd` | verified |
+  | N31-010 | medium | product | C8 | AC7 declares REPAIR.md §4 among the surfaces losing "the unbounded-cycle sentences" (In-scope 5) but verifies only "More cycles stay allowed" (`:64`); the second unbounded-cycle sentence "no cycle cap converts its verdict into a dead end" (`:71`) is matched by no criterion (AC7's `no cap converts…` grep is scoped to POLICY.md), so a PR can leave §4 asserting an uncapped loop with every AC green | In-scope 5; AC7; `skills/design-feature/references/REPAIR.md:64-65,71`; SPEC `## Amendments` E5 names both sentences for replacement; observed `grep -n "no cycle cap converts" …/REPAIR.md` → exit 0 at `bccc95fd` | verified |
+  | N31-011 | info | product | C9 | The Spec-lint product box classifies AC1 among the "pure commands" while AC1's own label is `(command + read-verified)` — incompatible classifications for one criterion (non-blocking; AC1's label already carries the read-verified requirement) | SPEC `## Spec-lint` product box; SPEC AC1 label (line 430) | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+- Parent state: n/a (spec stage roots its own lineage)
+```
