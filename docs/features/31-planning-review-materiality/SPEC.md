@@ -11,8 +11,11 @@ SPECs and plans) with the materiality floor fix #159 already proved and
 test-pinned on the code side: a `low` planning finding becomes a **report-note**
 (persisted, visible, non-blocking; material = `medium`+; the anti-deflating rule
 carries over verbatim), the spec/plan repair loop gets a **hard two-cycle cap**
-whose unconverged end is `NEEDS-DESIGN` (a third cycle never starts without
-explicit user instruction, mirroring `review-change`), and a POLICY §3
+whose unconverged end is the stage's human stop — `NEEDS-DESIGN` where the
+verdict vocabulary sanctions it (spec stage), the orchestrator's refusal +
+`design-feature` routing at the plan stage (D-31-8) — a third cycle never
+starts without explicit user instruction (mirroring `review-change`), and a
+POLICY §3
 **wording-only** determination routes a cosmetic repair batch without a full
 snapshot re-review (determination recorded; `artifactRevisionId` still
 rotates). Basis: issue [#171](https://github.com/gtrabanco/agentic-workflow/issues/171).
@@ -114,7 +117,9 @@ review honesty, not a market:
 - Cut the cost of a planning review cycle: a taste-level finding no longer
   buys a repair batch + full re-review of an unchanged-in-substance snapshot.
 - Make loop termination structural: an unconverged planning loop asks the
-  human (`NEEDS-DESIGN`) instead of cycling by default.
+  human instead of cycling by default — `NEEDS-DESIGN` at the spec stage, the
+  orchestrator's refusal + `design-feature` routing at the plan stage
+  (D-31-8).
 - Keep every honesty property the workflow already pins: findings stay visible,
   mislabeled defects still block, dismissal still needs counter-evidence, and
   every repair write still rotates the artifact revision.
@@ -334,7 +339,7 @@ block (user confirms; upsert-safe).
 | Snapshot/verify machinery (`scripts/pre-execution-snapshot.mjs` + `PRE_EXECUTION_FRESHNESS_CODES`) | yes | **Primary carrier**: verify distinguishes wording-only movement from material movement; determination recorded; rotation enforced | `pre-execution-sensor` + `pre-execution-attribution` suites (AC4) |
 | Orchestrator decider + sensor (`decideWorkflowAction`, `WORKFLOW_TRANSITION_TABLE`, `scripts/workflow-status.mjs`) | yes | **Primary carrier**: cap refusal past two consecutive unconverged cycles; human route named; table rows `review-spec`/`review-plan` otherwise unchanged | schema transition vectors (AC5) + `workflow-status-pre-execution` suite |
 | Phase-lint (`scripts/phase-lint.mjs`, rule owner `skills/phase-contract/SKILL.md`) | yes | **Plan-layer carrier**: the re-cut plan set expresses loop rules as machine-checkable done-whens and passes the linter at the PR head | `bun scripts/phase-lint.mjs` on the unit's plan (AC6) |
-| Skill reference docs (`skills/*/references/`) | yes | Shrink-only: the computable sentences leave `POLICY.md` §3/§4, both `CHECKS.md`, both `OUTPUT.md`, `LEDGERS.md` §3, `REPAIR.md` §4; the judgment remainder stays | AC7 greps + `normative-drift` + context budgets |
+| Skill reference docs (`skills/*/references/`) | yes | Shrink-only: the computable sentences leave `POLICY.md` §3/§4, both `CHECKS.md`, both `OUTPUT.md`, `LEDGERS.md` §3, `REPAIR.md` §4; the judgment remainder stays | AC7 greps (removals across `POLICY.md`/both `CHECKS.md`/both `OUTPUT.md`/`LEDGERS.md`/`REPAIR.md` + the kept remainder) + context budgets (`bun scripts/check-skill-context.mjs`, AC10); `normative-drift` guards the versioned blocks the shrink must not disturb, not the materiality prose |
 | Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | Persists `low` report-notes (append-only contract unchanged); row shape, writers, resolvers unchanged | `ledger-ownership` + `ledger-provenance` + `pre-execution-quality` suites |
 | Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` planning pins re-aim at the code carriers; existing assertions keep strength | AC8 + AC9 (no-weakening walk) |
 | Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | Re-bundled after the last `skills/` edit, from the package that owns the script | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC11) |
@@ -465,11 +470,24 @@ Command-checkable at the PR head unless labelled `read-verified`.
   run-and-paste `pre-execution-snapshot.mjs verify` exit codes (machine
   done-whens, not prose recitation) (`read-verified` against the re-cut plan).
 - **AC7** (command + `read-verified`): prose shrinks to the non-computable
-  remainder — `grep -rn "More cycles stay allowed" skills/` exits non-zero;
+  remainder — the machine-owned sentences leave **every** declared surface:
+  `grep -rn "More cycles stay allowed" skills/` exits non-zero;
   `grep -n "no cap converts a verdict into a dead end"
   skills/pre-execution-review/references/POLICY.md` exits non-zero;
   `grep -n "Entering a \*\*second\*\* cycle is allowed"
-  skills/pre-execution-review/references/POLICY.md` exits non-zero; the
+  skills/pre-execution-review/references/POLICY.md` exits non-zero;
+  `grep -rn "Material = anything above"
+  skills/review-spec/references/CHECKS.md
+  skills/review-plan/references/CHECKS.md` exits non-zero (the materiality
+  definition leaves both CHECKS files);
+  `grep -rnE "re-review of the new snapshot|re-reviews the new"
+  skills/review-spec/references/OUTPUT.md
+  skills/review-plan/references/OUTPUT.md` exits non-zero (the
+  re-review-for-every-batch mandate leaves both verdict-route tables and both
+  closing hand-off blocks);
+  `grep -n "only immaterial"
+  skills/pre-execution-review/references/LEDGERS.md` exits non-zero ("`info`
+  is the only immaterial one" leaves §3); the
   remainder stays: `grep -n "third cycle never"
   skills/pre-execution-review/references/POLICY.md` exits zero,
   `grep -niE "report-note"
@@ -594,14 +612,16 @@ Product boxes:
 
 ## Design status
 
-`designed` — carrier amendment applied (D-31-6 + D-31-7/D-31-8): capability
-closure complete (zero blank rows), Spec-lint product boxes all PASS, readiness
-preflight `READY-FOR-REVIEW` at artifact revision **`31-spec-3`** (2026-09-17 —
-see `## Amendments`). This write moves the Product half's bound bytes, so the
-`spec-review-31-3` receipt goes `stale-artifact-content` — authorized by the
-ruling as a carrier change: the spec stage reopens, the next `review-spec` run
-is cycle 1 (D-31-7), and `plan-feature` re-cuts the plan set (`31-plan-1/2`
-superseded, never repaired) only on a current `SPEC-REVIEW-PASS` receipt.
+`designed` — repair batch for `spec-review-31-4` applied (N31-004 + N31-005,
+one batch): capability closure complete (zero blank rows), Spec-lint product
+boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
+**`31-spec-4`** (2026-09-17 — see `## Amendments`). This write moves the
+Product half's bound bytes, so the `spec-review-31-4` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run is cycle 2 of
+the window D-31-7 opened at the carrier amendment (the `CONVERGENCE-ANOMALY`
+block preceded this batch's edits — POLICY §4), and `plan-feature` re-cuts the
+plan set (`31-plan-1/2` superseded, never repaired) only on a current
+`SPEC-REVIEW-PASS` receipt.
 ---
 
 ## Engineering half
@@ -1053,3 +1073,31 @@ moved — `stale-artifact-content`, verified post-write): the spec stage reopens
 and the next `/review-spec` run is cycle 1 (D-31-7). The Engineering half
 keeps its superseded bytes untouched (`31-plan-2`) — `plan-feature` re-cuts it
 after a fresh PASS receipt.
+
+### `31-spec-4` — repair batch for `spec-review-31-4` (N31-004 + N31-005)
+
+User-commissioned repair batch (2026-09-17), commissioned as "repair N31-004
++ N31-005: extend AC7 to grep both CHECKS.md and both OUTPUT.md for the
+removed materiality/loop sentences and LEDGERS.md for the removal of '`info`
+is the only immaterial one', correct the Integration-closure row's Test
+claim, and stage-scope the NEEDS-DESIGN wording in Goal + Business goals".
+Trigger: `spec-review-31-4` returned `SPEC-REVIEW-FAIL` (failed check C8) with
+one material `product` row (N31-004) plus one open `info` row (N31-005) — one
+batch over the whole set, repair owner `design-feature`. Entering the spec
+stage's second repair/re-review cycle of the window D-31-7 opened, the
+`CONVERGENCE-ANOMALY` block was printed before any edit (POLICY §4 — printed
+and routed, never a stop; a repair responding to a persisted verdict is never
+a loop defect). Repair classes (REPAIR §2):
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-004 | product · medium | AC7's removal grep set now covers every surface In-scope item 5 declares shrunk: both `CHECKS.md` ("Material = anything above"), both `OUTPUT.md` (the re-review-for-every-batch mandate — the FAIL verdict-route rows and the closing hand-off blocks), and `LEDGERS.md` §3 ("`info` is the only immaterial one"); the kept-side greps are unchanged. The Integration-closure row "Skill reference docs" now states its Test truthfully: AC7's greps verify the shrink; `check-skill-context.mjs` checks budgets (AC10); `normative-drift` guards the versioned blocks the shrink must not disturb — it never pinned the materiality prose. Repair class: **closure completion** (reviewed product intent unchanged — In-scope item 5 already declared these surfaces shrunk). | AC7 + Capability closure Integration-closure row "Skill reference docs" |
+| N31-005 | product · info | The two summary instances of the unconverged-loop end are stage-scoped to the machine map, in substance D-31-8's wording: the Goal names `NEEDS-DESIGN` where the verdict vocabulary sanctions it (spec stage) and the orchestrator's refusal + `design-feature` routing at the plan stage; Business-goals bullet 2 carries the same scoping. D-31-2's "(stage-scoped by D-31-8)" pointer is unchanged. Repair class: **mechanical, intent-preserving**. | `## Goal`; `### Business goals` bullet 2 |
+
+Artifact revision rotates `31-spec-3` → **`31-spec-4`** for the whole touched
+Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
+`progress.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded
+`31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
+`spec-review-31-4` receipt is superseded by design (bound Product bytes moved
+— `stale-artifact-content`): the next `/review-spec` run is cycle 2 (D-31-7).

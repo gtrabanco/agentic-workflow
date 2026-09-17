@@ -1144,3 +1144,129 @@ receipt write, before this report:
 `structural.fresh: true` — the mark landed (digest matches). `current: false`
 with `verdictIsPass: false` is the sanctioned emit result for a FAIL (exit 4):
 the verdict is the emit result, and the route is the repair owner below.
+
+## Repair batch `31-spec-4` — design-feature authoring turn (2026-09-17)
+
+Commissioned: "repair N31-004 + N31-005: extend AC7 to grep both CHECKS.md and
+both OUTPUT.md for the removed materiality/loop sentences and LEDGERS.md for
+the removal of 'info is the only immaterial one', correct the
+Integration-closure row's Test claim, and stage-scope the NEEDS-DESIGN wording
+in Goal + Business goals." One batch over the whole open findings set of
+`spec-review-31-4` (C8: N31-004 medium product; N31-005 info product), repair
+owner `design-feature`. Cycle state: the carrier-amendment re-review
+(`spec-review-31-4`) was cycle 1 of the window D-31-7 opened and did not
+converge, so this repair enters cycle 2 — the `CONVERGENCE-ANOMALY` block was
+printed before any edit (POLICY §4; recorded in `decisions.md`).
+
+Edits (evidence rows in `decisions.md` §"Product repair batch (design-feature,
+artifact revision `31-spec-4`)"):
+
+- SPEC.md `### Acceptance criteria` AC7 — the removal grep set now covers
+  every surface In-scope item 5 declares shrunk: both `CHECKS.md`
+  (`grep -rn "Material = anything above"`), both `OUTPUT.md`
+  (`grep -rnE "re-review of the new snapshot|re-reviews the new"` — the FAIL
+  verdict-route rows and the closing hand-off blocks), and `LEDGERS.md` §3
+  (`grep -n "only immaterial"`); the kept-side greps are unchanged. Every new
+  grep target was verified to exist verbatim at branch head `c5a6e173`
+  (sole-hit evidence rows).
+- SPEC.md Capability closure Integration-closure row "Skill reference docs" —
+  the Test cell now names the true verifiers: AC7's greps +
+  `check-skill-context.mjs` budgets (AC10); `normative-drift` is re-described
+  truthfully (guards the versioned blocks the shrink must not disturb — it
+  reads neither CHECKS.md nor OUTPUT.md and never pinned the materiality
+  prose).
+- SPEC.md `## Goal` + `### Business goals` bullet 2 — the unconverged-loop end
+  is stage-scoped per D-31-8: `NEEDS-DESIGN` where the verdict vocabulary
+  sanctions it (spec stage); the orchestrator's refusal + `design-feature`
+  routing at the plan stage (fix/162).
+- SPEC.md `## Design status` rotates to `31-spec-4`; `## Amendments` gains the
+  `31-spec-4` row (repair classes: N31-004 closure completion, N31-005
+  mechanical intent-preserving).
+- decisions.md — repair section + 5 evidence rows (`current`/`proven` at
+  `c5a6e173`); no new product decision (D-31-1…D-31-8 unchanged).
+- planning-findings.md — N31-004 + N31-005 → `resolved` at
+  `resolving-artifact-revision: 31-spec-4` with resolution evidence.
+
+Repair classification: both findings are `product` rows and were repaired
+here; the set carries no plan/source/environment/runtime row, so nothing is
+left open for another owner.
+
+### Gates (run in this act, before this report)
+
+Spec-lint product boxes — 9/9 PASS:
+
+1. Placeholder grep over the Product half: no matches (exit 1) — clean.
+2. Out-of-scope: 7 concrete bullets.
+3. Capability closure rows: all filled / explicit `n/a` (E1–E3, unchanged from
+   the reviewed bytes; zero blank rows).
+4. Integration closure: 12 derived-subsystem rows, unchanged count vs HEAD
+   (13 `| [A-Z]` lines = header + 12 rows).
+5. Role matrix: 5 capabilities × 5 roles, all explicit allowed/denied.
+6. Expectation sweep: 19 resolved rows (M ≥ 10), each with a pointer.
+7. In-scope → AC mapping: unchanged explicit AC pointers on every item/group.
+8. AC labels: 13/13 — AC2/AC3/AC5/AC10/AC11/AC12 pure commands; AC1/AC4/AC6/
+   AC7/AC8/AC9/AC13 command + `read-verified`.
+9. `### Deferred decisions` reads `none`.
+
+Readiness preflight (stage: spec) — all boxes pass:
+
+1. Required headings present in machine order
+   (`SPEC_PRODUCT_REQUIRED_HEADINGS`: Goal, Branch, Size, Dependencies,
+   Product half, Design status); no template placeholder text remains.
+2. `## Design status` reads `designed` — earned by the 9/9 spec-lint above.
+3. Entity closure: zero blank rows (C3 verified at `spec-review-31-4`;
+   unchanged bytes).
+4. Integration closure: one resolved row per derived subsystem; inventory
+   recorded (unchanged).
+5. Role matrix: every derived role explicit for every capability (unchanged).
+6. Expectation sweep: 19 resolved rows, zero unresolved (unchanged).
+7. Every in-scope bullet maps to ≥ 1 criterion; every criterion labelled.
+8. `Deferred decisions` reads `none`.
+9. Evidence: 50 grounding rows in `decisions.md`, all `proven`/`decision` at
+   `current` freshness (5 new rows read at `c5a6e173`; prior tables' cited
+   sources unchanged since `a400b978`), zero unknown/drifted/stale.
+10. No criterion rests on memory or chat history — every new grep target is a
+    verified `path:line` evidence row.
+    D1: no delegated-evidence run exists for this unit — n/a.
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-4 · Rows checked: 50 · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact-revision rotation: `31-spec-3` → **`31-spec-4`** (this write; a
+revert would rotate again). Post-write self-check:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-4",
+    "verdict": "spec-review-fail",
+    "snapshot": "d2444b4c179b3aa0ec7ab21345733355efc066c3588eba68edd25539ab6754fa",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "c041ba44e2fcc6823e2097c4abda5e7ffd5e863aad3d1cae29b867fed0f48e9e",
+  "digestMatches": false,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": false,
+    "reasonCode": "stale-artifact-content",
+    "detail": "bound artifact bytes moved since the receipt: docs/features/31-planning-review-materiality/SPEC.md",
+    "changedPaths": ["docs/features/31-planning-review-materiality/SPEC.md"]
+  }
+}
+```
+
+`stale-artifact-content` is the sanctioned post-authoring state: the bound
+Product bytes moved by this repair, so the `spec-review-31-4` receipt is
+superseded by design (exit 4). The next `/review-spec` run is cycle 2 of the
+window D-31-7 opened (a third cycle would need explicit user instruction
+behind the orchestrator's cap). `ACCEPTANCE.md` stays frozen untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded `31-plan-1/2`
+re-cut only after a fresh `SPEC-REVIEW-PASS` receipt).
