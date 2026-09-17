@@ -2704,3 +2704,90 @@ receipt write, before this report:
 }
 ```
 
+
+---
+
+## Plan repair batch (`31-plan-4`, 2026-09-17)
+
+`plan-feature` ran the repair batch `plan-review-31-3` commissioned (failed checks
+L5, P3, P8, P10, P12; findings P31-03 high, P31-01/P31-02 medium, P31-04/P31-05
+low). One batch over the whole set; no Product byte moved, no acceptance
+criterion's required outcome weakened, and no test was changed.
+
+What the batch did, per finding (engineering decisions E-D31-15…E-D31-19 in
+`decisions.md`, evidence rows PE-024…PE-029 in `planning-evidence.md`):
+
+- **P31-01** — the wording-only determination's home moves to the unit's unbound
+  `progress.md` (precedent `## Dependency receipt v1`), so the revision the block
+  must record survives the block's own write. E5, P3, `known-issues.md` §6.
+- **P31-02** — the branch is specified after `stale-context` and before
+  `stale-source-revision`, fed by a pure `wordingOnly` input, with the
+  no-determination path falling through unchanged (the earlier
+  `stale-artifact-revision` wording was wrong). E6, P3.
+- **P31-03** — one shared pure helper `deriveReviewLoopCycles` in
+  `scripts/pre-execution-contract.mjs` plus a `detail.review_loop_cycles`
+  projection in `scripts/workflow-status.mjs`; feature 38's A:12 is preserved and
+  pinned by the **already-packed** `scripts/review-loop-discipline.test.mjs` block
+  (projection string + decider absence). The feature-38 suite is deliberately not
+  added to AC10: it is outside every gate and red at this head (§10), so packing a
+  red suite would make the gate unsatisfiable. E4, E7, P2, O5, O10, AC5, AC10.
+- **P31-04** — the schema package's `CHANGELOG.md` row stays in P4 (the canonical
+  phase contract forbids a `docs` target in a `config/infra` phase — verified:
+  `scripts/phase-lint.mjs` blocks that shape), so the `normative-drift` window
+  P1→P4 is declared in `known-issues.md` §10 and P4's done-when now closes it.
+- **P31-05** — the Engineering half's evidence range corrected to
+  `PE-001…PE-029`.
+
+Newly surfaced during the batch and **left open** (the ledger's honesty rule: a
+row stays in the unit's ledger, open, until the owner amends the governing SPEC):
+`planning-findings.md` **P31-06** (`class: product`, medium) — AC13's declared
+code-carrier group omits `scripts/pre-execution-contract.mjs`,
+`scripts/workflow-status.mjs` and `scripts/workflow-status-pre-execution.test.mjs`,
+paths the plan edits by design and the `31-plan-3` cut already edited, so the
+frozen scope walk reports them as violations. It also records the live proof of
+the validator-blind class: the repo's own `scripts/workflow-status-sensor.test.mjs`
+is outside every gate and carries 3 pre-existing failures at this head (59 pass /
+3 fail). Route:
+`design-feature` amends the Product half's declaration, then `/review-spec`, then
+the plan re-derives.
+
+Gates run this turn, at the repaired revision:
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:schema-finding-record-materiality
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
+```
+
+- `bun test scripts/normative-drift.test.mjs scripts/pre-execution-quality.test.mjs
+  scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs
+  scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs
+  scripts/review-loop-discipline.test.mjs scripts/workflow-status-pre-execution.test.mjs`
+  → green. `scripts/workflow-status-sensor.test.mjs` (outside the ladder and the
+  AC10 pack) → 59 pass / 3 fail; recorded in `known-issues.md` §10 and left to its
+  owner (P31-06).
+- `bun scripts/check-skill-context.mjs` → exit 0 (no skill byte moved in this
+  batch).
+- Plan snapshot at this revision:
+  `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
+  31-planning-review-materiality --parent e15374a3…` →
+  `52fdee14fddef1037114da2dec34998a44b95b31b254be25ad3ddaaefd92f674` (the
+  `31-plan-3` digest `e1a22768…` and the intermediate `cebf6528…`/`c75c1c6e…` are
+  superseded; this is the digest after every bound-artifact edit of the batch).
+- Re-frozen acceptance manifest: `git hash-object
+  docs/features/31-planning-review-materiality/ACCEPTANCE.md` →
+  `650c7c8b21fdd6b7e2ec7b6c2c91672732201166` (the `31-plan-3` blob
+  `3d7e7c9e…` is superseded).
+- Artifact revision label rotated to **`31-plan-4`**; the Product half's bound
+  bytes did not move (the `spec-product-v1` selector ends at the first level-2
+  heading after `## Design status`), so `spec-review-31-9` stays the current
+  Product receipt.
+
+Hand-off: a repaired plan is not an approved plan. The next step is
+`/review-plan 31-planning-review-materiality` (plan stage cycle 3 of the window
+`plan-review-31-1` opened) — and the open P31-06 row means the Product half owes
+a one-line amendment first if the reviewer judges it blocking.

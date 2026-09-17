@@ -15,11 +15,15 @@ design-feature / plan-feature (author turn)
           · anti-deflation: mislabeled defect → medium minimum (authored prose)
       → verdict
           · FAIL → ONE root-caused repair batch
-              · wording-only determination recorded in the unit's evidence
-                home + revision rotated
-                  → verify answers fresh; material rows (ACCEPTANCE.md
-                    fingerprint + bound context authorities) must be unmoved
-                  → otherwise stale-artifact-content (exit 4), re-review owed
+              · wording-only determination recorded in the unit's
+                `progress.md` (unbound, so the recorded revision survives its
+                own write) + revision rotated
+                  → verify answers fresh; the acceptance fingerprint and the
+                    bound context authorities must be unmoved — the branch sits
+                    before `stale-source-revision`, which a moved bound byte
+                    always rotates
+                  → otherwise it falls through unchanged
+                    (`stale-source-revision`, exit 4), re-review owed
               · otherwise → re-review of the new snapshot
           · second cycle → CONVERGENCE-ANOMALY printed before any further edit
             (block byte-unchanged)
@@ -38,9 +42,10 @@ design-feature / plan-feature (author turn)
 | `packages/agentic-workflow-schema/src/index.ts` | config/infra | `WorkflowDecisionInput.reviewLoopCycles`; one added stop code `stop-review-loop-cap`; the cap refusal inside `decideWorkflowAction` |
 | `packages/agentic-workflow-schema/package.json` (+ projections) | config/infra | additive minor 4.3.0; the two Draft-07 projections regenerate from the canonical definition |
 | `packages/agentic-workflow-schema/test/**` | config/infra (test) | materiality, `reproducer` bound/back-compatibility and cap-refusal vectors |
-| `scripts/pre-execution-contract.mjs` | config/infra | the determination-block parser (same module as the receipt parser) |
-| `scripts/pre-execution-snapshot.mjs` | config/infra | the wording-only branch inside `attributeFreshness` + the acceptance fingerprint read; exit codes unchanged |
-| `scripts/workflow-status.mjs` | config/infra | derives the per-stage count and passes it into the decider input |
+| `scripts/pre-execution-contract.mjs` | config/infra | the determination-block parser + the pure `deriveReviewLoopCycles` helper (same module as the receipt parser) |
+| `scripts/pre-execution-snapshot.mjs` | config/infra | the wording-only branch inside `attributeFreshness` (after `stale-context`, before `stale-source-revision`, fed by a pure `wordingOnly` input) + the acceptance fingerprint read; exit codes unchanged |
+| `scripts/workflow-status.mjs` | config/infra | projects `detail.review_loop_cycles = { spec, plan }` into the envelope's existing free-form `detail` bag, recomputed per run; never references `decideWorkflowAction` (feature 38 A:12, pinned by the re-aimed discipline suite) |
+| `docs/features/<NN>-<slug>/progress.md` | n/a (unit record) | the unbound home of the `## Wording-only determination v1` block, beside the receipt blocks and the `## Dependency receipt v1` precedent |
 | `scripts/review-loop-discipline.test.mjs` | config/infra (test) | planning pins re-aimed at the code carriers; no assertion removed |
 | `skills/pre-execution-review/references/LEDGERS.md` §3 | docs | materiality line moves; row shape, writers, append-only contract untouched |
 | `skills/pre-execution-review/references/POLICY.md` §3 + §4 | docs | wording-only record/rotation + hard cap; §1, §2, §5–§8 byte-identical |
@@ -68,7 +73,15 @@ design-feature / plan-feature (author turn)
   receipt contract id stays `agentic-workflow/pre-execution-review-receipt@1`
   and older receipts remain structurally valid.
 - **Cycle counting basis**: the persisted stage receipts, recomputed on every run
-  — no new store, no counter write (E3 of the Product half's entity closure).
+  by one shared pure helper (`deriveReviewLoopCycles` in
+  `scripts/pre-execution-contract.mjs`) and exposed to the consumer-side decider as
+  `detail.review_loop_cycles` — no new store, no counter write, and no decider
+  reference in the sensor (feature 38 A:12, `E3` of the Product half's entity
+  closure).
+- **Wording-only record home**: a block in the unit's `progress.md` — the one
+  unit-record surface that neither stage's `STAGE_ARTIFACTS` row binds
+  (`scripts/pre-execution-contract.mjs:33-75`), so the record's own write cannot
+  rotate the `artifactRevisionId` it records (PE-026).
 - **Version bumps**: schema package 4.2.0 → 4.3.0 (additive minor, own row in
   the CHANGELOG companion-package table); `pre-execution-review` 2.2.1 → 2.3.0,
   `review-spec` 1.7.1 → 1.8.0, `review-plan` 1.6.1 → 1.7.0, `design-feature`

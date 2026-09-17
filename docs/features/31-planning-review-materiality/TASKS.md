@@ -2,14 +2,15 @@
 
 Per-phase implementation checklist. Each phase is atomic, declares one layer, and
 must satisfy its Done-when command before the phase commit. Artifact revision of
-this plan set: **`31-plan-3`** (the re-cut for the D-31-6 code carrier; the
-`31-plan-1`/`31-plan-2` set is superseded, never repaired). Tests are written
+this plan set: **`31-plan-4`** (the repair batch for `plan-review-31-3`,
+findings P31-01…P31-05, on top of the `31-plan-3` re-cut for the D-31-6 code
+carrier; the `31-plan-1/2` set is superseded, never repaired). Tests are written
 red-first where a test is the deliverable and fixed in code, never weakened. One
 version bump per skill per PR (E-D31-1 in `decisions.md`).
 
 ## P1 — Schema finding-record materiality
 
-Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift.
+Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift. The package's `CHANGELOG.md` row cannot live here (a `docs` target in a `config/infra` phase is forbidden by the canonical phase contract), so `normative-drift` stays red until P4 closes the window — declared in `known-issues.md` (P31-04).
 
 - [ ] Add the bounded `reproducer` field to `FINDING_SPEC.fields` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — optional `string`, `minLength: 1`, `maxLength: PRE_EXECUTION_LIMITS.reproducerChars`, `nulFree: true` — plus the matching optional member on the `PreExecutionReviewFindingV1` interface.
 - [ ] Add `reproducerChars: 1024` to `PRE_EXECUTION_LIMITS` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` so the bound is published rather than spelled in the field.
@@ -18,35 +19,36 @@ Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && bun ru
 - [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS with an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates while a `reproducer` beyond `reproducerChars` is refused.
 - [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs`; the `--check` form is the drift gate) so the committed projections carry `reproducer` and keep their `$comment` runtime-rule disclosure.
 - [ ] Bump the package to 4.3.0 in `packages/agentic-workflow-schema/package.json` (additive minor; every enum value, the receipt contract id and the freshness vocabulary keep their spelling).
-- [ ] Run the package suite green: `cd packages/agentic-workflow-schema && bun run test` → exit 0, then `bun run check:pre-execution-schemas` → exit 0.
+- [ ] Run the package suite and the projection drift check green: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0.
 
 ## P2 — Transition-decider cap refusal
 
-Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && bun run test` → exit 0 with the cap vectors green, and `bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0.
+Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the cap vectors and the emission case green.
 
 - [ ] Add the optional `reviewLoopCycles` input to `WorkflowDecisionInput` in `packages/agentic-workflow-schema/src/index.ts` as `{ spec?: number; plan?: number }`, documented as the consecutive-unconverged count derived from the unit's persisted stage receipts.
 - [ ] Add `stop-review-loop-cap` to `WORKFLOW_DECISION_STOP_CODES` in `packages/agentic-workflow-schema/src/index.ts` — the only added value; every existing sense, stop and invoke code keeps its spelling.
 - [ ] Implement the refusal in `decideWorkflowAction` (`packages/agentic-workflow-schema/src/index.ts`): a `review-spec`/`review-plan` proposal whose stage count reaches two returns `kind: "stop"`, `intent: "ask-human"`, `reasonCode: "stop-review-loop-cap"`, with the human route (`design-feature`) named in `detail`.
 - [ ] Add the vector suite `packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs` proving three behaviours: two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation; a PASS reset leaves the next cycle allowed; a `needs-design` outcome routes to `design-feature`.
 - [ ] Pin the counting rule in the same vector suite: the count is the consecutive FAIL-verdict receipts for a stage since its last PASS-verdict receipt, and every other transition-table row keeps its behaviour.
-- [ ] Derive the per-stage count in `scripts/workflow-status.mjs` from the receipts `scripts/pre-execution-contract.mjs` already parses and pass it into the decider input on every run (recomputed, never stored).
-- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the sensor suite green.
+- [ ] Add the shared pure helper `deriveReviewLoopCycles(receipts)` to `scripts/pre-execution-contract.mjs`, applying the E3 rule to the rows `parseReceipts` already returns (consecutive FAIL verdicts per stage since that stage's last PASS; no receipt for a stage reads `0`).
+- [ ] Project the derived count in `scripts/workflow-status.mjs` into the envelope's existing free-form `detail` bag as `detail.review_loop_cycles = { spec, plan }`, recomputed on every run, and keep `decideWorkflowAction` absent from the script (feature 38 A:12).
+- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the suite green.
 
 ## P3 — Snapshot wording-only route
 
 Layer: config/infra · Done-when: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` → exit 0 with the wording-only vectors and the re-aimed code-carrier pins green.
 
-- [ ] Add `parseWordingOnlyDeterminations(text)` to `scripts/pre-execution-contract.mjs` — one parser for the `## Wording-only determination v1 — <stage>` block's `Determination`, `Acceptance fingerprint` and `Intent and authority unchanged` lines, shared by the CLI and the sensor.
-- [ ] Add the wording-only branch to `attributeFreshness` in `scripts/pre-execution-snapshot.mjs`: with bound artifact bytes moved, a matching determination — same artifact revision, same acceptance fingerprint, zero changed context authorities — answers fresh with the determination id named in `detail`.
-- [ ] Enforce the rotation in `scripts/pre-execution-snapshot.mjs`: a rotated revision with no matching determination keeps `stale-artifact-revision`, and a determination whose recorded revision differs from the snapshot's current one is refused.
+- [ ] Add `parseWordingOnlyDeterminations(text)` to `scripts/pre-execution-contract.mjs` — one parser for the `## Wording-only determination v1 — <stage>` block's `Determination`, `Acceptance fingerprint` and `Intent and authority unchanged` lines, read from the unit's unbound `progress.md` (the home E5 names) and shared by the CLI and the sensor.
+- [ ] Add the wording-only branch to `attributeFreshness` in `scripts/pre-execution-snapshot.mjs`, placed **after the `stale-context` check and before the `stale-source-revision` check**, fed by a `wordingOnly` input object (never by file reads, so the function stays pure): with bound artifact bytes moved and zero changed context authorities, a matching determination — recorded revision equal to the snapshot's current `artifactRevisionId`, recorded acceptance fingerprint equal to the manifest's — answers fresh with the determination id named in `detail`.
+- [ ] Enforce the rotation in `scripts/pre-execution-snapshot.mjs`: a movement without a matching determination answers fresh nowhere — it falls through unchanged to the existing precedence (for moved bound bytes, `stale-source-revision`) — and a determination whose recorded revision differs from the snapshot's current one is likewise no match, so a later material movement after an exempted one is refused.
 - [ ] Read the acceptance fingerprint in the verify path of `scripts/pre-execution-snapshot.mjs` by fingerprinting the unit's acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` is the form the CLI runs) and fail closed when the manifest is absent, so the route is unavailable without a frozen manifest.
-- [ ] Extend `scripts/pre-execution-attribution.test.mjs` with the wording-only vectors for all three outcomes — fresh with the recorded determination, `stale-artifact-content` on material movement, and the refusal when the determination is missing.
+- [ ] Extend `scripts/pre-execution-attribution.test.mjs` with the wording-only vectors for all three outcomes — fresh with the recorded determination, the fall-through on material movement, and the fall-through when the determination is missing — and pass no `wordingOnly` on its parity vectors so the dimension-by-dimension agreement with the schema comparator is unchanged.
 - [ ] Extend `scripts/pre-execution-sensor.test.mjs` with the wording-only vectors and the `wording-only` anchor the acceptance criterion greps.
-- [ ] Re-aim the planning-side pins in `scripts/review-loop-discipline.test.mjs` at the code carriers — the pin block reads the schema package's `medium`+ predicate, the CLI's verify report and the decider's refusal — while every existing assertion keeps its strength.
+- [ ] Re-aim the planning-side pins in `scripts/review-loop-discipline.test.mjs` at the code carriers — the pin block reads the schema package's `medium`+ predicate, the CLI's verify report, the decider's refusal, the `detail.review_loop_cycles` projection in `scripts/workflow-status.mjs`, and that same script's absence of `decideWorkflowAction` (feature 38 A:12) — while every existing assertion keeps its strength.
 
 ## P4 — Skill-reference prose shrink
 
-Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed and the AC7 removal greps clean.
+Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed, the release tables recomputed against the frontmatter, and the AC7 removal greps clean. This phase closes the `normative-drift` window P1 opened by landing the schema package's 4.3.0 row (P31-04).
 
 - [ ] Rewrite `skills/pre-execution-review/references/LEDGERS.md` §3: drop "`info` is the only immaterial one"; state material = `medium`+, the `low` report-note persistence contract (persisted, visible, non-blocking, resolved by the stage author without a re-review), the anti-deflation carry-over, and the restated PASS-coexistence sentence.
 - [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical.
@@ -55,7 +57,7 @@ Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && grep -n "third
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
 - [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, one row per skill in `CHANGELOG.md` and accurate README skill cells.
-- [ ] Add the schema package's 4.3.0 row to the `CHANGELOG.md` companion-package table and append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md` (created there if absent, deduped against other features' entries).
+- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md` (created there if absent, deduped against other features' entries). The schema package's 4.3.0 companion-table row lands in P1 with the bump (P31-04).
 
 ## P5 — Hardening & PR
 

@@ -810,3 +810,95 @@ root in the hardening phase after the last `skills/` edit.
 | All nine AC7 removal fragments exist today with their sentences standing, and the kept-side `third cycle never` is absent today, so the greps discriminate and the shrink authors the remainder | repository | `REPAIR.md:64`, `:71`; `POLICY.md:42`, `:61`, `:82`, `:83`; `CHECKS.md` spec `:104` / plan `:105`; `OUTPUT.md` spec `:109,153` / plan `:118,160`; `LEDGERS.md:93`; `grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → non-zero at `4b7cad56` | `4b7cad56` @ 2026-09-17 | current | proven | P4 rewrites, P5 re-runs |
 | Roadmap row 31 reads `defined`, dependency 29 reads `done · #175` (merged), and rows 32/35/42/46 chain after 31 | repository | `docs/features/ROADMAP.md` rows 29–35, 42, 46 | `4b7cad56` @ 2026-09-17 | current | proven | the scaffold flips `defined → planned` and re-reads |
 | The superseded manifest blob was `d85e217acad1322d3caf4968715ef5d00e9189c0`; the re-frozen manifest's blob is `3d7e7c9ee92314261e5529815c76b373e8ca2745` | repository | `git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` (observed at the re-cut); `PLAN.md` header | `4b7cad56` @ 2026-09-17 | current | proven | P5 re-checks the blob |
+
+## 2026-09-17 — Engineering repair batch for `plan-review-31-3` (plan-feature, artifact revision `31-plan-4`)
+
+Trigger: `plan-review-31-3` returned `PLAN-REVIEW-FAIL` (failed checks L5, P3, P8,
+P10, P12) with five rows — P31-03 (high), P31-01/P31-02 (medium), P31-04/P31-05
+(low). Repair owner: `plan-feature`, one batch over the whole set on the owner's
+instruction. The batch repairs the plan; it does not re-open the Product half: the
+decider stays the cap's carrier (In-scope 3), the materiality line and the two-cycle
+cap are unchanged, and no acceptance criterion's required outcome is weakened.
+
+### E-D31-15: The wording-only determination is recorded in the unbound `progress.md`
+
+The plan-stage determination home (`planning-evidence.md`, or the SPEC's
+`### Planning evidence`) is a **bound** artifact of the plan snapshot, and
+`artifactRevisionId` defaults to `contentRevision` (the newest commit touching the
+bound paths). Recording the block there rotates the very revision the block must
+name, so E6's "recorded revision equals the snapshot's current
+`artifactRevisionId`" had no fixed point and AC4's first outcome was unreachable
+(P31-01). The home moves to the unit's `progress.md`: it is the one unit record
+neither stage's `STAGE_ARTIFACTS` row binds (`scripts/pre-execution-contract.mjs:33-75`),
+it already carries the review receipts and the `## Dependency receipt v1` block
+written by agent turns, and appending a block there cannot rotate the revision it
+records. The spec-stage home moves with it, so one home serves both stages. No
+ownership row changes: the block is a record in an existing unit ledger, not a new
+ledger column set, and `scripts/ledger-ownership.test.mjs` still fails any script
+writing a ledger it does not own.
+
+### E-D31-16: The wording-only branch is pure, and sits after `stale-context`, before `stale-source-revision`
+
+A wording-only movement moves a bound artifact, so `sourceRevision` always rotates,
+and `stale-source-revision` precedes `stale-artifact-content` in
+`attributeFreshness`'s documented order. At the position the superseded plan named
+("before the generic `stale-artifact-content` answer") the promised `fresh` answer
+was dead code (P31-02). The branch now sits after the `stale-context` check and
+before the `stale-source-revision` check; it is consulted only when a moved bound
+artifact is named, `changedContexts` is empty, a determination records the
+snapshot's current revision, and that block's acceptance fingerprint equals the
+manifest's. When any of those fails the answer **falls through unchanged** (for
+moved bound bytes: `stale-source-revision`), and no reason code on the
+no-determination path is rewritten — the earlier P3 wording that named
+`stale-artifact-revision` there was wrong. The branch receives its determination
+and fingerprint as inputs (`wordingOnly`) and stays pure, so
+`scripts/pre-execution-attribution.test.mjs`'s dimension-by-dimension agreement
+with the schema comparator is unchanged.
+
+### E-D31-17: The cap count is derived by one shared helper and projected into the envelope's `detail` bag
+
+`decideWorkflowAction()` is consumer-side by feature 38's frozen A:12
+(`scripts/workflow-status-sensor.test.mjs:268-269`;
+`docs/features/38-workflow-status-sensor-script/SPEC.md:306`), so the superseded
+P2 task — "pass [the count] into the decider input" from the sensor — had no
+implementation that did not break that invariant, and no gate ran the suite that
+pins it (P31-03). The batch keeps both properties: `scripts/pre-execution-contract.mjs`
+gains the pure helper `deriveReviewLoopCycles(receipts)` (consecutive FAIL verdicts
+per stage since that stage's last PASS; no receipt → `0`), and
+`scripts/workflow-status.mjs` projects the recomputed value into the envelope's
+existing **free-form** `detail` bag as `detail.review_loop_cycles = { spec, plan }`
+(`packages/agentic-workflow-schema/envelope.schema.json` declares `detail` as an
+open object, so no envelope shape or closed set moves). The consumer-side
+orchestrator builds `WorkflowDecisionInput` from that value and gets the refusal.
+the re-aimed `scripts/review-loop-discipline.test.mjs` block (a code carrier
+already inside the AC10 pack) pins the projection string and the decider's
+absence, so the invariant can no longer regress unseen; the behavioral emission
+stays a hardening-phase observation because the feature-38 suite is outside every
+gate and carries pre-existing failures at this head (`known-issues.md` §10).
+
+### E-D31-18: The schema package's CHANGELOG row lands with the bump (P1)
+
+`rendered-facts@1` recomputes the `CHANGELOG.md` companion table against
+`package.json` (`scripts/normative-drift.test.mjs:708-715`), so bumping the package
+in P1 and adding its row in P4 left the repo gate red for two phases with no
+phase-local validator covering it (P31-04). The row moves into P1 with the bump,
+and P1's done-when gains `bun test scripts/normative-drift.test.mjs`. P4 keeps the
+four skill release records and the bibliography.
+
+### E-D31-19: The Engineering half's evidence-row range is corrected
+
+The half claimed "rows PE-001…PE-021" while the frozen ledger carried 23 rows
+(`testing.md` cites `PE-023`) (P31-05). The range now reads the ledger's actual
+rows, and this batch's six new rows (`PE-024`…`PE-029`) are part of it.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The plan-stage determination homes named by the superseded E5 are all bound artifacts, so writing the block rotates the revision it must record | repository | `scripts/pre-execution-contract.mjs:33-75` (`STAGE_ARTIFACTS.plan`); `scripts/pre-execution-snapshot.mjs` `contentRevision()` | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-15; PE-026 |
+| `progress.md` is not a bound artifact of either stage's snapshot, and a record block there survives its own write (the review receipts and `## Dependency receipt v1` prove the pattern) | repository | `scripts/pre-execution-contract.mjs:33-75`; `scripts/pre-execution-snapshot.mjs` `receipts()`; `skills/execute-phase/references/PREFLIGHT.md:50` | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-15; PE-026 |
+| `attributeFreshness` orders `stale-context` → `stale-source-revision` → `stale-parent` → `stale-artifact-content` → `stale-artifact-revision` → `fresh`, and `sourceRevision` derives from the same bound paths a wording-only repair moves | repository | `scripts/pre-execution-snapshot.mjs` `attributeFreshness()`; `scripts/pre-execution-attribution.test.mjs:77-110` | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-16; PE-027 |
+| Feature 38 pins `decideWorkflowAction()` consumer-side and the suite that asserts it is not in the AC10 pack or the P5 ladder | repository | `scripts/workflow-status-sensor.test.mjs:268-269`; `docs/features/38-workflow-status-sensor-script/SPEC.md:306`; `docs/features/31-planning-review-materiality/ACCEPTANCE.md` AC10 | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-17; PE-024 |
+| The envelope's `detail` member is an open object, so `detail.review_loop_cycles` adds no field and moves no closed set | repository | `packages/agentic-workflow-schema/envelope.schema.json:220`; `CLAUDE.md` block `normative-surfaces@1` (`sensor-envelope-fields`, `must-name: no`) | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-17; PE-025 |
+| `normative-drift` recomputes the CHANGELOG companion table against `package.json`, so the bump and its row are one unit of work | repository | `scripts/normative-drift.test.mjs:708-715`; `CLAUDE.md` block `rendered-facts@1` | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-18; PE-028 |
+| The frozen evidence ledger carries 23 rows at artifact revision `31-plan-3` while the Engineering half claimed 21 | repository | `docs/features/31-planning-review-materiality/planning-evidence.md` (23 `| PE-` rows); `testing.md:47` (cites `PE-023`) | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-19; PE-029 |

@@ -689,19 +689,19 @@ only on a current `SPEC-REVIEW-PASS` receipt.
 
 ## Engineering half
 
-Written by `plan-feature-scaffold` (2026-09-17, artifact revision **`31-plan-3`**):
-the re-cut the Product carrier amendment (`31-spec-3`, D-31-6) and the Product
-half's own `## Design status` require ("`plan-feature` re-cuts the plan set
-(`31-plan-1/2` superseded, never repaired) only on a current
-`SPEC-REVIEW-PASS` receipt"). The plan descends from the current Product receipt
+Written by `plan-feature-scaffold` at artifact revision **`31-plan-3`** (the
+re-cut the Product carrier amendment `31-spec-3`/D-31-6 and the Product half's own
+`## Design status` require) and re-written by `plan-feature` at artifact revision
+**`31-plan-4`** — the repair batch for `plan-review-31-3`'s five rows
+(P31-01…P31-05). The plan descends from the current Product receipt
 `spec-review-31-9` @ snapshot
 `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`, verified
 fresh against the bytes on disk by `pre-execution-snapshot.mjs verify --stage
-spec` at this scaffold's Product-review gate (`current: true`,
-`structural.fresh: true`). Re-cut record: `progress.md`; engineering decisions:
-`decisions.md` (E-D31-8…E-D31-14, which also state which earlier decisions the
-carrier move supersedes); superseded plan-stage finding rows R31-01/R31-02/R31-03
-resolved in `planning-findings.md`; full phase detail: `PLAN.md` and `TASKS.md`.
+spec` at the scaffold's Product-review gate (`current: true`,
+`structural.fresh: true`). Repair record: `progress.md`; engineering decisions:
+`decisions.md` (E-D31-8…E-D31-14 for the carrier move, E-D31-15…E-D31-19 for this
+batch); plan-stage finding rows R31-01/R31-02/R31-03 and P31-01…P31-05 resolved in
+`planning-findings.md`; full phase detail: `PLAN.md` and `TASKS.md`.
 
 ### Technical goals
 
@@ -718,9 +718,11 @@ resolved in `planning-findings.md`; full phase detail: `PLAN.md` and `TASKS.md`.
   a third invocation of `review-spec`/`review-plan` with a named reason code and
   the human route; a PASS resets the count (D-31-7).
 - **A recorded wording-only route.** `verify` distinguishes a wording-only
-  movement — revision rotated, determination recorded, acceptance fingerprint and
-  bound authorities unmoved — from material movement (`stale-artifact-content`);
-  neither the determination nor the rotation is skippable (D-31-3).
+  movement — revision rotated, determination recorded in the unit's `progress.md`
+  (an unbound record home, so the recorded revision survives its own write),
+  acceptance fingerprint and bound authorities unmoved — from material movement
+  (`stale-artifact-content`); neither the determination nor the rotation is
+  skippable (D-31-3).
 - **Prose shrinks to the non-computable remainder** and the discipline pins
   re-aim at the code carriers, never weakened.
 
@@ -733,7 +735,7 @@ schema package stays dependency-free and the scripts stay dependency-free beyond
 the built schema package.
 
 Affected surfaces (verified at branch head `4b7cad56`; evidence rows
-PE-001…PE-021 in `planning-evidence.md`):
+PE-001…PE-029 in `planning-evidence.md`):
 
 - `packages/agentic-workflow-schema/src/pre-execution-contract.ts:101` (the
   severity vocabulary comment), `:455-500` (`FINDING_SPEC`), `:459` (the
@@ -748,10 +750,19 @@ PE-001…PE-021 in `planning-evidence.md`):
   `:885-925` (the `review-spec`/`review-plan` transition rows), `:1069`
   (`decideWorkflowAction`).
 - `scripts/pre-execution-contract.mjs:33-75` (the stage artifact tables and the
-  three bound context authorities), `:120-160` (`parseReceipts`).
+  three bound context authorities), `:120-160` (`parseReceipts`), plus this
+  unit's additions: `parseWordingOnlyDeterminations` and the pure
+  `deriveReviewLoopCycles` helper.
 - `scripts/pre-execution-snapshot.mjs:331-420` (`attributeFreshness`),
   `:424-490` (the `verify` action and its exit codes 0/1/3/4).
-- `scripts/workflow-status.mjs` (the sensor that assembles the decider input).
+- `scripts/workflow-status.mjs` (the sensor that derives the count through
+  `pre-execution-contract.mjs` and projects `detail.review_loop_cycles` into the
+  envelope's free-form `detail` bag — never referencing `decideWorkflowAction`,
+  feature 38 A:12 — the projection and the absence are both pinned by the re-aimed
+  `scripts/review-loop-discipline.test.mjs` block, which rides the AC10 pack).
+- `docs/features/31-planning-review-materiality/progress.md` (the unbound record
+  home for the wording-only determination block — the unit's own record, never a
+  bound artifact of either stage's snapshot).
 - `scripts/review-loop-discipline.test.mjs:20-28,134` (the existing reads the
   re-aimed planning pins extend).
 - Prose surfaces: `skills/pre-execution-review/references/LEDGERS.md:93`;
@@ -835,12 +846,26 @@ allows `design-feature`, and the `needs-design` verdict keeps its spec-stage
 `VERDICTS_BY_STAGE` membership (fix/162 narrowed plan-stage `needs-design`, and
 this design does not re-widen it).
 
-**E4 — The sensor supplies the count.** `scripts/workflow-status.mjs` already
-reads the unit's receipt blocks through `scripts/pre-execution-contract.mjs`;
-it derives the per-stage count with the E3 rule and passes it in the decider
-input. A repository with no receipt for a stage passes `0`, so the refusal is
-reachable only for a unit that really carries two consecutive unconverged
-cycles. The sensor's envelope shape is unchanged.
+**E4 — The sensor derives the count and projects it; the decider stays
+consumer-side.** `scripts/pre-execution-contract.mjs` gains one pure helper,
+`deriveReviewLoopCycles(receipts)`, implementing the E3 rule over the receipt
+rows the module already parses (consecutive FAIL verdicts per stage since that
+stage's last PASS; a stage with no receipt reads `0`), so the CLI and the sensor
+share one implementation. `scripts/workflow-status.mjs` imports that helper,
+recomputes the count on every run, and projects it into the envelope's **existing
+free-form `detail` bag** as `detail.review_loop_cycles = { spec, plan }` — no new
+envelope field, no closed-set change, and **no reference to
+`decideWorkflowAction`**, which stays consumer-side (feature 38 A:12:
+`grep -c decideWorkflowAction scripts/workflow-status.mjs` → 0). The
+consumer-side orchestrator builds `WorkflowDecisionInput` from that value and
+gets the E3 refusal; a repository with no receipt for a stage reads `0`, so the
+refusal is reachable only for a unit that really carries two consecutive
+unconverged cycles. The wiring is proven two ways: the schema vectors (AC5) and
+the re-aimed `scripts/review-loop-discipline.test.mjs` block — a code carrier
+already inside AC10's pack — pinning the `detail.review_loop_cycles` projection
+and `scripts/workflow-status.mjs`'s continuing absence of `decideWorkflowAction`,
+so a future change that puts the decider back into the sensor fails a frozen
+validator instead of passing silently.
 
 **E5 — The wording-only determination record (shape and home).** The repair turn
 records, in the unit's evidence home, a block of the existing record family:
@@ -853,29 +878,51 @@ records, in the unit's evidence home, a block of the existing record family:
 - Intent and authority unchanged: <one line>
 ```
 
-Home: `planning-evidence.md` for the plan stage (M/L) or the SPEC's
-`### Planning evidence` section (XS/S), and `decisions.md` for the spec stage —
-exactly the homes E2 of the Capability closure names. Writer: the stage's author
-(`plan-feature`, `plan-fix`, `design-feature`), which the ledger-ownership map
-already lists for those homes, so no ownership row changes. The judgment half
-("intent and authority unchanged") stays authored prose; the machine half is
-computed by `verify`.
+Home: the unit's `progress.md` — a record block in the unit's own progress
+ledger, beside the review receipts and the `## Dependency receipt v1` block the
+repository already writes there. The home is load-bearing, not stylistic:
+`progress.md` is **not** a bound artifact of either stage's snapshot
+(`STAGE_ARTIFACTS.spec` binds only the `spec-product-v1` projection;
+`STAGE_ARTIFACTS.plan` binds `SPEC.md`, `ACCEPTANCE.md`, `planning-evidence.md`,
+`planning-obligations.md`, `PLAN.md`, `TASKS.md`, `testing.md`, `decisions.md`
+and `architecture-notes.md`), so appending the record does **not** rotate the
+`artifactRevisionId` it records — the same property that lets a receipt survive
+its own write. Recording it in `planning-evidence.md`, the SPEC's
+`### Planning evidence` section or `decisions.md` would rotate that revision on
+write and make E6's identity check unsatisfiable at the plan stage. Precedent for
+an author-written record block in this home: `## Dependency receipt v1`
+(PE-026). Writer: the stage's author (`plan-feature`, `plan-fix`,
+`design-feature`); no ownership row changes, because this is a block in an
+existing unit record, not a new ledger column set. The judgment half ("intent and
+authority unchanged") stays authored prose; the machine half is computed by
+`verify`.
 
 **E6 — `verify` distinguishes wording-only from material movement.**
 `scripts/pre-execution-contract.mjs` gains one parser,
 `parseWordingOnlyDeterminations(text)`, shared by the CLI and the sensor.
-`attributeFreshness` gains a branch with this precedence, keeping the comparator's
-documented order: after the identity lines and before the generic
-`stale-artifact-content` answer, when bound artifact bytes moved, the branch
-looks for a determination block whose recorded artifact revision equals the
-snapshot's current `artifactRevisionId`, whose recorded acceptance fingerprint
-equals `git hash-object <unit>/ACCEPTANCE.md` on disk, and with zero changed
-context authorities — all three hold → `fresh: true` with the determination id
-named in `detail`; any of them fails → `stale-artifact-content` (exit 4). A
-rotated revision with no matching determination keeps `stale-artifact-revision`.
-An absent acceptance manifest makes the route unavailable (fail closed): the
-fingerprint cannot match, so the answer is `stale-artifact-content`. No new
-freshness code, no new flag, no new exit code.
+`attributeFreshness` gains exactly one branch, placed **after the `stale-context`
+check and before the `stale-source-revision` check** — the only position from
+which the answer it promises is reachable, because a wording-only movement moves
+a bound artifact and therefore always rotates `sourceRevision`, and
+`stale-source-revision` precedes `stale-artifact-content` in the comparator's
+documented order. The branch leaves that documented order intact for every other
+dimension and is consulted only when all four hold: git evidence names a moved
+bound artifact; `changedContexts` is empty; a determination block records an
+artifact revision equal to the snapshot's current `artifactRevisionId`; and that
+block's recorded acceptance fingerprint equals `git hash-object
+<unit>/ACCEPTANCE.md` on disk. All four → `fresh: true` with the determination id
+named in `detail`. Any of them fails → **fall through unchanged** to the existing
+precedence, which for moved bound bytes answers `stale-source-revision`; the
+branch never rewrites a reason code on the no-determination path (the earlier P3
+wording that named `stale-artifact-revision` here was wrong and is corrected). An
+absent acceptance manifest fails closed: the fingerprint cannot match, so the
+route is unavailable. `attributeFreshness` stays pure — the pre-parsed
+determination and the observed acceptance fingerprint arrive as inputs
+(`wordingOnly`), and the CLI does the file read — which is what keeps
+`scripts/pre-execution-attribution.test.mjs`'s dimension-by-dimension agreement
+with the schema comparator intact (it passes no `wordingOnly` and therefore sees
+every existing answer unchanged). No new freshness code, no new flag, no new exit
+code.
 
 **E7 — Discipline pins re-aimed at the code.** `scripts/review-loop-discipline.test.mjs`
 keeps every existing assertion and adds a planning-side pin block that reads the
@@ -885,7 +932,11 @@ over a seeded fixture (the wording-only answer and the material-movement
 refusal), and the decider's `stop-review-loop-cap` refusal. The suite therefore
 still fails if the rules regress, while the prose shrink it used to police is now
 validated by AC7's removal greps. Nothing is removed, and no assertion is
-loosened (AC8's no-weakening walk).
+loosened (AC8's no-weakening walk). The same phase binds the sensor side: the
+pin block also reads `scripts/workflow-status.mjs` and pins the
+`detail.review_loop_cycles` projection plus that script's continuing absence of
+`decideWorkflowAction` (feature 38 A:12), so the invariant cannot regress behind
+a gate the workflow never runs.
 
 **E8 — Prose shrink and authored remainder.** The computable sentences leave
 eight prose surfaces: `LEDGERS.md` §3 ("`info` is the only immaterial one"),
@@ -901,9 +952,12 @@ human-keyed third-cycle rule, and the wording-only determination shape. Only the
 byte-unchanged.
 
 **E9 — Release records.** The schema package bumps 4.2.0 → 4.3.0 (additive
-minor) with a row in `CHANGELOG.md`; the four touched skills take minor bumps
-through `bump-skill` (one bump per skill per PR — E-D31-1) with their
-`CHANGELOG.md` rows and README cells; the Pi mirror is re-bundled from the
+minor) and its `CHANGELOG.md` companion-table row lands **in the same phase as
+the bump (P1)**, because `rendered-facts@1` recomputes that table against
+`package.json` and `bun test scripts/normative-drift.test.mjs` would otherwise be
+red from P1 through P4; the four touched skills take minor bumps through
+`bump-skill` (one bump per skill per PR — E-D31-1) with their `CHANGELOG.md` rows
+and README cells; the Pi mirror is re-bundled from the
 package that owns the bundler after the last `skills/` edit; and the issue's
 bibliography obligation appends the Jin & Chen entry under a bottom `## References`
 section of `README.md` (AC12) — in the implementation PR, never before this
@@ -912,7 +966,7 @@ scaffold.
 ### Planning evidence
 
 see planning-evidence.md (M/L unit — the frozen table lives in
-`planning-evidence.md`; rows PE-001…PE-021, all `current`, `proven` or
+`planning-evidence.md`; rows PE-001…PE-029, all `current`, `proven` or
 `decision`).
 
 ### Obligations
@@ -931,7 +985,12 @@ spelled from the package that owns it) stay in force. `E-D31-5` (a
 **superseded** with the `31-plan-2` set: the pins now read code carriers, so a
 discrimination leg over superseded prose sentences has nothing to discriminate.
 `E-D31-7` (the diff-scope walk names the declared derived surfaces) stays and is
-re-aimed at AC13's three declared groups. New in this re-cut:
+re-aimed at AC13's three declared groups. This repair batch adds `E-D31-15`
+(the determination lives in the unbound `progress.md`), `E-D31-16` (the branch is
+pure and sits before `stale-source-revision`), `E-D31-17` (the count is derived by
+one shared helper and projected into the envelope's `detail` bag, keeping feature
+38's A:12) and `E-D31-18` (the schema package's CHANGELOG row lands in P4, with
+the `normative-drift` window declared) — see `decisions.md`. New in this re-cut:
 
 - **E-D31-8** — the materiality predicate is a closed membership test over the
   material severities rather than a negated `info` comparison, so the material
@@ -975,7 +1034,8 @@ beyond the built schema package:
   scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
   scripts/normative-drift.test.mjs scripts/workflow-status-pre-execution.test.mjs
   && bun scripts/check-skill-context.mjs` (AC10) — the ledger truth classes, the
-  normative surfaces and the context budgets stay green.
+  normative surfaces (with the projection and A:12 pins riding the discipline
+  suite), and the context budgets stay green.
 - **Distribution parity**: `cd packages/pi-agentic-workflow && bun run
   bundle:skills && bun run test` (AC11) — the bundler lives in the package; this
   repository has no root `package.json`.
@@ -998,8 +1058,8 @@ Failure modes seeded from the fixed category list; each reaches through an
 | `loop:reproducer-bound` (invalid or oversized input) | a `reproducer` past its declared bound is refused while an absent one still validates | the structural walk over `FINDING_SPEC` (P1 · the package suite's bound and back-compatibility vectors, AC3) |
 | `loop:deflation-guard` (invalid input) | a real defect mislabeled `low` re-classifies at `medium` minimum and blocks | the anti-deflation sentence in `LEDGERS.md`/both `CHECKS.md` (P4 · the AC7 kept-side `medium\` minimum` grep) |
 | `loop:role-violation` (permission denied / wrong role) | an author turn filing findings against its own artifact, or a script writing a ledger row, stays denied | the role matrix C1–C5 plus the unchanged ledger-ownership block (P5 · `ledger-ownership` in the ladder, AC10) |
-| `loop:cap-hit` (limit or threshold hit) | two consecutive unconverged cycles make the decider refuse a third invocation with `stop-review-loop-cap` and the human route; a PASS reset re-allows the next cycle | `decideWorkflowAction` over the derived receipt count (P2 · the package suite's `review-loop-cap` vectors and the sensor emission case, AC5) |
-| `loop:wording-only-skip` (concurrent/duplicate action) | a recorded wording-only determination keeps `verify` current while a missing record refuses the same movement | the determination parser plus `attributeFreshness` (P3 · the `wording-only` vectors, AC4) |
+| `loop:cap-hit` (limit or threshold hit) | two consecutive unconverged cycles make the decider refuse a third invocation with `stop-review-loop-cap` and the human route; a PASS reset re-allows the next cycle | `decideWorkflowAction` over the derived receipt count (P2 · the package suite's `review-loop-cap` vectors, the sensor's `detail.review_loop_cycles` emission + A:12 pin, AC5 + AC10) |
+| `loop:wording-only-skip` (concurrent/duplicate action) | a recorded wording-only determination keeps `verify` current while a missing determination refuses the same movement | the determination parser plus the `attributeFreshness` wording-only branch over the unbound `progress.md` record (P3 · the `wording-only` vectors, AC4) |
 | `loop:dup-finding` (concurrent/duplicate action) | the same finding re-reported in a later cycle keeps its stable id and gains a second resolution row | `finding-id` stability in `LEDGERS.md` §3 (outside every edited hunk, P4 · the AC7 hunk walk) |
 | `loop:pin-vacuous` (invalid input) | a pin that reads a superseded prose sentence instead of the code carrier leaves the suite green | the re-aimed pin block reading the schema predicate, the CLI report and the decider refusal (P3 · the discipline suite in the ladder, AC8) |
 | outage/dependency failure — n/a | no runtime dependency exists; every validator is a local command over repository bytes | n/a: all checks run locally (bun first, node fallback) |
@@ -1017,13 +1077,16 @@ hardening close-out.
 Layer: config/infra. Done-when: `cd packages/agentic-workflow-schema && bun run
 test && bun run check:pre-execution-schemas` → exit 0 with the materiality,
 `reproducer`-bound and back-compatibility vectors green and zero projection
-drift. (AC1, AC2, AC3)
+drift, **and** `bun test scripts/normative-drift.test.mjs` → exit 0 (the package
+bump and its CHANGELOG row land in this phase). (AC1, AC2, AC3)
 
 #### P2 — Transition-decider cap refusal
 
 Layer: config/infra. Done-when: `cd packages/agentic-workflow-schema && bun run
 test` → exit 0 with the cap vectors green, and `bun test
-scripts/workflow-status-pre-execution.test.mjs` → exit 0. (AC5, O15)
+scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the cap-refusal
+emission case green (the projection and A:12 pins land in P3's discipline-suite
+block). (AC5, O15)
 
 #### P3 — Snapshot wording-only route
 
@@ -1056,17 +1119,18 @@ pasted verbatim at scaffold time and again in P5):
 
 ```text
 P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:schema-finding-record-materiality
-P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:transition-decider-cap-refusal
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
 P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
 P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
 P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
 verdict PASS
-fingerprint: 7ae7a09036d9fafc8cffbbc735ec06f9dc8a03d632ca2d1141785ac555e8bce7
+fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
 ```
 
-The `31-plan-1`/`31-plan-2` fingerprints (`db27c41e…`, `5465f0aa…`) are dead
-with the superseded set: the carrier move re-cut every phase, and the aggregate
-above is this set's fingerprint.
+The `31-plan-1`/`31-plan-2` fingerprints (`db27c41e…`, `5465f0aa…`) and the
+`31-plan-3` aggregate (`7ae7a090…`) are dead with their superseded sets: the
+carrier move, then this repair batch, re-cut every affected phase, and the
+aggregate above is this set's fingerprint.
 
 ### Deploy & rollback
 
@@ -1088,6 +1152,13 @@ stays accepted.
   row) and R31-03 (the scope walk missing the unit's own records) — resolved by
   `planning-obligations.md`'s one-phase rows and AC13's declared
   workflow-mutated group.
+- **Resolved by the `31-plan-4` repair batch (P31-01…P31-05)**: the wording-only
+  determination moved to the unbound `progress.md` home and its branch was placed
+  before `stale-source-revision` (P31-01/P31-02); the cap count is derived by a
+  pure helper and projected into the envelope's free-form `detail` bag with
+  feature 38's A:12 kept and its suite added to the gate pack (P31-03); the
+  schema package's CHANGELOG row moved into P1 (P31-04); the evidence-row range
+  in this half was corrected (P31-05).
 - **Risk — the wording-only branch could be read as an author-declared bypass.**
   Mitigated by construction: the branch requires the acceptance fingerprint and
   the bound authorities to be unmoved, the revision to have rotated, and the
@@ -1365,3 +1436,42 @@ Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
 `spec-review-31-8` receipt is superseded by design (bound Product bytes moved
 — `stale-artifact-content`): the next `/review-spec` run is the user-keyed
 sixth cycle of the window (D-31-7).
+
+### `31-plan-4` — repair batch for `plan-review-31-3` (P31-01 + P31-02 + P31-03 + P31-04 + P31-05)
+
+`plan-feature` repair batch (2026-09-17), commissioned by the owner after
+`plan-review-31-3` returned `PLAN-REVIEW-FAIL` (failed checks L5, P3, P8, P10,
+P12) with five findings: P31-03 (high), P31-01/P31-02 (medium), P31-04/P31-05
+(low). One batch over the whole set; no Product byte moved and no acceptance
+criterion's required outcome was weakened.
+
+What changed, per finding:
+
+- **P31-01** — the wording-only determination's home moves from the bound
+  `planning-evidence.md`/SPEC-section/`decisions.md` surfaces to the unit's
+  unbound `progress.md` (§Design E5), because recording it in a bound artifact
+  rotates the `artifactRevisionId` it must name and made the identity check
+  unsatisfiable (E-D31-15, PE-026).
+- **P31-02** — the branch's position is now explicit and reachable: after the
+  `stale-context` check and before the `stale-source-revision` check, fed by a
+  pure `wordingOnly` input, with the no-determination path falling through
+  unchanged (E-D31-16, PE-027).
+- **P31-03** — the cap count is derived by one shared pure helper
+  (`deriveReviewLoopCycles` in `scripts/pre-execution-contract.mjs`) and projected
+  into the envelope's free-form `detail` bag as `detail.review_loop_cycles`;
+  feature 38's A:12 (`decideWorkflowAction` stays consumer-side) is preserved and
+  pinned by the re-aimed `scripts/review-loop-discipline.test.mjs` block, which
+  already rides the AC10 pack, while the feature-38 suite's own red state is
+  recorded as an open boundary (E-D31-17, PE-024, PE-025).
+- **P31-04** — the schema package's `CHANGELOG.md` row stays in P4 (the canonical
+  phase contract forbids a `docs` target in a `config/infra` phase): the
+  `normative-drift` window between P1 and P4 is declared in `known-issues.md`, and
+  P4's done-when now closes it by running `bun test scripts/normative-drift.test.mjs`
+  (E-D31-18, PE-028).
+- **P31-05** — the Engineering half's evidence-row range is corrected to the
+  ledger's actual rows, now `PE-001…PE-029` (E-D31-19, PE-029).
+
+The `31-plan-3` receipt (`plan-review-31-3`, FAIL) is superseded by design (bound
+plan bytes moved); the next `/review-plan` run is the plan stage's third cycle of
+the window `plan-review-31-1` opened, whose `CONVERGENCE-ANOMALY` block the
+`plan-review-31-3` receipt carries.
