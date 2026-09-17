@@ -138,6 +138,65 @@ Product checks (14/14):
 | C13 | Engineering leakage | pass | Engineering half empty; no architecture/phase/validator pre-fill (Size topology matches the 52/59 convention) |
 | C14 | Obligation containment | pass | No unit obligation exported; deferred rows are owner/cross-feature with triggers, not later-issued work |
 
+### plan — 2026-09-17
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-55-20260917-1 · Snapshot: 01ede4dfadf0da465c21741a5a22440104be4d59d389c435718108c2bfe74eff · Verdict: plan-review-fail
+- Unit: 55-executable-golden-fixture · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2 · Parent Product receipt: spec-review-55-20260917-3
+- Source revision: 438c778295348b9174101ef9fdf23b5c1ff775c8 · Artifact revision: 438c778295348b9174101ef9fdf23b5c1ff775c8
+- Reviewer: review-plan · Session: 01a0af60-6bf4-7302-a9d2-ced0e2a81494 · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T12:39:00Z/2026-09-17T12:45:00Z · Findings: 4 (material open: 3)
+- Ledgers read: planning-evidence 16 rows · obligations 14 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): none — first cycle
+```
+
+Snapshot built by `node scripts/pre-execution-snapshot.mjs build --stage plan
+--unit 55-executable-golden-fixture --parent
+c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2
+--source-revision 438c778295348b9174101ef9fdf23b5c1ff775c8` at `438c7782`
+(`artifactRevisionId` left to the builder's RS3(b) identity default, which is the
+same `438c7782…`). The planner's handoff label `55-plan-1` (`SPEC.md` Engineering
+half, "Plan artifact revision") is recorded here; the receipt field binds the
+builder's canonical digest-derived value, per the feature 37 precedent
+(`docs/features/37-phase-lint-script/progress.md:72`: a handoff label in the
+field is refused `stale-artifact-revision` with no bound byte moved), so a
+consumer's plain `verify --stage plan` matches. It bound three artifacts — `spec` → `SPEC.md`
+(56959 B), `acceptance` → `ACCEPTANCE.md` (5452 B), `decisions` →
+`decisions.md` (12151 B) — and the three contexts (`project-guide` present,
+`normalized-repository-state` present, `architectural-invariants` absent —
+NRS F010). The XS/S planning ledgers are embedded in `SPEC.md`, so the
+`planning-evidence` / `obligations` rows are `absent` and their bytes are bound
+by the whole-file `spec` row (D20); the builder's "no planning ledgers — legacy
+adoption state" note is the generic S-unit message for that shape, not a
+defect. Parent lineage: `verify --stage spec` reports `stale-source-revision`
+because the plan write (438c7782) rotated the derived spec source revision via
+the shared `SPEC.md`; rebuilding the `spec-product-v1` projection with the
+receipt's exact revisions reproduced `c1f0404…` byte-for-byte and the context
+digests are unchanged, so the Product half did not move and L1 holds.
+
+Falsification pass (recorded, not a finding unless evidenced):
+
+```text
+FALSIFICATION — 55-executable-golden-fixture plan @ 438c7782
+- Engineering claims a hostile reader could call invented rather than evidenced:
+  none — every claim resolves to a repository row (PE-001…PE-016); the two toy
+  plans' probe outputs reproduce exactly from /tmp/p55-probe at 438c7782.
+- A SPEC obligation this plan cannot deliver: none unowned; O2's validator is
+  mis-phased (PF-55-03) and the AC5 gate is malformed (PF-55-01).
+- A phase whose deliverable could be accepted while its validator passes for the
+  wrong reason: P2 — the ACCEPTANCE AC5 slug-grep returns no output on the
+  current pre-slim doc (PF-55-01).
+- If every phase shipped exactly as written: the doc would likely still exceed
+  150 lines (178 remain after the stated removals), failing P2's own done-when
+  (PF-55-02).
+- Failure state with no scenario or a scenario no validator runs: none — the dev
+  scenarios table maps each to a P3 check.
+- Verdict stance before checking: CONFIRMED-GAPS
+```
 
 ## Acceptance receipt v1
 
