@@ -229,3 +229,44 @@ O15's one-phase/one-task contract) and R31-03's plan facet — `plan-feature`
 re-derives the plan and re-freezes `ACCEPTANCE.md` (AC8 wording, obligation
 O8, P4 task 5) once a fresh `SPEC-REVIEW-PASS` receipt exists; the manifest
 stayed byte-frozen through this batch (blob `d85e217a…` recomputed intact).
+
+## 2026-09-17 — Owner ruling: redesign + replan (carrier moves to code)
+
+- **D-31-6 — The materiality predicate, the two-cycle cap and the wording-only
+  route are implemented in code; the prose surfaces shrink to what is not
+  computable.** Owner ruling after the 2026-09-17 review-cost audit. The Product
+  intent recorded in D-31-1…D-31-5 is **unchanged** — `low` stays a persistent
+  report-note, the loop still caps at two cycles and still ends in
+  `NEEDS-DESIGN`, and a wording-only repair still skips the full snapshot
+  re-review. What changes is the **carrier**: the predicate becomes a rule the
+  machine evaluates (the finding record's `class`/`severity`/`reproducer` plus
+  `pre-execution-snapshot.mjs verify`'s exit code and closed reason codes), the
+  cap becomes the state the orchestrator refuses to advance past, and the
+  discipline pins exist to keep the rule honest instead of encoding it.
+- **Kept.** Feature number 31, branch `feat/31-planning-review-materiality`,
+  issue #171, the entire Product half and its `spec-review-31-3` PASS (verified
+  `current: true`), and every product decision row.
+- **Superseded.** The whole plan set cut as `31-plan-1`/`31-plan-2` (`PLAN.md`,
+  `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`,
+  `testing.md`) and the plan-review findings raised against it (`F01–F03`,
+  `R31-01…R31-03`). They are **not repaired**: they describe a carrier
+  (skill-reference prose) that this ruling replaces, so a repair batch would
+  spend the plan stage's third cycle on the wrong artifact. The set is re-cut
+  from scratch by `plan-feature` once the Engineering half is rewritten.
+- **Why the Product half is not re-reviewed.** `spec-product-v1` selects title,
+  `## Goal`, `## Branch`, `## Size`, `## Dependencies`, the Product half and
+  `## Design status` — deliberately excluding the Engineering half
+  (`pre-execution-review/references/SNAPSHOT.md`), "so planning writes cannot
+  move a Product digest". Verified empirically on this revision: appending bytes
+  to the `## Engineering half` left the bound digest at
+  `5cdbd2f3f2039b1089c14cdce9a3367df9a92720eb0122de822e1693a07f502e` unchanged,
+  so the `spec-review-31-3` PASS stays current through a reshape of the
+  engineering cut. **If** the redesign is later judged to move the Product
+  half's own surface list, the digest rotates, the receipt goes
+  `stale-artifact-content` and the spec stage reopens — authorized by this
+  ruling as a carrier change, never as another re-review of the same intent.
+- **Next, in order.** `/plan-feature 31` (rewrites the Engineering half against
+  D-31-6 and re-cuts the plan set) → `/review-plan 31` on the new set, which is
+  cycle 1 of a new lineage → `/execute-phase 31` once the plan receipt is
+  current. Roadmap row 31 returns to `defined` (routing data, unbound) until the
+  new set is planned.
