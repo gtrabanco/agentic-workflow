@@ -328,3 +328,37 @@ in place with `resolving-artifact-revision: 31-spec-7` — see SPEC
 R31-01/R31-02/R31-03 stay `open` for `plan-feature`'s re-derivation batch
 (plan re-cut + `ACCEPTANCE.md` re-freeze once a fresh `SPEC-REVIEW-PASS`
 receipt exists).
+
+---
+
+## Re-review (`spec-review-31-8`, 2026-09-17)
+
+Cycle-5 independent re-review of the Product half the `31-spec-7` repair batch
+rewrote — the route `spec-review-31-7` named for N31-012/N31-013. Fresh
+context; this conversation never authored or edited the Product half, its
+ledgers, or its acceptance manifest → `contextClean: true`.
+
+Snapshot `07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794` @
+source revision `12ddc2154f6f9a5c88361dee95e38b4726e8e190` (`spec-product-v1`
+digest `d4912d0cac1378f01f835a1629df4203ce7ceb3b6cd27fcf4cea2aba4e539153`,
+45546 bytes); handoff label `31-spec-7`. Verdict: `spec-review-fail` — 13/14
+checks pass; C8 carries one `product` row (N31-014 `medium`). N31-012 and
+N31-013 are verified repaired at `31-spec-7` (the POLICY §3 removal grep hits
+`POLICY.md:42` today and discriminates; the two AC3 bound anchors return 0 /
+exit 1 today and discriminate). N31-009/N31-010/N31-011 stay `resolved` at
+`31-spec-6`; N31-006/N31-007/N31-008 at `31-spec-5`; N31-004/N31-005 at
+`31-spec-4`; N31-001/N31-002/N31-003 at `31-spec-2`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-014 | spec | medium | product | 07bdbf673ff2299a76c90df0cb90092f6021f54a9f6861eae535916b43e56794 | In-scope 5 declares `POLICY.md` §4 among the surfaces that lose "the unbounded-cycle sentences", and AC7 claims "the machine-owned sentences leave **every** declared surface", but AC7's removal set covers only two of §4's three unbounded-cycle claims: `grep -n "cycle is allowed when correctness needs it"` (`:61`, the wrapped "Entering a **second** cycle is allowed …" sentence) and `grep -n "no cap converts a verdict into a"` (`:83`, tail of "The anomaly is printed and routed, never a stop, and no cap converts a verdict into a dead end."). §4's third — "a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by design, so no cycle cap or anomaly rule may block or end it." (`:81-82`) — is matched by no criterion. After this unit ships the machine refuses a third consecutive unconverged review→repair→re-review cycle (In-scope 3 / E3 state transitions: "a third never starts: the orchestrator refuses and names the human route"; AC5), so §4's `:82` is contradicted by the shipped rule; a PR that rewrites §4's other two sentences and leaves `:82` ships a POLICY.md still asserting no cap may end the loop with every AC green — the same false-green class as N31-004/N31-006/N31-010/N31-012. | SPEC.md `#### In scope` item 5 (POLICY §4 "lose … the unbounded-cycle sentences"); SPEC.md AC7 (the two POLICY §4 greps + the "every declared surface" claim); SPEC.md `### Capability closure` E3 state transitions; SPEC.md AC5; `skills/pre-execution-review/references/POLICY.md:80-84` (the sentence, `:81-82`); observed `grep -n "no cycle cap or anomaly rule" skills/pre-execution-review/references/POLICY.md` → `82:` exit 0 at HEAD `12ddc215`, fragment unique in `skills/`; observed the only AC7 POLICY §4 fragments at `:61` and `:83` (both exit 0 today with the sentences standing) | open | — | — |
+
+The `medium` row is the same acceptance-coverage class the unit's review loop
+keeps surfacing (N31-004, N31-006, N31-010, N31-012): In-scope 5 declares a
+sentence class removed from `POLICY.md` §4 and no criterion observes one of
+that section's sentences. Repair owner: `design-feature
+31-planning-review-materiality`, one batch over the whole set, then
+`/review-spec 31-planning-review-materiality` re-reviews the new artifact
+revision. The plan-stage rows R31-01/R31-02/R31-03 stay `open` for
+`plan-feature`'s re-derivation batch (plan re-cut + `ACCEPTANCE.md` re-freeze
+once a fresh `SPEC-REVIEW-PASS` receipt exists).
