@@ -325,3 +325,34 @@ the full roadmap status machine. No new finding rows appended to
 ## Unit-loop receipt — P4 reconciliation
 - P4 commit: 72700419 (`docs(roadmap): mark 55 done (P4)`) — the receipt above recorded `pending`; this line resolves it (never amended to self-reference)
 - PR: [#240](https://github.com/gtrabanco/agentic-workflow/pull/240) (open; title + body refreshed to the delivery description) · Branch: `feat/55-executable-golden-fixture` · Remote: current after the link commit
+
+### P4 gate log (full commands — kept in the ledger, not in the SPEC ticks)
+
+Phase-lint parses task text (box 4 counts `→` chains; box 2 classifies path-like
+tokens), so a verbose command log inside a checkbox perturbs the plan lint.
+Recording it here keeps the plan's fingerprint stable.
+
+| Command | Result |
+|---|---|
+| `npx skills add . --list` | exit 0 |
+| `node scripts/check-skill-context.mjs` | `PASS context budgets: 40 skills`, exit 0 |
+| `node --test scripts/*.test.mjs` | exit 0 — 496 pass / 0 fail |
+| `node --test scripts/golden-fixture.test.mjs` | exit 0 — 9 pass / 0 fail |
+| `bun test scripts/golden-fixture.test.mjs` | 9 pass / 0 fail |
+| `unshare -rn node --test scripts/golden-fixture.test.mjs` | exit 0 — 9 pass / 0 fail (no network namespace — AC8 clause 2) |
+| `grep -nE "Date\.now\|Math\.random\|fetch\(\|https?://" scripts/golden-fixture.test.mjs` | no matches (AC8 clause 1) |
+| `diff <(node scripts/phase-lint.mjs …/toy-plan.md) scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt` | empty (AC1) |
+| `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` | exit 1, `verdict BLOCKED`, 6 `box-<n>` lines (AC2) |
+| `wc -l docs/workflow/GOLDEN_FIXTURE.md` | 149 ≤ 150 (AC5) |
+| AC5 exemption pipeline | no output |
+| `node scripts/phase-lint.mjs docs/features/55-executable-golden-fixture/SPEC.md` | `verdict PASS`, fingerprint `58fdb9db…` (identical to the frozen block) |
+| `git status --porcelain` | empty; branch remote-current |
+
+**Correction (found at close-out).** The first draft of the P4 tick evidence
+inlined this log and carried the branch name `feat/55-executable-golden-fixture`
+— a path-like token with no frozen layer prefix, which makes `phase-lint` fail
+closed as `BLOCKED: unparseable` — and its `→`-heavy lines tripped box 4. Neither
+touched a phase: after trimming the evidence to lint-safe prose, the linter
+returns `PASS (8/8)` for P1–P4 with the **same** fingerprint `58fdb9db…`, so the
+frozen plan is unchanged. Lesson: verbose evidence belongs in the handoff ledger,
+never inside a planner-checked checkbox.
