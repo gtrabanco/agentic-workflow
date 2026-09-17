@@ -695,16 +695,18 @@ only on a current `SPEC-REVIEW-PASS` receipt.
 
 Written by `plan-feature-scaffold` at artifact revision **`31-plan-3`** (the
 re-cut the Product carrier amendment `31-spec-3`/D-31-6 and the Product half's own
-`## Design status` require) and re-written by `plan-feature` at artifact revision
-**`31-plan-4`** — the repair batch for `plan-review-31-3`'s five rows
-(P31-01…P31-05). The plan descends from the current Product receipt
-`spec-review-31-9` @ snapshot
-`e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`, verified
+`## Design status` require), re-written by `plan-feature` at **`31-plan-4`** — the
+repair batch for `plan-review-31-3`'s five rows (P31-01…P31-05) — and re-derived
+at **`31-plan-5`** after the owner-commissioned Product patches `31-spec-9` and
+`31-spec-10` widened AC13's declared code-carrier group. The plan descends from
+the current Product receipt `spec-review-31-11` @ snapshot
+`dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`, verified
 fresh against the bytes on disk by `pre-execution-snapshot.mjs verify --stage
-spec` at the scaffold's Product-review gate (`current: true`,
+spec` at this re-derivation's Product-review gate (`current: true`,
 `structural.fresh: true`). Repair record: `progress.md`; engineering decisions:
-`decisions.md` (E-D31-8…E-D31-14 for the carrier move, E-D31-15…E-D31-19 for this
-batch); plan-stage finding rows R31-01/R31-02/R31-03 and P31-01…P31-05 resolved in
+`decisions.md` (E-D31-8…E-D31-14 for the carrier move, E-D31-15…E-D31-19 for the
+`31-plan-4` batch, E-D31-20…E-D31-21 for this re-derivation); plan-stage finding
+rows R31-01/R31-02/R31-03, P31-01…P31-05 and P31-06 resolved in
 `planning-findings.md`; full phase detail: `PLAN.md` and `TASKS.md`.
 
 ### Technical goals
@@ -739,7 +741,7 @@ schema package stays dependency-free and the scripts stay dependency-free beyond
 the built schema package.
 
 Affected surfaces (verified at branch head `4b7cad56`; evidence rows
-PE-001…PE-029 in `planning-evidence.md`):
+PE-001…PE-032 in `planning-evidence.md`):
 
 - `packages/agentic-workflow-schema/src/pre-execution-contract.ts:101` (the
   severity vocabulary comment), `:455-500` (`FINDING_SPEC`), `:459` (the
@@ -970,7 +972,7 @@ scaffold.
 ### Planning evidence
 
 see planning-evidence.md (M/L unit — the frozen table lives in
-`planning-evidence.md`; rows PE-001…PE-029, all `current`, `proven` or
+`planning-evidence.md`; rows PE-001…PE-032, all `current`, `proven` or
 `decision`).
 
 ### Obligations
@@ -1151,18 +1153,22 @@ stays accepted.
   diff to the Engineering half — resolved as E7 (`decisions.md` E-D31-4/E-D31-12:
   pins read the code carriers, no prose row floor).
 - **Inherited, RESOLVED by this plan**: R31-01 (the plan descending from a stale
-  Product receipt) — resolved by the re-cut, which binds
-  `spec-review-31-9` @ `e15374a3…` as parent; R31-02 (a multi-phase obligation
-  row) and R31-03 (the scope walk missing the unit's own records) — resolved by
-  `planning-obligations.md`'s one-phase rows and AC13's declared
+  Product receipt) — the lineage was repaired by the `31-plan-3` re-cut
+  (`spec-review-31-9` @ `e15374a3…`) and re-bound by the `31-plan-5`
+  re-derivation to `spec-review-31-11` @ `dd09372a…`; R31-02 (a multi-phase
+  obligation row) and R31-03 (the scope walk missing the unit's own records) —
+  resolved by `planning-obligations.md`'s one-phase rows and AC13's declared
   workflow-mutated group.
-- **Resolved by the `31-plan-4` repair batch (P31-01…P31-05)**: the wording-only
-  determination moved to the unbound `progress.md` home and its branch was placed
-  before `stale-source-revision` (P31-01/P31-02); the cap count is derived by a
-  pure helper and projected into the envelope's free-form `detail` bag with
-  feature 38's A:12 kept and its suite added to the gate pack (P31-03); the
-  schema package's CHANGELOG row moved into P1 (P31-04); the evidence-row range
-  in this half was corrected (P31-05).
+- **Resolved by the `31-plan-4` repair batch (P31-01…P31-05) and the `31-plan-5`
+  re-derivation (P31-06)**: the wording-only determination moved to the unbound
+  `progress.md` home and its branch was placed before `stale-source-revision`
+  (P31-01/P31-02); the cap count is derived by a pure helper and projected into
+  the envelope's free-form `detail` bag with feature 38's A:12 pinned in the
+  discipline suite (P31-03); the schema package's `CHANGELOG.md` row stays in the
+  `docs` P4 — it cannot live in the `config/infra` P1 (`known-issues.md` §12,
+  E-D31-18/E-D31-21); the evidence-row range in this half was corrected
+  (P31-05); and P31-06 closed once the Product half enumerated the code carriers
+  (`31-spec-9`/`31-spec-10`, `spec-review-31-11`).
 - **Risk — the wording-only branch could be read as an author-declared bypass.**
   Mitigated by construction: the branch requires the acceptance fingerprint and
   the bound authorities to be unmoved, the revision to have rotated, and the
@@ -1532,3 +1538,37 @@ set (`SPEC.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
 `plan-feature`'s owning artifact, re-derived only on a fresh `SPEC-REVIEW-PASS`
 receipt). The `spec-review-31-10` receipt is superseded by design (bound Product
 bytes moved — `stale-artifact-content`).
+
+### `31-plan-5` (2026-09-17) — engineering re-derivation for the reviewed Product patch
+
+Trigger: the plan's parent was `spec-review-31-9` @ `e15374a3…`, and the Product
+half's bound bytes moved twice after it — the owner-commissioned patches
+`31-spec-9` (the `## Scope` code-carrier group gains
+`scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs` and
+`scripts/workflow-status-pre-execution.test.mjs`, resolving `plan-review-31-3`'s
+open row P31-06) and `31-spec-10` (gains
+`scripts/pre-execution-attribution.test.mjs` and
+`scripts/pre-execution-sensor.test.mjs`, resolving `spec-review-31-10`'s N31-015).
+`spec-review-31-11` (`spec-review-pass`, 14/14 checks, zero findings,
+`spec-product-v1` digest `e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02`,
+46362 bytes) is the current Product receipt, so the plan descended from a stale
+parent — the exact lineage class R31-01 named.
+
+What the re-derivation changed: the plan snapshot's parent now binds
+`spec-review-31-11` @ `dd09372a…`; `planning-findings.md` **P31-06** flips to
+`resolved` (the Product declaration it was owed now enumerates every path the plan
+edits by design, so AC13's scope walk is satisfiable); `E-D31-18`'s CHANGELOG-row
+allocation is corrected to the phase-lint-valid one (the schema package's 4.3.0
+companion row stays in P4, where the `docs` layer lives, and the `normative-drift`
+window P1→P4 is declared in `known-issues.md`); `known-issues.md` §9 is closed and
+its duplicate item numbering repaired. No phase, task, validator, or acceptance
+criterion's required outcome changed: both Product patches were enumeration-only,
+so `ACCEPTANCE.md`'s validators are re-frozen byte-identical to their criterion
+text.
+
+Artifact revision rotates `31-plan-4` → **`31-plan-5`** for the plan set
+(`SPEC.md` Engineering half, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`,
+`planning-evidence.md`, `planning-obligations.md`, `decisions.md`,
+`known-issues.md`). The `plan-review-31-3` receipt is superseded by design (bound
+plan bytes moved); a repaired plan is not an approved plan, so the next step is
+`/review-plan`.

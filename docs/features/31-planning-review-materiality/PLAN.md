@@ -7,31 +7,39 @@ cut follows the Product half's carrier ruling (D-31-6) and its Size section ("M 
 code carrier, no split trigger: well under 5 phases"), so it stays inside the
 bound the reviewed Product half records. Every phase declares one layer, holds
 zero open design decisions, and ends in a locally runnable, machine-checkable
-done-when. Artifact revision of this plan set: **`31-plan-4`** — the repair batch for
-`plan-review-31-3` (P31-01…P31-05), on top of the `31-plan-3` re-cut the D-31-6
-carrier ruling owed (`31-plan-1/2` superseded, never repaired). The superseded
-sets are not repaired: `31-plan-1/2`'s carrier was prose recitation plus a
-`PLANNING_PIN_TABLE` row floor, which the code carrier replaces, and `31-plan-3`'s
-wording-only identity check and sensor wiring did not survive contact with the
-machine contract.
+done-when. Artifact revision of this plan set: **`31-plan-5`** — the re-derivation
+that binds the current Product receipt `spec-review-31-11` after the
+owner-commissioned Product patches `31-spec-9`/`31-spec-10`, on top of the
+`31-plan-4` repair batch for `plan-review-31-3` (P31-01…P31-05) and the `31-plan-3`
+re-cut the D-31-6 carrier ruling owed (`31-plan-1/2` superseded, never repaired).
+The superseded sets are not repaired: `31-plan-1/2`'s carrier was prose recitation
+plus a `PLANNING_PIN_TABLE` row floor, which the code carrier replaces;
+`31-plan-3`'s wording-only identity check and sensor wiring did not survive
+contact with the machine contract; and `31-plan-4`'s provenance paragraph and
+`E-D31-18` prose are re-cut here, never preserved.
 
 Plan provenance:
 
-- Parent Product snapshot: `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`
-  (`spec-review-31-9`), verified fresh against the bytes on disk at this
-  scaffold's Product-review gate (`pre-execution-snapshot.mjs verify --stage
+- Parent Product snapshot: `dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`
+  (`spec-review-31-11`), verified fresh against the bytes on disk at this
+  re-derivation's Product-review gate (`pre-execution-snapshot.mjs verify --stage
   spec` → `current: true`, `structural.fresh: true`).
-- Parent Product receipt: `spec-review-31-9` (14/14 checks, zero findings).
+- Parent Product receipt: `spec-review-31-11` (14/14 checks, zero findings;
+  `spec-product-v1` digest `e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02`,
+  46362 bytes).
 - Superseded plan-stage finding rows R31-01/R31-02/R31-03: resolved by the
   `31-plan-3` re-cut; F01/F02/F03 by `31-plan-2` (`planning-findings.md`).
 - Plan-stage finding rows P31-01…P31-05 (`plan-review-31-3`, medium/medium/high/
-  low/low): resolved in place by this repair batch (`planning-findings.md`;
-  artifact revision `31-plan-4`).
+  low/low): resolved in place by the `31-plan-4` repair batch; **P31-06**
+  (`plan-review-31-3`, medium, `class: product`) resolved by this re-derivation
+  once the Product patches `31-spec-9`/`31-spec-10` enumerated the code carriers it
+  named (`planning-findings.md`).
 - Frozen acceptance-manifest blob at this revision (`git hash-object`):
-  `650c7c8b21fdd6b7e2ec7b6c2c91672732201166` (the `31-plan-3` blob was
+  `849af5ae7bccc7bc815d60d8ca2a9e0400161df9` (the `31-plan-4` blob was
+  `650c7c8b21fdd6b7e2ec7b6c2c91672732201166`, the `31-plan-3` blob
   `3d7e7c9ee92314261e5529815c76b373e8ca2745`, the `31-plan-2` blob
   `d85e217acad1322d3caf4968715ef5d00e9189c0`; each re-cut re-froze the manifest
-  because the moved carrier changes the validators).
+  because the moved parent changes the recorded lineage).
 
 ## P1 — Schema finding-record materiality
 
@@ -129,7 +137,7 @@ package's 4.3.0 row lands with the bibliography append here.
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
 - [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, so `CHANGELOG.md` gains one row per skill and the README skill cells stay accurate.
-- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`. The schema package's 4.3.0 companion-table row lands in P1 with the bump — `rendered-facts@1` recomputes that table against `package.json` (P31-04).
+- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`. The schema package's 4.3.0 companion-table row lands in this phase with the other release records — it cannot live in P1, because `CHANGELOG.md` is a `docs` target and the phase contract forbids a `docs` target in the `config/infra` P1 — so the `normative-drift` window declared in `known-issues.md` closes at P4 (P31-04).
 
 Done-when: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed, the release tables recomputed against the frontmatter, and the AC7 removal greps clean.
 

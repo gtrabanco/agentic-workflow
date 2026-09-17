@@ -43,8 +43,11 @@ means the phase cut is wrong.
   matching prose, not a second predicate); the finding record's bound owns O3; the
   cap refusal owns O5 (O15 cites it as the invariant's carrier, not a second copy
   of the rule); the wording-only branch owns O4.
-- This ledger is the re-cut for artifact revision `31-plan-3`. The superseded
-  `31-plan-2` ledger's O15 (`PLANNING_PIN_FLOOR`, three phases in one row) is
-  retired with its carrier, and neither the plan-stage finding R31-02 nor the
-  row-span defect it named survives in this cut: every row above names one phase
-  and one task.
+- This ledger is the re-cut for artifact revision `31-plan-5` (the re-derivation
+  that binds the current Product receipt `spec-review-31-11`; `31-plan-3` is its
+  lineage and `31-plan-4` its immediate predecessor). The superseded `31-plan-2`
+  ledger's O15 (`PLANNING_PIN_FLOOR`, three phases in one row) is retired with
+  its carrier, and neither the plan-stage finding R31-02 nor the row-span defect
+  it named survives in this cut: every row above names one phase and one task.
+  No row moved in the `31-plan-5` re-derivation: both Product patches were
+  enumeration-only, so this ledger is byte-identical to the `31-plan-4` cut.
