@@ -500,6 +500,13 @@ Command-checkable at the PR head unless labelled `read-verified`.
   sentence is line-wrapped across `:83-84`, so the pattern is its
   single-line fragment — it matches while the sentence stands and disappears
   with it);
+  `grep -n "no cycle cap or anomaly rule"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero (§4's
+  third unbounded-cycle sentence — "… produces a new snapshot by design, so
+  no cycle cap or anomaly rule may block or end it." — wraps across
+  `:81-82`; the pattern is its single second line, unique in the file, so it
+  matches while the sentence stands and disappears with it — the same
+  line-wrap discrimination the other §4 greps use);
   `grep -n "cycle is allowed when correctness needs it"
   skills/pre-execution-review/references/POLICY.md` exits non-zero (the
   "Entering a **second** cycle is allowed" sentence wraps across `:60-61`;
@@ -664,17 +671,18 @@ Product boxes:
 
 ## Design status
 
-`designed` — repair batch for `spec-review-31-7` applied (N31-012 + N31-013,
-one batch): capability closure complete (zero blank rows), Spec-lint product
+`designed` — repair batch for `spec-review-31-8` applied (N31-014, one
+batch): capability closure complete (zero blank rows), Spec-lint product
 boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
-**`31-spec-7`** (2026-09-17 — see `## Amendments`). This write moves the
-Product half's bound bytes, so the `spec-review-31-7` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run is the **fifth
-consecutive cycle** of the window D-31-7 opened at the carrier amendment, and
-it starts under the explicit user instruction that commissioned this batch
-(D-31-7's user-keyed cycle — the instruction is quoted in `decisions.md` and
-`progress.md`; the window's `CONVERGENCE-ANOMALY` block preceded the cycle-2
-edits and is reproduced in the `spec-review-31-7` receipt).
+**`31-spec-8`** (2026-09-17 — see `## Amendments`). This write moves the
+Product half's bound bytes, so the `spec-review-31-8` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run is the
+**sixth consecutive cycle** of the window D-31-7 opened at the carrier
+amendment, and it starts under the explicit user instruction that
+commissioned this batch (D-31-7's user-keyed cycle — the instruction is
+quoted in `decisions.md` and `progress.md`; the window's
+`CONVERGENCE-ANOMALY` block preceded the cycle-2 edits and is reproduced in
+the `spec-review-31-8` receipt).
 `plan-feature` re-cuts the plan set (`31-plan-1/2` superseded, never repaired)
 only on a current `SPEC-REVIEW-PASS` receipt.
 ---
@@ -1255,3 +1263,34 @@ Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
 `spec-review-31-7` receipt is superseded by design (bound Product bytes moved
 — `stale-artifact-content`): the next `/review-spec` run is the user-keyed
 fifth cycle of the window (D-31-7).
+
+### `31-spec-8` (2026-09-17) — repair batch for `spec-review-31-8`
+
+Trigger: `spec-review-31-8` returned `SPEC-REVIEW-FAIL` (failed check C8;
+13/14 pass) with one finding, N31-014 (`medium`, product) — one batch over
+the whole open spec-stage set (N31-012/N31-013 are verified repaired at
+`31-spec-7`; no other open product row), repair owner `design-feature`.
+Commission (explicit user instruction, verbatim): "repair N31-014: give
+POLICY.md §4's third unbounded-cycle sentence ('… so no cycle cap or anomaly
+rule may block or end it.', :82) a criterion in AC7 so the declared §4
+shrink is observable". This is the **sixth consecutive cycle** of the window
+D-31-7 opened at the carrier amendment (`spec-review-31-4` FAIL #1,
+`spec-review-31-5` FAIL #2, `spec-review-31-6` FAIL #3, `spec-review-31-7`
+FAIL #4, `spec-review-31-8` FAIL #5); per D-31-7 it starts only under
+explicit user instruction, which this commission is — the instruction is
+quoted verbatim in `decisions.md` and `progress.md` (REPAIR §4: a repair
+responding to a persisted verdict is never a loop defect). Repair class
+(REPAIR §2):
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-014 | product · medium | AC7 gains the removal grep for POLICY.md §4's third unbounded-cycle sentence: `grep -n "no cycle cap or anomaly rule" skills/pre-execution-review/references/POLICY.md` exits non-zero. The sentence — "a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by design, so no cycle cap or anomaly rule may block or end it." — wraps across `:81-82`; the fragment is its single second line (`:82`), unique in the file (`grep -c` → 1) and in `skills/` (1 hit), and exits 0 with the sentence standing at branch head `12ddc215` — it matches while the sentence stands and disappears with it, the same line-wrap discrimination N31-006 gave the first two §4 greps and N31-012 the §3 grep. Repair class: **closure completion** (In-scope 5 already declares POLICY §4's unbounded-cycle sentences among the shrunk surfaces; only this sentence's criterion was missing — reviewed product intent unchanged). | AC7 |
+
+Artifact revision rotates `31-spec-7` → **`31-spec-8`** for the whole touched
+Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
+`progress.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded
+`31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
+`spec-review-31-8` receipt is superseded by design (bound Product bytes moved
+— `stale-artifact-content`): the next `/review-spec` run is the user-keyed
+sixth cycle of the window (D-31-7).
