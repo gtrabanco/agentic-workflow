@@ -3052,3 +3052,192 @@ Artifact revision rotates `31-spec-9` → **`31-spec-10`**.
 
 
 
+---
+
+# Delta re-review `spec-review-31-11` — review-spec reviewer turn (2026-09-17)
+
+Owner-scoped **delta re-review** of the Product-half patch `31-spec-10`
+(commit `e4887dac`). Owner instruction, verbatim: "en la re-revisión solo
+verifica que está parcheado y que está correcto, no verifiques todo, solo la
+parte que fallaba." Independent reviewer, fresh context — this conversation
+never authored nor edited the Product half → `contextClean: true`;
+`authorExclusion: not-enforceable` (manual route, no session identity to
+compare); `modelDiversity: not-applicable` (single reviewer).
+
+Cycle accounting (D-31-7): `spec-review-31-9` returned PASS (count reset to 0),
+`spec-review-31-10` returned FAIL → count 1, so this is **cycle 2** of the
+window. The owner-commissioned patch `31-spec-10` is a repair responding to a
+persisted FAIL receipt, so §4's carve-out keeps it unblocked; the anomaly is
+printed and routed, never a stop (below).
+
+Snapshot (built at the exact bytes read, one revision):
+
+```text
+digest   dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e
+source   e4887dac35e5d4925f9bac239ddd7b5ad888064c
+artifact e4887dac35e5d4925f9bac239ddd7b5ad888064c   (author handoff label `31-spec-10`)
+spec row docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · 46362 bytes · e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02
+contexts project-guide CLAUDE.md ff24d7e4… present · normalized-repository-state docs/workflow/REPOSITORY_STATE.md e1b81e29… present · architectural-invariants docs/architecture/ARCHITECTURAL_INVARIANTS.md absent
+```
+
+CONVERGENCE-ANOMALY (POLICY §4, D-31-7) — entry to the spec stage's cycle 2 of
+the window `spec-review-31-9`'s PASS reset (`spec-review-31-10` FAIL #1 →
+`31-spec-10` → this re-review). Reported on entry; grants no PASS and is not a
+stop:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-015 (repaired) / none new
+- Snapshots: b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9 → dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e (artifactRevisionId f0042c62 → e4887dac)
+- Missed: AC13's declared code-carrier group omitted the two suites AC4 requires (`scripts/pre-execution-attribution.test.mjs`, `scripts/pre-execution-sensor.test.mjs`); the earlier `31-spec-9` amendment repaired P31-06's three paths but not these two
+- Owning stage: product
+- Why the prior review failed: the `31-spec-9` carrier widening was an incomplete closure completion — the plan's own P3 edits were not walked against the declared groups
+- Route to owner: `design-feature 31-planning-review-materiality` (here executed directly by the human owner, POLICY §5) — one enumeration patch, then this re-review
+```
+
+## Delta scope — what was re-checked, what was carried
+
+`spec-review-31-10` failed exactly C9 and C10 (the single row N31-015). This
+turn re-runs **only** C9 and C10 against the patched bytes; C1–C8 and C11–C14
+are **carried** from `spec-review-31-10` — their subjects did not move (the
+delta below shows the only Product-projection change is the code-carrier
+enumeration plus the `## Design status` paragraph).
+
+Byte evidence — `git diff f0042c62..HEAD -- docs/features/31-planning-review-materiality/SPEC.md`:
+
+1. `## Scope` **Code carriers** (`SPEC.md:204-205`) gains
+   `scripts/pre-execution-attribution.test.mjs` and
+   `scripts/pre-execution-sensor.test.mjs`, inserted after
+   `scripts/pre-execution-contract.mjs` (`:203`).
+2. `## Design status` re-states the patch (the `31-spec-10` revision + the two
+   added paths).
+3. The `### 31-spec-10` entry under `## Amendments` is new — that section sits
+   after the Engineering half and is **outside** the `spec-product-v1` selector,
+   so it does not move the bound Product bytes.
+
+Nothing else in the selector moved.
+
+## Falsification (clean-context, delta-scoped)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ e4887dac
+- Name 3 specific product decisions in this half that a hostile reader could
+  call invented rather than recorded: none new in the delta — the patch records
+  an enumeration, cites its authority (AC4 + PLAN.md P3), and adds no product
+  decision.
+- Name the user outcome the SPEC promises that has no observable check: none
+  found in the delta (unchanged; carried from spec-review-31-10).
+- Name one role the matrix leaves unspecified for a capability it does list:
+  none (unchanged; carried).
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? That the two added paths are NOT edited by the plan or NOT required
+  by AC4 — FALSE: PLAN.md P3 task bullets (`PLAN.md:107-108`) extend both
+  suites, AC4 (`SPEC.md:469-478`) grep-requires both to carry `wording-only`,
+  and both files carry zero `wording-only` hits at e4887dac (observed
+  `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs
+  scripts/pre-execution-attribution.test.mjs` → exit 1), so the PR must edit
+  them and the declaration is necessary.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+## Checks — delta re-run (C9, C10) + carried set
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C2 | Actors and roles | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C3 | Entity closure | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C4 | Limits and failure states | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C5 | Scope and non-goals | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C6 | Integration closure | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C7 | Expectation sweep | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C8 | Acceptance objectivity | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C9 | Internal contradiction | **pass** | delta re-run: `## Scope` **Code carriers** (`SPEC.md:204-205`) now enumerates both `scripts/pre-execution-attribution.test.mjs` and `scripts/pre-execution-sensor.test.mjs`, and AC4 (`SPEC.md:469-478`) still requires `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → exit 0. AC4's required edits and AC13's declared allowed set no longer conflict — N31-015's contradiction is closed |
+| C10 | Repository contradiction | **pass** | delta re-run: every path the PLAN P1–P5 task bullets edit resolves to one of the three declared groups. P1 (`packages/agentic-workflow-schema/src/pre-execution-contract.ts`, `…/src/pre-execution.ts`, `…/test/pre-execution-receipt.test.mjs`, `package.json`, the two regenerated Draft-07 projections), P2 (`…/src/index.ts`, new `…/test/workflow-decision-review-loop-cap.test.mjs`, `scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs`, `scripts/workflow-status-pre-execution.test.mjs`), P3 (`scripts/pre-execution-contract.mjs`, `scripts/pre-execution-snapshot.mjs`, `scripts/pre-execution-attribution.test.mjs`, `scripts/pre-execution-sensor.test.mjs`, `scripts/review-loop-discipline.test.mjs`) → **code carriers** (`packages/agentic-workflow-schema/**` glob + the enumerated `scripts/*`), and the D-31-10 additions close the two formerly-undeclared paths; P3's `ACCEPTANCE.md` read + P5's `progress.md`/`PLAN.md`/`ACCEPTANCE.md`/`docs/features/ROADMAP.md` writes → **workflow-mutated records** (`docs/features/31-planning-review-materiality/**`, the unit's ROADMAP row); P4's skill references/`SKILL.md` `version:`s, `CHANGELOG.md`, `README.md` (skill cells + the AC12 `## References` append), and the Pi mirror → **prose-shrink + derived surfaces**. Every edited path is covered; the two added paths exist on disk and carry zero `wording-only` hits at `e4887dac` |
+| C11 | Evidence integrity | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C12 | Open product choices | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C13 | Engineering leakage | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+| C14 | Obligation containment | pass | carried from spec-review-31-10 (subject bytes unchanged) |
+
+Findings: 0 (material open: 0).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-11 · Snapshot: dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e · Verdict: spec-review-pass
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: e4887dac35e5d4925f9bac239ddd7b5ad888064c · Artifact revision: e4887dac35e5d4925f9bac239ddd7b5ad888064c
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature (owner amendment `31-spec-10`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T23:30:00Z/2026-09-17T23:44:00Z · Findings: 0 (material open: 0)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 46362 · digest e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 14/14 pass; C9 + C10 delta re-run (pass); C1–C8, C11–C14 carried from spec-review-31-10 (subject bytes unchanged); falsification NO-CONFIRMED-GAPS
+```
+
+Artifact-revision notes:
+
+- The handoff names the authoring label `31-spec-10` (`SPEC.md` `## Design
+  status`; `## Amendments` `### 31-spec-10`). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `e4887dac…` — the label stays recorded here.
+- Delta re-review by owner instruction: only C9 (AC4 ↔ AC13 contradiction) and
+  C10 (plan paths vs declared groups) were re-executed against the patched
+  bytes; the remaining twelve checks are carried from `spec-review-31-10`
+  because the delta changed only the code-carrier enumeration and the
+  `## Design status` paragraph inside the `spec-product-v1` projection.
+- Reviewed bytes are committed at `e4887dac` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held; the only writes
+  this turn makes are to the unbound `progress.md` and `planning-findings.md`,
+  so the bound digest is unchanged by them.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-11",
+    "verdict": "spec-review-pass",
+    "snapshot": "dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — a PASS: `structural.fresh: true`, `current: true`, `digestMatches:
+true`.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-PASS — 31-planning-review-materiality
+- Snapshot: dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e · Artifact revision: e4887dac35e5d4925f9bac239ddd7b5ad888064c · Checks: 14/14
+- Material findings open: 0 · Read-only: no reviewed artifact modified
+- Authority: planning may bind this receipt as its Product parent
+```
+
+All 14 checks resolve to `pass`; the delta re-run clears C9 and C10, and the
+carried set is unchanged. N31-015 stays `resolved` at `31-spec-10` in
+`planning-findings.md` (verified; no new row). No reviewed artifact was modified
+by this turn.
+
+→ Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
+  · design changed underneath → re-run /review-spec 31-planning-review-materiality first
+  · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
