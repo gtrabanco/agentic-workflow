@@ -93,6 +93,23 @@ preserve the stray `\`. A bare non-Markdown one-liner (e.g. `Closes #12`) may
 stay inline. Verify after: `gh issue view <n> --json body` shows backticks
 rendering, no literal `` \` ``.
 
+**Notation — forge numbers vs workflow numbers.** Two independent number spaces
+run side by side in this workflow and must never be confused:
+
+- **`#N` is a forge number** — a GitHub/GitLab issue or PR. In a forge, issues
+  and PRs share one sequence, so `#N` is always exactly one object, never two.
+  When the distinction matters, write **`issue #N`** or **`PR #N`**, or link it.
+- **Feature numbers carry no `#`.** Write **`feature 12`** (or plain `12` inside
+  a roadmap/feature context) — never `#12`. A roadmap row number is a workflow
+  identifier; the forge has its own object at that number.
+- **Fix units are forge-backed.** A fix is named by the issue that tracks it —
+  **`fix #157`**, folder `docs/fix/157-<topic>/`. So `fix #52` and `feature 52`
+  are two different things and the noun is what separates them.
+- **Ambiguity is a defect, not a style choice.** A sentence that mixes both
+  spaces (`merging #12 unblocks 05 and 07`) gets rewritten with the nouns
+  (`merging issue #12 unblocks features 05 and 07`). When a feature and an issue
+  share a number, the noun is mandatory.
+
 **Git workflow:** `<branches | worktrees>` — how parallel work is handled.
 **`branches`** (default): plain feature/fix branches via `git switch -c`, **one
 active unit at a time**, sequential — slower, but the working tree is always the
