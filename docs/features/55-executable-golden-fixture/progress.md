@@ -501,3 +501,300 @@ FALSIFICATION — 55-executable-golden-fixture plan @ d0623bda
   the verdict itself is the emit result.
 - Read-only: no reviewed plan artifact modified — `git status --porcelain` shows only
   this receipt in `progress.md` and the `PF-55-05` row in `planning-findings.md`.
+
+### spec — 2026-09-17 (review 4)
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-55-20260917-4 · Snapshot: 8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0 · Verdict: spec-review-pass
+- Unit: 55-executable-golden-fixture · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e · Artifact revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e
+- Reviewer: review-spec · Session: 01a0b0bd-7aa0-7302-a9d2-ceff406ff5ee · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T19:03:33Z/2026-09-17T19:04:16Z · Findings: 0 (material open: 0)
+```
+
+Snapshot rebuilt by `bun scripts/pre-execution-snapshot.mjs build --stage spec --unit
+55-executable-golden-fixture` (in-repo canonical serializer over
+`@gtrabanco/agentic-workflow-schema`). `sourceRevision`/`artifactRevisionId` carry the
+builder's RS3(b) identity default (`d0623bda`, the newest commit touching a bound path).
+It bound one artifact (`spec` → `SPEC.md`, selector `spec-product-v1`, 24981 bytes,
+sha256 `d8f9c47f…`) and three contexts: `project-guide` present (`CLAUDE.md`, sha256
+`f5c8e142…`), `normalized-repository-state` present (`docs/workflow/REPOSITORY_STATE.md`,
+sha256 `e1b81e29…`), `architectural-invariants` absent
+(`docs/architecture/ARCHITECTURAL_INVARIANTS.md` does not exist — NRS F010). Roadmap row
+55 is routing data and is deliberately unbound; the governing issue #230 was consulted
+as routing data and is likewise not a bound context (the canonical `CONTEXT_SOURCES`
+list binds only `project-guide`, `normalized-repository-state`, and
+`architectural-invariants`).
+
+**Why this review ran again (POLICY §4).** The prior Product receipt
+`spec-review-55-20260917-3` (`spec-review-pass`, snapshot `c1f0404…`) is stale on its
+`project-guide` context only: `CLAUDE.md` moved at `87d5b2db` — this unit's own P2/AC9
+deliverable, which added the verification-list line naming
+`scripts/golden-fixture.test.mjs` — so the snapshot changed
+(`c1f0404…` → `8467f280…`) while the Product projection did not. That is what
+`plan-review-55-20260917-3` stopped on (its `L1`, persisted as `PF-55-05`), and its route
+is exactly this re-review. The prior receipt was a PASS and no repair batch followed it,
+so this is a legitimate changed-snapshot repeat, not a second repair/re-review cycle; no
+`CONVERGENCE-ANOMALY` condition is met. Every prior finding `SPEC55-F1`…`SPEC55-F10` is
+`resolved` at `98d8e6a4`/`c5032f6e`; none is re-opened, and no new finding row is
+appended to `planning-findings.md`.
+
+**Byte identity.** The bound `spec-product-v1` row is `24981` bytes, sha256 `d8f9c47f…` —
+byte-for-byte the row `spec-review-55-20260917-3` bound. The Product half did not move:
+the `## Engineering half` write, the obligation-status ticks, and the task checkboxes all
+sit after `## Design status`, outside the projection (the selector ends at the first
+boundary heading after `Design status`). Only the `project-guide` digest rotated.
+
+```text
+FALSIFICATION — 55-executable-golden-fixture @ d0623bda
+- 3 product decisions a hostile reader could call invented rather than recorded:
+  (a) D-55-6's closed grammar `exact <n>/<n> · invented none|<k> · shape ok|<fail-code>`
+  and its 2026-09-18 cutoff — recorded as user-selected decisions D-55-4/D-55-6 with a
+  rationale; (b) D-55-3 committing both toy trees — recorded as a user-selected decision
+  with a rationale; (c) D-55-7's determinism constraints — recorded decisions backed by
+  the PE-5/PE-6/PE-7 document rows. Every one is presented as a decision with rationale,
+  never as a source-derived fact.
+- User outcome with no observable check: none found — the Goal's mechanical checking
+  maps to AC1–AC4/AC6/AC8 and the manual-judgment bookkeeping maps to AC3(c) + D-55-6.
+- Role left unspecified for a capability the half does list: none — the single capability
+  ("run the fixture smoke test") carries an explicit value for every derived role,
+  including the CI/root-runner and target-consumer `n/a` rows with reasons.
+- What would have to be true in the repository for this half to be wrong, and is it true?
+  The cited existing surfaces would have to differ. Checked now: `docs/CAPABILITIES.md` is
+  the unseeded template (roles row `<role>`, subsystem cells `<yes|no|partial>`);
+  `docs/architecture/ARCHITECTURAL_INVARIANTS.md` is absent; `docs/workflow/WORKFLOW_INVARIANTS.md`
+  declares no project invariant (its only `## AI-001` sits inside a fenced template
+  example), matching NRS F010; `scripts/fixtures/unit-route/` exists (`8cdf9548`, fix #224);
+  `scripts/schema-runtime.mjs` ← `1951b717` (fix 28); `scripts/check-skill-context.mjs` ←
+  `635168ce` (feature 20); `scripts/phase-lint.mjs` ← `4828900d` (feature 37). Every checked
+  claim holds. The one surface that moved since the half was authored —
+  `docs/workflow/GOLDEN_FIXTURE.md`, 383 → 149 lines — moved as this feature's own intended
+  outcome (AC5), and the half states that shape historically ("Feature 12 shipped … a
+  383-line human doc"), so it is not a current-state contradiction. Re-ran AC5's frozen
+  pipeline: `grep -rn "csv-export-command" docs/ | grep -vE
+  '^(docs/workflow/GOLDEN_FIXTURE\.md:[0-9]+:\| 20|docs/features/)'` → no output, and both
+  protocol greps (`Tool-calling smoke test`, `Fixed pass criteria`) match the slimmed doc.
+- Suspicion not evidenced as a defect: the governing issue #230's item 5 ("#152's drift
+  checker must learn the exclusion") is not restated verbatim in the half; the out-of-scope
+  bilingual bullet names row 57 as the owner and the repo is English-only interim (`AD-002`),
+  so the exclusion is owned, not silent. Recorded, not promoted to a finding.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+Product checks (14/14):
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | `## Goal`; every In-scope item carries `→ ACn`; AC1–AC9 are observable |
+| C2 | Actors and roles | pass | Role matrix (Repo owner · Agent · CI/root runner `n/a` · target consumer `n/a`) covers every derived role for the one capability |
+| C3 | Entity closure | pass | E1–E5 each fill Create/Read/Update/Delete/state; `n/a` rows carry reasons; no blank row |
+| C4 | Limits and failure states | pass | doc ≤150 lines + ~100-word protocol (limits); BLOCKED (AC2), invalid-envelope reject (AC3b), tamper (AC4), offline/no-clock (AC8) each carry a resolution |
+| C5 | Scope and non-goals | pass | 8 out-of-scope bullets, each a non-goal or a named owner (57, 44/#198, feature 08) |
+| C6 | Integration closure | pass | One resolved row per derived subsystem; the inventory is recorded because `docs/CAPABILITIES.md` is the unseeded template (verified placeholder-only) |
+| C7 | Expectation sweep | pass | 10 rows (≥5 for XS/S), each resolved with a pointer |
+| C8 | Acceptance objectivity | pass | AC1–AC9 are commands; AC8 clause 2 is `read-verified`; every In-scope item maps to ≥1 AC; AC5's frozen pipeline was re-run and behaves as specified |
+| C9 | Internal contradiction | pass | Cutoff/grammar/append-only/preservation are consistent across In-scope, E4, AC3(c), AC5, D-55-6; E1/E2 enumerations match AC3(b)/AC6 |
+| C10 | Repository contradiction | pass | 383→149 doc state is the feature's own intended outcome; CAPABILITIES placeholder-only, ARCHITECTURAL_INVARIANTS absent, WORKFLOW_INVARIANTS declaring none, producer lineage (`1951b717`/`635168ce`/`4828900d`/`8cdf9548`) all verified |
+| C11 | Evidence integrity | pass | decisions.md PE-1…PE-15 are all `proven`/`current`; no `unknown`, no `drifted`/`stale` row |
+| C12 | Open product choices | pass | 2 Deferred decisions, each with a decide-by trigger; no unflagged open choice |
+| C13 | Engineering leakage | pass | The Product half pre-fills no architecture, phase cut, task list, or validator set; the `## Size` topology sketch is the size convention (matches 52/59) and the plan cut four phases freely |
+| C14 | Obligation containment | pass | No unit obligation is exported; the two Deferred rows are owner/cross-feature with triggers, not later-issued work |
+
+Self-check (`write-then-report`, POLICY §8) — `bun scripts/pre-execution-snapshot.mjs
+verify --stage spec --unit 55-executable-golden-fixture --dir
+docs/features/55-executable-golden-fixture --unit-kind feature`:
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "55-executable-golden-fixture",
+  "receipt": {
+    "id": "spec-review-55-20260917-4",
+    "verdict": "spec-review-pass",
+    "snapshot": "8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+`current: true` (exit 0) with `digestMatches: true` + `structural.fresh: true` means the
+mark landed and the verdict is emit-able. Read-only: no reviewed artifact modified —
+`git status --porcelain` shows only this receipt in `progress.md`; `SPEC.md`,
+`decisions.md`, `ACCEPTANCE.md`, and `docs/features/ROADMAP.md` are untouched, and
+`planning-findings.md` gains no row (zero findings).
+
+### plan — 2026-09-17 (review 4)
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-55-20260917-4 · Snapshot: 807142855b7cbed45b1cf3fd9a93e15c2bb684ea84f98e3acd288b9ea2ab3808 · Verdict: plan-review-pass
+- Unit: 55-executable-golden-fixture · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0 · Parent Product receipt: spec-review-55-20260917-4
+- Source revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e · Artifact revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e
+- Reviewer: review-plan · Session: 9b5a375b-7e33-4ec7-807f-2baff7f7414a · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T22:05:00Z/2026-09-17T22:16:00Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 17 rows · obligations 14 rows (verified-capable: 14)
+- Prior plan receipt (re-review only): plan-review-55-20260917-3 @ fcf0fd79cb94811b1573b84cc1e4cdb2b840c533f9a496581e82f64fdfc577e0
+```
+
+**Repeat justification (POLICY §4).** The prior plan receipt
+`plan-review-55-20260917-3` (`plan-review-fail`, snapshot `fcf0fd79…`) stopped at L1
+because its parent Product lineage had gone stale. Its route — `/review-spec 55`
+re-derives the Product receipt, then `/review-plan 55` binds the new parent and
+re-derives the Plan receipt — was completed on 2026-09-17 by
+`spec-review-55-20260917-4` (`spec-review-pass`, snapshot `8467f280…`, re-verified
+`current: true`, `structural.fresh: true`). The plan snapshot therefore changed by
+design (`fcf0fd79…` → `8071428…`), so this is a legitimate changed-snapshot re-review,
+not no-progress; the prior receipt was a FAIL and its route is exactly this turn, so
+no second repair/re-review cycle is entered and no `CONVERGENCE-ANOMALY` condition is
+met (POLICY §4: "a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a
+new snapshot by design").
+
+**Snapshot.** Built by `node scripts/pre-execution-snapshot.mjs build --stage plan
+--unit 55-executable-golden-fixture --parent
+8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0`
+(builder's RS3(b) identity default, the newest commit touching a bound path,
+`d0623bda`). It bound three artifacts — `spec` → `SPEC.md` (61775 B, sha256
+`0a13114c…`), `acceptance` → `ACCEPTANCE.md` (5999 B, sha256 `a252a827…`),
+`decisions` → `decisions.md` (12151 B, sha256 `ac6d394e…`) — and three contexts:
+`project-guide` present (`CLAUDE.md`, sha256 `f5c8e142…`),
+`normalized-repository-state` present (`docs/workflow/REPOSITORY_STATE.md`, sha256
+`e1b81e29…`), `architectural-invariants` absent (`docs/architecture/ARCHITECTURAL_INVARIANTS.md`
+does not exist — NRS F010). The XS/S planning ledgers are embedded in `SPEC.md`, so
+the `planning-evidence` / `obligations` rows are `absent` and their bytes are bound
+by the whole-file `spec` row (D20); the builder's "no planning ledgers — legacy
+adoption state" note is the generic S-unit message for that shape, not a defect. The
+three bound artifact rows are byte-identical to the review-3 snapshot's rows — only
+the parent digest moved, which is the lineage re-derivation this turn exists to bind.
+
+**L1 — parent current.** `node scripts/pre-execution-snapshot.mjs verify --stage spec
+--unit 55-executable-golden-fixture --dir docs/features/55-executable-golden-fixture
+--unit-kind feature` → `current: true`, `digestMatches: true`, `verdictIsPass: true`,
+`structural.fresh: true`, `changedPaths: []` (exit 0): the newest `SPEC-REVIEW-PASS`
+receipt `spec-review-55-20260917-4` binds exactly `parentSpecSnapshotDigest`
+`8467f280…`, and the Product bytes/contexts have not moved since. L1 holds.
+
+**PF-55-05 resolved by the completed route.** The one finding of review 3
+(`PF-55-05`, `plan`/`high`/`product`, raised at `fcf0fd79…`) is the stale parent this
+turn closes. Its own `resolution-evidence` cell named the route
+`/review-spec 55` → `/review-plan 55`; the first leg landed
+(`spec-review-55-20260917-4`), and this receipt is the second. The row is flipped
+`open → resolved` in `planning-findings.md` with the re-derived Product snapshot as
+its counter-evidence — no reviewed artifact edited, and the recorded digest is never
+substituted (POLICY §7). With that row resolved, no open material row is carried into
+the snapshot's execution.
+
+Falsification pass (recorded, not a finding unless evidenced):
+
+```text
+FALSIFICATION — 55-executable-golden-fixture plan @ d0623bda
+- Engineering claims a hostile reader could call invented rather than evidenced:
+  PE-001/PE-002's toy-plan probe outputs (the fixtures are committed under
+  scripts/fixtures/golden-fixture/ and re-run green at this revision: toy-plan.md →
+  exit 0, fingerprint c39665a9…; toy-plan-nonatomic.md → exit 1, BLOCKED, six
+  box-<n> lines), PE-017's 148-line doc budget (a probe number; the committed doc is
+  149 lines, under AC5's ≤150 cap, and AC5 — not the probe — is the criterion), and
+  the plan's own phase fingerprints in its emitted Phase-lint block (re-run here:
+  verdict PASS, PASS (8/8) ×4, fingerprint 58fdb9db…). None is material.
+- A SPEC obligation this plan cannot deliver: none found — every AC maps to an
+  obligation row, and every obligation row is `verified` at this snapshot.
+- A phase whose deliverable could be accepted while its validator passes for the
+  wrong reason: none confirmed — review-1's PF-55-01 (the AC5 exemption pipeline
+  returning no output vacuously) is repaired and its non-vacuity was proven at
+  2ecc4915 (3 embedded-block lines pre-slim), and review-change F1 replaced the
+  suite's over-strict `checked === 0` assertion with the frozen contract (fold
+  c32525c).
+- If every phase shipped exactly as written, what would still be broken, and is that
+  in scope: nothing in scope — rollback is a PR revert, no persisted state, and EN–ES
+  restoration stays feature 57's.
+- Failure state with no scenario, or a scenario no validator runs: none — the dev
+  scenarios table maps every failure state to a P3 check.
+- Verdict stance before checking: NO-CONFIRMED-GAPS.
+```
+
+Ledger sweep (L1–L6):
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| L1 | Parent current | pass | `spec-review-55-20260917-4` binds `8467f280…` = `parentSpecSnapshotDigest`; `verify --stage spec` → current/fresh true |
+| L2 | Evidence integrity | pass | PE-001…PE-017 all `current` + `proven`; no `unknown`/`drifted`/`stale`; PE-001/PE-002/PE-003/PE-006/PE-007/PE-008/PE-010/PE-011/PE-012/PE-013/PE-015/PE-016 re-verified against the tree/`3133c5ca` |
+| L3 | Obligation completeness | pass | 14 rows O1–O14 cover SPEC §Scope items 1–7 plus AC8/AC9/verification-contract; no duplicate, none missing |
+| L4 | Obligation mapping | pass | every row carries one phase, its implementing task(s) in that phase, an owner, a validator tied to `ACCEPTANCE.md`/the phase done-when, and required-evidence; no blank/deferred status |
+| L5 | Scenario ↔ validator ↔ phase | pass | the 5 concrete dev scenarios + 3 explicit `n/a` rows each map to a P3 check; validators can fail (AC4 tamper case red-proven; AC5 pipeline non-vacuous pre-slim) |
+| L6 | Findings ledger honest | pass | `SPEC55-F1…F10`, `PF-55-01…04` resolved with evidence; `PF-55-05` resolved by this turn's route (below); no dismissed row; no open material row |
+
+Engineering checks (P1–P12):
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| P1 | Architecture | pass | `### Architecture impact` names every touched/untouched surface; invariant classification `n/a: no project invariants declared` (NRS F010) |
+| P2 | Dependency closure | pass | `## Dependencies`: no hard deps; producers 37/20/28(+25/59)/fix-224 all merged (PE-003, PE-009, PE-014, PE-015) |
+| P3 | Compatibility | pass | boundary stated: root `scripts/*.test.mjs` family convention, Envelope contracts read-only, no stored data, roadmap status machine; the toy-plan byte-exact snapshot is the deliberate golden-master pin (AC1) |
+| P4 | Security | n/a: no secret, input-validation, authn/authz, or PII surface is created — the suite is read-only over committed bytes and spawns only repo-local tools |
+| P5 | Migration | n/a: no schema/config/data migration (`### Deploy & rollback`); the roadmap row is a status flip; EN-only interim, no `.es.md` sibling owed |
+| P6 | Recovery | pass | `progress.md` unit-loop receipts per phase; phases are idempotent file writes; tamper case writes only to `mkdtempSync` |
+| P7 | Rollback | pass | revert the PR; additive fixtures/suite, no persisted state, doc slim reversible from git |
+| P8 | Operability | pass | `CLAUDE.md` verification list + `docs/workflow/README.md` index name the suite; roadmap row is the sensor surface |
+| P9 | Phase atomicity and order | pass | `node scripts/phase-lint.mjs …/SPEC.md` → `verdict PASS`, `PASS (8/8)` ×4, fingerprint `58fdb9db…` (identical to the frozen block); P1→P2→P3→P4 matches `Depends on`; last phase hardening |
+| P10 | Validators | pass | every done-when is a command with expected outcome; AC1–AC9 re-run green (suite 12/12; AC5 pipeline empty; `wc -l` 149; AC8 grep empty); no validator weakened to reach a phase |
+| P11 | Scenario coverage | pass | `### Dev scenarios` covers missing-fixture, tamper, invalid-envelope, grandfathered/post-cutoff rows, plus explicit `n/a` for permission/outage/concurrency |
+| P12 | Source evidence | pass | cited `path:line` rows re-checked at `d0623bda`: `scripts/phase-lint.mjs:230-238`, `:698`; `scripts/schema-runtime.mjs:36-47`; `scripts/phase-lint.test.mjs:1-5`; `CLAUDE.md:238,248`; `docs/workflow/README.md:21`; `scripts/fixtures/unit-route/**`; `packages/agentic-workflow-schema/src/index.ts:270-482` |
+
+**Recorded observation, not promoted to a finding.** O12's `phase` cell reads
+`P1, P4 · planning write`. The roadmap status machine genuinely crosses branch-open
+(P1) and PR-open (P4), and the row enumerates both checkpoints in its
+`required-evidence`, so the execution slice is unambiguous; review 2 adjudicated the
+same cell on the same bytes as acceptable, and no new evidence about it emerged from
+the lineage refresh. Recorded here for transparency; not a material finding
+(POLICY §4 no-progress — an identical question with no new route).
+
+Self-check (`write-then-report`, POLICY §8) — `node scripts/pre-execution-snapshot.mjs
+verify --stage plan --unit 55-executable-golden-fixture --dir
+docs/features/55-executable-golden-fixture --unit-kind feature --parent
+8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0`:
+
+```json
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "55-executable-golden-fixture",
+  "receipt": {
+    "id": "plan-review-55-20260917-4",
+    "verdict": "plan-review-pass",
+    "snapshot": "807142855b7cbed45b1cf3fd9a93e15c2bb684ea84f98e3acd288b9ea2ab3808",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "807142855b7cbed45b1cf3fd9a93e15c2bb684ea84f98e3acd288b9ea2ab3808",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+Read-only: no reviewed plan artifact modified — `git status --porcelain` shows only
+this receipt in `progress.md` and the `PF-55-05` resolution in `planning-findings.md`;
+`SPEC.md`, `ACCEPTANCE.md`, `decisions.md`, and `docs/features/ROADMAP.md` are
+untouched.
+
