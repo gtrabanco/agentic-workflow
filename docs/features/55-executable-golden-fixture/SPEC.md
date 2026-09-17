@@ -40,9 +40,11 @@ planning: a compact frozen `ACCEPTANCE.md` at scaffold, `P1` implementation +
 
 No hard dependencies. The producers this feature reuses are all merged:
 feature 37 (`scripts/phase-lint.mjs`), feature 38
-(`scripts/check-skill-context.mjs`), feature 25/59 (schema runtime +
-`next.continuation` in Envelope v2), and the `scripts/fixtures/unit-route/`
-committed-toy-repo precedent this feature's layout follows.
+(`scripts/check-skill-context.mjs`), feature 28 (`scripts/schema-runtime.mjs`;
+the schema package contracts it loads trace to feature 25, and
+`next.continuation` in Envelope v2 to feature 59), and the
+`scripts/fixtures/unit-route/` committed-toy-repo precedent this feature's
+layout follows.
 
 ---
 
@@ -63,8 +65,9 @@ plan: issue #230 (Phase 0 quick win) supersedes it **with owner approval**,
 because the doc is a test living in the human-docs surface.
 
 What changed since: feature 37/38 landed deterministic checkers
-(`phase-lint.mjs`, `check-skill-context.mjs`), feature 25/59 gave the repo a
-schema runtime and `next.continuation`, and feature 59 established the
+(`phase-lint.mjs`, `check-skill-context.mjs`), feature 28 gave the repo a
+schema runtime (`scripts/schema-runtime.mjs`), feature 59 added
+`next.continuation` in Envelope v2, and feature 59 established the
 committed-toy-repo fixture pattern (`scripts/fixtures/unit-route/` +
 `scripts/continuation-discipline.test.mjs`). The mechanical half of the golden
 fixture can now be asserted deterministically; only the weak-model judgment
@@ -167,7 +170,8 @@ classification applies to this docs-only unit.
 
 **E1 — executor fixture tree** (`scripts/fixtures/golden-fixture/` toy CSV
 files: plan, non-atomic plan variant, toy SPEC, acceptance manifest, expected
-output snapshots)
+output snapshots, and the committed envelope samples `envelope/valid.json` +
+`envelope/invalid.json` for the AC3(b) schema-validity case)
 
 - Create — committed in P1 as fixture files; never generated at runtime ·
   API: files under `scripts/fixtures/golden-fixture/` · test: AC1, AC3
@@ -182,8 +186,9 @@ output snapshots)
 - State transitions — n/a: static bytes
 
 **E2 — audit-target fixture tree** (`scripts/fixtures/golden-fixture/audit-target/`:
-README, worklist index, ADR tree ending at `0047-transport.md`, prior audit
-file carrying `F2`)
+README, worklist index `docs/fix/README.md`, ADR tree `docs/adr/` ending at
+`0047-transport.md`, prior audit file `docs/audits/3-*.md` carrying `F2` —
+all relative to the fixture root)
 
 - Create — committed in P1 as fixture files reproducing the four traps T1–T4 ·
   API: files under `audit-target/` · test: AC6
@@ -284,8 +289,8 @@ user-facing capability of this feature: **run the fixture smoke test**
 |---|---|---|---|
 | 1 | The suite runs offline with no wall-clock or randomness dependence | in-scope | AC8; D-55-7 |
 | 2 | A failing mechanical assertion names which fixture and which assertion failed (diagnosable, not a bare exit code) | in-scope | AC3 (suite output contract in Engineering half) |
-| 3 | The manual judgment protocol survives in the doc — weakest-model run, fixed pass criteria, no-invented-steps check | in-scope | AC5; In-scope item 5 |
-| 4 | The tool-calling smoke test (model precondition) stays reachable from the doc | in-scope | In-scope item 5 (protocol section) |
+| 3 | The manual judgment protocol survives in the doc — weakest-model run, fixed pass criteria, no-invented-steps check | in-scope | AC5 (fixed-pass-criteria grep); In-scope item 5 |
+| 4 | The tool-calling smoke test (model precondition) stays reachable from the doc | in-scope | AC5 (smoke-test grep); In-scope item 5 |
 | 5 | Run-log history is preserved; past rows are never rewritten | in-scope | E4 Update/Delete rows; Out-of-scope (rewrite ban) |
 | 6 | The fixture is mirrored into `template/` so target projects get it too | out-of-scope | Out of scope (template mirror bullet) |
 | 7 | The suite runs in a new CI workflow on every push | out-of-scope | Out of scope (CI bullet) |
@@ -303,11 +308,13 @@ runtime convention.
   stdout block is byte-identical to the committed snapshot
   `scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt`.
 - **AC2** — `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan-nonatomic.md`
-  exits non-zero, prints verdict `BLOCKED`, and names at least one phase-lint
-  rule id in its finding lines.
+  exits non-zero, prints verdict `BLOCKED`, and its finding lines emit at
+  least one phase-lint finding token `box-<n>` (the tool's fixed
+  `P<n> box-<n>: <reason>` finding-line form).
 - **AC3** — `node --test scripts/golden-fixture.test.mjs` exits 0 on a clean
   tree and covers: (a) AC1+AC2 assertions, (b) envelope schema validity —
-  committed valid sample passes and committed invalid sample is rejected via
+  `scripts/fixtures/golden-fixture/envelope/valid.json` passes and
+  `scripts/fixtures/golden-fixture/envelope/invalid.json` is rejected via
   `scripts/schema-runtime.mjs`, (c) run-log Result grammar with the
   2026-09-18 cutoff and grandfathering, (d) fixture/doc cross-reference
   existence, (e) audit-target trap invariants.
@@ -318,10 +325,17 @@ runtime convention.
 - **AC5** — doc slim: `grep -rn "csv-export-command" docs/` returns no
   matches; `docs/workflow/GOLDEN_FIXTURE.md` is ≤ 150 lines, contains the
   judgment protocol and run log, and points at
-  `scripts/fixtures/golden-fixture/`.
-- **AC6** — audit-target invariants (asserted by the suite): the worklist
-  shows row `9 — stale-cache` as `in-progress`; `docs/adr/` ends at
-  `0047-transport.md`; `docs/audits/3-*.md` exists and mentions finding `F2`.
+  `scripts/fixtures/golden-fixture/`; and the slim is verified to preserve
+  the protocol's fixed surface — `grep -n "Tool-calling smoke test"
+  docs/workflow/GOLDEN_FIXTURE.md` and `grep -n "Fixed pass criteria"
+  docs/workflow/GOLDEN_FIXTURE.md` each return a match, and the "No invented
+  steps" rule appears in the retained pass criteria (Expectations 3–4).
+- **AC6** — audit-target invariants under
+  `scripts/fixtures/golden-fixture/audit-target/` (asserted by the suite): the
+  worklist index `docs/fix/README.md` shows row `9 — stale-cache` as
+  `in-progress`; `docs/adr/` under that fixture root ends at
+  `0047-transport.md`; `docs/audits/3-*.md` under that fixture root exists and
+  mentions finding `F2`.
 - **AC7** — cross-reference integrity: the `CLAUDE.md` fixture pointer and the
   `docs/workflow/README.md` index line resolve to the existing doc; the doc
   references only fixture paths that exist (suite-checked).
@@ -381,7 +395,9 @@ Product boxes (run by `design-feature` before stamping `designed`):
 ## Design status
 
 `designed` — capability closure complete (2026-09-17); every closure row is
-filled or explicitly `n/a`; readiness `READY-FOR-REVIEW` for `review-spec`.
+filled or explicitly `n/a`. Review batch SPEC55-F1…F5 (spec-review-fail,
+2026-09-16) repaired 2026-09-17 — five `product`-class findings, one batch,
+no reviewed-intent change. Readiness re-run for re-review by `review-spec`.
 
 ---
 
