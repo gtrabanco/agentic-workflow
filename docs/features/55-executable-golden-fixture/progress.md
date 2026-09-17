@@ -198,6 +198,78 @@ FALSIFICATION — 55-executable-golden-fixture plan @ 438c7782
 - Verdict stance before checking: CONFIRMED-GAPS
 ```
 
+### plan — 2026-09-17 (review 2)
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-55-20260917-2 · Snapshot: 544d8079109c92de159f77d33d050ba35681737a88f3759eee5752c50813938a · Verdict: plan-review-pass
+- Unit: 55-executable-golden-fixture · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2 · Parent Product receipt: spec-review-55-20260917-3
+- Source revision: 2ecc4915012206a55344cb862b2c117766bf6348 · Artifact revision: 2ecc4915012206a55344cb862b2c117766bf6348
+- Reviewer: review-plan · Session: 01a0afa9-e412-7302-a9d2-cede903cbfcc · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T13:59:01Z/2026-09-17T14:05:00Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 17 rows · obligations 14 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): plan-review-55-20260917-1 @ 01ede4dfadf0da465c21741a5a22440104be4d59d389c435718108c2bfe74eff
+```
+
+Snapshot rebuilt by `bun scripts/pre-execution-snapshot.mjs build --stage plan
+--unit 55-executable-golden-fixture --parent
+c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2` (the
+builder's RS3(b) identity default, which is also the newest commit touching a
+bound path, `2ecc4915`). The planner's handoff label `55-plan-2` (`SPEC.md`
+Engineering half, "Plan artifact revision") is recorded here; the receipt field
+binds the builder's canonical digest-derived value, per the review-1 and feature
+37 precedents. It bound three artifacts — `spec` → `SPEC.md` (59208 B, sha256
+`7f668c7f…`), `acceptance` → `ACCEPTANCE.md` (5999 B, sha256 `a252a827…`),
+`decisions` → `decisions.md` (12151 B, sha256 `ac6d394e…`) — and the three
+contexts (`project-guide` present, `normalized-repository-state` present,
+`architectural-invariants` absent — NRS F010). The XS/S planning ledgers are
+embedded in `SPEC.md`, so the `planning-evidence` / `obligations` rows are
+`absent` and their bytes are bound by the whole-file `spec` row (D20). L1 parent:
+rebuilding the `spec-product-v1` projection with the receipt's exact revisions
+(`c5032f6e`/`c5032f6e`) reproduced `c1f040405f0d…` byte-for-byte and the three
+context digests are unchanged, so the Product half did not move; `verify --stage
+spec` reports only `stale-source-revision` because the plan write rotated the
+shared `SPEC.md`, which does not invalidate the Product projection.
+
+Falsification pass (recorded, not a finding unless evidenced):
+
+```text
+FALSIFICATION — 55-executable-golden-fixture plan @ 2ecc4915
+- Engineering claims a hostile reader could call invented rather than evidenced:
+  PE-001/PE-002's toy-plan probe outputs (the fixture files are P1 deliverables,
+  not committed at review time), PE-017's 148-line doc budget (a probe number,
+  not a recorded command block), and the plan's own phase fingerprints in its
+  emitted Phase-lint block. None is material: P1's done-when re-runs the linter
+  over the committed fixture, PE-017's arithmetic re-derives from the committed
+  doc's section counts (383 − 205 − 11 = 167 → 148), and the plan's own
+  Phase-lint output re-runs green at this snapshot.
+- A SPEC obligation this plan cannot deliver: none — every AC maps to an
+  obligation row; O2's P1 file-fact plus O7's P3 trap assertion together close
+  AC6, and O10 carries the full AC5 grep set.
+- A phase whose deliverable could be accepted while its validator passes for the
+  wrong reason: none — P2's ≤150 cap is paired with O10's AC5 exemption pipeline,
+  which is non-vacuous on the pre-slim doc (3 embedded-block lines) and fails on
+  a live slug.
+- If every phase shipped exactly as written, what would still be broken, and is
+  that in scope: nothing in scope — rollback is a PR revert, no persisted state,
+  and EN–ES restoration stays feature 57's.
+- Failure state with no scenario or a scenario no validator runs: none — the dev
+  scenarios table maps every failure state to a P3 check.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+Ledger sweep L1–L6 and Engineering checks P1–P12 all pass. The review-1 findings
+`PF-55-01`…`PF-55-04` are `resolved` at `2ecc4915` with re-verified evidence: the
+AC5 pipeline is non-vacuous pre-slim (lines 45, 54, 122) and yields the identical
+line set as SPEC AC5's form; the 205-line move + 11 blank re-join (167) + condense
+to 148 re-derives exactly and satisfies `wc -l ≤ 150`; O2 is re-phased to P1 with
+a P1-runnable file-fact validator and O7 owns the P3 trap assertions; O12 states
+the full roadmap status machine. No new finding rows appended to
+`planning-findings.md`.
+
 ## Acceptance receipt v1
 
 - Manifest: docs/features/55-executable-golden-fixture/ACCEPTANCE.md · Blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b · Status: frozen · Verified: 2026-09-17 (recorded at plan freeze by `plan-feature-scaffold`; re-frozen at the `PF-55-01` repair, which replaced the malformed AC5 validator with SPEC AC5's markdown-table-safe pipeline; recomputed before every phase and final review per `verification-contract`)
