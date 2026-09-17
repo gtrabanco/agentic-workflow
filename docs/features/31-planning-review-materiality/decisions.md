@@ -333,3 +333,56 @@ per `evidence-grounding` §The fixed evidence row):
 | Required status checks must pass before a pull request can be merged; checks show whether a PR is ready to merge | document | https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks (fetched 2026-09-17) | page @ 2026-09-17 | current | proven | — |
 | Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:" convention) remain current from the initial write | document | `decisions.md` §Evidence rows (grounding, 2026-09-17) | — | current | proven | — |
 | Schema package gate surface: `gate:pre-execution` = test + projection `--check` + package check + docs test | repository | `packages/agentic-workflow-schema/package.json` `scripts` | `a400b978` @ 2026-09-17 | current | proven | — |
+
+## 2026-09-17 — Product repair batch (design-feature, artifact revision `31-spec-4`)
+
+Trigger: `spec-review-31-4` returned `SPEC-REVIEW-FAIL` (failed check C8) with
+one material `product` row (N31-004) plus one open `info` row (N31-005) — one
+batch over the whole set, repair owner `design-feature`, user-commissioned as
+"repair N31-004 + N31-005: extend AC7 to grep both CHECKS.md and both
+OUTPUT.md for the removed materiality/loop sentences and LEDGERS.md for the
+removal of 'info is the only immaterial one', correct the Integration-closure
+row's Test claim, and stage-scope the NEEDS-DESIGN wording in Goal + Business
+goals". This enters the spec stage's second repair/re-review cycle of the
+window D-31-7 opened, so the `CONVERGENCE-ANOMALY` block was printed before
+any edit (POLICY §4 — "printed and routed, never a stop"; a repair responding
+to a persisted verdict is never a loop defect). Repair classes (REPAIR §2):
+
+- **N31-004 — closure completion (autonomous; reviewed product intent
+  unchanged).** In-scope item 5 already declared the shrink of both
+  `CHECKS.md`, both `OUTPUT.md` and `LEDGERS.md` §3; what was missing was the
+  verification. AC7's removal grep set gains three greps naming sentences
+  verified to exist verbatim today (evidence rows below): both `CHECKS.md`
+  lose "Material = anything above"; both `OUTPUT.md` lose the
+  re-review-for-every-batch mandate — the `SPEC-REVIEW-FAIL` /
+  `PLAN-REVIEW-FAIL, class: plan` verdict-route rows ("→ re-review of the new
+  snapshot") and the closing hand-off blocks ("re-reviews the new artifact
+  revision"); `LEDGERS.md` §3 loses "`info` is the only immaterial one". The
+  kept-side greps are unchanged. The Integration-closure row "Skill reference
+  docs" states its Test truthfully now: AC7's greps verify the shrink,
+  `check-skill-context.mjs` checks budgets (AC10), and `normative-drift`
+  guards the versioned blocks the shrink must not disturb (POLICY gate
+  vocabulary, hand-off grammar) — it reads neither CHECKS.md nor OUTPUT.md and
+  never pinned the materiality prose. No scope was widened: the AC now means
+  what In-scope item 5 always said.
+- **N31-005 — mechanical, intent-preserving.** The two summary instances of
+  the unconverged-loop end are stage-scoped to the machine map, in substance
+  D-31-8's wording: the Goal names `NEEDS-DESIGN` where the verdict vocabulary
+  sanctions it (spec stage) and the orchestrator's refusal + `design-feature`
+  routing at the plan stage; Business-goals bullet 2 carries the same scoping.
+  D-31-2's "(stage-scoped by D-31-8)" pointer and every mechanism section
+  (In-scope item 3, E3, expectation row 8) are untouched.
+
+No new product decision is taken: both repairs stay inside intent the SPEC
+already records (In-scope item 5, D-31-8); the decision set D-31-1…D-31-8 is
+unchanged.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| Both `CHECKS.md` carry the materiality-definition sentence the shrink removes ("Material = anything above `info`") — the new AC7 grep names a sentence that exists verbatim | repository | `skills/review-spec/references/CHECKS.md:104`; `skills/review-plan/references/CHECKS.md:105` (no other `skills/` hit) | branch head `c5a6e173` @ 2026-09-17 | current | proven | — |
+| Both `OUTPUT.md` carry the re-review-for-every-batch mandate the shrink removes: the FAIL verdict-route rows ("→ re-review of the new snapshot") and the closing hand-off blocks ("then /review-spec|/review-plan \<NN-slug\> re-reviews the new artifact revision") | repository | `skills/review-spec/references/OUTPUT.md:109,153`; `skills/review-plan/references/OUTPUT.md:118,160` (2 hits per file, none elsewhere) | `c5a6e173` @ 2026-09-17 | current | proven | — |
+| `LEDGERS.md` §3 carries "`info` is the only immaterial one." | repository | `skills/pre-execution-review/references/LEDGERS.md:93` (sole hit) | `c5a6e173` @ 2026-09-17 | current | proven | — |
+| `normative-drift` reads POLICY.md's versioned blocks, skill `SKILL.md` hand-offs and the turn contract — neither CHECKS.md nor OUTPUT.md, and no materiality sentence | repository | `scripts/normative-drift.test.mjs:76,324,343,366` | `c5a6e173` @ 2026-09-17 | current | proven | — |
+| `check-skill-context.mjs` checks context budgets only (the corrected Integration row names it for that role) | repository | `scripts/check-skill-context.mjs` (budget walk); N31-004 finding evidence | `c5a6e173` @ 2026-09-17 | current | proven | — |
