@@ -420,8 +420,11 @@ the Product half above was marked `designed` and its `spec-review-pass` receipt
 (`spec-review-55-20260917-3`, snapshot
 `c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2`) was
 re-verified against the bytes on disk. Grounded in `### Planning evidence`
-(PE-001…PE-016); obligations frozen in `### Obligations` (O1…O14). Plan
-artifact revision: `55-plan-1` (rotated by this write; the snapshot builder
+(PE-001…PE-017); obligations frozen in `### Obligations` (O1…O14). Repair batch
+of the first plan review's findings `PF-55-01`…`PF-55-04` applied 2026-09-17
+(AC5 validator, doc-slim budget arithmetic, O2 phasing, O12 lifecycle); the
+Product half was not touched, so the `spec` receipt above stays current. Plan
+artifact revision: `55-plan-2` (rotated by this write; the snapshot builder
 derives the git revision from the newest commit touching a bound path).
 
 ### Technical goals
@@ -552,15 +555,32 @@ enforced now rather than only when a future row appears.
 **Doc slim.** The doc keeps only live surfaces: purpose, when-to-run, the
 ~100-word judgment protocol, the tool-calling smoke test, the fixed pass
 criteria (executor path plus the audit expected-report pointer), the verbatim
-43-row run log, and the fixture pointers. Everything embedded or historical
-leaves the live surface: the toy SPEC/manifest fences (lines 44–115 and
-121–134) move to fixture files; the audit-target build (lines 204–268) moves to
-`audit-target/` plus `EXPECTED.md`; the interleaved prose blocks — the
-superseded `## Scope boundary` (lines 312–317), `Coverage note` (333–356), and
-`**Coverage addendum**` (357–380) — move verbatim to `RUN_LOG_NOTES.md`. The
-measured budget: 383 lines today; 173 embedded lines leave, 54 prose lines move,
-leaving the live surface plus 43 rows, which the P2 done-when caps at 150 lines
-(PE-006, PE-007).
+43-row run log, and the fixture pointers. The measured budget is exact
+(PE-006, PE-007, PE-017):
+
+- **Moves out — 205 lines.** The toy SPEC fence (44–115, 72 lines) and the
+  manifest fence (121–134, 14) become `toy-spec.md`/`toy-acceptance.md`; the
+  audit-target build (204–268, 65) becomes `audit-target/**` plus `EXPECTED.md`;
+  the three prose blocks — `## Scope boundary` (312–317, 6), `Coverage note`
+  (333–356, 24), `**Coverage addendum**` (357–380, 24) — move verbatim to
+  `RUN_LOG_NOTES.md`.
+- **Re-joins — 11 lines.** The run log's rows sit in five runs around the moved
+  prose, separated by 11 blank lines (282, 287, 293, 299, 301, 304, 311, 319,
+  322, 332, 382). Re-joining the table in existing row order drops those
+  separators without touching one row's content.
+- **Condenses — 19 lines.** Moves + re-join leave 167 lines: 117 of live prose
+  plus the 50-line run-log section (heading, blank, 2-line intro, blank, header,
+  separator, 43 rows). P2's `≤ 150` cap therefore requires live prose ≤ 100 and
+  the log intro on one line; the frozen assembly measures **148** — 99 lines of
+  live prose (intro 6 · Purpose 6 · When-to-run 7 · Fixture 15 · Procedure 9 ·
+  Smoke 15 · Fixed pass criteria 19 · Form-turn 14 · Audit 8) plus the 49-line
+  run-log section — satisfying `wc -l ≤ 150` with headroom.
+
+The probe that fixes those numbers (PE-017): at HEAD the doc is 383 lines; the
+frozen moves plus the re-join yield 167; the frozen per-section assembly yields
+148 and keeps every AC5 clause green — the `docs/` exemption pipeline returns no
+output, both protocol greps match, and the retained pass criteria carry "No
+invented steps".
 
 The run log stays append-only and byte-identical: the slim re-joins its rows into
 one contiguous table in their existing order (rows currently sit at 276–310,
@@ -583,26 +603,27 @@ one contiguous table in their existing order (rows currently sit at 276–310,
 | PE-011 | the root suite family is `scripts/*.test.mjs` run with `node --test`, `#!/usr/bin/env node`, embedding fixtures in temp dirs | repository | `scripts/phase-lint.test.mjs:1-40`; `CLAUDE.md` `## Verification` | `3133c5ca` | AC3 · O3 · O13 | current | proven | — |
 | PE-012 | `CLAUDE.md`'s verification list exists (lines 238–258) and does not yet name the new suite | repository | `CLAUDE.md` `## Verification` | `3133c5ca` | AC9 · O11 | current | proven | — |
 | PE-013 | `docs/workflow/README.md:21` carries the single index line describing the doc as a manual smoke test | repository | `docs/workflow/README.md:21` | `3133c5ca` | AC7 · AC9 · O11 | current | proven | — |
-| PE-014 | roadmap row 55 reads `defined` with `Depends on: —` | repository | `docs/features/ROADMAP.md:65` | `3133c5ca` | registration · O12 | current | proven | — |
+| PE-014 | roadmap row 55 read `defined` with `Depends on: —` at plan time and reads `planned` after scaffold | repository | `docs/features/ROADMAP.md:65` | `3133c5ca` | registration · O12 | current | proven | — |
 | PE-015 | `scripts/fixtures/unit-route/` is the committed-toy-repo precedent this layout follows | repository | `scripts/fixtures/unit-route/**` | `3133c5ca` | D-55-1 · O1 | current | proven | — |
 | PE-016 | unit 28's historical ledgers quote grep strings found inside `GOLDEN_FIXTURE.md`; no suite re-runs those strings | repository | `docs/features/28-evidence-grounded-spec-plan-review/{testing,planning-findings}.md` + `grep -rln` over `scripts/**` → none | `3133c5ca` | AC5 · ED-55-3 (disclosed) | current | proven | — |
+| PE-017 | the doc-slim budget is reachable: the doc is 383 lines at HEAD, the frozen moves + run-log re-join leave 167, and the frozen per-section assembly measures 148 lines with every AC5 clause green | repository | probe over `docs/workflow/GOLDEN_FIXTURE.md` at HEAD applying the removal ledger + table re-join + per-section budget (`wc -l` → 148; the AC5 exemption pipeline → empty; both protocol greps match) | `62e22d7e` | AC5 · O10 · P2 done-when | current | proven | — |
 
 ### Obligations
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
 | O1 | SPEC §Scope item 1; PE-001, PE-002, PE-015 | the two committed toy trees exist as bytes and lint as designed | P1 | 1–8 | execute-phase | `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` and `…toy-plan-nonatomic.md` | exit 0 / exit 1 with the expected verdicts | planned |
-| O2 | SPEC §Scope item 2; AC6 | the audit-target tree reproduces the four traps as file facts | P1 | 6–7 | execute-phase | suite `auditTargetTraps` | three invariant assertions pass | planned |
+| O2 | SPEC §Scope item 2; AC6 | the audit-target fixture tree is committed at its five declared paths | P1 | 6–7 | execute-phase | `git ls-files scripts/fixtures/golden-fixture/audit-target` | the five declared files listed (`README.md`, `EXPECTED.md`, `docs/fix/README.md`, `docs/adr/0047-transport.md`, `docs/audits/3-2026-06-30.md`) | planned |
 | O3 | SPEC §Scope item 3; AC1, AC2, AC3(a); PE-011 | the suite exercises the real phase-lint tool at its CLI boundary, both directions | P3 | 1–2 | execute-phase | `node --test scripts/golden-fixture.test.mjs` | PASS and BLOCKED assertions green | planned |
 | O4 | SPEC §Scope item 3; AC3(b); PE-009, PE-010 | envelope validity is proven from committed samples in both directions | P3 | 3 | execute-phase | suite `envelopeValidity` | valid accepted, invalid rejected | planned |
 | O5 | SPEC §Scope item 4; AC3(c); D-55-6 | every row dated on/after 2026-09-18 matches the closed Result grammar; earlier rows are grandfathered | P3 | 4 | execute-phase | suite `runLogGrammar` | accept and reject paths both asserted | planned |
 | O6 | SPEC §Scope item 3; AC3(d), AC7 | the doc's fixture pointer resolves and every referenced fixture path exists | P3 | 5 | execute-phase | suite `crossReferences` | pointer present, zero missing paths | planned |
-| O7 | SPEC §Scope item 2; AC6 | the T1–T4 trap invariants hold in the committed tree | P3 | 6 | execute-phase | suite `auditTargetTraps` | three assertions pass | planned |
+| O7 | SPEC §Scope item 2; AC6 | the T1–T4 trap invariants hold in the committed tree | P3 | 6 | execute-phase | suite `auditTargetTraps` | the worklist-row, ADR-terminal, and prior-audit-`F2` assertions pass | planned |
 | O8 | SPEC §Scope item 3; AC4; Expectation 2 | a failing check names the mutated fixture path and the violated assertion, fail-closed | P3 | 7 | execute-phase | suite tamper case | tamper assertion fails with the path named, committed bytes untouched | planned |
 | O9 | SPEC AC8; D-55-7 | the suite is deterministic — no network, wall-clock, or randomness | P3 | 1–7 | execute-phase | `grep -nE "Date\.now\|Math\.random\|fetch\(\|https?://" scripts/golden-fixture.test.mjs` + read check | no matches, suite green offline | planned |
 | O10 | SPEC §Scope item 5; AC5; PE-006, PE-007 | the doc slims to the judgment surface, keeps the protocol and run log, and drops every embedded copy | P2 | 1–3, 5 | execute-phase | `wc -l` ≤ 150; the AC5 greps | budget met, both protocol greps match, no live slug | planned |
 | O11 | SPEC §Scope item 6; AC7, AC9; PE-012, PE-013 | the workflow index and the `CLAUDE.md` verification list name the executable suite | P2 | 3–4 | execute-phase | `grep -n` over both files | both name the suite and resolve | planned |
-| O12 | SPEC §Scope item 7; AC9; PE-014 | roadmap row 55 carries the corrected summary and the shipped status | P1–P2 | registration | plan-feature / execute-phase | re-read of `docs/features/ROADMAP.md` | rows read `planned` then `done` with the PR link | planned |
+| O12 | SPEC §Scope item 7; AC9; PE-014 | roadmap row 55 moves through the full status machine with a current summary tail | P1, P4 · planning write | registration | plan-feature / execute-phase | re-read of `docs/features/ROADMAP.md` | row reads `planned` before P1, `in-progress` after P1 (branch open), and `done · [#<pr>](<pr-url>)` after P4; the summary tail names no superseded route | planned |
 | O13 | SPEC §Scope item 3; AC3, AC8; PE-011 | the suite is read-only over the working tree | P3 | 1, 7 | execute-phase | suite helpers + `git status --porcelain` after a run | committed fixtures byte-identical after the run | planned |
 | O14 | SPEC AC9; verification-contract | the unit's own finish line is frozen and receipted before any phase edits | P4 | 1–8 | execute-phase | `git hash-object docs/features/55-executable-golden-fixture/ACCEPTANCE.md` | blob matches the receipt | planned |
 
@@ -671,7 +692,7 @@ suite cases rather than domain states.
 
 - [x] `### Dev scenarios` carries failure-mode rows — five concrete rows plus three explicit `n/a` rows, each naming the check that covers it.
 - [x] Every phase passes the 8-box phase-lint — pasted below as `verdict PASS`, four fingerprints.
-- [x] `### Planning evidence` and `### Obligations` are present in place with zero blank cells (PE-001…PE-016, O1…O14).
+- [x] `### Planning evidence` and `### Obligations` are present in place with zero blank cells (PE-001…PE-017, O1…O14).
 - [x] Every normative SPEC behaviour, applicable invariant, affected use case, and required failure state has exactly one obligation row carrying a phase and a validator; no row is `deferred` and none points at a follow-up issue. No project invariant applies (NRS F010), so no invariant row is owed.
 - [x] No template placeholders left anywhere in the file — with one declared exemption: the frozen Product half's AC2 cites the phase-lint finding-line grammar `P<n> box-<n>: <reason>`, whose `<n>`/`<reason>` are grammar tokens of the tool's fixed output rather than unfilled template slots (the same exemption feature 52 recorded for `<N>`/`<code>`).
 
@@ -700,7 +721,7 @@ Layer: `config/infra`. Done-when: `node scripts/phase-lint.mjs scripts/fixtures/
 
 Layer: `docs`. Done-when: `wc -l docs/workflow/GOLDEN_FIXTURE.md` → ≤ 150, and `grep -n "Tool-calling smoke test" docs/workflow/GOLDEN_FIXTURE.md` → a match.
 
-- [ ] Slim `docs/workflow/GOLDEN_FIXTURE.md` to its live surfaces — purpose, the ~100-word judgment protocol, the tool-calling smoke test, the fixed pass criteria, the run log, and the fixture pointers (PE-006; O10)
+- [ ] Slim `docs/workflow/GOLDEN_FIXTURE.md` to the frozen live-surface shape — purpose, the ~100-word judgment protocol, the tool-calling smoke test, the fixed pass criteria, the run log, and the fixture pointers — applying the §Design move/re-join/condense ledger to 148 lines (PE-006, PE-017; O10)
 - [ ] Remove the embedded toy SPEC and manifest blocks from `docs/workflow/GOLDEN_FIXTURE.md`, leaving one pointer at the fixture tree (PE-006, PE-007; O10)
 - [ ] Remove the audit-target build, the four traps, and the old scope-boundary prose from `docs/workflow/GOLDEN_FIXTURE.md`, leaving pointers to `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md` and `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` (ED-55-3; O10)
 - [ ] Update the `docs/workflow/README.md` index line so it names the judgment protocol alongside the executable suite (PE-013; O11)
