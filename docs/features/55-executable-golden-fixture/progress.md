@@ -321,3 +321,7 @@ the full roadmap status machine. No new finding rows appended to
 - Gotchas: the acceptance blob re-checked at this phase still equals 2b832ac98ae7749a0e286051b4b0bc29f4db735b — the frozen finish line never moved. The suite's schema-runtime import means `packages/agentic-workflow-schema/dist/` must exist for the root gate; it does (built), and a missing build fails loudly naming the step (PE-010)
 - Files: `docs/features/ROADMAP.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
 - Next: unit finished
+
+## Unit-loop receipt — P4 reconciliation
+- P4 commit: 72700419 (`docs(roadmap): mark 55 done (P4)`) — the receipt above recorded `pending`; this line resolves it (never amended to self-reference)
+- PR: [#240](https://github.com/gtrabanco/agentic-workflow/pull/240) (open; title + body refreshed to the delivery description) · Branch: `feat/55-executable-golden-fixture` · Remote: current after the link commit
