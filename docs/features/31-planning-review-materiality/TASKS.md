@@ -2,11 +2,13 @@
 
 Per-phase implementation checklist. Each phase is atomic, declares one layer, and
 must satisfy its Done-when command before the phase commit. Artifact revision of
-this plan set: **`31-plan-4`** (the repair batch for `plan-review-31-3`,
-findings P31-01…P31-05, on top of the `31-plan-3` re-cut for the D-31-6 code
-carrier; the `31-plan-1/2` set is superseded, never repaired). Tests are written
-red-first where a test is the deliverable and fixed in code, never weakened. One
-version bump per skill per PR (E-D31-1 in `decisions.md`).
+this plan set: **`31-plan-5`** (the re-derivation binding the current Product
+receipt `spec-review-31-11` after the owner-commissioned Product patches
+`31-spec-9`/`31-spec-10`, on top of the `31-plan-4` repair batch for
+`plan-review-31-3`, findings P31-01…P31-05, and the `31-plan-3` re-cut for the
+D-31-6 code carrier; the `31-plan-1/2` set is superseded, never repaired). Tests
+are written red-first where a test is the deliverable and fixed in code, never
+weakened. One version bump per skill per PR (E-D31-1 in `decisions.md`).
 
 ## P1 — Schema finding-record materiality
 
@@ -57,7 +59,7 @@ Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && bun test scrip
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
 - [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, one row per skill in `CHANGELOG.md` and accurate README skill cells.
-- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md` (created there if absent, deduped against other features' entries). The schema package's 4.3.0 companion-table row lands in P1 with the bump (P31-04).
+- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md` (created there if absent, deduped against other features' entries). The schema package's 4.3.0 companion-table row lands in this phase with the other release records — not in P1, whose `config/infra` layer cannot carry a `docs` target (P31-04).
 
 ## P5 — Hardening & PR
 

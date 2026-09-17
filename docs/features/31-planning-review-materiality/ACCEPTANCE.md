@@ -2,18 +2,18 @@
 
 Status: frozen
 
-Frozen 2026-09-17 by `plan-feature` (repair batch `31-plan-4`, findings
-P31-01…P31-05) at artifact revision **`31-plan-4`**, from the SPEC's acceptance
-criteria AC1…AC14 as the Product half carries them (reviewed by
-`spec-review-31-9` @ snapshot
-`e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`). This
-re-freeze replaces the `31-plan-3` manifest: AC4's wording-only route now names
-the unbound `progress.md` record home and the branch position before
-`stale-source-revision`, AC5 gains the sensor emission plus feature 38's A:12
-negative control, both pinned by the re-aimed
-discipline suite that already rides AC10's pack. One stable ID per SPEC criterion;
-validators copied from the criteria. Modifying this manifest during execution
-requires a user-approved SPEC amendment.
+Frozen 2026-09-17 by `plan-feature` (re-derivation `31-plan-5`, binding the
+current Product receipt `spec-review-31-11` after the owner-commissioned patches
+`31-spec-9`/`31-spec-10`) at artifact revision **`31-plan-5`**, from the SPEC's
+acceptance criteria AC1…AC14 as the Product half carries them (reviewed by
+`spec-review-31-11` @ snapshot
+`dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`). This
+re-freeze replaces the `31-plan-4` manifest on the Product base of
+`spec-review-31-11`: the two patches were enumeration-only (AC13's declared
+code-carrier group), so every validator below is byte-identical to the `31-plan-4`
+manifest's — the re-freeze records the new Product parent, not a criterion change.
+One stable ID per SPEC criterion; validators copied from the criteria. Modifying
+this manifest during execution requires a user-approved SPEC amendment.
 
 | ID | Required outcome | Validator |
 |---|---|---|
