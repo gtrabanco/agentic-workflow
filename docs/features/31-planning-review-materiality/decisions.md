@@ -902,3 +902,45 @@ rows, and this batch's six new rows (`PE-024`…`PE-029`) are part of it.
 | The envelope's `detail` member is an open object, so `detail.review_loop_cycles` adds no field and moves no closed set | repository | `packages/agentic-workflow-schema/envelope.schema.json:220`; `CLAUDE.md` block `normative-surfaces@1` (`sensor-envelope-fields`, `must-name: no`) | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-17; PE-025 |
 | `normative-drift` recomputes the CHANGELOG companion table against `package.json`, so the bump and its row are one unit of work | repository | `scripts/normative-drift.test.mjs:708-715`; `CLAUDE.md` block `rendered-facts@1` | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-18; PE-028 |
 | The frozen evidence ledger carries 23 rows at artifact revision `31-plan-3` while the Engineering half claimed 21 | repository | `docs/features/31-planning-review-materiality/planning-evidence.md` (23 `| PE-` rows); `testing.md:47` (cites `PE-023`) | `7ace8dbc` @ 2026-09-17 | current | proven | E-D31-19; PE-029 |
+
+## 2026-09-17 — Product-half amendment (design-feature, artifact revision `31-spec-9`)
+
+Trigger: `plan-review-31-3` returned `PLAN-REVIEW-FAIL` (checks L5, P3, P8,
+P10, P12); the `31-plan-4` repair batch fixed P31-01…P31-05 and surfaced one
+row it could not repair — **P31-06** (`medium`, `class: product`, open in
+`planning-findings.md`): AC13's declared **code-carrier** allowed-set group
+omits three paths the plan edits by design, so the frozen scope walk reports
+them as violations and AC13 can never pass. Repair owner: `design-feature` —
+widening a Product-half declaration is product intent; no plan write may
+amend it. Commission (explicit user instruction, verbatim): "amendar el grupo
+code carriers de AC13 para incluir scripts/pre-execution-contract.mjs,
+scripts/workflow-status.mjs y scripts/workflow-status-pre-execution.test.mjs
+(P31-06) — una línea, sin tocar el resto del Product half".
+
+### D-31-9: The code-carrier group enumerates every path the plan edits by design
+
+The `## Scope` **Code carriers** group gains
+`scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs` and
+`scripts/workflow-status-pre-execution.test.mjs` beside the four paths it
+already enumerated. The carrier ruling D-31-6 moved the design into code; the
+`31-plan-3` re-cut (E-D31-15/E6, E-D31-17/E4, P31-03) then assigned those
+edits to `pre-execution-contract.mjs` (the determination parser and the
+shared `deriveReviewLoopCycles` helper), `workflow-status.mjs` (the
+`detail.review_loop_cycles` projection) and
+`workflow-status-pre-execution.test.mjs` (the suite that carries the
+emission/cap vectors, already in AC10's gate command) — the group
+declaration lagged the plan, and AC13's `read-verified` scope walk failed
+closed on the unit's own designed edits. One-line widening; no criterion
+text, closure row, sweep row, or non-goal moved. The open P31-06 row is
+resolved by the plan's re-derivation on a fresh `SPEC-REVIEW-PASS` receipt,
+not by this authoring turn. Roadmap row 31 stays `planned` (this write
+changes no scope or status beyond the declaration's enumeration).
+
+### Evidence rows (amendment batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The plan edits `scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs` and `scripts/workflow-status-pre-execution.test.mjs` by design (helper + parser, projection, suite extension) | repository | `docs/features/31-planning-review-materiality/PLAN.md:82-84,103,109`; `TASKS.md:26,33-35,41` | `7e6c5413` @ 2026-09-17 | current | proven | D-31-9; P31-06 |
+| `scripts/workflow-status-pre-execution.test.mjs` is already a machine-validated carrier (AC10's gate command runs it) | repository | `docs/features/31-planning-review-materiality/SPEC.md` AC10 (gate pack command) | `7e6c5413` @ 2026-09-17 | current | proven | D-31-9; P31-06 |
+| AC13's scope walk keys on the declared allowed-set groups, so the omission made AC13 unsatisfiable against the plan's own diff | repository | `docs/features/31-planning-review-materiality/planning-findings.md` P31-06 row; `SPEC.md` AC13 | `7e6c5413` @ 2026-09-17 | current | proven | D-31-9; P31-06 |
+| Widening a Product-half declaration is a product decision owned by `design-feature` | user | `planning-findings.md` P31-06 route column ("routes to `design-feature`; no plan write may amend it without inventing product intent") + the commission quoted above | `7e6c5413` @ 2026-09-17 | current | decision | D-31-9 |
