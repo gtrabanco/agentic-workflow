@@ -356,3 +356,148 @@ touched a phase: after trimming the evidence to lint-safe prose, the linter
 returns `PASS (8/8)` for P1–P4 with the **same** fingerprint `58fdb9db…`, so the
 frozen plan is unchanged. Lesson: verbose evidence belongs in the handoff ledger,
 never inside a planner-checked checkbox.
+
+### plan — 2026-09-17 (review 3)
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-55-20260917-3 · Snapshot: fcf0fd79cb94811b1573b84cc1e4cdb2b840c533f9a496581e82f64fdfc577e0 · Verdict: plan-review-fail
+- Unit: 55-executable-golden-fixture · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2 · Parent Product receipt: spec-review-55-20260917-3
+- Source revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e · Artifact revision: d0623bda47c0296a05c1d99d13d0218d8ab2367e
+- Reviewer: review-plan · Session: 01a0b0ad-7848-7302-a9d2-cefd1f30951b · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-17T18:42:00Z/2026-09-17T18:52:00Z · Findings: 1 (material open: 1)
+- Ledgers read: planning-evidence 17 rows · obligations 14 rows (verified-capable: 14)
+- Prior plan receipt (re-review only): plan-review-55-20260917-2 @ 544d8079109c92de159f77d33d050ba35681737a88f3759eee5752c50813938a
+```
+
+Notes:
+- **Repeat justification (POLICY §4).** The prior plan receipt `plan-review-55-20260917-2`
+  (`plan-review-pass`, snapshot `544d8079…`) is stale on two dimensions: the bound
+  `SPEC.md` bytes moved with this unit's own execution-ledger amendments (obligation
+  `status` `planned → verified`, task checkboxes `[ ] → [x]` with evidence, the F5 fold
+  at `d0623bda`) and the bound `project-guide` context moved (`CLAUDE.md`). The snapshot
+  changed (`544d8079…` → `fcf0fd79…`), so a repeat is legitimate; no repair batch
+  followed the earlier PASS, so this is not a second repair/re-review cycle and no
+  `CONVERGENCE-ANOMALY` condition is met. Precedents: unit 29's stale-context re-bind
+  (`docs/features/29-bounded-implementation-discovery/progress.md:136`) and fix-161's
+  cycle-4 re-bind (`docs/fix/161-finding-verification-loop-removal/progress.md:108`).
+  The revision also rotated (`2ecc4915` → `d0623bda`), so SNAPSHOT.md's "same revision as
+  the previous receipt → refuse to start" does not apply.
+- **Snapshot.** Built with `node scripts/pre-execution-snapshot.mjs build --stage plan
+  --unit 55-executable-golden-fixture --parent
+  c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2` at HEAD `78bf518d`.
+  `sourceRevision`/`artifactRevisionId` carry the builder's RS3(b) identity default
+  (`d0623bda`, the newest commit touching a bound path). Three artifacts bound — `spec`
+  → `SPEC.md` (61775 B, sha256 `0a13114c…`), `acceptance` → `ACCEPTANCE.md` (5999 B,
+  sha256 `a252a827…`), `decisions` → `decisions.md` (12151 B, sha256 `ac6d394e…`) — and
+  three contexts (`project-guide` `CLAUDE.md` present `f5c8e142…`,
+  `normalized-repository-state` present `e1b81e29…`, `architectural-invariants` absent —
+  NRS F010). The XS/S planning ledgers are embedded in `SPEC.md`, so the
+  `planning-evidence` / `obligations` rows are `absent` and their bytes are bound by the
+  whole-file `spec` row (D20); the builder's "no planning ledgers — legacy adoption
+  state" note is the generic S-unit message for that shape, not a defect.
+- **L1 fails — the parent Product lineage is stale.** POLICY §7 asks for the claimed
+  identity value beside its recomputation, never a substitution. Claimed:
+  `spec-review-55-20260917-3` binds Product snapshot `c1f040405f0d…` at source revision
+  `c5032f6e`. Recomputed now: `node scripts/pre-execution-snapshot.mjs build --stage spec
+  --unit 55-executable-golden-fixture` → `8467f280869a845c549f5c4ae38d0b791036e5b279fb2dacef1a31adea39fec0`.
+  The Product projection row is **byte-identical** (`spec-product-v1`, 24981 B, sha256
+  `d8f9c47f…` — the same row the receipt bound), so the Product *bytes* did not move;
+  the `project-guide` context did: `CLAUDE.md` sha256 `ff24d7e43764…` at `c5032f6e`
+  (`git show c5032f6e:CLAUDE.md | sha256sum`) → `f5c8e1428d27…` now, moved at
+  `87d5b2db docs(workflow): slim the golden-fixture procedure doc (P2)` — this unit's own
+  AC9 deliverable (the verification-list line naming `scripts/golden-fixture.test.mjs`).
+  `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+  55-executable-golden-fixture` answers `current: false`, `digestMatches: false`,
+  `verdictIsPass: true`, `structural.fresh: false`, `reasonCode: stale-context`,
+  `changedPaths: [CLAUDE.md]`, exit 4. CHECKS §1 is explicit that "a Product
+  byte/context/revision/source change invalidates this receipt **and** its parent
+  lineage", and L1 requires that "the Product bytes/contexts have not moved since":
+  they have. The plan snapshot therefore cannot bind a current parent, and `audit-pr`'s
+  lineage gate reads the same dimension (`skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:96`:
+  "or `/review-spec <unit>` when the parent is the broken link").
+- **Stopped at L1** per CHECKS §3 ("L1 failing is not a Plan defect: report the route
+  (`review-spec` first) and stop rather than reviewing an unparented or orphaned plan").
+  P1–P12 were **not** adjudicated this cycle (unit-37 cycle-4 precedent,
+  `docs/LOGS.md:978`). Nothing in the plan's own content was found defective before the
+  stop: the falsification pass below returned `NO-CONFIRMED-GAPS`, and the plan's own
+  phase-lint gate re-runs green over the amended bytes — `node scripts/phase-lint.mjs
+  docs/features/55-executable-golden-fixture/SPEC.md` → `verdict PASS`, `PASS (8/8)` for
+  P1–P4, fingerprint `58fdb9db…` (identical to the frozen block).
+- **Ledger sweep.** L1 = finding (above); L2–L6 not adjudicated — the review stopped at
+  L1. The findings ledger was still read row by row: `PF-55-01`…`PF-55-04` are `resolved`
+  at `2ecc4915`, `SPEC55-F1`…`SPEC55-F10` are `resolved` at
+  `98d8e6a4`/`c5032f6e`, and no open material row is carried into this snapshot.
+  `PF-55-05` (this review's single finding) is appended as `open`. The obligation ledger
+  was swept too: 14 rows read (`O1`…`O14`), every one `verified` with evidence in the
+  phase ticks, none blank, `deferred`, duplicated, or unvalidated — recorded as an
+  observation, not as an L-row PASS, because the lineage stop governs.
+- Falsification pass (recorded, not a finding unless evidenced):
+
+```text
+FALSIFICATION — 55-executable-golden-fixture plan @ d0623bda
+- Engineering claims a hostile reader could call invented rather than evidenced:
+  PE-001/PE-002's toy-plan probe outputs (the fixtures are committed at
+  `scripts/fixtures/golden-fixture/` and re-run green at this revision), PE-017's
+  148-line doc budget (a probe number; the committed doc is 149 lines under AC5's
+  ≤150 cap), and the plan's own phase fingerprints in its emitted Phase-lint block
+  (re-run here: `verdict PASS` ×4, fingerprint `58fdb9db…`). None is material.
+- A SPEC obligation this plan cannot deliver: none found — every AC maps to an
+  obligation row, and every obligation row is `verified` at this snapshot.
+- A phase whose deliverable could be accepted while its validator passes for the
+  wrong reason: none confirmed — review-1's PF-55-01 (the AC5 exemption pipeline
+  returning no output vacuously) is repaired and its non-vacuity was proven at
+  `2ecc4915` (3 embedded-block lines pre-slim), and review-change F1 replaced the
+  suite's over-strict `checked === 0` assertion with the frozen contract.
+- If every phase shipped exactly as written, what would still be broken, and is
+  that in scope: nothing in scope — rollback is a PR revert, no persisted state,
+  and EN–ES restoration stays feature 57's.
+- Failure state with no scenario, or a scenario no validator runs: none — the dev
+  scenarios table maps every failure state to a P3 check.
+- Verdict stance before checking: NO-CONFIRMED-GAPS on plan content. The confirmed
+  gap this cycle found is lineage (L1), not plan content.
+```
+
+- This unit's `review-findings.md` rows are a code-review ledger, out of scope for a
+  planning verdict: `F1`–`F3`, `F5` are `folded`; `F4` (`Upstream lineage`, `fix-now`,
+  routed `replan (authority) · /review-plan 55`) is the same defect this receipt
+  diagnoses and routes one hop further back — the broken link is the **parent**, so the
+  clearing command is `/review-spec 55-executable-golden-fixture` first, then this
+  review again over the re-derived Product snapshot.
+- Self-check (`write-then-report`, POLICY §8) — `node scripts/pre-execution-snapshot.mjs
+  verify --stage plan --unit 55-executable-golden-fixture --dir
+  docs/features/55-executable-golden-fixture --unit-kind feature --parent
+  c1f040405f0d5178d44bbcfa4441f4ed3b4cccbf25bb12142317a4b4c41d20d2`:
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "55-executable-golden-fixture",
+  "receipt": {
+    "id": "plan-review-55-20260917-3",
+    "verdict": "plan-review-fail",
+    "snapshot": "fcf0fd79cb94811b1573b84cc1e4cdb2b840c533f9a496581e82f64fdfc577e0",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "fcf0fd79cb94811b1573b84cc1e4cdb2b840c533f9a496581e82f64fdfc577e0",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+  `digestMatches: true` + `structural.fresh: true` means the mark landed;
+  `current: false` (exit 4) is the sanctioned answer for a persisted non-PASS verdict —
+  the verdict itself is the emit result.
+- Read-only: no reviewed plan artifact modified — `git status --porcelain` shows only
+  this receipt in `progress.md` and the `PF-55-05` row in `planning-findings.md`.
