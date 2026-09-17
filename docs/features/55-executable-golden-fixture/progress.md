@@ -200,4 +200,4 @@ FALSIFICATION — 55-executable-golden-fixture plan @ 438c7782
 
 ## Acceptance receipt v1
 
-- Manifest: docs/features/55-executable-golden-fixture/ACCEPTANCE.md · Blob: d87cff9a668bfd1f1f46286cea0edb215b1f685a · Status: frozen · Verified: 2026-09-17 (recorded at plan freeze by `plan-feature-scaffold`; recomputed before every phase and final review per `verification-contract`)
+- Manifest: docs/features/55-executable-golden-fixture/ACCEPTANCE.md · Blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b · Status: frozen · Verified: 2026-09-17 (recorded at plan freeze by `plan-feature-scaffold`; re-frozen at the `PF-55-01` repair, which replaced the malformed AC5 validator with SPEC AC5's markdown-table-safe pipeline; recomputed before every phase and final review per `verification-contract`)
