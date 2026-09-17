@@ -7,13 +7,13 @@ cut follows the Product half's carrier ruling (D-31-6) and its Size section ("M 
 code carrier, no split trigger: well under 5 phases"), so it stays inside the
 bound the reviewed Product half records. Every phase declares one layer, holds
 zero open design decisions, and ends in a locally runnable, machine-checkable
-done-when. Artifact revision of this plan set: **`31-plan-3`** — the re-cut
-`plan-feature` owes after the Product carrier amendment (`31-spec-3`) and the
-Product half's own `## Design status` ("`plan-feature` re-cuts the plan set
-(`31-plan-1/2` superseded, never repaired) only on a current `SPEC-REVIEW-PASS`
-receipt"). The superseded set `31-plan-1`/`31-plan-2` is not repaired: its
-carrier was prose recitation plus a `PLANNING_PIN_TABLE` row floor, which the
-code carrier replaces.
+done-when. Artifact revision of this plan set: **`31-plan-4`** — the repair batch for
+`plan-review-31-3` (P31-01…P31-05), on top of the `31-plan-3` re-cut the D-31-6
+carrier ruling owed (`31-plan-1/2` superseded, never repaired). The superseded
+sets are not repaired: `31-plan-1/2`'s carrier was prose recitation plus a
+`PLANNING_PIN_TABLE` row floor, which the code carrier replaces, and `31-plan-3`'s
+wording-only identity check and sensor wiring did not survive contact with the
+machine contract.
 
 Plan provenance:
 
@@ -22,12 +22,16 @@ Plan provenance:
   scaffold's Product-review gate (`pre-execution-snapshot.mjs verify --stage
   spec` → `current: true`, `structural.fresh: true`).
 - Parent Product receipt: `spec-review-31-9` (14/14 checks, zero findings).
-- Superseded plan-stage finding rows R31-01/R31-02/R31-03: resolved by this
-  re-cut (`planning-findings.md`; artifact revision `31-plan-3`).
+- Superseded plan-stage finding rows R31-01/R31-02/R31-03: resolved by the
+  `31-plan-3` re-cut; F01/F02/F03 by `31-plan-2` (`planning-findings.md`).
+- Plan-stage finding rows P31-01…P31-05 (`plan-review-31-3`, medium/medium/high/
+  low/low): resolved in place by this repair batch (`planning-findings.md`;
+  artifact revision `31-plan-4`).
 - Frozen acceptance-manifest blob at this revision (`git hash-object`):
-  `3d7e7c9ee92314261e5529815c76b373e8ca2745` (the `31-plan-2` blob was
-  `d85e217acad1322d3caf4968715ef5d00e9189c0`; the re-cut re-froze the manifest
-  because the carrier moved every AC1–AC9/AC11/AC13/AC14 validator).
+  `650c7c8b21fdd6b7e2ec7b6c2c91672732201166` (the `31-plan-3` blob was
+  `3d7e7c9ee92314261e5529815c76b373e8ca2745`, the `31-plan-2` blob
+  `d85e217acad1322d3caf4968715ef5d00e9189c0`; each re-cut re-froze the manifest
+  because the moved carrier changes the validators).
 
 ## P1 — Schema finding-record materiality
 
@@ -36,7 +40,14 @@ Layer: config/infra
 The schema package's finding record becomes the carrier of the materiality
 floor: the record gains the bounded `reproducer`, and the runtime predicate that
 decides whether a PASS may coexist with a row becomes `medium`+. The severity
-vocabulary, the receipt contract id and the freshness codes keep every value.
+vocabulary, the receipt contract id and the freshness codes keep every value. The
+package's own release record is owned by P4 with the other release records: the
+canonical phase contract forbids a `config/infra` phase from carrying a `docs`
+target (`scripts/phase-lint.mjs` `layerForTarget`), so the schema bump and its
+`CHANGELOG.md` row cannot share a phase — the repo's `normative-drift` gate is
+**expected red between this phase and P4**, this window is declared in
+`known-issues.md`, and the enforcement points are P4's done-when (which closes it)
+and AC10 at the PR head (P31-04).
 
 - [ ] Add the bounded `reproducer` field to the finding-record spec in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — an optional `string` entry in `FINDING_SPEC.fields` with `minLength: 1`, `maxLength` from a new `PRE_EXECUTION_LIMITS.reproducerChars` limit and `nulFree: true`, plus the matching optional member on the `PreExecutionReviewFindingV1` interface.
 - [ ] Rewrite the severity prose in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — the `PRE_EXECUTION_FINDING_SEVERITIES` comment and the `severity` field description state material = `medium`+, that `low` is a persisted report-note, and that `info` is immaterial, so no "only immaterial" phrasing survives anywhere in the package sources.
@@ -44,9 +55,9 @@ vocabulary, the receipt contract id and the freshness codes keep every value.
 - [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS carrying an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates, while a `reproducer` beyond the declared bound is refused.
 - [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs` writes them, and the `--check` form is the drift gate) so the committed projections carry `reproducer` and their `$comment` runtime-rule disclosure stays in sync.
 - [ ] Bump the schema package to 4.3.0 in `packages/agentic-workflow-schema/package.json` — an additive minor: every enum value, the receipt contract id and the freshness vocabulary stay byte-identical.
-- [ ] Run the package suite green: `cd packages/agentic-workflow-schema && bun run test` → exit 0.
+- [ ] Run the package suite and the projection drift check green: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0.
 
-Done-when: `cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift.
+Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift.
 
 Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:7:schema-finding-record-materiality`
 
@@ -58,18 +69,23 @@ The orchestrator's pure transition decider refuses to advance past the planning
 loop's hard cap: after two consecutive unconverged review→repair→re-review
 cycles, an invocation of `review-spec`/`review-plan` stops with a named reason
 code and the human route, and a PASS resets the count. The count is derived from
-the persisted receipts on every run — no new store, no counter write.
+the persisted receipts on every run through one shared pure helper — no new
+store, no counter write — and reaches the consumer-side decider through the
+sensor's envelope rather than by referencing the decider from the sensor
+(feature 38 A:12).
 
 - [ ] Add the optional derived cycle input to the decider's input type in `packages/agentic-workflow-schema/src/index.ts` — `WorkflowDecisionInput.reviewLoopCycles` as `{ spec?: number; plan?: number }`, documented as the consecutive-unconverged count the unit's stage receipts already carry.
 - [ ] Add the cap-refusal stop code to `packages/agentic-workflow-schema/src/index.ts` — `WORKFLOW_DECISION_STOP_CODES` gains `stop-review-loop-cap` while every existing code value keeps its spelling.
 - [ ] Implement the refusal in `packages/agentic-workflow-schema/src/index.ts` inside `decideWorkflowAction` — a `review-spec`/`review-plan` proposal whose stage count reaches two returns `kind: "stop"` with `intent: "ask-human"`, `reasonCode: "stop-review-loop-cap"` and the human route (`design-feature`) named in `detail`.
 - [ ] Add the cap vector suite `packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs` proving three behaviours: two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation; a PASS reset leaves the next cycle allowed; a `needs-design` outcome routes to `design-feature`.
-- [ ] Derive the per-stage consecutive-unconverged count in `scripts/workflow-status.mjs` from the receipts `scripts/pre-execution-contract.mjs` already parses, and pass it into the decider input.
-- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the sensor suite green.
+- [ ] Pin the counting rule in the same vector suite: the count is the consecutive FAIL-verdict receipts for a stage since its last PASS-verdict receipt, and every other transition-table row keeps its behaviour.
+- [ ] Add the shared pure helper `deriveReviewLoopCycles(receipts)` to `scripts/pre-execution-contract.mjs` — it applies the E3 rule to the rows `parseReceipts` already returns (consecutive FAIL verdicts per stage since that stage's last PASS; no receipt for a stage reads `0`), so the CLI, the sensor and the vectors cannot drift.
+- [ ] Project the derived count in `scripts/workflow-status.mjs` into the envelope's existing free-form `detail` bag as `detail.review_loop_cycles = { spec, plan }`, recomputed on every run, and keep `decideWorkflowAction` absent from that script (feature 38 A:12, whose pinned assertion lives in the discipline suite — P3).
+- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the suite green.
 
-Done-when: `cd packages/agentic-workflow-schema && bun run test` → exit 0 with the cap vectors green, and `bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0.
+Done-when: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the cap vectors and the emission/A:12 pins green.
 
-Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:6:transition-decider-cap-refusal`
+Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:8:transition-decider-cap-refusal`
 
 ## P3 — Snapshot wording-only route
 
@@ -77,18 +93,20 @@ Layer: config/infra
 
 The snapshot verifier distinguishes a recorded wording-only movement from
 material movement inside the closed freshness vocabulary: the author records the
-determination in the unit's evidence home, rotates the artifact revision, and
-`verify` answers current while the acceptance fingerprint and the bound
-authorities are unmoved. Nothing else moves: no new freshness code, no new CLI
-flag, and the exit codes stay 0/1/3/4.
+determination in the unit's unbound `progress.md`, rotates the artifact revision,
+and `verify` answers current while the acceptance fingerprint and the bound
+authorities are unmoved. The branch sits before `stale-source-revision` (a moved
+bound byte always rotates the revision), stays pure, and leaves every other
+answer unchanged. No new freshness code, no new CLI flag, and the exit codes stay
+0/1/3/4.
 
-- [ ] Add the determination parser `parseWordingOnlyDeterminations` to `scripts/pre-execution-contract.mjs` — it reads the `## Wording-only determination v1 — <stage>` block's `Determination`, `Acceptance fingerprint` and `Intent and authority unchanged` lines from a unit's evidence home.
-- [ ] Add the wording-only branch to `attributeFreshness` in `scripts/pre-execution-snapshot.mjs` — with bound artifact bytes moved, a matching determination (same artifact revision, same acceptance fingerprint, zero changed context authorities) answers fresh with the determination id named in `detail`.
-- [ ] Enforce the rotation in `scripts/pre-execution-snapshot.mjs` — a rotated revision with no matching determination keeps `stale-artifact-revision`, and a determination whose recorded revision differs from the snapshot's current one is refused.
+- [ ] Add the determination parser `parseWordingOnlyDeterminations` to `scripts/pre-execution-contract.mjs` — it reads the `## Wording-only determination v1 — <stage>` block's `Determination`, `Acceptance fingerprint` and `Intent and authority unchanged` lines from the unit's `progress.md`, the unbound record home E5 names (writing it into a bound artifact would rotate the revision it records).
+- [ ] Add the wording-only branch to `attributeFreshness` in `scripts/pre-execution-snapshot.mjs`, placed **after the `stale-context` check and before the `stale-source-revision` check**, and fed by a `wordingOnly` input object rather than by file reads so the function stays pure: with bound artifact bytes moved and zero changed contexts, a matching determination (recorded revision equal to the snapshot's current `artifactRevisionId`, recorded acceptance fingerprint equal to the manifest's) answers fresh with the determination id named in `detail`.
+- [ ] Enforce the rotation in `scripts/pre-execution-snapshot.mjs`: a movement without a matching determination answers fresh nowhere and **falls through unchanged** to the existing precedence (for moved bound bytes, `stale-source-revision`); a determination whose recorded revision differs from the snapshot's current one is likewise no match; a later material movement after an exempted one is refused because the recorded revision no longer matches (P31-01/P31-02).
 - [ ] Read the acceptance fingerprint in the verify path of `scripts/pre-execution-snapshot.mjs` by fingerprinting the unit's acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` is the form the CLI runs for its own unit) and fail closed when the manifest is absent, so the wording-only route is unavailable without a frozen manifest.
-- [ ] Extend `scripts/pre-execution-attribution.test.mjs` with the wording-only vectors for all three outcomes — fresh with the recorded determination, `stale-artifact-content` on material movement, and the refusal when the determination is missing.
+- [ ] Extend `scripts/pre-execution-attribution.test.mjs` with the wording-only vectors for all three outcomes — fresh with the recorded determination, the fall-through for material movement, and the fall-through when the determination is missing — and keep its dimension-by-dimension agreement with the schema comparator by passing no `wordingOnly` on those parity vectors.
 - [ ] Extend `scripts/pre-execution-sensor.test.mjs` with the wording-only vectors and the `wording-only` anchor the acceptance criterion greps.
-- [ ] Re-aim the planning-side pins in `scripts/review-loop-discipline.test.mjs` at the code carriers — the pin block reads the schema package's `medium`+ predicate, the CLI's verify report and the decider's refusal, and every existing assertion keeps its strength.
+- [ ] Re-aim the planning-side pins in `scripts/review-loop-discipline.test.mjs` at the code carriers — the pin block reads the schema package's `medium`+ predicate, the CLI's verify report, the decider's refusal, the `detail.review_loop_cycles` projection in `scripts/workflow-status.mjs`, and that same script's continuing absence of `decideWorkflowAction` (feature 38 A:12) — and every existing assertion keeps its strength.
 
 Done-when: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` → exit 0 with the wording-only vectors and the re-aimed code-carrier pins green.
 
@@ -111,9 +129,9 @@ package's 4.3.0 row lands with the bibliography append here.
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
 - [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, so `CHANGELOG.md` gains one row per skill and the README skill cells stay accurate.
-- [ ] Add the schema package's 4.3.0 row to the `CHANGELOG.md` companion-package table and append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`.
+- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`. The schema package's 4.3.0 companion-table row lands in P1 with the bump — `rendered-facts@1` recomputes that table against `package.json` (P31-04).
 
-Done-when: `bun scripts/check-skill-context.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed and the AC7 removal greps clean.
+Done-when: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed, the release tables recomputed against the frontmatter, and the AC7 removal greps clean.
 
 Phase-lint: PASS (8/8) · fingerprint `P4:docs:8:skill-reference-prose-shrink`
 
