@@ -2791,3 +2791,61 @@ Hand-off: a repaired plan is not an approved plan. The next step is
 `/review-plan 31-planning-review-materiality` (plan stage cycle 3 of the window
 `plan-review-31-1` opened) — and the open P31-06 row means the Product half owes
 a one-line amendment first if the reviewer judges it blocking.
+
+# Product-half amendment batch `31-spec-9` — design-feature authoring turn (2026-09-17)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "amendar el grupo code carriers de AC13 para incluir
+scripts/pre-execution-contract.mjs, scripts/workflow-status.mjs y
+scripts/workflow-status-pre-execution.test.mjs (P31-06) — una línea, sin
+tocar el resto del Product half". Trigger: the open P31-06 row
+(`medium`, `class: product`) that the `31-plan-4` repair batch left in
+`planning-findings.md` — AC13's declared code-carrier group omits three
+paths the plan edits by design, so the frozen scope walk reports them as
+violations and AC13 can never pass. One batch over the whole open
+spec-stage set set: P31-06 is the only open product row (N31-001…N31-014 all
+resolved at `31-spec-2`…`31-spec-8`; the plan-stage rows P31-01…P31-05 are
+resolved at `31-plan-4` and R31-01…R31-03 at `31-plan-3`).
+
+The write (one declaration line + bookkeeping, per the instruction):
+
+- `## Scope` **Code carriers** allowed-set group (walked by AC13) gains the
+  three paths beside the four it already enumerated. Repair class:
+  **closure completion** — AC13 already declares the walk over the group;
+  only the group's enumeration lagged the plan (D-31-9,
+  `decisions.md` evidence rows).
+- Nothing else in the Product half moved: no criterion text, closure row,
+  sweep row, non-goal, or In-scope item touched (`git diff` over
+  `SPEC.md` shows the one group bullet + the `## Design status` rotation
+  paragraph + the `## Amendments` entry — the latter two sit inside/outside
+  the `spec-product-v1` selector per its boundary and are the mandated
+  rotation/record).
+- The frozen `ACCEPTANCE.md` is not touched (plan-feature's owning
+  artifact, re-derived only on a fresh `SPEC-REVIEW-PASS` receipt). The
+  open P31-06 row is resolved by the plan's re-derivation, not by this
+  authoring turn.
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`,
+clean tree at `7e6c5413`): architectural invariants `n/a: no project
+invariants declared` (NRS F010); AD-008 preserved by D-31-5 (unchanged).
+Roadmap row 31 stays `planned` (no scope or status change). Spec-lint
+product boxes re-run after the edit: all PASS (19 expectation rows, zero
+blank closure rows, 5×5 role matrix, `Deferred decisions` reads `none`,
+every in-scope item → ≥ 1 AC, every AC command-or-`read-verified`).
+
+Readiness preflight (`evidence-grounding`, `stage: spec`):
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-9 · Rows checked: 4 evidence rows (batch) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact revision rotates `31-spec-8` → **`31-spec-9`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+
+→ Next: /review-spec 31-planning-review-materiality — product half designed and readiness-clean; it needs an
+    independent review before any engineering planning (the amended half re-reviews; `plan-feature` then
+    re-cuts the plan set and resolves P31-06 against the widened group)
+  · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys
+      nothing, rotates the artifact revision)
