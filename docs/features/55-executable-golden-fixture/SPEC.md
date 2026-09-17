@@ -708,14 +708,14 @@ ED-55-1; every phase below is linted with the canonical
 
 Layer: `config/infra`. Done-when: `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` → `verdict PASS`, and the same command over `scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` → `verdict BLOCKED`.
 
-- [ ] Commit `scripts/fixtures/golden-fixture/toy-plan.md` — the phase-lint-clean two-phase toy plan (PE-001; O1)
-- [ ] Commit `scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` — the expected-BLOCKED variant (PE-002; O1)
-- [ ] Commit `scripts/fixtures/golden-fixture/toy-spec.md` and `scripts/fixtures/golden-fixture/toy-acceptance.md` — the toy unit's two product artifacts, moved verbatim from the doc (PE-006; O1)
-- [ ] Commit `scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt` — the byte-exact stdout of the linter over the clean toy plan (PE-001; O1)
-- [ ] Commit `scripts/fixtures/golden-fixture/envelope/valid.json` and `scripts/fixtures/golden-fixture/envelope/invalid.json` — a complete Envelope v2 sample and its one-field-invalid twin (PE-009; O4)
-- [ ] Commit `scripts/fixtures/golden-fixture/audit-target/README.md`, `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md`, and `scripts/fixtures/golden-fixture/audit-target/docs/fix/README.md` — the toy target's gate declaration, its expected report, and its lagging worklist row `9 — stale-cache` (O2)
-- [ ] Commit `scripts/fixtures/golden-fixture/audit-target/docs/adr/0047-transport.md` and `scripts/fixtures/golden-fixture/audit-target/docs/audits/3-2026-06-30.md` — the terminal decision record and the prior whole-product audit carrying `F2` (O2)
-- [ ] Commit `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` — the doc's interleaved historical prose blocks, moved verbatim (PE-006; O10)
+- [x] Commit `scripts/fixtures/golden-fixture/toy-plan.md` — the phase-lint-clean two-phase toy plan (PE-001; O1) — evidence: `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` → exit 0, `verdict PASS`
+- [x] Commit `scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` — the expected-BLOCKED variant (PE-002; O1) — evidence: same command over the variant → exit 1, `verdict BLOCKED`, six `box-<n>` findings
+- [x] Commit `scripts/fixtures/golden-fixture/toy-spec.md` and `scripts/fixtures/golden-fixture/toy-acceptance.md` — the toy unit's two product artifacts, moved verbatim from the doc (PE-006; O1) — evidence: `scripts/fixtures/golden-fixture/toy-spec.md`, `toy-acceptance.md`
+- [x] Commit `scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt` — the byte-exact stdout of the linter over the clean toy plan (PE-001; O1) — evidence: `diff <(node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md) scripts/fixtures/golden-fixture/expected/phase-lint-toy-plan.txt` → empty
+- [x] Commit `scripts/fixtures/golden-fixture/envelope/valid.json` and `scripts/fixtures/golden-fixture/envelope/invalid.json` — a complete Envelope v2 sample and its one-field-invalid twin (PE-009; O4) — evidence: `validateEnvelope` accepts the valid sample, rejects the invalid one (`state: BOGUS`)
+- [x] Commit `scripts/fixtures/golden-fixture/audit-target/README.md`, `scripts/fixtures/golden-fixture/audit-target/EXPECTED.md`, and `scripts/fixtures/golden-fixture/audit-target/docs/fix/README.md` — the toy target's gate declaration, its expected report, and its lagging worklist row `9 — stale-cache` (O2)
+- [x] Commit `scripts/fixtures/golden-fixture/audit-target/docs/adr/0047-transport.md` and `scripts/fixtures/golden-fixture/audit-target/docs/audits/3-2026-06-30.md` — the terminal decision record and the prior whole-product audit carrying `F2` (O2)
+- [x] Commit `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md` — the doc's interleaved historical prose blocks, moved verbatim (PE-006; O10)
 
 #### P2 — Slim the golden-fixture procedure doc
 

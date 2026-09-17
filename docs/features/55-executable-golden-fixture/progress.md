@@ -273,3 +273,18 @@ the full roadmap status machine. No new finding rows appended to
 ## Acceptance receipt v1
 
 - Manifest: docs/features/55-executable-golden-fixture/ACCEPTANCE.md · Blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b · Status: frozen · Verified: 2026-09-17 (recorded at plan freeze by `plan-feature-scaffold`; re-frozen at the `PF-55-01` repair, which replaced the malformed AC5 validator with SPEC AC5's markdown-table-safe pipeline; recomputed before every phase and final review per `verification-contract`)
+
+## Dependency receipt v1
+- Fingerprint: 93bcc603f4886fdd0a70ae7e42c2991b66339a90 · Closure: 55-executable-golden-fixture (no dependencies — SPEC `## Dependencies` text only)
+- Merged PRs: none in closure · Fully merged: yes · Verified: 2026-09-17
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan.md` (exit 0, `verdict PASS`) + `node scripts/phase-lint.mjs scripts/fixtures/golden-fixture/toy-plan-nonatomic.md` (exit 1, `verdict BLOCKED`) · Acceptance blob: 2b832ac98ae7749a0e286051b4b0bc29f4db735b
+- Next: P2 · Attempts: 1 · Checkpoint triggers since baseline: none (P1 is `config/infra`, next phase is `docs` — layer boundary fires but whole-unit mode records it and continues)
+
+## P1 — 2026-09-17
+- Done: committed the golden-fixture corpus — `toy-plan.md` (PASS), `toy-plan-nonatomic.md` (BLOCKED), `toy-spec.md`, `toy-acceptance.md`, `expected/phase-lint-toy-plan.txt` (byte-exact), the envelope valid/invalid pair, the five audit-target files, and `RUN_LOG_NOTES.md` (historical prose moved verbatim); roadmap row 55 flipped to `in-progress`
+- Remains: P2 doc slim, P3 assertion suite, P4 Hardening & PR
+- Gotchas: the envelope pair differs in exactly one field (`state`) per ED-55-5; `RUN_LOG_NOTES.md` carries a one-paragraph provenance header above the three verbatim blocks; the doc still holds its embedded copies until P2 removes them
+- Files: `scripts/fixtures/golden-fixture/**`, `docs/features/ROADMAP.md`, `docs/features/55-executable-golden-fixture/SPEC.md`, `docs/features/55-executable-golden-fixture/progress.md`
+- Next: P2 — Slim the golden-fixture procedure doc
