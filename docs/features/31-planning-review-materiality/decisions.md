@@ -270,3 +270,66 @@ stayed byte-frozen through this batch (blob `d85e217a…` recomputed intact).
   cycle 1 of a new lineage → `/execute-phase 31` once the plan receipt is
   current. Roadmap row 31 returns to `defined` (routing data, unbound) until the
   new set is planned.
+
+## 2026-09-17 — Carrier amendment (design-feature, artifact revision `31-spec-3`)
+
+Trigger: the user commissioned "carrier amendment for D-31-6" — the Product
+half is re-scoped to the code carrier the ruling names (the schema finding
+record's `class`/`severity`/`reproducer`, the closed freshness/reason codes,
+the orchestrator's cap refusal, phase-lint) with its frozen semantics
+preserved verbatim (low = report-note; material = `medium`+; two-cycle cap →
+`needs-design`; wording-only skips only the re-review). Repair class per
+`REPAIR.md` §2: **redesign (carrier move)** — owner-authorized by D-31-6;
+product intent (D-31-1…D-31-5) unchanged and restated verbatim in Scope. This
+write moves the Product half's bound bytes, so `spec-review-31-3` goes
+`stale-artifact-content` — the authorized carrier-change consequence, never a
+repair of the receipt.
+
+- **D-31-7 — The cap counts consecutive unconverged cycles; a PASS resets
+  it.** The frozen "two-cycle cap" is a non-convergence bound, not a
+  total-review bound: the count is the consecutive FAIL-verdict receipts for
+  the stage since the last PASS verdict (the machine-derivable reading of
+  "review→repair→re-review cycle"), mirroring `review-change`'s loop, which a
+  REVIEW-PASS ends. Consequence: the spec stage's history
+  (`spec-review-31-1` PASS → `31-2` FAIL → repair → `31-3` PASS) converged at
+  cycle 1, and the ruling-authorized re-review of the carrier-amended Product
+  half is cycle 1 of a fresh window — never a third cycle of the old one.
+  Authority: D-31-6's authorization sentence + the user instruction;
+  consistency with `review-change/references/REVIEW_PROCESS.md` (LOOP CAP
+  REACHED semantics).
+- **D-31-8 — The cap's unconverged exit is stage-scoped to the machine map.**
+  The frozen "cap → `NEEDS-DESIGN`" holds where the verdict vocabulary
+  sanctions it: `VERDICTS_BY_STAGE.spec` carries `needs-design`. The plan
+  stage deliberately does not (fix/162 Decision 11: only `review-spec` may
+  emit it; no persisted plan-stage `needs-design` receipt exists), so at the
+  plan stage the cap's exit is the orchestrator's refusal to advance + the
+  `design-feature` routing the transition table already allows. The honest
+  property is identical at both stages — no silent end, no auto-continuation,
+  no new terminal label. Authority: repository evidence
+  (`pre-execution-contract.ts:127-138`) + D-31-2's no-new-label rule.
+
+### Evidence rows (carrier amendment, 2026-09-17)
+
+One row per material claim added by this amendment (fixed column order,
+per `evidence-grounding` §The fixed evidence row):
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| Carrier named by the ruling + instruction: finding record `class`/`severity`/`reproducer`, verify exit code + closed reason codes, orchestrator cap refusal, phase-lint; frozen semantics verbatim | user | `decisions.md` D-31-6 + user instruction 2026-09-17 (recorded in this section) | — | not-applicable | decision | — |
+| Finding record today: fields `id`/`severity`/`class`/`claim`/`evidenceRefs`/`verification`/`resolution`/`resolutionEvidence`; no `reproducer` field; severity enum `info\|low\|medium\|high\|critical`; class enum `product\|plan\|source\|environment\|runtime` | repository | `packages/agentic-workflow-schema/src/pre-execution-contract.ts:455-500` (`FINDING_SPEC`), enums `:102-112` | branch head `a400b978` @ 2026-09-17 | current | proven | — |
+| Materiality predicate in code today: `const material = finding.severity !== "info"` — `low` currently material | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:1059` | `a400b978` @ 2026-09-17 | current | proven | — |
+| PASS rule + "the only immaterial" restatements live in the schema sources | repository | `pre-execution-contract.ts:101,197,459,549`; `pre-execution.ts:998` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Freshness vocabulary closed at 10 codes (`invalid-stage`, `invalid-unit`, `stale-policy`, `impossible-timeline`, `stale-context`, `stale-source-revision`, `stale-parent`, `stale-artifact-revision`, `stale-artifact-content`, `missing-receipt-snapshot`) | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:159-170` | `a400b978` @ 2026-09-17 | current | proven | — |
+| `verify` exit codes: 0 current · 3 no receipt · 4 receipt present but not current · 1 usage/error | repository | `scripts/pre-execution-snapshot.mjs:442,487,499` | `a400b978` @ 2026-09-17 | current | proven | — |
+| `stale-artifact-revision` already answers "the authoring revision rotated … with no bound byte moved" — the machine half of the wording-only determination exists | repository | `scripts/pre-execution-snapshot.mjs:391` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Transition table rows `review-spec` (`:890`) and `review-plan` (`:923`) route FAIL/needs-design; the plan row does not sanction a plan-stage `needs-design` (fix/162 Decision 11) | repository | `packages/agentic-workflow-schema/src/index.ts:877-956`; `pre-execution-contract.ts:127-138` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Decider stop/sense codes are a closed vocabulary; no cycle awareness today | repository | `index.ts:712-725` (vocabulary), `:1069-1210` (`decideWorkflowAction`) | `a400b978` @ 2026-09-17 | current | proven | — |
+| Phase-lint is a deterministic linter (8 rules + fingerprint); rule owner is `phase-contract` | repository | `scripts/phase-lint.mjs`; `skills/phase-contract/SKILL.md` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Receipt contract id `agentic-workflow/pre-execution-review-receipt@1`; policy version `v1` gates freshness (`stale-policy`) | repository | `pre-execution-contract.ts:39,56`; `scripts/pre-execution-snapshot.mjs:348` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Receipt current at authoring start: `verify --stage spec` → exit 0, `current: true`, `spec-review-pass`, `digestMatches: true` | repository | command run 2026-09-17 at `a400b978` | `a400b978` @ 2026-09-17 | current | proven | — |
+| Baseline suites green: schema 707/707 at 4.2.0; dependency gate 12/12; context budgets PASS (40 skills) | repository | test runs 2026-09-17 at `a400b978` | `a400b978` @ 2026-09-17 | current | proven | — |
+| `spec-review-31-3` PASS + digest-invariance proof; a Product-half edit rotates the digest → receipt `stale-artifact-content` → spec stage reopens, authorized by the ruling | user | `decisions.md` D-31-6; `progress.md` §Redesign & replan | — | not-applicable | decision | — |
+| Tricorder: machine-computed analysis findings surfaced inside human review; guiding principles; data-driven ecosystem; empirical in-situ evaluation | document | https://research.google/pubs/pub43322/ (fetched 2026-09-17), abstract | page @ 2026-09-17 | current | proven | — |
+| Required status checks must pass before a pull request can be merged; checks show whether a PR is ready to merge | document | https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks (fetched 2026-09-17) | page @ 2026-09-17 | current | proven | — |
+| Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:" convention) remain current from the initial write | document | `decisions.md` §Evidence rows (grounding, 2026-09-17) | — | current | proven | — |
+| Schema package gate surface: `gate:pre-execution` = test + projection `--check` + package check + docs test | repository | `packages/agentic-workflow-schema/package.json` `scripts` | `a400b978` @ 2026-09-17 | current | proven | — |

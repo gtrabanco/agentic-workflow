@@ -965,3 +965,27 @@ Not superseded — verified, not assumed:
 Next: `/plan-feature 31` → `/review-plan 31` → `/execute-phase 31`. Roadmap row
 31 is back to `defined` (routing data, deliberately unbound) until the new set
 is cut.
+
+## Carrier amendment — `31-spec-3` (design-feature, 2026-09-17)
+
+Commissioned: "carrier amendment for D-31-6". The Product half is re-scoped to
+the code carrier (schema finding record `class`/`severity`/`reproducer`; the
+closed freshness/reason codes; the orchestrator's cap refusal; phase-lint)
+with the frozen semantics verbatim — low = report-note, material = `medium`+,
+two-cycle cap → `needs-design`, wording-only skips only the re-review.
+D-31-7 (the cap counts consecutive unconverged cycles; a PASS resets it) and
+D-31-8 (stage-scoped cap exit per the fix/162 machine map) are recorded in
+`decisions.md` with 18 fresh evidence rows; research gate re-run for the
+carrier's domain (two external fetches: Tricorder pub43322; GitHub Docs
+status checks). SPEC edits: Scope re-cut to the machine surfaces, capability
+closure E1–E3 re-walked, expectation sweep re-cut to 19 rows, AC1–AC13
+re-derived as command-checkable code-carrier criteria.
+
+Receipt state: pre-edit `verify --stage spec` → `current: true` (exit 0,
+`spec-review-pass`, receipt `spec-review-31-3`); post-edit →
+`stale-artifact-content` (exit 4) — the authorized carrier-change
+consequence; the spec stage reopens.
+
+Next: `/review-spec 31` (cycle 1, D-31-7) → `/plan-feature 31` (re-cut;
+`31-plan-1/2` superseded, never repaired) → `/review-plan 31` →
+`/execute-phase 31`.
