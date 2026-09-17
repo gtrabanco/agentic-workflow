@@ -744,10 +744,10 @@ Layer: `config/infra`. Done-when: `node --test scripts/golden-fixture.test.mjs` 
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted) — evidence: `npx skills add . --list` exit 0; `node scripts/check-skill-context.mjs` → `PASS context budgets: 40 skills`; `node --test scripts/*.test.mjs` → exit 0, 496 pass / 0 fail; `node --test scripts/golden-fixture.test.mjs` → exit 0, 9 pass / 0 fail; `bun test scripts/golden-fixture.test.mjs` → 9 pass / 0 fail
+- [x] Read-verify that `scripts/golden-fixture.test.mjs` passes with network access disabled (AC8 second clause) — evidence: `unshare -rn node --test scripts/golden-fixture.test.mjs` (new network namespace, no connectivity) → exit 0, 9 pass / 0 fail; `grep -nE "Date\.now|Math\.random|fetch\(|https?://" scripts/golden-fixture.test.mjs` → no matches
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty — evidence: empty immediately after the `docs(roadmap): mark 55 done (P4)` commit, i.e. no doc edit is left uncommitted at close-out
+- [x] Set the roadmap row status to `done` and commit the flip — evidence: `docs(roadmap): mark 55 done (P4)`
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat
 - [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
