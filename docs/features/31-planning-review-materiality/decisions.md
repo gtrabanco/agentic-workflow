@@ -944,3 +944,29 @@ changes no scope or status beyond the declaration's enumeration).
 | `scripts/workflow-status-pre-execution.test.mjs` is already a machine-validated carrier (AC10's gate command runs it) | repository | `docs/features/31-planning-review-materiality/SPEC.md` AC10 (gate pack command) | `7e6c5413` @ 2026-09-17 | current | proven | D-31-9; P31-06 |
 | AC13's scope walk keys on the declared allowed-set groups, so the omission made AC13 unsatisfiable against the plan's own diff | repository | `docs/features/31-planning-review-materiality/planning-findings.md` P31-06 row; `SPEC.md` AC13 | `7e6c5413` @ 2026-09-17 | current | proven | D-31-9; P31-06 |
 | Widening a Product-half declaration is a product decision owned by `design-feature` | user | `planning-findings.md` P31-06 route column ("routes to `design-feature`; no plan write may amend it without inventing product intent") + the commission quoted above | `7e6c5413` @ 2026-09-17 | current | decision | D-31-9 |
+
+## 2026-09-17 — User-commissioned Product-half patch (reviewing turn, artifact revision `31-spec-10`)
+
+Owner ruling (explicit user instruction, verbatim): "No voy a rediseñar más
+arreglalo tú como un parche, estamos tirando billones de tokens a la basura."
+`spec-review-31-10`'s open row N31-015 (`medium`, `class: product`) is closed by
+direct owner amendment of the governing SPEC instead of a further `design-feature`
+cycle (POLICY §5 sanctions the user amending the governing SPEC).
+
+### D-31-10: The code-carrier group enumerates the two remaining plan-edited suites
+
+`scripts/pre-execution-attribution.test.mjs` and
+`scripts/pre-execution-sensor.test.mjs` join the `## Scope` **Code carriers**
+group. Every path the plan edits by design is now enumerated across the three
+allowed-set groups, so AC4 (which requires `wording-only` vectors in both suites)
+and AC13 (which forbids undeclared diff paths) no longer contradict. No criterion
+text, closure row, sweep row, or non-goal moved.
+
+### Evidence rows (user-commissioned patch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| AC4 requires `wording-only` in both suites, so both must be edited | repository | `docs/features/31-planning-review-materiality/SPEC.md` AC4; observed `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → no match | `f0042c62` @ 2026-09-17 | current | proven | D-31-10; N31-015 |
+| The plan extends both suites by design | repository | `docs/features/31-planning-review-materiality/PLAN.md:107-108` | `f0042c62` @ 2026-09-17 | current | proven | D-31-10; N31-015 |
+| The two paths complete the declared allowed set (no other plan-edited path is undeclared) | repository | `PLAN.md` P1–P5 task set against `SPEC.md` `## Scope` groups 1–3 | `f0042c62` @ 2026-09-17 | current | proven | D-31-10; N31-015 |
+| The user owns the SPEC amendment and refused a further `design-feature` cycle | user | the commission quoted above | `f0042c62` @ 2026-09-17 | current | decision | D-31-10 |
