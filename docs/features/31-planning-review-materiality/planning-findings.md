@@ -438,3 +438,37 @@ Every spec-stage row stays resolved where it was recorded: N31-001/N31-002 at
 N31-006/N31-007/N31-008 at `31-spec-5`, N31-009/N31-010/N31-011 at `31-spec-6`,
 N31-012/N31-013 at `31-spec-7`, N31-014 at `31-spec-8`. No row is left `open`
 for any class at the time of this write.
+
+---
+
+## Re-review (`spec-review-31-10`, 2026-09-17)
+
+Cycle-1 independent re-review (D-31-7: the count resets on `spec-review-31-9`'s
+PASS) of the Product half the `31-spec-9` amendment rewrote — the amendment
+widened the `## Scope` **Code carriers** allowed-set group for the open P31-06
+row. Fresh context; this conversation never authored or edited the Product half →
+`contextClean: true`. Snapshot
+`b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9` @ source
+revision `f0042c6210702ba2c884c960137e14135057266f` (`spec-product-v1` digest
+`3dba9a8fdd7c16244ed22bbaf4adf9f229a48c85824c1f9df5576377210e118b`, 46282
+bytes); handoff label `31-spec-9`. Verdict: **`spec-review-fail`** — 12/14 checks
+pass; C9 (internal contradiction) and C10 (repository contradiction) carry the
+one material `product` row below. N31-001…N31-014 stay resolved at their
+recorded revisions (`31-spec-2`…`31-spec-8`); P31-01…P31-05 stay resolved at
+`31-plan-4`; P31-06 stays `open` for `plan-feature`'s re-derivation.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-015 | spec | medium | product | b3f1c415036ba9679f280dc4222e0cd9df0129bfbcbc35952316f7b108761df9 | AC13's declared **code-carrier** group still omits two paths the implementation must edit. AC4 requires `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` to exit zero, and both files carry **zero** `wording-only` hits at this head, so the PR diff must edit them; `PLAN.md` P3 extends both suites with the wording-only vectors. Neither path is in the code-carrier group or in the other two declared groups, so AC13's mechanical anchor (`git diff main --name-only` minus the three excluded paths must list only the first two groups' paths) would report both as scope violations. AC4 and AC13 are therefore mutually unsatisfiable — the same root cause P31-06 named, incompletely repaired by the `31-spec-9` amendment (which added the three paths P31-06 named but not these two). | `SPEC.md` `## Scope` code-carrier group (`:201-204`) vs AC4 (`:467-473`); `PLAN.md:107-108` ("Extend `scripts/pre-execution-attribution.test.mjs`…" / "Extend `scripts/pre-execution-sensor.test.mjs`…"); observed `grep -rn "wording-only" scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → no match at `f0042c62`; P31-06 row (same class, repaired at `31-spec-9`) | open | — | — |
+
+C9's other sections are consistent; the single contradiction is AC4's required
+edits versus AC13's declared allowed set. C10's other repository claims hold:
+the three paths the amendment added exist at `f0042c62`
+(`scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs`,
+`scripts/workflow-status-pre-execution.test.mjs`).
+
+Route: `class: product` → repair owner `design-feature
+31-planning-review-materiality` — one batch adding
+`scripts/pre-execution-attribution.test.mjs` and
+`scripts/pre-execution-sensor.test.mjs` to the code-carrier group, then
+`/review-spec` re-reviews the new artifact revision.
