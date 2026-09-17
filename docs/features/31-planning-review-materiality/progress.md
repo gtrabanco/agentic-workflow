@@ -3017,4 +3017,38 @@ above, and no reviewed artifact was modified by this turn.
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
 
+---
+
+# User-commissioned Product-half patch `31-spec-10` — owner instruction (2026-09-17)
+
+Owner ruling (explicit user instruction, verbatim, refusing a further
+`design-feature` cycle): "No voy a rediseñar más arreglalo tú como un parche,
+estamos tirando billones de tokens a la basura." The human owner amends the
+governing SPEC directly (POLICY §5); this turn applies the mechanical enumeration
+patch for `spec-review-31-10`'s only open row, **N31-015** (`medium`,
+`class: product`).
+
+The write (one enumeration line + bookkeeping):
+
+- `## Scope` **Code carriers** allowed-set group (walked by AC13) gains
+  `scripts/pre-execution-attribution.test.mjs` and
+  `scripts/pre-execution-sensor.test.mjs` — the two remaining paths AC4 requires
+  to carry `wording-only` vectors and `PLAN.md:107-108` (P3) extends. AC4 and
+  AC13 no longer contradict; no criterion text, closure row, sweep row or
+  non-goal moved.
+- `## Design status` records the patch and the new artifact revision
+  `31-spec-10`; a `### 31-spec-10` entry lands in `## Amendments`; `decisions.md`
+  gains D-31-10 plus four evidence rows; `planning-findings.md` marks N31-015
+  `resolved` at `31-spec-10`.
+- The frozen `ACCEPTANCE.md` is untouched (plan-feature's owning artifact).
+  `spec-review-31-10` is superseded by design (`stale-artifact-content`).
+
+Owner-scoped re-review instruction: the mandatory fresh-context re-review
+verifies **only** the patched part — C9/C10 and N31-015's resolution — and carries
+the checks whose subjects this write did not move. It is not a full 14-check
+re-sweep.
+
+Artifact revision rotates `31-spec-9` → **`31-spec-10`**.
+
+
 

@@ -201,6 +201,8 @@ scope guard walks them instead of reporting them as violations → AC13:
 - **Code carriers**: `packages/agentic-workflow-schema/**` (sources, tests, and
   the generated Draft-07 projections the package's generators rewrite),
   `scripts/pre-execution-snapshot.mjs`, `scripts/pre-execution-contract.mjs`,
+  `scripts/pre-execution-attribution.test.mjs`,
+  `scripts/pre-execution-sensor.test.mjs`,
   `scripts/review-loop-discipline.test.mjs`, `scripts/workflow-status.mjs`,
   `scripts/workflow-status-pre-execution.test.mjs`, `scripts/phase-lint.mjs`.
 - **Prose-shrink surfaces + derived surfaces**: the named skill reference files
@@ -672,22 +674,21 @@ Product boxes:
 
 ## Design status
 
-`designed` — Product-half amendment batch for `plan-review-31-3`'s open row
-**P31-06** applied (one instruction-commissioned edit: AC13's declared
-**code-carrier** group now enumerates `scripts/pre-execution-contract.mjs`,
-`scripts/workflow-status.mjs` and
-`scripts/workflow-status-pre-execution.test.mjs` — paths the plan edits by
-design per E-D31-17/P31-03, so the frozen scope walk stops reporting them as
-violations; nothing else in the Product half moved). Capability closure
-group: complete (zero blank rows), Spec-lint product boxes all PASS,
-readiness preflight `READY-FOR-REVIEW` at artifact revision
-**`31-spec-9`** (2026-09-17 — see `## Amendments`). This write moves the
-Product half's bound bytes, so the `spec-review-31-9` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run re-reviews
-the amended half, and `plan-feature` then re-cuts the plan set (the current
-`31-plan-4` set predates the widened carrier group) only on a current
-`SPEC-REVIEW-PASS` receipt. The open P31-06 row is resolved by the plan's
-re-derivation, not by this authoring turn.
+`designed` — user-commissioned Product-half patch for `spec-review-31-10`'s
+open row **N31-015** applied (one owner-instructed edit: AC13's declared
+**code-carrier** group additionally enumerates
+`scripts/pre-execution-attribution.test.mjs` and
+`scripts/pre-execution-sensor.test.mjs` — the two suites AC4 requires to carry
+the `wording-only` vectors and `PLAN.md` P3 extends, so the frozen scope walk
+stops reporting the plan's own designed edits as violations; nothing else in the
+Product half moved). Capability closure group: complete (zero blank rows),
+Spec-lint product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at
+artifact revision **`31-spec-10`** (2026-09-17 — see `## Amendments`). This write
+moves the Product half's bound bytes, so the `spec-review-31-10` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run delta-reviews the
+patched half in a fresh context (owner-scoped: confirm the enumeration fix,
+carry the byte-unchanged checks), and `plan-feature` then re-cuts the plan set
+only on a current `SPEC-REVIEW-PASS` receipt.
 ---
 
 ## Engineering half
@@ -1507,3 +1508,27 @@ The `31-plan-3` receipt (`plan-review-31-3`, FAIL) is superseded by design (boun
 plan bytes moved); the next `/review-plan` run is the plan stage's third cycle of
 the window `plan-review-31-1` opened, whose `CONVERGENCE-ANOMALY` block the
 `plan-review-31-3` receipt carries.
+
+### `31-spec-10` (2026-09-17) — user-commissioned Product-half patch for `spec-review-31-10`'s open row N31-015
+
+Trigger: `spec-review-31-10` returned `SPEC-REVIEW-FAIL` (12/14; C9 + C10) with
+one open row — **N31-015** (`medium`, `class: product`): AC13's declared
+**code-carrier** group still omitted
+`scripts/pre-execution-attribution.test.mjs` and
+`scripts/pre-execution-sensor.test.mjs`, both of which AC4 requires to carry
+`wording-only` vectors and `PLAN.md` P3 extends, so AC4 and AC13 were mutually
+unsatisfiable. Owner ruling (explicit user instruction, verbatim, refusing a
+further `design-feature` cycle): "No voy a rediseñar más arreglalo tú como un
+parche, estamos tirando billones de tokens a la basura." The human owner amends
+the governing SPEC directly (POLICY §5) and the reviewing turn applies the
+mechanical enumeration patch.
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-015 | product · medium | The `## Scope` **Code carriers** allowed-set group additionally enumerates `scripts/pre-execution-attribution.test.mjs` (the wording-only dimension vectors, `PLAN.md:107`) and `scripts/pre-execution-sensor.test.mjs` (the wording-only vectors + the `wording-only` anchor AC4 greps, `PLAN.md:108`) — the two remaining paths the plan edits by design, so AC13's scope walk no longer reports them as violations and AC4/AC13 stop contradicting. Enumeration only; no criterion text, closure row, sweep row, or non-goal moved. Repair class: **closure completion**. | `## Scope` allowed-set group 1 (walked by AC13) |
+
+Artifact revision rotates `31-spec-9` → **`31-spec-10`** for the touched Product
+set (`SPEC.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived only on a fresh `SPEC-REVIEW-PASS`
+receipt). The `spec-review-31-10` receipt is superseded by design (bound Product
+bytes moved — `stale-artifact-content`).
