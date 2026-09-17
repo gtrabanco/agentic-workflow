@@ -535,7 +535,7 @@ Recorded in full (with authority and rationale) in
   audit trail; hiding rows there would break the no-silent-dismissal contract.
 - **D-31-2** the cap terminates in the **existing** `needs-design` verdict —
   no new terminal label, no new grammar; mirrors `review-change`'s user-gated
-  third-cycle rule.
+  third-cycle rule (stage-scoped by D-31-8).
 - **D-31-3** the wording-only route skips only the re-review act — the
   determination record and the `artifactRevisionId` rotation are not skippable.
 - **D-31-4** one materiality line for both stages (spec + plan): material =
