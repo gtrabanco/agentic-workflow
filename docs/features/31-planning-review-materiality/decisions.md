@@ -72,3 +72,56 @@ One row per material claim, fixed column order
 None at product stage. The engineering half enumerates the exact pin diff in
 `scripts/review-loop-discipline.test.mjs` and confirms no new fenced grammar
 block is introduced (Integration closure row 5).
+
+## 2026-09-17 — Engineering decisions (plan-feature, artifact revision `31-plan-1`)
+
+### E-D31-1: One version bump per skill per PR, taken in the phase that first edits it
+
+- **What**: P1 bumps `pre-execution-review` 2.2.1→2.3.0, `review-spec` 1.7.1→1.8.0,
+  `review-plan` 1.6.1→1.7.0; P2 bumps `design-feature` 3.4.0→3.5.0. P2/P3 re-edit
+  files of already-bumped skills (`POLICY.md`, `OUTPUT.md` ×2) without re-bumping.
+- **Why**: a skill's `version:` is a per-PR artifact — it describes the PR's net
+  change, and two bumps of one skill inside one PR would publish a phantom
+  intermediate version. The per-phase commit rule ("run `bump-skill` before
+  committing" a skill edit) is satisfied by bumping in the phase that first
+  touches each skill; later phases edit the same PR's already-covered surfaces.
+- **Authority**: plan-feature engineering interpretation of `CLAUDE.md`
+  §"Version every change" + the #209 freeze (minor bumps, `BREAKING CHANGE:`
+  footer convention).
+
+### E-D31-2: No `docs/workflow/` tutorial edit
+
+- **What**: this plan touches no file under `docs/workflow/`
+  (`REVIEW_AND_CLASSIFY.md` included).
+- **Why**: the tutorial carries no severity/materiality statement today
+  (PE-15), and AC8 pins the PR diff to the In-scope surface enumeration — a
+  tutorial edit would fail the unit's own acceptance gate. Drift between the
+  tutorial and the new rules is `audit-docs`' inventory↔docs sweep, not this
+  unit's.
+- **Authority**: SPEC §Capability closure row "Workflow tutorial + site guides"
+  (`partial`/n-a) + AC8.
+
+### E-D31-3: AD-008 classification — preserved
+
+- **What**: the hard cap does not contradict AD-008 ("Correctness is evidence-
+  and obligation-bound, never cycle-count-bound"): the cap stops the loop and
+  routes an explicit human decision (`NEEDS-DESIGN`, user-gated third cycle) —
+  it never uses a cycle count to establish correctness, never auto-continues,
+  and never waives findings.
+- **Why**: D-31-5 (Product half) already reconciles this; the engineering cut
+  encodes it as O14 (P2) so the §4 text is written and read against AD-008's
+  wording. No `resolve-repository-state` amendment is triggered unless a
+  reviewer reads an actual contradiction (D-31-5's conditional trigger).
+- **Authority**: REPOSITORY_STATE AD-008; decisions.md D-31-5.
+
+### E-D31-4: Planning-side pins live in the existing `scripts/review-loop-discipline.test.mjs`
+
+- **What**: the report-note, anti-deflation, cap, and wording-only pins are new
+  additive sections in the existing suite (new `read()` consts for `POLICY.md`,
+  both `CHECKS.md`, `REPAIR.md`), not a second test file.
+- **Why**: the suite already reads `LEDGERS.md` and both `OUTPUT.md` files
+  (PE-007) and is the established home of loop-discipline pins (code side §1–§4);
+  one suite keeps the no-weakening walk (AC9) computable as a single diff.
+- **Authority**: SPEC §In scope 5 ("pins added to
+  `scripts/review-loop-discipline.test.mjs`; every existing assertion keeps its
+  strength").

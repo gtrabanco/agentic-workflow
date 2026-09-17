@@ -454,129 +454,320 @@ boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
 
 ## Engineering half
 
-Written by `plan-feature`, only once the Product half above is marked
-`designed` and independently reviewed.
+Written by `plan-feature` (2026-09-17, artifact revision `31-plan-1`), only
+once the Product half above was marked `designed` and independently reviewed
+(receipt `spec-review-31-1` @ snapshot
+`735e75876583d0deed58f22f2e05cfde516b4750cfa87ff6d0c088aece72170a` — verified
+fresh against the bytes on disk by `pre-execution-snapshot.mjs verify --stage
+spec` at this scaffold's Product-review gate).
 
 ### Technical goals
 
-The architectural outcomes — not implementation detail.
+- **One materiality floor across both pre-execution stages.** In
+  `planning-findings` semantics, material = `medium`+; a `low` finding is a
+  **report-note** — persisted, visible, non-blocking, never by itself a
+  re-review trigger, resolvable by the stage author without any re-review;
+  `info` stays immaterial. The anti-deflation rule carries over verbatim: a
+  real defect mislabeled `low` classifies at `medium` minimum, and deflating
+  a severity to dodge a review is itself a review defect.
+- **Structural loop termination.** The spec/plan repair loop is capped at
+  **two** review→repair→re-review cycles: the second cycle prints the
+  existing `CONVERGENCE-ANOMALY` block (byte-unchanged) before any further
+  edit; a third cycle never starts without explicit user instruction; an
+  unconverged loop ends in the existing `NEEDS-DESIGN` verdict routed to the
+  human — no new terminal label, no new grammar.
+- **A cheap honest route for cosmetic repairs.** A POLICY §3 wording-only
+  determination (intent, obligation identity, phase topology, validators, and
+  authority all unchanged) routes the repair batch **without** the full
+  snapshot re-review; the determination is recorded in the unit's frozen
+  evidence and `artifactRevisionId` still rotates.
+- **Preserved honesty properties.** No severity vocabulary change, no schema
+  change, no code-side behavior change, snapshot binding and receipt shape
+  intact, union/counter-evidence/independence rules untouched.
 
 ### Architecture impact
 
-How the feature interacts with the project's architecture and layering
-(as defined in its architecture doc). State the invariants the
-implementation must hold (e.g. "outer-layer-only — no changes to the
-core/domain layer"). If the feature touches the core/domain, justify it
-here.
+This feature is **docs-layer only**: skill reference prose plus the
+deterministic pins that guard it. No schema package change, no runtime script
+behavior change (`pre-execution-snapshot.mjs` untouched), no new machine
+grammar (the `NEEDS-DESIGN` verdict and the `CONVERGENCE-ANOMALY` block are
+already machine-pinned; the cap introduces no new fenced block, so the
+normative-surfaces table in `CLAUDE.md` needs no new row).
+
+Affected surfaces (verified at HEAD `180c7127`; evidence rows PE-001…PE-007
+in `planning-evidence.md`):
+
+- `skills/pre-execution-review/references/LEDGERS.md:93` — §3 severity
+  semantics (the moved line).
+- `skills/review-spec/references/CHECKS.md:104` and
+  `skills/review-plan/references/CHECKS.md:105` — "Material = anything above
+  `info`" restatements.
+- `skills/pre-execution-review/references/POLICY.md:36-52` (§3) and
+  `:53-85` (§4) — wording-only consequence + hard cap.
+- `skills/review-spec/references/OUTPUT.md:109-123` and
+  `skills/review-plan/references/OUTPUT.md:28,118-126` — verdict-side loop
+  text mirrors.
+- `skills/design-feature/references/REPAIR.md:57-71` — §4 cap mirror.
+- `scripts/review-loop-discipline.test.mjs` — additive planning-side pin
+  sections (PE-007: the suite already reads `LEDGERS.md` + both `OUTPUT.md`
+  files; `POLICY.md`/`CHECKS.md`/`REPAIR.md` reads are new consts).
+
+Invariants the implementation must hold:
+
+- **AD-008 preserved** (`REPOSITORY_STATE.md`): correctness stays evidence-
+  and obligation-bound, never cycle-count-bound. The cap stops the loop and
+  routes an explicit human decision (`NEEDS-DESIGN`, user-gated third cycle);
+  it never uses a cycle count to establish correctness, never auto-continues,
+  and never waives findings (D-31-5; obligation O14). Recorded
+  classification: `preserves` — no `resolve-repository-state` amendment is
+  triggered unless a reviewer reads an actual contradiction (D-31-5's
+  conditional trigger).
+- **Byte-stability constraints**: the `CONVERGENCE-ANOMALY` block, the
+  receipt-literal lines in both `OUTPUT.md` files (the
+  `agentic-workflow/pre-execution-review-receipt@1` rendered fact), the
+  LEDGERS row shape / writer map / ownership block, and both CHECKS severity
+  vocabulary lists stay byte-identical (AC8, AC9, AC11; PE-010).
+- **Formal invariant classification**: `n/a: no project invariants declared`
+  (NRS F010 — no `docs/architecture/ARCHITECTURAL_INVARIANTS.md` exists).
+
+```text
+Preflight: NRS consumed · invariant classification: n/a: no project invariants declared (F010) — AD-008 preserved (D-31-5)
+```
 
 ### Design
 
-The substantive technical content: entities, ports, adapters, schema,
-data shapes, algorithms, state machines. Pre-resolve every decision the
-implementer would otherwise have to guess. Close inherited open
-questions explicitly. This is the section that most reduces
-implementation risk — if it is vague, the implementation improvises.
+**E1 — Ledger severity semantics (`LEDGERS.md` §3).** The sentence
+"`info` is the only immaterial one" (line 93) is replaced by the planning
+materiality line: **material = `medium`+; `info` is immaterial; `low` is a
+report-note** — the row is appended to the ledger like any finding (same
+columns, same writers, same append-only contract), stays visible, never
+blocks a PASS, and never triggers a re-review by itself; the stage's author
+resolves it through the normal repair route without any re-review. The
+PASS-coexistence sentence at the section tail ("A `PASS` may not coexist with
+an open material/unverified row") is restated against the new line: only
+open `medium`+ or unverified rows block a PASS. The anti-deflation carry-over
+is stated verbatim in the same section: a real defect mislabeled `low`
+classifies at `medium` minimum, and deflating a severity to dodge a review is
+itself a review defect. Row shape, writer map, ownership block, and the
+append-only/no-delete contract are untouched.
+
+**E2 — Stage CHECKS restatements (both `CHECKS.md` files).** Each file's
+findings-assembly paragraph (spec :104, plan :105) replaces "Material =
+anything above `info`" with "Material = `medium`+" plus the report-note
+sentence plus the anti-deflation sentence, so a reviewer filing rows reads
+the same floor the ledger states. The closed severity vocabulary list in each
+file stays byte-identical.
+
+**E3 — POLICY §4 hard cap.** After the existing second-cycle
+`CONVERGENCE-ANOMALY` text (block byte-unchanged), §4 states: the planning
+review loop runs **at most two** review→repair→re-review cycles per stage per
+unit; the count derives from the persisted receipts and repair records in the
+unit's `progress.md` and `planning-findings.md` (no new store, no counter
+write — mirrors `review-plan`'s existing `none — first cycle` field); **a
+third cycle never starts without explicit user instruction**; an unconverged
+loop ends in the existing **`NEEDS-DESIGN`** verdict routed to the human
+through the stage's design/plan authority. The closing sentence "The anomaly
+is printed and routed, never a stop, and no cap converts a verdict into a
+dead end" is replaced with the user-gated-stop semantics: the cap's exit is a
+recorded human decision, not a silent stop and not an automatic continuation
+— the no-dead-end property is preserved *by* the human route (D-31-2,
+D-31-5). The repair-turn exemption paragraph is kept and scoped: it protects
+a repair turn responding to a persisted verdict **within an authorized
+cycle** from being blocked mid-repair; after the cap there is no further
+re-review to input a repair — the loop ends in `NEEDS-DESIGN`.
+
+**E4 — POLICY §3 wording-only route.** The opening paragraph keeps the
+single re-review of the resulting snapshot as the **default** batch
+consequence and adds the exemption: when the repair turn records a
+**wording-only determination** (intent, obligation identity, phase topology,
+validators, and authority all unchanged) in the unit's frozen evidence — a
+planning-evidence row at the new `artifactRevisionId` — the cosmetic batch
+routes without the full snapshot re-review; the next material change re-opens
+review. The Wording-only row's forbidden cell keeps the recording requirement
+and adds the rotation requirement (the determination record and the revision
+rotation are not skippable — D-31-3). The Common-root-cause and
+Scope-changing rows stay untouched.
+
+**E5 — Verdict-surface mirrors (both `OUTPUT.md` files + `REPAIR.md` §4).**
+Each OUTPUT file's loop text extends its second-cycle paragraph with the cap
+(`third cycle never starts without explicit user instruction`; unconverged →
+`NEEDS-DESIGN`), keeping the receipt-literal lines and verdict blocks
+byte-identical. `REPAIR.md` §4 replaces "More cycles stay allowed when
+correctness needs them" (:64-65) and "no cycle cap converts its verdict into
+a dead end" (:71) with the same cap mirror, preserving the §4 heading and the
+anomaly-first ordering.
+
+**E6 — Discipline pins (`scripts/review-loop-discipline.test.mjs`).** A new
+planning-side pin section: new `read()` consts for `POLICY.md`, both
+`CHECKS.md`, and `REPAIR.md` (the suite already reads `LEDGERS.md` and both
+`OUTPUT.md` files), asserting — red-first per phase — the report-note
+semantics, the `medium`+ materiality line in both CHECKS files, the
+anti-deflation rule, the cap (`third cycle never` + `NEEDS-DESIGN` end +
+unchanged `CONVERGENCE-ANOMALY` block), the verdict mirrors, and the
+wording-only route. Every existing assertion keeps its phrase or gains a
+strictly stronger assertion (AC9's no-weakening walk).
+
+**E7 — Version bumps (bump-skill).** `pre-execution-review` 2.2.1 → 2.3.0,
+`review-spec` 1.7.1 → 1.8.0, `review-plan` 1.6.1 → 1.7.0 (P1, the phases'
+first edits), `design-feature` 3.4.0 → 3.5.0 (P2) — minor bumps per the #176
+freeze, one bump per skill per PR (E-D31-1); CHANGELOG rows + README table
+cells ride the `bump-skill` contract.
 
 ### Planning evidence
 
-One compact row per Engineering claim that a phase relies on — never an
-exploration transcript. M/L units freeze this table in
-`planning-evidence.md` and leave the heading here reading
-`see planning-evidence.md`; XS/S units fill it in place.
-
-| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
-|---|---|---|---|---|---|---|---|---|
+see planning-evidence.md (M/L unit — the frozen table lives in
+`planning-evidence.md`; rows PE-001…PE-17, all `current`, `proven` or
+`decision`).
 
 ### Obligations
 
-One row per normative behaviour, applicable compatibility invariant, affected use
-case, and required failure state — the completeness map `execute-phase` and
-`audit-pr` read. M/L units freeze it in `planning-obligations.md`; XS/S units fill
-it in place. Status is `planned | in-progress | verified | n/a | deferred`;
-`n/a` requires evidence, and no current-unit obligation may be `deferred` to a
-follow-up issue.
-
-| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
-|---|---|---|---|---|---|---|---|---|
+see planning-obligations.md (M/L unit — O1…O14, one row per acceptance
+criterion AC1…AC13 plus O14 for the AD-008 invariant; every row starts
+`planned`; no row is `deferred`).
 
 ### Decisions to confirm
 
-Engineering decisions the project lead must make (or has made) before
-implementation starts. Record the chosen option and the rationale, so
-later reviewers understand the trade-off.
+Engineering decisions recorded with rationale in `decisions.md`
+(E-D31-1…E-D31-4, 2026-09-17); the project lead may override any of them
+before execution:
+
+- **E-D31-1 — one version bump per skill per PR**, taken in the phase that
+  first edits the skill; later phases re-editing the same PR's surfaces do
+  not re-bump.
+- **E-D31-2 — no `docs/workflow/` tutorial edit** (no severity statement
+  exists there today; AC8 pins the diff scope; `audit-docs` owns drift).
+- **E-D31-3 — AD-008 classified `preserves`** (the cap routes to a human
+  decision; D-31-5), recorded as obligation O14.
+- **E-D31-4 — planning-side pins live in the existing
+  `scripts/review-loop-discipline.test.mjs`** as additive sections, keeping
+  AC9's no-weakening walk a single diff.
 
 ### Testing requirements
 
-What must be tested and how. State the test layer (unit / integration
-/ architecture) and any tooling or runtime constraints. The project
-prefers integration and architecture tests over heavy mocking.
+Docs-layer feature; the test layer is the deterministic pin suite plus the
+repository's machine gates — no new test file, no runtime code:
+
+- **Discipline pins (primary)**: `bun test scripts/review-loop-discipline.test.mjs`
+  gains the planning-side sections (red-first in P1–P3, green by each phase's
+  edit); every existing assertion keeps its strength (AC9). The suite must
+  pass under bun and node (runtime convention).
+- **Ledger truth classes**: `bun test scripts/ledger-ownership.test.mjs
+  scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
+  scripts/pre-execution-sensor.test.mjs` — the LEDGERS edit must not disturb
+  the machine-pinned blocks (AC11).
+- **Normative surfaces**: `bun test scripts/normative-drift.test.mjs` — no
+  new grammar, no stale version restatement (AC11).
+- **Context budgets**: `bun scripts/check-skill-context.mjs` after the four
+  bumps, manifest updated for declared growth (AC11).
+- **Distribution parity**: `bun run bundle:skills` + Pi package suite (AC12).
+- **Negative integration**: schema package diff empty + suite green (AC10).
+- **Read-verified walks** (judgement-only, recorded in the P4 phase entry):
+  POLICY §3/§4 hunk scope, whole-diff surface list, no-weakening test diff,
+  bump-skill output diff (AC4, AC6, AC8, AC9, AC13).
+
+Full ladder and scenario inventory: `testing.md`.
 
 ### Dev scenarios
 
-The situations this feature introduces that must be reproducible in local
-dev — happy path **and** failure modes (empty/degraded state, races,
-outages, mass changes, data loss). Seed the failure modes from this **fixed
-category list** — walk every category and write a scenario or
-`n/a: <reason>` (unaided recall under-enumerates; the list makes coverage a
-presence check): empty/zero state · invalid or oversized input · permission
-denied / wrong role · dependency outage or timeout · concurrent/duplicate
-action · limit or threshold hit. For each, name it and state how it is
-reached through an **existing** mechanism (queued message, guard threshold,
-manual override, stubbed source) — scenarios are orchestration, never new
-domain. If the project has a runnable dev-scenario harness, register each
-scenario there (dev-gated, never reaching production) and link it here;
-otherwise list them as prose.
+Failure modes seeded from the fixed category list; each reaches through an
+**existing** mechanism (no new domain):
 
 | Scenario | Reproduces | Mechanism it drives |
 |---|---|---|
+| `loop:report-note-pass` (empty/zero state) | a review PASS coexists with open `low` report-note rows — no repair batch, no re-review | the findings-ledger append mechanism (`LEDGERS.md` §3) — live precedent: this unit's own two open `info` rows |
+| `loop:deflation-guard` (invalid input) | a real defect mislabeled `low` re-classifies at `medium` minimum and blocks | the anti-deflation sentence in `LEDGERS.md`/`CHECKS.md` (reviewer classification act) |
+| `loop:closed-vocabulary` (invalid input) | a severity outside `info\|low\|medium\|high\|critical` is never introduced | the closed receipt vocabulary in both CHECKS files + the untouched schema package |
+| `loop:role-violation` (permission denied) | an author turn filing findings against its own artifact, or a script writing a ledger row, stays denied | the role matrix C1–C5 + the ledger-ownership test (unchanged ownership block) |
+| `loop:cap-hit` (limit/threshold hit) | the second cycle prints `CONVERGENCE-ANOMALY` before any further edit; a third cycle is refused without explicit user instruction; an unconverged loop ends in `NEEDS-DESIGN` | POLICY §4 cap over persisted receipts + repair records (the `none — first cycle` receipt field) |
+| `loop:wording-only-skip` (concurrent/duplicate action) | a recorded cosmetic repair batch skips the re-review while the determination row + rotated revision remain | POLICY §3 route over the planning-evidence home + `artifactRevisionId` rotation |
+| `loop:dup-finding` (concurrent/duplicate action) | the same finding re-reported in a later cycle keeps its stable id and gains a second resolution row | `finding-id` stability in `LEDGERS.md` §3 (§3 outside the edited hunks — AC8 walk) |
+| outage/dependency failure — n/a | no runtime dependency exists; every validator is a local command over repository bytes | n/a: all checks run locally (bun/node) |
 
 ### Phases
 
-High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
-**Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
-"Steps".** `execute-phase <NN>` runs all remaining phases by default; an
-explicit `P<n>` runs one atomic phase. Planning (producing the planning artifacts) is done by `plan-feature`
-before execution, so it is **not** a numbered phase here. `P1` is the first
-implementation phase (it also commits the planning artifacts); the **last phase
-is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
-opening the PR is the final *step* of the hardening phase (its `TASKS.md`
-checklist ends with the literal close-out tasks), not a phase of its own. For
-**XS/S** (SPEC-only, no `TASKS.md`), list the phases **here, with checkbox
-tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
-carrying the literal close-out tasks (fixed wording — see
-`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` ticks this section as
-its ledger. Each implementation phase
-header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
-hardening>. Done-when: <command> → <expected outcome>.` before its task list
-(same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's
-"one declared layer" and "machine-checkable done-when" boxes need somewhere to
-be filled in, not invented.
+Detailed tasks: `TASKS.md`. Phase order matches the dependency-free cut (the
+unit's hard dependency 29 is merged); the final phase is hardening.
+
+#### P1 — Move the planning materiality line to report-note semantics
+
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
+exit 0 with the report-note, CHECKS-materiality, and anti-deflation pins green
+and every existing assertion still passing.
+
+#### P2 — End the planning repair loop at a hard two-cycle cap
+
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
+exit 0 with the cap, verdict-mirror, and REPAIR-mirror pins green and every
+existing assertion still passing.
+
+#### P3 — Route wording-only repairs past the full snapshot re-review
+
+Layer: docs. Done-when: `bun test scripts/review-loop-discipline.test.mjs` →
+exit 0 with the wording-only pin green and every existing assertion still
+passing.
+
+#### P4 — Qualify the planning-review-materiality unit
+
+Layer: hardening. Done-when: `bun scripts/check-skill-context.mjs && bun test
+scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs
+scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
+scripts/normative-drift.test.mjs` → exit 0 with every frozen `ACCEPTANCE.md`
+validator green at the terminal HEAD and the PR open with `Closes #171`.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-Every implementation phase below must pass all 8 boxes before it is emitted
-(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
-unticked box blocks emission/execution until the phase is re-cut or split.
-Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
-record the result here as `Phase-lint: PASS (8/8) · fingerprint
-<P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
+Every implementation phase above passed the canonical eight-box phase-lint
+before emission (`bun scripts/phase-lint.mjs
+docs/features/31-planning-review-materiality/PLAN.md`, node fallback — stdout
+pasted verbatim):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:6:move-planning-materiality-line-to-report-note-semantics
+P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:7:end-planning-repair-loop-at-hard-two-cycle-cap
+P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:3:route-wording-only-repairs-past-full-snapshot-re-review
+P4 Phase-lint: PASS (8/8) · fingerprint P4:hardening:10:qualify-planning-review-materiality-unit
+verdict PASS
+fingerprint: db27c41e198e86158ca0ed2cc400942325c205098d946eec5bafab746d16f406
+```
 
 ### Deploy & rollback
 
-Only when shipping needs more than merging: schema migrations and their order,
-feature flag (if gradual rollout), config/env changes, and the rollback path
-(revert PR? data cleanup?). State **n/a** explicitly when merging is enough.
+n/a — merging is enough. Docs-layer skills re-bundle with the PR
+(`bundle:skills` in P4); the rules take effect at the next planning review
+that runs the bumped skills. Rollback is reverting the PR.
 
 ### Open questions / risks
 
-Known unknowns and risks. Promote to `TASKS.md` if they become
-blockers. Mark inherited questions as RESOLVED or DEFERRED with a
-pointer to where they are now handled.
+- **Inherited, RESOLVED by this plan**: the Product half deferred "the exact
+  `review-loop-discipline.test.mjs` pin diff" to the Engineering half —
+  resolved as E6 + the P1–P3 pin tasks (`decisions.md` E-D31-4).
+- **D-31-5 conditional trigger**: if a `review-spec`/`review-plan` reviewer
+  reads an actual contradiction between the cap text and AD-008,
+  `resolve-repository-state` owns the wording amendment at execution time —
+  not a phase task here (E-D31-3 records the `preserves` classification).
+- **Risk — normative-grammar collisions**: the OUTPUT edits touch
+  machine-pinned surfaces; mitigated by byte-identical receipt-literal lines
+  (PE-010) and the `normative-drift` gate in P4. A new fenced block would
+  re-enter scope as a plan-time finding (Integration closure row 5).
+- No open engineering question remains; N31-001/N31-002 (`info`) route to
+  `design-feature`, not to execution (`known-issues.md` boundary 2).
 
 ### Deliverables
 
-The concrete artifacts the PR contains.
+- Filled Engineering half (this document) + the M/L artifact set:
+  `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md` (frozen), `planning-evidence.md`,
+  `planning-obligations.md`, `testing.md`, `known-issues.md`,
+  `architecture-notes.md`, engineering decisions in `decisions.md`.
+- The implementation PR (opened by P4) containing: the `LEDGERS.md` §3,
+  POLICY §3/§4, both CHECKS, both OUTPUT, and `REPAIR.md` §4 edits; the
+  planning-side pin sections in `scripts/review-loop-discipline.test.mjs`;
+  four minor version bumps + CHANGELOG rows + README cells; the Pi mirror
+  re-bundle; the bottom `## References` append in `README.md` (AC13);
+  `Closes #171`.
 
 ### Post-merge next feature
 
-The expected next feature in the sequence — see `docs/features/ROADMAP.md`.
+`32-review-consistency-pack` (#172) — next of the 2026-09 Phase-1 loop-policy
+chain; it depends on 30 + 31 and reworks the same POLICY/CLASSIFY surfaces
+one owner at a time. Rows 35/42 (and 46's coordination) chain after it per
+`docs/features/ROADMAP.md`.
