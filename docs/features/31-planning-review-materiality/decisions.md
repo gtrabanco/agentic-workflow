@@ -684,3 +684,129 @@ Repair class (REPAIR §2):
 | POLICY.md §4's third unbounded-cycle sentence ("a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by design, so no cycle cap or anomaly rule may block or end it.") wraps across `:81-82`; the fragment "no cycle cap or anomaly rule" is contained in its single second line (`:82`), unique in the file and unique under `skills/`, and exits 0 with the sentence standing — the replacement AC7 grep discriminates removal | repository | `sed -n '79,84p' skills/pre-execution-review/references/POLICY.md`; observed `grep -n "no cycle cap or anomaly rule" skills/pre-execution-review/references/POLICY.md` → `82:` (exit 0, sole hit, `grep -c` → 1); `grep -rn "no cycle cap or anomaly rule" skills/` → 1 hit (at `12ddc215`) | `12ddc215` @ 2026-09-17 | current | proven | — |
 | Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-8` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `12ddc215`) | `12ddc215` @ 2026-09-17 | current | proven | — |
 | Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the earlier batches — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batches `31-spec-4`/`31-spec-5`/`31-spec-6`/`31-spec-7`, 2026-09-17) | — | current | proven | — |
+
+---
+
+## 2026-09-17 — Engineering replan for the code carrier (plan-feature, artifact revision `31-plan-3`)
+
+The re-cut the Product carrier amendment (`31-spec-3`, D-31-6) and the Product
+half's `## Design status` require: `plan-feature` re-cuts the plan set
+(`31-plan-1/2` superseded, never repaired) once a current `SPEC-REVIEW-PASS`
+receipt exists — `spec-review-31-9` @ snapshot
+`e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507`, verified
+fresh at this turn's Product-review gate. The re-cut retired the plan-stage
+finding rows R31-01/R31-02/R31-03 (resolved in `planning-findings.md`), re-froze
+`ACCEPTANCE.md` (blob `3d7e7c9ee92314261e5529815c76b373e8ca2745`) and rotated the
+artifact revision label to `31-plan-3`.
+
+Earlier engineering decisions, and what the carrier move does to them:
+
+- **E-D31-1** (one version bump per skill per PR) — in force.
+- **E-D31-2** (no `docs/workflow/` tutorial edit) — in force.
+- **E-D31-3** (AD-008 classified `preserves`) — in force; carried by O15.
+- **E-D31-4** (planning-side pins live in the existing discipline suite) — in
+  force, re-aimed at the code carriers by E-D31-14 below.
+- **E-D31-5** (`PLANNING_PIN_TABLE` with a prose row floor and a discrimination
+  leg) — **superseded**. The pins no longer police prose sentences; a
+  discrimination leg over superseded wording has nothing to discriminate. The
+  suite's planning block reads code carriers instead.
+- **E-D31-6** (the bundler is always spelled from the package that owns it) —
+  in force.
+- **E-D31-7** (the diff-scope walk names the declared derived surfaces) — in
+  force, re-aimed at AC13's three declared groups.
+
+New decisions of this replan:
+
+### E-D31-8: The materiality predicate is a closed membership test over the material severities
+
+`validatePreExecutionReceiptAgainstSnapshot` replaces `finding.severity !==
+"info"` with a membership test over the material set (`medium`, `high`,
+`critical`). A negated comparison would let a future severity value become
+material silently; the closed set spells the material severities once. The rule
+id `pass-requires-resolved-material-findings` and its published claim text are
+unchanged, and no severity value is added, renamed or removed.
+
+### E-D31-9: `reproducer` is optional and bounded, with the bound published
+
+`FINDING_SPEC` gains `{ key: "reproducer", type: "string", minLength: 1,
+maxLength: PRE_EXECUTION_LIMITS.reproducerChars, nulFree: true }`, mirrored as
+`readonly reproducer?: string`. `reproducerChars: 1024` joins
+`PRE_EXECUTION_LIMITS` so the bound is published rather than spelled in the
+field. Optional on purpose: a receipt whose findings carry no `reproducer` stays
+valid, so the addition is additive for every producer. AC3 anchors both halves —
+the declared `maxLength` and the bound refusal vector — because
+`VerificationFieldSpec.maxLength` is itself optional and a bound-less
+declaration would pass the structural walk.
+
+### E-D31-10: The cap-refusal outcome is one added stop code, fed by a derived count
+
+`WORKFLOW_DECISION_STOP_CODES` gains exactly one value, `stop-review-loop-cap`.
+`WorkflowDecisionInput` gains the optional `reviewLoopCycles: { spec?: number;
+plan?: number }`, derived per run from the persisted receipts (D-31-7: `n` is the
+consecutive FAIL-verdict receipts for a stage since its last PASS-verdict
+receipt; a PASS resets `n` to 0). `decideWorkflowAction` answers, before the
+transition-table match, with `kind: "stop"`, `intent: "ask-human"`,
+`reasonCode: "stop-review-loop-cap"` and the human route (`design-feature`) named
+in `detail` when a `review-spec`/`review-plan` proposal's stage count reaches
+two. Every existing code value and every transition row keeps its behavior: the
+`review-spec` row already allows `design-feature`, and plan-stage `needs-design`
+stays narrowed (fix/162).
+
+### E-D31-11: The determination record reuses the existing record-block family in the unit's evidence home
+
+The wording-only determination is recorded as a `## Wording-only determination v1
+— <stage>` block with `- Field: value` lines — the shape the pre-execution
+receipt blocks already use — in the unit's evidence home (`planning-evidence.md`
+for the plan stage, the SPEC's `### Planning evidence` for XS/S, `decisions.md`
+for the spec stage). The alternative (a new fenced grammar plus a `CLAUDE.md`
+`normative-surfaces@1` row) is rejected: it would put `CLAUDE.md` in the PR diff,
+outside AC13's three declared groups. Precedent evidence: PE-011 — the receipt
+block itself is not a `normative-surfaces@1` row. The homes are outside the
+durable-ledger ownership map, so no writer row changes; the authoring skill
+(`plan-feature`, `plan-fix`, `design-feature`) writes the block, and the
+`# no-script-writer` directive keeps scripts as readers only.
+
+### E-D31-12: The wording-only answer adds no freshness code, flag or exit code
+
+`attributeFreshness` keeps the comparator's precedence and the ten closed codes:
+a matching determination (same artifact revision, same acceptance fingerprint,
+zero changed context authorities) answers `fresh` with the determination id named
+in `detail`, and every other movement keeps `stale-artifact-content` (exit 4). A
+rotated revision with no matching determination keeps `stale-artifact-revision`;
+an absent acceptance manifest makes the route unavailable (fail closed). This is
+the Product half's In-scope 2 read literally: "revision rotated, determination
+recorded, acceptance fingerprint and bound material bytes unmoved → still
+current".
+
+### E-D31-13: The acceptance manifest is re-frozen by this re-cut
+
+Every AC1–AC9/AC11/AC13/AC14 validator anchored to the superseded prose carrier,
+so the frozen finish line had to move with the carrier. The new blob
+`3d7e7c9ee92314261e5529815c76b373e8ca2745` is recorded in `PLAN.md` and receipted
+in `progress.md`; the superseded `d85e217acad1322d3caf4968715ef5d00e9189c0` is
+retained only as traceability (`known-issues.md` boundary 8).
+
+### E-D31-14: The pins read the code carriers, and the release records ride one PR
+
+`scripts/review-loop-discipline.test.mjs` keeps every existing assertion and adds
+a planning block that reads the schema package's predicate, the CLI's verify
+report and the decider's refusal — so the suite still fails when a rule regresses
+while the prose shrink is validated by AC7's removal greps. The four skill minor
+bumps and the schema package's 4.3.0 bump land once each in this PR, with their
+CHANGELOG rows and README cells, and the Pi mirror re-bundles from the package
+root in the hardening phase after the last `skills/` edit.
+
+### Evidence rows (replan, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The Product half carries a current independent PASS at this replan: `spec-review-31-9` @ `e15374a3…`, 14/14 checks, zero findings, and the CLI re-derives the same digest | repository | `progress.md` receipt block `spec-review-31-9`; `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` → `current: true`, `structural.fresh: true` (run 2026-09-17 at `4b7cad56`) | `4b7cad56` @ 2026-09-17 | current | proven | re-run at the plan review |
+| The `spec-product-v1` projection excludes the Engineering half and `## Amendments`, so the re-cut cannot move the Product bytes: post-write `build --stage spec` still answers `e15374a3863aedd968a9600b5bec280f4648874d82a069b72b2abfa4fb30a507` | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:482-556` (boundary scan after `## Design status`); observed post-write build at the re-cut | `4b7cad56` @ 2026-09-17 | current | proven | re-derive after any later SPEC write |
+| The materiality predicate is one expression at `pre-execution.ts:1059`, the severity prose is at `pre-execution-contract.ts:101` and `:459`, and `FINDING_SPEC` is the record's one field list at `:455-500` | repository | the three locations, read at the re-cut | `4b7cad56` @ 2026-09-17 | current | proven | P1 edits |
+| `VerificationFieldSpec.maxLength` is optional (`verification-contract.ts:51`), so AC3's bound anchor is what proves the `reproducer` declaration is bounded | repository | `packages/agentic-workflow-schema/src/verification-contract.ts:51`; `ACCEPTANCE.md` AC3 | `4b7cad56` @ 2026-09-17 | current | proven | P1 declares the bound |
+| The decider's stop vocabulary is closed at six values (`index.ts:719-727`), its input type is `WorkflowDecisionInput` (`:746-756`), and `decideWorkflowAction` (`:1069`) is pure and fail-closed | repository | the three locations, read at the re-cut | `4b7cad56` @ 2026-09-17 | current | proven | P2 implements the refusal |
+| The receipt block is not a `CLAUDE.md` `normative-surfaces@1` row (the declared rows are the CLI `contract` fenced output, the verdict vocabularies and the snapshot commands), so a record-block-family addition needs no `CLAUDE.md` edit | repository | `CLAUDE.md` blocks `normative-surfaces@1` and `rendered-facts@1` | `4b7cad56` @ 2026-09-17 | current | proven | E-D31-11 |
+| `attributeFreshness` answers `stale-artifact-content` for moved bound artifact bytes and `stale-artifact-revision` for a rotated revision, in the comparator's precedence, with no way to distinguish a wording-only move today — the branch is new, and the manifest fingerprint is available because the plan snapshot binds `ACCEPTANCE.md` | repository | `scripts/pre-execution-snapshot.mjs:331-420`; `scripts/pre-execution-contract.mjs:33-75` (`STAGE_ARTIFACTS.plan`, `CONTEXT_SOURCES`) | `4b7cad56` @ 2026-09-17 | current | proven | P3 adds the branch |
+| All nine AC7 removal fragments exist today with their sentences standing, and the kept-side `third cycle never` is absent today, so the greps discriminate and the shrink authors the remainder | repository | `REPAIR.md:64`, `:71`; `POLICY.md:42`, `:61`, `:82`, `:83`; `CHECKS.md` spec `:104` / plan `:105`; `OUTPUT.md` spec `:109,153` / plan `:118,160`; `LEDGERS.md:93`; `grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → non-zero at `4b7cad56` | `4b7cad56` @ 2026-09-17 | current | proven | P4 rewrites, P5 re-runs |
+| Roadmap row 31 reads `defined`, dependency 29 reads `done · #175` (merged), and rows 32/35/42/46 chain after 31 | repository | `docs/features/ROADMAP.md` rows 29–35, 42, 46 | `4b7cad56` @ 2026-09-17 | current | proven | the scaffold flips `defined → planned` and re-reads |
+| The superseded manifest blob was `d85e217acad1322d3caf4968715ef5d00e9189c0`; the re-frozen manifest's blob is `3d7e7c9ee92314261e5529815c76b373e8ca2745` | repository | `git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` (observed at the re-cut); `PLAN.md` header | `4b7cad56` @ 2026-09-17 | current | proven | P5 re-checks the blob |

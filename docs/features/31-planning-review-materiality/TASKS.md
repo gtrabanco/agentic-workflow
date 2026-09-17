@@ -1,73 +1,72 @@
 # TASKS — 31-planning-review-materiality
 
-Per-phase implementation checklist. Each phase is atomic, has one layer, and
-must satisfy its Done-when command before the phase commit. The discipline
-pins are written red-first inside each phase and made green by that phase's
-edits — never edited to pass; they are rows of one declared planning pin table
-whose row floor and discrimination leg make a vacuous pin set fail (F02, AC14).
-One version bump per skill per PR (E-D31-1 in `decisions.md`).
+Per-phase implementation checklist. Each phase is atomic, declares one layer, and
+must satisfy its Done-when command before the phase commit. Artifact revision of
+this plan set: **`31-plan-3`** (the re-cut for the D-31-6 code carrier; the
+`31-plan-1`/`31-plan-2` set is superseded, never repaired). Tests are written
+red-first where a test is the deliverable and fixed in code, never weakened. One
+version bump per skill per PR (E-D31-1 in `decisions.md`).
 
-## P1 — Move the planning materiality line to report-note semantics
+## P1 — Schema finding-record materiality
 
-Layer: docs · Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
-grep -q "PLANNING_PIN_TABLE" scripts/review-loop-discipline.test.mjs` → exit 0
-with the report-note, CHECKS-materiality, and anti-deflation pins green as the
-first four rows of the planning pin table (`PLANNING_PIN_FLOOR = 4`, liveness
-and discrimination legs green) and every existing assertion still passing.
+Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift.
 
-- [ ] Pin the report-note contract red-first against the new §3 wording of `skills/pre-execution-review/references/LEDGERS.md`: the assertion lands in the new planning-side pin table of the discipline suite (task 7 owns the table shell) and states that a `low` planning finding is persisted, visible, non-blocking, never a re-review trigger by itself, resolvable by the stage author without a re-review, with material = `medium`+; the row carries the superseded sentence “info is the only immaterial one” as its discrimination sample (F02).
-- [ ] Edit `skills/pre-execution-review/references/LEDGERS.md` §3: replace the "`info` is the only immaterial one" sentence with the report-note materiality line (material = `medium`+; a `low` finding is a persisted, visible, non-blocking report-note) and the anti-deflation carry-over (a real defect mislabeled `low` classifies at `medium` minimum; deflating a severity to dodge a review is itself a review defect), keeping the row shape, the writer map, and the append-only contract untouched.
-- [ ] Pin the materiality restatement red-first against the new wording of `skills/review-spec/references/CHECKS.md` + `skills/review-plan/references/CHECKS.md` in the discipline suite: both files state material = `medium`+ and carry the anti-deflation rule; each is a table row (task 7) whose discrimination sample is the superseded “Material = anything above info” sentence it replaces (F02).
-- [ ] Edit `skills/review-spec/references/CHECKS.md` + `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with "Material = `medium`+" plus the report-note sentence (a `low` finding never blocks, never triggers a re-review by itself) plus the anti-deflation sentence, keeping the closed severity vocabulary list unchanged.
-- [ ] Bump `pre-execution-review` 2.2.1 to 2.3.0, `review-spec` 1.7.1 to 1.8.0, `review-plan` 1.6.1 to 1.7.0 via the `bump-skill` contract (CHANGELOG rows + README cells; one bump per skill per PR per E-D31-1 — the later re-edits of these skills stay under their P1 versions).
-- [ ] Run `bun test scripts/review-loop-discipline.test.mjs` and record the green run in the phase's progress entry (every existing assertion still passing).
-- [ ] Declare the planning pin table in the discipline suite (`bun test scripts/review-loop-discipline.test.mjs` is the command that executes it): `PLANNING_PIN_TABLE` as `{ id, doc, must, superseded }` rows, the liveness leg (every `must` matches the live bytes), the discrimination leg (`assertDiscriminating(<row>)` fails a row whose `must` accepts its own `superseded` sample), and the floor `assert.ok(PLANNING_PINS.length >= PLANNING_PIN_FLOOR)` with `PLANNING_PIN_FLOOR = 4` — so a vacuous pin set reddens the suite (an absent, empty, truncated, and trivially-true table all fail) (F02).
-- [ ] Prove the pins are mechanically present at the phase head: `bun test scripts/review-loop-discipline.test.mjs && grep -q "PLANNING_PIN_TABLE" scripts/review-loop-discipline.test.mjs` → exit 0, with the four P1 rows, the `assertDiscriminating(` leg and `PLANNING_PIN_FLOOR = 4` recorded in the phase's progress entry (F02, AC14).
+- [ ] Add the bounded `reproducer` field to `FINDING_SPEC.fields` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — optional `string`, `minLength: 1`, `maxLength: PRE_EXECUTION_LIMITS.reproducerChars`, `nulFree: true` — plus the matching optional member on the `PreExecutionReviewFindingV1` interface.
+- [ ] Add `reproducerChars: 1024` to `PRE_EXECUTION_LIMITS` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` so the bound is published rather than spelled in the field.
+- [ ] Rewrite the severity prose in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — the `PRE_EXECUTION_FINDING_SEVERITIES` comment and the `severity` field description state material = `medium`+, `low` = persisted report-note, `info` = immaterial — so `grep -rn "the only immaterial" packages/agentic-workflow-schema/src/` exits non-zero and the two fragments `material = `medium`` and `report-note` exist.
+- [ ] Change `const material = finding.severity !== "info"` in `packages/agentic-workflow-schema/src/pre-execution.ts` to the `medium`+ membership test and restate the doc comment above `validatePreExecutionReceiptAgainstSnapshot` (a PASS may coexist with open/unverified `low` rows; it is refused while any open/unverified `medium`+ row exists).
+- [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS with an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates while a `reproducer` beyond `reproducerChars` is refused.
+- [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs`; the `--check` form is the drift gate) so the committed projections carry `reproducer` and keep their `$comment` runtime-rule disclosure.
+- [ ] Bump the package to 4.3.0 in `packages/agentic-workflow-schema/package.json` (additive minor; every enum value, the receipt contract id and the freshness vocabulary keep their spelling).
+- [ ] Run the package suite green: `cd packages/agentic-workflow-schema && bun run test` → exit 0, then `bun run check:pre-execution-schemas` → exit 0.
 
-## P2 — End the planning repair loop at a hard two-cycle cap
+## P2 — Transition-decider cap refusal
 
-Layer: docs · Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
-grep -q "PLANNING_PIN_FLOOR = 8" scripts/review-loop-discipline.test.mjs` →
-exit 0 with the cap, verdict-mirror, and REPAIR-mirror pins green as table rows
-(floor raised to 8, discrimination leg green) and every existing assertion
-still passing.
+Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && bun run test` → exit 0 with the cap vectors green, and `bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0.
 
-- [ ] Pin the hard cap red-first against the new §4 wording of `skills/pre-execution-review/references/POLICY.md` in the discipline suite: the second cycle prints the unchanged `CONVERGENCE-ANOMALY` block before any further edit, a third cycle never starts without explicit user instruction, and an unconverged loop ends in `NEEDS-DESIGN` routed to the human; each pin is a row of `PLANNING_PIN_TABLE` (P1) whose discrimination sample is the superseded sentence it replaces, and this phase raises `PLANNING_PIN_FLOOR` to 8 (F02).
-- [ ] Edit `skills/pre-execution-review/references/POLICY.md` §4: after the anomaly text, state the hard two-cycle cap with its counting basis (persisted receipts + repair records across the unit's progress and findings ledgers), end an unconverged loop in `NEEDS-DESIGN` routed to the human, scope the repair-turn exemption to authorized cycles, and replace "no cap converts a verdict into a dead end" with the user-gated-stop semantics — the `CONVERGENCE-ANOMALY` block itself stays byte-identical.
-- [ ] Pin the verdict-surface mirrors red-first against the new loop text of `skills/review-spec/references/OUTPUT.md` + `skills/review-plan/references/OUTPUT.md` in the discipline suite: both files carry the cap line (`third cycle never starts without explicit user instruction`); each mirror is a table row with its superseded sentence as the discrimination sample (F02).
-- [ ] Edit `skills/review-spec/references/OUTPUT.md` + `skills/review-plan/references/OUTPUT.md`: extend the second-cycle loop text with the hard cap and the `NEEDS-DESIGN` end, keeping the receipt-literal lines and the verdict blocks byte-identical (machine-pinned normative grammar).
-- [ ] Edit `skills/design-feature/references/REPAIR.md` §4: replace "More cycles stay allowed when correctness needs them" with the cap mirror (a third cycle never starts without explicit user instruction; an unconverged loop ends in `NEEDS-DESIGN`), preserving the §4 heading and the anomaly-first ordering.
-- [ ] Bump `design-feature` 3.4.0 to 3.5.0 via the `bump-skill` contract (the three skills bumped in P1 keep their versions — E-D31-1).
-- [ ] Run `bun test scripts/review-loop-discipline.test.mjs` and record the green run in the phase's progress entry (cap + mirror pins green; existing assertions unchanged).
+- [ ] Add the optional `reviewLoopCycles` input to `WorkflowDecisionInput` in `packages/agentic-workflow-schema/src/index.ts` as `{ spec?: number; plan?: number }`, documented as the consecutive-unconverged count derived from the unit's persisted stage receipts.
+- [ ] Add `stop-review-loop-cap` to `WORKFLOW_DECISION_STOP_CODES` in `packages/agentic-workflow-schema/src/index.ts` — the only added value; every existing sense, stop and invoke code keeps its spelling.
+- [ ] Implement the refusal in `decideWorkflowAction` (`packages/agentic-workflow-schema/src/index.ts`): a `review-spec`/`review-plan` proposal whose stage count reaches two returns `kind: "stop"`, `intent: "ask-human"`, `reasonCode: "stop-review-loop-cap"`, with the human route (`design-feature`) named in `detail`.
+- [ ] Add the vector suite `packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs` proving three behaviours: two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation; a PASS reset leaves the next cycle allowed; a `needs-design` outcome routes to `design-feature`.
+- [ ] Pin the counting rule in the same vector suite: the count is the consecutive FAIL-verdict receipts for a stage since its last PASS-verdict receipt, and every other transition-table row keeps its behaviour.
+- [ ] Derive the per-stage count in `scripts/workflow-status.mjs` from the receipts `scripts/pre-execution-contract.mjs` already parses and pass it into the decider input on every run (recomputed, never stored).
+- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the sensor suite green.
 
-## P3 — Route wording-only repairs past the full snapshot re-review
+## P3 — Snapshot wording-only route
 
-Layer: docs · Done-when: `bun test scripts/review-loop-discipline.test.mjs &&
-grep -q "PLANNING_PIN_FLOOR = 9" scripts/review-loop-discipline.test.mjs` →
-exit 0 with the wording-only pin green as the ninth table row (the frozen
-floor) and every existing assertion still passing.
+Layer: config/infra · Done-when: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` → exit 0 with the wording-only vectors and the re-aimed code-carrier pins green.
 
-- [ ] Pin the wording-only route red-first against the new §3 text of `skills/pre-execution-review/references/POLICY.md` in the discipline suite: a recorded wording-only determination routes a cosmetic repair batch without the full snapshot re-review, records the determination in the unit's frozen evidence, and rotates `artifactRevisionId`; the pin is the ninth row of `PLANNING_PIN_TABLE` and this phase raises `PLANNING_PIN_FLOOR` to its frozen value 9 (F02).
-- [ ] Edit `skills/pre-execution-review/references/POLICY.md` §3: the opening paragraph keeps the single re-review as the default batch consequence and exempts a recorded wording-only determination; the Wording-only row's forbidden cell keeps the recording requirement and adds the `artifactRevisionId` rotation requirement; the Common-root-cause and Scope-changing rows stay untouched.
-- [ ] Run `bun test scripts/review-loop-discipline.test.mjs` and record the green run in the phase's progress entry (wording-only pin green; existing assertions unchanged; no version bump — E-D31-1).
+- [ ] Add `parseWordingOnlyDeterminations(text)` to `scripts/pre-execution-contract.mjs` — one parser for the `## Wording-only determination v1 — <stage>` block's `Determination`, `Acceptance fingerprint` and `Intent and authority unchanged` lines, shared by the CLI and the sensor.
+- [ ] Add the wording-only branch to `attributeFreshness` in `scripts/pre-execution-snapshot.mjs`: with bound artifact bytes moved, a matching determination — same artifact revision, same acceptance fingerprint, zero changed context authorities — answers fresh with the determination id named in `detail`.
+- [ ] Enforce the rotation in `scripts/pre-execution-snapshot.mjs`: a rotated revision with no matching determination keeps `stale-artifact-revision`, and a determination whose recorded revision differs from the snapshot's current one is refused.
+- [ ] Read the acceptance fingerprint in the verify path of `scripts/pre-execution-snapshot.mjs` by fingerprinting the unit's acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md` is the form the CLI runs) and fail closed when the manifest is absent, so the route is unavailable without a frozen manifest.
+- [ ] Extend `scripts/pre-execution-attribution.test.mjs` with the wording-only vectors for all three outcomes — fresh with the recorded determination, `stale-artifact-content` on material movement, and the refusal when the determination is missing.
+- [ ] Extend `scripts/pre-execution-sensor.test.mjs` with the wording-only vectors and the `wording-only` anchor the acceptance criterion greps.
+- [ ] Re-aim the planning-side pins in `scripts/review-loop-discipline.test.mjs` at the code carriers — the pin block reads the schema package's `medium`+ predicate, the CLI's verify report and the decider's refusal — while every existing assertion keeps its strength.
 
-## P4 — Qualify the planning-review-materiality unit
+## P4 — Skill-reference prose shrink
 
-Layer: hardening · Done-when: `bun scripts/check-skill-context.mjs && bun test
-scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs
-scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs
-scripts/normative-drift.test.mjs` → exit 0 with every frozen `ACCEPTANCE.md`
-validator green at the terminal HEAD (AC14's `PLANNING_PIN_TABLE`,
-`assertDiscriminating(` and `PLANNING_PIN_FLOOR = 9` greps included) and the PR
-open with `Closes #171`.
+Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed and the AC7 removal greps clean.
 
-- [ ] Re-measure the four bumped skills against the context-budgets manifest and run `bun scripts/check-skill-context.mjs` green, updating the manifest where the declared growth covers the edits.
-- [ ] Re-bundle the Pi mirror from the final skill tree by running the package's own bundler with the Pi package root as the working directory — the verbatim command pair is frozen in the acceptance manifest's Commands section (F01) — then run the package's parity suite from the same working directory, so the mirror stays byte-identical to the canonical skill tree.
-- [ ] Run the full regression set (discipline + ledger-ownership + pre-execution-quality + ledger-provenance + normative-drift + pre-execution-sensor suites) and record every exit 0 in the phase's progress entry.
-- [ ] Run the schema package's suite from its package root and verify `git diff main...HEAD -- packages/agentic-workflow-schema` stays empty (negative integration, AC10).
-- [ ] Verify the AC8 + AC9 diff walks at the branch head: the `git diff main...HEAD -- skills/pre-execution-review/references/POLICY.md` walk touches only §3 + §4 hunks (§1, §2, §5–§8 byte-identical), the `git diff --name-only main...HEAD` walk lists only the In-scope surfaces **plus the declared derived-surface set** (every file the bundler rewrote under the Pi package skills tree, the four edited version lines, the README skill-table cells, the CHANGELOG rows) and nothing else, and the `git diff main...HEAD -- scripts/review-loop-discipline.test.mjs` walk removes no existing assertion (additions + equal-strength rewrites only) — the three read-verified walks are recorded in the phase entry (F03).
-- [ ] Append the Jin & Chen entry (arXiv:2603.00539) under a bottom References section in the repository README (created there if absent, deduped against other features' entries) and verify the AC13 version surface (four minor bumps + four CHANGELOG rows) — read-verified walk of the bump-skill output diff recorded.
-- [ ] Close the unit's progress, testing, and known-issues ledgers truthfully and verify the frozen acceptance-manifest blob (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md`) at the terminal HEAD.
+- [ ] Rewrite `skills/pre-execution-review/references/LEDGERS.md` §3: drop "`info` is the only immaterial one"; state material = `medium`+, the `low` report-note persistence contract (persisted, visible, non-blocking, resolved by the stage author without a re-review), the anti-deflation carry-over, and the restated PASS-coexistence sentence.
+- [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical.
+- [ ] Rewrite §3 of `skills/pre-execution-review/references/POLICY.md`: keep the single re-review of the resulting snapshot as the default batch consequence, remove the every-batch mandate sentence, and add the wording-only exemption with the determination block's shape and the non-skippable revision rotation.
+- [ ] Rewrite §4 of `skills/pre-execution-review/references/POLICY.md`: remove the three unbounded-cycle sentences, keep the `CONVERGENCE-ANOMALY` block byte-identical, and author the remainder — the hard two-cycle cap, the `third cycle never` starts without explicit user instruction rule, and the unconverged end in `needs-design` where the stage sanctions it plus the decider's `stop-review-loop-cap` refusal and `design-feature` route at the plan stage.
+- [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
+- [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
+- [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, one row per skill in `CHANGELOG.md` and accurate README skill cells.
+- [ ] Add the schema package's 4.3.0 row to the `CHANGELOG.md` companion-package table and append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md` (created there if absent, deduped against other features' entries).
+
+## P5 — Hardening & PR
+
+Layer: hardening · Done-when: `bun test scripts/review-loop-discipline.test.mjs` → exit 0 at the terminal HEAD with the whole ladder green, parity green and the PR URL printed.
+
+- [ ] Run the full acceptance ladder at the terminal HEAD and record every exit line — the root suites (`bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs scripts/workflow-status-pre-execution.test.mjs`), the schema package gate (`bun run gate:pre-execution` from the package root) and the budget gate (`bun scripts/check-skill-context.mjs`) → exit 0 across the ladder.
+- [ ] Run the plan-layer linter over the unit's plan (`bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md`) → exit 0 with a PASS verdict and all five fingerprints, pasted verbatim into the phase entry.
+- [ ] Re-bundle the Pi mirror after the last skill edit (`bun run bundle:skills` from the Pi package root) and run the package suite (`bun run test` from the same root) → exit 0 with the mirror byte-identical to the canonical skill tree.
+- [ ] Record the three read-verified walks in the phase entry — the additive-release vocabulary diff, the PR-diff scope against the three declared groups, and the no-weakening discipline-suite diff.
+- [ ] Verify the frozen acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md`) still equals the receipt blob and append the acceptance receipt to the unit progress ledger.
+- [ ] Confirm every phase fingerprint recorded in `PLAN.md` still matches the committed phase shapes and that each read-verified obligation row carries its evidence entry (manual).
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push

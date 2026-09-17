@@ -4,35 +4,44 @@
 
 | Layer | Required evidence | Command or check |
 |---|---|---|
-| Report-note semantics (ledger surface) | `LEDGERS.md` §3 states material = `medium`+, the `low` report-note rule, and the anti-deflation carry-over; the old "`info` is the only immaterial one" sentence is gone | `grep -n "only immaterial" skills/pre-execution-review/references/LEDGERS.md` non-zero; `grep -niE "report-note" skills/pre-execution-review/references/LEDGERS.md` zero; the report-note row of the planning pin table |
-| Materiality restatement (verdict checklists) | both CHECKS files carry the `medium`+ line + anti-deflation; severity vocabulary list unchanged | greps per AC2/AC3 + both CHECKS rows of the planning pin table |
-| Cap + wording-only (policy surface) | POLICY §4 hard cap with counting basis + `NEEDS-DESIGN` end; `CONVERGENCE-ANOMALY` block byte-identical; POLICY §3 wording-only route with determination + rotation | the cap/wording-only rows of the planning pin table; AC4/AC6 read-verified hunk walks in P4 |
-| Pin existence + discrimination (F02) | the planning pins exist, are non-empty, and every pin rejects the sentence it supersedes — a no-op suite no longer satisfies the criteria that depend on them | `grep -q "PLANNING_PIN_TABLE" scripts/review-loop-discipline.test.mjs`; `grep -q "assertDiscriminating(" scripts/review-loop-discipline.test.mjs`; `grep -q "PLANNING_PIN_FLOOR = 9" scripts/review-loop-discipline.test.mjs`; `bun test scripts/review-loop-discipline.test.mjs` → exit 0 (AC14) |
-| Verdict mirrors (OUTPUT ×2, REPAIR) | both OUTPUT files + `REPAIR.md` §4 carry the cap line; receipt-literal lines and verdict grammar untouched | AC5/AC7 greps + `bun test scripts/normative-drift.test.mjs` |
-| Ledger truth classes | no new ledger row type, writer, or owner; the rule moves text only | `bun test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/pre-execution-quality.test.mjs scripts/pre-execution-sensor.test.mjs` |
-| Context/installability | the four bumped skills stay within budgets; skills CLI discovery intact | `bun scripts/check-skill-context.mjs`; `npx skills add . --list` |
-| Untouched surfaces | schema package byte-untouched; no tutorial (`docs/workflow/`) edit | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema docs/workflow` empty; schema `bun run test` |
-| Pi distribution | canonical bundle parity + package behavior | `cd packages/pi-agentic-workflow && bun run bundle:skills && bun run test` (the bundler script lives in the package; no root `package.json`) |
+| Materiality predicate (schema runtime) | `pre-execution.ts` carries the `medium`+ membership test; a PASS with an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused `verdict-mismatch` | `grep -n 'severity !== "info"' packages/agentic-workflow-schema/src/pre-execution.ts` non-zero; `cd packages/agentic-workflow-schema && bun run test` → exit 0 with both readiness vectors named in the phase entry (AC1) |
+| Predicate prose (schema contract) | the severity vocabulary comment and the field description state the `medium`+ line; no "only immaterial" phrasing survives | `grep -rn "the only immaterial" packages/agentic-workflow-schema/src/` non-zero; `grep -nE 'material = .medium'` and `grep -n "report-note"` on `packages/agentic-workflow-schema/src/pre-execution-contract.ts` both zero (AC2) |
+| Finding reproducer (schema contract) | the optional bounded `reproducer` exists, its bound is declared on the field entry, vectors cover the bound refusal and back-compatibility, and the receipt contract id is unchanged | AC3's four anchors + the package suite exit 0 (AC3) |
+| Cap refusal (decider) | two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation with `stop-review-loop-cap` and the human route named; a PASS reset re-allows the next cycle; `needs-design` routes to `design-feature` | `grep -rln "review-loop-cap" packages/agentic-workflow-schema/test/` zero; `cd packages/agentic-workflow-schema && bun run test` → exit 0; `bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0 (AC5) |
+| Wording-only route (snapshot CLI) | the determination parser reads the record; a matching determination answers fresh; material movement answers `stale-artifact-content`; a rotation without the record is refused; no freshness code, flag or exit code moves | `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` → exit 0 with the `wording-only` vectors (AC4) |
+| Discipline pins (re-aimed) | the suite reads the schema package and the CLI report, and no existing assertion is removed | `bun test scripts/review-loop-discipline.test.mjs` → exit 0; `grep -n "packages/agentic-workflow-schema" scripts/review-loop-discipline.test.mjs` zero; the no-weakening diff walk (AC8) |
+| Prose shrink (docs) | every declared removal grep is clean, the kept-side greps hit, and the `CONVERGENCE-ANOMALY` block plus receipt literals are byte-unchanged | AC7's nine removal greps (non-zero) and three kept greps (zero) + the diff-hunk walk (AC7) |
+| Additive release (schema package) | the package gate passes and no enum value or contract id is removed | `cd packages/agentic-workflow-schema && bun run gate:pre-execution` → exit 0 + the vocabulary-diff walk (AC9) |
+| Ledger truth classes | no new ledger row type, writer or owner: the determination block lives in a `# no-script-writer` home and the ownership block is untouched | `bun test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 (AC10) |
+| Normative surfaces | no declared grammar moves and no version restatement goes stale | `bun test scripts/normative-drift.test.mjs` → exit 0 (AC10) |
+| Context/installability | the four bumped skills stay within their budgets after the shrink | `bun scripts/check-skill-context.mjs` → exit 0 (AC10) |
+| Plan layer | the unit's canonical phase list passes all eight boxes at the PR head, with machine done-whens rather than prose recitation | `bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md` → exit 0, stdout pasted verbatim (AC6) |
+| Pi distribution | canonical bundle parity plus package behavior, after the last skill edit and from the package that owns the bundler | `cd packages/pi-agentic-workflow && bun run bundle:skills && bun run test` → exit 0 (AC11) |
+| Scope | every changed path belongs to one of AC13's three declared groups | the anchored `git diff main --name-only` listing + the per-path attribution walk (AC13) |
+| Release records | one removed plus one added `version:` line per touched skill, CHANGELOG rows for the four skills and the schema package, accurate README cells, and the bibliography append | the AC14 bump-hunk count + the CHANGELOG/README walk + `grep -n "2603.00539" README.md` (AC12, AC14) |
 
 ## Mandatory scenario inventory
 
 Scenario coverage per the SPEC's `### Dev scenarios` table; each row names the
-phase + validator that exercises it:
+phase and the validator that exercises it:
 
 | Scenario | Exercised in | Validator |
 |---|---|---|
-| `loop:report-note-pass` — a review PASS coexists with open `low` report-note rows (no repair batch, no re-review) | P1 | report-note row of the planning pin table (PASS-coexistence wording in `LEDGERS.md` §3); live precedent: this unit's own two open `info` rows |
-| `loop:deflation-guard` — a real defect mislabeled `low` re-classifies at `medium` minimum and blocks | P1 | anti-deflation row of the planning pin table + AC3 grep |
-| `loop:closed-vocabulary` — a severity outside `info\|low\|medium\|high\|critical` is never introduced | P1 | unchanged severity list in both CHECKS files (grep) + AC10 schema diff empty |
-| `loop:role-violation` — an author turn filing findings against its own artifact, or a script writing ledger rows, stays denied | P4 | `bun test scripts/ledger-ownership.test.mjs` (unchanged ownership block) |
-| `loop:cap-hit` — the second cycle prints `CONVERGENCE-ANOMALY` before any further edit; a third cycle is refused without explicit user instruction; an unconverged loop ends in `NEEDS-DESIGN` | P2 | cap rows of the planning pin table + AC4 read-verified hunk walk |
-| `loop:wording-only-skip` — a recorded cosmetic repair batch skips the re-review, leaves the determination row + rotated revision behind | P3 | wording-only row of the planning pin table + AC6 read-verified hunk walk |
-| `loop:dup-finding` — the same finding re-reported in a later cycle keeps its stable id and gains a second resolution row | P4 | unchanged `finding-id` stability text in `LEDGERS.md` §3 (read-verified in the AC8 hunk walk: §3 outside the edited hunks) |
-| `loop:pin-vacuous` — a planning pin that is absent, empty, truncated, or trivially true leaves the discipline suite green | P1, P2, P3, then P4 at the PR head | the pin table's row floor (`PLANNING_PIN_FLOOR` 4 → 8 → 9) + the discrimination leg + the AC14 validator |
-| outage/dependency failure — n/a: no runtime dependency exists; every validator is a local command over repository bytes |
+| `loop:report-note-pass` — a review PASS coexists with open `low` report-note rows, with no repair batch and no re-review | P1 | the package suite's `low`-coexistence vector; live precedent: this unit's own open `info` rows in `planning-findings.md` (AC1) |
+| `loop:reproducer-bound` — a `reproducer` past its declared bound is refused while an absent one still validates | P1 | `grep -A8 'key: "reproducer"' … \| grep -c "maxLength"` ≥ 1 + the bound and back-compatibility vectors (AC3) |
+| `loop:deflation-guard` — a real defect mislabeled `low` re-classifies at `medium` minimum and blocks | P4 | the anti-deflation sentence in `LEDGERS.md`/both `CHECKS.md`, hit by AC7's `medium\` minimum` kept-side grep |
+| `loop:role-violation` — an author turn filing findings against its own artifact, or a script writing a ledger row, stays denied | P5 | `bun test scripts/ledger-ownership.test.mjs` on the unchanged ownership block (AC10) |
+| `loop:cap-hit` — two consecutive unconverged cycles make the decider refuse a third invocation with `stop-review-loop-cap` and the human route; a PASS reset re-allows the next cycle | P2 | the package suite's `review-loop-cap` vectors + the sensor emission case (AC5) |
+| `loop:wording-only-skip` — a recorded determination keeps `verify` current while the same movement without the record is refused | P3 | the `wording-only` vectors in both suites (AC4) |
+| `loop:dup-finding` — the same finding re-reported in a later cycle keeps its stable id and gains a second resolution row | P4 | `LEDGERS.md` §3's `finding-id` stability text, outside every edited hunk (read-verified in the AC7 walk) |
+| `loop:pin-vacuous` — a pin that reads a superseded prose sentence instead of the code carrier leaves the suite green | P3, then P5 at the PR head | the re-aimed pin block reading the schema predicate, the CLI report and the decider refusal (AC8) |
+| outage/dependency failure — n/a: no runtime dependency exists; every validator is a local command over repository bytes | — | n/a |
+| data loss / mass change — n/a: no data store is touched; the only durable writes are ledger appends and release records | — | n/a |
 
 ## Runtime convention
 
-bun first (`bun test …`, `bun scripts/…`); the same commands under
-`node --test …` / `node scripts/…` are the guaranteed fallback (CI node-compat
-job). The discipline suite must pass under both runtimes.
+bun first (`bun test …`, `bun scripts/…`, `bun run <script>`); the same commands
+under `node --test …` / `node scripts/…` are the guaranteed fallback (CI
+node-compat job). Two commands are package-root-bound by construction — the
+schema package's suite and the Pi package's bundler/parity pair — because this
+repository has no root `package.json` (PE-018, PE-023).
