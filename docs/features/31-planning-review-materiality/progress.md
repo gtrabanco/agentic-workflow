@@ -2734,7 +2734,7 @@ What the batch did, per finding (engineering decisions E-D31-15…E-D31-19 in
 - **P31-04** — the schema package's `CHANGELOG.md` row stays in P4 (the canonical
   phase contract forbids a `docs` target in a `config/infra` phase — verified:
   `scripts/phase-lint.mjs` blocks that shape), so the `normative-drift` window
-  P1→P4 is declared in `known-issues.md` §10 and P4's done-when now closes it.
+  P1→P4 is declared in `known-issues.md` §12 and P4's done-when now closes it.
 - **P31-05** — the Engineering half's evidence range corrected to
   `PE-001…PE-029`.
 
@@ -2768,7 +2768,7 @@ fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
   scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs
   scripts/review-loop-discipline.test.mjs scripts/workflow-status-pre-execution.test.mjs`
   → green. `scripts/workflow-status-sensor.test.mjs` (outside the ladder and the
-  AC10 pack) → 59 pass / 3 fail; recorded in `known-issues.md` §10 and left to its
+  AC10 pack) → 59 pass / 3 fail; recorded in `known-issues.md` §11 and left to its
   owner (P31-06).
 - `bun scripts/check-skill-context.mjs` → exit 0 (no skill byte moved in this
   batch).

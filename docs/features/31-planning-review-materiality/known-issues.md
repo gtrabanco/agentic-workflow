@@ -1,8 +1,9 @@
 # known-issues — 31-planning-review-materiality
 
 No unresolved product or engineering decision blocks implementation, and no
-planning-finding row is left open by this re-cut (R31-01/R31-02/R31-03 are
-resolved in `planning-findings.md` at artifact revision `31-plan-3`). The
+planning-finding row is left open by this re-cut: R31-01/R31-02/R31-03 were
+resolved at artifact revision `31-plan-3`, P31-01…P31-05 at `31-plan-4`, and
+P31-06 at `31-plan-5` (`planning-findings.md`). The
 boundaries below are recorded so qualification and review do not rediscover them.
 
 ## Known boundaries to preserve
@@ -66,34 +67,50 @@ boundaries below are recorded so qualification and review do not rediscover them
    invariant unseen (P31-03). The behavioral emission stays an observation, not a
    gate: see §10.
 
-7. **`stop-review-loop-cap` is additive only.** The transition table's rows and
+8. **`stop-review-loop-cap` is additive only.** The transition table's rows and
    every pre-existing decider vocabulary value keep their spelling; a consumer
    that switches exhaustively over the stop codes gains one arm, and no consumer
    loses one. Recorded here because the schema package ships as a published
    contract (E-D31-10).
 
-8. **The acceptance manifest was re-frozen by this re-cut (E-D31-13).** The
-   superseded `31-plan-2` blob (`d85e217acad1322d3caf4968715ef5d00e9189c0`) no
-   longer gates anything; the live blob is recorded in `PLAN.md` and receipted in
-   `progress.md`. Anyone holding the old blob must re-read the manifest.
+9. **The acceptance manifest was re-frozen by the `31-plan-5` re-derivation
+   (E-D31-20).** The live blob is
+   `849af5ae7bccc7bc815d60d8ca2a9e0400161df9`, recorded in `PLAN.md` and receipted
+   in `progress.md`; the superseded `31-plan-4` blob
+   (`650c7c8b21fdd6b7e2ec7b6c2c91672732201166`) and older blobs no longer gate
+   anything. The re-freeze records the new Product parent (`spec-review-31-11`);
+   every validator in the manifest is byte-identical to the `31-plan-4` manifest's,
+   because both Product patches were enumeration-only. Anyone holding an old blob
+   must re-read the manifest.
 
-9. **AC13's code-carrier group is short of three paths this plan edits (open,
-   `class: product`).** The frozen Product half enumerates the code carriers as
-   `packages/agentic-workflow-schema/**`, `scripts/pre-execution-snapshot.mjs`,
-   `scripts/review-loop-discipline.test.mjs` and `scripts/phase-lint.mjs`, while
-   the plan edits `scripts/pre-execution-contract.mjs`,
-   `scripts/workflow-status.mjs` and `scripts/workflow-status-pre-execution.test.mjs` by
-   design — so AC13's scope walk reports them as violations until the Product
-   half's declaration is amended. Recorded as `planning-findings.md` P31-06 and
-   routed to `design-feature`; no plan write may widen it silently.
+10. **AC13's code-carrier group now enumerates every path this plan edits
+    (RESOLVED at `31-plan-5`).** The `31-plan-4` cut recorded the gap — the frozen
+    Product half named four code carriers while the plan edits
+    `scripts/pre-execution-contract.mjs`, `scripts/workflow-status.mjs`,
+    `scripts/workflow-status-pre-execution.test.mjs`,
+    `scripts/pre-execution-attribution.test.mjs` and
+    `scripts/pre-execution-sensor.test.mjs` by design — as `planning-findings.md`
+    **P31-06** (`medium`, `class: product`). The owner-commissioned Product patches
+    `31-spec-9`/`31-spec-10` enumerated all five, and `spec-review-31-11` passed the
+    patched half (14/14, zero findings); the `31-plan-5` re-derivation then closed
+    P31-06 and rebound the plan's parent. AC13's scope walk is satisfiable.
 
-10. **The feature-38 suite is outside every gate, and red at this head.**
+11. **The feature-38 suite is outside every gate, and red at this head.**
    `bun test scripts/workflow-status-sensor.test.mjs` → 59 pass / 3 fail at
    `7ace8dbc` (two forge-hang harness timeouts at the 5 s bound, one exit-status
    assertion on the same path). No phase done-when, AC10 pack or AC list runs that
    suite, so the workflow cannot see it — the live proof of the validator-blind
-   class P31-06 names. This batch does **not** edit that suite and does not add it
+   class P31-06 named. This unit does **not** edit that suite and does not add it
    to the pack (a red suite in a frozen gate makes the gate unsatisfiable); the
    A:12 and projection invariants are pinned instead in the already-packed
    `scripts/review-loop-discipline.test.mjs`, and the red suite is recorded here so
    a future fix owns it deliberately.
+
+12. **The `normative-drift` window P1→P4 is declared, not hidden.** P1 bumps the
+    schema package to 4.3.0 while the `CHANGELOG.md` companion row cannot land in
+    the same phase: `CHANGELOG.md` is a `docs` target and the canonical phase
+    contract's box 2 refuses a `docs` target in the `config/infra` P1
+    (`scripts/phase-lint.mjs` `layerForTarget`; P31-04, E-D31-18/E-D31-21). The
+    repo gate is therefore expected red between P1 and P4, P1's done-when stays
+    package-local, and P4's done-when runs `bun test
+    scripts/normative-drift.test.mjs` to prove the closure.

@@ -784,7 +784,7 @@ Every AC1–AC9/AC11/AC13/AC14 validator anchored to the superseded prose carrie
 so the frozen finish line had to move with the carrier. The new blob
 `3d7e7c9ee92314261e5529815c76b373e8ca2745` is recorded in `PLAN.md` and receipted
 in `progress.md`; the superseded `d85e217acad1322d3caf4968715ef5d00e9189c0` is
-retained only as traceability (`known-issues.md` boundary 8).
+retained only as traceability (`known-issues.md` boundary 9).
 
 ### E-D31-14: The pins read the code carriers, and the release records ride one PR
 
@@ -874,16 +874,24 @@ the re-aimed `scripts/review-loop-discipline.test.mjs` block (a code carrier
 already inside the AC10 pack) pins the projection string and the decider's
 absence, so the invariant can no longer regress unseen; the behavioral emission
 stays a hardening-phase observation because the feature-38 suite is outside every
-gate and carries pre-existing failures at this head (`known-issues.md` §10).
+gate and carries pre-existing failures at this head (`known-issues.md` §11).
 
-### E-D31-18: The schema package's CHANGELOG row lands with the bump (P1)
+### E-D31-18: The schema package's CHANGELOG row stays in the `docs` P4, with the `normative-drift` window declared
 
 `rendered-facts@1` recomputes the `CHANGELOG.md` companion table against
 `package.json` (`scripts/normative-drift.test.mjs:708-715`), so bumping the package
-in P1 and adding its row in P4 left the repo gate red for two phases with no
-phase-local validator covering it (P31-04). The row moves into P1 with the bump,
-and P1's done-when gains `bun test scripts/normative-drift.test.mjs`. P4 keeps the
-four skill release records and the bibliography.
+in P1 while the row lands later leaves the repo gate red across that window with no
+phase-local validator covering it (P31-04). The row cannot move into P1 to close
+it: `CHANGELOG.md` is a `docs` target and the canonical phase contract's box 2
+refuses a `docs` target in a `config/infra` phase (`scripts/phase-lint.mjs`
+`layerForTarget`; verified against the phase as cut, which lints PASS). The
+allocation is therefore unchanged — row in P4 with the four skill release records
+— P1's done-when stays package-local, the `normative-drift` window P1→P4 is
+declared in `known-issues.md`, and P4's done-when runs `bun test
+scripts/normative-drift.test.mjs` to prove the closure. **Amendment 2026-09-17
+(`31-plan-5`, E-D31-21): the body originally read "the row moves into P1 with the
+bump", which contradicts both this allocation and the linter's rule; that reading
+is dead and this is the authoritative one.**
 
 ### E-D31-19: The Engineering half's evidence-row range is corrected
 
@@ -970,3 +978,52 @@ text, closure row, sweep row, or non-goal moved.
 | The plan extends both suites by design | repository | `docs/features/31-planning-review-materiality/PLAN.md:107-108` | `f0042c62` @ 2026-09-17 | current | proven | D-31-10; N31-015 |
 | The two paths complete the declared allowed set (no other plan-edited path is undeclared) | repository | `PLAN.md` P1–P5 task set against `SPEC.md` `## Scope` groups 1–3 | `f0042c62` @ 2026-09-17 | current | proven | D-31-10; N31-015 |
 | The user owns the SPEC amendment and refused a further `design-feature` cycle | user | the commission quoted above | `f0042c62` @ 2026-09-17 | current | decision | D-31-10 |
+
+## 2026-09-17 — Engineering re-derivation for the reviewed Product patch (plan-feature, artifact revision `31-plan-5`)
+
+Trigger: the plan's parent was `spec-review-31-9` @ `e15374a3…`; the Product
+half's bound bytes then moved twice — the owner-commissioned patches `31-spec-9`
+(the `## Scope` code-carrier group gains the three paths `plan-review-31-3`'s open
+row P31-06 named) and `31-spec-10` (gains the two suites `spec-review-31-10`'s
+N31-015 named) — and `spec-review-31-11` (`spec-review-pass`, 14/14 checks, zero
+findings) is the current receipt. The plan therefore descended from a stale
+parent, the exact lineage class R31-01 named, and still carried one open row
+(P31-06). Repair owner: `plan-feature`, on the Product reviewer's own hand-off
+("Product half reviewed; the plan binds this receipt"). No phase, task, validator
+or acceptance criterion's required outcome changed: both Product patches were
+enumeration-only.
+
+### E-D31-20: The plan binds `spec-review-31-11` and closes P31-06
+
+The plan snapshot's `--parent` becomes
+`dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`
+(`spec-review-31-11`), verified fresh against the bytes on disk at this
+re-derivation's Product-review gate (`node scripts/pre-execution-snapshot.mjs
+verify --stage spec --unit 31-planning-review-materiality` → `current: true`,
+`structural.fresh: true`). With AC13's code-carrier group now enumerating every
+path the plan edits by design, P31-06's defect no longer exists — the frozen scope
+walk (O13) is satisfiable — so the row flips to `resolved` with `31-plan-5` as its
+resolving artifact revision. The lineage is repaired by re-deriving the plan,
+never by editing the reviewed Product half (the Engineering half and `##
+Amendments` sit outside the `spec-product-v1` selector, PE-003).
+
+### E-D31-21: P31-04's allocation is the linter-valid one (row in P4), and its prose slips are corrected
+
+The `31-plan-4` batch's `P31-04` resolution (row stays in P4; window declared in
+`known-issues.md`; P4's done-when proves the closure) is the authoritative one,
+because the canonical phase contract's box 2 refuses a `docs` target in the
+`config/infra` P1 (`scripts/phase-lint.mjs` `layerForTarget`). Two prose slips said
+otherwise and are corrected here: `E-D31-18`'s body and the `PLAN.md`/`TASKS.md`
+P4 task 8 parenthetical now read the allocation that lints PASS; `known-issues.md`
+gains the window declaration its own text already claimed existed. A plan set that
+contradicts itself on a phase allocation is exactly what a plan review flags, so
+the re-derivation repairs it rather than carrying it forward.
+
+### Evidence rows (re-derivation, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The Product half moved after the plan's parent and `spec-review-31-11` is the current PASS receipt; the plan's parent must rebind to `dd09372a…` | repository | `docs/features/31-planning-review-materiality/progress.md` receipt block `spec-review-31-11`; `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` → `current: true`, `fresh: true` | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-20; PE-030 |
+| AC13's code-carrier group now enumerates every path the plan edits by design, so P31-06's defect is gone | repository | `docs/features/31-planning-review-materiality/SPEC.md` `## Scope` group 1 (nine paths); the P1–P5 task targets in `PLAN.md`/`TASKS.md` | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-20; PE-031 |
+| The phase contract refuses a `docs` target in a `config/infra` phase, so the schema `CHANGELOG.md` row stays in the `docs` P4 | repository | `scripts/phase-lint.mjs` box 2 (`layerForTarget`); `PLAN.md` P1/P4 `Layer:` declarations | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-21; PE-032 |
+| The Product reviewer's own hand-off routed to `plan-feature` to bind `spec-review-31-11` | repository | `progress.md` `spec-review-31-11` receipt → `→ Next: /plan-feature 31-planning-review-materiality` | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-20 |
