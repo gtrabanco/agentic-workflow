@@ -38,3 +38,32 @@ above were resolved in place by that batch, which also re-froze `ACCEPTANCE.md`
 
 The two `info` product-class rows N31-001/N31-002 stay `open`: their owner is
 `design-feature` (spec-stage product class), not this batch.
+
+---
+
+## Re-review (`spec-review-31-2`, 2026-09-17)
+
+Re-review of the Product half the `31-plan-2` repair batch edited — the route
+`plan-review-31-2` named for R31-01 (`class: product` → Product-half re-review
+before the plan can re-derive a parent). This is the spec stage's cycle-1
+repair/re-review (one review, one re-review), so no cycle cap is consumed and no
+`CONVERGENCE-ANOMALY` is due — the same reading `plan-review-31-2` recorded for
+its own re-review. Fresh context; this conversation never authored or edited the
+Product half, its ledgers, or its acceptance manifest.
+
+Snapshot `d93328fe9bede0ecadb64081d5663b91259e2cd9681374657b7f59bda6277a2e` @
+source revision `a3012f8617549fe5fd73f2e86cf80ab520370e43` (`spec-product-v1`
+digest `c09b28aa82002cb075b62aa07b0b821fb6a1be8c1a8ce999cd358daa5d0960f2`,
+31401 bytes). Verdict: `spec-review-fail` — 13/14 checks pass, C8 carries one
+material `product` row. N31-001/N31-002 stay `open` (`info`), unchanged.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-003 | spec | medium | product | d93328fe9bede0ecadb64081d5663b91259e2cd9681374657b7f59bda6277a2e | AC8's scope guard gates on the branch diff as a whole (`git diff main --stat`) while its declared allowed set — the governed In-scope surfaces plus the derived-surface set (E-D31-7) — omits the unit's own workflow-mutated paths, so the criterion cannot be satisfied by the correct implementation: at the PR head the diff necessarily also carries `docs/features/31-planning-review-materiality/**` and the `docs/features/ROADMAP.md` row. | SPEC.md `#### In scope` + AC8; `ACCEPTANCE.md` AC8; `skills/verification-contract/SKILL.md:27-33` §Validator stability (v1.2.1, rule added by fix #159 per `CHANGELOG.md:659` — a validator must never gate on the branch diff as a whole; a diff-based validator enumerates the unit's paths or excludes the workflow-mutated surfaces explicitly, `docs/LOGS.md`, the unit's own docs directory); `docs/features/27-pi-agentic-workflow/ACCEPTANCE.md` AC16 (repo precedent that enumerates its own unit dir + `ROADMAP.md`); `git diff main --stat` at `afd0edab` → 13 paths, all unit records + `ROADMAP.md`, none an In-scope surface; R31-03 (same defect, plan facet, `open`/`info`) | open | — | — |
+
+The finding is the product-side facet of R31-03: the plan reviewer read the same
+whole-diff guard as a plan-stage walk defect (`info`), this review reads the
+criterion's declared allowed set as the Product-half defect the
+verification-contract rule names, and no plan-only walk can satisfy that rule
+without editing the Product half's `#### In scope` / AC8 wording — which is why
+the plan cannot re-derive a stable parent until `design-feature` repairs it.
