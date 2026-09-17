@@ -1939,3 +1939,96 @@ SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
 - Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
 - Parent state: n/a (spec stage roots its own lineage)
 ```
+
+# Repair batch `31-spec-7` — design-feature authoring turn (2026-09-17)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "repair N31-012 + N31-013: add a POLICY.md §3
+criterion to AC7 (single-line fragment such as grep -n \"re-review of the
+resulting snapshot\" exits non-zero, or the intended qualified-sentence
+fragment) so the declared §3 shrink is observable, and add a bound check for
+the reproducer field to AC3 (or move 'bounded' to read-verified)" — one
+repair batch for N31-012 + N31-013. Trigger: the `spec-review-31-7` receipt
+(FAIL, check C8; 12/14 pass; N31-012 medium + N31-013 low, both product). One
+batch over the whole open spec-stage set; the plan-stage rows
+R31-01/02/03 stay with `plan-feature`.
+
+**Cycle accounting (D-31-7):** this is the fifth consecutive unconverged
+cycle of the window the carrier amendment opened (FAIL `spec-review-31-4` →
+repair `31-spec-4` → FAIL `spec-review-31-5` → repair `31-spec-5` → FAIL
+`spec-review-31-6` → repair `31-spec-6` → FAIL `spec-review-31-7` → this
+batch). The commission above is the explicit user instruction that keys a
+further cycle, issued in answer to the `spec-review-31-7` hand-off that named
+exactly this command and batch. Under the live POLICY §4 the loop is
+uncapped — that is the defect this unit fixes — so the cycle is lawful on
+both readings. The window's `CONVERGENCE-ANOMALY` block was printed on entry
+to cycle 2 (reproduced in the `spec-review-31-7` receipt); POLICY §4's
+anomaly rule scopes to second-cycle entry, so no new block is due for a
+user-keyed further cycle (REPAIR §4: a repair responding to a persisted
+verdict is never a loop defect). Reproduced for the cycle record:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality spec
+- Finding ids: N31-009/N31-010/N31-011 (repaired, 31-spec-6) / N31-012, N31-013 (repaired, this batch)
+- Snapshots: 95d1551379b7… → c9acd7885ea6… → (this batch's bytes) (artifactRevisionId bccc95fd → bfdd3b54 → 31-spec-7 label)
+- Missed: AC7 leaves POLICY §3's "before a single re-review of the resulting snapshot" uncriterioned (In-scope 5 declares the surface shrunk); AC3 verifies `reproducer` presence but not its declared bound
+```
+
+Repairs (classes in SPEC `## Amendments` `31-spec-7` + `decisions.md`):
+
+- **N31-012** — AC7 gains the removal grep for POLICY.md §3's re-review
+  mandate (`grep -n "re-review of the resulting snapshot"
+  skills/pre-execution-review/references/POLICY.md` → non-zero; the §3
+  sentence wraps across `:41-42`, the fragment is its single second line
+  `:42`, unique in the file, exit 0 with the sentence standing at branch head
+  `6f1d024e` — the same line-wrap discrimination N31-006 gave the §4 greps;
+  the qualified-sentence alternative was not taken, the removal fragment
+  stays observable without fixing the replacement's wording).
+- **N31-013** — AC3's `bounded` claim becomes command-observable: the field
+  entry must declare its bound (`grep -A8 'key: "reproducer"'
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts | grep -c
+  "maxLength"` ≥ 1 — `VerificationFieldSpec.maxLength` is optional at
+  `verification-contract.ts:51`, count 0 today), a suite vector must
+  exercise the field (`grep -rln "reproducer"
+  packages/agentic-workflow-schema/test/` exits zero — exit 1 today), and
+  the suite clause names the bound vector (over-long `reproducer` refused)
+  beside the existing back-compatibility clause; AC3 stays `(command)` —
+  the read-verified alternative was not taken.
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`, head
+`6f1d024e`): `node scripts/pre-execution-snapshot.mjs verify --stage spec
+--unit 31-planning-review-materiality` → exit 4 (receipt not current — the
+open FAIL receipt is this batch's input), `digestMatches: true` (the FAIL
+receipt binds the bytes on disk). Architectural invariants: `n/a: no project
+invariants declared` (NRS F010); AD-008 preserved by D-31-5 (unchanged). The
+frozen `ACCEPTANCE.md` is not touched (plan-feature's owning artifact,
+superseded set, re-cut on a fresh PASS).
+
+Spec-lint product boxes re-run after the edits: all PASS (placeholders none;
+out-of-scope 7 bullets; closure rows complete; integration 14/14 derived
+subsystems; role matrix 5×5; sweep 19/19 resolved; every in-scope item → ≥ 1
+AC; every AC runnable or `read-verified` — AC2–AC3, AC5, AC10–AC12 pure
+commands, AC1, AC4, AC6–AC9, AC13–AC14 command + `read-verified`, matching
+every criterion's own label — AC3's new anchors are commands, its label is
+unchanged; deferred decisions `none`).
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-7 · Rows checked: 4 evidence rows (batch) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-17
+```
+
+Artifact revision rotates `31-spec-6` → **`31-spec-7`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+
+Post-edit selector check (readiness box 1): `node
+scripts/pre-execution-snapshot.mjs verify --stage spec --unit
+31-planning-review-materiality` re-derived the `spec-product-v1` projection
+from the new bytes, reporting exactly the declared by-design state —
+`fresh: false` ("bound artifact bytes moved since the receipt"),
+`changedPaths: [docs/features/31-planning-review-materiality/SPEC.md]`.
+
+→ Next: /review-spec 31-planning-review-materiality — product half designed and readiness-clean; it needs an
+    independent review before any engineering planning (fifth user-keyed cycle of the window, D-31-7)
+  · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys nothing,
+      rotates the artifact revision)

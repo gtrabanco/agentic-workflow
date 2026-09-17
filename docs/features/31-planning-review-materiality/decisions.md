@@ -549,3 +549,83 @@ decision set D-31-1…D-31-8 is unchanged.
 | REPAIR.md §4's second unbounded-cycle sentence sits wholly on `:71` ("… and no cycle cap converts its verdict into a dead end."); the fragment "no cycle cap converts" is unique in the file and exits 0 with the sentence standing — the replacement AC7 grep discriminates removal | repository | `grep -n "no cycle cap converts" skills/design-feature/references/REPAIR.md` → `71:` (exit 0, sole hit at `bccc95fd`) | `bccc95fd` @ 2026-09-17 | current | proven | — |
 | Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-6` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `bccc95fd`) | `bccc95fd` @ 2026-09-17 | current | proven | — |
 | Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the earlier batches — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batches `31-spec-4`/`31-spec-5`, 2026-09-17) | — | current | proven | — |
+
+## 2026-09-17 — Product repair batch (design-feature, artifact revision `31-spec-7`)
+
+Trigger: `spec-review-31-7` returned `SPEC-REVIEW-FAIL` (failed check C8;
+12/14 pass) with N31-012 (medium) + N31-013 (low), both `product` — one batch
+over the whole set, repair owner `design-feature`, user-commissioned as
+"repair N31-012 + N31-013: add a POLICY.md §3 criterion to AC7 (single-line
+fragment such as grep -n \"re-review of the resulting snapshot\" exits
+non-zero, or the intended qualified-sentence fragment) so the declared §3
+shrink is observable, and add a bound check for the reproducer field to AC3
+(or move 'bounded' to read-verified)" — one repair batch for N31-012 +
+N31-013.
+
+**Cycle authorization (D-31-7).** This is the spec stage's fifth consecutive
+unconverged cycle in the window the carrier amendment opened
+(`spec-review-31-4` FAIL #1 → `31-spec-4` batch → `spec-review-31-5` FAIL #2 →
+`31-spec-5` batch → `spec-review-31-6` FAIL #3 → `31-spec-6` batch →
+`spec-review-31-7` FAIL #4 → this batch). D-31-7 keys a further cycle to
+explicit user instruction; the commission quoted above is that instruction,
+issued in direct answer to the `spec-review-31-7` receipt's hand-off. Under
+the live POLICY §4 the planning loop is still uncapped — that is the defect
+this unit fixes — so the cycle is lawful on both readings; the window's
+`CONVERGENCE-ANOMALY` block was printed on entry to cycle 2 and is reproduced
+in the `spec-review-31-7` receipt — POLICY §4's anomaly rule scopes to
+second-cycle entry, so no new block is due for a user-keyed further cycle.
+Recorded per REPAIR §4: a repair responding to a persisted verdict is never a
+loop defect.
+
+Repair classes (REPAIR §2):
+
+- **N31-012 — closure completion (In-scope 5 already declares POLICY.md §3
+  among the shrunk surfaces; only this sentence's criterion was missing).**
+  AC7 verifies the re-review-for-every-batch mandate in both `OUTPUT.md`
+  files but had no anchor for the §3 sentence In-scope 5 declares lost and
+  §Context names as the defect the wording-only route fixes. AC7 gains
+  `grep -n "re-review of the resulting snapshot"
+  skills/pre-execution-review/references/POLICY.md` → non-zero. The §3
+  sentence wraps across `:41-42` ("… before a single\nre-review of the
+  resulting snapshot."), so a full-phrase grep would false-pass exactly as
+  N31-006's §4 greps did; the anchor is the sentence's single second line
+  (`:42`), unique in the file (`grep -c` → 1), and exits 0 with the sentence
+  standing at branch head `6f1d024e` — it matches while the sentence stands
+  and disappears with it. The commission's alternative — grep the intended
+  qualified sentence — was not taken: the removal fragment is observable
+  without fixing the replacement's wording, which stays an implementation
+  choice inside In-scope 5's declared intent (§3 loses the unconditional
+  mandate; the wording-only route keeps a re-review for material movement
+  per In-scope 2).
+- **N31-013 — closure completion (In-scope 1 already declares the field
+  bounded; only the bound's criterion was missing).** AC3 proved only token
+  presence (`grep -n "reproducer"` exit 1 today, so presence discriminated —
+  the defect was the missing bound check, as the finding itself notes). AC3
+  gains two command anchors: `grep -A8 'key: "reproducer"'
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts | grep -c
+  "maxLength"` returns ≥ 1 (the field entry declares its size bound;
+  `VerificationFieldSpec.maxLength` is optional at `verification-contract.ts:51`,
+  so a bound-less declaration fails the anchor — observed count 0 at
+  `6f1d024e`), and `grep -rln "reproducer"
+  packages/agentic-workflow-schema/test/` exits zero (a suite vector
+  exercises the field; observed exit 1 today — the receipt test walks
+  vocabularies, not per-field bounds). The suite clause now names the bound
+  vector (a `reproducer` longer than the field's declared `maxLength` is
+  refused) beside the existing back-compatibility clause. The commission's
+  alternative — move `bounded` to `read-verified` — was not taken: command
+  anchors keep AC3 `(command)` and objective, strictly stronger than a
+  judgement-only walk. AC3's label is unchanged, so the Spec-lint product
+  box's AC groups need no refile.
+
+No new product decision is taken: the repairs stay inside intent the SPEC
+already records (In-scope items 1 and 5, AC3, AC7, D-31-1/D-31-2); the
+decision set D-31-1…D-31-8 is unchanged.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| POLICY.md §3's re-review mandate sentence wraps across `:41-42` ("applies **one** evidence-bounded repair batch to the owning artifact(s) before a single / re-review of the resulting snapshot."); the fragment "re-review of the resulting snapshot" is its single second line, unique in the file and unique under `skills/`, and exits 0 with the sentence standing — the replacement AC7 grep discriminates removal | repository | `sed -n '39,42p' skills/pre-execution-review/references/POLICY.md`; observed `grep -n "re-review of the resulting snapshot" skills/pre-execution-review/references/POLICY.md` → `42:` (exit 0, sole hit); `grep -rn "re-review of the resulting snapshot" skills/` → 1 hit (at `6f1d024e`) | `6f1d024e` @ 2026-09-17 | current | proven | — |
+| The AC3 bound anchors discriminate: `grep -n "reproducer"` over `pre-execution-contract.ts` exits 1 (field absent), `grep -A8 'key: "reproducer"' … \| grep -c "maxLength"` returns 0, and `grep -rln "reproducer" packages/agentic-workflow-schema/test/` exits 1 (no test names the field) — all turn 0 / ≥ 1 only when the bounded field and its suite vector land; `VerificationFieldSpec.maxLength` is optional at `verification-contract.ts:51`, so a bound-less declaration is representable and would fail the declaration anchor | repository | observed greps at branch head (2026-09-17); `packages/agentic-workflow-schema/src/verification-contract.ts:51` (`readonly maxLength?: number`); `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs:116` walks vocabularies, not per-field bounds | `6f1d024e` @ 2026-09-17 | current | proven | — |
+| Receipt state at authoring start: `verify --stage spec` → exit 4 (receipt not current), receipt `spec-review-31-7` bound, `digestMatches: true`, `verdictIsPass: false` — the open FAIL receipt that names this repair (REPAIR §4: the unit is being repaired by definition) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-17 at `6f1d024e`) | `6f1d024e` @ 2026-09-17 | current | proven | — |
+| Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder) remain current from the initial write and the earlier batches — this batch authors no new domain claim, so the research gate is satisfied by those rows at `current` freshness | document | `decisions.md` §Evidence rows (grounding, 2026-09-17; repair batches `31-spec-4`/`31-spec-5`/`31-spec-6`, 2026-09-17) | — | current | proven | — |

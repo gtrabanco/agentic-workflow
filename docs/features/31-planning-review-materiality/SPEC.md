@@ -450,9 +450,18 @@ Command-checkable at the PR head unless labelled `read-verified`.
 - **AC3** (command): the finding record carries the bounded `reproducer` —
   `grep -n "reproducer"
   packages/agentic-workflow-schema/src/pre-execution-contract.ts` exits zero,
-  and the suite proves back-compatibility (a receipt whose findings carry no
-  `reproducer` still validates); the receipt contract id is unchanged
-  (`grep -c "agentic-workflow/pre-execution-review-receipt@1"
+  the bound is declared on the field entry — `grep -A8 'key: "reproducer"'
+  packages/agentic-workflow-schema/src/pre-execution-contract.ts | grep -c
+  "maxLength"` returns ≥ 1 (`VerificationFieldSpec.maxLength` is optional at
+  `verification-contract.ts:51`, so a bound-less `reproducer` declaration
+  fails this anchor; every anchor here exits non-zero / 0 at branch head
+  `6f1d024e`, so the criterion discriminates the implementation), and a suite
+  vector exercises the field — `grep -rln "reproducer"
+  packages/agentic-workflow-schema/test/` exits zero (no such hit exists
+  today); the suite proves back-compatibility (a receipt whose findings carry
+  no `reproducer` still validates) and the bound (a `reproducer` longer than
+  the field's declared `maxLength` is refused); the receipt contract id is
+  unchanged (`grep -c "agentic-workflow/pre-execution-review-receipt@1"
   packages/agentic-workflow-schema/src/pre-execution-contract.ts` ≥ 1).
 - **AC4** (command + `read-verified`): the wording-only route is
   machine-recorded — `bun test scripts/pre-execution-sensor.test.mjs
@@ -495,6 +504,14 @@ Command-checkable at the PR head unless labelled `read-verified`.
   skills/pre-execution-review/references/POLICY.md` exits non-zero (the
   "Entering a **second** cycle is allowed" sentence wraps across `:60-61`;
   the fragment is its second line, so it discriminates the same way);
+  `grep -n "re-review of the resulting snapshot"
+  skills/pre-execution-review/references/POLICY.md` exits non-zero (§3's
+  re-review-for-every-batch mandate — "… before a single re-review of the
+  resulting snapshot." — wraps across `:41-42`; the fragment is its single
+  second line, unique in the file, so it matches while the sentence stands
+  and disappears with it — the same line-wrap discrimination the §4 greps
+  use, and a full-phrase grep over the wrap would false-pass exactly as the
+  finding warns);
   `grep -rn "Material = anything above"
   skills/review-spec/references/CHECKS.md
   skills/review-plan/references/CHECKS.md` exits non-zero (the materiality
@@ -647,17 +664,17 @@ Product boxes:
 
 ## Design status
 
-`designed` — repair batch for `spec-review-31-6` applied (N31-009 + N31-010 +
-N31-011, one batch): capability closure complete (zero blank rows), Spec-lint
-product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact
-revision **`31-spec-6`** (2026-09-17 — see `## Amendments`). This write moves
-the Product half's bound bytes, so the `spec-review-31-6` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run is the **fourth
+`designed` — repair batch for `spec-review-31-7` applied (N31-012 + N31-013,
+one batch): capability closure complete (zero blank rows), Spec-lint product
+boxes all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
+**`31-spec-7`** (2026-09-17 — see `## Amendments`). This write moves the
+Product half's bound bytes, so the `spec-review-31-7` receipt goes
+`stale-artifact-content` by design: the next `review-spec` run is the **fifth
 consecutive cycle** of the window D-31-7 opened at the carrier amendment, and
 it starts under the explicit user instruction that commissioned this batch
 (D-31-7's user-keyed cycle — the instruction is quoted in `decisions.md` and
 `progress.md`; the window's `CONVERGENCE-ANOMALY` block preceded the cycle-2
-edits and is reproduced in the `spec-review-31-6` receipt).
+edits and is reproduced in the `spec-review-31-7` receipt).
 `plan-feature` re-cuts the plan set (`31-plan-1/2` superseded, never repaired)
 only on a current `SPEC-REVIEW-PASS` receipt.
 ---
@@ -1205,3 +1222,36 @@ Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
 `spec-review-31-6` receipt is superseded by design (bound Product bytes moved
 — `stale-artifact-content`): the next `/review-spec` run is the user-keyed
 fourth cycle of the window (D-31-7).
+
+### `31-spec-7` — repair batch for `spec-review-31-7` (N31-012 + N31-013)
+
+User-commissioned repair batch (2026-09-17), commissioned as "repair N31-012
++ N31-013: add a POLICY.md §3 criterion to AC7 (single-line fragment such as
+grep -n \"re-review of the resulting snapshot\" exits non-zero, or the
+intended qualified-sentence fragment) so the declared §3 shrink is
+observable, and add a bound check for the reproducer field to AC3 (or move
+'bounded' to read-verified)" — one repair batch for N31-012 + N31-013.
+Trigger: `spec-review-31-7` returned `SPEC-REVIEW-FAIL` (failed check C8;
+12/14 pass) with N31-012 (`medium`, product) and N31-013 (`low`, product) —
+one batch over the whole set, repair owner `design-feature`. This is the
+**fifth consecutive cycle** of the window D-31-7 opened at the carrier
+amendment (`spec-review-31-4` FAIL #1, `spec-review-31-5` FAIL #2,
+`spec-review-31-6` FAIL #3, `spec-review-31-7` FAIL #4); per D-31-7 it starts
+only under explicit user instruction, which this commission is — the
+instruction is quoted verbatim in `decisions.md` and `progress.md` (REPAIR
+§4: a repair responding to a persisted verdict is never a loop defect).
+Repair classes (REPAIR §2):
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-012 | product · medium | AC7 gains the removal grep for POLICY.md §3's re-review mandate: `grep -n "re-review of the resulting snapshot" skills/pre-execution-review/references/POLICY.md` exits non-zero. The §3 sentence wraps across `:41-42`; the fragment is its single second line (`:42`), unique in the file, and exits 0 with the sentence standing at branch head `6f1d024e` — it matches while the sentence stands and disappears with it, the same line-wrap discrimination N31-006 gave the §4 greps (a full-phrase grep over the wrap would false-pass exactly as the finding warns). The commission's alternative (the intended qualified-sentence fragment) was not taken: the removal fragment is observable without fixing the replacement's wording, which stays an implementation choice inside In-scope 5's declared intent. Repair class: **closure completion** (In-scope 5 already declares POLICY §3 among the shrunk surfaces; only this sentence's criterion was missing). | AC7 |
+| N31-013 | product · low | AC3's `bounded` claim becomes command-observable: `grep -A8 'key: "reproducer"' packages/agentic-workflow-schema/src/pre-execution-contract.ts \| grep -c "maxLength"` returns ≥ 1 (the field entry declares its size bound — `VerificationFieldSpec.maxLength` is optional at `verification-contract.ts:51`, so a bound-less `reproducer` declaration fails the anchor), and `grep -rln "reproducer" packages/agentic-workflow-schema/test/` exits zero (a suite vector exercises the field — none exists today); the suite clause now names the bound vector (a `reproducer` longer than the field's declared `maxLength` is refused) beside the existing back-compatibility clause. All three anchors exit non-zero / 0 at `6f1d024e`. The commission's alternative (move `bounded` to `read-verified`) was not taken: command anchors keep AC3 `(command)` and objective. Repair class: **closure completion** (In-scope 1 already declares the field bounded; only the bound's criterion was missing). | AC3 |
+
+Artifact revision rotates `31-spec-6` → **`31-spec-7`** for the whole touched
+Product set (`SPEC.md`, `decisions.md`, `planning-findings.md`,
+`progress.md`). The frozen `ACCEPTANCE.md` stays untouched (it is
+`plan-feature`'s owning artifact, re-derived with the superseded
+`31-plan-1/2` re-cut only after a fresh `SPEC-REVIEW-PASS` receipt). The
+`spec-review-31-7` receipt is superseded by design (bound Product bytes moved
+— `stale-artifact-content`): the next `/review-spec` run is the user-keyed
+fifth cycle of the window (D-31-7).
