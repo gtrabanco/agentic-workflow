@@ -17,3 +17,29 @@ review-change cycle 1 ran on 2026-09-18 at head cdd351a6394815aa9a1f80b78e866376
 | F8 | skills/fold-findings/SKILL.md:173 | brand/docs | med | fix-now | fold into current unit — restore the "user confirms" step to the fixed REPLAN sub-bullet so the block matches the decision table and FOLD_PROCESS step 9 | yes |
 | VF-8 | skills/fold-findings/SKILL.md:173 · reviewer review-change · HEAD cdd351a6394815aa9a1f80b78e866376389dc645 · recheck direct read: block omits "user confirms" present at :190 and `references/FOLD_PROCESS.md:61`; SPEC P2 task 2 requires the planner-append/user-confirm/fresh-review/execute chain | brand/docs | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD cdd351a6394815aa9a1f80b78e866376389dc645 | n/a | n/a | review-mark | n/a | n/a |
+| F9 | docs/fix/244-freeze-batch-planner-consumer/progress.md:47 | code | med | fix-now | fold into current unit — replace the dead PR reference `#246`/`pull/246` with the unit's real PR #247 (`docs/fix/README.md:18` already cites it); CLAUDE.md requires documented cross-references to resolve | no |
+| VF-9 | docs/fix/244-freeze-batch-planner-consumer/progress.md:47 · reviewer review-change · HEAD 0947a10debf86d5d43ebc6bcd361de5c1ba0ec1c · recheck direct read + forge check: the line reads `[#246](.../pull/246)`; `gh pr view 246` → "Could not resolve to a PullRequest with the number of 246"; `gh pr view 247 --json number,state,headRefName` → `{"headRefName":"fix/244-freeze-batch-planner-consumer","number":247,"state":"OPEN"}`; `docs/fix/README.md:18` cites #247 | code | confirmed | finding-mark | n/a | n/a |
+| F10 | skills/fold-findings/references/FOLD_PROCESS.md:46 (+ skills/fold-findings/SKILL.md:121-126,192) | brand/docs | med | fix-now | fold into current unit — split the freeze-batch consumer by the router's emitted conclusion: `replan-in-unit` → `/plan-fix <n>` / `/plan-feature <slug>`, `decision-required` → stop and surface the decision to the user, never a planner; extend the `#244` pin to the decision branch | no |
+| VF-10 | skills/fold-findings/references/FOLD_PROCESS.md:46 · reviewer review-change · HEAD 0947a10debf86d5d43ebc6bcd361de5c1ba0ec1c · recheck reproducible command output: `UNIT_ROUTE_REPO=scripts/fixtures/unit-route node scripts/unit-route.mjs 12-decision-unit` → `route: decision` / `next: decision required — stop and surface to the user`, while the cell's trigger admits `decision-required` and its consumer is `/plan-fix <n>` / `/plan-feature <slug>`; sibling contracts `docs/workflow/REVIEW_AND_CLASSIFY.md:84`, `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md:35` | brand/docs | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 0947a10debf86d5d43ebc6bcd361de5c1ba0ec1c · 2026-09-19 · review-change · cycle 2 · full pass (delta escalated: width + size) · verdict: REVIEW-FAIL · new: F9 F10 | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 2 ran on 2026-09-19 at head `0947a10debf86d5d43ebc6bcd361de5c1ba0ec1c` (default single-reviewer route; isolated `code`, `verify`, `security`, `brand/docs`, `perf` finder passes; isolated verification of both candidates; isolated classifier and debt transform — `design`/`a11y`/`seo` inapplicable: no UI/web surface). All six `folded: yes` rows re-verified clean at their cited locations. Delta mode escalated to a full pass — **width** (changed files outside the folded rows' cited-file union: the unit docs, the pi mirror, and the new `scripts/check-changelog-row.mjs` + test) and **size** (278 changed lines > 200). Gate green at the reviewed head; frozen `ACCEPTANCE.md` blob `687f7e55a89c2c49133144a9af0ac4b77cd56b19` recomputed to an exact match. Decision: REVIEW-FAIL (two new `med` fix-now rows).
+
+```text
+CONVERGENCE-ANOMALY — 244-freeze-batch-planner-consumer source
+- Finding ids: new: F9, F10 (no repeat of a prior row's location)
+- Snapshots: cdd351a6394815aa9a1f80b78e866376389dc645 -> 0947a10debf86d5d43ebc6bcd361de5c1ba0ec1c (cycle-1 reviewed head -> cycle-2 reviewed head)
+- Missed: no validator reads the unit ledger's own PR cross-reference (progress.md:47), and the cycle-1 finders asserted the planner tokens exist without checking that every class the freeze-batch trigger admits maps to a conclusion the router actually emits (`decision-required` -> `decision`, not a planner)
+- Owning stage: source (both rows)
+- Why the prior review failed: cycle 1 reviewed the pre-fold bytes, so it never saw the folded consumer wording, and it read the ledger's delivery rows for phase evidence rather than for their own reference integrity
+- Route to owner: source rows -> `/fold-findings` with the explicit ids F9 + F10
+```
+
+```text
+LOOP CAP REACHED — 244-freeze-batch-planner-consumer
+- Finding ids: F9 + F10 (both source-owned, foldable in one atomic batch)
+- Cycles: 2 (REVIEW-RAN marks + forge receipts)
+- Route: /triage-issue --prioritize-now 244-freeze-batch-planner-consumer F9 F10 (or the programmatic outer driver)
+```
+
+Cycle 2 completed two review→fold cycles without convergence (cycle 1's six rows all folded, F3 resolved by the user-approved AC6 amendment, then this cycle produced two new fix-now rows). Both rows are source-owned and small enough to fold in place, but a verifying third cycle is the **user's** escape, never a reviewer election — the cap block above names the residue route.
