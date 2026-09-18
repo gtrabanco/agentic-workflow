@@ -1164,32 +1164,34 @@ test("machine vocabularies are parsed from committed source, never from dist", (
 
 // #244 — freeze-batch hand-off pin: the closing block must be machine-readable.
 // A regression that (a) hard-wraps a · sub-bullet, (b) puts a host command as
-// the consumer, or (c) drops the planner command fails CI.
+// the consumer, or (c) drops the planner command or a format sentence from
+// either skill file fails CI. The block and table are read through the same
+// fixedOutputBlocks/markdownTable helpers the drift sensor uses.
 test("#244 freeze-batch hand-off: closing block shape and consumer are correct", (t) => {
   const skillRel = "skills/fold-findings/SKILL.md";
+  const processRel = "skills/fold-findings/references/FOLD_PROCESS.md";
   if (!exists(skillRel)) return t.skip("fold-findings SKILL.md absent");
+  assert.ok(exists(processRel), "fold-findings FOLD_PROCESS.md exists");
   const skill = read(skillRel);
+  const process = read(processRel);
 
   // --- Part 1: the fenced → Next: block (AC3 block-shape + AC1 consumer) ---
-  // The block is a fenced code block that starts with "→ Next:" and continues
-  // until the closing ```. The regex captures after the "→ Next:" text,
-  // so the first captured line is the rest of the header line (typically
-  // a parenthesised description). Every subsequent non-blank line must
-  // begin with "· " (one physical line, never wrapped).
-  const nextBlockMatch = skill.match(/```[\s\n]*→ Next:([\s\S]*?)```/);
-  assert.ok(nextBlockMatch, "the → Next: fenced block exists");
-  const blockContent = nextBlockMatch[1];
-  const blockLines = blockContent.split("\n");
-
-  let headerDone = false;
-  for (const raw of blockLines) {
-    const line = raw.trim();
-    if (line === "") continue;
-    if (!headerDone) {
-      // First non-blank line is the tail of the → Next: header line
-      headerDone = true;
-      continue;
-    }
+  // The block is read through the sensor's own fixedOutputBlocks helper. Its
+  // header line is identified by its marker, never by position, so every other
+  // non-blank line — including the first sub-bullet — is shape- and
+  // token-checked.
+  const blocks = fixedOutputBlocks(skill, "→ Next:");
+  assert.ok(blocks.length >= 1, "a fenced block carrying the → Next: marker exists");
+  const blockContent = blocks.find((block) =>
+    block.split("\n").some((line) => line.trim().startsWith("→ Next:"))
+  );
+  assert.ok(blockContent, "the fenced → Next: hand-off block exists");
+  const blockLines = blockContent.split("\n").map((line) => line.trim()).filter(Boolean);
+  const headerIndex = blockLines.findIndex((line) => line.startsWith("→ Next:"));
+  assert.ok(headerIndex >= 0, "the fenced block carries the → Next: header line");
+  const subBullets = blockLines.filter((_, i) => i !== headerIndex);
+  assert.ok(subBullets.length >= 1, "the block carries at least one · sub-bullet");
+  for (const line of subBullets) {
     assert.ok(
       line.startsWith("· "),
       "every post-header line must be a · sub-bullet (got: " + JSON.stringify(line) + ")"
@@ -1206,21 +1208,13 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
   assert.ok(blockContent.includes("/plan-feature"), "the block must name /plan-feature");
 
   // --- Part 2: the closing-block decision table (AC1 extended) ---
-  // Find the freeze-batch row in the decision table.
-  const freezeLines = skill.split("\n").filter((l) => /freeze-batch/.test(l));
-  assert.ok(freezeLines.length >= 1, "the freeze-batch row exists in the decision table");
-  // Take the first match that is a table row (starts with |)
-  const freezeLine = freezeLines.find((l) => /^\s*\|/.test(l));
-  assert.ok(freezeLine, "the freeze-batch row is a table row");
-  const freezeParts = freezeLine.split("|").map((s) => s.trim());
-  // The consumer cell is the last non-empty part (the table has | cell | cell | cell |)
-  let consumerCell = "";
-  for (let i = freezeParts.length - 1; i >= 0; i--) {
-    if (freezeParts[i].trim()) {
-      consumerCell = freezeParts[i].trim();
-      break;
-    }
-  }
+  // The table is read through the sensor's own markdownTable helper, so the
+  // pin cannot drift from the grammar it guards.
+  const rows = markdownTable(skill, "Closing-block decision branch");
+  assert.ok(rows, "the closing-block decision table exists");
+  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
+  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  const consumerCell = freezeRow[freezeRow.length - 1];
   // Must name both planner tokens and mark the router invocation as discovery
   assert.ok(
     consumerCell.includes("/plan-fix"),
@@ -1239,17 +1233,19 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
     "the primary consumer (before →) must be a planner command, not a host command (got: " + JSON.stringify(primaryConsumer) + ")"
   );
 
-  // --- Part 3: format sentences in both skill files (AC2 + AC3) ---
-  // Both files must carry the "bare folder number or the full slug" sentence
-  assert.ok(
-    skill.includes("bare folder number or the full slug"),
-    "SKILL.md must carry the unit format sentence"
-  );
-  // The one-physical-line rule sentence
-  assert.ok(
-    skill.includes("exactly one physical line"),
-    "SKILL.md must carry the one-physical-line rule"
-  );
+  // --- Part 3: both skill files carry the tokens and format sentences (AC1 + AC2 + AC3) ---
+  for (const [rel, text] of [[skillRel, skill], [processRel, process]]) {
+    assert.ok(text.includes("/plan-fix"), `${rel} must name /plan-fix`);
+    assert.ok(text.includes("/plan-feature"), `${rel} must name /plan-feature`);
+    assert.ok(
+      text.includes("bare folder number or the full slug"),
+      `${rel} must carry the unit format sentence`
+    );
+    assert.ok(
+      text.includes("exactly one physical line"),
+      `${rel} must carry the one-physical-line rule`
+    );
+  }
 });
 
 
