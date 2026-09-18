@@ -140,6 +140,46 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
   SPEC-REVIEW-32-1 findings F1–F8; evidence rows E-09 (revised), E-22, E-23.
   Recorded by `design-feature` (repair batch, 2026-09-18).
 
+## 2026-09-18 — D32-7: repair batch F9–F10 (SPEC-REVIEW-32-2) — GATE-RAN's ownership encoded the way the `ledger-ownership@1` grammar admits; Spec-lint self-counts corrected
+
+- **What**: one evidence-bounded repair batch closing both findings of receipt
+  SPEC-REVIEW-32-2 (`planning-findings.md` F9 `high`/product, F10 `low`/product),
+  applied to the Product half in place:
+  (F9) IS-4, AC-04, the GATE-RAN entity-closure Create row, and the
+  Integration-closure `ledger-ownership@1` row no longer demand a **new**
+  `gate-ran` map row — the machine-read grammar (`scripts/ledger-ownership.test.mjs`)
+  freezes exactly the seven AC16 truth classes, forbids a second row declaring
+  the `review-findings.md` ledger pattern, and allows one writer per column
+  set, so the demanded row could not exist while AC-01 keeps the suite green.
+  GATE-RAN's ownership is instead encoded on the **existing** `review-findings`
+  truth-class row: its owner cell gains the two gate-running recorders as new
+  column-sets, `execute-phase:gate-ran-marks` (executor phase gates) +
+  `review-change:review-gate-ran-marks` (reviewer gate runs) — distinct
+  column-set names per the one-writer-per-column-set rule — and both template
+  projections (`docs/features/_TEMPLATE/LEDGERS.md`,
+  `docs/fix/_TEMPLATE/LEDGERS.md`) gain the identical owner cell in the same
+  change. (F10) the Spec-lint self-description states the true counts: five
+  entities × five rows (= 25 closure rows) and eighteen Integration-closure
+  inventory rows.
+- **Why**: the reviewer proved empirically that the demanded map row fails the
+  suite (`map truth class "gate-ran" is not one of the seven AC16 classes`;
+  ledger already declared by `review-findings`); the repair instruction chose
+  the grammar-admitting owner-column extension over declaring a grammar
+  change (a `@2` grammar bump is a contract change this wording-level sweep
+  does not need). Product intent is unchanged: GATE-RAN keeps exactly one
+  home ledger (the unit's `review-findings.md`, feature and fix variants) and
+  named recorders — now declared where the grammar can actually enforce them,
+  via the map/template agreement the suite pins. F10 is mechanical and
+  intent-preserving (count corrections only).
+- **Supersedes**: the "new `ledger-ownership@1` map row" encoding in D32-3's
+  summary (the append-only D32-3 entry above keeps its original text; the
+  SPEC's Product-decisions D32-3 bullet now points here).
+- **Authority**: receipt SPEC-REVIEW-32-2 findings F9–F10 (snapshot
+  `4efd6ffa…`); `scripts/ledger-ownership.test.mjs` grammar (`TRUTH_CLASSES`,
+  unique-ledger check, `ownerCellFailures` one-writer-per-column-set check,
+  map/template equality); the user's repair instruction. Recorded by
+  `design-feature` (repair batch, 2026-09-18).
+
 ## Open items for `resolve-repository-state` (not resolved here)
 
 - REPOSITORY_STATE.md F006/F007 are stale versus the current forge and roadmap
