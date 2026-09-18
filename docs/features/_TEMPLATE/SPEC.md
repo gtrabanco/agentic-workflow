@@ -279,6 +279,13 @@ What must be tested and how. State the test layer (unit / integration
 / architecture) and any tooling or runtime constraints. The project
 prefers integration and architecture tests over heavy mocking.
 
+Declare the test set in the `path-protection-plan@1` block of `PLAN.md` (M/L)
+or this SPEC's `### Phases` (XS/S): `freeze-after: <P<n>|none>` plus one
+justified `created | <repo-relative path or glob> | <one-line justification>` /
+`not-created | <test name> | <one-line justification>` /
+`ignored | <test name> | <one-line justification>` row per test decision.
+Placeholder tokens only — never a project glob.
+
 ### Dev scenarios
 
 The situations this feature introduces that must be reproducible in local

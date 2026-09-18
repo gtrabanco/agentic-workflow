@@ -46,7 +46,10 @@
       "referenceEstimateMax": 2350
     },
     "execute-phase": {
-      "referenceEstimateMax": 2588
+      "referenceEstimateMax": 3232,
+      "referenceSources": {
+        "feature 60 P3": "the path-protection checkpoint step in PREFLIGHT.md grew the reference to 2938 est; ceiling re-based to ceil(2938 x 1.10)"
+      }
     },
     "workflow-status": {
       "mainEstimateMax": 1680,
@@ -97,10 +100,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27371,
-      "routeLinesMax": 1837,
+      "routeEstimateMax": 27385,
+      "routeLinesMax": 1839,
       "sources": {
-        "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:descope": {
@@ -120,8 +124,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11910,
-      "routeLinesMax": 846
+      "routeEstimateMax": 12006,
+      "routeLinesMax": 853,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:feature": {
       "skills": [
@@ -140,8 +147,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11923,
-      "routeLinesMax": 846
+      "routeEstimateMax": 12019,
+      "routeLinesMax": 849,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:final-pr": {
       "skills": [
@@ -160,8 +170,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11794,
-      "routeLinesMax": 832
+      "routeEstimateMax": 11889,
+      "routeLinesMax": 834,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:finding": {
       "skills": [
@@ -180,8 +193,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11955,
-      "routeLinesMax": 854
+      "routeEstimateMax": 12051,
+      "routeLinesMax": 857,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:fix": {
       "skills": [
@@ -200,8 +216,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12108,
-      "routeLinesMax": 852
+      "routeEstimateMax": 12204,
+      "routeLinesMax": 855,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:legacy": {
       "skills": [
@@ -220,8 +239,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11708,
-      "routeLinesMax": 834
+      "routeEstimateMax": 11803,
+      "routeLinesMax": 836,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:small": {
       "skills": [
@@ -240,8 +262,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11871,
-      "routeLinesMax": 847
+      "routeEstimateMax": 11966,
+      "routeLinesMax": 850,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "execute-phase:unit-loop": {
       "skills": [
@@ -261,8 +286,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13041,
-      "routeLinesMax": 980
+      "routeEstimateMax": 13137,
+      "routeLinesMax": 980,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-feature:issue": {
       "skills": [
@@ -273,10 +301,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11873,
-      "routeLinesMax": 931,
+      "routeEstimateMax": 11968,
+      "routeLinesMax": 938,
       "sources": {
-        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "plan-feature:scaffold": {
@@ -288,8 +317,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24458,
-      "routeLinesMax": 1715
+      "routeEstimateMax": 24714,
+      "routeLinesMax": 1732,
+      "sources": {
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-feature:scoped": {
       "skills": [
@@ -299,10 +331,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 9377,
-      "routeLinesMax": 753,
+      "routeEstimateMax": 9473,
+      "routeLinesMax": 759,
       "sources": {
-        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "plan-fix:issue": {
@@ -315,10 +348,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27608,
-      "routeLinesMax": 1974,
+      "routeEstimateMax": 27718,
+      "routeLinesMax": 1982,
       "sources": {
-        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:adversarial": {
@@ -338,11 +372,12 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18728,
-      "routeLinesMax": 1342,
+      "routeEstimateMax": 18824,
+      "routeLinesMax": 1349,
       "sources": {
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:default-backend": {
@@ -361,11 +396,12 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16911,
-      "routeLinesMax": 1224,
+      "routeEstimateMax": 17006,
+      "routeLinesMax": 1230,
       "sources": {
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:default-web": {
@@ -384,11 +420,12 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16911,
-      "routeLinesMax": 1224,
+      "routeEstimateMax": 17006,
+      "routeLinesMax": 1230,
       "sources": {
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:synthesize": {
@@ -407,11 +444,12 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17424,
-      "routeLinesMax": 1248,
+      "routeEstimateMax": 17520,
+      "routeLinesMax": 1254,
       "sources": {
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-plan:default": {
@@ -420,10 +458,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 18450,
-      "routeLinesMax": 1179,
+      "routeEstimateMax": 18464,
+      "routeLinesMax": 1180,
       "sources": {
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-spec:default": {
@@ -432,17 +471,18 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16705,
-      "routeLinesMax": 1121,
+      "routeEstimateMax": 16719,
+      "routeLinesMax": 1122,
       "sources": {
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
+        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     }
   },
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10)); 2026-09-16 (feature 59 P3 — quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 — design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10)); 2026-09-16 (feature 59 P3 — quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 — design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4); 2026-09-18 (feature 60 P3 — the path-protection checkpoint contract grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md, so the execute-phase reference ceiling and every route those files load are re-set to ceil(measured x 1.10); growth source feature 60 P3 checkpoint-contract adoption)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
