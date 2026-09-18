@@ -196,3 +196,33 @@ Notes:
   `TASKS.md`, `testing.md`, `decisions.md`, `architecture-notes.md`, the two ledgers, and
   the `ROADMAP.md` row-60 bytes are byte-identical to the reviewed snapshot; only this
   receipt ledger and `planning-findings.md` were appended.
+
+## Acceptance receipt v1
+
+- Manifest: docs/features/60-path-protection-guards/ACCEPTANCE.md · Blob: aceb3d52402506214bbc85060508a9414323ddca · Status: frozen · Verified: 2026-09-18 (recomputed at the PLAN60-F1…F8 repair, which materialized the runnable crate-suite invocation `bun test packages/agentic-workflow/test/` with its Node 24 glob fallback and enriched AC-08's read-verified validator; the assertions are unchanged — E-60-10; recomputed before every phase and final review per `verification-contract`)
+
+## Plan repair — PLAN60-F1…F8 (2026-09-18)
+
+One batch, plan owner, no phase appended: all eight rows are plan-class authoring
+defects in the plan's own artifacts, so they are repaired in place and the ledger
+rows resolved at `10dfb0ec` (feature 55's PF-55-01…04 precedent). No Product byte
+changed — the `spec-product-v1` projection stays 24443 B, sha256
+`50b33e5d944690097c947811cd97e106962e2a00a3d83bcd1a9b8ac4c9af920e`, so
+`SPEC-REVIEW-60-2` stays current and the plan's parent snapshot stays
+`12121bff…1682e`.
+
+| Finding | Repair |
+|---|---|
+| PLAN60-F1 | Every crate-suite validator is the runnable `bun test packages/agentic-workflow/test/` form with the Node 24 glob fallback (PLAN/TASKS/ACCEPTANCE/obligations/testing/SPEC Engineering half); E-60-10, PE-023. |
+| PLAN60-F2 | `PATH_GUARD_REASONS` is published by a `schema-export:` normative-surface row; the `block:path-protection@1` row keeps the machine with `must-name: no`; E-60-11, PE-024; verified by a drift-gate simulation. |
+| PLAN60-F3 | The checkpoint runs over the just-closed phase's recorded committed range with `--base` (base-ref record in the phase handoff; close-out checks the final range); a committed-range scenario/pin added; E-60-12. |
+| PLAN60-F4 | O15 split into O15 (P2 template seed) + O18 (P4 pi mirror); one phase and one task per row. |
+| PLAN60-F5 | P2's done-when is a byte-diff command against the crate's `serializeShippedPolicy()`; O15 and the plan declaration name it; E-60-14. |
+| PLAN60-F6 | Tier 2 reads the unit decision ledgers resolved from `ctx.cwd`; a matching `justification` permits the write; the positive case is in P4's suite; E-60-13, PE-025. |
+| PLAN60-F7 | `path-guard:empty-diff` and `path-guard:two-runs` are named P1 tasks and done-when pins. |
+| PLAN60-F8 | P3 edits POLICY §8's prose count together with the rejection-type row. |
+
+No newly discovered need was added: the batch stays inside the eight rows. The
+phase fingerprints are unchanged (`P1:config/infra:7:tier-1-path-gate` …
+`P5:hardening:7:hardening-pr`, digest `c4a9e11a3b8fad370b0212ce3d97f796957e9d8eaaf1a63c1d75f14082d63dc4`)
+because task counts and layers are unchanged (PE-026).
