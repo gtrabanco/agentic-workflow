@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.2.1
+version: 1.3.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >

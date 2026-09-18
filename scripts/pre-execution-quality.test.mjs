@@ -1170,7 +1170,7 @@ const ledgerMap = read("skills/pre-execution-review/references/LEDGERS.md");
 // The closed gate-rejection vocabulary, declared once in `POLICY.md` §8. A fifth
 // type in a printed block is a defect, so the fixture compares the set rather than
 // spot-checking one of them.
-const GATE_REJECTION_TYPES = ["dependency", "status", "phase-lint", "stale-or-missing-receipt"];
+const GATE_REJECTION_TYPES = ["dependency", "status", "phase-lint", "path-protection", "stale-or-missing-receipt"];
 
 // §8's fixed trace as code: type, reason and return route — or no trace at all.
 const rejectionTrace = (act) =>
@@ -1265,12 +1265,12 @@ test("gate rejections: the four typed blocks print reason and return route, neve
   const gates = `${preflight}\n${execGate}`;
   const blocks = [...gates.matchAll(/GATE REJECTION — ([a-z-]+)\s*\n\s*Reason: (\S[^\n]*)\n\s*Return route: (\S[^\n]*)/g)];
   assert.deepEqual([...new Set(blocks.map((b) => b[1]))].sort(), [...GATE_REJECTION_TYPES].sort());
-  assert.equal(blocks.length, 5, "dependency, status ×2 (idea, defined), phase-lint and the receipt gate each carry a trace");
+  assert.equal(blocks.length, 6, "dependency, status ×2 (idea, defined), phase-lint, path-protection and the receipt gate each carry a trace");
   for (const [, type, reason, route] of blocks) {
     assert.ok(reason.replace(/[<>]/g, "").trim(), `${type} names a reason`);
     assert.match(route, /\/(execute-phase|design-feature|plan-feature|review-plan)/, `${type} routes to the command that clears it`);
   }
-  assert.ok(!/GATE REJECTION — (?!dependency|status|phase-lint|stale-or-missing-receipt)/.test(gates), "no gate block invents a fifth type");
+  assert.ok(!/GATE REJECTION — (?!dependency|status|phase-lint|path-protection|stale-or-missing-receipt)/.test(gates), "no gate block invents a sixth type");
   // the executor points at the owner instead of re-deriving the rule
   assert.match(preflight, /write-then-report/);
   assert.match(preflight, /`POLICY\.md` §8/);
