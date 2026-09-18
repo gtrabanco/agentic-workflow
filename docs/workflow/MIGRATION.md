@@ -76,7 +76,8 @@ gate.
 
 **Breaking contract; `review-change` 3.0.0, `loop-review-fold` 4.0.0.**
 
-The infinite review/fold loop observed on units #28 and #157 is closed
+The infinite review/fold loop observed on the `envelope-orchestrator-only`
+unit (feature 10, PR #28) and on `fix #157` is closed
 structurally — four independent bounds, none of them a relaxation of a real
 gate:
 
