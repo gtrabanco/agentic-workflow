@@ -147,7 +147,8 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    current · 1 usage), a **wording-only movement** (revision rotated,
    determination recorded, acceptance fingerprint and bound material bytes
    unmoved → still current, no re-review owed) from **material movement**
-   (`stale-artifact-content` → re-review owed); the determination record and
+   (for moved bound bytes the comparator answers `stale-source-revision` →
+   re-review owed); the determination record and
    the `artifactRevisionId` rotation are enforced by the same predicate —
    neither is skippable → AC4.
 3. **The orchestrator refuses to advance past the cap**: the transition decider
@@ -310,7 +311,7 @@ derived inventory is recorded under Integration closure.
 - Delete — n/a: append-only evidence; derived values are never deleted.
 - State transitions — record-once-at-repair-time; the only observable
   transition is the verify outcome flipping when a later material change moves
-  bound bytes (`stale-artifact-content` → re-review owed).
+  bound bytes (`stale-source-revision` → re-review owed).
 
 **E3 — Repair/re-review cycle state (spec and plan stages)**
 
@@ -416,7 +417,7 @@ What a competent workflow maintainer would assume ships with a
 | 8 | The loop never ends silently — the cap ends it in a printed `needs-design` routed to the human (spec stage) or the orchestrator's refusal naming the human route (plan stage) | in-scope | In scope 3 + AC5 + AC7 |
 | 9 | A third cycle remains possible behind an explicit user instruction (the cap is user-gated, not absolute) | in-scope | In scope 3 + In scope 5 (human-keyed sentence stays) |
 | 10 | The wording-only determination is recorded even when the re-review is skipped — machine half and judgment half | in-scope | In scope 2 + AC4 |
-| 11 | Every repair write rotates `artifactRevisionId` — the freshness predicate itself refuses an unrecorded rotation (`stale-artifact-revision`), including on the wording-only route | in-scope | In scope 2 + AC4 |
+| 11 | Every repair write rotates `artifactRevisionId` — the freshness predicate itself refuses an unrecorded rotation (without the recorded determination the wording-only branch never holds, so moved bound bytes fall through to `stale-source-revision`), including on the wording-only route | in-scope | In scope 2 + AC4 |
 | 12 | Review verdicts keep binding to exact snapshots with digest + artifact revision (receipt shape otherwise unchanged) | in-scope | Out of scope bullet 3 + AC9 |
 | 13 | Code-side review/fold behavior is untouched by this feature | out-of-scope | Out of scope bullet 2 |
 | 14 | Severity/verdict/code values stay unchanged — additions only where this SPEC names them (`reproducer` field, cap-refusal outcome) | out-of-scope | Out of scope bullet 1 + AC9 |
@@ -676,14 +677,28 @@ Product boxes:
 
 ## Design status
 
-`designed` — user-commissioned Product-half patch **`31-spec-12`** (2026-09-18)
-applied: review-change finding **F3** routed through the product route — AC4's
+`designed` — user-commissioned Product-half patch **`31-spec-13`** (2026-09-18)
+applied: the repair batch for `spec-review-31-12`'s open rows **N31-016**
+(`medium`, `product`) + **N31-017** (`low`, report-note) — In scope item 2 and
+Capability closure E2's state transitions now name `stale-source-revision` (the
+code the machine answers for moved bound bytes, matching AC4, the frozen
+`ACCEPTANCE.md` AC4 and Design E6) instead of the impossible
+`stale-artifact-content`, and Expectation sweep row 11 drops the wrong
+`stale-artifact-revision` name for the same no-determination fall-through;
+`progress.md` records the readiness block for this revision (the record N31-017
+found missing for `31-spec-12`). Nothing else in the Product half moved.
+Capability closure group: complete (zero blank rows), Spec-lint product boxes
+all PASS, readiness preflight `READY-FOR-REVIEW` at artifact revision
+**`31-spec-13`** (see `## Amendments`). Earlier state: `31-spec-12`
+(2026-09-18) — user-commissioned Product-half patch applied: review-change
+finding **F3** routed through the product route — AC4's
 fall-through parenthetical now names `stale-source-revision` (the code the
 machine answers for moved bound bytes, matching the frozen `ACCEPTANCE.md` AC4
 and Design E6) instead of the impossible `stale-artifact-content`; nothing else
 in the Product half moved. Capability closure group: complete (zero blank rows),
-Spec-lint product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at
-artifact revision **`31-spec-12`** (see `## Amendments`). Earlier state:
+Spec-lint product boxes all PASS (readiness block for that revision was found
+missing by `spec-review-31-12` N31-017 and is supplied by this batch's
+`31-spec-13` record). Earlier state:
 `31-spec-10` — user-commissioned Product-half patch for `spec-review-31-10`'s
 open row **N31-015** applied (one owner-instructed edit: AC13's declared
 **code-carrier** group additionally enumerates
@@ -1250,6 +1265,35 @@ owner at a time. Rows 35/42 (and 46's coordination) chain after it per
 ---
 
 ## Amendments
+
+### `31-spec-13` (2026-09-18) — repair batch for `spec-review-31-12` (N31-016 + N31-017)
+
+User-commissioned repair batch (2026-09-18), commissioned as "fix the surviving
+wrong freshness codes: In scope 2 and E2 state transitions must say
+`stale-source-revision` for moved bound bytes, Expectation row 11 must drop
+`stale-artifact-revision`; record the `31-spec-12`-successor readiness block".
+Trigger: `spec-review-31-12` returned `SPEC-REVIEW-FAIL` (cycle 1 of the window
+`spec-review-31-11`'s PASS opened) with one material `product` row (N31-016)
+and one `low` report-note (N31-017), repair owner `design-feature` (product
+class). The F3 patch corrected AC4 but left the same wrong code names in two
+more Product-half locations, making the half contradict itself; the
+`31-spec-12` readiness block was never recorded in the unbound `progress.md`.
+Per D-31-4 these `low` rows are recorded and visible; N31-017 is folded by the
+same batch because the route names the record it owes.
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| N31-016 | product · medium | In scope item 2 and E2's state transitions now name `stale-source-revision` (the code `attributeFreshness` answers for committed moved bound bytes, before the `stale-artifact-content` slot — `scripts/pre-execution-snapshot.mjs:400`), matching AC4, the frozen `ACCEPTANCE.md` AC4 and Design E6; sweep row 11 drops the wrong `stale-artifact-revision` name — the no-determination fall-through answers `stale-source-revision` for moved bound bytes, and `stale-artifact-revision` stays reserved for its comparator slot (a rotation with no bound byte moved). No criterion outcome moves; the half now states one code per event. Repair class: mechanical, intent-preserving. | In scope item 2; Capability closure E2 state transitions; Expectation sweep row 11 |
+| N31-017 | product · low | The readiness block for the `31-spec-12` successor is recorded in `progress.md` at authoring time (the `READINESS — … spec READY-FOR-REVIEW` block for **`31-spec-13`**), restoring the per-revision record convention every earlier reviewed revision follows. | `progress.md` (unbound record home) |
+
+Artifact revision rotates `31-spec-12` → **`31-spec-13`** for the touched
+Product set (`SPEC.md`; `decisions.md` gains E-D31-29 with its evidence rows).
+The frozen `ACCEPTANCE.md` stays untouched (blob `849af5ae…` recomputed intact —
+no criterion, validator or required outcome moves). The current Product receipt
+`spec-review-31-12` is superseded by design (bound Product bytes moved with no
+wording-only determination — the movement is material): only a fresh
+`/review-spec 31-planning-review-materiality` delta-reviews the patch and
+restores currency.
 
 ### `31-spec-12` (2026-09-18) — user-commissioned Product-half patch routing review-change finding F3 through the product route
 

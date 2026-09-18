@@ -4050,3 +4050,83 @@ invents product intent. No reviewed artifact was modified by this turn.
     then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
+---
+
+# Product-half repair batch `31-spec-13` — design-feature authoring turn (2026-09-18)
+
+Owner: `design-feature` (instruction mode). Commission (explicit user
+instruction, verbatim): "fix the surviving wrong freshness codes: In scope 2
+(SPEC.md:150) and E2 state transitions (SPEC.md:313) must say
+stale-source-revision for moved bound bytes, and Expectation row 11
+(SPEC.md:419) must drop stale-artifact-revision; record the 31-spec-12-successor
+readiness block". Trigger: `spec-review-31-12` returned `spec-review-fail`
+(cycle 1 of the window `spec-review-31-11`'s PASS opened) with one material
+`product` row (N31-016, `medium`) and one `low` report-note (N31-017); the
+verdict's route names this skill as repair owner for exactly this batch. The
+F3 patch (E-D31-28) corrected AC4 but left the same wrong code name in two more
+Product-half locations, so the half contradicted itself; the `31-spec-12`
+readiness block was never recorded. One batch over the whole open spec-stage
+set: N31-016 + N31-017 are the only open product rows.
+
+The write (three code names + record duty, per the instruction):
+
+- **In scope item 2** — the material-movement parenthetical now reads "for
+  moved bound bytes the comparator answers `stale-source-revision` → re-review
+  owed" (was the impossible `stale-artifact-content`).
+- **Capability closure E2, state transitions** — the verify-outcome flip for
+  moved bound bytes now names `stale-source-revision` (was
+  `stale-artifact-content`).
+- **Expectation sweep row 11** — the wrong `stale-artifact-revision` name is
+  dropped: without the recorded determination the wording-only branch never
+  holds, so moved bound bytes fall through to `stale-source-revision`
+  (`stale-artifact-revision` keeps only its comparator slot: a rotation with no
+  bound byte moved). Repair class: mechanical, intent-preserving (E-D31-29,
+  `decisions.md` evidence rows).
+- **Readiness record (N31-017)** — the `READINESS` block below is written in
+  the same authoring act, restoring the per-revision record convention; the
+  duty is restated as a rule in E-D31-29 so the gap cannot recur silently.
+
+Nothing else in the Product half moved: no criterion text, other closure row,
+other sweep row, non-goal, or In-scope item touched. The remaining
+`stale-artifact-content` occurrences in the Product half are the correction
+prose itself (Design status + Amendments) and Design E6's documented comparator
+order; the Engineering half (from `## Engineering half`, line 718) is
+plan-feature's surface and re-derives on a current receipt. The frozen
+`ACCEPTANCE.md` is not touched (blob `849af5ae…` recomputed intact — no
+criterion, validator or required outcome moves).
+
+Gates at authoring start (branch `feat/31-planning-review-materiality`):
+architectural invariants `n/a: no project invariants declared` (NRS F010);
+AD-008 preserved by D-31-5 (unchanged). Roadmap row 31 stays as-is (no scope or
+status change). Spec-lint product boxes re-run after the edit: all PASS (19
+expectation rows each resolved, zero blank closure rows, 5×5 role matrix,
+zero placeholders, `Deferred decisions` reads `none`, every in-scope item →
+≥ 1 AC, every AC command-or-`read-verified`). No new vocabulary value was
+introduced: the three names are existing `PRE_EXECUTION_FRESHNESS_CODES`
+members (10 closed codes unchanged).
+
+Readiness preflight (`evidence-grounding`, `stage: spec`):
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-13 · Rows checked: 6 evidence rows (E-D31-29) + 6 carried (E-D31-28) · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md/planning-findings.md · Frozen: 2026-09-18
+```
+
+Findings resolution: N31-016 and N31-017 marked `resolved` in
+`planning-findings.md` at `31-spec-13` (both rows carry resolution-evidence).
+
+Artifact revision rotates `31-spec-12` → **`31-spec-13`** (the write's bound
+id is the commit that carries these bytes — this unit's receipt convention).
+Each of these writes moves the Product half's bound bytes, so the
+`spec-review-31-12` receipt goes stale by design: the next `review-spec` run
+delta-reviews the patched half in a fresh context, and `plan-feature` re-cuts
+the plan set only on a current `SPEC-REVIEW-PASS` receipt.
+
+→ Next: /review-spec 31-planning-review-materiality — product half designed and readiness-clean; it needs an
+    independent review before any engineering planning
+  · more to design → re-run /design-feature 31-planning-review-materiality "<instruction>" (upsert, destroys nothing,
+      rotates the artifact revision)
+  · recurring gap in this project's capability closure → /product-audit (a systemic pattern,
+      not a one-off design fix)
