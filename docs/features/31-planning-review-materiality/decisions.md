@@ -1157,3 +1157,14 @@ which is exactly what `test/pre-execution-schema.test.mjs` already pins.
 | The published-limits fixture also discloses every key, so `reproducerChars` must join its literal | repository | `packages/agentic-workflow-schema/test/pre-execution-canonical.test.mjs:524-546`; `test/fixtures/pre-execution-vectors.mjs` (`limits: PRE_EXECUTION_LIMITS`) | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 |
 | The shared field walk has no optional-key representation | repository | `packages/agentic-workflow-schema/src/verification-contract.ts:1160-1164` (`missing-field` for every absent declared key); `src/verification-contract.ts:42-76` (`VerificationFieldSpec`, no `optional`) | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 companion |
 | Feature 59's P1 put the schema bump and its CHANGELOG row in one `config/infra` task | repository | `docs/features/59-executable-continuations/PLAN.md` P1 task ("Bump the package to 4.2.0 ... record the row in the repo `CHANGELOG.md`") | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 |
+
+### E-D31-27: TASKS P5 task 6 stops naming `PLAN.md` so the phase linter passes on TASKS.md too
+
+The canonical phase contract's box 2 refuses a `docs` target in a `hardening`
+phase. `PLAN.md` P5 task 6 was already worded "recorded in this plan"; `TASKS.md`
+P5 task 6 said "recorded in `PLAN.md`", so `bun scripts/phase-lint.mjs
+docs/features/31-planning-review-materiality/TASKS.md` (the form
+`turn-contract.mjs` runs for box 2) blocked while the same linter over `PLAN.md`
+passed. The `TASKS.md` wording now matches `PLAN.md`; the requirement (confirm the
+recorded fingerprints and the read-verified evidence rows) is unchanged. No phase,
+task count, validator, obligation or acceptance outcome moves.
