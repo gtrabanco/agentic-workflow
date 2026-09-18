@@ -1861,3 +1861,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Plan-repair batch for feature 60 (PLAN60-F9, PLAN60-F10): added P5 close-out path-guard gate and same-PR release sweep (version bump + CHANGELOG rows for 6 skills and pi package)
 - **Decisions:** P5 went 7→10 tasks (hardening ceiling); P5 close-out gate reads the committed range with --base; same-PR release sweep uses bump-skill for 6 touched skills + manual bump for pi-agentic-workflow to 0.11.0; private crate stays unbumped (private:true, 0.0.0); phase-lint box 2 rejects non-hardening path tokens in hardening phase; @scope/pkg token is ambiguous to the parser
 - **Next:** Re-run /review-plan 60-path-protection-guards on artifact revision 812035ec; the plan carries a live plan-review-fail (PLAN-REVIEW-60-2) so this is the replan-the-batch route, not execution
+
+## 2026-09-18T23:04:18Z — feat/220-path-protection-guards — manual
+- **Commits:** 50 (`8c52eef5…936138c8`)
+- **Files:** 64 files
+- **Summary:** Feature 60 path-protection-guards: full lifecycle from design to PR-ready — issue #220, path-protection guards extending feature 20 tripwire family
+- **Decisions:** Tests freeze is plan-declared (per-test justification: done/not-done/ignored, docs-only justifies none, freeze = where declared set is complete) · Doc-config canonical + pi tighten-only · Policy config itself is protected · Absent/malformed config falls back to shipped defaults with reported degradation · Post-freeze modifications require recorded owner approval in review-findings ledger · No auto-approval path anywhere
+- **Next:** /review-pr on the branch — the feature went through design → spec-repair → plan (3 repair cycles) → P1..P5 execution → 31 review findings → fold-findings → plan-repair (2 cycles); tree is clean, 50 commits, ready to push as PR to main
+
