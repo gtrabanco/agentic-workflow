@@ -51,6 +51,12 @@ export interface VerificationFieldSpec {
   readonly maxLength?: number;
   /** Reject values containing NUL. */
   readonly nulFree?: boolean;
+  /**
+   * The key is declared but not required: an object omitting it stays valid.
+   * Default `false` — every field is required unless it opts out. Projected as
+   * "present in `properties`, absent from `required`".
+   */
+  readonly optional?: boolean;
   /** Single pattern a valid string must match (digest/timestamp shapes). */
   readonly pattern?: string;
   readonly minimum?: number;
@@ -1159,7 +1165,7 @@ function validateStructureFields(
   for (const field of spec.fields) {
     const fieldPath = at(field.key);
     if (!Object.prototype.hasOwnProperty.call(value, field.key)) {
-      sink.push("missing-field", fieldPath);
+      if (field.optional !== true) sink.push("missing-field", fieldPath);
       continue;
     }
     const raw = value[field.key];

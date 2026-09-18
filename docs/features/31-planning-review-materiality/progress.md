@@ -3768,3 +3768,23 @@ PLAN-REVIEW-PASS — 31-planning-review-materiality
 
 Hand-off: `/execute-phase 31-planning-review-materiality` — execution binds this
 receipt and snapshot `255d099b…`.
+
+---
+
+## Dependency receipt v1
+- Fingerprint: 34c191282defc3809b0e4fd5555543712a41dd8e · Closure: 31-planning-review-materiality ← 29-bounded-implementation-discovery ← 28-evidence-grounded-spec-plan-review · soft 30-repair-receipt-delta-review ← 29
+- Merged PRs: 29 #175 @ 1cd06f4f2152895468c2a8c9c9a81629e1322337 · 30 #188 @ 54ff9126ceff732a0828591c5ddd86ff5ae873a1 · Fully merged: yes · Verified: 2026-09-18
+
+## Acceptance receipt v1
+- Manifest: docs/features/31-planning-review-materiality/ACCEPTANCE.md · Blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9 · Frozen: 2026-09-17 · Recorded: 2026-09-18
+
+## P1 — 2026-09-18
+- Done: schema finding-record materiality carrier — optional bounded `reproducer` (field spec with the additive `optional` flag, `reproducerChars: 1024`), `medium`+ materiality predicate and severity prose, receipt vectors (low-coexistence + reproducer back-compat/bound), regenerated receipt projection, package 4.3.0 bump with its two pins and the `CHANGELOG.md` row, README published-limit entry; P1 gate green (`bun run test` 709 pass / 0 fail; `check:pre-execution-schemas` drift-free)
+- Remains: P2 transition-decider cap refusal, P3 snapshot wording-only route, P4 prose shrink + release records, P5 hardening & PR
+- Gotchas: (1) the `31-plan-6` cut was unsatisfiable at P1 — the package suite's `verification-docs.test.mjs` binds the `CHANGELOG.md` row to the shipped version, so the 4.3.0 row moved from P4 to P1 with the bump (E-D31-26; plan/tasks/known-issues updated, all fingerprints unchanged). (2) `VerificationFieldSpec` had no optional-key representation, so P1 adds the additive default-off `optional` flag to `verification-contract.ts` and filters it in both projection generators; the finding `required` list stays byte-identical. (3) Editing bound plan rows stales the consumed `plan-review-31-5` receipt — expected post-entry; the entry gate was satisfied before the first write.
+- Files: packages/agentic-workflow-schema/src/pre-execution-contract.ts, packages/agentic-workflow-schema/src/pre-execution.ts, packages/agentic-workflow-schema/src/verification-contract.ts, packages/agentic-workflow-schema/scripts/generate-pre-execution-schemas.mjs, packages/agentic-workflow-schema/scripts/generate-verification-schemas.mjs, packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs, packages/agentic-workflow-schema/test/pre-execution-canonical.test.mjs, packages/agentic-workflow-schema/test/release-contract.test.mjs, packages/agentic-workflow-schema/test/verification-gates.test.mjs, packages/agentic-workflow-schema/pre-execution-review-receipt.schema.json, packages/agentic-workflow-schema/package.json, packages/agentic-workflow-schema/README.md, CHANGELOG.md, docs/features/31-planning-review-materiality/{PLAN.md,TASKS.md,known-issues.md,decisions.md,progress.md}
+- Next: P2 — Transition-decider cap refusal
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: P2 · Attempts: 1
