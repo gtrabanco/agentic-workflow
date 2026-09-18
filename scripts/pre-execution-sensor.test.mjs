@@ -474,6 +474,40 @@ test("wording-only: the frozen SPEC E5 ` · `-separated block shape is read", (t
   assert.match(r.structural.detail, /wording-e5/);
 });
 
+test("wording-only: a determination missing its revision falls through, never borrowing a later block", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the thing, worded differently."));
+  const rotated = f.commit("docs(99): wording-only repair");
+  const fingerprint = git(f.root, "hash-object", `${f.dir}/ACCEPTANCE.md`);
+  const progressPath = `${f.dir}/progress.md`;
+  const previous = fs.existsSync(path.join(f.root, progressPath))
+    ? fs.readFileSync(path.join(f.root, progressPath), "utf8") : "";
+  // The determination omits its own `- Artifact revision:` while a later record
+  // block in the same chunk carries one. E6 must fall through on the absent field,
+  // never borrow the later block's value and answer `fresh`.
+  const malformed = [
+    "## Wording-only determination v1 — spec",
+    "",
+    `- Determination: wording-missing · Unit: ${f.unit}`,
+    `- Acceptance fingerprint: ${fingerprint} · Recorded: 2026-09-18`,
+    "- Intent and authority unchanged: yes",
+    "",
+    "## Pre-execution review receipt v1 — plan",
+    `- Review: rs-plan-999 · Snapshot: ${"a".repeat(64)} · Verdict: plan-review-pass`,
+    `- Unit: ${f.unit} · Stage: plan · Unit kind: feature`,
+    `- Source revision: ${rotated} · Artifact revision: ${rotated}`,
+    "",
+  ].join("\n");
+  f.write(progressPath, `${previous}${malformed}\n`);
+  f.commit("docs(99): record a malformed determination followed by a plan receipt");
+  const result = verify(f, "spec");
+  const r = report(result);
+  assert.equal(r.structural.fresh, false,
+    `a determination with no revision must fall through, never borrow a later block: ${result.stdout}`);
+  assert.equal(r.structural.reasonCode, "stale-source-revision");
+});
+
 // ---------------------------------------------------------------------------
 // RS14 — the documented recipe must be reachable
 // ---------------------------------------------------------------------------
