@@ -2,9 +2,10 @@
 
 Per-phase implementation checklist. Each phase is atomic, declares one layer, and
 must satisfy its Done-when command before the phase commit. Artifact revision of
-this plan set: **`31-plan-5`** (the re-derivation binding the current Product
-receipt `spec-review-31-11` after the owner-commissioned Product patches
-`31-spec-9`/`31-spec-10`, on top of the `31-plan-4` repair batch for
+this plan set: **`31-plan-6`** (the repair batch for `plan-review-31-4`'s five
+plan-class rows P31-07…P31-11, on top of the `31-plan-5` re-derivation that binds
+the current Product receipt `spec-review-31-11` after the owner-commissioned
+Product patches `31-spec-9`/`31-spec-10`, the `31-plan-4` repair batch for
 `plan-review-31-3`, findings P31-01…P31-05, and the `31-plan-3` re-cut for the
 D-31-6 code carrier; the `31-plan-1/2` set is superseded, never repaired). Tests
 are written red-first where a test is the deliverable and fixed in code, never
@@ -12,7 +13,7 @@ weakened. One version bump per skill per PR (E-D31-1 in `decisions.md`).
 
 ## P1 — Schema finding-record materiality
 
-Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift. The package's `CHANGELOG.md` row cannot live here (a `docs` target in a `config/infra` phase is forbidden by the canonical phase contract), so `normative-drift` stays red until P4 closes the window — declared in `known-issues.md` (P31-04).
+Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green, zero projection drift, and the bumped version's two pins and published-limits walk green. The package's `CHANGELOG.md` row cannot live here (a `docs` target in a `config/infra` phase is forbidden by the canonical phase contract), so `normative-drift` stays red until P4 closes the window — declared in `known-issues.md` (P31-04).
 
 - [ ] Add the bounded `reproducer` field to `FINDING_SPEC.fields` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — optional `string`, `minLength: 1`, `maxLength: PRE_EXECUTION_LIMITS.reproducerChars`, `nulFree: true` — plus the matching optional member on the `PreExecutionReviewFindingV1` interface.
 - [ ] Add `reproducerChars: 1024` to `PRE_EXECUTION_LIMITS` in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` so the bound is published rather than spelled in the field.
@@ -20,7 +21,8 @@ Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun r
 - [ ] Change `const material = finding.severity !== "info"` in `packages/agentic-workflow-schema/src/pre-execution.ts` to the `medium`+ membership test and restate the doc comment above `validatePreExecutionReceiptAgainstSnapshot` (a PASS may coexist with open/unverified `low` rows; it is refused while any open/unverified `medium`+ row exists).
 - [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS with an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates while a `reproducer` beyond `reproducerChars` is refused.
 - [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs`; the `--check` form is the drift gate) so the committed projections carry `reproducer` and keep their `$comment` runtime-rule disclosure.
-- [ ] Bump the package to 4.3.0 in `packages/agentic-workflow-schema/package.json` (additive minor; every enum value, the receipt contract id and the freshness vocabulary keep their spelling).
+- [ ] Bump the package to 4.3.0 in `packages/agentic-workflow-schema/package.json` (additive minor; every enum value, the receipt contract id and the freshness vocabulary keep their spelling) and move the two version pins the bump reddens in the same commit — `test/release-contract.test.mjs` (`assert.equal(pkg.version, "4.2.0")`) and `test/verification-gates.test.mjs` (`assert.equal(manifest.version, "4.2.0")`).
+- [ ] Add the `reproducerChars 1024` entry to the `### Published limits` block of `packages/agentic-workflow-schema/README.md`, so the `test/pre-execution-docs.test.mjs` walk over `PRE_EXECUTION_LIMITS` finds the new key and its value inside the section.
 - [ ] Run the package suite and the projection drift check green: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0.
 
 ## P2 — Transition-decider cap refusal
@@ -53,8 +55,8 @@ Layer: config/infra · Done-when: `bun test scripts/pre-execution-sensor.test.mj
 Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed, the release tables recomputed against the frontmatter, and the AC7 removal greps clean. This phase closes the `normative-drift` window P1 opened by landing the schema package's 4.3.0 row (P31-04).
 
 - [ ] Rewrite `skills/pre-execution-review/references/LEDGERS.md` §3: drop "`info` is the only immaterial one"; state material = `medium`+, the `low` report-note persistence contract (persisted, visible, non-blocking, resolved by the stage author without a re-review), the anti-deflation carry-over, and the restated PASS-coexistence sentence.
-- [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical.
-- [ ] Rewrite §3 of `skills/pre-execution-review/references/POLICY.md`: keep the single re-review of the resulting snapshot as the default batch consequence, remove the every-batch mandate sentence, and add the wording-only exemption with the determination block's shape and the non-skippable revision rotation.
+- [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical and the pinned sentence byte-identical — `scripts/pre-execution-quality.test.mjs` matches its two-line pairing (the line ending `carry an open`, then the line starting `unverified material row`) verbatim, so neither the words nor the break point moves (AC10).
+- [ ] Rewrite §3 of `skills/pre-execution-review/references/POLICY.md`: preserve the default batch consequence — one re-review of the freshly rotated snapshot after the batch — while deleting the exact phrase AC7's re-review removal grep over `skills/pre-execution-review/references/POLICY.md` names (that grep must exit non-zero at the PR head), remove the every-batch re-review mandate sentence, and add the wording-only exemption with the determination record's block shape and the non-skippable revision rotation.
 - [ ] Rewrite §4 of `skills/pre-execution-review/references/POLICY.md`: remove the three unbounded-cycle sentences, keep the `CONVERGENCE-ANOMALY` block byte-identical, and author the remainder — the hard two-cycle cap, the `third cycle never` starts without explicit user instruction rule, and the unconverged end in `needs-design` where the stage sanctions it plus the decider's `stop-review-loop-cap` refusal and `design-feature` route at the plan stage.
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.

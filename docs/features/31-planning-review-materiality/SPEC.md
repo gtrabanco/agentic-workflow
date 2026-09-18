@@ -696,17 +696,21 @@ only on a current `SPEC-REVIEW-PASS` receipt.
 Written by `plan-feature-scaffold` at artifact revision **`31-plan-3`** (the
 re-cut the Product carrier amendment `31-spec-3`/D-31-6 and the Product half's own
 `## Design status` require), re-written by `plan-feature` at **`31-plan-4`** — the
-repair batch for `plan-review-31-3`'s five rows (P31-01…P31-05) — and re-derived
+repair batch for `plan-review-31-3`'s five rows (P31-01…P31-05) — re-derived
 at **`31-plan-5`** after the owner-commissioned Product patches `31-spec-9` and
-`31-spec-10` widened AC13's declared code-carrier group. The plan descends from
-the current Product receipt `spec-review-31-11` @ snapshot
-`dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`, verified
-fresh against the bytes on disk by `pre-execution-snapshot.mjs verify --stage
-spec` at this re-derivation's Product-review gate (`current: true`,
-`structural.fresh: true`). Repair record: `progress.md`; engineering decisions:
-`decisions.md` (E-D31-8…E-D31-14 for the carrier move, E-D31-15…E-D31-19 for the
-`31-plan-4` batch, E-D31-20…E-D31-21 for this re-derivation); plan-stage finding
-rows R31-01/R31-02/R31-03, P31-01…P31-05 and P31-06 resolved in
+`31-spec-10` widened AC13's declared code-carrier group, and repaired at
+**`31-plan-6`** for `plan-review-31-4`'s five rows (P31-07…P31-11). The plan
+descends from the current Product receipt `spec-review-31-11` @ snapshot
+`dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`: the
+`spec-product-v1` projection digest (`e9ce9abf…`, 46362 bytes) and the three
+context digests recompute byte-identical from the bytes on disk, while `SPEC.md`'s
+whole-file revision has since moved with this half — the known
+`stale-source-revision` false signal PE-003 records, which L1 resolves on the
+projection, never on the whole-file revision. Repair record: `progress.md`;
+engineering decisions: `decisions.md` (E-D31-8…E-D31-14 for the carrier move,
+E-D31-15…E-D31-19 for the `31-plan-4` batch, E-D31-20…E-D31-21 for the
+re-derivation, E-D31-22…E-D31-25 for the `31-plan-6` repair batch); plan-stage
+finding rows R31-01/R31-02/R31-03, P31-01…P31-06 and P31-07…P31-11 resolved in
 `planning-findings.md`; full phase detail: `PLAN.md` and `TASKS.md`.
 
 ### Technical goals
@@ -741,7 +745,7 @@ schema package stays dependency-free and the scripts stay dependency-free beyond
 the built schema package.
 
 Affected surfaces (verified at branch head `4b7cad56`; evidence rows
-PE-001…PE-032 in `planning-evidence.md`):
+PE-001…PE-037 in `planning-evidence.md`):
 
 - `packages/agentic-workflow-schema/src/pre-execution-contract.ts:101` (the
   severity vocabulary comment), `:455-500` (`FINDING_SPEC`), `:459` (the
@@ -958,10 +962,17 @@ human-keyed third-cycle rule, and the wording-only determination shape. Only the
 byte-unchanged.
 
 **E9 — Release records.** The schema package bumps 4.2.0 → 4.3.0 (additive
-minor) and its `CHANGELOG.md` companion-table row lands **in the same phase as
-the bump (P1)**, because `rendered-facts@1` recomputes that table against
-`package.json` and `bun test scripts/normative-drift.test.mjs` would otherwise be
-red from P1 through P4; the four touched skills take minor bumps through
+minor) in the `config/infra` P1, and its `CHANGELOG.md` companion-table row lands
+in the `docs` P4 with the four skill release records — never in P1, whose
+`config/infra` layer cannot carry a `docs` target (phase-lint box 2) — so
+`rendered-facts@1`, which recomputes that table against
+`package.json`, stays red across the declared P1→P4 window (`known-issues.md` §12,
+E-D31-18/E-D31-21), P1's own done-when stays package-local, and P4's done-when
+closes the window; the two version pins the bump reddens
+(`test/release-contract.test.mjs`, `test/verification-gates.test.mjs`) move in the
+same commit as the bump, and the new `reproducerChars` limit is published in the
+package README's `### Published limits` block in P1, because both are the bump's
+own `config/infra` surfaces; the four touched skills take minor bumps through
 `bump-skill` (one bump per skill per PR — E-D31-1) with their `CHANGELOG.md` rows
 and README cells; the Pi mirror is re-bundled from the
 package that owns the bundler after the last `skills/` edit; and the issue's
@@ -972,7 +983,7 @@ scaffold.
 ### Planning evidence
 
 see planning-evidence.md (M/L unit — the frozen table lives in
-`planning-evidence.md`; rows PE-001…PE-032, all `current`, `proven` or
+`planning-evidence.md`; rows PE-001…PE-037, all `current`, `proven` or
 `decision`).
 
 ### Obligations
@@ -996,7 +1007,14 @@ re-aimed at AC13's three declared groups. This repair batch adds `E-D31-15`
 pure and sits before `stale-source-revision`), `E-D31-17` (the count is derived by
 one shared helper and projected into the envelope's `detail` bag, keeping feature
 38's A:12) and `E-D31-18` (the schema package's CHANGELOG row lands in P4, with
-the `normative-drift` window declared) — see `decisions.md`. New in this re-cut:
+the `normative-drift` window declared) — see `decisions.md`. This repair batch adds
+`E-D31-22` (the bump's own `config/infra` surfaces — the two version pins and the
+package README's published-limit block — live in P1, the phase whose done-when runs
+them), `E-D31-23` (`E9` states the P4 CHANGELOG allocation, the single reading the
+P31-04 resolution already chose), `E-D31-24` (the two P4 task wordings name the pin
+they must keep and stop reciting the literal AC7 deletes) and `E-D31-25` (P1's task
+budget is at the canonical ceiling, so a further P1 requirement splits the phase).
+New in this re-cut:
 
 - **E-D31-8** — the materiality predicate is a closed membership test over the
   material severities rather than a negated `info` comparison, so the material
@@ -1027,9 +1045,10 @@ beyond the built schema package:
 
 - **Schema package (primary)**: `cd packages/agentic-workflow-schema && bun run test`
   gains the materiality vectors (AC1), the `reproducer` bound and
-  back-compatibility vectors (AC3) and the cap-refusal vectors (AC5); the gate
-  `bun run gate:pre-execution` adds the projection drift checks, the package
-  check and the docs test (AC9).
+  back-compatibility vectors (AC3) and the cap-refusal vectors (AC5), and holds
+  the bumped version's two pins and the published-limits walk with the same exit
+  (P31-07/P31-08); the gate `bun run gate:pre-execution` adds the projection drift
+  checks, the package check and the docs test (AC9).
 - **Snapshot machinery**: `bun test scripts/pre-execution-sensor.test.mjs
   scripts/pre-execution-attribution.test.mjs` gains the `wording-only` vectors
   for both outcomes plus the missing-record refusal (AC4), with the attribution
@@ -1083,8 +1102,11 @@ hardening close-out.
 Layer: config/infra. Done-when: `cd packages/agentic-workflow-schema && bun run
 test && bun run check:pre-execution-schemas` → exit 0 with the materiality,
 `reproducer`-bound and back-compatibility vectors green and zero projection
-drift, **and** `bun test scripts/normative-drift.test.mjs` → exit 0 (the package
-bump and its CHANGELOG row land in this phase). (AC1, AC2, AC3)
+drift — the same suite holds the bumped version's two pins and the
+published-limits walk. The schema package's `CHANGELOG.md` row cannot land here (a
+`docs` target in a `config/infra` phase is forbidden by the phase contract), so
+`normative-drift` stays red until the `docs` P4 closes the window declared in
+`known-issues.md` §12. (AC1, AC2, AC3)
 
 #### P2 — Transition-decider cap refusal
 
@@ -1124,13 +1146,13 @@ docs/features/31-planning-review-materiality/PLAN.md`, node fallback — stdout
 pasted verbatim at scaffold time and again in P5):
 
 ```text
-P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:schema-finding-record-materiality
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:8:schema-finding-record-materiality
 P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
 P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
 P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
 P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
 verdict PASS
-fingerprint: 4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9
+fingerprint: d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c
 ```
 
 The `31-plan-1`/`31-plan-2` fingerprints (`db27c41e…`, `5465f0aa…`) and the
@@ -1169,6 +1191,18 @@ stays accepted.
   E-D31-18/E-D31-21); the evidence-row range in this half was corrected
   (P31-05); and P31-06 closed once the Product half enumerated the code carriers
   (`31-spec-9`/`31-spec-10`, `spec-review-31-11`).
+- **Resolved by the `31-plan-6` repair batch (P31-07…P31-11)**: P1's own done-when
+  is reachable again — the bump carries its two reddened version pins in the same
+  commit (`test/release-contract.test.mjs`, `test/verification-gates.test.mjs`;
+  P31-07) and the package README's `### Published limits` block publishes
+  `reproducerChars 1024` in the same phase (P31-08); `E9` now states the `docs` P4
+  CHANGELOG allocation P31-04's resolution chose, so the plan no longer reads its
+  own release-record phase two ways (P31-09); and the two P4 wordings no longer
+  collide with the frozen gates — the review-spec `CHECKS.md` rewrite names the
+  sentence `scripts/pre-execution-quality.test.mjs` pins verbatim (P31-11), and the
+  `POLICY.md` §3 rewrite no longer recites the literal AC7 deletes (P31-10).
+  No criterion, validator or required outcome moved; the failure class P31-07/P31-08
+  exposed is now a declared boundary (`known-issues.md` §13).
 - **Risk — the wording-only branch could be read as an author-declared bypass.**
   Mitigated by construction: the branch requires the acceptance fingerprint and
   the bound authorities to be unmoved, the revision to have rotated, and the
@@ -1572,3 +1606,59 @@ Artifact revision rotates `31-plan-4` → **`31-plan-5`** for the plan set
 `known-issues.md`). The `plan-review-31-3` receipt is superseded by design (bound
 plan bytes moved); a repaired plan is not an approved plan, so the next step is
 `/review-plan`.
+
+### `31-plan-6` (2026-09-17) — repair batch for `plan-review-31-4` (P31-07 + P31-08 + P31-09 + P31-10 + P31-11)
+
+Trigger: `plan-review-31-4` returned `PLAN-REVIEW-FAIL` on snapshot `b17009ea…`
+(artifact revision `31-plan-5`) with five plan-class rows and no product row. Its
+`CONVERGENCE-ANOMALY` block named the route: `plan-feature
+31-planning-review-materiality` — one batch for P31-07…P31-11, then `/review-plan`
+re-reviews the new artifact revision. All five rows are `class: plan`, so the batch
+repairs this Engineering half only; the Product parent stays `spec-review-31-11` @
+`dd09372a…`.
+
+What the batch changed:
+
+- **P31-07 (high)** — P1's done-when could not commit: two existing tests hard-pin
+  the package version to `4.2.0` (`test/release-contract.test.mjs`,
+  `test/verification-gates.test.mjs`) while the task list bumped
+  `package.json` to `4.3.0`. The bump task now moves both pins in the same commit
+  (E-D31-22, PE-033).
+- **P31-08 (high)** — the same suite's `test/pre-execution-docs.test.mjs` walks
+  `PRE_EXECUTION_LIMITS` against the package README's `### Published limits` block,
+  and `reproducerChars` was published nowhere; a P1 task now adds
+  `reproducerChars 1024` to that block (both it and the pins are `packages/**`,
+  i.e. `config/infra`, so the `docs` P4 cannot carry them) (E-D31-22, PE-034).
+- **P31-09 (medium)** — `E9` still said the CHANGELOG row lands with the bump in
+  P1 while `PLAN.md`/`TASKS.md`/`E-D31-18`/`known-issues.md` §12 and the SPEC's
+  own `### Phases` P1 done-when said P4; every statement now reads the P4
+  allocation the P31-04 resolution chose (E-D31-23).
+- **P31-10 (low)** — P4's §3 task kept the exact literal AC7's removal grep
+  deletes; the task now names the removal grep and states the default batch
+  consequence without reciting it (E-D31-24, PE-036).
+- **P31-11 (info)** — P4's CHECKS rewrite promised only the severity vocabulary
+  lists byte-identical while `scripts/pre-execution-quality.test.mjs` pins the
+  `a \`PASS\` may not carry an open` / `unverified material row` pairing with its
+  line break; the task now names that pin (AC10's pack) (E-D31-24, PE-035).
+
+Also repaired in the same batch, same root cause as P31-09: the `### Phases` P1
+done-when appended `bun test scripts/normative-drift.test.mjs` → exit 0 as if the
+bump and its CHANGELOG row shared P1, contradicting the P4 allocation and the
+phase contract's box 2; it now stays package-local and restates the declared
+window.
+
+No phase, task count outside P1, validator or acceptance criterion's required
+outcome changed, and `ACCEPTANCE.md` is **not** re-frozen: every row here is
+Engineering-half, so its blob `849af5ae…` and every validator stay as the
+`31-plan-5` re-derivation froze them. P1 goes from seven to eight tasks (the bump
+task absorbs the two pins, one new published-limit task), which is the canonical
+phase contract's ceiling for a non-close-out phase (E-D31-25, PE-037); the
+superseded fingerprint `P1:config/infra:7:…` and the aggregate
+`4b681ff5de2757fce619dd3acded678c78352d2c0703706a67f2de720d4e56e9` are dead
+with the `31-plan-5` set.
+
+Artifact revision rotates `31-plan-5` → **`31-plan-6`** for the plan set
+(`SPEC.md` Engineering half, `PLAN.md`, `TASKS.md`, `planning-evidence.md`,
+`planning-obligations.md`, `decisions.md`, `known-issues.md`, `testing.md`). The
+`plan-review-31-4` receipt is superseded by design (bound plan bytes moved); a
+repaired plan is not an approved plan, so the next step is `/review-plan`.
