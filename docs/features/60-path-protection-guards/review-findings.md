@@ -21,7 +21,7 @@ brand surface. Ledger schema:
 | F5 | packages/agentic-workflow/bin/path-guard.mjs:39-45,148,151 | code | med | fix-now | source (fold) | yes |
 | F6 | packages/agentic-workflow/bin/path-guard.mjs:136,151 | security | med | fix-now | source (fold) | yes |
 | F7 | packages/pi-agentic-workflow/src/extension/index.ts:205,214-215 | security | med | fix-now | source (fold) | yes |
-| F8 | CHANGELOG.md:94,97 | code | med | fix-now | source (fold) | no |
+| F8 | CHANGELOG.md:94,97 | code | med | fix-now | source (fold) | yes |
 | F10 | packages/pi-agentic-workflow/test/path-protection.test.mjs | verify | med | fix-now | source (fold) | yes |
 | F13 | packages/pi-agentic-workflow/src/extension/index.ts:221 | perf | med | fix-now | source (fold) | yes |
 | F16 | template/.agentic-workflow/path-protection.md:61-66 | api-ergonomics | med | fix-now | source (fold) | no |
