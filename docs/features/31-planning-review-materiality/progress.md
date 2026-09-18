@@ -3865,5 +3865,9 @@ fingerprint: d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c
 - Manifest: docs/features/31-planning-review-materiality/ACCEPTANCE.md · Blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9 · Verified at terminal HEAD: 2026-09-18 · Matches the P1 receipt: yes
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: `bun test scripts/review-loop-discipline.test.mjs` (exit 0) + the full ladder above · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
-- Next: close-out (PR + roadmap flip) · Attempts: 1
+- Commit: 4d060b9c · Gate: `bun test scripts/review-loop-discipline.test.mjs` (exit 0) + the full ladder above · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: none — unit finished
+
+## UNIT LOOP — 31-planning-review-materiality COMPLETE
+Phases: 5 · Commits: 085ce93f, 52bf548f, e0767164, e2c288ce, 0003a4a3, 955a7b87 (main sync), d7ad5f68, 4d060b9c · Acceptance: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9 · Gate: PASS
+PR: https://github.com/gtrabanco/agentic-workflow/pull/243
