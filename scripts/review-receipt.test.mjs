@@ -270,6 +270,32 @@ test("CLI: an unknown command is a usage error (exit 1)", () => {
   assert.match(result.stderr, /usage/i);
 });
 
+test("CLI flags: an unknown or misspelled flag is refused, never silently defaulted (F5)", () => {
+  const result = spawnSync(
+    process.execPath,
+    [script, "render", "--head", SHA_A, "--scope", "code", "--axes", "code", "--coverage", "AC1", "--invariant", "pass"],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 1, "a misspelled --invariants must not render an n/a receipt");
+  assert.match(result.stderr, /unknown flag: --invariant/);
+  assert.equal(result.stdout.trim(), "", "no receipt body is printed on a usage error");
+});
+
+test("CLI flags: --flag=value and the documented -R alias are accepted (F5)", () => {
+  const inline = spawnSync(
+    process.execPath,
+    [script, "render", `--head=${SHA_A}`, "--scope=code", "--axes=code", "--coverage=AC1", "--manual=none"],
+    { encoding: "utf8" },
+  );
+  assert.equal(inline.status, 0, inline.stderr);
+  assert.equal(parseReviewReceipt(inline.stdout).sha, SHA_A);
+
+  // -R resolves to --repo; an unknown flag after it still fails closed.
+  const unknownWithAlias = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "-R", "owner/name", "--nope"], { encoding: "utf8", input: "[]" });
+  assert.equal(unknownWithAlias.status, 1);
+  assert.match(unknownWithAlias.stderr, /unknown flag: --nope/);
+});
+
 // ---------------------------------------------------------------------------
 // CLI — emit refuses a moved head, through a fake `gh` on PATH
 // ---------------------------------------------------------------------------

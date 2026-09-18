@@ -221,22 +221,33 @@ const USAGE = `usage: audit-pr-gate <command> [options]
             Post the merge-ready comment idempotently and confirm it landed.
 `;
 
+const VALUE_FLAGS = new Set(["--pr", "--repo", "--head", "--gates-json", "--comments-json"]);
+const BOOLEAN_FLAGS = new Set(["--hygiene", "--apply"]);
+const FLAG_ALIASES = { "-R": "--repo" };
+
+/** Closed flag set: an unknown or misspelled flag is a usage error, never a
+ * silent default, and the documented `-R owner/name` alias is honored (F5). */
 function parseArgs(argv) {
   const opts = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
-    if (!token.startsWith("--")) {
+    if (!token.startsWith("-") || token === "-") {
       opts._.push(token);
       continue;
     }
-    const name = token.slice(2);
-    if (name === "apply") {
-      opts.apply = true;
+    const eq = token.indexOf("=");
+    const rawName = eq === -1 ? token : token.slice(0, eq);
+    const inline = eq === -1 ? undefined : token.slice(eq + 1);
+    const name = FLAG_ALIASES[rawName] ?? rawName;
+    if (BOOLEAN_FLAGS.has(name)) {
+      if (inline !== undefined) throw new Error(`${name} takes no value`);
+      opts[name.slice(2)] = true;
       continue;
     }
-    const value = argv[++i];
-    if (value === undefined) throw new Error(`${token} needs a value`);
-    opts[name] = value;
+    if (!VALUE_FLAGS.has(name)) throw new Error(`unknown flag: ${rawName}`);
+    const value = inline ?? argv[++i];
+    if (value === undefined) throw new Error(`${name} needs a value`);
+    opts[name.slice(2)] = value;
   }
   return opts;
 }
@@ -259,7 +270,7 @@ function main() {
     throw new Error(`unknown command "${command}"\n\n${USAGE}`);
   }
   const opts = parseArgs(argv.slice(1));
-  const repo = opts.R ?? opts.repo;
+  const repo = opts.repo;
 
   if (command === "hygiene") {
     let stated = null;
