@@ -611,7 +611,7 @@ unavailable-gate-disclosure invariants and the `path-guard:empty-diff` /
 
 ### Decisions to confirm
 
-Frozen as engineering decisions in `decisions.md` (E-60-1…E-60-8); none is
+Frozen as engineering decisions in `decisions.md` (E-60-1…E-60-9); none is
 open:
 
 - **E-60-1** — canonical defaults live in the crate module; the template seed
@@ -634,6 +634,9 @@ open:
 - **E-60-8** — the path-protection checkpoint has no `--force` bypass; the
   escape hatch is the recorded justification/approval (safety gate, not an
   ordering stop).
+- **E-60-9** — the five-phase cut, one layer each, derived from the
+  `phase-lint.mjs` `layerForTarget()` table (`template/` and `skills/` map to
+  `docs`; `packages/` and `scripts/` map to `config/infra`).
 
 ### Testing requirements
 
