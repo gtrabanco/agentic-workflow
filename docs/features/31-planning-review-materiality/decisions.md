@@ -1168,3 +1168,36 @@ docs/features/31-planning-review-materiality/TASKS.md` (the form
 passed. The `TASKS.md` wording now matches `PLAN.md`; the requirement (confirm the
 recorded fingerprints and the read-verified evidence rows) is unchanged. No phase,
 task count, validator, obligation or acceptance outcome moves.
+
+## 2026-09-18 — F3 product patch (design-feature, `31-spec-12`)
+
+### E-D31-28: AC4's fall-through code is `stale-source-revision`, not `stale-artifact-content`
+
+Review-change finding F3 (`review-findings.md`, head `ec04261d`, PR #243): the
+SPEC's AC4 required `stale-artifact-content` (exit 4) for material byte
+movement in the wording-only scenario, but a material movement of a bound
+artifact rotates `sourceRevision` by construction, and the verifier returns
+`stale-source-revision` before the `stale-artifact-content` slot — so the
+criterion's named code was unreachable for the scenario it describes. The
+frozen `ACCEPTANCE.md` AC4 and Design E6 already record the correct code.
+Owner-commissioned repair routed through the product route
+(`design-feature` → `review-spec`); the criterion's required outcome (non-fresh,
+exit 4) is unchanged, only the impossible code name is corrected. Domain
+grounding (research gate, accessed 2026-09-18): content-addressed freshness
+derives the staleness signal from the changed bytes themselves — a changed
+artifact necessarily produces a new content key/revision
+(https://en.wikipedia.org/wiki/Content-addressable_storage), and
+revision/content-movement invalidation precedes content-only comparison in
+standard invalidation ladders
+(https://getsdeready.com/cache-invalidation-optimizing-application-performance/).
+
+### Evidence rows (F3 product patch, 2026-09-18)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The verifier answers `stale-source-revision` for moved bound bytes, before the `stale-artifact-content` slot | repository | `scripts/pre-execution-snapshot.mjs:395-400` (`stale-source-revision` return precedes the artifact-content slot) | `9c253473` @ 2026-09-18 | current | proven | E-D31-28 |
+| The frozen acceptance manifest records `stale-source-revision` (exit 4) for the no-determination fall-through | repository | `docs/features/31-planning-review-materiality/ACCEPTANCE.md` AC4 row | `849af5ae` blob @ 2026-09-18 | current | proven | E-D31-28 |
+| Design E6 declares the fall-through code for moved bound bytes and already corrected the earlier wrong code name | repository | `docs/features/31-planning-review-materiality/SPEC.md` Design E6 ("for moved bound bytes answers `stale-source-revision`") | `9c253473` @ 2026-09-18 | current | proven | E-D31-28 |
+| A wording-only movement always rotates the source revision, so the scenario AC4 describes cannot answer `stale-artifact-content` | repository | SPEC Design E6 opening ("a wording-only movement moves a bound artifact and therefore always rotates `sourceRevision`") | `9c253473` @ 2026-09-18 | current | proven | E-D31-28 |
+| Content-addressed freshness derives the staleness signal from the changed bytes (new content ⇒ new key) | external | https://en.wikipedia.org/wiki/Content-addressable_storage (accessed 2026-09-18) | fetched 2026-09-18 | current | proven | E-D31-28 |
+| Invalidation ladders check revision/content movement before content-only comparison | external | https://getsdeready.com/cache-invalidation-optimizing-application-performance/ (accessed 2026-09-18) | fetched 2026-09-18 | current | proven | E-D31-28 |
