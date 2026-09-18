@@ -21,6 +21,7 @@ import {
   isProtectedPath,
   matchingJustification,
   mergePathProtectionOverrides,
+  normalizeTarget,
 } from "../dist/config/path-policy.js";
 import { mergeConfigs } from "../dist/config/merge.js";
 import { parseConfigFile } from "../dist/config/schema.js";
@@ -284,6 +285,65 @@ test("AC4 entry: a matching justification row permits the same write", async () 
     const entry = await shippedEntry(cwd, agentDir);
     const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "tests/a.mjs" } }, context(cwd));
     assert.equal(decision, undefined, "a matching justification must let the write pass");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC4 entry: every unit's records block is consulted, not just the first", async () => {
+  const { root, cwd, agentDir } = tempRoot("all-blocks");
+  try {
+    // The first ledger (directory order) carries a non-matching row; the
+    // matching justification lives in a later block. A reader that stops at the
+    // first block blocks the write instead of letting it through.
+    mkdirSync(join(cwd, "docs", "features", "aaa-first"), { recursive: true });
+    mkdirSync(join(cwd, "docs", "features", "zzz-second"), { recursive: true });
+    writeFileSync(
+      join(cwd, "docs", "features", "aaa-first", "decisions.md"),
+      recordsFence(["justification | tests/other.mjs | P1 | 2026-09-18 | execute-phase | another path"]),
+    );
+    writeFileSync(
+      join(cwd, "docs", "features", "zzz-second", "decisions.md"),
+      recordsFence(["justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | this path"]),
+    );
+    assert.equal(
+      matchingJustification(
+        "tests/a.mjs",
+        `${recordsFence(["justification | tests/other.mjs | P1 | 2026-09-18 | execute-phase | another path"])}\n${recordsFence(["justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | this path"])}`,
+      ),
+      true,
+    );
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
+    assert.equal(decision, undefined, "a justification in any ledger must permit the write");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC4 entry: equivalent path spellings are normalised before matching", async () => {
+  const { root, cwd, agentDir } = tempRoot("normalize");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    for (const spelling of ["./tests/a.mjs", "sub/../tests/a.mjs", "foo/../tests/a.mjs"]) {
+      const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: spelling } }, context(cwd));
+      assert.equal(decision?.block, true, `${spelling} must be recognised as the protected tests/a.mjs`);
+    }
+    assert.equal(normalizeTarget("./tests/a.mjs"), "tests/a.mjs");
+    assert.equal(normalizeTarget("sub/../tests/a.mjs"), "tests/a.mjs");
+    assert.equal(normalizeTarget("../outside.mjs"), "../outside.mjs");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC4 entry: a target escaping the project root is blocked, never silently allowed", async () => {
+  const { root, cwd, agentDir } = tempRoot("outside");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "../outside.mjs" } }, context(cwd));
+    assert.equal(decision?.block, true);
+    assert.match(decision.reason, /outside the project root/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

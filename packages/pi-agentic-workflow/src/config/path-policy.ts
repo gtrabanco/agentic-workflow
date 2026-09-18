@@ -184,44 +184,73 @@ function isProtectedGlob(classes: Record<string, PathPolicyClass>, glob: string)
 }
 
 /**
- * Read the `path-protection-records@1` fenced block and report whether a
- * `justification` row (authority `execute-phase`) matches `target`. A missing or
- * malformed block permits nothing. A file with no marker is ignored (it simply
- * contributes no records).
+ * Collapse `.`/`..` segments and normalise separators so equivalent spellings
+ * (`./tests/x`, `sub/../tests/x`) match the same glob. A leading `..` is kept:
+ * the caller refuses an out-of-root result before matching (E-60-5).
  */
-export function matchingJustification(target: string, recordsText: string): boolean {
-  const block = recordsLines(recordsText);
-  if (block === null) return false;
-  let headerSeen = false;
-  for (const line of block) {
-    if (line === "kind | paths | phase | date | authority | justification") {
-      headerSeen = true;
+export function normalizeTarget(target: string): string {
+  const out: string[] = [];
+  for (const part of target.replace(/\\/g, "/").split("/")) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") {
+      if (out.length > 0 && out[out.length - 1] !== "..") out.pop();
+      else out.push("..");
       continue;
     }
-    if (!headerSeen) continue;
-    const cells = line.split("|").map((cell) => cell.trim());
-    if (cells.length !== 6) return false;
-    const [kind, pathsCell, phase, date, authority, justification] = cells;
-    if (kind !== "justification" || authority !== "execute-phase") continue;
-    if (!/^P\d+$/.test(phase) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || justification === "") continue;
-    const paths = pathsCell.split(",").map((entry) => entry.trim()).filter(Boolean);
-    if (paths.some((glob) => pathMatchesGlob(target, glob))) return true;
+    out.push(part);
+  }
+  return out.join("/");
+}
+
+/**
+ * Read the `path-protection-records@1` fenced blocks and report whether a
+ * `justification` row (authority `execute-phase`) matches `target`. A missing
+ * marker permits nothing; a malformed row voids only its own block. Every
+ * block is consulted, because the guard reads the ledgers of every unit.
+ */
+export function matchingJustification(target: string, recordsText: string): boolean {
+  const normalized = normalizeTarget(target);
+  for (const block of recordsBlocks(recordsText)) {
+    let headerSeen = false;
+    for (const line of block) {
+      if (line === "kind | paths | phase | date | authority | justification") {
+        headerSeen = true;
+        continue;
+      }
+      if (!headerSeen) continue;
+      const cells = line.split("|").map((cell) => cell.trim());
+      if (cells.length !== 6) break;
+      const [kind, pathsCell, phase, date, authority, justification] = cells;
+      if (kind !== "justification" || authority !== "execute-phase") continue;
+      if (!/^P\d+$/.test(phase) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || justification === "") continue;
+      const paths = pathsCell.split(",").map((entry) => entry.trim()).filter(Boolean);
+      if (paths.some((glob) => pathMatchesGlob(normalized, glob))) return true;
+    }
   }
   return false;
 }
 
-/** The marker's following lines up to the closing fence; `null` when absent. */
-function recordsLines(text: string): string[] | null {
+/** Every marker-delimited block's non-empty lines, in file order. */
+function recordsBlocks(text: string): string[][] {
   const lines = text.split(/\r?\n/);
-  const start = lines.findIndex((line) => line.trim() === RECORDS_SCHEMA);
-  if (start === -1) return null;
-  const body: string[] = [];
-  for (let index = start + 1; index < lines.length; index += 1) {
-    const trimmed = lines[index].trim();
-    if (trimmed.startsWith("```")) break;
-    if (trimmed !== "") body.push(trimmed);
+  const blocks: string[][] = [];
+  let index = 0;
+  while (index < lines.length) {
+    if (lines[index].trim() !== RECORDS_SCHEMA) {
+      index += 1;
+      continue;
+    }
+    const body: string[] = [];
+    index += 1;
+    while (index < lines.length && !lines[index].trim().startsWith("```")) {
+      const trimmed = lines[index].trim();
+      if (trimmed !== "") body.push(trimmed);
+      index += 1;
+    }
+    blocks.push(body);
+    index += 1;
   }
-  return body;
+  return blocks;
 }
 
 export type ToolCallGuardResult = { block: false } | { block: true; reason: string };
@@ -245,14 +274,15 @@ const WRITE_TOOLS = new Set(["write", "edit"]);
 export function evaluateToolCall(input: ToolCallGuardInput): ToolCallGuardResult {
   if (!WRITE_TOOLS.has(input.toolName)) return { block: false };
   if (!input.targetExists) return { block: false };
-  if (!isProtectedPath(input.policy, input.targetPath)) return { block: false };
-  if (matchingJustification(input.targetPath, input.recordsText)) return { block: false };
+  const target = normalizeTarget(input.targetPath);
+  if (!isProtectedPath(input.policy, target)) return { block: false };
+  if (matchingJustification(target, input.recordsText)) return { block: false };
   return {
     block: true,
     reason:
-      `"${input.targetPath}" is a protected path (path-protection policy) and no matching ` +
+      `"${target}" is a protected path (path-protection policy) and no matching ` +
       `justification record exists. Record a "${RECORDS_SCHEMA}" row ` +
-      `\`justification | ${input.targetPath} | <P<n>> | <YYYY-MM-DD> | execute-phase | <reason>\` in the unit's ` +
+      `\`justification | ${target} | <P<n>> | <YYYY-MM-DD> | execute-phase | <reason>\` in the unit's ` +
       `decisions.md, and for a post-freeze change ask the owner for the recorded approval the checkpoint gate requires.`,
   };
 }
