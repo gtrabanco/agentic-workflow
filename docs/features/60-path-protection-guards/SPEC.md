@@ -457,7 +457,7 @@ else):
   "classes": {
     "tests":         { "globs": ["tests/**"], "freeze": true },
     "e2e":           { "globs": ["e2e/**"], "freeze": true },
-    "test-file":     { "globs": ["**/*.test.*", "**/*.spec.*"], "freeze": true },
+    "test-file":     { "globs": ["**/*.test.*"], "freeze": true },
     "fixtures":      { "globs": ["fixtures/**", "**/fixtures/**"], "freeze": true },
     "policy-config": { "globs": [".agentic-workflow/path-policy.json"], "freeze": false }
   },
@@ -628,8 +628,8 @@ parity test is the pi package's `skills/` mirror
 
 ### Planning evidence
 
-See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 28 rows,
-PE-001…PE-028, all `current` + `proven`).
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 29 rows,
+PE-001…PE-029, all `current` + `proven`).
 
 ### Obligations
 
