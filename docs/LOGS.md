@@ -1937,3 +1937,11 @@ out to do, what was decided and *why*, and where to resume.
 **Decisions:** F3's `folded: no` is a stale ledger value — the product route closed it and the cycle-3 log entry already confirmed AC4 now reads `stale-source-revision`. No fold commit needed; only the ledger row needs ticking.
 
 **Next:** Tick P5 checkboxes in TASKS.md and PLAN.md (F5 fold — 2 lines, mechanical). No code change needed.
+
+## 2026-09-18T23:05Z — feat/31-planning-review-materiality — manual
+
+- **Summary:** review-change + fold-findings cycle: reviewed PR #243 HEAD (ec04261d), got REVIEW-FAIL on F1-F5 (med: POLICY §3 wrong freshness code name, determinationLine grammar, SPEC AC4 self-contradiction, schema README severity/docs, TASKS/PLAN checkboxes); folded F1/F2/F4 (source repairs + mirror re-bundle); F3 (Product half AC4) and F5 (plan ledger) routed to replan — F3 folded by spec-review-31-13 PASS (31-spec-13), F5 folded by plan-feature re-cut; AC10 pack 153/0 green at fold HEAD
+
+- **Decisions:** F1: POLICY §3 now states stale-source-revision for the unrecorded-wording rotation (machine returns that code on fall-through; SPEC E6 records old name as wrong); F2: determinationLine terminates values at · (matching SPEC E5 frozen grammar) and uses the existing fieldFrom helper pattern; F4: schema README severity cell/finding-shape/PASS-authority re-stated with material = medium+ and reproducer?; F3 and F5: authority-owned, not foldable — F3 needs /design-feature + /review-spec (Product half AC4), F5 needs /plan-feature + /review-plan + /execute-phase (plan ledger); all 5 fold-closed by the time the next review ran
+
+- **Next:** /audit-pr 243 — merge gate; all review-change findings fold-closed (F1-F5), spec-review-31-13 PASS, plan-review-31-5 PASS, roadmap row done, PR #243 OPEN awaiting human merge
