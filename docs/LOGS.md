@@ -1826,7 +1826,7 @@ out to do, what was decided and *why*, and where to resume.
 - (4) **F5/F6 gate fail-closed. `--base` null became empty diff (pass/clean exit 0). An unresolvable ref or a ref starting with `-` reached git's option parser, creating arbitrary files. Fixed by `runGit` returning an `ok` flag, resolving refs via `rev-parse --verify --end-of-options <ref>^{commit}`, and erroring (exit 2) on any git failure.
 - (5) **F8 version collision. The branch's `0.11.0` CHANGELOG row collided with main's `0.11.1` and the drift gate rejected `0.11.0 x2` as duplicate. Fixed by bumping to `0.12.0` (package.json + CHANGELOG row) — a minor bump since the feature code changed.
 - (6) **F16 docs — record phase-scoping undocumented.** The policy doc showed the `phase` column but never stated that only rows whose `phase` equals the gate's `--phase` count. A correctly-worded row for a different phase is silently ignored. Fixed by adding a paragraph to `path-protection.md` naming the close-out `--phase P<n-1>` value.
-- (7) **Ledger provenance. All 11 rows annotated with their fold commit SHAs via `ledger-provenance --annotate`, `--check` passes.
+- (7) **Ledger provenance.** All 11 rows annotated with their fold commit SHAs via `ledger-provenance --annotate`; `--check` passes (CHECK PASS: every folded row names a verified commit).
 - **Next:** /review-change on this branch (delta mode mandatory, RE-REVIEW-REQUIRED, two high-severity rows folded). After PASS: /audit-pr → merge gate.
 
 ## 2026-09-18T22:42:27Z — feat/220-path-protection-guards — manual
