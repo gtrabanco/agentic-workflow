@@ -1,5 +1,14 @@
 # progress.md — fix-244-freeze-batch-planner-consumer
 
+## P2 — Freeze-batch consumer contract
+
+- [x] `skills/fold-findings/SKILL.md` freeze-batch prose: recommends planner command, invocation as discovery
+- [x] `skills/fold-findings/SKILL.md` → Next: block: REPLAN sub-bullet names both planner tokens, one-physical-line rule stated
+- [x] `skills/fold-findings/SKILL.md` closing-block decision table: freeze-batch cell names both planner tokens, router as discovery
+- [x] `skills/fold-findings/references/FOLD_PROCESS.md`: batch-classification cell and step 9 name both planner tokens, unit format stated, one-physical-line rule
+- [x] Pin suite: `node --test scripts/normative-drift.test.mjs` → exit 0 (18/18 pass)
+- [x] Context budget: `bun scripts/check-skill-context.mjs --skill fold-findings` → PASS (2612/2800 estimate)
+
 ## P1 — Freeze-batch hand-off pin (RED — observed against unfixed bytes)
 
 Red run output (2026-09-19, pre-fix HEAD `7d4ec6d`):
