@@ -44,8 +44,8 @@ schema:
 | REVIEW-RAN | HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb | n/a | n/a | review-mark | n/a | n/a |
 | F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) | yes |
 | F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | yes |
-| F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | no |
-| F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | no |
+| F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | yes |
+| F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | yes |
 | F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | yes |
 | F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | yes |
 | F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | yes |

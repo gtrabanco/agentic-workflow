@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -180,6 +180,14 @@ test("glob semantics match the crate: ** crosses directories, * does not", () =>
   for (const state of PHASE_STATES) assert.deepEqual(Object.keys(SHIPPED_PATH_POLICY.matrix[state]).sort(), ["create", "delete", "modify", "rename"]);
 });
 
+test("F20 mirror: the matcher stays linear on a star-chain glob", () => {
+  const policy = intersectPathPolicy(SHIPPED_PATH_POLICY, { protectedGlobs: ["a*a*a*a*a*a*a*a*a*a*a*a*a*b"] });
+  const started = Date.now();
+  assert.equal(isProtectedPath(policy, `${'a'.repeat(40)}c`), false);
+  assert.equal(isProtectedPath(policy, `a${'a'.repeat(40)}b`), true);
+  assert.ok(Date.now() - started < 500, "the mirror matcher must not backtrack exponentially");
+});
+
 /* ---------------------------------------------- shipped entry: handler-level */
 // AC4/AC10 name "the pi extension unit test" as the proof that a `tool_call`
 // returns `{ block: true, reason }`. The pure-helper cases above never invoke
@@ -344,6 +352,26 @@ test("AC4 entry: a target escaping the project root is blocked, never silently a
     const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "../outside.mjs" } }, context(cwd));
     assert.equal(decision?.block, true);
     assert.match(decision.reason, /outside the project root/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F19: a symlink alias to a protected file is blocked, and a symlink escape is refused", async () => {
+  const { root, cwd, agentDir } = tempRoot("symlink");
+  try {
+    symlinkSync(join("tests", "a.mjs"), join(cwd, "alias.mjs"));
+    const outside = join(root, "outside");
+    mkdirSync(outside, { recursive: true });
+    writeFileSync(join(outside, "secret.mjs"), "secret\n");
+    symlinkSync(outside, join(cwd, "escapeLink"));
+    const entry = await shippedEntry(cwd, agentDir);
+    const aliased = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "alias.mjs" } }, context(cwd));
+    assert.equal(aliased?.block, true, "a symlink alias must not defeat the protected-glob match");
+    assert.match(aliased.reason, /tests\/a\.mjs/);
+    const escaped = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/secret.mjs" } }, context(cwd));
+    assert.equal(escaped?.block, true, "a symlink escape must not defeat the out-of-root refusal");
+    assert.match(escaped.reason, /outside the project root/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

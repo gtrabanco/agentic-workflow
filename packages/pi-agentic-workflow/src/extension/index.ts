@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -214,7 +214,27 @@ export default function extension(pi: ExtensionAPI): void {
       }
     }
     const absolute = isAbsolute(targetPath) ? targetPath : resolve(ctx.cwd, targetPath);
-    const relativeTarget = normalizeTarget(relative(ctx.cwd, absolute));
+    // Resolve symlinks before matching and containment so a link alias cannot
+    // defeat the protected-glob match or the out-of-root refusal (F19). A target
+    // that does not exist yet (a create) keeps its lexical path and passes below.
+    let realAbsolute = absolute;
+    if (existsSync(absolute)) {
+      try {
+        realAbsolute = realpathSync(absolute);
+      } catch {
+        return {
+          block: true,
+          reason: `"${targetPath}" could not be resolved; path protection cannot verify it, so the write is blocked.`,
+        };
+      }
+    }
+    let realRoot = ctx.cwd;
+    try {
+      realRoot = realpathSync(ctx.cwd);
+    } catch {
+      // ctx.cwd always exists; fall back to the lexical root.
+    }
+    const relativeTarget = normalizeTarget(relative(realRoot, realAbsolute));
     // Fail closed on a target that escapes the project root: the policy is
     // repo-relative, so an out-of-root path cannot be verified (F7).
     if (relativeTarget === "" || relativeTarget === ".." || relativeTarget.startsWith("../") || isAbsolute(relativeTarget)) {
