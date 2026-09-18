@@ -170,14 +170,14 @@ deferred`; `n/a` requires evidence, and no row is `deferred` to a follow-up issu
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | PE-001 + PE-002 + PE-005 | A `REVIEW-PASS` cannot be reported without a current, SHA-bound receipt: `emit` refuses a moved head and exits non-zero unless the newest marker names the reviewed head | P1 | 1 | execute-phase | AC1 validator (`node --test scripts/review-receipt.test.mjs`) → exit 0 | `emit` moved-head refusal test name + exit code in progress.md | planned |
-| O2 | PE-001 + PE-008 | The receipt marker grammar has exactly one owner: the receipt test imports the runtime instead of redefining the grammar | P1 | 4 | execute-phase | AC2 validator (import grep + receipt test exit 0) | grep output + test count in progress.md | planned |
-| O3 | PE-002 + PE-005 | The merge gate is a closed, machine-evaluated set, and an absent or stale receipt blocks before any gate is read | P1 | 5 | execute-phase | AC3 validator (`node --test scripts/audit-pr-receipt.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
-| O4 | PE-002 + PE-005 + PE-011 | Terminal hygiene is read from state, not assumed: `tree-clean`, `branch-pushed`, `pr-ready` are gates, and only the draft flag has a mechanical repair | P1 | 6 | execute-phase | AC4 validator (`node --test scripts/audit-pr-receipt.test.mjs` → exit 0; live `hygiene` names each dirty path) | `hygiene --apply` test name + exit code, and the live hygiene output, in progress.md | planned |
-| O5 | PE-002 + PE-006 | A session close commits the log entry alone and names every leftover path; a rewritten or unappended log is refused | P1 | 8 | execute-phase | AC5 validator (`node --test scripts/session-close.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
-| O6 | PE-002 + PE-006 | The pi extension blocks the unverifiable inline receipt path and warns once per settled turn on a dirty worktree | P2 | 1 | execute-phase | AC6 validator (`cd packages/pi-agentic-workflow && bun run test`) → exit 0 | test count + exit code in progress.md | planned |
-| O7 | PE-005 + PE-006 | The three skills name the runtimes as their box/step, so no prose path remains for a reviewer to end a turn through | P3 | 1 | execute-phase | AC7 validator (three greps → ≥ 1 each) | grep output in progress.md | planned |
-| O8 | PE-010 + PE-006 | The bundled skills mirror stays byte-identical to `skills/` and every route stays within its enforced context budget | P2 | 4 | execute-phase | AC8 validator (`bun scripts/check-skill-context.mjs` → exit 0; pi suite mirror parity) | command output in progress.md | planned |
+| O1 | PE-001 + PE-002 + PE-005 | A `REVIEW-PASS` cannot be reported without a current, SHA-bound receipt: `emit` refuses a moved head and exits non-zero unless the newest marker names the reviewed head | P1 | 1 | execute-phase | AC1 validator (`node --test scripts/review-receipt.test.mjs`) → exit 0 | `emit` moved-head refusal test name + exit code in progress.md | verified |
+| O2 | PE-001 + PE-008 | The receipt marker grammar has exactly one owner: the receipt test imports the runtime instead of redefining the grammar | P1 | 4 | execute-phase | AC2 validator (import grep + receipt test exit 0) | grep output + test count in progress.md | verified |
+| O3 | PE-002 + PE-005 | The merge gate is a closed, machine-evaluated set, and an absent or stale receipt blocks before any gate is read | P1 | 5 | execute-phase | AC3 validator (`node --test scripts/audit-pr-receipt.test.mjs`) → exit 0 | test count + exit code in progress.md | verified |
+| O4 | PE-002 + PE-005 + PE-011 | Terminal hygiene is read from state, not assumed: `tree-clean`, `branch-pushed`, `pr-ready` are gates, and only the draft flag has a mechanical repair | P1 | 6 | execute-phase | AC4 validator (`node --test scripts/audit-pr-receipt.test.mjs` → exit 0; live `hygiene` names each dirty path) | `hygiene --apply` test name + exit code, and the live hygiene output, in progress.md | verified |
+| O5 | PE-002 + PE-006 | A session close commits the log entry alone and names every leftover path; a rewritten or unappended log is refused | P1 | 8 | execute-phase | AC5 validator (`node --test scripts/session-close.test.mjs`) → exit 0 | test count + exit code in progress.md | verified |
+| O6 | PE-002 + PE-006 | The pi extension blocks the unverifiable inline receipt path and warns once per settled turn on a dirty worktree | P2 | 1 | execute-phase | AC6 validator (`cd packages/pi-agentic-workflow && bun run test`) → exit 0 | test count + exit code in progress.md | verified |
+| O7 | PE-005 + PE-006 | The three skills name the runtimes as their box/step, so no prose path remains for a reviewer to end a turn through | P3 | 1 | execute-phase | AC7 validator (three greps → ≥ 1 each) | grep output in progress.md | verified |
+| O8 | PE-010 + PE-006 | The bundled skills mirror stays byte-identical to `skills/` and every route stays within its enforced context budget | P2 | 4 | execute-phase | AC8 validator (`bun scripts/check-skill-context.mjs` → exit 0; pi suite mirror parity) | command output in progress.md | verified |
 | O9 | PE-006 + PE-009 | The fix-index row flips to `done` with the PR link after the PR opens, and the flagged row-35 boundary is carried to the reviewer | P4 | close-out | execute-phase | AC9 validator (grep the row) → 1 | `docs/fix/README.md` row | planned |
 
 ## Acceptance
@@ -243,14 +243,14 @@ Layer: `config/infra`. Done-when:
 `node --test scripts/review-receipt.test.mjs scripts/session-close.test.mjs scripts/audit-pr-receipt.test.mjs`
 → exit 0.
 
-- [ ] `scripts/review-receipt.mjs` implements the pure receipt grammar beside one forge adapter, and the `render` / `verify` / `emit` commands (O1)
-- [ ] `scripts/review-receipt.mjs` `emit` refuses a PR head that differs from the reviewed head and exits non-zero unless the newest marker names that head (O1)
-- [ ] `scripts/review-receipt.test.mjs` pins the `emit` moved-head refusal through a fake `gh` on `PATH`: a PR head different from `--head` exits non-zero naming both heads (O1)
-- [ ] `scripts/audit-pr-receipt.test.mjs` imports the runtime grammar and gate functions instead of redefining them (O2)
-- [ ] `scripts/audit-pr-gate.mjs` declares the closed 13-name gate set with receipt currency before the gate set (O3)
-- [ ] `scripts/audit-pr-gate.mjs` `hygiene` reads tree / branch / draft state and applies only the PR-ready mechanical repair (O4)
-- [ ] `scripts/audit-pr-receipt.test.mjs` pins the `hygiene --apply` CLI on a fixture repo with a fake `gh`: exactly one PR-ready repair call, then a clean re-read (O4)
-- [ ] `scripts/session-close.mjs` `close` refuses a log that was not appended to, commits the log alone, and names every leftover path (O5)
+- [x] `scripts/review-receipt.mjs` implements the pure receipt grammar beside one forge adapter, and the `render` / `verify` / `emit` commands (O1)
+- [x] `scripts/review-receipt.mjs` `emit` refuses a PR head that differs from the reviewed head and exits non-zero unless the newest marker names that head (O1)
+- [x] `scripts/review-receipt.test.mjs` pins the `emit` moved-head refusal through a fake `gh` on `PATH`: a PR head different from `--head` exits non-zero naming both heads (O1)
+- [x] `scripts/audit-pr-receipt.test.mjs` imports the runtime grammar and gate functions instead of redefining them (O2)
+- [x] `scripts/audit-pr-gate.mjs` declares the closed 13-name gate set with receipt currency before the gate set (O3)
+- [x] `scripts/audit-pr-gate.mjs` `hygiene` reads tree / branch / draft state and applies only the PR-ready mechanical repair (O4)
+- [x] `scripts/audit-pr-receipt.test.mjs` pins the `hygiene --apply` CLI on a fixture repo with a fake `gh`: exactly one PR-ready repair call, then a clean re-read (O4)
+- [x] `scripts/session-close.mjs` `close` refuses a log that was not appended to, commits the log alone, and names every leftover path (O5)
 
 Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:8:deterministic-receipt-runtime-family`
 
@@ -259,10 +259,10 @@ Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:8:deterministic-receipt-r
 Layer: `config/infra`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 → exit 0.
 
-- [ ] `packages/pi-agentic-workflow/src/extension/receipt-guard.ts` exposes the pure guard for the inline receipt path and the dirty-worktree warning (O6)
-- [ ] `packages/pi-agentic-workflow/src/extension/index.ts` wires the guard into the extension lifecycle (O6)
-- [ ] `packages/pi-agentic-workflow/test/receipt-guard.test.mjs` pins every guard decision (O6)
-- [ ] `packages/pi-agentic-workflow/skills/` mirror refreshed from `skills/` so both trees stay byte-identical (O8)
+- [x] `packages/pi-agentic-workflow/src/extension/receipt-guard.ts` exposes the pure guard for the inline receipt path and the dirty-worktree warning (O6)
+- [x] `packages/pi-agentic-workflow/src/extension/index.ts` wires the guard into the extension lifecycle (O6)
+- [x] `packages/pi-agentic-workflow/test/receipt-guard.test.mjs` pins every guard decision (O6)
+- [x] `packages/pi-agentic-workflow/skills/` mirror refreshed from `skills/` so both trees stay byte-identical (O8)
 
 Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:4:pi-extension-receipt-guard`
 
@@ -271,12 +271,12 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:4:pi-extension-receipt-gu
 Layer: `docs`. Done-when: `bun scripts/check-skill-context.mjs` → `PASS context
 budgets: <count> skills`.
 
-- [ ] `skills/review-change/SKILL.md` names the receipt emitter as the final-review box (O7)
-- [ ] `skills/review-change/references/PERSIST_AND_DECIDE.md` runs the emitter instead of assembling the body (O7)
-- [ ] `skills/audit-pr/SKILL.md` and `skills/audit-pr/references/03_AUDIT_PROCESS.md` name the gate runtime and the three hygiene gates (O7)
-- [ ] `skills/log-session/SKILL.md` commits its entry through the session-close command (O7)
-- [ ] `docs/workflow/SKILL_CONTEXT_BUDGETS.json` re-baselines the `audit-pr` route ceiling with a declared source (O8)
-- [ ] `CHANGELOG.md` carries one row for the `review-change` / `audit-pr` / `log-session` bumps (O7)
+- [x] `skills/review-change/SKILL.md` names the receipt emitter as the final-review box (O7)
+- [x] `skills/review-change/references/PERSIST_AND_DECIDE.md` runs the emitter instead of assembling the body (O7)
+- [x] `skills/audit-pr/SKILL.md` and `skills/audit-pr/references/03_AUDIT_PROCESS.md` name the gate runtime and the three hygiene gates (O7)
+- [x] `skills/log-session/SKILL.md` commits its entry through the session-close command (O7)
+- [x] `docs/workflow/SKILL_CONTEXT_BUDGETS.json` re-baselines the `audit-pr` route ceiling with a declared source (O8)
+- [x] `CHANGELOG.md` carries one row for the `review-change` / `audit-pr` / `log-session` bumps (O7)
 
 Phase-lint: PASS (8/8) · fingerprint `P3:docs:6:skill-wiring-to-runtime-family`
 

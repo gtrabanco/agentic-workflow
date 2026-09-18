@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), "audit-pr-gate.mjs");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SHA_A = "a".repeat(40);
 const auditSkill = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/SKILL.md"), "utf8");
 const auditProcess = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/references/03_AUDIT_PROCESS.md"), "utf8");
 
@@ -212,4 +216,87 @@ test("hygieneFromState: a draft PR blocks and offers the one mechanical repair",
   assert.equal(state.gates["pr-ready"], "fail");
   assert.ok(state.blockers.some((b) => /draft/i.test(b)));
   assert.deepEqual(state.repairs, ["gh pr ready"], "audit-pr flips the draft flag rather than reporting it");
+});
+
+// ---------------------------------------------------------------------------
+// CLI — `hygiene --apply` on a throwaway repo with a fake `gh`
+// ---------------------------------------------------------------------------
+
+/** A throwaway git repo whose tree is clean, so only the draft flag blocks. */
+const makeRepo = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-pr-gate-hygiene-"));
+  const repo = path.join(dir, "repo");
+  fs.mkdirSync(repo);
+  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.com");
+  git("config", "user.name", "Tester");
+  fs.writeFileSync(path.join(repo, "README.md"), "fixture\n");
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: seed");
+  return { dir, repo };
+};
+
+test("CLI hygiene --apply: the draft PR is repaired exactly once by `gh pr ready`, then re-read clean", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  const state = path.join(dir, "draft-state");
+  fs.writeFileSync(state, "draft");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  // The fake models the forge: `pr view` reports the draft flag from the state
+  // file, `pr ready` flips it. Every call is logged so the repair count is exact.
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+if (args[0] === "pr" && args[1] === "ready") { fs.writeFileSync(${JSON.stringify(state)}, "ready"); process.exit(0); }
+const isDraft = fs.readFileSync(${JSON.stringify(state)}, "utf8").trim() !== "ready";
+process.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr", "240", "--apply"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.clean, true);
+  assert.deepEqual(report.gates, { "tree-clean": "pass", "branch-pushed": "pass", "pr-ready": "pass" });
+  const calls = fs.readFileSync(log, "utf8").trim().split("\n");
+  assert.equal(calls.filter((c) => c === "pr ready").length, 1, "exactly one mechanical repair");
+  assert.ok(calls.filter((c) => c.startsWith("pr view")).length >= 2, "the state is re-read after the repair");
+});
+
+test("CLI hygiene --apply: a clean, pushed, ready PR needs no repair and runs no forge write", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+process.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft: false, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr", "240", "--apply"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).clean, true);
+  const calls = fs.readFileSync(log, "utf8");
+  assert.doesNotMatch(calls, /pr ready/, "no mechanical repair is run when nothing blocks");
 });

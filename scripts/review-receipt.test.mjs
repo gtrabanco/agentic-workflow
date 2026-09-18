@@ -270,4 +270,80 @@ test("CLI: an unknown command is a usage error (exit 1)", () => {
   assert.match(result.stderr, /usage/i);
 });
 
-console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body");
+// ---------------------------------------------------------------------------
+// CLI — emit refuses a moved head, through a fake `gh` on PATH
+// ---------------------------------------------------------------------------
+
+/** A fake `gh` that reports the PR head it is told to, and logs its invocations. */
+const fakeGh = (dir, headReported) => {
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  const fake = path.join(bin, "gh");
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+fs.appendFileSync(${JSON.stringify(log)}, process.argv.slice(2).join(" ") + "\\n");
+process.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(headReported)}, number: 240, comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  return { bin, log };
+};
+
+test("CLI emit: a PR head that differs from the reviewed head is refused, naming both heads", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-emit-"));
+  const { bin, log } = fakeGh(dir, SHA_B);
+  const result = spawnSync(
+    process.execPath,
+    [script, "emit", "--pr", "240", "--head", SHA_A, "--scope", "code", "--axes", "code", "--coverage", "AC1", "--manual", "none"],
+    { encoding: "utf8", env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } },
+  );
+  assert.notEqual(result.status, 0, "a moved PR head must never emit a receipt");
+  assert.equal(result.stdout.trim(), "", "no success report is printed");
+  assert.match(result.stderr, new RegExp(SHA_B), "the refusal names the PR head");
+  assert.match(result.stderr, new RegExp(SHA_A), "the refusal names the reviewed head");
+  assert.match(result.stderr, /candidate changed during review/i);
+  const calls = fs.readFileSync(log, "utf8");
+  assert.doesNotMatch(calls, /pr comment/, "the refusal happens before any comment is posted");
+});
+
+test("CLI emit: a head equal to the reviewed head posts once and confirms it landed", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-emit-"));
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  const fake = path.join(bin, "gh");
+  // The fake models the forge's own re-read: it echoes back the posted body as
+  // a comment, so `emit`'s after-read sees a current marker at the reviewed head.
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+if (args[0] === "pr" && args[1] === "comment") {
+  const body = fs.readFileSync(0, "utf8");
+  fs.writeFileSync(${JSON.stringify(path.join(dir, "posted.md"))}, body);
+  process.exit(0);
+}
+const posted = fs.existsSync(${JSON.stringify(path.join(dir, "posted.md"))}) ? fs.readFileSync(${JSON.stringify(path.join(dir, "posted.md"))}, "utf8") : "";
+process.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(SHA_A)}, number: 240, comments: posted ? [{ body: posted }] : [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  const result = spawnSync(
+    process.execPath,
+    [script, "emit", "--pr", "240", "--head", SHA_A, "--scope", "code", "--axes", "code", "--coverage", "AC1", "--manual", "none"],
+    { encoding: "utf8", env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.current, true);
+  assert.equal(report.status, "current");
+  assert.equal(report.posted, true);
+  assert.equal(report.head, SHA_A);
+  const calls = fs.readFileSync(log, "utf8").trim().split("\n");
+  assert.equal(calls.filter((c) => c.startsWith("pr comment")).length, 1, "exactly one post");
+});
+
+console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body, emit refuses a moved head");
