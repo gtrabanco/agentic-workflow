@@ -1206,14 +1206,21 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
   assert.ok(blockContent.includes("/plan-feature"), "the block must name /plan-feature");
 
   // --- Part 2: the closing-block decision table (AC1 extended) ---
-  // Find the freeze-batch row and check the consumer cell.
-  const freezeRow = skill.match(
-    /\|\s*freeze-batch[\s\S]*?\|\s*\|/m
-  );
-  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
-  const freezeParts = freezeRow[0].split("|").map((s) => s.trim());
-  // The consumer cell is the last non-empty part
-  const consumerCell = freezeParts[freezeParts.length - 1].trim();
+  // Find the freeze-batch row in the decision table.
+  const freezeLines = skill.split("\n").filter((l) => /freeze-batch/.test(l));
+  assert.ok(freezeLines.length >= 1, "the freeze-batch row exists in the decision table");
+  // Take the first match that is a table row (starts with |)
+  const freezeLine = freezeLines.find((l) => /^\s*\|/.test(l));
+  assert.ok(freezeLine, "the freeze-batch row is a table row");
+  const freezeParts = freezeLine.split("|").map((s) => s.trim());
+  // The consumer cell is the last non-empty part (the table has | cell | cell | cell |)
+  let consumerCell = "";
+  for (let i = freezeParts.length - 1; i >= 0; i--) {
+    if (freezeParts[i].trim()) {
+      consumerCell = freezeParts[i].trim();
+      break;
+    }
+  }
   // Must name both planner tokens and mark the router invocation as discovery
   assert.ok(
     consumerCell.includes("/plan-fix"),
