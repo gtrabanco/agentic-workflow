@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.5.0
+version: 1.5.1
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -121,9 +121,13 @@ no schema field). Six fields, always present:
 **Freeze-batch (replan present).** When the taken queue contains any row whose
 frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
 `folded: yes` flips, no commits. The receipt records the `REPLAN-ROUTE` branch
-and every retained (unfolded) row id, and the loop stops and routes to
-`node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
-planner that re-cuts the plan.
+and every retained (unfolded) row id, and the loop stops. The consumer is the
+conclusion the already-run router printed, never the invocation itself: on
+`route: replan` the planner it named — `/plan-fix <n>` for a fix unit or
+`/plan-feature <slug>` for a feature unit; on `route: decision` stop and
+surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
+`node scripts/unit-route.mjs <unit>` is the discovery step the fold already
+ran; it is never the recommendation.
 
 ## Guardrails
 
@@ -167,11 +171,17 @@ or touched outside the queue.
   · all FOLDED (<F1> + <F2> + …) → /review-change — re-review the branch now that all listed findings are fixed
   · any DISPUTED (<F1> + <F2> + …) → user decision — resolve every evidenced dispute without creating backlog
   · any BLOCKED (<F1> + <F2> + …) → supply the listed missing inputs, then re-run /fold-findings
-  · any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch
+  · any REPLAN (<F1> + <F2> + …) → /plan-fix <n> or /plan-feature <slug> — the planner appends the proposed phases to the unit's SPEC, the user confirms them, then a fresh /review-plan must pass before /execute-phase on this unit
+  · any DECISION (<F1> + <F2> + …) → stop and surface the decision to the user — a `route: decision` conclusion names no planner, so the unit waits on the user before any plan or code change
 ```
 
+Every `· ` sub-bullet is exactly one physical line — never hard-wrapped across
+several lines, never joined into one prose line.
+
 Replace placeholders with every actual affected finding ID before printing; never
-print `<F2>`, `…`, or a single representative ID in a live hand-off.
+print `<F2>`, `…`, or a single representative ID in a live hand-off. Resolve the
+`/plan-fix <n>` / `/plan-feature <slug>` unit argument the same way — never carry
+`<n>` or `<slug>` into a live hand-off.
 
 ## Closing-block decision branch (choose one, at emission)
 
@@ -181,7 +191,7 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `node scripts/unit-route.mjs <unit>` → the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/plan-fix <n>` (fix) or `/plan-feature <slug>` (feature) when the router concludes `replan` — user confirms, fresh `/review-plan` passes, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |
