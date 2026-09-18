@@ -191,7 +191,7 @@ function makeReviewRepo(t, unit = "99-toy") {
   };
   const commit = (message) => {
     git(dir, "add", "-A");
-    git(dir, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", message);
+    git(dir, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-q", "-m", message);
     return git(dir, "rev-parse", "HEAD");
   };
 
