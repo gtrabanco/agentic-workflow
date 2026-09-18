@@ -12,6 +12,8 @@
 
 export const PATH_POLICY_SCHEMA = "path-protection-policy@1";
 export const RECORDS_SCHEMA = "path-protection-records@1";
+/** Mirror of the crate's glob-length bound: a longer `protectedGlobs` entry is refused (F29). */
+export const PATH_GLOB_MAX_LENGTH = 512;
 
 export type PathRequirement = "none" | "justification" | "approval";
 export type PathOperation = "create" | "modify" | "delete" | "rename";

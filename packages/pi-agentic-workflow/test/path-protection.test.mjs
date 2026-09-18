@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  PATH_GLOB_MAX_LENGTH,
   PHASE_STATES,
   SHIPPED_PATH_POLICY,
   evaluateToolCall,
@@ -49,6 +50,10 @@ test("the strict schema accepts a shaped override and rejects unknown keys", () 
   assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { nope: true } })).ok, false);
   assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { requirements: { "pre-freeze": { modify: "maybe" } } } })).ok, false);
   assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: [""] } })).ok, false);
+});
+
+test("F29 mirror: the strict schema rejects a protectedGlobs entry over the glob-length bound", () => {
+  assert.equal(parseConfigFile(JSON.stringify({ pathProtection: { protectedGlobs: ["a".repeat(PATH_GLOB_MAX_LENGTH + 1)] } })).ok, false);
 });
 
 /* --------------------------------------------------------------- tighten-only */
@@ -372,6 +377,34 @@ test("F19: a symlink alias to a protected file is blocked, and a symlink escape 
     const escaped = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escapeLink/secret.mjs" } }, context(cwd));
     assert.equal(escaped?.block, true, "a symlink escape must not defeat the out-of-root refusal");
     assert.match(escaped.reason, /outside the project root/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F27: a create under a symlinked cwd is not misread as outside the project root", async () => {
+  const { root, cwd, agentDir } = tempRoot("symlink-cwd");
+  try {
+    const link = join(root, "repo-link");
+    symlinkSync(cwd, link);
+    const entry = await shippedEntry(link, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "src/new.ts" } }, context(link));
+    assert.equal(decision, undefined, "a new-file create must pass even when cwd is reached through a symlink");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("F28: a dangling symlink target cannot route a write outside the project root", async () => {
+  const { root, cwd, agentDir } = tempRoot("dangling");
+  try {
+    const outside = join(root, "outside");
+    mkdirSync(outside, { recursive: true });
+    symlinkSync(join(outside, "created.ts"), join(cwd, "escape.ts"));
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "escape.ts" } }, context(cwd));
+    assert.equal(decision?.block, true, "a dangling symlink escaping the root must be blocked");
+    assert.match(decision.reason, /outside the project root/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

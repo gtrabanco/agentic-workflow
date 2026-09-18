@@ -20,7 +20,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { PATH_GUARD_REASONS, pathMatchesGlob } from "../packages/agentic-workflow/src/path-policy.mjs";
+import { PATH_GUARD_REASONS, PATH_GLOB_MAX_LENGTH, parsePathPolicy, pathMatchesGlob } from "../packages/agentic-workflow/src/path-policy.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(repoRoot, "packages/agentic-workflow/bin/path-guard.mjs");
@@ -268,6 +268,51 @@ test("path-guard:glob-linear — a star-chain glob matches in bounded time (F20)
   assert.equal(pathMatchesGlob(`${'a'.repeat(40)}c`, starred), false);
   assert.equal(pathMatchesGlob(`a${'a'.repeat(40)}b`, starred), true);
   assert.ok(Date.now() - started < 500, "the matcher must not backtrack exponentially");
+});
+
+test("path-guard:typechange — a committed typechange of a protected path is caught (F25)", () => {
+  const dir = fixture("typechange");
+  commit(dir, "tests/a.mjs", "v1\n");
+  const base = git(dir, "rev-parse", "HEAD");
+  fs.rmSync(path.join(dir, "tests/a.mjs"));
+  fs.symlinkSync("../README.md", path.join(dir, "tests/a.mjs"));
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "typechange the protected file");
+  const result = run(dir, ["--phase", "P1", "--base", base]);
+  assert.equal(result.code, 1, result.stdout + result.stderr);
+  assert.equal(reasonOf(result.stdout), "protected-modification");
+  assert.match(result.stdout, /^offenders: tests\/a\.mjs:modify:protected-modification$/m);
+});
+
+test("path-guard:unit-symlink — an in-repo symlink to an out-of-root unit is refused (F26)", () => {
+  const dir = fixture("unit-symlink");
+  commit(dir, "tests/a.mjs", "v1\n");
+  fs.writeFileSync(path.join(dir, "tests/a.mjs"), "v2\n");
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "path-guard-evil-link-"));
+  DIRS.add(outside);
+  fs.writeFileSync(path.join(outside, "PLAN.md"), declaration());
+  fs.writeFileSync(path.join(outside, "decisions.md"), recordsBlock([
+    "justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | fabricated",
+  ]));
+  fs.symlinkSync(outside, path.join(dir, "docs", "features", "evillink"));
+  const result = run(dir, ["--phase", "P1"], { unit: "docs/features/evillink" });
+  assert.equal(result.code, 2, result.stdout + result.stderr);
+  assert.match(result.stderr, /--unit must be a directory inside the repository/);
+  assert.doesNotMatch(result.stdout, /PATH-GUARD pass/);
+});
+
+test("path-guard:glob-bound — an oversized policy glob is rejected as malformed-config, never matched (F29)", () => {
+  const doc = policyDoc();
+  doc.classes.tests.globs.push("a".repeat(PATH_GLOB_MAX_LENGTH + 1));
+  const parsed = parsePathPolicy(JSON.stringify(doc));
+  assert.equal(parsed.ok, false, "the reader must refuse a glob over the bound");
+  assert.match(parsed.message, /bound/);
+
+  const dir = fixture("glob-bound", { config: JSON.stringify(doc) });
+  const result = run(dir, ["--phase", "P1"]);
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /DEGRADED — malformed-config: shipped defaults in force/);
+  assert.equal(reasonOf(result.stdout), "clean");
 });
 
 /* ---------------------------------------------------------- safety invariants */
