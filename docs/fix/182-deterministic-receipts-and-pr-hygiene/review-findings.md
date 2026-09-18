@@ -26,3 +26,16 @@ report-only and never enter this ledger.
 | VF-7 | scripts/session-close.mjs:119-124 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible command: `node scripts/session-close.mjs render --base refs/does/not/exist --summary hi` prints `- **Commits:** 22 (\`c541aac5…a9e663c4\`)` from `origin/main` and exits 0 — an explicit `--base` that does not resolve is silently replaced by the fallback | code | confirmed | finding-mark | n/a | n/a |
 | VF-8 | scripts/session-close.mjs:177-180 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible output + code read: `git show HEAD:docs/LOGS.md` exits 128 with a valid HEAD when the blob is unreadable, and `baselineOf` maps **every** non-zero status to the empty untracked baseline, so `appendedOnly("", <non-empty>)` returns `ok: true` (the case pinned by `scripts/session-close.test.mjs:84`) — the append guard is bypassed whenever git cannot read the committed log. Harm is latent (a synthetic repo then failed loudly at `git commit`) | code | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 | n/a | n/a | review-mark | n/a | n/a |
+| F9 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:64 | workflow | med | replan-in-unit | regression of F3 — `/review-plan fix-182` at the terminal head re-issues the `stage: plan` receipt bound to the current SPEC.md, then the `progress.md:64` gate line is corrected to the new receipt | no |
+| VF-9 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:64 · reviewer review-change · HEAD cfb873f174871ed6135f9326df887ff69b34b97f · recheck reproducible command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 4, `current:false`, `digestMatches:false`, `structural.reasonCode:"stale-source-revision"`, `changedPaths:["SPEC.md"]` (receipt `rp-fix182-20260918-004` signed at `dbda8e01`, SPEC.md blob `0d3e6e49…` → `29268e7a…` at `a9e663c4`), while `progress.md:64` asserts `current: true, digestMatches: true` and exit 0 | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD cfb873f174871ed6135f9326df887ff69b34b97f | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — fix-182 plan
+- Finding ids: repeated: F3 (F9 = regression of F3) / new: none
+- Snapshots: 5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea (recorded receipt snapshot) → 94f49541558f53bdff6c1971e00bd7e23fd58faad94f49145a1f50628d0540d8 (observed at HEAD cfb873f1)
+- Missed: obligation O10 / P5 done-when validator (`pre-execution-snapshot.mjs verify` → exit 0, `current:true`, `digestMatches:true`) — the plan-stage receipt went stale when `a9e663c4` (P10) rewrote the bound SPEC.md after receipt `rp-fix182-20260918-004` was signed at `dbda8e01`
+- Owning stage: plan
+- Why the prior repair failed: P5 re-issued the receipt at `dbda8e01`, then P6–P10 edited the bound SPEC.md; the terminal head was never re-verified, and the cycle-2 review confirmed F1–F4 repaired without re-running `verify`
+- Route to owner: `review-plan` (`/review-plan fix-182`) — re-issue the `stage: plan` receipt at the terminal head
+```
