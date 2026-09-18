@@ -56,7 +56,7 @@ packages/                companion npm packages: @gtrabanco/agentic-workflow-sch
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
-docs/features/_TEMPLATE  feature SPEC template + ROADMAP (the planning artifacts skills produce)
+docs/features/_TEMPLATE  feature SPEC + ACCEPTANCE + ROADMAP templates (the planning artifacts skills produce)
 docs/fix/                fix SPEC template + index
 .github/                 issue + PR templates the workflow expects
 ```
@@ -110,7 +110,7 @@ merge.**
 ### Design
 
 | Skill            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `design-feature` | **Product definition.** Folds in the raw-idea interview, then walks three fixed **capability-closure** checklists — **entity closure** (per entity: CRUD + state transitions, each with a UI entry point + API surface + test, or an explicit `n/a: <reason>`), **integration closure** (the feature reconciled against every subsystem in the project's capability inventory, `docs/CAPABILITIES.md`: auth, ACL, navigation, notifications, … — one resolved row per subsystem, none skipped), and a **role matrix** (every inventory role explicitly allowed/denied per capability) — into exhaustive acceptance criteria, plus an **expectation sweep** (≥ 10 implicit domain expectations — "a blog has drafts" — each forced to in-scope/out-of-scope/deferred, never left unstated). It classifies optional architectural invariants from repository evidence and stops for an explicit decision when a rule changes. Writes the SPEC's **product half**, stamps `## Design status: designed`, and sets the feature's roadmap row to `defined` (the `idea → defined` transition). The raw-idea interview is a bounded **form protocol** — one compact form-turn over the ≤ 6 fixed rubric slots with one-word defaults, then at most 2 ambiguity follow-ups, never one-question-per-turn. Upserts on re-run; never destroys recorded decisions. |
 
 ### Plan
