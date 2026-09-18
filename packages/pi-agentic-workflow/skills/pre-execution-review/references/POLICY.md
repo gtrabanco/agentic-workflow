@@ -38,14 +38,32 @@ what is specific to their artifact set.
 The first review emits one complete unioned findings set — never a drip of
 successive surprises. Its owner then classifies **every** finding by root cause
 (`product | plan | source | environment | runtime`) and applies **one**
-evidence-bounded repair batch to the owning artifact(s) before a single
-re-review of the resulting snapshot.
+evidence-bounded repair batch to the owning artifact(s). The batch rotates
+`artifactRevisionId`; by default it is followed by one re-review of the freshly
+rotated snapshot.
 
 | Class | What the batch may do | What it may not do |
 |---|---|---|
 | Common root cause | One edit that closes several findings | Split into per-finding micro-edits that leave the shared cause in place |
-| Wording-only | Skip a full replan when intent, obligation identity, phase topology, validators, and authority are all unchanged | Proceed without recording that determination in the evidence |
+| Wording-only | Skip the re-review when intent, obligation identity, phase topology, validators, and authority are all unchanged | Proceed without recording the determination, or without rotating `artifactRevisionId` |
 | Scope-changing | Re-cut the plan or the Product half | Ride through as a "wording fix" |
+
+A wording-only batch records its machine half and its judgment half as one block
+in the unit's unbound `progress.md`:
+
+```text
+## Wording-only determination v1 — <spec|plan>
+- Determination: <opaque id>
+- Artifact revision: <the rotated artifactRevisionId>
+- Acceptance fingerprint: <the ACCEPTANCE.md blob the batch left unmoved>
+- Intent and authority unchanged: yes
+```
+
+The revision rotation is **never** skippable: the freshness predicate refuses an
+unrecorded rotation (`stale-artifact-revision`), and a later material movement
+after an exempted one is refused because the recorded revision no longer matches.
+The determination is the exemption's record, never authorization to move bytes
+without one.
 
 Never repair by editing the reviewed claim into agreement with the reviewer: the
 repair supplies the missing evidence or routes the gap to its owner.
@@ -57,8 +75,8 @@ falsifiable question and a new evidence route**. Identical inputs plus an
 identical question stop as no-progress: report it and stop, do not re-issue the
 same verdict with more confidence.
 
-One repair/re-review cycle is the normal correction path. Entering a **second**
-cycle is allowed when correctness needs it and never grants PASS, but it is a
+One repair/re-review cycle is the normal correction path. A **second**
+consecutive unconverged repair/re-review cycle is not routine — it is a
 `CONVERGENCE-ANOMALY`: before any further edit, report
 
 ```text
@@ -76,12 +94,18 @@ on a Product- or Plan-rooted finding is invalid even when the candidate changed:
 the loop repairs source, not authority. Runtime retry and budget mechanics stay
 outside this policy and can never be translated into a PASS.
 
-The guards above gate **blind re-reviews** — an identical snapshot with the
-identical question — and never a repair performed in response to a persisted
-verdict: a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new
-snapshot by design, so no cycle cap or anomaly rule may block or end it. The
-anomaly is printed and routed, never a stop, and no cap converts a verdict into a
-dead end.
+A **third cycle never** starts without explicit user instruction: after two
+consecutive unconverged cycles the orchestrator's `stop-review-loop-cap` refusal
+stops a further `review-spec`/`review-plan` invocation, names `design-feature` as
+the human route, and a PASS resets the count. An unconverged loop ends in the
+`needs-design` verdict where the verdict vocabulary sanctions it (the spec stage)
+and in the refusal plus `design-feature` routing at the plan stage. The guards
+above gate **blind re-reviews** — an identical snapshot with the identical
+question — and never a repair performed in response to a persisted verdict: a
+repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by
+design, so the count is over review invocations, never over repairs. The cap
+stops the loop and routes a human decision; it never establishes correctness from
+a count and never waives a finding.
 
 ### 5. What a cycle can never produce
 
