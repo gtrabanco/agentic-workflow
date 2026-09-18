@@ -1858,3 +1858,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Cycle counting (D-31-7).** The previous receipt `spec-review-31-13` was a PASS (reset), so this FAIL is cycle 1 of the fresh window — no `CONVERGENCE-ANOMALY` block owed, `stop-review-loop-cap` not armed. The next repair batch is cycle 2 of the window.
 
 **Next:** `/design-feature 31-planning-review-materiality` — one repair batch adding `docs/workflow/SKILL_CONTEXT_BUDGETS.json` to AC13's derived-surface group (and correcting `known-issues.md` §3) plus dropping/correcting AC14's "nothing but the `version:` change" clause, then re-running `/review-spec`.
+
+## 2026-09-18T22:48:58Z — feat/31-planning-review-materiality — manual
+- **Commits:** 76 (`cf238040…7bae9920`)
+- **Files:** 62 files
+- **Summary:** Answered user on why design-feature bare fails to locate F8/F10, diagnosed the routing gap (unit-route.mjs has no product route, fold-findings freeze-batch doesn't fire on product rows, design-feature never reads review-findings.md), and created issue #246 for the durable machine bridge. No code changes — diagnosis and issue creation only.
+- **Decisions:** F8 decision: refuse_manifest — reject wording-only when ACCEPTANCE.md is a bound artifact moved (deterministic, cheap). F10 decision: amend_ac13_drivers — widen AC7/AC13 to include plan-feature, plan-fix, ship-roadmap/ADVANCE.md, replan-findings/PHASE_APPEND.md. Durable bridge: plan as fix unit #246 (unit-route.mjs missing product route, fold-findings keying on class only, missing instruction placeholder in → Next:).
+- **Next:** /design-feature 31-planning-review-materiality '<instrucción de F8 y F10 con decisiones ya tomadas>' — Product authority para cerrar hallazgos; /plan-fix 246 — planner de la unidad de fix para el puente máquina
