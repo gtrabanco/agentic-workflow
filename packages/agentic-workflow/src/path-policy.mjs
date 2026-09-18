@@ -23,6 +23,13 @@ export const RECORD_KINDS = Object.freeze(["justification", "approval"]);
 
 /** A project policy over this bound is `malformed-config` with the defaults in force. */
 export const PATH_POLICY_MAX_BYTES = 256 * 1024;
+/**
+ * A glob over this bound is refused by the policy reader. The memoised matcher
+ * is O(glob × path), so an unbounded glob accepted here could exhaust memory on
+ * the first match (F29); the bound keeps the accepted policy inside a small,
+ * predictable matcher footprint.
+ */
+export const PATH_GLOB_MAX_LENGTH = 512;
 /** A changed-path list over this bound is a usage error (exit 2), never a silent truncation. */
 export const CHANGED_PATH_LIMIT = 10000;
 
@@ -255,6 +262,9 @@ function validatePathPolicy(value) {
     if (!Array.isArray(raw.globs)) return failPolicy(`class "${name}" globs must be an array`);
     for (const glob of raw.globs) {
       if (typeof glob !== "string" || glob.trim() === "") return failPolicy(`class "${name}" has an invalid glob`);
+      if (glob.length > PATH_GLOB_MAX_LENGTH) {
+        return failPolicy(`class "${name}" has a glob over the ${PATH_GLOB_MAX_LENGTH}-character bound`);
+      }
     }
     if (typeof raw.freeze !== "boolean") return failPolicy(`class "${name}" freeze must be a boolean`);
     classes[name] = { globs: [...raw.globs], freeze: raw.freeze };

@@ -16,7 +16,7 @@
 // exit: 0 pass | 1 fail | 2 usage error
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 
 import {
@@ -148,9 +148,25 @@ function main(argv) {
   const repoRoot = top.stdout.trimEnd();
 
   // The unit directory must stay inside the repository: an out-of-root --unit
-  // could read a fabricated declaration/records and flip a failing gate to pass (F22).
+  // could read a fabricated declaration/records and flip a failing gate to pass
+  // (F22). The containment test runs on the resolved (realpath) unit, because a
+  // lexical comparison lets an in-repo symlink point the reads outside the root
+  // (F26). A unit that does not resolve keeps its lexical spelling, and the
+  // missing declaration then fails closed below.
   const unitPath = path.resolve(cwd, unit);
-  const unitRelative = path.relative(repoRoot, unitPath);
+  let realRepoRoot = repoRoot;
+  try {
+    realRepoRoot = realpathSync(repoRoot);
+  } catch {
+    // `git rev-parse --show-toplevel` names an existing directory; keep the lexical root.
+  }
+  let realUnitPath = unitPath;
+  try {
+    realUnitPath = realpathSync(unitPath);
+  } catch {
+    // The unit directory does not exist (or is unreadable): keep the lexical path.
+  }
+  const unitRelative = path.relative(realRepoRoot, realUnitPath);
   if (
     unitRelative === "" ||
     unitRelative === ".." ||
@@ -172,7 +188,10 @@ function main(argv) {
     const resolved = runGit(repoRoot, ["rev-parse", "--verify", "--quiet", "--end-of-options", `${base}^{commit}`]);
     const baseCommit = resolved.stdout.trim().split(/\r?\n/).pop() ?? "";
     if (!resolved.ok || baseCommit === "") return fail(`unknown base ref: ${base}`);
-    const diff = runGit(repoRoot, ["diff", "--name-status", "-z", "--diff-filter=ACMRD", baseCommit]);
+    // `T` (typechange, e.g. a committed file replaced by a symlink) is a
+    // protected modification; excluding it made the committed-range gate a
+    // fail-open on exactly the invocation the preflight mandates (F25).
+    const diff = runGit(repoRoot, ["diff", "--name-status", "-z", "--diff-filter=ACMRDT", baseCommit]);
     if (!diff.ok) return fail("git diff failed; cannot determine the committed range");
     changes = changes.concat(parseNameStatus(diff.stdout));
   }

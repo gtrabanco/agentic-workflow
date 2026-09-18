@@ -1,6 +1,6 @@
 import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
 import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
-import { OPERATIONS, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
+import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
 /**
@@ -72,6 +72,8 @@ function checkPathProtection(value: unknown, path: string, issues: ConfigIssue[]
   if (value.protectedGlobs !== undefined) {
     if (!Array.isArray(value.protectedGlobs) || value.protectedGlobs.some((glob) => typeof glob !== "string" || glob.trim() === "")) {
       issues.push({ path: `${path}.protectedGlobs`, message: "must be an array of non-empty glob strings" });
+    } else if (value.protectedGlobs.some((glob) => (glob as string).length > PATH_GLOB_MAX_LENGTH)) {
+      issues.push({ path: `${path}.protectedGlobs`, message: `a glob must be at most ${PATH_GLOB_MAX_LENGTH} characters` });
     } else {
       override.protectedGlobs = value.protectedGlobs as string[];
     }

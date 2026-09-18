@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { readFileSync, readdirSync, existsSync, lstatSync, readlinkSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
@@ -153,6 +153,52 @@ function collectRecordTexts(root: string): string {
   return texts.join("\n");
 }
 
+/**
+ * Canonicalise an absolute target even when it does not exist yet. `realpathSync`
+ * refuses a path whose final component is absent, so the longest existing prefix
+ * is canonicalised and the missing tail re-appended; a symlink at the final
+ * component is followed explicitly, because a write follows it even when its
+ * destination is absent (F28). Resolution errors fail closed.
+ */
+function resolveRealTarget(target: string): { ok: true; real: string } | { ok: false; reason: string } {
+  let current = target;
+  for (let hops = 0; hops < 40; hops += 1) {
+    let link: string | null = null;
+    try {
+      if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
+    } catch {
+      // The path does not exist: canonicalise its longest existing prefix.
+      return { ok: true, real: resolveExistingPrefix(current) };
+    }
+    if (link === null) {
+      try {
+        return { ok: true, real: realpathSync(current) };
+      } catch (error) {
+        return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+      }
+    }
+    current = isAbsolute(link) ? link : resolve(dirname(current), link);
+  }
+  return { ok: false, reason: "too many symbolic links" };
+}
+
+/** Canonicalise the longest existing prefix of `target` and re-append the missing tail. */
+function resolveExistingPrefix(target: string): string {
+  const tail: string[] = [];
+  let current = target;
+  for (;;) {
+    try {
+      const real = realpathSync(current);
+      return tail.length === 0 ? real : join(real, ...tail.reverse());
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return target;
+      tail.push(basename(current));
+      current = parent;
+    }
+  }
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -214,27 +260,26 @@ export default function extension(pi: ExtensionAPI): void {
       }
     }
     const absolute = isAbsolute(targetPath) ? targetPath : resolve(ctx.cwd, targetPath);
-    // Resolve symlinks before matching and containment so a link alias cannot
-    // defeat the protected-glob match or the out-of-root refusal (F19). A target
-    // that does not exist yet (a create) keeps its lexical path and passes below.
-    let realAbsolute = absolute;
-    if (existsSync(absolute)) {
-      try {
-        realAbsolute = realpathSync(absolute);
-      } catch {
-        return {
-          block: true,
-          reason: `"${targetPath}" could not be resolved; path protection cannot verify it, so the write is blocked.`,
-        };
-      }
-    }
     let realRoot = ctx.cwd;
     try {
       realRoot = realpathSync(ctx.cwd);
     } catch {
       // ctx.cwd always exists; fall back to the lexical root.
     }
-    const relativeTarget = normalizeTarget(relative(realRoot, realAbsolute));
+    // Canonicalise the target even when it does not exist yet, so the
+    // containment check and the protected-glob match run on the same basis as
+    // `realpathSync(ctx.cwd)` (F27) and a dangling symlink cannot route a write
+    // outside the project root (F28).
+    const resolvedTarget = resolveRealTarget(absolute);
+    if (!resolvedTarget.ok) {
+      return {
+        block: true,
+        reason:
+          `"${targetPath}" could not be resolved (${resolvedTarget.reason}); ` +
+          `path protection cannot verify it, so the write is blocked.`,
+      };
+    }
+    const relativeTarget = normalizeTarget(relative(realRoot, resolvedTarget.real));
     // Fail closed on a target that escapes the project root: the policy is
     // repo-relative, so an out-of-root path cannot be verified (F7).
     if (relativeTarget === "" || relativeTarget === ".." || relativeTarget.startsWith("../") || isAbsolute(relativeTarget)) {
