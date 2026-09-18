@@ -18,8 +18,8 @@ brand surface. Ledger schema:
 | F2 | packages/pi-agentic-workflow/src/extension/index.ts:208-209 | code | high | fix-now | source (fold) | yes |
 | F3 | packages/pi-agentic-workflow/src/extension/index.ts:196-200 | code | med | fix-now | source (fold) | yes |
 | F4 | packages/pi-agentic-workflow/src/config/path-policy.ts:214-224 | code | med | fix-now | source (fold) | yes |
-| F5 | packages/agentic-workflow/bin/path-guard.mjs:39-45,148,151 | code | med | fix-now | source (fold) | no |
-| F6 | packages/agentic-workflow/bin/path-guard.mjs:136,151 | security | med | fix-now | source (fold) | no |
+| F5 | packages/agentic-workflow/bin/path-guard.mjs:39-45,148,151 | code | med | fix-now | source (fold) | yes |
+| F6 | packages/agentic-workflow/bin/path-guard.mjs:136,151 | security | med | fix-now | source (fold) | yes |
 | F7 | packages/pi-agentic-workflow/src/extension/index.ts:205,214-215 | security | med | fix-now | source (fold) | yes |
 | F8 | CHANGELOG.md:94,97 | code | med | fix-now | source (fold) | no |
 | F10 | packages/pi-agentic-workflow/test/path-protection.test.mjs | verify | med | fix-now | source (fold) | yes |
