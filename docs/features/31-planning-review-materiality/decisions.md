@@ -1234,3 +1234,92 @@ artifact revision `31-spec-12` → `31-spec-13`; the frozen `ACCEPTANCE.md`
 | `stale-artifact-revision` is reserved for a rotation with no bound byte moved, not for an unrecorded-determination refusal | repository | `scripts/pre-execution-snapshot.mjs:418-421` (the code answers only after `changedArtifacts.length === 0`) | `9c253473` @ 2026-09-18 | current | proven | E-D31-29 |
 | In scope item 2, E2 state transitions and sweep row 11 carried the wrong names at the reviewed bytes | review record | `planning-findings.md` N31-016 row (`spec-review-31-12` snapshot `2ca0f9c4…`, evidence `SPEC.md:150,:313,:419` against AC4 `:476-478` and E6 `:919-936`) | `324d9de3` @ 2026-09-18 | current | proven | E-D31-29 |
 | Every earlier reviewed spec revision carries a `READINESS — … spec READY-FOR-REVIEW` block in `progress.md`; `31-spec-12` had none | repository | `progress.md` blocks for `31-spec-4`…`31-spec-9` (grep `READINESS — .* spec READY-FOR-REVIEW`) vs `grep -c '31-spec-12' progress.md` → 0 at the reviewed bytes | `324d9de3` @ 2026-09-18 | current | proven | E-D31-29 |
+
+## 2026-09-18 — Review-findings closure batch (design-feature, artifact revision `31-spec-14`)
+
+Trigger: the unit's `review-change` ledger (`review-findings.md`, reviewed
+heads after PR #243) carries two open fix-now findings routed to the product
+owner — **F8** (`medium`, spec-drift) and **F10** (`medium`, brand) — and the
+owner commissioned one batch over exactly that set. **F9** stays open by owner
+choice: its route offers "amend AC13's anchor to the merge-base form and/or
+main-sync the branch", and the commission scoped this batch to F8 + F10 only.
+Repair owner `design-feature` (product class); no receipt text was touched
+(`review-findings.md` rows flip at fold time, owned by `fold-findings`).
+
+### D-31-11: The wording-only route never certifies a movement of the unit's own frozen acceptance manifest
+
+- **What**: the exemption is rejected when the moved bound artifacts include
+  the unit's `ACCEPTANCE.md`; the recorded acceptance fingerprint stops being
+  a sufficient condition on its own — it corroborates the determination only
+  when the manifest itself did not move. Declared in In-scope 2, AC4,
+  Capability closure E2 (Create + state transitions), role matrix C3 and
+  sweep row 10, and made operational in Design E6 (a fifth branch condition:
+  the moved bound artifact is not the unit's own acceptance manifest).
+- **Why**: F8's reproducer — the wording-only branch self-compares the
+  determination's recorded `Acceptance fingerprint` with the current on-disk
+  `git hash-object <unit>/ACCEPTANCE.md`, so a repair that rewrites the frozen
+  manifest and records the post-edit revision plus the post-edit hash answers
+  `fresh: true` over the movement it just made. A fingerprint taken after the
+  move is a self-referential attestation: the manifest being measured is the
+  artifact whose movement is being certified. Domain grounding (research
+  gate, fetched 2026-09-18): RFC 9334 (RATS architecture) — attestation
+  requires a root of trust outside the target, "so that the Target Environment
+  cannot forge Evidence about itself". The SPEC's own mitigation sentence
+  ("requires the acceptance fingerprint and the bound authorities to be
+  unmoved") is only deliverable if manifest movement sits outside the
+  exemption; otherwise the branch delivers nothing its contract claims.
+- **Consequence**: a manifest movement always falls through unchanged
+  (`stale-source-revision`, exit 4) — the same non-fresh outcome AC4 already
+  requires for material movement, so no criterion outcome, exit code or
+  vocabulary value moves. The code half (the branch's manifest-exclusion
+  condition in `scripts/pre-execution-snapshot.mjs`) folds at source after
+  the Product half re-passes review.
+- **Authority**: the owner commission (recorded verbatim in `SPEC.md`
+  Amendments `31-spec-14`); `review-findings.md` F8/VF-8.
+
+### D-31-12: The re-review skip is declared by every surface that executes a repair batch
+
+- **What**: AC13's declared set (In-scope group 2), the prose-shrink surface
+  enumeration (In-scope 5) and AC7's removal set widen to include
+  `skills/plan-feature/SKILL.md`, `skills/plan-fix/SKILL.md`,
+  `skills/ship-roadmap/references/ADVANCE.md` and
+  `skills/replan-findings/references/PHASE_APPEND.md`, plus
+  `design-feature/references/REPAIR.md` §1/§3; those surfaces declare — like
+  POLICY §3 and both OUTPUTs already do — that a recorded wording-only batch
+  skips the re-review (D-31-3's semantics, unchanged). AC7 gains seven
+  removal greps (each fragment observed unique in its file with the mandate
+  standing). The touched-skills enumeration (In-scope 7, AC14, Design E9)
+  widens four → eight skills with the same consequence: minor bumps,
+  CHANGELOG rows and accurate README cells, one bump per skill per PR
+  (E-D31-1).
+- **Why**: F10 — POLICY §3 and both OUTPUTs declare the skip while the
+  surfaces that execute repairs (`plan-feature`'s redirect gate, `plan-fix`'s
+  close-out, `ship-roadmap`'s REVIEW-SPEC step, `replan-findings`' append
+  contract, `REPAIR.md` §1/§3's hand-offs) still mandate an unconditional
+  re-review — a newly introduced internal contradiction (`git show main:`
+  proves the pre-change §3 skipped only a full replan). Domain grounding
+  (research gate, fetched 2026-09-18): the XACML PEP/PDP separation — an
+  enforcement point enforces the decision the decision point makes, so every
+  surface that executes a policy must carry that policy; a policy declared
+  only at the decision point is a contradiction waiting at the first
+  enforcement surface.
+- **Consequence**: no vocabulary value, verdict or criterion outcome moves;
+  the widening makes the declared allowed-set match what the shrink must
+  edit (the exact defect class AC13/P31-06 closed for the code-carrier
+  group), and the versioning surface widens with it so the plan stage cannot
+  inherit an undeclared release obligation.
+- **Authority**: the owner commission; D-31-3 (the skip's semantics are
+  maintained, not re-decided); `review-findings.md` F10/VF-10.
+
+### Evidence rows (closure batch, 2026-09-18)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The wording-only branch self-compares the determination's recorded fingerprint with the on-disk manifest and names no manifest exclusion — F8's defect stands in code at this write | repository | `scripts/pre-execution-snapshot.mjs:377-403` (branch conditions; no path-exclusion test) | `553982d3` @ 2026-09-18 | current | proven | the source fold re-aims the branch after the Product re-review |
+| The seven new AC7 removal fragments exist verbatim, each unique in its file, with the unconditional mandates standing: `replans the batch, then re-reviews` (plan-feature SKILL.md:176), `rotate the artifact revision, re-review` (plan-fix SKILL.md:138), `then a fresh review` (ADVANCE.md:28), `Never skip the re-review` (:88) and `a fresh independent review of the re-cut plan` (:72) (PHASE_APPEND.md), `request one re-review of the new snapshot` (:15) and `for a re-review of the new snapshot` (:54) (REPAIR.md) — observed `grep -c` → 1 per fragment | repository | observed greps at this write (2026-09-18); `skills/plan-feature/SKILL.md`, `skills/plan-fix/SKILL.md`, `skills/ship-roadmap/references/ADVANCE.md`, `skills/replan-findings/references/PHASE_APPEND.md`, `skills/design-feature/references/REPAIR.md` | `553982d3` @ 2026-09-18 | current | proven | P4 rewrites the surfaces, P5 re-runs AC7 |
+| Attestation requires a root of trust outside the target — the Target Environment cannot forge Evidence about itself | document | https://www.rfc-editor.org/rfc/rfc9334 (RFC 9334, RATS architecture; fetched 2026-09-18) | RFC 9334 @ 2026-09-18 | current | proven | D-31-11 |
+| An enforcement point enforces the decision the decision point makes — every surface that executes a policy carries that policy (PEP/PDP separation) | document | https://docs.oracle.com/cd/E24191_01/common/tutorials/authz_xacml_pep.html (fetched 2026-09-18) | page @ 2026-09-18 | current | proven | D-31-12 |
+| The eight skills the widened surface set touches: `pre-execution-review`, `review-spec`, `review-plan`, `design-feature`, `plan-feature`, `plan-fix`, `ship-roadmap`, `replan-findings` — their SKILL.md `version:` lines are the bump surface AC14 counts (≥ 16 hunk lines) | repository | `grep -m1 '^version:' skills/<name>/SKILL.md` ×8 (all carry the line); `skills/bump-skill/SKILL.md` guardrail | `553982d3` @ 2026-09-18 | current | proven | P1/P4 bumps, AC14 walk |
+| The frozen `ACCEPTANCE.md` requires re-freeze by `plan-feature` on a fresh PASS: AC4's validator text, AC7's removal-grep enumeration (nine → sixteen) and AC14's touched-skill set moved with this batch | repository | `ACCEPTANCE.md` AC4/AC7/AC14 vs the patched `SPEC.md` at `31-spec-14` | `849af5ae` blob @ 2026-09-18 | current | proven | `plan-feature` re-cut (the `31-plan-5` precedent) |
+| Receipt state at authoring start: `verify --stage spec` → exit 0, receipt `spec-review-31-13` PASS current, `digestMatches: true` — this batch moves Product bound bytes with no wording-only determination (a Product predicate change is never wording-only, D-31-11's own rule), so the receipt goes stale by design; the next `/review-spec` is cycle 1 of a fresh window (D-31-7) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-18 at `553982d3`) | `553982d3` @ 2026-09-18 | current | proven | the re-review hand-off |
+| Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder; content-addressable storage; invalidation ladders) remain current — this batch adds the two rows above for its new domain claims | document | `decisions.md` §Evidence rows (2026-09-17 batches; E-D31-28) | — | current | proven | — |

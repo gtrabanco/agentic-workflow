@@ -150,7 +150,12 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    (for moved bound bytes the comparator answers `stale-source-revision` →
    re-review owed); the determination record and
    the `artifactRevisionId` rotation are enforced by the same predicate —
-   neither is skippable → AC4.
+   neither is skippable — and the route never certifies a movement of the
+   unit's own frozen acceptance manifest: when the moved bound artifacts
+   include the unit's `ACCEPTANCE.md`, the exemption is rejected (material
+   movement, re-review owed) whatever the determination records, and the
+   recorded acceptance fingerprint alone is never sufficient — it corroborates
+   only when the manifest itself did not move → AC4.
 3. **The orchestrator refuses to advance past the cap**: the transition decider
    (`decideWorkflowAction` over `WORKFLOW_TRANSITION_TABLE`, rows
    `review-spec`/`review-plan`) refuses a third consecutive unconverged
@@ -169,7 +174,15 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    `design-feature/references/REPAIR.md` §4 lose the sentences the machine now
    owns ("`info` is the only immaterial one", "Material = anything above
    `info`", the unbounded-cycle sentences, the mandate of a re-review for every
-   batch). The remainder this shrink leaves in those surfaces is **authored,
+   batch). The four surfaces that execute repair batches —
+   `plan-feature/SKILL.md`, `plan-fix/SKILL.md`,
+   `ship-roadmap/references/ADVANCE.md` and
+   `replan-findings/references/PHASE_APPEND.md` — plus
+   `design-feature/references/REPAIR.md` §1/§3 lose their unconditional
+   re-review mandates the same way: they declare that a recorded wording-only
+   batch skips the re-review (D-31-3's semantics declared at every surface
+   that executes it — D-31-12). The remainder this shrink leaves in those
+   surfaces is **authored,
    not preserved**: the anti-deflation judgment ("`medium` minimum";
    deflation is itself a review defect), the human-keyed third-cycle rule
    ("third cycle never starts without explicit user instruction"), and the
@@ -186,8 +199,9 @@ Primary carrier — the machine surfaces D-31-6 names (all verified at branch he
    → AC8 + AC9.
 7. **Version bumps + release surfaces**: the schema package (additive minor)
    and the touched skills (`pre-execution-review`, `review-spec`,
-   `review-plan`, `design-feature` — minor per the #176 freeze) bump in the
-   same PR with CHANGELOG rows and README skill-table cells; the Pi mirror is
+   `review-plan`, `design-feature`, plus `plan-feature`, `plan-fix`,
+   `ship-roadmap` and `replan-findings` — the four D-31-12 widens in — minor
+   per the #176 freeze) bump in the same PR with CHANGELOG rows and README skill-table cells; the Pi mirror is
    re-bundled from the package that owns the bundler
    (`cd packages/pi-agentic-workflow && bun run bundle:skills`) → AC10 + AC11
    + AC14.
@@ -206,10 +220,13 @@ scope guard walks them instead of reporting them as violations → AC13:
   `scripts/pre-execution-sensor.test.mjs`,
   `scripts/review-loop-discipline.test.mjs`, `scripts/workflow-status.mjs`,
   `scripts/workflow-status-pre-execution.test.mjs`, `scripts/phase-lint.mjs`.
-- **Prose-shrink surfaces + derived surfaces**: the named skill reference files
-  under `skills/**`; the touched skills' `version:` lines; the README
-  skill-table cells; `CHANGELOG.md`; the Pi mirror under
-  `packages/pi-agentic-workflow/skills/**` (written only by the bundler).
+- **Prose-shrink surfaces + derived surfaces**: the named skill surfaces under
+  `skills/**` — the prose-shrink files (`POLICY.md`, `LEDGERS.md`, both
+  `CHECKS.md`, both `OUTPUT.md`, `REPAIR.md`, `plan-feature/SKILL.md`,
+  `plan-fix/SKILL.md`, `ship-roadmap/references/ADVANCE.md`,
+  `replan-findings/references/PHASE_APPEND.md`) plus the touched skills'
+  `version:` lines; the README skill-table cells; `CHANGELOG.md`; the Pi mirror
+  under `packages/pi-agentic-workflow/skills/**` (written only by the bundler).
 - **Workflow-mutated record surfaces** (per `verification-contract`
   §Validator stability): the unit's own records under
   `docs/features/31-planning-review-materiality/**`, the unit's
@@ -294,7 +311,9 @@ derived inventory is recorded under Integration closure.
 
 - Create — the repair turn produces both halves: the **machine half** is
   computed (revision rotated, determination recorded, acceptance fingerprint
-  and bound material bytes unmoved → verify stays current without a re-review)
+  and bound material bytes unmoved → verify stays current without a re-review;
+  the moved bound artifacts never include the unit's own frozen acceptance
+  manifest — D-31-11 rejects manifest movement on the route)
   and the **judgment half** (intent and authority unchanged) is recorded as a
   frozen evidence row in the unit's evidence home (plan stage:
   `planning-evidence.md` M/L or the SPEC section XS/S; spec stage:
@@ -311,7 +330,8 @@ derived inventory is recorded under Integration closure.
 - Delete — n/a: append-only evidence; derived values are never deleted.
 - State transitions — record-once-at-repair-time; the only observable
   transition is the verify outcome flipping when a later material change moves
-  bound bytes (`stale-source-revision` → re-review owed).
+  bound bytes (`stale-source-revision` → re-review owed); a movement of the
+  unit's own acceptance manifest is always material (D-31-11).
 
 **E3 — Repair/re-review cycle state (spec and plan stages)**
 
@@ -382,7 +402,8 @@ refuse; they never author findings).
   revision; `verify` computes the machine half. Roles: author turn allowed ·
   drivers & sensors allowed as validators (they compute and record the machine
   half; the route is refused when the determination record or rotation is
-  missing) · reviewer turn denied (nothing to re-review on that route; the
+  missing, or when the moved bound artifact is the unit's own acceptance
+  manifest — D-31-11) · reviewer turn denied (nothing to re-review on that route; the
   next material change re-opens review) · human owner denied · executor turn
   denied.
 - **C4 — Start a third consecutive unconverged repair/re-review cycle.** Entry
@@ -416,7 +437,7 @@ What a competent workflow maintainer would assume ships with a
 | 7 | The second cycle still prints `CONVERGENCE-ANOMALY` before any further edit | in-scope | In scope 5 (block byte-unchanged) + AC7 |
 | 8 | The loop never ends silently — the cap ends it in a printed `needs-design` routed to the human (spec stage) or the orchestrator's refusal naming the human route (plan stage) | in-scope | In scope 3 + AC5 + AC7 |
 | 9 | A third cycle remains possible behind an explicit user instruction (the cap is user-gated, not absolute) | in-scope | In scope 3 + In scope 5 (human-keyed sentence stays) |
-| 10 | The wording-only determination is recorded even when the re-review is skipped — machine half and judgment half | in-scope | In scope 2 + AC4 |
+| 10 | The wording-only determination is recorded even when the re-review is skipped — machine half and judgment half — but a movement of the unit's own frozen acceptance manifest never qualifies | in-scope | In scope 2 + AC4 (D-31-11) |
 | 11 | Every repair write rotates `artifactRevisionId` — the freshness predicate itself refuses an unrecorded rotation (without the recorded determination the wording-only branch never holds, so moved bound bytes fall through to `stale-source-revision`), including on the wording-only route | in-scope | In scope 2 + AC4 |
 | 12 | Review verdicts keep binding to exact snapshots with digest + artifact revision (receipt shape otherwise unchanged) | in-scope | Out of scope bullet 3 + AC9 |
 | 13 | Code-side review/fold behavior is untouched by this feature | out-of-scope | Out of scope bullet 2 |
@@ -478,7 +499,12 @@ Command-checkable at the PR head unless labelled `read-verified`.
   `fresh` — for moved bound bytes the fall-through answers
   `stale-source-revision`, exit 4, the code the frozen `ACCEPTANCE.md` AC4 and
   Design E6 record); a rotation without the recorded determination is refused (the
-  record and the rotation are not skippable). Vector semantics walked at the
+  record and the rotation are not skippable); and a movement whose changed
+  bound artifacts include the unit's own frozen acceptance manifest is
+  rejected on the route — the exemption never certifies `ACCEPTANCE.md`
+  movement, whatever the determination records, and the recorded fingerprint
+  is not sufficient by itself (it answers only when the manifest itself did
+  not move) (D-31-11). Vector semantics walked at the
   PR head (`read-verified`).
 - **AC5** (command): the orchestrator refuses to advance past the cap —
   `cd packages/agentic-workflow-schema && bun run test` passes with a
@@ -534,6 +560,20 @@ Command-checkable at the PR head unless labelled `read-verified`.
   skills/review-plan/references/OUTPUT.md` exits non-zero (the
   re-review-for-every-batch mandate leaves both verdict-route tables and both
   closing hand-off blocks);
+  `grep -n "replans the batch, then re-reviews" skills/plan-feature/SKILL.md`
+  exits non-zero; `grep -n "rotate the artifact revision, re-review"
+  skills/plan-fix/SKILL.md` exits non-zero; `grep -n "then a fresh review"
+  skills/ship-roadmap/references/ADVANCE.md` exits non-zero; `grep -n "Never
+  skip the re-review" skills/replan-findings/references/PHASE_APPEND.md`
+  exits non-zero; `grep -n "a fresh independent review of the re-cut plan"
+  skills/replan-findings/references/PHASE_APPEND.md` exits non-zero; `grep -n
+  "request one re-review of the new snapshot"
+  skills/design-feature/references/REPAIR.md` exits non-zero; `grep -n "for a
+  re-review of the new snapshot" skills/design-feature/references/REPAIR.md`
+  exits non-zero (the four driver surfaces plus REPAIR.md §1/§3 declare —
+  like §4 — that a recorded wording-only batch skips the re-review; each
+  fragment is unique in its file and matches while the unconditional mandate
+  stands, observed at this write's head);
   `grep -n "only immaterial"
   skills/pre-execution-review/references/LEDGERS.md` exits non-zero ("`info`
   is the only immaterial one" leaves §3); the
@@ -577,11 +617,13 @@ Command-checkable at the PR head unless labelled `read-verified`.
   ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists only
   paths of the first two groups; the schema vocabulary diffs remove no value
   (`read-verified`).
-- **AC14** (command + `read-verified`): the four touched skills are bumped and
+- **AC14** (command + `read-verified`): the eight touched skills are bumped and
   their release surfaces move in the same PR — `git diff main --
   skills/pre-execution-review/SKILL.md skills/review-spec/SKILL.md
-  skills/review-plan/SKILL.md skills/design-feature/SKILL.md | grep -cE
-  '^[+-]version: '` returns ≥ 8 (one removed + one added `version:` line per
+  skills/review-plan/SKILL.md skills/design-feature/SKILL.md
+  skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md
+  skills/ship-roadmap/SKILL.md skills/replan-findings/SKILL.md | grep -cE
+  '^[+-]version: '` returns ≥ 16 (one removed + one added `version:` line per
   touched skill; a skill whose `version:` did not move contributes no such
   hunk — each SKILL.md carries nothing but the `version:` change, per
   `bump-skill`'s guardrail), and the walk verifies: each old→new pair is a
@@ -589,8 +631,8 @@ Command-checkable at the PR head unless labelled `read-verified`.
   `CHANGELOG.md` gains one per-skill row per bumped skill (newest first — the
   `normative-drift` version-tables check in AC10's pack recomputes those
   tables against the frontmatter `version:` lines, so a moved version without
-  its row fails AC10); and the README `## The skills` cells for the four
-  touched skills are accurate post-shrink (`bump-skill`'s
+  its row fails AC10); and the README `## The skills` cells for the touched
+  skills are accurate post-shrink (`bump-skill`'s
   update-not-rewrite surface — `pre-execution-review` is narrative-only in
   README) (`read-verified`).
 
@@ -677,8 +719,21 @@ Product boxes:
 
 ## Design status
 
-`designed` — user-commissioned Product-half patch **`31-spec-13`** (2026-09-18)
-applied: the repair batch for `spec-review-31-12`'s open rows **N31-016**
+`designed` — user-commissioned review-findings closure batch **`31-spec-14`**
+(2026-09-18) applied: fix-now findings **F8** (`medium`, spec-drift) and
+**F10** (`medium`, brand) from the unit's `review-change` ledger, both routed
+to the product owner — AC4, In scope 2, E2, C3 and sweep row 10 now declare
+that the wording-only route never certifies a movement of the unit's own
+frozen acceptance manifest and that the recorded fingerprint is no longer
+sufficient by itself (D-31-11), and AC13's declared set, the prose-shrink
+surfaces, AC7's removal set and the touched-skills/AC14 enumeration widen to
+the four repair-executing surfaces plus `REPAIR.md` §1/§3, which now declare
+that a recorded wording-only batch skips the re-review (D-31-12). F9 stays
+open by owner choice (its route names main-sync as the alternative). Nothing
+else in the Product half moved. Capability closure group: complete (zero
+blank rows), Spec-lint product boxes all PASS, readiness preflight
+`READY-FOR-REVIEW` at artifact revision **`31-spec-14`** (see
+`## Amendments`). Earlier state: `31-spec-13` (2026-09-18) — user-commissioned Product-half patch applied: the repair batch for `spec-review-31-12`'s open rows **N31-016**
 (`medium`, `product`) + **N31-017** (`low`, report-note) — In scope item 2 and
 Capability closure E2's state transitions now name `stale-source-revision` (the
 code the machine answers for moved bound bytes, matching AC4, the frozen
@@ -940,12 +995,22 @@ which the answer it promises is reachable, because a wording-only movement moves
 a bound artifact and therefore always rotates `sourceRevision`, and
 `stale-source-revision` precedes `stale-artifact-content` in the comparator's
 documented order. The branch leaves that documented order intact for every other
-dimension and is consulted only when all four hold: git evidence names a moved
+dimension and is consulted only when all five hold: git evidence names a moved
 bound artifact; `changedContexts` is empty; a determination block records an
-artifact revision equal to the snapshot's current `artifactRevisionId`; and that
+artifact revision equal to the snapshot's current `artifactRevisionId`; that
 block's recorded acceptance fingerprint equals `git hash-object
-<unit>/ACCEPTANCE.md` on disk. All four → `fresh: true` with the determination id
-named in `detail`. Any of them fails → **fall through unchanged** to the existing
+<unit>/ACCEPTANCE.md` on disk; and the moved bound artifact is not the unit's
+own acceptance manifest. All five → `fresh: true` with the determination id
+named in `detail`. The manifest exclusion (D-31-11) is load-bearing: the
+fingerprint is a self-referential value — a hash of the very manifest the
+repair may have moved — so a repair that rewrites `ACCEPTANCE.md` and records
+the post-edit revision plus the post-edit hash would otherwise self-certify
+the movement it just made; a fingerprint taken after the move cannot attest
+the move's own immateriality (the attestation rule: the target environment
+cannot forge evidence about itself). The fingerprint therefore corroborates
+the determination only when the manifest itself did not move, and is never
+sufficient by itself; a manifest movement falls through unchanged
+(`stale-source-revision`, exit 4). Any of them fails → **fall through unchanged** to the existing
 precedence, which for moved bound bytes answers `stale-source-revision`; the
 branch never rewrites a reason code on the no-determination path (the earlier P3
 wording that named `stale-artifact-revision` here was wrong and is corrected). An
@@ -973,11 +1038,16 @@ pin block also reads `scripts/workflow-status.mjs` and pins the
 a gate the workflow never runs.
 
 **E8 — Prose shrink and authored remainder.** The computable sentences leave
-eight prose surfaces: `LEDGERS.md` §3 ("`info` is the only immaterial one"),
+twelve prose surfaces: `LEDGERS.md` §3 ("`info` is the only immaterial one"),
 both `CHECKS.md` files ("Material = anything above `info`"), `POLICY.md` §3 (the
 every-batch re-review mandate) and §4 (the three unbounded-cycle sentences), both
 `OUTPUT.md` files (the re-review-for-every-batch sentences in the verdict tables
-and the closing blocks), and `REPAIR.md` §4 (both unbounded-cycle sentences). The
+and the closing blocks), and `REPAIR.md` §4 (both unbounded-cycle sentences);
+plus the four repair-executing surfaces — `plan-feature/SKILL.md`,
+`plan-fix/SKILL.md`, `ship-roadmap/references/ADVANCE.md`,
+`replan-findings/references/PHASE_APPEND.md` — and `REPAIR.md` §1/§3 (their
+unconditional re-review hand-offs), all declaring that a recorded wording-only
+batch skips the re-review (D-31-12). The
 remainder is authored, not preserved: the anti-deflation judgment (`medium`
 minimum; deflating a severity to dodge a review is itself a review defect), the
 report-note persistence contract with the planning materiality line, the
@@ -996,7 +1066,7 @@ closes the window; the two version pins the bump reddens
 (`test/release-contract.test.mjs`, `test/verification-gates.test.mjs`) move in the
 same commit as the bump, and the new `reproducerChars` limit is published in the
 package README's `### Published limits` block in P1, because both are the bump's
-own `config/infra` surfaces; the four touched skills take minor bumps through
+own `config/infra` surfaces; the eight touched skills take minor bumps through
 `bump-skill` (one bump per skill per PR — E-D31-1) with their `CHANGELOG.md` rows
 and README cells; the Pi mirror is re-bundled from the
 package that owns the bundler after the last `skills/` edit; and the issue's
@@ -1265,6 +1335,58 @@ owner at a time. Rows 35/42 (and 46's coordination) chain after it per
 ---
 
 ## Amendments
+
+### `31-spec-14` (2026-09-18) — review-findings closure batch (F8 + F10, product owner)
+
+User-commissioned repair batch (2026-09-18), commissioned as: "Cierra los
+hallazgos F8 y F10 del ledger (clase fix-now, owning stage product). (F8) la
+ruta wording-only no puede certificar un movimiento del propio manifiesto
+congelado: la exención se rechaza cuando entre los bound artifacts movidos está
+ACCEPTANCE.md, y el fingerprint registrado deja de ser condición suficiente por
+sí solo; actualiza AC4 y el diseño E6. (F10) el salto de re-review declarado en
+POLICY §3 y en los OUTPUT de review-spec/review-plan se mantiene (D-31-3);
+amplía el conjunto declarado de AC13 (y el removal set de AC7) para incluir
+plan-feature/SKILL.md, plan-fix/SKILL.md, ship-roadmap ADVANCE.md y
+replan-findings PHASE_APPEND.md, de modo que esas superficies y REPAIR.md
+§1/§3 declaren que un batch wording-only registrado salta la re-review."
+Repair owner `design-feature`; the two findings are the batch (F9 stays open by
+owner choice — its route names main-sync as the alternative). Repair classes:
+
+- **F8 — product-ruling repair (owner decision, D-31-11).** The wording-only
+  exemption never certifies a movement of the unit's own frozen acceptance
+  manifest: In scope 2, AC4, Capability closure E2 (Create + state
+  transitions), role matrix C3 and sweep row 10 now declare the rejection, and
+  Design E6 gains the fifth branch condition (the moved bound artifact is not
+  the unit's own acceptance manifest) with the fingerprint demoted from
+  sufficient condition to corroboration — a fingerprint taken after the move
+  is a self-referential attestation and cannot attest the move's own
+  immateriality. No criterion outcome moves: manifest movement answers
+  `stale-source-revision` (exit 4), the same fall-through the criterion
+  already requires for material movement.
+- **F10 — closure completion (D-31-12; the D-31-3 semantics declared at the
+  surfaces that execute it).** In scope 5's surface enumeration, In scope
+  group 2 (AC13's declared set), AC7's removal set (seven new greps:
+  four driver surfaces + `REPAIR.md` §1/§3), Design E8, and the
+  touched-skills enumeration (In scope 7, AC14, Design E9: four → eight
+  skills, `grep -cE '^[+-]version: '` ≥ 16) widen together — the four newly
+  named surfaces declare that a recorded wording-only batch skips the
+  re-review, so POLICY §3 + both OUTPUTs and the execution surfaces state one
+  policy.
+
+Artifact revision rotates `31-spec-13` → **`31-spec-14`** for the touched
+Product set (`SPEC.md`; `decisions.md` gains D-31-11/D-31-12 with evidence
+rows; `progress.md` records this batch and its readiness block). The frozen
+`ACCEPTANCE.md` is **not** touched by this authoring turn: AC4's validator
+text, AC7's removal-grep enumeration and AC14's touched-skill set moved with
+this batch, so the manifest must be re-frozen by `plan-feature`'s re-cut on a
+fresh `SPEC-REVIEW-PASS` (the `31-plan-5` precedent) — modifying it during
+execution would violate its own quality floor. The current Product receipt
+`spec-review-31-13` is superseded by design (the Product half's bound bytes
+moved with no wording-only determination — a Product predicate change is
+never wording-only, D-31-11's own rule): only a fresh
+`/review-spec 31-planning-review-materiality` delta-reviews the patch and
+restores currency. Engineering half: E6's commissioned update is in; E8/E9's
+enumerations move with it; the phase/task set re-derives under `plan-feature`.
 
 ### `31-spec-13` (2026-09-18) — repair batch for `spec-review-31-12` (N31-016 + N31-017)
 
