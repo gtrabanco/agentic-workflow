@@ -397,3 +397,37 @@ No newly discovered need was added: the batch stays inside the eight rows. The
 phase fingerprints are unchanged (`P1:config/infra:7:tier-1-path-gate` …
 `P5:hardening:7:hardening-pr`, digest `c4a9e11a3b8fad370b0212ce3d97f796957e9d8eaaf1a63c1d75f14082d63dc4`)
 because task counts and layers are unchanged (PE-026).
+
+## Plan repair — PLAN60-F9…F10 (2026-09-18)
+
+Second plan-repair batch, same shape as the first: two plan-class authoring
+defects in the plan's own artifacts, repaired in place at one revision, no phase
+appended. No Product byte changed — the `spec-product-v1` projection stays
+24443 B, sha256
+`50b33e5d944690097c947811cd97e106962e2a00a3d83bcd1a9b8ac4c9af920e`, so
+`SPEC-REVIEW-60-2` stays current and the plan's parent snapshot stays
+`12121bff…1682e` (the SPEC Engineering half moved only).
+
+| Finding | Repair |
+|---|---|
+| PLAN60-F9 | P5 gains the close-out path gate: record P5's base ref, run `path-guard --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 with the `PATH-GUARD` block; the invocation is in the P5 done-when; a fail stops the close-out before the PR (no `--force`). E-60-15, PE-028, O19; the SPEC Phases P5 bullet and done-when now name it. |
+| PLAN60-F10 | P5 gains the same-PR release sweep: the six touched skills bump **minor** via `bump-skill` (each with its CHANGELOG row) and the pi package bumps to `0.11.0` with its Companion npm packages CHANGELOG row, before the Pi mirror re-bundle. E-60-16, PE-027, O20/O21; `architecture-notes.md` names the scheduled mechanic. |
+
+No newly discovered need was added: the batch stays inside the two rows. P5 goes
+from 7 to 10 tasks (the final close-out's budget ceiling), so its fingerprint
+moves to `P5:hardening:10:hardening-pr` and the whole-set digest to
+`381019477bdf277c455ec78b11d05c10a01542db75161a4f737a0fb9add85e0a` (P1–P4
+fingerprints unchanged; PE-026). The plan declaration's `freeze-after: P4` is
+unchanged — P5 creates no test file — and the frozen `ACCEPTANCE.md` blob
+(`aceb3d52…`) is untouched because the close-out gate is a phase-done-when
+validator (O19), not a new acceptance criterion.
+
+Stage 2 planning preflight (re-run because the engineering plan changed):
+
+```text
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared)
+```
+
+The Normalized Repository State is `frozen` and records no project
+architectural-invariants document (NRS F010; D-60-11, PE-021), so no invariant
+can be violated, introduced, or changed by this repair.
