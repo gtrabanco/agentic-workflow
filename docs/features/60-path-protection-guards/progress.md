@@ -546,6 +546,195 @@ Notes:
   (exit 4) is the sanctioned answer for a persisted non-PASS verdict — the verdict itself
   is the emit result.
 
+### plan — 2026-09-18 (re-review, revision 4)
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-60-4 · Snapshot: 194049b4941cb009a6981452dc2dd5e4ef3e3d5648aed0b716df0175c61432f6 · Verdict: plan-review-pass
+- Unit: 60-path-protection-guards · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e · Parent Product receipt: SPEC-REVIEW-60-2
+- Source revision: f901532493ca96cb293704352ce4af73150ff5c7 · Artifact revision: f901532493ca96cb293704352ce4af73150ff5c7
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (2026-09-18 authoring + three repair turns)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T16:55:00Z/2026-09-18T17:10:32Z · Findings: 1 (material open: 0 — PLAN60-F12 low advisory, non-material under the operator materiality bar, E-60-18)
+- Ledgers read: planning-evidence 29 rows · obligations 21 rows (verified-capable: 19)
+- Prior plan receipt (re-review only): PLAN-REVIEW-60-3 @ 7f66d179b929ca7cc2279843c4ce28f9c1e24d496f5134acbcd0767c15fb5047
+```
+
+Notes:
+- Snapshot built by the recipe owner at one revision: `bun scripts/pre-execution-snapshot.mjs
+  build --stage plan --unit 60-path-protection-guards --parent
+  12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e`. It bound nine
+  artifact rows whole-file — `spec` `SPEC.md` (49708 B, `9c9f785e…c477`), `acceptance`
+  `ACCEPTANCE.md` (5343 B, `291fbe73…5f98`), `planning-evidence` (13393 B, `d5d8560b…d763`),
+  `obligations` (9663 B, `01ced719…ae00`), `plan` `PLAN.md` (15950 B, `5941dc20…bc61`),
+  `tasks` `TASKS.md` (12784 B, `a5de27f5…1315`), `testing` (4706 B, `9353c20e…98a3`),
+  `decisions` (23429 B, `7a211070…5651`), `architecture-notes` (4810 B, `d83c3d91…77a6`) —
+  and three contexts `project-guide` present (`CLAUDE.md`, `f5c8e142…`),
+  `normalized-repository-state` present (`docs/workflow/REPOSITORY_STATE.md`, `e1b81e29…`),
+  `architectural-invariants` absent (`docs/architecture/ARCHITECTURAL_INVARIANTS.md` does not
+  exist — NRS F010). Digest `194049b4…32f6` pasted above.
+- `- Artifact revision:` binds the snapshot builder's canonical content-derived value
+  (`f9015324…`, the newest commit that touched a bound path). Live `HEAD` is `13252001`; the
+  builder's `contentRevision` over the bound paths resolves to `f9015324` (`13252001` only
+  appended the PLAN60-F11/F12 resolution to `planning-findings.md` and this receipt ledger,
+  neither a bound path). The planner's handoff label `60-plan-3` (`PLAN.md:9`, `SPEC.md:388`)
+  is recorded here beside the recomputed value per `POLICY.md` §7; the receipt field carries
+  the derived value so a consumer's plain `verify --stage plan` matches (feature 55/59
+  precedent). The label was not re-coined for the third repair batch — see the non-blocking
+  observation below.
+- **L1 parent currency — current, by the decisive recomputation (POLICY §7).** Building the
+  spec-stage snapshot at the Product receipt's own revision (`build --stage spec --unit
+  60-path-protection-guards --source-revision 7e9f6f543719ded87d9da03385b7ba99bd2ab93d
+  --artifact-revision 7e9f6f543719ded87d9da03385b7ba99bd2ab93d`) reproduces exactly
+  `12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e`, the Snapshot the
+  `SPEC-REVIEW-60-2` receipt records. The pinned Product projection re-derived from the
+  current `SPEC.md` bytes is byte-identical (24 443 B, sha256
+  `50b33e5d944690097c947811cd97e106962e2a00a3d83bcd1a9b8ac4c9af920e`) and all three context
+  rows are unmoved, so the parent is **current**; only the revision field rotated (the third
+  repair batch moved the SPEC file outside the Product selector — the sanctioned
+  Engineering-half commit `f9015324`, feature 55/59's identical reading). Never repaired by
+  re-copying the digest.
+- **L2 evidence integrity — pass.** 29 rows PE-001…PE-029, every one `current` + `proven`
+  (none `drifted`/`stale`; no `unknown`). PE-029 was added by the third repair batch and
+  sources the shipped-default glob correction (D4 / AC-01 / issue #220's four families).
+  Load-bearing rows re-verified first-hand this turn: PE-001 (`package.json` no
+  `bin`/`scripts`; `bin/turn-contract.mjs` precedent), PE-002/PE-026 (`phase-lint.mjs`
+  `layerForTarget` + fingerprint form — the linter re-run below matches), PE-004
+  (`PREFLIGHT.md:154`), PE-005 (`POLICY.md:188` `gate-rejection-vocabulary@1`, four types +
+  prose "closed set of four" at `:173`), PE-009 (`src/extension/index.ts:163-165`), PE-011
+  (`schema.ts:14` `ROOT_KEYS`), PE-016 (`normalize-hook-payload.sh` carries only
+  command/path), PE-020 (`ledger-ownership.test.mjs:421-439` scans only `scripts/` and
+  `packages/<name>/scripts/`), PE-021 (NRS `frozen`, F010), PE-022 (roadmap row 37 `done`,
+  row 60 `planned`), PE-025 (pi `docs/extensions.md` §tool_call), PE-028 (`SPEC.md:591`),
+  PE-029 (`SPEC.md:336` D4, `:277-280` AC-01).
+- **L3 obligation completeness — pass, with the recorded advisory (PLAN60-F12).** 21 rows
+  O1…O21, ids stable, none duplicated; every acceptance criterion AC-01…AC-10 has its row
+  (O1…O10) plus the read-only/vocabulary/no-auto-approval/unavailable-gate invariants, the
+  three scenario pins, the split template-seed (O15) / pi-mirror (O18) parity pins, the P5
+  close-out gate (O19), and the same-PR release sweep (O20/O21). The `undeclared-test`
+  failure state keeps no obligation row — the residual coverage gap recorded as PLAN60-F12,
+  `low`, advisory under the operator materiality bar (E-60-18). It does not name a
+  user-visible outcome the frozen acceptance manifest misses (AC-01…AC-10 name no
+  `undeclared-test` criterion), so it is non-blocking under the bar.
+- **L4 obligation mapping — pass.** Every row names exactly one phase and one task,
+  `execute-phase` as implementation owner, a validator copied from `ACCEPTANCE.md` or the
+  phase done-when, and required evidence; no blank status; no `deferred` row.
+- **L5 scenario ↔ validator ↔ phase closure — pass, with the recorded advisory.**
+  `testing.md`'s nine scenario rows each map to a phase and a validator, and the P1 pins can
+  fail (explicit sub-cases). The `undeclared-test` failure state remains the one named reason
+  with no scenario and no validator — PLAN60-F12, advisory/non-material.
+- **L6 findings ledger — pass.** `SPEC60-F1…F3` and `PLAN60-F1…F11` are all `resolved` with
+  resolution evidence; no `dismissed` row lacks counter-evidence; the single open row is
+  `PLAN60-F12` (`low`, `plan`, advisory under the operator materiality bar with its fold path
+  named), so no open **material** row is carried into execution. The F11 repair is verified
+  in place this turn: the Engineering-invented `**/*.spec.*` glob is gone (repo-wide grep
+  matches only this ledger's own claim text, the repair records, and this ledger's notes).
+- **P1 Architecture — pass.** Affected surfaces are named with `path:line` evidence rows;
+  the invariant classification is present (`n/a` — NRS F010, no project invariants doc).
+- **P2 Dependency closure — pass.** Hard dependency feature 37 `done` (PR #212); soft feature
+  42 `idea`, nothing depends on it; issue #220 OPEN and matching; no phase builds unwritten
+  work.
+- **P3 Compatibility — pass.** The pi `pathProtection` key is optional/additive to the strict
+  `ROOT_KEYS`; an existing config without it stays valid; the policy file is additive and the
+  gate is read-only; the private crate is unshipped (known-issue B-01 discloses the gap).
+- **P4 Security — pass.** No secrets/PII; input validation is bounded (256 KiB policy, 10 000
+  changed paths); the parsers fail closed; the guard blocks writes, never reads.
+- **P5 Migration — pass.** The policy is additive (a repo without it runs on the shipped
+  defaults and reports the degradation); no data migration; the roadmap row is standard
+  close-out; no `.es.md` sync exists under the English-only interim.
+- **P6 Recovery — pass.** Per-phase commits with `progress.md` receipts; the gate is stateless
+  and idempotent (the `two-runs` pin); no phase leaves the tree mid-write.
+- **P7 Rollback — pass.** Standard revert; no persisted state; every new file additive.
+- **P8 Operability — pass.** The `PATH-GUARD` block and degradation line surface the
+  behaviour; the same-PR release sweep is scheduled (P5 tasks 2–3, O20/O21).
+- **P9 Phase atomicity and order — pass.** `node scripts/phase-lint.mjs
+  docs/features/60-path-protection-guards/PLAN.md` → `verdict PASS`, exit 0; the five recorded
+  fingerprints match exactly (`P1:config/infra:7:tier-1-path-gate` …
+  `P5:hardening:10:hardening-pr`) and the whole-set digest is
+  `381019477bdf277c455ec78b11d05c10a01542db75161a4f737a0fb9add85e0a`, identical to the
+  repair record. The third repair batch kept every phase's task count and layer (PE-026), so
+  the fingerprints and digest are unchanged. Order P1→P5; the last phase is hardening/PR.
+- **P10 Validators — pass.** Every phase's done-when is a runnable command with an expected
+  outcome, and the crate-suite forms are the runnable `bun test packages/agentic-workflow/test/`
+  form with the Node 24 glob fallback; no validator was weakened, skipped, or re-scoped. The
+  `undeclared-test` branch stays the one behaviour no validator reaches (PLAN60-F12, advisory).
+- **P11 Scenario coverage — pass, with the recorded advisory.** Empty/oversize/invalid/
+  concurrent, the freeze boundary, and the committed-range checkpoint are covered; the
+  `undeclared-test` failure state keeps no scenario (PLAN60-F12, advisory/non-material).
+- **P12 Source evidence — pass.** The plan's file/symbol claims match the repository at the
+  revision (spot-verified above); the dependency/status claims hold live. The F11 correction
+  removes the only invented glob.
+- **Falsification (fresh context, before the checks): CONFIRMED-GAPS (advisory class only, and
+  now closed except the recorded advisory).** Three Engineering claims a hostile reader could
+  call invented — the `schema-export:` publication mechanism (re-derived true: PE-024, a
+  frozen `export const` array is what the reader parses), the pi `tool_call` record source
+  (`ctx.cwd` + unit decision ledgers — re-derived true: PE-025), and the `--base`
+  committed-range checkpoint (re-derived true: Design + E-60-12). The shipped-default
+  `**/*.spec.*` glob that the prior review confirmed as an invented family is **gone** (F11
+  resolved). The one SPEC behaviour this plan still does not verify is the `undeclared-test`
+  failure state (PLAN60-F12). The phase whose deliverable could be accepted while its
+  validator passes for the wrong reason is P1's declaration-enforcement branch — the same
+  advisory gap. If every phase shipped exactly as written, the only residual would be that
+  untested branch, in scope and recorded, with its fold path named.
+- **CONVERGENCE (POLICY §4).** This is the fourth plan review and the re-review of the third
+  repair batch. The second and third cycles' `CONVERGENCE-ANOMALY` blocks were printed and
+  routed by `PLAN-REVIEW-60-2` and `PLAN-REVIEW-60-3` before each edit; this re-review is not a
+  blind repeat — the snapshot changed by design in response to the persisted `plan-review-fail`
+  (`7f66d179…5047` → `194049b4…32f6`, `artifactRevisionId` `812035ec` → `f9015324`), and the
+  two findings it carried are now either `resolved` (F11) or recorded advisory (F12). No new
+  material finding and no repeated material finding; the cycle converges to PASS rather than
+  opening a fourth repair cycle.
+- Non-blocking observations (not findings rows): (a) the plan's handoff label `60-plan-3`
+  (`PLAN.md:9`, `SPEC.md:388`) was not re-coined for the third repair batch — the parenthetical
+  still enumerates only the F1…F8 and F9…F10 batches — while the canonical content-derived
+  identity (`f9015324`) is bound by this receipt and by the snapshot builder, so the staleness
+  is cosmetic (`POLICY.md` §7 pairing convention, same class the prior receipts recorded);
+  (b) the SPEC Engineering-half `### Deliverables` list names `scripts/normative-drift.test.mjs`
+  beside `CLAUDE.md`, but the plan's approach publishes the vocabulary through an existing
+  `schema-export:` reader (PE-024) and schedules no drift-gate code edit — an info-level
+  summary inaccuracy that weakens no validator.
+- Findings for this snapshot: `planning-findings.md` — no new row; `PLAN60-F12` stays `open`,
+  `low`, advisory (E-60-18), bound by this receipt.
+- Self-check (`write-then-report`, POLICY §8) — `bun scripts/pre-execution-snapshot.mjs
+  verify --stage plan --unit 60-path-protection-guards --dir
+  docs/features/60-path-protection-guards --unit-kind feature --parent
+  12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e`:
+
+```json
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "60-path-protection-guards",
+  "receipt": {
+    "id": "PLAN-REVIEW-60-4",
+    "verdict": "plan-review-pass",
+    "snapshot": "194049b4941cb009a6981452dc2dd5e4ef3e3d5648aed0b716df0175c61432f6",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "194049b4941cb009a6981452dc2dd5e4ef3e3d5648aed0b716df0175c61432f6",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+  `digestMatches: true` + `structural.fresh: true` + `current: true` (exit 0) means the mark
+  landed and execution may bind this receipt for this exact snapshot.
+
+- No reviewed plan artifact was modified: `git status --porcelain` shows only this receipt in
+  `progress.md` (and the no-op review note in `planning-findings.md`); `SPEC.md`,
+  `ACCEPTANCE.md`, `PLAN.md`, `TASKS.md`, `testing.md`, `decisions.md`, `architecture-notes.md`,
+  the two ledgers, and the `ROADMAP.md` row-60 bytes are byte-identical to the reviewed
+  snapshot.
+
 ## Acceptance receipt v1
 
 - Manifest: docs/features/60-path-protection-guards/ACCEPTANCE.md · Blob: aceb3d52402506214bbc85060508a9414323ddca · Status: frozen · Verified: 2026-09-18 (recomputed at the PLAN60-F1…F8 repair, which materialized the runnable crate-suite invocation `bun test packages/agentic-workflow/test/` with its Node 24 glob fallback and enriched AC-08's read-verified validator; the assertions are unchanged — E-60-10; recomputed before every phase and final review per `verification-contract`)
