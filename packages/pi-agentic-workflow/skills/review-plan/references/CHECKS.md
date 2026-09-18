@@ -102,7 +102,10 @@ One row per finding in the receipt's `findings` array: stable `id`, `severity`
 (`info | low | medium | high | critical`), `class` (`product | plan | source |
 environment | runtime`), `claim` with its section/row pointer, `evidenceRefs`
 (≥ 1 — a finding without evidence is a hunch and gets dropped), `verification`,
-`resolution: open` on emission. Material = anything above `info`; a PASS may not
-carry an open or unverified material row. A Product-rooted finding found here
+`resolution: open` on emission. Material = `medium` and above; a `low` row is a
+persisted report-note the stage author resolves without a re-review, and `info`
+is immaterial. Deflating a real defect below the `medium` minimum to unblock a
+pass is itself a finding; a PASS may not carry an open or unverified material
+row. A Product-rooted finding found here
 keeps `class: product`: the class routes the repair, it is not a record of who
 noticed what.
