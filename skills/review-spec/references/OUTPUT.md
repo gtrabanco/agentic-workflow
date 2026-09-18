@@ -106,8 +106,8 @@ not authority.
 | Verdict | Who repairs | What happens next |
 |---|---|---|
 | `SPEC-REVIEW-PASS` | nobody | `/plan-feature <NN-slug>` binds this receipt + exact snapshot digest |
-| `SPEC-REVIEW-FAIL` | `design-feature` (the author) | one root-caused repair batch → new revision → re-review of the new snapshot |
-| `NEEDS-DESIGN` | the human, through `design-feature` | dated `## Amendments`/`Product decisions` entry → new revision → re-review |
+| `SPEC-REVIEW-FAIL` | `design-feature` (the author) | one root-caused repair batch → new revision → next cycle (default re-review; a recorded wording-only batch skips it) |
+| `NEEDS-DESIGN` | the human, through `design-feature` | dated `## Amendments`/`Product decisions` entry → new revision → next cycle |
 
 A finding whose `class` is `plan`, `source`, `environment`, or `runtime` does not
 become work here: record it, keep it open, and route it to its owner (`review-plan`
@@ -117,8 +117,11 @@ schedules nothing.
 Repeating this review follows the no-progress and convergence rules in
 `pre-execution-review/references/POLICY.md` §4: a repeat needs a
 changed snapshot or a named falsifiable question plus a new evidence route, and
-entering a second repair/re-review cycle prints `CONVERGENCE-ANOMALY` before any
-further edit. A `design-feature` repair turn re-reads the union of open findings
+a second consecutive repair/re-review cycle prints `CONVERGENCE-ANOMALY` before
+any further edit. A third cycle never starts without explicit user instruction:
+the orchestrator's `stop-review-loop-cap` refusal stops the invocation and names
+`design-feature` as the human route, and a PASS resets the count. A
+`design-feature` repair turn re-reads the union of open findings
 from `planning-findings.md`, not just the newest receipt, so nothing recorded here
 is ever lost between cycles.
 
@@ -150,7 +153,8 @@ On FAIL or NEEDS-DESIGN, name every finding id once, in order, joined with ` + `
 
 ```
 → Next: /design-feature <NN-slug> "<instruction>" — one repair batch for F1 + F2 + F4,
-    then /review-spec <NN-slug> re-reviews the new artifact revision
+    then /review-spec <NN-slug> judges the new artifact revision
+  · a third cycle → explicit user instruction first; the decider refuses it (`stop-review-loop-cap`) and names design-feature
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
 ```
