@@ -168,8 +168,18 @@ migration.
 - **IS-4 — Gate-run receipt.** A `GATE-RAN | HEAD <sha> | <cmds> | exit <code>`
   mark recorded by whoever runs the project's gate — executor phase gates and
   reviewer gate runs alike — appended to the unit's `review-findings.md`
-  ledger (home ledger and recorder set fixed by a `ledger-ownership@1` map
-  row added in the same change; every mark names its recorder). Any skill may
+  ledger, with ownership encoded the way the `ledger-ownership@1` grammar
+  actually admits: the map's existing `review-findings` truth-class row
+  (the ledger is already that row's: the unit's `review-findings.md`, feature
+  and fix variants) gains the two gate-running recorders as new owner
+  column-sets — `execute-phase:gate-ran-marks` (executor phase gates) and
+  `review-change:review-gate-ran-marks` (reviewer gate runs), distinct
+  column-set names per the one-writer-per-column-set rule — and both template
+  projections gain the identical owner cell in the same change; no new
+  truth-class row is added (the machine-read grammar in
+  `scripts/ledger-ownership.test.mjs` freezes exactly the seven AC16 truth
+  classes and forbids a second row declaring the `review-findings.md` ledger
+  pattern); every mark names its recorder. Any skill may
   consume a green run **only at the
   identical HEAD**; a changed head ⇒ re-run. Extensible digest slots from day
   one: fields after `HEAD` are additive; consumers ignore unknown trailing
@@ -248,7 +258,9 @@ For **severity conversion table** (one section in `CLASSIFY.md`):
 For **GATE-RAN mark** (durable, append-only ledger mark):
 - [x] Create — UI: appended by whichever skill ran the project gate (executor
   phase gates and reviewer gate runs alike), at the head it ran on · API: fixed format
-  `GATE-RAN | HEAD <sha> | <cmds> | exit <code>[ | <additive slots>]` ·
+  `GATE-RAN | HEAD <sha> | <cmds> | exit <code>[ | <additive slots>]`, owned by
+  the `ledger-ownership@1` map's `review-findings` row gate-run column-sets
+  (`execute-phase:gate-ran-marks`, `review-change:review-gate-ran-marks`) ·
   test: discipline pin asserting the format, additive-slots rule, and reserved
   `manifest` slot
 - [x] Read/list — UI: any consumer skill reads a green run and skips
@@ -333,10 +345,14 @@ user confirms — the file exists, seeding it from the template is no longer
 the ask.
 
 - [x] `ledger-ownership@1` map (`LEDGERS.md`) — folded-flag owner text
-  corrected to match its own table; the map gains the GATE-RAN mark row
-  naming the home ledger (the unit's `review-findings.md`, feature and fix
-  variants) and the recorder set (the gate-running skills) in the same
-  change · test: `node --test scripts/ledger-ownership.test.mjs`
+  corrected to match its own table; the map's existing `review-findings`
+  truth-class row gains the GATE-RAN recorder column-sets
+  (`execute-phase:gate-ran-marks` + `review-change:review-gate-ran-marks`)
+  in the same change — no new truth-class row: the machine-read grammar
+  freezes exactly the seven AC16 truth classes and forbids a second
+  declaration of the `review-findings.md` ledger pattern, and both template
+  projections gain the identical owner cell · test:
+  `node --test scripts/ledger-ownership.test.mjs` stays green
 - [x] Loop-discipline tests (`scripts/review-loop-discipline.test.mjs`,
   `scripts/bounded-delivery-loops.test.mjs`) — new pins for IS-1…IS-4 wording
   and rules; existing pins never weakened · test: both suites green
@@ -448,10 +464,15 @@ the ask.
   additive-slots rule ("fields after HEAD are additive; consumers ignore
   unknown trailing fields"), the reserved trailing `manifest <sha>` slot, the
   identical-HEAD-only reuse rule, and the changed-head ⇒ re-run rule; the
-  `ledger-ownership@1` map contains the GATE-RAN row naming the home ledger
-  (`docs/features/<NN>-<slug>/review-findings.md` ·
-  `docs/fix/<issue>-<topic>/review-findings.md`) and its recorder set (the
-  gate-running skills).
+  `ledger-ownership@1` map encodes GATE-RAN the way its grammar admits: the
+  existing `review-findings` truth-class row's owner cell declares the
+  recorder column-sets `execute-phase:gate-ran-marks +
+  review-change:review-gate-ran-marks` (home ledger
+  `docs/features/<NN>-<slug>/review-findings.md` ·
+  `docs/fix/<issue>-<topic>/review-findings.md`, already that row's ledger —
+  no new truth-class row: the grammar fixes exactly the seven AC16 classes
+  and one declaration per ledger pattern), and both template projections
+  carry the identical owner cell.
 - [x] **AC-05** (command-verified) — substrate notice pinned:
   `node --test scripts/workflow-status-sensor.test.mjs` gains a missing-ledger
   case asserting a non-blocking machine-readable notice and zero
@@ -507,7 +528,8 @@ All recorded with rationale in `decisions.md` (2026-09-17); summary:
 - **D32-3 GATE-RAN is a durable ledger mark, not a schema contract.** Same
   ruling as feature 30's REPAIR-RECEIPT: printed/appended fixed text, no
   schema change; home ledger (the unit's `review-findings.md`) and recorder
-  set fixed by the `ledger-ownership@1` map row added in the change.
+  set fixed by the `ledger-ownership@1` map's `review-findings` row (D32-7
+  encoding — the grammar admits no new truth-class row).
 - **D32-4 Extensible slots from day one.** The 2026-09-07 amendment carried
   by issue #172 (provenance: the amendment on #182) is adopted verbatim:
   fields after `HEAD` additive, unknown trailing fields ignored,
@@ -576,8 +598,9 @@ Product boxes (run this turn — results below):
 - [x] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — nine bullets,
   each naming its owner.
 - [x] Every Capability closure row is filled or an explicit n/a with its
-  actual reason spelled out — zero blank rows (five entities × six rows;
-  seven capabilities; seventeen inventory rows).
+  actual reason spelled out — zero blank rows (five entities × five rows =
+  25 closure rows: Create / Read-list / Update / Delete / State transitions;
+  seven capabilities; eighteen inventory rows).
 - [x] Integration closure has one row per subsystem of the derived inventory
   (`docs/CAPABILITIES.md` is the unfilled template, no live inventory; the
   derived inventory is recorded in the section and reconciled against the
@@ -599,9 +622,11 @@ Product boxes (run this turn — results below):
 ## Design status
 
 `designed` — capability closure complete (zero blank rows), product spec-lint
-boxes all tick; re-affirmed after the 2026-09-18 repair batch closing
-SPEC-REVIEW-32-1 findings F1–F8. Awaiting independent review by `review-spec`
-of the new revision.
+boxes all tick; re-affirmed after the 2026-09-18 repair batches closing
+SPEC-REVIEW-32-1 findings F1–F8 and SPEC-REVIEW-32-2 findings F9–F10
+(GATE-RAN's map encoding corrected to the grammar-admitting owner-column
+extension; Spec-lint self-counts fixed). Awaiting independent review by
+`review-spec` of the new revision.
 
 ---
 
