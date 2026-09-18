@@ -8,6 +8,9 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   PHASE_STATES,
@@ -174,4 +177,114 @@ test("glob semantics match the crate: ** crosses directories, * does not", () =>
   assert.equal(globToRegExp("**/*.test.*").test("a/b/x.test.mjs"), true);
   assert.equal(globToRegExp("**/*.test.*").test("a/x.spec.mjs"), false);
   for (const state of PHASE_STATES) assert.deepEqual(Object.keys(SHIPPED_PATH_POLICY.matrix[state]).sort(), ["create", "delete", "modify", "rename"]);
+});
+
+/* ---------------------------------------------- shipped entry: handler-level */
+// AC4/AC10 name "the pi extension unit test" as the proof that a `tool_call`
+// returns `{ block: true, reason }`. The pure-helper cases above never invoke
+// the entry, which is exactly how a non-compiling handler shipped green; the
+// cases below drive the real `dist/extension/index.js` with a Pi-shaped API.
+
+/** A Pi-shaped API that records event handlers instead of registering them. */
+function piDouble() {
+  const handlers = new Map();
+  return {
+    handlers,
+    api: {
+      registerCommand: () => {},
+      sendUserMessage: () => {},
+      setModel: async () => true,
+      getThinkingLevel: () => "medium",
+      setThinkingLevel: () => {},
+      on: (type, handler) => handlers.set(type, handler),
+    },
+  };
+}
+
+function context(cwd, notified = []) {
+  return {
+    cwd,
+    model: { provider: "anthropic", id: "claude-sonnet-4-5" },
+    isIdle: () => true,
+    isProjectTrusted: () => true,
+    ui: {
+      notify: (message, kind) => notified.push([message, kind]),
+      select: () => undefined,
+      input: () => undefined,
+      confirm: () => undefined,
+    },
+    modelRegistry: { find: () => undefined, hasConfiguredAuth: () => false, getAll: () => [] },
+  };
+}
+
+/** Load the shipped entry once against an isolated agent dir and repo cwd. */
+async function shippedEntry(cwd, agentDir) {
+  const previous = process.env.PI_CODING_AGENT_DIR;
+  process.env.PI_CODING_AGENT_DIR = agentDir;
+  try {
+    const { default: extension } = await import("../dist/extension/index.js");
+    const double = piDouble();
+    extension(double.api);
+    return double;
+  } finally {
+    if (previous === undefined) delete process.env.PI_CODING_AGENT_DIR;
+    else process.env.PI_CODING_AGENT_DIR = previous;
+  }
+}
+
+function tempRoot(name) {
+  const root = mkdtempSync(join(tmpdir(), `paw-path-${name}-`));
+  const cwd = join(root, "repo");
+  const agentDir = join(root, "agent");
+  mkdirSync(join(cwd, "tests"), { recursive: true });
+  mkdirSync(agentDir, { recursive: true });
+  writeFileSync(join(cwd, "tests", "a.mjs"), "v1\n");
+  return { root, cwd, agentDir };
+}
+
+function recordsFence(rows) {
+  return `\`\`\`text\npath-protection-records@1\nkind | paths | phase | date | authority | justification\n${rows.join("\n")}\n\`\`\`\n`;
+}
+
+test("AC4 entry: the shipped handler blocks an inline `gh pr comment` receipt on a bash call", async () => {
+  const { root, cwd, agentDir } = tempRoot("receipt");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")(
+      { toolName: "bash", input: { command: 'gh pr comment 1 --body "review-change:pass"' } },
+      context(cwd),
+    );
+    assert.equal(decision.block, true, "the ticket #182 receipt guard must be reachable for a bash call");
+    assert.match(decision.reason, /review-receipt\.mjs emit/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC4 entry: the shipped handler blocks a write to an existing protected file and names it", async () => {
+  const { root, cwd, agentDir } = tempRoot("write");
+  try {
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "edit", input: { path: "tests/a.mjs" } }, context(cwd));
+    assert.equal(decision.block, true);
+    assert.match(decision.reason, /tests\/a\.mjs/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC4 entry: a matching justification row permits the same write", async () => {
+  const { root, cwd, agentDir } = tempRoot("justified");
+  try {
+    mkdirSync(join(cwd, "docs", "features", "unit-one"), { recursive: true });
+    writeFileSync(
+      join(cwd, "docs", "features", "unit-one", "decisions.md"),
+      recordsFence(["justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | authoring the test"]),
+    );
+    const entry = await shippedEntry(cwd, agentDir);
+    const decision = entry.handlers.get("tool_call")({ toolName: "write", input: { path: "tests/a.mjs" } }, context(cwd));
+    assert.equal(decision, undefined, "a matching justification must let the write pass");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

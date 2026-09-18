@@ -156,6 +156,9 @@ function collectRecordTexts(root: string): string {
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
+  // Said once per session: an override that was ignored (or a malformed file)
+  // is reported the first time the guard runs, never on every tool call.
+  let reportedDegradations = false;
 
   const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi),
@@ -190,14 +193,13 @@ export default function extension(pi: ExtensionAPI): void {
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
   // The inline-receipt path is impossible: a `gh pr comment` carrying a
   // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
-  // names the script that proves the receipt landed (issue #182).
+  // names the script that proves the receipt landed (issue #182). The guard
+  // itself filters to `bash`, so every tool call is checked — nesting it under
+  // one tool name would make the block unreachable for the calls it exists for.
   pi.on("tool_call", (event, ctx) => {
-    // Receipt guard for mcp/tool calls carrying REVIEW-PASS markers.
-    if (event.toolName === "mcp") {
-      const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
-      const r = guards.receiptGuard({ toolName: event.toolName, command });
-      if (r) return r;
-    }
+    const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    const receipt = guards.receiptGuard({ toolName: event.toolName, command });
+    if (receipt.block) return receipt;
     // Tier 2 path prevention (feature 60): block a write/edit to an existing
     // protected path with no matching justification record; reads and new-file
     // creates pass. Reads the same effective policy the Tier 1 gate reads.
@@ -230,8 +232,6 @@ export default function extension(pi: ExtensionAPI): void {
     // the settled turn — best-effort by construction (issue #182 F4).
     const warning = guards.dirtyWorktreeWarning(readGitStatusBounded(ctx.cwd));
     if (warning) ctx.ui.notify(warning, "warning");
-  });
-
   });
 }
 
