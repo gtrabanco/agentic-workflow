@@ -106,14 +106,22 @@ boundaries below are recorded so qualification and review do not rediscover them
    `scripts/review-loop-discipline.test.mjs`, and the red suite is recorded here so
    a future fix owns it deliberately.
 
-12. **The `normative-drift` window P1→P4 is declared, not hidden.** P1 bumps the
-    schema package to 4.3.0 while the `CHANGELOG.md` companion row cannot land in
-    the same phase: `CHANGELOG.md` is a `docs` target and the canonical phase
-    contract's box 2 refuses a `docs` target in the `config/infra` P1
-    (`scripts/phase-lint.mjs` `layerForTarget`; P31-04, E-D31-18/E-D31-21). The
-    repo gate is therefore expected red between P1 and P4, P1's done-when stays
-    package-local, and P4's done-when runs `bun test
-    scripts/normative-drift.test.mjs` to prove the closure.
+12. **The `CHANGELOG.md` row lands with the bump in P1 — no `normative-drift`
+    window exists (E-D31-26, superseding the P31-04/E-D31-18/E-D31-21 reading).**
+    The package suite's own changelog-of-record check
+    (`test/verification-docs.test.mjs` → "the changelog of record carries a row for
+    the version being shipped") reads `package.json` and asserts the schema
+    package's `CHANGELOG.md` table has a row for that exact version, so bumping to
+    4.3.0 without the row reddens P1's own done-when. The repo's *Version every
+    change* rule and feature 59's precedent (`PLAN.md` P1 of
+    `59-executable-continuations`) bind the bump, its row and its release
+    surfaces to the same PR/task. The `docs`-target concern P31-04 raised holds
+    only for a phase whose *first* declared target is the row (the phase
+    contract's box 2 reads one target token, `scripts/phase-lint.mjs
+    `layerForTarget`); P1's bump task names `packages/agentic-workflow-schema/
+    package.json` first, and `CHANGELOG.md` is one of AC13's declared derived
+    surfaces, so the row rides the bump in P1. P4's done-when still runs
+    `bun test scripts/normative-drift.test.mjs` (it must stay green).
 
 13. **P1 is at the canonical phase budget, and it owns the bump's own reddened
     assertions and published limit.** The version bump reddens two existing

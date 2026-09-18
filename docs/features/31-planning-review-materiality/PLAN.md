@@ -60,20 +60,22 @@ The schema package's finding record becomes the carrier of the materiality
 floor: the record gains the bounded `reproducer`, and the runtime predicate that
 decides whether a PASS may coexist with a row becomes `medium`+. The severity
 vocabulary, the receipt contract id and the freshness codes keep every value. The
-package's own release record is owned by P4 with the other release records: the
-canonical phase contract forbids a `config/infra` phase from carrying a `docs`
-target (`scripts/phase-lint.mjs` `layerForTarget`), so the schema bump and its
-`CHANGELOG.md` row cannot share a phase — the repo's `normative-drift` gate is
-**expected red between this phase and P4**, this window is declared in
-`known-issues.md`, and the enforcement points are P4's done-when (which closes it)
-and AC10 at the PR head (P31-04).
+package's own release record lands with the bump in this phase (E-D31-26): the
+package suite's changelog-of-record check (`test/verification-docs.test.mjs`)
+binds the `CHANGELOG.md` row to the version `package.json` ships, and the repo's
+*Version every change* rule binds the bump, its row and its release surfaces to
+the same PR, so the bump and the row cannot be split without leaving this phase's
+own done-when red. `CHANGELOG.md` is one of AC13's declared derived surfaces; the
+`docs`-target concern `P31-04` raised was real only for a phase whose *first*
+declared target is the row (the phase contract's box 2), which this task avoids by
+naming the package bump first. No `normative-drift` window exists to declare.
 
 - [ ] Add the bounded `reproducer` field to the finding-record spec in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — an optional `string` entry in `FINDING_SPEC.fields` with `minLength: 1`, `maxLength` from a new `PRE_EXECUTION_LIMITS.reproducerChars` limit and `nulFree: true`, plus the matching optional member on the `PreExecutionReviewFindingV1` interface.
 - [ ] Rewrite the severity prose in `packages/agentic-workflow-schema/src/pre-execution-contract.ts` — the `PRE_EXECUTION_FINDING_SEVERITIES` comment and the `severity` field description state material = `medium`+, that `low` is a persisted report-note, and that `info` is immaterial, so no "only immaterial" phrasing survives anywhere in the package sources.
 - [ ] Change the materiality predicate in `packages/agentic-workflow-schema/src/pre-execution.ts` to the `medium`+ line and restate the doc comment above `validatePreExecutionReceiptAgainstSnapshot` — a PASS may coexist with open/unverified `low` rows and is refused while any open/unverified `medium`+ row exists.
 - [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS carrying an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates, while a `reproducer` beyond the declared bound is refused.
 - [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs` writes them, and the `--check` form is the drift gate) so the committed projections carry `reproducer` and their `$comment` runtime-rule disclosure stays in sync.
-- [ ] Bump the schema package to 4.3.0 in `packages/agentic-workflow-schema/package.json` and move the two version pins the bump reddens in the same commit — `test/release-contract.test.mjs` (`assert.equal(pkg.version, "4.2.0")`) and `test/verification-gates.test.mjs` (`assert.equal(manifest.version, "4.2.0")`) — an additive minor: every enum value, the receipt contract id and the freshness vocabulary stay byte-identical.
+- [ ] Bump the schema package to 4.3.0 in `packages/agentic-workflow-schema/package.json`, move the two version pins the bump reddens in the same commit — `test/release-contract.test.mjs` (`assert.equal(pkg.version, "4.2.0")`) and `test/verification-gates.test.mjs` (`assert.equal(manifest.version, "4.2.0")`) — and add the 4.3.0 row to `CHANGELOG.md` (E-D31-26) — an additive minor: every enum value, the receipt contract id and the freshness vocabulary stay byte-identical.
 - [ ] Add the `reproducerChars 1024` entry to the `### Published limits` block of `packages/agentic-workflow-schema/README.md`, so the `test/pre-execution-docs.test.mjs` walk over `PRE_EXECUTION_LIMITS` finds the new key and its value inside the section.
 - [ ] Run the package suite and the projection drift check green: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0.
 
@@ -149,7 +151,7 @@ package's 4.3.0 row lands with the bibliography append here.
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.
 - [ ] Run the repository's `bump-skill` procedure for the four touched skills (`skills/pre-execution-review/SKILL.md`, `skills/review-spec/SKILL.md`, `skills/review-plan/SKILL.md`, `skills/design-feature/SKILL.md`) — minor bumps, so `CHANGELOG.md` gains one row per skill and the README skill cells stay accurate.
-- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`. The schema package's 4.3.0 companion-table row lands in this phase with the other release records — it cannot live in P1, because `CHANGELOG.md` is a `docs` target and the phase contract forbids a `docs` target in the `config/infra` P1 — so the `normative-drift` window declared in `known-issues.md` closes at P4 (P31-04).
+- [ ] Append the Jin & Chen bibliography entry under a bottom `## References` section of `README.md`. The schema package's 4.3.0 companion-table row already landed with the bump in P1 (E-D31-26), so this phase carries only the bibliography and the four skill release records.
 
 Done-when: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` → exit 0 with the four skill minor bumps landed, the release tables recomputed against the frontmatter, and the AC7 removal greps clean.
 

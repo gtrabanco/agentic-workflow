@@ -1108,3 +1108,52 @@ never grows the list.
 | The `POLICY.md` sentence AC7's removal grep deletes is live at line 42, so a task that says "keep" it collides with the frozen criterion | repository | `ACCEPTANCE.md` AC7 (the `POLICY.md` re-review removal grep); `skills/pre-execution-review/references/POLICY.md:39-42`; observed `grep -n "re-review of the resulting snapshot" skills/pre-execution-review/references/POLICY.md` → `42:`, exit 0 | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-24; PE-036 |
 | Phase-lint box 3 caps a non-close-out phase at 8 tasks, so the two added P1 requirements resolve inside the budget by folding the pins into the bump task | repository | `scripts/phase-lint.mjs` box 3 (`box3`, `limit = 8` for a non-close-out phase); `PLAN.md` P1 (8 tasks); observed `bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md` → PASS (8/8) per phase, aggregate `d7193898…` | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-25; PE-037 |
 | The Product projection and its three context digests recompute byte-identical from the bytes on disk, so the repair batch moves no reviewed Product byte | repository | `node scripts/pre-execution-snapshot.mjs build --stage spec --unit 31-planning-review-materiality` → `spec-product-v1` digest `e9ce9abf…` (46362 bytes); `progress.md` receipt block `spec-review-31-11`; `packages/agentic-workflow-schema/src/pre-execution.ts:482-556` (the selector) | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-20; the plan's `--parent` binding |
+
+## 2026-09-18 — Execution conflict resolution (execute-phase, P1 entry)
+
+The pre-write mapper for P1 (implementation-discovery) confirmed every carried
+P1 planning-evidence row (PE-006/PE-007/PE-033/PE-034/PE-037) and found one
+Plan/source contradiction the `31-plan-6` cut left standing.
+
+### E-D31-26: The schema bump, its two pins and its `CHANGELOG.md` row land together in P1
+
+P1's own done-when (`cd packages/agentic-workflow-schema && bun run test &&
+bun run check:pre-execution-schemas`) is unsatisfiable as the `31-plan-6` cut
+wrote it: the package suite carries `test/verification-docs.test.mjs`, whose
+"the changelog of record carries a row for the version being shipped" case
+reads `package.json` and asserts the schema package's `CHANGELOG.md` table has
+a row for that exact version. Bumping to 4.3.0 while the row stays in P4
+reddens P1's own gate. The phase contract's box 2 concern P31-04 raised
+(`CHANGELOG.md` is a `docs` target, `scripts/phase-lint.mjs` `layerForTarget`)
+applies to the *first* declared target of a task, and P1's bump task names
+`packages/agentic-workflow-schema/package.json` first; `CHANGELOG.md` is one of
+AC13's declared derived surfaces. The repo's *Version every change* rule and
+feature 59's P1 (`59-executable-continuations`) both bind the bump, its row and
+its release surfaces to the same PR/task. Resolution: the 4.3.0 row moves from
+P4 to P1 alongside the bump and the two version pins. No phase, task count,
+validator, obligation or acceptance outcome moves (P1 stays eight tasks, P4
+stays eight tasks), so every phase fingerprint and the aggregate
+`d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c` are
+unchanged; `known-issues.md` §12 is rewritten to retire the window.
+
+### Execution-time refinement (E-D31-26 companion): the shared field spec needs an additive `optional` flag
+
+E-D31-9 declares `reproducer` "optional on purpose: a receipt whose findings
+carry no `reproducer` stays valid". The shared `VerificationFieldSpec`
+(`packages/agentic-workflow-schema/src/verification-contract.ts`) requires
+every declared field (`validateStructureFields` pushes `missing-field` for an
+absent key), so optionality had no representation. P1 adds `optional?: boolean`
+(default `false`) to the field spec, skips an absent optional field in the
+structural walk, and filters optional fields out of `required` in both Draft-07
+generators. Additive and default-off: no existing field changes behaviour, and
+the projected `PreExecutionReviewFindingV1.required` list stays byte-identical,
+which is exactly what `test/pre-execution-schema.test.mjs` already pins.
+
+### Evidence rows (execution conflict, 2026-09-18)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The package suite requires a `CHANGELOG.md` row for the shipped `package.json` version | repository | `packages/agentic-workflow-schema/test/verification-docs.test.mjs:504-522`; observed `bun run test` after the 4.3.0 bump → `2 tests failed`, incl. "the changelog of record carries a row for the version being shipped" | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 |
+| The published-limits fixture also discloses every key, so `reproducerChars` must join its literal | repository | `packages/agentic-workflow-schema/test/pre-execution-canonical.test.mjs:524-546`; `test/fixtures/pre-execution-vectors.mjs` (`limits: PRE_EXECUTION_LIMITS`) | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 |
+| The shared field walk has no optional-key representation | repository | `packages/agentic-workflow-schema/src/verification-contract.ts:1160-1164` (`missing-field` for every absent declared key); `src/verification-contract.ts:42-76` (`VerificationFieldSpec`, no `optional`) | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 companion |
+| Feature 59's P1 put the schema bump and its CHANGELOG row in one `config/infra` task | repository | `docs/features/59-executable-continuations/PLAN.md` P1 task ("Bump the package to 4.2.0 ... record the row in the repo `CHANGELOG.md`") | `4d522b6b` @ 2026-09-18 | current | proven | E-D31-26 |

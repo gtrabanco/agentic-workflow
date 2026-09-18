@@ -417,7 +417,7 @@ other families):
 artifacts 32 · contexts 16 · findings 64 · evidencePerFinding 8
 parentReceipts 8 · receiptDiagnostics 8 · diagnostics 50
 unitIdChars 128 · revisionIdChars 128 · idChars 128 · identifierChars 160
-pathChars 1024 · claimChars 2048 · evidenceChars 1024
+pathChars 1024 · claimChars 2048 · reproducerChars 1024 · evidenceChars 1024
 resolutionEvidenceChars 2048 · policyChars 64 · diagnosticChars 512
 artifactBytes 4194304 · snapshotBytes 32768 · receiptBytes 65536
 ```
