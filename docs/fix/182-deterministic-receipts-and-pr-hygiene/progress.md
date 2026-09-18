@@ -81,7 +81,7 @@ Notes:
 - Read-only: no reviewed artifact (`SPEC.md`, `ACCEPTANCE.md`, the roadmap, the fix-index row) was modified. Only this ledger (`progress.md`) was written; `planning-findings.md` gains no row (zero new findings).
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `node --test scripts/review-receipt.test.mjs scripts/session-close.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0, 59 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Commit: 32a6f142 · Gate: `node --test scripts/review-receipt.test.mjs scripts/session-close.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0, 59 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P4 · Attempts: 1
 
 ## P1 — 2026-09-18
