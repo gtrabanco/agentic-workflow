@@ -69,3 +69,12 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
   AC-09 (`test -f path-policy.json && test -f path-protection.md && grep -q
   'path-protection' hooks/README.md`) → exit 0; AC-07 intent (`grep -rnE
   'tests/\*\*|e2e/\*\*' skills/`) → no match.
+- **P3 (2026-09-18)** — `node --test scripts/normative-drift.test.mjs` → 17 pass
+  / 0 fail (the `path-protection@1` block resolves, the `path-protection`
+  rejection type is named by the new `GATE REJECTION — path-protection` trace,
+  and the two new `normative-surfaces@1` rows resolve against
+  `path-protection-reason`); `node scripts/check-skill-context.mjs` → PASS
+  context budgets: 40 skills; `node scripts/check-skill-context.mjs --routes` →
+  PASS route budgets: 22 routes (the 19 affected route ceilings and the
+  execute-phase reference ceiling re-based to ceil(measured × 1.10), growth
+  source feature 60 P3); `node --test scripts/check-skill-context.test.mjs` → exit 0.
