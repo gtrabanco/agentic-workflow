@@ -180,6 +180,47 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
   map/template equality); the user's repair instruction. Recorded by
   `design-feature` (repair batch, 2026-09-18).
 
+## 2026-09-18 — D32-8: repair batch F11–F12 (SPEC-REVIEW-32-3) — template projections vs the `template/` export mirror disambiguated; IS-5(c) evidence row added
+
+- **What**: one evidence-bounded repair batch closing both findings of receipt
+  SPEC-REVIEW-32-3 (`planning-findings.md` F11 `medium`/product, F12
+  `low`/product), applied to the Product half in place:
+  (F11) the out-of-scope bullet "No `template/` change" is reworded. "Template"
+  carried two meanings and the non-goal's stated reason was false for the
+  surfaces the D32-7 repair makes change: the two LEDGERS.md **template
+  projections** the scaffold reads (`docs/features/_TEMPLATE/LEDGERS.md`,
+  `docs/fix/_TEMPLATE/LEDGERS.md`) DO change — they gain the identical
+  `review-findings` owner cell per IS-4/D32-7 (`scripts/ledger-ownership.test.mjs`
+  reads only those two files and demands map/projection owner-cell equality).
+  The bullet now scopes the unchanged surfaces precisely: the GATE-RAN mark
+  itself stays recorded output, not a convention the SPEC/ACCEPTANCE template
+  bodies mirror (feature 30's receipt ruling, now scoped to those bodies), and
+  the exportable mirror (`template/docs/features/_TEMPLATE/LEDGERS.md`,
+  `template/docs/fix/_TEMPLATE/LEDGERS.md`) is untouched — already drifted;
+  re-syncing it is a template-mirror change outside this sweep (feature 28's
+  `c6daf5ec` is that surface's owner).
+  (F12) evidence row **E-24** added: the `ledger-ownership@1` roadmap row's
+  writer column-sets (`LEDGERS.md:146`) name `plan-feature-scaffold:planned-row`
+  as the `defined → planned` writer and omit `plan-feature`, while
+  `plan-feature/SKILL.md:92-94`'s "Confirm roadmap" step verifies/repairs
+  registration only — grounding IS-5(c)'s verify-vs-write claim (→ AC-07).
+  IS-5(c) was the only in-scope item whose supporting claim had no evidence
+  row.
+- **Why**: F11's ambiguity would let a weak model read the non-goal as
+  forbidding the very projection edit IS-4/AC-04 mandate (one word, two
+  meanings, opposite instructions); F12 left the only unevidenced in-scope
+  claim un-falsifiable from the frozen set — both defects are exactly what
+  this feature's own evidence contract forbids.
+- **Supersedes**: the previous wording of the out-of-scope "No `template/`
+  change" bullet (feature 30's receipt ruling now applies to the
+  SPEC/ACCEPTANCE template bodies, not to the LEDGERS.md projections). No
+  scope change: the same surfaces change, the same surfaces stay untouched.
+- **Authority**: receipt SPEC-REVIEW-32-3 findings F11–F12 (snapshot
+  `eb2e7a29d80eaf9c66de29efc11f0a81eb69e8bf83ba7ddb5c34b4494ce4d9e7`);
+  `scripts/ledger-ownership.test.mjs:42-43,186-196`; evidence rows E-22 (the
+  drift fact), E-24 (new). Recorded by `design-feature` (repair batch,
+  2026-09-18).
+
 ## Open items for `resolve-repository-state` (not resolved here)
 
 - REPOSITORY_STATE.md F006/F007 are stale versus the current forge and roadmap

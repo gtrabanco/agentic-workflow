@@ -226,9 +226,19 @@ migration.
   feature 35; here only the trailing `manifest` slot of GATE-RAN is reserved.
 - **No bilingual siblings** — English-only interim (AD-002 / F011): no
   `.es.md` files are created or updated.
-- **No `template/` change** — the GATE-RAN mark is recorded output, not a
-  ledger convention the template mirrors (same ruling as feature 30's
-  receipt).
+- **No GATE-RAN convention in the template bodies; no `template/` export-mirror
+  change** — "template" names two different file sets here, and this sweep
+  touches exactly one of them: the two LEDGERS.md **template projections** the
+  scaffold reads (`docs/features/_TEMPLATE/LEDGERS.md`,
+  `docs/fix/_TEMPLATE/LEDGERS.md`) DO change — they gain the identical
+  `review-findings` owner cell per IS-4 (D32-7). What stays untouched is (a)
+  the GATE-RAN mark itself, which is recorded output, not a ledger convention
+  the SPEC/ACCEPTANCE template bodies mirror (feature 30's receipt ruling,
+  which applies to those bodies only), and (b) the exportable mirror
+  (`template/docs/features/_TEMPLATE/LEDGERS.md`,
+  `template/docs/fix/_TEMPLATE/LEDGERS.md`) — already drifted; re-syncing it
+  is a template-mirror change outside this sweep (feature 28's `c6daf5ec` is
+  that surface's owner).
 - **No re-wording of `execute-phase`'s NRS clause** — `EXECUTION_CONTRACT.md`
   already records NRS as optional at authoring HEAD (E-14); that surface gets
   a regression check only.
@@ -578,6 +588,7 @@ lands in this unit (sweep row 15 is in-scope, pinned by AC-02).
 | E-21 | Roles: agents execute the skills; orchestrators or people invoke and consume outputs; no external CI/scheduler role beyond `audit-pr`'s existing CI consumption | user | decisions.md 2026-09-17 (D32 rows) | 2026-09-17 | not-applicable | decision | — |
 | E-22 | `docs/CAPABILITIES.md` exists as the unfilled template (no live inventory): roles table + cross-cutting subsystem floor, byte-identical to `template/docs/CAPABILITIES.md` (revised 2026-09-18: the half had claimed the file does not exist; falsified by SPEC-REVIEW-32-1 F2) | repository | `git log -1 --format='%H %s' -- docs/CAPABILITIES.md` → `1bab6e60 feat(docs): seed CAPABILITIES.md from template (feature 30 prep)`; `wc -l docs/CAPABILITIES.md` → 47; phrasing per feature 59 SPEC:244-245 | 721c40d (HEAD at repair) | current | proven | — |
 | E-23 | The planning scale `info \| low \| medium \| high \| critical` is already the findings-ledger severity vocabulary and is in live use (revised 2026-09-18: the half had dated the scale to feature 31; falsified by SPEC-REVIEW-32-1 F3) | document | `skills/pre-execution-review/references/LEDGERS.md:92` (findings-ledger severity vocabulary, `info` the only immaterial value); live rows `docs/features/37-phase-lint-script/planning-findings.md` F1 (`info`), `docs/features/59-executable-continuations/planning-findings.md` F1 (`low`) | 721c40d (HEAD at repair) | current | proven | — |
+| E-24 | `plan-feature` verifies — not writes — the roadmap row: the `ledger-ownership@1` roadmap row's writer column-sets name `plan-feature-scaffold:planned-row` (the `defined → planned` writer) and do not list `plan-feature`, while `plan-feature`'s "Confirm roadmap" step verifies/repairs registration only — the verify-vs-write blur IS-5(c) fixes (grounds IS-5(c) → AC-07) | document | `skills/pre-execution-review/references/LEDGERS.md:146` (roadmap writer column-sets: `design-feature:idea-or-defined-row + plan-feature-scaffold:planned-row + plan-fix:fix-index-row + execute-phase:status-and-pr-link + ship-roadmap:founding-and-flip + audit-docs:low-risk-row-repair`); `skills/plan-feature/SKILL.md:92-94` ("Confirm roadmap. Verify the feature is registered … fix the entry now — never leave registration for later"); `skills/plan-feature-scaffold/SKILL.md:110` ("the `defined → planned` write this skill owns") | 950e37e (HEAD at this repair) | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -625,7 +636,11 @@ Product boxes (run this turn — results below):
 boxes all tick; re-affirmed after the 2026-09-18 repair batches closing
 SPEC-REVIEW-32-1 findings F1–F8 and SPEC-REVIEW-32-2 findings F9–F10
 (GATE-RAN's map encoding corrected to the grammar-admitting owner-column
-extension; Spec-lint self-counts fixed). Awaiting independent review by
+extension; Spec-lint self-counts fixed), and after the 2026-09-18 repair batch
+closing SPEC-REVIEW-32-3 findings F11–F12 (the out-of-scope "template" bullet
+reworded to disambiguate the LEDGERS.md template projections from the
+`template/` export mirror; evidence row E-24 added for IS-5(c)'s
+verify-vs-write claim). Awaiting independent review by
 `review-spec` of the new revision.
 
 ---
