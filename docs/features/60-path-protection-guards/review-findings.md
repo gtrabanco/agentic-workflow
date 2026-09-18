@@ -14,15 +14,15 @@ brand surface. Ledger schema:
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F1 | packages/pi-agentic-workflow/src/extension/index.ts:235 | code | high | fix-now | source (fold) | no |
-| F2 | packages/pi-agentic-workflow/src/extension/index.ts:208-209 | code | high | fix-now | source (fold) | no |
-| F3 | packages/pi-agentic-workflow/src/extension/index.ts:196-200 | code | med | fix-now | source (fold) | no |
+| F1 | packages/pi-agentic-workflow/src/extension/index.ts:235 | code | high | fix-now | source (fold) | yes |
+| F2 | packages/pi-agentic-workflow/src/extension/index.ts:208-209 | code | high | fix-now | source (fold) | yes |
+| F3 | packages/pi-agentic-workflow/src/extension/index.ts:196-200 | code | med | fix-now | source (fold) | yes |
 | F4 | packages/pi-agentic-workflow/src/config/path-policy.ts:214-224 | code | med | fix-now | source (fold) | no |
 | F5 | packages/agentic-workflow/bin/path-guard.mjs:39-45,148,151 | code | med | fix-now | source (fold) | no |
 | F6 | packages/agentic-workflow/bin/path-guard.mjs:136,151 | security | med | fix-now | source (fold) | no |
 | F7 | packages/pi-agentic-workflow/src/extension/index.ts:205,214-215 | security | med | fix-now | source (fold) | no |
 | F8 | CHANGELOG.md:94,97 | code | med | fix-now | source (fold) | no |
-| F10 | packages/pi-agentic-workflow/test/path-protection.test.mjs | verify | med | fix-now | source (fold) | no |
+| F10 | packages/pi-agentic-workflow/test/path-protection.test.mjs | verify | med | fix-now | source (fold) | yes |
 | F13 | packages/pi-agentic-workflow/src/extension/index.ts:221 | perf | med | fix-now | source (fold) | no |
 | F16 | template/.agentic-workflow/path-protection.md:61-66 | api-ergonomics | med | fix-now | source (fold) | no |
 | VF-1 | packages/pi-agentic-workflow/src/extension/index.ts:235 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck reproducer `cd packages/pi-agentic-workflow && bun run test` → exit 2, `error TS1128: Declaration or statement expected` at 235,4 and 236,1 (stray `});`) | code | confirmed | finding-mark | n/a | n/a |
