@@ -273,8 +273,8 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
     assert.ok(registered.has(SETTINGS_COMMAND_ALIAS), "the /aw-settings alias is registered from the entry too");
     assert.deepEqual(
       surfaceCalls.filter(([call]) => call === "on").map(([, type]) => type).sort(),
-      ["agent_settled", "model_select", "thinking_level_select"],
-      "the entry subscribes to the lifecycle events routing depends on",
+      ["agent_settled", "model_select", "thinking_level_select", "tool_call"],
+      "the entry subscribes to the lifecycle events routing and the receipt/hygiene guards depend on",
     );
 
     // Running a real alias through the real entry must reach Pi's dispatcher.
