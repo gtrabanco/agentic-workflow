@@ -74,13 +74,13 @@ residue routes to `triage-issue --prioritize-now` rather than a fourth fold.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F25 | packages/agentic-workflow/bin/path-guard.mjs:175 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F26 | packages/agentic-workflow/bin/path-guard.mjs:150-158 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F27 | packages/pi-agentic-workflow/src/extension/index.ts:220-242 | code | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F28 | packages/pi-agentic-workflow/src/extension/index.ts:221-250 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F29 | packages/agentic-workflow/src/path-policy.mjs:150-175 | perf | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F30 | template/.agentic-workflow/hooks/README.md:41-53 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold | yes |
-| F31 | docs/features/60-path-protection-guards/SPEC.md:576-577 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · replan-in-unit | yes |
+| F25 | packages/agentic-workflow/bin/path-guard.mjs:175 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 293875d | yes |
+| F26 | packages/agentic-workflow/bin/path-guard.mjs:150-158 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 293875d | yes |
+| F27 | packages/pi-agentic-workflow/src/extension/index.ts:220-242 | code | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 293875d | yes |
+| F28 | packages/pi-agentic-workflow/src/extension/index.ts:221-250 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 293875d | yes |
+| F29 | packages/agentic-workflow/src/path-policy.mjs:150-175 | perf | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 293875d | yes |
+| F30 | template/.agentic-workflow/hooks/README.md:41-53 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold · fold 7352186 | yes |
+| F31 | docs/features/60-path-protection-guards/SPEC.md:576-577 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · replan-in-unit · fold 7352186 | yes |
 | VF-20 | packages/agentic-workflow/bin/path-guard.mjs:175 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: temp repo, `tests/a.mjs` replaced by a symlink and committed; `git diff --name-status -z --diff-filter=ACMRD BASE` → empty while plain `git diff --name-status BASE` → `T\ttests/a.mjs`; gate `--base BASE` → `PATH-GUARD pass — clean`, `checked: 0`, exit 0 | security | confirmed | finding-mark | n/a | n/a |
 | VF-21 | packages/agentic-workflow/bin/path-guard.mjs:150-158 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: in-repo symlink `evillink -> /tmp/evil` carrying a valid declaration + justification row; `--unit evillink` → `PATH-GUARD pass — justified` exit 0, real in-repo unit → `fail — protected-modification` exit 1 | security | confirmed | finding-mark | n/a | n/a |
 | VF-22 | packages/pi-agentic-workflow/src/extension/index.ts:220-242 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: real built handler with `cwd` reached through a symlink → `write src/new.ts` returns `{block:true, reason:"…resolves outside the project root…"}`; the same create under a non-symlinked cwd is allowed | code | confirmed | finding-mark | n/a | n/a |
