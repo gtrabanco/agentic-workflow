@@ -282,3 +282,14 @@ Notes:
 ## Unit-loop receipt — P6
 - Commit: pending · Gate: `bun scripts/check-skill-context.mjs` (exit 0) + P6 greps (`audit-pr-gate.mjs comment` ≥ 1, `gh pr comment` = 0) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P7 · Attempts: 1
+
+## P7 — 2026-09-18
+- Done (commit predecessor `5c572afa`): `aheadCount()` now returns `null` when `git rev-list --count @{upstream}..HEAD` exits non-zero, and `hygieneFromState` maps `branchAhead: null` to `branch-pushed: fail` with the blocker "the branch has no resolvable upstream to compare against" — never a zero ahead-count. Red-first: the pure `branchAhead: null` case and the CLI no-upstream case failed before the change, both green after. `makeRepo` gained a configured bare remote so the existing CLI fixtures stay truthfully `branch-pushed: pass`; the new fixture calls `makeRepo({ withRemote: false })`. O12 `verified`.
+- Remains: P8–P10.
+- Gotchas: the falsification hook is the no-upstream throwaway repo (exit 128 counted as zero before, now the blocked state). The `evaluate --hygiene` path consumes the same `aheadCount()`, so it fails closed too. Root suite 546 pass / 0 fail.
+- Files: scripts/audit-pr-gate.mjs, scripts/audit-pr-receipt.test.mjs, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: P8
+
+## Unit-loop receipt — P7
+- Commit: pending · Gate: `node --test scripts/*.test.mjs` (exit 0, 546 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: P8 · Attempts: 1
