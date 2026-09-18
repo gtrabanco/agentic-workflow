@@ -10,7 +10,7 @@
 // prints:
 //   PATH-GUARD <pass|fail> — <code>
 //   offenders: <path:operation:reason[, …]|none>
-//   phase: <P<n>> · freeze-after: <P<m>|none> · checked: <n>
+//   phase: <P<n>> · freeze-after: <P<m>|none|n/a> · checked: <n>   (n/a when no declaration)
 //   DEGRADED — <code>: <detail>        (only when a degradation is reported)
 // exit: 0 pass | 1 fail | 2 usage error
 

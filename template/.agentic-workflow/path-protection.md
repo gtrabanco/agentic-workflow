@@ -5,10 +5,14 @@ A deterministic guard for the repository's protected paths. It moves the
 policy itself) from prompt prose to shipped defaults an agent cannot silently
 weaken.
 
-`path-policy.json` beside this file is the policy the guard reads. It ships with
-the scaffold as the defaults; a repository that never edits it still gets the
-expected behaviour, and one that extends it gets a stricter guard. The
-`path-protection-policy@1` schema is the document shape.
+`path-policy.json` beside this file is the policy the **Tier 1 checkpoint gate**
+reads. It ships with the scaffold as the defaults; a repository that never edits
+it still gets the expected behaviour, and one that extends it gets a stricter
+guard. The `path-protection-policy@1` schema is the document shape. The **Tier 2
+pi guard** never reads this file: it applies the same shipped defaults, tightened
+by the optional `pathProtection` key in the pi config
+(`~/.pi/agent/pi-agentic-workflow.json` / `<repo>/.pi/pi-agentic-workflow.json`) —
+see *Consumers*.
 
 ## Protected classes (shipped defaults)
 
@@ -92,4 +96,8 @@ covers is `undeclared-test`.
   fixed `PATH-GUARD` block. It is read-only and offline.
 - **Tier 2 — the pi preventive guard** blocks a `write` / `edit` tool call to an
   existing protected path with no matching justification record. Reads and
-  new-file creates pass.
+  new-file creates pass. Its policy is the shipped defaults tightened by the pi
+  config's `pathProtection` key (same JSON file as the model routing — not
+  `path-policy.json`), resolved tighten-only: a removal or a lowering is ignored
+  and reported once per session. See the pi package README's *Path protection*
+section for the override shape.
