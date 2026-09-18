@@ -225,6 +225,25 @@ test("hygieneFromState: an unresolvable upstream blocks the branch-pushed gate (
   assert.deepEqual(state.repairs, []);
 });
 
+test("hygieneFromState: an unobserved draft flag fails pr-ready closed, never a default pass (F6)", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: null });
+  assert.equal(state.gates["pr-ready"], "fail");
+  assert.ok(state.blockers.some((b) => /draft state was not observed/.test(b)), state.blockers.join("; "));
+  assert.deepEqual(state.repairs, [], "an unobserved flag is not repaired by guessing");
+  // The explicit reads still behave: false passes, true blocks with the repair.
+  assert.equal(hygieneFromState({ isDraft: false }).gates["pr-ready"], "pass");
+  assert.deepEqual(hygieneFromState({ isDraft: true }).repairs, ["gh pr ready"]);
+});
+
+test("CLI hygiene: without --pr the draft flag is unobserved, so pr-ready fails closed (F6)", () => {
+  const { repo } = makeRepo({ withRemote: false });
+  const result = spawnSync(process.execPath, [script, "hygiene"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.gates["pr-ready"], "fail");
+  assert.ok(report.blockers.some((b) => /draft state was not observed/.test(b)), report.blockers.join("; "));
+});
+
 // ---------------------------------------------------------------------------
 // CLI — `hygiene --apply` on a throwaway repo with a fake `gh`
 // ---------------------------------------------------------------------------
