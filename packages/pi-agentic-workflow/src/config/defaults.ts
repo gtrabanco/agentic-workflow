@@ -1,4 +1,5 @@
 import type { EffectiveConfig, Route } from "./types.js";
+import { SHIPPED_PATH_POLICY, intersectPathPolicy } from "./path-policy.js";
 
 /**
  * The in-package default (SPEC S6, D-P6): a fresh install with no config file
@@ -12,4 +13,5 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   commands: {},
   onUnavailableRoute: "stop",
   onSettle: "keep",
+  pathProtection: intersectPathPolicy(SHIPPED_PATH_POLICY, {}),
 };

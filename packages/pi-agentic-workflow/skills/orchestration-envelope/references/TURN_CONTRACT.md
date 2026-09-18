@@ -85,3 +85,55 @@ next | suggested
 next | continuation
 ```
 
+## Path-protection checkpoint (feature 60)
+
+The Tier 1 path gate is versioned so the checkpoint invocation, the closed
+reason vocabulary, and the two record blocks cannot drift from the crate module
+that produces them. The preflight runs the checkpoint over the just-closed
+phase's committed range (`execute-phase`'s preflight owns the step text):
+
+```text
+path-protection@1
+# checkpoint: path-guard --unit <unit-dir> --phase <P<n>> --base <P<n> base ref>
+# reasons: schema-export:PATH_GUARD_REASONS (packages/agentic-workflow/src/path-policy.mjs)
+reason | kind
+clean | pass
+justified | pass
+approved | pass
+protected-modification | fail
+approval-required | fail
+undeclared-test | fail
+unmatched-record | fail
+malformed-declaration | fail
+missing-config | degraded
+malformed-config | degraded
+```
+
+The gate prints one fixed block (`PATH-GUARD <pass|fail> — <reason>`, then an
+`offenders:` line, then `phase: … freeze-after: … checked:`, then any `DEGRADED`
+line) and exits 0 on pass, 1 on fail, 2 on usage. The plan declares the protected
+set it will author:
+
+```text
+path-protection-plan@1
+freeze-after: <P<n>|none>
+kind | path | justification
+created | <repo-relative path or glob> | <one-line justification>
+not-created | <test name> | <one-line justification>
+ignored | <test name> | <one-line justification>
+```
+
+Every escape is an append-only record row in the unit's `decisions.md`:
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | <path or glob>[,<path or glob>] | <P<n>> | <YYYY-MM-DD> | execute-phase | <one-line justification>
+approval | <path or glob>[,<path or glob>] | <P<n>> | <YYYY-MM-DD> | human-owner | <one-line justification>
+```
+
+A `justification` row satisfies a justification requirement; an `approval` row
+satisfies an approval requirement and additionally requires a matching
+justification row. The authority column is validated (`execute-phase` for
+justification, `human-owner` for approval), so no auto-approval authority exists.
+
