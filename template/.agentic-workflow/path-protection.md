@@ -72,6 +72,14 @@ justification row for the same path. There is no auto-approval authority: an
 approval written by anyone but the owner is malformed, and the guard fails
 closed. A record row whose paths match no changed path is `unmatched-record`.
 
+A record row is scoped to a single phase: only rows whose `phase` cell equals the
+`--phase` the gate is invoked with are counted, so a correctly-worded row for a
+different phase is ignored (and can itself surface as `unmatched-record`). Write
+the phase the checkpoint checks — the `execute-phase` preflight runs the
+close-out gate over the just-closed phase's committed range with
+`--phase P<n-1>`, so the row for a change made while closing phase *n* names
+`P<n-1>`, not `P<n>`.
+
 The plan declares the protected paths it will create in the
 `path-protection-plan@1` block (`freeze-after` plus `created` / `not-created` /
 `ignored` rows, each justified). A created protected path no `created` row

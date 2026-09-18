@@ -24,7 +24,7 @@ brand surface. Ledger schema:
 | F8 | CHANGELOG.md:94,97 | code | med | fix-now | source (fold) | yes |
 | F10 | packages/pi-agentic-workflow/test/path-protection.test.mjs | verify | med | fix-now | source (fold) | yes |
 | F13 | packages/pi-agentic-workflow/src/extension/index.ts:221 | perf | med | fix-now | source (fold) | yes |
-| F16 | template/.agentic-workflow/path-protection.md:61-66 | api-ergonomics | med | fix-now | source (fold) | no |
+| F16 | template/.agentic-workflow/path-protection.md:61-66 | api-ergonomics | med | fix-now | source (fold) | yes |
 | VF-1 | packages/pi-agentic-workflow/src/extension/index.ts:235 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck reproducer `cd packages/pi-agentic-workflow && bun run test` → exit 2, `error TS1128: Declaration or statement expected` at 235,4 and 236,1 (stray `});`) | code | confirmed | finding-mark | n/a | n/a |
 | VF-2 | packages/pi-agentic-workflow/src/extension/index.ts:208-209 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck `grep -rn reportedDegradations packages/pi-agentic-workflow/src` → only the read (208) and write (209), no declaration; `npx tsc --noEmit` on a copy with 235 fixed → TS2304 "Cannot find name 'reportedDegradations'" at 208 | code | confirmed | finding-mark | n/a | n/a |
 | VF-3 | packages/pi-agentic-workflow/src/extension/index.ts:196-200 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read: handler consumes `receiptGuard` only under `event.toolName === "mcp"`, while `src/extension/receipt-guard.ts:65-66` returns `{block:false}` for anything but `"bash"` → the Bash-call guard is unreachable | code | confirmed | finding-mark | n/a | n/a |
