@@ -139,3 +139,60 @@ Notes:
   --unit-kind feature` → `structural.fresh: true`, `current: true`, exit 0.
 - No reviewed artifact was modified: `SPEC.md`, `decisions.md`, and the `ROADMAP.md`
   row-60 bytes are unchanged; only this receipt ledger was appended.
+
+### plan — 2026-09-18
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-60-1 · Snapshot: 40626cd083e620763d791c8b1408d248c610a67846b380242836a14e5c1b0ad8 · Verdict: plan-review-fail
+- Unit: 60-path-protection-guards · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e · Parent Product receipt: SPEC-REVIEW-60-2
+- Source revision: 6dddba5d27ed104f38385f4a48d4cbc69ed0cbf8 · Artifact revision: 6dddba5d27ed104f38385f4a48d4cbc69ed0cbf8
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (2026-09-18 authoring turn)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T08:55:00Z/2026-09-18T09:05:00Z · Findings: 8 (material open: 8)
+- Ledgers read: planning-evidence 22 rows · obligations 17 rows (verified-capable: 15)
+- Prior plan receipt (re-review only): none — first cycle
+```
+
+Notes:
+- Snapshot built by `bun scripts/pre-execution-snapshot.mjs build --stage plan --unit
+  60-path-protection-guards --parent
+  12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e` at one revision
+  (`git rev-parse HEAD` = `6dddba5d…`, tree clean; `contentRevision` over the bound paths
+  resolves to the same commit). It bound nine artifact rows whole-file — `spec` `SPEC.md`
+  (46600 B), `acceptance` `ACCEPTANCE.md` (4577 B), `planning-evidence` (8860 B),
+  `obligations` (7169 B), `plan` `PLAN.md` (12637 B), `tasks` `TASKS.md` (9777 B),
+  `testing` (3608 B), `decisions` (16180 B), `architecture-notes` (3952 B) — and the three
+  contexts `project-guide` present, `normalized-repository-state` present,
+  `architectural-invariants` absent (NRS F010). Digest `40626cd0…0ad8` pasted above.
+- Parent lineage confirmed by recomputation, never by prose: building the spec-stage
+  snapshot at the Product receipt's own revision
+  (`build --stage spec --unit 60-path-protection-guards --source-revision
+  7e9f6f543719ded87d9da03385b7ba99bd2ab93d --artifact-revision
+  7e9f6f543719ded87d9da03385b7ba99bd2ab93d`) reproduces exactly
+  `12121bffc93596850673d031a53afe79586816c6ba23a952906959e485e1682e`, the Snapshot the
+  `SPEC-REVIEW-60-2` receipt records. The bound Product projection is still 24443 B
+  sha256 `50b33e5d…920e` and the three contexts are unchanged, so the parent is current
+  and only the Engineering half moved.
+- `- Artifact revision:` binds the snapshot builder's canonical content-derived value
+  (`6dddba5d…`), not the planner's handoff label `60-plan-1` (`PLAN.md:8-9`, `SPEC.md:388`).
+  The label is recorded here beside the recomputed value per `POLICY.md` §7; the receipt
+  field carries the derived value so a consumer's plain `verify --stage plan` matches, per
+  the feature 55 (`docs/features/55-executable-golden-fixture/progress.md:155-166`) and
+  feature 37 precedents.
+- Falsification before the checks (fresh context): CONFIRMED-GAPS. The three strongest
+  unsupported claims are the P3 normative-surface machine vocabulary (PLAN60-F2), the
+  template-seed parity attributed to AC-09 (PLAN60-F5), and the Tier 2 guard's
+  justification-record source (PLAN60-F6). No obligation is silently dropped; the gaps
+  are a missing drift-gate task, an unenforced second pin, an unobservable checkpoint,
+  and an under-specified Tier 2 condition.
+- Findings for this snapshot: `planning-findings.md` (`PLAN60-F1`…`PLAN60-F8`).
+- Self-check: see the JSON answer pasted beside the verdict block (POLICY §8, reviewer is
+  consumer zero): `structural.fresh: true`, `current: false`, exit 4 — the persisted
+  verdict is a FAIL, which is the emit result.
+- No reviewed plan artifact was modified: `SPEC.md`, `ACCEPTANCE.md`, `PLAN.md`,
+  `TASKS.md`, `testing.md`, `decisions.md`, `architecture-notes.md`, the two ledgers, and
+  the `ROADMAP.md` row-60 bytes are byte-identical to the reviewed snapshot; only this
+  receipt ledger and `planning-findings.md` were appended.
