@@ -41,11 +41,13 @@ contradiction fixes, pins close-out).
   same fold/review surfaces and its plan must not be re-based mid-flight.
   Satisfied: merged through PR #188 (roadmap row 30, verified 2026-09-17).
 - **Hard (execution start): feature 31** (`planning-review-materiality`,
-  issue #171) — **not yet merged** (roadmap status `idea` at authoring,
-  2026-09-17). Same LEDGERS/`review-change` surfaces; the planning-scale row
-  of the severity conversion table (IS-2) is written against 31's
-  `info|low|medium|high|critical` vocabulary and lands only after 31 exists.
-  Blocks execution, **not** this design.
+  issue #171) — **not yet merged** (roadmap status `idea`; re-checked at the
+  2026-09-18 repair). Same LEDGERS/`review-change` surfaces; 31 re-edits the
+  same planning-review rules, so this feature's plan must not be re-based
+  mid-flight. Blocks execution, **not** this design. (The planning scale
+  `info|low|medium|high|critical` itself already exists — LEDGERS.md's
+  findings-ledger severity vocabulary — so IS-2's conversion row for it lands
+  in this unit, not in 31; see D32-6.)
 - **Soft:** features 33 (`turn-contract-single-owner`) and 50
   (`review-loop-convergence`) re-base on this feature's final text; feature 35
   (`scoped-receipt-verifier`) consumes IS-4's extensible digest slots. None
@@ -76,14 +78,18 @@ concepts still have parallel local vocabularies:
    `audit-pr`, and `triage-issue` alike. A weak model reading any two of these
    surfaces must guess.
 2. **Severity scales are local and partly buggy.** The ledger scale is
-   `high | med | low` (CLASSIFY.md); `audit-docs` defines **14 checks** but its
-   report contract emits `Checks run: <n>/13`, and one finding prose uses a
-   `MEDIUM` severity its legend does not define; `product-audit` classifies
-   with a parallel `fix-now | postpone | tradeoff` vocabulary where the pack's
-   closed class set is `fix-now | replan-in-unit | decision-required |
-   proposal | ignore`. Feature 31 will add a planning scale
-   (`info|low|medium|high|critical`). No conversion table exists, so each
-   consumer converts ad hoc.
+   `high | med | low` (CLASSIFY.md); the nine internal review passes emit a
+   finder scale `critical | major | minor` in their findings tables, converted
+   ad hoc at `PERSIST_AND_DECIDE.md` (`critical→high`, `major→med`,
+   `minor→low`); the planning-findings ledger already uses
+   `info | low | medium | high | critical` (LEDGERS.md's findings-ledger
+   severity vocabulary, live in shipped planning ledgers); `audit-docs`
+   defines **14 checks** but its report contract emits a `| # | Check (1-13) |`
+   header and `Checks run: <n>/13`, and one finding prose uses a `MEDIUM`
+   severity its legend does not define; `product-audit` classifies with a
+   parallel `fix-now | postpone | tradeoff` vocabulary where the pack's closed
+   class set is `fix-now | replan-in-unit | decision-required | proposal |
+   ignore`. No conversion table exists, so each consumer converts ad hoc.
 3. **Blocking is a severity opinion.** Nothing ties "this finding blocks" to a
    checkable source; an LLM reviewer's severity confidence is the de-facto gate.
    External evidence (E-11, E-12) shows LLM reviewers systematically
@@ -140,14 +146,18 @@ migration.
 - **IS-2 — Canonical severity conversion table.** One table, owned by
   `review-implementation/references/CLASSIFY.md` (the declared single
   classifier), mapping every severity scale the pack emits:
-  the ledger scale `high | med | low`; feature 31's planning scale
-  `info | low | medium | high | critical` (row lands with/after 31); and
-  `audit-docs`' local `high | low`. The issue's claimed finder scale
-  `critical | major | minor` does **not** exist anywhere in the repo at
-  authoring time (E-09) — see D32-2. Bug fixes in the same sweep:
-  `audit-docs` emits the true check count (`<n>/14`) and drops the phantom
-  `MEDIUM` (its legend allows `high | low` only); `product-audit` classifies
-  by referencing the closed class set instead of `postpone/tradeoff`.
+  the ledger scale `high | med | low`; the finder scale
+  `critical | major | minor` emitted by the nine internal review passes'
+  findings tables (today converted ad hoc at `PERSIST_AND_DECIDE.md` — the
+  canonical table replaces that local mapping); the planning scale
+  `info | low | medium | high | critical` (already the findings-ledger
+  severity vocabulary at `LEDGERS.md` and in shipped planning ledgers — the
+  row lands here, not with feature 31); and `audit-docs`' local `high | low`.
+  Bug fixes in the same sweep: `audit-docs` emits the true check count
+  (`<n>/14`) with the matching `| # | Check (1-14) |` fixed-output header, and
+  drops the phantom `MEDIUM` (its legend allows `high | low` only);
+  `product-audit` classifies by referencing the closed class set instead of
+  `postpone/tradeoff`. See D32-2 as revised by D32-6.
 - **IS-3 — Derived blocking gate.** One rule in `CLASSIFY.md` (D10's verdict
   rule unchanged): *a finding blocks only when the reviewer cites which
   single-owner source fails — (a) an ACCEPTANCE criterion unverified/failed,
@@ -156,9 +166,11 @@ migration.
   blocking.* Blocking becomes a table lookup over cited sources, not a
   severity opinion. Pinned by the discipline test.
 - **IS-4 — Gate-run receipt.** A `GATE-RAN | HEAD <sha> | <cmds> | exit <code>`
-  mark recorded by whoever runs the project's gate, appended to the unit's
-  ledger (home ledger + single writer fixed by a `ledger-ownership@1` map row
-  added in the same change). Any skill may consume a green run **only at the
+  mark recorded by whoever runs the project's gate — executor phase gates and
+  reviewer gate runs alike — appended to the unit's `review-findings.md`
+  ledger (home ledger and recorder set fixed by a `ledger-ownership@1` map
+  row added in the same change; every mark names its recorder). Any skill may
+  consume a green run **only at the
   identical HEAD**; a changed head ⇒ re-run. Extensible digest slots from day
   one: fields after `HEAD` are additive; consumers ignore unknown trailing
   fields; a trailing `manifest <sha>` slot is reserved for feature 35. Ends
@@ -194,8 +206,10 @@ migration.
   sensor's existing output vocabulary (`packages/agentic-workflow-schema`
   untouched, regression-only).
 - **No planning-side loop-policy changes** — materiality floor, two-cycle cap,
-  and wording-only determination belong to feature 31; this feature only adds
-  the planning-scale row to the conversion table once 31's vocabulary exists.
+  and wording-only determination belong to feature 31; this feature adds the
+  planning-scale conversion row here because the vocabulary already exists
+  (the findings-ledger severity contract at `LEDGERS.md`), and adds no
+  loop-policy change with it.
 - **No turn-contract migration** — bespoke contract text reconciliation is
   feature 33 (`turn-contract-single-owner`).
 - **No scoped affecting-path manifest** — the CLI and manifest digests are
@@ -218,9 +232,11 @@ For **severity conversion table** (one section in `CLASSIFY.md`):
 - [x] Create — UI entry point: new "Severity conversion" section in
   `skills/review-implementation/references/CLASSIFY.md`, referenced by every
   consumer instead of local tables · API: normative table rows, one per
-  producer scale (`high|med|low`; `info|low|medium|high|critical` with 31;
-  `high|low`) · test: discipline-test pin asserting the section, its owner
-  path, and the audit-docs/product-audit vocabulary fixes
+  producer scale (`high|med|low`; `critical|major|minor` — the nine review
+  passes' finder scale; `info|low|medium|high|critical` — the
+  planning-findings vocabulary; `high|low`) · test: discipline-test pin
+  asserting the section, its owner path, every producer-scale row, and the
+  audit-docs/product-audit vocabulary fixes
 - [x] Read/list — UI: reviewers and auditors consult it when a producer scale
   differs from the target scale · API: same section · test: same pin
 - [x] Update — UI: only the owning section may change; adding a scale = one
@@ -230,8 +246,8 @@ For **severity conversion table** (one section in `CLASSIFY.md`):
 - [x] State transitions — n/a: a static mapping, not a stateful artifact
 
 For **GATE-RAN mark** (durable, append-only ledger mark):
-- [x] Create — UI: appended by the skill that actually ran the project gate,
-  at the head it ran on · API: fixed format
+- [x] Create — UI: appended by whichever skill ran the project gate (executor
+  phase gates and reviewer gate runs alike), at the head it ran on · API: fixed format
   `GATE-RAN | HEAD <sha> | <cmds> | exit <code>[ | <additive slots>]` ·
   test: discipline pin asserting the format, additive-slots rule, and reserved
   `manifest` slot
@@ -296,22 +312,31 @@ actor classes the workflow itself defines):
 |---|---|---|---|---|
 | Convert a severity across scales | allowed — consults the owning table | denied — executes the pack's own scale only | denied — reads emitted severities | allowed — final arbiter on disputes |
 | Decide blocking vs report-note (derived gate) | allowed — must cite one of the four sources; no citation ⇒ never blocks | denied — blocking is decided at classification, not at fold time | denied — reads the decision | allowed — explicit user override only (D10 unchanged) |
-| Record GATE-RAN | denied | allowed — sole recorder, at the head actually run | denied — triggers runs, never records marks | n/a — no manual path |
+| Record GATE-RAN | allowed — records at the head the review's gate run actually used (reviewers run the gate: `review-verify`'s checklist, `review-change`'s fold review) | allowed — records at the head actually run (executor phase gates) | denied — triggers runs, never records marks | n/a — no manual path |
 | Consume GATE-RAN at identical HEAD | allowed — skips re-running the gate | allowed — same rule | allowed — same rule | n/a — no manual path |
 | Flip `folded: no → yes` | denied | allowed — `fold-findings` only | denied | denied |
 | Emit missing-ledger substrate notice | denied | denied | allowed — runs the sensor and reads its JSON | denied |
 | Write the roadmap row `defined → planned` | denied | denied | denied | allowed — via `plan-feature-scaffold`, the sole writer |
 
-**3. Integration closure** — the project has no `docs/CAPABILITIES.md`
-inventory file; the inventory below is derived from this repository's
-architecture (the workflow contract itself: skills, ledgers, pins, mirrors,
-docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
-`template/docs/CAPABILITIES.md` (user confirms; upsert-safe).
+**3. Integration closure** — `docs/CAPABILITIES.md` is the unfilled template
+in this repository (no live inventory; tracked since `1bab6e60`, byte-identical
+to `template/docs/CAPABILITIES.md`), so the inventory is **derived** per the
+skill from this repository's architecture (the workflow contract itself:
+skills, ledgers, pins, mirrors, docs) and walked row by row below. The
+template's roles table and cross-cutting subsystem floor were read and
+reconciled against that derived inventory: its application-shaped subsystem
+rows (auth, ACL, billing, and the like) have no live counterpart in this
+docs-and-skills repository, and the package rows below are the nearest
+analogues of its public-API row. Corrected offer recorded in `decisions.md`
+(D32-6): **fill** `docs/CAPABILITIES.md` from the derived inventory when the
+user confirms — the file exists, seeding it from the template is no longer
+the ask.
 
 - [x] `ledger-ownership@1` map (`LEDGERS.md`) — folded-flag owner text
   corrected to match its own table; the map gains the GATE-RAN mark row
-  (home ledger + single writer) in the same change · test:
-  `node --test scripts/ledger-ownership.test.mjs`
+  naming the home ledger (the unit's `review-findings.md`, feature and fix
+  variants) and the recorder set (the gate-running skills) in the same
+  change · test: `node --test scripts/ledger-ownership.test.mjs`
 - [x] Loop-discipline tests (`scripts/review-loop-discipline.test.mjs`,
   `scripts/bounded-delivery-loops.test.mjs`) — new pins for IS-1…IS-4 wording
   and rules; existing pins never weakened · test: both suites green
@@ -325,8 +350,9 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
   test: discipline pin + read-verified
 - [x] `fold-findings` — sole-flipper claim kept, now map-cited · test:
   `node --test scripts/ledger-ownership.test.mjs`
-- [x] `audit-docs` — check count `14` emitted (`<n>/14`), phantom `MEDIUM`
-  removed, local scale joins the conversion table · test: discipline pin
+- [x] `audit-docs` — check count `14` emitted (`<n>/14` and the
+  `| # | Check (1-14) |` header), phantom `MEDIUM` removed, local scale joins
+  the conversion table · test: discipline pin
 - [x] `product-audit` — classification references the closed class set;
   `postpone/tradeoff` vocabulary removed; proposes-only contract untouched ·
   test: discipline pin (`grep` gate on the removed vocabulary)
@@ -382,7 +408,9 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
 | 12 | No new review axis, audit dimension, or severity vocabulary is invented by this sweep | out-of-scope | Out of scope: "No big-bang severity unification"; "No new `blocking:` field" |
 | 13 | Bilingual siblings are untouched — English-only interim holds | out-of-scope | Out of scope: "No bilingual siblings" |
 | 14 | `GOLDEN_FIXTURE.md`'s dated run-log rows are history, not contract — the old fold-cycle run description is not rewritten | out-of-scope | IS-1 (tutorial scan rule) |
-| 15 | The planning-scale conversion row exists even while feature 31 is unmerged | deferred | Deferred decisions: DD-1 (decide-by: feature 31 merge, owner `plan-feature`) |
+| 15 | The planning-scale conversion row (`info\|low\|medium\|high\|critical`) ships with this feature, not with feature 31 — the scale is already the findings-ledger vocabulary | in-scope | AC-02 (planning-scale row; D32-6) |
+| 16 | A reviewer's green gate run is recorded and reusable too, not only the executor's — whoever runs the gate records the mark | in-scope | AC-04 (recorder set spans executor phase gates and reviewer gate runs) |
+| 17 | The nine review passes' finder scale (`critical\|major\|minor`) converts through the canonical table, not the ad-hoc prose at `PERSIST_AND_DECIDE.md` | in-scope | AC-02 (finder-scale row) |
 
 ### Acceptance criteria
 
@@ -394,13 +422,19 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
   that the sentence in `skills/pre-execution-review/references/LEDGERS.md`
   claiming the flag is "the flag `triage-issue` gives it" is corrected;
   `node --test scripts/ledger-ownership.test.mjs` stays green (ownership
-  unchanged).
+  unchanged). IS-1's tutorial scan is pinned in the same suite:
+  `grep -rnE "only step that ever flips|one and only ledger state transition"
+  docs/workflow/ --include=*.md` returns nothing outside `GOLDEN_FIXTURE.md`'s
+  dated run-log history — no contradicting restatement of the sole flipper
+  survives in the tutorials.
 - [x] **AC-02** (command-verified) — canonical severity table pinned: the
   discipline suite asserts the conversion section exists in
   `skills/review-implementation/references/CLASSIFY.md` as sole owner, covers
-  the ledger and `audit-docs` scales (and the planning scale per DD-1), and
-  that unknown scales fail closed; `grep -n "MEDIUM" skills/audit-docs/SKILL.md`
-  returns nothing and the emitted count is `<n>/14`;
+  all four producer scales — ledger `high|med|low`, finder
+  `critical|major|minor`, planning `info|low|medium|high|critical`,
+  `audit-docs` `high|low` — and that unknown scales fail closed;
+  `grep -n "MEDIUM" skills/audit-docs/SKILL.md` returns nothing, the emitted
+  count is `<n>/14`, and the fixed-output header reads `| # | Check (1-14) |`;
   `grep -nE "postpone|tradeoff" skills/product-audit/` returns nothing while
   the closed class set is referenced.
 - [x] **AC-03** (command-verified) — derived blocking gate pinned: the
@@ -414,7 +448,10 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
   additive-slots rule ("fields after HEAD are additive; consumers ignore
   unknown trailing fields"), the reserved trailing `manifest <sha>` slot, the
   identical-HEAD-only reuse rule, and the changed-head ⇒ re-run rule; the
-  `ledger-ownership@1` map contains the GATE-RAN row with a single writer.
+  `ledger-ownership@1` map contains the GATE-RAN row naming the home ledger
+  (`docs/features/<NN>-<slug>/review-findings.md` ·
+  `docs/fix/<issue>-<topic>/review-findings.md`) and its recorder set (the
+  gate-running skills).
 - [x] **AC-05** (command-verified) — substrate notice pinned:
   `node --test scripts/workflow-status-sensor.test.mjs` gains a missing-ledger
   case asserting a non-blocking machine-readable notice and zero
@@ -460,21 +497,21 @@ All recorded with rationale in `decisions.md` (2026-09-17); summary:
 - **D32-1 Missing ≠ optional-dirty.** Only the *missing* NRS ledger degrades
   to a substrate notice; `draft`, `contradicted`, and `resolved` keep blocking.
   The issue's wording targets the missing-ledger blocker specifically.
-- **D32-2 Conversion table is closed over existing scales.** The table maps
-  the scales that actually exist (ledger `high|med|low`; `audit-docs`
-  `high|low`; planning scale with feature 31). The issue's "finder scale
-  `critical|major|minor` is already mapped" premise is false at authoring HEAD
-  (E-09) — no such scale exists in `skills/` or the schema package. Encoding a
-  phantom row would violate the evidence contract; instead the table is
-  closed, unknown scales fail closed (no ad-hoc conversion), and a scale row
-  is added only when a producer scale actually exists.
+- **D32-2 Conversion table covers every scale the pack emits.** *(as revised
+  by D32-6, 2026-09-18)* The table maps the four scales that actually exist:
+  ledger `high|med|low`; finder `critical|major|minor` from the nine review
+  passes (replacing the ad-hoc mapping at `PERSIST_AND_DECIDE.md`); planning
+  `info|low|medium|high|critical`; `audit-docs` `high|low`. Unknown scales
+  fail closed (no ad-hoc conversion); a scale row is added only when a
+  producer scale actually exists.
 - **D32-3 GATE-RAN is a durable ledger mark, not a schema contract.** Same
   ruling as feature 30's REPAIR-RECEIPT: printed/appended fixed text, no
-  schema change; home ledger + single writer fixed by the
-  `ledger-ownership@1` map row added in the change.
-- **D32-4 Extensible slots from day one.** The 2026-09-07 amendment on #182 is
-  adopted verbatim: fields after `HEAD` additive, unknown trailing fields
-  ignored, `manifest <sha>` slot reserved — one line in the owning spec plus a
+  schema change; home ledger (the unit's `review-findings.md`) and recorder
+  set fixed by the `ledger-ownership@1` map row added in the change.
+- **D32-4 Extensible slots from day one.** The 2026-09-07 amendment carried
+  by issue #172 (provenance: the amendment on #182) is adopted verbatim:
+  fields after `HEAD` additive, unknown trailing fields ignored,
+  `manifest <sha>` slot reserved — one line in the owning spec plus a
   discipline pin, so feature 35 needs no format migration.
 - **D32-5 Execute-phase NRS clause is regression-only.** `EXECUTION_CONTRACT.md`
   already records NRS as optional at HEAD (E-14); the issue's affected-surfaces
@@ -486,9 +523,11 @@ All recorded with rationale in `decisions.md` (2026-09-17); summary:
 
 ### Deferred decisions
 
-| Decision | Why deferred | Decide by (trigger or phase) |
-|---|---|---|
-| DD-1 — exact conversion-table row for the planning scale (`info|low|medium|high|critical`) | The planning scale does not exist until feature 31 (#171) merges; writing the row against a non-existent vocabulary would invent evidence. The table ships with the ledger + audit-docs rows and a named empty slot. | Feature 31's PR merges; owner: `plan-feature` (fills the row during 31's planning/execution on the same surface) |
+`none` — DD-1 (planning-scale row deferred to feature 31) is resolved by the
+2026-09-18 repair batch (D32-6): its premise was false — the planning scale
+`info|low|medium|high|critical` is already the findings-ledger severity
+vocabulary at `LEDGERS.md` and is in live use — so the conversion-table row
+lands in this unit (sweep row 15 is in-scope, pinned by AC-02).
 
 ### Evidence rows
 
@@ -502,7 +541,7 @@ All recorded with rationale in `decisions.md` (2026-09-17); summary:
 | E-06 | `audit-pr` emits gate scale `blocker / warning / n-a` while another scale in the same file reads `pass / blocker / n-a`; `warning` exists nowhere else in the pack | document | `skills/audit-pr/SKILL.md:52` vs `:55,58` | 4b3a56b | current | proven | — |
 | E-07 | `workflow-status` treats a missing NRS ledger as blocking (`NRS_BLOCKING` includes `missing`) | repository | `scripts/workflow-status.mjs:223` (`NRS_BLOCKING = Set(["missing","draft","contradicted","resolved"])`) | 4b3a56b | current | proven | — |
 | E-08 | NRS is already declared optional in execute-phase's contract | document | `skills/execute-phase/references/EXECUTION_CONTRACT.md:108-116` | 4b3a56b | current | proven | — |
-| E-09 | No `critical \| major \| minor` finder severity scale exists anywhere in `skills/` or the schema package — the issue's "already mapped" premise is false at this HEAD | derived | rule: `grep -rn "major"` over `skills/ --include=*.md` and `packages/agentic-workflow-schema/src/*.ts` returns no severity-vocabulary match | 4b3a56b | current | proven | — |
+| E-09 | The finder scale `critical \| major \| minor` is live in the nine internal review passes' findings tables and already converted ad hoc at `PERSIST_AND_DECIDE.md` (`critical→high`, `major→med`, `minor→low`) — the issue's "already mapped" premise holds for this scale and the canonical table must cover it (revised 2026-09-18: the original row claimed the scale does not exist; falsified by SPEC-REVIEW-32-1 F1) | document | `grep -rn "critical\|major\|minor" skills/ --include=*.md` → 9 hits (`skills/review-code/SKILL.md:65`, `review-design:54`, `review-a11y:54`, `review-brand:59`, `review-perf:73`, `review-seo:59`, `review-security:59`, `review-debt:53`, `review-verify:59`); `skills/review-change/references/PERSIST_AND_DECIDE.md:20-21` | 721c40d (HEAD at repair) | current | proven | — |
 | E-10 | `review-change`'s relationship text mentions `triage-issue` only for the proposals route; the three modes are not named | document | `skills/review-change/SKILL.md:44,153`; `references/PERSIST_AND_DECIDE.md:37`; `references/OUTPUT_AND_GUARDRAILS.md:38` | 4b3a56b | current | proven | — |
 | E-11 | LLM reviewers systematically overcorrect (misclassify correct code as non-compliant); explanation-demanding prompts increase misjudgment; proposed fixes should be validated as executable counterfactual evidence | document | Jin & Chen, "Are LLMs Reliable Code Reviewers? Systematic Overcorrection in Requirement Conformance Judgement", arXiv:2603.00539 (https://arxiv.org/abs/2603.00539, fetched 2026-09-17) | v1, 2026-02-28 | current | proven | — |
 | E-12 | Practitioner convention separates blocking comments (must fix before merge) from non-blocking polish (`nit:` — optional, author may ignore); the boundary is defined by the comment's cited consequence, not the reviewer's confidence | document | Google Engineering Practices — code review guidelines (adaptation: https://solmaz.io/google-eng-practices-github, fetched 2026-09-17); Conventional Comments `nitpick` label (surveyed via https://www.augmentcode.com/guides/what-does-nit-mean-in-code-review, fetched 2026-09-17) | fetched 2026-09-17 | current | proven | — |
@@ -515,6 +554,8 @@ All recorded with rationale in `decisions.md` (2026-09-17); summary:
 | E-19 | NRS lifecycle facts F006/F007 are stale vs current roadmap/forge (rows 30–38 done; 31 still `idea`) | ledger | REPOSITORY_STATE.md F006/F007 vs `docs/features/ROADMAP.md` + forge E-14 | snapshot 2026-08-30 | drifted | unknown | owner: `resolve-repository-state` — next evidence: refresh the snapshot against current forge state; consequence: this design consumes the roadmap and direct forge evidence instead of the stale lifecycle facts |
 | E-20 | Workflow invariants: review-change is final-diff authority; audit-pr is the sole MERGE-READY emitter; the manual loop is bounded at two cycles and never merges/discards findings | document | `docs/workflow/WORKFLOW_INVARIANTS.md:78-80` | 4b3a56b | current | proven | — |
 | E-21 | Roles: agents execute the skills; orchestrators or people invoke and consume outputs; no external CI/scheduler role beyond `audit-pr`'s existing CI consumption | user | decisions.md 2026-09-17 (D32 rows) | 2026-09-17 | not-applicable | decision | — |
+| E-22 | `docs/CAPABILITIES.md` exists as the unfilled template (no live inventory): roles table + cross-cutting subsystem floor, byte-identical to `template/docs/CAPABILITIES.md` (revised 2026-09-18: the half had claimed the file does not exist; falsified by SPEC-REVIEW-32-1 F2) | repository | `git log -1 --format='%H %s' -- docs/CAPABILITIES.md` → `1bab6e60 feat(docs): seed CAPABILITIES.md from template (feature 30 prep)`; `wc -l docs/CAPABILITIES.md` → 47; phrasing per feature 59 SPEC:244-245 | 721c40d (HEAD at repair) | current | proven | — |
+| E-23 | The planning scale `info \| low \| medium \| high \| critical` is already the findings-ledger severity vocabulary and is in live use (revised 2026-09-18: the half had dated the scale to feature 31; falsified by SPEC-REVIEW-32-1 F3) | document | `skills/pre-execution-review/references/LEDGERS.md:92` (findings-ledger severity vocabulary, `info` the only immaterial value); live rows `docs/features/37-phase-lint-script/planning-findings.md` F1 (`info`), `docs/features/59-executable-continuations/planning-findings.md` F1 (`low`) | 721c40d (HEAD at repair) | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -538,25 +579,29 @@ Product boxes (run this turn — results below):
   actual reason spelled out — zero blank rows (five entities × six rows;
   seven capabilities; seventeen inventory rows).
 - [x] Integration closure has one row per subsystem of the derived inventory
-  (no `docs/CAPABILITIES.md` exists; the seventeen-row derived inventory is
-  recorded in the section) — zero subsystems skipped; seed offer recorded.
+  (`docs/CAPABILITIES.md` is the unfilled template, no live inventory; the
+  derived inventory is recorded in the section and reconciled against the
+  template's roles table + subsystem floor) — zero subsystems skipped;
+  corrected fill offer recorded.
 - [x] Every capability's role matrix lists EVERY role in the derived inventory
   with an explicit `allowed`/`denied` (four roles × seven capabilities; the
   `n/a` cells are manual-path impossibilities, not unlisted roles).
-- [x] `### Expectation sweep` has 15 resolved rows (≥ 10 for M); every row is
+- [x] `### Expectation sweep` has 17 resolved rows (≥ 10 for M); every row is
   `in-scope` / `out-of-scope` / `deferred` with a pointer.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion —
   IS-1→AC-01, IS-2→AC-02, IS-3→AC-03, IS-4→AC-04, IS-5→AC-05/AC-06/AC-07/AC-08,
   IS-6→AC-10, IS-7→AC-09/AC-11.
 - [x] Every Acceptance criterion is a runnable command OR labelled
   `read-verified` — AC-01…AC-09, AC-11 command-verified; AC-10 read-verified.
-- [x] `### Deferred decisions` exists; every row has a decide-by trigger
-  (DD-1), or the section reads `none`.
+- [x] `### Deferred decisions` exists and reads `none` (DD-1 resolved by
+  D32-6, 2026-09-18 — its premise was falsified; see decisions.md).
 
 ## Design status
 
 `designed` — capability closure complete (zero blank rows), product spec-lint
-boxes all tick. Awaiting independent review by `review-spec`.
+boxes all tick; re-affirmed after the 2026-09-18 repair batch closing
+SPEC-REVIEW-32-1 findings F1–F8. Awaiting independent review by `review-spec`
+of the new revision.
 
 ---
 
