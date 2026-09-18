@@ -1,103 +1,36 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), "audit-pr-gate.mjs");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SHA_A = "a".repeat(40);
 const auditSkill = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/SKILL.md"), "utf8");
 const auditProcess = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/references/03_AUDIT_PROCESS.md"), "utf8");
 
-const REVIEW_CONTRACT = "v1";
-const REVIEW_MARKER_RE = /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ ]+) -->/;
-const AUDIT_MARKER_RE = /<!-- audit-pr:merge-ready sha=([0-9a-f]{40}) -->/;
+// The contract lives in the runtimes the skills call. This file used to define
+// `parseReview`, `newestReceipt`, `receiptStatus`, `GATE_NAMES`, `auditVerdict`,
+// `newestAuditComment` and `mergeCommentAction` locally — it proved a copy of
+// the rule while `review-change` and `audit-pr` executed prose. The assertions
+// below are unchanged; only their subject is, so a regression in the runtime the
+// workflow actually runs now fails here (#182).
+import {
+  GATE_NAMES,
+  auditVerdict,
+  hygieneFromState,
+  mergeCommentAction,
+  newestAuditComment,
+} from "./audit-pr-gate.mjs";
+import { receiptStatus, renderReceiptBody } from "./review-receipt.mjs";
 
-const reviewBody = ({ sha, scope, axes, coverage, invariants, proposals, manual }) =>
-  [
-    `<!-- review-change:pass sha=${sha} contract=${REVIEW_CONTRACT} -->`,
-    "## review-change: REVIEW-PASS",
-    "",
-    `- Reviewed head: \`${sha}\``,
-    `- Scope and applicable axes: ${scope}`,
-    `- Acceptance coverage: ${coverage}`,
-    `- Architectural invariants: ${invariants}`,
-    "- Current-unit findings open: 0",
-    `- Future-capability proposals: ${proposals}`,
-    `- Manual verification: ${manual}`,
-    "",
-  ].join("\n");
-
-const parseReview = (body) => {
-  const match = REVIEW_MARKER_RE.exec(body ?? "");
-  if (!match) return null;
-  return { sha: match[1], contract: match[2] };
-};
-
-const newestReceipt = (comments) => {
-  const list = comments ?? [];
-  for (let i = list.length - 1; i >= 0; i--) {
-    const receipt = parseReview(list[i].body);
-    if (receipt && receipt.contract === REVIEW_CONTRACT) return receipt;
-  }
-  return null;
-};
-
-const receiptStatus = (comments, headSha) => {
-  const receipt = newestReceipt(comments);
-  if (!receipt) return { status: "absent", reason: "no REVIEW-PASS marker" };
-  if (receipt.sha !== headSha) return { status: "stale", reason: `receipt at ${receipt.sha}, head is ${headSha}` };
-  return { status: "current", reason: `receipt current at ${headSha}` };
-};
-
-const GATE_NAMES = [
-  "acceptance-coverage",
-  "phases-complete",
-  "scope-creep",
-  "docs-updated",
-  "traceability",
-  "ci",
-  "mergeability",
-  "closure",
-  "descope",
-  "invariants",
-];
-
-const auditVerdict = ({ comments, headSha, gates = {} }) => {
-  const status = receiptStatus(comments, headSha);
-  if (status.status !== "current") {
-    return {
-      verdict: "BLOCKED",
-      reason: status.reason,
-      route: "/review-change",
-      gatesEvaluated: false,
-      blockers: [status.reason],
-    };
-  }
-  const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass")
-    .map((name) => `gate ${name} failed`);
-  if (blockers.length > 0) {
-    return { verdict: "BLOCKED", reason: blockers.join("; "), route: null, gatesEvaluated: true, blockers };
-  }
-  return { verdict: "MERGE-READY", reason: "receipt current; every applicable gate passes", route: null, gatesEvaluated: true, blockers: [] };
-};
-
-const newestAuditComment = (comments) => {
-  const list = comments ?? [];
-  for (let i = list.length - 1; i >= 0; i--) {
-    const match = AUDIT_MARKER_RE.exec(list[i].body ?? "");
-    if (match) return match[1];
-  }
-  return null;
-};
-
-const mergeCommentAction = ({ verdict, comments, headSha }) => {
-  if (verdict !== "MERGE-READY") return { action: "none", reason: "BLOCKED posts no comment (no stale green flag)" };
-  const marker = newestAuditComment(comments);
-  if (marker === headSha) return { action: "skip", reason: "same SHA already commented — idempotent by SHA marker" };
-  return { action: "post", reason: "newest marker wins; older SHA re-comments" };
-};
+/** The receipt body builder, by its historical name in this file. */
+const reviewBody = renderReceiptBody;
 
 const EMPTY = {};
 
@@ -235,3 +168,207 @@ test("pure: identical inputs yield identical verdicts and actions (no forge stat
 });
 
 console.log("PASS audit-pr receipt: current/absent/stale verdicts, gate evaluation, idempotent SHA-bound comment, zero re-review, zero forge calls");
+
+// ---------------------------------------------------------------------------
+// Terminal hygiene (issue #182) — the gates that had no owner at merge time
+// ---------------------------------------------------------------------------
+
+test("hygiene gates are part of the closed gate set, so an unread one fails closed", () => {
+  for (const name of ["tree-clean", "branch-pushed", "pr-ready"]) {
+    assert.ok(GATE_NAMES.includes(name), `${name} is a required gate`);
+  }
+  const sha = "a".repeat(40);
+  const reviews = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const allPass = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const dirty = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "tree-clean": "fail" } });
+  assert.equal(dirty.verdict, "BLOCKED");
+  assert.deepEqual(dirty.blockers, ["gate tree-clean failed"]);
+  // Omitting hygiene entirely is the same failure, never a silent pass.
+  const omitted = auditVerdict({ comments: reviews, headSha: sha, gates: { ...allPass, "pr-ready": undefined } });
+  assert.deepEqual(omitted.blockers, ["gate pr-ready failed"]);
+});
+
+test("hygieneFromState: a clean, pushed, ready terminal state passes every hygiene gate", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: false });
+  assert.deepEqual(state.gates, { "tree-clean": "pass", "branch-pushed": "pass", "pr-ready": "pass" });
+  assert.deepEqual(state.blockers, []);
+  assert.deepEqual(state.repairs, []);
+});
+
+test("hygieneFromState: a dirty tree names every path and offers no repair — it is the author's to fix", () => {
+  const state = hygieneFromState({ treePorcelain: " M docs/LOGS.md\n?? tmp/scratch\n", branchAhead: 0, isDraft: false });
+  assert.equal(state.gates["tree-clean"], "fail");
+  assert.equal(state.blockers.length, 1);
+  assert.match(state.blockers[0], /docs\/LOGS\.md/);
+  assert.match(state.blockers[0], /tmp\/scratch/);
+  assert.deepEqual(state.repairs, [], "only the draft flag has a mechanical repair");
+});
+
+test("hygieneFromState: an unpushed branch blocks and is not silently pushed", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 3, isDraft: false });
+  assert.equal(state.gates["branch-pushed"], "fail");
+  assert.match(state.blockers[0], /3 commit/);
+  assert.deepEqual(state.repairs, []);
+});
+
+test("hygieneFromState: a draft PR blocks and offers the one mechanical repair", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: true });
+  assert.equal(state.gates["pr-ready"], "fail");
+  assert.ok(state.blockers.some((b) => /draft/i.test(b)));
+  assert.deepEqual(state.repairs, ["gh pr ready"], "audit-pr flips the draft flag rather than reporting it");
+});
+
+test("hygieneFromState: an unresolvable upstream blocks the branch-pushed gate (never a zero ahead-count)", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: null, isDraft: false });
+  assert.equal(state.gates["branch-pushed"], "fail");
+  assert.ok(state.blockers.some((b) => /upstream/i.test(b)), state.blockers.join("; "));
+  assert.deepEqual(state.repairs, []);
+});
+
+test("hygieneFromState: an unobserved draft flag fails pr-ready closed, never a default pass (F6)", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: 0, isDraft: null });
+  assert.equal(state.gates["pr-ready"], "fail");
+  assert.ok(state.blockers.some((b) => /draft state was not observed/.test(b)), state.blockers.join("; "));
+  assert.deepEqual(state.repairs, [], "an unobserved flag is not repaired by guessing");
+  // The explicit reads still behave: false passes, true blocks with the repair.
+  assert.equal(hygieneFromState({ isDraft: false }).gates["pr-ready"], "pass");
+  assert.deepEqual(hygieneFromState({ isDraft: true }).repairs, ["gh pr ready"]);
+});
+
+test("CLI hygiene: without --pr the draft flag is unobserved, so pr-ready fails closed (F6)", () => {
+  const { repo } = makeRepo({ withRemote: false });
+  const result = spawnSync(process.execPath, [script, "hygiene"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.gates["pr-ready"], "fail");
+  assert.ok(report.blockers.some((b) => /draft state was not observed/.test(b)), report.blockers.join("; "));
+});
+
+// ---------------------------------------------------------------------------
+// CLI — `hygiene --apply` on a throwaway repo with a fake `gh`
+// ---------------------------------------------------------------------------
+
+/** A throwaway git repo whose tree is clean, so only the draft flag blocks. */
+const makeRepo = ({ withRemote = true } = {}) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-pr-gate-hygiene-"));
+  const repo = path.join(dir, "repo");
+  fs.mkdirSync(repo);
+  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.com");
+  git("config", "user.name", "Tester");
+  fs.writeFileSync(path.join(repo, "README.md"), "fixture\n");
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: seed");
+  if (withRemote) {
+    // A configured upstream is what makes `@{upstream}..HEAD` resolvable; the
+    // pushed branch is the truthful `branch-pushed: pass` the other fixtures assert.
+    const remote = path.join(dir, "remote.git");
+    spawnSync("git", ["init", "-q", "--bare", remote], { encoding: "utf8" });
+    git("remote", "add", "origin", remote);
+    git("push", "-q", "-u", "origin", "main");
+  }
+  return { dir, repo };
+};
+
+test("CLI hygiene: a branch with no configured upstream fails branch-pushed closed", () => {
+  const { repo } = makeRepo({ withRemote: false });
+  const result = spawnSync(process.execPath, [script, "hygiene"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.gates["branch-pushed"], "fail");
+  assert.ok(report.blockers.some((b) => /upstream/i.test(b)), report.blockers.join("; "));
+  assert.doesNotMatch(report.blockers.join(" "), /0 commit\(s\) ahead/);
+});
+
+test("CLI hygiene --apply: the draft PR is repaired exactly once by `gh pr ready`, then re-read clean", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  const state = path.join(dir, "draft-state");
+  fs.writeFileSync(state, "draft");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  // The fake models the forge: `pr view` reports the draft flag from the state
+  // file, `pr ready` flips it. Every call is logged so the repair count is exact.
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+if (args[0] === "pr" && args[1] === "ready") { fs.writeFileSync(${JSON.stringify(state)}, "ready"); process.exit(0); }
+const isDraft = fs.readFileSync(${JSON.stringify(state)}, "utf8").trim() !== "ready";
+process.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr", "240", "--apply"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.clean, true);
+  assert.deepEqual(report.gates, { "tree-clean": "pass", "branch-pushed": "pass", "pr-ready": "pass" });
+  const calls = fs.readFileSync(log, "utf8").trim().split("\n");
+  assert.equal(calls.filter((c) => c === "pr ready").length, 1, "exactly one mechanical repair");
+  assert.ok(calls.filter((c) => c.startsWith("pr view")).length >= 2, "the state is re-read after the repair");
+});
+
+test("CLI hygiene --apply: a clean, pushed, ready PR needs no repair and runs no forge write", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, args.join(" ") + "\\n");
+process.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft: false, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr", "240", "--apply"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).clean, true);
+  const calls = fs.readFileSync(log, "utf8");
+  assert.doesNotMatch(calls, /pr ready/, "no mechanical repair is run when nothing blocks");
+});
+
+test("CLI flags: an unknown or misspelled flag is refused, never a silent default (F5)", () => {
+  const { repo } = makeRepo();
+  const result = spawnSync(process.execPath, [script, "hygiene", "--prr", "240"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /unknown flag: --prr/);
+});
+
+test("CLI flags: --flag=value is accepted and -R resolves to the forge scope (F5)", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node\nconst fs = require("node:fs");\nfs.appendFileSync(${JSON.stringify(log)}, process.argv.slice(2).join(" ") + "\\n");\nprocess.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft: false, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr=240", "-R", "owner/name"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(fs.readFileSync(log, "utf8"), /-R owner\/name/, "the documented -R alias must reach the forge call");
+});
