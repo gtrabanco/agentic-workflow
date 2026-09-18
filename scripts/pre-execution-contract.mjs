@@ -171,3 +171,33 @@ export function deriveReviewLoopCycles(receipts) {
   }
   return result;
 }
+
+/**
+ * Every `## Wording-only determination v1 — <stage>` block in a progress ledger,
+ * in file order. The machine half of the wording-only route (feature 31): the
+ * block records the artifact revision the repair rotated and the acceptance
+ * fingerprint the repair left unmoved, plus the author's intent/authority
+ * judgment. Read from the unit's unbound `progress.md`, so recording it cannot
+ * rotate the revision it names. `text === null` reads as "no determinations".
+ */
+/**
+ * One `- <label>: <value>` line of a determination block. The determination
+ * grammar is NOT the receipt grammar (its labels are read by a distinct block
+ * kind), so it carries its own extractor: the receipt parser's label scan must
+ * keep proving that every RECEIPT label is emitted by both stage templates.
+ */
+function determinationLine(chunk, label) {
+  const match = chunk.match(new RegExp(`^[ \\t]*-[ \\t]*${label}:[ \\t]*(.+)$`, "m"));
+  return match ? match[1].trim() : null;
+}
+
+export function parseWordingOnlyDeterminations(text) {
+  if (text === null || text === undefined) return [];
+  return String(text).split(/^## Wording-only determination v1 — /m).slice(1).map((chunk) => ({
+    stage: chunk.startsWith("spec") ? "spec" : chunk.startsWith("plan") ? "plan" : "unknown",
+    id: determinationLine(chunk, "Determination"),
+    revision: determinationLine(chunk, "Artifact revision"),
+    acceptanceFingerprint: recordedValue(determinationLine(chunk, "Acceptance fingerprint")),
+    unchanged: /^(yes|true)$/i.test((determinationLine(chunk, "Intent and authority unchanged") ?? "").trim()),
+  }));
+}
