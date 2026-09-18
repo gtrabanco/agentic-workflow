@@ -7,7 +7,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
-import { evaluateToolCall } from "../config/path-policy.js";
+import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -214,11 +214,25 @@ export default function extension(pi: ExtensionAPI): void {
       }
     }
     const absolute = isAbsolute(targetPath) ? targetPath : resolve(ctx.cwd, targetPath);
-    const relativeTarget = isAbsolute(targetPath) ? relative(ctx.cwd, absolute) : targetPath;
+    const relativeTarget = normalizeTarget(relative(ctx.cwd, absolute));
+    // Fail closed on a target that escapes the project root: the policy is
+    // repo-relative, so an out-of-root path cannot be verified (F7).
+    if (relativeTarget === "" || relativeTarget === ".." || relativeTarget.startsWith("../") || isAbsolute(relativeTarget)) {
+      return {
+        block: true,
+        reason:
+          `"${targetPath}" resolves outside the project root (${ctx.cwd}); ` +
+          `path protection cannot verify it, so the write is blocked.`,
+      };
+    }
+    // Lazy: read the records corpus (every unit's decisions.md) only once the
+    // target is a known existing protected path, never on every write/edit (F13).
+    if (!existsSync(absolute)) return undefined;
+    if (!isProtectedPath(loaded.config.pathProtection, relativeTarget)) return undefined;
     const decision = evaluateToolCall({
       toolName: event.toolName,
       targetPath: relativeTarget,
-      targetExists: existsSync(absolute),
+      targetExists: true,
       policy: loaded.config.pathProtection,
       recordsText: collectRecordTexts(ctx.cwd),
     });
