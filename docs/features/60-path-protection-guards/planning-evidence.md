@@ -4,8 +4,8 @@ Compact source-backed conclusions used to cut this Engineering plan. This is not
 an exploration transcript. Row shape and column order per
 `evidence-grounding/references/ROWS.md` (§ Plan-stage table). All rows observed at
 HEAD `44732c8b` (branch `feat/220-path-protection-guards`) unless a row says
-otherwise; PE-023…PE-026 were added by the PLAN60-F1…F8 repair and PE-027/PE-028
-by the PLAN60-F9…F10 repair.
+otherwise; PE-023…PE-026 were added by the PLAN60-F1…F8 repair, PE-027/PE-028 by
+the PLAN60-F9…F10 repair, and PE-029 by the PLAN60-F11…F12 repair.
 
 Planning baseline: HEAD `44732c8b` + live forge state verified 2026-09-18
 (governing issue #220 OPEN; dependency feature 37 `done` via PR #212; receipt
@@ -41,3 +41,4 @@ SPEC-REVIEW-60-2).
 | PE-026 | `scripts/phase-lint.mjs` fingerprints each phase as `P<n>:<layer>:<task-count>:<slug>` and digests the newline-joined list, so a repair that keeps each phase's task count and declared layer leaves the plan digest unchanged and the recorded fingerprints valid | repository | `scripts/phase-lint.mjs:680-703` | a504b203 | phase-lint PASS | current | proven | re-run the linter after every plan edit |
 | PE-027 | The same-PR version rule is mandatory and mechanical: `CLAUDE.md` requires a `version:` bump plus a `CHANGELOG.md` line for every changed skill, and a `package.json` version bump plus a Companion npm packages row for a touched published package; the repo's internal `bump-skill` performs the skill half; the version-tables drift check compares an existing CHANGELOG cell to the frontmatter/package version, so it cannot see an omitted bump | repository + document | `CLAUDE.md:172-178,383-390,421-428`; `skills/bump-skill/SKILL.md`; `scripts/normative-drift.test.mjs:1017-1027` | 1a12784d | O20, O21; PLAN60-F10 | current | proven | E-60-16 schedules the sweep and O20/O21 carry the validators |
 | PE-028 | The SPEC's Checkpoint wiring already names the final phase's own committed range as the close-out gate's job (`path-guard --phase P<n> --base <P<n> base ref>`), but the pre-repair P5 task list ran no such invocation — the residual PLAN60-F3 gap | repository | `docs/features/60-path-protection-guards/SPEC.md:591`; pre-repair `PLAN.md` P5 and `TASKS.md` P5; `planning-findings.md` PLAN60-F9 | 1a12784d | O19; PLAN60-F9 | current | proven | E-60-15 adds the P5 task and done-when validator |
+| PE-029 | The Product's default protected set is D4's four glob families (`tests/**`, `e2e/**`, `*.test.*`, `fixtures/**`) plus the policy config itself; no Product decision or E-60 row authorizes a `*.spec.*` variant, so the canonical shipped-default `test-file` class protects `**/*.test.*` alone | repository | `docs/features/60-path-protection-guards/SPEC.md:336` (D4), `:277-280` (AC-01 families); `docs/features/ROADMAP.md` row 60 + issue #220 (four default globs) | e411326b | E-60-1; PLAN60-F11 | current | proven | E-60-17 aligns `SHIPPED_PATH_POLICY` at P1; the template seed and pi mirror inherit it through O15/O18 |

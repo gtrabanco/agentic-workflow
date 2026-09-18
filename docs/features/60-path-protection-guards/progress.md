@@ -609,3 +609,38 @@ Preflight: NRS consumed · invariant classification: n/a (no project invariants 
 The Normalized Repository State is `frozen` and records no project
 architectural-invariants document (NRS F010; D-60-11, PE-021), so no invariant
 can be violated, introduced, or changed by this repair.
+
+## Plan repair — PLAN60-F11…F12 (2026-09-18)
+
+Third plan-repair batch, same shape as the two before it: the two `class: plan`
+findings of `PLAN-REVIEW-60-3` are handled by the plan owner in one batch over
+the whole set, no phase appended. Operator instruction for the batch:
+`drop **/*.spec.*; F12 recorded advisory`. The first finding is repaired in
+place; the second is **recorded as an advisory** under the operator's
+materiality bar (feature 38's open-advisory precedent) and is not repaired.
+No Product byte changed — the `spec-product-v1` projection stays 24443 B, sha256
+`50b33e5d944690097c947811cd97e106962e2a00a3d83bcd1a9b8ac4c9af920e`, so
+`SPEC-REVIEW-60-2` stays current and the plan's parent snapshot stays
+`12121bff…1682e` (the SPEC Engineering half moved only).
+
+| Finding | Disposition |
+|---|---|
+| PLAN60-F11 | The canonical shipped-default `test-file` class drops the Engineering-invented `**/*.spec.*` glob and protects `**/*.test.*` alone, so `SHIPPED_PATH_POLICY` (E-60-1) projects D4 / AC-01 / issue #220's four default glob families exactly. E-60-17, PE-029. The Product projection is byte-identical, no acceptance criterion or obligation changes (AC-01 and D4 already enumerate the four families without a spec variant), and the template seed and pi mirror inherit the correction through O15/O18. |
+| PLAN60-F12 | Recorded as an advisory, not repaired: the `undeclared-test` failure reason stays a declared Product behaviour (`SPEC.md:515`, `:547`) closed in the reason vocabulary (O12), but it keeps no obligation row, dev scenario, or P1 validator. The ledger row stays `open` with its fold path named, and it does not restart a plan cycle. E-60-18 (operator materiality bar, 2026-09-18). |
+
+No newly discovered need was added: the batch stays inside the two rows. No
+phase task, layer, or count changed, so every phase fingerprint and the
+whole-set digest are unchanged
+(`P1:config/infra:7:tier-1-path-gate` … `P5:hardening:10:hardening-pr`, digest
+`381019477bdf277c455ec78b11d05c10a01542db75161a4f737a0fb9add85e0a`; PE-026),
+and the frozen `ACCEPTANCE.md` blob (`aceb3d52…`) is untouched.
+
+Stage 2 planning preflight (re-run because the engineering plan changed):
+
+```text
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared)
+```
+
+The Normalized Repository State is `frozen` and records no project
+architectural-invariants document (NRS F010; D-60-11, PE-021), so no invariant
+can be violated, introduced, or changed by this repair.
