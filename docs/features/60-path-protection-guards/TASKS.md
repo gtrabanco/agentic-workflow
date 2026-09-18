@@ -64,14 +64,17 @@ Done-when: `cd packages/pi-agentic-workflow && bun run test` → exit 0 with the
 
 ## P5 — Hardening & PR
 
-Layer: hardening · fingerprint `P5:hardening:7:hardening-pr` · Phase-lint: PASS (8/8)
+Layer: hardening · fingerprint `P5:hardening:10:hardening-pr` · Phase-lint: PASS (8/8)
 
 - [ ] Run the full verification ladder — `node --test scripts/*.test.mjs`, `bun test packages/agentic-workflow/test/`, and the pi package suite in its own directory → exit 0 across the ladder
+- [ ] Bump the six touched skills at **minor** with the repo's `bump-skill` maintenance skill — `execute-phase`, `plan-feature-scaffold`, `init-workspace`, `orchestration-envelope`, `pre-execution-review`, `verification-contract` — so every `version:` frontmatter and its changelog rows are synchronized, then verify with `node --test scripts/normative-drift.test.mjs` → exit 0 — evidence: `<recorded at execution>`
+- [ ] Bump the pi package (`pi-agentic-workflow`) to `0.11.0` and add its Companion npm packages changelog row naming the feature-60 re-bundle, then verify with `node --test scripts/normative-drift.test.mjs` → exit 0 — evidence: `<recorded at execution>`
 - [ ] Re-bundle the Pi mirror from the final skill tree with the package's own `bun run bundle:skills` and run the parity suite (`node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs`) → exit 0
 - [ ] Verify the frozen acceptance manifest blob with `git hash-object docs/features/60-path-protection-guards/ACCEPTANCE.md` and record the acceptance receipt in the unit progress log
 - [ ] Confirm every phase fingerprint in this plan still matches the committed phase shapes and that every read-verified row has its evidence recorded (manual)
+- [ ] Record P5's base ref (`git rev-parse HEAD` at phase entry) in the phase handoff, then run the close-out path gate `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 with the `PATH-GUARD` block pasted; a fail stops the close-out before the PR (no `--force` bypass) — evidence: `<recorded at execution>`
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push
 
-Done-when: `node --test scripts/path-protection.test.mjs` → exit 0 with the whole ladder green, parity green, and the PR URL printed.
+Done-when: `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 and `node --test scripts/path-protection.test.mjs` → exit 0 with the whole ladder green, the version/CHANGELOG sweep recorded, parity green, and the PR URL printed.
