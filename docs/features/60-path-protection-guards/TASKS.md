@@ -24,12 +24,12 @@ Done-when: `bun test packages/agentic-workflow/test/ && node --test scripts/path
 
 Layer: docs · fingerprint `P2:docs:6:template-policy-ship` · Phase-lint: PASS (8/8)
 
-- [ ] Create `template/.agentic-workflow/path-policy.json` as the install seed of the shipped-default policy, byte-identical to the crate module's default serialization
-- [ ] Create `template/.agentic-workflow/path-protection.md` — the doc page for the policy: the protected classes, the pre-freeze versus post-freeze matrix, the tighten-only rule, the degradation behavior, and the justification and approval escape procedure
-- [ ] Add the path-protection section to `template/.agentic-workflow/hooks/README.md` — the policy's home beside the command guard, what it protects, and the two consumers (the Tier 1 gate and the pi guard)
-- [ ] Extend `skills/init-workspace/references/BOOTSTRAP_WRITE.md` so install mode seeds the policy file and its doc page additively
-- [ ] Extend `skills/init-workspace/references/UPGRADE.md` so upgrade mode proposes the missing policy file and doc page without clobbering an existing owner policy
-- [ ] Run the template-seed parity command and the seeding greps: `template/.agentic-workflow/path-policy.json` is diffed byte-for-byte against the crate's `serializeShippedPolicy()` output (`node -e` importing `packages/agentic-workflow/src/path-policy.mjs`), and `grep -c 'path-policy' skills/init-workspace/references/` counts both seeding references — evidence: `<recorded at execution>`
+- [x] Create `template/.agentic-workflow/path-policy.json` as the install seed of the shipped-default policy, byte-identical to the crate module's default serialization
+- [x] Create `template/.agentic-workflow/path-protection.md` — the doc page for the policy: the protected classes, the pre-freeze versus post-freeze matrix, the tighten-only rule, the degradation behavior, and the justification and approval escape procedure
+- [x] Add the path-protection section to `template/.agentic-workflow/hooks/README.md` — the policy's home beside the command guard, what it protects, and the two consumers (the Tier 1 gate and the pi guard)
+- [x] Extend `skills/init-workspace/references/BOOTSTRAP_WRITE.md` so install mode seeds the policy file and its doc page additively
+- [x] Extend `skills/init-workspace/references/UPGRADE.md` so upgrade mode proposes the missing policy file and doc page without clobbering an existing owner policy
+- [x] Run the template-seed parity command and the seeding greps: `template/.agentic-workflow/path-policy.json` is diffed byte-for-byte against the crate's `serializeShippedPolicy()` output (`node -e` importing `packages/agentic-workflow/src/path-policy.mjs`), and `grep -c 'path-policy' skills/init-workspace/references/` counts both seeding references — evidence: `<recorded at execution>`
 
 Done-when: `diff <(node -e "import('./packages/agentic-workflow/src/path-policy.mjs').then(m=>process.stdout.write(m.serializeShippedPolicy()))") template/.agentic-workflow/path-policy.json` → empty, and `grep -c 'path-policy' skills/init-workspace/references/*.md` → at least 2.
 

@@ -19,7 +19,9 @@ lacks**. Seven ordered steps:
    (`docs/CAPABILITIES.md` + its documentation-map row), the optional
    architectural-invariants document
    (`docs/architecture/ARCHITECTURAL_INVARIANTS.md` + its documentation-map
-   row), the portable command-guard pack and detected platform adapter, or the Normalized
+   row), the portable command-guard pack and detected platform adapter, the
+   shipped path-protection `path-policy.json` seed and its `path-protection.md`
+   doc page, or the Normalized
    Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
    diff-against-current-template contract; it is the only source of *what's
    new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
@@ -44,7 +46,10 @@ lacks**. Seven ordered steps:
    template also changed is left untouched and listed as a residual, not
    silently updated. For hooks, add the canonical pack when absent and activate
    a platform adapter only after an explicit yes; never replace an existing
-   platform hook config. Leave honest placeholders where the user skipped.
+   platform hook config. A missing `path-policy.json` seed and its
+   `path-protection.md` page are proposed from the template; an existing
+   owner-written `path-policy.json` is never clobbered and is listed as a
+   residual instead. Leave honest placeholders where the user skipped.
 6. **Seed missing urgency labels, additively (feature 15).** Independent of
    the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and

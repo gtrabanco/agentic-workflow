@@ -20,7 +20,13 @@
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
 7. **Install accepted agent safety hooks.** Keep the canonical policy and
-   fullauto wrapper at `.agentic-workflow/hooks/`. For each accepted platform,
+   fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
+   path-protection policy at `.agentic-workflow/path-policy.json` and its doc
+   page at `.agentic-workflow/path-protection.md`, beside the hooks — the
+   `path-policy.json` seed is byte-identical to the producer crate's canonical
+   default, so a fresh install gets the guard with zero config. Leave an
+   existing owner-written `.agentic-workflow/path-policy.json` untouched and
+   report it as a residual. For each accepted platform,
    activate only its repository config/example as documented in the hook pack.
    Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
    an unknown payload, or an existing customized hook file becomes a residual,

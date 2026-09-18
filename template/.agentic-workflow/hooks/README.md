@@ -34,3 +34,24 @@ the merged PR. It never creates a persistent `.automerge` permission.
 
 These hooks are defense-in-depth, not a sandbox. Keep secret-manager controls
 and forge branch protection/rulesets enabled.
+
+## Path protection
+
+`guard-command.sh` guards commands; the path-protection policy guards **paths**.
+It lives beside this README as `../path-policy.json`, with its doc page at
+`../path-protection.md`. The shipped defaults protect `tests/**`, `e2e/**`,
+`**/*.test.*`, `fixtures/**` and the policy config itself, and a project extends
+or tightens them from there — the defaults can never be silently loosened.
+
+Two consumers read the same policy:
+
+- the **Tier 1 checkpoint gate** (`path-guard`, a producer-crate subcommand) runs
+  at each phase checkpoint over the phase's committed range and fails a
+  protected change with no recorded justification/approval;
+- the **Tier 2 pi guard** blocks a `write` / `edit` tool call to an existing
+  protected path with no matching justification record (reads and new-file
+  creates pass).
+
+The command guard deliberately stays command-only: the normalized hook payload
+carries no write intent, so a path check there would block reads of protected
+files too. Path enforcement is the checkpoint gate plus the pi guard.

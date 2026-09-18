@@ -62,3 +62,10 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
   `unmatched-record` scenarios. The `undeclared-test` branch (PLAN60-F12
   advisory) gained P1 coverage: `a declared create passes pre-freeze; an
   undeclared create is undeclared-test`.
+- **P2 (2026-09-18)** — seed parity: `diff <(node -e
+  "import('./packages/agentic-workflow/src/path-policy.mjs').then(m=>process.stdout.write(m.serializeShippedPolicy()))")
+  template/.agentic-workflow/path-policy.json` → empty; `grep -c 'path-policy'
+  skills/init-workspace/references/*.md` → `BOOTSTRAP_WRITE.md:3`, `UPGRADE.md:3`;
+  AC-09 (`test -f path-policy.json && test -f path-protection.md && grep -q
+  'path-protection' hooks/README.md`) → exit 0; AC-07 intent (`grep -rnE
+  'tests/\*\*|e2e/\*\*' skills/`) → no match.
