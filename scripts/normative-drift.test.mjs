@@ -1162,4 +1162,87 @@ test("machine vocabularies are parsed from committed source, never from dist", (
   }
 });
 
+// #244 — freeze-batch hand-off pin: the closing block must be machine-readable.
+// A regression that (a) hard-wraps a · sub-bullet, (b) puts a host command as
+// the consumer, or (c) drops the planner command fails CI.
+test("#244 freeze-batch hand-off: closing block shape and consumer are correct", (t) => {
+  const skillRel = "skills/fold-findings/SKILL.md";
+  if (!exists(skillRel)) return t.skip("fold-findings SKILL.md absent");
+  const skill = read(skillRel);
+
+  // --- Part 1: the fenced → Next: block (AC3 block-shape + AC1 consumer) ---
+  // The block is a fenced code block that starts with "→ Next:" and continues
+  // until the closing ```. The regex captures after the "→ Next:" text,
+  // so the first captured line is the rest of the header line (typically
+  // a parenthesised description). Every subsequent non-blank line must
+  // begin with "· " (one physical line, never wrapped).
+  const nextBlockMatch = skill.match(/```[\s\n]*→ Next:([\s\S]*?)```/);
+  assert.ok(nextBlockMatch, "the → Next: fenced block exists");
+  const blockContent = nextBlockMatch[1];
+  const blockLines = blockContent.split("\n");
+
+  let headerDone = false;
+  for (const raw of blockLines) {
+    const line = raw.trim();
+    if (line === "") continue;
+    if (!headerDone) {
+      // First non-blank line is the tail of the → Next: header line
+      headerDone = true;
+      continue;
+    }
+    assert.ok(
+      line.startsWith("· "),
+      "every post-header line must be a · sub-bullet (got: " + JSON.stringify(line) + ")"
+    );
+    // No router invocation token inside the block
+    assert.ok(
+      !line.includes("unit-route.mjs"),
+      "the → Next: block must not contain the router invocation as consumer (got: " + JSON.stringify(line) + ")"
+    );
+  }
+
+  // Both planner commands must appear in the block (AC1)
+  assert.ok(blockContent.includes("/plan-fix"), "the block must name /plan-fix");
+  assert.ok(blockContent.includes("/plan-feature"), "the block must name /plan-feature");
+
+  // --- Part 2: the closing-block decision table (AC1 extended) ---
+  // Find the freeze-batch row and check the consumer cell.
+  const freezeRow = skill.match(
+    /\|\s*freeze-batch[\s\S]*?\|\s*\|/m
+  );
+  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  const freezeParts = freezeRow[0].split("|").map((s) => s.trim());
+  // The consumer cell is the last non-empty part
+  const consumerCell = freezeParts[freezeParts.length - 1].trim();
+  // Must name both planner tokens and mark the router invocation as discovery
+  assert.ok(
+    consumerCell.includes("/plan-fix"),
+    "the freeze-batch consumer cell must name /plan-fix (got: " + JSON.stringify(consumerCell) + ")"
+  );
+  assert.ok(
+    consumerCell.includes("/plan-feature"),
+    "the freeze-batch consumer cell must name /plan-feature (got: " + JSON.stringify(consumerCell) + ")"
+  );
+  // The router invocation may appear as a description of the discovery step,
+  // but the consumer (first token before →) must be a planner command
+  const consumerTokens = consumerCell.split(/→/);
+  const primaryConsumer = consumerTokens[0].trim();
+  assert.ok(
+    primaryConsumer.includes("/plan-fix") || primaryConsumer.includes("/plan-feature"),
+    "the primary consumer (before →) must be a planner command, not a host command (got: " + JSON.stringify(primaryConsumer) + ")"
+  );
+
+  // --- Part 3: format sentences in both skill files (AC2 + AC3) ---
+  // Both files must carry the "bare folder number or the full slug" sentence
+  assert.ok(
+    skill.includes("bare folder number or the full slug"),
+    "SKILL.md must carry the unit format sentence"
+  );
+  // The one-physical-line rule sentence
+  assert.ok(
+    skill.includes("exactly one physical line"),
+    "SKILL.md must carry the one-physical-line rule"
+  );
+});
+
 
