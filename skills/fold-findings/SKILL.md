@@ -170,14 +170,16 @@ or touched outside the queue.
   · all FOLDED (<F1> + <F2> + …) → /review-change — re-review the branch now that all listed findings are fixed
   · any DISPUTED (<F1> + <F2> + …) → user decision — resolve every evidenced dispute without creating backlog
   · any BLOCKED (<F1> + <F2> + …) → supply the listed missing inputs, then re-run /fold-findings
-  · any REPLAN (<F1> + <F2> + …) → /plan-fix <n> or /plan-feature <slug> — the planner appends the proposed phases to the unit's SPEC, then a fresh /review-plan must pass before /execute-phase on this unit
+  · any REPLAN (<F1> + <F2> + …) → /plan-fix <n> or /plan-feature <slug> — the planner appends the proposed phases to the unit's SPEC, the user confirms them, then a fresh /review-plan must pass before /execute-phase on this unit
 ```
 
 Every `· ` sub-bullet is exactly one physical line — never hard-wrapped across
 several lines, never joined into one prose line.
 
 Replace placeholders with every actual affected finding ID before printing; never
-print `<F2>`, `…`, or a single representative ID in a live hand-off.
+print `<F2>`, `…`, or a single representative ID in a live hand-off. Resolve the
+`/plan-fix <n>` / `/plan-feature <slug>` unit argument the same way — never carry
+`<n>` or `<slug>` into a live hand-off.
 
 ## Closing-block decision branch (choose one, at emission)
 
