@@ -33,7 +33,7 @@ Notes:
 ## Preflight record (execute-phase --fix 182, whole-unit)
 - Dependency gate: PASS — SPEC `Depends on` is empty; no closure to traverse.
 - Own-status: n/a — fix unit has no roadmap-status equivalent (fix-index entry is its state).
-- Pre-execution gate: PASS — newest `stage: plan` receipt `rp-fix182-20260917-002`, verdict `plan-review-pass`, snapshot `8f6126b308175af3b32c27c749966783393cf3f038d9cea752938220d8fce3ca`, `current: true`, `digestMatches: true`, `verdictIsPass: true` (`node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 0).
+- Pre-execution gate (superseded): the `rp-fix182-20260917-002` receipt held at revision 81ee3ff6 and stopped being current when the main-sync merge moved `CLAUDE.md`; superseded by the e2a42683 merge. The current gate is `rp-fix182-20260918-004` (recorded in the newest `Pre-execution review receipt v1 — plan` block below): `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 0, `current: true`, `digestMatches: true`, `verdictIsPass: true`.
 - Acceptance-manifest gate: PASS — `git hash-object ACCEPTANCE.md` = `3ff5b7f104954d80d218f1085ddc7ef4bac0421e`, matching the SPEC-recorded frozen blob.
 - Phase-lint: PASS (8/8) all phases · fingerprint `f660b4dbe98cf247e700b9efe2175ee0ffe8b6e3535682192e8d942bd3f4ed81`.
 - Architectural invariants: n/a — no project invariant document declared (NRS F010).
@@ -53,6 +53,34 @@ Reuse and constraints: fake-`gh`-on-`PATH` pattern from scripts/review-receipt.t
 Expected writes: scripts/review-receipt.test.mjs → O1 · scripts/audit-pr-receipt.test.mjs → O4
 Validation: falsification probe = `node --test scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` (currently green with the two paths unexercised) · TDD target = both new CLI cases fail before the code they exercise would regress, i.e. they bind the runtime branch · phase gate = `node --test scripts/review-receipt.test.mjs scripts/session-close.test.mjs scripts/audit-pr-receipt.test.mjs` exit 0
 Plan assumptions: confirmed — the `emit` refusal and `hygiene --apply` loop are as PE-011 describes
+Contradictions: none
+Unknowns: none
+Decision: READY
+```
+
+## Preflight record (execute-phase --fix 182, phases P5–P10)
+- Dependency gate: PASS — SPEC `Depends on` is empty; no closure to traverse.
+- Own-status: n/a — fix unit has no roadmap-status equivalent (fix-index entry is its state).
+- Pre-execution gate: PASS — newest `stage: plan` receipt `rp-fix182-20260918-004`, verdict `plan-review-pass`, snapshot `5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea`, `current: true`, `digestMatches: true`, `verdictIsPass: true` (`node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 0).
+- Acceptance-manifest gate: PASS — `git hash-object docs/fix/182-deterministic-receipts-and-pr-hygiene/ACCEPTANCE.md` = `3ff5b7f104954d80d218f1085ddc7ef4bac0421e`, matching the frozen blob.
+- Phase-lint: PASS (8/8) all phases · fingerprint `24c1adc8acec3570498a98ad5d2c9f9534279c4cc6b31e5135bc8b287d176fe9`.
+- Architectural invariants: n/a — no project invariant document declared (NRS F010).
+- Queue (reconciled against repository evidence): `P5, P6, P7, P8, P9, P10`. P1–P4 are ticked and their evidence exists; P5–P10 are unticked and each defect reproduces live: P5's two corrected-gate-line markers absent (`grep -c "held at revision 81ee3ff6"` = 0, `grep -c "superseded by the e2a42683 merge"` = 0), P6 `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` = 0 / `grep -c "gh pr comment" …` = 1, P7 a no-upstream throwaway repo returns `branch-pushed: pass` exit 0 (should be fail), P8 `packages/pi-agentic-workflow/src/extension/index.ts:137` `spawnSync` has no `timeout`, P9 the mirror is byte-identical today (P6 will drift it, P9 re-bundles).
+
+```text
+IMPLEMENTATION MAP — fix-182 P5–P10
+Map revision: map-fix182-p5-p10-20260918-1
+Source identity: HEAD 02ce4465 · clean source (git status --porcelain empty) · cited: docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md, skills/audit-pr/SKILL.md, scripts/audit-pr-gate.mjs, scripts/audit-pr-receipt.test.mjs, packages/pi-agentic-workflow/src/extension/receipt-guard.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/receipt-guard.test.mjs, packages/pi-agentic-workflow/package.json, packages/pi-agentic-workflow/scripts/bundle-skills.mjs, packages/pi-agentic-workflow/test/skill-parity.test.mjs, CHANGELOG.md, docs/fix/README.md
+Authority: plan receipt rp-fix182-20260918-004 (5e14f732) + SPEC/ACCEPTANCE 3ff5b7f1 + phase fingerprints P5:docs:3:merged-head-plan-receipt-reconciliation · P6:docs:2:audit-pr-merge-ready-box-names-comment-runtime · P7:config/infra:3:branch-pushed-gate-fails-closed-without-upstream · P8:config/infra:3:settled-turn-git-probe-is-time-bounded · P9:config/infra:2:pi-mirror-parity-for-repaired-skill · P10:hardening:9:hardening-pr
+Planning evidence: PE-012 confirmed (the hand-assembled `gh pr comment --body-file` path is `skills/audit-pr/SKILL.md:47`; already removed in `references/03_AUDIT_PROCESS.md:49`), PE-013 confirmed (`aheadCount()` returns 0 on any non-zero exit; no-upstream repro exit 128), PE-014 confirmed (the `progress.md:36` line still presents a standing gate; live verify exit 4 stale-context before this write), PE-015 confirmed (`index.ts:137` no `timeout`; comments at `:131-135`/`:185-187` claim it never blocks), PE-016 confirmed (`scripts/pre-execution-snapshot.mjs:483` `verdictIsPass` exact)
+Obligations: O10 (P5·1–3), O11 (P6·1–2), O12 (P7·1–3), O13 (P8·1–3), O14 (P9·1–2), plus P10 re-verification of O1–O14
+Entry points: progress.md `Pre-execution gate` line + newest receipt block (P5) · skills/audit-pr/SKILL.md:46-48 turn-contract box (P6) · audit-pr-gate.mjs `hygieneFromState` `:147-166` and `aheadCount` `:197-200` (P7) · receipt-guard.ts exports + index.ts `readGitStatus` `:128-137` and `agent_settled` `:171-189` (P8) · bundle-skills.mjs `bundleSkills` + package.json version (P9) · docs/fix/README.md row (P10)
+Affected surfaces: P6 edit drifts the bundled mirror → test/skill-parity.test.mjs fails until P9 re-bundles (planned coupling, disclosed) · P7 change touches `hygieneFromState` consumers (CLI `hygiene`, `evaluate --hygiene`) and the existing CLI fixtures `makeRepo` that have no upstream (must gain a remote to stay truthfully `pass`) · P8 change is consumed by the Pi extension lifecycle and pinned by test/receipt-guard.test.mjs against `dist/` · P9 re-bundle touches the whole bundled `skills/` tree and the companion-packages CHANGELOG row
+Current behaviour: all five defects reproduce live (see the Queue line); no runtime path is missing — each phase is a bounded correction or a rebundle
+Reuse and constraints: P7 reuses the `hygieneFromState` pure shape and the existing fake-`gh`/`makeRepo` fixture pattern (`scripts/audit-pr-receipt.test.mjs:226-302`); P8 reuses `dirtyWorktreeWarning` and the same test file's Pi-free import of `../dist/extension/receipt-guard.js`; P9 reuses `bun scripts/bundle-skills.mjs` (the only bundle writer) and `skills/bump-skill` for the audit-pr patch; validators may not be weakened; the full project gate is the four ACCEPTANCE commands
+Expected writes: progress.md (P5) → O10 · skills/audit-pr/SKILL.md + CHANGELOG.md + skills/bump-skill run (P6) → O11 · scripts/audit-pr-gate.mjs + scripts/audit-pr-receipt.test.mjs (P7) → O12 · receipt-guard.ts + index.ts + test/receipt-guard.test.mjs (P8) → O13 · packages/pi-agentic-workflow/skills/ re-bundle + package.json + CHANGELOG.md companion row (P9) → O14 · docs/fix/README.md + SPEC.md + progress.md (P5–P10) → O10–O14 evidence
+Validation: falsification probes = the P5 greps + `verify` exit-0 JSON, P6 greps on `skills/audit-pr/SKILL.md`, the no-upstream `hygiene` repro, the P8 direct read of `index.ts:137`; TDD targets = P7's no-upstream fixture (red before the `hygieneFromState` change) and P8's hanging-fake-git probe (red before the bounded probe); phase gates = P5 verify exit 0 + greps, P6 `bun scripts/check-skill-context.mjs` exit 0, P7 `node --test scripts/audit-pr-receipt.test.mjs` exit 0, P8 `cd packages/pi-agentic-workflow && bun run test` exit 0, P9 `cd packages/pi-agentic-workflow && bun run test` exit 0, P10 the four ACCEPTANCE commands
+Plan assumptions: confirmed — every cited line and count matches the live tree
 Contradictions: none
 Unknowns: none
 Decision: READY
@@ -208,3 +236,38 @@ Notes:
 }
 ```
 - Self-check command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 0 (`current: true`, `digestMatches: true`, `verdictIsPass: true`, `structural.fresh: true`).
+
+## P5 — 2026-09-18
+- Done: reconciled the merged-head plan receipt record. The superseded `Pre-execution gate` line in the first preflight record now reads `held at revision 81ee3ff6` and `superseded by the e2a42683 merge`, and points at the current receipt. Recorded the fresh `stage: plan` receipt `rp-fix182-20260918-004` — snapshot `5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea`, source revision `dbda8e01aa4b8520be609f41043352f87ee1d333` — in the newest receipt block. Re-ran the plan-stage verify for the appended ledger; exit-0 JSON pasted below. Ticked P5 (O10 `verified`).
+- Remains: P6–P10.
+- Gotchas: `verify` re-reads the newest receipt and the *bound* artifact bytes; `progress.md` is not a bound path, so this reconciliation does not move the snapshot digest (`current: true` holds). The two corrected-gate-line markers are the P5/O10 falsification hooks the plan-review added.
+- Files: docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md
+- Next: P6
+
+```json
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "fix-182",
+  "receipt": {
+    "id": "rp-fix182-20260918-004",
+    "verdict": "plan-review-pass",
+    "snapshot": "5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` (exit 0) + P5 greps · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: P6 · Attempts: 1
