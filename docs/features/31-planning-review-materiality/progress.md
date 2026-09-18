@@ -3797,5 +3797,16 @@ receipt and snapshot `255d099b…`.
 - Next: P3 — Snapshot wording-only route
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Commit: 52bf548f · Gate: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
 - Next: P3 · Attempts: 1
+
+## P3 — 2026-09-18
+- Done: snapshot wording-only route — `parseWordingOnlyDeterminations` in `scripts/pre-execution-contract.mjs` (its own block grammar, not the receipt grammar), pure `wordingOnly` branch in `attributeFreshness` after `stale-context` and before `stale-source-revision`, fail-closed acceptance-manifest fingerprint read via `git hash-object`, wording-only vectors in both the attribution and sensor suites, and the re-aimed code-carrier pins in `review-loop-discipline.test.mjs` (medium+ predicate, CLI verify route, `stop-review-loop-cap`, `detail.review_loop_cycles`, A:12 absence); P3 gate green (30 pass / 0 fail across the three suites)
+- Remains: P4 prose shrink + release records, P5 hardening & PR
+- Gotchas: (1) `scripts/pre-execution-quality.test.mjs` F70 scans the contract module for every `fieldFrom(chunk, "...")` label and requires each in both receipt templates; the determination block is a distinct grammar, so it uses its own `determinationLine` extractor instead of `fieldFrom` — the receipt-label invariant is unchanged, no frozen test edited. (2) the wording-only branch receives its determination and acceptance fingerprint as the pure `wordingOnly` input; the parity vectors pass none, so the dimension-by-dimension comparator agreement is untouched. (3) the determination must name the snapshot's `contentRevision` (the newest commit touching a bound path); the block lives in the unbound `progress.md`, so recording it does not rotate that revision.
+- Files: scripts/pre-execution-contract.mjs, scripts/pre-execution-snapshot.mjs, scripts/pre-execution-attribution.test.mjs, scripts/pre-execution-sensor.test.mjs, scripts/review-loop-discipline.test.mjs, docs/features/31-planning-review-materiality/{TASKS.md,progress.md}
+- Next: P4 — Skill-reference prose shrink
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: P4 · Attempts: 1
