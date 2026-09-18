@@ -473,8 +473,10 @@ Command-checkable at the PR head unless labelled `read-verified`.
   scripts/pre-execution-sensor.test.mjs
   scripts/pre-execution-attribution.test.mjs` exits zero): revision rotated +
   determination recorded + no material movement → verify stays current without
-  a new review receipt; material byte movement → `stale-artifact-content`
-  (exit 4); a rotation without the recorded determination is refused (the
+  a new review receipt; material byte movement yields a non-fresh answer (never
+  `fresh` — for moved bound bytes the fall-through answers
+  `stale-source-revision`, exit 4, the code the frozen `ACCEPTANCE.md` AC4 and
+  Design E6 record); a rotation without the recorded determination is refused (the
   record and the rotation are not skippable). Vector semantics walked at the
   PR head (`read-verified`).
 - **AC5** (command): the orchestrator refuses to advance past the cap —
@@ -674,7 +676,15 @@ Product boxes:
 
 ## Design status
 
-`designed` — user-commissioned Product-half patch for `spec-review-31-10`'s
+`designed` — user-commissioned Product-half patch **`31-spec-12`** (2026-09-18)
+applied: review-change finding **F3** routed through the product route — AC4's
+fall-through parenthetical now names `stale-source-revision` (the code the
+machine answers for moved bound bytes, matching the frozen `ACCEPTANCE.md` AC4
+and Design E6) instead of the impossible `stale-artifact-content`; nothing else
+in the Product half moved. Capability closure group: complete (zero blank rows),
+Spec-lint product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at
+artifact revision **`31-spec-12`** (see `## Amendments`). Earlier state:
+`31-spec-10` — user-commissioned Product-half patch for `spec-review-31-10`'s
 open row **N31-015** applied (one owner-instructed edit: AC13's declared
 **code-carrier** group additionally enumerates
 `scripts/pre-execution-attribution.test.mjs` and
@@ -683,12 +693,11 @@ the `wording-only` vectors and `PLAN.md` P3 extends, so the frozen scope walk
 stops reporting the plan's own designed edits as violations; nothing else in the
 Product half moved). Capability closure group: complete (zero blank rows),
 Spec-lint product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at
-artifact revision **`31-spec-10`** (2026-09-17 — see `## Amendments`). This write
-moves the Product half's bound bytes, so the `spec-review-31-10` receipt goes
-`stale-artifact-content` by design: the next `review-spec` run delta-reviews the
-patched half in a fresh context (owner-scoped: confirm the enumeration fix,
-carry the byte-unchanged checks), and `plan-feature` then re-cuts the plan set
-only on a current `SPEC-REVIEW-PASS` receipt.
+artifact revision **`31-spec-10`** (2026-09-17 — see `## Amendments`). Each of
+these writes moves the Product half's bound bytes, so the prior receipt goes
+stale by design: the next `review-spec` run delta-reviews the patched half in a
+fresh context, and `plan-feature` re-cuts the plan set only on a current
+`SPEC-REVIEW-PASS` receipt.
 ---
 
 ## Engineering half
@@ -1241,6 +1250,38 @@ owner at a time. Rows 35/42 (and 46's coordination) chain after it per
 ---
 
 ## Amendments
+
+### `31-spec-12` (2026-09-18) — user-commissioned Product-half patch routing review-change finding F3 through the product route
+
+Trigger: the unit's `review-change` pass (head `ec04261d`, PR #243) returned
+`REVIEW-FAIL` with five fix-now rows (`review-findings.md` F1–F5); F1/F2/F4 and
+F5 folded in place, while **F3** (`medium`, `spec-drift`) names a Product-half
+defect its frozen route reserves to this skill: AC4's fall-through parenthetical
+named `stale-artifact-content` for material byte movement while the machine
+answers `stale-source-revision` for moved bound bytes — the exact code the
+frozen `ACCEPTANCE.md` AC4 records and Design E6 declares ("for moved bound
+bytes answers `stale-source-revision`"; the earlier `stale-artifact-revision`
+wording was already corrected there as wrong). `scripts/pre-execution-snapshot.mjs`
+returns `stale-source-revision` before the `stale-artifact-content` slot, so a
+criterion requiring `stale-artifact-content` (exit 4) from the wording-only
+scenario is unsatisfiable as written. Owner instruction: "route F3 through" the
+product route (design-feature → review-spec); the planning author did not
+touch the Product half.
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| F3 | spec-drift · med | AC4's fall-through parenthetical now reads: material byte movement yields a non-fresh answer (never `fresh` — for moved bound bytes the fall-through answers `stale-source-revision`, exit 4), matching the frozen `ACCEPTANCE.md` AC4 wording byte-for-byte in substance. No criterion outcome moves — the required outcome (non-fresh, exit 4) is unchanged; only the impossible code name is corrected. Repair class: mechanical, intent-preserving. | AC4 (SPEC `### Acceptance criteria`) |
+
+Artifact revision rotates `31-spec-10` → **`31-spec-12`** for the touched
+Product set (`SPEC.md`, `decisions.md`). The frozen `ACCEPTANCE.md` stays
+untouched (blob `849af5ae…` recomputed intact — no criterion, validator or
+required outcome moves). The current Product receipt `spec-review-31-11` is
+superseded by design (bound Product bytes moved with no wording-only
+determination — the movement is material, not cosmetic): only a fresh
+`/review-spec 31-planning-review-materiality` delta-reviews the patch and
+restores currency. The fold ledger row F3 stays `folded: no` until that
+re-review passes; the router's `route: fold` line for F3 is answered by this
+frozen route (the product route is the authority-preserving repair).
 
 ### `31-plan-2` — repair batch for `plan-review-31-1` (F01 + F02 + F03)
 
