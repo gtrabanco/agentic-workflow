@@ -385,8 +385,9 @@ re-review by `review-spec`.
 
 Written by `plan-feature` / `plan-feature-scaffold` after the Product-review
 gate passed (receipt SPEC-REVIEW-60-2, snapshot `12121bff…1682e`). Product
-bytes are untouched; the artifact revision of this plan set is `60-plan-2`
-(initial cut by `plan-feature-scaffold` on 2026-09-18).
+bytes are untouched; the artifact revision of this plan set is `60-plan-3`
+(initial cut by `plan-feature-scaffold` on 2026-09-18; repaired in two batches
+for PLAN60-F1…F8 and PLAN60-F9…F10).
 
 ### Technical goals
 
@@ -627,16 +628,17 @@ parity test is the pi package's `skills/` mirror
 
 ### Planning evidence
 
-See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 26 rows,
-PE-001…PE-026, all `current` + `proven`).
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 28 rows,
+PE-001…PE-028, all `current` + `proven`).
 
 ### Obligations
 
-See `planning-obligations.md` (M/L — O1…O18, one row per acceptance criterion
+See `planning-obligations.md` (M/L — O1…O21, one row per acceptance criterion
 plus the read-only, vocabulary-closure, no-auto-approval, and
 unavailable-gate-disclosure invariants, the `path-guard:empty-diff` /
-`path-guard:two-runs` / `path-guard:committed-range` scenario pins, and the
-split template-seed (O15) / pi-mirror (O18) parity pins; every row `planned` at
+`path-guard:two-runs` / `path-guard:committed-range` scenario pins, the
+split template-seed (O15) / pi-mirror (O18) parity pins, and the P5 close-out
+gate (O19) plus the same-PR release sweep (O20/O21); every row `planned` at
 freeze).
 
 ### Decisions to confirm
@@ -743,9 +745,13 @@ artifacts with its first change.
   strict `pathProtection` key and tighten-only intersection in the config layer,
   the `tool_call` guard, and the package suite. Done-when:
   `cd packages/pi-agentic-workflow && bun run test` → exit 0.
-- **P5 — Hardening & PR** (hardening): the full ladder, the pi mirror re-bundle
-  + parity, the acceptance blob receipt, the fingerprint check, and the literal
-  close-out chain. Done-when: the whole ladder green and the PR URL printed.
+- **P5 — Hardening & PR** (hardening): the full ladder, the same-PR version and
+  CHANGELOG sweep for the six touched skills and the pi package, the pi mirror
+  re-bundle + parity, the acceptance blob receipt, the fingerprint check, the
+  close-out path gate over P5's own committed range
+  (`path-guard --phase P5 --base <P5 base ref>`, no `--force`), and the literal
+  close-out chain. Done-when: the close-out gate exits 0 over P5's committed
+  range, the whole ladder is green, and the PR URL is printed.
 
 ### Deploy & rollback
 

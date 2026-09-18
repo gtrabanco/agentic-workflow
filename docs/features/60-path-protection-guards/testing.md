@@ -11,7 +11,7 @@
 | Budgets (P3) | every touched skill re-based via the declared `ceil(measured × 1.10)` rule with the growth source named | `node scripts/check-skill-context.mjs` → exit 0 |
 | No project globs in skills (P3) | skills reference the mechanism, never project paths | `grep -nE 'tests/\*\*\|e2e/\*\*' skills/` → no output |
 | Tier 2 pi guard (P4) | block/reason on an existing protected path, read passthrough, create passthrough, tighten honored, loosen rejected, cross-package default parity | `cd packages/pi-agentic-workflow && bun run test` → exit 0 |
-| Qualification (P5) | the whole ladder green, the pi mirror byte-identical, the acceptance blob unchanged | `node --test scripts/*.test.mjs` + `bun test packages/agentic-workflow/test/` + the pi suite → exit 0; parity green |
+| Qualification (P5) | the whole ladder green, the same-PR version/CHANGELOG sweep landed, the pi mirror byte-identical, the acceptance blob unchanged, and the close-out gate passing over P5's own committed range | `node --test scripts/*.test.mjs` + `bun test packages/agentic-workflow/test/` + the pi suite → exit 0; `node --test scripts/normative-drift.test.mjs` → exit 0 after the version bumps; `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 with the `PATH-GUARD` block; parity green |
 
 ## Mandatory scenario inventory
 

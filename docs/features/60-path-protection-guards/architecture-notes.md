@@ -23,8 +23,11 @@
   rejection type), `skills/verification-contract/SKILL.md` (the pointer), the
   plan templates and the scaffold reference (the declaration instruction), and
   `CLAUDE.md` (the normative-surface row).
-- **hardening (P5):** qualification only — ladder runs, mirror re-bundle plus
-  parity, acceptance blob receipt, close-out.
+- **hardening (P5):** qualification and release — ladder runs, the same-PR
+  version/CHANGELOG sweep for the six touched skills and the pi package, the
+  mirror re-bundle plus parity, the acceptance blob receipt, the fingerprint
+  check, the close-out path gate over P5's own committed range (E-60-15), and
+  close-out.
 
 ## Contract impact
 
@@ -55,10 +58,13 @@
   four. `gate-rejection-type` gains `path-protection`, and POLICY §8's prose
   count updates with it (E-60-11, F8). The skill text carries
   placeholders only, so `grep -nE 'tests/\*\*|e2e/\*\*' skills/` stays empty.
-- **No public package release.** `packages/agentic-workflow` is private
-  (`"private": true`) and the change is not published; the pi package gains a
-  minor version bump per the repo's version-per-change rule (recorded at
-  execution with its CHANGELOG row).
+- **No public crate release; a scheduled pi/skills release.**
+  `packages/agentic-workflow` is private (`"private": true`, version `0.0.0`)
+  and is not published, so it takes no bump. The six touched skills take a
+  `bump-skill` minor bump (each with its CHANGELOG row) and the pi package takes
+  a minor bump to `0.11.0` with its Companion npm packages CHANGELOG row, both
+  in P5 before the Pi mirror re-bundle (E-60-16; the repo's version-per-change
+  rule).
 
 ## Runtime and distribution
 
