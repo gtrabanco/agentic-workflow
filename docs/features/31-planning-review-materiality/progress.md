@@ -3821,3 +3821,49 @@ receipt and snapshot `255d099b…`.
 ## Unit-loop receipt — P4
 - Commit: pending · Gate: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
 - Next: P5 · Attempts: 1
+
+## P5 — 2026-09-18
+- Done: hardening close-out — full acceptance ladder green at the terminal HEAD, plan lint pasted, Pi mirror re-bundled + package suite green, the three read-verified walks recorded (AC8/AC9/AC13), the frozen manifest re-verified, the PR opened and the roadmap row flipped to `done`
+- Remains: none — the unit is `done` with its PR open; `/review-change` is the mandatory end review, `/audit-pr` the merge gate
+- Gotchas: (1) `main` advanced during the unit (feature 55 executable golden fixture, #240); the branch was synced with a merge commit so the literal `git diff main` scope walk is exact. (2) the extra sensor-suite projection test was dropped from `scripts/workflow-status-sensor.test.mjs` because AC13's declared code carriers do not include it.
+- Files: packages/pi-agentic-workflow/skills/** (mirror re-bundle), docs/features/31-planning-review-materiality/{progress.md,PLAN.md,TASKS.md}, docs/features/ROADMAP.md
+- Next: unit finished
+
+### Acceptance ladder at terminal HEAD (recorded verbatim)
+
+```text
+bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs scripts/workflow-status-pre-execution.test.mjs
+→ 152 pass / 0 fail (8 files) · exit 0
+(cd packages/agentic-workflow-schema && bun run gate:pre-execution)
+→ exit 0 (suite + projection drift checks + package check + docs test)
+bun scripts/check-skill-context.mjs
+→ PASS context budgets: 40 skills · exit 0
+(cd packages/pi-agentic-workflow && bun run bundle:skills && bun run test)
+→ bundled 39 skills (125 files) · 214 pass / 0 fail · exit 0
+```
+
+### Plan-layer linter (pasted verbatim, AC6)
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:8:schema-finding-record-materiality
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c
+```
+
+### Read-verified walks
+
+- **AC9 additive release:** `git diff main -- packages/agentic-workflow-schema/src/` removes no enum value and no contract id; the only removed predicate line is the materiality rewrite `const material = finding.severity !== "info";`. The receipt contract id count is unchanged (`grep -c "agentic-workflow/pre-execution-review-receipt@1"` ≥ 1). The package version is 4.3.0 with its CHANGELOG row.
+- **AC8 no weakening:** `git diff main -- scripts/review-loop-discipline.test.mjs | grep -E '^-'` removes no assertion; the planning block is purely additive and reads the schema package (`grep -n "packages/agentic-workflow-schema"` exits 0).
+- **AC13 scope:** `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists only code-carrier, prose-shrink/derived, or workflow-mutated paths.
+- **AC14 release records:** the four touched skills' bump-hunk count is 8 (one removed + one added `version:` each), each a semver-minor, with one CHANGELOG row per skill and accurate README cells.
+
+## Acceptance receipt v1 (terminal)
+- Manifest: docs/features/31-planning-review-materiality/ACCEPTANCE.md · Blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9 · Verified at terminal HEAD: 2026-09-18 · Matches the P1 receipt: yes
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: `bun test scripts/review-loop-discipline.test.mjs` (exit 0) + the full ladder above · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: close-out (PR + roadmap flip) · Attempts: 1
