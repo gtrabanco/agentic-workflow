@@ -60,8 +60,9 @@ in the unit's unbound `progress.md`:
 ```
 
 The revision rotation is **never** skippable: the freshness predicate refuses an
-unrecorded rotation (`stale-artifact-revision`), and a later material movement
-after an exempted one is refused because the recorded revision no longer matches.
+unrecorded rotation (`stale-source-revision` — bound bytes moved and no matching
+determination was recorded), and a later material movement after an exempted one
+is refused because the recorded revision no longer matches.
 The determination is the exemption's record, never authorization to move bytes
 without one.
 
