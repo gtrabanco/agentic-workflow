@@ -7,16 +7,19 @@ cut follows the Product half's carrier ruling (D-31-6) and its Size section ("M 
 code carrier, no split trigger: well under 5 phases"), so it stays inside the
 bound the reviewed Product half records. Every phase declares one layer, holds
 zero open design decisions, and ends in a locally runnable, machine-checkable
-done-when. Artifact revision of this plan set: **`31-plan-5`** — the re-derivation
-that binds the current Product receipt `spec-review-31-11` after the
-owner-commissioned Product patches `31-spec-9`/`31-spec-10`, on top of the
-`31-plan-4` repair batch for `plan-review-31-3` (P31-01…P31-05) and the `31-plan-3`
-re-cut the D-31-6 carrier ruling owed (`31-plan-1/2` superseded, never repaired).
+done-when. Artifact revision of this plan set: **`31-plan-6`** — the repair batch
+for `plan-review-31-4` (P31-07…P31-11: the two schema-version pins and the
+published-limit block P1's own done-when runs, `E9`'s CHANGELOG-row allocation,
+and two P4 task wordings the frozen gates pin), on top of the `31-plan-5`
+re-derivation that binds the current Product receipt `spec-review-31-11` after the
+owner-commissioned Product patches `31-spec-9`/`31-spec-10`, the `31-plan-4`
+repair batch for `plan-review-31-3` (P31-01…P31-05) and the `31-plan-3` re-cut the
+D-31-6 carrier ruling owed (`31-plan-1/2` superseded, never repaired).
 The superseded sets are not repaired: `31-plan-1/2`'s carrier was prose recitation
 plus a `PLANNING_PIN_TABLE` row floor, which the code carrier replaces;
 `31-plan-3`'s wording-only identity check and sensor wiring did not survive
 contact with the machine contract; and `31-plan-4`'s provenance paragraph and
-`E-D31-18` prose are re-cut here, never preserved.
+`E-D31-18` prose are re-cut, never preserved.
 
 Plan provenance:
 
@@ -31,12 +34,20 @@ Plan provenance:
   `31-plan-3` re-cut; F01/F02/F03 by `31-plan-2` (`planning-findings.md`).
 - Plan-stage finding rows P31-01…P31-05 (`plan-review-31-3`, medium/medium/high/
   low/low): resolved in place by the `31-plan-4` repair batch; **P31-06**
-  (`plan-review-31-3`, medium, `class: product`) resolved by this re-derivation
-  once the Product patches `31-spec-9`/`31-spec-10` enumerated the code carriers it
-  named (`planning-findings.md`).
+  (`plan-review-31-3`, medium, `class: product`) resolved by the `31-plan-5`
+  re-derivation once the Product patches `31-spec-9`/`31-spec-10` enumerated the
+  code carriers it named (`planning-findings.md`).
+- Plan-stage finding rows P31-07/P31-08 (high/high), P31-09 (medium),
+  P31-10 (low) and P31-11 (info) — all `class: plan` from `plan-review-31-4`:
+  resolved in place by this `31-plan-6` repair batch (the two schema-version pins
+  and the published-limit block that make P1's own done-when reachable, `E9`'s
+  CHANGELOG-row allocation, and the two P4 wordings the frozen AC7/AC10 greps or
+  pins would otherwise collide with) — `planning-findings.md`.
 - Frozen acceptance-manifest blob at this revision (`git hash-object`):
-  `849af5ae7bccc7bc815d60d8ca2a9e0400161df9` (the `31-plan-4` blob was
-  `650c7c8b21fdd6b7e2ec7b6c2c91672732201166`, the `31-plan-3` blob
+  `849af5ae7bccc7bc815d60d8ca2a9e0400161df9` — unchanged by this batch (every row
+  it repairs is Engineering-half; no criterion, validator or required outcome
+  moves), the same blob the `31-plan-5` re-derivation bound (the `31-plan-4` blob
+  was `650c7c8b21fdd6b7e2ec7b6c2c91672732201166`, the `31-plan-3` blob
   `3d7e7c9ee92314261e5529815c76b373e8ca2745`, the `31-plan-2` blob
   `d85e217acad1322d3caf4968715ef5d00e9189c0`; each re-cut re-froze the manifest
   because the moved parent changes the recorded lineage).
@@ -62,12 +73,13 @@ and AC10 at the PR head (P31-04).
 - [ ] Change the materiality predicate in `packages/agentic-workflow-schema/src/pre-execution.ts` to the `medium`+ line and restate the doc comment above `validatePreExecutionReceiptAgainstSnapshot` — a PASS may coexist with open/unverified `low` rows and is refused while any open/unverified `medium`+ row exists.
 - [ ] Add the receipt vectors to `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`: a PASS carrying an open/unverified `low` row validates; the same PASS with an open/unverified `medium` row is refused with `verdict-mismatch`; a receipt whose findings carry no `reproducer` still validates, while a `reproducer` beyond the declared bound is refused.
 - [ ] Regenerate the two pre-execution Draft-07 projections with the package's own generator run from the package root (`bun scripts/generate-pre-execution-schemas.mjs` writes them, and the `--check` form is the drift gate) so the committed projections carry `reproducer` and their `$comment` runtime-rule disclosure stays in sync.
-- [ ] Bump the schema package to 4.3.0 in `packages/agentic-workflow-schema/package.json` — an additive minor: every enum value, the receipt contract id and the freshness vocabulary stay byte-identical.
+- [ ] Bump the schema package to 4.3.0 in `packages/agentic-workflow-schema/package.json` and move the two version pins the bump reddens in the same commit — `test/release-contract.test.mjs` (`assert.equal(pkg.version, "4.2.0")`) and `test/verification-gates.test.mjs` (`assert.equal(manifest.version, "4.2.0")`) — an additive minor: every enum value, the receipt contract id and the freshness vocabulary stay byte-identical.
+- [ ] Add the `reproducerChars 1024` entry to the `### Published limits` block of `packages/agentic-workflow-schema/README.md`, so the `test/pre-execution-docs.test.mjs` walk over `PRE_EXECUTION_LIMITS` finds the new key and its value inside the section.
 - [ ] Run the package suite and the projection drift check green: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0.
 
-Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green and zero projection drift.
+Done-when: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` → exit 0 with the materiality, `reproducer`-bound and back-compatibility vectors green, zero projection drift, and the bumped version's two pins and the published-limits walk green.
 
-Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:7:schema-finding-record-materiality`
+Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:8:schema-finding-record-materiality`
 
 ## P2 — Transition-decider cap refusal
 
@@ -131,8 +143,8 @@ edit to its bump, its `CHANGELOG.md` row and its README cell, and the schema
 package's 4.3.0 row lands with the bibliography append here.
 
 - [ ] Rewrite the materiality semantics in `skills/pre-execution-review/references/LEDGERS.md` §3: replace the "`info` is the only immaterial one" sentence with the planning materiality line (material = `medium`+; `low` is a persisted, visible, non-blocking report-note that the stage author resolves without a re-review), the report-note persistence contract, the anti-deflation carry-over, and the restated PASS-coexistence sentence.
-- [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical.
-- [ ] Rewrite §3 of `skills/pre-execution-review/references/POLICY.md`: keep the single re-review of the resulting snapshot as the default batch consequence, remove the every-batch re-review mandate sentence, and add the wording-only exemption with the determination record's block shape and the non-skippable revision rotation.
+- [ ] Rewrite the findings-assembly paragraph in `skills/review-spec/references/CHECKS.md` and `skills/review-plan/references/CHECKS.md`: replace "Material = anything above `info`" with material = `medium`+ plus the report-note sentence and the anti-deflation sentence, keeping each closed severity vocabulary list byte-identical and the pinned sentence byte-identical — `scripts/pre-execution-quality.test.mjs` matches its two-line pairing (the line ending `carry an open`, then the line starting `unverified material row`) verbatim, so neither the words nor the break point moves (AC10).
+- [ ] Rewrite §3 of `skills/pre-execution-review/references/POLICY.md`: preserve the default batch consequence — one re-review of the freshly rotated snapshot after the batch — while deleting the exact phrase AC7's re-review removal grep over `skills/pre-execution-review/references/POLICY.md` names (that grep must exit non-zero at the PR head), remove the every-batch re-review mandate sentence, and add the wording-only exemption with the determination record's block shape and the non-skippable revision rotation.
 - [ ] Rewrite §4 of `skills/pre-execution-review/references/POLICY.md`: remove the three unbounded-cycle sentences, keep the `CONVERGENCE-ANOMALY` block byte-identical, and author the remainder — the hard two-cycle cap, the `third cycle never` starts without explicit user instruction rule, and the unconverged end in `needs-design` where the stage sanctions it and in the decider's `stop-review-loop-cap` refusal plus `design-feature` route at the plan stage.
 - [ ] Extend the loop text in `skills/review-spec/references/OUTPUT.md` and `skills/review-plan/references/OUTPUT.md`: remove the re-review-for-every-batch sentences from both verdict tables and both closing hand-off blocks, add the cap mirror, and keep every receipt-literal line and verdict block byte-identical.
 - [ ] Rewrite §4 of `skills/design-feature/references/REPAIR.md`: remove both unbounded-cycle sentences and add the cap mirror, preserving the §4 heading and the anomaly-first ordering.

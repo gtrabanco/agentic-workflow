@@ -2,8 +2,8 @@
 
 No unresolved product or engineering decision blocks implementation, and no
 planning-finding row is left open by this re-cut: R31-01/R31-02/R31-03 were
-resolved at artifact revision `31-plan-3`, P31-01…P31-05 at `31-plan-4`, and
-P31-06 at `31-plan-5` (`planning-findings.md`). The
+resolved at artifact revision `31-plan-3`, P31-01…P31-05 at `31-plan-4`, P31-06 at
+`31-plan-5`, and P31-07…P31-11 at `31-plan-6` (`planning-findings.md`). The
 boundaries below are recorded so qualification and review do not rediscover them.
 
 ## Known boundaries to preserve
@@ -114,3 +114,15 @@ boundaries below are recorded so qualification and review do not rediscover them
     repo gate is therefore expected red between P1 and P4, P1's done-when stays
     package-local, and P4's done-when runs `bun test
     scripts/normative-drift.test.mjs` to prove the closure.
+
+13. **P1 is at the canonical phase budget, and it owns the bump's own reddened
+    assertions and published limit.** The version bump reddens two existing
+    package gates — `test/release-contract.test.mjs` and
+    `test/verification-gates.test.mjs` both hard-pin `4.2.0` — and adding
+    `reproducerChars` to `PRE_EXECUTION_LIMITS` reddens
+    `test/pre-execution-docs.test.mjs`, which walks every published limit against
+    the package README's `### Published limits` block. All three surfaces are
+    `packages/**` (`config/infra`), so they belong to P1 and cannot ride the
+    `docs` P4; P1 now carries eight tasks, the ceiling the phase contract's box 3
+    allows a non-close-out phase. A further P1 requirement must split the phase,
+    never grow the list silently (P31-07/P31-08, E-D31-22, PE-033/PE-034/PE-037).

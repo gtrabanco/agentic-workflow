@@ -1027,3 +1027,84 @@ the re-derivation repairs it rather than carrying it forward.
 | AC13's code-carrier group now enumerates every path the plan edits by design, so P31-06's defect is gone | repository | `docs/features/31-planning-review-materiality/SPEC.md` `## Scope` group 1 (nine paths); the P1–P5 task targets in `PLAN.md`/`TASKS.md` | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-20; PE-031 |
 | The phase contract refuses a `docs` target in a `config/infra` phase, so the schema `CHANGELOG.md` row stays in the `docs` P4 | repository | `scripts/phase-lint.mjs` box 2 (`layerForTarget`); `PLAN.md` P1/P4 `Layer:` declarations | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-21; PE-032 |
 | The Product reviewer's own hand-off routed to `plan-feature` to bind `spec-review-31-11` | repository | `progress.md` `spec-review-31-11` receipt → `→ Next: /plan-feature 31-planning-review-materiality` | `8eb3b928` @ 2026-09-17 | current | proven | E-D31-20 |
+
+## 2026-09-17 — Plan repair batch for `plan-review-31-4` (plan-feature, artifact revision `31-plan-6`)
+
+Trigger: `plan-review-31-4` returned `PLAN-REVIEW-FAIL` (snapshot `b17009ea…`,
+artifact revision `31-plan-5`) with five plan-class rows — P31-07/P31-08 (high),
+P31-09 (medium), P31-10 (low), P31-11 (info) — and no product row. Its
+`CONVERGENCE-ANOMALY` block named the repair owner: `plan-feature
+31-planning-review-materiality` — one batch for the whole set, then `/review-plan`
+re-reviews the new artifact revision. The user commissioned the batch with the
+same scope. No Product byte moves: the `spec-product-v1` projection digest stays
+`e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02` (46362
+bytes) and the three context digests stay unmoved, so the plan's parent remains
+`spec-review-31-11` @ `dd09372a…`.
+
+### E-D31-22: the bump's own reddened gates and its published limit are P1 tasks, in the bump's commit
+
+P1's done-when runs `(cd packages/agentic-workflow-schema && bun run test && bun
+run check:pre-execution-schemas)`, and `bun run test` is `tsc && tsc -p
+tsconfig.test.json && bun test test/*.test.mjs` — so the phase commits only if
+every test in that package passes. Bumping `package.json` to 4.3.0 reddens two
+existing pins that assert `4.2.0` verbatim (`test/release-contract.test.mjs`,
+`test/verification-gates.test.mjs`), and adding `reproducerChars` to
+`PRE_EXECUTION_LIMITS` reddens `test/pre-execution-docs.test.mjs`, whose
+published-limit walk requires the README's `### Published limits` block to carry
+every key and its value (P31-07/P31-08). All three surfaces are `packages/**`,
+which `layerForTarget` maps to `config/infra`, so they belong to P1 and cannot
+ride the `docs` P4. The bump task now moves both pins in the same commit — the
+precedent feature 59 recorded — and a new P1 task publishes `reproducerChars 1024`
+in the README block. The alternative reading (make P1's done-when weaker) would
+have manufactured a green phase over a red package suite, which the manifest's
+quality floor refuses.
+
+### E-D31-23: `E9` states the P4 CHANGELOG allocation — one reading, not two
+
+`SPEC.md` E9 said the schema package's `CHANGELOG.md` companion row lands "in the
+same phase as the bump (P1)" while `PLAN.md`/`TASKS.md` P1/P4, `E-D31-18`,
+`known-issues.md` §12 and E9's sibling `### Open questions / risks` bullet all read
+P4 (P31-09). An executor following E9 would place a `docs` target in the
+`config/infra` P1 and fail phase-lint box 2; one following PLAN/TASKS would leave
+E9 false. The P31-04/E-D31-18 resolution already settled the linter-valid
+allocation (row in P4, `normative-drift` window P1→P4 declared), so E9 now states
+it, names the two version pins and the published-limit block as the bump's own
+P1 surfaces, and the SPEC's `### Phases` P1 done-when — which had appended a
+`bun test scripts/normative-drift.test.mjs` → exit 0 claim as if the row shared
+P1 — stays package-local and restates the window. Same root cause, both
+statements repaired.
+
+### E-D31-24: the two P4 task wordings name the frozen gate they must keep
+
+P4's `CHECKS.md` task promised only that "each closed severity vocabulary list"
+stays byte-identical, while `scripts/pre-execution-quality.test.mjs` — inside
+AC10's pack — matches the review-spec paragraph's sentence `a \`PASS\` may not
+carry an open` + line break + `unverified material row` verbatim, so a re-wrap
+reddens the gate (P31-11). The task now names that pinned pairing and its break
+point. P4's `POLICY.md` §3 task kept the exact literal AC7's removal grep deletes
+(P31-10); it now names the removal grep and states the default batch consequence —
+one re-review of the freshly rotated snapshot — without reciting the deleted
+phrase. Both are wording-only: no phase, task count, validator or acceptance
+outcome moves.
+
+### E-D31-25: P1's task budget is at the canonical ceiling
+
+P1 now carries eight tasks, the maximum the phase contract's box 3 allows a
+non-close-out phase (`bun scripts/phase-lint.mjs` → `PASS (8/8)` per phase, new
+fingerprint `P1:config/infra:8:schema-finding-record-materiality`, new aggregate
+`d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c`). The two
+additions do not raise the count beyond the ceiling because the two version pins
+fold into the bump task they belong to in the same commit (E-D31-22). The boundary
+is recorded in `known-issues.md` §13: a further P1 requirement splits the phase,
+never grows the list.
+
+### Evidence rows (repair batch, 2026-09-17)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| Two existing package tests hard-pin the version to `4.2.0`, so the bump reddens them; the three-file baseline is green | repository | `packages/agentic-workflow-schema/test/release-contract.test.mjs:23-28`; `packages/agentic-workflow-schema/test/verification-gates.test.mjs:115-118`; `packages/agentic-workflow-schema/package.json:3,62`; observed `bun test test/release-contract.test.mjs test/verification-gates.test.mjs test/pre-execution-docs.test.mjs` → 32 pass / 0 fail | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-22; PE-033 |
+| The published-limit walk requires every `PRE_EXECUTION_LIMITS` key and value in the README's feature-28 `### Published limits` block, and `packages/**` maps to `config/infra` | repository | `packages/agentic-workflow-schema/test/pre-execution-docs.test.mjs:26-34,131-137`; `packages/agentic-workflow-schema/README.md:411-424`; `scripts/phase-lint.mjs` box 2 (`layerForTarget`) | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-22; PE-034 |
+| `scripts/pre-execution-quality.test.mjs` pins the review-spec `CHECKS.md` sentence with its line break, inside AC10's pack | repository | `scripts/pre-execution-quality.test.mjs:319-327`; `skills/review-spec/references/CHECKS.md:104-105`; `ACCEPTANCE.md` AC10 | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-24; PE-035 |
+| The `POLICY.md` sentence AC7's removal grep deletes is live at line 42, so a task that says "keep" it collides with the frozen criterion | repository | `ACCEPTANCE.md` AC7 (the `POLICY.md` re-review removal grep); `skills/pre-execution-review/references/POLICY.md:39-42`; observed `grep -n "re-review of the resulting snapshot" skills/pre-execution-review/references/POLICY.md` → `42:`, exit 0 | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-24; PE-036 |
+| Phase-lint box 3 caps a non-close-out phase at 8 tasks, so the two added P1 requirements resolve inside the budget by folding the pins into the bump task | repository | `scripts/phase-lint.mjs` box 3 (`box3`, `limit = 8` for a non-close-out phase); `PLAN.md` P1 (8 tasks); observed `bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md` → PASS (8/8) per phase, aggregate `d7193898…` | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-25; PE-037 |
+| The Product projection and its three context digests recompute byte-identical from the bytes on disk, so the repair batch moves no reviewed Product byte | repository | `node scripts/pre-execution-snapshot.mjs build --stage spec --unit 31-planning-review-materiality` → `spec-product-v1` digest `e9ce9abf…` (46362 bytes); `progress.md` receipt block `spec-review-31-11`; `packages/agentic-workflow-schema/src/pre-execution.ts:482-556` (the selector) | `6e2a804f` @ 2026-09-17 | current | proven | E-D31-20; the plan's `--parent` binding |
