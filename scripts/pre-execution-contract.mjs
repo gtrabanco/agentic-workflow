@@ -173,16 +173,33 @@ export function deriveReviewLoopCycles(receipts) {
 }
 
 /**
+ * The determination block's own body: after its `## Wording-only determination
+ * v1 — <stage>` header, up to the next `## ` header (or the end of the text).
+ * Bounding the region is load-bearing: `parseWordingOnlyDeterminations` splits
+ * only on determination headers, so without this bound a later record block — a
+ * review receipt also carries `- Artifact revision:` — sits inside the same chunk
+ * and a determination that omits a field could be answered with that block's
+ * value instead of `null` (E6 must fail closed).
+ */
+function determinationBlock(chunk) {
+  const end = chunk.search(/^## /m);
+  return end === -1 ? chunk : chunk.slice(0, end);
+}
+
+/**
  * One `- <label>: <value>` field of a determination block. The determination
  * grammar is NOT the receipt grammar (its labels are read by a distinct block
  * kind), so it carries its own extractor: the receipt parser's label scan must
  * keep proving that every RECEIPT label is emitted by both stage templates.
  * The label may sit mid-line — the frozen SPEC E5 block carries several fields
- * on one ` \u00b7 `-separated line — and the value ends at the next ` \u00b7 ` or the
- * line end, the same termination the receipt scan uses.
+ * on one ` \u00b7 `-separated line — so it must start a field: a line start (after an
+ * optional `- ` bullet) or the ` \u00b7 ` separator. The value ends at the next ` \u00b7 `
+ * or the line end, the same termination the receipt scan uses. An absent field
+ * returns `null`, never a value borrowed from another block.
  */
 function determinationLine(chunk, label) {
-  const match = chunk.match(new RegExp(`${label}:[ \\t]*([^\\n\u00b7]+)`));
+  const match = determinationBlock(chunk).match(
+    new RegExp(`(?:^|[\\u00b7])[ \\t]*(?:-[ \\t]*)?${label}:[ \\t]*([^\\n\u00b7]+)`, "m"));
   return match ? match[1].replace(/`/g, "").trim() : null;
 }
 
