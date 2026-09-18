@@ -358,9 +358,9 @@ replan re-cut the plan and `/review-plan` re-issued the receipt at the merged
 head; this phase stops the progress record from presenting the superseded gate
 as standing and records the fresh one.
 
-- [ ] Record the fresh merged-head `stage: plan` receipt in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md`, pasting its id, snapshot digest and source revision (F3; PF-3; O10)
-- [ ] Correct the superseded `Pre-execution gate` line in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` so it carries `held at revision 81ee3ff6` and `superseded by the e2a42683 merge` rather than standing as the current gate (F3; PF-3; O10)
-- [ ] Re-run `node scripts/pre-execution-snapshot.mjs verify` for the appended ledger and paste its exit-0 JSON into the same record (F3; PF-3; O10)
+- [x] Record the fresh merged-head `stage: plan` receipt in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md`, pasting its id, snapshot digest and source revision (F3; PF-3; O10)
+- [x] Correct the superseded `Pre-execution gate` line in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` so it carries `held at revision 81ee3ff6` and `superseded by the e2a42683 merge` rather than standing as the current gate (F3; PF-3; O10)
+- [x] Re-run `node scripts/pre-execution-snapshot.mjs verify` for the appended ledger and paste its exit-0 JSON into the same record (F3; PF-3; O10)
 
 Phase-lint: PASS (8/8) · fingerprint `P5:docs:3:merged-head-plan-receipt-reconciliation`
 
