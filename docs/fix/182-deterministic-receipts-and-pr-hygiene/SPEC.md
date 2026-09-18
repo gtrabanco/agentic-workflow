@@ -91,13 +91,15 @@ same log records the follow-up audit-pr `BLOCKED` loop this unit unblocks.
    pure marker grammar and `render` / `verify` / `emit` commands; `emit` refuses
    a moved head, posts once via `--body-file -`, re-reads, and exits non-zero
    unless the newest `review-change:pass` marker names the reviewed head;
-   `verify` exits `0` current / `3` absent / `4` stale.
+   `verify` exits `0` current / `3` absent / `4` stale; `scripts/review-receipt.test.mjs`
+   pins the moved-head refusal through a fake `gh` on `PATH` (P1 task 3).
 2. **Deterministic merge-gate and hygiene runtime** (`scripts/audit-pr-gate.mjs`,
    P1): a closed 13-name gate set (the ten historical gates plus `tree-clean`,
    `branch-pushed`, `pr-ready`); the receipt-currency check precedes the gate
    set; `comment` refuses a BLOCKED verdict and confirms the landed marker;
    `hygiene` reads tree / branch / draft state and applies only the `gh pr ready`
-   mechanical repair.
+   mechanical repair, pinned by `scripts/audit-pr-receipt.test.mjs` on a fixture
+   repo with a fake `gh` (P1 task 7).
 3. **Deterministic session close** (`scripts/session-close.mjs`, P1): `render`
    computes the git facts and prints the entry without writing; `close` refuses
    a log that was not appended to, commits `docs/LOGS.md` **alone**, and names
@@ -158,6 +160,7 @@ each.
 | PE-008 | The marker grammar now has one owner: `scripts/audit-pr-receipt.test.mjs` imports `scripts/review-receipt.mjs` and `scripts/audit-pr-gate.mjs`, so its long-standing assertions execute the code the skills invoke rather than a copy | repository | `scripts/audit-pr-receipt.test.mjs` import lines; `scripts/review-receipt.mjs` `REVIEW_MARKER_RE`; `scripts/audit-pr-gate.mjs` `GATE_NAMES` | `c541aac5` | O2, O3, AC2, AC3 | current | proven | — |
 | PE-009 | The routed remainder is real, separate work: roadmap row 35 `scoped-receipt-verifier` (`idea`) describes the affecting-path receipt binding as one deterministic CLI beside `pre-execution-snapshot.mjs`, and it cites #182 as its tracked issue — a row/issue-boundary decision this SPEC flags rather than silently resolves | document | `docs/features/ROADMAP.md` row 35; `docs/fix/README.md` history (`2264b454`, AD-2 dropped the stale #182 row because the issue was re-registered as row 35) | `d63e9b12` | AC9, `## Cross-issue notes` | current | proven | — |
 | PE-010 | Context budgets are enforced by file: `docs/workflow/SKILL_CONTEXT_BUDGETS.json` carries the per-route ceiling and `sources` map, and `scripts/check-skill-context.mjs` fails the gate when a route exceeds it | repository | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`audit-pr` / `audit-pr:fix` entries); `scripts/check-skill-context.mjs` | `c541aac5` | O8, AC7 | current | proven | — |
+| PE-011 | Verification gap repaired: `review-plan` returned PF-1/PF-2 — the `emit` moved-head refusal and the `hygiene --apply` CLI were declared outcomes with no test invoking either path — and this write adds the missing CLI test as plan work instead of re-pointing the rows to a weaker validator | derived | rule "supply the missing evidence, never edit the reviewed claim into agreement" (`pre-execution-review` POLICY §3) over `docs/fix/182-deterministic-receipts-and-pr-hygiene/planning-findings.md` rows PF-1/PF-2 + `scripts/review-receipt.mjs` `emit` branch + `scripts/audit-pr-gate.mjs` `hygiene` `--apply` loop | — | O1, O4, AC1, AC4 | not-applicable | decision | — |
 
 ### Obligations
 
@@ -167,11 +170,11 @@ deferred`; `n/a` requires evidence, and no row is `deferred` to a follow-up issu
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | PE-001 + PE-002 + PE-005 | A `REVIEW-PASS` cannot be reported without a current, SHA-bound receipt: `emit` refuses a moved head and exits non-zero unless the newest marker names the reviewed head | P1 | 1 | execute-phase | AC1 validator (`node --test scripts/review-receipt.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
-| O2 | PE-001 + PE-008 | The receipt marker grammar has exactly one owner: the receipt test imports the runtime instead of redefining the grammar | P1 | 3 | execute-phase | AC2 validator (import grep + receipt test exit 0) | grep output + test count in progress.md | planned |
-| O3 | PE-002 + PE-005 | The merge gate is a closed, machine-evaluated set, and an absent or stale receipt blocks before any gate is read | P1 | 4 | execute-phase | AC3 validator (`node --test scripts/audit-pr-receipt.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
-| O4 | PE-002 + PE-005 | Terminal hygiene is read from state, not assumed: `tree-clean`, `branch-pushed`, `pr-ready` are gates, and only the draft flag has a mechanical repair | P1 | 5 | execute-phase | AC4 validator (`hygiene --apply` on a clean fixture → exit 0; a dirty path names itself) | command output in progress.md | planned |
-| O5 | PE-002 + PE-006 | A session close commits the log entry alone and names every leftover path; a rewritten or unappended log is refused | P1 | 6 | execute-phase | AC5 validator (`node --test scripts/session-close.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
+| O1 | PE-001 + PE-002 + PE-005 | A `REVIEW-PASS` cannot be reported without a current, SHA-bound receipt: `emit` refuses a moved head and exits non-zero unless the newest marker names the reviewed head | P1 | 1 | execute-phase | AC1 validator (`node --test scripts/review-receipt.test.mjs`) → exit 0 | `emit` moved-head refusal test name + exit code in progress.md | planned |
+| O2 | PE-001 + PE-008 | The receipt marker grammar has exactly one owner: the receipt test imports the runtime instead of redefining the grammar | P1 | 4 | execute-phase | AC2 validator (import grep + receipt test exit 0) | grep output + test count in progress.md | planned |
+| O3 | PE-002 + PE-005 | The merge gate is a closed, machine-evaluated set, and an absent or stale receipt blocks before any gate is read | P1 | 5 | execute-phase | AC3 validator (`node --test scripts/audit-pr-receipt.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
+| O4 | PE-002 + PE-005 + PE-011 | Terminal hygiene is read from state, not assumed: `tree-clean`, `branch-pushed`, `pr-ready` are gates, and only the draft flag has a mechanical repair | P1 | 6 | execute-phase | AC4 validator (`node --test scripts/audit-pr-receipt.test.mjs` → exit 0; live `hygiene` names each dirty path) | `hygiene --apply` test name + exit code, and the live hygiene output, in progress.md | planned |
+| O5 | PE-002 + PE-006 | A session close commits the log entry alone and names every leftover path; a rewritten or unappended log is refused | P1 | 8 | execute-phase | AC5 validator (`node --test scripts/session-close.test.mjs`) → exit 0 | test count + exit code in progress.md | planned |
 | O6 | PE-002 + PE-006 | The pi extension blocks the unverifiable inline receipt path and warns once per settled turn on a dirty worktree | P2 | 1 | execute-phase | AC6 validator (`cd packages/pi-agentic-workflow && bun run test`) → exit 0 | test count + exit code in progress.md | planned |
 | O7 | PE-005 + PE-006 | The three skills name the runtimes as their box/step, so no prose path remains for a reviewer to end a turn through | P3 | 1 | execute-phase | AC7 validator (three greps → ≥ 1 each) | grep output in progress.md | planned |
 | O8 | PE-010 + PE-006 | The bundled skills mirror stays byte-identical to `skills/` and every route stays within its enforced context budget | P2 | 4 | execute-phase | AC8 validator (`bun scripts/check-skill-context.mjs` → exit 0; pi suite mirror parity) | command output in progress.md | planned |
@@ -179,7 +182,7 @@ deferred`; `n/a` requires evidence, and no row is `deferred` to a follow-up issu
 
 ## Acceptance
 
-Frozen manifest: `docs/fix/182-deterministic-receipts-and-pr-hygiene/ACCEPTANCE.md` · Blob: `d73d7a1bef9c90554924c566f58863c903399efa` · Status: frozen · Recorded at plan cut 2026-09-17.
+Frozen manifest: `docs/fix/182-deterministic-receipts-and-pr-hygiene/ACCEPTANCE.md` · Blob: `3ff5b7f104954d80d218f1085ddc7ef4bac0421e` · Status: frozen · Re-frozen at the 2026-09-17 repair cut (see `## Amendments`).
 
 Objective, verifiable conditions for "done". Each criterion is a runnable
 command with an expected outcome; the record of each run is greppable in the
@@ -226,12 +229,12 @@ phase carries only the literal hardening chain, per the contract's authorized
 Lint output (`node scripts/phase-lint.mjs docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md`, exit 0):
 
 ```text
-P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:6:deterministic-receipt-runtime-family
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:8:deterministic-receipt-runtime-family
 P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:4:pi-extension-receipt-guard
 P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:6:skill-wiring-to-runtime-family
 P4 Phase-lint: PASS (8/8) · fingerprint P4:hardening:8:hardening-pr
 verdict PASS
-fingerprint: a4244d3853e066ec83eabb719707ee65386da31a51249d10ab7c6804ea360994
+fingerprint: f660b4dbe98cf247e700b9efe2175ee0ffe8b6e3535682192e8d942bd3f4ed81
 ```
 
 ### P1 — Deterministic receipt runtime family
@@ -242,12 +245,14 @@ Layer: `config/infra`. Done-when:
 
 - [ ] `scripts/review-receipt.mjs` implements the pure receipt grammar beside one forge adapter, and the `render` / `verify` / `emit` commands (O1)
 - [ ] `scripts/review-receipt.mjs` `emit` refuses a PR head that differs from the reviewed head and exits non-zero unless the newest marker names that head (O1)
+- [ ] `scripts/review-receipt.test.mjs` pins the `emit` moved-head refusal through a fake `gh` on `PATH`: a PR head different from `--head` exits non-zero naming both heads (O1)
 - [ ] `scripts/audit-pr-receipt.test.mjs` imports the runtime grammar and gate functions instead of redefining them (O2)
 - [ ] `scripts/audit-pr-gate.mjs` declares the closed 13-name gate set with receipt currency before the gate set (O3)
 - [ ] `scripts/audit-pr-gate.mjs` `hygiene` reads tree / branch / draft state and applies only the PR-ready mechanical repair (O4)
+- [ ] `scripts/audit-pr-receipt.test.mjs` pins the `hygiene --apply` CLI on a fixture repo with a fake `gh`: exactly one PR-ready repair call, then a clean re-read (O4)
 - [ ] `scripts/session-close.mjs` `close` refuses a log that was not appended to, commits the log alone, and names every leftover path (O5)
 
-Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:6:deterministic-receipt-runtime-family`
+Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:8:deterministic-receipt-runtime-family`
 
 ### P2 — Pi extension receipt guard
 
@@ -293,17 +298,19 @@ Phase-lint: PASS (8/8) · fingerprint `P4:hardening:8:hardening-pr`
 
 ## Testing
 
-The regression gate is the three red-first suites the fix shipped plus the pi
-package suite: `scripts/review-receipt.test.mjs` (pure grammar, idempotent post
-decision, moved-head refusal, exit codes), `scripts/session-close.test.mjs`
-(append-only proof, single-file commit, leftover reporting),
-`scripts/audit-pr-receipt.test.mjs` (imports the runtimes; gate set, verdict
-precedence, comment action, hygiene derivation), and
-`packages/pi-agentic-workflow/test/receipt-guard.test.mjs`. No heavy mocking:
-the forge is exercised through the pure exported decisions, and the CLI paths
-take `--comments-json` / `--gates-json` fixtures instead of a live PR. The root
-suite (`node --test scripts/*.test.mjs`) and `bun scripts/check-skill-context.mjs`
-remain the project gate.
+The regression gate is the three suites plus the pi package suite:
+`scripts/review-receipt.test.mjs` (pure grammar, idempotent post decision, exit
+codes, and — delivered by P1 task 3 — the `emit` moved-head refusal against a
+fake `gh` on `PATH`), `scripts/session-close.test.mjs` (append-only proof,
+single-file commit, leftover reporting), `scripts/audit-pr-receipt.test.mjs`
+(imports the runtimes; gate set, verdict precedence, comment action, hygiene
+derivation, and — delivered by P1 task 7 — the `hygiene --apply` CLI repair on a
+fixture repo), and `packages/pi-agentic-workflow/test/receipt-guard.test.mjs`.
+No heavy mocking: the forge is exercised through the pure exported decisions for
+the read-only paths (`--comments-json` / `--gates-json` fixtures) and, for the
+two commands that call `gh` (`emit`, `hygiene --apply`), through a fake `gh`
+script on `PATH`. The root suite (`node --test scripts/*.test.mjs`) and
+`bun scripts/check-skill-context.mjs` remain the project gate.
 
 ### Failure scenarios
 
@@ -312,12 +319,12 @@ exercises it.
 
 | Failure state | Phase · task | Validator |
 |---|---|---|
-| The PR head moved between review and receipt | P1 · 2 | AC1 (`emit` refusal test in `scripts/review-receipt.test.mjs`) |
-| No receipt, or a receipt at another head, at the merge gate | P1 · 4 | AC3 (`audit-pr-receipt.test.mjs` verdict-precedence tests) |
-| A dirty tree at the merge gate | P1 · 5 | AC4 (`hygiene` names each dirty path) |
-| A branch ahead of its remote at the merge gate | P1 · 5 | AC4 (`hygiene` names the commit count) |
-| A draft PR at the merge gate | P1 · 5 | AC4 (`hygiene --apply` runs the PR-ready repair only) |
-| A rewritten or unappended session log | P1 · 6 | AC5 (`session-close.test.mjs` append-only tests) |
+| The PR head moved between review and receipt | P1 · 3 | AC1 (`emit` moved-head refusal test in `scripts/review-receipt.test.mjs`, fake `gh` on `PATH`) |
+| No receipt, or a receipt at another head, at the merge gate | P1 · 5 | AC3 (`audit-pr-receipt.test.mjs` verdict-precedence tests) |
+| A dirty tree at the merge gate | P1 · 6 | AC4 (`hygiene` names each dirty path) |
+| A branch ahead of its remote at the merge gate | P1 · 6 | AC4 (`hygiene` names the commit count) |
+| A draft PR at the merge gate | P1 · 7 | AC4 (`hygiene --apply` CLI test runs only the `gh pr ready` repair) |
+| A rewritten or unappended session log | P1 · 8 | AC5 (`session-close.test.mjs` append-only tests) |
 | An agent trying the inline, unverifiable receipt path | P2 · 1 | AC6 (`receipt-guard.test.mjs`) |
 
 ## Rollback
@@ -445,9 +452,10 @@ convention); `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (AC8);
 
 ## Effort
 
-M — the runtime change plus three red-first suites, the pi guard, and the skill
-wiring landed in one commit (`c541aac5`, 26 files); the remaining work in this
-SPEC is verification and close-out, not new implementation.
+M — the runtime change plus three suites, the pi guard, and the skill wiring
+landed in one commit (`c541aac5`, 26 files); this repair adds the two CLI
+contract tests the first cut declared but did not carry (P1 tasks 3 and 7), and
+the remaining work is their implementation plus verification and close-out.
 
 ## Decisions made during drafting
 
@@ -475,6 +483,21 @@ SPEC is verification and close-out, not new implementation.
    close-out ledger, so each task is checkable against the current tree rather
    than pretending the bytes do not exist.
 
+## Amendments
+
+- **2026-09-17 — plan repair batch (PF-1 + PF-2), user-approved.** `review-plan`
+  (receipt `rp-fix182-20260917-001`) returned `PLAN-REVIEW-FAIL` with two
+  plan-class findings: the `emit` moved-head refusal (PF-1) and the
+  `hygiene --apply` CLI repair (PF-2) were declared outcomes whose cited
+  validators did not exercise them. Repair: P1 gained the two CLI contract tests
+  (tasks 3 and 7), `### Failure scenarios` and `## Testing` were re-pointed at
+  those tasks, O4's validator/evidence were strengthened, and AC4's validator now
+  names the `hygiene --apply` CLI test. The rows were **not** re-pointed to a
+  weaker existing validator (the repair supplies the missing evidence, per
+  `pre-execution-review` POLICY §3). Replacement manifest blob
+  `3ff5b7f104954d80d218f1085ddc7ef4bac0421e`; `artifactRevisionId` rotated to
+  `ar-fix182-20260917-plan-2`.
+
 ## Planning preflight record
 
 Preflight: Stage 1 — NRS consumed · arch: deferred
@@ -485,14 +508,14 @@ Readiness (`evidence-grounding` `references/READINESS.md`, `stage: plan`):
 
 ```text
 READINESS — fix 182-deterministic-receipts-and-pr-hygiene plan READY-FOR-REVIEW
-- Artifact revision: ar-fix182-20260917-plan-1 · Rows checked: 10 evidence + 9 obligations · Unknowns open: 0
+- Artifact revision: ar-fix182-20260917-plan-2 · Rows checked: 11 evidence + 9 obligations · Unknowns open: 0
 - Evidence: SPEC.md ### Planning evidence · Frozen: 2026-09-17
 ```
 
 Box results: 1 `n/a` — a fix unit has no Product half and no parent SPEC to
 parent (D6); 2 pass — frozen `ACCEPTANCE.md`, one ID per criterion, named
-validators, blob `d73d7a1b` recorded; 3 pass — `## Impact` names the surfaces and
-PE-001..PE-010 carry the code evidence, invariant classification `n/a` (NRS
+validators, blob `3ff5b7f1` recorded; 3 pass — `## Impact` names the surfaces and
+PE-001..PE-011 carry the code evidence, invariant classification `n/a` (NRS
 F010); 4 pass — nine obligations, each one phase/task/owner/validator/evidence
 row with a non-blank status; 5 pass — the evidence table is embedded in this
 SPEC (XS/S home); 6 pass — `### Failure scenarios` maps every named failure state
@@ -503,5 +526,5 @@ no unresolved decision word, and the one open boundary (roadmap row 35) is an
 owned owner decision in `## Cross-issue notes`; 11 pass — every evidence row
 `current`, zero unknowns open.
 
-`artifactRevisionId`: `ar-fix182-20260917-plan-1` (this write; one id for the
-SPEC + `ACCEPTANCE.md` + the fix-index row it touched).
+`artifactRevisionId`: `ar-fix182-20260917-plan-2` (this repair write; one id for
+the SPEC + `ACCEPTANCE.md` + the fix-index row it touched).
