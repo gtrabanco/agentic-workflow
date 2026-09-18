@@ -1,4 +1,3 @@
-import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,6 +9,7 @@ import { loadConfig } from "../config/load.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
+import { readGitStatusBounded } from "./receipt-guard.js";
 import type { InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, stateFilePath } from "../routing/state.js";
@@ -128,17 +128,6 @@ function toRegistrar(pi: ExtensionAPI): CommandRegistrar<PiModel> {
   };
 }
 
-/**
- * `git status --porcelain` for the settled-turn hygiene notice. A directory that
- * is not a repository, or a missing git, reads as clean: the notice is
- * best-effort and must never fail a turn.
- */
-function readGitStatus(cwd: string): string {
-  const result = spawnSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8" });
-  if (result.error || result.status !== 0) return "";
-  return result.stdout ?? "";
-}
-
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -184,8 +173,10 @@ export default function extension(pi: ExtensionAPI): void {
   pi.on("agent_settled", (_event, ctx) => {
     void router.settle(toInvocationContext(ctx));
     // Terminal hygiene is said out loud once the turn is over; a clean tree
-    // stays silent. This never blocks and is best-effort by construction.
-    const warning = guards.dirtyWorktreeWarning(readGitStatus(ctx.cwd));
+    // stays silent. The probe is time-bounded (2000 ms) and swallows timeout,
+    // spawn error and non-zero status, so an unresponsive git can never park
+    // the settled turn — best-effort by construction (issue #182 F4).
+    const warning = guards.dirtyWorktreeWarning(readGitStatusBounded(ctx.cwd));
     if (warning) ctx.ui.notify(warning, "warning");
   });
 }
