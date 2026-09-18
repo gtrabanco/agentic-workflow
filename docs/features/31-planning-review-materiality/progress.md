@@ -4271,3 +4271,64 @@ do not touch this PASS.
 → Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
   · design changed underneath → re-run /review-spec 31-planning-review-materiality first
   · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
+
+---
+
+## Authoring — review-findings closure batch (design-feature, `31-spec-14`) (2026-09-18)
+
+Owner-commissioned one-batch repair of the product-owner fix-now findings in
+`review-findings.md`: **F8** (`medium`, spec-drift) and **F10** (`medium`,
+brand). Decisions recorded in `decisions.md` as **D-31-11** (the wording-only
+route never certifies a movement of the unit's own frozen `ACCEPTANCE.md`;
+the recorded fingerprint is corroboration, never a sufficient condition) and
+**D-31-12** (the re-review skip is declared by every surface that executes a
+repair batch — AC13's declared set, In-scope 5, AC7's removal set and the
+touched-skills/AC14 enumeration widen to `plan-feature/SKILL.md`,
+`plan-fix/SKILL.md`, `ship-roadmap/references/ADVANCE.md`,
+`replan-findings/references/PHASE_APPEND.md` and `REPAIR.md` §1/§3; eight
+touched skills, `grep -cE '^[+-]version: '` ≥ 16). F9 stays open by owner
+choice (its route names main-sync as the alternative). Research gate: two new
+fetched rows (RFC 9334 RATS attestation; XACML PEP/PDP separation) in
+`decisions.md`'s evidence table.
+
+Touched Product set: In-scope 2/5/7, declared group 2, AC4, AC7 (+7 removal
+greps), AC14 (eight skills, ≥ 16), E2 Create + transitions, C3, sweep row 10,
+Design E6 (commissioned — five branch conditions, fingerprint demoted),
+Design E8/E9 enumerations, `## Design status`, `## Amendments` (`31-spec-14`).
+Artifact revision rotates `31-spec-13` → **`31-spec-14`**. The frozen
+`ACCEPTANCE.md` is untouched this turn (AC4 validator text, AC7 removal
+enumeration and AC14 skill set moved, so `plan-feature` re-freezes it on a
+fresh PASS — the `31-plan-5` precedent). `review-findings.md` untouched
+(`folded` is `fold-findings`' surface).
+
+Receipt state after the write: `verify --stage spec` → `current: false`,
+`stale-artifact-content` ("bound artifact bytes moved:
+docs/features/31-planning-review-materiality/SPEC.md") — material movement by
+design (a Product predicate change is never wording-only, D-31-11's own
+rule); the next `/review-spec 31-planning-review-materiality` delta-reviews
+the patch as cycle 1 of a fresh window (D-31-7).
+
+Gates at authoring close (branch head `553982d3` base): architectural
+invariants `n/a: no project invariants declared` (NRS F010); AD-008 preserved
+by D-31-5 (unchanged). Roadmap row 31 stays `done · #243` (no scope or status
+change). Spec-lint product boxes re-run after the edit: all PASS (19
+expectation rows each resolved, zero blank closure rows, 5×5 role matrix,
+zero placeholders over the Product half, `Deferred decisions` reads `none`,
+every in-scope item → ≥ 1 AC, every AC command-or-`read-verified`). No new
+vocabulary value was introduced: no severity, verdict, freshness code or
+stop-code value moved; the seven new AC7 fragments are file-scoped removal
+greps over already-declared prose surfaces.
+
+Readiness preflight (`evidence-grounding`, `stage: spec`):
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-14 · Rows checked: 8 evidence rows (closure batch) + carried rows current · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-18
+```
+
+→ Next: /review-spec 31-planning-review-materiality — product half re-cut at
+  `31-spec-14`; an independent context must delta-review F8/F10's closure
+  before any plan re-derivation or source fold
+  · the fold of F8's source half waits for the fresh PASS (the branch's
+    manifest exclusion folds at source after the product route re-passes)
