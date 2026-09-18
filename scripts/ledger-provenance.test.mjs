@@ -52,6 +52,7 @@ function makeFixture(t) {
   git(root, "init", "-q", "-b", "main");
   git(root, "config", "user.email", "fixture@example.invalid");
   git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
   fs.mkdirSync(abs("src"), { recursive: true });
   fs.mkdirSync(abs("docs"), { recursive: true });
   write("src/index.ts", "export const a = 1;\n");
