@@ -626,3 +626,44 @@ Route: `class: product` → repair owner `design-feature
 (with the `known-issues.md` §3 correction) and drop or correct AC14's "nothing but
 the `version:` change" clause; then `/review-spec 31-planning-review-materiality`
 re-reviews the new artifact revision.
+
+## Re-review (`spec-review-31-15`, 2026-09-18)
+
+Cycle-2 independent `review-spec` delta-review of the `31-spec-15` repair batch
+(F31-14-01 + F31-14-02) over spec snapshot
+`47e4d49aa0dff90459f128fee9def9f350acaf780248175c61b1a019a3676451` (source
+revision `d203f79e478ebec710013101b8e3c692c91be74b`, artifact handoff label
+`31-spec-15`). Fresh context; this conversation never authored or edited the
+Product half → `contextClean: true`. Verdict: **`spec-review-pass`** — 14/14
+Product checks pass, zero new findings, `material open: 0`. Window accounting
+(D-31-7): `spec-review-31-13`'s PASS reset the count; this is the window's second
+invocation and it converged, so no `CONVERGENCE-ANOMALY` is owed. No reviewed
+artifact was modified by the turn.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+
+The two rows `spec-review-31-14` opened are **verified repaired in substance** at
+`31-spec-15`:
+
+- **F31-14-01** — AC13's declared group 2 (Prose-shrink + derived surfaces) now
+  names `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`SPEC.md:229-233`) and
+  `known-issues.md` §3 names it; the mechanical anchor's non-excluded paths are
+  all in declared groups (`git diff main --name-only -- . ':(exclude)…'` lists only
+  the manifest plus group 1/2 paths). Resolved in substance; the ledger row's
+  `open` token is stale.
+- **F31-14-02** — AC14 no longer carries the "nothing but the `version:` change"
+  clause and states `bump-skill`'s guardrail scope truthfully; the
+  Integration-closure row reads eight skill minor bumps, matching In scope 7 +
+  AC14. Resolved in substance; the ledger row's `open` token is stale.
+
+Ledger flip owed (not a finding against the Product half): the `31-spec-15`
+authoring turn did not flip its two resolved rows to `status: resolved` with
+`resolving-artifact-revision: 31-spec-15`. Per `LEDGERS.md` §3 the resolution
+columns are `design-feature:product-class-resolutions`' — not the reviewer's — so
+this review leaves them and records the gap; the next authoring turn (or a
+one-line `design-feature` fold) closes it so `audit-pr` does not read the stale
+`open` tokens as an unresolved material finding.
+
+Route: a current `SPEC-REVIEW-PASS` => `/plan-feature 31-planning-review-materiality`
+(plus the owed ledger flip before `/audit-pr`).
