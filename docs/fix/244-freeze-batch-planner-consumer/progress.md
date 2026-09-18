@@ -44,7 +44,7 @@ slug`, `exactly one physical line`) are also absent from both skill files.
 - [x] Pending-docs: `git status --porcelain -- docs/` → empty
 - [x] Fix-index row updated to `done`
 - [x] Branch pushed
-- [x] PR opened: [#246](https://github.com/gtrabanco/agentic-workflow/pull/246)
+- [x] PR opened: [#247](https://github.com/gtrabanco/agentic-workflow/pull/247)
 - [x] Fix-index row linked to PR
 
 ## Pre-execution review receipt v1 — plan
