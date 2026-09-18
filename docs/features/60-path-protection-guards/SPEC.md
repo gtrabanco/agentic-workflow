@@ -573,8 +573,8 @@ state, and prints one fixed block:
 ```text
 PATH-GUARD <pass|fail> — <code>
 offenders: <path:operation:reason[, …]|none>
-phase: <P<n>> · freeze-after: <P<m>|none> · checked: <n>
-DEGRADED — <missing-config|malformed-config>: shipped defaults in force   (only when degraded)
+phase: <P<n>> · freeze-after: <P<m>|none|n/a> · checked: <n>   (n/a when no declaration)
+DEGRADED — <code>: <detail>   (only when degraded; code ∈ missing-config | malformed-config | ignored-removal | ignored-lowering)
 ```
 
 Exit: `0` pass (including a degraded but clean run), `1` fail, `2` usage error.

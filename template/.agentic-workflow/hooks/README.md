@@ -38,19 +38,23 @@ and forge branch protection/rulesets enabled.
 ## Path protection
 
 `guard-command.sh` guards commands; the path-protection policy guards **paths**.
-It lives beside this README as `../path-policy.json`, with its doc page at
+The policy document is `../path-policy.json`, with its doc page at
 `../path-protection.md`. The shipped defaults protect `tests/**`, `e2e/**`,
 `**/*.test.*`, `fixtures/**` and the policy config itself, and a project extends
 or tightens them from there — the defaults can never be silently loosened.
 
-Two consumers read the same policy:
+The two tiers do not read the same file:
 
-- the **Tier 1 checkpoint gate** (`path-guard`, a producer-crate subcommand) runs
-  at each phase checkpoint over the phase's committed range and fails a
-  protected change with no recorded justification/approval;
-- the **Tier 2 pi guard** blocks a `write` / `edit` tool call to an existing
-  protected path with no matching justification record (reads and new-file
-  creates pass).
+- the **Tier 1 checkpoint gate** (`path-guard`, a producer-crate subcommand)
+  reads `../path-policy.json`; it runs at each phase checkpoint over the phase's
+  committed range and fails a protected change with no recorded
+  justification/approval;
+- the **Tier 2 pi guard** never reads `../path-policy.json`: it applies the
+  shipped defaults, tightened by the optional `pathProtection` key in the pi
+  config (`~/.pi/agent/pi-agentic-workflow.json` /
+  `<repo>/.pi/pi-agentic-workflow.json`), and blocks a `write` / `edit` tool call
+  to an existing protected path with no matching justification record (reads and
+  new-file creates pass).
 
 The command guard deliberately stays command-only: the normalized hook payload
 carries no write intent, so a path check there would block reads of protected
