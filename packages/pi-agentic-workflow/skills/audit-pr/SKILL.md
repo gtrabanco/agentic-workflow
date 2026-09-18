@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 5.2.0
+version: 5.2.1
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -43,9 +43,9 @@ independently evaluates only the delivery gates below.
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
-✓ MERGE-READY verdict? Then the MERGE-READY comment was POSTED on the PR
-  (`gh pr comment --body-file` RUN, idempotent by SHA marker) — a comment,
-  never a commit-message tag. BLOCKED → no comment posted
+✓ MERGE-READY verdict? Then the comment was POSTED by
+  `bun scripts/audit-pr-gate.mjs comment` (re-reads, exits non-zero unless the newest marker
+  names the head) — a comment, never a commit-message tag. BLOCKED → no comment
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session
 ✓ No review pass was composed or reconstructed: a missing/stale receipt is a

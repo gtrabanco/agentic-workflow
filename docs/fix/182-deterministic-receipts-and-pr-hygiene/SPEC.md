@@ -419,8 +419,8 @@ as a build copy: the bundled mirror still carries the stale box and
 invariant at the P2/P4 revision; this byte edit re-opens the bundle, so the
 re-bundle travels with the package version cell.
 
-- [ ] Re-bundle the Pi skills mirror from `packages/pi-agentic-workflow` after the last `skills/` edit, so the bundled `audit-pr` bytes match the canonical tree (F1; O14)
-- [ ] Bump `packages/pi-agentic-workflow/package.json` to 0.11.1 and add its row to the companion-packages table in `CHANGELOG.md` (F1; O14)
+- [x] Re-bundle the Pi skills mirror from `packages/pi-agentic-workflow` after the last `skills/` edit, so the bundled `audit-pr` bytes match the canonical tree (F1; O14)
+- [x] Bump `packages/pi-agentic-workflow/package.json` to 0.11.1 and add its row to the companion-packages table in `CHANGELOG.md` (F1; O14)
 
 Phase-lint: PASS (8/8) · fingerprint `P9:config/infra:2:pi-mirror-parity-for-repaired-skill`
 
