@@ -143,7 +143,7 @@ recorded here (offer: seed `docs/CAPABILITIES.md` from the template):
 producer crate (scripts/, packages/agentic-workflow)` · `pi package
 extension (packages/pi-agentic-workflow)` · `execution checkpoints
 (skills/execute-phase preflight + phase fingerprint)` · `turn contract /
-machine envelope` · `review-findings ledger (finding-mark schema)` ·
+machine envelope` · `decisions ledger (human-owner:ratified-verdicts column set)` ·
 `init-workspace install/upgrade path` · `template/docs scaffold` ·
 `discipline tests (scripts/*.test.mjs)` · `workflow-status sensor` ·
 `forge/GitHub integration` · `roadmap/status machine`.
@@ -171,9 +171,12 @@ Entity **Path Protection Policy** (config artifact shipped as defaults):
 
 Entity **Justification & approval record** (durable, append-only):
 
-- Create — UI entry point: none · API: the executing agent writes the
-  justification when a protected change is intended; the owner writes the
-  approval row after freeze, asked first · test: marker fixture
+- Create — UI entry point: none · API: the executing agent appends the
+  justification when a protected change is intended (a phase-decision row,
+  `execute-phase:phase-decisions`); the owner appends the approval row after
+  freeze, asked first (`human-owner:ratified-verdicts`) — both are append-only
+  rows of the unit's `decisions.md` ledger (the `ledger-ownership@1`
+  `decisions` row) · test: marker fixture
 - Read/list — UI: none · API: gate verifies records against the changed paths
   at the checkpoint · test: Tier 1 pass case with recorded approval
 - Update — n/a: records are append-only; a superseded approval is a new row
@@ -212,9 +215,11 @@ Entity **Guard verdict** (ephemeral, per checkpoint):
 - Turn contract / machine envelope — wording gains the justification marker
   as the place a protected change is declared at a checkpoint · test:
   grammar test covers the marker line
-- Review-findings ledger (`finding-mark` schema) — owner approvals and
-  justifications are recorded as append-only rows the gate verifies ·
-  test: ledger-record fixture
+- Decisions ledger (`docs/features/<NN>-<slug>/decisions.md`, the
+  `ledger-ownership@1` `decisions` row) — owner approvals and justifications
+  are recorded as append-only rows under its already-declared
+  `human-owner:ratified-verdicts` (owner) and `execute-phase:phase-decisions`
+  (agent) column sets, which the gate verifies · test: ledger-record fixture
 - `init-workspace` — install and upgrade modes seed the shipped policy
   defaults and offer the platform adapters additively · test: seeding
   acceptance
@@ -265,7 +270,7 @@ anywhere.
 | 12 | Fixtures get the same protection as tests | in-scope | AC1 default glob set |
 | 13 | A shell redirect (`echo > tests/x`) is caught like a tool edit | in-scope | AC2 (Tier 1 diffs, write-path-agnostic) |
 | 14 | Skills stay project-agnostic (no project globs inline) | in-scope | AC7 grep gate; Out of scope |
-| 15 | The shipped defaults can be tightened but never silently loosened | in-scope | AC3 + pi settings tighten-only; In scope 1 |
+| 15 | The shipped defaults can be tightened but never silently loosened | in-scope | AC10 (tighten-only pi override) + AC3 (fallback); In scope 1 |
 
 ### Acceptance criteria
 
@@ -302,6 +307,14 @@ anywhere.
 9. **AC9 — Template mirror:** the shipped policy default and its doc page
    exist under `template/.agentic-workflow/` and the hooks README documents
    the guard (grep-verified).
+10. **AC10 — Tighten-only pi override:** the `packages/pi-agentic-workflow`
+    extension unit test proves the effective policy is the shipped defaults
+    **intersected** with any pi settings override: a tightening override (an
+    added protected glob, or a phase made stricter) is honored, while a
+    loosening override (removing a shipped protected glob, or relaxing a
+    phase) is rejected — the shipped protection stays in force and the
+    rejected loosening emits the degradation report, so the defaults can never
+    be silently loosened.
 
 ### Tooling
 
@@ -321,7 +334,7 @@ anywhere.
 | D2 — Policy location | Doc-config canonical in the target repo (`.agentic-workflow/` convention, beside the feature 20 hooks, shipped via `template/`); pi settings may only tighten; the Tier 1 gate reads the doc config | User decision 2026-09-17 ("both"). Doc config keeps the zero-config promise portable across hosts; a tighten-only pi override cannot silently weaken the owner's policy. |
 | D3 — Absent/malformed config | Fall back to the shipped defaults and report the fallback; never fail open, never fail everything shut | User decision 2026-09-17 ("provide default values") + issue #220's never-silent rule. Defaults exist precisely so a missing file degrades to expected behaviour; the report keeps the degradation visible. |
 | D4 — Default protected set | `tests/**`, `e2e/**`, `*.test.*`, `fixtures/**`, plus the policy config itself; creation ≠ modification; the policy config is protected at all times | Issue #220 default globs (confirmed 2026-09-17) + the bypass close-out: the guard that can edit its own policy is no guard. |
-| D5 — Approval recording | Append-only justification/approval rows in the unit's review-findings ledger (`finding-mark` schema), which the gate verifies | User decision 2026-09-17 ("ledger"). Append-only records survive the unit, are machine-checkable against the diff, and reuse the feature 17 ledger convention instead of inventing a parallel surface. |
+| D5 — Approval recording | Append-only justification/approval rows in the unit's `decisions.md` ledger (the `ledger-ownership@1` `decisions` row) — the agent's justification under `execute-phase:phase-decisions`, the owner's approval under `human-owner:ratified-verdicts` — which the gate verifies | User decision 2026-09-17 ("ledger"), surface corrected 2026-09-18 (SPEC60-F1, user instruction: "move D5's approval record off finding-mark@1 onto a ledger-sanctioned column set/writer"). The `review-findings` `finding-mark@1` row has the single writer `review-change` and no owner-approval column, so a sanctioned column set of the `decisions` ledger hosts the record instead. Append-only records survive the unit, are machine-checkable against the diff, and reuse an existing ledger instead of inventing a parallel surface. |
 | D6 — Tier 1 producer home | Crate subcommand (`packages/agentic-workflow`), producer-vehicle rule | Roadmap rows 37/43: producers land as subcommands of the existing crate; no new package. |
 | D7 — Architectural invariants | `n/a: no project invariants declared` (`docs/architecture/ARCHITECTURAL_INVARIANTS.md` absent; NRS F010) | Standard classification record; workflow-level invariants (`docs/workflow/WORKFLOW_INVARIANTS.md`) are unaffected — this feature preserves them. |
 
@@ -346,17 +359,25 @@ Product boxes (run by `design-feature` before stamping `designed`):
       value — no role unlisted.
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (15 rows), every row
       `in-scope` / `out-of-scope` / `deferred` with a pointer.
-- [x] Every In-scope bullet maps to ≥ 1 Acceptance criterion (items 1→AC1/AC3/AC9,
-      2→AC2, 3→AC4, 4→AC5, 5→AC1/AC6, 6→AC3; plus AC7/AC8 from the closure).
+- [x] Every In-scope bullet maps to ≥ 1 Acceptance criterion (items
+      1→AC1/AC3/AC9/AC10, 2→AC2, 3→AC4/AC10, 4→AC5, 5→AC1/AC6, 6→AC3; plus
+      AC7/AC8 from the closure).
 - [x] Every Acceptance criterion is a runnable command or labelled
       `read-verified` (AC8's prose clause is labelled).
 - [x] `### Deferred decisions` exists; both rows have decide-by triggers.
 
 ## Design status
 
-`designed` — capability closure complete (2026-09-17). Spec-lint product
-boxes all tick. `plan-feature` may plan this feature after an independent
-`review-spec` pass.
+`designed` — capability closure complete (2026-09-17); every closure row is
+filled or explicitly `n/a`. Review batch SPEC60-F1…F3 (spec-review-fail,
+2026-09-18) repaired 2026-09-18 — three `product`-class findings, one batch:
+F1 moved the owner-approval record onto the `decisions` ledger's sanctioned
+`human-owner:ratified-verdicts` / `execute-phase:phase-decisions` column sets,
+F2 normalized the product evidence rows to the closed `authority-kind` /
+`freshness` vocabularies, F3 froze AC10 for the tighten-only pi override. No
+scope, role, authority, or user-outcome change beyond the corrected approval
+surface (user-directed; `decisions.md` D-60-14). Readiness re-run for
+re-review by `review-spec`.
 
 ---
 
