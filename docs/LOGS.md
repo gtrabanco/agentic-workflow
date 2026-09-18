@@ -1837,3 +1837,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Merge, not execute-phase.** Unit 31's TASKS.md has 0 open checkboxes; roadmap row 31 reads `done · #243`; all 14 ACs verified at the PR head. `execute-phase` would only re-ignite ceremony on completed work.
 
 **Next:** Human merge of PR #243. After merge: (a) push the two remaining hermeticity fixes (`session-close`, `audit-pr-receipt`) to main; (b) `/plan-feature --next` or `/workflow-status` for the next roadmap unit (sensor indicates unit 40 `versioned-skills-releases` needs spec review, or unit 37 `phase-lint-script` has a replan-in-unit finding).
+
+## 2026-09-18T22:44:49Z — feat/31-planning-review-materiality — manual
+- **Commits:** 74 (`cf238040…b18a52d6`)
+- **Files:** 62 files
+- **Summary:** Cerró los hallazgos F8 y F10 del ledger review-change de la feature 31 (planning-review-materiality) — diseño del medio producto (SPEC.md) con D-31-11 (el fingerprint de manifest no certifica movimiento de ACCEPTANCE.md) y D-31-12 (skip de re-review declarado en las cuatro superficies de ejecución de repair batch) y D-31-11/D-31-12 registrados en decisions.md, revisión rotada a 31-spec-14, manifest no tocado (plan-feature lo re-congelerá)
+- **Decisions:** F8: la ruta wording-only no puede auto-certificar el movimiento del propio manifiesto ACCEPTANCE.md — el fingerprint registrado deja de ser condición suficiente por sí solo (D-31-11). F10: el salto de re-review declarado en POLICY §3 y OUTPUTs se mantiene (D-31-3), pero las superficies que ejecutan los repair batch (plan-feature, plan-fix, ship-roadmap/ADVANCE, replan-findings/PHASE_APPEND, REPAIR.md §1/§3) ahora declaran el mismo skip (D-31-12). AC13 widen: ocho skills, AC14: 16 version hunks, AC7: 7 greps nuevos. Research gate: RFC 9334 (RATS attestation) y XACML PEP/PDP.
+- **Next:** /review-spec 31-planning-review-materiality — el medio producto necesita revisión independiente con el delta de F8/F10; tras PASS, plan-feature re-cuta el manifest congelado y el plan
