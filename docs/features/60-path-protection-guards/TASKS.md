@@ -73,8 +73,8 @@ Layer: hardening · fingerprint `P5:hardening:10:hardening-pr` · Phase-lint: PA
 - [x] Verify the frozen acceptance manifest blob with `git hash-object docs/features/60-path-protection-guards/ACCEPTANCE.md` and record the acceptance receipt in the unit progress log
 - [x] Confirm every phase fingerprint in this plan still matches the committed phase shapes and that every read-verified row has its evidence recorded (manual)
 - [x] Record P5's base ref (`git rev-parse HEAD` at phase entry) in the phase handoff, then run the close-out path gate `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 with the `PATH-GUARD` block pasted; a fail stops the close-out before the PR (no `--force` bypass) — evidence: `<recorded at execution>` — evidence: base `d60c8ddc33adc1ff33f4f17aab7cf0a542d16a34`; `PATH-GUARD pass — approved`, exit 0 (owner approval recorded in the escape block, E-60-21)
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
 
 Done-when: `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base <P5 base ref>` → exit 0 and `node --test scripts/path-protection.test.mjs` → exit 0 with the whole ladder green, the version/CHANGELOG sweep recorded, parity green, and the PR URL printed.
