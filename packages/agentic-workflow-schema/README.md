@@ -312,7 +312,7 @@ display the guarantees the schema cannot state.
 | `PRE_EXECUTION_CONTEXT_KINDS` | `roadmap-row` · `governing-issue` · `normalized-repository-state` · `architectural-invariants` · `dependency-unit` · `project-guide` — Authorities a reviewer was allowed to rely on. |
 | `PRE_EXECUTION_CONTEXT_PRESENCE` | `present` · `absent` — `absent` is a recorded fact, never a skipped field. |
 | `PRE_EXECUTION_VERDICTS` | `spec-review-pass` · `spec-review-fail` · `plan-review-pass` · `plan-review-fail` · `needs-design` — Each verdict names the stage it is legal on. |
-| `PRE_EXECUTION_FINDING_SEVERITIES` | `info` · `low` · `medium` · `high` · `critical` — `info` never blocks a PASS on its own merits. |
+| `PRE_EXECUTION_FINDING_SEVERITIES` | `info` · `low` · `medium` · `high` · `critical` — material = `medium` and above; `low` is a persisted report-note and `info` is immaterial, so neither blocks a PASS on its own merits. |
 | `PRE_EXECUTION_FINDING_CLASSES` | `product` · `plan` · `source` · `environment` · `runtime` — Which contract layer the finding is about. |
 | `PRE_EXECUTION_FINDING_VERIFICATION` | `verified` · `unverified` — Only `verified` material findings can support a PASS. |
 | `PRE_EXECUTION_FINDING_RESOLUTIONS` | `open` · `resolved` · `dismissed` — `dismissed` requires recorded counter-evidence. |
@@ -377,7 +377,7 @@ validator to refuse an unordered snapshot.
 `verdict` ∈ `spec-review-pass | spec-review-fail | plan-review-pass |
 plan-review-fail | needs-design`, and the verdict must match the snapshot stage.
 A finding is `{ id, severity, class, claim, evidenceRefs, verification,
-resolution, resolutionEvidence }` with `severity` ∈ `info | low | medium | high
+resolution, resolutionEvidence, reproducer? }` with `severity` ∈ `info | low | medium | high
 | critical`, `class` ∈ `product | plan | source | environment | runtime`,
 `verification` ∈ `verified | unverified`, and `resolution` ∈ `open | resolved |
 dismissed`. Every finding carries at least one evidence reference, and a
@@ -385,7 +385,8 @@ dismissal requires recorded counter-evidence.
 
 `validatePreExecutionReceiptAgainstSnapshot` is the only entry that can bless a
 PASS. It refuses a PASS while any material finding is open or unverified
-(`info`-severity findings never block on their own merits), while the receipt
+(material = `medium` and above; `low`/`info` report-notes never block on their
+own merits), while the receipt
 binds a different snapshot, while the policy version differs, when the claimed
 author exclusion is violated under `enforced`, or when the reviewer's own
 identity authored the artifact set (`invalid-author`). Parent receipts model a
