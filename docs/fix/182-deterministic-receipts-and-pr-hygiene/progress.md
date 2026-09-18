@@ -333,3 +333,25 @@ Notes:
 ## Unit-loop receipt — P10
 - Commit: pending · Gate: the four ACCEPTANCE commands (exit 0) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: mandatory `/review-change` end review, then `/audit-pr` · Attempts: 1
+
+## End review + fold — 2026-09-18
+- End review (`review-change`, fresh context) at `a9e663c4`: **`REVIEW-FAIL`**, no receipt posted. Four new fix-now findings F5–F8; the four carried rows F1–F4 were re-verified as repaired by P5–P10 and are now ticked closed. Ledger append committed by the reviewer at `90f0ba3c` and pushed.
+- Folded in three atomic batches, each gate-green and pushed:
+  - **F5** `658fd31b` — closed CLI flag contract across `review-receipt.mjs`, `audit-pr-gate.mjs`, `session-close.mjs`: unknown/misspelled flags are usage errors, `--flag=value` and the documented `-R owner/name` alias are honored. Regression tests: misspelled `--invariant`, unknown `--prr`/`--summry`, inline `--head=`, and the `-R` scope reaching the fake `gh`.
+  - **F6** `4ba18969` — `hygieneFromState` takes `isDraft: null` for "not observed" and fails `pr-ready` closed; the CLI passes `null` without `--pr`. Regression tests: pure `isDraft: null` and CLI `hygiene` with no `--pr`.
+  - **F7+F8** `0798c3e1` — `resolveBase` refuses an explicit `--base` that does not resolve instead of falling back to `origin/main`; `baselineOf` distinguishes an absent path (empty baseline) from an unresolvable HEAD or unreadable blob (throws). Regression tests: `render --base refs/does/not/exist` and a no-HEAD repo `close`.
+- F1–F4 closed in this ledger commit: F1 the `audit-pr` box (P6 `5c572afa`), F2 the no-upstream `branch-pushed` failure (P7 `51390cae`), F3 the merged-head receipt reconciliation (P5 `f5d266ea`), F4 the bounded settled-turn probe (P8 `ede4be5e`).
+- Gate at `0798c3e1`: `node --test scripts/*.test.mjs` → exit 0, 556 pass / 0 fail. Re-review of the folded head is the mandated next step (within the two-cycle bound).
+
+```text
+## REPAIR-RECEIPT
+- Repaired: F1 + F2 + F3 + F4 + F5 (VF-5) + F6 (VF-6) + F7 (VF-7) + F8 (VF-8)
+- Refuted/open: none
+- Gate: node --test scripts/*.test.mjs → exit 0 at head 0798c3e1 · 556 pass / 0 fail
+- Batch class: all-repair-in-place
+- Fold diff: 7 files changed, 208 insertions(+), 40 deletions(-)
+- Branch: RE-REVIEW-REQUIRED (delta)
+```
+
+- Files: scripts/review-receipt.mjs, scripts/audit-pr-gate.mjs, scripts/session-close.mjs, scripts/review-receipt.test.mjs, scripts/session-close.test.mjs, scripts/audit-pr-receipt.test.mjs, docs/fix/182-deterministic-receipts-and-pr-hygiene/review-findings.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: re-run `/review-change` at the folded head
