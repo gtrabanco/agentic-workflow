@@ -52,13 +52,13 @@ Done-when: `node --test scripts/normative-drift.test.mjs` and `node scripts/chec
 
 Layer: config/infra · fingerprint `P4:config/infra:7:pi-preventive-guard` · Phase-lint: PASS (8/8)
 
-- [ ] Create `packages/pi-agentic-workflow/src/config/path-policy.ts` — the embedded shipped-default mirror, the `PathProtectionOverride` type, `intersectPathPolicy(shipped, override)` (globs union, requirement maximum, an ignored lowering reported), `matchingJustification(targetPath, recordsText)` (the `path-protection-records@1` reader the guard uses), and the degradation codes
-- [ ] Add the optional `pathProtection` key to `ConfigFile` and the resolved `pathProtection` field to `EffectiveConfig` in `packages/pi-agentic-workflow/src/config/types.ts`
-- [ ] Validate the `pathProtection` key strictly in `packages/pi-agentic-workflow/src/config/schema.ts` by adding it to `ROOT_KEYS` and checking its shape
-- [ ] Resolve the effective path policy in `packages/pi-agentic-workflow/src/config/merge.ts` and surface the cross-scope override plus its degradation records from `packages/pi-agentic-workflow/src/config/load.ts`
-- [ ] Register the `tool_call` guard in `packages/pi-agentic-workflow/src/extension/index.ts` — resolve the repo root from `ctx.cwd`, read the `path-protection-records@1` block of every `docs/features/*/decisions.md` and `docs/fix/*/decisions.md`, block a `write` / `edit` call to an existing protected path whose target matches no `justification` row, return `{ block: true, reason }` naming the escape path, and pass read-only calls plus new-file creates
-- [ ] Create `packages/pi-agentic-workflow/test/path-protection.test.mjs` with the block and reason cases, the matching-justification-permits-write positive case, the read-passthrough case, the create-passthrough case, the tighten and loosen resolution cases, and the cross-package shipped-default parity case
-- [ ] Run the package suite green: `cd packages/pi-agentic-workflow && bun run test` → exit 0 — evidence: `<recorded at execution>`
+- [x] Create `packages/pi-agentic-workflow/src/config/path-policy.ts` — the embedded shipped-default mirror, the `PathProtectionOverride` type, `intersectPathPolicy(shipped, override)` (globs union, requirement maximum, an ignored lowering reported), `matchingJustification(targetPath, recordsText)` (the `path-protection-records@1` reader the guard uses), and the degradation codes
+- [x] Add the optional `pathProtection` key to `ConfigFile` and the resolved `pathProtection` field to `EffectiveConfig` in `packages/pi-agentic-workflow/src/config/types.ts`
+- [x] Validate the `pathProtection` key strictly in `packages/pi-agentic-workflow/src/config/schema.ts` by adding it to `ROOT_KEYS` and checking its shape
+- [x] Resolve the effective path policy in `packages/pi-agentic-workflow/src/config/merge.ts` and surface the cross-scope override plus its degradation records from `packages/pi-agentic-workflow/src/config/load.ts`
+- [x] Register the `tool_call` guard in `packages/pi-agentic-workflow/src/extension/index.ts` — resolve the repo root from `ctx.cwd`, read the `path-protection-records@1` block of every `docs/features/*/decisions.md` and `docs/fix/*/decisions.md`, block a `write` / `edit` call to an existing protected path whose target matches no `justification` row, return `{ block: true, reason }` naming the escape path, and pass read-only calls plus new-file creates
+- [x] Create `packages/pi-agentic-workflow/test/path-protection.test.mjs` with the block and reason cases, the matching-justification-permits-write positive case, the read-passthrough case, the create-passthrough case, the tighten and loosen resolution cases, and the cross-package shipped-default parity case
+- [x] Run the package suite green: `cd packages/pi-agentic-workflow && bun run test` → exit 0 — evidence: `<recorded at execution>`
 
 Done-when: `cd packages/pi-agentic-workflow && bun run test` → exit 0 with the block, matching-record, passthrough, tighten/loosen, and parity pins green.
 

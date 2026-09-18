@@ -867,5 +867,17 @@ can be violated, introduced, or changed by this repair.
 - Next: P4 — Pi preventive guard
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` (17 pass) + `node scripts/check-skill-context.mjs` (PASS, 40 skills; --routes PASS, 22 routes) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Commit: b968c33e · Gate: `node --test scripts/normative-drift.test.mjs` (17 pass) + `node scripts/check-skill-context.mjs` (PASS, 40 skills; --routes PASS, 22 routes) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
 - Next: P4 · Attempts: 1
+
+## P4 — 2026-09-18
+- Done: the pi `path-policy.ts` module (shipped-default mirror, tighten-only `intersectPathPolicy`, `mergePathProtectionOverrides`, `matchingJustification`, `evaluateToolCall`), the strict `pathProtection` key in `schema.ts` + `ConfigFile`/`EffectiveConfig`, the merge/load resolution with surfaced degradations, the `tool_call` guard in `extension/index.ts`, the `test/path-protection.test.mjs` suite, and the Pi mirror re-bundle; 7/7 P4 tasks ticked.
+- Remains: none in P4.
+- Gotchas: E-60-20 records the two contract-shape test updates (AC6 `DEFAULT_CONFIG` literal, AC3 `tool_call` subscription) and the P4 mirror re-bundle (P5 re-runs it idempotently). The P4 checkpoint ran over P3's range (`path-guard --phase P3 --base 8b867bfa`) → pass clean. P4 modifies two existing `test/*.test.mjs` files, so the `path-protection-records@1` justification row in `decisions.md` (phase P4) is the required pre-freeze escape; it must ride this commit. `bun install` was run in `packages/pi-agentic-workflow` to materialize devDeps (node_modules and dist are gitignored).
+- Files: packages/pi-agentic-workflow/src/config/path-policy.ts, packages/pi-agentic-workflow/src/config/{types,schema,merge,load,defaults}.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/path-protection.test.mjs, packages/pi-agentic-workflow/test/{default-inherit,alias-coverage}.test.mjs, packages/pi-agentic-workflow/skills/**, docs/features/60-path-protection-guards/{TASKS.md,testing.md,decisions.md,progress.md}
+- Base ref: b968c33e94efcaad3e4dfd4e30e142591efc521b
+- Next: P5 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (228 pass, exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Next: P5 · Attempts: 1

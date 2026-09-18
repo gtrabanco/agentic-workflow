@@ -1,11 +1,13 @@
-import { dirname, resolve } from "node:path";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
+import { getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
+import { evaluateToolCall } from "../config/path-policy.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -127,6 +129,29 @@ function toRegistrar(pi: ExtensionAPI): CommandRegistrar<PiModel> {
   };
 }
 
+/** Every unit decision ledger's `path-protection-records@1` block, concatenated. */
+function collectRecordTexts(root: string): string {
+  const texts: string[] = [];
+  for (const parent of ["docs/features", "docs/fix"]) {
+    const base = join(root, parent);
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = readdirSync(base, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      try {
+        texts.push(readFileSync(join(base, entry.name, "decisions.md"), "utf8"));
+      } catch {
+        // A unit without a decisions ledger contributes no records.
+      }
+    }
+  }
+  return texts.join("\n");
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -163,6 +188,33 @@ export default function extension(pi: ExtensionAPI): void {
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
   pi.on("agent_settled", (_event, ctx) => void router.settle(toInvocationContext(ctx)));
+
+  // Tier 2 path prevention (feature 60): block a write/edit to an existing
+  // protected path with no matching justification record; reads and new-file
+  // creates pass. Reads the same effective policy the Tier 1 gate reads.
+  let reportedDegradations = false;
+  pi.on("tool_call", (event, ctx) => {
+    if (!isToolCallEventType("write", event) && !isToolCallEventType("edit", event)) return undefined;
+    const targetPath = event.input.path;
+    if (typeof targetPath !== "string" || targetPath === "") return undefined;
+    const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
+    if (!reportedDegradations && loaded.pathProtectionDegradations.length > 0) {
+      reportedDegradations = true;
+      for (const degradation of loaded.pathProtectionDegradations) {
+        ctx.ui.notify(`pi-agentic-workflow: path protection — ${degradation.code}: ${degradation.detail}`, "warning");
+      }
+    }
+    const absolute = isAbsolute(targetPath) ? targetPath : resolve(ctx.cwd, targetPath);
+    const relativeTarget = isAbsolute(targetPath) ? relative(ctx.cwd, absolute) : targetPath;
+    const decision = evaluateToolCall({
+      toolName: event.toolName,
+      targetPath: relativeTarget,
+      targetExists: existsSync(absolute),
+      policy: loaded.config.pathProtection,
+      recordsText: collectRecordTexts(ctx.cwd),
+    });
+    return decision.block ? { block: true, reason: decision.reason } : undefined;
+  });
 }
 
 // Exported so the settings console (P4) names the same command without relisting it.

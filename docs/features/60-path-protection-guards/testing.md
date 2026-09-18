@@ -78,3 +78,12 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
   PASS route budgets: 22 routes (the 19 affected route ceilings and the
   execute-phase reference ceiling re-based to ceil(measured × 1.10), growth
   source feature 60 P3); `node --test scripts/check-skill-context.test.mjs` → exit 0.
+- **P4 (2026-09-18)** — `cd packages/pi-agentic-workflow && bun run test` (tsc +
+  `bun test test/*.test.mjs`) → 228 pass / 0 fail, including the 18-case
+  `test/path-protection.test.mjs` (AC4 block/reason/read/create cases, the
+  matching-justification positive, the tighten-honored / loosen-rejected
+  resolution, the cross-scope merge, and the AC10 cross-package shipped-default
+  parity pin). The Pi skill mirror was re-bundled (`bun run bundle:skills` → 39
+  skills / 125 files) so `skill-parity.test.mjs` stays green after the P3 skill
+  edits; the two contract-shape assertions updated for the reviewed extension are
+  recorded as E-60-20.

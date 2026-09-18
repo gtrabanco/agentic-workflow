@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "./defaults.js";
+import { SHIPPED_PATH_POLICY, intersectPathPolicy, mergePathProtectionOverrides } from "./path-policy.js";
 import type { ConfigFile, EffectiveConfig, Route, RouteFile } from "./types.js";
 
 /**
@@ -46,6 +47,10 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     onUnavailableRoute:
       projectFile.onUnavailableRoute ?? globalFile.onUnavailableRoute ?? DEFAULT_CONFIG.onUnavailableRoute,
     onSettle: projectFile.onSettle ?? globalFile.onSettle ?? DEFAULT_CONFIG.onSettle,
+    pathProtection: intersectPathPolicy(
+      SHIPPED_PATH_POLICY,
+      mergePathProtectionOverrides(globalFile.pathProtection, projectFile.pathProtection),
+    ),
   };
 }
 
