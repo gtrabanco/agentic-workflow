@@ -1,19 +1,10 @@
 # progress.md — fix-244-freeze-batch-planner-consumer
 
-## P2 — Freeze-batch consumer contract
-
-- [x] `skills/fold-findings/SKILL.md` freeze-batch prose: recommends planner command, invocation as discovery
-- [x] `skills/fold-findings/SKILL.md` → Next: block: REPLAN sub-bullet names both planner tokens, one-physical-line rule stated
-- [x] `skills/fold-findings/SKILL.md` closing-block decision table: freeze-batch cell names both planner tokens, router as discovery
-- [x] `skills/fold-findings/references/FOLD_PROCESS.md`: batch-classification cell and step 9 name both planner tokens, unit format stated, one-physical-line rule
-- [x] Pin suite: `node --test scripts/normative-drift.test.mjs` → exit 0 (18/18 pass)
-- [x] Context budget: `bun scripts/check-skill-context.mjs --skill fold-findings` → PASS (2612/2800 estimate)
-
 ## P1 — Freeze-batch hand-off pin (RED — observed against unfixed bytes)
 
 Red run output (2026-09-19, pre-fix HEAD `7d4ec6d`):
 ```
-n✖ #244 freeze-batch hand-off: closing block shape and consumer are correct
+✖ #244 freeze-batch hand-off: closing block shape and consumer are correct
   AssertionError [ERR_ASSERTION]: the block must name /plan-fix
 ```
 The pin fails on the first assertion (`the block must name /plan-fix`) proving
@@ -25,7 +16,36 @@ slug`, `exactly one physical line`) are also absent from both skill files.
 - [x] Add the #244 test to `scripts/normative-drift.test.mjs` — block shape, consumer tokens, decision table cell
 - [x] Extend the #244 test with the second half — consumer cell, bare-folder sentence, one-physical-line rule; observed red
 
-## Pre-execution review receipt v1 — plan
+## P2 — Freeze-batch consumer contract
+
+- [x] `skills/fold-findings/SKILL.md` freeze-batch prose: recommends planner command, invocation as discovery
+- [x] `skills/fold-findings/SKILL.md` → Next: block: REPLAN sub-bullet names both planner tokens, one-physical-line rule stated
+- [x] `skills/fold-findings/SKILL.md` closing-block decision table: freeze-batch cell names both planner tokens, router as discovery
+- [x] `skills/fold-findings/references/FOLD_PROCESS.md`: batch-classification cell and step 9 name both planner tokens, unit format stated, one-physical-line rule
+- [x] Pin suite: `node --test scripts/normative-drift.test.mjs` → exit 0 (18/18 pass)
+- [x] Context budget: `bun scripts/check-skill-context.mjs --skill fold-findings` → PASS (2612/2800 estimate)
+
+## P3 — Release wiring
+
+- [x] `skills/fold-findings/SKILL.md` frontmatter version: 1.5.0 → 1.5.1
+- [x] `CHANGELOG.md` fold-findings 1.5.1 row (fix #244)
+- [x] `CHANGELOG.md` pi-agentic-workflow 0.11.2 re-bundle row
+
+## P4 — Mirror re-bundle
+
+- [x] `packages/pi-agentic-workflow/package.json` version: 0.11.1 → 0.11.2
+- [x] Bundle re-run: 39 skills bundled (125 files)
+- [x] Package test suite: 227/227 pass (includes skill-parity test)
+
+## P5 — Hardening & PR
+
+- [x] Verification gate: `node --test scripts/normative-drift.test.mjs` → 18/18 pass
+- [x] Context budget: `bun scripts/check-skill-context.mjs` → PASS (40/40 skills green)
+- [x] Pending-docs: `git status --porcelain -- docs/` → empty
+- [x] Fix-index row updated to `done`
+- [x] Branch pushed
+- [x] PR opened: [#246](https://github.com/gtrabanco/agentic-workflow/pull/246)
+- [x] Fix-index row linked to PR
 
 ## Pre-execution review receipt v1 — plan
 
