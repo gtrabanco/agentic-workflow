@@ -1,0 +1,42 @@
+# Review findings — fix/182-deterministic-receipts-and-pr-hygiene
+
+Fold ledger (`review-change:finding-rows` + `review-change:finding-mark` +
+`review-change:review-mark`). Reviewer appends; only `fold-findings` flips
+`folded` to `yes`. Ledger severity uses the finder scale
+(`critical`→`high`, `major`→`med`, `minor`→`low`); `low` findings are
+report-only and never enter this ledger.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F1 | skills/audit-pr/SKILL.md:46-48 | code | med | fix-now | fold into the unit's close-out | yes |
+| F2 | scripts/audit-pr-gate.mjs:197-200 | code | med | fix-now | fold into the unit's close-out | yes |
+| F3 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:36 | workflow | med | replan-in-unit | /review-plan fix-182 at the merged head, then continue | yes |
+| F4 | packages/pi-agentic-workflow/src/extension/index.ts:137 | perf | med | fix-now | fold into the unit's close-out | yes |
+| VF-1 | skills/audit-pr/SKILL.md:46-48 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck direct read of the box text (still `gh pr comment --body-file`) against `references/03_AUDIT_PROCESS.md:49` (`audit-pr-gate.mjs comment`), plus `grep -c "audit-pr-gate.mjs hygiene" skills/audit-pr/SKILL.md` → 1 (blind to the comment box) | code | confirmed | finding-mark | n/a | n/a |
+| VF-2 | scripts/audit-pr-gate.mjs:197-200 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck reproducible command: on a branch with no `@{upstream}` and one commit not on the remote, `node scripts/audit-pr-gate.mjs hygiene` prints `"branch-pushed": "pass"` and exits 0 while `git rev-list --count @{upstream}..HEAD` exits 128 | code | confirmed | finding-mark | n/a | n/a |
+| VF-3 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:36 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck reproducible command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 4, `current:false`, `digestMatches:false`, `structural.reasonCode:"stale-context"` (`CLAUDE.md` blob `9172532c` → `4eed9a3a`, moved by the `e2a42683` main-sync merge) | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-4 | packages/pi-agentic-workflow/src/extension/index.ts:137 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck direct read: `spawnSync("git", ["status","--porcelain"], {cwd, encoding})` runs inside the `agent_settled` handler with no `timeout`, and the adjacent comment "This never blocks" is false | perf | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 819047ac093124bf9608d0245cb7dd473de1ddae | n/a | n/a | review-mark | n/a | n/a |
+| F5 | scripts/review-receipt.mjs:229-244 · scripts/audit-pr-gate.mjs:224-239 · scripts/session-close.mjs:154-167 | code | med | fix-now | fold into the unit's close-out | yes |
+| F6 | scripts/audit-pr-gate.mjs:265-276 | code | med | fix-now | fold into the unit's close-out | yes |
+| F7 | scripts/session-close.mjs:119-124 | code | med | fix-now | fold into the unit's close-out | yes |
+| F8 | scripts/session-close.mjs:177-180 | code | med | fix-now | fold into the unit's close-out | yes |
+| VF-5 | scripts/review-receipt.mjs:229-244 · scripts/audit-pr-gate.mjs:224-239 · scripts/session-close.mjs:154-167 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible commands: `node scripts/review-receipt.mjs render --head a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 --scope s --axes a --coverage c --invariant pass` prints `- Architectural invariants: n/a` (misspelled `--invariants` silently defaulted, exit 0); `node scripts/review-receipt.mjs render --head=a9e663c4…` exits 1 `--head must be a 40-hex commit SHA` (no `--flag=value`); `node scripts/review-receipt.mjs verify --pr 241 -R definitely/not-a-real-repo-xyz` exits 3 (documented `-R` silently ignored, queried the real repo); `node scripts/audit-pr-gate.mjs hygiene -R definitely/not-a-real-repo-xyz` exits 0 against the cwd repo. Deviation from the sibling the module cites: `scripts/pre-execution-snapshot.mjs:103-113` parses against a `valueFlags` allowlist and `scripts/workflow-status.mjs:1418` errors `unknown flag: <token>` | code | confirmed | finding-mark | n/a | n/a |
+| VF-6 | scripts/audit-pr-gate.mjs:265-276 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible command: `node scripts/audit-pr-gate.mjs hygiene` (no `--pr`) prints `{"gates":{"tree-clean":"pass","branch-pushed":"pass","pr-ready":"pass"},"clean":true}` and exits 0 — `pr-ready` comes from the `{ isDraft: false }` default at `:267` without reading the forge, contradicting SPEC O4/O12 ("read from state", "fail-closed") and the module header's "derived from observed state rather than asserted" | code | confirmed | finding-mark | n/a | n/a |
+| VF-7 | scripts/session-close.mjs:119-124 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible command: `node scripts/session-close.mjs render --base refs/does/not/exist --summary hi` prints `- **Commits:** 22 (\`c541aac5…a9e663c4\`)` from `origin/main` and exits 0 — an explicit `--base` that does not resolve is silently replaced by the fallback | code | confirmed | finding-mark | n/a | n/a |
+| VF-8 | scripts/session-close.mjs:177-180 · reviewer review-change · HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 · recheck reproducible output + code read: `git show HEAD:docs/LOGS.md` exits 128 with a valid HEAD when the blob is unreadable, and `baselineOf` maps **every** non-zero status to the empty untracked baseline, so `appendedOnly("", <non-empty>)` returns `ok: true` (the case pinned by `scripts/session-close.test.mjs:84`) — the append guard is bypassed whenever git cannot read the committed log. Harm is latent (a synthetic repo then failed loudly at `git commit`) | code | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD a9e663c4ca8ab091ba6ad16892b6259ed4a58d12 | n/a | n/a | review-mark | n/a | n/a |
+| F9 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:64 | workflow | med | replan-in-unit | regression of F3 — `/review-plan fix-182` at the terminal head re-issues the `stage: plan` receipt bound to the current SPEC.md, then the `progress.md:64` gate line is corrected to the new receipt | yes |
+| VF-9 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:64 · reviewer review-change · HEAD cfb873f174871ed6135f9326df887ff69b34b97f · recheck reproducible command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 4, `current:false`, `digestMatches:false`, `structural.reasonCode:"stale-source-revision"`, `changedPaths:["SPEC.md"]` (receipt `rp-fix182-20260918-004` signed at `dbda8e01`, SPEC.md blob `0d3e6e49…` → `29268e7a…` at `a9e663c4`), while `progress.md:64` asserts `current: true, digestMatches: true` and exit 0 | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD cfb873f174871ed6135f9326df887ff69b34b97f | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD bab2b6aba9ebfaef0aecfe6aa182ce5358498369 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — fix-182 plan
+- Finding ids: repeated: F3 (F9 = regression of F3) / new: none
+- Snapshots: 5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea (recorded receipt snapshot) → 94f49541558f53bdff6c1971e00bd7e23fd58faad94f49145a1f50628d0540d8 (observed at HEAD cfb873f1)
+- Missed: obligation O10 / P5 done-when validator (`pre-execution-snapshot.mjs verify` → exit 0, `current:true`, `digestMatches:true`) — the plan-stage receipt went stale when `a9e663c4` (P10) rewrote the bound SPEC.md after receipt `rp-fix182-20260918-004` was signed at `dbda8e01`
+- Owning stage: plan
+- Why the prior repair failed: P5 re-issued the receipt at `dbda8e01`, then P6–P10 edited the bound SPEC.md; the terminal head was never re-verified, and the cycle-2 review confirmed F1–F4 repaired without re-running `verify`
+- Route to owner: `review-plan` (`/review-plan fix-182`) — re-issue the `stage: plan` receipt at the terminal head
+```
