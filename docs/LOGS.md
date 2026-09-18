@@ -1855,3 +1855,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Plan repair for 60-path-protection-guards: dropped unsourced **/*.spec.* glob (F11), recorded F12 as advisory
 - **Decisions:** F11 fixed by removing the Engineering-invented **/*.spec.* glob that no Product decision authorizes; F12 (undeclared-test) recorded as non-cycle-restarting advisory under operator materiality bar — no counter-evidence falsifies it, fold path named for next plan-side write
 - **Next:** /review-plan 60-path-protection-guards to re-judge artifact revision f9015324, then /execute-phase 60-path-protection-guards on PASS
+## 2026-09-18T23:00:16Z — feat/220-path-protection-guards — manual
+- **Commits:** 49 (`8c52eef5…57acee9e`)
+- **Files:** 64 files
+- **Summary:** Plan-repair batch for feature 60 (PLAN60-F9, PLAN60-F10): added P5 close-out path-guard gate and same-PR release sweep (version bump + CHANGELOG rows for 6 skills and pi package)
+- **Decisions:** P5 went 7→10 tasks (hardening ceiling); P5 close-out gate reads the committed range with --base; same-PR release sweep uses bump-skill for 6 touched skills + manual bump for pi-agentic-workflow to 0.11.0; private crate stays unbumped (private:true, 0.0.0); phase-lint box 2 rejects non-hardening path tokens in hardening phase; @scope/pkg token is ambiguous to the parser
+- **Next:** Re-run /review-plan 60-path-protection-guards on artifact revision 812035ec; the plan carries a live plan-review-fail (PLAN-REVIEW-60-2) so this is the replan-the-batch route, not execution
