@@ -1248,4 +1248,51 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
   }
 });
 
+// #244 (F10) — the freeze-batch trigger admits a `decision-required` row, whose
+// router conclusion is `decision` ("stop and surface to the user"), not a
+// planner. The block, the decision-table cell, and both skill files must carry
+// that branch, or a decision-only batch is misrouted to `/plan-fix`.
+test("#244 freeze-batch hand-off: the decision-required branch surfaces the user decision", (t) => {
+  const skillRel = "skills/fold-findings/SKILL.md";
+  const processRel = "skills/fold-findings/references/FOLD_PROCESS.md";
+  if (!exists(skillRel)) return t.skip("fold-findings SKILL.md absent");
+  assert.ok(exists(processRel), "fold-findings FOLD_PROCESS.md exists");
+  const skill = read(skillRel);
+  const process = read(processRel);
+  const decisionConsumer = "stop and surface the decision to the user";
+
+  // The fixed → Next: block carries a decision branch beside the replan one.
+  const blocks = fixedOutputBlocks(skill, "→ Next:");
+  const blockContent = blocks.find((block) =>
+    block.split("\n").some((line) => line.trim().startsWith("→ Next:"))
+  );
+  assert.ok(blockContent, "the fenced → Next: hand-off block exists");
+  const subBullets = blockContent
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("· "));
+  assert.ok(
+    subBullets.some((line) => line.includes(decisionConsumer)),
+    "the block must carry a · sub-bullet that surfaces the decision-required consumer"
+  );
+
+  // The decision-table freeze-batch cell carries the same branch.
+  const rows = markdownTable(skill, "Closing-block decision branch");
+  assert.ok(rows, "the closing-block decision table exists");
+  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
+  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  assert.ok(
+    freezeRow[freezeRow.length - 1].includes(decisionConsumer),
+    "the freeze-batch consumer cell must surface the decision-required consumer"
+  );
+
+  // Both skill files state the branch.
+  for (const [rel, text] of [[skillRel, skill], [processRel, process]]) {
+    assert.ok(
+      text.includes(decisionConsumer),
+      `${rel} must carry the decision-required consumer`
+    );
+  }
+});
+
 
