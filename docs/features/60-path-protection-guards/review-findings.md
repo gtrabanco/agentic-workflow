@@ -42,14 +42,14 @@ schema:
 | VF-10 | packages/pi-agentic-workflow/src/extension/index.ts:221 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read: `recordsText: collectRecordTexts(ctx.cwd)` is evaluated before any protection check; replica over this repo measured ≈4.63 ms and ≈382,714 B per call across 38 unit dirs | perf | confirmed | finding-mark | n/a | n/a |
 | VF-11 | template/.agentic-workflow/path-protection.md:61-66 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read of the shipped page: the records fence exists but no sentence states that only rows whose `phase` equals the gate's `--phase` count (`src/path-policy.mjs:453`), and `skills/execute-phase/references/PREFLIGHT.md:212` runs `--phase P<n-1>` | api-ergonomics | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb | n/a | n/a | review-mark | n/a | n/a |
-| F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) | no |
-| F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | no |
+| F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) | yes |
+| F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | yes |
 | F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | no |
 | F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | no |
 | F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | yes |
-| F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | no |
+| F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | yes |
 | F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | yes |
-| F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) | no |
+| F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) | yes |
 | VF-12 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: temp repo modify `tests/café-helper.js` → `git diff --name-status` = `M<TAB>"tests/caf\303\251-helper.js"`; gate `--base` → `PATH-GUARD pass — clean` exit 0 (ASCII control → `fail — protected-modification` exit 1) | code+security | confirmed | finding-mark | n/a | n/a |
 | VF-13 | packages/agentic-workflow/bin/path-guard.mjs:51-57 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: policy `pre-freeze.delete=approval` + justification-only row; unstaged `rm tests/prot.js` → `PATH-GUARD pass — justified` exit 0, staged `D ` → `fail — approval-required` exit 1 | code+security | confirmed | finding-mark | n/a | n/a |
 | VF-14 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: built `dist` + symlink `alias.mjs -> tests/real.mjs` → handler returns no block (protected file); symlink to `/tmp/outside` passes while `../outside` is blocked | security | confirmed | finding-mark | n/a | n/a |

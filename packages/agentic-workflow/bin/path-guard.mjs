@@ -11,7 +11,8 @@
 //   PATH-GUARD <pass|fail> — <code>
 //   offenders: <path:operation:reason[, …]|none>
 //   phase: <P<n>> · freeze-after: <P<m>|none|n/a> · checked: <n>   (n/a when no declaration)
-//   DEGRADED — <code>: <detail>        (only when a degradation is reported)
+//   DEGRADED — <code>: <detail>        (only when a degradation is reported; code ∈
+//                                        missing-config | malformed-config | ignored-removal | ignored-lowering)
 // exit: 0 pass | 1 fail | 2 usage error
 
 import { spawnSync } from "node:child_process";
@@ -47,12 +48,11 @@ function runGit(root, args) {
 
 const PHASE_RE = /^P\d+$/;
 
-/** Map a porcelain v1 `-z` status pair to an operation, or null. */
+/** Map a porcelain v1 `-z` status pair to an operation. Both columns count: an unstaged deletion (` D`) is a delete. */
 function operationFor(index, worktree) {
   if (index === "?" || worktree === "?") return "create";
   if (index === "A" || index === "C") return "create";
-  if (index === "D") return "delete";
-  if (index === "M" || index === "T" || index === "U" || index === "B") return "modify";
+  if (index === "D" || worktree === "D") return "delete";
   return "modify";
 }
 
@@ -85,19 +85,21 @@ function parsePorcelain(raw) {
 
 function parseNameStatus(raw) {
   const changes = [];
-  for (const line of raw.split(/\r?\n/)) {
-    if (line.trim() === "") continue;
-    const cells = line.split("\t");
-    const status = cells[0][0];
-    if (status === "R" || status === "C") {
-      const [original, target] = [cells[1], cells[2]];
+  const tokens = raw.split("\0");
+  for (let index = 0; index < tokens.length; index += 1) {
+    const status = tokens[index];
+    if (status === "") continue;
+    const code = status[0];
+    if (code === "R" || code === "C") {
+      const original = tokens[(index += 1)] ?? "";
+      const target = tokens[(index += 1)] ?? "";
       if (target) changes.push({ path: target, operation: "create" });
       if (original) changes.push({ path: original, operation: "delete" });
       continue;
     }
-    const target = cells[1];
+    const target = tokens[(index += 1)];
     if (!target) continue;
-    const operation = status === "A" ? "create" : status === "D" ? "delete" : "modify";
+    const operation = code === "A" ? "create" : code === "D" ? "delete" : "modify";
     changes.push({ path: target, operation });
   }
   return changes;
@@ -145,6 +147,19 @@ function main(argv) {
   if (!top.ok || top.stdout.trim() === "") return fail("not inside a git repository");
   const repoRoot = top.stdout.trimEnd();
 
+  // The unit directory must stay inside the repository: an out-of-root --unit
+  // could read a fabricated declaration/records and flip a failing gate to pass (F22).
+  const unitPath = path.resolve(cwd, unit);
+  const unitRelative = path.relative(repoRoot, unitPath);
+  if (
+    unitRelative === "" ||
+    unitRelative === ".." ||
+    unitRelative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(unitRelative)
+  ) {
+    return fail("--unit must be a directory inside the repository");
+  }
+
   // Changed paths: the dirty working tree, unioned with the committed range.
   // A git failure is a gate error, never an empty change list (F5): an
   // unresolvable `--base` must not read as "nothing changed".
@@ -157,7 +172,7 @@ function main(argv) {
     const resolved = runGit(repoRoot, ["rev-parse", "--verify", "--quiet", "--end-of-options", `${base}^{commit}`]);
     const baseCommit = resolved.stdout.trim().split(/\r?\n/).pop() ?? "";
     if (!resolved.ok || baseCommit === "") return fail(`unknown base ref: ${base}`);
-    const diff = runGit(repoRoot, ["diff", "--name-status", "--diff-filter=ACMRD", baseCommit]);
+    const diff = runGit(repoRoot, ["diff", "--name-status", "-z", "--diff-filter=ACMRD", baseCommit]);
     if (!diff.ok) return fail("git diff failed; cannot determine the committed range");
     changes = changes.concat(parseNameStatus(diff.stdout));
   }
@@ -184,14 +199,14 @@ function main(argv) {
     }
     if (malformed !== null) {
       policy = resolvePathPolicy(SHIPPED_PATH_POLICY, null);
-      degradations.push({ code: "malformed-config", detail: "shipped defaults in force" });
+      degradations.push({ code: "malformed-config", detail: `shipped defaults in force — ${malformed}` });
     }
   }
   for (const record of policy.degradations) degradations.push(record);
 
   // Plan declaration (PLAN.md, else the SPEC's own block).
-  const planFile = path.join(cwd, unit, "PLAN.md");
-  const specFile = path.join(cwd, unit, "SPEC.md");
+  const planFile = path.join(unitPath, "PLAN.md");
+  const specFile = path.join(unitPath, "SPEC.md");
   let declaration = null;
   if (existsSync(planFile)) declaration = parsePlanDeclaration(readFileSync(planFile, "utf8"));
   else if (existsSync(specFile)) declaration = parsePlanDeclaration(readFileSync(specFile, "utf8"));
@@ -199,7 +214,7 @@ function main(argv) {
   else if (declaration !== null) declaration = null;
 
   // Escape records (the unit's decisions ledger; a missing block means none).
-  const decisionsFile = path.join(cwd, unit, "decisions.md");
+  const decisionsFile = path.join(unitPath, "decisions.md");
   let records = [];
   if (existsSync(decisionsFile)) {
     const parsed = parseRecords(readFileSync(decisionsFile, "utf8"));
