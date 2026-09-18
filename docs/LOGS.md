@@ -1842,3 +1842,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/244: complete lifecycle — triage → plan-fix → 10 review-change cycles → fold 10 findings → PR #247 ready
 - **Decisions:** (1) Triage verdict: fix-now, low severity — triaged issue #244 (fold-findings freeze-batch → Next: consumer defect) by verifying the router-invocation still in SKILL.md:184 and FOLD_PROCESS.md:46; (2) 4 review-change cycles on PR #247 yielded 10 findings (F1–F10) across multiple axes (correctness, security, perf, design, code quality); (3) fold-findings resolved all 10 findings: F1–F8 in cycle 2 (pin hardening, version pin, block completeness, changelog validator), F3 resolved via scoped fix (portable AC6), F9 linked unit ledger to PR #247, F10 branched the freeze-batch consumer on the router's decision
 - **Next:** Merge PR #247, then run /workflow-status to discover next roadmap unit (56, 55, 48, or new)
+## 2026-09-18T22:55:34Z — fix/244-freeze-batch-planner-consumer — manual
+- **Commits:** 19 (`7d4ec6d4…e2561d79`)
+- **Files:** 16 files
+- **Summary:** fix #244: repaired fold-findings freeze-batch hand-off consumer
+- **Decisions:** P1 pin test observed red before P2 edits (test-first regression guard). Pre-execution review required manually constructing PLAN-REVIEW-PASS receipt (no prior review existed). Pin test parsing used line-by-line row filtering instead of cross-line regex to avoid picking up trailing table cells.
+- **Next:** /review-change on PR #247 → /fold-findings if REVIEW-FAIL → re-run /review-change → /audit-pr merge gate
