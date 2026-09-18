@@ -1882,3 +1882,9 @@ out to do, what was decided and *why*, and where to resume.
 
 **Next:** The user's next session acted on the findings: merged `origin/main` into the branch, ran design-feature repair batches (31-spec-14 + 31-spec-15), and `spec-review-31-15` returned `SPEC-REVIEW-PASS` (14/14, 0 findings, 2 open rows F31-14-01/F31-14-02 resolved). PR #243 still OPEN awaiting human merge.
 
+
+## 2026-09-18T22:49:56Z — feat/31-planning-review-materiality — manual
+- **Commits:** 0 (read-only session)
+- **Files:** read only (feature 31 artifact tree: SPEC.md, progress.md, PLAN.md, TASKS.md, progress.md, review-findings.md, planning-findings.md)
+- **Summary:** Ran `design-feature 31-planning-review-materiality` in review mode (bare slug). Confirmed the feature is done: all 5 phases complete, acceptance ladder green (152 pass / 0 fail ledger pack + package gate + context budgets + mirror bundle), roadmap row `done`, PR #243 OPEN awaiting human merge. Product half designed at artifact revision `31-spec-13`, latest spec receipt `spec-review-31-13` PASS (14/14, 0 findings), latest plan receipt `plan-review-31-5` PASS. All review-change findings folded or persisted (F3→31-spec-13, F6/F7 folded, F8–F10 persisted in progress.md, F9 persisted).
+- **Next:** /audit-pr against PR #243 for merge gate
