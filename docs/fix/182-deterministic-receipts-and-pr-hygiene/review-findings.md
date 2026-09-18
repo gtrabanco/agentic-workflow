@@ -17,7 +17,7 @@ report-only and never enter this ledger.
 | VF-3 | docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:36 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck reproducible command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 4, `current:false`, `digestMatches:false`, `structural.reasonCode:"stale-context"` (`CLAUDE.md` blob `9172532c` → `4eed9a3a`, moved by the `e2a42683` main-sync merge) | workflow | confirmed | finding-mark | n/a | n/a |
 | VF-4 | packages/pi-agentic-workflow/src/extension/index.ts:137 · reviewer review-change · HEAD 819047ac093124bf9608d0245cb7dd473de1ddae · recheck direct read: `spawnSync("git", ["status","--porcelain"], {cwd, encoding})` runs inside the `agent_settled` handler with no `timeout`, and the adjacent comment "This never blocks" is false | perf | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 819047ac093124bf9608d0245cb7dd473de1ddae | n/a | n/a | review-mark | n/a | n/a |
-| F5 | scripts/review-receipt.mjs:229-244 · scripts/audit-pr-gate.mjs:224-239 · scripts/session-close.mjs:154-167 | code | med | fix-now | fold into the unit's close-out | no |
+| F5 | scripts/review-receipt.mjs:229-244 · scripts/audit-pr-gate.mjs:224-239 · scripts/session-close.mjs:154-167 | code | med | fix-now | fold into the unit's close-out | yes |
 | F6 | scripts/audit-pr-gate.mjs:265-276 | code | med | fix-now | fold into the unit's close-out | no |
 | F7 | scripts/session-close.mjs:119-124 | code | med | fix-now | fold into the unit's close-out | no |
 | F8 | scripts/session-close.mjs:177-180 | code | med | fix-now | fold into the unit's close-out | no |

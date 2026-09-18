@@ -325,3 +325,31 @@ process.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDra
   const calls = fs.readFileSync(log, "utf8");
   assert.doesNotMatch(calls, /pr ready/, "no mechanical repair is run when nothing blocks");
 });
+
+test("CLI flags: an unknown or misspelled flag is refused, never a silent default (F5)", () => {
+  const { repo } = makeRepo();
+  const result = spawnSync(process.execPath, [script, "hygiene", "--prr", "240"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /unknown flag: --prr/);
+});
+
+test("CLI flags: --flag=value is accepted and -R resolves to the forge scope (F5)", () => {
+  const { dir, repo } = makeRepo();
+  const bin = path.join(dir, "bin");
+  fs.mkdirSync(bin);
+  const log = path.join(dir, "gh.log");
+  fs.writeFileSync(log, "");
+  const fake = path.join(bin, "gh");
+  fs.writeFileSync(
+    fake,
+    `#!/usr/bin/env node\nconst fs = require("node:fs");\nfs.appendFileSync(${JSON.stringify(log)}, process.argv.slice(2).join(" ") + "\\n");\nprocess.stdout.write(JSON.stringify({ headRefOid: "${SHA_A}", number: 240, isDraft: false, mergeable: "clean", comments: [] }));\n`,
+  );
+  fs.chmodSync(fake, 0o755);
+  const result = spawnSync(process.execPath, [script, "hygiene", "--pr=240", "-R", "owner/name"], {
+    cwd: repo,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(fs.readFileSync(log, "utf8"), /-R owner\/name/, "the documented -R alias must reach the forge call");
+});

@@ -226,22 +226,40 @@ const USAGE = `usage: review-receipt <command> [options]
           Post the receipt idempotently and confirm it landed at the head.
 `;
 
+const VALUE_FLAGS = new Set([
+  "--head", "--scope", "--axes", "--coverage", "--invariants", "--proposals", "--manual",
+  "--pr", "--comments-json", "--repo",
+]);
+const BOOLEAN_FLAGS = new Set(["--dry-run"]);
+const FLAG_ALIASES = { "-R": "--repo" };
+
+/**
+ * Parse a flag vector against this module's closed flag set. Unknown flags and
+ * a value flag with no value are usage errors: a misspelled `--invariants` must
+ * not silently fall back to `n/a` (issue #182 F5). `--flag=value` and the
+ * documented `-R owner/name` alias are supported.
+ */
 function parseArgs(argv) {
   const opts = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
-    if (!token.startsWith("--")) {
+    if (!token.startsWith("-") || token === "-") {
       opts._.push(token);
       continue;
     }
-    const name = token.slice(2);
-    if (name === "dry-run") {
-      opts.dryRun = true;
+    const eq = token.indexOf("=");
+    const rawName = eq === -1 ? token : token.slice(0, eq);
+    const inline = eq === -1 ? undefined : token.slice(eq + 1);
+    const name = FLAG_ALIASES[rawName] ?? rawName;
+    if (BOOLEAN_FLAGS.has(name)) {
+      if (inline !== undefined) throw new Error(`${name} takes no value`);
+      opts[name === "--dry-run" ? "dryRun" : name.slice(2)] = true;
       continue;
     }
-    const value = argv[++i];
-    if (value === undefined) throw new Error(`${token} needs a value`);
-    opts[name] = value;
+    if (!VALUE_FLAGS.has(name)) throw new Error(`unknown flag: ${rawName}`);
+    const value = inline ?? argv[++i];
+    if (value === undefined) throw new Error(`${name} needs a value`);
+    opts[name.slice(2)] = value;
   }
   return opts;
 }
@@ -266,7 +284,7 @@ function main() {
   if (!known.includes(command)) throw new Error(`unknown command "${command}"\n\n${USAGE}`);
 
   const opts = parseArgs(argv.slice(1));
-  const repo = opts.R ?? opts.repo;
+  const repo = opts.repo;
   const fields = {
     scope: opts.scope,
     axes: opts.axes,
