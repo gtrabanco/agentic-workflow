@@ -3786,5 +3786,16 @@ receipt and snapshot `255d099b…`.
 - Next: P2 — Transition-decider cap refusal
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Commit: 085ce93f · Gate: `(cd packages/agentic-workflow-schema && bun run test && bun run check:pre-execution-schemas)` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
 - Next: P2 · Attempts: 1
+
+## P2 — 2026-09-18
+- Done: transition-decider cap refusal — `stop-review-loop-cap` added to `WORKFLOW_DECISION_STOP_CODES`, optional `reviewLoopCycles: { spec?, plan? }` input on `WorkflowDecisionInput`, refusal in `decideWorkflowAction` before the transition-table match (stop · ask-human · human route `design-feature` named), shared pure `deriveReviewLoopCycles(receipts)` in `scripts/pre-execution-contract.mjs`, `detail.review_loop_cycles = { spec, plan }` projected by `scripts/workflow-status.mjs` without referencing the decider; new vector suite `workflow-decision-review-loop-cap.test.mjs`; sensor `detail.review_loop_cycles` test; P2 gate green (package suite 717 pass / 0 fail; `workflow-status-pre-execution.test.mjs` 10 pass / 0 fail)
+- Remains: P3 snapshot wording-only route, P4 prose shrink + release records, P5 hardening & PR
+- Gotchas: (1) the A:12 source pin requires zero `decideWorkflowAction` occurrences in `scripts/workflow-status.mjs` — the initial explanatory comment named it and reddened the pin; the comment now says "consumer-side" without the token. (2) the F24/F25 pin matches the sensor's contract import line byte-for-byte, so the helper is imported on a second line rather than widening the pinned import. (3) `scripts/workflow-status-sensor.test.mjs` carries three environment-only failures under this bun build (A:11 case b renders the source context containing the literal `ERR_MODULE_NOT_FOUND`, and A:21/F19 are 5 s hang-shim harness timeouts); none is read by a phase done-when, no file this phase edited causes them, and the new 31 projection test passes.
+- Files: packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs, scripts/pre-execution-contract.mjs, scripts/workflow-status.mjs, scripts/workflow-status-pre-execution.test.mjs, scripts/workflow-status-sensor.test.mjs, docs/features/31-planning-review-materiality/{TASKS.md,progress.md}
+- Next: P3 — Snapshot wording-only route
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: P3 · Attempts: 1

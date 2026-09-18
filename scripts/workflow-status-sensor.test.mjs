@@ -1258,3 +1258,27 @@ test("59: two consecutive runs emit byte-identical envelopes with no continuatio
   const hits = source.split("\n").filter((line) => mutation.test(line));
   assert.deepEqual(hits, [], `emission must stay read-only: ${hits.join(" | ")}`);
 });
+
+// ===========================================================================
+// Feature 31 — `detail.review_loop_cycles` projection
+// ===========================================================================
+
+test("31: the sensor projects the derived review-loop count for the current unit", () => {
+  const { run, write } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    branch: "feat/90-alpha",
+  });
+  write("docs/features/90-alpha/progress.md", [
+    "# Progress",
+    "## Pre-execution review receipt v1 — spec",
+    `- Review: s1 · Snapshot: ${"a".repeat(64)} · Verdict: spec-review-fail`,
+    "## Pre-execution review receipt v1 — spec",
+    `- Review: s2 · Snapshot: ${"a".repeat(64)} · Verdict: spec-review-fail`,
+    "",
+  ].join("\n"));
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.detail.review_loop_cycles, { spec: 2, plan: 0 },
+    `the count the decider consumes must be projected: ${JSON.stringify(envelope.detail.review_loop_cycles)}`);
+});

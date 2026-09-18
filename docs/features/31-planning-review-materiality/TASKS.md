@@ -29,14 +29,14 @@ Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun r
 
 Layer: config/infra · Done-when: `(cd packages/agentic-workflow-schema && bun run test) && bun test scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the cap vectors and the emission case green.
 
-- [ ] Add the optional `reviewLoopCycles` input to `WorkflowDecisionInput` in `packages/agentic-workflow-schema/src/index.ts` as `{ spec?: number; plan?: number }`, documented as the consecutive-unconverged count derived from the unit's persisted stage receipts.
-- [ ] Add `stop-review-loop-cap` to `WORKFLOW_DECISION_STOP_CODES` in `packages/agentic-workflow-schema/src/index.ts` — the only added value; every existing sense, stop and invoke code keeps its spelling.
-- [ ] Implement the refusal in `decideWorkflowAction` (`packages/agentic-workflow-schema/src/index.ts`): a `review-spec`/`review-plan` proposal whose stage count reaches two returns `kind: "stop"`, `intent: "ask-human"`, `reasonCode: "stop-review-loop-cap"`, with the human route (`design-feature`) named in `detail`.
-- [ ] Add the vector suite `packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs` proving three behaviours: two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation; a PASS reset leaves the next cycle allowed; a `needs-design` outcome routes to `design-feature`.
-- [ ] Pin the counting rule in the same vector suite: the count is the consecutive FAIL-verdict receipts for a stage since its last PASS-verdict receipt, and every other transition-table row keeps its behaviour.
-- [ ] Add the shared pure helper `deriveReviewLoopCycles(receipts)` to `scripts/pre-execution-contract.mjs`, applying the E3 rule to the rows `parseReceipts` already returns (consecutive FAIL verdicts per stage since that stage's last PASS; no receipt for a stage reads `0`).
-- [ ] Project the derived count in `scripts/workflow-status.mjs` into the envelope's existing free-form `detail` bag as `detail.review_loop_cycles = { spec, plan }`, recomputed on every run, and keep `decideWorkflowAction` absent from the script (feature 38 A:12).
-- [ ] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the suite green.
+- [x] Add the optional `reviewLoopCycles` input to `WorkflowDecisionInput` in `packages/agentic-workflow-schema/src/index.ts` as `{ spec?: number; plan?: number }`, documented as the consecutive-unconverged count derived from the unit's persisted stage receipts.
+- [x] Add `stop-review-loop-cap` to `WORKFLOW_DECISION_STOP_CODES` in `packages/agentic-workflow-schema/src/index.ts` — the only added value; every existing sense, stop and invoke code keeps its spelling.
+- [x] Implement the refusal in `decideWorkflowAction` (`packages/agentic-workflow-schema/src/index.ts`): a `review-spec`/`review-plan` proposal whose stage count reaches two returns `kind: "stop"`, `intent: "ask-human"`, `reasonCode: "stop-review-loop-cap"`, with the human route (`design-feature`) named in `detail`.
+- [x] Add the vector suite `packages/agentic-workflow-schema/test/workflow-decision-review-loop-cap.test.mjs` proving three behaviours: two consecutive unconverged cycles refuse a third `review-spec`/`review-plan` invocation; a PASS reset leaves the next cycle allowed; a `needs-design` outcome routes to `design-feature`.
+- [x] Pin the counting rule in the same vector suite: the count is the consecutive FAIL-verdict receipts for a stage since its last PASS-verdict receipt, and every other transition-table row keeps its behaviour.
+- [x] Add the shared pure helper `deriveReviewLoopCycles(receipts)` to `scripts/pre-execution-contract.mjs`, applying the E3 rule to the rows `parseReceipts` already returns (consecutive FAIL verdicts per stage since that stage's last PASS; no receipt for a stage reads `0`).
+- [x] Project the derived count in `scripts/workflow-status.mjs` into the envelope's existing free-form `detail` bag as `detail.review_loop_cycles = { spec, plan }`, recomputed on every run, and keep `decideWorkflowAction` absent from the script (feature 38 A:12).
+- [x] Extend `scripts/workflow-status-pre-execution.test.mjs` with the cap-refusal emission case and run the suite green.
 
 ## P3 — Snapshot wording-only route
 
