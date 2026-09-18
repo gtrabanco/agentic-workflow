@@ -1848,3 +1848,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 60 (path-protection-guards) full lifecycle: plan repair cycles, 3 plan-review failures → PASS, 5-phase execution (P1–P5), PR #245; review-change audit with 31 fix-now findings, all folded; plus fix-182 execution through PR #241 merge.
 - **Decisions:** Three plan-review FAIL cycles for feature 60 (PLAN60-F1..F8, F9..F10, F11..F12), each resolved by plan-owner repair before re-review; PLAN60-F12 kept as open advisory under operator materiality bar (low severity, no user-visible outcome missed); 31 fix-now findings from review-change audit all folded — the gate's git inputs, containment, symlink resolution, degradation reporting, and records parsing were hardened across 8 fold batches; pi package bumped to 0.12.0 (not 0.11.0 as originally planned — fold F8 corrected); PR #245 OPEN, mergeStateStatus CLEAN, awaiting human merge.
 - **Next:** /audit-pr 245 to check merge readiness, then merge PR #245; feature 60 moves to done on the roadmap.
+
+## 2026-09-18T22:50:01Z — feat/220-path-protection-guards — manual
+- **Commits:** 47 (`8c52eef5…247ce4ef`)
+- **Files:** 64 files
+- **Summary:** Plan repair for 60-path-protection-guards: dropped unsourced **/*.spec.* glob (F11), recorded F12 as advisory
+- **Decisions:** F11 fixed by removing the Engineering-invented **/*.spec.* glob that no Product decision authorizes; F12 (undeclared-test) recorded as non-cycle-restarting advisory under operator materiality bar — no counter-evidence falsifies it, fold path named for next plan-side write
+- **Next:** /review-plan 60-path-protection-guards to re-judge artifact revision f9015324, then /execute-phase 60-path-protection-guards on PASS
