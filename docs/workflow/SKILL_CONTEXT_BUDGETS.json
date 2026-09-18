@@ -84,8 +84,8 @@
         "evidence-grounding"
       ],
       "templates": [],
-      "routeEstimateMax": 16914,
-      "routeLinesMax": 1163,
+      "routeEstimateMax": 16948,
+      "routeLinesMax": 1165,
       "sources": {
         "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -97,8 +97,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27371,
-      "routeLinesMax": 1837,
+      "routeEstimateMax": 27879,
+      "routeLinesMax": 1872,
       "sources": {
         "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -288,8 +288,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24458,
-      "routeLinesMax": 1715
+      "routeEstimateMax": 24932,
+      "routeLinesMax": 1747
     },
     "plan-feature:scoped": {
       "skills": [
@@ -315,8 +315,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27608,
-      "routeLinesMax": 1974,
+      "routeEstimateMax": 28082,
+      "routeLinesMax": 2006,
       "sources": {
         "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
       }
@@ -420,8 +420,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 18450,
-      "routeLinesMax": 1179,
+      "routeEstimateMax": 18981,
+      "routeLinesMax": 1214,
       "sources": {
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
       }
@@ -432,8 +432,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16705,
-      "routeLinesMax": 1121,
+      "routeEstimateMax": 17339,
+      "routeLinesMax": 1161,
       "sources": {
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)"
       }
@@ -442,7 +442,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10)); 2026-09-16 (feature 59 P3 — quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 — design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10)); 2026-09-16 (feature 59 P3 — quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 — design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4); 2026-09-18 (feature 31 P4 — the wording-only determination block + hard two-cycle cap text in the pre-execution-review/review-spec/review-plan/design-feature reference surfaces grew design-feature:product/repair, plan-feature:scaffold, plan-fix:issue, review-plan:default and review-spec:default past the feature-59 ceilings; the six affected routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source feature 31 P4)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
