@@ -221,6 +221,90 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
   drift fact), E-24 (new). Recorded by `design-feature` (repair batch,
   2026-09-18).
 
+## 2026-09-18 — Engineering decisions ED-32-1…ED-32-6
+
+Recorded by `plan-feature-scaffold` (plan set `32-plan-1`). Product decisions
+D32-1…D32-8 above are untouched.
+
+### ED-32-1 — the conversion table targets the ledger scale, and `info` maps to `low`
+
+The canonical table maps every producer scale onto the ledger scale
+`high | med | low` (the scale `CLASSIFY.md` already owns). The planning scale's
+`info` — the findings-ledger vocabulary's only immaterial value — maps to `low`,
+which is the report-note floor; it never maps to `med`, because an immaterial
+note must not reach the current-unit gate. The finder scale reuses the mapping
+D32-6 already fixed (`critical→high`, `major→med`, `minor→low`).
+
+- **Authority**: D32-2 / D32-6 (the four scales that exist);
+  `skills/review-implementation/references/CLASSIFY.md:18-24,86-88`.
+- **Derivation**: PE-003, PE-004, PE-005.
+
+### ED-32-2 — `audit-docs`' phantom `MEDIUM` becomes `low`
+
+The orphan-provenance case (a `generated-by:` page whose `source-unit` is
+absent) proposes deletion or re-attribution. That is a proposal, not a
+misleading-or-broken finding, so it carries the legend's `low` — the same
+severity the adjacent `LOW: propose /generate-docs` case in the same check
+already uses. The legend stays `high | low`; no third severity is invented.
+
+- **Authority**: IS-2 / AC-02; `skills/audit-docs/SKILL.md:98,121,125`.
+- **Derivation**: PE-006.
+
+### ED-32-3 — GATE-RAN is an appended text mark, not a ledger row
+
+The mark's format has variable arity (additive slots), which a fixed
+seven-column ledger row cannot express, and a mark that parsed as a finding row
+would corrupt the router's open-row sweep. The mark is therefore an appended
+`gate-ran@1` text block, and no row parser is extended: the router reads only
+`|`-led rows with ≥ 7 cells and marks only `VF-`/`REVIEW-RAN` ids, and the
+provenance annotator matches `^\|\s*(F\d+)\s*\|`. The SPEC's own out-of-scope
+bullet already rules out a schema change and calls the mark an appended text
+mark.
+
+- **Authority**: IS-4 / AC-04; `scripts/unit-route.mjs:114,128`;
+  `scripts/ledger-provenance.mjs:33`; SPEC §Out of scope (no schema change).
+- **Derivation**: PE-021.
+
+### ED-32-4 — `product-audit`'s `postpone` example becomes `proposal`
+
+The closed class set is `fix-now | replan-in-unit | decision-required |
+proposal | ignore`. The example finding (units routinely exporting scope) is
+independent future discipline work with its own route, so it is a `proposal`.
+The audit stays proposes-only: it never folds, never opens an issue, and never
+emits `fix-now` on its own authority.
+
+- **Authority**: IS-2 / AC-02; `skills/product-audit/SKILL.md:100,105`;
+  `skills/product-audit/references/AUDIT_PROCESS.md:7`.
+- **Derivation**: PE-007.
+
+### ED-32-5 — `audit-pr`'s `warning` leaves the scale, not the note
+
+IS-5(d) aligns the closure-integrity **result scale** to `pass | blocker | n-a`.
+`skills/audit-pr/references/04_VERDICT.md` separately prints a *closure-warning
+note* beside a verdict; that is an added non-blocking line, not a scale value,
+and it stays. AC-08's pin is therefore scoped to the three scale lines in
+`skills/audit-pr/SKILL.md`, not to the whole audit-pr tree — a whole-tree grep
+would false-fail on the note.
+
+- **Authority**: IS-5(d) / AC-08 / E-06; `skills/audit-pr/SKILL.md:52,55,58`;
+  `skills/audit-pr/references/04_VERDICT.md:26-27,36`.
+- **Derivation**: PE-008.
+
+### ED-32-6 — the phase cut is by layer, keeping the plan at five phases
+
+The product sketch's per-owner cut would straddle layers
+(`scripts/` vs `skills/`+`docs/`), which box 2 forbids. The four one-line
+contradiction fixes therefore land in the phase nearest their owning surface -
+`triage-issue`'s modes and the roadmap verify-vs-write with the ownership prose
+(P2), the `audit-pr` scale with the other scales (P3) — and the sensor keeps its
+own `config/infra` phase (P1). Each phase is one layer; a paired test-file edit
+appears only inside a task whose first path target is in the phase's layer. The
+plan stays at five phases, inside the ≤ 5-phase bound the Product half records.
+
+- **Authority**: `scripts/phase-lint.mjs:232-237,468-487` (layer table + box 2);
+  SPEC §Size (M, per-owner phase sketch).
+- **Derivation**: PE-020.
+
 ## Open items for `resolve-repository-state` (not resolved here)
 
 - REPOSITORY_STATE.md F006/F007 are stale versus the current forge and roadmap
