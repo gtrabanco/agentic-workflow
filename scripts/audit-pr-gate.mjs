@@ -141,12 +141,13 @@ export function renderMergeReadyBody({ sha, gates = [], hygiene = [], mergeabili
  * `treePorcelain` is `git status --porcelain` output; `branchAhead` is the count
  * of local commits not on the remote, or `null` when `@{upstream}` did not resolve
  * (which fails the gate closed — a comparison that never ran is not "zero ahead");
- * `isDraft` is the forge's draft flag. Only `pr-ready` has a mechanical repair
- * (`gh pr ready`), so it is the only gate the caller may clear by acting — the
- * other two are the author's to fix, and a dirty tree names its files so the
- * report is actionable.
+ * `isDraft` is the forge's draft flag — `false`/`true` when actually read, `null`
+ * when it was not observed (which fails `pr-ready` closed, never a default
+ * `false`). Only `pr-ready` has a mechanical repair (`gh pr ready`), so it is the
+ * only gate the caller may clear by acting — the other two are the author's to
+ * fix, and a dirty tree names its files so the report is actionable.
  */
-export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft = false } = {}) {
+export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft = null } = {}) {
   const dirty = String(treePorcelain)
     .split("\n")
     .map((line) => line.trim())
@@ -156,7 +157,7 @@ export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft 
     gates: {
       "tree-clean": dirty.length === 0 ? "pass" : "fail",
       "branch-pushed": ahead === 0 ? "pass" : "fail",
-      "pr-ready": isDraft ? "fail" : "pass",
+      "pr-ready": isDraft === false ? "pass" : "fail",
     },
     blockers: [
       ...(dirty.length > 0 ? [`uncommitted changes: ${dirty.join(", ")}`] : []),
@@ -165,9 +166,10 @@ export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft 
         : ahead > 0
           ? [`branch is ${ahead} commit(s) ahead of its remote`]
           : []),
-      ...(isDraft ? ["the PR is still a draft"] : []),
+      ...(isDraft === true ? ["the PR is still a draft"] : []),
+      ...(isDraft === null || isDraft === undefined ? ["the PR's draft state was not observed — pass --pr <N> to read it"] : []),
     ],
-    repairs: isDraft ? ["gh pr ready"] : [],
+    repairs: isDraft === true ? ["gh pr ready"] : [],
   };
 }
 
@@ -275,7 +277,7 @@ function main() {
   if (command === "hygiene") {
     let stated = null;
     try {
-      const prMeta = opts.pr ? stateFromForge(opts.pr, repo) : { isDraft: false };
+      const prMeta = opts.pr ? stateFromForge(opts.pr, repo) : { isDraft: null };
       stated = hygieneFromState({ treePorcelain: run("git", ["status", "--porcelain"]).stdout, branchAhead: aheadCount(), isDraft: prMeta.isDraft });
       if (opts.apply) {
         for (const repair of stated.repairs) {
@@ -283,7 +285,7 @@ function main() {
           run(cmd, rest);
         }
         if (stated.repairs.length > 0) {
-          const prMeta = opts.pr ? stateFromForge(opts.pr, repo) : { isDraft: false };
+          const prMeta = opts.pr ? stateFromForge(opts.pr, repo) : { isDraft: null };
           stated = hygieneFromState({ treePorcelain: run("git", ["status", "--porcelain"]).stdout, branchAhead: aheadCount(), isDraft: prMeta.isDraft });
         }
       }
@@ -305,7 +307,7 @@ function main() {
 
   const gates = { ...(stated ?? {}) };
   if (opts.hygiene) {
-    const h = hygieneFromState({ treePorcelain: run("git", ["status", "--porcelain"]).stdout, branchAhead: aheadCount(), isDraft: forge.isDraft });
+    const h = hygieneFromState({ treePorcelain: run("git", ["status", "--porcelain"]).stdout, branchAhead: aheadCount(), isDraft: forge.isDraft ?? null });
     Object.assign(gates, h.gates);
   }
 
