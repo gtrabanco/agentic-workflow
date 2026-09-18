@@ -72,7 +72,7 @@ Layer: hardening · Done-when: `bun test scripts/review-loop-discipline.test.mjs
 - [ ] Re-bundle the Pi mirror after the last skill edit (`bun run bundle:skills` from the Pi package root) and run the package suite (`bun run test` from the same root) → exit 0 with the mirror byte-identical to the canonical skill tree.
 - [ ] Record the three read-verified walks in the phase entry — the additive-release vocabulary diff, the PR-diff scope against the three declared groups, and the no-weakening discipline-suite diff.
 - [ ] Verify the frozen acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md`) still equals the receipt blob and append the acceptance receipt to the unit progress ledger.
-- [ ] Confirm every phase fingerprint recorded in `PLAN.md` still matches the committed phase shapes and that each read-verified obligation row carries its evidence entry (manual).
+- [ ] Confirm every phase fingerprint recorded in this plan still matches the committed phase shapes and that each read-verified obligation row carries its evidence entry (manual).
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push
