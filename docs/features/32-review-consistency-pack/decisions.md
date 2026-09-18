@@ -87,6 +87,59 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
 - **Authority**: `ledger-ownership@1` roadmap row; recorded by `design-feature`
   2026-09-17.
 
+## 2026-09-18 — D32-6: repair batch F1–F8 (SPEC-REVIEW-32-1) — every emitted scale in the table; GATE-RAN's home ledger and recorder set named
+
+- **What**: one evidence-bounded repair batch closing all eight findings of
+  receipt SPEC-REVIEW-32-1 (`planning-findings.md` F1–F8, all `class:
+  product`), applied to the Product half in place:
+  (F1) the canonical conversion table now covers the finder scale
+  `critical|major|minor` emitted by the nine internal review passes and
+  replaces the ad-hoc mapping at `PERSIST_AND_DECIDE.md:20-21`; E-09 is
+  rewritten accordingly (the original absence claim was falsified).
+  (F3) the planning-scale row (`info|low|medium|high|critical`) lands in this
+  unit — DD-1's premise ("does not exist until feature 31 merges") was false:
+  the scale is the findings-ledger severity vocabulary at `LEDGERS.md:92`,
+  live in shipped planning ledgers; DD-1 is resolved, `Deferred decisions`
+  reads `none`, sweep row 15 is in-scope. (F2) the Integration closure states
+  `docs/CAPABILITIES.md` is the unfilled template (tracked since `1bab6e60`,
+  no live inventory) and reconciles the derived inventory against its roles
+  table + subsystem floor; the original "seed from template" offer becomes a
+  **fill** offer (below). (F4) GATE-RAN's home ledger is named: the unit's
+  `review-findings.md` (feature and fix variants) — the same home as the
+  `review-mark@1` precedent — fixed by the `ledger-ownership@1` map row added
+  in the same change. (F5) the role matrix allows `agent-reviewer` to record
+  GATE-RAN: reviewers run the project's gate (`review-verify`'s checklist,
+  `review-change`'s fold review), so the recorder set spans executor and
+  reviewer gate runs; the executor cell's "sole recorder" claim is removed.
+  (F6) AC-02 pins the fixed-output header `| # | Check (1-14) |` alongside
+  `<n>/14`. (F7) IS-1's tutorial scan gains its criterion in AC-01 (grep pin
+  over `docs/workflow/`, `GOLDEN_FIXTURE.md` history excluded).
+  (F8) attribution correction, recorded here because this ledger is
+  append-only: D32-4 above cites "the amendment on issue #182" — the
+  2026-09-07 amendment is **carried by issue #172's amendment section**;
+  #182's amendment is its provenance, not its carrier (the SPEC's Goal and
+  E-13 already cited it correctly).
+  Intent is unchanged throughout: every repair re-aligns the half with issue
+  #172's recorded scope — item 2 names the finder scale "already mapped" and
+  asks the planning-scale row into the same table; item 4's "whoever runs the
+  project gate" includes reviewers.
+- **Why**: falsification by `review-spec` (receipt SPEC-REVIEW-32-1) proved
+  three absence claims false (E-09, the CAPABILITIES absence, the planning
+  scale's non-existence) and two rows under-specified (GATE-RAN's home ledger,
+  recorder roles); repairing restores the evidence contract this feature
+  itself enforces.
+- **Supersedes**: D32-2's scale list (now four scales, finder included) and
+  its "closed over existing scales" framing; DD-1. D32-2/D32-4 above keep
+  their original text per append-only ledger rules; the SPEC's Product
+  decisions summary carries the revised state.
+- **Open offer (corrected, upsert-safe, user confirms)**: fill
+  `docs/CAPABILITIES.md` from the derived Integration-closure inventory — the
+  file already exists as the unfilled template, so the original "seed from
+  template" offer is replaced by this one.
+- **Authority**: issue #172 (items 2 and 4, amendment section); receipt
+  SPEC-REVIEW-32-1 findings F1–F8; evidence rows E-09 (revised), E-22, E-23.
+  Recorded by `design-feature` (repair batch, 2026-09-18).
+
 ## Open items for `resolve-repository-state` (not resolved here)
 
 - REPOSITORY_STATE.md F006/F007 are stale versus the current forge and roadmap
