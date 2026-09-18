@@ -90,3 +90,10 @@ Notes:
 - Gotchas: the plan snapshot digest is bound to the pre-execution SPEC bytes; ticking the phase checkboxes after the gate is the contract's own progress mark and does not re-open the gate (which runs once, before the first edit). The two new tests bind the real runtime branches — the refusal message wording is "the candidate changed during review", asserted verbatim.
 - Files: scripts/review-receipt.test.mjs, scripts/audit-pr-receipt.test.mjs, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
 - Next: P4 — Hardening & PR
+
+## P4 — 2026-09-18
+- Done: full project gate re-run green (root suite 532 pass, pi suite 224 pass, context budgets `PASS: 40 skills`, phase-lint `verdict PASS`); fix-index row flipped to `done` and committed (`44ff4506`), branch pushed; PR opened and linked back into the index (`docs: link PR #241`); the roadmap row-35 boundary decision is carried in the PR body's "Decision required before merge" note.
+- Remains: none — the unit is delivered; merge is gated by `/audit-pr` after the mandatory end review.
+- Gotchas: the owner decision on roadmap row 35 (`scoped-receipt-verifier`, currently citing #182) remains open and is the one human decision before merge; the fix-index row stays until the PR actually merges.
+- Files: docs/fix/README.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: unit finished
