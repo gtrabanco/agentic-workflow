@@ -16,6 +16,20 @@ M/L ledgers with zero blank cells; every normative Product behaviour has one
 obligation row with a phase and a validator; no template placeholder remains in
 the SPEC.
 
+Plan declaration (the grammar this unit introduces; `freeze-after` is the last
+test-authoring phase):
+
+```text
+path-protection-plan@1
+freeze-after: P4
+kind | path | justification
+created | packages/agentic-workflow/test/path-guard.engine.test.mjs | the freeze × class × operation matrix and the CLI exit-code pins (AC1, AC3, AC5, AC6)
+created | scripts/path-protection.test.mjs | the repo-root CLI discipline, closed-reason closure, and no-auto-approval negative pins (AC2)
+created | packages/pi-agentic-workflow/test/path-protection.test.mjs | the Tier 2 block and passthrough pins plus the tighten-only resolution pins (AC4, AC10)
+not-created | template seed parity test file | the template mirror is checked by the AC-09 command validator (a diff), so no committed test file is needed
+not-created | skill wording test file | the docs surfaces are covered by the normative-drift gate and the budget gate, so no new test file is needed
+```
+
 ## P1 — Tier 1 path gate
 
 Layer: config/infra
