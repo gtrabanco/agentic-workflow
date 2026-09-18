@@ -171,6 +171,7 @@ each.
 | PE-013 | Replan finding F2 (reproduction): `aheadCount()` answers `0` whenever `git rev-list --count @{upstream}..HEAD` exits non-zero, so an unset upstream (git exits 128) reaches `branch-pushed` as a zero ahead-count and `hygiene` exits 0 reporting `pass` | repository | `scripts/audit-pr-gate.mjs:197-200`; reproduced on a throwaway repository with no configured remote: `git rev-list --count @{upstream}..HEAD` → exit 128 `fatal: no upstream configured for branch 'main'`, while the same expression as `aheadCount()` evaluates `0` | `c3649687` | O12, AC4 | current | proven | P7 task 2 test case |
 | PE-014 | Replan finding F3 (reproduction): the unit's recorded plan-stage preflight reads `current: true, digestMatches: true` while the bound authority moved, because the main-sync merge `e2a42683` rewrote `CLAUDE.md` after receipt `rp-fix182-20260917-002` was issued | repository | `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md:36`; `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 4, `current: false`, `digestMatches: false`, `structural.reasonCode: "stale-context"`, `changedPaths: ["CLAUDE.md"]` | `c3649687` | O10, AC9 | current | proven | P5 task 3 verify output |
 | PE-015 | Replan finding F4 (reproduction): the settled-turn hygiene probe spawns `git status --porcelain` with no `timeout`, so an unresponsive git parks the `agent_settled` handler, and the adjacent comment claims the opposite ("This never blocks") | repository | `packages/pi-agentic-workflow/src/extension/index.ts:137`; `packages/pi-agentic-workflow/src/extension/index.ts:128-131` and `:185-187` (the two comments) | `c3649687` | O13, AC6 | current | proven | P8 task 3 test cases |
+| PE-016 | Verification gap repaired: `review-plan` returned PF-3/PF-4 — O10/P5 proved only the newest receipt's `verdictIsPass` (true while the receipt is stale, `scripts/pre-execution-snapshot.mjs:483`) and never that the superseded `progress.md:36` gate line was corrected, and O11/P6/row 8 proved the `audit-pr-gate.mjs comment` token without proving the hand-assembled `gh pr comment --body-file` path was removed — so this write strengthens those validators in place instead of re-pointing the rows to a weaker check | derived | rule "supply the missing evidence, never edit the reviewed claim into agreement" (`pre-execution-review` POLICY §3) over `docs/fix/182-deterministic-receipts-and-pr-hygiene/planning-findings.md` rows PF-3/PF-4 + `scripts/pre-execution-snapshot.mjs:483` + `skills/audit-pr/SKILL.md:46-48` | — | O10, O11 | not-applicable | decision | — |
 
 ### Obligations
 
@@ -189,8 +190,8 @@ deferred`; `n/a` requires evidence, and no row is `deferred` to a follow-up issu
 | O7 | PE-005 + PE-006 | The three skills name the runtimes as their box/step, so no prose path remains for a reviewer to end a turn through | P3 | 1 | execute-phase | AC7 validator (three greps → ≥ 1 each) | grep output in progress.md | verified |
 | O8 | PE-010 + PE-006 | The bundled skills mirror stays byte-identical to `skills/` and every route stays within its enforced context budget | P2 | 4 | execute-phase | AC8 validator (`bun scripts/check-skill-context.mjs` → exit 0; pi suite mirror parity) | command output in progress.md | verified |
 | O9 | PE-006 + PE-009 | The fix-index row flips to `done` with the PR link after the PR opens, and the flagged row-35 boundary is carried to the reviewer | P4 | close-out | execute-phase | AC9 validator (grep the row) → 1 | `docs/fix/README.md` row | planned |
-| O10 | F3; PE-014 | The unit's plan-stage preflight is current again at the merged head, and the progress record names the revision each gate held at instead of presenting a superseded `current: true` as standing | P5 | 1 | execute-phase | `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → prints `"verdictIsPass": true` | the verify JSON and the fresh receipt id in progress.md | planned |
-| O11 | F1; PE-012 | The `audit-pr` turn-contract box names the runtime that builds, posts and re-reads the merge-ready marker, so no hand-assembled comment path survives as the box | P6 | 1 | execute-phase | `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `bun scripts/check-skill-context.mjs` → exit 0 | the grep count and the checker tail in progress.md | planned |
+| O10 | F3; PF-3; PE-014 | The unit's plan-stage preflight is current again at the merged head, and the progress record names the revision each gate held at instead of presenting a superseded `current: true` as standing | P5 | 1 | execute-phase | `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 0 printing `"current": true`, `"digestMatches": true` and `"verdictIsPass": true`, and `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `grep -c "held at revision 81ee3ff6" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1, and `grep -c "superseded by the e2a42683 merge" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1 | the verify JSON (exit 0 with current/digestMatches/verdictIsPass all true), the fresh receipt id, and the corrected gate line in progress.md | planned |
+| O11 | F1; PF-4; PE-012 | The `audit-pr` turn-contract box names the runtime that builds, posts and re-reads the merge-ready marker, so no hand-assembled comment path survives as the box | P6 | 1 | execute-phase | `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0, and `bun scripts/check-skill-context.mjs` → exit 0 | both grep counts (the runtime token present, the hand-assembled comment path gone) and the checker tail in progress.md | planned |
 | O12 | F2; PE-013 | Terminal hygiene is fail-closed: a branch git cannot compare to its remote blocks `branch-pushed` instead of passing as a zero ahead-count | P7 | 1 | execute-phase | `node --test scripts/audit-pr-receipt.test.mjs` → exit 0 (the no-upstream case) | the case name + exit code in progress.md | planned |
 | O13 | F4; PE-015 | The settled-turn git probe is time-bounded, so an unresponsive git cannot park the turn, and its comments state that contract | P8 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (the probe-timeout pins) | the case names + count in progress.md | planned |
 | O14 | F1; PE-012 (the P2/P4 `O8` bundle predates this byte edit) | The committed Pi skills mirror is byte-identical to `skills/` after the `audit-pr` edit, and the package version cell moves with the re-bundle | P9 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (`skill-parity.test.mjs`) | the parity output and the 0.11.1 row | planned |
@@ -243,6 +244,12 @@ proves it; the executor re-runs the validator and ticks.
 > fix-index row `done`); its ticks are reconciled from the `P4 — 2026-09-18`
 > entry in `progress.md`, which is the execution evidence the executed-phase
 > exemption keys on. Rationale and the manifest decision are in `## Amendments`.
+>
+> Plan-repair batch `ar-fix182-20260918-plan-4` (2026-09-18, user-directed):
+> `review-plan` receipt `rp-fix182-20260918-003` returned `PLAN-REVIEW-FAIL` with
+> PF-3/PF-4. The repair strengthens `P5`/`P6`'s done-when and `O10`/`O11`'s
+> validators **in place** — no phase is renumbered, re-cut, or appended — so the
+> two appended phases can no longer pass on the unrepaired state.
 
 ### Phase-lint (owned by `skills/phase-contract/SKILL.md`)
 
@@ -342,7 +349,7 @@ Phase-lint: PASS (8/8) · fingerprint `P4:hardening:8:hardening-pr`
 
 ### P5 — Merged-head plan receipt reconciliation
 
-Layer: `docs`. Done-when: `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → prints `"verdictIsPass": true`.
+Layer: `docs`. Done-when: `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 0 printing `"current": true`, `"digestMatches": true` and `"verdictIsPass": true`, and `grep -c "held at revision 81ee3ff6" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1, and `grep -c "superseded by the e2a42683 merge" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1.
 
 The main-sync merge `e2a42683` moved `CLAUDE.md` after receipt
 `rp-fix182-20260917-002` was issued, so the unit's recorded preflight gate reads
@@ -351,15 +358,15 @@ replan re-cut the plan and `/review-plan` re-issued the receipt at the merged
 head; this phase stops the progress record from presenting the superseded gate
 as standing and records the fresh one.
 
-- [ ] Record the fresh merged-head `stage: plan` receipt in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md`, pasting its id, snapshot digest and source revision (F3; O10)
-- [ ] Correct the superseded `Pre-execution gate` line in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` so it names the revision its `current: true` held at (F3; O10)
-- [ ] Re-run `node scripts/pre-execution-snapshot.mjs verify` for the appended ledger and paste its JSON into the same record (F3; O10)
+- [ ] Record the fresh merged-head `stage: plan` receipt in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md`, pasting its id, snapshot digest and source revision (F3; PF-3; O10)
+- [ ] Correct the superseded `Pre-execution gate` line in `docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` so it carries `held at revision 81ee3ff6` and `superseded by the e2a42683 merge` rather than standing as the current gate (F3; PF-3; O10)
+- [ ] Re-run `node scripts/pre-execution-snapshot.mjs verify` for the appended ledger and paste its exit-0 JSON into the same record (F3; PF-3; O10)
 
 Phase-lint: PASS (8/8) · fingerprint `P5:docs:3:merged-head-plan-receipt-reconciliation`
 
 ### P6 — Audit-pr merge-ready box names the comment runtime
 
-Layer: `docs`. Done-when: `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `bun scripts/check-skill-context.mjs` → exit 0.
+Layer: `docs`. Done-when: `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0, and `bun scripts/check-skill-context.mjs` → exit 0.
 
 The `audit-pr` turn-contract box (`skills/audit-pr/SKILL.md:46-48`) still
 tells the reader to post the merge-ready comment through the hand-assembled
@@ -367,8 +374,8 @@ tells the reader to post the merge-ready comment through the hand-assembled
 step 7 runs `bun scripts/audit-pr-gate.mjs comment`; AC7's greps count only the
 hygiene mention, so the box stayed prose after the P3 wiring (F1).
 
-- [ ] `skills/audit-pr/SKILL.md` names `bun scripts/audit-pr-gate.mjs comment` as the merge-ready box's step in place of the hand-assembled `comment --body-file` instruction (F1; O11)
-- [ ] Run `bump-skill` for `audit-pr` at patch 5.2.0 to 5.2.1 (wording only) so its frontmatter, the `CHANGELOG.md` row and the `README.md` skills-table cell move together (F1; O11)
+- [ ] `skills/audit-pr/SKILL.md` names `bun scripts/audit-pr-gate.mjs comment` as the merge-ready box's step and removes the hand-assembled `comment --body-file` path so the box carries no prose comment instruction (F1; PF-4; O11)
+- [ ] Run `bump-skill` for `audit-pr` at patch 5.2.0 to 5.2.1 (wording only) so its frontmatter, the `CHANGELOG.md` row and the `README.md` skills-table cell move together (F1; PF-4; O11)
 
 Phase-lint: PASS (8/8) · fingerprint `P6:docs:2:audit-pr-merge-ready-box-names-comment-runtime`
 
@@ -473,10 +480,10 @@ exercises it.
 | A draft PR at the merge gate | P1 · 7 | AC4 (`hygiene --apply` CLI test runs only the `gh pr ready` repair) |
 | A rewritten or unappended session log | P1 · 8 | AC5 (`session-close.test.mjs` append-only tests) |
 | An agent trying the inline, unverifiable receipt path | P2 · 1 | AC6 (`receipt-guard.test.mjs`) |
-| A merge-ready box that still instructs the hand-assembled comment path | P6 · 1 | AC7 (`grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1) plus the P9 mirror parity suite |
+| A merge-ready box that still instructs the hand-assembled comment path | P6 · 1 | AC7 (`grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0) plus the P9 mirror parity suite |
 | A branch with no configured upstream at the merge gate | P7 · 1 | AC4 (`audit-pr-receipt.test.mjs` no-upstream `branch-pushed` case) |
 | An unresponsive `git status` in a settled turn | P8 · 1 | AC6 (`receipt-guard.test.mjs` timeout pins through the bounded probe) |
-| A plan receipt stale because a bound authority moved after the review | P5 · 1 | O10 (`pre-execution-snapshot.mjs verify` → `"verdictIsPass": true` at the merged head) |
+| A plan receipt stale because a bound authority moved after the review | P5 · 1 | O10 (`pre-execution-snapshot.mjs verify` → exit 0 with `"current": true` and `"digestMatches": true` at the merged head, and `grep -c "held at revision 81ee3ff6" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1 proving the superseded `progress.md:36` gate line was corrected) |
 
 ## Rollback
 
@@ -495,8 +502,10 @@ would leave the new cases red.
 `in-progress` — the runtime body landed on the branch in `c541aac5`, `P1`–`P3`
 verified it, and `P4` closed the first cut out (PR #241 open, fix-index row
 `done` · [#241]). The 2026-09-18 replan (`route: replan`, F1–F4) appended `P5`–`P9`
-and a fresh `P10`, so the unit is **not** delivered until those phases run and the
-end review and merge audit pass at the terminal head.
+and a fresh `P10`; a second 2026-09-18 batch (PF-3 + PF-4, review receipt
+`rp-fix182-20260918-003`) strengthened the `P5`/`P6` gates and `O10`/`O11` in
+place. The unit is **not** delivered until those phases run and the end review and
+merge audit pass at the terminal head.
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
 
@@ -687,6 +696,30 @@ pins, one mirror re-bundle, and one ledger reconciliation.
   authorization is pending. **Placement:** append-after, not insert-before — `P4`
   executed, so the ledger must end with an unexecuted hardening. `artifactRevisionId`
   rotated to `ar-fix182-20260918-plan-3` (one id for this write's SPEC set).
+- **2026-09-18 — plan repair batch (PF-3 + PF-4), user-directed.** `review-plan`
+  (receipt `rp-fix182-20260918-003`) returned `PLAN-REVIEW-FAIL` with two
+  plan-class findings: `O10`/`P5` asserted the newest receipt's `verdictIsPass` —
+  true while the receipt is stale (`scripts/pre-execution-snapshot.mjs:483`) —
+  and neither P5's done-when nor `### Failure scenarios` row 11 proved the
+  superseded `progress.md:36` gate line was corrected (PF-3); `O11`/`P6`/row 8
+  proved the `audit-pr-gate.mjs comment` token is present but never that the
+  hand-assembled `gh pr comment --body-file` path was removed (PF-4). **Repair
+  (in place, no renumbering):** P5's done-when now requires `verify --json` →
+  exit 0 with `"current": true` and `"digestMatches": true`, plus the
+  `held at revision 81ee3ff6` and `superseded by the e2a42683 merge` markers the
+  corrected gate line must carry; P6's done-when adds
+  `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0; `O10`/`O11` carry the
+  same strengthened validators and `### Failure scenarios` rows 11 and 8 name
+  them; `PE-016` records the repair. The findings' rows were supplied with the
+  missing evidence, never re-pointed to a weaker validator (`pre-execution-review`
+  POLICY §3). **ACCEPTANCE amendment: none** — no criterion's required outcome
+  changed: AC7's "no prose receipt/comment path remains as the box" already
+  requires the F1 rewrite, and the receipt currency PF-3 asserts is the
+  pre-execution gate the obligations govern, not a manifest criterion; the
+  strengthened checks travel in the phases' done-when gates, so the manifest
+  stays frozen at blob `3ff5b7f1`. `artifactRevisionId` rotated to
+  `ar-fix182-20260918-plan-4` (one id for this write's SPEC set; `ACCEPTANCE.md`
+  is untouched).
 
 ## Planning preflight record
 
@@ -702,14 +735,14 @@ Readiness (`evidence-grounding` `references/READINESS.md`, `stage: plan`):
 
 ```text
 READINESS — fix 182-deterministic-receipts-and-pr-hygiene plan READY-FOR-REVIEW
-- Artifact revision: ar-fix182-20260918-plan-3 · Rows checked: 15 evidence + 14 obligations · Unknowns open: 0
+- Artifact revision: ar-fix182-20260918-plan-4 · Rows checked: 16 evidence + 14 obligations · Unknowns open: 0
 - Evidence: SPEC.md ### Planning evidence · Frozen: 2026-09-18
 ```
 
 Box results: 1 `n/a` — a fix unit has no Product half and no parent SPEC to
 parent (D6); 2 pass — frozen `ACCEPTANCE.md`, one ID per criterion, named
 validators, blob `3ff5b7f1` recorded and unchanged by this write; 3 pass —
-`## Impact` names the surfaces and PE-001..PE-015 carry the code evidence,
+`## Impact` names the surfaces and PE-001..PE-016 carry the code evidence,
 invariant classification `n/a` (NRS F010); 4 pass — fourteen obligations, each
 one phase/task/owner/validator/evidence row with a non-blank status; 5 pass — the
 evidence table is embedded in this SPEC (XS/S home) and every appended claim
@@ -722,6 +755,6 @@ decision word in the phases, and the one open boundary (roadmap row 35) is an
 owned owner decision in `## Cross-issue notes`; 11 pass — every evidence row
 `current`, zero unknowns open.
 
-`artifactRevisionId`: `ar-fix182-20260918-plan-3` (this replan write; one id for
-the SPEC set it touched — `ACCEPTANCE.md` is untouched and keeps blob
+`artifactRevisionId`: `ar-fix182-20260918-plan-4` (this PF-3/PF-4 repair write;
+one id for the SPEC set it touched — `ACCEPTANCE.md` is untouched and keeps blob
 `3ff5b7f1`).
