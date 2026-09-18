@@ -1201,3 +1201,36 @@ standard invalidation ladders
 | A wording-only movement always rotates the source revision, so the scenario AC4 describes cannot answer `stale-artifact-content` | repository | SPEC Design E6 opening ("a wording-only movement moves a bound artifact and therefore always rotates `sourceRevision`") | `9c253473` @ 2026-09-18 | current | proven | E-D31-28 |
 | Content-addressed freshness derives the staleness signal from the changed bytes (new content ⇒ new key) | external | https://en.wikipedia.org/wiki/Content-addressable_storage (accessed 2026-09-18) | fetched 2026-09-18 | current | proven | E-D31-28 |
 | Invalidation ladders check revision/content movement before content-only comparison | external | https://getsdeready.com/cache-invalidation-optimizing-application-performance/ (accessed 2026-09-18) | fetched 2026-09-18 | current | proven | E-D31-28 |
+
+### E-D31-29: the surviving freshness-code names follow AC4 — `stale-source-revision` for moved bound bytes; the per-revision readiness block is a record duty
+
+Spec-review finding N31-016 (`spec-review-31-12`, `medium`, `class: product`):
+the F3 patch (E-D31-28) corrected AC4 but left the same wrong code name in two
+more Product-half locations — In scope item 2 and Capability closure E2's state
+transitions still said `stale-artifact-content` for moved bound bytes — and
+Expectation sweep row 11 still named `stale-artifact-revision` for an unrecorded
+rotation, the naming Design E6 already corrected as wrong once. One event, two
+incompatible codes in the same half. Ruling: the comparator's precedence is the
+single authority — for committed moved bound bytes `attributeFreshness` answers
+`stale-source-revision` before the `stale-artifact-content` slot, and on the
+no-determination path the wording-only branch never holds, so the same
+fall-through applies; `stale-artifact-revision` keeps only its comparator slot
+(a rotation with no bound byte moved). The three names move to
+`stale-source-revision`; no criterion outcome, validator or required outcome
+moves. Companion record duty (N31-017, `low` report-note): every Product-half
+patch that asserts a readiness preflight records its `READINESS — … spec
+READY-FOR-REVIEW` block in the unbound `progress.md` in the same authoring act
+— the per-revision record convention every earlier reviewed revision follows,
+which `31-spec-12` broke. Repair owner `design-feature` (product class),
+artifact revision `31-spec-12` → `31-spec-13`; the frozen `ACCEPTANCE.md`
+(blob `849af5ae…`) is untouched.
+
+### Evidence rows (N31-016 + N31-017 repair batch, 2026-09-18)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The verifier answers `stale-source-revision` for committed moved bound bytes, before the `stale-artifact-content` slot | repository | `scripts/pre-execution-snapshot.mjs:395-400` (`stale-source-revision` return precedes the artifact-content slot at `:412`) | `9c253473` @ 2026-09-18 | current | proven | E-D31-29 |
+| On the no-determination path the wording-only branch never holds, so an unrecorded rotation falls through to the same `stale-source-revision` precedence | repository | `scripts/pre-execution-snapshot.mjs:377-403` (branch conditions + fall-through comment: "the branch never rewrites a reason code on the no-determination path") | `9c253473` @ 2026-09-18 | current | proven | E-D31-29 |
+| `stale-artifact-revision` is reserved for a rotation with no bound byte moved, not for an unrecorded-determination refusal | repository | `scripts/pre-execution-snapshot.mjs:418-421` (the code answers only after `changedArtifacts.length === 0`) | `9c253473` @ 2026-09-18 | current | proven | E-D31-29 |
+| In scope item 2, E2 state transitions and sweep row 11 carried the wrong names at the reviewed bytes | review record | `planning-findings.md` N31-016 row (`spec-review-31-12` snapshot `2ca0f9c4…`, evidence `SPEC.md:150,:313,:419` against AC4 `:476-478` and E6 `:919-936`) | `324d9de3` @ 2026-09-18 | current | proven | E-D31-29 |
+| Every earlier reviewed spec revision carries a `READINESS — … spec READY-FOR-REVIEW` block in `progress.md`; `31-spec-12` had none | repository | `progress.md` blocks for `31-spec-4`…`31-spec-9` (grep `READINESS — .* spec READY-FOR-REVIEW`) vs `grep -c '31-spec-12' progress.md` → 0 at the reviewed bytes | `324d9de3` @ 2026-09-18 | current | proven | E-D31-29 |
