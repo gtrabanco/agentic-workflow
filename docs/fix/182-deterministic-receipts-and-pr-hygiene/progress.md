@@ -148,3 +148,63 @@ Notes:
 ```
 - Self-check command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 4 (verdict persisted, not a PASS — the verdict itself is the emit result; `structural.fresh: true`, `digestMatches: true`; `current: false` is the PASS-only field, per POLICY §8).
 
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-fix182-20260918-004 · Snapshot: 5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea · Verdict: plan-review-pass
+- Unit: fix-182 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); the contract forbids a parent on a fix plan snapshot (D30)
+- Source revision: dbda8e01aa4b8520be609f41043352f87ee1d333 · Artifact revision: dbda8e01aa4b8520be609f41043352f87ee1d333
+- Reviewer: review-plan (review-only turn) · Session: 01a0b4e9-86e7-7302-a9d2-cf5e9e2ac8b0 · Role: reviewer · Author: plan-fix (commit dbda8e01)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T14:26:38Z/2026-09-18T15:03:13Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 16 rows (PE-001…PE-016, embedded in the SPEC) · obligations 14 rows (O1…O14, verified-capable: 9 — O1–O8 verified, O9–O14 planned)
+- Prior plan receipt (re-review only): rp-fix182-20260918-003 @ 5a9c450f79c9b74a45d92c4de5681f3e74ce1473d38bb8afb08d38ee614886af
+
+Notes:
+- CONVERGENCE-ANOMALY — fix-182 plan (second repair/re-review cycle, printed before any further edit per POLICY §4; the anomaly is reported and routed, never a stop, and the repair it routes has already run):
+  ```text
+  CONVERGENCE-ANOMALY — fix-182 plan
+  - Finding ids: repeated: none / new: none (PF-3 and PF-4 both resolved by this write)
+  - Snapshots: 5a9c450f79c9b74a45d92c4de5681f3e74ce1473d38bb8afb08d38ee614886af → 5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea (artifactRevisionId ar-fix182-20260918-plan-3 → ar-fix182-20260918-plan-4)
+  - Missed: the plan-receipt-currency proof for F3 (PF-3: the P5/O10 validator asserted the newest verdict, which stays true while the receipt is stale) and the comment-path-removal proof for F1 (PF-4: the P6/O11 validator asserted the runtime token, not the removal of the hand-assembled path)
+  - Owning stage: plan
+  - Why the prior repair failed: the plan-3 replan appended the F1–F4 phases but proved the two outcomes with presence tokens that already pass on the unrepaired state, so the plan could pass while the exact defects survived
+  - Route to owner: plan-fix (owner performed the PF-3/PF-4 in-place repair; artifact revision ar-fix182-20260918-plan-4, commit dbda8e01)
+  ```
+- Snapshot built by `node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` at source revision `dbda8e01`; `validated: schema` (digest stable across builds). Rows: `spec` → SPEC.md (63406 B, `afe55bbf051694af02a7f87a30cd888c67ea60951ada237fa478389d5b69cb33`) + `acceptance` → ACCEPTANCE.md (3927 B, `316b953fb1618ecef9320f116ede918295ee3ea224da840a7b458f56028b21ce`); `planning-evidence`/`obligations`/`tasks`/`testing`/`decisions`/`plan`/`architecture-notes` rows absent (fix template; the two planning tables are embedded in the SPEC and bound through the whole-file `spec` row). Contexts: `project-guide` (CLAUDE.md, `f5c8e142…`) and `normalized-repository-state` (docs/workflow/REPOSITORY_STATE.md, `e1b81e29…`) present and bound; `architectural-invariants` absent (NRS F010 → the SPEC's invariant classification `n/a` is evidence-backed). `parentSpecSnapshotDigest: null` (D6/D30).
+- Manual-runtime disclosure (Portability): no runtime rotates `artifactRevisionId`; the receipt's revision lines carry the derived content revision (`dbda8e01`) that `verify` re-derives, while the planner's declared label `ar-fix182-20260918-plan-4` is recorded here beside it (POLICY §7 pairing, never a substitution). Prior cycles recorded the same split (`ar-…-plan-3` @ `2644b0a7`, `ar-…-plan-2` @ `81ee3ff6`, `ar-…-plan-1` @ `f971a03e`).
+- No-progress/convergence: this repeat is sanctioned — the input is the PF-3/PF-4 repair turn's changed snapshot (`5a9c450f…` → `5e14f732…`), produced in response to the persisted FAIL receipt `rp-fix182-20260918-003`; per POLICY §4 no cycle cap or anomaly rule blocks or ends it. The anomaly above is printed and routed; the findings it names are both `resolved` with resolution evidence in `planning-findings.md`.
+- Falsification stance before the check table: **NO-CONFIRMED-GAPS**. Hostile-reader attacks refuted with evidence on the current bytes: PE-012 (the hand-assembled path is exactly `skills/audit-pr/SKILL.md:47` on both trees, `grep -c "audit-pr-gate.mjs comment"` = 0 while the reference file already runs the runtime at `references/03_AUDIT_PROCESS.md:49`); PE-013 (`scripts/audit-pr-gate.mjs:197-200` returns `0` on any non-zero `rev-list` exit); PE-014 (the recorded preflight line at `progress.md:36` still presents `current: true`, and the live `verify` answers exit 4, `current:false`, `digestMatches:false`, `structural.reasonCode:"stale-source-revision"`); PE-015 (`packages/pi-agentic-workflow/src/extension/index.ts:137` `spawnSync` has no `timeout`, and the comments at `:131-135`/`:185-187` claim the opposite); PE-016's cited line `scripts/pre-execution-snapshot.mjs:483` is exact (`verdictIsPass`); the ACCEPTANCE blob recomputed (`git hash-object` → `3ff5b7f104954d80d218f1085ddc7ef4bac0421e`, matching the SPEC's frozen blob) and its last touch is `81ee3ff6` (unchanged by the plan-3 and plan-4 writes).
+- Ledger sweep (L1–L6): L1 pass (fix snapshot parent `null`, stated, no invented lineage); L2 pass (PE-001…PE-016 resolve — `repository`/`proven` for the code/document claims, `derived`/`decision`/`not-applicable` for PE-004, PE-011 and PE-016, the sanctioned shape; no `unknown`, no `drifted`/`stale`); L3 pass (O1–O14 — one row per normative behaviour, stable unique ids, none duplicated); L4 pass (each row names exactly one phase/task/owner/validator/evidence with a non-blank status; no `deferred` row; each validator copied from `ACCEPTANCE.md` or the phase done-when); L5 pass — the PF-3/PF-4 repair made both previously wrong-reason validators fail-capable: P5's gate now requires `"current": true` and `"digestMatches": true` (fails on the stale state today) plus the corrected-gate-line markers, and P6's gate now requires `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0 (fails at 1 today); `### Failure scenarios` rows 11 and 8 name those same checks; L6 pass (PF-1…PF-4 all `resolved` with resolution evidence and `resolving-artifact-revision` `ar-fix182-20260917-plan-2` / `ar-fix182-20260918-plan-4`; no open material row; the review-findings F1–F4 rows are the source-class rows P5–P9 repair).
+- Verification spot-checks at `dbda8e01` (re-run live this turn): `node scripts/phase-lint.mjs docs/fix/182-…/SPEC.md` → `verdict PASS`, reproducing the SPEC's recorded whole-set fingerprint `24c1adc8acec3570498a98ad5d2c9f9534279c4cc6b31e5135bc8b287d176fe9` and all ten per-phase fingerprints; `node --test scripts/*.test.mjs` (root) → 544 pass / 0 fail; `cd packages/pi-agentic-workflow && bun run test` → 224 pass / 0 fail; `bun scripts/check-skill-context.mjs` → `PASS context budgets: 40 skills`; `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 4 on the prior FAIL receipt (`structural.reasonCode: "stale-source-revision"`, `changedPaths: ["SPEC.md"]`), the state this receipt supersedes; `git hash-object ACCEPTANCE.md` → `3ff5b7f1…`; P5's gate greps at HEAD → 0 for both corrected-gate-line markers and 3 for the receipt heading, so P5 cannot pass on the unexecuted state; P6's gate greps → `audit-pr-gate.mjs comment` = 0 and `gh pr comment` = 1, so P6 cannot pass on the unexecuted state; AC7 greps `review-receipt.mjs emit` = 1, `audit-pr-gate.mjs hygiene` = 1, `session-close.mjs close` = 2; AC9 grep = 1; `GATE_NAMES` is exactly the 13 declared names; versions review-change 3.6.0 / audit-pr 5.2.0 / log-session 2.2.0 / pi 0.11.0, each with its `CHANGELOG.md` row; the pi mirror differs from `skills/` only by the deliberately excluded `bump-skill` (so P6 will break parity and P9 re-bundles).
+- P5 gate feasibility (checked, not assumed): `buildSnapshot` defaults `sourceRevision`/`artifactRevisionId` to `contentRevision(git, boundPaths)` — the newest commit touching a **bound** path — not live HEAD, so the P5 write to `progress.md` (not a bound artifact) leaves the plan receipt `current: true`; the gate is reachable once this PASS is on disk. `artifactRevision` is likewise the content revision (`dbda8e01`), which `verify` re-derives.
+- Non-material observations (not findings): (i) the SPEC's `## Status` reads `in-progress` while the fix-index row reads `done` · [#241] — the index's `done` is "built + PR open, human merge pending" and `P10` re-confirms it, so this is a label reading, not a gate; (ii) the roadmap row-35 `scoped-receipt-verifier` boundary (it cites #182) remains the one open owner decision before merge, disclosed in `## Cross-issue notes` and required by AC9 — a human decision, not an engineering gap; (iii) AC1's "malformed argument set" outcome is exercised by the `validateEmitOptions` unit test inside the AC1 suite rather than by a dedicated `### Failure scenarios` row (info: the suite that AC1 names runs it); (iv) the O1–O8 `verified` required-evidence quotes test names in prose rather than verbatim (pre-existing, every named validator ran green this turn).
+- Read-only: no reviewed artifact (`SPEC.md`, `ACCEPTANCE.md`, `planning-findings.md`, the roadmap, the fix-index row) was modified. Only this ledger (`progress.md`) was written; `planning-findings.md` gains no row (zero new findings).
+
+## Re-review self-check (POLICY §8) — rp-fix182-20260918-004
+```json
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "fix-182",
+  "receipt": {
+    "id": "rp-fix182-20260918-004",
+    "verdict": "plan-review-pass",
+    "snapshot": "5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "5e14f732c1bda4bb59a8f73be75d0436a328d9d29b58e20a16381099dee5bdea",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+- Self-check command: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` → exit 0 (`current: true`, `digestMatches: true`, `verdictIsPass: true`, `structural.fresh: true`).
