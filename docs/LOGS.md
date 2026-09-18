@@ -1823,3 +1823,17 @@ out to do, what was decided and *why*, and where to resume.
 - The snapshot builder derives `sourceRevision`/`artifactRevisionId` from the newest commit touching bound paths, not live HEAD — committing the receipt does not invalidate it.
 
 **Next:** `audit-pr` to verify the PR is merge-ready (plus the owed ledger flip).
+
+## 2026-09-18T22:00Z — feat/31-planning-review-materiality — manual (ledger flip + AC evidence run)
+
+**Branch:** `feat/31-planning-review-materiality` · **Commits this session:** 1 (`54de9726`) · **HEAD:** `54de9726` · **Clean tree at close:** yes
+
+**Summary:** Closed the stale ledger rows from the `spec-review-31-15` PASS by flipping `F31-14-01` and `F31-14-02` to `status: resolved` / `resolving-artifact-revision: 31-spec-15` in `planning-findings.md` (owner: `design-feature:product-class-resolutions`). Then ran all 14 mechanical ACs of the frozen `ACCEPTANCE.md` live at the PR head — evidence-first, no receipt ceremony. 13/14 green on first pass. The single red (AC10) was a fixture-hermeticity bug: `ledger-provenance.test.mjs` temp-repo fixtures inherit global `commit.gpgsign=true`, so fixture commits hang ~5s on GPG and time out. Fixed by adding `git config commit.gpgsign false` in fixture setup (pattern already used by `continuation-discipline` and `pre-execution-sensor` suites), committed as `54de9726`, pushed to PR #243. Final count: 122/122 scripts, 227/227 package tests, all greps and suites green. PR #243 is merge-ready; the next step is human merge (no `execute-phase` — all phases were already executed in prior sessions).
+
+**Decisions:**
+- **Evidence over receipts.** The owner's direction: once deterministic scripts cover what they can check, move away from staged receipt ceremony (re-review on every SPEC rotation, ledger flips as separate turns) toward a natural evidence system: verify ACs by execution, develop in favor of the ACs, skip ceremony when a current repair receipt exists. This session applied that principle — the `spec-review-31-15` PASS was the repair receipt, but the real evidence was 14 live AC executions.
+- **Scope guard respected.** Two sibling test files with the same hermeticity bug (`session-close.test.mjs`, `audit-pr-receipt.test.mjs`) were patched locally but NOT committed on this branch. Adding them would break AC13's declared-groups scope guard (those paths are outside the unit's allowed set). They remain as a follow-up to merge into main after #243 lands.
+- **Not a token-burn bug fix but an evidence pass.** The review-loop tax is the real bug (mapped in roadmap row 50 `review-loop-convergence`). This session's work — ledger flip + AC run — is what the new system would do natively. The old system's cost was the gap between the flip being logically obvious and the protocol demanding a separate receipt-issuing turn.
+- **Merge, not execute-phase.** Unit 31's TASKS.md has 0 open checkboxes; roadmap row 31 reads `done · #243`; all 14 ACs verified at the PR head. `execute-phase` would only re-ignite ceremony on completed work.
+
+**Next:** Human merge of PR #243. After merge: (a) push the two remaining hermeticity fixes (`session-close`, `audit-pr-receipt`) to main; (b) `/plan-feature --next` or `/workflow-status` for the next roadmap unit (sensor indicates unit 40 `versioned-skills-releases` needs spec review, or unit 37 `phase-lint-script` has a replan-in-unit finding).
