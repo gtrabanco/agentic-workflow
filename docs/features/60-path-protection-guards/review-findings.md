@@ -46,9 +46,9 @@ schema:
 | F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | no |
 | F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | no |
 | F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | no |
-| F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | no |
+| F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | yes |
 | F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | no |
-| F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | no |
+| F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | yes |
 | F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) | no |
 | VF-12 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: temp repo modify `tests/café-helper.js` → `git diff --name-status` = `M<TAB>"tests/caf\303\251-helper.js"`; gate `--base` → `PATH-GUARD pass — clean` exit 0 (ASCII control → `fail — protected-modification` exit 1) | code+security | confirmed | finding-mark | n/a | n/a |
 | VF-13 | packages/agentic-workflow/bin/path-guard.mjs:51-57 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: policy `pre-freeze.delete=approval` + justification-only row; unstaged `rm tests/prot.js` → `PATH-GUARD pass — justified` exit 0, staged `D ` → `fail — approval-required` exit 1 | code+security | confirmed | finding-mark | n/a | n/a |
