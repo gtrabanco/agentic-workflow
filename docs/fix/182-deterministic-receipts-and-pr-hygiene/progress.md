@@ -92,7 +92,7 @@ Notes:
 - Next: P4 — Hardening & PR
 
 ## P4 — 2026-09-18
-- Done: full project gate re-run green (root suite 532 pass, pi suite 224 pass, context budgets `PASS: 40 skills`, phase-lint `verdict PASS`); fix-index row flipped to `done` and committed (`44ff4506`), branch pushed; PR opened and linked back into the index (`docs: link PR #241`); the roadmap row-35 boundary decision is carried in the PR body's "Decision required before merge" note.
+- Done: full project gate re-run green (root suite 532 pass, pi suite 224 pass, context budgets `PASS: 40 skills`, phase-lint `verdict PASS`); fix-index row flipped to `done` and committed (`44ff4506`), branch pushed; PR opened and linked back into the index (`docs: link PR #241`); the roadmap row-35 boundary decision is carried in the PR body's "Decision required before merge" note. Then synced `origin/main` (feature 55) in `e2a42683` — resolved the `CHANGELOG.md` / `docs/LOGS.md` / pi `package.json` conflicts, re-bundled the pi skills mirror, and re-ran the gate green on the merged tree (root 544 pass, pi 224 pass, context `PASS: 40 skills`); PR #241 is now `MERGEABLE` / `CLEAN`.
 - Remains: none — the unit is delivered; merge is gated by `/audit-pr` after the mandatory end review.
 - Gotchas: the owner decision on roadmap row 35 (`scoped-receipt-verifier`, currently citing #182) remains open and is the one human decision before merge; the fix-index row stays until the PR actually merges.
 - Files: docs/fix/README.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
