@@ -843,5 +843,17 @@ can be violated, introduced, or changed by this repair.
 - Next: P2 — Template policy ship
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `bun test packages/agentic-workflow/test/ && node --test scripts/path-protection.test.mjs` (exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Commit: aadf2502 · Gate: `bun test packages/agentic-workflow/test/ && node --test scripts/path-protection.test.mjs` (exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
 - Next: P2 · Attempts: 1
+
+## P2 — 2026-09-18
+- Done: shipped the path-protection policy as the install seed `template/.agentic-workflow/path-policy.json` (byte-identical to the crate's `serializeShippedPolicy()`), its doc page `template/.agentic-workflow/path-protection.md`, the hooks README path-protection section, and the install/upgrade seeding instructions in `skills/init-workspace/references/{BOOTSTRAP_WRITE,UPGRADE}.md`; 6/6 P2 tasks ticked.
+- Remains: none in P2.
+- Gotchas: the seed is generated from the crate module, so regenerate it (do not hand-edit) if the default ever changes. The AC-09 check and the P2 done-when seed diff both pass; the AC-07 validator's directory grep needs `-r`, but the intent (`grep -rnE 'tests/\*\*|e2e/\*\*' skills/` → no match) holds.
+- Files: template/.agentic-workflow/{path-policy.json,path-protection.md,hooks/README.md}, skills/init-workspace/references/{BOOTSTRAP_WRITE.md,UPGRADE.md}, docs/features/60-path-protection-guards/{TASKS.md,testing.md,progress.md}
+- Base ref: aadf250285ca4bf7270914f6a1b7f0e4f031b7d8
+- Next: P3 — Checkpoint contract adoption
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `diff <(node -e "import('./packages/agentic-workflow/src/path-policy.mjs').then(m=>process.stdout.write(m.serializeShippedPolicy()))") template/.agentic-workflow/path-policy.json` (empty) + `grep -c 'path-policy' skills/init-workspace/references/*.md` (3/3) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Next: P3 · Attempts: 1
