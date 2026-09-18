@@ -141,6 +141,26 @@ test("path-guard:two-runs — two runs are byte-identical and mutate nothing", (
   assert.equal(after, before);
 });
 
+test("path-guard:unknown-base — an unresolvable --base fails closed, never reads as an empty diff (F5)", () => {
+  const dir = fixture("unknown-base");
+  commit(dir, "tests/a.mjs", "v1\n");
+  fs.writeFileSync(path.join(dir, "tests/a.mjs"), "v2\n");
+  const result = run(dir, ["--phase", "P1", "--base", "no-such-ref-xyz"]);
+  assert.equal(result.code, 2, "an unknown base is a usage error, not a silent pass");
+  assert.match(result.stderr, /unknown base ref: no-such-ref-xyz/);
+  assert.doesNotMatch(result.stdout, /PATH-GUARD pass/);
+});
+
+test("path-guard:ref-injection — a `--base` beginning with `-` never reaches git's option parser (F6)", () => {
+  const dir = fixture("ref-injection");
+  commit(dir, "tests/a.mjs", "v1\n");
+  fs.writeFileSync(path.join(dir, "tests/a.mjs"), "v2\n");
+  const target = path.join(dir, "injected-output");
+  const result = run(dir, ["--phase", "P1", "--base", `--output=${target}`]);
+  assert.equal(result.code, 2);
+  assert.equal(fs.existsSync(target), false, "git must not have written the injected output file");
+});
+
 test("path-guard:malformed-config — shipped defaults stay in force and the fallback is reported", () => {
   const dir = fixture("malformed", { config: "{ not json" });
   const result = run(dir, ["--phase", "P1"]);

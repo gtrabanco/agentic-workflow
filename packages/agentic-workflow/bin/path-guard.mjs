@@ -36,12 +36,13 @@ const USAGE =
   "  --base <ref>    union the committed range <ref>..HEAD into the changed paths\n" +
   "  --help          print this usage and exit 0\n";
 
-function gitOrNull(root, args) {
+/** Run git. `ok` is false when the process could not run or exited non-zero. */
+function runGit(root, args) {
   const result = spawnSync("git", ["--no-optional-locks", "-C", root, ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"],
   });
-  return result.status === 0 ? result.stdout : null;
+  return { ok: result.status === 0 && result.error === undefined, stdout: result.status === 0 ? result.stdout : "" };
 }
 
 const PHASE_RE = /^P\d+$/;
@@ -140,16 +141,25 @@ function main(argv) {
   if (phase === "" || !PHASE_RE.test(phase)) return fail("--phase must be P<n>");
 
   const cwd = process.cwd();
-  const root = gitOrNull(cwd, ["rev-parse", "--show-toplevel"]);
-  if (root === null) return fail("not inside a git repository");
-  const repoRoot = root.trimEnd();
+  const top = runGit(cwd, ["rev-parse", "--show-toplevel"]);
+  if (!top.ok || top.stdout.trim() === "") return fail("not inside a git repository");
+  const repoRoot = top.stdout.trimEnd();
 
   // Changed paths: the dirty working tree, unioned with the committed range.
-  const status = gitOrNull(repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]) ?? "";
-  let changes = parsePorcelain(status);
+  // A git failure is a gate error, never an empty change list (F5): an
+  // unresolvable `--base` must not read as "nothing changed".
+  const status = runGit(repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
+  if (!status.ok) return fail("git status failed; cannot determine the changed paths");
+  let changes = parsePorcelain(status.stdout);
   if (base !== "") {
-    const diff = gitOrNull(repoRoot, ["diff", "--name-status", "--diff-filter=ACMRD", base]) ?? "";
-    changes = changes.concat(parseNameStatus(diff));
+    // Resolve the ref first and diff the resolved commit, so a value beginning
+    // with `-` can never reach git's option parser (F6).
+    const resolved = runGit(repoRoot, ["rev-parse", "--verify", "--quiet", "--end-of-options", `${base}^{commit}`]);
+    const baseCommit = resolved.stdout.trim().split(/\r?\n/).pop() ?? "";
+    if (!resolved.ok || baseCommit === "") return fail(`unknown base ref: ${base}`);
+    const diff = runGit(repoRoot, ["diff", "--name-status", "--diff-filter=ACMRD", baseCommit]);
+    if (!diff.ok) return fail("git diff failed; cannot determine the committed range");
+    changes = changes.concat(parseNameStatus(diff.stdout));
   }
   changes = dedupe(changes);
   if (changes.length > CHANGED_PATH_LIMIT) return fail(`changed-path list exceeds ${CHANGED_PATH_LIMIT} entries`);
