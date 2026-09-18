@@ -3588,3 +3588,183 @@ dependency, no blocker.
 Hand-off: the new artifact revision is `31-plan-6` (`ef0fe325`), and the reviewer
 re-derives plan snapshot `255d099b…`. Next step:
 `/review-plan 31-planning-review-materiality`.
+
+---
+
+# Plan review `plan-review-31-5` — review-plan reviewer turn (2026-09-18)
+
+Independent reviewer turn over plan snapshot
+`255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1` (artifact
+revision `31-plan-6` @ `ef0fe3251b58b1cb093cd4d683073a112595a4d9`), the repair
+batch `plan-review-31-4`'s `CONVERGENCE-ANOMALY` named. Fresh context; this
+conversation neither authored nor edited any reviewed plan artifact (every
+`git status` check in this turn saw an otherwise clean tree) → `contextClean:
+true`; `authorExclusion: not-enforceable` (manual route, no session identity to
+compare); `modelDiversity: not-applicable` (single reviewer).
+
+Cycle accounting (D-31-7 / POLICY §4): the window `plan-review-31-1` opened is at
+its **fifth** review. This is not a blind re-review — the snapshot moved
+(`b17009ea…` → `255d099b…`) and the five rows `plan-review-31-4` opened
+(`P31-07…P31-11`) are `resolved` at `31-plan-6` — so the anomaly below is printed
+and routed, never a stop. The verdict stands on the checks alone.
+
+Snapshot (built at the exact bytes read, one revision):
+
+```text
+digest   255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1
+source   ef0fe3251b58b1cb093cd4d683073a112595a4d9
+artifact ef0fe3251b58b1cb093cd4d683073a112595a4d9   (author handoff label `31-plan-6`)
+plan rows whole-file: spec · acceptance (849af5ae…) · planning-evidence · obligations · plan · tasks · testing · decisions · architecture-notes
+parent   dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e
+contexts project-guide CLAUDE.md ff24d7e4… present · normalized-repository-state docs/workflow/REPOSITORY_STATE.md e1b81e29… present · architectural-invariants docs/architecture/ARCHITECTURAL_INVARIANTS.md absent
+```
+
+Lineage L1 (claimed beside recomputed). The current Product receipt is
+`spec-review-31-11` @ `dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e`.
+Recomputed from the bytes on disk with the receipt's own recorded revisions
+(`node scripts/pre-execution-snapshot.mjs build --stage spec --unit
+31-planning-review-materiality --source-revision e4887dac35e5d4925f9bac239ddd7b5ad888064c
+--artifact-revision e4887dac35e5d4925f9bac239ddd7b5ad888064c`) → the **same**
+`dd09372a…`, the `spec-product-v1` projection digest
+`e9ce9abfa9f931356adcbcda1e8efe308ffc4809b6b3afcbe2e28ff88ef07e02` at 46362
+bytes, and the three context digests (`e1b81e29…`, `ff24d7e4…`, invariants
+absent) byte-identical to the receipt. The default `verify --stage spec`
+whole-file answer is the known `stale-source-revision` false signal `PE-003`
+records (the Engineering half lives in the same `SPEC.md`); L1 is decided on the
+projection, never on the whole-file revision.
+
+Review record (read-only — no reviewed plan artifact was modified by this turn):
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| L1 | Parent current | pass | `spec-review-31-11` @ `dd09372a…` recomputed; projection `e9ce9abf…` (46362 bytes) + 3 context digests unmoved |
+| L2 | Evidence integrity | pass | `planning-evidence.md` 37 rows (PE-001…PE-037), every one `current` + `proven`/`decision`; no `drifted`/`stale`, no ownerless `unknown` |
+| L3 | Obligation completeness | pass | `planning-obligations.md` 15 rows (O1…O14 mirror AC1…AC14; O15 = AD-008); no duplicate, ids stable |
+| L4 | Obligation mapping | pass | each row names exactly one phase, one task that exists in `PLAN.md`, an owner, a validator copied from `ACCEPTANCE.md`, and `required-evidence`; no blank, no `deferred` |
+| L5 | Scenario ↔ validator ↔ phase | pass | every `### Dev scenarios` failure category maps to a phase + validator; the AC7/AC1/AC2/AC3/AC5 discriminator greps were observed live (they exit `0` today and the kept-side fragments are absent today, so each discriminates the rewrite) |
+| L6 | Findings ledger honest | pass | R31-01…R31-03 resolved at `31-plan-3`, P31-01…P31-05 at `31-plan-4`, P31-06 at `31-plan-5`, P31-07…P31-11 at `31-plan-6`; no dismissed row lacks counter-evidence; no open material row |
+| P1 | Architecture | pass | affected surfaces carry `path:line` rows (PE-004…PE-016, PE-024…PE-037); AD-008 classification `preserves` recorded |
+| P2 | Dependency closure | pass | hard dep 29 `done · #175` merged, soft dep 30 `done · #188` merged; no phase builds outside the unit |
+| P3 | Compatibility | pass | additive only: no enum/verdict/freshness code/contract id removed; `reproducer` optional (back-compat vector); receipt contract id unchanged |
+| P4 | Security | pass | no secrets/authn/PII/new dependency; the added input is a bounded (`maxLength`, `nulFree`) string |
+| P5 | Migration | pass | no data/schema migration; the P1→P4 `normative-drift` window is declared (`known-issues.md` §12) and closed at P4's done-when; EN/ES sync not applicable (feature 57) |
+| P6 | Recovery | pass | per-phase commit + phase-entry receipts; `progress.md` records re-entry; fully-formed repair batches R31/P31 prove idempotent re-entry |
+| P7 | Rollback | pass | revert the PR: no persisted data, no migration, every accepted vocabulary value stays accepted |
+| P8 | Operability | pass | the sensor projects `detail.review_loop_cycles`; gates are the repo's own suites; README/CHANGELOG surfaces move with the change |
+| P9 | Phase atomicity and order | pass | `bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md` → PASS (8/8) every phase, aggregate `d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c` (re-run this turn, matches the recorded block); order matches `Depends on`; last phase is hardening |
+| P10 | Validators | pass | every done-when is a command with an expected outcome; the declared gates were re-observed at this revision: sensor/attribution/discipline 25 pass/0 fail, `workflow-status-pre-execution` 7/0, `normative-drift` 17/0, `ledger-provenance` 14/0; no validator weakened or re-scoped |
+| P11 | Scenario coverage | pass | `testing.md`'s mandatory inventory covers every SPEC scenario incl. empty/oversize/concurrent/duplicate; each maps to a phase + validator |
+| P12 | Source evidence | pass | the plan's file/symbol claims match the repository at `ef0fe325`: predicate `pre-execution.ts:1059`, prose `pre-execution-contract.ts:101,:459`, `PRE_EXECUTION_LIMITS:150-170`, both `4.2.0` pins, README `### Published limits`, `grep -c decideWorkflowAction scripts/workflow-status.mjs` → 0, and the nine AC7 fragments present today |
+
+Falsification — `NO-CONFIRMED-GAPS`: the three claims a hostile reader might call
+invented are each evidenced (PE-033/PE-034 pins and published limit, PE-035 the
+`pre-execution-quality` pin, PE-020 every AC7 fragment live today); no obligation
+is undeliverable; no phase's validator passes on a no-op (each AC7 fragment
+discriminates today); the two out-of-scope surfaces are declared
+(`known-issues.md` §1 context drift, §11 the red feature-38 suite).
+
+Findings (two, both `info`, immaterial, non-blocking; appended to
+`planning-findings.md`):
+
+- **P31-12** (`info`, plan) — `SPEC.md`'s `### Phases` **P4** summary done-when
+  omits `bun test scripts/normative-drift.test.mjs`, which `PLAN.md`/`TASKS.md`
+  P4 done-whens carry and the same SPEC's P1 summary (`:1108`) and the
+  `31-plan-4` amendment (`:1542`) say closes the declared window. The SPEC
+  explicitly designates `PLAN.md` the canonical phase list, so no phase's actual
+  gate is lost — `PLAN.md`/`TASKS.md` are correct and phase-lint passes.
+- **P31-13** (`info`, plan) — `TASKS.md` P1 carries nine checklist items while
+  `PLAN.md` P1 carries the canonical eight (the phase-contract ceiling that
+  `known-issues.md` §13 and `E-D31-25` record); the ninth is the finer-grained
+  split of the `reproducerChars` requirement, not a ninth requirement.
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: plan-review-31-5 · Snapshot: 255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1 · Verdict: plan-review-pass
+- Unit: 31-planning-review-materiality · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: dd09372a28b2d2e824a53d2d28951e7ff24d1d43e9f873f250fc426faf757a2e · Parent Product receipt: spec-review-31-11
+- Source revision: ef0fe3251b58b1cb093cd4d683073a112595a4d9 · Artifact revision: ef0fe3251b58b1cb093cd4d683073a112595a4d9
+- Reviewer: review-plan@pi · Session: pi-web-manual · Role: reviewer · Author: plan-feature (31-plan-6)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T00:50:00Z/2026-09-18T01:06:00Z · Findings: 2 (material open: 0)
+- Ledgers read: planning-evidence 37 rows · obligations 15 rows (verified-capable: 0 — every row `planned`)
+- Prior plan receipt (re-review only): plan-review-31-4 @ b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be
+```
+
+Artifact-revision notes:
+
+- The handoff label is `31-plan-6`; no runtime rotates `artifactRevisionId` in
+  this environment, so this receipt binds the builder's digest-derived value
+  `ef0fe325…` (the newest commit touching the bound paths; `HEAD` at review start
+  is `cd9667ab`, a `progress.md`-only commit, which is unbound and therefore does
+  not move the content revision).
+- Reviewed bytes are committed at `ef0fe325` (clean worktree at review start:
+  `git status --porcelain` empty before this turn's two evidence appends), so the
+  builder's commit precondition held; the only writes this turn makes are to the
+  unbound `progress.md` and `planning-findings.md`, so none of the nine bound rows
+  moves and `verify` stays fresh.
+- Environment note (not a plan finding): the AC10 repo gate pack runs the ledger
+  suites under `bun test`'s parallel file execution, where two 5 s harness
+  timeouts in `scripts/ledger-provenance.test.mjs` were observed under load; run
+  in isolation every suite is green (14/0, 17/0, 25/0, 7/0 at this revision). The
+  executor should re-run a loaded pack serially before recording it red/dismissed;
+  no file this unit edits is read by `ledger-provenance`.
+
+Self-check (`verify --stage plan`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "plan-review-31-5",
+    "verdict": "plan-review-pass",
+    "snapshot": "255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — a PASS: `structural.fresh: true`, `current: true`; `digestMatches` is
+`true` because this receipt binds the snapshot the bytes re-derive.)
+
+CONVERGENCE-ANOMALY (POLICY §4, D-31-7) — entry to the plan stage's fifth review
+of the window `plan-review-31-1` opened. Reported on entry; grants no PASS and is
+not a stop:
+
+```text
+CONVERGENCE-ANOMALY — 31-planning-review-materiality plan
+- Finding ids: P31-12 + P31-13 (new, this cycle, both info) / P31-07…P31-11 (resolved at 31-plan-6), P31-01…P31-06 (resolved at 31-plan-4/31-plan-5), R31-01…R31-03, F01…F03 (resolved at 31-plan-2/31-plan-3)
+- Snapshots: b17009ea2719f3d81764d04c1c7831c1ada78b77af8c1d2b07f674e3c131d4be → 255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1 (artifactRevisionId 31-plan-5/ecde13dc → 31-plan-6/ef0fe325)
+- Missed: the SPEC `### Phases` P4 summary done-when and the TASKS P1 checklist granularity — both duplicate-summary drift, neither a phase gate or a requirement change
+- Owning stage: plan
+- Why the prior review failed: plan-review-31-4 returned FAIL on P31-07…P31-11; the 31-plan-6 batch repaired all five and aligned the SPEC `### Phases` P1 summary, leaving the P4 summary and the TASKS P1 checklist count unaligned
+- Route to owner: none required for the verdict — the two rows are immaterial (`info`); a future cosmetic batch may align them, and `execute-phase` may bind this receipt for `255d099b…`
+```
+
+---
+
+## Verdict
+
+```text
+PLAN-REVIEW-PASS — 31-planning-review-materiality
+- Snapshot: 255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1 · Artifact revision: ef0fe3251b58b1cb093cd4d683073a112595a4d9 · Checks: L1–L6 + 12/12 Pn
+- Obligations: 15 rows, none blank/deferred/unvalidated · Material findings open: 0
+- Read-only: no plan artifact modified
+- Authority: execution may bind this receipt for this exact snapshot
+```
+
+Hand-off: `/execute-phase 31-planning-review-materiality` — execution binds this
+receipt and snapshot `255d099b…`.
