@@ -218,12 +218,19 @@ test("hygieneFromState: a draft PR blocks and offers the one mechanical repair",
   assert.deepEqual(state.repairs, ["gh pr ready"], "audit-pr flips the draft flag rather than reporting it");
 });
 
+test("hygieneFromState: an unresolvable upstream blocks the branch-pushed gate (never a zero ahead-count)", () => {
+  const state = hygieneFromState({ treePorcelain: "", branchAhead: null, isDraft: false });
+  assert.equal(state.gates["branch-pushed"], "fail");
+  assert.ok(state.blockers.some((b) => /upstream/i.test(b)), state.blockers.join("; "));
+  assert.deepEqual(state.repairs, []);
+});
+
 // ---------------------------------------------------------------------------
 // CLI — `hygiene --apply` on a throwaway repo with a fake `gh`
 // ---------------------------------------------------------------------------
 
 /** A throwaway git repo whose tree is clean, so only the draft flag blocks. */
-const makeRepo = () => {
+const makeRepo = ({ withRemote = true } = {}) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-pr-gate-hygiene-"));
   const repo = path.join(dir, "repo");
   fs.mkdirSync(repo);
@@ -234,8 +241,26 @@ const makeRepo = () => {
   fs.writeFileSync(path.join(repo, "README.md"), "fixture\n");
   git("add", "-A");
   git("commit", "-q", "-m", "chore: seed");
+  if (withRemote) {
+    // A configured upstream is what makes `@{upstream}..HEAD` resolvable; the
+    // pushed branch is the truthful `branch-pushed: pass` the other fixtures assert.
+    const remote = path.join(dir, "remote.git");
+    spawnSync("git", ["init", "-q", "--bare", remote], { encoding: "utf8" });
+    git("remote", "add", "origin", remote);
+    git("push", "-q", "-u", "origin", "main");
+  }
   return { dir, repo };
 };
+
+test("CLI hygiene: a branch with no configured upstream fails branch-pushed closed", () => {
+  const { repo } = makeRepo({ withRemote: false });
+  const result = spawnSync(process.execPath, [script, "hygiene"], { cwd: repo, encoding: "utf8" });
+  assert.equal(result.status, 2, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.gates["branch-pushed"], "fail");
+  assert.ok(report.blockers.some((b) => /upstream/i.test(b)), report.blockers.join("; "));
+  assert.doesNotMatch(report.blockers.join(" "), /0 commit\(s\) ahead/);
+});
 
 test("CLI hygiene --apply: the draft PR is repaired exactly once by `gh pr ready`, then re-read clean", () => {
   const { dir, repo } = makeRepo();

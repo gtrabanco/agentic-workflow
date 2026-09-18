@@ -139,17 +139,19 @@ export function renderMergeReadyBody({ sha, gates = [], hygiene = [], mergeabili
  * Terminal hygiene, derived from observed state rather than asserted.
  *
  * `treePorcelain` is `git status --porcelain` output; `branchAhead` is the count
- * of local commits not on the remote; `isDraft` is the forge's draft flag. Only
- * `pr-ready` has a mechanical repair (`gh pr ready`), so it is the only gate the
- * caller may clear by acting — the other two are the author's to fix, and a
- * dirty tree names its files so the report is actionable.
+ * of local commits not on the remote, or `null` when `@{upstream}` did not resolve
+ * (which fails the gate closed — a comparison that never ran is not "zero ahead");
+ * `isDraft` is the forge's draft flag. Only `pr-ready` has a mechanical repair
+ * (`gh pr ready`), so it is the only gate the caller may clear by acting — the
+ * other two are the author's to fix, and a dirty tree names its files so the
+ * report is actionable.
  */
 export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft = false } = {}) {
   const dirty = String(treePorcelain)
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
-  const ahead = Number(branchAhead) || 0;
+  const ahead = branchAhead === null ? null : Number(branchAhead) || 0;
   return {
     gates: {
       "tree-clean": dirty.length === 0 ? "pass" : "fail",
@@ -158,7 +160,11 @@ export function hygieneFromState({ treePorcelain = "", branchAhead = 0, isDraft 
     },
     blockers: [
       ...(dirty.length > 0 ? [`uncommitted changes: ${dirty.join(", ")}`] : []),
-      ...(ahead > 0 ? [`branch is ${ahead} commit(s) ahead of its remote`] : []),
+      ...(ahead === null
+        ? ["the branch has no resolvable upstream to compare against (nothing was pushed)"]
+        : ahead > 0
+          ? [`branch is ${ahead} commit(s) ahead of its remote`]
+          : []),
       ...(isDraft ? ["the PR is still a draft"] : []),
     ],
     repairs: isDraft ? ["gh pr ready"] : [],
@@ -196,7 +202,9 @@ function stateFromForge(pr, repo) {
 
 function aheadCount() {
   const result = run("git", ["rev-list", "--count", "@{upstream}..HEAD"]);
-  return result.status === 0 ? Number(result.stdout.trim()) || 0 : 0;
+  // A non-zero exit means `@{upstream}` did not resolve (no remote/upstream), so
+  // nothing was compared. That is the blocked state, never a zero ahead-count.
+  return result.status === 0 ? Number(result.stdout.trim()) || 0 : null;
 }
 
 const USAGE = `usage: audit-pr-gate <command> [options]
