@@ -1966,3 +1966,8 @@ out to do, what was decided and *why*, and where to resume.
 
 **Fold diffs (3258b470..6e485a4d):** 4 files, 70 insertions(+), 19 deletions(-). Branch: RE-REVIEW-REQUIRED (delta).
 
+## 2026-09-18T23:56:48Z — feat/31-planning-review-materiality — manual
+- **Commits:** 85 (`cf238040…87b9a8e9`)
+- **Files:** 62 files
+- **Summary:** plan-feature 31: redirect gate found roadmap row 31 already done (PR 243); STOPPED with audit-pr hand-off. The feature had been fully executed across earlier turns (all 5 phases) with a later carrier amendment re-scoping the work to code-carrier. No plan-feature-scaffold ran.
+- **Next:** /audit-pr 243 — merge gate for feature 31
