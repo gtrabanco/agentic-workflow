@@ -550,3 +550,29 @@ own pre-execution gate refuses these bytes, so the commissioned batch followed t
 verdict's named repair owner instead of the router's line — the same reported
 `unit-route` family gap the `31-plan-2` batch disclosed (its `replan` route is
 unreachable for plan-class rows).
+
+---
+
+## Re-review (`plan-review-31-5`, 2026-09-18)
+
+Cycle-5 independent reviewer turn over plan snapshot
+`255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1` (artifact
+revision `31-plan-6` @ `ef0fe325`), bound to Product parent `spec-review-31-11`
+@ `dd09372a…`. Fresh context; this conversation never authored or edited a plan
+artifact → `contextClean: true`. Verdict: **`plan-review-pass`** — L1–L6 and
+P1–P12 all pass; the five rows `plan-review-31-4` opened (P31-07…P31-11) are
+verified resolved at `31-plan-6`. Two **immaterial** (`info`) rows are recorded
+below for traceability; neither blocks the verdict (material open: 0) and neither
+changes a phase gate, a validator, or a required outcome.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| P31-12 | plan | info | plan | 255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1 | The `### Phases` **P4** summary done-when in the SPEC omits `bun test scripts/normative-drift.test.mjs`, while `PLAN.md`/`TASKS.md` P4 done-whens carry it, the same SPEC's `### Phases` P1 summary (`:1106-1108`) says the `docs` P4 closes the declared `normative-drift` window, and the `31-plan-4` amendment (`:1542`) states "P4's done-when now closes it by running `bun test scripts/normative-drift.test.mjs`". Non-blocking: the SPEC designates `PLAN.md` the canonical phase list ("the canonical phase list the linter reads is `PLAN.md`"), `PLAN.md` P4 and `TASKS.md` P4 both carry the gate, and AC10's PR-head pack runs `normative-drift` regardless — so no phase's actual gate is lost. | `SPEC.md:1128-1131` (the P4 summary done-when) vs `PLAN.md:154`, `TASKS.md:55`, `SPEC.md:1106-1108`, `SPEC.md:1542`; `bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md` → PASS (canonical list unaffected) | open | — (immaterial duplicate-summary drift; `PLAN.md` is authoritative and correct) | — |
+| P31-13 | plan | info | plan | 255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1 | `TASKS.md` P1 carries nine `- [ ]` checklist items while `PLAN.md` P1 carries the canonical eight that `known-issues.md` §13 and `E-D31-25` record as the phase-contract box-3 ceiling; the ninth item is a finer-grained split of the `reproducerChars` limit (folded into task 1 of `PLAN.md` P1), not a ninth requirement. Non-blocking: `phase-lint` reads `PLAN.md`, which is at 8/8, so the phase shape is unaffected. | `PLAN.md` P1 (8 `- [ ]`), `TASKS.md` P1 (9 `- [ ]`); `known-issues.md` §13; `decisions.md` `E-D31-25`; observed `bun scripts/phase-lint.mjs …` → `P1:config/infra:8:…` | open | — (immaterial checklist-granularity drift; the canonical count is 8) | — |
+
+Environment note (not a finding): `bun test`'s parallel file execution makes two
+5 s harness timeouts in `scripts/ledger-provenance.test.mjs` observable under load
+(this turn saw 9 failures across the AC10 pack under load, 0 in isolation); no
+file this unit edits is read by that suite, and the receipt's notes carry the
+re-run instruction. Recorded so a later executor does not read a loaded pack as a
+real regression.
