@@ -151,17 +151,25 @@ const USAGE = `usage: session-close <command> [options]
           Exit 0 clean · 2 leftovers (named) · 1 refused.
 `;
 
+const VALUE_FLAGS = new Set(["--summary", "--decisions", "--next", "--kind", "--base", "--log"]);
+
+/** Closed flag set: an unknown or misspelled flag is a usage error, never a
+ * silent default, and `--flag=value` is accepted (issue #182 F5). */
 function parseArgs(argv) {
   const opts = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
-    if (!token.startsWith("--")) {
+    if (!token.startsWith("-") || token === "-") {
       opts._.push(token);
       continue;
     }
-    const value = argv[++i];
-    if (value === undefined) throw new Error(`${token} needs a value`);
-    opts[token.slice(2)] = value;
+    const eq = token.indexOf("=");
+    const rawName = eq === -1 ? token : token.slice(0, eq);
+    const inline = eq === -1 ? undefined : token.slice(eq + 1);
+    if (!VALUE_FLAGS.has(rawName)) throw new Error(`unknown flag: ${rawName}`);
+    const value = inline ?? argv[++i];
+    if (value === undefined) throw new Error(`${rawName} needs a value`);
+    opts[rawName.slice(2)] = value;
   }
   return opts;
 }

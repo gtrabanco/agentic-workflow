@@ -208,4 +208,18 @@ test("end to end: an unknown command is a usage error", () => {
   assert.match(result.stderr, /usage/i);
 });
 
+test("end to end: an unknown or misspelled flag is refused, never silently defaulted (F5)", () => {
+  const { dir } = makeRepo();
+  const result = run(dir, ["render", "--summry", "hi"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /unknown flag: --summry/);
+});
+
+test("end to end: --flag=value is accepted (F5)", () => {
+  const { dir } = makeRepo();
+  const result = run(dir, ["render", "--summary=did a thing"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /did a thing/);
+});
+
 console.log("PASS session-close: facts computed, entry committed alone, leftovers named not swept");
