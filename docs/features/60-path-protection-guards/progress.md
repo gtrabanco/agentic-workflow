@@ -833,3 +833,15 @@ Preflight: NRS consumed · invariant classification: n/a (no project invariants 
 The Normalized Repository State is `frozen` and records no project
 architectural-invariants document (NRS F010; D-60-11, PE-021), so no invariant
 can be violated, introduced, or changed by this repair.
+
+## P1 — 2026-09-18
+- Done: crate policy module `packages/agentic-workflow/src/path-policy.mjs` (shipped defaults, policy/declaration/record parsers, pure evaluator, closed `PATH_GUARD_REASONS`/`DEGRADATION_CODES`), the read-only gate CLI `packages/agentic-workflow/bin/path-guard.mjs`, the engine suite, and the repo-root discipline suite; 7/7 P1 tasks ticked.
+- Remains: none in P1.
+- Gotchas: escape records are scoped to the checkpoint phase (E-60-19); the `undeclared-test` branch now has P1 coverage (engine test `a declared create passes pre-freeze; an undeclared create is undeclared-test`), which the PLAN60-F12 advisory fold path allows to ride this receipt. The preflight checkpoint step is wired in P3, so no gate ran over P1's own range yet; P5's close-out gate covers the final range.
+- Files: packages/agentic-workflow/src/path-policy.mjs, packages/agentic-workflow/bin/path-guard.mjs, packages/agentic-workflow/test/path-guard.engine.test.mjs, scripts/path-protection.test.mjs, docs/features/60-path-protection-guards/{TASKS.md,testing.md,known-issues.md,decisions.md,progress.md}
+- Base ref: 91cb3c31084bb6e98b2d9ce1bc51a069e9c99149
+- Next: P2 — Template policy ship
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `bun test packages/agentic-workflow/test/ && node --test scripts/path-protection.test.mjs` (exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Next: P2 · Attempts: 1

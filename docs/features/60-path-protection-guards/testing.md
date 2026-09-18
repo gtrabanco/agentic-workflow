@@ -49,4 +49,16 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 
 ## Execution evidence
 
-`<recorded phase by phase at execution — see the unit progress log>`
+- **P1 (2026-09-18)** — `bun test packages/agentic-workflow/test/` → 74 pass / 0
+  fail (56 pre-existing + 18 new engine cases); `node --test
+  packages/agentic-workflow/test/*.test.mjs` → the same 74 pass;
+  `node --test scripts/path-protection.test.mjs` → 11 pass / 0 fail. The
+  engine suite pins the full freeze × class × operation matrix, the
+  creation-vs-modification split, the justification/approval/unmatched cases,
+  the fallback + degradation cases, and `path-guard:empty-diff`; the discipline
+  suite pins the CLI exit codes and fixed block, the closed-reason closure, the
+  no-auto-approval negative, the policy-config-always-protected case, and the
+  `two-runs` / `committed-range` / `freeze-boundary` / `missing-approval` /
+  `unmatched-record` scenarios. The `undeclared-test` branch (PLAN60-F12
+  advisory) gained P1 coverage: `a declared create passes pre-freeze; an
+  undeclared create is undeclared-test`.

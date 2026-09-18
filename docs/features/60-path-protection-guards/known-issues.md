@@ -16,12 +16,15 @@
   non-pi hosts is deliberately the checkpoint gate (Product half out-of-scope 3,
   E-60-6). Revisit only if a hook payload gains a normalized write-intent field.
 
-- **B-03 — policy surface is a document, not a schema package export:** the
-  reason vocabulary is declared through the `block:path-protection@1` grammar
-  rather than a `schema-export:` const, because the crate is the producer and
-  the schema package owns envelope/verification contracts only. No runtime
-  cross-check exists between the crate's `SHIPPED_PATH_POLICY` and the schema
-  package; the parity tests pin the template seed and the pi mirror instead.
+- **B-03 — the reason vocabulary is a crate-module export, not a schema-package
+  one:** `PATH_GUARD_REASONS` is published by a `schema-export:` normative row
+  reading `packages/agentic-workflow/src/path-policy.mjs`, because the crate is
+  the producer and the schema package owns envelope/verification contracts only
+  (E-60-11). The closure is machine-checked by the crate module plus
+  `scripts/path-protection.test.mjs` (O12); the `block:path-protection@1`
+  grammar declares the block against the same vocabulary. No runtime cross-check
+  exists between the crate's `SHIPPED_PATH_POLICY` and the schema package; the
+  parity pins cover the template seed and the pi mirror instead (B-01).
 
 - **B-04 — the gate does not police test content:** whether a test is good stays
   with `review-code` / `review-verify`; this unit guards the authorization to
