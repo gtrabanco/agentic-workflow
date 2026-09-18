@@ -9,7 +9,7 @@ Status: frozen
 | AC3 | The closing-block contract states each `·` sub-bullet is exactly one physical line in both skill files, and the fixed `→ Next:` block carries no wrapped sub-bullet. | `grep -c "exactly one physical line" skills/fold-findings/SKILL.md skills/fold-findings/references/FOLD_PROCESS.md` → 1 per file; `node --test scripts/normative-drift.test.mjs` → exit 0 (block-shape assertion) |
 | AC4 | A `#244` pin test in `scripts/normative-drift.test.mjs` guards the freeze-batch hand-off — a hard-wrapped sub-bullet, a host command as the consumer, or a removed planner command fails CI — and it was observed red against the unfixed bytes before the skill edits. | `node --test scripts/normative-drift.test.mjs` → exit 0; `read-verified`: the red run recorded in the unit `progress.md` (P1 task 2) |
 | AC5 | The project verification gate is green and the bundled pi mirror is byte-identical to `skills/`. | `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/*.test.mjs` → exit 0; `cd packages/pi-agentic-workflow && bun run test` → exit 0 |
-| AC6 | `fold-findings` is bumped to 1.5.1 with a `CHANGELOG.md` skill-table row, and the pi package is bumped to 0.11.2 with a re-bundle row, in the same PR. | `grep -c "version: 1.5.1" skills/fold-findings/SKILL.md` → 1; `grep -c "^| 1.5.1 |" CHANGELOG.md` → 1; `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1 |
+| AC6 | `fold-findings` is bumped to 1.5.1 with a `CHANGELOG.md` skill-table row, and the pi package is bumped to 0.11.2 with a re-bundle row, in the same PR. | `grep -c "version: 1.5.1" skills/fold-findings/SKILL.md` → 1; `bun scripts/check-changelog-row.mjs fold-findings 1.5.1` → prints 1, exit 0; `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1 |
 
 ## Quality floor
 
