@@ -43,6 +43,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { deriveReviewLoopCycles, parseReceipts } from "./pre-execution-contract.mjs";
 
 const repoRoot = process.env.WORKFLOW_STATUS_PRE_EXECUTION_REPO
   ? path.resolve(process.env.WORKFLOW_STATUS_PRE_EXECUTION_REPO)
@@ -443,4 +444,38 @@ test("PRE_EXECUTION cites step 8's currency and reports a missing mark as a gate
   // The step-6a sensing this file owns is unchanged: labels and legacy route.
   assert.match(doc, /\| `current` \| stage PASS verdict/);
   assert.match(doc, /### Legacy units/);
+});
+
+// ===========================================================================
+// Feature 31 — the review-loop cap count the decider's refusal consumes
+// ===========================================================================
+
+const capReceipt = (stage, verdict, id) => [
+  `## Pre-execution review receipt v1 — ${stage}`,
+  `- Review: ${id} · Snapshot: ${"b".repeat(64)} · Verdict: ${verdict}`,
+  "",
+].join("\n");
+
+test("31: two consecutive unconverged receipts emit the count that stops a third invocation", () => {
+  const progress = [
+    capReceipt("spec", "spec-review-fail", "s1"),
+    capReceipt("spec", "spec-review-fail", "s2"),
+    capReceipt("plan", "plan-review-fail", "p1"),
+    capReceipt("plan", "plan-review-fail", "p2"),
+    capReceipt("plan", "plan-review-fail", "p3"),
+  ].join("\n");
+  assert.deepEqual(deriveReviewLoopCycles(parseReceipts(progress)), { spec: 2, plan: 3 });
+});
+
+test("31: a PASS resets the stage count to zero", () => {
+  const progress = [
+    capReceipt("plan", "plan-review-fail", "p1"),
+    capReceipt("plan", "plan-review-fail", "p2"),
+    capReceipt("plan", "plan-review-pass", "p3"),
+  ].join("\n");
+  assert.deepEqual(deriveReviewLoopCycles(parseReceipts(progress)), { spec: 0, plan: 0 });
+});
+
+test("31: no receipt for a stage reads zero", () => {
+  assert.deepEqual(deriveReviewLoopCycles(parseReceipts("# Progress\n")), { spec: 0, plan: 0 });
 });

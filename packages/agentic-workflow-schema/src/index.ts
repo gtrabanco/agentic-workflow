@@ -723,6 +723,7 @@ export const WORKFLOW_DECISION_STOP_CODES = Object.freeze([
   "stop-contradiction",
   "stop-policy-denied",
   "stop-forbidden-transition",
+  "stop-review-loop-cap",
 ] as const);
 export type WorkflowDecisionStopReason = (typeof WORKFLOW_DECISION_STOP_CODES)[number];
 
@@ -755,6 +756,13 @@ export interface WorkflowDecisionInput {
   readonly lastOutcomeSourceRevision: string | null;
   /** Closed caller policy governing what transitions are permitted. */
   readonly policy: WorkflowDecisionPolicy;
+  /**
+   * Consecutive unconverged review→repair→re-review cycles per pre-execution
+   * stage, derived by the consumer from the unit's persisted stage receipts (the
+   * count of consecutive FAIL-verdict receipts since that stage's last PASS
+   * receipt; a stage with no receipt reads 0). Absent reads as zero.
+   */
+  readonly reviewLoopCycles?: { readonly spec?: number; readonly plan?: number };
 }
 
 /** Intent values that may be directly invoked (excludes non-invocation intents). */
@@ -1150,6 +1158,23 @@ export function decideWorkflowAction(
   const proposal = input.lastOutcome.next.intent;
   const targets = input.lastOutcome.next.targets || [];
   const lastSkill = input.lastOutcome.skill;
+
+  // Derived review-loop cap (feature 31): a third consecutive unconverged review
+  // invocation stops and asks the human. The count is consumer-derived from the
+  // persisted receipts (never written here); a PASS reset leaves it below 2, so
+  // the next cycle is allowed. Checked before the transition-table match.
+  if ((proposal === "review-spec" || proposal === "review-plan") && input.reviewLoopCycles) {
+    const stage = proposal === "review-spec" ? "spec" : "plan";
+    const cycles = input.reviewLoopCycles[stage];
+    if (typeof cycles === "number" && cycles >= 2) {
+      return {
+        kind: "stop", intent: "ask-human", targets,
+        reasonCode: "stop-review-loop-cap",
+        evidenceRefs: [],
+        detail: `${proposal} refused: ${cycles} consecutive unconverged ${stage} cycle(s) (cap 2) · route to design-feature`,
+      };
+    }
+  }
 
   const entry = WORKFLOW_TRANSITION_TABLE.find((r) => r.key === lastSkill);
   if (entry === undefined) {

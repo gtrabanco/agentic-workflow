@@ -143,3 +143,31 @@ export function parseReceipts(text) {
     finishedAt: timelineField(chunk, 1),
   }));
 }
+
+/**
+ * The consecutive-unconverged review→repair→re-review count per stage, derived
+ * from the parsed receipts (E-D31-10/D-31-7): the count is the FAIL-verdict
+ * receipts for a stage since that stage's last PASS-verdict receipt; a PASS
+ * resets it and a stage with no receipt reads `0`. One shared pure helper, so
+ * the sensor's projection and the vector suites cannot drift. Non-FAIL,
+ * non-PASS verdicts (e.g. `needs-design`) neither increment nor reset.
+ */
+export function deriveReviewLoopCycles(receipts) {
+  const rows = Array.isArray(receipts) ? receipts : [];
+  const result = { spec: 0, plan: 0 };
+  for (const stage of ["spec", "plan"]) {
+    const pass = stage === "spec" ? "spec-review-pass" : "plan-review-pass";
+    const fail = stage === "spec" ? "spec-review-fail" : "plan-review-fail";
+    const stageRows = rows.filter((row) => row && row.stage === stage);
+    let lastPass = -1;
+    for (let i = 0; i < stageRows.length; i += 1) {
+      if (stageRows[i].verdict === pass) lastPass = i;
+    }
+    let count = 0;
+    for (let i = lastPass + 1; i < stageRows.length; i += 1) {
+      if (stageRows[i].verdict === fail) count += 1;
+    }
+    result[stage] = count;
+  }
+  return result;
+}

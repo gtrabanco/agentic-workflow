@@ -28,6 +28,8 @@ import { loadSchemaRuntime } from "./schema-runtime.mjs";
 // the parser, so a change to the bound set silently checked the wrong paths (F24)
 // and the two parsers could drift (F25).
 import { STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts } from "./pre-execution-contract.mjs";
+// Feature 31 — the derived review-loop count, one shared pure helper with the CLI.
+import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
 // The router owns the ledger's row semantics — the open/closed `folded` vocabulary,
 // which id shapes are marks rather than findings, the class→route table, and the
 // echoed-cell bound. The sensor imports them instead of re-deriving them: two
@@ -1311,10 +1313,19 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     return mergeResolver(unit) ? "merged" : "none";
   };
 
+  // Feature 31 — the same derived count the decider consumes, recomputed every
+  // run from the current unit's persisted receipts (no counter is written here).
+  // A:12 — the sensor projects the number and stays consumer-side.
+  const currentUnitDir = currentUnit ? unitDirFor(currentUnit) : null;
+  const reviewLoopCycles = currentUnitDir
+    ? deriveReviewLoopCycles(parseReceipts(readProject(path.join(currentUnitDir, "progress.md"))))
+    : { spec: 0, plan: 0 };
+
   const detail = {
     repository_state: nrs,
     design_candidates: designCandidates_,
     pre_execution: receiptRows,
+    review_loop_cycles: reviewLoopCycles,
     features: projections.features,
     fixes: projections.fixes,
     startable_now: startable.map((entry) => entry.id),
