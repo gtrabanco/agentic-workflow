@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 2.1.0
+version: 2.2.0
 argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -29,6 +29,7 @@ judgment. It must never reach for an expensive model.
 
 ```
 ✓ The entry was APPENDED to docs/LOGS.md (file edited, not just drafted) with accurate git facts
+✓ `bun scripts/session-close.mjs close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
 ✓ No past entry was edited
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
@@ -93,27 +94,32 @@ the HEAD sha and start time at session open.
      review must chase (fix #157's F14). Write the actual state: "PR #N open,
      awaiting the human merge".
 
-4. **Append the entry** to `docs/LOGS.md`, newest at the bottom (append-only,
-   chronological). Use this format so the auto-hook entries and these stay
-   compatible:
+4. **Render the entry** — the mechanical facts (timestamp, branch, commit count
+   and range, files touched) are computed for you:
 
-   ```markdown
-   ## <ISO-8601 timestamp> — <branch> — manual
-   - **Commits:** <n> (`<short-sha>…<short-sha>`)
-   - **Files:** <comma-separated paths, or a count if many>
-   - **Summary:** <what this session did>
-   - **Decisions:** <key choices + why; omit the line if none>
-   - **Next:** <the concrete next step>
+   ```
+   bun scripts/session-close.mjs render --summary "<what this session did>" \
+     --decisions "<key choices + why>" --next "<the concrete next step>"
    ```
 
-   If the user passed a note as an argument, prepend it to the Summary.
+   It writes nothing: append its output to the **end** of `docs/LOGS.md`
+   (append-only, chronological) with your editing tool. Omit `--decisions` /
+   `--next` when there is nothing real to record — the script drops the line
+   rather than emitting an empty one. A user-supplied note is prepended to the
+   Summary.
 
-5. **Commit policy.** `docs/LOGS.md` is documentation — keep it coherent, but do
-   **not** open a PR just for a log entry. If you're mid-feature on a branch,
-   the entry rides along with the next commit. If the working tree is otherwise
-   clean and the user wants it persisted, ask before committing a standalone
-   `docs(log): session <date>` commit. Never push without the project's push
-   convention.
+5. **Close the session** — commit the entry and prove the tree is clean:
+
+   ```
+   bun scripts/session-close.mjs close
+   ```
+
+   It refuses unless `docs/LOGS.md` was **appended to** (a rewritten or truncated
+   log is not a session entry), commits that one file as
+   `docs(log): <the appended summary>`, and reports every path still uncommitted:
+   exit `0` clean, `2` the named leftovers are still dirty, `1` refused. Do not
+   open a PR just for a log entry, and never `git add -A` here — a concurrent
+   conversation's work must not be swept into a log commit.
 
 ## Guardrails
 

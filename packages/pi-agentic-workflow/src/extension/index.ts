@@ -11,6 +11,7 @@ import { evaluateToolCall } from "../config/path-policy.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
+import { readGitStatusBounded } from "./receipt-guard.js";
 import type { InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, stateFilePath } from "../routing/state.js";
@@ -156,7 +157,7 @@ export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
 
-  const { router } = createExtension<PiModel>({
+  const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi),
     // Resolved per call: the router must never hold a session-bound object
     // between turns, because Pi can hand a new session to the same extension.
@@ -187,13 +188,19 @@ export default function extension(pi: ExtensionAPI): void {
 
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
-  pi.on("agent_settled", (_event, ctx) => void router.settle(toInvocationContext(ctx)));
-
-  // Tier 2 path prevention (feature 60): block a write/edit to an existing
-  // protected path with no matching justification record; reads and new-file
-  // creates pass. Reads the same effective policy the Tier 1 gate reads.
-  let reportedDegradations = false;
+  // The inline-receipt path is impossible: a `gh pr comment` carrying a
+  // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
+  // names the script that proves the receipt landed (issue #182).
   pi.on("tool_call", (event, ctx) => {
+    // Receipt guard for mcp/tool calls carrying REVIEW-PASS markers.
+    if (event.toolName === "mcp") {
+      const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+      const r = guards.receiptGuard({ toolName: event.toolName, command });
+      if (r) return r;
+    }
+    // Tier 2 path prevention (feature 60): block a write/edit to an existing
+    // protected path with no matching justification record; reads and new-file
+    // creates pass. Reads the same effective policy the Tier 1 gate reads.
     if (!isToolCallEventType("write", event) && !isToolCallEventType("edit", event)) return undefined;
     const targetPath = event.input.path;
     if (typeof targetPath !== "string" || targetPath === "") return undefined;
@@ -214,6 +221,17 @@ export default function extension(pi: ExtensionAPI): void {
       recordsText: collectRecordTexts(ctx.cwd),
     });
     return decision.block ? { block: true, reason: decision.reason } : undefined;
+  });
+  pi.on("agent_settled", (_event, ctx) => {
+    void router.settle(toInvocationContext(ctx));
+    // Terminal hygiene is said out loud once the turn is over; a clean tree
+    // stays silent. The probe is time-bounded (2000 ms) and swallows timeout,
+    // spawn error and non-zero status, so an unresponsive git can never park
+    // the settled turn — best-effort by construction (issue #182 F4).
+    const warning = guards.dirtyWorktreeWarning(readGitStatusBounded(ctx.cwd));
+    if (warning) ctx.ui.notify(warning, "warning");
+  });
+
   });
 }
 
