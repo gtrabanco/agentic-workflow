@@ -218,7 +218,7 @@ never the bare working tree (E-60-12) — a gate without `--base` always returns
    ```text
    GATE REJECTION — path-protection
    Reason: <the gate's `PATH-GUARD fail — <reason>` line>
-   Return route: record a justification/approval row in the unit's decisions.md, then re-run the checkpoint
+   Return route: /execute-phase <NN> <P<n>> — record a justification/approval row, then re-run the checkpoint
    ```
 
    There is **no `--force` bypass** (E-60-8): the escape hatch is the recorded

@@ -879,5 +879,13 @@ can be violated, introduced, or changed by this repair.
 - Next: P5 — Hardening & PR
 
 ## Unit-loop receipt — P4
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (228 pass, exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Commit: d60c8ddc · Gate: `cd packages/pi-agentic-workflow && bun run test` (228 pass, exit 0) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
 - Next: P5 · Attempts: 1
+
+## P5 — 2026-09-18
+- Done: full ladder green (scripts 510, crate 74, pi 228); same-PR minor bumps — `execute-phase` 4.6.0, `plan-feature-scaffold` 2.4.0, `init-workspace` 2.9.0, `orchestration-envelope` 2.2.0, `pre-execution-review` 2.3.0, `verification-contract` 1.3.0 — plus `@gtrabanco/pi-agentic-workflow` 0.11.0 with its Companion npm packages row; Pi mirror re-bundled with parity green; acceptance blob re-verified; phase fingerprints unchanged; 6/10 P5 tasks ticked.
+- Remains: P5 tasks 7–10 (close-out path gate, PR, roadmap flip, link commit) are blocked on the recorded owner approval for the post-freeze `scripts/pre-execution-quality.test.mjs` update (E-60-21).
+- Gotchas: the close-out gate over P5's range reports `protected-modification` for `scripts/pre-execution-quality.test.mjs`; the P5 justification row is in the escape block and the owner `approval` row is the missing half (no auto-approval, E-60-3). After the owner records the approval, re-run `bun packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/60-path-protection-guards --phase P5 --base d60c8ddc33adc1ff33f4f17aab7cf0a542d16a34`, then open the PR.
+- Files: skills/{execute-phase,plan-feature-scaffold,init-workspace,orchestration-envelope,pre-execution-review,verification-contract}/SKILL.md, skills/execute-phase/references/PREFLIGHT.md, CHANGELOG.md, scripts/pre-execution-quality.test.mjs, packages/pi-agentic-workflow/{package.json,skills/**}, docs/features/60-path-protection-guards/{TASKS.md,testing.md,decisions.md,progress.md}
+- Base ref: d60c8ddc33adc1ff33f4f17aab7cf0a542d16a34
+- Next: P5 (close-out blocked on owner approval)
