@@ -67,12 +67,12 @@ Layer: docs · Done-when: `bun scripts/check-skill-context.mjs && bun test scrip
 
 Layer: hardening · Done-when: `bun test scripts/review-loop-discipline.test.mjs` → exit 0 at the terminal HEAD with the whole ladder green, parity green and the PR URL printed.
 
-- [ ] Run the full acceptance ladder at the terminal HEAD and record every exit line — the root suites (`bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs scripts/workflow-status-pre-execution.test.mjs`), the schema package gate (`bun run gate:pre-execution` from the package root) and the budget gate (`bun scripts/check-skill-context.mjs`) → exit 0 across the ladder.
-- [ ] Run the plan-layer linter over the unit's plan (`bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md`) → exit 0 with a PASS verdict and all five fingerprints, pasted verbatim into the phase entry.
-- [ ] Re-bundle the Pi mirror after the last skill edit (`bun run bundle:skills` from the Pi package root) and run the package suite (`bun run test` from the same root) → exit 0 with the mirror byte-identical to the canonical skill tree.
-- [ ] Record the three read-verified walks in the phase entry — the additive-release vocabulary diff, the PR-diff scope against the three declared groups, and the no-weakening discipline-suite diff.
-- [ ] Verify the frozen acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md`) still equals the receipt blob and append the acceptance receipt to the unit progress ledger.
-- [ ] Confirm every phase fingerprint recorded in this plan still matches the committed phase shapes and that each read-verified obligation row carries its evidence entry (manual).
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] Run the full acceptance ladder at the terminal HEAD and record every exit line — the root suites (`bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs scripts/workflow-status-pre-execution.test.mjs`), the schema package gate (`bun run gate:pre-execution` from the package root) and the budget gate (`bun scripts/check-skill-context.mjs`) → exit 0 across the ladder.
+- [x] Run the plan-layer linter over the unit's plan (`bun scripts/phase-lint.mjs docs/features/31-planning-review-materiality/PLAN.md`) → exit 0 with a PASS verdict and all five fingerprints, pasted verbatim into the phase entry.
+- [x] Re-bundle the Pi mirror after the last skill edit (`bun run bundle:skills` from the Pi package root) and run the package suite (`bun run test` from the same root) → exit 0 with the mirror byte-identical to the canonical skill tree.
+- [x] Record the three read-verified walks in the phase entry — the additive-release vocabulary diff, the PR-diff scope against the three declared groups, and the no-weakening discipline-suite diff.
+- [x] Verify the frozen acceptance manifest (`git hash-object docs/features/31-planning-review-materiality/ACCEPTANCE.md`) still equals the receipt blob and append the acceptance receipt to the unit progress ledger.
+- [x] Confirm every phase fingerprint recorded in this plan still matches the committed phase shapes and that each read-verified obligation row carries its evidence entry (manual).
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
