@@ -101,4 +101,4 @@ P5: PASS (8/8) · fingerprint P5:hardening:7:hardening-pr
 ```
 
 ## Acceptance receipt v1
-- Manifest: docs/fix/244-freeze-batch-planner-consumer/ACCEPTANCE.md · Blob: 259af38d6a0b4ef5103d9f466a858b18353d4858 · Status: frozen · Verified: 2026-09-19
+- Manifest: docs/fix/244-freeze-batch-planner-consumer/ACCEPTANCE.md · Blob: 687f7e55a89c2c49133144a9af0ac4b77cd56b19 · Status: frozen · Verified: 2026-09-18 (replaced under the dated `## Amendments` entry — AC6 validator scoped to the `#### fold-findings` table with `scripts/check-changelog-row.mjs`; review F3, user-approved)

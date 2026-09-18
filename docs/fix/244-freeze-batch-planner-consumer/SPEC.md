@@ -129,7 +129,7 @@ each.
 | O2 | Issue #244 expected behaviour (2) | The `<unit>` argument format is stated — bare folder number or the full slug — where the router is named in `skills/fold-findings/SKILL.md` and `references/FOLD_PROCESS.md` | P2 | P2 task 4 | executor | `grep -c "bare folder number or the full slug" skills/fold-findings/SKILL.md skills/fold-findings/references/FOLD_PROCESS.md` → 1 per file | grep counts | planned |
 | O3 | Issue #244 expected behaviour (3) | The closing-block contract states each `·` sub-bullet is exactly one physical line — never hard-wrapped across several, never joined into one prose line — in SKILL.md and FOLD_PROCESS.md | P2 | P2 tasks 2, 4 | executor | pin test (block-shape assertion) → pass; `grep -c "exactly one physical line" skills/fold-findings/SKILL.md skills/fold-findings/references/FOLD_PROCESS.md` → 1 per file | pin output + grep counts | planned |
 | O4 | Issue #244 acceptance criterion (4) | A pin/test guards the freeze-batch hand-off so the regression fails CI: sub-bullet hard-wrapped in the block, a host command as the consumer, or the planner command removed from block or cell | P1 | P1 tasks 1–2 | executor | `node --test scripts/normative-drift.test.mjs` → exit 1 at pre-fix HEAD (red recorded in P1), exit 0 after P2 | red/green run outputs | planned |
-| O5 | Issue #244 acceptance criterion (6) | `fold-findings` version bumped + a `CHANGELOG.md` row in the same PR (1.5.1 patch, fix-#63 precedent), with the companion-package re-bundle row | P3 | P3 tasks 1–3 | executor | `grep -c "^| 1.5.1 |" CHANGELOG.md` → 1; `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1; frontmatter `version: 1.5.1` | grep counts | planned |
+| O5 | Issue #244 acceptance criterion (6) | `fold-findings` version bumped + a `CHANGELOG.md` row in the same PR (1.5.1 patch, fix-#63 precedent), with the companion-package re-bundle row | P3 | P3 tasks 1–3 | executor | `bun scripts/check-changelog-row.mjs fold-findings 1.5.1` → prints 1, exit 0; `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1; frontmatter `version: 1.5.1` | scoped-check output + grep counts | planned |
 | O6 | Issue #244 acceptance criterion (5) | Bundled `packages/pi-agentic-workflow/skills/` mirror refreshed and byte-identical; project gate green | P4 | P4 tasks 1–3 | executor | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (includes `test/skill-parity.test.mjs`); `bun scripts/check-skill-context.mjs` → exit 0 | suite outputs | planned |
 
 ## Acceptance
@@ -178,7 +178,7 @@ mirror parity check runs inside the suite).
 ### AC6 — Version bump and CHANGELOG rows in the same PR
 
 Validator: `grep -c "version: 1.5.1" skills/fold-findings/SKILL.md` → 1;
-`grep -c "^| 1.5.1 |" CHANGELOG.md` → 1;
+`bun scripts/check-changelog-row.mjs fold-findings 1.5.1` → prints 1, exit 0;
 `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1.
 
 ### Spec-lint (mechanical — presence checks only)
@@ -243,7 +243,7 @@ Layer: docs. Done-when: `node --test scripts/normative-drift.test.mjs`
 
 ### P3 — Release wiring
 
-Layer: docs. Done-when: `grep -c "^| 1.5.1 |" CHANGELOG.md` → 1 and
+Layer: docs. Done-when: `bun scripts/check-changelog-row.mjs fold-findings 1.5.1` → prints 1, exit 0 and
 `grep -c "^| 0.11.2 |" CHANGELOG.md` → 1.
 
 - [ ] `skills/fold-findings/SKILL.md`: bump the frontmatter `version:` to `1.5.1` (patch — wording/contract clarification, the fix-#63 bump precedent)
@@ -300,6 +300,21 @@ the test file, the versions, and the mirror (the mirror re-bundles on revert
 with the skill bytes). Data cleanup: none — no schema, no migration, no
 persisted state. Preserved: everything the fix did not touch (the router
 itself, the sensor, other skills' prose).
+
+## Amendments
+
+### 2026-09-18 — AC6 validator scoped to the fold-findings table (review F3, user-approved)
+
+The AC6 validator `grep -c "^| 1.5.1 |" CHANGELOG.md` → 1 was unscoped: it
+matched every skill table holding a `1.5.1` row (**6** rows on this head), so
+the criterion could never PASS as declared. The user approved the redefinition
+during the fix-244 cycle-1 review and required a portable `bun`/`node` solution
+(not `awk`). Replacement validator:
+`bun scripts/check-changelog-row.mjs fold-findings 1.5.1` → prints 1, exit 0 —
+a new portable Node ESM reader (`scripts/check-changelog-row.mjs` + its test)
+that scopes the count to the `#### \`fold-findings\`` table. The criterion text
+is unchanged; O5's validator cell and P3's done-when take the same scoped
+command. The replacement manifest is committed with a fresh acceptance receipt.
 
 ## Status
 
