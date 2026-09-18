@@ -374,8 +374,8 @@ tells the reader to post the merge-ready comment through the hand-assembled
 step 7 runs `bun scripts/audit-pr-gate.mjs comment`; AC7's greps count only the
 hygiene mention, so the box stayed prose after the P3 wiring (F1).
 
-- [ ] `skills/audit-pr/SKILL.md` names `bun scripts/audit-pr-gate.mjs comment` as the merge-ready box's step and removes the hand-assembled `comment --body-file` path so the box carries no prose comment instruction (F1; PF-4; O11)
-- [ ] Run `bump-skill` for `audit-pr` at patch 5.2.0 to 5.2.1 (wording only) so its frontmatter, the `CHANGELOG.md` row and the `README.md` skills-table cell move together (F1; PF-4; O11)
+- [x] `skills/audit-pr/SKILL.md` names `bun scripts/audit-pr-gate.mjs comment` as the merge-ready box's step and removes the hand-assembled `comment --body-file` path so the box carries no prose comment instruction (F1; PF-4; O11)
+- [x] Run `bump-skill` for `audit-pr` at patch 5.2.0 to 5.2.1 (wording only) so its frontmatter, the `CHANGELOG.md` row and the `README.md` skills-table cell move together (F1; PF-4; O11)
 
 Phase-lint: PASS (8/8) · fingerprint `P6:docs:2:audit-pr-merge-ready-box-names-comment-runtime`
 

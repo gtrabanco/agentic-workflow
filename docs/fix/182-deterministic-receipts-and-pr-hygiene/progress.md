@@ -271,3 +271,14 @@ Notes:
 ## Unit-loop receipt — P5
 - Commit: pending · Gate: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix` (exit 0) + P5 greps · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P6 · Attempts: 1
+
+## P6 — 2026-09-18
+- Done (commit predecessor `f5d266ea`): the `audit-pr` turn-contract box now names `bun scripts/audit-pr-gate.mjs comment` as the step that posts the MERGE-READY comment and proves the marker landed (the reference `03_AUDIT_PROCESS.md` step 7 carries the full `--pr … --head … --gates-json …` invocation); the hand-assembled `gh pr comment --body-file` path is gone from the box. Box kept within the 2800 main-estimate ceiling (2795 est / 206 lines). Bumped `audit-pr` frontmatter 5.2.0 → 5.2.1 (patch, wording only) and added its `CHANGELOG.md` row. `bump-skill` patch rule: the `README.md` skills-table cell carries no version and its description ("MERGE-READY posts a dated SHA-bound PR comment") stays accurate, so it is unchanged by design, not by omission. O11 `verified`.
+- Remains: P7–P10.
+- Gotchas: this edit drifts the bundled Pi mirror, so `test/skill-parity.test.mjs` is red until P9 re-bundles in the next phase — the planned coupling the SPEC names, deliberately not hidden. P6's own gate is `bun scripts/check-skill-context.mjs`; the first box draft overran the audit-pr 2800 main-estimate ceiling, so the box was compacted to 2795 est.
+- Files: skills/audit-pr/SKILL.md, CHANGELOG.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: P7
+
+## Unit-loop receipt — P6
+- Commit: pending · Gate: `bun scripts/check-skill-context.mjs` (exit 0) + P6 greps (`audit-pr-gate.mjs comment` ≥ 1, `gh pr comment` = 0) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: P7 · Attempts: 1
