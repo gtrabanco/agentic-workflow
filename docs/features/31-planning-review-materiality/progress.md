@@ -4130,3 +4130,144 @@ the plan set only on a current `SPEC-REVIEW-PASS` receipt.
       rotates the artifact revision)
   · recurring gap in this project's capability closure → /product-audit (a systemic pattern,
       not a one-off design fix)
+
+---
+
+# Spec re-review `spec-review-31-13` — fresh-context reviewer turn (2026-09-18)
+
+Cycle 2 of the window `spec-review-31-11`'s PASS opened (D-31-7): `spec-review-31-12`
+was cycle 1 (FAIL, N31-016 + N31-017), batch `31-spec-13` repaired it, and this turn
+re-judges the rotated bytes. Fresh context; this conversation never authored or
+edited the reviewed Product half.
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ 2e61d0b7
+- 3 specific product decisions a hostile reader could call invented rather than
+  recorded:
+    1. In scope 1's bounded optional `reproducer` field — authority is the owner
+       ruling D-31-6 (`decisions.md`) carried into the Engineering cut as
+       E-D31-9; the Product half's E1 CRUD row cites it. Not invented.
+    2. The user-gated third cycle ("third cycle never starts without explicit
+       user instruction") — mirrored from `review-change` and recorded D-31-2 +
+       D-31-7. Not invented.
+    3. The stage-scoped cap exit (spec `needs-design`; plan refusal) — recorded
+       D-31-8 and verified against `VERDICTS_BY_STAGE` (spec sanctions
+       `needs-design`, plan does not). Not invented.
+- Name the user outcome the SPEC promises that has no observable check: none
+  found — cost/loop termination/honesty map to AC1+AC4, AC5, and AC1+AC8+AC9.
+- Name one role the matrix leaves unspecified for a capability it does list:
+  none — 5 derived roles × 5 capabilities (C1–C5), every cell allowed/denied.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? The half would be wrong if the machine answered anything other than
+  `stale-source-revision` for committed moved bound bytes, or if the bundler were
+  not owned by the pi package, or if `VERDICTS_BY_STAGE.spec` did not sanction
+  `needs-design`. All three are as the half says: `pre-execution.ts:1154` precedes
+  `:1156` and `scripts/pre-execution-snapshot.mjs:400` precedes `:412`;
+  `packages/pi-agentic-workflow/package.json:46` owns `bundle:skills`;
+  `pre-execution-contract.ts:136` lists `needs-design` for spec only.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+## Product checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | In scope 1–8 each name an observable machine outcome with its AC anchor (1→AC1/2/3, 2→AC4, 3→AC5/7, 4→AC6, 5→AC7, 6→AC8/9, 7→AC10/11/14, 8→AC12; allowed-set groups→AC13) |
+| C2 | Actors and roles | pass | 5 derived roles × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied`; entry points named per capability |
+| C3 | Entity closure | pass | E1–E3 resolve CRUD + state transitions to surfaces/tests or explicit `n/a: <reason>`; zero blank rows |
+| C4 | Limits and failure states | pass | Limit = findings ≤ 64 (`PRE_EXECUTION_LIMITS.findings:64`, unchanged) + the two-cycle cap; failure states resolved — unconverged loop → stage-scoped human stop (spec `needs-design`, plan refusal), unrecorded rotation → `stale-source-revision`, mislabeled defect → `medium` minimum, wording-only misroute → recorded determination + rotation; size `M` |
+| C5 | Scope and non-goals | pass | 7 out-of-scope bullets, each naming an owner or a non-goal; nothing excluded by silence |
+| C6 | Integration closure | pass | 12 derived subsystems, one row each, none skipped; inventory recorded because `docs/CAPABILITIES.md` is the unseeded template |
+| C7 | Expectation sweep | pass | 19 rows (≥ 10 for M), each resolved in-scope/out-of-scope with a pointer; counted mechanically |
+| C8 | Acceptance objectivity | pass | AC1–AC14 objective, each labelled command or command+`read-verified`; every In-scope bullet maps to ≥ 1 AC; anchors re-verified on disk (`reproducer` @ `pre-execution-contract.ts:497-500`, `material = medium`+ fragments, `wording-only` greps, `review-loop-cap` suite, four skill `version:` hunks) |
+| C9 | Internal contradiction | pass | One freshness code per event now: In scope 2 (`:150`), E2 state transitions (`:314`), sweep row 11 (`:420`) and AC4 (`:479`) all name `stale-source-revision` for moved bound bytes; the only surviving `stale-artifact-content`/`stale-artifact-revision` mentions are the correction prose in `## Design status` (`:686-697`), which labels them as the wrong names |
+| C10 | Repository contradiction | pass | Machine claims match the repo: `stale-source-revision` precedes `stale-artifact-content` (`pre-execution.ts:1154` < `:1156`; `scripts/pre-execution-snapshot.mjs:400` < `:412`); material = `medium`+ (`MATERIAL_FINDING_SEVERITIES` `pre-execution.ts:989`, used `:1069`); bounded `reproducer` (`pre-execution-contract.ts:497-500`, `reproducerChars:1024`); `stop-review-loop-cap` refusal (`index.ts:726,1172`, cap 2); `VERDICTS_BY_STAGE` spec-only `needs-design` (`pre-execution-contract.ts:136`); bundler in the package (`packages/pi-agentic-workflow/package.json:46`); AC13's mechanical anchor lists only declared group paths |
+| C11 | Evidence integrity | pass | Every `decisions.md` evidence row is `current`/`proven` (117 rows), zero `unknown`/`drifted`/`stale`; N31-016 + N31-017 carry resolution evidence at `31-spec-13`; the per-revision `READINESS — … spec READY-FOR-REVIEW` block exists in `progress.md` |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` (empty table); no open product-class choice — both N31 rows resolved; the two remaining open rows are plan-stage `info` report-notes bound to a plan snapshot |
+| C13 | Engineering leakage | pass | The half cuts no phase, task or architecture; naming the machine carriers is the owner's D-31-6 carrier ruling, not a phase cut |
+| C14 | Obligation containment | pass | No current-unit obligation is exported to a future issue; the superseded plan set is a declared non-goal, not an export |
+
+Findings: 0 (material open: 0).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-13 · Snapshot: 443eede8fb23015941f458fa841424e601fb1ce7c7a107537d0f061c8abba73f · Verdict: spec-review-pass
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 2e61d0b787a17eb99bc50c278e9861fa8a080a2e · Artifact revision: 2e61d0b787a17eb99bc50c278e9861fa8a080a2e
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature (repair batch `31-spec-13`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T15:38:00Z/2026-09-18T15:46:16Z · Findings: 0 (material open: 0)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 48167 · digest 857b12e76825fe0e2e6ab28704e3105858f7ca7594af34a2c6cd1aadb555fbe2 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 14/14 pass; full re-run against the repaired bytes (no rows carried); falsification NO-CONFIRMED-GAPS
+```
+
+Artifact-revision notes:
+
+- The handoff names the authoring label `31-spec-13` (`SPEC.md` `## Design
+  status`; `## Amendments` `### 31-spec-13`). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `2e61d0b7…` — the label stays recorded here, the same
+  reconciliation every prior receipt made.
+- Cycle counting (D-31-7): after `spec-review-31-11`'s PASS (reset), cycle 1 was
+  `spec-review-31-12` (FAIL); this is cycle 2. It converged, so the
+  `CONVERGENCE-ANOMALY` block is not owed and a PASS resets the count — the
+  `stop-review-loop-cap` refusal never armed.
+- The reviewed bytes are committed at `2e61d0b7` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held; the only writes
+  this turn makes are to the unbound `progress.md`, which `STAGE_ARTIFACTS.spec`
+  does not bind, so the bound digest is unchanged by them.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-13",
+    "verdict": "spec-review-pass",
+    "snapshot": "443eede8fb23015941f458fa841424e601fb1ce7c7a107537d0f061c8abba73f",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "443eede8fb23015941f458fa841424e601fb1ce7c7a107537d0f061c8abba73f",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — a PASS: `structural.fresh: true`, `current: true`, `digestMatches:
+true`.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-PASS — 31-planning-review-materiality
+- Snapshot: 443eede8fb23015941f458fa841424e601fb1ce7c7a107537d0f061c8abba73f · Artifact revision: 2e61d0b787a17eb99bc50c278e9861fa8a080a2e · Checks: 14/14
+- Material findings open: 0 · Read-only: no reviewed artifact modified
+- Authority: planning may bind this receipt as its Product parent
+```
+
+No reviewed artifact was modified by this turn; the only writes are to the
+unbound `progress.md`. The two open rows in `planning-findings.md` are
+plan-stage `info` report-notes (P31-12, P31-13) bound to a plan snapshot, so they
+do not touch this PASS.
+
+→ Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
+  · design changed underneath → re-run /review-spec 31-planning-review-materiality first
+  · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
