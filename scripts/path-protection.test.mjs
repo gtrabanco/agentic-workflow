@@ -64,8 +64,8 @@ function fixture(name, { freezeAfter = "P4", rows = [], config = undefined } = {
   return dir;
 }
 
-function run(dir, args) {
-  const result = spawnSync(process.execPath, [CLI, "--unit", UNIT, ...args], { cwd: dir, encoding: "utf8" });
+function run(dir, args, { unit = UNIT } = {}) {
+  const result = spawnSync(process.execPath, [CLI, "--unit", unit, ...args], { cwd: dir, encoding: "utf8" });
   return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -216,6 +216,50 @@ test("path-guard:unmatched-record — a record matching no changed path fails th
   const result = run(dir, ["--phase", "P1"]);
   assert.equal(result.code, 1);
   assert.equal(reasonOf(result.stdout), "unmatched-record");
+});
+
+test("path-guard:quoted-paths — a committed protected path git would quote is still caught (F17)", () => {
+  const dir = fixture("quoted");
+  commit(dir, "tests/café-helper.mjs", "v1\n");
+  const base = git(dir, "rev-parse", "HEAD");
+  commit(dir, "tests/café-helper.mjs", "v2\n");
+  const result = run(dir, ["--phase", "P1", "--base", base]);
+  assert.equal(result.code, 1, result.stdout);
+  assert.equal(reasonOf(result.stdout), "protected-modification");
+  assert.match(result.stdout, /^offenders: tests\/café-helper\.mjs:modify:protected-modification$/m);
+});
+
+test("path-guard:worktree-delete — an unstaged deletion is classified delete, not modify (F18)", () => {
+  const policy = policyDoc();
+  policy.matrix["pre-freeze"].delete = "approval";
+  const dir = fixture("worktree-delete", { config: JSON.stringify(policy) });
+  commit(dir, "tests/a.mjs", "v1\n");
+  fs.rmSync(path.join(dir, "tests/a.mjs"));
+  fs.writeFileSync(path.join(dir, `${UNIT}/decisions.md`), recordsBlock([
+    "justification | tests/a.mjs | P1 | 2026-09-18 | execute-phase | deleting a protected test",
+  ]));
+  const result = run(dir, ["--phase", "P1"]);
+  assert.equal(result.code, 1, result.stdout);
+  assert.equal(reasonOf(result.stdout), "approval-required");
+  assert.match(result.stdout, /^offenders: tests\/a\.mjs:delete:approval-required$/m);
+});
+
+test("path-guard:unit-containment — a --unit outside the repository is refused (F22)", () => {
+  const dir = fixture("unit-containment");
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "path-guard-evil-"));
+  DIRS.add(outside);
+  fs.writeFileSync(path.join(outside, "PLAN.md"), declaration());
+  const result = run(dir, ["--phase", "P1"], { unit: path.relative(dir, outside) });
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /--unit must be a directory inside the repository/);
+  assert.doesNotMatch(result.stdout, /PATH-GUARD pass/);
+});
+
+test("path-guard:malformed-config-detail — the parse message is carried into the degradation (F24)", () => {
+  const dir = fixture("malformed-detail", { config: "{ not json" });
+  const result = run(dir, ["--phase", "P1"]);
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stdout, /^DEGRADED — malformed-config: shipped defaults in force — .+$/m);
 });
 
 /* ---------------------------------------------------------- safety invariants */
