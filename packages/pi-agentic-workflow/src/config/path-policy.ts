@@ -97,8 +97,58 @@ export function globToRegExp(glob: string): RegExp {
   return new RegExp(`^${out}$`);
 }
 
+/**
+ * Linear-time glob match with the same semantics as `globToRegExp` (`**` crosses
+ * `/`; `*` and `?` do not). Memoised so a star-chain glob cannot trigger the
+ * catastrophic backtracking the RegExp form suffers (F20).
+ */
+export function matchGlob(glob: string, target: string): boolean {
+  const glen = glob.length;
+  const plen = target.length;
+  const memo = new Int8Array((glen + 1) * (plen + 1)).fill(-1);
+  const at = (gi: number, pi: number): boolean => {
+    if (gi === glen) return pi === plen;
+    const key = gi * (plen + 1) + pi;
+    const cached = memo[key];
+    if (cached !== -1) return cached === 1;
+    let result = false;
+    const char = glob[gi];
+    if (char === "?") {
+      result = pi < plen && target[pi] !== "/" && at(gi + 1, pi + 1);
+    } else if (char === "*") {
+      if (glob[gi + 1] === "*") {
+        const after = gi + 2;
+        if (glob[after] === "/") {
+          // `**/` matches zero or more characters ending in `/`.
+          result = at(after + 1, pi);
+          for (let index = pi; index < plen && !result; index += 1) {
+            if (target[index] === "/") result = at(after + 1, index + 1);
+          }
+        } else {
+          // `**` matches any sequence, crossing `/`.
+          result = at(after, pi);
+          for (let index = pi; index < plen && !result; index += 1) {
+            result = at(after, index + 1);
+          }
+        }
+      } else {
+        // `*` matches any sequence within a path segment.
+        result = at(gi + 1, pi);
+        for (let index = pi; index < plen && !result && target[index] !== "/"; index += 1) {
+          result = at(gi + 1, index + 1);
+        }
+      }
+    } else {
+      result = pi < plen && target[pi] === char && at(gi + 1, pi + 1);
+    }
+    memo[key] = result ? 1 : 0;
+    return result;
+  };
+  return at(0, 0);
+}
+
 export function pathMatchesGlob(target: string, glob: string): boolean {
-  return globToRegExp(glob).test(target);
+  return matchGlob(glob, target);
 }
 
 export function isProtectedPath(policy: PathPolicy, target: string): boolean {

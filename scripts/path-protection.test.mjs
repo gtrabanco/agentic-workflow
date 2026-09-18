@@ -20,7 +20,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { PATH_GUARD_REASONS } from "../packages/agentic-workflow/src/path-policy.mjs";
+import { PATH_GUARD_REASONS, pathMatchesGlob } from "../packages/agentic-workflow/src/path-policy.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = path.join(repoRoot, "packages/agentic-workflow/bin/path-guard.mjs");
@@ -260,6 +260,14 @@ test("path-guard:malformed-config-detail — the parse message is carried into t
   const result = run(dir, ["--phase", "P1"]);
   assert.equal(result.code, 0, result.stderr);
   assert.match(result.stdout, /^DEGRADED — malformed-config: shipped defaults in force — .+$/m);
+});
+
+test("path-guard:glob-linear — a star-chain glob matches in bounded time (F20)", () => {
+  const starred = "a*a*a*a*a*a*a*a*a*a*a*a*a*b";
+  const started = Date.now();
+  assert.equal(pathMatchesGlob(`${'a'.repeat(40)}c`, starred), false);
+  assert.equal(pathMatchesGlob(`a${'a'.repeat(40)}b`, starred), true);
+  assert.ok(Date.now() - started < 500, "the matcher must not backtrack exponentially");
 });
 
 /* ---------------------------------------------------------- safety invariants */
