@@ -6,7 +6,12 @@ vs base `3781d6513eec95aec0002c2875d5cf9e6eb09f52`): five isolated axis passes
 (code, security, verify, perf, api-ergonomics) plus one isolated verification
 pass. `design`, `a11y`, `brand` and `seo` were skipped — this repository is an
 agent-skills/docs substrate with two bun/node ESM packages and no UI, web or
-brand surface. Ledger schema:
+brand surface. Cycle 2 review ran 2026-09-18 against head
+`088fcc431fa6bd9e38cbce76e71f2bd84d7683ed` — delta mode escalated to a **full
+pass** by the size trigger (408 changed lines in the fold range > 200) — with
+the same five axis passes plus an isolated verification pass and a classifier;
+all eleven cycle-1 folded rows re-verified gone. Its fix-now rows follow. Ledger
+schema:
 
 ```
 | id | file:line | axis | severity | class | route | folded |
@@ -37,3 +42,20 @@ brand surface. Ledger schema:
 | VF-10 | packages/pi-agentic-workflow/src/extension/index.ts:221 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read: `recordsText: collectRecordTexts(ctx.cwd)` is evaluated before any protection check; replica over this repo measured ≈4.63 ms and ≈382,714 B per call across 38 unit dirs | perf | confirmed | finding-mark | n/a | n/a |
 | VF-11 | template/.agentic-workflow/path-protection.md:61-66 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read of the shipped page: the records fence exists but no sentence states that only rows whose `phase` equals the gate's `--phase` count (`src/path-policy.mjs:453`), and `skills/execute-phase/references/PREFLIGHT.md:212` runs `--phase P<n-1>` | api-ergonomics | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb | n/a | n/a | review-mark | n/a | n/a |
+| F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) | no |
+| F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | no |
+| F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | no |
+| F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | no |
+| F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | no |
+| F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | no |
+| F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | no |
+| F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) | no |
+| VF-12 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: temp repo modify `tests/café-helper.js` → `git diff --name-status` = `M<TAB>"tests/caf\303\251-helper.js"`; gate `--base` → `PATH-GUARD pass — clean` exit 0 (ASCII control → `fail — protected-modification` exit 1) | code+security | confirmed | finding-mark | n/a | n/a |
+| VF-13 | packages/agentic-workflow/bin/path-guard.mjs:51-57 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: policy `pre-freeze.delete=approval` + justification-only row; unstaged `rm tests/prot.js` → `PATH-GUARD pass — justified` exit 0, staged `D ` → `fail — approval-required` exit 1 | code+security | confirmed | finding-mark | n/a | n/a |
+| VF-14 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: built `dist` + symlink `alias.mjs -> tests/real.mjs` → handler returns no block (protected file); symlink to `/tmp/outside` passes while `../outside` is blocked | security | confirmed | finding-mark | n/a | n/a |
+| VF-15 | packages/agentic-workflow/src/path-policy.mjs:120-150 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: `globToRegExp("a*a*a*a*a*a*a*a*a*a*a*a*a*b")` + 36-char path → gate `real 0m53.392s` (40-char → timeout, exit 124); shipped defaults < 0.1 ms | perf | confirmed | finding-mark | n/a | n/a |
+| VF-16 | packages/pi-agentic-workflow/README.md · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck: `grep -n pathProtection packages/pi-agentic-workflow/README.md` → rc=1; `template/.agentic-workflow/path-protection.md:8` says `path-policy.json` "is the policy the guard reads" vs `src/config/load.ts:29-34` `.pi/pi-agentic-workflow.json` | api-ergonomics | confirmed | finding-mark | n/a | n/a |
+| VF-17 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: `--unit ../c8evil` with a planted SPEC/decisions → `PATH-GUARD pass — justified` exit 0 (in-repo unit → `fail — protected-modification` exit 1) | security | confirmed | finding-mark | n/a | n/a |
+| VF-18 | packages/agentic-workflow/bin/path-guard.mjs:216,221 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck: no-declaration unit emits `phase: P1 · freeze-after: n/a · checked: 0` vs `SPEC.md:576` documenting `freeze-after: <P<m>` or `none` only | api-ergonomics | confirmed | finding-mark | n/a | n/a |
+| VF-19 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: `ignored-removal`/`ignored-lowering` emitted; malformed JSON → `DEGRADED — malformed-config: shipped defaults in force` (parse message computed at :181/:185 discarded at :187) | api-ergonomics | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed | n/a | n/a | review-mark | n/a | n/a |
