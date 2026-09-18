@@ -77,4 +77,5 @@ path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | packages/pi-agentic-workflow/test/default-inherit.test.mjs,packages/pi-agentic-workflow/test/alias-coverage.test.mjs | P4 | 2026-09-18 | execute-phase | E-60-20 contract-shape extension of two existing pi-suite assertions; both stay equally strong
 justification | scripts/pre-execution-quality.test.mjs | P5 | 2026-09-18 | execute-phase | the P3 fifth gate-rejection type (path-protection) requires the hardcoded vocabulary fixture to list five types; the comparison stays a complete-set assertion (E-60-21)
+approval | scripts/pre-execution-quality.test.mjs | P5 | 2026-09-18 | human-owner | owner approved the post-freeze contract-shape test update after the feature-60 close-out gate blocked it (operator answer 2026-09-18)
 ```
