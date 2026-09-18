@@ -4332,3 +4332,150 @@ READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
   before any plan re-derivation or source fold
   · the fold of F8's source half waits for the fresh PASS (the branch's
     manifest exclusion folds at source after the product route re-passes)
+
+---
+
+## Re-review (`spec-review-31-14`, 2026-09-18)
+
+Context-clean `review-spec` delta-review of the F8/F10 Product-half closure batch
+(`31-spec-14`) over spec snapshot
+`00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c`. Verdict:
+**`spec-review-fail`** — 12/14 Product checks pass; two `product`-class rows, one
+material (`medium`); repair owner `design-feature 31-planning-review-materiality`.
+No reviewed artifact was modified by this turn. Process note: the authoring
+`design-feature` turn left the `31-spec-14` revision uncommitted in the worktree,
+and the snapshot contract's freshness comparison reads a committed revision
+(`changedBoundPaths(revision)` against the worktree), so this turn first persisted
+the author's bytes **byte-identically** as commit `c410a594` before building the
+snapshot — no reviewed byte changed; see the receipt notes below.
+
+### Falsification — `31-planning-review-materiality` @ `c410a594`
+
+- Name 3 product decisions a hostile reader could call invented: none —
+  D-31-11/D-31-12 carry the owner commission verbatim (`## Amendments
+  31-spec-14`) plus the `decisions.md` authority column and evidence rows.
+- The user outcome the SPEC promises with no observable check: In scope 5's
+  positive declaration on the four newly named surfaces (they "declare that a
+  recorded wording-only batch skips the re-review", `SPEC.md:177-186`) — AC7
+  observes only the removals. Recorded as context, not filed: the bullet maps to
+  AC7 (C8's letter holds).
+- One role the matrix leaves unspecified: none — C1–C5 each enumerate all five
+  derived roles with an explicit `allowed`/`denied`.
+- What would have to be true for this half to be wrong, and is it true: the PR
+  diff carries a path outside AC13's three declared groups → **TRUE**
+  (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, F6's fold `9f4e05c2`).
+- Verdict stance before checking: `CONFIRMED-GAPS`.
+
+### Product checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | In scope 1–8 each name an observable machine outcome with AC anchors (1→AC1/2/3, 2→AC4, 3→AC5/7, 4→AC6, 5→AC7, 6→AC8/9, 7→AC10/11/14, 8→AC12; groups→AC13) |
+| C2 | Actors and roles | pass | 5 derived roles × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied`; entry point named per capability |
+| C3 | Entity closure | pass | E1–E3 resolve CRUD + state transitions to surfaces/tests or explicit `n/a`; zero blank rows |
+| C4 | Limits and failure states | pass | Limit = findings ≤ 64 (`PRE_EXECUTION_LIMITS.findings`) + the two-cycle cap; failure states resolved (unconverged loop → stage-scoped human stop; unrecorded rotation → `stale-source-revision`; mislabeled defect → `medium` minimum; wording-only misroute → recorded determination + rotation) |
+| C5 | Scope and non-goals | pass | 7 out-of-scope bullets, each naming an owner or a non-goal |
+| C6 | Integration closure | pass | 12 derived subsystems, one row each; inventory derived because `docs/CAPABILITIES.md` is the unseeded template (all `<role>`/`<yes\|no\|partial>` placeholders) |
+| C7 | Expectation sweep | pass | 19 rows (≥ 10 for M), each resolved in-scope/out-of-scope with a pointer |
+| C8 | Acceptance objectivity | pass | AC1–AC14 objective, each labelled command or command+`read-verified`; every In-scope bullet maps to ≥ 1 AC |
+| C9 | Internal contradiction | **finding** | F31-14-01: AC10 requires the budget gate green ("budgets updated for the shrink if it moves sizes", `SPEC.md:605`) while AC13's declared groups (`SPEC.md:216-237`) forbid the budget path AC10 needs. F31-14-02: AC14's "each SKILL.md carries nothing but the `version:` change" (`SPEC.md:628`) contradicts In scope 5 (`SPEC.md:177-186`) + AC7 (`SPEC.md:565-568`) |
+| C10 | Repository contradiction | **finding** | F31-14-01: `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, outside all three declared groups |
+| C11 | Evidence integrity | pass | Every `decisions.md` row is `current`/`proven`; the 31-spec-14 batch's 8 rows are `current`/`proven`; no `unknown`/`drifted`/`stale` row survives; the `31-spec-14` `READINESS — … spec READY-FOR-REVIEW` block exists in this file |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none`; the one open product-owned item (review-change F9) is flagged for the human in `## Design status`, and its two-dot-anchor defect is in fact resolved by the branch's main-sync (`git rev-list --left-right --count main...HEAD` → `0 67`; the AC13 anchor now lists only in-group paths bar the F31-14-01 gap) |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, or architecture; naming the machine carriers is the owner's D-31-6 carrier ruling |
+| C14 | Obligation containment | pass | No current-unit obligation exported to a future issue; the superseded plan set is a declared non-goal |
+
+Findings: 2 (material open: 1).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-14 · Snapshot: 00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: c410a594114ceec4c9607f833a3d3a0d1bfacdca · Artifact revision: c410a594114ceec4c9607f833a3d3a0d1bfacdca
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature (repair batch `31-spec-14`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T21:12:00Z/2026-09-18T21:21:44Z · Findings: 2 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 52291 · digest 90d47e5d5ff0723546dcee1bf71f13aa54138927d1e91af7233eee2633852aed · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 12/14 pass, C9 + C10 findings; full re-run against the patched bytes; falsification CONFIRMED-GAPS
+```
+
+Artifact-revision and process notes:
+
+- The handoff names the authoring label `31-spec-14` (`SPEC.md` `## Design status`;
+  the readiness block above). No runtime rotates `artifactRevisionId` in this
+  environment, so the receipt binds the builder's digest-derived value
+  `c410a594…`; the label stays recorded here — the reconciliation every prior
+  receipt made.
+- The reviewed revision was uncommitted when this review began. The builder's own
+  remedy ("commit the bound artifacts, or pass
+  `--source-revision`/`--artifact-revision`") and the freshness comparison
+  (`changedBoundPaths(revision)` diffs the recorded revision against the worktree)
+  mean uncommitted bound bytes always answer `stale-artifact-content` — the
+  reviewer's own write could not be fresh. This turn therefore persisted the
+  author's `31-spec-14` set byte-identically as commit `c410a594` before building
+  the snapshot; no reviewed artifact byte changed, and no content was authored or
+  edited by this turn (context clean: true).
+- Cycle counting (D-31-7): `spec-review-31-13`'s PASS reset the count; the
+  31-spec-14 patch is cycle 1 of the fresh window and this FAIL is its outcome, so
+  no `CONVERGENCE-ANOMALY` block is owed and the `stop-review-loop-cap` refusal
+  is not armed.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the receipt
+write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-14",
+    "verdict": "spec-review-fail",
+    "snapshot": "00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — a persisted non-PASS verdict: `structural.fresh: true`, `digestMatches:
+true`, `current: false`; the verdict itself is the emit result, routed per the
+FAIL block below.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: 00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c · Artifact revision: c410a594114ceec4c9607f833a3d3a0d1bfacdca
+- Failed checks: C9, C10
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  | F31-14-01 | medium | product | C10 (also C9) | AC13's declared allowed-set groups omit `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, which the PR diff carries (F6's fold `9f4e05c2`), so the criterion's anchor lists an out-of-group path and AC13/AC10 assert incompatible sets | SPEC.md:216-237, :605, :612-616; `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'`; `git diff main -- docs/workflow/SKILL_CONTEXT_BUDGETS.json`; `git merge-base --is-ancestor 9f4e05c2 46968309` → false | verified |
+  | F31-14-02 | low | product | C9 | AC14's "each SKILL.md carries nothing but the `version:` change" contradicts In scope 5 + AC7, which require `plan-feature/SKILL.md` and `plan-fix/SKILL.md` to lose prose | SPEC.md:620-628, :177-186, :565-568; skills/bump-skill/SKILL.md:81 | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+```
+
+No reviewed artifact was modified by this turn (the only writes are the unbound
+`progress.md` receipt block and the `planning-findings.md` rows; the reviewer
+persisted the author's already-existing `31-spec-14` bytes as commit `c410a594`,
+which changed no byte). `ACCEPTANCE.md`, `SPEC.md`, `decisions.md`, and the
+roadmap row are byte-identical to the reviewed revision.
+
+→ Next: /design-feature 31-planning-review-materiality "add `docs/workflow/SKILL_CONTEXT_BUDGETS.json` to AC13's declared derived-surface group (and correct `known-issues.md` §3), and drop/correct AC14's 'nothing but the `version:` change' clause" — one repair batch for F31-14-01 + F31-14-02, then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
+  · a product choice is missing → answer it in the instruction; nothing here chooses for you
+  · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
+
