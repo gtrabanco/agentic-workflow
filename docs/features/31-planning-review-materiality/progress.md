@@ -3465,3 +3465,126 @@ CONVERGENCE-ANOMALY — 31-planning-review-materiality plan
 - Why the prior review failed: `plan-review-31-3` returned FAIL on P31-01…P31-05; the `31-plan-4` batch repaired them and the `31-plan-5` re-derivation re-parented the plan and closed P31-06 without re-deriving P1's edit set against the package suite it runs as its done-when
 - Route to owner: `plan-feature 31-planning-review-materiality` — one batch for P31-07 + P31-08 + P31-09 + P31-10 + P31-11, then `/review-plan` re-reviews the new artifact revision
 ```
+
+---
+
+# Plan repair batch (`31-plan-6`), 2026-09-17
+
+Route: `plan-feature 31-planning-review-materiality` — the repair owner
+`plan-review-31-4`'s `CONVERGENCE-ANOMALY` block named, commissioned by the user
+as one batch over P31-07 + P31-08 + P31-09 + P31-10 + P31-11. Loaded contract:
+`replan-findings` + its `references/PHASE_APPEND.md` on the repair-entry reading
+the `31-plan-2` batch recorded (the finding already pins the scope; no planning
+preflight was consumed).
+
+Router disclosure (recorded, never silently worked around):
+`node scripts/unit-route.mjs 31-planning-review-materiality` answers
+`route: execute` (`open-rows: 0`) because it reads the unit's
+`review-findings.md` — the code-side fix-now fold ledger, which this unit does not
+have — and is blind to the stage-aware `planning-findings.md` where plan-class
+rows live. The unit's plan review is nevertheless a FAIL with four open material
+rows and `execute-phase`'s own pre-execution gate would refuse these bytes, so the
+commissioned repair followed the verdict's named repair owner instead of the
+router's line. This is the same routing-surface gap in the `unit-route` family
+(its `replan` route is unreachable for plan-class rows) the `31-plan-2` batch
+reported for triage rather than fixing inside this unit's scope.
+
+Product-review gate (before any write): `spec-review-31-11` is the newest
+`stage: spec` receipt and its verdict is `spec-review-pass`. The snapshot
+recomputed from the bytes on disk with the receipt's own recorded revision
+(`build --stage spec --source-revision e4887dac… --artifact-revision e4887dac…`)
+is `dd09372a…` — the receipt's `snapshotDigest` — and the `spec-product-v1`
+projection digest (`e9ce9abf…`, 46362 bytes) plus the three context digests are
+byte-identical to it. The default `verify --stage spec` answers
+`stale-source-revision` over `SPEC.md` because the Engineering half lives in the
+same file and its revision moved (`ecde13dc…`), the known whole-file false signal
+PE-003 records; the Product bytes and contexts are unmoved, so the plan's parent
+stays `spec-review-31-11` @ `dd09372a…` and no Product re-review is owed. This is
+the same reading `plan-review-31-4` recorded for its own L1.
+
+No phase had executed (roadmap row `planned`, no `in-progress` transition, no
+phase commit), so each repair landed in the phase that owns the surface — an
+in-place re-cut, no ledger-order change, no new phase number:
+
+- **P31-07 (high)** — P1's bump task now moves both version pins the bump reddens
+  in the same commit: `test/release-contract.test.mjs`
+  (`assert.equal(pkg.version, "4.2.0")`) and `test/verification-gates.test.mjs`
+  (`assert.equal(manifest.version, "4.2.0")`). Baseline re-observed green at
+  `6e2a804f` (`bun test test/release-contract.test.mjs
+  test/verification-gates.test.mjs test/pre-execution-docs.test.mjs` → 32 pass /
+  0 fail), so the bump is what reddens them.
+- **P31-08 (high)** — a new P1 task adds `reproducerChars 1024` to the
+  `### Published limits` block of `packages/agentic-workflow-schema/README.md`,
+  the section `test/pre-execution-docs.test.mjs` walks over
+  `PRE_EXECUTION_LIMITS`. Both surfaces are `packages/**` (`config/infra`), so
+  neither can ride the `docs` P4.
+- **P31-09 (medium)** — `E9` now states the `docs` P4 CHANGELOG-row allocation the
+  P31-04 resolution chose (naming the two pins and the published limit as the
+  bump's own P1 surfaces), and the SPEC `### Phases` P1 done-when — same root
+  cause — stops claiming `bun test scripts/normative-drift.test.mjs` green in P1
+  and restates the declared window.
+- **P31-10 (low)** — P4's `POLICY.md` §3 task no longer recites the literal AC7
+  deletes; it names the removal grep and states the default batch consequence.
+- **P31-11 (info)** — P4's `CHECKS.md` task now names the sentence
+  `scripts/pre-execution-quality.test.mjs` pins verbatim (the words and the break
+  point after `open`), inside AC10's pack.
+
+Engineering decisions E-D31-22…E-D31-25 in `decisions.md`; evidence rows
+PE-033…PE-037 in `planning-evidence.md`; the five rows above flip to `resolved`
+in `planning-findings.md` with `31-plan-6` as their resolving artifact revision;
+the P1 phase budget boundary (8 tasks, the canonical ceiling) is recorded in
+`known-issues.md` §13; `testing.md`'s ladder names the pins and the published-limit
+walk. `ACCEPTANCE.md` is deliberately **not** re-frozen: every repaired row is
+Engineering-half, so blob `849af5ae7bccc7bc815d60d8ca2a9e0400161df9` and every
+validator stay as `31-plan-5` froze them, and no required outcome weakened.
+
+Gates run this turn, at the repaired revision:
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:8:schema-finding-record-materiality
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:transition-decider-cap-refusal
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:7:snapshot-wording-only-route
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skill-reference-prose-shrink
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c
+```
+
+Repo pack (informational, not this turn's finish line):
+`bun test scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs
+scripts/ledger-provenance.test.mjs scripts/normative-drift.test.mjs
+scripts/workflow-status-pre-execution.test.mjs` → 117 pass / 2 fail. Both
+failures are 5 s harness timeouts in `scripts/ledger-provenance.test.mjs`
+("a message-only claim and a range in a subject are both recovered", "a tick with
+no commit behind it is UNPROVEN, never annotated") under five-file parallel load;
+isolated, the same suite is 14 pass / 0 fail. No file this batch edited is read by
+that suite. `bun scripts/check-skill-context.mjs` → exit 0.
+
+Readiness preflight (`stage: plan`, `evidence-grounding/references/READINESS.md`),
+boxes 1–11 plus shared D1:
+
+```text
+READINESS — 31-planning-review-materiality plan READY-FOR-REVIEW
+- Artifact revision: ef0fe3251b58b1cb093cd4d683073a112595a4d9 (`31-plan-6`) · Rows checked: 11 + D1 · Unknowns open: 0
+- Evidence: planning-evidence.md (PE-001…PE-037) · Frozen: 2026-09-17
+```
+
+Plan snapshot (built at the repaired revision, parented to the current Product
+receipt): `node scripts/pre-execution-snapshot.mjs build --stage plan --unit
+31-planning-review-materiality --parent dd09372a…` →
+`255d099b7b1fc546b3677a5a796aebc0ee45c3d0d73ff31d5db3aab3616472c1` at
+`artifactRevisionId` `ef0fe3251b58b1cb093cd4d683073a112595a4d9`. A repaired plan is
+not an approved plan, so the reviewer re-derives it; no plan receipt exists yet.
+
+Dependency and blocker check (run this turn, before the recommended next step):
+hard dependency 29 reads `done · [#175](…/pull/175)` (merged) and soft dependency
+30 reads `done · [#188](…/pull/188)` (merged) — the closure is met. The fix index
+carries exactly one row (#179, `pending`, declared-ledger-delta-receipts), which
+depends on features 30/31/32 rather than blocking 31, and no open issue or fix-now
+row in this repository touches a module this SPEC changes (#205 — review-loop
+convergence — depends on 31, and #171 is this unit's own tracking issue). No
+dependency, no blocker.
+
+Hand-off: the new artifact revision is `31-plan-6` (`ef0fe325`), and the reviewer
+re-derives plan snapshot `255d099b…`. Next step:
+`/review-plan 31-planning-review-materiality`.
