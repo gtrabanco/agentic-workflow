@@ -135,6 +135,54 @@ test("the sensor's attribution answers exactly what the comparator answers", asy
   }
 });
 
+test("wording-only: a matching determination answers fresh, and every mismatch falls through", async () => {
+  const reviewed = await build(specInput());
+  const current = await build(edited(specInput()));
+  const base = {
+    recorded: recordedFrom(reviewed.snapshot, reviewed.digest),
+    snapshot: current.snapshot,
+    observedDigest: current.digest,
+    policyVersion: POLICY,
+    changedArtifacts: [SPEC_PATH],
+    changedContexts: [],
+  };
+  const fingerprint = "f".repeat(64);
+  const determination = {
+    stage: current.snapshot.stage,
+    id: "determination-1",
+    revision: current.snapshot.artifactRevisionId,
+    acceptanceFingerprint: fingerprint,
+    unchanged: true,
+  };
+  const fresh = attributeFreshness({ ...base, wordingOnly: { determination, acceptanceFingerprint: fingerprint } });
+  assert.equal(fresh.fresh, true, JSON.stringify(fresh));
+  assert.match(fresh.detail, /wording-only determination determination-1/);
+  assert.deepEqual(fresh.changedPaths, []);
+  // No determination at all: the branch is skipped and the precedence answers.
+  const absent = attributeFreshness({ ...base });
+  assert.equal(absent.fresh, false);
+  assert.equal(absent.reasonCode, "stale-artifact-content",
+    "without a determination the moved bound byte is ordinary content drift");
+  // A determination naming another revision is no match.
+  const staleRevision = attributeFreshness({
+    ...base,
+    wordingOnly: { determination: { ...determination, revision: "rev-0" }, acceptanceFingerprint: fingerprint },
+  });
+  assert.equal(staleRevision.fresh, false);
+  // A determination whose acceptance fingerprint differs is no match.
+  const staleFingerprint = attributeFreshness({
+    ...base,
+    wordingOnly: { determination, acceptanceFingerprint: "0".repeat(64) },
+  });
+  assert.equal(staleFingerprint.fresh, false);
+  // Intent/authority not affirmed is no match.
+  const notAffirmed = attributeFreshness({
+    ...base,
+    wordingOnly: { determination: { ...determination, unchanged: false }, acceptanceFingerprint: fingerprint },
+  });
+  assert.equal(notAffirmed.fresh, false);
+});
+
 test("the timeline dimension is git-backed: the pure comparator cannot see it, the sensor fires at its slot", async () => {
   const reviewed = await build(specInput());
   const current = await build(specInput());

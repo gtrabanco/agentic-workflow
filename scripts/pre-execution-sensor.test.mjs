@@ -366,6 +366,89 @@ test("RS13: the report keeps every key the consumers already read", (t) => {
 });
 
 // ---------------------------------------------------------------------------
+// Feature 31 — the recorded wording-only route
+// ---------------------------------------------------------------------------
+
+/** The determination block the repair turn records in the unbound `progress.md`. */
+function determinationBlock({ stage, id, revision, fingerprint, unchanged = "yes" }) {
+  return `## Wording-only determination v1 — ${stage}
+- Determination: ${id}
+- Artifact revision: ${revision}
+- Acceptance fingerprint: ${fingerprint}
+- Intent and authority unchanged: ${unchanged}
+`;
+}
+
+/** Append a wording-only determination to the unit's unbound progress ledger. */
+const recordDetermination = (f, { stage, id, revision, fingerprint, unchanged }) => {
+  const progressPath = `${f.dir}/progress.md`;
+  const previous = fs.existsSync(path.join(f.root, progressPath))
+    ? fs.readFileSync(path.join(f.root, progressPath), "utf8") : "";
+  f.write(progressPath, `${previous}${determinationBlock({ stage, id, revision, fingerprint, unchanged })}\n`);
+  return f.commit("docs(99): record the wording-only determination");
+};
+
+test("wording-only: a recorded determination keeps verify current without a re-review", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  // A cosmetic bound edit rotates the revision: the newest commit touching a bound path.
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the thing, worded differently."));
+  const rotated = f.commit("docs(99): wording-only repair");
+  const built = f.build("--stage", "spec", "--dir", f.dir, "--unit", f.unit);
+  assert.equal(built.snapshot.artifactRevisionId, rotated, "the repair rotated the artifact revision");
+  const fingerprint = git(f.root, "hash-object", `${f.dir}/ACCEPTANCE.md`);
+  recordDetermination(f, { stage: "spec", id: "wording-1", revision: rotated, fingerprint });
+  const result = verify(f, "spec");
+  const r = report(result);
+  assert.equal(result.status, 0, `a recorded wording-only move must stay current: ${result.stdout}`);
+  assert.equal(r.current, true);
+  assert.equal(r.structural.fresh, true);
+  assert.match(r.structural.detail, /wording-1/, "the determination id is named in detail");
+});
+
+test("wording-only: a movement with no determination falls through unchanged (never fresh)", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the other thing."));
+  f.commit("docs(99): material edit with no determination");
+  const result = verify(f, "spec");
+  const r = report(result);
+  assert.equal(result.status, 4, "a stale receipt exits 4");
+  assert.equal(r.current, false);
+  assert.equal(r.structural.fresh, false);
+  assert.equal(r.structural.reasonCode, "stale-source-revision",
+    "the branch is skipped and the existing precedence answers");
+  assert.ok(PRE_EXECUTION_FRESHNESS_CODES.includes(r.structural.reasonCode));
+});
+
+test("wording-only: a determination from another revision is no match", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the other thing."));
+  const rotated = f.commit("docs(99): material edit");
+  const fingerprint = git(f.root, "hash-object", `${f.dir}/ACCEPTANCE.md`);
+  // An exemption that names some other revision must not launder this movement.
+  recordDetermination(f, { stage: "spec", id: "wording-stale", revision: "a".repeat(40), fingerprint });
+  const r = report(verify(f, "spec"));
+  assert.notEqual(rotated, "a".repeat(40));
+  assert.equal(r.current, false);
+  assert.equal(r.structural.fresh, false);
+});
+
+test("wording-only: the route is unavailable without a frozen acceptance manifest", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the thing, worded differently."));
+  const rotated = f.commit("docs(99): wording-only repair");
+  const fingerprint = git(f.root, "hash-object", `${f.dir}/ACCEPTANCE.md`);
+  recordDetermination(f, { stage: "spec", id: "wording-2", revision: rotated, fingerprint });
+  fs.rmSync(path.join(f.root, `${f.dir}/ACCEPTANCE.md`));
+  const r = report(verify(f, "spec"));
+  assert.equal(r.current, false, "no manifest means the wording-only route fails closed");
+  assert.equal(r.structural.fresh, false);
+});
+
+// ---------------------------------------------------------------------------
 // RS14 — the documented recipe must be reachable
 // ---------------------------------------------------------------------------
 
