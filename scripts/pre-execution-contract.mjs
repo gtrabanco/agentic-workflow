@@ -173,6 +173,20 @@ export function deriveReviewLoopCycles(receipts) {
 }
 
 /**
+ * One `- <label>: <value>` field of a determination block. The determination
+ * grammar is NOT the receipt grammar (its labels are read by a distinct block
+ * kind), so it carries its own extractor: the receipt parser's label scan must
+ * keep proving that every RECEIPT label is emitted by both stage templates.
+ * The label may sit mid-line — the frozen SPEC E5 block carries several fields
+ * on one ` \u00b7 `-separated line — and the value ends at the next ` \u00b7 ` or the
+ * line end, the same termination the receipt scan uses.
+ */
+function determinationLine(chunk, label) {
+  const match = chunk.match(new RegExp(`${label}:[ \\t]*([^\\n\u00b7]+)`));
+  return match ? match[1].replace(/`/g, "").trim() : null;
+}
+
+/**
  * Every `## Wording-only determination v1 — <stage>` block in a progress ledger,
  * in file order. The machine half of the wording-only route (feature 31): the
  * block records the artifact revision the repair rotated and the acceptance
@@ -180,17 +194,6 @@ export function deriveReviewLoopCycles(receipts) {
  * judgment. Read from the unit's unbound `progress.md`, so recording it cannot
  * rotate the revision it names. `text === null` reads as "no determinations".
  */
-/**
- * One `- <label>: <value>` line of a determination block. The determination
- * grammar is NOT the receipt grammar (its labels are read by a distinct block
- * kind), so it carries its own extractor: the receipt parser's label scan must
- * keep proving that every RECEIPT label is emitted by both stage templates.
- */
-function determinationLine(chunk, label) {
-  const match = chunk.match(new RegExp(`^[ \\t]*-[ \\t]*${label}:[ \\t]*(.+)$`, "m"));
-  return match ? match[1].trim() : null;
-}
-
 export function parseWordingOnlyDeterminations(text) {
   if (text === null || text === undefined) return [];
   return String(text).split(/^## Wording-only determination v1 — /m).slice(1).map((chunk) => ({

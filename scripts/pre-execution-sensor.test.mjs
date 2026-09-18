@@ -448,6 +448,32 @@ test("wording-only: the route is unavailable without a frozen acceptance manifes
   assert.equal(r.structural.fresh, false);
 });
 
+test("wording-only: the frozen SPEC E5 ` · `-separated block shape is read", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write(`${f.dir}/SPEC.md`, specText("Ship the thing, worded differently."));
+  const rotated = f.commit("docs(99): wording-only repair");
+  const fingerprint = git(f.root, "hash-object", `${f.dir}/ACCEPTANCE.md`);
+  const progressPath = `${f.dir}/progress.md`;
+  const previous = fs.existsSync(path.join(f.root, progressPath))
+    ? fs.readFileSync(path.join(f.root, progressPath), "utf8") : "";
+  const e5 = [
+    "## Wording-only determination v1 — spec",
+    "",
+    `- Determination: wording-e5 · Unit: ${f.unit} · Artifact revision: ${rotated}`,
+    `- Acceptance fingerprint: ${fingerprint} · Recorded: 2026-09-18`,
+    "- Intent and authority unchanged: yes",
+    "",
+  ].join("\n");
+  f.write(progressPath, `${previous}${e5}\n`);
+  f.commit("docs(99): record the wording-only determination (SPEC E5 shape)");
+  const result = verify(f, "spec");
+  const r = report(result);
+  assert.equal(result.status, 0, `an E5-shaped determination must stay current: ${result.stdout}`);
+  assert.equal(r.structural.fresh, true);
+  assert.match(r.structural.detail, /wording-e5/);
+});
+
 // ---------------------------------------------------------------------------
 // RS14 — the documented recipe must be reachable
 // ---------------------------------------------------------------------------
