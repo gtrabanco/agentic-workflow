@@ -11,8 +11,11 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { dirtyWorktreeWarning, receiptGuard } from "../dist/extension/receipt-guard.js";
+import { GIT_STATUS_TIMEOUT_MS, dirtyWorktreeWarning, readGitStatusBounded, receiptGuard } from "../dist/extension/receipt-guard.js";
 
 // --- tool_call guard ------------------------------------------------------
 
@@ -99,4 +102,47 @@ test("#182: a long dirty list is previewed and summarised", () => {
   assert.match(warning, /9/);
   assert.match(warning, /\+4 more/);
   assert.ok(!warning.includes("file-8.ts"), `the tail is summarised, not dumped: ${warning}`);
+});
+
+// --- settled-turn git probe -----------------------------------------------
+
+/** Run `fn` with a fake `git` first on PATH, then restore PATH and clean up. */
+const withFakeGit = (body, fn) => {
+  const dir = mkdtempSync(join(tmpdir(), "receipt-guard-probe-"));
+  const bin = join(dir, "bin");
+  mkdirSync(bin);
+  const fake = join(bin, "git");
+  writeFileSync(fake, `#!/usr/bin/env node\n${body}\n`);
+  chmodSync(fake, 0o755);
+  const previous = process.env.PATH;
+  process.env.PATH = `${bin}:${previous}`;
+  try {
+    return fn(dir);
+  } finally {
+    process.env.PATH = previous;
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+test("#182: the settled-turn git probe has a 2000 ms timeout", () => {
+  assert.equal(GIT_STATUS_TIMEOUT_MS, 2000);
+});
+
+test("#182: a hung git reads as a clean worktree without parking the turn", () => {
+  withFakeGit("setTimeout(() => process.exit(0), 10000);", (cwd) => {
+    const started = Date.now();
+    const out = readGitStatusBounded(cwd);
+    const elapsed = Date.now() - started;
+    assert.equal(out, "", "a timeout is best-effort clean, never a thrown turn failure");
+    assert.ok(elapsed < 5000, `the probe must time out well before the hang: ${elapsed}ms`);
+  });
+});
+
+test("#182: the probe returns porcelain on success and clean on any failure", () => {
+  withFakeGit('process.stdout.write(" M file.ts\\n");', (cwd) => {
+    assert.equal(readGitStatusBounded(cwd), " M file.ts\n");
+  });
+  withFakeGit("process.exit(1);", (cwd) => {
+    assert.equal(readGitStatusBounded(cwd), "");
+  });
 });

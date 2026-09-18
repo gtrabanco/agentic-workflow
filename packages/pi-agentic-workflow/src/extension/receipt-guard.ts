@@ -16,6 +16,8 @@
  * predicates compile and are tested with no session.
  */
 
+import { spawnSync } from "node:child_process";
+
 /** The narrow slice of a Pi `tool_call` the guard reads. */
 export interface ToolCallLike {
   toolName: string;
@@ -77,4 +79,26 @@ export function dirtyWorktreeWarning(porcelain: string): string | undefined {
   const preview = lines.slice(0, WARNING_PREVIEW).join(", ");
   const rest = lines.length > WARNING_PREVIEW ? `, +${lines.length - WARNING_PREVIEW} more` : "";
   return `Uncommitted changes in the worktree (${lines.length}): ${preview}${rest} — commit or stash before this change is reviewed.`;
+}
+
+/**
+ * How long the settled-turn `git status` probe may run before it is abandoned.
+ * The probe is best-effort hygiene, not work: an unresponsive git must never
+ * park the turn the way the old unbounded `spawnSync` could (issue #182 F4).
+ */
+export const GIT_STATUS_TIMEOUT_MS = 2000;
+
+/**
+ * `git status --porcelain` for the settled-turn notice, time-bounded. A timeout,
+ * a spawn error and a non-zero exit all read as a clean worktree — the notice is
+ * best-effort by construction and must never fail a turn.
+ */
+export function readGitStatusBounded(cwd: string): string {
+  const result = spawnSync("git", ["status", "--porcelain"], {
+    cwd,
+    encoding: "utf8",
+    timeout: GIT_STATUS_TIMEOUT_MS,
+  });
+  if (result.error || result.status !== 0) return "";
+  return result.stdout ?? "";
 }

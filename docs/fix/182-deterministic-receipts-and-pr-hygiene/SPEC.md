@@ -403,9 +403,9 @@ Layer: `config/infra`. Done-when: `cd packages/pi-agentic-workflow && bun run te
 and the adjacent comment claims "This never blocks" — false, because an
 unresponsive git parks the settled turn for as long as git hangs (F4).
 
-- [ ] `packages/pi-agentic-workflow/src/extension/receipt-guard.ts` exports the bounded probe: a 2000 ms `spawnSync` timeout whose expiry, spawn error and non-zero status all read as a clean worktree (F4; O13)
-- [ ] `packages/pi-agentic-workflow/src/extension/index.ts` consumes that probe in its settled-turn handler and states the real contract in the adjacent comments (F4; O13)
-- [ ] `packages/pi-agentic-workflow/test/receipt-guard.test.mjs` pins the probe's timeout option and its timed-out read against a hanging fake git on `PATH` (F4; O13)
+- [x] `packages/pi-agentic-workflow/src/extension/receipt-guard.ts` exports the bounded probe: a 2000 ms `spawnSync` timeout whose expiry, spawn error and non-zero status all read as a clean worktree (F4; O13)
+- [x] `packages/pi-agentic-workflow/src/extension/index.ts` consumes that probe in its settled-turn handler and states the real contract in the adjacent comments (F4; O13)
+- [x] `packages/pi-agentic-workflow/test/receipt-guard.test.mjs` pins the probe's timeout option and its timed-out read against a hanging fake git on `PATH` (F4; O13)
 
 Phase-lint: PASS (8/8) · fingerprint `P8:config/infra:3:settled-turn-git-probe-is-time-bounded`
 

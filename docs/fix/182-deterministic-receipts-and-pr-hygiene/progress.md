@@ -293,3 +293,14 @@ Notes:
 ## Unit-loop receipt — P7
 - Commit: pending · Gate: `node --test scripts/*.test.mjs` (exit 0, 546 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P8 · Attempts: 1
+
+## P8 — 2026-09-18
+- Done (commit predecessor `51390cae`): `receipt-guard.ts` now exports `GIT_STATUS_TIMEOUT_MS = 2000` and `readGitStatusBounded(cwd)` — a `spawnSync` with that `timeout` where timeout, spawn error and non-zero status all return `""` (clean). `index.ts` drops its unbounded local `readGitStatus` and consumes the probe directly in the `agent_settled` handler, with the real contract stated in the comment (time-bounded, swallows failure, never parks the turn). Red-first: the new `readGitStatusBounded`/`GIT_STATUS_TIMEOUT_MS` imports failed before the export; the hanging-git probe now times out in under 5 s and reads clean. O13 `verified`.
+- Remains: P9–P10.
+- Gotchas: the P6 `audit-pr` byte edit drifted the bundled mirror, so the parity suite is red on the P8 commit alone; the re-bundle is P9's deliverable. Verified on the combined working tree (P8 + the P9 bundle refresh): `cd packages/pi-agentic-workflow && bun run test` → 227 pass / 0 fail. The probe test temporarily swaps `process.env.PATH` and restores it, and never hits the network.
+- Files: packages/pi-agentic-workflow/src/extension/receipt-guard.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/receipt-guard.test.mjs, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: P9
+
+## Unit-loop receipt — P8
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 227 pass on the combined P8+P9-bundle tree) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: P9 · Attempts: 1
