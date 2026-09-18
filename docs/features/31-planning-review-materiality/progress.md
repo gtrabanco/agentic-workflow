@@ -3871,3 +3871,182 @@ fingerprint: d71938984b6e87a81def926b394ffeed643eb71001df98a846ea7035391bf95c
 ## UNIT LOOP — 31-planning-review-materiality COMPLETE
 Phases: 5 · Commits: 085ce93f, 52bf548f, e0767164, e2c288ce, 0003a4a3, 955a7b87 (main sync), d7ad5f68, 4d060b9c · Acceptance: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9 · Gate: PASS
 PR: https://github.com/gtrabanco/agentic-workflow/pull/243
+
+---
+
+# Re-review `spec-review-31-12` — review-spec reviewer turn (2026-09-18)
+
+Owner-commissioned **product-route re-review** of the Product-half patch
+`31-spec-12` (commit `324d9de3`), which routes review-change finding **F3**
+(`review-findings.md`) through the product route (`design-feature` →
+`review-spec`). Independent reviewer, fresh context — this conversation never
+authored nor edited the Product half → `contextClean: true`;
+`authorExclusion: not-enforceable` (manual route, no session identity to
+compare); `modelDiversity: not-applicable` (single reviewer).
+
+Cycle accounting (D-31-7): `spec-review-31-11` returned PASS, which reset the
+consecutive-unconverged count to 0, so this is **cycle 1** of a new window — no
+`CONVERGENCE-ANOMALY` is owed. The owner-commissioned patch is a repair
+responding to a persisted review-change FAIL, which §4's carve-out keeps
+unblocked.
+
+Snapshot (built at the exact bytes read, one revision):
+
+```text
+digest   2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7
+source   324d9de36b1b5bf242dafcd20dd4fdc509e0b622
+artifact 324d9de36b1b5bf242dafcd20dd4fdc509e0b622   (author handoff label `31-spec-12`)
+spec row docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · 47039 bytes · 8d29996d91939f588190e0cb7895be54270dabd7f0a3ab75cccf93ff69048466
+contexts project-guide CLAUDE.md f5c8e142… present · normalized-repository-state docs/workflow/REPOSITORY_STATE.md e1b81e29… present · architectural-invariants docs/architecture/ARCHITECTURAL_INVARIANTS.md absent
+```
+
+## Falsification (clean-context, delta-scoped)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ 324d9de3
+- Name 3 specific product decisions in this half that a hostile reader could
+  call invented rather than recorded:
+  1. `## Design status`'s "readiness preflight READY-FOR-REVIEW at artifact
+     revision 31-spec-12" — no readiness block for that revision exists in the
+     unbound `progress.md` (last write `12c8a079` predates the patch; `grep -c
+     '31-spec-12' progress.md` → 0), while every earlier revision carries one.
+  2. In scope 2's material-movement code name and E2's state-transition code
+     name (`stale-artifact-content`) — the F3 patch corrected AC4 but left the
+     same wrong code in the scope definition and the entity table.
+  3. Expectation sweep row 11's `stale-artifact-revision` for an unrecorded
+     rotation — E6 explicitly records that naming as wrong.
+- Name the user outcome the SPEC promises that has no observable check: none
+  found — each Business goal maps to AC1–AC14 (unchanged in the delta).
+- Name one role the matrix leaves unspecified for a capability it does list:
+  none — the 5 roles × 5 capabilities matrix (C1–C5) lists every role.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true? That the verify fall-through for moved bound bytes answers
+  `stale-artifact-content` rather than `stale-source-revision`. FALSE:
+  `attributeFreshness` returns `stale-source-revision`
+  (`scripts/pre-execution-snapshot.mjs:400`) before the `stale-artifact-content`
+  slot (`:412`); reproducer below.
+- Verdict stance before checking: CONFIRMED-GAPS
+```
+
+Reproducer (fresh, this turn):
+
+```text
+bun /tmp/s31-repro.mjs
+material/committed   -> stale-source-revision | paths: ["SPEC.md"]
+material/uncommitted -> stale-artifact-content | paths: ["SPEC.md"]
+```
+
+## Checks — one result each
+
+Delta scope: the `spec-product-v1` projection changed only in AC4
+(`git diff e4887dac..HEAD -- SPEC.md` hunk `@@ -473`) and the `## Design status`
+paragraph (hunk `@@ -674`); every other Product-half subject is byte-identical to
+the `spec-review-31-11` subject (projection `e9ce9abf…`, 46362 bytes → now
+`8d29996d…`, 47039 bytes; the three context digests unmoved except `CLAUDE.md`,
+which no reviewed claim depends on).
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Business goals name observable outcomes (cycle-cost cut, structural loop termination, preserved honesty properties) and each In-scope item maps to ACs (1→AC1–3, 2→AC4, 3→AC5/AC7, 4→AC6, 5→AC7, 6→AC8–9, 7→AC10/11/14, 8→AC12); bytes unchanged in the delta |
+| C2 | Actors and roles | pass | Derived role inventory (human owner, author turn, reviewer turn, executor turn, drivers and sensors) lists every role `allowed`/`denied` for the five capabilities C1–C5; bytes unchanged |
+| C3 | Entity closure | pass | E1–E3 resolve Create/Read/Update/Delete/state-transitions; Delete/Update are explicit `n/a: append-only ledger or derived value`; zero blank rows; unchanged |
+| C4 | Limits and failure states | pass | Limits stated (cap = two consecutive unconverged cycles; ≤64 findings; `reproducer` maxLength); each named failure carries a resolution (re-review owed, `verdict-mismatch`, `needs-design`); unchanged. The code-name accuracy of the named failures is filed under C9/C10 |
+| C5 | Scope and non-goals | pass | 7 out-of-scope bullets, each naming a non-goal or an owner; unchanged |
+| C6 | Integration closure | pass | 12 derived subsystems, one row each; `docs/CAPABILITIES.md` exists only as the unseeded template, and the derivation from `CLAUDE.md` plus the `LEDGERS.md` ownership map is stated; unchanged |
+| C7 | Expectation sweep | pass | 19 rows (≥10 for M), each resolved in-scope/out-of-scope with a pointer; row 11's wrong code name is filed under C9/C10 |
+| C8 | Acceptance objectivity | pass | AC1–AC14 objective and labelled command or command+`read-verified`; every In-scope bullet maps to ≥1 AC; the patched AC4 stays command-checkable and `read-verified` |
+| C9 | Internal contradiction | **finding** | N31-016: the half asserts, for the same moved-bound-bytes event, two incompatible codes — AC4 (`SPEC.md:476-478`, patched) says `stale-source-revision`, while In scope item 2 (`SPEC.md:150`) and E2 state transitions (`SPEC.md:313`) say `stale-artifact-content`; sweep row 11 (`SPEC.md:419`) says `stale-artifact-revision`, which E6 (`SPEC.md:934-936`) records as the corrected-wrong name |
+| C10 | Repository contradiction | **finding** | N31-016: the repository's `attributeFreshness` answers `stale-source-revision` for committed moved bound bytes (`scripts/pre-execution-snapshot.mjs:400`, before the `stale-artifact-content` slot at `:412`); reproducer `bun /tmp/s31-repro.mjs` → `material/committed -> stale-source-revision`. The patched AC4 matches the repository and the frozen `ACCEPTANCE.md:23`; the two unpatched scope/entity statements do not |
+| C11 | Evidence integrity | **finding** | N31-017 (`low`, non-blocking): the `decisions.md` evidence rows added for the F3 patch (E-D31-28 batch) are all `current` and `proven` and no `drifted`/`stale`/`unknown` cell survives, but `## Design status` (`SPEC.md:685`) asserts a readiness preflight `READY-FOR-REVIEW` at `31-spec-12` that resolves to no record anywhere in the unit |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` with an empty table; the only open row (F3/N31-016) is a product-class finding, not a deferred choice |
+| C13 | Engineering leakage | pass | The half cuts no phase, task or architecture; the delta adds none |
+| C14 | Obligation containment | pass | No current-unit obligation is exported to a future issue; N31-016 routes to its product-class owner (`design-feature`) |
+
+Findings: 2 (material open: 1).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-12 · Snapshot: 2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7 · Verdict: spec-review-fail
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 324d9de36b1b5bf242dafcd20dd4fdc509e0b622 · Artifact revision: 324d9de36b1b5bf242dafcd20dd4fdc509e0b622
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T14:20:00Z/2026-09-18T14:29:22Z · Findings: 2 (material open: 1)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 47039 · digest 8d29996d91939f588190e0cb7895be54270dabd7f0a3ab75cccf93ff69048466 · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 11/14 pass; C9 + C10 finding (N31-016); C11 finding (N31-017); falsification CONFIRMED-GAPS
+```
+
+Artifact-revision notes:
+
+- The handoff names the authoring label `31-spec-12` (`SPEC.md` `## Design
+  status`; `## Amendments` `### 31-spec-12`). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `324d9de3…` — the label stays recorded here, the same
+  reconciliation every prior receipt made.
+- Delta re-review, commissioned by the owner ("route F3 through" the product
+  route): the projection changed only in AC4 and the `## Design status`
+  paragraph, so C1–C8, C12–C14 are carried from `spec-review-31-11` after the
+  delta diff was read; C9, C10 and C11 were re-executed against the patched
+  bytes.
+- Reviewed bytes are committed at `324d9de3` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held; the only writes
+  this turn makes are to the unbound `progress.md` and the stage-aware
+  `planning-findings.md`, neither bound by `STAGE_ARTIFACTS.spec`, so the bound
+  digest is unchanged by them.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the
+receipt write, before this report:
+
+```json
+{
+  "current": false,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-12",
+    "verdict": "spec-review-fail",
+    "snapshot": "2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 4 — a digest-bound verdict that is not a PASS: `structural.fresh: true`,
+`digestMatches: true`, `current: false`. The verdict itself is the emit result;
+route per verdict.)
+
+## Verdict
+
+```text
+SPEC-REVIEW-FAIL — 31-planning-review-materiality BLOCKED
+- Snapshot: 2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7 · Artifact revision: 324d9de36b1b5bf242dafcd20dd4fdc509e0b622
+- Failed checks: C9, C10, C11
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim | evidence | verification |
+  | N31-016 | medium | product | C9, C10 | The F3 patch corrected AC4 but the same impossible code (`stale-artifact-content`) still describes material movement in In scope item 2 (`SPEC.md:150`) and E2 state transitions (`SPEC.md:313`), and sweep row 11 (`SPEC.md:419`) still names `stale-artifact-revision` — the naming E6 records as corrected-wrong | SPEC.md:150, :313, :419 vs AC4 `:476-478` and E6 `:919-936`; ACCEPTANCE.md:23; `scripts/pre-execution-snapshot.mjs:400` before `:412`; reproducer `bun /tmp/s31-repro.mjs` -> material/committed = stale-source-revision | verified |
+  | N31-017 | low | product | C11 | `## Design status` (`SPEC.md:685`) asserts a readiness preflight at `31-spec-12` that no record in the unit supports (progress.md last written `12c8a079`, before the patch; `grep -c '31-spec-12' progress.md` = 0) | SPEC.md:685; git log of progress.md (12c8a079 @ 2026-09-18 08:05) vs HEAD (324d9de3 @ 13:13); grep of the readiness blocks | verified |
+- Repair owner: `design-feature 31-planning-review-materiality` — one batch over this whole set
+```
+
+Both rows are `class: product`, so the repair is the author's and needs no plan
+re-cut; the intended behaviour is already frozen in AC4, `ACCEPTANCE.md` AC4 and
+E6, so the batch corrects code names and records the readiness block, never
+invents product intent. No reviewed artifact was modified by this turn.
+
+→ Next: /design-feature 31-planning-review-materiality "fix the surviving wrong freshness codes: In scope 2 (SPEC.md:150) and E2 state transitions (SPEC.md:313) must say stale-source-revision for moved bound bytes, and Expectation row 11 (SPEC.md:419) must drop stale-artifact-revision; record the 31-spec-12-successor readiness block" — one repair batch for N31-016 + N31-017,
+    then /review-spec 31-planning-review-materiality re-reviews the new artifact revision
+  · a product choice is missing → answer it in the instruction; nothing here chooses for you
+  · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
