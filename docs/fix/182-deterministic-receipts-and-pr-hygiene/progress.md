@@ -315,3 +315,21 @@ Notes:
 ## Unit-loop receipt — P9
 - Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 227 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P10 (close-out) · Attempts: 1
+
+## P10 — 2026-09-18 (close-out)
+- Full project gate re-run (all four ACCEPTANCE commands exit 0):
+  - `node --test scripts/review-receipt.test.mjs scripts/session-close.test.mjs scripts/audit-pr-receipt.test.mjs` → exit 0, 61 pass / 0 fail
+  - `node --test scripts/*.test.mjs` → exit 0, 546 pass / 0 fail
+  - `bun scripts/check-skill-context.mjs` → exit 0, `PASS context budgets: 40 skills`
+  - `cd packages/pi-agentic-workflow && bun run test` → exit 0, 227 pass / 0 fail
+- Pending-docs check (`git status --porcelain -- docs/`): empty after this close-out commit; the phase receipts and SPEC ticks ride it.
+- Fix-index: `docs/fix/README.md:17` already reads `` `done` · [#241](https://github.com/gtrabanco/agentic-workflow/pull/241) `` — the flip and the `docs: link PR #241` commit are not re-made (no empty commit).
+- PR: `gh pr view 241 --json url,state,isDraft,mergeable` → `OPEN`, non-draft, `MERGEABLE`, head branch `fix/182-deterministic-receipts-and-pr-hygiene`; URL https://github.com/gtrabanco/agentic-workflow/pull/241 — verified, never re-created.
+- Obligations: O9–O14 reconciled to `verified` from the P4–P9 evidence — O9 the index row, O10 the P5 verify JSON + corrected-gate-line markers, O11 the P6 greps + context PASS, O12 the P7 no-upstream case + the 546-pass root suite, O13 the P8 probe pins, O14 the P9 parity + 0.11.1 row. No `deferred` row.
+- Remains: task 9 — the mandatory end review (`/review-change`) at the terminal head, in a fresh context; then `/audit-pr` as the merge gate.
+- Files: docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: mandatory `/review-change` end review
+
+## Unit-loop receipt — P10
+- Commit: pending · Gate: the four ACCEPTANCE commands (exit 0) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: mandatory `/review-change` end review, then `/audit-pr` · Attempts: 1

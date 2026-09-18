@@ -189,12 +189,12 @@ deferred`; `n/a` requires evidence, and no row is `deferred` to a follow-up issu
 | O6 | PE-002 + PE-006 | The pi extension blocks the unverifiable inline receipt path and warns once per settled turn on a dirty worktree | P2 | 1 | execute-phase | AC6 validator (`cd packages/pi-agentic-workflow && bun run test`) → exit 0 | test count + exit code in progress.md | verified |
 | O7 | PE-005 + PE-006 | The three skills name the runtimes as their box/step, so no prose path remains for a reviewer to end a turn through | P3 | 1 | execute-phase | AC7 validator (three greps → ≥ 1 each) | grep output in progress.md | verified |
 | O8 | PE-010 + PE-006 | The bundled skills mirror stays byte-identical to `skills/` and every route stays within its enforced context budget | P2 | 4 | execute-phase | AC8 validator (`bun scripts/check-skill-context.mjs` → exit 0; pi suite mirror parity) | command output in progress.md | verified |
-| O9 | PE-006 + PE-009 | The fix-index row flips to `done` with the PR link after the PR opens, and the flagged row-35 boundary is carried to the reviewer | P4 | close-out | execute-phase | AC9 validator (grep the row) → 1 | `docs/fix/README.md` row | planned |
-| O10 | F3; PF-3; PE-014 | The unit's plan-stage preflight is current again at the merged head, and the progress record names the revision each gate held at instead of presenting a superseded `current: true` as standing | P5 | 1 | execute-phase | `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 0 printing `"current": true`, `"digestMatches": true` and `"verdictIsPass": true`, and `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `grep -c "held at revision 81ee3ff6" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1, and `grep -c "superseded by the e2a42683 merge" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1 | the verify JSON (exit 0 with current/digestMatches/verdictIsPass all true), the fresh receipt id, and the corrected gate line in progress.md | planned |
-| O11 | F1; PF-4; PE-012 | The `audit-pr` turn-contract box names the runtime that builds, posts and re-reads the merge-ready marker, so no hand-assembled comment path survives as the box | P6 | 1 | execute-phase | `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0, and `bun scripts/check-skill-context.mjs` → exit 0 | both grep counts (the runtime token present, the hand-assembled comment path gone) and the checker tail in progress.md | planned |
-| O12 | F2; PE-013 | Terminal hygiene is fail-closed: a branch git cannot compare to its remote blocks `branch-pushed` instead of passing as a zero ahead-count | P7 | 1 | execute-phase | `node --test scripts/audit-pr-receipt.test.mjs` → exit 0 (the no-upstream case) | the case name + exit code in progress.md | planned |
-| O13 | F4; PE-015 | The settled-turn git probe is time-bounded, so an unresponsive git cannot park the turn, and its comments state that contract | P8 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (the probe-timeout pins) | the case names + count in progress.md | planned |
-| O14 | F1; PE-012 (the P2/P4 `O8` bundle predates this byte edit) | The committed Pi skills mirror is byte-identical to `skills/` after the `audit-pr` edit, and the package version cell moves with the re-bundle | P9 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (`skill-parity.test.mjs`) | the parity output and the 0.11.1 row | planned |
+| O9 | PE-006 + PE-009 | The fix-index row flips to `done` with the PR link after the PR opens, and the flagged row-35 boundary is carried to the reviewer | P4 | close-out | execute-phase | AC9 validator (grep the row) → 1 | `docs/fix/README.md` row | verified |
+| O10 | F3; PF-3; PE-014 | The unit's plan-stage preflight is current again at the merged head, and the progress record names the revision each gate held at instead of presenting a superseded `current: true` as standing | P5 | 1 | execute-phase | `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-182 --dir docs/fix/182-deterministic-receipts-and-pr-hygiene --unit-kind fix --json` → exit 0 printing `"current": true`, `"digestMatches": true` and `"verdictIsPass": true`, and `grep -c "Pre-execution review receipt v1 — plan" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 3, and `grep -c "held at revision 81ee3ff6" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1, and `grep -c "superseded by the e2a42683 merge" docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md` → ≥ 1 | the verify JSON (exit 0 with current/digestMatches/verdictIsPass all true), the fresh receipt id, and the corrected gate line in progress.md | verified |
+| O11 | F1; PF-4; PE-012 | The `audit-pr` turn-contract box names the runtime that builds, posts and re-reads the merge-ready marker, so no hand-assembled comment path survives as the box | P6 | 1 | execute-phase | `grep -c "audit-pr-gate.mjs comment" skills/audit-pr/SKILL.md` → ≥ 1, and `grep -c "gh pr comment" skills/audit-pr/SKILL.md` → 0, and `bun scripts/check-skill-context.mjs` → exit 0 | both grep counts (the runtime token present, the hand-assembled comment path gone) and the checker tail in progress.md | verified |
+| O12 | F2; PE-013 | Terminal hygiene is fail-closed: a branch git cannot compare to its remote blocks `branch-pushed` instead of passing as a zero ahead-count | P7 | 1 | execute-phase | `node --test scripts/audit-pr-receipt.test.mjs` → exit 0 (the no-upstream case) | the case name + exit code in progress.md | verified |
+| O13 | F4; PE-015 | The settled-turn git probe is time-bounded, so an unresponsive git cannot park the turn, and its comments state that contract | P8 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (the probe-timeout pins) | the case names + count in progress.md | verified |
+| O14 | F1; PE-012 (the P2/P4 `O8` bundle predates this byte edit) | The committed Pi skills mirror is byte-identical to `skills/` after the `audit-pr` edit, and the package version cell moves with the re-bundle | P9 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 (`skill-parity.test.mjs`) | the parity output and the 0.11.1 row | verified |
 
 ## Acceptance
 
@@ -434,14 +434,14 @@ already exists and the fix-index row already reads `done` · [#241], so every ta
 below re-verifies its outcome against the live PR and never re-creates it; the
 end-review task runs after every box in this ledger is ticked.
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Confirm the fix-index row reads `done` · [#241] and commit the flip only if it is missing
-- [ ] `git push`
-- [ ] Verify the open PR and print its URL (`gh pr view 241 --json url`) — never re-create it
-- [ ] Confirm the fix-index row links PR #241 and re-commit only if the link moved
-- [ ] Commit `docs: link PR #241` and push (no empty commit when the link already holds)
-- [ ] Reconcile the obligations ledger's open rows to the status their recorded evidence supports
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Confirm the fix-index row reads `done` · [#241] and commit the flip only if it is missing
+- [x] `git push`
+- [x] Verify the open PR and print its URL (`gh pr view 241 --json url`) — never re-create it
+- [x] Confirm the fix-index row links PR #241 and re-commit only if the link moved
+- [x] Commit `docs: link PR #241` and push (no empty commit when the link already holds)
+- [x] Reconcile the obligations ledger's open rows to the status their recorded evidence supports
 - [ ] Run the end review at the terminal head and paste its receipt line and the `audit-pr` verdict in the unit's progress ledger
 
 Phase-lint: PASS (8/8) · fingerprint `P10:hardening:9:hardening-pr`
