@@ -603,3 +603,26 @@ In scope item 2, E2's state transitions and Expectation sweep row 11 (to
 `stale-source-revision` for moved bound bytes, per AC4/`ACCEPTANCE.md` AC4/E6) and
 recording the `31-spec-12`-successor readiness block, then `/review-spec
 31-planning-review-materiality` re-reviews the new artifact revision.
+
+## Re-review (`spec-review-31-14`, 2026-09-18)
+
+Context-clean `review-spec` delta-review of the F8/F10 Product-half closure batch
+(`31-spec-14`) over spec snapshot
+`00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c` (artifact
+revision `c410a594114ceec4c9607f833a3d3a0d1bfacdca`; author handoff label
+`31-spec-14`). Verdict: **`spec-review-fail`** (12/14; C9 + C10). Repair owner
+`design-feature 31-planning-review-materiality` — one batch over the whole set.
+Window accounting (D-31-7): `spec-review-31-13`'s PASS reset the count, so this is
+cycle 1. No reviewed artifact was modified by the turn.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| F31-14-01 | spec | medium | product | 00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c | AC13's three declared allowed-set groups (`SPEC.md:216-237`) omit `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, which the PR diff carries: the folded review-change finding F6 (commit `9f4e05c2`, an ancestor of HEAD but **not** of the last Product PASS `46968309`) re-based six route ceilings in that file to satisfy AC10's budget gate (`SPEC.md:605` — "budgets updated for the shrink if it moves sizes"). AC13's mechanical anchor therefore lists an out-of-group path and the criterion cannot pass; AC10 (budgets updated) and AC13 (no out-of-group path) assert incompatible sets. Repair class: closure completion — the `P31-06`/`N31-015` enumeration precedent. | `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` → includes `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; `git diff main -- docs/workflow/SKILL_CONTEXT_BUDGETS.json` → six `routeEstimateMax`/`routeLinesMax` re-basings; `git merge-base --is-ancestor 9f4e05c2 46968309` → false (the path entered after the last Product review); `known-issues.md` §3 claims "The only `docs/` paths this PR touches outside the three AC13 groups' first two members are the unit's own records (group 3)" | open | — | — |
+| F31-14-02 | spec | low | product | 00e30f51f537ab87f76670185a70d2c9a3d06d1893a04e4569c5ee7c5ac1733c | AC14's rationale states "each SKILL.md carries nothing but the `version:` change" (`SPEC.md:628`), but In scope 5 (`SPEC.md:177-186`) and AC7's new removal greps (`SPEC.md:565-568`) require `plan-feature/SKILL.md` and `plan-fix/SKILL.md` to lose prose — so those two SKILL.md diffs carry more than the version line. Non-blocking: the ≥ 16 version-hunk mechanism is unaffected; the clause misdescribes two of the eight files. Repair class: mechanical, intent-preserving. | `SPEC.md:620-628` (AC14); `SPEC.md:177-186` (In scope 5); `SPEC.md:565-568` (AC7 `plan-feature`/`plan-fix` removal greps); `skills/bump-skill/SKILL.md:81` (`Never change anything in a SKILL.md except the version: line`) | open | — | — |
+
+Route: `class: product` → repair owner `design-feature
+31-planning-review-materiality` — one batch: add
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` to AC13's declared derived-surface group
+(with the `known-issues.md` §3 correction) and drop or correct AC14's "nothing but
+the `version:` change" clause; then `/review-spec 31-planning-review-materiality`
+re-reviews the new artifact revision.
