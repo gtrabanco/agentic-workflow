@@ -1848,3 +1848,21 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix #244: repaired fold-findings freeze-batch hand-off consumer
 - **Decisions:** P1 pin test observed red before P2 edits (test-first regression guard). Pre-execution review required manually constructing PLAN-REVIEW-PASS receipt (no prior review existed). Pin test parsing used line-by-line row filtering instead of cross-line regex to avoid picking up trailing table cells.
 - **Next:** /review-change on PR #247 → /fold-findings if REVIEW-FAIL → re-run /review-change → /audit-pr merge gate
+## 2026-09-18T22:56:16Z — fix/244-freeze-batch-planner-consumer — manual
+- **Commits:** 20 (`7d4ec6d4…4e22592e`)
+- **Files:** 16 files
+- **Summary:** Full fix lifecycle for #244 freeze-batch hand-off (plan, 4 review cycles, 10 fold batches, version bump 1.5.1, pi mirror re-bundle 0.11.2) — PR #247 open, awaiting merge. Also feature 60 path-protection-guards (PR #245 merged).
+- **Decisions:** (1) 5-phase plan for #244: P1 pin test (red-first), P2 contract repair, P3 version bump, P4 mirror re-bundle, P5 hardening. (2) Review-change went through 4 cycles with LOOP CAP at cycle 2 (user-initiated cycle 3). (3) Feature 60 also completed: plan → 4 review cycles → fold batches → PR #245 merged.
+- **Next:** Merge PR #247 (fix/244-freeze-batch-planner-consumer). Then: /plan-feature --next or /triage-issue for open issues.
+## 2026-09-18T22:57:03Z — fix/244-freeze-batch-planner-consumer — manual
+- **Commits:** 20 (`7d4ec6d4…4e22592e`)
+- **Files:** 16 files
+- **Summary:** 32-review-consistency-pack: repaired SPEC-REVIEW-32-3 findings F11-F12 (out-of-scope template/ bullet disambiguated, evidence row E-24 added)
+- **Decisions:** (1) F11: the out-of-scope bullet's two meanings of 'template' were disambiguated — LEDGERS.md template projections (docs/*/_TEMPLATE/LEDGERS.md) change via D32-7, the template/ export mirror (template/docs/*/_TEMPLATE/LEDGERS.md) does not (feature 28's surface); (2) F12: evidence row E-24 added grounding IS-5(c)'s verify-vs-write claim — ledger-ownership@1 names plan-feature-scaffold:planned-row as the sole roadmap writer, omitting plan-feature which only verifies — a previously unevidenced in-scope claim is now falsifiable from the frozen set.
+- **Next:** PR 247 merge (human), then /plan-feature --next or /workflow-status to discover next roadmap unit
+## 2026-09-18T22:57:03Z — fix/244-freeze-batch-planner-consumer — manual
+- **Commits:** 20 (`7d4ec6d4…4e22592e`)
+- **Files:** 16 files
+- **Summary:** Multi-feature delivery: fix-244 freeze-batch consumer PR-247 review-change cycles 1 through 4 LOOP CAP user-override, fix-182 merged PR-241, feature 31 planning-review materiality PR-243, feature 60 path-protection-guards PR-245 F1 through F31 fold batches, feature 32 review-consistency-pack SPEC-REVIEW-32-3 FAIL F11 F12
+- **Decisions:** LOOP CAP user-override on fix-244: review-change exceeded the 2-cycle fold cap at cycle 3, user-initiated cycle 4. D2 block persists on PR-247: roadmap row 70 Closes-244 boundary. Feature 32: CONVERGENCE-ANOMALY on second repair cycle; F11 template mirror vs docs projection disambiguation, F12 IS-5(c) premise has no evidence row. Feature 60 fold batches span 31 fix-now findings.
+- **Next:** PR-247: resolve D2 roadmap row 70 then audit-pr-247 for merge. Feature 32: design-feature 32-review-consistency-pack to repair F11 plus F12. Feature 60: audit-pr-245. Feature 31: audit-pr-243.
