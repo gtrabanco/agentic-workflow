@@ -4524,3 +4524,151 @@ READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
   closure before any plan re-derivation or source fold
   · the frozen `ACCEPTANCE.md` re-freezes at `plan-feature`'s re-cut on a
     fresh PASS (the `31-plan-5` precedent)
+
+---
+
+# Spec re-review `spec-review-31-15` — fresh-context reviewer turn (2026-09-18)
+
+Cycle 2 of the window `spec-review-31-13`'s PASS opened (D-31-7): `spec-review-31-14`
+was cycle 1 (FAIL, F31-14-01 + F31-14-02), the batch `31-spec-15` repaired it, and
+this turn re-judges the rotated bytes. Fresh context; this conversation never
+authored or edited the reviewed Product half. No `CONVERGENCE-ANOMALY` is owed:
+the count is over **unconverged** repair/re-review cycles (repo
+`skills/pre-execution-review/references/POLICY.md` §4), and this second invocation
+converged — the same reading `spec-review-31-13` recorded.
+
+## Falsification (clean-context, answered before checking)
+
+```text
+FALSIFICATION — 31-planning-review-materiality @ d203f79e
+- 3 specific product decisions a hostile reader could call invented:
+    1. AC13 group 2's inclusion of the derived budget manifest
+       `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — recorded D-31-13 with the
+       F6 fold `9f4e05c2` precedent and the owner commission; not invented.
+    2. Dropping AC14's "nothing but the `version:` change" clause — recorded
+       D-31-13 with `skills/bump-skill/SKILL.md:81`'s own scope as authority;
+       not invented.
+    3. Correcting the Integration-closure row four → eight skill bumps — the
+       D-31-12 widening carried from the prior reviewed batch; not invented.
+- User outcome with no observable check: In-scope 5's positive declaration on the
+  four driver surfaces (they declare that a recorded wording-only batch skips the
+  re-review) is observed only through AC7's removals — the same context the
+  `spec-review-31-14` falsification recorded; C8's letter holds (In scope 5 → AC7).
+- Role the matrix leaves unspecified for a capability it lists: none — 5 derived
+  roles × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied`.
+- What would have to be true in the repository for this half to be wrong, and is
+  it true?: the repaired AC13 group would still leave the budget manifest
+  out-of-group, or AC14 would still carry the version-only clause, or
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` would not be in the PR diff. All
+  false: group 2 names the manifest (`SPEC.md:229-233`), AC14 carries no
+  version-only clause, and the AC13 anchor lists the manifest as an in-group path.
+- Verdict stance before checking: NO-CONFIRMED-GAPS
+```
+
+## Product checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | In scope 1–8 each name an observable machine outcome with its AC anchor (1→AC1/2/3, 2→AC4, 3→AC5/7, 4→AC6, 5→AC7, 6→AC8/9, 7→AC10/11/14, 8→AC12; allowed-set groups→AC13), `SPEC.md:129-214` |
+| C2 | Actors and roles | pass | 5 derived roles × 5 capabilities (C1–C5), every cell explicit `allowed`/`denied`, entry point named per capability, `SPEC.md:390-425` |
+| C3 | Entity closure | pass | E1–E3 resolve CRUD + state transitions to surfaces/tests or explicit `n/a: <reason>`; zero blank rows, `SPEC.md:273-341` |
+| C4 | Limits and failure states | pass | Limit = findings ≤ 64 (`PRE_EXECUTION_LIMITS.findings`) + the two-cycle cap; failure states resolved (unconverged loop → stage-scoped human stop; unrecorded rotation → `stale-source-revision`; mislabeled defect → `medium` minimum; wording-only misroute → recorded determination + rotation), `SPEC.md:341-360` |
+| C5 | Scope and non-goals | pass | 7 out-of-scope bullets, each naming a preserved contract, an owning feature, or an explicit exclusion; nothing excluded by silence, `SPEC.md:243-271` |
+| C6 | Integration closure | pass | 12 derived subsystem rows, one per subsystem, none skipped; inventory recorded because `docs/CAPABILITIES.md` is the unseeded template; the "Versioning/release surfaces" row now reads eight skill minor bumps, matching In scope 7 + AC14, `SPEC.md:363-388` |
+| C7 | Expectation sweep | pass | 19 numbered rows (≥ 10 for `M`), each resolved to exactly one of `in-scope`/`out-of-scope` with a pointer — counted mechanically (`awk` → 19), `SPEC.md:428-454` |
+| C8 | Acceptance objectivity | pass | AC1–AC14 objective, each labelled command or command+`read-verified`; every In-scope bullet maps to ≥ 1 AC; the repaired AC14 anchor (`grep -cE '^[+-]version: '` ≥ 16) is command-checkable and no longer misstates the two driver `SKILL.md` diffs; AC13's anchor now lists only in-group paths, `SPEC.md:456-645` |
+| C9 | Internal contradiction | pass | F31-14-01 and F31-14-02 are closed with no new contradiction: AC13's declared groups now carry the derived budget manifest, so AC10's budget gate and AC13's scope guard assert compatible sets (`SPEC.md:229-233`); AC14 carries no version-only clause contradicting In scope 5 + AC7 (`SPEC.md:623-644` vs `:177-186`, `:565-568`); the Integration-closure eight matches In scope 7 + AC14 (`SPEC.md:380`) |
+| C10 | Repository contradiction | pass | The AC13 mechanical anchor's non-excluded paths are only declared group 1/2 paths — `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md'` lists `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (now group 2), `CHANGELOG.md`, `README.md`, `packages/agentic-workflow-schema/**`, `packages/pi-agentic-workflow/skills/**`, `scripts/**`, `skills/**`; the negative scan for any other path returns nothing. Machine claims match: `stale-source-revision` precedes `stale-artifact-content` (`pre-execution.ts:1154` < `:1156`; `scripts/pre-execution-snapshot.mjs:400` < `:412`); material = `medium`+ (`MATERIAL_FINDING_SEVERITIES` `pre-execution.ts:989`, used `:1069`); bounded `reproducer` (`pre-execution-contract.ts:169,500`; README published limit `packages/agentic-workflow-schema/README.md:421`); `stop-review-loop-cap` (`index.ts:726,1172`); `VERDICTS_BY_STAGE` spec-only `needs-design` (`pre-execution-contract.ts:135-139`); bundler owned by the pi package (`packages/pi-agentic-workflow/package.json:46`); ROADMAP row 29 `done · #175`. Read-verified note: the Context's present-tense problem statements (`SPEC.md:58-94`) describe the pre-shrink state this feature removes — the branch has since implemented the shrink (`e2c288ce`) and the predicate (`pre-execution.ts`), so those sentences read as the feature's problem statement, not as live current-state claims; the operative requirements and criteria are unaffected |
+| C11 | Evidence integrity | pass | Every `decisions.md` evidence row's `freshness` is `current` (or the explicit `n/a`) and its `status` `proven`; no `stale`/`drifted`/`unknown` row survives (the 55 `stale` tokens are freshness-code names); D-31-13 + its six evidence rows are `current`/`proven`; the `31-spec-15` `READINESS — … spec READY-FOR-REVIEW` block exists in this file; F31-14-01/F31-14-02 are verified repaired on disk (see C9/C10) |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none` (empty table, `SPEC.md:695-700`); the only open product-owned item is the code-side `review-change` finding F9, flagged for the human in `## Design status` with its main-sync alternative; no Product-half choice is open |
+| C13 | Engineering leakage | pass | The half cuts no phase, task, validator or architecture; naming the machine carriers is the owner's D-31-6 carrier ruling, and the superseded plan set is a declared non-goal |
+| C14 | Obligation containment | pass | No current-unit obligation is exported to a future issue; the superseded plan set is a declared non-goal, not an export; version bumps/pins and the README bibliography are in-unit (AC9/AC11/AC12/AC14) |
+
+Findings: 0 (material open: 0).
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: spec-review-31-15 · Snapshot: 47e4d49aa0dff90459f128fee9def9f350acaf780248175c61b1a019a3676451 · Verdict: spec-review-pass
+- Unit: 31-planning-review-materiality · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: d203f79e478ebec710013101b8e3c692c91be74b · Artifact revision: d203f79e478ebec710013101b8e3c692c91be74b
+- Reviewer: review-spec@pi · Session: pi-web-manual · Role: reviewer · Author: design-feature (repair batch `31-spec-15`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T21:52:00Z/2026-09-18T21:58:39Z · Findings: 0 (material open: 0)
+- Artifact: docs/features/31-planning-review-materiality/SPEC.md · selector spec-product-v1 · bytes 54033 · digest e5c8d06d45c5059b572ceac382f04c5f72eea20af641e8b555ee9a1ba863908e · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 14/14 pass; full re-run against the repaired bytes; falsification NO-CONFIRMED-GAPS
+```
+
+Artifact-revision and process notes:
+
+- The handoff names the authoring label `31-spec-15` (`SPEC.md` `## Design status`;
+  `## Amendments` `### 31-spec-15`; the readiness block above). No runtime rotates
+  `artifactRevisionId` in this environment, so the receipt binds the builder's
+  digest-derived value `d203f79e…`; the label stays recorded here — the
+  reconciliation every prior receipt made.
+- The reviewed bytes are committed at `d203f79e` (clean tree at review start), so
+  the builder's "commit the bound artifacts" precondition held. The only writes this
+  turn makes are to the unbound `progress.md` and `planning-findings.md`, neither of
+  which `STAGE_ARTIFACTS.spec` binds, so the bound digest is unchanged by them.
+- Ledger hygiene (non-blocking, not a finding against the half): the `31-spec-15`
+  repair batch did not flip its two resolved rows in `planning-findings.md` —
+  `F31-14-01` (medium) and `F31-14-02` (low) still read `status: open`. Both defects
+  are verified repaired here (C9/C10), so this review's PASS is not blocked; the
+  flip is `design-feature:product-class-resolutions`' column set (LEDGERS §3), not
+  the reviewer's. The owed flip is recorded so `audit-pr` does not read the stale
+  `open` tokens as an unresolved material finding.
+- Cycle counting (D-31-7): `spec-review-31-13`'s PASS reset the count; `31-spec-15`
+  is the window's second review invocation and it converged, so no
+  `CONVERGENCE-ANOMALY` block is owed and the `stop-review-loop-cap` refusal is not
+  armed.
+
+Self-check (`verify --stage spec`, POLICY §8) — run in the same act as the receipt
+write, before this report:
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "31-planning-review-materiality",
+  "receipt": {
+    "id": "spec-review-31-15",
+    "verdict": "spec-review-pass",
+    "snapshot": "47e4d49aa0dff90459f128fee9def9f350acaf780248175c61b1a019a3676451",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "47e4d49aa0dff90459f128fee9def9f350acaf780248175c61b1a019a3676451",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — a PASS: `structural.fresh: true`, `current: true`, `digestMatches:
+true`.)
+
+---
+
+## Verdict
+
+```text
+SPEC-REVIEW-PASS — 31-planning-review-materiality
+- Snapshot: 47e4d49aa0dff90459f128fee9def9f350acaf780248175c61b1a019a3676451 · Artifact revision: d203f79e478ebec710013101b8e3c692c91be74b · Checks: 14/14
+- Material findings open: 0 · Read-only: no reviewed artifact modified
+- Authority: planning may bind this receipt as its Product parent
+```
+
+No reviewed artifact was modified by this turn; the only writes are the unbound
+`progress.md` receipt block and the `planning-findings.md` re-review record.
+
+→ Next: /plan-feature 31-planning-review-materiality — Product half reviewed; the plan binds this receipt
+  · design changed underneath → re-run /review-spec 31-planning-review-materiality first
+  · the `31-spec-15` rows `F31-14-01`/`F31-14-02` still read `open` → flip them to `resolved` at `31-spec-15` (`design-feature:product-class-resolutions`), then `/audit-pr`
+  · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
