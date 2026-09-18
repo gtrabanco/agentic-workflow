@@ -115,9 +115,17 @@ function mustGit(args) {
   return result.stdout;
 }
 
-/** The repository's base branch, resolved the same way the skills do. */
+/** The repository's base branch, resolved the same way the skills do. An
+ * explicit `--base` that does not resolve is a usage error, never a silent
+ * fallback to `origin/main` (issue #182 F7). */
 function resolveBase(explicit) {
-  for (const candidate of [explicit, "origin/main", "main"].filter(Boolean)) {
+  if (explicit !== undefined && explicit !== null && String(explicit).trim() !== "") {
+    if (git(["rev-parse", "--verify", "--quiet", explicit]).status !== 0) {
+      throw new Error(`--base ${explicit} does not resolve to a known revision`);
+    }
+    return explicit;
+  }
+  for (const candidate of ["origin/main", "main"]) {
     if (git(["rev-parse", "--verify", "--quiet", candidate]).status === 0) return candidate;
   }
   return null;
@@ -181,10 +189,23 @@ function readValue(value) {
   return value;
 }
 
-/** `git show HEAD:<rel>` — an untracked log has an empty baseline. */
+/**
+ * `git show HEAD:<rel>` — an untracked log has an empty baseline. Only the
+ * *absent* case is an empty baseline: a HEAD that does not resolve, or a
+ * committed path git cannot read, fails closed instead of emptying the baseline
+ * and letting `appendedOnly` accept any rewrite (issue #182 F8).
+ */
 function baselineOf(rel) {
-  const result = git(["show", `HEAD:${rel}`]);
-  return result.status === 0 ? result.stdout : "";
+  const spec = `HEAD:${rel}`;
+  if (git(["rev-parse", "--verify", "--quiet", "HEAD"]).status !== 0) {
+    throw new Error(`cannot establish the ${rel} baseline: HEAD does not resolve`);
+  }
+  if (git(["cat-file", "-e", spec]).status !== 0) return "";
+  const result = git(["show", spec]);
+  if (result.status !== 0) {
+    throw new Error(`git could not read the committed ${rel}: ${(result.stderr || "").trim() || "unknown error"}`);
+  }
+  return result.stdout;
 }
 
 function relativeToRoot(logPath) {
