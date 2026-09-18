@@ -135,6 +135,13 @@ Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and 
 What test confirms the fix, at what layer (unit / integration /
 architecture). Prefer integration over heavy mocking.
 
+Declare the test set in the `path-protection-plan@1` block of this SPEC's
+`## Phases`: `freeze-after: <P<n>|none>` plus one justified
+`created | <repo-relative path or glob> | <one-line justification>` /
+`not-created | <test name> | <one-line justification>` /
+`ignored | <test name> | <one-line justification>` row per test decision.
+Placeholder tokens only — never a project glob.
+
 ## Rollback
 
 How to revert safely if the fix misbehaves in production. State the

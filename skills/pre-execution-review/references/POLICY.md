@@ -170,9 +170,9 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   printed without the pasted self-check output is a contract defect, and every
   consumer reads a chat-only verdict as `missing-receipt-snapshot` — it does not
   exist to the sensor.
-- **A gate rejection is typed**, from a closed set of four: `dependency`, `status`,
-  `phase-lint`, `stale-or-missing-receipt`. Each fixed gate block carries its type
-  and names what it read and where the turn goes:
+- **A gate rejection is typed**, from a closed set of five: `dependency`, `status`,
+  `phase-lint`, `path-protection`, `stale-or-missing-receipt`. Each fixed gate
+  block carries its type and names what it read and where the turn goes:
 
   ```text
   GATE REJECTION — <type>
@@ -191,6 +191,7 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   dependency | PREFLIGHT.md
   status | PREFLIGHT.md
   phase-lint | PREFLIGHT.md
+  path-protection | PREFLIGHT.md
   stale-or-missing-receipt | PRE_EXECUTION_GATE.md
   ```
 

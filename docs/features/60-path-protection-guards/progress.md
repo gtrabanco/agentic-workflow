@@ -855,5 +855,17 @@ can be violated, introduced, or changed by this repair.
 - Next: P3 — Checkpoint contract adoption
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: `diff <(node -e "import('./packages/agentic-workflow/src/path-policy.mjs').then(m=>process.stdout.write(m.serializeShippedPolicy()))") template/.agentic-workflow/path-policy.json` (empty) + `grep -c 'path-policy' skills/init-workspace/references/*.md` (3/3) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Commit: 8b867bfa · Gate: `diff <(node -e "import('./packages/agentic-workflow/src/path-policy.mjs').then(m=>process.stdout.write(m.serializeShippedPolicy()))") template/.agentic-workflow/path-policy.json` (empty) + `grep -c 'path-policy' skills/init-workspace/references/*.md` (3/3) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
 - Next: P3 · Attempts: 1
+
+## P3 — 2026-09-18
+- Done: the `path-protection@1` grammar block in `skills/orchestration-envelope/references/TURN_CONTRACT.md`; the committed-range checkpoint step + typed `GATE REJECTION — path-protection` trace in `skills/execute-phase/references/PREFLIGHT.md`; the `path-protection` row and the "closed set of five" prose in `skills/pre-execution-review/references/POLICY.md`; the two `normative-surfaces@1` rows in `CLAUDE.md` (`path-protection-contract`, `path-protection-reasons`) plus the `verification-contract` test-immutability pointer; the declaration-block instruction in `skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md`, `docs/features/_TEMPLATE/SPEC.md` and `docs/fix/_TEMPLATE/SPEC.md`; the budget re-basis; 8/8 P3 tasks ticked.
+- Remains: none in P3.
+- Gotchas: `path-protection-reason` is registered by the `schema-export:PATH_GUARD_REASONS` row and consumed by the `block:path-protection@1` row, so the two rows must stay paired. The budget re-basis moved 19 route ceilings and the execute-phase reference ceiling to `ceil(measured × 1.10)` (feature 60 P3 growth source). The checkpoint step now runs at each subsequent phase's preflight; the P1 range was not observed by a wired preflight (it predates this phase) and the P5 close-out gate covers the final range.
+- Files: skills/orchestration-envelope/references/TURN_CONTRACT.md, skills/execute-phase/references/PREFLIGHT.md, skills/pre-execution-review/references/POLICY.md, CLAUDE.md, skills/verification-contract/SKILL.md, skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md, docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, docs/features/60-path-protection-guards/{TASKS.md,testing.md,progress.md}
+- Base ref: 8b867bfa00b309f7bc77ef21e7e394e17242fe97
+- Next: P4 — Pi preventive guard
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` (17 pass) + `node scripts/check-skill-context.mjs` (PASS, 40 skills; --routes PASS, 22 routes) · Acceptance blob: aceb3d52402506214bbc85060508a9414323ddca
+- Next: P4 · Attempts: 1
