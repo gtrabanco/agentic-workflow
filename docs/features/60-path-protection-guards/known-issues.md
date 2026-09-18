@@ -35,3 +35,13 @@
   `ceil(measured × 1.10)` rule with the growth source named. An unrelated
   over-ceiling route at execution is a pre-existing repo condition and is named
   in the phase handoff rather than widening this unit.
+
+- **B-06 — AC-07's frozen validator has a directory-grep encoding defect (disclosed,
+  not edited):** the criterion's validator `grep -nE 'tests/\*\*|e2e/\*\*' skills/`
+  passes a directory operand without `-r`, so GNU grep prints
+  `grep: skills/: Is a directory` and exits 2 instead of returning no output. The
+  assertion it intends — no project-specific globs are inlined in `skills/` — holds:
+  `grep -rnE 'tests/\*\*|e2e/\*\*' skills/` → no match, exit 1. `ACCEPTANCE.md` is
+  frozen and was not edited during execution; the end review (`review-change`) sees
+  this disclosure. Re-trigger: a user-approved SPEC amendment that re-freezes AC-07
+  should encode the recursive form.
