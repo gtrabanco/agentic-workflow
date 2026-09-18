@@ -87,3 +87,15 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
   skills / 125 files) so `skill-parity.test.mjs` stays green after the P3 skill
   edits; the two contract-shape assertions updated for the reviewed extension are
   recorded as E-60-20.
+- **P5 (2026-09-18)** — full ladder: `node --test scripts/*.test.mjs` → 510 pass /
+  0 fail; `bun test packages/agentic-workflow/test/` → 74 pass; `cd
+  packages/pi-agentic-workflow && bun run test` → 228 pass. Same-PR minor sweep:
+  `execute-phase` 4.6.0, `plan-feature-scaffold` 2.4.0, `init-workspace` 2.9.0,
+  `orchestration-envelope` 2.2.0, `pre-execution-review` 2.3.0,
+  `verification-contract` 1.3.0, `@gtrabanco/pi-agentic-workflow` 0.11.0;
+  `node --test scripts/normative-drift.test.mjs` → 17 pass; `node
+  scripts/check-skill-context.mjs` → PASS; Pi mirror re-bundled with
+  `skill-parity.test.mjs` green. Acceptance blob re-verified
+  `aceb3d52…`; phase-lint fingerprints still
+  `381019477bdf277c455ec78b11d05c10a01542db75161a4f737a0fb9add85e0a`. The
+  close-out path gate is blocked on the owner approval recorded in E-60-21.
