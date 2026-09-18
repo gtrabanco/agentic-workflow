@@ -1323,3 +1323,56 @@ Repair owner `design-feature` (product class); no receipt text was touched
 | The frozen `ACCEPTANCE.md` requires re-freeze by `plan-feature` on a fresh PASS: AC4's validator text, AC7's removal-grep enumeration (nine → sixteen) and AC14's touched-skill set moved with this batch | repository | `ACCEPTANCE.md` AC4/AC7/AC14 vs the patched `SPEC.md` at `31-spec-14` | `849af5ae` blob @ 2026-09-18 | current | proven | `plan-feature` re-cut (the `31-plan-5` precedent) |
 | Receipt state at authoring start: `verify --stage spec` → exit 0, receipt `spec-review-31-13` PASS current, `digestMatches: true` — this batch moves Product bound bytes with no wording-only determination (a Product predicate change is never wording-only, D-31-11's own rule), so the receipt goes stale by design; the next `/review-spec` is cycle 1 of a fresh window (D-31-7) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-18 at `553982d3`) | `553982d3` @ 2026-09-18 | current | proven | the re-review hand-off |
 | Prior materiality-domain research rows (arXiv:2603.00539; Google eng-practices "Nit:"; GitHub required status checks; Tricorder; content-addressable storage; invalidation ladders) remain current — this batch adds the two rows above for its new domain claims | document | `decisions.md` §Evidence rows (2026-09-17 batches; E-D31-28) | — | current | proven | — |
+
+## 2026-09-18 — Review-finding repair batch (design-feature, artifact revision `31-spec-15`)
+
+Trigger: `spec-review-31-14` returned `SPEC-REVIEW-FAIL` (12/14; C9 + C10) with
+two `product` rows (F31-14-01 `medium`, F31-14-02 `low`); one batch over the
+whole open spec-stage set, repair owner `design-feature`. Commission (explicit
+user instruction, verbatim): "add docs/workflow/SKILL_CONTEXT_BUDGETS.json to
+AC13's declared derived-surface group (and correct known-issues.md §3), and
+drop/correct AC14's 'nothing but the version: change' clause" — quoted in
+`SPEC.md` Amendments `31-spec-15` and `progress.md` (REPAIR §4: a repair
+responding to a persisted verdict is never a loop defect).
+
+### D-31-13: The declared derived-surface group carries the budget manifest; version-only is `bump-skill`'s own constraint, not the unit's
+
+- **What**: AC13's second declared group (Prose-shrink surfaces + derived
+  surfaces) gains `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the route
+  ceilings AC10's `check-skill-context.mjs` gate reads, re-based when the
+  shrink moves a route's measured size — and `known-issues.md` §3 names it;
+  AC14 drops the false "each SKILL.md carries nothing but the `version:`
+  change" clause (the two driver-surface skills carry the declaration prose
+  In scope 5 + AC7 require), and the Integration-closure row
+  "Versioning/release surfaces" is corrected four → eight skill minor bumps
+  (same root cause).
+- **Why**: F31-14-01 — the PR diff already carries the budget manifest (F6's
+  fold `9f4e05c2` re-based the six feature-31 route ceilings to
+  ceil(measured × 1.10) at a declared re-basis), so AC10's budget gate and
+  AC13's scope guard asserted incompatible sets; the declared set lagged the
+  designed edits, the same defect class AC13/P31-06 closed for the
+  code-carrier group and N31-015 for its test-suite members. F31-14-02 — the
+  version-only sentence attributed `bump-skill`'s own edit guardrail
+  (`skills/bump-skill/SKILL.md:81`) to the unit's SKILL.md diffs, which AC7's
+  removal greps require to carry prose changes in exactly those two files.
+- **Consequence**: no vocabulary value, verdict, exit code or criterion
+  outcome moves. AC13's mechanical anchor lists only in-group paths after the
+  widening; AC14's ≥ 16 anchor is unchanged (each touched SKILL.md still
+  contributes exactly one `version:` hunk pair); `known-issues.md` §3's
+  no-materiality-text rule for `docs/workflow/` is unchanged — only its
+  "only the unit's records" claim is corrected.
+- **Authority**: the owner commission (quoted in Amendments `31-spec-15`);
+  D-31-12 (the eight-skill widening whose Integration row lagged);
+  `progress.md` spec-review-31-14 findings F31-14-01 (C9/C10) and F31-14-02
+  (C9).
+
+### Evidence rows (F31-14-01 + F31-14-02 repair batch, 2026-09-18)
+
+| claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|
+| The AC13 mechanical anchor lists `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — one hit, outside all three declared groups — while the PR diff carries the file (13 insertions / 13 deletions) | repository | `git diff main --name-only -- . ':(exclude)docs/features/31-planning-review-materiality' ':(exclude)docs/features/ROADMAP.md' ':(exclude)docs/LOGS.md' \| grep -c SKILL_CONTEXT_BUDGETS` → 1; `git diff main --stat -- docs/workflow/SKILL_CONTEXT_BUDGETS.json` | branch head @ 2026-09-18 | current | proven | the group widening makes AC13's walk satisfiable; P5 re-runs AC13 |
+| The budget manifest is the input `check-skill-context.mjs` reads and the shrink re-bases when a route's measured size moves — F6's fold re-based six feature-31 route ceilings to ceil(measured × 1.10) at a declared re-basis naming feature 31 P4 | repository | `scripts/check-skill-context.mjs:9` (`manifestPath`); commit `9f4e05c2` (fold F6, 2026-09-18); AC10's "budgets updated for the shrink if it moves sizes" | `9f4e05c2` @ 2026-09-18 | current | proven | AC10's gate at P5 |
+| The two driver-surface skills' SKILL.md files must lose prose today — AC7's removal fragments stand at `plan-feature/SKILL.md:176` and `plan-fix/SKILL.md:138` — so AC14's "nothing but the `version:` change" clause was unsatisfiable as written | repository | observed greps (2026-09-18, both fragments present); SPEC In scope 5 + AC7 | branch head @ 2026-09-18 | current | proven | P4 rewrites the surfaces, P5 re-runs AC7 |
+| The version-only rule is `bump-skill`'s own guardrail — it constrains what `bump-skill` edits, not the unit's direct SKILL.md edits | repository | `skills/bump-skill/SKILL.md:81` ("Never change anything in a SKILL.md except the `version:` line") | branch head @ 2026-09-18 | current | proven | AC14's corrected walk |
+| Same-root-cause staleness: the Integration-closure row "Versioning/release surfaces" said "four skill minor bumps" against AC14's "eight touched skills" (D-31-12's four→eight widening lagged the row) | repository | SPEC Integration-closure row, pre-patch bytes of this write | branch head @ 2026-09-18 | current | proven | corrected in this batch; verified by the row's own Test cell pointing at AC14 |
+| Receipt state at authoring start: `verify --stage spec` → exit 0, `structural.fresh: true`, `digestMatches: true`, receipt `spec-review-31-14` FAIL current (`verdictIsPass: false`) — this batch moves Product bound bytes with no wording-only determination, so the receipt stays superseded; the next `/review-spec` is cycle 2 of the window `spec-review-31-13`'s PASS opened (second cycle allowed when correctness needs it — POLICY §4) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-18) | branch head @ 2026-09-18 | current | proven | the re-review hand-off |

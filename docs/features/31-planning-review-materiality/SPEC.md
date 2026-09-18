@@ -226,7 +226,12 @@ scope guard walks them instead of reporting them as violations → AC13:
   `plan-fix/SKILL.md`, `ship-roadmap/references/ADVANCE.md`,
   `replan-findings/references/PHASE_APPEND.md`) plus the touched skills'
   `version:` lines; the README skill-table cells; `CHANGELOG.md`; the Pi mirror
-  under `packages/pi-agentic-workflow/skills/**` (written only by the bundler).
+  under `packages/pi-agentic-workflow/skills/**` (written only by the bundler);
+  and the shrink's derived budget manifest
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the route ceilings AC10's
+  `check-skill-context.mjs` gate reads, re-based when the shrink moves a
+  route's measured size (the F6 fold `9f4e05c2` declared re-basis is the
+  precedent).
 - **Workflow-mutated record surfaces** (per `verification-contract`
   §Validator stability): the unit's own records under
   `docs/features/31-planning-review-materiality/**`, the unit's
@@ -372,7 +377,7 @@ block (user confirms; upsert-safe).
 | Planning findings ledger (`LEDGERS.md` §3 + ownership map) | yes | Persists `low` report-notes (append-only contract unchanged); row shape, writers, resolvers unchanged | `ledger-ownership` + `ledger-provenance` + `pre-execution-quality` suites |
 | Discipline & quality test pack (`scripts/*.test.mjs`) | yes | `review-loop-discipline.test.mjs` planning pins re-aim at the code carriers; existing assertions keep strength | AC8 + AC9 (no-weakening walk) |
 | Pi package mirror (`packages/pi-agentic-workflow/skills/`) | yes | Re-bundled after the last `skills/` edit, from the package that owns the script | mirror parity: `cd packages/pi-agentic-workflow && bun run test` (AC11) |
-| Versioning/release surfaces (package + skill `version:`s, `CHANGELOG.md`, README tables) | yes | Schema package minor bump; four skill minor bumps; CHANGELOG rows + README cells via `bump-skill` | AC10 + AC14 + rendered-facts consistency |
+| Versioning/release surfaces (package + skill `version:`s, `CHANGELOG.md`, README tables) | yes | Schema package minor bump; eight skill minor bumps; CHANGELOG rows + README cells via `bump-skill` | AC10 + AC14 + rendered-facts consistency |
 | README references (bibliography) | yes | The issue's citation obligation lands as a bottom `## References` append in the implementation PR — never before | AC12 grep at PR head |
 | Workflow tutorial + site guides (`docs/workflow/*`, `docs/site/guides/`) | partial | No severity statement exists today; no edit; generated guides change only if `docs/workflow/` prose changes (it does not) | n/a here; `audit-docs` owns drift |
 | GitHub templates / forge surfaces (`.github/`, issue/PR forms) | no | Untouched by this feature | n/a — no surface exists to integrate with |
@@ -625,8 +630,12 @@ Command-checkable at the PR head unless labelled `read-verified`.
   skills/ship-roadmap/SKILL.md skills/replan-findings/SKILL.md | grep -cE
   '^[+-]version: '` returns ≥ 16 (one removed + one added `version:` line per
   touched skill; a skill whose `version:` did not move contributes no such
-  hunk — each SKILL.md carries nothing but the `version:` change, per
-  `bump-skill`'s guardrail), and the walk verifies: each old→new pair is a
+  hunk — `bump-skill`'s version-only guardrail governs what `bump-skill`
+  itself edits, while the two driver-surface skills `plan-feature` and
+  `plan-fix` additionally carry the wording-only declaration prose In scope 5
+  + AC7's removal greps require, so their SKILL.md diffs are not version-only;
+  each touched SKILL.md still contributes exactly one `version:` hunk pair),
+  and the walk verifies: each old→new pair is a
   semver-minor increment (minor per the #176 freeze — no major);
   `CHANGELOG.md` gains one per-skill row per bumped skill (newest first — the
   `normative-drift` version-tables check in AC10's pack recomputes those
@@ -719,7 +728,23 @@ Product boxes:
 
 ## Design status
 
-`designed` — user-commissioned review-findings closure batch **`31-spec-14`**
+`designed` — user-commissioned repair batch **`31-spec-15`** (2026-09-18)
+applied: the repair for `spec-review-31-14`'s two `product` rows — AC13's
+declared derived-surface group gains the shrink's budget manifest
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` (the route ceilings AC10's gate
+reads, re-based when the shrink moves a route's measured size; F31-14-01,
+D-31-13), `known-issues.md` §3 is corrected to name it, AC14's false "each
+SKILL.md carries nothing but the `version:` change" clause is dropped (the two
+driver-surface skills carry the declaration prose In scope 5 + AC7 require;
+`bump-skill`'s version-only guardrail governs `bump-skill`'s own edits;
+F31-14-02), and the Integration-closure row "Versioning/release surfaces" is
+corrected four → eight skill minor bumps (same root cause). No criterion
+outcome moves — F31-14-01 makes AC13 satisfiable against the diff the PR
+already carries, F31-14-02 drops an unsatisfiable clause, and AC14's ≥ 16
+anchor is unchanged. Capability closure group: complete (zero blank rows),
+Spec-lint product boxes all PASS, readiness preflight `READY-FOR-REVIEW` at
+artifact revision **`31-spec-15`** (see `## Amendments`). Earlier state:
+user-commissioned review-findings closure batch **`31-spec-14`**
 (2026-09-18) applied: fix-now findings **F8** (`medium`, spec-drift) and
 **F10** (`medium`, brand) from the unit's `review-change` ledger, both routed
 to the product owner — AC4, In scope 2, E2, C3 and sweep row 10 now declare
@@ -1335,6 +1360,41 @@ owner at a time. Rows 35/42 (and 46's coordination) chain after it per
 ---
 
 ## Amendments
+
+### `31-spec-15` (2026-09-18) — repair batch for `spec-review-31-14` (F31-14-01 + F31-14-02)
+
+User-commissioned repair batch (2026-09-18), commissioned as: "add
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` to AC13's declared derived-surface
+group (and correct `known-issues.md` §3), and drop/correct AC14's 'nothing but
+the `version:` change' clause" — one repair batch for F31-14-01 + F31-14-02.
+Trigger: `spec-review-31-14` returned `SPEC-REVIEW-FAIL` (12/14; C9 + C10)
+with two `product` rows — F31-14-01 (`medium`: AC10 requires the budget gate
+green while AC13's declared groups forbid the budget path the PR diff already
+carries; F6's fold `9f4e05c2` re-based the six feature-31 route ceilings in
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json`) and F31-14-02 (`low`: AC14's
+"each SKILL.md carries nothing but the `version:` change" contradicts In
+scope 5 + AC7, which require `plan-feature/SKILL.md` and `plan-fix/SKILL.md`
+to lose prose). Repair owner `design-feature` (product class). Repair classes:
+
+| Finding | Class · severity | Repair | Where |
+|---|---|---|---|
+| F31-14-01 | product · medium | The `## Scope` **Prose-shrink surfaces + derived surfaces** group gains the shrink's derived budget manifest `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — the route ceilings AC10's `check-skill-context.mjs` gate reads, re-based when the shrink moves a route's measured size (the F6 fold's declared re-basis is the precedent) — so AC13's scope walk stops reporting a path the PR diff carries by design and AC10/AC13 assert compatible sets; `known-issues.md` §3 is corrected to name the manifest instead of claiming the unit's records are the only `docs/` paths outside the first two groups. One-line declaration widening; no criterion outcome, closure row, sweep row or non-goal moved. Repair class: **closure completion** (the same defect class AC13/P31-06 closed for the code-carrier group and N31-015 for its test-suite members — the declared set lagging the designed edits). | `## Scope` allowed-set group 2; `known-issues.md` §3 |
+| F31-14-02 | product · low | AC14's "each SKILL.md carries nothing but the `version:` change, per `bump-skill`'s guardrail" parenthetical is dropped: `bump-skill`'s version-only guardrail (`skills/bump-skill/SKILL.md:81`) governs what `bump-skill` itself edits, while the two driver-surface skills `plan-feature` and `plan-fix` additionally carry the wording-only declaration prose In scope 5 + AC7's removal greps require, so their SKILL.md diffs are not version-only; each touched SKILL.md still contributes exactly one `version:` hunk pair (the ≥ 16 anchor is unchanged). Also repaired in the same batch, same root cause: the Integration-closure row "Versioning/release surfaces" still said "four skill minor bumps" against AC14's eight touched skills (D-31-12's four→eight widening lagged the row) — corrected four → eight. No criterion outcome moves; the dropped clause was unsatisfiable as written. Repair class: **closure completion** (the criterion text matched a pre-F10 assumption; the reviewed obligation — eight bumped skills with countable `version:` hunks — unchanged). | AC14 + Capability closure Integration-closure row "Versioning/release surfaces" |
+
+Artifact revision rotates `31-spec-14` → **`31-spec-15`** for the touched
+Product set (`SPEC.md`; `decisions.md` gains D-31-13 with evidence rows;
+`known-issues.md` §3; `progress.md` records this batch and its readiness
+block). The frozen `ACCEPTANCE.md` is **not** touched by this authoring turn:
+AC13's declared-group widening and AC14's clause drop move acceptance-surface
+text, so the manifest must be re-frozen by `plan-feature`'s re-cut on a fresh
+`SPEC-REVIEW-PASS` (the `31-plan-5` precedent). The Product receipt
+`spec-review-31-14` is a FAIL verdict and the bound Product bytes move with no
+wording-only determination: the next `/review-spec
+31-planning-review-materiality` run is cycle 2 of the window
+`spec-review-31-13`'s PASS opened (entering a second cycle is allowed when
+correctness needs it — POLICY §4; this commission is the explicit user
+instruction REPAIR §4 records). Engineering half: no Engineering byte moved;
+`known-issues.md` §3's correction re-derives with the plan set at the re-cut.
 
 ### `31-spec-14` (2026-09-18) — review-findings closure batch (F8 + F10, product owner)
 

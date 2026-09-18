@@ -4479,3 +4479,48 @@ roadmap row are byte-identical to the reviewed revision.
   · a product choice is missing → answer it in the instruction; nothing here chooses for you
   · finding class is plan/source/environment/runtime → route to its owner, do not edit the SPEC
 
+
+---
+
+## Repair batch (`31-spec-15`, 2026-09-18)
+
+Authoring `design-feature` repair batch for `spec-review-31-14`'s two
+`product` rows (F31-14-01 `medium`, F31-14-02 `low`), one batch over the whole
+open spec-stage set. Commission (explicit user instruction, verbatim): "add
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` to AC13's declared derived-surface
+group (and correct `known-issues.md` §3), and drop/correct AC14's 'nothing but
+the `version:` change' clause". What moved:
+
+- `## Scope` allowed-set group 2 (Prose-shrink surfaces + derived surfaces)
+  gains the shrink's derived budget manifest
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — AC10's budget gate and AC13's
+  scope guard stop asserting incompatible sets (F31-14-01; the F6 fold
+  `9f4e05c2` is the re-basis precedent).
+- `known-issues.md` §3 names the manifest instead of claiming the unit's
+  records are the only `docs/` paths outside the first two groups; the
+  no-materiality-text rule for `docs/workflow/` is unchanged.
+- AC14 drops the unsatisfiable "each SKILL.md carries nothing but the
+  `version:` change" clause and states `bump-skill`'s guardrail scope
+  truthfully (the driver-surface skills carry the declaration prose In scope 5
+  + AC7 require); the ≥ 16 anchor is unchanged (F31-14-02).
+- Integration-closure row "Versioning/release surfaces" corrected four →
+  eight skill minor bumps (same root cause as F31-14-02 — D-31-12's widening
+  lagged the row).
+
+Decision D-31-13 + six evidence rows in `decisions.md`; amendment `31-spec-15`
+in `SPEC.md`. Nothing else in the Product half moved; no criterion outcome,
+closure row, sweep row or non-goal moved. Receipt state at authoring start:
+`verify --stage spec` → exit 0, `structural.fresh: true`, `digestMatches:
+true`, receipt `spec-review-31-14` FAIL current (`verdictIsPass: false`).
+
+```text
+READINESS — 31-planning-review-materiality spec READY-FOR-REVIEW
+- Artifact revision: 31-spec-15 · Rows checked: 6 evidence rows (repair batch) + carried rows current · Unknowns open: 0
+- Evidence: SPEC Product half/decisions.md · Frozen: 2026-09-18
+```
+
+→ Next: /review-spec 31-planning-review-materiality — product half re-cut at
+  `31-spec-15`; an independent context must delta-review F31-14-01/F31-14-02's
+  closure before any plan re-derivation or source fold
+  · the frozen `ACCEPTANCE.md` re-freezes at `plan-feature`'s re-cut on a
+    fresh PASS (the `31-plan-5` precedent)
