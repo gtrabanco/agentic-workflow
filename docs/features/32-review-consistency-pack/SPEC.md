@@ -647,5 +647,348 @@ verify-vs-write claim). Awaiting independent review by
 
 ## Engineering half
 
-Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`.
+Written by `plan-feature-scaffold` after the Product-review gate passed
+(receipt `SPEC-REVIEW-32-4`, snapshot `5d5a5b6c…f0acd`). Product bytes are
+untouched; the artifact revision of this plan set is `32-plan-1` (initial cut by
+`plan-feature-scaffold`, 2026-09-18).
+
+### Technical goals
+
+- **One owner per rule, cited — never asserted.** The folded-flag flip, the
+  severity conversion, the blocking decision, and the roadmap `defined →
+  planned` write each have exactly one cited owner
+  (`ledger-ownership@1`); every prose sentence that claims one is replaced by a
+  pointer to that owner, so a weak executor never arbitrates between two texts
+  (IS-1…IS-5).
+- **One scale per concept.** `CLASSIFY.md` becomes the single owner of a
+  canonical severity conversion table covering every scale the pack actually
+  emits, and an unknown scale fails closed instead of being converted ad hoc
+  (IS-2).
+- **Blocking stops being an opinion.** A finding blocks only when the reviewer
+  cites which single-owner source fails; without a citation it is a report-note
+  — a table lookup, not a severity calibration (IS-3).
+- **The gate runs once per head.** A SHA-bound appended `gate-ran@1` mark lets
+  any skill reuse a green run at the identical head and forces a re-run the
+  moment the head changes — no weakening of freshness (IS-4).
+- **Four one-line contradictions removed,** and the grouped vocabulary bugs the
+  governing issue carries are fixed in the same sweep (IS-5, IS-2).
+
+### Architecture impact
+
+This unit changes **contract text, one sensor branch, one discipline suite, and
+one pair of template projections**. No new module, port, schema, or dependency:
+
+- **docs layer** — `skills/pre-execution-review/references/LEDGERS.md` (the
+  machine-read `ledger-ownership@1` map + the new `gate-ran@1` mark shape +
+  corrected ownership prose), the two template projections
+  (`docs/features/_TEMPLATE/LEDGERS.md`, `docs/fix/_TEMPLATE/LEDGERS.md`),
+  `skills/review-implementation/references/CLASSIFY.md` (conversion table +
+  derived blocking gate), `skills/review-change/references/PERSIST_AND_DECIDE.md`
+  + `skills/review-change/SKILL.md` + `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md`
+  (fold-flip wording, triage modes, GATE-RAN recorder),
+  `skills/execute-phase/references/FOLDING.md` +
+  `skills/execute-phase/references/EXECUTION_CONTRACT.md` (flip wording,
+  phase-gate GATE-RAN), `skills/fold-findings/SKILL.md`,
+  `skills/audit-docs/SKILL.md`, `skills/product-audit/SKILL.md` +
+  `skills/product-audit/references/AUDIT_PROCESS.md`, `skills/audit-pr/SKILL.md`,
+  `skills/plan-feature/SKILL.md` + `skills/plan-feature-scaffold/SKILL.md`,
+  `skills/workflow-status/SKILL.md` + its two references.
+- **config/infra layer** — one branch of `scripts/workflow-status.mjs` (the
+  missing-NRS ledger degrades from blocker to a non-blocking substrate notice)
+  plus its pin suite `scripts/workflow-status-sensor.test.mjs`; the discipline
+  pin suite `scripts/review-loop-discipline.test.mjs` grows the IS-1…IS-4
+  assertions. The sensor stays read-only (no forge write, no file write), the
+  router/annotator row parsers are untouched, and the schema package is
+  regression-only.
+
+**Layering.** Both touched layers are outer: contract text and a read-only
+sensor projection of state the sensor already prints. No inner layer, no public
+API, no package contract is touched. The two `LEDGERS.md` template projections
+must carry the identical `review-findings` owner cell as the live map, or
+`scripts/ledger-ownership.test.mjs` (which reads all three as one contract)
+fails closed.
+
+Preflight (planning-preflight contract):
+
+```text
+Preflight: Stage 1 — NRS consumed · arch: deferred
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared — REPOSITORY_STATE.md F010)
+```
+
+### Design
+
+Five pre-resolved contracts. Each is stated once below and pinned in the phase
+that lands it; no phase may re-derive one from memory.
+
+**1. Severity conversion table (new section in
+`skills/review-implementation/references/CLASSIFY.md`).** One table, one owner,
+four producer scales mapped onto the ledger scale `high | med | low`:
+
+| Producer scale | Where it is emitted | `critical` | `high` | `medium` | `med` | `major` | `low` | `minor` | `info` |
+|---|---|---|---|---|---|---|---|---|---|
+| ledger `high \| med \| low` | the classification output | — | `high` | — | `med` | — | `low` | — | — |
+| finder `critical \| major \| minor` | the nine internal review passes' findings tables | `high` | — | — | — | `med` | — | `low` | — |
+| planning `info \| low \| medium \| high \| critical` | `planning-findings.md` ledgers | `high` | `high` | `med` | — | — | `low` | — | `low` |
+| `audit-docs` `high \| low` | the docs-audit report | — | `high` | — | — | — | `low` | — | — |
+
+Rules: the table is the **only** conversion home — the ad-hoc mapping at
+`PERSIST_AND_DECIDE.md:20-21` is deleted and replaced by a pointer here; an
+unknown scale **fails closed** (the finding is returned for the missing row, it
+is never converted by the consumer); the table has one row per producer scale
+that actually exists, and a new scale arrives as one table row plus one producer
+citation, never as a new local table. `audit-docs`' legend stays `high | low`
+(the phantom `MEDIUM` is not a legend value); `audit-docs`' orphan-provenance
+finding is `low` (a propose-deletion/re-attribution note, the same severity the
+adjacent `LOW: propose /generate-docs` case carries). `product-audit`'s finding
+line carries a `class:` value from the closed class set
+(`fix-now | replan-in-unit | decision-required | proposal | ignore`) owned by
+`CLASSIFY.md`; the audit stays proposes-only, and the example finding previously
+classed `postpone` becomes `proposal`.
+
+**2. Derived blocking gate (one rule row in the same `CLASSIFY.md` section).**
+A finding blocks **only** when the reviewer cites which single-owner source
+fails, one of exactly four: (a) an ACCEPTANCE criterion unverified or failed,
+(b) an obligation row outside `verified`/`n/a`, (c) the gate red at the reviewed
+head, (d) an open confirmed `fix-now` row. With no citation the outcome is
+`report-note` (materiality floor) or `proposal` — **never blocking**. D10's
+three-state report Decision line is unchanged; severity stays a *screen* for
+which findings are examined, never the authority for blocking.
+
+**3. `gate-ran@1` mark (a new subsection of
+`skills/pre-execution-review/references/LEDGERS.md`).** An **appended text
+mark**, not a table row (the format has variable arity, and a mark that parsed
+as a ledger row would corrupt the router's open-row sweep — the out-of-scope
+bullet already rules out a schema change):
+
+```text
+gate-ran@1
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>[ | <additive slots>]
+```
+
+- **Home ledger:** the unit's `review-findings.md` (feature and fix variants).
+- **Recorders:** whoever runs the project's gate — executor phase gates and
+  reviewer gate runs alike — encoded in the map's existing `review-findings`
+  truth-class row through two new owner column-sets:
+  `execute-phase:gate-ran-marks` (executor phase gates) and
+  `review-change:review-gate-ran-marks` (reviewer gate runs). No new truth-class
+  row: `scripts/ledger-ownership.test.mjs` freezes exactly the seven AC16
+  classes, forbids two rows declaring one ledger pattern, and demands the
+  identical owner cell in both template projections (`:42-43`, `:186-196`).
+- **Reuse rule:** any skill may consume a green run only at the **identical
+  HEAD**; a changed head re-runs the gate. A failed run is recorded verbatim
+  (`exit` reads the real code) — failure is evidence, not silence.
+- **Additive slots:** fields after `HEAD` are additive; consumers ignore unknown
+  trailing fields; the trailing `manifest <sha>` slot is reserved for feature 35
+  (`scoped-receipt-verifier`), so its later addition needs no format migration.
+
+**4. Missing-NRS substrate notice (`scripts/workflow-status.mjs`).**
+`NRS_BLOCKING` keeps `draft`, `contradicted`, `resolved`; `missing` leaves the
+blocking set. The sensor then emits a non-blocking, machine-readable notice at
+`detail.substrate_notice` — `{ id: "repository-state", state: "missing",
+blocking: false }` — plus one `detail.workflow_observations` line, keeps
+`/discover-repository-state` as an `alternatives` entry (optional, still
+recommended), and returns to the normal state/next computation (exit 0). The
+three real blocker states keep today's behavior (run-scoped substrate blocker +
+`state: BLOCKED` + `/discover-repository-state` recommendation). `detail` is
+schema-unconstrained, so the schema package is untouched; the workflow-status
+skill references (`ENVELOPE_CORE.md`, `SENSOR_CORE.md`) state the same split.
+
+**5. The one-line contradiction fixes.**
+- `review-change`'s relationship text names `triage-issue`'s three modes:
+  proposals, audit findings, and `--prioritize-now` (mirrored in both
+  references).
+- `plan-feature`'s **Confirm roadmap** step verifies and repairs registration
+  only; it states that `plan-feature-scaffold` is the sole `defined → planned`
+  writer (`plan-feature-scaffold` already owns that column-set).
+- `audit-pr`'s closure-integrity result scale reads `pass | blocker | n-a`
+  (`warning` leaves the scale, aligning it with the two scales beside it). The
+  separate co-occurring *closure-warning note* in
+  `references/04_VERDICT.md` is not a result scale — it is an added non-blocking
+  line printed beside a verdict — and stays; ED-32-5 records the distinction so
+  the pin targets the scale, not the word.
+
+### Planning evidence
+
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 22 rows,
+PE-001…PE-022, all `current`, all `proven`).
+
+### Obligations
+
+See `planning-obligations.md` (M/L — O1…O25: one row per acceptance criterion
+plus the four applicable workflow invariants, the ledger-grammar and mirror
+invariants, and the six dev-scenario pins; every row `planned` at freeze).
+
+### Decisions to confirm
+
+Frozen as engineering decisions in `decisions.md` (ED-32-1…ED-32-6); none open:
+
+- **ED-32-1** — the severity table maps **onto** the ledger scale
+  `high | med | low` and covers exactly the four producer scales that exist; the
+  planning scale's `info` maps to `low` (the immaterial value is a report-note,
+  never a blocking `med`).
+- **ED-32-2** — `audit-docs`' phantom `MEDIUM` becomes `low`, matching the
+  adjacent `LOW: propose /generate-docs` case in the same check.
+- **ED-32-3** — GATE-RAN is an appended **text** mark (`gate-ran@1`), not a
+  seventh-column ledger row: the mark has variable arity, and the ledger row
+  parsers (`scripts/unit-route.mjs` ≥ 7 cells + `isMarkRow`,
+  `scripts/ledger-provenance.mjs` `^\|\s*(F\d+)\s*\|`) must keep ignoring it.
+- **ED-32-4** — `product-audit`'s example finding previously classed
+  `postpone` becomes `proposal`; the audit keeps its proposes-only contract and
+  never folds.
+- **ED-32-5** — `audit-pr`'s `warning` leaves the closure-integrity **scale**;
+  the co-occurring closure-warning note in `04_VERDICT.md` is not a scale and
+  stays (AC-08's pin asserts the scale lines, not the whole pack).
+- **ED-32-6** — the phase cut merges the four one-line contradictions into the
+  prose-alignment phases nearest their owner surface so the plan stays at five
+  phases; every phase is one layer, and the layer that differs from the
+  phase's declared one appears only as a paired pin inside a task whose first
+target is in the phase's layer.
+
+### Testing requirements
+
+Repo convention: integration over mocks; fixtures are throwaway git repos
+(`scripts/workflow-status-sensor.test.mjs:83-130` pattern) plus text assertions
+over the owned skill files.
+
+- **Discipline suite** (`scripts/review-loop-discipline.test.mjs`) — the single
+  home of the new IS-1…IS-5 text pins (sole-flipper attribution, corrected
+  `LEDGERS.md` sentence, tutorial scan, triage modes, four conversion scales +
+  fail-closed, four blocking citation categories + no-citation outcome, D10
+  unchanged, `audit-docs` count/header/legend, `product-audit` vocabulary,
+  `audit-pr` scale, `plan-feature` verify-vs-write, GATE-RAN format/slots/reuse).
+  **One existing pin must be re-pointed, never deleted:**
+  `assert.match(persist, /critical.*high.*major.*med.*minor.*low/s)` currently
+  asserts the *ad-hoc* mapping the canonical table replaces; it moves to assert
+  the same five mappings as rows of the `CLASSIFY.md` table (AC-11's sanctioned
+  reworded assertion).
+- **Sensor suite** (`scripts/workflow-status-sensor.test.mjs`) — the new
+  missing-ledger case (notice present, zero missing-ledger blockers, exit 0)
+  plus the `draft`/`contradicted`/`resolved` regression cases (blocker + state +
+  recommendation unchanged).
+- **Grammar suite** (`scripts/ledger-ownership.test.mjs`) — must stay green with
+  the extended owner cell in the live map **and** both template projections
+  (one row per truth class, unique ledger pattern, owner-cell equality).
+- **Regression gates** — `scripts/bounded-delivery-loops.test.mjs` (roadmap
+  wording), `scripts/audit-pr-receipt.test.mjs` (merge gate unchanged),
+  `scripts/normative-drift.test.mjs`, `scripts/check-skill-context.mjs`,
+  `scripts/workflow-status-pre-execution.test.mjs`.
+- **Read-verified rows** — AC-10 (README bibliography at PR close-out) and each
+  phase's quoted landed text.
+
+### Dev scenarios
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `sweep:empty-state` | No contradicting restatement survives anywhere | The AC-01 scan over `docs/workflow/` plus the negative text pins; a tree where the old sentences are absent keeps the suite green (P2 pins) |
+| `sweep:unknown-scale` | A severity scale the table does not cover reaches classification | The fail-closed pin feeding an undeclared scale name and asserting it is returned, never converted (P3 pins) |
+| `sweep:wrong-role-write` | A non-owner skill claims the flip or the roadmap write | The sole-writer text pins against the `ledger-ownership@1` map plus `scripts/ledger-ownership.test.mjs` (P2/P4 pins) |
+| `sweep:stale-head` | A green gate run is reused after the head moved | The GATE-RAN reuse pin: identical HEAD reuses; a changed head re-runs (P4 pins) |
+| `sweep:additive-slots` | A consumer meets unknown trailing GATE-RAN fields or the reserved slot | The additive-slots pin: unknown trailing fields are ignored, the `manifest <sha>` slot is reserved (P4 pins) |
+| `sweep:nrs-missing` | The optional NRS ledger is absent at sense time | The sensor fixture with no ledger: notice emitted, zero missing-ledger blockers, exit 0 (P1 pins) |
+
+Category walk: empty/zero state → `sweep:empty-state`; invalid or oversized
+input → `sweep:unknown-scale`; permission denied / wrong role →
+`sweep:wrong-role-write` (contract-level denial: the map, not a runtime ACL);
+dependency outage or timeout → `sweep:nrs-missing` plus the unchanged forge/git
+degradation codes; concurrent/duplicate action → `sweep:stale-head`; limit or
+threshold hit → `sweep:additive-slots` (the mark's declared slot boundary).
+
+### Phases
+
+Five phases, one layer each, zero open decisions; detailed checklists in
+`TASKS.md`, phase-lint output in the scaffold report. P1 is the only
+`config/infra` phase (the sensor); the rest are contract text; the last is
+hardening.
+
+- **P1 — NRS missing-ledger notice** (config/infra): `missing` leaves
+  `NRS_BLOCKING`, the notice is emitted at `detail.substrate_notice`, the
+  workflow-status references state the same split, and the sensor suite pins the
+  notice plus the three real-blocker regressions.
+  Done-when: `node --test scripts/workflow-status-sensor.test.mjs` → exit 0.
+- **P2 — Ownership prose alignment** (docs): fold-flip sentences corrected at
+  the three surfaces plus `fold-findings`, the `LEDGERS.md` prose corrected
+  against its own map, `triage-issue`'s three modes named, `plan-feature`
+  verify-vs-write split, the tutorial scan, and the pins.
+  Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs` → exit 0.
+- **P3 — Classification single-owner contract** (docs): the canonical severity
+  conversion table, the derived blocking gate, the `audit-docs` count/header/
+  legend fixes, the `product-audit` closed-class vocabulary, the `audit-pr`
+  result scale, the ad-hoc map deleted, and the pins.
+  Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0.
+- **P4 — Gate-run receipt** (docs): the `gate-ran@1` mark, the map owner-cell
+  extension mirrored into both template projections, the executor and reviewer
+  recorder/consumer text, the minor version bumps, and the budget re-basis.
+  Done-when: `node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0.
+- **P5 — Hardening & PR** (hardening): full ladder, mirror re-bundle + parity,
+  acceptance-blob receipt, README bibliography, close-out (PR, roadmap `done`,
+  link commit). Done-when: the whole ladder → exit 0 with the PR URL printed.
+
+### Deploy & rollback
+
+n/a — docs-and-scripts repository; shipping is the PR merge. Rollback is the
+standard revert. No migration, no flag, no data side: the sensor change only
+removes a blocker for an *absent optional* ledger, and an older consumer that
+still blocks on a missing ledger is unaffected (this unit does not remove the
+ledger or change a contract's shape).
+
+### Open questions / risks
+
+None open. Risks with owners:
+
+- **`ledger-ownership.test.mjs` owner-cell equality.** The live map and both
+template projections must carry the *byte-identical* owner cell; owner P4,
+  contained by running the grammar suite in the same phase.
+- **Re-pointing the existing finder-scale pin.** Deleting the ad-hoc mapping
+  without re-pointing `scripts/review-loop-discipline.test.mjs`'s
+  `critical.*high.*major.*med.*minor.*low` assertion would go red; owner P3, and
+  AC-11 rules the re-pointing sanctioned.
+- **Budget re-basis growth.** Touched skills' text grows; owner P4, using the
+  tool's own declared re-basis (`ceil(measured × 1.10)` with the growth source
+  named), the feature-38/59 precedent.
+- **`audit-pr`'s `warning` scope.** A pin that greps the whole audit-pr tree
+  for `warning` would false-fail on the closure-warning note; owner P3, scoped
+  by ED-32-5.
+
+### Deliverables
+
+- Contract text: `CLASSIFY.md` conversion table + derived blocking gate;
+  `LEDGERS.md` `gate-ran@1` mark + corrected prose + extended map row; both
+  `_TEMPLATE/LEDGERS.md` projections; corrected flip wording in
+  `PERSIST_AND_DECIDE.md`/`FOLDING.md`/`fold-findings`;
+  `audit-docs`/`product-audit`/`audit-pr`/`plan-feature`/
+  `plan-feature-scaffold`/`review-change`/`workflow-status` text fixes.
+- Sensor: the missing-NRS notice branch in `scripts/workflow-status.mjs`.
+- Tests: the new pins in `scripts/review-loop-discipline.test.mjs` and
+  `scripts/workflow-status-sensor.test.mjs`; every existing pin preserved or
+  sanctioned-reworded.
+- Release: minor frontmatter bumps for every touched skill + `CHANGELOG.md`
+  rows; re-based `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; re-bundled Pi
+  mirror; README `## References` entry; roadmap row `planned` → `done` at
+  close-out.
+
+### Post-merge next feature
+
+Feature 33 (`turn-contract-single-owner`, #173) re-bases on this feature's final
+text; feature 35 (`scoped-receipt-verifier`, #182) consumes the reserved
+`manifest` slot; feature 50 (`review-loop-convergence`, #205) composes with the
+derived blocking gate. See `docs/features/ROADMAP.md`.
+
+---
+
+## Artifacts created by plan-feature-scaffold (2026-09-18, `32-plan-1`)
+
+- `docs/features/32-review-consistency-pack/SPEC.md` — this file (Engineering
+  half filled; Product half byte-identical to the reviewed revision)
+- `docs/features/32-review-consistency-pack/PLAN.md` — 5-phase plan
+  (PE-001…PE-022, O1…O25)
+- `docs/features/32-review-consistency-pack/TASKS.md` — per-phase checklists
+- `docs/features/32-review-consistency-pack/ACCEPTANCE.md` — frozen manifest
+- `docs/features/32-review-consistency-pack/planning-evidence.md` — PE-001…PE-022
+- `docs/features/32-review-consistency-pack/planning-obligations.md` — O1…O25
+- `docs/features/32-review-consistency-pack/testing.md` — validation ladder
++ scenarios
+- `docs/features/32-review-consistency-pack/known-issues.md` — tracked boundaries
+- `docs/features/32-review-consistency-pack/architecture-notes.md` — layer impact
+- `docs/features/32-review-consistency-pack/decisions.md` — engineering decisions
+  ED-32-1…ED-32-6 appended (product decisions D32-1…D32-8 untouched)
+

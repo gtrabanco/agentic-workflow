@@ -1,5 +1,7 @@
 # Progress — 32-review-consistency-pack
 
+Last reviewed: —
+
 ## Pre-execution review receipt v1 — spec
 
 ```text
@@ -69,3 +71,31 @@ Notes:
 - Zero writes to any reviewed artifact: `SPEC.md`, `decisions.md`, and the roadmap row carry the exact bytes the D32-7 repair committed at `0f93f7ea` (the snapshot digest binds them); this turn authored only this receipt block and the F11/F12 rows in `planning-findings.md`. `artifactRevisionId` rotation depends on manual handoff — no runtime rotation occurred; any later write to `SPEC.md` invalidates this receipt.
 - Self-check `verify --stage spec` run in the same act as this write (write-then-report); its JSON output is printed beside the verdict block in chat.
 
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: SPEC-REVIEW-32-4 · Snapshot: 5d5a5b6c04cad71e2b5fdf8cc1fa3fd248164d9ea7ae68968e54cd00f06f0acd · Verdict: spec-review-pass
+- Unit: 32-review-consistency-pack · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 7cb1398f38355306ab4b74ce9ff387cec3466a3b · Artifact revision: 7cb1398f38355306ab4b74ce9ff387cec3466a3b
+- Reviewer: review-spec (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: design-feature (2026-09-18 repair batch, D32-8)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-18T10:33Z/2026-09-18T10:43Z · Findings: 0 (material open: 0)
+```
+
+Notes:
+- Snapshot built with `bun scripts/pre-execution-snapshot.mjs build --stage spec --unit 32-review-consistency-pack`; digest is stdout's first line. The builder derived `sourceRevision`/`artifactRevisionId` = `7cb1398f` (the content revision of the bound paths); `HEAD` is `2a87c5cd`, which only appended the F11–F12 resolution rows to `planning-findings.md` and is binding-irrelevant. Bound Product bytes: spec `docs/features/32-review-consistency-pack/SPEC.md`, selector `spec-product-v1`, 48622 bytes, sha256 `675349efa8655a55345aec1c7ac47163ceb2eb6cb0832f0eada53924713e68cc`.
+- Contexts emitted by the recipe owner's fixed set: `project-guide` (`CLAUDE.md`, present, digest `f5c8e142…`), `normalized-repository-state` (`docs/workflow/REPOSITORY_STATE.md`, present, digest `e1b81e29…`), `architectural-invariants` (`docs/architecture/ARCHITECTURAL_INVARIANTS.md`, absent). Governing issue #172 and dependency units 30/31 were consulted live (`gh issue view 172` incl. its 2026-09-07 amendment; roadmap rows 30/31/32) but the builder's fixed context set carries no `governing-issue`/`dependency-unit` row — recorded here, not in the snapshot (same shape as SPEC-REVIEW-32-1/32-2/32-3).
+- This is the re-review of the D32-8 repair (parent SPEC-REVIEW-32-3, snapshot `eb2e7a29…`, FAIL with F11–F12). Snapshot changed (`eb2e7a29…` → `5d5a5b6c…`) → no no-progress.
+- All 14 Product checks resolved **pass**: C1–C14. Independent verification re-ran every evidence row against the bound revision: E-01/E-02 (`PERSIST_AND_DECIDE.md:28`, `FOLDING.md:26`, `fold-findings/SKILL.md:153`, `LEDGERS.md:117` + `:139-146`), E-03 (`CLASSIFY.md:18-24,86-88`), E-04 (`audit-docs/SKILL.md:98` `MEDIUM`, `:121` `| # | Check (1-13) |`, `:125` `<n>/13`; checks 1–14 confirmed), E-05 (`product-audit/SKILL.md:100,105`; `AUDIT_PROCESS.md:7`), E-06 (`audit-pr/SKILL.md:52` `blocker / warning / n-a` vs `:55,58` `pass / blocker / n-a`), E-07 (`workflow-status.mjs:223`), E-08 (`EXECUTION_CONTRACT.md:108-116`), E-09 (finder scale live in exactly nine review passes; ad-hoc map at `PERSIST_AND_DECIDE.md:20-21`), E-10 (`review-change/SKILL.md:44,153`; `PERSIST_AND_DECIDE.md:37`; `OUTPUT_AND_GUARDRAILS.md:38` — only the proposals route), E-14/E-15 (roadmap rows 30 done · #188; 31 `idea`; 33/35/50 depend on 32), E-16 (no `docs/architecture/`), E-18 (`LEDGERS.md:123`), E-20 (`WORKFLOW_INVARIANTS.md:78-80`), E-22 (`docs/CAPABILITIES.md` 47 lines, tracked at `1bab6e60`, byte-identical to `template/docs/CAPABILITIES.md`), E-23 (`LEDGERS.md:90-92`), E-24 (`LEDGERS.md:146`; `plan-feature/SKILL.md:91-94`; `plan-feature-scaffold/SKILL.md:110`). All match the bound bytes.
+- F9's grammar question was independently re-verified in a throwaway `git archive HEAD` tree (`/tmp/lo32`): baseline `node --test scripts/ledger-ownership.test.mjs` = 18 pass / 0 fail; applying IS-4's owner-column extension (`execute-phase:gate-ran-marks` + `review-change:review-gate-ran-marks` on the existing `review-findings` truth-class row, mirrored identically in both `docs/*/_TEMPLATE/LEDGERS.md`) = 18 pass / 0 fail; adding a **new** `gate-ran` truth-class row instead = 16 pass / 2 fail with `map truth class "gate-ran" is not one of the seven AC16 classes` and `ledger "docs/features/<NN>-<slug>/review-findings.md" is already declared by "review-findings"`. D32-7's encoding is therefore the grammar-admitting one and the SPEC's claim is exact.
+- F11/F12 independently re-verified. The reworded out-of-scope bullet disambiguates the two LEDGERS.md **template projections** (which DO change) from the `template/` **export mirror** (which stays); the mirror is in fact drifted (`template/docs/features/_TEMPLATE/LEDGERS.md` and `template/docs/fix/_TEMPLATE/LEDGERS.md` lack `review-change:finding-mark` relative to the live projections), so the bullet's stated reason holds. E-24's citations are accurate and ground IS-5(c) → AC-07.
+- Recorded observations, non-material — no finding filed: (1) E-15's "row 32 exists at `idea`" describes the pre-promotion state; the roadmap row now reads `defined` and the same row carries "(plus this turn's edit)" — the claim's material content (dependencies 30/31; dependents 33/35/50) is accurate, and the promotion is recorded in `decisions.md`. (2) IS-4's "every mark names its recorder" is satisfied by the ownership map's two recorder column-sets; the pinned format itself carries no recorder field, and AC-04 pins the format without one — a plan-stage implementation detail, not a product gap. (3) `## Size`'s per-owner phase sketch matches the project's established sizing idiom (feature 30 / feature 59 `## Size`, the latter review-passed); it names no PLAN phase, task, or phase validator. (4) C11/E-19 is the same recorded judgment as the prior three receipts: E-19 carries `freshness: drifted` with `status: unknown` + owner + next evidence, and `evidence-grounding/references/ROWS.md` §"Closed vocabularies" prescribes exactly this encoding ("re-acquired **or** demoted to `unknown` with an owner"); the row is not evidence and the check-vs-ROWS wording tension belongs to the check's owner.
+- Cycle count: this is the third repair/re-review cycle (32-1 FAIL → D32-6 → 32-2 FAIL → D32-7 → 32-3 FAIL → D32-8 → this review). POLICY §4 makes the anomaly informational and never a stop; each repair turn responded to a persisted FAIL receipt (new snapshot by design), so no cycle cap or anomaly rule blocks this PASS. Feature 31's hard two-cycle cap is not merged (roadmap row 31 `idea`) and does not apply.
+- Zero writes to any reviewed artifact: `SPEC.md`, `decisions.md`, and the roadmap row carry the exact bytes the D32-8 repair committed at `7cb1398f` (the snapshot digest binds them); this turn authored only this receipt block, and appended zero findings rows (`Findings: 0`). `artifactRevisionId` rotation depends on manual handoff — no runtime rotation occurred; any later write to `SPEC.md` invalidates this receipt.
+- Self-check `verify --stage spec` run in the same act as this write (write-then-report); its JSON output is printed beside the verdict block in chat.
+
+## Acceptance receipt v1
+
+- Manifest: docs/features/32-review-consistency-pack/ACCEPTANCE.md · Blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5 · Status: frozen · Verified: 2026-09-18 (recorded at plan freeze by `plan-feature-scaffold`; recomputed before every phase and final review per `verification-contract`)
