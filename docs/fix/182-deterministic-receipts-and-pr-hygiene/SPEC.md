@@ -388,9 +388,9 @@ Layer: `config/infra`. Done-when: `node --test scripts/audit-pr-receipt.test.mjs
 configured upstream the `branch-pushed` gate reads `pass` while git compared
 nothing (F2, reproduced on a throwaway repository: exit 128, counted as zero).
 
-- [ ] `scripts/audit-pr-gate.mjs` treats an unresolvable `@{upstream}` comparison as the blocked `branch-pushed` state, never as a zero ahead-count (F2; O12)
-- [ ] `scripts/audit-pr-receipt.test.mjs` pins the no-upstream `branch-pushed` failure on a throwaway repository with no configured remote (F2; O12)
-- [ ] Re-run `node --test scripts/*.test.mjs` to exit 0 (F2; O12)
+- [x] `scripts/audit-pr-gate.mjs` treats an unresolvable `@{upstream}` comparison as the blocked `branch-pushed` state, never as a zero ahead-count (F2; O12)
+- [x] `scripts/audit-pr-receipt.test.mjs` pins the no-upstream `branch-pushed` failure on a throwaway repository with no configured remote (F2; O12)
+- [x] Re-run `node --test scripts/*.test.mjs` to exit 0 (F2; O12)
 
 Phase-lint: PASS (8/8) · fingerprint `P7:config/infra:3:branch-pushed-gate-fails-closed-without-upstream`
 
