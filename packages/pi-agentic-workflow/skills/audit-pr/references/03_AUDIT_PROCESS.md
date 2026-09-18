@@ -1,18 +1,24 @@
 ## Process
 
 1. **Gather** — Step 0: project contract, PR, SPEC + artifacts, CI status.
-2. **Consume the review receipt** — Step 1: fetch the PR's `headRefOid` and
-   comments in one query (`gh pr view <N> --json headRefOid,comments`) and take
-   the **newest** marker
-   `<!-- review-change:pass sha=<40-hex> contract=v1 -->`. Its `sha` must equal
-   that query's `headRefOid` current head SHA. Any mismatch is stale; do not
-   use a local diff to preserve a receipt for a different PR head.
-   - **current** → acknowledge scope/axes, acceptance coverage, invariant result,
-     manual checks; continue to the gates.
+2. **Consume the review receipt** — Step 1: run the receipt verifier, which
+   fetches `headRefOid` + comments and applies the currency rule itself:
+   `bun scripts/review-receipt.mjs verify --pr <N>` — exit `0` current, `3`
+   absent, `4` stale. Its `headRefOid` is the current head SHA: a marker for any
+   other SHA is stale, never preserved from a local diff.
+   - **current (0)** → acknowledge scope/axes, acceptance coverage, invariant
+     result, manual checks; continue to the gates.
    - **absent / stale** → **BLOCKER** (no review evidence at the head), routed to
      `/review-change`; never re-review from here.
-3. **Walk the contract** — evaluate every gate above against evidence. For each,
-   record pass / blocker / n-a with the specific artifact or check that proves it.
+3. **Walk the contract** — evaluate every gate above against evidence, recording
+   pass / blocker / n-a with the artifact that proves it. The three
+   terminal-hygiene gates (`tree-clean`, `branch-pushed`, `pr-ready`) are **read
+   from state, never asserted** — hygiene previously had no owner at merge time:
+   `bun scripts/audit-pr-gate.mjs hygiene --pr <N> --apply` (exit `0` clean, `2`
+   blocked). `--apply` performs the only mechanical repair there is (`gh pr
+   ready`, so a draft is flipped rather than reported); a dirty tree names its
+   paths and an unpushed branch its commit count — those stay the author's to fix.
+   Fold the three results into the gate map you decide on in step 5.
 4. **Confirm deferrals are real** — for anything postponed (an unchecked task, a
    review finding, a known issue), verify a tracked issue + trigger exists. A
    deferral with no destination is a blocker, not a pass.
@@ -40,30 +46,12 @@
    re-appended; a genuinely new blocker gets the next `Fn` id.
 7. **Post the MERGE-READY comment on the PR (MERGE-READY only).** The verdict
    must be visible on the PR itself — as a **comment**, never in a commit
-   message (a commit trailing "MERGE-READY" pollutes history and goes stale
-   the moment the branch moves). Write the body to a file (Markdown rule —
-   see Guardrails) and run
-   `gh pr comment <N> --body-file <path>` with exactly this body:
-
-   ```markdown
-   <!-- audit-pr:merge-ready sha=<head SHA> -->
-   ## ✅ audit-pr: MERGE-READY
-
-   - **Audited head:** `<head SHA>` · CI: <green|local-gate-green>
-   - **Review receipt:** `REVIEW-PASS` at `<head SHA>` (consumed, not re-reviewed)
-   - **Date:** <YYYY-MM-DD>
-   - **Before merge, a human should still verify:**
-     - <manual-verification item — or "nothing">
-
-   Any commit after `<head SHA>` voids this verdict — re-run `audit-pr`.
-   ```
-
-   **Idempotent:** first check the existing comments
-   (`gh pr view <N> --json comments`) for the `<!-- audit-pr:merge-ready -->`
-   marker — same SHA already commented → skip (say so); older SHA → post the
-   new comment (the newest marker wins). Never post a comment for a BLOCKED
-   verdict — blockers go in the chat report only, so the PR page never shows
-   a stale green flag.
+   message. Run `bun scripts/audit-pr-gate.mjs comment --pr <N> --head <head
+   SHA> --gates-json <gate map>`: it builds the fixed body, posts once, re-reads,
+   and **exits non-zero unless the newest `<!-- audit-pr:merge-ready sha=… -->`
+   marker names the head**. **Idempotent by marker** — same SHA skips, an older
+   SHA re-posts (newest wins) — and it **refuses to post for a BLOCKED verdict**,
+   so the page never shows a stale green flag.
 8. **Report** — the verdict block below, always headed by the PR's full URL.
    In an active `ship-roadmap --fullauto` AUDIT stage, return the verdict to the
    conductor; never run its merge wrapper from this skill.

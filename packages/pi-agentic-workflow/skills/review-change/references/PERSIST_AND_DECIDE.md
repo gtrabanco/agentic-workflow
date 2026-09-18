@@ -45,48 +45,33 @@ exact command tokens.
    `REVIEW-PASS` with a PR, the receipt comment (step 12) — it never runs a
    fold, executes a phase, or edits source (see the review-end turn boundary in
    the SKILL.md Turn contract).
-12. **Close out the final-review receipt before reporting.** First derive the
-   `Decision` from step 7 and persist step 11. Then, before printing any line of
-   the fixed report block or the `→ Next:` block, complete the receipt action
-   below. The receipt is a precondition of the report, not a follow-up.
+12. **Close out the final-review receipt before reporting.** Derive the
+   `Decision` from step 7 and persist step 11 first. Then — **only on
+   `Decision: REVIEW-PASS` and when the PR exists** — run the receipt emitter,
+   which is a precondition of the report, not a follow-up:
 
-   The durable, audit-consumable receipt is one idempotent SHA-bound PR comment
-   (D6, D7). **Only on `Decision: REVIEW-PASS` AND when the PR exists** (the
-   mandatory final review; the PR always exists by then — the phase gate created
-   it). `REVIEW-FAIL` and `NEEDS-DECISION` post **no** passing receipt; continue
-   to step 13 after recording that status.
+   ```
+   bun scripts/review-receipt.mjs emit --pr <N> \
+     --head "$(git rev-parse HEAD)" --scope "<reviewed surface>" \
+     --axes "<axes run and skipped>" --coverage "<criterion-to-evidence>" \
+     --invariants pass|n/a --proposals <n> --manual "<items or none>"
+   ```
 
-   The reviewed head SHA is the value frozen by `git rev-parse HEAD` in the
-   review process. Resolve the PR identity immediately before this action with
-   `gh pr view --json number,headRefOid`. No PR → take the documented pre-PR
-   path. With a PR, its `headRefOid` **must equal the reviewed head SHA** before
-   querying or posting comments. A mismatch means the candidate changed during
-   review: do not post a receipt and re-run `/review-change` at the PR head.
-
-   For `REVIEW-PASS` with a PR, write the body below to a **temporary** Markdown
-   file (e.g. `$TMPDIR/review-receipt.md`), then run
-   `gh pr comment <N> --body-file <path>` — never inline `--body`, never commit
-   the file into the branch. Before posting, run `gh pr view <N> --json comments`
-   and inspect the newest matching marker. Same SHA → skip the post; older or
-   absent SHA → post. After posting, run the same comment query again and confirm
-   the newest marker equals the reviewed head SHA. If that confirmation fails,
-   retry the receipt action; do not print a `REVIEW-PASS` report or recommend
+   The script is the contract: it refuses a PR whose `headRefOid` differs from
+   the reviewed head, posts the one idempotent SHA-bound comment (skipping an
+   identical one), re-reads the comments, and **exits non-zero unless the newest
+   `<!-- review-change:pass sha=… contract=v1 -->` marker names the reviewed
+   head**. Never hand-assemble the body and never post it inline; the fixed body
+   lives in the script and its suite. A non-zero exit means no receipt landed —
+   fix that before printing anything in step 13, and never recommend
    `/audit-pr` while the receipt is not current.
 
-   Use **exactly** this body:
+   `REVIEW-FAIL` and `NEEDS-DECISION` post **no** passing receipt: record the
+   status and continue to step 13. No PR → the documented pre-PR path, and the
+   receipt box reads `n/a: no PR`.
 
-   ```markdown
-   <!-- review-change:pass sha=<head SHA> contract=v1 -->
-   ## review-change: REVIEW-PASS
-
-   - Reviewed head: `<head SHA>`
-   - Scope and applicable axes: <compact list>
-   - Acceptance coverage: concise criterion-to-evidence summary
-   - Architectural invariants: pass | n/a
-   - Current-unit findings open: 0
-   - Future-capability proposals: <count; no issues created>
-   - Manual verification: <items or none>
-   ```
+   Read-only check, any time: `bun scripts/review-receipt.mjs verify --pr <N>`
+   prints `current | absent | stale` and exits `0 | 3 | 4`.
 
 13. **Report block — Return exactly this structure** after step 12 succeeds
    (fixed chat-report block; this is not the end of the turn):
