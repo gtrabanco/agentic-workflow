@@ -42,14 +42,14 @@ schema:
 | VF-10 | packages/pi-agentic-workflow/src/extension/index.ts:221 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read: `recordsText: collectRecordTexts(ctx.cwd)` is evaluated before any protection check; replica over this repo measured ≈4.63 ms and ≈382,714 B per call across 38 unit dirs | perf | confirmed | finding-mark | n/a | n/a |
 | VF-11 | template/.agentic-workflow/path-protection.md:61-66 · reviewer review-change · HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb · recheck direct read of the shipped page: the records fence exists but no sentence states that only rows whose `phase` equals the gate's `--phase` count (`src/path-policy.mjs:453`), and `skills/execute-phase/references/PREFLIGHT.md:212` runs `--phase P<n-1>` | api-ergonomics | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 682c57042abe480889ba7259d9568d8a6a65bcbb | n/a | n/a | review-mark | n/a | n/a |
-| F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) | yes |
-| F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) | yes |
-| F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) | yes |
-| F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) | yes |
-| F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) | yes |
-| F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) | yes |
-| F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) | yes |
-| F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) | yes |
+| F17 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 | code+security | high | fix-now | source (fold) · fold fd4e16a | yes |
+| F18 | packages/agentic-workflow/bin/path-guard.mjs:51-57 | code+security | high | fix-now | source (fold) · fold fd4e16a | yes |
+| F19 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 | security | high | fix-now | source (fold) · fold 20e3b88 | yes |
+| F20 | packages/agentic-workflow/src/path-policy.mjs:120-150 | perf | med | fix-now | source (fold) · fold 20e3b88 | yes |
+| F21 | packages/pi-agentic-workflow/README.md, template/.agentic-workflow/path-protection.md:8,23-24 | api-ergonomics | med | fix-now | source (fold) · fold 777c4f1 | yes |
+| F22 | packages/agentic-workflow/bin/path-guard.mjs:193-194,202 | security | med | fix-now | source (fold) · fold fd4e16a | yes |
+| F23 | packages/agentic-workflow/bin/path-guard.mjs:216,221 | api-ergonomics | med | fix-now | source (fold) · fold 777c4f1 | yes |
+| F24 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 | api-ergonomics | med | fix-now | source (fold) · fold fd4e16a | yes |
 | VF-12 | packages/agentic-workflow/bin/path-guard.mjs:86-105,160 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: temp repo modify `tests/café-helper.js` → `git diff --name-status` = `M<TAB>"tests/caf\303\251-helper.js"`; gate `--base` → `PATH-GUARD pass — clean` exit 0 (ASCII control → `fail — protected-modification` exit 1) | code+security | confirmed | finding-mark | n/a | n/a |
 | VF-13 | packages/agentic-workflow/bin/path-guard.mjs:51-57 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: policy `pre-freeze.delete=approval` + justification-only row; unstaged `rm tests/prot.js` → `PATH-GUARD pass — justified` exit 0, staged `D ` → `fail — approval-required` exit 1 | code+security | confirmed | finding-mark | n/a | n/a |
 | VF-14 | packages/pi-agentic-workflow/src/extension/index.ts:216-237 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: built `dist` + symlink `alias.mjs -> tests/real.mjs` → handler returns no block (protected file); symlink to `/tmp/outside` passes while `../outside` is blocked | security | confirmed | finding-mark | n/a | n/a |
@@ -59,3 +59,33 @@ schema:
 | VF-18 | packages/agentic-workflow/bin/path-guard.mjs:216,221 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck: no-declaration unit emits `phase: P1 · freeze-after: n/a · checked: 0` vs `SPEC.md:576` documenting `freeze-after: <P<m>` or `none` only | api-ergonomics | confirmed | finding-mark | n/a | n/a |
 | VF-19 | packages/agentic-workflow/bin/path-guard.mjs:180,183,187,223 · reviewer review-change · HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed · recheck reproducer: `ignored-removal`/`ignored-lowering` emitted; malformed JSON → `DEGRADED — malformed-config: shipped defaults in force` (parse message computed at :181/:185 discarded at :187) | api-ergonomics | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 088fcc431fa6bd9e38cbce76e71f2bd84d7683ed | n/a | n/a | review-mark | n/a | n/a |
+
+## Cycle 3 — 2026-09-18 (user-invoked third cycle)
+
+Cycle 3 review ran against head `20e3b88297a5b0b82333faccd6cb0f79f65d70e7`.
+Delta mode was superseded by the size trigger (329 changed lines in the fold range
+> 200), so it ran a **full pass** with five isolated axis passes (code, security,
+verify, perf, api-ergonomics), one isolated verification pass, and the isolated
+`review-implementation` classifier plus `review-debt` transform. All 24 prior
+`folded: yes` rows were re-verified gone at their cited locations; seven new
+fix-now rows (F25–F31) were confirmed. Because cycles 1 and 2 each produced new
+fix-now rows (no convergence), this third cycle reached the two-cycle cap; the
+residue routes to `triage-issue --prioritize-now` rather than a fourth fold.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F25 | packages/agentic-workflow/bin/path-guard.mjs:175 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F26 | packages/agentic-workflow/bin/path-guard.mjs:150-158 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F27 | packages/pi-agentic-workflow/src/extension/index.ts:220-242 | code | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F28 | packages/pi-agentic-workflow/src/extension/index.ts:221-250 | security | high | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F29 | packages/agentic-workflow/src/path-policy.mjs:150-175 | perf | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F30 | template/.agentic-workflow/hooks/README.md:41-53 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · source fold | no |
+| F31 | docs/features/60-path-protection-guards/SPEC.md:576-577 | api-ergonomics | med | fix-now | triage-issue --prioritize-now (loop cap) · replan-in-unit | no |
+| VF-20 | packages/agentic-workflow/bin/path-guard.mjs:175 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: temp repo, `tests/a.mjs` replaced by a symlink and committed; `git diff --name-status -z --diff-filter=ACMRD BASE` → empty while plain `git diff --name-status BASE` → `T\ttests/a.mjs`; gate `--base BASE` → `PATH-GUARD pass — clean`, `checked: 0`, exit 0 | security | confirmed | finding-mark | n/a | n/a |
+| VF-21 | packages/agentic-workflow/bin/path-guard.mjs:150-158 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: in-repo symlink `evillink -> /tmp/evil` carrying a valid declaration + justification row; `--unit evillink` → `PATH-GUARD pass — justified` exit 0, real in-repo unit → `fail — protected-modification` exit 1 | security | confirmed | finding-mark | n/a | n/a |
+| VF-22 | packages/pi-agentic-workflow/src/extension/index.ts:220-242 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: real built handler with `cwd` reached through a symlink → `write src/new.ts` returns `{block:true, reason:"…resolves outside the project root…"}`; the same create under a non-symlinked cwd is allowed | code | confirmed | finding-mark | n/a | n/a |
+| VF-23 | packages/pi-agentic-workflow/src/extension/index.ts:221-250 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: `escape.ts -> /tmp/outside/created.ts` (target absent) → handler returns undefined; `writeFileSync(escape.ts,"pwned")` creates `/tmp/outside/created.ts` | security | confirmed | finding-mark | n/a | n/a |
+| VF-24 | packages/agentic-workflow/src/path-policy.mjs:150-175 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck reproducer: `parsePathPolicy` accepts a 200636-byte doc whose glob is 200000 chars; `matchGlob(200k stars, 1000 chars)` → `RangeError: Maximum call stack size exceeded`, memo 190.9 MB; 51-char star-chain → 1.148 ms (F20 fix intact) | perf | confirmed | finding-mark | n/a | n/a |
+| VF-25 | template/.agentic-workflow/hooks/README.md:41-53 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck direct read: the README says the policy "lives beside this README as `../path-policy.json`" and lists the Tier 2 pi guard among its readers, while `packages/pi-agentic-workflow/src/config/load.ts:28-34` reads `<cwd>/.pi/pi-agentic-workflow.json` and `template/.agentic-workflow/path-protection.md:11-13` states the Tier 2 guard never reads that file | api-ergonomics | confirmed | finding-mark | n/a | n/a |
+| VF-26 | docs/features/60-path-protection-guards/SPEC.md:576-577 · reviewer review-change · HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 · recheck direct read + run: the SPEC block documents `freeze-after: <P<m>-or-none>` and `DEGRADED — <missing-config/malformed-config>`; the gate on an undeclared unit emits `freeze-after: n/a`, and a removing/lowering policy emits `ignored-removal`/`ignored-lowering` | api-ergonomics | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 20e3b88297a5b0b82333faccd6cb0f79f65d70e7 | n/a | n/a | review-mark | n/a | n/a |
