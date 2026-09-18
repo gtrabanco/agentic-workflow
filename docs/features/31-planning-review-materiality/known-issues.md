@@ -27,8 +27,13 @@ boundaries below are recorded so qualification and review do not rediscover them
 3. **No tutorial mirror.** `docs/workflow/` gains no materiality, cap or
    wording-only text in this unit (PE-015 of the superseded set is retired;
    AC13's scope guard keeps the path out). Tutorial drift is `audit-docs`'
-   inventory↔docs sweep. The only `docs/` paths this PR touches outside the three
-   AC13 groups' first two members are the unit's own records (group 3).
+   inventory↔docs sweep. The one `docs/workflow/` path this PR does touch is
+   the derived budget manifest `docs/workflow/SKILL_CONTEXT_BUDGETS.json` —
+   the route ceilings AC10's `check-skill-context.mjs` gate reads, re-based
+   when the shrink moves a route's measured size (the F6 fold `9f4e05c2`
+   precedent) — declared in AC13's derived-surface group since `31-spec-15`;
+   every other `docs/` path this PR touches is the unit's own records
+   (group 3).
 
 4. **No retroactive reclassification.** `low` rows already persisted in existing
    units' `planning-findings.md` keep their recorded semantics; the new machine
