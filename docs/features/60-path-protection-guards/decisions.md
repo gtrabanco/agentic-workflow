@@ -78,4 +78,6 @@ kind | paths | phase | date | authority | justification
 justification | packages/pi-agentic-workflow/test/default-inherit.test.mjs,packages/pi-agentic-workflow/test/alias-coverage.test.mjs | P4 | 2026-09-18 | execute-phase | E-60-20 contract-shape extension of two existing pi-suite assertions; both stay equally strong
 justification | scripts/pre-execution-quality.test.mjs | P5 | 2026-09-18 | execute-phase | the P3 fifth gate-rejection type (path-protection) requires the hardcoded vocabulary fixture to list five types; the comparison stays a complete-set assertion (E-60-21)
 approval | scripts/pre-execution-quality.test.mjs | P5 | 2026-09-18 | human-owner | owner approved the post-freeze contract-shape test update after the feature-60 close-out gate blocked it (operator answer 2026-09-18)
+justification | scripts/path-protection.test.mjs,packages/pi-agentic-workflow/test/path-protection.test.mjs | P5 | 2026-09-18 | execute-phase | fold-cycle-2 regression checks for F17/F18/F20/F22/F24 (Tier-1 gate) and F19 (Tier-2 guard); adds cases, weakens no existing assertion
+approval | scripts/path-protection.test.mjs,packages/pi-agentic-workflow/test/path-protection.test.mjs | P5 | 2026-09-18 | human-owner | owner approved the post-freeze regression-test edits for the F17-F24 fold (operator answer e1715257-4216-43e1-8f96-a0138d02926e)
 ```
