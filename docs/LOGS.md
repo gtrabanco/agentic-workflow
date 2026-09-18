@@ -1888,3 +1888,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** read only (feature 31 artifact tree: SPEC.md, progress.md, PLAN.md, TASKS.md, progress.md, review-findings.md, planning-findings.md)
 - **Summary:** Ran `design-feature 31-planning-review-materiality` in review mode (bare slug). Confirmed the feature is done: all 5 phases complete, acceptance ladder green (152 pass / 0 fail ledger pack + package gate + context budgets + mirror bundle), roadmap row `done`, PR #243 OPEN awaiting human merge. Product half designed at artifact revision `31-spec-13`, latest spec receipt `spec-review-31-13` PASS (14/14, 0 findings), latest plan receipt `plan-review-31-5` PASS. All review-change findings folded or persisted (F3→31-spec-13, F6/F7 folded, F8–F10 persisted in progress.md, F9 persisted).
 - **Next:** /audit-pr against PR #243 for merge gate
+
+## 2026-09-18T22:53:15Z — feat/31-planning-review-materiality — manual
+- **Commits:** 78 (`cf238040…a0f2821a`)
+- **Files:** 62 files
+- **Summary:** Ran /review-spec 31-planning-review-materiality cycle 2 (31-spec-13 repair) — SPEC-REVIEW-PASS, 0 findings, cycle converged
+- **Decisions:** N31-016 closure: the three Product-half locations (In scope 2, E2 state transitions, sweep row 11) were corrected to name stale-source-revision (matching AC4, ACCEPTANCE.md AC4, and Design E6) — the verifier's precedence puts stale-source-revision before stale-artifact-content (scripts/pre-execution-snapshot.mjs:400), so moved bound bytes always answer stale-source-revision; stale-artifact-content is unreachable for committed movements. Cycle 2 converged: no CONVERGENCE-ANOMALY owed; stop-review-loop-cap never armed.
+- **Next:** /plan-feature 31-planning-review-materiality binds spec-review-31-13 as Product parent; the plan set is a fresh cut, not a repair of the superseded 31-plan-1/2
