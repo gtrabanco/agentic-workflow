@@ -3808,5 +3808,16 @@ receipt and snapshot `255d099b…`.
 - Next: P4 — Skill-reference prose shrink
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Commit: e0767164 · Gate: `bun test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/review-loop-discipline.test.mjs` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
 - Next: P4 · Attempts: 1
+
+## P4 — 2026-09-18
+- Done: skill-reference prose shrink + release records — LEDGERS §3 material = `medium`+ / report-note + anti-deflation, both CHECKS.md findings paragraphs, POLICY §3 wording-only determination block + non-skippable rotation, POLICY §4 hard two-cycle cap + `stop-review-loop-cap` (CONVERGENCE-ANOMALY block byte-unchanged), both OUTPUT.md verdict/loop text, REPAIR §4 cap mirror; four skills bumped minor (pre-execution-review 2.3.0, review-spec 1.8.0, review-plan 1.7.0, design-feature 3.5.0) with CHANGELOG rows; README `## References` gains the Jin & Chen entry (`2603.00539`); P4 gate green (context budgets PASS, `normative-drift` 17/0, `third cycle never` present), AC7 nine removal greps non-zero and three kept greps zero, AC14 bump-hunk count 8, AC10 pack 122/0
+- Remains: P5 hardening & PR
+- Gotchas: (1) `scripts/pre-execution-quality.test.mjs` pins the shared-owner phrases `it is a\n\`CONVERGENCE-ANOMALY\``, `they never earn a PASS`, `an exhausted cycle budget`, and `a \`PASS\` may not carry an open or\nunverified material row`; the shrink keeps those phrases and removes only the unbounded-cycle claims (no frozen test edited). (2) `review-plan/OUTPUT.md` neared its 2350 route ceiling after the cap mirror; the loop paragraph was compressed to stay inside it (no budget raised). (3) the Pi mirror is deliberately not re-bundled here — P5 task 3 owns `bundle:skills` after the last skill edit.
+- Files: skills/pre-execution-review/references/{LEDGERS.md,POLICY.md}, skills/review-spec/references/{CHECKS.md,OUTPUT.md}, skills/review-plan/references/{CHECKS.md,OUTPUT.md}, skills/design-feature/references/REPAIR.md, skills/{pre-execution-review,review-spec,review-plan,design-feature}/SKILL.md, CHANGELOG.md, README.md, docs/features/31-planning-review-materiality/{TASKS.md,progress.md}
+- Next: P5 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `bun scripts/check-skill-context.mjs && bun test scripts/normative-drift.test.mjs && grep -n "third cycle never" skills/pre-execution-review/references/POLICY.md` (exit 0) · Acceptance blob: 849af5ae7bccc7bc815d60d8ca2a9e0400161df9
+- Next: P5 · Attempts: 1
