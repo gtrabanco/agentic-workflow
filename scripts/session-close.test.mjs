@@ -222,4 +222,25 @@ test("end to end: --flag=value is accepted (F5)", () => {
   assert.match(result.stdout, /did a thing/);
 });
 
+test("end to end: an explicit --base that does not resolve is refused, never silently replaced (F7)", () => {
+  const { dir } = makeRepo();
+  const result = run(dir, ["render", "--base", "refs/does/not/exist", "--summary", "hi"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--base refs\/does\/not\/exist does not resolve/);
+  assert.equal(result.stdout.trim(), "", "no entry is printed for an unresolvable base");
+});
+
+test("end to end: an unresolvable HEAD fails the baseline closed, never an empty baseline (F8)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "session-close-nohead-"));
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.com");
+  git("config", "user.name", "Tester");
+  fs.mkdirSync(path.join(dir, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "docs/LOGS.md"), "## an entry\n- **Summary:** hi\n");
+  const result = run(dir, ["close"]);
+  assert.equal(result.status, 1, "an unreadable HEAD must not be treated as an empty baseline");
+  assert.match(result.stderr, /HEAD does not resolve/);
+});
+
 console.log("PASS session-close: facts computed, entry committed alone, leftovers named not swept");
