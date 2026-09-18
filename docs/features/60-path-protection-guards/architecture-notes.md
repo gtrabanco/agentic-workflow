@@ -29,10 +29,12 @@
 ## Contract impact
 
 - **One policy, three consumers.** `path-protection-policy@1` is owned by the
-  crate module; the template seed and the pi mirror are copies pinned by parity
-  checks (E-60-1). A new protected class, a new operation, or a new requirement
-  value is a SPEC change, never a code path. The reason vocabulary is closed
-  (`PATH_GUARD_REASONS`) and declared as a normative surface.
+  crate module (`SHIPPED_PATH_POLICY` plus `serializeShippedPolicy()` for the
+  template seed); the template seed and the pi mirror are copies pinned by
+  parity checks (E-60-1, E-60-14). A new protected class, a new operation, or a
+  new requirement value is a SPEC change, never a code path. The reason
+  vocabulary is closed (`PATH_GUARD_REASONS`) and published as a normative
+  surface.
 - **Additive configuration.** `pathProtection` is an optional key in the pi
   config file; an absent key means the shipped defaults, and an existing file
   without the key stays valid (the strict validator adds the key to
@@ -40,13 +42,18 @@
 - **Read-only gate.** The CLI reads the policy, the plan declaration, the
   escape records, and git state, and prints; it writes nothing. It needs no
   network and no forge, so it is usable offline and on any host with the crate.
+  The `execute-phase` preflight checkpoint passes `--base` over the just-closed
+  phase's committed range so the gate observes the phase diff (E-60-12).
 - **Ledger reuse, no new ledger.** Justifications and approvals are append-only
   rows in the unit's `decisions.md` under the already-declared
   `execute-phase:phase-decisions` and `human-owner:ratified-verdicts` column
   sets. The gate is a reader; the ownership map is unchanged.
-- **Normative surface additions.** `path-protection-reason` joins the drift
-  gate's must-name closed set through the `block:path-protection@1` grammar;
-  `gate-rejection-type` gains `path-protection`. The skill text carries
+- **Normative surface additions.** `path-protection-reason` is published by a
+  `schema-export:PATH_GUARD_REASONS` row (must-name `no`), and the
+  `block:path-protection@1` row declares the block grammar against the same
+  vocabulary (E-60-11); the drift gate's must-name closed set stays the fixed
+  four. `gate-rejection-type` gains `path-protection`, and POLICY §8's prose
+  count updates with it (E-60-11, F8). The skill text carries
   placeholders only, so `grep -nE 'tests/\*\*|e2e/\*\*' skills/` stays empty.
 - **No public package release.** `packages/agentic-workflow` is private
   (`"private": true`) and the change is not published; the pi package gains a
