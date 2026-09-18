@@ -304,3 +304,14 @@ Notes:
 ## Unit-loop receipt — P8
 - Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 227 pass on the combined P8+P9-bundle tree) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
 - Next: P9 · Attempts: 1
+
+## P9 — 2026-09-18
+- Done (commit predecessor `ede4be5e`): re-bundled the Pi skills mirror with `bun scripts/bundle-skills.mjs` (39 skills / 125 files, `bump-skill` excluded) so the bundled `audit-pr` bytes match `skills/` after the P6 edit; `diff -rq skills packages/pi-agentic-workflow/skills` now reports only the excluded `bump-skill`. Bumped `@gtrabanco/pi-agentic-workflow` 0.11.0 → 0.11.1 and added its companion-packages `CHANGELOG.md` row (covering the re-bundle and the P8 bounded probe); merged today's release-log line to name the whole P6–P9 close-out. O14 `verified`.
+- Remains: P10.
+- Gotchas: the P8 commit alone was red only on the parity suite (the planned drift); this commit closes it, so the tree is green again. `bun run test` = 227 pass / 0 fail.
+- Files: packages/pi-agentic-workflow/skills/audit-pr/SKILL.md, packages/pi-agentic-workflow/package.json, CHANGELOG.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/SPEC.md, docs/fix/182-deterministic-receipts-and-pr-hygiene/progress.md
+- Next: P10
+
+## Unit-loop receipt — P9
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 227 pass) · Acceptance blob: 3ff5b7f104954d80d218f1085ddc7ef4bac0421e
+- Next: P10 (close-out) · Attempts: 1
