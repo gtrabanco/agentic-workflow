@@ -385,7 +385,7 @@ re-review by `review-spec`.
 
 Written by `plan-feature` / `plan-feature-scaffold` after the Product-review
 gate passed (receipt SPEC-REVIEW-60-2, snapshot `12121bff…1682e`). Product
-bytes are untouched; the artifact revision of this plan set is `60-plan-1`
+bytes are untouched; the artifact revision of this plan set is `60-plan-2`
 (initial cut by `plan-feature-scaffold` on 2026-09-18).
 
 ### Technical goals
@@ -490,7 +490,9 @@ expectation 4 requires). With `--base <ref>` it additionally unions
 `git diff --name-status --diff-filter=ACMRD <ref>` so a committed phase range can
 be checked. Porcelain is the source for the working tree because a checkpoint
 sees the dirty tree, and it catches shell redirects (expectation 13) that
-Tier 2 cannot see.
+Tier 2 cannot see. The checkpoint **must** pass `--base`: a fresh pre-edit tree
+is clean and the working-tree union alone yields `pass — clean`, so a gate with
+no `--base` never observes a committed phase's protected changes.
 
 **Plan declaration (`path-protection-plan@1`).** A fenced block in the unit's
 plan-carrying file (`PLAN.md` for M/L units, the SPEC's `### Phases` for XS/S):
@@ -548,8 +550,16 @@ match no changed path is `unmatched-record` (a void record fails the gate).
 | `malformed-config` | degraded | the project policy is unreadable or invalid; the shipped defaults are in force |
 
 The vocabulary is closed: adding a reason is a SPEC change, never a code path.
-`PATH_GUARD_REASONS` is exported by the crate module and declared as a normative
-surface row (machine `path-protection-reason`, must-name `yes`).
+`PATH_GUARD_REASONS` is exported by the crate module as a frozen literal array
+(so the drift gate can read it) and **published** as a normative surface by a
+`schema-export:PATH_GUARD_REASONS` row in the `normative-surfaces@1` table whose
+machine is `path-protection-reason`; the `block:path-protection@1` row declares
+the block grammar against that same vocabulary. Both rows are `must-name: no`:
+the reason closure is machine-checked by the crate module plus
+`scripts/path-protection.test.mjs` (O12), while the drift gate's `must-name`
+direction keeps its four existing sets — publishing the vocabulary is what keeps
+the drift gate's `unpublished-vocabulary` check green without inventing a fifth
+must-name set no text surface could order.
 
 **Tier 1 gate CLI.** `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`
 (`packages/agentic-workflow/bin/path-guard.mjs`). It resolves the effective
@@ -570,21 +580,37 @@ Exit: `0` pass (including a degraded but clean run), `1` fail, `2` usage error.
 The gate is read-only and offline (git + local files only; no network, no forge).
 
 **Checkpoint wiring.** `execute-phase`'s preflight runs the gate after the
-phase-lint guard and before any edit; a fail prints the typed
-`GATE REJECTION — path-protection` trace and stops. There is no `--force` bypass:
-the escape hatch is a recorded justification/approval, not a force flag (D-60-8).
-Where the crate is unavailable (installed-skill target; the scripts-distribution
-gap), the skill applies the same disclose-and-degrade rule the phase-lint guard
-already uses and records the unavailable gate — it never silently skips it.
+phase-lint guard and before any edit, on the **recorded committed range of the
+phase that just closed** — a pre-edit working tree is clean by construction, so a
+gate that reads only the working tree can never observe a phase's protected
+changes. Each phase entry records its base ref (`git rev-parse HEAD` at phase
+entry) in the phase handoff; at phase `P<n>` (n ≥ 2) the preflight runs
+`path-guard --unit <unit-dir> --phase P<n-1> --base <P<n-1> base ref>`, which
+unions that committed range with any dirty tree left by an interrupted run. P1's
+checkpoint uses the planning-artifacts range (`--phase P1 --base <unit base>`),
+and the final phase's own range is checked by the close-out gate (P5's ladder)
+with `--phase P<n> --base <P<n> base ref>`. A fail prints the typed
+`GATE REJECTION — path-protection` trace and stops before the next edit. There is
+no `--force` bypass: the escape hatch is a recorded justification/approval, not a
+force flag (D-60-8). Where the crate is unavailable (installed-skill target; the
+scripts-distribution gap), the skill applies the same disclose-and-degrade rule
+the phase-lint guard already uses and records the unavailable gate — it never
+silently skips it.
 
 **Tier 2 pi guard.** `packages/pi-agentic-workflow` registers `pi.on("tool_call")`
 and blocks a `write` / `edit` call whose target is an **existing** protected path
 and carries no matching `justification` record, returning
 `{ block: true, reason }` with the reason naming the escape path (the record
-procedure and the `path-protection-records@1` grammar). Read-only tool calls and
-new-file creates pass (expectation 2 and expectation 8). Post-freeze approval is
-Tier 1's checkpoint duty because the extension has no phase state; the extension
-never weakens the shipped floor (D-60-5). The pi settings override is the strict
+procedure and the `path-protection-records@1` grammar). The record source is the
+repository's unit decision ledgers: the guard resolves the repo root from
+`ctx.cwd`, reads the `path-protection-records@1` block of every
+`docs/features/*/decisions.md` and `docs/fix/*/decisions.md`, and permits the
+write when a `justification` row (authority `execute-phase`) whose `paths` match
+the target exists. `approval` rows are never consulted — the extension has no
+phase state, so post-freeze approval stays Tier 1's checkpoint duty (E-60-5); a
+missing or malformed ledger, or no matching row, blocks. Read-only tool calls and
+new-file creates pass (expectation 2 and expectation 8); the extension never
+weakens the shipped floor (D-60-5). The pi settings override is the strict
 `pathProtection` key (`{ protectedGlobs?: string[]; requirements?: { [state]:
 { [operation]: requirement } } }`) merged by the same tighten-only rule: an added
 glob or a raised requirement is honored, a removal or a lowering is rejected with
@@ -592,22 +618,26 @@ the degradation report (AC10).
 
 **Three shipped-default surfaces, two pins.** The canonical defaults live in the
 crate module; `template/.agentic-workflow/path-policy.json` is the install seed
-(parity-checked against the crate serialization), and the pi package embeds a
-mirror (parity-checked against the crate module in its own suite). The repo
-pattern for a shipped mirror plus a parity test is the pi package's `skills/`
-mirror (`packages/pi-agentic-workflow/test/skill-parity.test.mjs`).
+(parity-checked by the P2 done-when command — a byte diff of the crate's
+`serializeShippedPolicy()` output against the seed, not a file-existence check),
+and the pi package embeds a mirror (parity-checked against the crate module by a
+committed test in its own suite). The repo pattern for a shipped mirror plus a
+parity test is the pi package's `skills/` mirror
+(`packages/pi-agentic-workflow/test/skill-parity.test.mjs`).
 
 ### Planning evidence
 
-See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 22 rows,
-PE-001…PE-022, all `current` + `proven`).
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 26 rows,
+PE-001…PE-026, all `current` + `proven`).
 
 ### Obligations
 
-See `planning-obligations.md` (M/L — O1…O17, one row per acceptance criterion
+See `planning-obligations.md` (M/L — O1…O18, one row per acceptance criterion
 plus the read-only, vocabulary-closure, no-auto-approval, and
-unavailable-gate-disclosure invariants and the `path-guard:empty-diff` /
-`path-guard:two-runs` scenario pins; every row `planned` at freeze).
+unavailable-gate-disclosure invariants, the `path-guard:empty-diff` /
+`path-guard:two-runs` / `path-guard:committed-range` scenario pins, and the
+split template-seed (O15) / pi-mirror (O18) parity pins; every row `planned` at
+freeze).
 
 ### Decisions to confirm
 
@@ -644,7 +674,8 @@ Test layers (repo convention — integration over mocks; throwaway git fixture
 repos per the existing `scripts/continuation-discipline.test.mjs` harness);
 `bun`-first with the `node` fallback:
 
-- **Crate engine suite** (`node --test packages/agentic-workflow`) — the
+- **Crate engine suite** (`bun test packages/agentic-workflow/test/`; Node 24
+  fallback `node --test packages/agentic-workflow/test/*.test.mjs`) — the
   freeze × class × operation matrix, creation-vs-modification, the
   justification / approval / unmatched-record / malformed-declaration cases, and
   the shipped-default fallback + degradation cases (AC1, AC3, AC5, AC6).
@@ -672,6 +703,7 @@ repos per the existing `scripts/continuation-discipline.test.mjs` harness);
 | `path-guard:unmatched-record` | A record matching no changed path | fixture unit with an orphan approval row; gate prints `fail — unmatched-record`, exit 1 (P1 pins) |
 | `path-guard:freeze-boundary` | The phase ordinal exactly at and one past `freeze-after` | two fixture units, `--phase` at the boundary; the requirement flips `justification` → `approval` (P1 pins) |
 | `path-guard:two-runs` | Two consecutive runs on the same tree | stateless read-only gate; byte-identical blocks, `git status` unchanged after both runs (P1 pins) |
+| `path-guard:committed-range` | A phase committed a protected modification without a record | fixture unit whose P1 commit changes a test file; the next checkpoint runs `path-guard --phase P1 --base <pre-P1-ref>` → `fail — protected-modification`, exit 1 (P1 pins) |
 | `pi:read-passthrough` | A `read` tool call against a protected path | extension fixture; no block returned, read allowed by the role matrix (P4 pins) |
 | `pi:create-passthrough` | A `write` to a new protected file pre-freeze | extension fixture with a non-existent target; no block returned (TDD authoring, expectation 2) (P4 pins) |
 
@@ -694,7 +726,9 @@ artifacts with its first change.
   `path-protection-plan@1` / `path-protection-records@1` parsers, the pure
   evaluator, the closed reason vocabulary, the `path-guard` CLI, the crate engine
   suite, and the repo-root discipline suite. Done-when:
-  `node --test packages/agentic-workflow scripts/path-protection.test.mjs` → exit 0.
+  `bun test packages/agentic-workflow/test/ && node --test scripts/path-protection.test.mjs`
+  → exit 0 (Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs &&
+  node --test scripts/path-protection.test.mjs` → exit 0).
 - **P2 — Template policy ship** (docs): the policy seed and its doc page under
   `template/.agentic-workflow/`, the hooks README section, and the
   `init-workspace` install/upgrade seeding. Done-when: the template mirror diff
