@@ -576,3 +576,30 @@ Environment note (not a finding): `bun test`'s parallel file execution makes two
 file this unit edits is read by that suite, and the receipt's notes carry the
 re-run instruction. Recorded so a later executor does not read a loaded pack as a
 real regression.
+
+---
+
+## Re-review (`spec-review-31-12`, 2026-09-18)
+
+Owner-commissioned product-route re-review of the Product-half patch `31-spec-12`
+(commit `324d9de3`, routing review-change finding F3 through
+`design-feature` → `review-spec`). Context-clean reviewer turn over spec snapshot
+`2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7` (author handoff
+label `31-spec-12`). Verdict: **`spec-review-fail`** — the AC4 patch is correct,
+but the same wrong freshness code the patch corrected in AC4 survives unpatched in
+two more Product-half locations, so the half now contradicts itself; one
+non-blocking record gap is also recorded. No reviewed artifact was modified by the
+turn. Window accounting (D-31-7): `spec-review-31-11` PASS reset the count, so this
+is cycle 1.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| N31-016 | spec | medium | product | 2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7 | The F3 repair is incomplete and now makes the Product half contradict itself. The patched AC4 (`SPEC.md:476-478`) correctly says the fall-through for moved bound bytes answers `stale-source-revision`, but the same event is still described with the impossible code `stale-artifact-content` in `#### In scope` item 2 (`SPEC.md:150`) and in Capability closure E2's state transitions (`SPEC.md:313`), and Expectation sweep row 11 (`SPEC.md:419`) still names `stale-artifact-revision` for an unrecorded rotation — the naming Design E6 (`SPEC.md:934-936`) explicitly records as "wrong and is corrected". A reader of the half therefore learns two incompatible codes for one behaviour. | `SPEC.md:150` (In scope 2), `:313` (E2 state transitions), `:419` (sweep row 11) against AC4 `SPEC.md:476-478` and E6 `SPEC.md:919-936`; frozen `ACCEPTANCE.md:23` (AC4) records `stale-source-revision`; `scripts/pre-execution-snapshot.mjs:400` returns `stale-source-revision` before the `stale-artifact-content` slot at `:412`; fresh reproducer `bun /tmp/s31-repro.mjs` → `material/committed -> stale-source-revision`, `material/uncommitted -> stale-artifact-content` | open | — (product-class repair: route to `design-feature`; the intended behaviour is already frozen in AC4/`ACCEPTANCE.md` AC4/E6, so only the code names move) | — |
+| N31-017 | spec | low | product | 2ca0f9c45d4665a9d97dd90cf26cc2df94362d62fd00b18d870c28b47a378ed7 | `## Design status` (`SPEC.md:685`) asserts a "readiness preflight `READY-FOR-REVIEW` at artifact revision `31-spec-12`", but no readiness block for that revision exists in the unit's record: the last write to the unbound `progress.md` is `12c8a079` (2026-09-18 08:05), before the `31-spec-12` patch was committed (`324d9de3`, 13:13), and `grep -c '31-spec-12' progress.md` returns 0, while every earlier reviewed revision (`31-spec-4`…`31-spec-9`) has its own `READINESS — … spec READY-FOR-REVIEW` block. Non-blocking report-note: it changes no criterion, validator or required outcome; the next `design-feature` turn produces the record. | `SPEC.md:685`; `git log -1 --format='%h %ci' -- docs/features/31-planning-review-materiality/progress.md` → `12c8a079 2026-09-18 08:05:23`; `git log -1` at HEAD → `324d9de3 2026-09-18 13:13:17`; `grep -c '31-spec-12' docs/features/31-planning-review-materiality/progress.md` → 0; `grep -n 'READINESS — .* spec READY-FOR-REVIEW' progress.md` lists `31-spec-4`…`31-spec-9` only | open | — (report-note; resolved by the `design-feature` repair batch recording the readiness block) | — |
+
+Route: `class: product` → repair owner `design-feature
+31-planning-review-materiality` — one batch correcting the freshness code names in
+In scope item 2, E2's state transitions and Expectation sweep row 11 (to
+`stale-source-revision` for moved bound bytes, per AC4/`ACCEPTANCE.md` AC4/E6) and
+recording the `31-spec-12`-successor readiness block, then `/review-spec
+31-planning-review-materiality` re-reviews the new artifact revision.
