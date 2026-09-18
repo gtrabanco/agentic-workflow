@@ -1,0 +1,54 @@
+{
+  "skill": "execute-phase",
+  "state": "BOGUS",
+  "summary": "P1 committed; P2 is next.",
+  "unit": {
+    "type": "feature",
+    "id": "99-csv-export-command",
+    "issue": 99,
+    "branch": "feat/99-csv-export-command"
+  },
+  "phase": {
+    "current": "P2",
+    "total": 4,
+    "completed": 1
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": "none",
+    "head_sha": null,
+    "merge_ready": null,
+    "ci": null
+  },
+  "gates": {
+    "verification": "green",
+    "review_pending": true,
+    "audit_pending": true
+  },
+  "findings": {
+    "fix_now": [],
+    "issues_filed": [],
+    "untriaged": 0,
+    "decisions_recorded": 0
+  },
+  "blockers": [],
+  "dependencies": {
+    "unmet": [],
+    "build_order": []
+  },
+  "recommendations": {
+    "product_audit": false,
+    "reason": null
+  },
+  "needs_input": null,
+  "next": {
+    "recommended": "/execute-phase 99 P2",
+    "alternatives": [],
+    "tier": "cheap"
+  },
+  "detail": {
+    "fixture": "golden-fixture",
+    "purpose": "the valid sample with exactly one field changed: state"
+  }
+}
