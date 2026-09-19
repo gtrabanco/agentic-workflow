@@ -2002,3 +2002,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** SPEC60-F1: user instruction moves D5 approval off review-findings finding-mark@1 (single-writer review-change, no approval column) onto decisions.md via human-owner:ratified-verdicts / execute-phase:phase-decisions (ledger-ownership@1). SPEC60-F2: vocabulary fix only — web/repository doc/platform doc/forge/user decision → document/repository/forge/user per ROWS.md closed vocabularies. SPEC60-F3: closure completion — AC10 freezes the tighten-only pi override expectation that was in scope but unclosed. All three are class: product, one batch, no scope/role/authority/user-outcome change beyond corrected surface.
 - **Next:** /review-spec 60-path-protection-guards for re-review of the new artifact revision 7e9f6f54
 
+
+## 2026-09-19T13:43:17Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** fix(phase-lint): 4 execution-affecting fixes — PR #248
+- **Decisions:** F99: embeddedTarget linearized from split() to matchAll() (0 mismatches over 500k fuzz, byte-identical); F42: OUTCOME_ANCHOR arrow alternatives now require alphanumeric text (→\s*\S*[A-Za-z0-9] instead of →\s*\S); F12 and F15 verified correct on main — only F42 needed behavior change; F99/F12/F15 documented with comments
+- **Next:** None — PR #248 merged to main; check workflow-status for next roadmap unit
