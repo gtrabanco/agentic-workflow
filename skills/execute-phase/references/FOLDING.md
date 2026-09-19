@@ -23,8 +23,8 @@ end up "solved" locally but absent from the merged PR:
   (known-issues.md entry resolved? progress.md notes the fold)
 ✓ Each folded finding's row in the unit's `review-findings.md` ledger (if one
   exists — the ledger is optional; a unit with no fix-now findings has none)
-  flipped `folded: no → yes` — the one and only ledger state transition, owned
-  solely by this fold cycle
+  flipped `folded: no → yes` — the one and only ledger state transition,
+  `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer
 ✓ `git add` + `git commit` RUN (sha pasted) — e.g.
   `fix(<scope>): fold review findings — <summary>`
 ✓ `git push` RUN (PR is open → every commit pushes immediately)
