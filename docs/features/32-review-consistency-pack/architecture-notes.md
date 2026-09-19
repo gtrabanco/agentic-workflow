@@ -19,7 +19,10 @@
   `skills/review-change/references/PERSIST_AND_DECIDE.md` and
   `skills/execute-phase/references/FOLDING.md`, `skills/fold-findings/SKILL.md`,
   the `audit-docs`/`product-audit`/`audit-pr`/`plan-feature`/
-  `plan-feature-scaffold`/`review-change`/`workflow-status` text fixes.
+  `plan-feature-scaffold`/`review-change`/`workflow-status` text fixes, plus the
+  release bookkeeping surface — `CHANGELOG.md` (the `pre-execution-review`
+  version collision resolved: the later-merged feature 60 row takes 2.4.0) and
+  the matching `skills/pre-execution-review/SKILL.md` frontmatter.
 - **hardening (P5)** — qualification only: ladder runs, mirror re-bundle +
   parity, acceptance-blob receipt, README bibliography, close-out.
 
@@ -45,7 +48,12 @@
   already declared NRS optional (`EXECUTION_CONTRACT.md`), reducing a run-scoped
   false blocker without weakening any real gate.
 - **No schema, package, or public API change.** `packages/agentic-workflow-schema`
-  is regression-only; the Pi mirror is regenerated from the skill tree.
+  is regression-only; the Pi mirror is regenerated from the skill tree. The
+  `CHANGELOG.md` correction changes a version cell and adds no rule, flag, or
+  output shape: `scripts/normative-drift.test.mjs`'s once-per-table pin is
+  satisfied by the corrected row, and its legacy exemption list
+  (`LEGACY_DUPLICATE_VERSION_ROWS`) is left unextended (extending it would weaken
+  the pin AC-11 forbids weakening).
 
 ## Preflight classification
 

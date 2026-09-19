@@ -305,9 +305,70 @@ plan stays at five phases, inside the ≤ 5-phase bound the Product half records
   SPEC §Size (M, per-owner phase sketch).
 - **Derivation**: PE-020.
 
+## 2026-09-19 — Engineering decisions ED-32-7…ED-32-9 (plan re-cut `32-plan-2`)
+
+Recorded by `plan-feature` (repair batch for `PLAN-REVIEW-32-1` findings
+F13–F19, re-cut against the post-merge head `e1c008bc`). Product decisions
+D32-1…D32-8 and engineering decisions ED-32-1…ED-32-6 above are untouched.
+
+### ED-32-7 — the plan set is re-based on the post-merge head, not redesigned
+
+The `32-plan-1` set was cut at `2a87c5cd`, before this branch merged
+`origin/main` at `e1c008bc` — which brought **feature 31** (PR #243, this unit's
+declared hard execution dependency) and **feature 60** (PR #245). Every
+`planning-evidence.md` row was therefore re-read at `e1c008bc`: the `path:line`
+cites the merge shifted were updated (`LEDGERS.md` +4, `fold-findings/SKILL.md`,
+`audit-pr/SKILL.md`, `workflow-status.mjs`, `CLAUDE.md`), and two rows whose
+*claims* the merge falsified were corrected rather than left `current`:
+`PE-016` (the budget manifest declares entries for only some touched skills;
+the rest ride `defaults`, the case feature 30's P30-4 already recorded) and
+`PE-022` (the dependency closure is now **satisfied** — rows 30 and 31 are both
+`done` and merged). The parent Product receipt moves to `SPEC-REVIEW-32-5`
+(snapshot `e4b293e3…`), because `SPEC-REVIEW-32-4` went `stale-context` when
+`CLAUDE.md` moved with feature 60. No product intent, obligation identity, phase
+topology, validator, or authority changes: this is a re-baseline, and the phase
+cut, criterion set, and frozen `ACCEPTANCE.md` blob stay as frozen.
+
+- **Authority**: PLAN-REVIEW-32-1 findings F13–F16; `SPEC.md ## Dependencies`;
+  `planning-evidence.md` rows PE-001…PE-022; `progress.md` `SPEC-REVIEW-32-5`.
+
+### ED-32-8 — the `CHANGELOG.md` version collision is corrected at the row, not exempted
+
+`CHANGELOG.md` states `pre-execution-review` 2.3.0 twice in one table: the
+feature 60 P3 row (`:648`) and the feature 31 row (`:663`) both bumped the same
+minor from 2.2.0 on parallel branches, so `scripts/normative-drift.test.mjs`'s
+once-per-table pin is red (18/19) at `e1c008bc` and AC-09/O13 cannot reach exit
+0. The later-merged feature (60) takes the next minor: its row becomes 2.4.0 and
+`skills/pre-execution-review/SKILL.md`'s frontmatter follows, so the
+newest-row/frontmatter pin stays green and P4's own bump of the same skill reads
+2.5.0. Extending `LEGACY_DUPLICATE_VERSION_ROWS` (the `log-session` 1.4.0
+exemption path) was rejected: that list is for duplicates whose history cannot
+be unsaid, and extending it weakens a pin — the exact move AC-11 forbids. The
+Pi mirror keeps the stale copy until P5 re-bundles it, which is the established
+flow.
+
+- **Authority**: PLAN-REVIEW-32-1 finding F15; `node --test
+  scripts/normative-drift.test.mjs` (1 fail at `e1c008bc`); `CHANGELOG.md:648,663`;
+  `scripts/normative-drift.test.mjs:853,1036-1058`.
+
+### ED-32-9 — `report-note` stays owned by the ledger, never restated
+
+IS-3's derived blocking gate names a no-citation `report-note` outcome, and the
+merged feature 31 already shipped the same word as the `low` severity band in
+`LEDGERS.md` §3 (`:91-96`). The two agree in effect (uncited or `low` is
+non-blocking) but must not fork into two definitions: the blocking rule therefore
+**cites** `LEDGERS.md` §3 as the owner of `report-note`, and the `low`/`info`
+report-note coherence rule is read from `LEDGERS.md:111` instead of being
+restated. `CLASSIFY.md` still owns the classification and the gate; the
+materiality vocabulary is the ledger's.
+
+- **Authority**: PLAN-REVIEW-32-1 finding F18; `LEDGERS.md:91-96,111`;
+  `SPEC.md` IS-3 / AC-03; `skills/review-implementation/references/CLASSIFY.md`.
+
 ## Open items for `resolve-repository-state` (not resolved here)
 
-- REPOSITORY_STATE.md F006/F007 are stale versus the current forge and roadmap
-  (rows 30–38 done; 31 still `idea`). Evidence row E-19 records the drifted
-  rows and the consequence (this design consumes roadmap + forge evidence
-  directly). Owner: `resolve-repository-state`.
+- REPOSITORY_STATE.md F006/F007 remain stale versus the current forge and
+  roadmap (rows 30/31 are now `done` and merged; the rows the snapshot still
+  reads as open have moved again). Evidence row E-19 records the drifted rows
+  and the consequence (this design consumes roadmap + forge evidence directly).
+  Owner: `resolve-repository-state`.
