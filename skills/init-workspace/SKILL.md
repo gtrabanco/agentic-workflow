@@ -1,5 +1,7 @@
 ---
 name: init-workspace
+model: opus
+effort: high
 user-invocable: true
 version: 2.9.0
 argument-hint: <target-dir>

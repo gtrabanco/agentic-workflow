@@ -1,5 +1,7 @@
 ---
 name: review-security
+model: opus
+effort: high
 user-invocable: false
 version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"

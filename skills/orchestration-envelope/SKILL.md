@@ -1,5 +1,7 @@
 ---
 name: orchestration-envelope
+model: sonnet
+effort: medium
 user-invocable: false
 version: 2.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"

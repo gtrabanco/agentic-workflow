@@ -1,5 +1,7 @@
 ---
 name: plan-feature-from-issue
+model: opus
+effort: high
 user-invocable: false
 version: 2.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
