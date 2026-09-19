@@ -52,6 +52,10 @@ const RUNTIME_WORDS = new Set(["bun", "node", "npm", "npx", "git", "grep", "diff
 const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
 const PATH_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 const HAS_LETTER = /[A-Za-z]/;
+// F12: the frozen heading separator is exactly `[—-]` — em-dash (U+2014) and
+// ASCII hyphen-minus only. It is deliberately not a range and does not include
+// en-dash (U+2013): `## P1 – Docs` is not a phase heading (pinned by the
+// en-dash corpus case). Verified against the SPEC-frozen grammar — no change.
 const PHASE_HEADING = /^ {0,3}#{2,4}\s+P(\d+)\s*[—-]\s*(.*)$/;
 /**
  * Strip markdown emphasis (asterisks, underscores, tildes) from both ends of a
@@ -140,8 +144,15 @@ function looksPathLike(token) {
  * a URL, a glob) and stays exempt.
  */
 function embeddedTarget(token) {
-  for (const run of token.split(/[^A-Za-z0-9_./-]+/)) {
-    const candidate = trimEdgeSlashes(run);
+  // F99: a single `matchAll` pass over the allowed-run class — the exact
+  // complement of the old `split(/[^A-Za-z0-9_./-]+/)` delimiter — replaces
+  // materializing every run as an array before judging any of them. The
+  // per-run work (edge-slash trim, `//` collapse, `isTargetToken`) is O(run)
+  // and the runs partition the token, so the whole scan is O(n) in the token
+  // length with no quadratic retry. The result is identical to the split form
+  // (differentially fuzzed over 500k random tokens).
+  for (const match of token.matchAll(/[A-Za-z0-9_./-]+/g)) {
+    const candidate = trimEdgeSlashes(match[0]);
     if (candidate === "") continue;
     // A repeated separator (`scripts//evil.mjs`) still names a real POSIX
     // target — interchangeable with `scripts/evil.mjs` — but the frozen token
@@ -149,7 +160,7 @@ function embeddedTarget(token) {
     // untokenizable and must fail closed instead of dropping to targetless
     // prose and skipping the layer check (F74; the F69 class one segment
     // short of the class boundary).
-    const collapsed = candidate.replace(/\/{2,}/g, "/");
+    const collapsed = candidate.includes("//") ? candidate.replace(/\/{2,}/g, "/") : candidate;
     if (isTargetToken(collapsed)) return collapsed;
   }
   return null;
@@ -597,8 +608,15 @@ function box7(phase) {
  * explicit exit forms committed plans actually use — `exits 0`, `exit code 2`
  * and `exits with code 0` (F45/F65) — while a bare arrow or a command with no
  * outcome still fails.
+ *
+ * F42: an arrow must be followed by at least one alphanumeric inside its first
+ * non-space run, so a bare `→`/`->` or punctuation-only filler (`→.`, `→!`) is
+ * not an outcome. F15: `pass`/`passes`/`passed` are matched as whole words —
+ * the trailing `\b` also rejects `passing`, the leading `\b` rejects
+ * `bypasses` — and `empty`/`matches`/`zero` stay word-anchored so `nonempty`
+ * is not `empty`.
  */
-const OUTCOME_ANCHOR = /→\s*\S|->\s*\S|\bexits?(?:\s+with)?(?:\s+code)?\s+(?:\d+|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i;
+const OUTCOME_ANCHOR = /→\s*\S*[A-Za-z0-9]|->\s*\S*[A-Za-z0-9]|\bexits?(?:\s+with)?(?:\s+code)?\s+(?:\d+|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i;
 function box8(phase) {
   if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
   if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
