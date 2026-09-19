@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { loadConfig, configFilePaths } from "../dist/config/load.js";
 import { effectiveRoute } from "../dist/config/merge.js";
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "../dist/config/defaults.js";
+import { SHIPPED_PATH_POLICY } from "../dist/config/path-policy.js";
 import { SETTINGS_COMMAND } from "../dist/routing/types.js";
 import { createSession } from "./helpers/session.mjs";
 
@@ -41,6 +42,9 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     commands: {},
     onUnavailableRoute: "stop",
     onSettle: "keep",
+    // Feature 60 added the resolved path-protection policy to the effective
+    // config; the shipped floor with no override and no degradation.
+    pathProtection: { ...SHIPPED_PATH_POLICY, degradations: [] },
   });
 });
 

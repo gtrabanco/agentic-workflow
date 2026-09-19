@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { DEFAULT_CONFIG } from "./defaults.js";
 import { mergeConfigs } from "./merge.js";
 import { parseConfigFile } from "./schema.js";
+import type { PathPolicyDegradation } from "./path-policy.js";
 import type { ConfigFile, ConfigPaths, ConfigProblem, EffectiveConfig } from "./types.js";
 
 /**
@@ -51,6 +52,8 @@ export interface LoadedConfig {
   /** The merged configuration; the shipped default whenever `ok` is false. */
   config: EffectiveConfig;
   problems: ConfigProblem[];
+  /** The effective policy's tighten-only degradations (feature 60); empty when clean. */
+  pathProtectionDegradations: PathPolicyDegradation[];
 }
 
 const NOT_THERE = new Set(["ENOENT", "ENOTDIR"]);
@@ -96,11 +99,13 @@ export function loadConfig({ agentDir, cwd, projectTrusted, readFile = readIfExi
   const globalFile = loadScope("global", paths.global, readFile, problems);
   const projectFile = projectTrusted ? loadScope("project", paths.project, readFile, problems) : {};
 
+  const config = problems.length === 0 ? mergeConfigs(globalFile, projectFile) : DEFAULT_CONFIG;
   return {
     ok: problems.length === 0,
     // Fail closed: a broken file hands the caller the unrouted default and the
     // problems that explain why dispatch is refused.
-    config: problems.length === 0 ? mergeConfigs(globalFile, projectFile) : DEFAULT_CONFIG,
+    config,
     problems,
+    pathProtectionDegradations: config.pathProtection.degradations,
   };
 }
