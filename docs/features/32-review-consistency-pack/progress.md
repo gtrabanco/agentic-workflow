@@ -491,3 +491,169 @@ Self-check (`verify --stage plan`, POLICY §8), run in the same act as this writ
 ```
 
 (exit 4 — the write landed, `structural.fresh: true`, `digestMatches: true`; `current` is false because the verdict is FAIL, which is the expected emit result and routes per the verdict.)
+
+## Plan repair batch `32-plan-3` — plan-feature authoring turn (2026-09-19)
+
+Trigger: `PLAN-REVIEW-32-2` (`plan-review-fail`, snapshot `065459e6…`) findings
+F21 + F22, one batch, per the FAIL receipt's emitted continuation
+(`/plan-feature 32-review-consistency-pack "…" — one batch for F21 + F22`).
+Both findings are `class: plan`, so the batch is the `review-plan` route table's
+own repair path (`plan-feature` → new artifact revision → re-review); the
+router's code-side line is unchanged (`node scripts/unit-route.mjs 32` →
+`status: planned`, `open-rows: 0`, `route: execute` — this unit's findings live
+in `planning-findings.md`, which the router does not read, per the recorded
+`32-plan-2` router note).
+
+**What changed** (one batch; F21/F22 rows in `planning-findings.md` are
+`resolved` with resolution evidence and `resolving-artifact-revision`
+`32-plan-3`):
+
+- **F21** — `planning-evidence.md` row PE-011's `ledger-ownership.test.mjs`
+  cites are re-based at the bound source revision `aefdccc4`: `:56-57` (the
+  `FEATURE_TEMPLATE_REL`/`FIX_TEMPLATE_REL` projection paths), `:66-74`
+  (`TRUTH_CLASSES`), `:158-163` (one row per class), `:173` (the
+  unique-ledger-per-row check), `:202-204` (the owner-cell equality check).
+  Every location was re-read before the row was rewritten; the claim,
+  `freshness: current` and `status: proven` now stand on cited lines that
+  resolve.
+- **F22** — the IS-5(a) prose half lands at P2 everywhere:
+  `planning-obligations.md` O9 moves from P1 to **P2** — its task now names the
+  split (the sensor half lands in P1's tasks; the reference alignment is
+  `PLAN.md`/`TASKS.md` P2 task 7), its validator gains the
+  `review-loop-discipline` IS-5(a)-text pin so the reference-alignment component
+  is falsifiable when the obligation resolves, and its required evidence moves
+  to the P2 handoff. `SPEC.md`'s P1 phase bullet drops "the workflow-status
+  references state the same split" and the P2 bullet now names the
+  workflow-status reference alignment (IS-5(a) text). `PLAN.md`'s
+  artifact-revision paragraph is re-cut to `32-plan-3` (history preserved).
+  No `PLAN.md`/`TASKS.md` task moved: the finding itself recorded that P2 task 7
+  already owned the alignment, and P1's four tasks are untouched, so both
+  phase-lint fingerprints are unchanged.
+
+**Product-half safety.** The SPEC.md edit is inside the `## Engineering half`
+(§ Phases), outside the `spec-product-v1` projection. Recomputed projection at
+the batch head: digest `675349efa8655a55345aec1c7ac47163ceb2eb6cb0832f0eada53924713e68cc`
+— byte-identical to the bytes `SPEC-REVIEW-32-5` reviewed, so the parent Product
+receipt stays current on the projection evidence (the recorded feature-30
+`P30-3` comparator limitation; the whole-file content revision moved, which is
+why a standalone `verify --stage spec` answers `stale-source-revision` for
+`SPEC.md` only).
+
+**Open findings after the batch**: F20 (spec, low, report-note — Product-half
+citation re-base, owner `design-feature`), F23 (product, low, report-note —
+AC-02's directory grep), F24 (product, low, report-note — AC-10's append
+clause). All three are non-material; none was touched by this batch (they are
+not F21/F22 and were never claimed).
+
+**Deliberately recorded, not fixed here.** `node --test
+scripts/check-skill-context.test.mjs` fails at this head (assertion at
+`:121` — `--routes --json` exits 1) because four *route* budgets are over their
+declared ceilings (`plan-feature:scaffold`, `plan-fix:issue`,
+`review-plan:default`, `review-spec:default`). Verified pre-existing: the same
+test fails identically at the batch's parent commit `45f70b09`. The
+`check-skill-context.mjs` manifest gate itself passes (`PASS context budgets:
+40 skills`; `PASS context manifest: 40 discovered skills; 11 explicit
+overrides; reference depth 1`). The route-ceiling drift predates this unit's
+plan and touches no surface this batch edits; it is reported for its owner
+(the budget manifest's route section) and is not folded into this batch.
+
+Phase-lint (verbatim stdout of `bun scripts/phase-lint.mjs docs/features/32-review-consistency-pack/PLAN.md`):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:4:nrs-missing-ledger-notice
+P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:8:contract-prose-alignment
+P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:8:classification-single-owner-contract
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:7:gate-run-receipt
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: bcc83a051816c2a893161c819f301ed0b27b9a7b6021ccbc1d9382f91fe29382
+```
+
+Readiness preflight (`evidence-grounding/references/READINESS.md`, `stage: plan`,
+boxes 1–11 re-run on the batch bytes):
+
+```text
+READINESS — 32-review-consistency-pack plan READY-FOR-REVIEW
+- Artifact revision: 32-plan-3 · Rows checked: 23 evidence / 25 obligations · Unknowns open: 0
+- Evidence: planning-evidence.md · Frozen: 2026-09-18 (ACCEPTANCE.md blob ce71193384cbf0cb7f4adb490456f309da8fc2e5)
+```
+
+- Box 1 — `SPEC-REVIEW-32-5` (`spec-review-pass`, `e4b293e3…`) is the current
+  Product receipt; the projection is byte-identical at this head (above).
+- Box 2 — `ACCEPTANCE.md` untouched, blob recomputed `ce711933…` (unchanged).
+- Box 4 — 25 obligation rows (O9 re-pointed to P2; counts unchanged), each with
+  phase, task, owner, validator, required evidence and a non-blank `planned`
+  status; no `deferred` row.
+- Box 5 — 23 evidence rows, every engineering claim resolving to one; PE-011's
+  provenance now cites lines that resolve at the bound revision (F21 closed).
+- Box 7 — every phase passes the 8-box phase-lint with its fingerprint recorded
+  (stdout above); the `config/infra` phase still carries no `skills/` first
+  target (F22's layer note is satisfied by O9's move).
+- Boxes 3, 6, 8, 9, 10, 11 — unchanged by this batch (surfaces, dev scenarios,
+  phase order, rollback, risks, unknowns all as re-cut at `32-plan-2`).
+
+Plan snapshot (built in this act, after the batch commit):
+
+```text
+digest: a29feeca517bfad3dea51e08751c4931b3f2738739cbcd56e5eb90d4af0f797c
+sourceRevision / artifactRevisionId: 55bf6b80f127aa3c824551cd5a97f03c438f12b5 (the batch commit)
+parentSpecSnapshotDigest: e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7
+```
+
+The planner's label is `32-plan-3`; no runtime rotates an id in this
+environment, so the hand-off names the label and the snapshot binds the
+builder's canonical commit-derived identity (the reconciliation every prior
+receipt recorded). The roadmap row was re-read after the write:
+
+```text
+node scripts/unit-route.mjs 32 → status: planned · open-rows: 0 · route: execute
+```
+
+Qualification suites re-run at the batch head: `review-loop-discipline`,
+`ledger-ownership`, `bounded-delivery-loops`, `audit-pr-receipt`,
+`workflow-status-sensor`, `workflow-status-pre-execution` all pass;
+`normative-drift` stays 18/19 by design until P4 task 1 lands;
+`check-skill-context` manifest gate passes (its route-budget test failure is
+pre-existing, recorded above).
+
+Plan-stage verify at the batch head (the reviewer's sensor, POLICY §8; expected
+to answer `stale-source-revision` against the superseded `PLAN-REVIEW-32-2`
+receipt — a repair turn produces a new snapshot by design, POLICY §4's
+repair-in-response carve-out):
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "32-review-consistency-pack",
+  "receipt": {
+    "id": "PLAN-REVIEW-32-2",
+    "verdict": "plan-review-fail",
+    "snapshot": "065459e621797ef57769e42d96d1bb25b9de99b804b8d26d0f5f17da77190cd6",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "a29feeca517bfad3dea51e08751c4931b3f2738739cbcd56e5eb90d4af0f797c",
+  "digestMatches": false,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": false,
+    "reasonCode": "stale-source-revision",
+    "detail": "the artifacts were reviewed at aefdccc4de12b65883d1fe556317ab2107418158, the bound bytes now sit at 55bf6b80f127aa3c824551cd5a97f03c438f12b5",
+    "changedPaths": [
+      "docs/features/32-review-consistency-pack/PLAN.md",
+      "docs/features/32-review-consistency-pack/SPEC.md",
+      "docs/features/32-review-consistency-pack/planning-evidence.md",
+      "docs/features/32-review-consistency-pack/planning-obligations.md"
+    ]
+  }
+}
+```
+
+(exit 4 — the superseded FAIL receipt is stale against the batch bytes; the
+re-review mints its successor.)
+
+Hand-off: `/review-plan 32-review-consistency-pack` — an independent context
+judges the `32-plan-3` artifact revision (prior receipt `PLAN-REVIEW-32-2`,
+FAIL, F21–F22 resolved with evidence; F20/F23/F24 remain open, non-material).
