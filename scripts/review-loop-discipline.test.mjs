@@ -433,6 +433,48 @@ const auditPr = read("skills/audit-pr/SKILL.md");
 assert.match(auditPr, /pass \/ blocker \/ n-a/);
 assert.doesNotMatch(auditPr, /pass.*blocker.*warning.*n-a/);
 assert.doesNotMatch(auditPr, /\bwarning\b.*blocker|\bblocker\b.*\bwarning\b/s);
+
+// ── 15. Feature 32 (P4) — gate-run receipt pins ──────────────────────────────
+
+// P4 Task 2: gate-ran@1 mark in LEDGERS.md.
+assert.match(ledgers, /gate-ran@1/);
+assert.match(ledgers, /GATE-RAN \|\s*HEAD/);
+assert.match(ledgers, /additive slots|additive-slots|fields after.*additive|trailing.*slot/s);
+assert.match(ledgers, /manifest.*slot|reserved.*slot.*manifest|manifest.*sha/s);
+assert.match(ledgers, /identical-head|identical\s+head.*reuse|reuse.*identical.*head|changed.*head.*re-run/s);
+assert.match(ledgers, /execute-phase:gate-ran-marks/);
+assert.match(ledgers, /review-change:review-gate-ran-marks/);
+assert.match(ledgers, /review-change:review-gate-ran-marks.*execute-phase:gate-ran-marks|execute-phase:gate-ran-marks.*review-change:review-gate-ran-marks/s);
+
+// P4 Task 3: template projections have the same owner cell.
+const featTemplate = read("docs/features/_TEMPLATE/LEDGERS.md");
+const fixTemplate = read("docs/fix/_TEMPLATE/LEDGERS.md");
+// Both templates must contain the same gate-ran recorder column-sets.
+assert.match(featTemplate, /execute-phase:gate-ran-marks/);
+assert.match(featTemplate, /review-change:review-gate-ran-marks/);
+assert.match(fixTemplate, /execute-phase:gate-ran-marks/);
+assert.match(fixTemplate, /review-change:review-gate-ran-marks/);
+// Byte-equal owner cells: extract the review-findings owner from live LEDGERS and both templates.
+const liveRow = ledgers.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+const featRow = featTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+const fixRow = fixTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+assert.ok(liveRow && featRow && fixRow, "all three rows exist");
+// The owner portion (second field) should be identical across all three.
+const liveOwner = liveRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+const featOwner = featRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+const fixOwner = fixRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+assert.equal(featOwner, liveOwner, "features template owner cell matches live");
+assert.equal(fixOwner, liveOwner, "fix template owner cell matches live");
+
+// P4 Task 4: GATE-RAN in EXECUTION_CONTRACT.md and FOLDING.md.
+assert.match(read("skills/execute-phase/references/EXECUTION_CONTRACT.md"), /gate-ran@1|GATE-RAN\s*\|/);
+assert.match(read("skills/execute-phase/references/EXECUTION_CONTRACT.md"), /identical-head|identical\s+head.*reuse|reuse.*identical.*head|changed.*head.*re-run|gate-ran|GATE-RAN/s);
+assert.match(read("skills/execute-phase/references/FOLDING.md"), /GATE-RAN/);
+assert.match(read("skills/execute-phase/references/FOLDING.md"), /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
+
+// P4 Task 4: GATE-RAN in PERSIST_AND_DECIDE.md.
+assert.match(persist, /GATE-RAN/);
+assert.match(persist, /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
 // The planning-side loop rules are code, not prose: this block reads the
