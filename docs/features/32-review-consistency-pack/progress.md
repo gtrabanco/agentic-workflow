@@ -96,6 +96,149 @@ Notes:
 - Zero writes to any reviewed artifact: `SPEC.md`, `decisions.md`, and the roadmap row carry the exact bytes the D32-8 repair committed at `7cb1398f` (the snapshot digest binds them); this turn authored only this receipt block, and appended zero findings rows (`Findings: 0`). `artifactRevisionId` rotation depends on manual handoff — no runtime rotation occurred; any later write to `SPEC.md` invalidates this receipt.
 - Self-check `verify --stage spec` run in the same act as this write (write-then-report); its JSON output is printed beside the verdict block in chat.
 
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-32-1 · Snapshot: 102238d5e10dd88444b947fed646915fe77daf7096c4c5f5322608aab4044c97 · Verdict: plan-review-fail
+- Unit: 32-review-consistency-pack · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 5d5a5b6c04cad71e2b5fdf8cc1fa3fd248164d9ea7ae68968e54cd00f06f0acd · Parent Product receipt: SPEC-REVIEW-32-4
+- Source revision: e1c008bc039d2403855fd180da156a9472bc43e7 · Artifact revision: e1c008bc039d2403855fd180da156a9472bc43e7
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (2026-09-18 `32-plan-1`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-19T11:50Z/2026-09-19T12:15Z · Findings: 7 (material open: 6)
+- Ledgers read: planning-evidence 22 rows · obligations 25 rows (verified-capable: 22)
+- Prior plan receipt (re-review only): none — first cycle
+```
+
+Notes:
+
+- Snapshot built with `bun scripts/pre-execution-snapshot.mjs build --stage plan --unit 32-review-consistency-pack --parent 5d5a5b6c04cad71e2b5fdf8cc1fa3fd248164d9ea7ae68968e54cd00f06f0acd`; digest is stdout's first line (`102238d5…`). Bound artifacts: `SPEC.md` (whole-file 69401 B, `98ec785d…`), `ACCEPTANCE.md` (`6b8db637…`), `PLAN.md` (`2c47fc6b…`), `TASKS.md` (`7f417498…`), `planning-evidence.md` (`b3d2c49e…`), `planning-obligations.md` (`925a6b49…`), `testing.md` (`e1901989…`), `decisions.md` (`23d17cff…`), `architecture-notes.md` (`c96d9c69…`). No `planning-evidence`/`obligations` rows are `absent` (M unit froze both ledgers as files). `sourceRevision`/`artifactRevisionId` default to `e1c008bc` (HEAD, no source write in this turn); the planner's label is `32-plan-1` — no runtime rotates the id in this environment, so the builder's digest-derived value is bound and the label recorded (the same reconciliation `plan-review-31-1` recorded).
+- **L1 fails — the bound parent is stale, not missing.** `bun scripts/pre-execution-snapshot.mjs verify --stage spec --unit 32-review-consistency-pack` answers `digestMatches: false`, `structural.fresh: false`, `reasonCode: "stale-context"`, `changedPaths: ["CLAUDE.md"]`: `SPEC-REVIEW-32-4` recorded `project-guide` (`CLAUDE.md`) at `f5c8e142…`; at `e1c008bc` the file hashes `45af6d85…` (`87d5b2db` → `b968c33e`), so the current spec snapshot recomputes to `e4b293e3…` instead of the bound `5d5a5b6c…`. The Product projection itself is unchanged (`spec-product-v1` digest `675349ef…`, 48622 B, byte-identical to the reviewed bytes), but the contract binds contexts too. No current `SPEC-REVIEW-PASS` therefore exists to parent this plan; parent state = `stale-parent → review-spec first`.
+- Contexts emitted by the recipe owner at `e1c008bc`: `project-guide` (`CLAUDE.md`, present, `45af6d85…`), `normalized-repository-state` (`docs/workflow/REPOSITORY_STATE.md`, present, `e1b81e29…`), `architectural-invariants` (`docs/architecture/ARCHITECTURAL_INVARIANTS.md`, absent). Governing issue #172 and dependency rows 30/31 were read live; the builder's fixed context set carries no `governing-issue`/`dependency-unit` row (recorded here, not in the snapshot — same shape as SPEC-REVIEW-32-1…4).
+- **Root cause of the substantive plan finding.** The plan set was cut at `2a87c5cd`/`852c29ef`, before the branch merged `origin/main` at `e1c008bc` — which brought feature 31 (the SPEC's declared hard execution dependency, merged via #243) and feature 60 (#245). `git diff --stat 7cb1398f HEAD` shows the planned target surfaces moved after the evidence revision (`LEDGERS.md` +4, `PERSIST_AND_DECIDE.md` −15, `review-change/SKILL.md` +2, `audit-pr/SKILL.md` +2, `fold-findings/SKILL.md` ±24, `workflow-status.mjs` +2, `review-loop-discipline.test.mjs` +41, `audit-pr-receipt.test.mjs` rewritten, `SKILL_CONTEXT_BUDGETS.json` 164 lines), while every `planning-evidence` row still claims `freshness: current`/`status: proven` and the SPEC `## Dependencies` still reads feature 31 "not yet merged (roadmap status `idea`)". PE-022 is falsified at `e1c008bc`: roadmap row 31 is `done · #243` and the committed row 32 is `idea`.
+- Falsification pass (CHECKS.md §2) stance CONFIRMED-GAPS → confirmed: F13 (stale parent, L1), F14 (pre-merge plan vs merged dependency 31), F15 (P4/AC-09/O13 gate red at head), F16/F17 (stale `path:line` and stale ledger counts), F18 (31's overlapping materiality contract), F19 (roadmap write clobbered by the merge). Spot-checks that passed at `e1c008bc`: `CLASSIFY.md:29-41,86-88` (closed classes + severity legend), `audit-docs/SKILL.md` (14 checks, `MEDIUM` at :98, `(1-13)` at :121, `<n>/13` at :125), `product-audit` `postpone|tradeoff`, `PERSIST_AND_DECIDE.md:20-21,28` (ad-hoc map + sole-flipper sentence still present), `review-loop-discipline.test.mjs:40` (`critical.*high.*major.*med.*minor.*low` still present), `plan-feature/SKILL.md:92-94`, `plan-feature-scaffold/SKILL.md:110`, `unit-route.mjs:114,128`, `ledger-provenance.mjs:33`, `phase-lint.mjs:232-237,468-487`.
+- Ledger sweep: L1 fail (above); L2 fail (PE rows stale/falsified — F14/F16/F18); L3 pass (obligations cover every AC-01…AC-11, the four applicable invariants, the grammar/mirror invariants, and the six dev scenarios); L4 pass (every row names one phase, one task, an owner, a validator, required evidence; none blank or `deferred`); L5 pass (each named failure state maps to a scenario with a phase and a validator that can fail); L6 pass (F1–F12 all `resolved` with resolution evidence and revisions; no open material row).
+- Engineering checks: P1 finding by omission of pre-31 reconciliation; P2 fail; P3 pass; P4 `n/a: no secrets/authn/PII surface — docs and a read-only sensor`; P5 pass (budget re-basis + English-only interim named); P6 pass (per-phase progress receipts / idempotent re-entry); P7 pass (`## Deploy & rollback`: standard revert, no migration); P8 pass (sensor projects the new state; docs carry the rule); P9 pass (`bun scripts/phase-lint.mjs docs/features/32-review-consistency-pack/PLAN.md` → all five phases PASS (8/8), verdict PASS, flags `P1:config/infra:3:nrs-missing-ledger-notice` … `P5:hardening:9:hardening-pr`); P10 fail (F15); P11 pass (six scenarios mapped); P12 fail (F16/F17). Reports-only, no F-checks (feature unit).
+- Zero writes to any reviewed artifact: `SPEC.md`, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, `decisions.md`, `architecture-notes.md`, `testing.md`, and the roadmap row carry the exact bytes the plan set was committed at (`852c29ef`); this turn authored only this receipt block and the F13–F19 rows in `planning-findings.md`. The pre-existing `docs/features/ROADMAP.md` working-tree modification (`idea` → `planned`) predates this turn and was not touched. `artifactRevisionId` rotation depends on manual handoff — no runtime rotation occurred; any later write to a bound artifact invalidates this receipt.
+- Self-check (`verify --stage plan`, POLICY §8), run in the same act as this write:
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "32-review-consistency-pack",
+  "receipt": {
+    "id": "PLAN-REVIEW-32-1",
+    "verdict": "plan-review-fail",
+    "snapshot": "102238d5e10dd88444b947fed646915fe77daf7096c4c5f5322608aab4044c97",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "102238d5e10dd88444b947fed646915fe77daf7096c4c5f5322608aab4044c97",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+
+(exit 4 — the write landed, `structural.fresh: true`, `digestMatches: true`; `current` is false because the verdict is FAIL, which is the expected emit result and routes per the verdict.)
+```
+
 ## Acceptance receipt v1
 
 - Manifest: docs/features/32-review-consistency-pack/ACCEPTANCE.md · Blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5 · Status: frozen · Verified: 2026-09-18 (recorded at plan freeze by `plan-feature-scaffold`; recomputed before every phase and final review per `verification-contract`)
+
+## Pre-execution review receipt v1 — spec
+
+```text
+## Pre-execution review receipt v1 — spec
+- Review: SPEC-REVIEW-32-5 · Snapshot: e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7 · Verdict: spec-review-pass
+- Unit: 32-review-consistency-pack · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: e1c008bc039d2403855fd180da156a9472bc43e7 · Artifact revision: e1c008bc039d2403855fd180da156a9472bc43e7
+- Reviewer: review-spec (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: design-feature (D32-8 repair batch) + plan-feature-scaffold (`32-plan-1`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-19T13:20Z/2026-09-19T13:40Z · Findings: 1 (material open: 0)
+- Artifact: docs/features/32-review-consistency-pack/SPEC.md · selector spec-product-v1 · bytes 48622 · digest 675349efa8655a55345aec1c7ac47163ceb2eb6cb0832f0eada53924713e68cc · validated: builder (scripts/pre-execution-snapshot.mjs)
+- Checks: 14/14 evaluated (13 pass · C10 carries one low report-note F20; material open 0) · falsification CONFIRMED-GAPS → F20 only
+```
+
+Notes:
+
+- Snapshot built with `bun scripts/pre-execution-snapshot.mjs build --stage spec --unit 32-review-consistency-pack`; digest is stdout's first line (`e4b293e3…`). Bound Product bytes: spec `docs/features/32-review-consistency-pack/SPEC.md`, selector `spec-product-v1`, 48622 bytes, sha256 `675349ef…`. Contexts emitted by the recipe owner's fixed set: `project-guide` (`CLAUDE.md`, present, `45af6d85…`), `normalized-repository-state` (`docs/workflow/REPOSITORY_STATE.md`, present, `e1b81e29…`), `architectural-invariants` (`docs/architecture/ARCHITECTURAL_INVARIANTS.md`, absent). The roadmap row is read as routing data and deliberately unbound; parent is `null`. Governing issue #172 (open, incl. its 2026-09-07 amendment) and dependency rows 30/31 were consulted live; the builder's fixed context set carries no `governing-issue`/`dependency-unit` row — recorded here, not in the snapshot (same shape as SPEC-REVIEW-32-1…4).
+- **Why this review exists.** `SPEC-REVIEW-32-4` (PASS at `7cb1398f`, snapshot `5d5a5b6c…`) went stale on its **contexts**, not on its artifact: `CLAUDE.md` moved `f5c8e142…` → `45af6d85…` (`87d5b2db` → `b968c33e`, feature 60's P3 path-protection rows), so the current spec snapshot recomputes to `e4b293e3…` and `verify --stage spec` answers `structural.fresh: false`, `reasonCode: "stale-context"`, `changedPaths: ["CLAUDE.md"]`. The Product projection is byte-identical to the bytes that review approved (`675349ef…`, 48622 B) — planning writes cannot invalidate a spec-stage receipt by themselves, but a context row can. `PLAN-REVIEW-32-1`'s L1 (F13) named exactly this and routed here; the substantive plan findings F14–F19 are plan-stage and are not this review's work.
+- Cycle count (POLICY §4): `32-1` FAIL → D32-6 → `32-2` FAIL → D32-7 → `32-3` FAIL → D32-8 → `32-4` **PASS (count reset)** → this review. This is cycle 1 of the new window on a changed snapshot, so no `CONVERGENCE-ANOMALY` block is owed and the merged two-cycle/third-cycle rule does not arm.
+- Falsification pass (CHECKS.md §2, stance CONFIRMED-GAPS → one confirmed gap). Hostile probes: (1) the four derived-blocking citation categories of IS-3 are traceable to existing single-owner sources and to E-11/E-12, not invented; (2) D32-4's reserved `manifest <sha>` slot is the issue #172 2026-09-07 amendment verbatim (E-13); (3) IS-6's bibliography row is the issue's own obligation (E-13 + E-11). The user outcome "blocking stops being a severity opinion" carries an observable check (AC-03's discipline pins). No capability row leaves a role unspecified (4 roles × 7 capabilities, every cell resolved). What would have to be true for the half to be wrong — that `CLASSIFY.md` already owned a conversion table, that the ledger already used the finder scale, or that `LEDGERS.md`'s prose already matched its own table — is **false**: the ad-hoc finder map is still live at `PERSIST_AND_DECIDE.md:20-21`, the `triage-issue`-gives-it sentence is still at `LEDGERS.md:121`, and no conversion section exists in `CLASSIFY.md`. The one confirmed gap is the citation/dependency drift filed as F20.
+- Independent re-verification at `e1c008bc` (content, not line numbers). Confirmed live: `PERSIST_AND_DECIDE.md:28` ("only step that ever flips it to `yes`") and `:20-21` (the ad-hoc finder map); `FOLDING.md:26` ("the one and only ledger state transition, owned solely by this fold cycle"); `fold-findings/SKILL.md:157` ("this skill only flips"); the `ledger-ownership@1` map's `review-findings` annotator `fold-findings:folded-flag` and the roadmap writer column-sets (`LEDGERS.md:145`, `:150`); `LEDGERS.md:91-96` (material = `medium`+, `low` = report-note); `CLASSIFY.md:18-24,86-88`; `audit-docs/SKILL.md:98` (`MEDIUM`), `:121` (`Check (1-13)` header), `:125` (`<n>/13`) with 14 real checks; `product-audit/SKILL.md:100,105` + `AUDIT_PROCESS.md:7` (`fix-now / postpone / tradeoff`); `audit-pr/SKILL.md:54` (`pass / blocker / warning / n-a`) vs `:55,58` (`pass / blocker / n-a`); `workflow-status.mjs:225` (`NRS_BLOCKING` includes `missing`); `EXECUTION_CONTRACT.md:108-116` (NRS optional); the finder scale `critical | major | minor` in exactly nine `review-*` passes; `review-change/SKILL.md:44,155`; `WORKFLOW_INVARIANTS.md:78-80`; `plan-feature/SKILL.md:92-94`; `plan-feature-scaffold/SKILL.md:110`; `docs/CAPABILITIES.md` = 47 lines, byte-identical to `template/docs/CAPABILITIES.md`; no `docs/architecture/`; roadmap rows 30 (`done · #188`), 31 (`done · #243`), 33/35/50 depending on 32.
+- **The one row — F20 (`low`, `product`, check C10, report-note).** The post-authoring merge of feature 31 (#243, this unit's declared hard dependency) and feature 60 (#245) shifted the surfaces the Evidence rows cite and merged the dependency those rows record as open (detail in `planning-findings.md`). Every underlying claim was re-verified in substance; only the citations moved (`fold-findings/SKILL.md:153`→`:157`; `LEDGERS.md:117`→`:121`, `:123`→`:127`, `:139-146`→`:142-149`, `:146`→`:150`; `audit-pr/SKILL.md:52`→`:54`; `workflow-status.mjs:223`→`:225`) and the dependency status advanced (`## Dependencies` + E-14 still read 31 as unmerged; roadmap row 31 is `done · #243`). Intent, obligation identity, phase topology, validators and authority are unaffected, so `low` — a persisted report-note the stage author (`design-feature`) re-bases without a re-review (LEDGERS.md §3; POLICY §3 wording-only determination if the rotation is recorded) — is the honest band, not a deflation of a blocking defect: no ACCEPTANCE criterion fails, no obligation row is non-`verified`/`n-a`, no gate is red at head, and no open `fix-now` row exists. `A PASS may coexist with open or unverified low/info report-note rows` (LEDGERS.md:111); the established precedent is `spec-review-30-1` (PASS, 2 non-material rows) and `SPEC-REVIEW-37-2` (PASS, 3 `info` rows).
+- Recorded observations, non-material, no finding filed: (1) E-19 keeps `freshness: drifted` with `status: unknown`, an owner and next evidence — the exact encoding `evidence-grounding/references/ROWS.md` §"Closed vocabularies" prescribes (same note as SPEC-REVIEW-32-1…4), and it carries no material claim. (2) IS-3's classification outcome "report-note" and feature 31's shipped severity band "report-note" share one word; in effect they agree (uncited or `low` ⇒ non-blocking) and F18 routes the wording reconciliation to the plan re-cut. (3) F19's pre-existing working-tree `docs/features/ROADMAP.md` modification (`idea` → `planned · 32-plan-1`) predates this turn and was not touched; the roadmap row is unbound at this stage. (4) `## Size`'s per-owner phase sketch remains the project's established sizing idiom (feature 30 / feature 59), not engineering leakage.
+- Zero writes to any reviewed artifact: `SPEC.md`, `decisions.md`, `ACCEPTANCE.md` and the roadmap row carry the exact bytes they held at `e1c008bc` — `git status --porcelain` shows no change to any of them. This turn authored only this receipt block (unbound `progress.md`) and the F20 row (unbound `planning-findings.md`). No runtime rotates `artifactRevisionId` in this environment, so the mutate-and-revert guarantee rests on the manual handoff — any later write to a bound artifact invalidates this receipt.
+- Self-check (`verify --stage spec`, POLICY §8) run in the same act as this write, before the report:
+
+## Product checks (14/14 evaluated — the fixed list, one row each)
+
+| # | Check | Result | Evidence at `e1c008bc` (bound product bytes `675349ef…`) |
+|---|---|---|---|
+| C1 | Outcome ownership | pass | Each in-scope item states a concrete outcome with its AC anchor: IS-1→AC-01, IS-2→AC-02, IS-3→AC-03, IS-4→AC-04, IS-5→AC-05/06/07/08, IS-6→AC-10, IS-7→AC-09/11; `## Business goals` name observable machine behaviours (gate-run reuse, citation-backed blocking), never "improve X" |
+| C2 | Actors and roles | pass | Four derived roles — agent-reviewer, agent-executor, orchestrator, human — named, and the matrix resolves all 7 capabilities × 4 roles to `allowed`/`denied`, with the `n/a` cells being manual-path impossibilities, not unlisted roles |
+| C3 | Entity closure | pass | 25 closure rows re-counted mechanically (5 entities × Create/Read-list/Update/Delete/State transitions); zero blank; every row resolves to UI/API/test or an explicit `n/a: <reason>` (permanent section, append-only mark, static mapping) |
+| C4 | Limits and failure states | pass | Size `M`; failure states each resolved — unknown severity scale fails closed (AC-02), changed HEAD ⇒ re-run (AC-04), missing NRS ledger ⇒ non-blocking notice (AC-05), `draft`/`contradicted`/`resolved` keep blocking |
+| C5 | Scope and non-goals | pass | 9 out-of-scope bullets, each naming an owner or a non-goal (feature 31, feature 33, feature 35, feature 28's `c6daf5ec`, AD-002/F011 interim, no schema change); nothing excluded by silence |
+| C6 | Integration closure | pass | 18 inventory rows, one per derived subsystem, none skipped; `docs/CAPABILITIES.md` re-verified as the unfilled 47-line template byte-identical to `template/docs/CAPABILITIES.md`, and the derived inventory is recorded in the half |
+| C7 | Expectation sweep | pass | 17 rows (≥ 10 for M), counted mechanically, each forced to `in-scope`/`out-of-scope` with a pointer (`deferred` unused) |
+| C8 | Acceptance objectivity | pass | AC-01…AC-11, objective and labelled: 10 `command-verified`, 1 `read-verified` (AC-10, merge-time bibliography); every in-scope bullet maps to ≥ 1 criterion |
+| C9 | Internal contradiction | pass | Counts are mutually consistent and match the Spec-lint box (25 entity rows; 18 inventory rows; 17 sweep rows; 7 capability rows × 4 roles); no two sections assert incompatible behaviour, counts or ownership |
+| C10 | Repository contradiction | finding (low) | Claims match the repository in substance, but several authoring-time citations and the feature-31 dependency status no longer resolve at `e1c008bc` → F20 (report-note) |
+| C11 | Evidence integrity | pass | Every material claim resolves to a `proven`/`decision` row; no unowned `unknown`; E-19 keeps the sanctioned `drifted`/`unknown` + owner + next-evidence encoding; F20's rows stay `current` in metadata and are re-based by their owner |
+| C12 | Open product choices | pass | `### Deferred decisions` reads `none`; DD-1's resolution is recorded (D32-6); the `docs/CAPABILITIES.md` fill offer is flagged for the human in D32-6 and exports no current-unit obligation |
+| C13 | Engineering leakage | pass | The half cuts no PLAN phase, task or phase validator; `## Size`'s per-owner sketch is the established sizing idiom, and the closure rows' test pointers are the half's own product-level observability |
+| C14 | Obligation containment | pass | No current-unit obligation is exported: IS-6 ships with the PR, the NRS staleness routes to `resolve-repository-state`, and no row defers work to a future issue or "later" |
+
+Findings: 1 (material open: 0 — F20 `low`, report-note, owner `design-feature`).
+
+```json
+{
+  "current": true,
+  "stage": "spec",
+  "unit": "32-review-consistency-pack",
+  "receipt": {
+    "id": "SPEC-REVIEW-32-5",
+    "verdict": "spec-review-pass",
+    "snapshot": "e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+(exit 0 — a PASS: `structural.fresh: true`, `current: true`, `digestMatches: true`.)
+
+## Verdict
+
+```text
+SPEC-REVIEW-PASS — 32-review-consistency-pack
+- Snapshot: e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7 · Artifact revision: e1c008bc039d2403855fd180da156a9472bc43e7 · Checks: 14/14
+- Material findings open: 0 · Read-only: no reviewed artifact modified
+- Authority: planning may bind this receipt as its Product parent
+```
+
+No reviewed artifact was modified by this turn; the only writes are to the unbound `progress.md` and `planning-findings.md`. F20 (`low`, `product`, report-note) is the sole open row and does not block: the stage author (`design-feature`) re-bases the drifted citations and the feature-31 dependency status without a re-review (LEDGERS.md §3; POLICY §3 wording-only determination if the rotation is recorded).
+
+→ Next: /plan-feature 32-review-consistency-pack — Product half reviewed; the plan binds this receipt
+  · design changed underneath → re-run /review-spec 32-review-consistency-pack first
+  · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)

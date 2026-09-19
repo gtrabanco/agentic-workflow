@@ -7,11 +7,12 @@ command; judgment-only checks are labelled `read-verified`.
 
 ## P1 — NRS missing-ledger notice
 
-Layer: config/infra · fingerprint `P1:config/infra:3:nrs-missing-ledger-notice`
+Layer: config/infra · fingerprint `P1:config/infra:4:nrs-missing-ledger-notice`
 · Phase-lint: PASS (8/8)
 
 - [ ] Update `scripts/workflow-status.mjs` so `NRS_BLOCKING` keeps `draft`, `contradicted`, and `resolved`; the `missing` case emits `detail.substrate_notice` with `{ id: "repository-state", state: "missing", blocking: false }` plus one `detail.workflow_observations` line, keeps `/discover-repository-state` as an `alternatives` entry, and returns to the normal state computation
 - [ ] Extend `scripts/workflow-status-sensor.test.mjs` with the missing-ledger case (notice present, `blocking: false`, zero `repository-state` blockers, exit 0) and one regression case per real blocker state asserting the substrate blocker, `state: BLOCKED`, and the `/discover-repository-state` recommendation are unchanged
+- [ ] Assert in `scripts/workflow-status-sensor.test.mjs` that the sensor's feature 31 review-loop-cycle projection is unchanged by the NRS branch
 - [ ] Run `node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs` → exit 0
 
 Done-when: `node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the notice and the three real-blocker regressions green.
@@ -33,10 +34,11 @@ Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/ledger-o
 
 ## P3 — Classification single-owner contract
 
-Layer: docs · fingerprint `P3:docs:7:classification-single-owner-contract` · Phase-lint: PASS (8/8)
+Layer: docs · fingerprint `P3:docs:8:classification-single-owner-contract` · Phase-lint: PASS (8/8)
 
 - [ ] Add the canonical severity conversion section to `skills/review-implementation/references/CLASSIFY.md` — the ledger, finder, planning, and `audit-docs` scales mapped onto `high | med | low`, one row per producer scale, unknown scales failing closed — and pin every row plus the fail-closed outcome in `scripts/review-loop-discipline.test.mjs`
 - [ ] Add the derived blocking-gate rule to the same `CLASSIFY.md` section — the four citation categories (a verification criterion that is unverified, an obligation row outside `verified`/`n/a`, a gate red at the reviewed head, an open confirmed `fix-now` row), the no-citation `report-note` outcome, and D10's verdict rule unchanged — and pin it in `scripts/review-loop-discipline.test.mjs`
+- [ ] Cite `LEDGERS.md` §3 (`:91-96`) as the single owner of the `report-note` definition — material is `medium`+, a `low` row is a persisted report-note — instead of restating it beside the blocking rule, and pin that the classifying surfaces name that owner rather than a second definition
 - [ ] Fix the report contract in `skills/audit-docs/SKILL.md` — the `| # | Check (1-14) |` header, `Checks run: <n>/14`, and `low` in place of the phantom `MEDIUM` — and pin the three in `scripts/review-loop-discipline.test.mjs`
 - [ ] Replace the `fix-now | postpone | tradeoff` class vocabulary in `skills/product-audit/SKILL.md` with the closed class set owned by `review-implementation/CLASSIFY.md`, mirror it in `skills/product-audit/references/AUDIT_PROCESS.md`, and pin the removal grep in `scripts/review-loop-discipline.test.mjs`
 - [ ] Delete the ad-hoc finder-scale mapping from `skills/review-change/references/PERSIST_AND_DECIDE.md` in favour of a pointer to the canonical table in `skills/review-implementation/references/CLASSIFY.md`, then re-point the existing finder-scale pin in `scripts/review-loop-discipline.test.mjs` at the table rows
@@ -47,16 +49,17 @@ Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/audit-pr
 
 ## P4 — Gate-run receipt
 
-Layer: docs · fingerprint `P4:docs:6:gate-run-receipt` · Phase-lint: PASS (8/8)
+Layer: docs · fingerprint `P4:docs:7:gate-run-receipt` · Phase-lint: PASS (8/8)
 
+- [ ] Resolve the `CHANGELOG.md` version collision the drift gate fails on: the later-merged feature 60 row takes `pre-execution-review` 2.4.0 (feature 31's row keeps 2.3.0), the row text records the correction, and `skills/pre-execution-review/SKILL.md` `version:` reads 2.4.0 so the newest-row/frontmatter pin holds
 - [ ] Add the `gate-ran@1` appended-text mark to `skills/pre-execution-review/references/LEDGERS.md` — the fixed format, the additive-slots rule, the reserved trailing `manifest` slot, the identical-head reuse rule, and the changed-head re-run rule — and extend the map's `review-findings` owner cell with `execute-phase:gate-ran-marks` and `review-change:review-gate-ran-marks`, pinned in `scripts/review-loop-discipline.test.mjs`
 - [ ] Mirror the identical `review-findings` owner cell into `docs/features/_TEMPLATE/LEDGERS.md` and `docs/fix/_TEMPLATE/LEDGERS.md` so the live map and both projections stay byte-equal
 - [ ] State in `skills/execute-phase/references/EXECUTION_CONTRACT.md` that the phase completion gate records a `GATE-RAN` mark at the head it ran and consumes an identical-head green mark instead of re-running, mirror it in `skills/execute-phase/references/FOLDING.md`, and pin it in `scripts/review-loop-discipline.test.mjs`
 - [ ] State in `skills/review-change/references/PERSIST_AND_DECIDE.md` that a reviewer records a `GATE-RAN` mark for the gate run its review performed and consumes an identical-head green mark instead of re-running, and pin it in `scripts/review-loop-discipline.test.mjs`
-- [ ] Bump the minor version of every touched skill (review-change, execute-phase, pre-execution-review, fold-findings, review-implementation, audit-docs, product-audit, audit-pr, plan-feature, plan-feature-scaffold, workflow-status) through the `bump-skill` routine with one `CHANGELOG.md` row each
-- [ ] Re-base the touched skills' budget entries in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` at the tool's own declared re-basis with the growth source named, then run `node scripts/check-skill-context.mjs` and `node --test scripts/ledger-ownership.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs` → exit 0
+- [ ] Bump the minor version of every touched skill (review-change, execute-phase, pre-execution-review — 2.4.0 → 2.5.0 — fold-findings, review-implementation, audit-docs, product-audit, audit-pr, plan-feature, plan-feature-scaffold, workflow-status) through the `bump-skill` routine with one `CHANGELOG.md` row each
+- [ ] Re-base the declared `docs/workflow/SKILL_CONTEXT_BUDGETS.json` entries at the tool's own declared re-basis with the growth source named, declaring a new entry for a touched skill that grew past `defaults`, then run `node scripts/check-skill-context.mjs` and `node --test scripts/ledger-ownership.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs` → exit 0
 
-Done-when: `node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0 with the map/projection equality, the `gate-ran@1` pins, and the roadmap pins green.
+Done-when: `node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs` → exit 0 with the map/projection equality, the `gate-ran@1` pins, the roadmap pins, and the changelog once-per-table pin green.
 
 ## P5 — Hardening & PR
 

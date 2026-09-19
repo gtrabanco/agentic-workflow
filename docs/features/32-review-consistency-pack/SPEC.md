@@ -647,10 +647,13 @@ verify-vs-write claim). Awaiting independent review by
 
 ## Engineering half
 
-Written by `plan-feature-scaffold` after the Product-review gate passed
-(receipt `SPEC-REVIEW-32-4`, snapshot `5d5a5b6c…f0acd`). Product bytes are
-untouched; the artifact revision of this plan set is `32-plan-1` (initial cut by
-`plan-feature-scaffold`, 2026-09-18).
+Written by `plan-feature-scaffold` after the Product-review gate passed, then
+re-cut by `plan-feature` on 2026-09-19 against the post-merge head `e1c008bc`
+(features 31 and 60 merged) as the repair batch for `PLAN-REVIEW-32-1` findings
+F13–F19. Product bytes are untouched; the artifact revision of this plan set is
+`32-plan-2`, parented to the Product receipt `SPEC-REVIEW-32-5` (snapshot
+`e4b293e3…`). The initial `32-plan-1` cut by `plan-feature-scaffold`
+(2026-09-18) was parented to `SPEC-REVIEW-32-4`, `5d5a5b6c…`.
 
 ### Technical goals
 
@@ -752,7 +755,12 @@ fails, one of exactly four: (a) an ACCEPTANCE criterion unverified or failed,
 head, (d) an open confirmed `fix-now` row. With no citation the outcome is
 `report-note` (materiality floor) or `proposal` — **never blocking**. D10's
 three-state report Decision line is unchanged; severity stays a *screen* for
-which findings are examined, never the authority for blocking.
+which findings are examined, never the authority for blocking. The materiality
+vocabulary itself is **not** redefined here: `LEDGERS.md` §3 (`:91-96`, the
+merged feature 31 contract) owns `report-note` — material is `medium`+, a `low`
+row is a persisted report-note the stage author resolves without a re-review —
+and this rule cites that owner instead of restating it, so IS-3 and feature 31
+do not fork the word.
 
 **3. `gate-ran@1` mark (a new subsection of
 `skills/pre-execution-review/references/LEDGERS.md`).** An **appended text
@@ -809,8 +817,9 @@ skill references (`ENVELOPE_CORE.md`, `SENSOR_CORE.md`) state the same split.
 
 ### Planning evidence
 
-See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 22 rows,
-PE-001…PE-022, all `current`, all `proven`).
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 23 rows,
+PE-001…PE-023, all `current`, all `proven`, every location re-read at
+`e1c008bc` after the feature 31 + 60 merge).
 
 ### Obligations
 
@@ -820,7 +829,7 @@ invariants, and the six dev-scenario pins; every row `planned` at freeze).
 
 ### Decisions to confirm
 
-Frozen as engineering decisions in `decisions.md` (ED-32-1…ED-32-6); none open:
+Frozen as engineering decisions in `decisions.md` (ED-32-1…ED-32-9); none open:
 
 - **ED-32-1** — the severity table maps **onto** the ledger scale
   `high | med | low` and covers exactly the four producer scales that exist; the
@@ -843,6 +852,23 @@ Frozen as engineering decisions in `decisions.md` (ED-32-1…ED-32-6); none open
   phases; every phase is one layer, and the layer that differs from the
   phase's declared one appears only as a paired pin inside a task whose first
 target is in the phase's layer.
+- **ED-32-7** — the plan set is re-based on the post-merge head `e1c008bc`
+  (features 31 + 60): every `planning-evidence.md` row was re-read there, the
+  `path:line` cites the merge shifted were updated, and a row whose claim the
+  merge falsified (`PE-016`'s "an entry for every touched skill"; `PE-022`'s
+  "feature 31 not merged") was corrected. Product intent, obligation identity,
+  phase topology, and authority are unchanged — this is a re-baseline, not a
+  redesign.
+- **ED-32-8** — the `CHANGELOG.md` `pre-execution-review` 2.3.0 collision is
+  resolved by moving the **later-merged** feature 60 row to 2.4.0 (with the
+  matching frontmatter in `skills/pre-execution-review/SKILL.md`), never by
+  extending `LEGACY_DUPLICATE_VERSION_ROWS`: that list exempts duplicates whose
+  history cannot be unsaid, and extending it is exactly the pin-weakening AC-11
+  forbids. P4's own bump of the same skill therefore reads 2.5.0.
+- **ED-32-9** — `report-note` stays owned by `LEDGERS.md` §3 (feature 31's
+  shipped materiality contract). The derived blocking gate cites that owner and
+  adds no second definition; the `low`/`info` report-note coexistence rule is
+  likewise read from `LEDGERS.md:111`, not restated.
 
 ### Testing requirements
 
@@ -903,7 +929,8 @@ hardening.
 - **P1 — NRS missing-ledger notice** (config/infra): `missing` leaves
   `NRS_BLOCKING`, the notice is emitted at `detail.substrate_notice`, the
   workflow-status references state the same split, and the sensor suite pins the
-  notice plus the three real-blocker regressions.
+  notice, the three real-blocker regressions, and the untouched feature 31
+  review-loop-cycle projection.
   Done-when: `node --test scripts/workflow-status-sensor.test.mjs` → exit 0.
 - **P2 — Ownership prose alignment** (docs): fold-flip sentences corrected at
   the three surfaces plus `fold-findings`, the `LEDGERS.md` prose corrected
@@ -911,14 +938,16 @@ hardening.
   verify-vs-write split, the tutorial scan, and the pins.
   Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs` → exit 0.
 - **P3 — Classification single-owner contract** (docs): the canonical severity
-  conversion table, the derived blocking gate, the `audit-docs` count/header/
-  legend fixes, the `product-audit` closed-class vocabulary, the `audit-pr`
-  result scale, the ad-hoc map deleted, and the pins.
+  conversion table, the derived blocking gate citing `LEDGERS.md` §3 as the owner
+  of `report-note`, the `audit-docs` count/header/legend fixes, the
+  `product-audit` closed-class vocabulary, the `audit-pr` result scale, the
+  ad-hoc map deleted, and the pins.
   Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0.
 - **P4 — Gate-run receipt** (docs): the `gate-ran@1` mark, the map owner-cell
   extension mirrored into both template projections, the executor and reviewer
-  recorder/consumer text, the minor version bumps, and the budget re-basis.
-  Done-when: `node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0.
+  recorder/consumer text, the `CHANGELOG.md` version-collision resolution that
+  unblocks the drift gate, the minor version bumps, and the budget re-basis.
+  Done-when: `node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs` → exit 0.
 - **P5 — Hardening & PR** (hardening): full ladder, mirror re-bundle + parity,
   acceptance-blob receipt, README bibliography, close-out (PR, roadmap `done`,
   link commit). Done-when: the whole ladder → exit 0 with the PR URL printed.
@@ -975,15 +1004,16 @@ derived blocking gate. See `docs/features/ROADMAP.md`.
 
 ---
 
-## Artifacts created by plan-feature-scaffold (2026-09-18, `32-plan-1`)
+## Artifacts created by `plan-feature-scaffold` (2026-09-18, `32-plan-1`) and re-cut by `plan-feature` (2026-09-19, `32-plan-2`)
 
 - `docs/features/32-review-consistency-pack/SPEC.md` — this file (Engineering
   half filled; Product half byte-identical to the reviewed revision)
 - `docs/features/32-review-consistency-pack/PLAN.md` — 5-phase plan
-  (PE-001…PE-022, O1…O25)
+  (PE-001…PE-023, O1…O25)
 - `docs/features/32-review-consistency-pack/TASKS.md` — per-phase checklists
 - `docs/features/32-review-consistency-pack/ACCEPTANCE.md` — frozen manifest
-- `docs/features/32-review-consistency-pack/planning-evidence.md` — PE-001…PE-022
+- `docs/features/32-review-consistency-pack/planning-evidence.md` — PE-001…PE-023
+  (re-based at `e1c008bc` by the `32-plan-2` re-cut)
 - `docs/features/32-review-consistency-pack/planning-obligations.md` — O1…O25
 - `docs/features/32-review-consistency-pack/testing.md` — validation ladder
 + scenarios
