@@ -28,6 +28,14 @@
    - Rotate `artifactRevisionId` for the unit's plan artifacts on this write and
      carry it in the hand-off. A later revert to these same bytes is a new
      authoring event and needs a new id.
+   - Declare the test set in the `path-protection-plan@1` block (feature 60),
+     placeholder tokens only, never a project glob: `freeze-after: <P<n>|none>`
+     plus one justified row per test decision
+     (`created | <repo-relative path or glob> | <one-line justification>`,
+     `not-created | <test name> | <one-line justification>`,
+     `ignored | <test name> | <one-line justification>`). Put it in `PLAN.md` for
+     M/L, or in the SPEC's `### Phases` for XS/S; the grammar is
+     `path-protection@1` in the turn contract.
 4. **Scale by size:**
 
    - **XS/S:** SPEC + `ACCEPTANCE.md`. Its `### Phases` has checkbox tasks and at least `P1`

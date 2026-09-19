@@ -1,11 +1,13 @@
-import { dirname, resolve } from "node:path";
+import { readFileSync, readdirSync, existsSync, lstatSync, readlinkSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
+import { getAgentDir, isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
+import { evaluateToolCall, isProtectedPath, normalizeTarget } from "../config/path-policy.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
@@ -128,9 +130,81 @@ function toRegistrar(pi: ExtensionAPI): CommandRegistrar<PiModel> {
   };
 }
 
+/** Every unit decision ledger's `path-protection-records@1` block, concatenated. */
+function collectRecordTexts(root: string): string {
+  const texts: string[] = [];
+  for (const parent of ["docs/features", "docs/fix"]) {
+    const base = join(root, parent);
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = readdirSync(base, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      try {
+        texts.push(readFileSync(join(base, entry.name, "decisions.md"), "utf8"));
+      } catch {
+        // A unit without a decisions ledger contributes no records.
+      }
+    }
+  }
+  return texts.join("\n");
+}
+
+/**
+ * Canonicalise an absolute target even when it does not exist yet. `realpathSync`
+ * refuses a path whose final component is absent, so the longest existing prefix
+ * is canonicalised and the missing tail re-appended; a symlink at the final
+ * component is followed explicitly, because a write follows it even when its
+ * destination is absent (F28). Resolution errors fail closed.
+ */
+function resolveRealTarget(target: string): { ok: true; real: string } | { ok: false; reason: string } {
+  let current = target;
+  for (let hops = 0; hops < 40; hops += 1) {
+    let link: string | null = null;
+    try {
+      if (lstatSync(current).isSymbolicLink()) link = readlinkSync(current);
+    } catch {
+      // The path does not exist: canonicalise its longest existing prefix.
+      return { ok: true, real: resolveExistingPrefix(current) };
+    }
+    if (link === null) {
+      try {
+        return { ok: true, real: realpathSync(current) };
+      } catch (error) {
+        return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+      }
+    }
+    current = isAbsolute(link) ? link : resolve(dirname(current), link);
+  }
+  return { ok: false, reason: "too many symbolic links" };
+}
+
+/** Canonicalise the longest existing prefix of `target` and re-append the missing tail. */
+function resolveExistingPrefix(target: string): string {
+  const tail: string[] = [];
+  let current = target;
+  for (;;) {
+    try {
+      const real = realpathSync(current);
+      return tail.length === 0 ? real : join(real, ...tail.reverse());
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return target;
+      tail.push(basename(current));
+      current = parent;
+    }
+  }
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
+  // Said once per session: an override that was ignored (or a malformed file)
+  // is reported the first time the guard runs, never on every tool call.
+  let reportedDegradations = false;
 
   const { router, guards } = createExtension<PiModel>({
     registrar: toRegistrar(pi),
@@ -165,10 +239,69 @@ export default function extension(pi: ExtensionAPI): void {
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
   // The inline-receipt path is impossible: a `gh pr comment` carrying a
   // REVIEW-PASS / merge-ready marker is blocked before it runs, and the reason
-  // names the script that proves the receipt landed (issue #182).
-  pi.on("tool_call", (event) => {
+  // names the script that proves the receipt landed (issue #182). The guard
+  // itself filters to `bash`, so every tool call is checked — nesting it under
+  // one tool name would make the block unreachable for the calls it exists for.
+  pi.on("tool_call", (event, ctx) => {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
-    return guards.receiptGuard({ toolName: event.toolName, command });
+    const receipt = guards.receiptGuard({ toolName: event.toolName, command });
+    if (receipt.block) return receipt;
+    // Tier 2 path prevention (feature 60): block a write/edit to an existing
+    // protected path with no matching justification record; reads and new-file
+    // creates pass. Reads the same effective policy the Tier 1 gate reads.
+    if (!isToolCallEventType("write", event) && !isToolCallEventType("edit", event)) return undefined;
+    const targetPath = event.input.path;
+    if (typeof targetPath !== "string" || targetPath === "") return undefined;
+    const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
+    if (!reportedDegradations && loaded.pathProtectionDegradations.length > 0) {
+      reportedDegradations = true;
+      for (const degradation of loaded.pathProtectionDegradations) {
+        ctx.ui.notify(`pi-agentic-workflow: path protection — ${degradation.code}: ${degradation.detail}`, "warning");
+      }
+    }
+    const absolute = isAbsolute(targetPath) ? targetPath : resolve(ctx.cwd, targetPath);
+    let realRoot = ctx.cwd;
+    try {
+      realRoot = realpathSync(ctx.cwd);
+    } catch {
+      // ctx.cwd always exists; fall back to the lexical root.
+    }
+    // Canonicalise the target even when it does not exist yet, so the
+    // containment check and the protected-glob match run on the same basis as
+    // `realpathSync(ctx.cwd)` (F27) and a dangling symlink cannot route a write
+    // outside the project root (F28).
+    const resolvedTarget = resolveRealTarget(absolute);
+    if (!resolvedTarget.ok) {
+      return {
+        block: true,
+        reason:
+          `"${targetPath}" could not be resolved (${resolvedTarget.reason}); ` +
+          `path protection cannot verify it, so the write is blocked.`,
+      };
+    }
+    const relativeTarget = normalizeTarget(relative(realRoot, resolvedTarget.real));
+    // Fail closed on a target that escapes the project root: the policy is
+    // repo-relative, so an out-of-root path cannot be verified (F7).
+    if (relativeTarget === "" || relativeTarget === ".." || relativeTarget.startsWith("../") || isAbsolute(relativeTarget)) {
+      return {
+        block: true,
+        reason:
+          `"${targetPath}" resolves outside the project root (${ctx.cwd}); ` +
+          `path protection cannot verify it, so the write is blocked.`,
+      };
+    }
+    // Lazy: read the records corpus (every unit's decisions.md) only once the
+    // target is a known existing protected path, never on every write/edit (F13).
+    if (!existsSync(absolute)) return undefined;
+    if (!isProtectedPath(loaded.config.pathProtection, relativeTarget)) return undefined;
+    const decision = evaluateToolCall({
+      toolName: event.toolName,
+      targetPath: relativeTarget,
+      targetExists: true,
+      policy: loaded.config.pathProtection,
+      recordsText: collectRecordTexts(ctx.cwd),
+    });
+    return decision.block ? { block: true, reason: decision.reason } : undefined;
   });
   pi.on("agent_settled", (_event, ctx) => {
     void router.settle(toInvocationContext(ctx));

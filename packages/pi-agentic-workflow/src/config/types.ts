@@ -8,6 +8,8 @@
  *    fully resolved, so no downstream code has to reason about optionality.
  */
 
+import type { PathProtectionOverride, ResolvedPathPolicy } from "./path-policy.js";
+
 /** Pi's thinking levels, mirrored here so the domain layer stays Pi-free. */
 export const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 
@@ -47,6 +49,8 @@ export interface ConfigFile {
   onUnavailableRoute?: UnavailableRoutePolicy;
   /** What happens to the routed model and thinking level after the command settles. */
   onSettle?: SettlePolicy;
+  /** The tighten-only path-protection override (feature 60, AC10). */
+  pathProtection?: PathProtectionOverride;
 }
 
 export type UnavailableRoutePolicy = "stop" | "inherit";
@@ -74,6 +78,8 @@ export interface EffectiveConfig {
   commands: Record<string, Route>;
   onUnavailableRoute: UnavailableRoutePolicy;
   onSettle: SettlePolicy;
+  /** The effective path-protection policy: the shipped floor tightened by any override. */
+  pathProtection: ResolvedPathPolicy;
 }
 
 export interface ConfigProblem {

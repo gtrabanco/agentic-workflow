@@ -1,5 +1,7 @@
 import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
 import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
+import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
+import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
 /**
  * Strict validator for one config file (SPEC S5-S8, D-E5).
@@ -11,7 +13,7 @@ import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, Thinki
  * default, and that decision belongs to the loader.
  */
 
-const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle"]);
+const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle", "pathProtection"]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
 
@@ -53,6 +55,61 @@ function isUnavailableRoutePolicy(value: unknown): value is UnavailableRoutePoli
 
 function isSettlePolicy(value: unknown): value is SettlePolicy {
   return SETTLE_POLICIES.includes(value as SettlePolicy);
+}
+
+/** Strict validator for the optional `pathProtection` override (feature 60, AC10). */
+function checkPathProtection(value: unknown, path: string, issues: ConfigIssue[]): PathProtectionOverride | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: "must be an object with optional protectedGlobs/requirements keys" });
+    return undefined;
+  }
+  const override: PathProtectionOverride = {};
+  for (const key of Object.keys(value)) {
+    if (key !== "protectedGlobs" && key !== "requirements") {
+      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown pathProtection key "${key}" (allowed: protectedGlobs, requirements)` });
+    }
+  }
+  if (value.protectedGlobs !== undefined) {
+    if (!Array.isArray(value.protectedGlobs) || value.protectedGlobs.some((glob) => typeof glob !== "string" || glob.trim() === "")) {
+      issues.push({ path: `${path}.protectedGlobs`, message: "must be an array of non-empty glob strings" });
+    } else if (value.protectedGlobs.some((glob) => (glob as string).length > PATH_GLOB_MAX_LENGTH)) {
+      issues.push({ path: `${path}.protectedGlobs`, message: `a glob must be at most ${PATH_GLOB_MAX_LENGTH} characters` });
+    } else {
+      override.protectedGlobs = value.protectedGlobs as string[];
+    }
+  }
+  if (value.requirements !== undefined) {
+    if (!isRecord(value.requirements)) {
+      issues.push({ path: `${path}.requirements`, message: "must be an object keyed by phase state" });
+    } else {
+      const requirements: PathProtectionOverride["requirements"] = {};
+      for (const [state, raw] of Object.entries(value.requirements)) {
+        if (!(PHASE_STATES as readonly string[]).includes(state)) {
+          issues.push({ path: `${path}.requirements.${displayKey(state)}`, message: `unknown phase state "${state}"` });
+          continue;
+        }
+        if (!isRecord(raw)) {
+          issues.push({ path: `${path}.requirements.${displayKey(state)}`, message: "must be an object keyed by operation" });
+          continue;
+        }
+        const row: Partial<Record<PathOperation, PathRequirement>> = {};
+        for (const [operation, requirement] of Object.entries(raw)) {
+          if (!(OPERATIONS as readonly string[]).includes(operation)) {
+            issues.push({ path: `${path}.requirements.${displayKey(state)}.${displayKey(operation)}`, message: `unknown operation "${operation}"` });
+            continue;
+          }
+          if (!(REQUIREMENTS as readonly string[]).includes(requirement as string)) {
+            issues.push({ path: `${path}.requirements.${displayKey(state)}.${displayKey(operation)}`, message: `must be one of ${REQUIREMENTS.join(", ")}` });
+            continue;
+          }
+          row[operation as PathOperation] = requirement as PathRequirement;
+        }
+        requirements[state as PathPhaseState] = row;
+      }
+      override.requirements = requirements;
+    }
+  }
+  return override;
 }
 
 function describe(value: unknown): string {
@@ -140,7 +197,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection)`,
       });
     }
   }
@@ -187,6 +244,11 @@ function validateConfig(value: unknown): ParseResult {
     } else {
       config.onSettle = value.onSettle;
     }
+  }
+
+  if (value.pathProtection !== undefined) {
+    const override = checkPathProtection(value.pathProtection, "$.pathProtection", issues);
+    if (override) config.pathProtection = override;
   }
 
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
