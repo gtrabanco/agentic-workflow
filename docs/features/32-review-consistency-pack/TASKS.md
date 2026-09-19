@@ -10,10 +10,10 @@ command; judgment-only checks are labelled `read-verified`.
 Layer: config/infra · fingerprint `P1:config/infra:4:nrs-missing-ledger-notice`
 · Phase-lint: PASS (8/8)
 
-- [ ] Update `scripts/workflow-status.mjs` so `NRS_BLOCKING` keeps `draft`, `contradicted`, and `resolved`; the `missing` case emits `detail.substrate_notice` with `{ id: "repository-state", state: "missing", blocking: false }` plus one `detail.workflow_observations` line, keeps `/discover-repository-state` as an `alternatives` entry, and returns to the normal state computation
-- [ ] Extend `scripts/workflow-status-sensor.test.mjs` with the missing-ledger case (notice present, `blocking: false`, zero `repository-state` blockers, exit 0) and one regression case per real blocker state asserting the substrate blocker, `state: BLOCKED`, and the `/discover-repository-state` recommendation are unchanged
-- [ ] Assert in `scripts/workflow-status-sensor.test.mjs` that the sensor's feature 31 review-loop-cycle projection is unchanged by the NRS branch
-- [ ] Run `node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs` → exit 0
+- [x] Update `scripts/workflow-status.mjs` so `NRS_BLOCKING` keeps `draft`, `contradicted`, and `resolved`; the `missing` case emits `detail.substrate_notice` with `{ id: "repository-state", state: "missing", blocking: false }` plus one `detail.workflow_observations` line, keeps `/discover-repository-state` as an `alternatives` entry, and returns to the normal state computation
+- [x] Extend `scripts/workflow-status-sensor.test.mjs` with the missing-ledger case (notice present, `blocking: false`, zero `repository-state` blockers, exit 0) and one regression case per real blocker state asserting the substrate blocker, `state: BLOCKED`, and the `/discover-repository-state` recommendation are unchanged
+- [x] Assert in `scripts/workflow-status-sensor.test.mjs` that the sensor's feature 31 review-loop-cycle projection is unchanged by the NRS branch
+- [x] Run `node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs` → exit 0
 
 Done-when: `node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs` → exit 0 with the notice and the three real-blocker regressions green.
 

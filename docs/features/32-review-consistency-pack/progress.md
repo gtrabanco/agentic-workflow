@@ -721,3 +721,8 @@ CONVERGENCE-ANOMALY — 32-review-consistency-pack plan
 - Why the prior review failed: PLAN-REVIEW-32-2 returned FAIL on F21 (stale evidence cites) + F22 (O9 phase contradiction); the 32-plan-3 batch repaired both with evidence
 - Route to owner: none required for the verdict — F21/F22 resolved at 32-plan-3 and this cycle converges (PASS); F20/F23/F24 (low, Product/plan report-notes) plus F25 (low) are re-based by the stage author without a re-review (LEDGERS.md §3)
 ```
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
+- Next: P2 · Attempts: 1
+- Tasks: NRS_BLOCKING de-deduplicated "missing"; substrate_notice added to detail; resolveNext routes missing to alternatives; 5 new sensor tests (1 missing-ledger + 3 regressions + 1 review-loop-cycle projection)

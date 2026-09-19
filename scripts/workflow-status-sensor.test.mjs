@@ -1258,3 +1258,126 @@ test("59: two consecutive runs emit byte-identical envelopes with no continuatio
   const hits = source.split("\n").filter((line) => mutation.test(line));
   assert.deepEqual(hits, [], `emission must stay read-only: ${hits.join(" | ")}`);
 });
+
+// ---------------------------------------------------------------------------
+// Feature 32 (P1) — NRS missing-ledger notice
+// ---------------------------------------------------------------------------
+
+test("32/P1: a missing NRS ledger emits a non-blocking notice and zero blockers (AC-05)", () => {
+  const { run } = makeFixture({
+    nrs: "# Normalized repository state\n\nStatus: missing",
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  // Missing ledger must NOT block — state stays OK.
+  assert.equal(envelope.state, "OK", "missing ledger never blocks");
+  // Zero repository-state blockers.
+  assert.equal(
+    envelope.blockers.filter((b) => b.id === "repository-state").length,
+    0,
+    "no repository-state blocker on missing ledger"
+  );
+  // Non-blocking substrate_notice is present.
+  assert.ok(
+    envelope.detail.substrate_notice,
+    "substrate_notice present for missing ledger"
+  );
+  assert.equal(
+    envelope.detail.substrate_notice.id,
+    "repository-state",
+    "substrate_notice id is repository-state"
+  );
+  assert.equal(
+    envelope.detail.substrate_notice.state,
+    "missing",
+    "substrate_notice state is missing"
+  );
+  assert.equal(
+    envelope.detail.substrate_notice.blocking,
+    false,
+    "substrate_notice is non-blocking"
+  );
+  // An observation about the missing ledger.
+  assert.ok(
+    envelope.detail.workflow_observations.some((o) => o.includes("repository-state") && o.includes("absent")),
+    "workflow_observations mentions the absent ledger"
+  );
+  // /discover-repository-state appears in alternatives.
+  assert.ok(
+    envelope.next.alternatives.includes("/discover-repository-state"),
+    "alternatives includes /discover-repository-state for missing ledger"
+  );
+});
+
+test("32/P1: regression — draft NRS still blocks (AC-05)", () => {
+  const { run } = makeFixture({
+    nrs: "# Normalized repository state\n\nStatus: draft\n\nSnapshot: fix-1",
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(envelope.state, "BLOCKED", "draft NRS blocks");
+  assert.ok(
+    envelope.blockers.some((b) => b.id === "repository-state"),
+    "repository-state blocker present for draft"
+  );
+  assert.equal(envelope.next.recommended, "/discover-repository-state");
+  // No substrate_notice — only missing produces one.
+  assert.equal(envelope.detail.substrate_notice, undefined);
+});
+
+test("32/P1: regression — contradicted NRS still blocks (AC-05)", () => {
+  const { run } = makeFixture({
+    nrs: "# Normalized repository state\n\nStatus: contradicted\n\nSnapshot: fix-1",
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(envelope.state, "BLOCKED", "contradicted NRS blocks");
+  assert.ok(
+    envelope.blockers.some((b) => b.id === "repository-state"),
+    "repository-state blocker present for contradicted"
+  );
+});
+
+test("32/P1: regression — resolved NRS still blocks (AC-05)", () => {
+  const { run } = makeFixture({
+    nrs: "# Normalized repository state\n\nStatus: resolved\n\nSnapshot: fix-1",
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(envelope.state, "BLOCKED", "resolved NRS blocks");
+  assert.ok(
+    envelope.blockers.some((b) => b.id === "repository-state"),
+    "repository-state blocker present for resolved"
+  );
+});
+
+test("32/P1: the sensor's feature 31 review-loop-cycle projection survives the NRS branch", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/progress.md": CONTINUATION_PROGRESS },
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  // review_loop_cycles must be present and an object (feature 31 projection).
+  assert.ok(
+    envelope.detail.review_loop_cycles,
+    "review_loop_cycles present (feature 31 projection)"
+  );
+  assert.ok(
+    typeof envelope.detail.review_loop_cycles === "object",
+    "review_loop_cycles is an object"
+  );
+  assert.ok(
+    "spec" in envelope.detail.review_loop_cycles && "plan" in envelope.detail.review_loop_cycles,
+    "review_loop_cycles has spec and plan keys"
+  );
+});
