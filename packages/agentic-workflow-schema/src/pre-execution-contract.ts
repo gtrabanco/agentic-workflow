@@ -98,7 +98,13 @@ export const PRE_EXECUTION_VERDICTS = Object.freeze([
   "needs-design",
 ] as const);
 
-/** Severities mirror the candidate-review ladder; `info` is the only immaterial one. */
+/**
+ * Severities mirror the candidate-review ladder on the planning materiality
+ * line: material = `medium` and above, so a PASS may coexist with an
+ * open/unverified `low` row and is refused while any open/unverified `medium`+
+ * row exists. `low` is a persisted report-note the stage author resolves
+ * without a re-review; `info` is immaterial.
+ */
 export const PRE_EXECUTION_FINDING_SEVERITIES = Object.freeze([
   "info", "low", "medium", "high", "critical",
 ] as const);
@@ -160,6 +166,7 @@ export const PRE_EXECUTION_LIMITS = Object.freeze({
   pathChars: 1024,
   identifierChars: 160,
   claimChars: 2048,
+  reproducerChars: 1024,
   evidenceChars: 1024,
   resolutionEvidenceChars: 2048,
   policyChars: 64,
@@ -456,7 +463,7 @@ const FINDING_SPEC: VerificationObjectSpec = {
   description: "One structured review finding.",
   fields: [
     opaqueId("id", "Stable finding identity, unique inside the receipt."),
-    { key: "severity", type: "enum", enum: PRE_EXECUTION_FINDING_SEVERITIES, description: "Severity ladder shared with candidate review; `info` is the only immaterial row." },
+    { key: "severity", type: "enum", enum: PRE_EXECUTION_FINDING_SEVERITIES, description: "Severity ladder shared with candidate review on the planning materiality line: material = `medium` and above, `low` is a persisted report-note, `info` immaterial." },
     { key: "class", type: "enum", enum: PRE_EXECUTION_FINDING_CLASSES, description: "Root-cause owner the finding routes to." },
     {
       key: "claim",
@@ -485,6 +492,15 @@ const FINDING_SPEC: VerificationObjectSpec = {
       maxLength: PRE_EXECUTION_LIMITS.resolutionEvidenceChars,
       nulFree: true,
       description: "Counter-evidence or repair pointer. Required to dismiss or resolve a finding.",
+    },
+    {
+      key: "reproducer",
+      type: "string",
+      minLength: 1,
+      maxLength: PRE_EXECUTION_LIMITS.reproducerChars,
+      nulFree: true,
+      optional: true,
+      description: `Concrete reproduction for the finding; at most ${PRE_EXECUTION_LIMITS.reproducerChars} characters. Optional, so a receipt whose findings carry none stays valid.`,
     },
   ],
   rules: [

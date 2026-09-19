@@ -1162,4 +1162,137 @@ test("machine vocabularies are parsed from committed source, never from dist", (
   }
 });
 
+// #244 — freeze-batch hand-off pin: the closing block must be machine-readable.
+// A regression that (a) hard-wraps a · sub-bullet, (b) puts a host command as
+// the consumer, or (c) drops the planner command or a format sentence from
+// either skill file fails CI. The block and table are read through the same
+// fixedOutputBlocks/markdownTable helpers the drift sensor uses.
+test("#244 freeze-batch hand-off: closing block shape and consumer are correct", (t) => {
+  const skillRel = "skills/fold-findings/SKILL.md";
+  const processRel = "skills/fold-findings/references/FOLD_PROCESS.md";
+  if (!exists(skillRel)) return t.skip("fold-findings SKILL.md absent");
+  assert.ok(exists(processRel), "fold-findings FOLD_PROCESS.md exists");
+  const skill = read(skillRel);
+  const process = read(processRel);
+
+  // --- Part 1: the fenced → Next: block (AC3 block-shape + AC1 consumer) ---
+  // The block is read through the sensor's own fixedOutputBlocks helper. Its
+  // header line is identified by its marker, never by position, so every other
+  // non-blank line — including the first sub-bullet — is shape- and
+  // token-checked.
+  const blocks = fixedOutputBlocks(skill, "→ Next:");
+  assert.ok(blocks.length >= 1, "a fenced block carrying the → Next: marker exists");
+  const blockContent = blocks.find((block) =>
+    block.split("\n").some((line) => line.trim().startsWith("→ Next:"))
+  );
+  assert.ok(blockContent, "the fenced → Next: hand-off block exists");
+  const blockLines = blockContent.split("\n").map((line) => line.trim()).filter(Boolean);
+  const headerIndex = blockLines.findIndex((line) => line.startsWith("→ Next:"));
+  assert.ok(headerIndex >= 0, "the fenced block carries the → Next: header line");
+  const subBullets = blockLines.filter((_, i) => i !== headerIndex);
+  assert.ok(subBullets.length >= 1, "the block carries at least one · sub-bullet");
+  for (const line of subBullets) {
+    assert.ok(
+      line.startsWith("· "),
+      "every post-header line must be a · sub-bullet (got: " + JSON.stringify(line) + ")"
+    );
+    // No router invocation token inside the block
+    assert.ok(
+      !line.includes("unit-route.mjs"),
+      "the → Next: block must not contain the router invocation as consumer (got: " + JSON.stringify(line) + ")"
+    );
+  }
+
+  // Both planner commands must appear in the block (AC1)
+  assert.ok(blockContent.includes("/plan-fix"), "the block must name /plan-fix");
+  assert.ok(blockContent.includes("/plan-feature"), "the block must name /plan-feature");
+
+  // --- Part 2: the closing-block decision table (AC1 extended) ---
+  // The table is read through the sensor's own markdownTable helper, so the
+  // pin cannot drift from the grammar it guards.
+  const rows = markdownTable(skill, "Closing-block decision branch");
+  assert.ok(rows, "the closing-block decision table exists");
+  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
+  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  const consumerCell = freezeRow[freezeRow.length - 1];
+  // Must name both planner tokens and mark the router invocation as discovery
+  assert.ok(
+    consumerCell.includes("/plan-fix"),
+    "the freeze-batch consumer cell must name /plan-fix (got: " + JSON.stringify(consumerCell) + ")"
+  );
+  assert.ok(
+    consumerCell.includes("/plan-feature"),
+    "the freeze-batch consumer cell must name /plan-feature (got: " + JSON.stringify(consumerCell) + ")"
+  );
+  // The router invocation may appear as a description of the discovery step,
+  // but the consumer (first token before →) must be a planner command
+  const consumerTokens = consumerCell.split(/→/);
+  const primaryConsumer = consumerTokens[0].trim();
+  assert.ok(
+    primaryConsumer.includes("/plan-fix") || primaryConsumer.includes("/plan-feature"),
+    "the primary consumer (before →) must be a planner command, not a host command (got: " + JSON.stringify(primaryConsumer) + ")"
+  );
+
+  // --- Part 3: both skill files carry the tokens and format sentences (AC1 + AC2 + AC3) ---
+  for (const [rel, text] of [[skillRel, skill], [processRel, process]]) {
+    assert.ok(text.includes("/plan-fix"), `${rel} must name /plan-fix`);
+    assert.ok(text.includes("/plan-feature"), `${rel} must name /plan-feature`);
+    assert.ok(
+      text.includes("bare folder number or the full slug"),
+      `${rel} must carry the unit format sentence`
+    );
+    assert.ok(
+      text.includes("exactly one physical line"),
+      `${rel} must carry the one-physical-line rule`
+    );
+  }
+});
+
+// #244 (F10) — the freeze-batch trigger admits a `decision-required` row, whose
+// router conclusion is `decision` ("stop and surface to the user"), not a
+// planner. The block, the decision-table cell, and both skill files must carry
+// that branch, or a decision-only batch is misrouted to `/plan-fix`.
+test("#244 freeze-batch hand-off: the decision-required branch surfaces the user decision", (t) => {
+  const skillRel = "skills/fold-findings/SKILL.md";
+  const processRel = "skills/fold-findings/references/FOLD_PROCESS.md";
+  if (!exists(skillRel)) return t.skip("fold-findings SKILL.md absent");
+  assert.ok(exists(processRel), "fold-findings FOLD_PROCESS.md exists");
+  const skill = read(skillRel);
+  const process = read(processRel);
+  const decisionConsumer = "stop and surface the decision to the user";
+
+  // The fixed → Next: block carries a decision branch beside the replan one.
+  const blocks = fixedOutputBlocks(skill, "→ Next:");
+  const blockContent = blocks.find((block) =>
+    block.split("\n").some((line) => line.trim().startsWith("→ Next:"))
+  );
+  assert.ok(blockContent, "the fenced → Next: hand-off block exists");
+  const subBullets = blockContent
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("· "));
+  assert.ok(
+    subBullets.some((line) => line.includes(decisionConsumer)),
+    "the block must carry a · sub-bullet that surfaces the decision-required consumer"
+  );
+
+  // The decision-table freeze-batch cell carries the same branch.
+  const rows = markdownTable(skill, "Closing-block decision branch");
+  assert.ok(rows, "the closing-block decision table exists");
+  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
+  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  assert.ok(
+    freezeRow[freezeRow.length - 1].includes(decisionConsumer),
+    "the freeze-batch consumer cell must surface the decision-required consumer"
+  );
+
+  // Both skill files state the branch.
+  for (const [rel, text] of [[skillRel, skill], [processRel, process]]) {
+    assert.ok(
+      text.includes(decisionConsumer),
+      `${rel} must carry the decision-required consumer`
+    );
+  }
+});
+
 

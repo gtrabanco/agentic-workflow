@@ -535,6 +535,7 @@ test("the published limits are the same object the fixture discloses", () => {
     pathChars: 1024,
     identifierChars: 160,
     claimChars: 2048,
+    reproducerChars: 1024,
     evidenceChars: 1024,
     resolutionEvidenceChars: 2048,
     policyChars: 64,

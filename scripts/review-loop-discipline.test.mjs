@@ -274,8 +274,9 @@ assert.match(foldPolicy, /materializ/);
 
 // 10j. Version — fold-findings is bumped for this contract. The exact pin is
 // maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
-// conditional replan destination) with the assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.5\.0/);
+// conditional replan destination) and fix #244 moved it 1.5.0 → 1.5.1
+// (the freeze-batch consumer contract), the assertion unchanged in strength.
+assert.match(foldSkill, /version: 1\.5\.1/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
@@ -332,5 +333,41 @@ assert.match(ledgers, /materializ/);
 assert.match(ledgers, /never .*re-derive|never re-derives/);
 assert.match(ledgers, /single writer of every finding mark is `review-change`/);
 assert.match(ledgers, /VF-/);
+
+// ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
+//
+// The planning-side loop rules are code, not prose: this block reads the
+// carriers directly, so a regression of any rule fails here even when the
+// superseded sentences are gone. The existing code-side assertions above stay
+// byte-unchanged (AC8's no-weakening walk).
+
+const preExecutionSource = read("packages/agentic-workflow-schema/src/pre-execution.ts");
+const preExecutionContract = read("packages/agentic-workflow-schema/src/pre-execution-contract.ts");
+const workflowIndex = read("packages/agentic-workflow-schema/src/index.ts");
+const snapshotScript = read("scripts/pre-execution-snapshot.mjs");
+const statusScript = read("scripts/workflow-status.mjs");
+
+// 13a. The materiality predicate is a closed `medium`+ membership test, and the
+// negated `info` comparison is gone.
+assert.match(preExecutionSource, /MATERIAL_FINDING_SEVERITIES/);
+assert.match(preExecutionSource, /"medium", "high", "critical"/);
+assert.doesNotMatch(preExecutionSource, /severity !== "info"/);
+assert.match(preExecutionContract, /material = `medium`/);
+assert.match(preExecutionContract, /report-note/);
+assert.match(preExecutionContract, /reproducerChars/);
+
+// 13b. The orchestrator refuses past the two-cycle cap with the human route.
+assert.match(workflowIndex, /stop-review-loop-cap/);
+assert.match(workflowIndex, /reviewLoopCycles/);
+
+// 13c. The CLI's verify report carries the wording-only route.
+assert.match(snapshotScript, /parseWordingOnlyDeterminations/);
+assert.match(snapshotScript, /wordingOnly/);
+
+// 13d. The sensor projects the derived count and never references the decider
+// (feature 38 A:12).
+assert.match(statusScript, /review_loop_cycles/);
+assert.match(statusScript, /deriveReviewLoopCycles/);
+assert.doesNotMatch(statusScript, /decideWorkflowAction/);
 
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");

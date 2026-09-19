@@ -263,6 +263,8 @@ export interface PreExecutionFinding {
   readonly verification: PreExecutionFindingVerification;
   readonly resolution: PreExecutionFindingResolution;
   readonly resolutionEvidence: string | null;
+  /** Optional concrete reproduction; absent means the producer recorded none. */
+  readonly reproducer?: string;
 }
 
 /** One optional parent receipt: topology, never a vote. */
@@ -980,6 +982,13 @@ export function validatePreExecutionReviewReceiptV1(value: unknown): PreExecutio
 }
 
 /**
+ * The material line (E-D31-8): `medium` and above block a PASS; `low` and
+ * `info` are report-notes. One closed set, so a future severity cannot become
+ * material through a negated comparison.
+ */
+const MATERIAL_FINDING_SEVERITIES: ReadonlySet<string> = new Set(["medium", "high", "critical"]);
+
+/**
  * The ONLY authority that blesses a pre-execution verdict (feature 28 AC1/AC2).
  *
  * On top of the structural pass it binds the receipt to a snapshot and to the
@@ -995,7 +1004,8 @@ export function validatePreExecutionReviewReceiptV1(value: unknown): PreExecutio
  *   3. `contextClean` is mandatory for a PASS and never for a FAIL: a contaminated
  *      reviewer may still report what it found;
  *   4. a PASS may not carry a material finding that is still open or unverified
- *      (`verdict-mismatch`) — `info` severity is the only immaterial row.
+ *      (`verdict-mismatch`) — material is `medium` and above, so a PASS may
+ *      coexist with an open/unverified `low` or `info` report-note.
  *
  * The parent-topology rule (parents require a critic/synthesizer/arbiter role,
  * `invalid-topology`) is part of the canonical definition itself — the shared
@@ -1056,7 +1066,7 @@ export function validatePreExecutionReceiptAgainstSnapshot(
   if (isPassVerdict(bound.verdict)) {
     for (let i = 0; i < bound.findings.length; i++) {
       const finding = bound.findings[i];
-      const material = finding.severity !== "info";
+      const material = MATERIAL_FINDING_SEVERITIES.has(finding.severity);
       if (material && (finding.resolution === "open" || finding.verification === "unverified")) {
         collector.add("verdict-mismatch", `/findings/${i}`);
       }

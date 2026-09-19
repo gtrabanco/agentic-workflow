@@ -246,6 +246,35 @@ test("an info-severity finding never blocks a PASS on its own merits", async () 
   assert.equal(result.ok, true, rows(result));
 });
 
+test("a PASS may coexist with an open or unverified low report-note (AC1)", async () => {
+  const { snapshot } = await currentPair();
+  const cases = [
+    ["open", finding({ severity: "low", verification: "verified", resolution: "open" })],
+    ["unverified", finding({ severity: "low", verification: "unverified", resolution: "resolved",
+      resolutionEvidence: "recorded as a report-note" })],
+  ];
+  for (const [label, row] of cases) {
+    const { receipt } = await currentPair();
+    const result = await validatePreExecutionReceiptAgainstSnapshot(
+      { ...receipt, findings: [row] }, snapshot, POLICY_VERSION,
+    );
+    assert.equal(result.ok, true, `a PASS with an ${label} low row must stand · ${rows(result)}`);
+  }
+});
+
+test("the finding reproducer is optional, bounded, and well-formed (AC3)", () => {
+  const base = finding({ severity: "low", resolution: "open", verification: "verified" });
+  assert.equal(structural({ findings: [base] }).ok, true,
+    "a receipt whose findings carry no reproducer stays valid");
+  assert.equal(structural({ findings: [{ ...base, reproducer: "bun test scripts/x.test.mjs" }] }).ok, true,
+    "a present reproducer validates");
+  const oversize = structural({
+    findings: [{ ...base, reproducer: "x".repeat(PRE_EXECUTION_LIMITS.reproducerChars + 1) }],
+  });
+  assert.equal(oversize.ok, false, "a reproducer past the declared bound is refused");
+  assert.ok(codes(oversize).includes("limit-exceeded"), rows(oversize));
+});
+
 test("a FAIL verdict may report freely, including a contaminated context", async () => {
   const { snapshot, receipt } = await currentPair();
   const failing = await validatePreExecutionReceiptAgainstSnapshot(
