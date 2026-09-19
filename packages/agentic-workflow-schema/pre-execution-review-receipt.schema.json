@@ -333,7 +333,7 @@
             "high",
             "critical"
           ],
-          "description": "Severity ladder shared with candidate review; `info` is the only immaterial row."
+          "description": "Severity ladder shared with candidate review on the planning materiality line: material = `medium` and above, `low` is a persisted report-note, `info` immaterial."
         },
         "class": {
           "type": "string",
@@ -393,6 +393,13 @@
             }
           ],
           "description": "Counter-evidence or repair pointer. Required to dismiss or resolve a finding."
+        },
+        "reproducer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[^\\0]*$",
+          "description": "Concrete reproduction for the finding; at most 1024 characters. Optional, so a receipt whose findings carry none stays valid."
         }
       },
       "allOf": [

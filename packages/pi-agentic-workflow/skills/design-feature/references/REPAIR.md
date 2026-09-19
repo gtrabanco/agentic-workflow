@@ -57,18 +57,20 @@ exists; it never chose how to fill it, and neither does this skill.
 ### 4. Second cycle = anomaly, not routine
 
 Cycle rules have one owner: `pre-execution-review/references/POLICY.md` §4 — a repeat needs a changed
-snapshot or a named falsifiable question plus a new evidence route, and entering
-a second repair/re-review cycle prints the `CONVERGENCE-ANOMALY` block (repeated
+snapshot or a named falsifiable question plus a new evidence route, and a second
+consecutive repair/re-review cycle prints the `CONVERGENCE-ANOMALY` block (repeated
 and new finding ids, the snapshots that moved, the evidence or obligation missed,
 the owning stage, and why the prior readiness/review/repair failed) **before** any
-further edit, then routes to that owner. More cycles stay allowed when
-correctness needs them; they never earn a PASS, and an exhausted cycle budget
-does not downgrade an open finding.
+further edit, then routes to that owner. The repair cycles are the correction
+path; they never earn a PASS, and an exhausted cycle budget does not downgrade an
+open finding. A third cycle never starts without explicit user instruction: the
+orchestrator's `stop-review-loop-cap` refusal stops the invocation and names
+`design-feature` as the human route, and a PASS resets the count.
 
-A repair responding to a persisted verdict is **never** a loop defect (POLICY §4
-scopes every guard to blind re-reviews): a unit whose `progress.md` carries an open
-FAIL/NEEDS-DESIGN receipt is being repaired by definition, so no "already complete"
-answer exists for it and no cycle cap converts its verdict into a dead end.
+The cap counts review invocations, never repairs: a repair responding to a
+persisted verdict produces a new snapshot by design, so the repair turn itself is
+never a loop defect. An open finding is never downgraded or waved through to
+satisfy a count.
 
 The spec-stage detail this skill adds: the owning stage of a Product-half miss is
 `product` unless the evidence proves the plan asked for something the SPEC never

@@ -143,3 +143,81 @@ export function parseReceipts(text) {
     finishedAt: timelineField(chunk, 1),
   }));
 }
+
+/**
+ * The consecutive-unconverged review→repair→re-review count per stage, derived
+ * from the parsed receipts (E-D31-10/D-31-7): the count is the FAIL-verdict
+ * receipts for a stage since that stage's last PASS-verdict receipt; a PASS
+ * resets it and a stage with no receipt reads `0`. One shared pure helper, so
+ * the sensor's projection and the vector suites cannot drift. Non-FAIL,
+ * non-PASS verdicts (e.g. `needs-design`) neither increment nor reset.
+ */
+export function deriveReviewLoopCycles(receipts) {
+  const rows = Array.isArray(receipts) ? receipts : [];
+  const result = { spec: 0, plan: 0 };
+  for (const stage of ["spec", "plan"]) {
+    const pass = stage === "spec" ? "spec-review-pass" : "plan-review-pass";
+    const fail = stage === "spec" ? "spec-review-fail" : "plan-review-fail";
+    const stageRows = rows.filter((row) => row && row.stage === stage);
+    let lastPass = -1;
+    for (let i = 0; i < stageRows.length; i += 1) {
+      if (stageRows[i].verdict === pass) lastPass = i;
+    }
+    let count = 0;
+    for (let i = lastPass + 1; i < stageRows.length; i += 1) {
+      if (stageRows[i].verdict === fail) count += 1;
+    }
+    result[stage] = count;
+  }
+  return result;
+}
+
+/**
+ * The determination block's own body: after its `## Wording-only determination
+ * v1 — <stage>` header, up to the next `## ` header (or the end of the text).
+ * Bounding the region is load-bearing: `parseWordingOnlyDeterminations` splits
+ * only on determination headers, so without this bound a later record block — a
+ * review receipt also carries `- Artifact revision:` — sits inside the same chunk
+ * and a determination that omits a field could be answered with that block's
+ * value instead of `null` (E6 must fail closed).
+ */
+function determinationBlock(chunk) {
+  const end = chunk.search(/^## /m);
+  return end === -1 ? chunk : chunk.slice(0, end);
+}
+
+/**
+ * One `- <label>: <value>` field of a determination block. The determination
+ * grammar is NOT the receipt grammar (its labels are read by a distinct block
+ * kind), so it carries its own extractor: the receipt parser's label scan must
+ * keep proving that every RECEIPT label is emitted by both stage templates.
+ * The label may sit mid-line — the frozen SPEC E5 block carries several fields
+ * on one ` \u00b7 `-separated line — so it must start a field: a line start (after an
+ * optional `- ` bullet) or the ` \u00b7 ` separator. The value ends at the next ` \u00b7 `
+ * or the line end, the same termination the receipt scan uses. An absent field
+ * returns `null`, never a value borrowed from another block.
+ */
+function determinationLine(chunk, label) {
+  const match = determinationBlock(chunk).match(
+    new RegExp(`(?:^|[\\u00b7])[ \\t]*(?:-[ \\t]*)?${label}:[ \\t]*([^\\n\u00b7]+)`, "m"));
+  return match ? match[1].replace(/`/g, "").trim() : null;
+}
+
+/**
+ * Every `## Wording-only determination v1 — <stage>` block in a progress ledger,
+ * in file order. The machine half of the wording-only route (feature 31): the
+ * block records the artifact revision the repair rotated and the acceptance
+ * fingerprint the repair left unmoved, plus the author's intent/authority
+ * judgment. Read from the unit's unbound `progress.md`, so recording it cannot
+ * rotate the revision it names. `text === null` reads as "no determinations".
+ */
+export function parseWordingOnlyDeterminations(text) {
+  if (text === null || text === undefined) return [];
+  return String(text).split(/^## Wording-only determination v1 — /m).slice(1).map((chunk) => ({
+    stage: chunk.startsWith("spec") ? "spec" : chunk.startsWith("plan") ? "plan" : "unknown",
+    id: determinationLine(chunk, "Determination"),
+    revision: determinationLine(chunk, "Artifact revision"),
+    acceptanceFingerprint: recordedValue(determinationLine(chunk, "Acceptance fingerprint")),
+    unchanged: /^(yes|true)$/i.test((determinationLine(chunk, "Intent and authority unchanged") ?? "").trim()),
+  }));
+}
