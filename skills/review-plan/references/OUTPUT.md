@@ -115,16 +115,17 @@ not authority.
 | Verdict / class | Who acts | What happens next |
 |---|---|---|
 | `PLAN-REVIEW-PASS` | nobody | `/execute-phase <NN>` binds this receipt + exact snapshot digest |
-| `PLAN-REVIEW-FAIL`, `class: plan` | `plan-feature` / `plan-fix` (the author) | one root-caused repair batch → new `artifactRevisionId` → re-review of the new snapshot |
+| `PLAN-REVIEW-FAIL`, `class: plan` | `plan-feature` / `plan-fix` (the author) | one root-caused repair batch → new `artifactRevisionId` → next cycle (default re-review; a recorded wording-only batch skips it) |
 | `PLAN-REVIEW-FAIL`, `class: product` | `design-feature` | repair the Product half → `review-spec` → the Plan receipt is re-derived (`stale-parent`) |
 | `PLAN-REVIEW-FAIL`, `class: source\|environment\|runtime` | its owner, later | record the row, keep it `open`, route it. Do not edit the plan to hide it and do not start `execute-phase` on a plan carrying an open material row |
 
 Repeating this review follows the no-progress and convergence rules in
 `pre-execution-review/references/POLICY.md` §4 — a repeat needs
 a changed snapshot or a named falsifiable question plus a new evidence route, and
-entering a second repair/re-review cycle prints the `CONVERGENCE-ANOMALY` block
-before any further edit. A second cycle never grants PASS and never gets folded
-into `review-change → fold-findings`, which repairs source, not plan authority.
+a second consecutive repair/re-review cycle prints the `CONVERGENCE-ANOMALY`
+block before any further edit; the orchestrator's `stop-review-loop-cap` refuses
+a third and names `design-feature` (a PASS resets the count). A second cycle
+never grants PASS and never folds into `review-change → fold-findings`.
 
 ### Skill-specific turn-contract boxes
 
@@ -157,10 +158,9 @@ On FAIL, name every finding id once, in order, joined with ` + `:
 
 ```
 → Next: /plan-feature <NN-slug> "<instruction>" (or /plan-fix <N> "<instruction>") —
-    one repair batch for F1 + P9 + L4, then /review-plan <NN-slug> re-reviews the new
+    one repair batch for F1 + P9 + L4, then /review-plan <NN-slug> judges the new
     artifact revision
   · class: product → /design-feature <NN-slug> then /review-spec <NN-slug>; the plan
     re-derives afterwards
   · a missing product choice → answer it yourself in the instruction; nothing here chooses
-  · a second cycle about to start → print CONVERGENCE-ANOMALY first, then route to the owner
 ```

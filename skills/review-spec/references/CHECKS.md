@@ -101,5 +101,8 @@ Each finding is one row of the receipt's `findings` array: stable `id`,
 source | environment | runtime`), `claim` (what is wrong, with the section
 pointer), `evidenceRefs` (≥ 1 — a finding without evidence is a hunch and gets
 dropped), `verification` (`verified | unverified`), `resolution` (`open` on
-emission). Material = anything above `info`; a `PASS` may not carry an open or
+emission). Material = `medium` and above; a `low` row is a persisted report-note
+the stage author resolves without a re-review, and `info` is immaterial.
+Deflating a real defect below the `medium` minimum to unblock a pass is itself a
+finding; a `PASS` may not carry an open or
 unverified material row.

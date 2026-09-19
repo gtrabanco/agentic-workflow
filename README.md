@@ -788,3 +788,7 @@ tables; a missing extra is never a gap.
 | ----------------------------------------------------------- | --------------------------------------------------------------------- |
 | [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot     |
 | [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Started with vibecoding, migrated to the workflow once it was working |
+
+## References
+
+- Jin & Chen (2026). *Overcorrection in LLM-based artifact review.* arXiv:2603.00539. <https://arxiv.org/abs/2603.00539> — the study on which feature 31's planning materiality floor (`low` = report-note, material = `medium`+) is built.

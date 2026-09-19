@@ -90,7 +90,11 @@ status | resolution-evidence | resolving-artifact-revision
 
 - `stage` is `spec` or `plan`; `severity` and `class` use the receipt
   vocabularies (`info|low|medium|high|critical`,
-  `product|plan|source|environment|runtime`). `info` is the only immaterial one.
+  `product|plan|source|environment|runtime`). Material is `medium` and above; a
+  `low` row is a persisted **report-note** — visible, non-blocking, and resolved
+  by the stage author without a re-review — and `info` is immaterial.
+- Deflating a real defect below the `medium` minimum to unblock a pass is itself
+  a finding: the row is re-classified and blocks, never waved through.
 - `finding-id` is stable across cycles: a repeated finding keeps its id and gains
   a second resolution row, which is exactly what makes the no-progress and
   `CONVERGENCE-ANOMALY` rules computable.
@@ -104,9 +108,9 @@ status | resolution-evidence | resolving-artifact-revision
 - `resolving-artifact-revision` is the `artifactRevisionId` of the write that
   closed the row — the link that lets a re-review prove the snapshot actually
   changed.
-- A `PASS` may not coexist with an open material/unverified row in this table for
-  the bound snapshot. `audit-pr` reads it; the merge authority stays
-  `audit-pr`'s alone.
+- A `PASS` may coexist with open or unverified `low`/`info` report-note rows; it
+  is refused while any open or unverified `medium`+ row exists for the bound
+  snapshot. `audit-pr` reads it; the merge authority stays `audit-pr`'s alone.
 
 ## Durable ledger write ownership (the map)
 
