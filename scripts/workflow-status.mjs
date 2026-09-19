@@ -222,7 +222,9 @@ function readRepositoryState() {
   };
 }
 
-const NRS_BLOCKING = new Set(["missing", "draft", "contradicted", "resolved"]);
+// Feature 32 (P1) — only draft / contradicted / resolved block; missing is a
+// non-blocking substrate notice, never a blocker.
+const NRS_BLOCKING = new Set(["draft", "contradicted", "resolved"]);
 
 // ---------------------------------------------------------------------------
 // Step 1 — Git state
@@ -963,7 +965,12 @@ function summarize(units, startable, designCandidates, openPrs) {
 
 function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash }) {
   const alternatives = [];
-  if (nrs && NRS_BLOCKING.has(nrs.status)) {
+  // Feature 32 (P1) — missing ledger is a notice (non-blocking); add it to
+  // alternatives and continue so startable/gate rows can still be recommended.
+  if (nrs && nrs.status === "missing") {
+    alternatives.push("/discover-repository-state");
+  }
+  else if (nrs && NRS_BLOCKING.has(nrs.status)) {
     const command = nrs.status === "contradicted"
       ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
       : "/discover-repository-state";
@@ -1252,6 +1259,13 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       detail: `repository-state ledger is ${nrs.status}`,
     });
   }
+  // Feature 32 (P1) — missing ledger is a notice, not a blocker.
+  const substrateNotice = (nrs && nrs.status === "missing")
+    ? { id: "repository-state", state: "missing", blocking: false }
+    : null;
+  if (substrateNotice) {
+    observations.push("repository-state ledger is absent — reported as non-blocking notice");
+  }
   runScopedBlockers.push(...dependencies.blockers);
   const blockers = [...runScopedBlockers, ...gateBlockers];
 
@@ -1259,6 +1273,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const crash = readCrashRecovery({ gitState, units, phases });
 
   // Top-level state: the NRS/substrate gate overrides the crash-recovery mapping.
+  // Feature 32 (P1) — missing ledger no longer blocks.
   let state;
   if (nrs && NRS_BLOCKING.has(nrs.status)) state = "BLOCKED";
   else if (dependencies.blockers.some((blocker) => blocker.scope === "run")) state = "BLOCKED";
@@ -1346,6 +1361,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
         tasks_from_boundary: currentUnit ? (phases.get(currentUnit.id)?.remaining ?? null) : null,
       },
     },
+    ...(substrateNotice ? { substrate_notice: substrateNotice } : {}),
   };
 
   const envelope = {
