@@ -75,7 +75,6 @@ Run these and collect findings (cite paths/lines/issue numbers each):
 
 **Workflow discipline (checks 10–14)** — the executor skills enforce these at
 write time; this audit verifies they actually held. Each check is mechanical:
-run the command shown, don't infer.
 
 10. **Phase naming.** `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
     must return nothing — plans use `P1, P2, …` ("phases") only. Any hit: LOW
@@ -95,7 +94,7 @@ run the command shown, don't infer.
     `Docs site` block; otherwise state n/a).** Scan the declared content dir
     for pages carrying `generated-by: agentic-workflow/generate-docs`. For
     each: (a) its `source-unit` exists in the roadmap or fix index — no match
-    is an **orphan** (MEDIUM: propose deletion or re-attribution); (b) the
+    is an **orphan** (low: propose deletion or re-attribution); (b) the
     unit's PR merged **after** the page's `updated` date with commits touching
     the page's subject paths — that page is **stale** (LOW: propose
     `/generate-docs <unit>` to refresh). Cite page path + unit per finding.
@@ -118,16 +117,17 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-13) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-14) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/13 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/14 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```
 
    Sev: **high** = misleading or broken; **low** = cosmetic.
+   Only `high` and `low` are defined in this legend
 3. **Fix only on request.** With explicit `--fix` (or user go-ahead), apply the
    low-risk corrections (remove a merged fix-index row, fix a dead link, register
    a missing roadmap entry, add a verified PR link to a bare `done` row). Leave judgment calls to the user.
