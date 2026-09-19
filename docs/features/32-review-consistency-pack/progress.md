@@ -729,5 +729,10 @@ CONVERGENCE-ANOMALY — 32-review-consistency-pack plan
 
 ## Unit-loop receipt — P2
 - Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
-- Next: P3 · Attempts: 1
+- Next: P4 · P2 complete · Attempts: 1
 - Tasks: 7 prose corrections (fold-flip provenance, triage-issue modes, roadmap verify-vs-write, NRS sensor split) + discipline pins (IS-1/5a/5b/5c) in review-loop-discipline and ledger-ownership suites
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/audit-pr-receipt.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
+- Next: P4 · Attempts: 1
+- Tasks: canonical severity conversion table (CLASSIFY.md), derived blocking gate (CLASSIFY.md), report-note owner citation (LEDGERS.md), audit-docs fix (14 checks, no MEDIUM), product-audit vocabulary (closed class set), PERSIST_AND_DECIDE.md finder-scale pointer, audit-pr scale alignment (pass/blocker/n-a), all pinned in review-loop-discipline and audit-pr-receipt suites
