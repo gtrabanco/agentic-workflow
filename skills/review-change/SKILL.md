@@ -157,7 +157,8 @@ only for independent proposals (D3). It is Stage 4: checkpoint reviews are
 optional, the end review is mandatory and fresh. `fix-now` is routed to the
 unit's fold cycle — a separate `/fold-findings` invocation, never run by this review;
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
-proposals. `audit-pr` consumes only the verified PR-comment receipt, never the
+proposals, audit findings, and `--prioritize-now` runs. `audit-pr` consumes
+only the verified PR-comment receipt, never the
 chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
 correction path is `/fold-findings`, then re-run `/review-change` on the changed
 HEAD (bounded at two cycles — a third cycle never starts without an explicit

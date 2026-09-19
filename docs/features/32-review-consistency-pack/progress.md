@@ -726,3 +726,8 @@ CONVERGENCE-ANOMALY — 32-review-consistency-pack plan
 - Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs scripts/workflow-status-pre-execution.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
 - Next: P2 · Attempts: 1
 - Tasks: NRS_BLOCKING de-deduplicated "missing"; substrate_notice added to detail; resolveNext routes missing to alternatives; 5 new sensor tests (1 missing-ledger + 3 regressions + 1 review-loop-cycle projection)
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
+- Next: P3 · Attempts: 1
+- Tasks: 7 prose corrections (fold-flip provenance, triage-issue modes, roadmap verify-vs-write, NRS sensor split) + discipline pins (IS-1/5a/5b/5c) in review-loop-discipline and ledger-ownership suites

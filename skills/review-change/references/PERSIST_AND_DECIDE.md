@@ -25,7 +25,9 @@ exact command tokens.
    `finding-mark@1` signature on a **separate `VF-` row** (reviewer, head SHA,
    recheck + reproducer), as modeled in `LEDGERS.md` (§finding-mark@1) and the
    fixture.
-   `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
+   `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
+   the `folded: no → yes` flip; the fold cycle is the only step that ever
+   flips it to `yes`.
    A `low` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
    **dedupe by `file:line` + axis**:
@@ -35,7 +37,7 @@ exact command tokens.
    **Non-fix-now findings are never written here** — they keep
    their destinations from step 11 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
-   (D3).
+   (independent proposals, audit findings, or `--prioritize-now` runs) (D3).
    **Commit the ledger append** — rows + `REVIEW-RAN` mark, one commit
    (`docs(<unit>): persist review findings F<n>–F<m>`), pushed when a PR is open;
    an uncommitted append hands the next review a dirty-tree stop. On
