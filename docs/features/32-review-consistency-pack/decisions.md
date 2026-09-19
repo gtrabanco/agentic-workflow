@@ -372,3 +372,10 @@ materiality vocabulary is the ledger's.
   reads as open have moved again). Evidence row E-19 records the drifted rows
   and the consequence (this design consumes roadmap + forge evidence directly).
   Owner: `resolve-repository-state`.
+
+## Path-protection-records@1
+
+| justification | path | phase | date | executor | reason |
+|---|---|---|---|---|---|
+| P1: NRS missing-ledger notice is a non-blocking substrate notice; edit workflow-status.mjs and extend the sensor test with the missing case + regression cases | scripts/workflow-status.mjs | P1 | 2026-09-19 | execute-phase | P1 scope: change NRS_BLOCKING to exclude "missing", add substrate_notice output, wire missing→notice in resolveNext; test additions are the P1 done-when validator |
+| P1: same justification for test file | scripts/workflow-status-sensor.test.mjs | P1 | 2026-09-19 | execute-phase | P1 done-when requires: missing-ledger case, three regression cases (draft/contradicted/resolved), and feature 31 review-loop-cycle projection assertion |
