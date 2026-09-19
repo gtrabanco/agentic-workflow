@@ -212,7 +212,7 @@ function objectBody(contract, spec) {
   const body = {
     type: "object",
     additionalProperties: false,
-    required: spec.fields.map((field) => field.key),
+    required: spec.fields.filter((field) => field.optional !== true).map((field) => field.key),
     properties,
   };
   const fragments = spec.rules
