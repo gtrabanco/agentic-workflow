@@ -103,6 +103,32 @@ The first workflow command you run after install says once that routing is
 configurable, then never again. That acknowledgement is stored in
 `~/.pi/agent/pi-agentic-workflow-state.json`, not in your config.
 
+## Path protection (optional)
+
+The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing
+protected path with no matching justification record. Its policy is the shipped
+`path-protection-policy@1` default, tightened by an optional `pathProtection`
+key in the same config files:
+
+```json
+{
+  "pathProtection": {
+    "protectedGlobs": ["secrets/**"],
+    "requirements": { "post-freeze": { "modify": "approval" } }
+  }
+}
+```
+
+The override is **tighten-only**: `protectedGlobs` are unioned with the shipped
+globs, and each `requirements` entry takes the stricter of the two — so a removal
+or a lowering is ignored (the shipped protection stays in force) and reported
+once per session as a `pi-agentic-workflow: path protection — <code>: <detail>`
+notification. `requirements` is keyed by phase state (`pre-freeze`, `post-freeze`,
+`always`) and operation (`create`, `modify`, `delete`, `rename`), with values
+`none` < `justification` < `approval`. To allow a protected edit, record the
+matching `path-protection-records@1` `justification` row in the unit's
+`decisions.md`.
+
 ## When a configured model is unavailable
 
 Default: the command **refuses to start** and tells you why — the model is not in

@@ -1,0 +1,56 @@
+{
+  "schema": "path-protection-policy@1",
+  "classes": {
+    "tests": {
+      "globs": [
+        "tests/**"
+      ],
+      "freeze": true
+    },
+    "e2e": {
+      "globs": [
+        "e2e/**"
+      ],
+      "freeze": true
+    },
+    "test-file": {
+      "globs": [
+        "**/*.test.*"
+      ],
+      "freeze": true
+    },
+    "fixtures": {
+      "globs": [
+        "fixtures/**",
+        "**/fixtures/**"
+      ],
+      "freeze": true
+    },
+    "policy-config": {
+      "globs": [
+        ".agentic-workflow/path-policy.json"
+      ],
+      "freeze": false
+    }
+  },
+  "matrix": {
+    "pre-freeze": {
+      "create": "none",
+      "modify": "justification",
+      "delete": "justification",
+      "rename": "justification"
+    },
+    "post-freeze": {
+      "create": "justification",
+      "modify": "approval",
+      "delete": "approval",
+      "rename": "approval"
+    },
+    "always": {
+      "create": "approval",
+      "modify": "approval",
+      "delete": "approval",
+      "rename": "approval"
+    }
+  }
+}

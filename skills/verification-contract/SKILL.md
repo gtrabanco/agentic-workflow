@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.2.1
+version: 1.3.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -87,6 +87,12 @@ never the test — editing an expectation to match behaviour is not a fix, it is
 a cover-up. The sole legitimate amendment is a **proven mis-encoding of external semantics**: the test's expectation contradicts the actual
 documented semantics of the platform/library/language, cited from authoritative documentation — not a product decision change. Even that surfaces as a
 **finding plus a SPEC amendment**, never a silent edit to go green.
+
+The deterministic backstop for this rule is the feature 60 path-protection
+checkpoint (`path-protection@1` in the turn contract): the Tier 1 gate fails a
+protected-path change with no recorded justification/approval, and the pi guard
+blocks the write before it lands. This manifest is the finish line those
+recorded escapes are checked against.
 
 Prevention rides the research gate (**research-before-encode**): platform
 semantics are verified against authoritative documentation **before a test encodes them**, so **adding stronger tests stays allowed**; **editing expectations never** (except the proven-mis-encoding path above).
