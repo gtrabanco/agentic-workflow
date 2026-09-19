@@ -18,7 +18,9 @@ exact command tokens.
    `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
    by definition). Otherwise, for each **fix-now** finding of severity `high`
    or `med` (only ledger severities; finder scale
-   `critical`→`high`, `major`→`med`, `minor`→`low`): append a row
+   converts through the canonical table in
+   `CLASSIFY.md`):
+   append a row
    (create the file with the header row when missing), carrying the
    verbatim `Sev` value into `severity`; `folded` always starts `no` — that
    row comes from a **confirmed** candidate only and carries its
