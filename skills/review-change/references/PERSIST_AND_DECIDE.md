@@ -45,6 +45,9 @@ exact command tokens.
    an uncommitted append hands the next review a dirty-tree stop. On
    `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
    receipt is the durable record): head and posted receipt stay identical.
+   A reviewer also records a `GATE-RAN` mark for the gate run the review performed
+   and consumes an identical-head green mark instead of re-running (see
+   `LEDGERS.md` §gate-ran@1).
    This skill's only mutations are this ledger commit (step 11) and, on
    `REVIEW-PASS` with a PR, the receipt comment (step 12) — it never runs a
    fold, executes a phase, or edits source (see the review-end turn boundary in
