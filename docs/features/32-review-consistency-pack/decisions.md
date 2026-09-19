@@ -381,4 +381,5 @@ Append-only rows the Tier 1 checkpoint gate verifies. See the `path-protection-r
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/workflow-status.mjs,scripts/workflow-status-sensor.test.mjs | P1 | 2026-09-19 | execute-phase | P1 scope: NRS_BLOCKING degrades missing to non-blocking notice; adds substrate_notice to detail; wires missing→notice in resolveNext; extends sensor test with missing case + 3 regressions + feature 31 projection assertion
+justification | scripts/review-loop-discipline.test.mjs,scripts/ledger-ownership.test.mjs | P2 | 2026-09-19 | execute-phase | P2 scope: IS-1 fold-flip provenance pins, IS-5(b) triage-modes pins, IS-5(c) roadmap verify-vs-write pin, IS-5(a) sensor-split pin, AC-01 tutorial scan pin, fold-findings sole-flipper pin, LEDGERS.md triage-prose pin, PERSIST_AND_DECIDE sole-flipper pin, FOLDING.md sole-flipper pin, OUTPUT_AND_GUARDRAILS triage pin, plan-feature roadmap verify pin, ENVELOPE_CORE/SENSOR_CORE NRS-split pin
 ```
