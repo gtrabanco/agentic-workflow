@@ -96,6 +96,7 @@ import {
   DIGEST64,
   recordedValue,
   parseReceipts,
+  parseWordingOnlyDeterminations,
 } from "./pre-execution-contract.mjs";
 
 export { STAGE_ARTIFACTS, CONTEXT_SOURCES };
@@ -308,7 +309,7 @@ const recordedDigest = (value) => {
  */
 export function attributeFreshness({
   recorded = {}, snapshot, observedDigest, policyVersion,
-  changedArtifacts = [], changedContexts = [], sourceCommitDate,
+  changedArtifacts = [], changedContexts = [], sourceCommitDate, wordingOnly = null,
 } = {}) {
   const bound = recordedDigest(recorded.snapshot);
   const paths = [...new Set([...changedContexts, ...changedArtifacts])].sort();
@@ -367,6 +368,30 @@ export function attributeFreshness({
   // are ordered exactly as the comparator orders them.
   if (changedContexts.length > 0) {
     return report("stale-context", `an authority the reviewer relied on moved: ${changedContexts.join(", ")}`, changedContexts);
+  }
+  // Feature 31 — a recorded wording-only movement (E-D31-16): bound artifact bytes
+  // moved but no authority moved, and the unbound determination names this
+  // snapshot's current revision with the manifest's acceptance fingerprint. Pure:
+  // the determination and fingerprint arrive as `wordingOnly`, never by a file
+  // read. Any mismatch falls through unchanged to the precedence below.
+  if (
+    changedArtifacts.length > 0 &&
+    changedContexts.length === 0 &&
+    wordingOnly !== null &&
+    typeof wordingOnly === "object" &&
+    wordingOnly.determination !== null &&
+    typeof wordingOnly.determination === "object" &&
+    wordingOnly.determination.unchanged === true &&
+    typeof wordingOnly.determination.revision === "string" &&
+    wordingOnly.determination.revision === snapshot.artifactRevisionId &&
+    typeof wordingOnly.acceptanceFingerprint === "string" &&
+    wordingOnly.determination.acceptanceFingerprint === wordingOnly.acceptanceFingerprint
+  ) {
+    return Object.freeze({
+      fresh: true,
+      detail: `wording-only determination ${wordingOnly.determination.id ?? "(unnamed)"} recorded at ${snapshot.artifactRevisionId}; the acceptance fingerprint and bound authorities are unmoved`,
+      changedPaths: Object.freeze([]),
+    });
   }
   const recordedSource = recordedValue(recorded.sourceRevision);
   if (recordedSource !== snapshot.sourceRevision) {
@@ -462,6 +487,18 @@ async function main() {
   const sourceCommitDate = isRevision(receipt.sourceRevision)
     ? (git("show", "-s", "--format=%cI", receipt.sourceRevision) || null)
     : null;
+  // Feature 31 — the wording-only route is unavailable without a frozen
+  // acceptance manifest (fail closed), and the determination is read from the
+  // unit's unbound `progress.md`. Both are supplied to the pure attribute
+  // function, which never reads files itself.
+  const manifestRel = normalize(path.join(dir, "ACCEPTANCE.md"));
+  const manifestFingerprint = readRepo(manifestRel) !== null ? (git("hash-object", manifestRel) || null) : null;
+  const determinations = parseWordingOnlyDeterminations(readRepo(normalize(path.join(dir, "progress.md"))))
+    .filter((row) => row.stage === opts.stage);
+  const determination = determinations.length > 0 ? determinations[determinations.length - 1] : null;
+  const wordingOnly = determination !== null && manifestFingerprint !== null
+    ? { determination, acceptanceFingerprint: manifestFingerprint }
+    : null;
   const structural = attributeFreshness({
     recorded: receipt,
     snapshot,
@@ -470,6 +507,7 @@ async function main() {
     changedArtifacts: moved.filter((p) => artifactPaths.includes(p)),
     changedContexts: moved.filter((p) => contextPaths.includes(p)),
     sourceCommitDate,
+    wordingOnly,
   });
   const report = {
     // Fails closed on an inconsistent receipt: a bound digest that matches while its
