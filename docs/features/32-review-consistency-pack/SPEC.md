@@ -927,15 +927,15 @@ Five phases, one layer each, zero open decisions; detailed checklists in
 hardening.
 
 - **P1 — NRS missing-ledger notice** (config/infra): `missing` leaves
-  `NRS_BLOCKING`, the notice is emitted at `detail.substrate_notice`, the
-  workflow-status references state the same split, and the sensor suite pins the
-  notice, the three real-blocker regressions, and the untouched feature 31
-  review-loop-cycle projection.
+  `NRS_BLOCKING`, the notice is emitted at `detail.substrate_notice`, and the
+  sensor suite pins the notice, the three real-blocker regressions, and the
+  untouched feature 31 review-loop-cycle projection.
   Done-when: `node --test scripts/workflow-status-sensor.test.mjs` → exit 0.
 - **P2 — Ownership prose alignment** (docs): fold-flip sentences corrected at
   the three surfaces plus `fold-findings`, the `LEDGERS.md` prose corrected
   against its own map, `triage-issue`'s three modes named, `plan-feature`
-  verify-vs-write split, the tutorial scan, and the pins.
+  verify-vs-write split, the workflow-status references aligned to the sensor's
+  split (IS-5(a) text), the tutorial scan, and the pins.
   Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs` → exit 0.
 - **P3 — Classification single-owner contract** (docs): the canonical severity
   conversion table, the derived blocking gate citing `LEDGERS.md` §3 as the owner
