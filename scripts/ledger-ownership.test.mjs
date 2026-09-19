@@ -800,3 +800,12 @@ test("node --test exits non-zero when a template row loses its owner", (t) => {
 console.log(
   "PASS ledger ownership: map and both template projections agree in each direction, the fold token is bound to the line that emits it, and no undeclared writer touches a durable ledger",
 );
+
+// ── Feature 32 (P2) — P2 pins for LEDGERS.md edits ────────────────────────
+
+const ledgersMd = read("skills/pre-execution-review/references/LEDGERS.md");
+// IS-1: the triage-issue credit is gone from the fold-flip sentence
+assert.doesNotMatch(ledgersMd, /flag `triage-issue` gives it/);
+// IS-1: the sole flipper now cites the map's annotator
+assert.match(ledgersMd, /`fold-findings` flips only the `folded:` flag per the map/);
+

@@ -198,6 +198,9 @@ assert.match(folding, /edit an existing test's expectation/i);
 
 const foldSkill = read("skills/fold-findings/SKILL.md");
 const foldProcess = read("skills/fold-findings/references/FOLD_PROCESS.md");
+const reviewChangeSkill = read("skills/review-change/SKILL.md");
+const envelopeCore = read("skills/workflow-status/references/ENVELOPE_CORE.md");
+const sensorCore = read("skills/workflow-status/references/SENSOR_CORE.md");
 
 // 10a. The fixed REPAIR-RECEIPT block is printed as the ABSOLUTE-last output —
 // its header and every one of its five fields (repaired ids + finding-mark@1
@@ -333,6 +336,52 @@ assert.match(ledgers, /materializ/);
 assert.match(ledgers, /never .*re-derive|never re-derives/);
 assert.match(ledgers, /single writer of every finding mark is `review-change`/);
 assert.match(ledgers, /VF-/);
+
+// ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
+//
+// The planning-side loop rules are code, not prose: this block reads the
+// carriers directly, so a regression of any rule fails here even when the
+// superseded sentences are gone. The existing code-side assertions above stay
+// byte-unchanged (AC8's no-weakening walk).
+
+// ── 13.5. Feature 32 (P2) — contract prose alignment pins ───────────────────
+//
+// IS-1: sole flipper provenance — fold-findings:folded-flag is the sole writer
+// of `folded: no → yes` across all surfaces. IS-5(b): triage-issue's three modes
+// named in review-change surfaces. IS-5(c): plan-feature verify-vs-write split.
+// IS-5(a): sensor NRS split (draft/contradicted/resolved block, missing = notice).
+
+// IS-1: fold-findings/SKILL.md cites the map, not the cycle
+assert.match(foldSkill, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: PERSIST_AND_DECIDE.md cites the map, not the cycle
+assert.match(persist, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: FOLDING.md cites the map
+assert.match(folding, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: no surviving old claim in docs/workflow/ (tutorial scan) — AC-01
+let workflowDocs = "";
+try {
+  workflowDocs = execFileSync("grep", ["-rnE", "only step that ever flips|one and only ledger state transition", "docs/workflow/", "--include=*.md"], { encoding: "utf8", stderr: "inherit" }).toString();
+} catch {
+  // grep returns exit 1 when no matches — that's the expected pass condition
+}
+assert.equal(workflowDocs, "", "no contradicting sole-flipper restatement survives in docs/workflow/ outside GOLDEN_FIXTURE.md");
+
+// IS-5(b): triage-issue's three modes in review-change surfaces
+assert.match(reviewChangeSkill, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+assert.match(outputGuardrails, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+assert.match(persist, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+
+// IS-5(c): plan-feature verify-vs-roadmap
+const planFeature = read("skills/plan-feature/SKILL.md");
+const planScaffold = read("skills/plan-feature-scaffold/SKILL.md");
+assert.match(planFeature, /verifies.*repairs.*roadmap.*plan-feature-scaffold.*sole writer.*defined → planned/s);
+assert.match(planScaffold, /defined → planned.*write.*owns/);
+
+// IS-5(a): sensor NRS split — draft/contradicted/resolved block, missing = notice
+assert.match(envelopeCore, /\`draft\`, \`contradicted\`, or \`resolved\`/);
+assert.match(envelopeCore, /absent ledger is a non-blocking notice/);
+assert.match(sensorCore, /\`draft\`[,\s]+\`contradicted\`/);
+assert.match(sensorCore, /absent ledger emits a non-blocking substrate notice/);
 
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
