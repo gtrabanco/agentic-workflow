@@ -13,11 +13,16 @@ records. Detailed task checklists live in `TASKS.md`; the frozen finish line is
 `ACCEPTANCE.md`; the planning ledgers are `planning-evidence.md` (PE-001…PE-023)
 and `planning-obligations.md` (O1…O25).
 
-Artifact revision of this plan set: `32-plan-2` — re-cut by `plan-feature` on
-2026-09-19 against the post-merge head `e1c008bc` (features 31 and 60 merged),
-the repair batch for `PLAN-REVIEW-32-1` findings F13–F19; parent Product receipt
-`SPEC-REVIEW-32-5`, snapshot `e4b293e3…`. The `32-plan-1` initial cut
-(`plan-feature-scaffold`, 2026-09-18) was parented to `SPEC-REVIEW-32-4`,
+Artifact revision of this plan set: `32-plan-3` — the `plan-feature` repair
+batch for `PLAN-REVIEW-32-2` findings F21–F22 (2026-09-19): PE-011's
+`ledger-ownership.test.mjs` cites are re-based (`:56-57`, `:66-74`, `:158-163`,
+`:173`, `:202-204`) and O9 moves to P2, so the reference alignment lands where
+`PLAN.md`/`TASKS.md` P2 task 7 and its IS-5(a)-text pin already put it (the
+SPEC's P1/P2 phase bullets match the split). `32-plan-2` was the re-cut by
+`plan-feature` on 2026-09-19 against the post-merge head `e1c008bc` (features 31
+and 60 merged), the repair batch for `PLAN-REVIEW-32-1` findings F13–F19; parent
+Product receipt `SPEC-REVIEW-32-5`, snapshot `e4b293e3…`. The `32-plan-1` initial
+cut (`plan-feature-scaffold`, 2026-09-18) was parented to `SPEC-REVIEW-32-4`,
 `5d5a5b6c…`, and was cut before that merge.
 
 ## P1 — NRS missing-ledger notice
