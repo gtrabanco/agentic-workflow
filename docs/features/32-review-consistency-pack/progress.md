@@ -242,3 +242,197 @@ No reviewed artifact was modified by this turn; the only writes are to the unbou
 → Next: /plan-feature 32-review-consistency-pack — Product half reviewed; the plan binds this receipt
   · design changed underneath → re-run /review-spec 32-review-consistency-pack first
   · recurring closure gaps across units → /product-audit (a systemic pattern, not one SPEC)
+
+## Plan repair batch `32-plan-2` — plan-feature authoring turn (2026-09-19)
+
+Trigger: `PLAN-REVIEW-32-1` (`plan-review-fail`, snapshot `102238d5…`) findings
+F13–F19. The FAIL receipt's emitted continuation was
+`/plan-feature 32-review-consistency-pack "<instruction>" — one repair batch for
+F13 + F14 + F15 + F16 + F17 + F18 + F19, then /review-plan ... judges the new
+artifact revision`; this turn ran exactly that batch. Root cause (one, not seven):
+the plan set was cut at `2a87c5cd` **before** this branch merged `origin/main` at
+`e1c008bc`, which brought feature 31 (PR #243 — the SPEC's declared hard
+execution dependency) and feature 60 (PR #245).
+
+**Router line, recorded rather than hidden.** `node scripts/unit-route.mjs 32`
+answers `status: planned`, `open-rows: 0`, `route: execute` — not `replan` —
+because the router reads only the code-side `review-findings.md` ledger and this
+unit carries no such file: its findings live in `planning-findings.md`. The
+`replan-findings` contract therefore does not load, and its prohibition on
+re-scaffolding is honoured — nothing was re-scaffolded, the existing phase cut
+was re-cut in place. The repair is authorised by `review-plan`'s own route table
+(`PLAN-REVIEW-FAIL`, `class: plan` → `plan-feature`, one root-caused repair batch
+→ new artifact revision → re-review), which is the block this unit's FAIL receipt
+printed. Observable gap for its owner: the router has no plan-ledger intake, so a
+plan-stage FAIL never produces the `route: replan` line that contract expects.
+
+**What changed** (one batch; the F13–F19 rows in `planning-findings.md` are all
+`resolved` with their resolution evidence and `resolving-artifact-revision`
+`32-plan-2`):
+
+- **F13** — the parent Product receipt is re-established as `SPEC-REVIEW-32-5`
+  (`spec-review-pass`, snapshot `e4b293e3…`, `current: true`, zero open material
+  rows), because `SPEC-REVIEW-32-4` went `stale-context` when feature 60 moved
+  `CLAUDE.md`. The `32-plan-2` snapshot parents to it
+  (`--parent e4b293e3…`).
+- **F14 / F16** — `planning-evidence.md` is fully re-based: every row re-read at
+  `e1c008bc`, every shifted `path:line` updated (`LEDGERS.md`, `fold-findings`,
+  `audit-pr`, `workflow-status.mjs`, `CLAUDE.md`, the two suites), `PE-016`
+  corrected (the budget manifest declares per-skill entries for only some touched
+  skills; the rest ride `defaults`, the case feature 30's P30-4 recorded) and
+  `PE-022` rewritten to the **satisfied** dependency closure (rows 30 and 31 both
+  `done` and merged).
+- **F15** — `PE-023` records the `CHANGELOG.md` `pre-execution-review` 2.3.0
+  collision and its observed 18/19 drift-gate failure; P4 gains task 1, which
+  resolves it at the row (the later-merged feature 60 row takes 2.4.0 with the
+  matching frontmatter) instead of extending `LEGACY_DUPLICATE_VERSION_ROWS`, so
+  P4's done-when and O13 can reach exit 0.
+- **F17** — `PLAN.md`'s ledger references now read `PE-001…PE-023` and
+  `O1…O25`, matching the two ledgers, and the SPEC's engineering half was
+  corrected to the same counts.
+- **F18** — `ED-32-9`: `report-note` stays owned by `LEDGERS.md` §3
+  (`:91-96`, feature 31's shipped materiality contract) and is cited, never
+  restated; P1 adds an assertion that the sensor's merged feature 31
+  review-loop-cycle projection survives the NRS branch.
+- **F19** — the roadmap row's promotion is re-committed as
+  `planned · 32-plan-2`, so the row is durable at HEAD.
+
+**Deliberately not done** (reported, never smuggled in):
+
+- `SPEC.md ## Dependencies` still records feature 31 as unmerged. That sentence is
+  Product half: re-basing it here would rotate the Product bytes `SPEC-REVIEW-32-5`
+  binds. It is filed as **F20** (`low`, `product`, owner `design-feature`) and
+  re-based there, as a report-note with no re-review owed.
+- The `CHANGELOG.md` correction is *planned* (P4 task 1), not executed here: it is
+  release bookkeeping inside the phase that owns it (`ED-32-8`). The frozen
+  `ACCEPTANCE.md` blob is untouched (`ce71193384cbf0cb7f4adb490456f309da8fc2e5`),
+  and `node --test scripts/normative-drift.test.mjs` stays 18/19 at the planning
+  head by design until P4 lands.
+- `planning-findings.md` row **F12** (spec stage, `resolved`, authored by
+  `review-spec`) carries one raw `|` inside its evidence cell, so a pipe split
+  reads 11 cells instead of the 10 the ledger header fixes. It is outside this
+  batch's rows and was left untouched — reported here for its owner.
+
+Phase-lint (verbatim stdout of `bun scripts/phase-lint.mjs docs/features/32-review-consistency-pack/PLAN.md`):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:4:nrs-missing-ledger-notice
+P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:8:contract-prose-alignment
+P3 Phase-lint: PASS (8/8) · fingerprint P3:docs:8:classification-single-owner-contract
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:7:gate-run-receipt
+P5 Phase-lint: PASS (8/8) · fingerprint P5:hardening:9:hardening-pr
+verdict PASS
+fingerprint: bcc83a051816c2a893161c819f301ed0b27b9a7b6021ccbc1d9382f91fe29382
+```
+
+Readiness preflight (`evidence-grounding/references/READINESS.md`, `stage: plan`,
+boxes 1–11 re-run on the re-cut bytes):
+
+```text
+READINESS — 32-review-consistency-pack plan READY-FOR-REVIEW
+- Artifact revision: 32-plan-2 · Rows checked: 23 evidence / 25 obligations · Unknowns open: 0
+- Evidence: planning-evidence.md · Frozen: 2026-09-18 (ACCEPTANCE.md blob ce71193384cbf0cb7f4adb490456f309da8fc2e5)
+```
+
+- Box 1 — the governing Product half is `designed` and `SPEC-REVIEW-32-5` is a
+  current `spec-review-pass` for exactly `e4b293e3…`, the snapshot parented here.
+- Box 2 — `ACCEPTANCE.md` is `frozen`, one stable ID per SPEC criterion AC-01…AC-11,
+  every row carries a named validator; blob recomputed `ce711933…` (unchanged).
+- Box 3 — `architecture-notes.md` names the affected surfaces with `path:line`
+  evidence and the invariant classification (`n/a` project invariants; workflow
+  rows `preserves`).
+- Box 4 — 25 obligation rows, each with phase, task, owner, validator, required
+  evidence and a non-blank `planned` status; no `deferred` row.
+- Box 5 — the M/L ledger home is `planning-evidence.md`, compact, 23 rows, every
+  engineering claim resolving to one.
+- Box 6 — the six dev scenarios map to phases and validators (`testing.md`).
+- Box 7 — every phase passes the 8-box phase-lint with its fingerprint recorded
+  (stdout above).
+- Box 8 — phase order follows the dependency closure; no later deliverable is
+  built early; P5 is the hardening/close-out phase.
+- Box 9 — deploy/rollback stated (standard revert, no migration); no unnamed
+  public-contract change (schema package regression-only).
+- Box 10 — no unresolved decision word; the risk list names an owner per risk.
+- Box 11 — every evidence row is `current`; no unowned unknown.
+
+Plan snapshot (built in this act, after the re-cut commit):
+
+```text
+53502b22… (pre-commit build) → 065459e621797ef57769e42d96d1bb25b9de99b804b8d26d0f5f17da77190cd6 (post-commit build)
+sourceRevision / artifactRevisionId: aefdccc4de12b65883d1fe556317ab2107418158 (the re-cut commit)
+parentSpecSnapshotDigest: e4b293e3f62f2ad543423b172fa4766c211604a7d77d6ea719700dd949aeb9a7
+```
+
+The planner's label is `32-plan-2`; no runtime rotates an id in this environment,
+so the hand-off names the label and the snapshot binds the builder's canonical
+commit-derived identity (the same reconciliation every prior receipt recorded). The
+roadmap row was re-read after the write:
+
+```text
+node scripts/unit-route.mjs 32 → status: planned · open-rows: 0 · route: execute
+git show HEAD:docs/features/ROADMAP.md row 32 → planned · `32-plan-2` (engineering half re-cut on branch)
+```
+
+Hand-off: `/review-plan 32-review-consistency-pack` — an independent context
+judges this artifact revision.
+
+**Parent-lineage note for the re-review (recorded, not hidden).** Committing the
+re-cut touched `SPEC.md` (engineering half only), so `SPEC.md`'s **whole-file**
+content revision moved to `aefdccc4` and a standalone
+`verify --stage spec` now answers `stale-source-revision` for `SPEC-REVIEW-32-5`
+(`changedPaths: [SPEC.md]`) even though nothing the Product half says changed: the
+bound `spec-product-v1` projection is byte-identical (`675349ef…`, 48622 B) and
+every context row is unmoved (`CLAUDE.md` `45af6d85…`,
+`REPOSITORY_STATE.md` `e1b81e29…`, invariants absent). This is the recorded
+comparator limitation of feature 30's `P30-3` disposition — a plan commit's
+Engineering-half append rotates the SPEC.md content revision while the Product
+projection is unchanged — and L1 is judged on the projection evidence, not by
+auto-routing back to `review-spec`. The plan snapshot's
+`parentSpecSnapshotDigest` is exactly `e4b293e3…`, the digest that receipt
+recorded.
+
+**Plan-stage verify at the re-cut head** (the reviewer's sensor, POLICY §8;
+expected to answer `stale-source-revision` against the superseded
+`PLAN-REVIEW-32-1` receipt, because a repair turn produces a new snapshot by
+design — POLICY §4's repair-in-response carve-out):
+
+```json
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "32-review-consistency-pack",
+  "receipt": {
+    "id": "PLAN-REVIEW-32-1",
+    "verdict": "plan-review-fail",
+    "snapshot": "102238d5e10dd88444b947fed646915fe77daf7096c4c5f5322608aab4044c97",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "065459e621797ef57769e42d96d1bb25b9de99b804b8d26d0f5f17da77190cd6",
+  "digestMatches": false,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": false,
+    "reasonCode": "stale-source-revision",
+    "detail": "the artifacts were reviewed at e1c008bc039d2403855fd180da156a9472bc43e7, the bound bytes now sit at aefdccc4de12b65883d1fe556317ab2107418158",
+    "changedPaths": [
+      "docs/features/32-review-consistency-pack/PLAN.md",
+      "docs/features/32-review-consistency-pack/SPEC.md",
+      "docs/features/32-review-consistency-pack/TASKS.md",
+      "docs/features/32-review-consistency-pack/architecture-notes.md",
+      "docs/features/32-review-consistency-pack/decisions.md",
+      "docs/features/32-review-consistency-pack/planning-evidence.md",
+      "docs/features/32-review-consistency-pack/planning-obligations.md",
+      "docs/features/32-review-consistency-pack/testing.md"
+    ]
+  }
+}
+```
+
+(exit 4 — the superseded FAIL receipt is stale against the re-cut bytes; the
+re-review mints its successor. The suites the plan qualifies against were re-run
+at this head: `review-loop-discipline`, `ledger-ownership`,
+`bounded-delivery-loops`, `audit-pr-receipt`, `workflow-status-sensor`,
+`workflow-status-pre-execution` and `check-skill-context` all pass;
+`normative-drift` stays 18/19 by design until P4 task 1 lands.)
