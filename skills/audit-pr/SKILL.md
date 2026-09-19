@@ -51,7 +51,7 @@ independently evaluates only the delivery gates below.
 ✓ No review pass was composed or reconstructed: a missing/stale receipt is a
   blocker, never a prompt to re-run review axes from this skill
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
-  blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
+  blocker / n-a (fix-governed PRs are always n-a; never skipped
   silently)
 ✓ Scope integrity (descope) was evaluated and its result stated explicitly:
   pass / blocker / n-a (no unit-referencing issues born on the branch → n-a;

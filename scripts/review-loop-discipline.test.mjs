@@ -37,7 +37,7 @@ assert.match(classify, /deflating a real defect to `low` to unblock a review is 
 // The severity vocabulary is consistent end-to-end: finder scale maps onto the
 // classification scale, and only high/med rows persist.
 assert.match(persist, /finding of severity `high`\s+or `med`/);
-assert.match(persist, /critical.*high.*major.*med.*minor.*low/s);
+assert.match(classify, /critical.*high.*major.*med.*minor.*low/s);
 assert.match(persist, /never persisted to the fold ledger/);
 assert.match(outputGuardrails, /`low`\s+findings are report-only notes that never block/);
 assert.match(persist, /Notes \(low · report-only/);
@@ -383,6 +383,56 @@ assert.match(envelopeCore, /absent ledger is a non-blocking notice/);
 assert.match(sensorCore, /\`draft\`[,\s]+\`contradicted\`/);
 assert.match(sensorCore, /absent ledger emits a non-blocking substrate notice/);
 
+
+// ── 14. Feature 32 (P3) — classification single-owner contract pins ─────────
+
+// IS-2: canonical severity conversion table exists in CLASSIFY.md with all four
+// producer scales mapped onto high|med|low.
+assert.match(classify, /Severity conversion \(canonical table\)/);
+assert.match(classify, /Producer scale.*→ `high`.*→ `med`.*→ `low`/s);
+assert.match(classify, /Ledger \(`CLASSIFY.md` itself\): `high`/);
+assert.match(classify, /Finder \(nine review passes\): `critical`/);
+assert.match(classify, /Planning/);
+assert.match(classify, /`audit-docs`/);
+assert.match(classify, /Unknown scale.*fail closed/);
+
+// IS-2: fail-closed for unknown scales.
+assert.match(classify, /fail closed.*guess|guess.*fail closed/s);
+
+// IS-3: derived blocking gate — four citation categories and no-citation outcome.
+assert.match(classify, /Derived blocking gate/);
+assert.match(classify, /finding.*blocks.*only when the reviewer cites/);
+assert.match(classify, /ACCEPTANCE criterion.*unverified/i);
+assert.match(classify, /Obligation row/);
+assert.match(classify, /gate.*red.*at the reviewed head/i);
+assert.match(classify, /open confirmed.*fix-now/i);
+assert.match(classify, /report-note.*proposal.*never blocking|never blocking.*report-note.*proposal/s);
+assert.match(classify, /D10[\s\S]*verdict[\s\S]*unchanged/i);
+
+// IS-3: report-note definition cited to LEDGERS.md §3.
+assert.match(classify, /LEDGERS.md.*§3/);
+
+// IS-2: audit-docs report contract — 14 checks, no MEDIUM.
+const auditDocs = read("skills/audit-docs/SKILL.md");
+assert.match(auditDocs, /Check \(1-14\)/);
+assert.match(auditDocs, /Checks run: <n>\/14/);
+assert.doesNotMatch(auditDocs, /MEDIUM/);
+
+// IS-2: product-audit uses closed class set, not postpone/tradeoff.
+const productAudit = read("skills/product-audit/SKILL.md");
+assert.doesNotMatch(productAudit, /\bpostpone\b/);
+assert.doesNotMatch(productAudit, /\btradeoff\b/);
+assert.match(productAudit, /fix-now.*replan-in-unit.*decision-required.*proposal.*ignore|fix-now.*replan-in-unit/s);
+
+// IS-2: PERSIST_AND_DECIDE.md finder-scale maps to canonical table, not ad-hoc.
+assert.doesNotMatch(persist, /critical.*high.*major.*med.*minor.*low/s);
+assert.match(persist, /canonical table.*CLASSIFY\.md|CLASSIFY\.md.*canonical table/s);
+
+// IS-2: audit-pr closure-integrity scale is pass/blocker/n-a.
+const auditPr = read("skills/audit-pr/SKILL.md");
+assert.match(auditPr, /pass \/ blocker \/ n-a/);
+assert.doesNotMatch(auditPr, /pass.*blocker.*warning.*n-a/);
+assert.doesNotMatch(auditPr, /\bwarning\b.*blocker|\bblocker\b.*\bwarning\b/s);
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
 // The planning-side loop rules are code, not prose: this block reads the
