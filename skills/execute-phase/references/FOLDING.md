@@ -35,6 +35,13 @@ Then hand back to the gate that sent you (`/review-change` re-review, or
 `/audit-pr` re-audit). Never report findings as resolved while any box is
 unchecked — an unpushed fix does not exist for CI, the reviewer, or the merge.
 
+## Gate-run mark (P4)
+
+A `GATE-RAN` mark is appended to the unit's `review-findings.md` ledger at the
+head the gate actually ran. The mark's shape and ownership rule are declared in
+`LEDGERS.md` (§gate-ran@1). A green run is recorded; a red run is also recorded.
+The identical-head reuse rule is documented in `EXECUTION_CONTRACT.md` (§gate-ran).
+
 Final-phase / single-pass / fix hand-off:
 
 ```

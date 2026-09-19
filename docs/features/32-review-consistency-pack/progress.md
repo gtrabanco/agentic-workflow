@@ -736,3 +736,8 @@ CONVERGENCE-ANOMALY — 32-review-consistency-pack plan
 - Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/audit-pr-receipt.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
 - Next: P4 · Attempts: 1
 - Tasks: canonical severity conversion table (CLASSIFY.md), derived blocking gate (CLASSIFY.md), report-note owner citation (LEDGERS.md), audit-docs fix (14 checks, no MEDIUM), product-audit vocabulary (closed class set), PERSIST_AND_DECIDE.md finder-scale pointer, audit-pr scale alignment (pass/blocker/n-a), all pinned in review-loop-discipline and audit-pr-receipt suites
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
+- Next: P5 · P4 complete · Attempts: 1
+- Tasks: CHANGELOG.md version collision fix (feature 60 pre-execution-review 2.3.0→2.4.0), gate-ran@1 mark in LEDGERS.md (fixed format, additive-slots, reserved manifest slot, identical-head reuse, changed-head re-run), owner cell extended with execute-phase:gate-ran-marks + review-change:review-gate-ran-marks, template projections mirrored byte-equal, GATE-RAN statements in EXECUTION_CONTRACT.md + FOLDING.md + PERSIST_AND_DECIDE.md, discipline pins for gate-ran@1 + owner-cell equality, skill version bumps (7 skills), context budget re-basis (pre-execution-review 3557→4274, review-implementation new entry 2939), drift and ownership passes
