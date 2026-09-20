@@ -368,8 +368,11 @@ try {
 }
 assert.equal(workflowDocs, "", "no contradicting sole-flipper restatement survives in docs/workflow/ outside GOLDEN_FIXTURE.md");
 
-// IS-5(b): triage-issue's three modes in review-change surfaces
-assert.match(reviewChangeSkill, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+// IS-5(b): triage-issue's three modes in review-change surfaces. The reviewChange
+// clause is pinned to the `triage-issue` sentence itself — a match from any other
+// adjacent sentence (the F11 defect) is no longer accepted.
+assert.match(reviewChangeSkill, /`triage-issue` is user-invoked[\s\S]{0,120}?for independent proposals, audit findings, and\s+`--prioritize-now` runs/s);
+assert.doesNotMatch(reviewChangeSkill, /user-invoked\s+only for independent proposals/);
 assert.match(outputGuardrails, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
 assert.match(persist, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
 

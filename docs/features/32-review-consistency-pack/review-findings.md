@@ -64,7 +64,7 @@ the findings below are genuinely new (no `regression of` row).
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F11 | skills/review-change/SKILL.md:155-160 | brand | med | fix-now | fold into current unit (source owner): drop the residual "`triage-issue` is user-invoked only for independent proposals" clause so the paragraph names the three modes without self-contradiction, and tighten the AC-06 discipline pin to require `triage-issue` in the matched clause instead of the unrelated adjacent sentence | no |
+| F11 | skills/review-change/SKILL.md:155-160 | brand | med | fix-now | fold into current unit (source owner): drop the residual "`triage-issue` is user-invoked only for independent proposals" clause so the paragraph names the three modes without self-contradiction, and tighten the AC-06 discipline pin to require `triage-issue` in the matched clause instead of the unrelated adjacent sentence | yes |
 | F12 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:26 · :28 | perf | med | fix-now | fold into current unit (source owner): re-base `plan-feature.mainEstimateMax` to `ceil(2826 × 1.10) = 3109` and refresh the declared baseline to `2826 est / 209 lines` — the F10 class (growth after the P2 re-basis) | no |
 | F13 | docs/features/32-review-consistency-pack/TASKS.md:68-76 | workflow | med | fix-now | fold into current unit: tick the 9 P5 tasks (or record why any stays open) so the phase ledger agrees with its `Unit-loop receipt — P5` ("Unit done") and the roadmap row `done · [#249]`; `UNIT_LOOP.md:17-18` makes an unticked phase unfinished | no |
 
