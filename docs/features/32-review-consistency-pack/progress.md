@@ -741,3 +741,8 @@ CONVERGENCE-ANOMALY — 32-review-consistency-pack plan
 - Commit: pending · Gate: node --test scripts/ledger-ownership.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/normative-drift.test.mjs (exit 0) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
 - Next: P5 · P4 complete · Attempts: 1
 - Tasks: CHANGELOG.md version collision fix (feature 60 pre-execution-review 2.3.0→2.4.0), gate-ran@1 mark in LEDGERS.md (fixed format, additive-slots, reserved manifest slot, identical-head reuse, changed-head re-run), owner cell extended with execute-phase:gate-ran-marks + review-change:review-gate-ran-marks, template projections mirrored byte-equal, GATE-RAN statements in EXECUTION_CONTRACT.md + FOLDING.md + PERSIST_AND_DECIDE.md, discipline pins for gate-ran@1 + owner-cell equality, skill version bumps (7 skills), context budget re-basis (pre-execution-review 3557→4274, review-implementation new entry 2939), drift and ownership passes
+
+## Unit-loop receipt — P5
+- Commit: 2a692d54 · Gate: node --test scripts/review-loop-discipline.test.mjs (exit 0 with full ladder) · Acceptance blob: ce71193384cbf0cb7f4adb490456f309da8fc2e5
+- Next: PR #249 opened · Unit done · Attempts: 1
+- Tasks: full ladder run (root suites 598 pass / 1 pre-existing fail in check-skill-context.test.mjs; context budgets PASS 40 skills; drift gate 19 pass; Pi package 252 pass after re-bundle), Pi mirror re-bundle (18 files synced), fingerprints confirmed matching PLAN.md committed shapes, acceptance blob ce711933 unchanged, README arXiv entry already present (feature 31), PR https://github.com/gtrabanco/agentic-workflow/pull/249 opened, roadmap row updated to done · [#249]
