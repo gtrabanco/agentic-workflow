@@ -53,3 +53,23 @@ yes` is **false** — the F4 edit (`4c07e332`) grew `LEDGERS.md` again after the
 | VF-10 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:34 · reviewer review-change · HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 · recheck `Math.ceil(byteLength/4)` on `skills/pre-execution-review/references/LEDGERS.md` → 3930 est, `ceil(3930 × 1.10) = 4323 > 4274`; `git log a40d6bfa..HEAD -- skills/pre-execution-review/references/LEDGERS.md` → `4c07e332` (F4) after the `00280100` re-basis | perf | confirmed | finding-mark | n/a | n/a |
 
 | REVIEW-RAN | HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 3 re-review ran on 2026-09-19 (`review-change`, head
+`5ae908b19ca8a5153903e5c23808ee7fbeff51a6`, PR #249). Per-pass isolated
+finders for the five applicable axes (code, verify, security, brand, perf);
+the verification pass, the classifier (`review-implementation`) and the debt
+transform (`review-debt`) each ran in a separate isolated context. Every
+folded `yes` row (F1–F10) was re-verified at its cited location and holds;
+the findings below are genuinely new (no `regression of` row).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F11 | skills/review-change/SKILL.md:155-160 | brand | med | fix-now | fold into current unit (source owner): drop the residual "`triage-issue` is user-invoked only for independent proposals" clause so the paragraph names the three modes without self-contradiction, and tighten the AC-06 discipline pin to require `triage-issue` in the matched clause instead of the unrelated adjacent sentence | no |
+| F12 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:26 · :28 | perf | med | fix-now | fold into current unit (source owner): re-base `plan-feature.mainEstimateMax` to `ceil(2826 × 1.10) = 3109` and refresh the declared baseline to `2826 est / 209 lines` — the F10 class (growth after the P2 re-basis) | no |
+| F13 | docs/features/32-review-consistency-pack/TASKS.md:68-76 | workflow | med | fix-now | fold into current unit: tick the 9 P5 tasks (or record why any stays open) so the phase ledger agrees with its `Unit-loop receipt — P5` ("Unit done") and the roadmap row `done · [#249]`; `UNIT_LOOP.md:17-18` makes an unticked phase unfinished | no |
+
+| VF-11 | skills/review-change/SKILL.md:155-160 · reviewer review-change · HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 · recheck direct read: :155-156 reads "`triage-issue` is user-invoked only for independent proposals (D3)" beside the added :159-160 "…becomes proposals, audit findings, and `--prioritize-now` runs"; `PERSIST_AND_DECIDE.md:40-41` states the three modes; the AC-06 pin still matches the unrelated :156 sentence | brand | confirmed | finding-mark | n/a | n/a |
+| VF-12 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:26 · reviewer review-change · HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 · recheck `Math.ceil(Buffer.byteLength(text,'utf8')/4)` on `skills/plan-feature/SKILL.md` → 2826 est / 209 lines at head vs 2799 / 208 at `main`; declared `mainEstimateMax` 3079 = `ceil(2799 × 1.10)` < `ceil(2826 × 1.10) = 3109`; both budget gates still exit 0 (the ratio floor is enforced for routes only) | perf | confirmed | finding-mark | n/a | n/a |
+| VF-13 | docs/features/32-review-consistency-pack/TASKS.md:68-76 · reviewer review-change · HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 · recheck: P5 `## P5 — Hardening & PR` carries 9 `- [ ]` and 0 ticks while P1–P4 are fully ticked; `progress.md` P5 receipt reads "Next: PR #249 opened · Unit done"; `ROADMAP.md:42` reads `done · [#249]`; `UNIT_LOOP.md:17-18` declares an unticked phase unfinished | workflow | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 | n/a | n/a | review-mark | n/a | n/a |
