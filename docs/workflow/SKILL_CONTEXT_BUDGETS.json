@@ -31,13 +31,13 @@
     "pre-execution-review": {
       "referenceEstimateMax": 4274,
       "referenceSources": {
-        "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from 3557 to 3885; ceiling re-based to ceil(measured x 1.10)"
+        "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3885; ceiling re-based to ceil(3885 x 1.10) = 4274. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3885, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1."
       }
     },
     "review-implementation": {
       "referenceEstimateMax": 2939,
       "referenceSources": {
-        "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from 2200 to 2671; ceiling re-based to ceil(measured x 1.10)"
+        "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939"
       }
     },
     "replan-findings": {
@@ -115,10 +115,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27385,
-      "routeLinesMax": 1839,
+      "routeEstimateMax": 28358,
+      "routeLinesMax": 1905,
 
       "sources": {
+        "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -140,9 +141,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12006,
-      "routeLinesMax": 853,
+      "routeEstimateMax": 12350,
+      "routeLinesMax": 882,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -163,9 +165,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12019,
-      "routeLinesMax": 849,
+      "routeEstimateMax": 12363,
+      "routeLinesMax": 877,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -186,9 +189,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11889,
-      "routeLinesMax": 834,
+      "routeEstimateMax": 12234,
+      "routeLinesMax": 863,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -209,9 +213,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12051,
-      "routeLinesMax": 857,
+      "routeEstimateMax": 12395,
+      "routeLinesMax": 886,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -232,9 +237,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12204,
-      "routeLinesMax": 855,
+      "routeEstimateMax": 12548,
+      "routeLinesMax": 884,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -255,9 +261,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11803,
-      "routeLinesMax": 836,
+      "routeEstimateMax": 12148,
+      "routeLinesMax": 865,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -278,9 +285,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11966,
-      "routeLinesMax": 850,
+      "routeEstimateMax": 12311,
+      "routeLinesMax": 878,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -302,9 +310,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13137,
+      "routeEstimateMax": 13481,
       "routeLinesMax": 980,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -317,9 +326,10 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11968,
-      "routeLinesMax": 938,
+      "routeEstimateMax": 11998,
+      "routeLinesMax": 939,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -333,9 +343,10 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24714,
-      "routeLinesMax": 1732,
+      "routeEstimateMax": 25654,
+      "routeLinesMax": 1796,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
 
@@ -348,9 +359,10 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 9473,
-      "routeLinesMax": 759,
+      "routeEstimateMax": 9502,
+      "routeLinesMax": 761,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -365,10 +377,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27718,
-      "routeLinesMax": 1982,
+      "routeEstimateMax": 28658,
+      "routeLinesMax": 2045,
 
       "sources": {
+        "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -390,9 +403,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18824,
-      "routeLinesMax": 1349,
+      "routeEstimateMax": 19418,
+      "routeLinesMax": 1401,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
@@ -414,9 +428,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17006,
-      "routeLinesMax": 1230,
+      "routeEstimateMax": 17600,
+      "routeLinesMax": 1282,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
@@ -438,9 +453,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17006,
-      "routeLinesMax": 1230,
+      "routeEstimateMax": 17600,
+      "routeLinesMax": 1282,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
@@ -462,9 +478,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17520,
-      "routeLinesMax": 1254,
+      "routeEstimateMax": 18114,
+      "routeLinesMax": 1306,
       "sources": {
+        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
@@ -476,10 +493,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 18464,
-      "routeLinesMax": 1180,
+      "routeEstimateMax": 19461,
+      "routeLinesMax": 1247,
 
       "sources": {
+        "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -490,10 +508,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16719,
-      "routeLinesMax": 1122,
+      "routeEstimateMax": 17818,
+      "routeLinesMax": 1194,
 
       "sources": {
+        "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
