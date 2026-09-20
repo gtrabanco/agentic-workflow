@@ -6,6 +6,25 @@ per-pass isolated subagents for the five applicable axes (code, verify,
 security, perf, brand); the classifier (`review-implementation`) and the debt
 transform (`review-debt`) each ran in a separate isolated context.
 
+Cycle 2 re-review ran on 2026-09-19 (`review-change --adversarial 2`, head
+`4733af3fb122be0d241a45f23be16443b8d29fd5`, PR #249). Two context-clean
+adversarial reviewers (R1 correctness/logic, R2 security/inputs) each ran the
+applicable finder checklists over the branch diff vs `main`; the delta scope
+escalated to a full pass on the **width** trigger (changed files outside the
+folded rows' cited union — `scripts/review-loop-discipline.test.mjs`,
+`skills/execute-phase/references/EXECUTION_CONTRACT.md`,
+`skills/workflow-status/SKILL.md` — plus cited-file lines more than 50 lines from
+every cited line in `SKILL_CONTEXT_BUDGETS.json`). The verification pass, the
+classifier (`review-implementation`) and the debt transform (`review-debt`) each
+ran in a separate isolated context.
+
+Every folded `yes` row (F1–F7) was re-verified at its cited location: F1–F5,
+F6's declared-baseline intent and F7's declaration hold, but F6/F7's `folded:
+yes` is **false** — the F4 edit (`4c07e332`) grew `LEDGERS.md` again after the
+`00280100` re-basis, so the declared baseline `3885` is stale (est `3930`) and
+`referenceEstimateMax` `4274` sits below the declared floor
+`ceil(3930 × 1.10) = 4323` (recorded as the regression row F10).
+
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F1 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:76 | code | med | fix-now | fold into current unit (source owner): re-base the 14 route ceilings that fail at head (execute-phase:descope/feature/final-pr/finding/fix/legacy/small/unit-loop, plan-feature:issue/scoped, review-change:adversarial/default-backend/default-web/synthesize) at a declared re-basis naming the growth source, or trim the added reference text; `check-skill-context.test.mjs` must go green | yes |
@@ -25,3 +44,12 @@ transform (`review-debt`) each ran in a separate isolated context.
 | VF-7 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:32 · reviewer review-change · HEAD a40d6bfaf0f29c73d9a5381ca666bcdb1e01bf6b · recheck measured reference estimates with the script's own estimator `Math.ceil(Buffer.byteLength(text,'utf8')/4)` — `LEDGERS.md` 3885, `POLICY.md` 3529, `SNAPSHOT.md` 1981 — all compared against one `referenceEstimateMax` 4274 (`scripts/check-skill-context.mjs:206`), giving `POLICY.md`/`SNAPSHOT.md` slack above the declared 10 % | perf | confirmed | finding-mark | n/a | n/a |
 
 | REVIEW-RAN | HEAD a40d6bfaf0f29c73d9a5381ca666bcdb1e01bf6b | n/a | n/a | review-mark | n/a | n/a |
+| F8 | packages/pi-agentic-workflow/package.json:3 | verify | med | fix-now | fold into current unit (source owner): bump `packages/pi-agentic-workflow/package.json` (minor) and add the CHANGELOG "Companion npm packages" row for the re-bundle — the 19-file mirror change never publishes otherwise (CLAUDE.md §Packages requires the same-PR bump; the publish workflow skips when local == published) | no |
+| F9 | skills/product-audit/SKILL.md:105 | code | med | fix-now | fold into current unit (source owner): restore the example's class to `proposal` at `:105`, matching frozen ED-32-4 / SPEC.md:844 (a product-wide sweep has no unit to re-cut) | no |
+| F10 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:34 | perf | med | fix-now | regression of F6+F7 — fold into current unit (source owner): re-measure `skills/pre-execution-review/references/LEDGERS.md` (est 3930 at this head) and re-base `referenceEstimateMax` to `ceil(3930 × 1.10) = 4323`, updating the declared baseline text (the fold's `3885` predates the F4 edit, so F6/F7's `folded: yes` is false) | no |
+
+| VF-8 | packages/pi-agentic-workflow/package.json:3 · reviewer review-change · HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 · recheck `git diff --name-only origin/main...HEAD -- packages/pi-agentic-workflow/skills/ \| wc -l` → 19 changed while `grep -m1 '"version"' packages/pi-agentic-workflow/package.json` → 0.12.0 and `git diff origin/main...HEAD -- packages/pi-agentic-workflow/package.json` → empty | verify | confirmed | finding-mark | n/a | n/a |
+| VF-9 | skills/product-audit/SKILL.md:105 · reviewer review-change · HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 · recheck direct read of `:105` (`class: replan-in-unit`) against `decisions.md:268-278` ED-32-4 ("so it is a `proposal`") and `SPEC.md:844` | code | confirmed | finding-mark | n/a | n/a |
+| VF-10 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:34 · reviewer review-change · HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 · recheck `Math.ceil(byteLength/4)` on `skills/pre-execution-review/references/LEDGERS.md` → 3930 est, `ceil(3930 × 1.10) = 4323 > 4274`; `git log a40d6bfa..HEAD -- skills/pre-execution-review/references/LEDGERS.md` → `4c07e332` (F4) after the `00280100` re-basis | perf | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 4733af3fb122be0d241a45f23be16443b8d29fd5 | n/a | n/a | review-mark | n/a | n/a |
