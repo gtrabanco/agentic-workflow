@@ -91,8 +91,9 @@ one hop from this file, and fail closed when missing.
    the internal steps; never re-fetched mid-plan.
 4. **Confirm roadmap.** Verify the feature is registered in
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
-   if any of the three is missing or wrong, fix the entry now — never leave
-   registration for later.
+   repair registration if needed — never leave registration for later.
+   `plan-feature` verifies and repairs the roadmap entry; `plan-feature-scaffold`
+   is the sole writer of the `defined → planned` write.
 5. **Dependency & blocker check (always, before recommending execution).**
    - Walk the feature's `Depends on:` closure (transitively): every dependency
      must be `done` **and merged**. Any unmet → the closing block recommends

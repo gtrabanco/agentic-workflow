@@ -57,6 +57,25 @@ never treat a missing marker as a blocker or crash condition.
 Something forbidden looks necessary → stop, record it in `decisions.md` or
 `known-issues.md`, and surface it — never do it silently.
 
+## Gate-run mark
+
+The phase completion gate records a `GATE-RAN` mark at the head it ran and
+consumes an identical-head green mark instead of re-running. The mark's shape,
+ownership, and reuse rule are declared in `LEDGERS.md` (§gate-ran@1).
+
+```text
+GATE-RAN | HEAD <40-hex sha> | <runnable commands joined by ` | `> | <exit code>
+```
+
+- **Record**: whoever runs the project gate records a mark at the head the gate
+  actually ran. A green run is recorded; a red run is also recorded (exit code
+  ≠ 0 is evidence, not silence).
+- **Consume**: any skill may consume a green run only at the identical HEAD. A
+  changed head ⇒ re-run the gate.
+- **Recorder column-sets**: `execute-phase:gate-ran-marks` (executor phase gates)
+  and `review-change:review-gate-ran-marks` (reviewer gate runs) are declared in
+  the `review-findings` truth-class row's owner cell.
+
 ## Phase completion gate — pass only if (every box, every phase)
 
 ```

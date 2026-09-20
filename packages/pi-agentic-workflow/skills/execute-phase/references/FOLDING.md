@@ -23,8 +23,8 @@ end up "solved" locally but absent from the merged PR:
   (known-issues.md entry resolved? progress.md notes the fold)
 ✓ Each folded finding's row in the unit's `review-findings.md` ledger (if one
   exists — the ledger is optional; a unit with no fix-now findings has none)
-  flipped `folded: no → yes` — the one and only ledger state transition, owned
-  solely by this fold cycle
+  flipped `folded: no → yes` — the one and only ledger state transition,
+  `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer
 ✓ `git add` + `git commit` RUN (sha pasted) — e.g.
   `fix(<scope>): fold review findings — <summary>`
 ✓ `git push` RUN (PR is open → every commit pushes immediately)
@@ -34,6 +34,13 @@ end up "solved" locally but absent from the merged PR:
 Then hand back to the gate that sent you (`/review-change` re-review, or
 `/audit-pr` re-audit). Never report findings as resolved while any box is
 unchecked — an unpushed fix does not exist for CI, the reviewer, or the merge.
+
+## Gate-run mark (P4)
+
+A `GATE-RAN` mark is appended to the unit's `review-findings.md` ledger at the
+head the gate actually ran. The mark's shape and ownership rule are declared in
+`LEDGERS.md` (§gate-ran@1). A green run is recorded; a red run is also recorded.
+The identical-head reuse rule is documented in `EXECUTION_CONTRACT.md` (§gate-ran).
 
 Final-phase / single-pass / fix hand-off:
 

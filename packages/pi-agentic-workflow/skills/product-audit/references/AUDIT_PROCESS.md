@@ -4,7 +4,7 @@
 2. **Sweep code & axes** — run the applicable axes across the codebase: compose
    `review-implementation` plus the internal review pack's applicable passes
    (each returns its fixed-format table + PASS|FAIL), and any optional installed
-   extras. Classify findings (severity + fix-now / postpone / tradeoff).
+   extras. Classify findings (severity + closed class set from review-implementation/CLASSIFY.md).
 
 **Evidence-provenance gate (fixed):** applies during every evidence-collecting sweep
 step (2–5). Each item ends with exactly one fallback; never pick another one mid-audit.

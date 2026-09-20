@@ -154,8 +154,10 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
                        │                  ──BLOCKED──▶ user supplies missing input
 ```
 
-`review-change`/`audit-pr` classify and persist; this skill only flips
-`folded: no` to `yes` after a real fix. `execute-phase`'s embedded fold checklist
+`review-change`/`audit-pr` classify and persist;
+`ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
+the `folded: no → yes` flip — this skill only flips that flag after a real
+fix. `execute-phase`'s embedded fold checklist
 is the inline fallback; this standalone path keeps frozen classification and its
 forbidden list and never runs above its tier. `DISPUTED` stops for user evidence;
 no issue is created.
