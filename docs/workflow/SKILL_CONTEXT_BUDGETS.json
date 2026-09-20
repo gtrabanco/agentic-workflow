@@ -23,9 +23,9 @@
       "descriptionEstimateMax": 170
     },
     "plan-feature": {
-      "mainEstimateMax": 3079,
+      "mainEstimateMax": 3109,
       "mainSources": {
-        "fix 224 / #224": "conditional replan entry wiring grew the skill to 2799 est / 207 lines; ceiling re-based to ceil(measured x 1.10) so the next correction is not blocked by a 1-unit headroom"
+        "feature 32 (P2)": "the Confirm-roadmap verify-vs-write sentence grew the skill from the measured 2799 (fix 224) to 2826 est / 209 lines; ceiling re-based to ceil(2826 x 1.10) = 3109 (review finding F12)"
       }
     },
     "pre-execution-review": {
