@@ -277,9 +277,11 @@ assert.match(foldPolicy, /materializ/);
 
 // 10j. Version — fold-findings is bumped for this contract. The exact pin is
 // maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
-// conditional replan destination) and fix #244 moved it 1.5.0 → 1.5.1
-// (the freeze-batch consumer contract), the assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.5\.1/);
+// conditional replan destination), fix #244 moved it 1.5.0 → 1.5.1
+// (the freeze-batch consumer contract), and feature 32 moved it 1.5.1 → 1.6.0
+// (sole-flipper provenance cited to the ledger-ownership map), the assertion
+// unchanged in strength.
+assert.match(foldSkill, /version: 1\.6\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
