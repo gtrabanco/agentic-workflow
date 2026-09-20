@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 5.2.1
+version: 5.3.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -51,7 +51,7 @@ independently evaluates only the delivery gates below.
 ✓ No review pass was composed or reconstructed: a missing/stale receipt is a
   blocker, never a prompt to re-run review axes from this skill
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
-  blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
+  blocker / n-a (fix-governed PRs are always n-a; never skipped
   silently)
 ✓ Scope integrity (descope) was evaluated and its result stated explicitly:
   pass / blocker / n-a (no unit-referencing issues born on the branch → n-a;

@@ -9,10 +9,11 @@ placement per the installed `orchestration-envelope` skill. The
 states** (the schema package needs no release):
 
 - `CLEAN` → `state: OK` (the sensor default when the substrate is usable).
-- A missing or non-frozen repository-state ledger is a run-scoped substrate
-  gate and overrides the crash-recovery state with `state: BLOCKED`; the
-  blocker and concrete discovery/resolution command are emitted before
-  readiness data.
+- `draft`, `contradicted`, or `resolved` repository-state ledger is a
+  run-scoped substrate gate and overrides the crash-recovery state with
+  `state: BLOCKED`; the blocker and concrete discovery/resolution command
+  are emitted before readiness data.
+  An absent ledger is a non-blocking notice, not a blocker.
 - `RESUMABLE` → `state: CONTINUE`, `next.recommended` = the resume command
   from the decision table.
 - `AMBIGUOUS` → `state: NEEDS_INPUT`, `needs_input.question` = what is
