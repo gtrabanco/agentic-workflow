@@ -28,8 +28,7 @@ exact command tokens.
    recheck + reproducer), as modeled in `LEDGERS.md` (§finding-mark@1) and the
    fixture.
    `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
-   the `folded: no → yes` flip; the fold cycle is the only step that ever
-   flips it to `yes`.
+   the `folded: no → yes` flip.
    A `low` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
    **dedupe by `file:line` + axis**:

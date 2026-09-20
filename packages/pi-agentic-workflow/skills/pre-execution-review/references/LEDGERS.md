@@ -210,24 +210,28 @@ single-writer rule untouched.
 
 ### The gate-run mark
 
-A gate that runs green leaves a durable mark in the unit's `review-findings.md`
-ledger (for features: `docs/features/<NN>-<slug>/review-findings.md`, for fixes:
+A gate run — green or red — leaves a durable mark in the unit's
+`review-findings.md` ledger (for features:
+`docs/features/<NN>-<slug>/review-findings.md`, for fixes:
 `docs/fix/<issue>-<topic>/review-findings.md`), owned by the `review-findings`
 truth-class row's owner cell extended with the two recorder column-sets:
 
 ```text
 gate-ran@1
-id | file:line | cmds | exit-code | [additive-slots ...]
-GATE-RAN | HEAD <40-hex sha> | <runnable commands joined by ` | `> | <non-negative integer> | [reserved trailing slot: `manifest <sha>`]
+id | file:line | cmds | exit | [additive-slots ...]
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `manifest <sha>`]
 ```
 
-- **Fixed format**: `GATE-RAN | HEAD <sha> | <cmds> | exit <code>` — every green
-  run records the SHA, the commands run, and the exit code.
+- **Fixed format** (the one grammar; every consumer cites this block):
+  `GATE-RAN | HEAD <sha> | <cmds> | exit <code>` — every run records the SHA,
+  the commands run, and the exit code (green and red alike; `exit 0` is green).
+  `<cmds>` is the runnable command(s) the gate ran, joined by ` | ` when several.
 - **Additive slots**: fields after `HEAD` are additive; consumers ignore unknown
   trailing fields (feature 35's `manifest <sha>` slot is reserved, not yet
   consumed).
-- **Identical-head reuse**: any skill may consume a green run only at the
-  identical HEAD; a changed head ⇒ re-run the gate.
+- **Identical-head reuse**: any skill may consume a **green** run only at the
+  identical HEAD; a changed head ⇒ re-run the gate. A red mark is never
+  consumed as a pass.
 - **Recorder column-sets**: the `review-findings` truth-class row's owner cell
   declares `execute-phase:gate-ran-marks` (executor phase gates) and
   `review-change:review-gate-ran-marks` (reviewer gate runs), distinct column-set
