@@ -64,7 +64,7 @@ consumes an identical-head green mark instead of re-running. The mark's shape,
 ownership, and reuse rule are declared in `LEDGERS.md` (§gate-ran@1).
 
 ```text
-GATE-RAN | HEAD <40-hex sha> | <runnable commands joined by ` | `> | <exit code>
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
 ```
 
 - **Record**: whoever runs the project gate records a mark at the head the gate
