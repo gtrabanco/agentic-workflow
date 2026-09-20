@@ -18,14 +18,18 @@ exact command tokens.
    `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
    by definition). Otherwise, for each **fix-now** finding of severity `high`
    or `med` (only ledger severities; finder scale
-   `critical`→`high`, `major`→`med`, `minor`→`low`): append a row
+   converts through the canonical table in
+   `CLASSIFY.md`):
+   append a row
    (create the file with the header row when missing), carrying the
    verbatim `Sev` value into `severity`; `folded` always starts `no` — that
    row comes from a **confirmed** candidate only and carries its
    `finding-mark@1` signature on a **separate `VF-` row** (reviewer, head SHA,
    recheck + reproducer), as modeled in `LEDGERS.md` (§finding-mark@1) and the
    fixture.
-   `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
+   `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
+   the `folded: no → yes` flip; the fold cycle is the only step that ever
+   flips it to `yes`.
    A `low` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
    **dedupe by `file:line` + axis**:
@@ -35,12 +39,15 @@ exact command tokens.
    **Non-fix-now findings are never written here** — they keep
    their destinations from step 11 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
-   (D3).
+   (independent proposals, audit findings, or `--prioritize-now` runs) (D3).
    **Commit the ledger append** — rows + `REVIEW-RAN` mark, one commit
    (`docs(<unit>): persist review findings F<n>–F<m>`), pushed when a PR is open;
    an uncommitted append hands the next review a dirty-tree stop. On
    `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
    receipt is the durable record): head and posted receipt stay identical.
+   A reviewer also records a `GATE-RAN` mark for the gate run the review performed
+   and consumes an identical-head green mark instead of re-running (see
+   `LEDGERS.md` §gate-ran@1).
    This skill's only mutations are this ledger commit (step 11) and, on
    `REVIEW-PASS` with a PR, the receipt comment (step 12) — it never runs a
    fold, executes a phase, or edits source (see the review-end turn boundary in
