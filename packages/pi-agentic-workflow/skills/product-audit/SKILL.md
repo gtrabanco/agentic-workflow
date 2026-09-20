@@ -102,7 +102,7 @@ Verdict: <one-line honest health verdict>
   [example — scope-export recurrence] F<k> [med] Workflow discipline — <N>
     consecutive units exported scope via `## Amendments`/descope issues —
     features are being cut too big for real capacity — evidence: <unit list +
-    amendments/issues> — class: replan-in-unit — route: #64 (atomicity/split rules)
+    amendments/issues> — class: proposal — route: #64 (atomicity/split rules)
 
 ## Delta vs audit <prior-id>
   New: F<k>
