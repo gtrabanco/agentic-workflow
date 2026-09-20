@@ -65,14 +65,14 @@ Done-when: ✅ `node --test scripts/ledger-ownership.test.mjs scripts/review-loo
 
 Layer: hardening · fingerprint `P5:hardening:9:hardening-pr` · Phase-lint: PASS (8/8)
 
-- [ ] Run the full verification ladder — the root suites, the schema and Pi package suites, the budget gate, and the drift gate — pasting each command with its exit code
-- [ ] Re-bundle the Pi mirror from the final skill tree and run the parity suite plus the Pi package suite → exit 0
-- [ ] Confirm every phase fingerprint still matches the plan's committed shapes and the frozen acceptance blob is unchanged, and record the acceptance receipt in the unit's progress file
-- [ ] Append the arXiv:2603.00539 entry to the bottom `## References` section of the repo README, creating the section when absent and deduping against entries other features added (read-verified)
-- [ ] Verify the README entry sits under the References section, cites the printed form, and is deduped (read-verified)
-- [ ] Confirm the touched test files gained the new pins and kept every existing assertion, recording the sanctioned AC-11 rewordings (read-verified)
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] Run the full verification ladder — the root suites, the schema and Pi package suites, the budget gate, and the drift gate — pasting each command with its exit code
+- [x] Re-bundle the Pi mirror from the final skill tree and run the parity suite plus the Pi package suite → exit 0
+- [x] Confirm every phase fingerprint still matches the plan's committed shapes and the frozen acceptance blob is unchanged, and record the acceptance receipt in the unit's progress file
+- [x] Append the arXiv:2603.00539 entry to the bottom `## References` section of the repo README, creating the section when absent and deduping against entries other features added (read-verified)
+- [x] Verify the README entry sits under the References section, cites the printed form, and is deduped (read-verified)
+- [x] Confirm the touched test files gained the new pins and kept every existing assertion, recording the sanctioned AC-11 rewordings (read-verified)
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
 
 Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0 with the whole ladder green, the mirror parity green, and the PR URL printed.
