@@ -736,7 +736,7 @@ function readOpenRows(unitDir) {
     // bogus finding whose id is the dash run: the guard is the id's shape, not one
     // separator's spelling.
     if (/^[-:\s]*$/.test(id)) continue;
-    // Mark rows (`VF-<n>`, `REVIEW-RAN`) carry no destination of their own.
+    // Mark rows (`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`) carry no destination of their own.
     if (isMarkRow(id)) continue;
     rows.push({ id, file, axis, severity, klass, route });
   }

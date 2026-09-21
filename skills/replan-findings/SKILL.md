@@ -1,7 +1,7 @@
 ---
 name: replan-findings
 user-invocable: false
-version: 1.1.0
+version: 1.1.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -67,8 +67,8 @@ fingerprint: <sha256 over the inputs the answer used>
 - `read-set` is the bounded intake below: at most 12 paths, then an explicit
   `… and N more` line — never a silent truncation.
 - `open-rows`/`rows:` come from the ledger's open rows only (`folded` not
-  `yes`/`—`/`-`/`n/a`/empty), and the id shapes `VF-<n>` and `REVIEW-RAN` are
-  marks, never findings.
+  `yes`/`—`/`-`/`n/a`/empty), and the id shapes `VF-<n>`, `REVIEW-RAN` and
+  `GATE-RAN` are marks, never findings.
 
 Exit codes are part of the contract: a route prints and exits **0**; an unknown
 unit, or any argument count other than one, exits **1**; an ambiguous token (a

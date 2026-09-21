@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 5.3.0
+version: 5.3.1
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -91,7 +91,7 @@ one hop from this file, and fail closed when missing.
    the internal steps; never re-fetched mid-plan.
 4. **Confirm roadmap.** Verify the feature is registered in
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
-   repair registration if needed — never leave registration for later.
+   if any of the three is missing or wrong, fix the entry now — never leave registration for later.
    `plan-feature` verifies and repairs the roadmap entry; `plan-feature-scaffold`
    is the sole writer of the `defined → planned` write.
 5. **Dependency & blocker check (always, before recommending execution).**
