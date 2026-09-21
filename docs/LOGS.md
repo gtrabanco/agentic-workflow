@@ -2040,3 +2040,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change --adversarial 2 + fold: repaired 3 fix-now findings (F8–F10) on 32-review-consistency-pack
 - **Decisions:** Adversarial run escalated to full pass on width trigger (changed files outside folded rows' union). F8: Pi mirror re-bundled without package version bump (publish gate skips). F9: product-audit example contradicts frozen ED-32-4 (replan-in-unit → proposal). F10: budget re-basis went stale after F4 edit grew LEDGERS.md (3930 est > declared 3885, ceiling 4274 < floor 4323).
 - **Next:** Re-run /audit-pr as merge gate
+
+## 2026-09-21T17:55:21Z — feat/32-review-consistency-pack — manual
+- **Commits:** 54 (`44acea68…09cc6d2c`)
+- **Files:** 70 files
+- **Summary:** Feature 32 review-consistency-pack — final adversarial review (cycle 8, --adversarial 2) and REVIEW-PASS
+- **Decisions:** Cycle 8 with 2 context-clean adversarial reviewers (R1 correctness, R2 security) found 2 minor code-quality findings (F40: CLASSIFY.md SEVERITY_VOCABULARY projection claim, F41: redundant NRS_BLOCKING guard in workflow-status.mjs) — both classify as ignore. All 11 acceptance criteria pass. All health gates green. Receipt posted to PR #249 and verified current. Unit 32 is review-closed.
+- **Next:** /audit-pr 249 — merge gate
