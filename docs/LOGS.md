@@ -2275,3 +2275,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Poner orden en ramas locales: mergear feat/31 en main (commit log local no estaba en remoto), aplicar fix de email del autor a todas las skills en main, descartar backup/english-only-pre-rebase sin mergear, comprobar agwo vs feat/agwo (difieren en paquete agwo → se mantienen ambas).
 - **Decisions:** No mergear feat/agwo en main (el commit `03fc3784` reserva el npm package `packages/agwo` que es secreto/proyecto aparte); email fix (`d6b78386`) se aplicó directamente con sed sin cherry-pick para evitar conflictos de YAML frontmatter; backup/english-only descartado sin mergear (ya estaba en origin/main).
 - **Next:** Worktree fix/optimizing_research_and_guards listo para continuar
+## 2026-09-21T18:59:07Z — main — manual
+- **Commits:** 1 (`1e7be55a..4c818dc8`)
+- **Files:** 2 (package.json, bun.lock — packages/pi-agentic-workflow)
+- **Summary:** bump pi-agentic-workflow deps to 0.87.0
+- **Decisions:** Pi CLI ya usa 0.87.0; node_modules resolve coding-agent a 0.85.1 (peer dep mismatch). No breaking code changes: el paquete solo escucha agent_settled, no construye eventos ni hace switches exhaustivos sobre SessionEntry/ExtensionEvent. 0.86 breaking (TranscriptContext, getCurrentSystemPrompt, user_bash fail-closed) y 0.87 breaking (shouldStopAfterTurn removido, emitBoundary, TurnEndEvent required fields, context_with_system) no tocan nuestras rutas de código. 252 tests pasan sin cambios.
+- **Next:** Publicar el paquete actualizado con npm publish (si se publica).
