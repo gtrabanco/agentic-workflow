@@ -3,7 +3,7 @@ name: design-feature
 user-invocable: true
 version: 3.5.0
 argument-hint: <idea | NN-slug> [<instruction>]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Turn a raw idea or existing feature into a designed product SPEC by completing

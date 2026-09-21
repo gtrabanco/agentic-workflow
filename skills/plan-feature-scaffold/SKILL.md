@@ -2,7 +2,7 @@
 name: plan-feature-scaffold
 user-invocable: false
 version: 2.4.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal step of plan-feature: from an already-designed SPEC (product half

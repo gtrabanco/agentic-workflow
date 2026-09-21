@@ -2,7 +2,7 @@
 name: phase-contract
 user-invocable: false
 version: 1.0.5
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: the single owner of the eight phase-lint rules, the fixed

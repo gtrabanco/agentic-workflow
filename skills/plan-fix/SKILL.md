@@ -3,7 +3,7 @@ name: plan-fix
 user-invocable: true
 version: 3.3.0
 argument-hint: <issue-number> [<issue-number> …]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Draft and locally commit a tightly scoped, phased fix SPEC from one or more

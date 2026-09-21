@@ -2,7 +2,7 @@
 name: plan-feature-from-issue
 user-invocable: false
 version: 2.0.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal step of plan-feature: turn a feature-request issue into a scoped,

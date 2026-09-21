@@ -3,7 +3,7 @@ name: review-change
 user-invocable: true
 version: 3.7.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Review a change with only applicable internal axes, classify every finding,

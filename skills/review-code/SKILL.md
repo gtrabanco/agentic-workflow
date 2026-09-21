@@ -2,7 +2,7 @@
 name: review-code
 user-invocable: false
 version: 1.2.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal correctness + simplification review pass of the agentic-workflow

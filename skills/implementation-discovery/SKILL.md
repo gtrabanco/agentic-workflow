@@ -2,7 +2,7 @@
 name: implementation-discovery
 user-invocable: false
 version: 1.1.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: the single owner of the bounded pre-write implementation

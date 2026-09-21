@@ -2,7 +2,7 @@
 name: orchestration-envelope
 user-invocable: false
 version: 2.2.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal machine-result contract for headless agentic-workflow drivers. The

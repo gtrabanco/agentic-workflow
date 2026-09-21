@@ -2,7 +2,7 @@
 name: review-verify
 user-invocable: false
 version: 1.1.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal run-it verification review pass of the agentic-workflow review pack —

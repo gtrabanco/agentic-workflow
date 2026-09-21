@@ -3,7 +3,7 @@ name: plan-feature
 user-invocable: true
 version: 5.3.1
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Route designed features or issues into engineering planning and roadmap
