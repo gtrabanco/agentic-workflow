@@ -52,7 +52,7 @@ assert.match(reviewProcess, /never a `workflow` finding/);
 // The review never dirties the tree it will next be judged against.
 assert.match(persist, /Commit the ledger append/);
 assert.match(persist, /docs\(<unit>\): persist review findings/);
-assert.match(persist, /On\s+`REVIEW-PASS` with an open PR no ledger write happens/);
+assert.match(persist, /On\s+`REVIEW-PASS` with an open PR no additional ledger write happens beyond/);
 
 // ── 3. Folded rows are re-verified, not re-reported ─────────────────────────
 

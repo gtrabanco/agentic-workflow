@@ -42,15 +42,16 @@ exact command tokens.
    **Commit the ledger append** — rows + `REVIEW-RAN` mark, one commit
    (`docs(<unit>): persist review findings F<n>–F<m>`), pushed when a PR is open;
    an uncommitted append hands the next review a dirty-tree stop. On
-   `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
-   receipt is the durable record): head and posted receipt stay identical.
+   `REVIEW-PASS` with an open PR no additional ledger write happens beyond
+   step 11 (the SHA-bound receipt is the durable record): head and posted
+   receipt stay identical.
    A reviewer also records a `GATE-RAN` mark for the gate run the review performed
    and consumes an identical-head green mark instead of re-running (see
    `LEDGERS.md` §gate-ran@1).
-   This skill's only mutations are this ledger commit (step 11) and, on
-   `REVIEW-PASS` with a PR, the receipt comment (step 12) — it never runs a
-   fold, executes a phase, or edits source (see the review-end turn boundary in
-   the SKILL.md Turn contract).
+   This skill's only mutations are this ledger commit (step 11), the
+   `GATE-RAN` mark, and, on `REVIEW-PASS` with a PR, the receipt comment
+   (step 12) — it never runs a fold, executes a phase, or edits source (see
+   the review-end turn boundary in the SKILL.md Turn contract).
 12. **Close out the final-review receipt before reporting.** Derive the
    `Decision` from step 7 and persist step 11 first. Then — **only on
    `Decision: REVIEW-PASS` and when the PR exists** — run the receipt emitter,
