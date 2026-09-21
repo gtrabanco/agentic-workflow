@@ -2,7 +2,7 @@
 name: pre-execution-review
 user-invocable: false
 version: 2.5.1
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal owner of the pre-execution review cycle and the planning ledgers:

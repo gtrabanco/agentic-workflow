@@ -4,7 +4,7 @@ user-invocable: true
 version: 4.7.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Implement all remaining phases of a planned feature/fix by default, or one

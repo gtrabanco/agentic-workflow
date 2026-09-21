@@ -3,7 +3,7 @@ name: triage-issue
 user-invocable: true
 version: 2.8.0
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Verify an issue, persisted audit finding, or unresolved review finding against

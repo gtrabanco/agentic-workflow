@@ -3,7 +3,7 @@ name: log-session
 user-invocable: true
 version: 2.2.0
 argument-hint: "[note to prepend to the entry]"
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Append a structured entry to the project's session log (`docs/LOGS.md`):
