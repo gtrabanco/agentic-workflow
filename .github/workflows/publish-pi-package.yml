@@ -19,12 +19,11 @@ name: Publish Pi package
 # npm-CLI-specific tooling Bun doesn't replicate. `bun install` also runs the
 # package's `prepare` script (tsc build).
 #
-# Skills are bundled in two ORDERED steps, and the order is the whole point:
-# `bundle:skills:check` exits non-zero when the committed bundle has drifted
-# from the canonical `skills/` tree, and the write mode runs only after it, so
-# the packed artifact is regenerated rather than trusted from git. Rebuilding
-# first would make `test/skill-parity.test.mjs` compare a fresh copy with
-# itself — a green guard that can never fail.
+# The skill bundle is pack-time build output, not a committed mirror. `skills/`
+# at the repo root is the only skills tree in git; the package stages a filtered
+# copy for packing and the package's own lifecycle owns it (`prepare` and `test`
+# stage it, `prepublishOnly` restages it before the gate, `postpack` removes it).
+# So this file never sequences it — but it does assert the artifact, below.
 #
 # Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
 # exchanges this job's GitHub OIDC token (the id-token: write permission
@@ -95,10 +94,6 @@ jobs:
           # rule — 1.4.0 writes lockfile version 2).
           bun-version: 1.4.0
       - run: bun install --frozen-lockfile
-      - name: Skill bundle drift guard (before any rebuild)
-        run: bun run bundle:skills:check
-      - name: Rebuild skill bundle (the packed artifact is generated, not trusted)
-        run: bun run bundle:skills
       - name: Build + test (node runtime — the guaranteed fallback)
         run: bun run test:node
 
@@ -130,14 +125,8 @@ jobs:
       - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
         run: npm install -g npm@latest
 
-      - name: Install + build (bun, frozen lockfile; prepare runs tsc)
+      - name: Install + build (bun, frozen lockfile; prepare runs tsc and stages the bundle)
         run: bun install --frozen-lockfile
-
-      - name: Skill bundle drift guard (before any rebuild)
-        run: bun run bundle:skills:check
-
-      - name: Rebuild skill bundle (the packed artifact is generated, not trusted)
-        run: bun run bundle:skills
 
       - name: Test (the gate — never publish red)
         run: bun run test
@@ -148,6 +137,22 @@ jobs:
       # node-compat job already proves the same code on the Node toolchain.
       - name: Mutation gate (every ruled-out mutation must break a named test)
         run: bun run mutation
+
+      # The one failure nothing else would catch: a tarball with an absent or
+      # empty skills/ still publishes green, because npm never complains about a
+      # directory the whitelist named but nothing produced. Packs a throwaway
+      # tarball and inspects it. `postpack` removes the staged copy afterwards;
+      # `prepublishOnly` stages a fresh one for the real pack.
+      - name: Tarball carries the skill bundle
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP" >/dev/null
+          TGZ=$(ls "$RUNNER_TEMP"/gtrabanco-pi-agentic-workflow-*.tgz)
+          COUNT=$(tar tzf "$TGZ" | grep -c '^package/skills/' || true)
+          echo "skill files in the tarball: $COUNT"
+          tar tzf "$TGZ" | grep -qx 'package/skills/audit-docs/SKILL.md' \
+            || { echo "::error::tarball is missing the skill bundle — check package.json 'files' and .npmignore"; exit 1; }
+          [ "$COUNT" -ge 100 ] \
+            || { echo "::error::only $COUNT skill files in the tarball"; exit 1; }
 
       - name: Skip when the version is already published
         id: version
