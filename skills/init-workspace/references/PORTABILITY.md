@@ -7,7 +7,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
+- **No per-skill `model:`/`effort:`** — no skill pins a tier; pick tiers yourself:
   the interview and adaptation are judgment work — run them on your
   **strongest** model.
 - **No Claude Code hooks** — choose the Cursor, Copilot, or OpenCode adapter
