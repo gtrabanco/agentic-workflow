@@ -2281,3 +2281,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** bump pi-agentic-workflow deps to 0.87.0
 - **Decisions:** Pi CLI ya usa 0.87.0; node_modules resolve coding-agent a 0.85.1 (peer dep mismatch). No breaking code changes: el paquete solo escucha agent_settled, no construye eventos ni hace switches exhaustivos sobre SessionEntry/ExtensionEvent. 0.86 breaking (TranscriptContext, getCurrentSystemPrompt, user_bash fail-closed) y 0.87 breaking (shouldStopAfterTurn removido, emitBoundary, TurnEndEvent required fields, context_with_system) no tocan nuestras rutas de código. 252 tests pasan sin cambios.
 - **Next:** Publicar el paquete actualizado con npm publish (si se publica).
+## 2026-09-21T21:12:27Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Retired the #claude branch and per-skill model routing: removed docs/workflow/model-routing.yml, .github/scripts/inject_claude_frontmatter.py, and the sync-claude CI job; stripped every #claude pointer from skill descriptions, Portability sections, README, AGENTS.md, bump-skill refs, and the pre-execution suite; added a dated retirement note in MIGRATION.md; patch-bumped 9 skills (log-session 2.2.1, audit-docs 2.1.1, review-change 3.7.1, plan-feature 5.3.2, init-workspace 3.0.1, design-feature 3.5.1, ship-roadmap 5.2.4, audit-pr 5.3.1, bump-skill 2.3.5) with CHANGELOG rows and release-log entry. Branch re-based on top of root-suite CI commit (fetch-depth: 0 fix). PR #250 merged to main. The origin/claude ref was deleted explicitly (not implied by merge).
+- **Next:** Nothing pending — the claude branch retirement is fully merged. Next: /clear or start a new task.
