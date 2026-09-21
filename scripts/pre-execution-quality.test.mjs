@@ -1532,10 +1532,9 @@ test("normalizer order: a mutating step scheduled after the freeze row is refuse
     { name: "edit", mutates: true },
     { name: "freeze", mutates: false },
     { name: "bump-skill", mutates: true },
-    { name: "generate-docs", mutates: true },
   ];
   assert.deepEqual(scheduleVerdict({ steps: twoLate, freezeAt: 1 }),
-    { ok: false, offenders: ["bump-skill", "generate-docs"] });
+    { ok: false, offenders: ["bump-skill"] });
   // the freeze row itself is not a write, and a check-only tail is always legal
   assert.equal(scheduleVerdict({ steps: legal, freezeAt: 4 }).ok, true);
   // rule placement: stated once, in the gate that owns the fixed pre-flight order
@@ -1576,7 +1575,6 @@ test("normalizer inventory: one home, and every entry names its side of the free
     ["bun run build (packages/agentic-workflow-schema)", "before"],
     ["generate-pre-execution-schemas.mjs", "before"],
     ["generate-verification-schemas.mjs", "before"],
-    ["generate-docs", "before"],
     ["generate-pre-execution-schemas.mjs --check", "after"],
     ["generate-verification-schemas.mjs --check", "after"],
     ["pre-execution-snapshot.mjs verify", "after"],

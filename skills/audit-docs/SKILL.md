@@ -94,12 +94,12 @@ run the command shown, don't infer.
     feature/fix-scoped changes committed directly without a PR: HIGH.
 13. **Generated-docs provenance (only when the documentation map declares a
     `Docs site` block; otherwise state n/a).** Scan the declared content dir
-    for pages carrying `generated-by: agentic-workflow/generate-docs`. For
+    for orphan pages
     each: (a) its `source-unit` exists in the roadmap or fix index — no match
     is an **orphan** (low: propose deletion or re-attribution); (b) the
     unit's PR merged **after** the page's `updated` date with commits touching
     the page's subject paths — that page is **stale** (LOW: propose
-    `/generate-docs <unit>` to refresh). Cite page path + unit per finding.
+). Cite page path + unit per finding.
 14. **Commit format & dependency discipline.** Sample the unit branches'
     commits: `<type>(<scope>): <summary>` conventional format (violations:
     LOW). Every `in-progress`/`done` row's `Depends on:` closure was merged —

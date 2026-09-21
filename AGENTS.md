@@ -290,7 +290,6 @@ bun run bundle:skills | generator (stages the pack-time skill bundle at `package
 bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
 generate-verification-schemas.mjs | generator (writes the verification schema projections) | before
-generate-docs | docs generator (writes `docs/site/guides/`) | before
 generate-pre-execution-schemas.mjs --check | check-only (drift report, `bun run check:pre-execution-schemas`) | after
 generate-verification-schemas.mjs --check | check-only (drift report, `bun run check:verification-schemas`) | after
 pre-execution-snapshot.mjs verify | check-only (re-derives a bound digest, writes nothing) | after

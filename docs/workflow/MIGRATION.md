@@ -496,7 +496,7 @@ no action required to keep existing usage working. See
 
 **Breaking change to 14 skills' output contract.** Every user-facing skill
 except `workflow-status` — `audit-docs, audit-pr, bump-skill, design-feature,
-execute-phase, generate-docs, init-workspace, log-session, plan-feature,
+execute-phase, init-workspace, log-session, plan-feature,
 plan-fix, product-audit, review-change, ship-roadmap, triage-issue` — no
 longer ends its turn with the `## Machine envelope` fenced JSON block. The
 turn-contract box requiring that emission is also removed, and every closing

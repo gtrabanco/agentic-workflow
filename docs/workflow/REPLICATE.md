@@ -33,7 +33,7 @@ The installable set is **17 user-facing + 13 internal** (30 total):
 - **User-facing (17):** `init-workspace`, `discover-repository-state`,
   `resolve-repository-state`, `design-feature`, `plan-feature`, `plan-fix`,
   `execute-phase`, `review-change`, `audit-pr`, `audit-docs`, `product-audit`,
-  `fold-findings`, `generate-docs`, `triage-issue`, `ship-roadmap`,
+  `fold-findings`, `triage-issue`, `ship-roadmap`,
   `log-session`, `workflow-status`.
 - **Internal (13):** `plan-feature-from-issue`, `plan-feature-scaffold`,
   `orchestration-envelope`, `review-implementation`, `review-code`,

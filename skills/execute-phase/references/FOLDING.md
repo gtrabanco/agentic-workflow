@@ -52,14 +52,7 @@ Roadmap/fix-index row: done · #<n> (linked and pushed)
   · REVIEW-FAIL → /fold-findings (only on a REVIEW-FAIL), then re-run /review-change (unresolved findings go to triage/replan)
   · clean    → /audit-pr (merge gate) → human merges
   · findings → fold fix-now into this PR; independent work remains a proposal until user triage; re-review
-  · docs site declared (documentation map has a `Docs site` block) →
-    /generate-docs <unit> — document what this unit changed; the generated
-    pages ride this same PR (commit + push them before the merge gate)
 ```
-
-The `/generate-docs` line appears **only** when the project's documentation
-map declares a `Docs site` block — never suggest it otherwise (a project
-without a docs site has nowhere to publish).
 
 This never auto-merges. Explicit `P<n>` stops after one phase; omitted-phase
 mode gates and commits every remaining phase before the same final review.

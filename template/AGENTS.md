@@ -42,9 +42,9 @@ your domains.
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
-| Generated developer docs | the `Docs site` block below *(read by `/generate-docs`)* |
+| Generated developer docs | *(deprecated — generate-docs skill removed)* |
 
-## Docs site *(optional — uncomment and fill to enable `/generate-docs`)*
+# Docs site *(optional — uncomment and fill for a docs website that the project manages manually)*
 
 <!--
 - format: starlight | docusaurus | markdown

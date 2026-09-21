@@ -159,8 +159,6 @@ the frozen ledger and route missing or contradictory state to these skills.
 **Supporting workflow skills**
 - `fold-findings` — repair every persisted fix-now finding one at a time, with a
   green gate, one commit, and one push per finding.
-- `generate-docs` — write incremental developer documentation through the
-  project's declared docs adapter.
 - `log-session` — append a structured session handoff to the project journal.
 - `workflow-status` — emit the read-only Envelope v2 sensor result for external drivers.
 
