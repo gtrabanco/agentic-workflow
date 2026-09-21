@@ -94,8 +94,7 @@ dual-keyed: the flag on the running command **and** `merge: fullauto` in the
 committed decision record (see Merge policy). One key without the other runs
 in default mode.
 
-Each firing is a fresh `/ship-roadmap --continue` turn (on Claude Code's
-`#claude` branch, at this skill's pinned tier; elsewhere, at whatever tier the
-driver chose — judgment iterations deserve your strongest model). Iterations
+Each firing is a fresh `/ship-roadmap --continue` turn, at whatever tier the
+driver chose — judgment iterations deserve your strongest model. Iterations
 after a terminal banner are cheap no-ops that re-print the same banner — so a
 missed stop costs tokens, never correctness.

@@ -27,8 +27,8 @@ SKILL.md, so report violations without fixing them:
 4. Every user-facing skill opens with `## Turn contract`.
 5. Every user-facing skill directory appears as `./skills/<name>` in
    `.claude-plugin/plugin.json`.
-6. That plugin array and `docs/workflow/model-routing.yml` top-level keys are
-   alphabetical (compare each ordered list with its sorted form).
+6. That plugin array is alphabetical (compare the ordered list with its sorted
+   form).
 7. A `user-invocable: false` skill absent from the plugin array has anchored
    `metadata.internal: true` inside frontmatter. Plugin-listed internal steps
    are exempt. Check only between the first two `---` lines; body prose does not
