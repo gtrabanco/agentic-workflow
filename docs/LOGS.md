@@ -2034,3 +2034,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 32 review-consistency-pack — P1–P5 execution through PR #249
 - **Decisions:** Path-protection-records@1 used for protected-path edits (workflow-status.mjs, sensor test, discipline test). Fold cycle ran to completion with 39 triage findings (F1–F39) across planning and execution phases. Rebased onto main to resolve ceiling drift on 19 stale route ceilings. Pi mirror re-bundled and synced to source at P5.
 - **Next:** Feature 32 is merged (PR #249). Next roadmap unit: check /workflow-status for the next startable feature/fix.
+## 2026-09-21T17:55:53Z — feat/32-review-consistency-pack — manual
+- **Commits:** 54 (`44acea68…09cc6d2c`)
+- **Files:** 70 files
+- **Summary:** review-change --adversarial 2 + fold: repaired 3 fix-now findings (F8–F10) on 32-review-consistency-pack
+- **Decisions:** Adversarial run escalated to full pass on width trigger (changed files outside folded rows' union). F8: Pi mirror re-bundled without package version bump (publish gate skips). F9: product-audit example contradicts frozen ED-32-4 (replan-in-unit → proposal). F10: budget re-basis went stale after F4 edit grew LEDGERS.md (3930 est > declared 3885, ceiling 4274 < floor 4323).
+- **Next:** Re-run /audit-pr as merge gate
