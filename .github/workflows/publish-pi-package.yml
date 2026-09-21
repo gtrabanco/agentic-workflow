@@ -147,9 +147,12 @@ jobs:
         run: |
           npm pack --pack-destination "$RUNNER_TEMP" >/dev/null
           TGZ=$(ls "$RUNNER_TEMP"/gtrabanco-pi-agentic-workflow-*.tgz)
-          COUNT=$(tar tzf "$TGZ" | grep -c '^package/skills/' || true)
+          # List once: piping tar into grep -q makes tar die on SIGPIPE and spray
+          # "write error" into a gate log, which is how people learn to ignore it.
+          LISTING=$(tar tzf "$TGZ")
+          COUNT=$(printf '%s\n' "$LISTING" | grep -c '^package/skills/' || true)
           echo "skill files in the tarball: $COUNT"
-          tar tzf "$TGZ" | grep -qx 'package/skills/audit-docs/SKILL.md' \
+          printf '%s\n' "$LISTING" | grep -qx 'package/skills/audit-docs/SKILL.md' \
             || { echo "::error::tarball is missing the skill bundle — check package.json 'files' and .npmignore"; exit 1; }
           [ "$COUNT" -ge 100 ] \
             || { echo "::error::only $COUNT skill files in the tarball"; exit 1; }
