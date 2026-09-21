@@ -10,8 +10,8 @@
 
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join } from "node:path";
-import { sep as pathSep } from "node:path";
+import { join, resolve, sep as pathSep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const PKG = join(import.meta.dirname, "..");
 
@@ -35,7 +35,7 @@ export const MUTANTS = [
   { file: "src/config/load.ts", from: 'const projectFile = projectTrusted ? loadScope("project", paths.project, readFile, problems) : {};', to: 'const projectFile = loadScope("project", paths.project, readFile, problems);', suite: "untrusted-project-config", rule: "AC13 untrusted project never read" },
   { file: "src/routing/catalogue.ts", from: 'meta.userInvocable = value === "true";', to: 'meta.userInvocable = value !== "false";', suite: "alias-coverage", rule: "F8 a command needs an explicit true" },
   { file: "src/extension/index.ts", from: 'pi.on("model_select", (event) => router.noteModelSelect(event.model));', to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter wires model_select" },
-  { file: "src/extension/index.ts", from: 'pi.on("agent_settled", (_event, ctx) => void router.settle(toInvocationContext(ctx)));', to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter settles" },
+  { file: "src/extension/index.ts", from: "void router.settle(toInvocationContext(ctx));", to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter settles" },
   { file: "src/extension/index.ts", from: 'pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));', to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter wires thinking_level_select" },
   { file: "src/extension/index.ts", from: "isProjectTrusted: () => ctx.isProjectTrusted(),", to: "isProjectTrusted: () => true,", suite: "shipped-adapter", rule: "N-1 trust comes from Pi" },
   { file: "src/extension/index.ts", from: "    cwd: ctx.cwd,", to: "    cwd: process.cwd(),", suite: "shipped-adapter", rule: "N-1 the project file comes from Pi's cwd" },
@@ -62,60 +62,101 @@ export const MUTANTS = [
   { file: "src/settings/console.ts", from: "if (draft.onSettle) file.onSettle = draft.onSettle;", to: 'if (draft.onSettle && draft.onSettle !== "keep") file.onSettle = draft.onSettle;', suite: "settings-console", rule: "F4 an explicit keep onSettle is saved" },
 ];
 
-const root = mkdtempSync(join("/tmp", "paw-mutation-"));
-// Mirror the whole repository, not just the package: several suites read the
-// canonical `skills/` tree and both READMEs through `../..`, and a mirror without
-// them fails pristine — which makes every kill in those suites meaningless.
-const REPO = join(PKG, "..", "..");
-const mirror = join(root, "repo");
-mkdirSync(mirror, { recursive: true });
-for (const entry of readdirSync(REPO)) {
-  if (entry === ".git" || entry === "node_modules") continue;
-  cpSync(join(REPO, entry), join(mirror, entry), {
-    recursive: true,
-    filter: (source) => !source.includes(`${pathSep}node_modules`),
-  });
+/**
+ * Every mutant whose `from` needle no longer occurs in its source file. A stale
+ * needle is the quiet failure mode of this table: the rule stops being
+ * verified while the row still claims it, and the suite can never fail because
+ * the mutation was never applied. Reads files only — no mirror, no build, no
+ * mutants — so a test can assert it on every run.
+ * @returns {Array<{ file: string, rule: string }>}
+ */
+export function findStaleNeedles() {
+  return MUTANTS.filter((mutant) => !readFileSync(join(PKG, mutant.file), "utf8").includes(mutant.from)).map(
+    ({ file, rule }) => ({ file, rule }),
+  );
 }
-const work = join(mirror, "packages", "pi-agentic-workflow");
-if (existsSync(join(PKG, "node_modules"))) cpSync(join(PKG, "node_modules"), join(work, "node_modules"), { recursive: true });
 
-const run = (command, args) => spawnSync(command, args, { cwd: work, encoding: "utf8" });
+/**
+ * Apply every mutant to a throwaway mirror of the repository, run the suite the
+ * table names, and report one status per mutant. Exported and free of import
+ * side effects so the table itself can be checked without paying for a run.
+ * A pristine control runs first: if a suite already fails with no mutant
+ * applied, every "kill" recorded against it would be environmental noise.
+ * @returns {Array<{ status: string, rule: string, detail?: string }>}
+ */
+export function runMutationSuite() {
+  const root = mkdtempSync(join("/tmp", "paw-mutation-"));
+  // Mirror the whole repository, not just the package: several suites read the
+  // canonical `skills/` tree and both READMEs through `../..`, and a mirror without
+  // them fails pristine — which makes every kill in those suites meaningless.
+  const REPO = join(PKG, "..", "..");
+  const mirror = join(root, "repo");
+  mkdirSync(mirror, { recursive: true });
+  for (const entry of readdirSync(REPO)) {
+    if (entry === ".git" || entry === "node_modules") continue;
+    cpSync(join(REPO, entry), join(mirror, entry), {
+      recursive: true,
+      filter: (source) => !source.includes(`${pathSep}node_modules`),
+    });
+  }
+  const work = join(mirror, "packages", "pi-agentic-workflow");
+  if (existsSync(join(PKG, "node_modules"))) cpSync(join(PKG, "node_modules"), join(work, "node_modules"), { recursive: true });
 
-// Pristine control: if a suite already fails without any mutant, every "kill"
-// recorded against it is environmental noise, not evidence.
-const control = run("node", ["--test", ...new Set(MUTANTS.map((mutant) => `test/${mutant.suite}.test.mjs`))]);
-if (control.status !== 0) {
-  console.error("PRISTINE CONTROL FAILED — the mirror is not a faithful copy; results would be fiction.");
-  console.error((control.stdout + control.stderr).split("\n").filter((line) => line.startsWith("✖")).slice(0, 8).join("\n"));
+  const run = (command, args) => spawnSync(command, args, { cwd: work, encoding: "utf8" });
+
+  // Pristine control: if a suite already fails without any mutant, every "kill"
+  // recorded against it is environmental noise, not evidence.
+  const control = run("node", ["--test", ...new Set(MUTANTS.map((mutant) => `test/${mutant.suite}.test.mjs`))]);
+  if (control.status !== 0) {
+    rmSync(root, { recursive: true, force: true });
+    throw new Error(
+      "PRISTINE CONTROL FAILED — the mirror is not a faithful copy; results would be fiction.\n" +
+        (control.stdout + control.stderr)
+          .split("\n")
+          .filter((line) => line.startsWith("✖"))
+          .slice(0, 8)
+          .join("\n"),
+    );
+  }
+  const pristine = new Map(MUTANTS.map((mutant) => [mutant.file, readFileSync(join(work, mutant.file), "utf8")]));
+
+  const results = [];
+  for (const mutant of MUTANTS) {
+    const original = pristine.get(mutant.file);
+    if (!original.includes(mutant.from)) {
+      results.push({ ...mutant, status: "stale-needle" });
+      continue;
+    }
+    writeFileSync(join(work, mutant.file), original.replace(mutant.from, mutant.to));
+    const built = run("npx", ["tsc", "-p", "tsconfig.json"]);
+    if (built.status !== 0) {
+      results.push({ ...mutant, status: "compile-error", detail: (built.stdout + built.stderr).split("\n").find((line) => line.includes("error TS")) ?? "build failed" });
+    } else {
+      const tested = run("node", ["--test", `test/${mutant.suite}.test.mjs`]);
+      results.push({ ...mutant, status: tested.status === 0 ? "SURVIVED" : "killed" });
+    }
+    writeFileSync(join(work, mutant.file), original);
+  }
+
   rmSync(root, { recursive: true, force: true });
-  process.exit(2);
-}
-const pristine = new Map(MUTANTS.map((mutant) => [mutant.file, readFileSync(join(work, mutant.file), "utf8")]));
 
-const results = [];
-for (const mutant of MUTANTS) {
-  const original = pristine.get(mutant.file);
-  if (!original.includes(mutant.from)) {
-    results.push({ ...mutant, status: "stale-needle" });
-    continue;
+  const tally = (status) => results.filter((entry) => entry.status === status).length;
+  for (const entry of results) {
+    console.log(`${entry.status.padEnd(14)} ${entry.rule}${entry.detail ? ` — ${entry.detail.trim()}` : ""}`);
   }
-  writeFileSync(join(work, mutant.file), original.replace(mutant.from, mutant.to));
-  const built = run("npx", ["tsc", "-p", "tsconfig.json"]);
-  if (built.status !== 0) {
-    results.push({ ...mutant, status: "compile-error", detail: (built.stdout + built.stderr).split("\n").find((line) => line.includes("error TS")) ?? "build failed" });
-  } else {
-    const tested = run("node", ["--test", `test/${mutant.suite}.test.mjs`]);
-    results.push({ ...mutant, status: tested.status === 0 ? "SURVIVED" : "killed" });
+  console.log(`\n${results.length} mutants · ${tally("killed")} killed · ${tally("SURVIVED")} survived · ${tally("compile-error")} compile-enforced · ${tally("stale-needle")} stale`);
+  return results;
+}
+
+const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) {
+  let results;
+  try {
+    results = runMutationSuite();
+  } catch (error) {
+    console.error(error.message);
+    process.exit(2);
   }
-  writeFileSync(join(work, mutant.file), original);
+  const bad = results.filter((entry) => entry.status === "SURVIVED" || entry.status === "stale-needle");
+  process.exit(bad.length === 0 ? 0 : 1);
 }
-
-rmSync(root, { recursive: true, force: true });
-
-const tally = (status) => results.filter((entry) => entry.status === status).length;
-for (const entry of results) {
-  console.log(`${entry.status.padEnd(14)} ${entry.rule}${entry.detail ? ` — ${entry.detail.trim()}` : ""}`);
-}
-console.log(`\n${results.length} mutants · ${tally("killed")} killed · ${tally("SURVIVED")} survived · ${tally("compile-error")} compile-enforced · ${tally("stale-needle")} stale`);
-const bad = results.filter((entry) => entry.status === "SURVIVED" || entry.status === "stale-needle");
-process.exit(bad.length === 0 ? 0 : 1);
