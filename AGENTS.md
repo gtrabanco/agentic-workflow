@@ -263,15 +263,7 @@ This repo has no application build. "Green" means:
   `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
   trees; the staged one is always rebuilt first, so it is never stale.
 
-**Runtime convention (one rule, everywhere):** scripts run with **bun first**
-(`bun scripts/x.mjs`, `bun run <pkg-script>`); when bun is absent, the same
-command with `node` (`node scripts/x.mjs`, `npm run <pkg-script>`) is the
-guaranteed fallback, enforced by a node-compat CI job. Skill prose and usage
-strings show the bun form; skills running in user projects resolve
-bun-else-node at invocation (`AGENTIC_WORKFLOW_RUNTIME=bun|node` overrides;
-`npm_config_user_agent` starting with `bun/` pins bun). The shebangs stay
-`#!/usr/bin/env node` — the portable fallback, since a shebang cannot express
-"bun else node".
+**Runtime convention (two scopes, one override):** `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is set. Outside that override, scope decides: (a) **manual invocation** of repo scripts runs bun-first (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage strings show the bun form, and skills running in user projects resolve bun-else-node at invocation (`npm_config_user_agent` starting with `bun/` pins bun); (b) **package-spawned children of `@gtrabanco/pi-agentic-workflow`** run under the runtime that launched pi (bun when pi was installed via bun, node when via npm), resolved by the package's runtime module (`detectRuntime`/`runtimeBin`/`runtimeEnv`) — the user's install choice decides, bun is never forced. The shebangs stay `#!/usr/bin/env node` — the portable fallback, since a shebang cannot express "bun else node".
 
 ### Normalizer inventory (this repository)
 
