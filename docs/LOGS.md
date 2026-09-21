@@ -2075,3 +2075,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Re-established SPEC receipt (SPEC-REVIEW-32-5 PASS after stale-context CLAUDE.md move) and re-cut engineering half (32-plan-2) resolving all PLAN-REVIEW-32-1 findings F13–F19, then review-plan PASS
 - **Decisions:** SPEC-REVIEW-32-5: parent Product byte-identical (675349ef…), only CLAUDE.md moved by feature 60 merge — re-review minted fresh spec snapshot. Plan repair batch 32-plan-2: router tooling gap (reads only review-findings.md, not planning-findings.md) — repair authorised by review-plan FAIL route table instead of unit-route replan; P30-3 comparator limitation accepted for L1 judgment on spec-product-v1 projection; CHANGELOG collision resolved by row renumbering (not LEGACY_DUPLICATE_VERSION_ROWS extension).
 - **Next:** /review-plan 32-review-consistency-pack — but already PASS at HEAD 33b65e7e (PLAN-REVIEW-PASS). Next: execute-phase 32-review-consistency-pack to implement the 5-phase plan
+## 2026-09-21T18:02:10Z — feat/32-review-consistency-pack — manual
+- **Commits:** 61 (`44acea68…dd9c7d93`)
+- **Files:** 70 files
+- **Summary:** Execute feature 32 P5 hardening & PR open
+- **Decisions:** Pi mirror bundle was stale after P4 skill bumps — re-bundled before PR open to keep parity gate green; pre-existing check-skill-context route-ceiling drift in test is known from plan review
+- **Next:** /review-change on PR #249, then /fold-findings if REVIEW-FAIL, /audit-pr for merge gate
