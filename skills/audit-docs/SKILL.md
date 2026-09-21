@@ -75,6 +75,7 @@ Run these and collect findings (cite paths/lines/issue numbers each):
 
 **Workflow discipline (checks 10–14)** — the executor skills enforce these at
 write time; this audit verifies they actually held. Each check is mechanical:
+run the command shown, don't infer.
 
 10. **Phase naming.** `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
     must return nothing — plans use `P1, P2, …` ("phases") only. Any hit: LOW
