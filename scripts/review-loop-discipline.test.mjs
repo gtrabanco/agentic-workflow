@@ -491,6 +491,13 @@ const unitRouteSource = read("scripts/unit-route.mjs");
 // isMarkRow must contain the GATE-RAN pattern
 assert.match(unitRouteSource, /export const isMarkRow[\s\S]*?GATE-RAN/);
 
+// Triage 32 F31: the four mark-id enumerations name GATE-RAN alongside VF-/REVIEW-RAN,
+// so the documented contract agrees with the guard widened above.
+assert.match(unitRouteSource, /`VF-<n>` carries a finding's verification signature[\s\S]*?`GATE-RAN` a gate run's/);
+assert.match(read("scripts/workflow-status.mjs"), /Mark rows \(`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`\)/);
+assert.match(read("skills/workflow-status/references/SENSOR_SIGNALS.md"), /`GATE-RAN` \(a gate-run mark\)/);
+assert.match(read("skills/replan-findings/SKILL.md"), /`VF-<n>`, `REVIEW-RAN` and\n\s*`GATE-RAN` are marks/);
+
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
 // The planning-side loop rules are code, not prose: this block reads the

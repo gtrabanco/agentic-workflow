@@ -105,9 +105,10 @@ export const isOpen = (folded) => {
 };
 
 /**
- * Mark rows are not findings: `VF-<n>` carries a finding's verification signature
- * and `REVIEW-RAN` a review's, and a padded mark row reaches the row parser looking
- * like a finding whose cells are empty. The id shape is the guard — a value-based
+ * Mark rows are not findings: `VF-<n>` carries a finding's verification signature,
+ * `REVIEW-RAN` a review's and `GATE-RAN` a gate run's, and a padded mark row
+ * reaches the row parser looking like a finding whose cells are empty. The id
+ * shape is the guard — a value-based
  * guard ("`folded: n/a` means not a finding") breaks the moment a mark is padded
  * differently.
  */
