@@ -2120,3 +2120,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-plan 32-review-consistency-pack → PLAN-REVIEW-FAIL (F21–F24): PE-011 stale path:line cites, O9/phase mismatch (P1→P2), AC-02 grep dir, AC-10 bibliography already present
 - **Decisions:** PLAN-REVIEW-FAIL found in review-plan run: F21 (L2/P12: PE-011 ledger-ownership cites don't resolve), F22 (L4: O9 obligation in P1 but task is P2), F23 (L5: AC-02 grep on directory without -r), F24 (L5: AC-10 bibliography append unsatisfiable — feature 31 already added entry); all committed as PLAN-REVIEW-32-2
 - **Next:** re-cut engineering half: re-base on post-merge head, fix PE-011 cites and O9 phase, then /review-plan 32
+
+## 2026-09-21T18:43:32Z — main — manual
+- **Commits:** 3 (`96ae2754..a9296080`)
+- **Files:** 3 commits (email: 72 files; CI: 1 file)
+- **Summary:** Poner orden en ramas locales: mergear feat/31 en main (commit log local no estaba en remoto), aplicar fix de email del autor a todas las skills en main, descartar backup/english-only-pre-rebase sin mergear, comprobar agwo vs feat/agwo (difieren en paquete agwo → se mantienen ambas).
+- **Decisions:** No mergear feat/agwo en main (el commit `03fc3784` reserva el npm package `packages/agwo` que es secreto/proyecto aparte); email fix (`d6b78386`) se aplicó directamente con sed sin cherry-pick para evitar conflictos de YAML frontmatter; backup/english-only descartado sin mergear (ya estaba en origin/main).
+- **Next:** Worktree fix/optimizing_research_and_guards listo para continuar
