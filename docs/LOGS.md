@@ -2100,3 +2100,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Log-session: created fix-phase-lint-critical worktree for 4 execution-affecting phase-lint fixes
 - **Decisions:** Only fix code that affects agentic-workflow execution gate — no typos, no doc updates. The 4 findings selected (F99 perf, F42 arrow validation, F12 heading grammar, F15 pass regex) all impact the phase-lint pre-flight gate used by every plan review cycle.
 - **Next:** Run the prompt at ../fix-phase-lint-critical/PROMPT.md to implement the 4 fixes, run node scripts/phase-lint.test.mjs to verify, and create a PR targeting main
+## 2026-09-21T18:04:00Z — feat/32-review-consistency-pack — manual
+- **Commits:** 65 (`44acea68…12bf7b7e`)
+- **Files:** 70 files
+- **Summary:** review-plan 32-review-consistency-pack → PLAN-REVIEW-FAIL (F13-F19)
+- **Decisions:** Parent SPEC-REVIEW-32-4 stale-context from CLAUDE.md moves (L1); plan cut pre-merge against now-merged dep 31+60 (L2/P2/P12); normative-drift.changelog row red at head (P10); 8+ evidence path:line stale post-merge (P12); PLAN.md ledger counts miscounted (P12); feature 31 materiality contract overlaps edited surfaces (P1/P2); roadmap write clobbered by merge (F19 env)
+- **Next:** re-cut engineering half: re-base on post-merge head e1c008bc, reconcile IS-3/dep 31 overlap, fix PLAN.md counts, land on head where normative-drift is green, then re-run /review-plan 32
