@@ -15,7 +15,7 @@
  *
  * How those conditions are met here:
  *   * The scope of "normative surface" is one declared table — `normative-surfaces@1`
- *     in `CLAUDE.md` — and the gate refuses a row whose `grammar` cell does not
+ *     in `AGENTS.md` — and the gate refuses a row whose `grammar` cell does not
  *     resolve, which is what makes "every surface has a fixed grammar" a check
  *     rather than a claim. The `rendered-facts@1` table does the same for the
  *     restatements (a surface cannot be both unpinned and unknown to the gate).
@@ -68,7 +68,7 @@ const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test
 const read = (rel) => fs.readFileSync(path.join(root, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(root, rel));
 
-const GUIDE_REL = "CLAUDE.md";
+const GUIDE_REL = "AGENTS.md";
 const INVENTORY_MARKER = "normative-surfaces@1";
 const FACTS_MARKER = "rendered-facts@1";
 const SCHEMA_INDEX_REL = "packages/agentic-workflow-schema/src/index.ts";

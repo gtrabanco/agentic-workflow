@@ -139,7 +139,7 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n| ${unit.slice(0, 2)} | \`${unit.slice(3)}\` | ${status} | — | a unit |\n`);
   write("docs/fix/README.md", `${FIX_INDEX}\n`);
   write("docs/workflow/REPOSITORY_STATE.md", `${FROZEN_NRS}\n`);
-  write("CLAUDE.md", GUIDE);
+  write("AGENTS.md", GUIDE);
   write(`${unitDir}/SPEC.md`, specText());
   write(`${unitDir}/ACCEPTANCE.md`, ACCEPTANCE);
   write(`${unitDir}/PLAN.md`, "# Plan\n\nP1 ships it.\n");

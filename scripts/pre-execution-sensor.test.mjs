@@ -105,7 +105,7 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
   write(`${dir}/planning-evidence.md`, "# Evidence\n\n- PE-1 measured.\n");
   write(`${dir}/planning-obligations.md`, "# Obligations\n\n- OB-1.\n");
   write("docs/features/ROADMAP.md", ROADMAP);
-  write("CLAUDE.md", GUIDE);
+  write("AGENTS.md", GUIDE);
   write("src/code.ts", "export const a = 1;\n");
   git(root, "init", "-q", "-b", "main");
   git(root, "config", "user.email", "fixture@example.invalid");
@@ -190,7 +190,7 @@ test("RS3b: the identity fields default to the newest commit that touched a boun
   const { snapshot } = f.build("--stage", "spec", "--dir", f.dir, "--unit", f.unit);
   // ROADMAP.md is deliberately NOT a bound path (shared lifecycle ledger): the
   // identity covers the unit's artifacts plus the governing authorities only.
-  const bound = git(f.root, "log", "-1", "--format=%H", "--", `${f.dir}/SPEC.md`, "CLAUDE.md");
+  const bound = git(f.root, "log", "-1", "--format=%H", "--", `${f.dir}/SPEC.md`, "AGENTS.md");
   assert.equal(snapshot.sourceRevision, bound,
     "sourceRevision is the revision the bound bytes were actually read at");
   assert.equal(snapshot.artifactRevisionId, bound,
@@ -294,11 +294,11 @@ test("RS13: a moved authority outranks artifact content (contract precedence)", 
   const f = makeRepo(t);
   recordReceipt(f, { stage: "spec" });
   f.write(`${f.dir}/SPEC.md`, specText("Ship the other thing."));
-  f.write("CLAUDE.md", "# Project guide\n\nRules that the reviewer never read.\n");
+  f.write("AGENTS.md", "# Project guide\n\nRules that the reviewer never read.\n");
   const r = report(verify(f, "spec"));
   assert.equal(r.structural.reasonCode, "stale-context",
     "the schema comparator answers stale-context before content; the CLI must not drift from it");
-  assert.ok(r.structural.changedPaths.includes("CLAUDE.md"));
+  assert.ok(r.structural.changedPaths.includes("AGENTS.md"));
 });
 
 test("RS13: a moved policy is its own dimension", (t) => {

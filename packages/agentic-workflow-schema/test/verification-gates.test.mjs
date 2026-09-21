@@ -2,7 +2,7 @@
 //
 // F70 originally asserted that the npm package-lock.json and bun.lock agreed
 // with the manifest (dual-lock sync). On 2026-08-30 the repo went bun-only:
-// bun.lock is the sole lockfile (CLAUDE.md → Packages; pinned by
+// bun.lock is the sole lockfile (AGENTS.md → Packages; pinned by
 // lockfile-policy.test.mjs), so the sync assertions now compare the one lock
 // against the manifest instead of the two locks against each other.
 import { test } from "node:test";

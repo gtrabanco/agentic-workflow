@@ -1,7 +1,7 @@
 ## Write and verify the bootstrap
 
-4. **Write the adapted scaffold.** Fill the `CLAUDE.md` placeholders (commands,
-   the documentation map rows, architecture); keep `AGENTS.md`, the
+4. **Write the adapted scaffold.** Fill the `AGENTS.md` placeholders (commands,
+   the documentation map rows, architecture); keep the
    `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
    `.github/` templates; keep `.agentic-workflow/hooks/` and activate only the
    adapters explicitly accepted in the interview; prune unused doc folders and
@@ -41,7 +41,7 @@
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
    with the skills and covers every review axis, so **no external review skill
    is required on any agent**. If the user wants platform-specific extras (a
-   framework skill, a stack-specific security skill), record them in `CLAUDE.md`
+   framework skill, a stack-specific security skill), record them in `AGENTS.md`
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.

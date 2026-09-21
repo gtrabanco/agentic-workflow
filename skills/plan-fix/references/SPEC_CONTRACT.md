@@ -7,7 +7,7 @@ Follow the project's **Workflow conventions** question protocol (what / scope / 
 The base template at `docs/fix/_TEMPLATE/SPEC.md` is mandatory. Add these sections in order, after the existing ones:
 
 - **Impact** — layers touched (per the architecture doc); modules and files (paths); blast radius; detection lead time.
-- **Rules that must never be violated** — project-wide invariants the fix must preserve, from CLAUDE.md "Hard rules" + the cited docs. E.g. "Domain value-object rules hold", "Inner layers cannot import outer layers".
+- **Rules that must never be violated** — project-wide invariants the fix must preserve, from AGENTS.md "Hard rules" + the cited docs. E.g. "Domain value-object rules hold", "Inner layers cannot import outer layers".
 - **Operational risks** — scheduled-job / queue / cache / schema / external-adapter interactions; concurrency or eventual-consistency hazards.
 - **Security risks** — auth, secrets, PII, webhooks, rate-limits.
 - **Compliance touchpoints** — any domain/compliance rules; note "n/a" explicitly if none.

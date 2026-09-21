@@ -26,7 +26,8 @@ conventions and adapt.
 
 ## 1. Discover the project (read before writing anything)
 Find and read whatever exists; record the real paths and rules:
-- The agent guide at the repo root: `CLAUDE.md` and/or `AGENTS.md`.
+- The agent guide at the repo root: `AGENTS.md` (a legacy `CLAUDE.md` may still
+  be the only name an older Claude Code release reads).
   Extract: the documentation map, the feature workflow, branch/PR rules, the
   pre-commit checklist, the docs language, and the verification gate commands
   (type-check / test / build — whatever the project uses, e.g.

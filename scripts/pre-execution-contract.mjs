@@ -59,7 +59,7 @@ export const CONTEXT_SOURCES = [
   // Dependency receipt v1 fingerprints the SPEC `Depends on:` line plus the
   // closure roadmap rows). The unit's own artifacts and the governing
   // authorities below stay fully bound.
-  { kind: "project-guide", file: "CLAUDE.md" },
+  { kind: "project-guide", file: "AGENTS.md" },
   { kind: "normalized-repository-state", file: "docs/workflow/REPOSITORY_STATE.md" },
   // The *project's* declared invariants only: docs/workflow/WORKFLOW_INVARIANTS.md
   // is the portable evaluation contract, never a project's rule set, so binding it

@@ -6,7 +6,7 @@
 // package-lock.json on disk is drift: it rots silently next to bun.lock, and
 // this exact file resurrected on main once already (the #150 merge) despite
 // the schema package dropping its own at 1.0.1. The policy lives in
-// CLAUDE.md → Packages; the .gitignore rejects the file; this test fails the
+// AGENTS.md → Packages; the .gitignore rejects the file; this test fails the
 // suite if one ever appears again.
 
 import { test } from "node:test";
@@ -32,6 +32,6 @@ test("package-lock.json must not exist (bun is the sole package manager)", () =>
   assert.equal(
     existsSync(join(PKG_DIR, "package-lock.json")),
     false,
-    "package-lock.json resurrected — delete it; bun.lock is the sole lockfile (CLAUDE.md → Packages)",
+    "package-lock.json resurrected — delete it; bun.lock is the sole lockfile (AGENTS.md → Packages)",
   );
 });

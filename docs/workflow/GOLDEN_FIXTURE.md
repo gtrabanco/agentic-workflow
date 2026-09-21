@@ -6,7 +6,7 @@ output still holds. The mechanical half is executable (`scripts/golden-fixture.t
 
 ## Purpose
 
-CLAUDE.md promises every skill "must run correctly on any agent and any model" —
+AGENTS.md promises every skill "must run correctly on any agent and any model" —
 and that promise is untested: a rewording a frontier model absorbs can silently
 break a weak local model (Qwen3.6 35B / Gemma4 26B).
 

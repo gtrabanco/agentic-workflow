@@ -31,7 +31,7 @@ const REPO = fileURLToPath(new URL("..", import.meta.url));
 const FIXTURE_DIR = path.join(REPO, "scripts", "fixtures", "golden-fixture");
 const DOC = path.join(REPO, "docs", "workflow", "GOLDEN_FIXTURE.md");
 const LINTER = path.join(REPO, "scripts", "phase-lint.mjs");
-const GUIDE = path.join(REPO, "CLAUDE.md");
+const GUIDE = path.join(REPO, "AGENTS.md");
 const INDEX = path.join(REPO, "docs", "workflow", "README.md");
 const SNAPSHOT = path.join(FIXTURE_DIR, "expected", "phase-lint-toy-plan.txt");
 
@@ -246,7 +246,7 @@ export function crossReferences(root, docPath = DOC) {
       message: `crossReferences: ${showPath(docPath)} names missing fixture path(s): ${[...missing].join(", ")}`,
     };
   }
-  for (const [file, label] of [[GUIDE, "CLAUDE.md"], [INDEX, "docs/workflow/README.md"]]) {
+  for (const [file, label] of [[GUIDE, "AGENTS.md"], [INDEX, "docs/workflow/README.md"]]) {
     const line = fs
       .readFileSync(file, "utf8")
       .split("\n")

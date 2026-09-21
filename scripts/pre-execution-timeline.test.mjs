@@ -82,7 +82,7 @@ function makeRepo(t) {
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
   write(`${UNIT_DIR}/SPEC.md`, specText());
   write(`${UNIT_DIR}/ACCEPTANCE.md`, ACCEPTANCE);
-  write("CLAUDE.md", GUIDE);
+  write("AGENTS.md", GUIDE);
   git(root, process.env, "init", "-q", "-b", "main");
   git(root, process.env, "config", "user.email", "fixture@example.invalid");
   git(root, process.env, "config", "user.name", "Fixture");

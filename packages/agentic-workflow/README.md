@@ -6,7 +6,7 @@ the first producer feature creates the crate, later producers land their scripts
 as subcommands of it.
 
 - **Private, zero dependencies, no build step.** Repository tooling runs with
-  bun first and node as the guaranteed fallback (`CLAUDE.md` §Verification).
+  bun first and node as the guaranteed fallback (`AGENTS.md` §Verification).
 - **Scratch convention:** `.agentic-workflow/tmp/` at the repository root holds
   throwaway producer output. It is committed as a directory (`.gitkeep`) so the
   convention exists on a fresh clone.

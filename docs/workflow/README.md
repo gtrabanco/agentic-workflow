@@ -24,7 +24,7 @@ Notion ("Agentic Workflow").
 ## Core principles
 
 1. **Docs drive the work.** Every skill reads the project's own guide
-   (`CLAUDE.md`/`AGENTS.md`), documentation map, architecture, roadmap, and style
+   (`AGENTS.md`), documentation map, architecture, roadmap, and style
    docs *first*, and respects them. The workflow adapts to the project, not the
    other way around.
 2. **Plan before code.** Features get a SPEC + planning artifacts before a line

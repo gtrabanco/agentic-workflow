@@ -141,7 +141,7 @@ assert.match(ledgers, /single writer of every finding mark is `review-change`/);
 
 // O6: one writer on the ownership map + the normative-surfaces row.
 assert.match(ledgers, /review-change:finding-mark/);
-const claudeGuide = read("CLAUDE.md");
+const claudeGuide = read("AGENTS.md");
 assert.match(claudeGuide, /block:finding-mark@1/);
 
 // O7: the annotator never parses VF- rows as findings — proven against the

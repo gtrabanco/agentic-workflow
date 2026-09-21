@@ -333,7 +333,7 @@ test("AC15: the troubleshooting table quotes messages the code actually emits", 
 });
 
 // --- F8 fold: the two scanners disagreed about a skill that never declares
-// `user-invocable`. CLAUDE.md is explicit — the key is REQUIRED to appear in the
+// `user-invocable`. AGENTS.md is explicit — the key is REQUIRED to appear in the
 // menu — so absence means internal, which is what the bundler already did and
 // what the runtime scanner did not.
 
