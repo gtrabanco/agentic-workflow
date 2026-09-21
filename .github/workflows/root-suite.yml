@@ -37,6 +37,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.0
+        with:
+          # Full history, not the default shallow clone: the ledger-provenance
+          # suite resolves which commit ticked a fold row by walking git log, so
+          # a one-commit clone attributes every row to HEAD and reports all of
+          # them unproven — a false red that says nothing about the change.
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6.4.0
