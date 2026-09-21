@@ -27,12 +27,10 @@ For a new skill, create this table in the correct user-facing/internal section:
 Use today's date and a tight behavioral summary. Add or merge today's Release
 log line.
 
-### 3. Synchronize READMEs and model routing
+### 3. Synchronize READMEs
 
 - Minor/major behavior change: update only the affected Skills-table cell in
   `README.md`. Patch: edit only if the cell is inaccurate.
-- Tier change: update `docs/workflow/model-routing.yml`, then mirror it in both
-  README model tables. Never edit the derived `claude` branch directly.
 - Otherwise leave README content unchanged.
 
 ### 4. Handle major migrations

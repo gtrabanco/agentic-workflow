@@ -22,7 +22,7 @@ leans on them harder than any other — here is the manual equivalent of each:
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally in the conversation the routing table assigns it (in-turn = this
   conversation; subagent/hand-off = a fresh one).
-- **No per-skill `model:`/`effort:`** — the `#claude` branch's routing table pins these tiers; here, pick tiers yourself:
+- **No per-skill `model:`/`effort:`** — no skill pins a tier; pick tiers yourself:
   judgment stages on your **strongest** model, implementation on a cheaper one,
   and `product-audit` always as its own maximum-effort run.
 - **Provider concurrency limits** — when spawning parallel subagents (or
