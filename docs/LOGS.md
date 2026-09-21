@@ -2009,3 +2009,22 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix(phase-lint): 4 execution-affecting fixes — PR #248
 - **Decisions:** F99: embeddedTarget linearized from split() to matchAll() (0 mismatches over 500k fuzz, byte-identical); F42: OUTCOME_ANCHOR arrow alternatives now require alphanumeric text (→\s*\S*[A-Za-z0-9] instead of →\s*\S); F12 and F15 verified correct on main — only F42 needed behavior change; F99/F12/F15 documented with comments
 - **Next:** None — PR #248 merged to main; check workflow-status for next roadmap unit
+
+## 2026-09-21T17:50:28Z — feat/32-review-consistency-pack — manual
+- **Commits:** 52 (`44acea68…9aa33530`)
+- **Files:** 69 files
+- **Summary:** triage-issue --prioritize-now F14-F20: fixed 7 review findings (PERSIST_AND_DECIDE self-contradiction, CLASSIFY duplicate converter, AUDIT_DIMENSIONS stale range, 4 budget ceilings) and verified all gates
+- **Decisions:** F15: resolved PERSIST_AND_DECIDE.md "no ledger write" self-contradiction by adding "beyond step 11" qualifier and adding GATE-RAN to the mutations list; updated review-loop-discipline discipline pin (026bcc98). F14: changed AUDIT_DIMENSIONS.md "checks 1-13" to citation of audit-docs as count owner. F16: added CLASSIFY.md sentence naming workflow-status.mjs SEVERITY_VOCABULARY as envelope projection. F17-F20: re-based 4 per-skill budget ceilings (review-change 2800→3079, workflow-status ref 2527→2764, workflow-status main 1680→1767/lines 136→140, plan-feature ref new 2367) with declared growth sources.
+- **Next:** /review-change on the changed HEAD — re-verify unit is clean after fold
+## 2026-09-21T17:50:27Z — feat/32-review-consistency-pack — manual
+- **Commits:** 52 (`44acea68…9aa33530`)
+- **Files:** 69 files
+- **Summary:** audit-pr #249 (feat/32-review-consistency-pack) — the PR was MERGE-READY: review receipt current at 9aa33530, all 5 phases P1–P5 complete, all verification gates green (599/599 pass, context budgets PASS 40, normative drift 19/19), closure integrity pass (25 entity rows + 7×4 role matrix + 18 inventory, zero blanks), no blocker, 3 low report-notes (F20 spec citation drift, F23 grep -n on directory, F25 plan-label mismatch) logged as non-blocking
+- **Decisions:** audit-pr consumes the review-change REVIEW-PASS receipt rather than re-reviewing — the SHA-bound marker at 9aa33530 matched headRefOid, so all 13 gates evaluated and passed
+- **Next:** /audit-pr will need to be re-run after the human merges PR #249 to verify the merge; after merge: /plan-feature --next for the next roadmap unit (row 50, review-loop-convergence)
+## 2026-09-21T17:50:29Z — feat/32-review-consistency-pack — manual
+- **Commits:** 52 (`44acea68…9aa33530`)
+- **Files:** 69 files
+- **Summary:** review-change --adversarial 2 + fold: found and fixed 5 fix-now findings (F35-F39) on the 32-review-consistency-pack unit
+- **Decisions:** F35-F37 were branch divergence (feature branch forked before PR #248 merged to main); the fix was a single rebase onto main, which restored PR #248's three phase-lint fixes (matchAll linearization, OUTCOME_ANCHOR arrow guard, F12/F15 grammar comments)
+- **Next:** re-run /review-change on HEAD 9aa33530 (or HEAD 91875d3b) to close out the 32-review-consistency-pack unit review cycle
