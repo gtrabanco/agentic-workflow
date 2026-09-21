@@ -84,6 +84,9 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
 ✓ Every task of this phase checked off in TASKS.md, each mapped to evidence
   (code path or test name)
 ✓ Tests updated/added for every behavior this phase changed
+✓ Tests-first red run recorded (core/domain + orchestration phases, n/a for
+  test-after UI/adapter phases) — the failing first run's command, exit status,
+  and failing test names are in the phase's `progress.md` receipt
 ✓ No TODO/FIXME/HACK markers left in the diff
 ✓ No duplicated logic (reuse the existing helper — cite it if one existed)
 ✓ No dead code introduced (unused imports, functions, unreachable branches)

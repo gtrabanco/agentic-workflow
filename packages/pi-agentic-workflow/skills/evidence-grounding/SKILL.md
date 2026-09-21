@@ -1,7 +1,7 @@
 ---
 name: evidence-grounding
 user-invocable: false
-version: 1.6.0
+version: 1.7.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -80,7 +80,17 @@ Authoring is progressive. Never jump from discovery to a polished artifact.
    design stage where `design-feature`'s research gate makes it mandatory, fetch
    external sources and freeze each as an evidence row (URL and access date);
    offline or unanswered material questions return `NEEDS-EVIDENCE`, never an
-   invented citation. **If you are
+   invented citation. **Partial is a first-class stop.** When every remaining
+   material question is an `unknown` row with a named owner and a stated
+   consequence, stop investigating and draft — depth follows uncertainty and
+   consequence, not completeness; hunting further reads to convert owned
+   `unknown` rows into `proven` ones is a stalled pass unless one named read
+   closes one. **Human-decision cutoff** — when a gap can only be closed by a
+   product or user decision, stop that thread immediately: record one focused
+   question as an `unknown` row owned by the human, and continue the rest of
+   the pass. Never research to guess the answer, and never let one open product
+   choice stall unrelated evidence; readiness, not more searching, routes the
+   open question to its owner (`NEEDS-DESIGN`). **If you are
    that reader** — you did not write the artifact and are not writing it — the
    contract governs you: skip steps 1, 3 and 4, and produce the artifact under
    whatever name the invitation used; the position decides, not the label.
