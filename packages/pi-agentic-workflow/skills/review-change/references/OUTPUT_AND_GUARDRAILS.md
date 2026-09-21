@@ -35,7 +35,8 @@ lost, and none becomes reviewer-created backlog (D3):
 - **fix-now / `decision-required`** → stop and surface the decision to the user;
   the unit blocks until decided. No issue is created.
 - **proposal** (independent future capability) → batched in the report with a
-  trigger; only the **user** routes it to `triage-issue`.
+  trigger; only the **user** routes it to `triage-issue` (independent
+  proposals, audit findings, or `--prioritize-now` runs).
 - **ignore** → note the rationale in the report; no further action.
 
 The report's `Decision:` line is **three-state** (D10): `REVIEW-PASS` when the

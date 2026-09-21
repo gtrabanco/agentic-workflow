@@ -118,7 +118,7 @@ The one-owner rule, stated once so every skill and template can cite it here:
 **a durable ledger has exactly one writer per column set, plus at most one
 declared mechanical annotator, which may append only the token its own row
 names.** Nobody else writes a row — not a reviewer, not a later phase, not a
-script. So `fold-findings` flips only the `folded:` flag `triage-issue` gives it,
+script. So `fold-findings` flips only the `folded:` flag per the map's `fold-findings:folded-flag` owner entry,
 and `scripts/ledger-provenance.mjs` appends only the marker it really emits:
 its `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
 `· REOPENED — provenance unproven` note when a tick has no matching
@@ -142,7 +142,7 @@ must pass; the CI node-compat job enforces the fallback.
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
-review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | bun test scripts/ledger-provenance.test.mjs
+review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + review-change:review-gate-ran-marks + audit-pr:audit-rows + triage-issue:triage-rows + execute-phase:gate-ran-marks + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | bun test scripts/ledger-provenance.test.mjs
 planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none | none | bun test scripts/pre-execution-quality.test.mjs
 progress | docs/features/<NN>-<slug>/progress.md · docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none | none | bun test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
@@ -207,3 +207,36 @@ reproducer as its regression check — it never re-derives it; a `recheck` cell
 that cannot be materialized yields `BLOCKED <missing input>`. This consumption
 leaves the row shape, the `VF-` exclusions, and the `review-change`
 single-writer rule untouched.
+
+### The gate-run mark
+
+A gate run — green or red — leaves a durable mark in the unit's
+`review-findings.md` ledger (for features:
+`docs/features/<NN>-<slug>/review-findings.md`, for fixes:
+`docs/fix/<issue>-<topic>/review-findings.md`), owned by the `review-findings`
+truth-class row's owner cell extended with the two recorder column-sets:
+
+```text
+gate-ran@1
+id | file:line | cmds | exit | [additive-slots ...]
+GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `manifest <sha>`]
+```
+
+- **Fixed format** (the one grammar; every consumer cites this block):
+  `GATE-RAN | HEAD <sha> | <cmds> | exit <code>` — every run records the SHA,
+  the commands run, and the exit code (green and red alike; `exit 0` is green).
+  `<cmds>` is the runnable command(s) the gate ran, joined by ` | ` when several.
+- **Additive slots**: fields after `HEAD` are additive; consumers ignore unknown
+  trailing fields (feature 35's `manifest <sha>` slot is reserved, not yet
+  consumed).
+- **Identical-head reuse**: any skill may consume a **green** run only at the
+  identical HEAD; a changed head ⇒ re-run the gate. A red mark is never
+  consumed as a pass.
+- **Recorder column-sets**: the `review-findings` truth-class row's owner cell
+  declares `execute-phase:gate-ran-marks` (executor phase gates) and
+  `review-change:review-gate-ran-marks` (reviewer gate runs), distinct column-set
+  names per the one-writer-per-column-set rule.
+- **Owner extension**: the identical owner cell is mirrored into both template
+  projections (`docs/features/_TEMPLATE/LEDGERS.md` and `docs/fix/_TEMPLATE/LEDGERS.md`).
+- **No new truth-class row**: the grammar admits no new row — the existing
+  `review-findings.md` ledger pattern is reused with extended owner cells.

@@ -5,6 +5,61 @@ the **synthesized** findings table (D5). Classify each finding into exactly one
 class, in this order. Never reopen source files to classify; the table's
 evidence is authoritative.
 
+### Severity conversion (canonical table)
+
+The single-owner table below maps every severity scale the review pack emits
+onto the classification scale (`high | med | low`). Only this section may
+convert — a consumer facing an unknown scale **fails closed** (no ad-hoc
+conversion). The table replaces the ad-hoc mapping that lived at
+`PERSIST_AND_DECIDE.md`.
+
+The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs:718-721`)
+is a direct projection of this table onto the envelope schema's `high|med|low`
+enum, not a competing converter; it always produces a value listed here.
+
+| Producer scale | → `high` | → `med` | → `low` |
+|---|---|---|---|
+| Ledger (`CLASSIFY.md` itself): `high` | self | — | — |
+| Ledger: `med` | — | self | — |
+| Ledger: `low` | — | — | self |
+| Finder (nine review passes): `critical` → `high` | ✓ | — | — |
+| Finder: `major` → `med` | — | ✓ | — |
+| Finder: `minor` → `low` | — | — | ✓ |
+| Planning: `critical` → `high` | ✓ | — | — |
+| Planning: `high` → `high` | ✓ | — | — |
+| Planning: `medium` → `med` | — | ✓ | — |
+| Planning: `low` → `low` | — | — | ✓ |
+| Planning: `info` → `low` | — | — | ✓ |
+| `audit-docs`: `high` → `high` | ✓ | — | — |
+| `audit-docs`: `low` → `low` | — | — | ✓ |
+
+**Unknown scale → fail closed.** A scale not listed above is an error; the
+consuming skill must not guess.
+
+### Derived blocking gate
+
+A finding **blocks** only when the reviewer cites which single-owner source
+fails — blocking is a table lookup over cited sources, never a severity
+opinion. The four citation categories are:
+
+1. **ACCEPTANCE criterion** unverified or failed.
+2. **Obligation row** in the unit's ledger is not `verified` or `n-a`.
+3. **Gate is red** at the reviewed head (the project gate exited non-zero at
+   the exact head under review).
+4. **Open confirmed `fix-now` row** on the fold ledger (a finding already
+   persisted as `fix-now` with `folded: no`).
+
+No citation among these four categories → the finding is a **report-note** or
+**proposal**, never blocking. D10's verdict rule (the three-way `REVIEW-PASS |
+REVIEW-FAIL | NEEDS-DECISION` verdict) remains **unchanged** — the derived gate
+operates inside the `REVIEW-FAIL` branch as the evidence that determines whether
+a finding truly blocks.
+
+**`report-note` definition owner.** The `report-note` classification is owned by
+`LEDGERS.md` §3 (`:91-96`): material is `medium`+, a `low` row is a persisted
+report-note. Classifying surfaces cite this owner instead of restating the
+materiality bar.
+
 ### Step 1 — `ignore` first (the claim, not a class choice)
 
 `ignore` claims **"this is not a real defect"** — a false positive or a

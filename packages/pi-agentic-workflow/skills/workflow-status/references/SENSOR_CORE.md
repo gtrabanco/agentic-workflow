@@ -12,12 +12,13 @@ the JSON and interprets it.
 
 Read `docs/workflow/REPOSITORY_STATE.md` when present and always emit
 `detail.repository_state: {status, snapshot_id, source_revision}`. Before
-readiness classification, if the ledger is missing, `draft`, `contradicted`, or
+readiness classification, if the ledger is `draft`, `contradicted`, or
 `resolved`, add a run-scoped `substrate` blocker, set the envelope state to
 `BLOCKED`, leave `startable_now` empty, and set `next.recommended` to
-`/discover-repository-state` for missing/non-frozen state or
-`/resolve-repository-state <contradiction-id>` for `contradicted` state. The
-sensor remains read-only; it never edits or resolves the ledger. Conflicting
+`/discover-repository-state` for non-frozen state or
+`/resolve-repository-state <contradiction-id>` for `contradicted` state.
+An absent ledger emits a non-blocking substrate notice instead of a blocker.
+The sensor remains read-only; it never edits or resolves the ledger. Conflicting
 live evidence against a frozen ledger remains a contradiction candidate.
 
 3. **Urgency labels (`detail.urgent`) — labels-only, presence-only, never
