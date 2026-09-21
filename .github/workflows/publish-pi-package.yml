@@ -88,6 +88,8 @@ jobs:
           # rule — 1.4.0 writes lockfile version 2).
           bun-version: 1.4.0
       - run: bun install --frozen-lockfile
+      - name: Bundle skills (must run before test — test checks source vs bundle parity)
+        run: bun run bundle:skills
       - name: Build + test (node runtime — the guaranteed fallback)
         run: bun run test:node
 
@@ -121,6 +123,9 @@ jobs:
 
       - name: Install + build (bun, frozen lockfile; prepare runs tsc)
         run: bun install --frozen-lockfile
+
+      - name: Bundle skills (must run before test — test checks source vs bundle parity)
+        run: bun run bundle:skills
 
       - name: Test (the gate — never publish red)
         run: bun run test
