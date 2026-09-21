@@ -1,5 +1,36 @@
 # Migration notes
 
+## 2026-09-21 — the agent guide is `AGENTS.md`, and `CLAUDE.md` is retired (`init-workspace` 3.0.0, **breaking for the scaffold's file name**)
+
+**What changed.** The scaffold wrote the guide as `CLAUDE.md` and shipped an
+`AGENTS.md` stub beside it. The guide is now written only as `AGENTS.md` — one
+file, one name — and this repository's own guide moved with it.
+
+**Why.** Two names for one document is a duplicated source of truth. The copy
+nobody reads is the copy that gets edited, and edits made there are silently
+overwritten by the next scaffold refresh.
+
+**What you have to do.** Nothing, unless you want the single name:
+
+- **Bootstrap** now fills `AGENTS.md` and produces no `CLAUDE.md`.
+- **Upgrade mode** (`/init-workspace`) gains a step that reconciles and retires
+the old file: any block, rule, or value that exists only in `CLAUDE.md` is
+folded into `AGENTS.md` **first**, and `CLAUDE.md` is deleted **only if you say
+yes**. It is never deleted as a side effect of an upgrade.
+- **Keep it if your client needs it.** A Claude Code release that predates
+`AGENTS.md` support reads only `CLAUDE.md`. If yours is one of them, decline the
+removal: the file is left byte-identical and reported as a residual — a kept
+legacy guide is a decision, not drift. Point the agent at `AGENTS.md` yourself
+once your client reads it.
+- **Existing scaffold markers.** Step 0 accepts either file name when deciding
+whether a repository is an agentic-workflow install, so an install from an older
+release still enrols in upgrade mode instead of being treated as foreign.
+
+**Tooling on this change.** The root suite resolves the guide by name, as do the
+golden-fixture and pre-execution suites — their temporary projects declare it as
+the `project-guide` context row — so `scripts/pre-execution-contract.mjs` and the
+four fixture-building suites moved with it in the same change.
+
 ## 2026-09-11 — the workflow-status envelope has a deterministic script producer (`workflow-status` 3.3.0, additive)
 
 **Additive minor bump, no migration required.** `workflow-status` 3.2.1 → 3.3.0
@@ -49,7 +80,7 @@ in-flight spec/plan receipt repo-wide and force a re-review that answered nothin
 
 What still invalidates a receipt (unchanged): any bound unit artifact byte
 (`SPEC.md`, `ACCEPTANCE.md`, `TASKS.md`, …), the governing authorities
-(`CLAUDE.md`, `docs/workflow/REPOSITORY_STATE.md`,
+(`AGENTS.md`, `docs/workflow/REPOSITORY_STATE.md`,
 `docs/architecture/ARCHITECTURAL_INVARIANTS.md`), the parent lineage, the policy
 version, and a rotated `artifactRevisionId`. The roadmap row's safety-relevant
 content stays guarded live by the own-status gate (read every invocation) and the
@@ -383,9 +414,9 @@ mode proposes `docs/CAPABILITIES.md` seeded from discovery) — or copy
 
 **Additive, non-breaking.** `init-workspace` gains a second mode: on a repo
 Step 0 recognizes as an existing agentic-workflow scaffold (marker:
-`CLAUDE.md` + `docs/features/ROADMAP.md` or `docs/workflow/`), it now offers
+`AGENTS.md` + `docs/features/ROADMAP.md` or `docs/workflow/`), it now offers
 **upgrade** alongside the existing merge/adapt/abort choices. Upgrade mode
-fetches the current `template/`, diffs the project's `CLAUDE.md`/`docs/`
+fetches the current `template/`, diffs the project's `AGENTS.md`/`docs/`
 substrate against it, reads this file (`MIGRATION.md`) for the rationale
 behind each missing block, and proposes **only the blocks the project
 lacks** through one short, discovery-defaulted interview — never rewriting a

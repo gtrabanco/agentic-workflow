@@ -18,7 +18,7 @@ Ask one consolidated question only when a bump remains genuinely ambiguous.
 
 ### 3. Lint, warn, never repair
 
-Check all seven `CLAUDE.md` invariants. This skill may edit only `version:` in a
+Check all seven `AGENTS.md` invariants. This skill may edit only `version:` in a
 SKILL.md, so report violations without fixing them:
 
 1. User-facing entrypoint contains a visible closing `→ Next:` block.

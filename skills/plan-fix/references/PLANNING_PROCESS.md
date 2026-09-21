@@ -14,7 +14,7 @@ inferred around.
    (use the declared forge equivalent). Any failure stops the whole set. Translate
    issue text to the artifact language; ask only on material ambiguity. Derive a
    kebab-case topic (≤40 chars, no leading verb) from the primary issue title.
-2. **Read the docs map.** Read `CLAUDE.md`, then relevant mapped docs; every SPEC
+2. **Read the docs map.** Read `AGENTS.md`, then relevant mapped docs; every SPEC
    claim cites a path/section.
 3. **Locate affected code.** Name per issue the layers, modules/files, ports,
    adapters, and entities.

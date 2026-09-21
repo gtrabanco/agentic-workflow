@@ -41,9 +41,9 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
 5. **Sweep installed tooling** — (a) inventory the installed skills and
    connected MCP servers available to the agent; (b) cross-reference each
    against the applicable review axes and the roadmap features; (c) classify
-   each as **register** (useful, not yet named in the project's `CLAUDE.md`),
+   each as **register** (useful, not yet named in the project's `AGENTS.md`),
    **re-design** (would change a feature's definition/scope), or
-   **not-relevant**; (d) dedupe against what `CLAUDE.md` already registers —
+   **not-relevant**; (d) dedupe against what `AGENTS.md` already registers —
    only unregistered/relevant items survive into proposals. If the agent
    cannot enumerate its installed skills / connected MCPs, say so plainly
    (no silent caps) rather than inventing an inventory.
@@ -54,7 +54,7 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
    - **Roadmap: remove or revise** — features that are obsolete, superseded, or no
      longer make sense.
    - **Tooling: register or re-design** — unregistered-but-useful tooling to add
-     to `CLAUDE.md`, or a discovered skill/MCP that would rescope a feature.
+     to `AGENTS.md`, or a discovered skill/MCP that would rescope a feature.
 7. **Number the findings.** Assign every finding in the severity-ranked list a
    sequential id `F1, F2, …` — **one single `F` sequence for the whole audit**,
    in ranked order, regardless of dimension. Never use a different letter per

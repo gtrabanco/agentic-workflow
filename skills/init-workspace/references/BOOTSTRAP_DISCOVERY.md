@@ -61,7 +61,7 @@
      so `review-perf` can measure instead of guess.
    - **Docs site** — does the project have (or want) a developer docs website
      the `generate-docs` skill can write into? If yes, fill the template's
-     `Docs site` block in `CLAUDE.md` (format: starlight/docusaurus/markdown,
+     `Docs site` block in `AGENTS.md` (format: starlight/docusaurus/markdown,
      content dir, build command, optional knowledge-map command — proposed
      from discovery: an `astro.config.*` + `@astrojs/starlight` dependency
      means Starlight). If no, leave the block commented out — `generate-docs`

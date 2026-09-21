@@ -1,7 +1,7 @@
 # Feature workflow (end-to-end)
 
 From an idea or a feature-request issue to a merged PR — every step and the skill
-that drives it. The lifecycle, per `CLAUDE.md`, is the **five-stage pipeline**:
+that drives it. The lifecycle, per `AGENTS.md`, is the **five-stage pipeline**:
 
 ```
 design (design-feature) → plan (plan-feature) → execute (execute-phase)
@@ -313,7 +313,7 @@ Re-run the gate (type-check, tests, build) green.
 - **Never stack PRs.** If a feature is too large, split into independently
   shippable slices — never by internal phases.
 - Conventional title; body includes `Closes #N` if it came from an issue.
-- The pre-commit checklist (from `CLAUDE.md`): the gate (type-check, tests,
+- The pre-commit checklist (from `AGENTS.md`): the gate (type-check, tests,
   build) green, no architecture violations, no hardcoded secrets, no hidden
   user-facing limitations, and any other project-mandated rules satisfied.
 

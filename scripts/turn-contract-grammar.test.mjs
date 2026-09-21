@@ -2,7 +2,7 @@
 //
 // The fenced `turn-contract-receipt@1` block in the canonical turn contract is
 // the single grammar source (D-52-5). This test parses it, asserts the receipt
-// surface is registered in CLAUDE.md's normative-surfaces table, and runs the
+// surface is registered in AGENTS.md's normative-surfaces table, and runs the
 // shared fixture matrix through BOTH engines checking every emitted line
 // against the parsed grammar.
 
@@ -14,7 +14,7 @@ import path from "node:path";
 import { makeContext, receiptCases, engineOnlyCases, REPO_ROOT } from "../packages/agentic-workflow/test/fixtures.mjs";
 
 const CONTRACT = path.join(REPO_ROOT, "skills/orchestration-envelope/references/TURN_CONTRACT.md");
-const GUIDE = path.join(REPO_ROOT, "CLAUDE.md");
+const GUIDE = path.join(REPO_ROOT, "AGENTS.md");
 const MARKER = "turn-contract-receipt@1";
 
 const EXPECTED_CODES = [
@@ -76,9 +76,9 @@ test("the declared grammar exposes the closed reason-code vocabulary", () => {
 test("the receipt surface is registered in the normative-surfaces table", () => {
   const guide = readFileSync(GUIDE, "utf8");
   const lines = readBlock(guide, "normative-surfaces@1");
-  assert.ok(lines, "CLAUDE.md declares the normative-surfaces@1 block");
+  assert.ok(lines, "AGENTS.md declares the normative-surfaces@1 block");
   const row = lines.find((l) => l.split("|")[0].trim() === "turn-contract-receipt");
-  assert.ok(row, "CLAUDE.md registers the turn-contract-receipt surface");
+  assert.ok(row, "AGENTS.md registers the turn-contract-receipt surface");
   const cells = row.split("|").map((c) => c.trim());
   assert.equal(cells[1], "skills/orchestration-envelope/references/TURN_CONTRACT.md");
   assert.equal(cells[2], "block:turn-contract-receipt@1");

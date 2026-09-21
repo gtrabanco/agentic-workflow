@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.9.0
+version: 3.0.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -34,7 +34,7 @@ first on purpose).
 ## When to use
 
 - Setting up a repo to use these skills and you want the documentation substrate
-  (`CLAUDE.md` + `docs/` map + templates) adapted to the project, not just copied.
+  (`AGENTS.md` + `docs/` map + templates) adapted to the project, not just copied.
 - Prefer this over a static `npx degit gtrabanco/agentic-workflow/template` when you
   want the gate commands, architecture, and doc domains filled in by interview.
 
@@ -42,14 +42,14 @@ first on purpose).
 
 Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
-- Existing `CLAUDE.md` / `AGENTS.md` / `docs/` / `.github/`? If so, **do not
-  clobber** — check first whether it's an **agentic-workflow scaffold**
-  (marker: `CLAUDE.md` present *and* either `docs/features/ROADMAP.md` or a
-  `docs/workflow/` dir). If both markers are present, offer **upgrade** as the
-  default action, alongside merge / adapt-in-place / abort — see **Upgrade
-  mode** below. If `CLAUDE.md`/`docs/` exist but the markers are absent (a
-  foreign scaffold), stay in bootstrap and ask merge / adapt in place / abort
-  as before.
+- An existing **agent guide** (`AGENTS.md`, or a legacy `CLAUDE.md`), `docs/`,
+  `.github/`? If so, **do not clobber** — check first whether it's an
+  **agentic-workflow scaffold** (marker: an agent guide present *and* either
+  `docs/features/ROADMAP.md` or a `docs/workflow/` dir). If both markers are
+  present, offer **upgrade** as the default action, alongside merge /
+  adapt-in-place / abort — see **Upgrade mode** below. If an agent guide or
+  `docs/` exists but the markers are absent (a foreign scaffold), stay in
+  bootstrap and ask merge / adapt in place / abort as before.
 - Detect the stack from manifests (`package.json`, `pyproject.toml`, `go.mod`,
   `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
 - Note the git state (is it a repo, what's the default branch, and the **remote
@@ -84,7 +84,13 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 ## Guardrails
 
-- **Never overwrite an existing `CLAUDE.md` or `docs/` without explicit consent.**
+- **Never overwrite an existing agent guide (`AGENTS.md`, or a legacy
+  `CLAUDE.md`) or `docs/` without explicit consent.**
+- **One guide, one name.** `AGENTS.md` is the guide; a legacy `CLAUDE.md` is
+  retired only in upgrade mode, only with an explicit yes, and only after any
+  content unique to it is folded into `AGENTS.md` first. A user whose Claude
+  Code release predates `AGENTS.md` support may keep it — that choice is
+  reported as a residual, never treated as drift to repair.
 - **Additive-only, never clobber (upgrade mode).** Upgrade mode only adds
   blocks the project lacks and fills raw placeholders — it never rewrites or
   deletes a block the project already tailored, even if the current template
@@ -136,7 +142,7 @@ OpenCode adapter does not load this fallback.
 
 ## Done when
 
-- A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
+- A tailored `AGENTS.md` + `docs/` scaffold + `.github/` templates exist in the
   target, unused folders pruned, residual placeholders flagged, the platform's
   companion review skills are recorded (and offered), and the `urgent`/
   `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade),

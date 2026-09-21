@@ -8,6 +8,6 @@ dist/
 # from honouring this entry while packing.
 skills/
 
-# bun is the sole package manager (CLAUDE.md → Packages) — an npm
+# bun is the sole package manager (AGENTS.md → Packages) — an npm
 # package-lock.json here is drift and the lockfile-policy test fails on it
 package-lock.json

@@ -39,5 +39,5 @@ log line.
 
 For a rename or removed/renamed flag, append the migration to
 `docs/workflow/MIGRATION.md` (create its standard header when absent), update
-the `CLAUDE.md` skill entry when its name/contract changed, and update stale
+the `AGENTS.md` skill entry when its name/contract changed, and update stale
 cross-references found under `docs/` and `skills/`.

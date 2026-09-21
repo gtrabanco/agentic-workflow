@@ -20,7 +20,7 @@ every later decision is made silently and logged with a one-line rationale.
 in-turn (both opus/high — within the ≥ rule), **pre-fed with the interview
 answers** so it asks nothing. Branch discipline:
 
-- **Empty repo:** the scaffold (CLAUDE.md, docs/, .github/, completed
+- **Empty repo:** the scaffold (AGENTS.md, docs/, .github/, completed
   ROADMAP.md, decision record) is the repo's **initial commit on the default
   branch** — there is no history to protect and no base for a PR yet.
 - **Existing repo:** founding goes on a `docs/ship-founding` branch as a PR.

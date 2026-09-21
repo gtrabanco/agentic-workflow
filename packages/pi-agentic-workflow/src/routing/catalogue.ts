@@ -29,7 +29,7 @@ export interface SkillMeta {
  * Minimal frontmatter reader: `name`, `description`, `user-invocable` only.
  *
  * `user-invocable` must say `true` to count: this repository's own rule
- * (CLAUDE.md — the key "REQUIRED for it to appear in the agent's /command menu")
+ * (AGENTS.md — the key "REQUIRED for it to appear in the agent's /command menu")
  * makes absence mean internal, and `scripts/bundle-skills.mjs` reads it the same
  * way. The two scanners agree because the rule is stated once per scanner and
  * pinned by `test/alias-coverage.test.mjs`, not because either default is safe.
