@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 2.1.0
+version: 2.1.1
 argument-hint: "[--fix]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -11,7 +11,8 @@ description: >
   entries already merged/closed, broken documentation-map links, dependency
   cycles, artifacts in the wrong language, naming-convention violations — and
   reports them ranked by severity, fixing only low-risk items on request.
-  On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  Model-agnostic: the skill inherits whatever model and effort your agent
+  session is already using.
   Triggers: "check doc consistency", "are the docs in sync", "audit the docs",
   "doc coherence review", "did the docs drift", "validate the roadmap".
 ---
@@ -149,7 +150,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
+- **No per-skill `model:`/`effort:`** — no skill pins a tier; pick tiers yourself:
   these are mostly mechanical cross-document checks — a mid-tier model is
   enough; escalate to your strongest only for a deep audit.
 
