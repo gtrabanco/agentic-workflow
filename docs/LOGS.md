@@ -2028,3 +2028,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change --adversarial 2 + fold: found and fixed 5 fix-now findings (F35-F39) on the 32-review-consistency-pack unit
 - **Decisions:** F35-F37 were branch divergence (feature branch forked before PR #248 merged to main); the fix was a single rebase onto main, which restored PR #248's three phase-lint fixes (matchAll linearization, OUTCOME_ANCHOR arrow guard, F12/F15 grammar comments)
 - **Next:** re-run /review-change on HEAD 9aa33530 (or HEAD 91875d3b) to close out the 32-review-consistency-pack unit review cycle
+## 2026-09-21T17:52:57Z — feat/32-review-consistency-pack — manual
+- **Commits:** 53 (`44acea68…02e201be`)
+- **Files:** 70 files
+- **Summary:** Feature 32 review-consistency-pack — P1–P5 execution through PR #249
+- **Decisions:** Path-protection-records@1 used for protected-path edits (workflow-status.mjs, sensor test, discipline test). Fold cycle ran to completion with 39 triage findings (F1–F39) across planning and execution phases. Rebased onto main to resolve ceiling drift on 19 stale route ceilings. Pi mirror re-bundled and synced to source at P5.
+- **Next:** Feature 32 is merged (PR #249). Next roadmap unit: check /workflow-status for the next startable feature/fix.
