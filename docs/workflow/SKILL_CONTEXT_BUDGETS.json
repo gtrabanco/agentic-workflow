@@ -39,9 +39,10 @@
       }
     },
     "review-implementation": {
-      "referenceEstimateMax": 2939,
+      "referenceEstimateMax": 3004,
       "referenceSources": {
-        "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939"
+        "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939",
+        "triage 32 F8": "the sensor-projection note added to CLASSIFY.md at 3912d9c1 grew it to 2730 est (10918 B / 4); ceiling re-based to ceil(2730 x 1.10) = 3004"
       }
     },
     "replan-findings": {
@@ -72,11 +73,11 @@
       "referenceLinesMax": 280,
       "mainSources": {
         "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)",
-        "feature 32 (P4)": "the P4 budget re-basis grew SKILL.md to 1606 est / 127 lines (previously 1527/123); mainEstimateMax re-based to ceil(1606 x 1.10) = 1767, mainLinesMax to ceil(127 x 1.10) = 140 (review finding F19)"
+        "triage 32 F25": "the P4 budget re-basis at ceil(1606 x 1.10) = 1767 (review finding F19); SKILL.md is 1606 est / 127 lines at the merged tree — this ceiling was set on a per-skill re-basis but the file is byte-identical to main (the unit did not grow it), so the value is inherited from the merged tree baseline"
       },
       "referenceSources": {
         "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)",
-        "feature 32 (P4)": "the unit's NRS prose grew SENSOR_SIGNALS.md to 2512 est / 150 lines (previously 2297); ceiling re-based to ceil(2512 x 1.10) = 2764 (review finding F18)"
+        "triage 32 F25": "the sensor reference ceiling at ceil(2512 x 1.10) = 2764 (review finding F18); SENSOR_SIGNALS.md is 2512 est / 150 lines at the merged tree — this ceiling was set on a per-skill re-basis but the file is byte-identical to main (the unit did not grow it), so the value is inherited from the merged tree baseline"
       }
     }
   },
@@ -410,13 +411,14 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 19418,
-      "routeLinesMax": 1401,
+      "routeEstimateMax": 19472,
+      "routeLinesMax": 1405,
       "sources": {
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (17701/1277 measured → 19472/1405 declared); the review-change:adversarial route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1"
       }
     },
     "review-change:default-backend": {
@@ -435,13 +437,14 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17600,
-      "routeLinesMax": 1282,
+      "routeEstimateMax": 17654,
+      "routeLinesMax": 1286,
       "sources": {
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-backend route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1"
       }
     },
     "review-change:default-web": {
@@ -460,13 +463,14 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17600,
-      "routeLinesMax": 1282,
+      "routeEstimateMax": 17654,
+      "routeLinesMax": 1286,
       "sources": {
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-web route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1"
       }
     },
     "review-change:synthesize": {
@@ -485,13 +489,14 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18114,
-      "routeLinesMax": 1306,
+      "routeEstimateMax": 18168,
+      "routeLinesMax": 1311,
       "sources": {
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
         "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16516/1191 measured → 18168/1311 declared); the synthesize route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1"
       }
     },
     "review-plan:default": {

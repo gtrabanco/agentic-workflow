@@ -113,7 +113,7 @@ export const isOpen = (folded) => {
  */
 export const isMarkRow = (id) => {
   const value = String(id ?? "").trim();
-  return /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value);
+  return /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value) || /^GATE-RAN$/i.test(value);
 };
 
 const isSeparator = (id) => /^[-:\s]*$/.test(String(id ?? ""));

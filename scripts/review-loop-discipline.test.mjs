@@ -52,7 +52,7 @@ assert.match(reviewProcess, /never a `workflow` finding/);
 // The review never dirties the tree it will next be judged against.
 assert.match(persist, /Commit the ledger append/);
 assert.match(persist, /docs\(<unit>\): persist review findings/);
-assert.match(persist, /On\s+`REVIEW-PASS` with an open PR no additional ledger write happens beyond/);
+assert.match(persist, /On\s+`REVIEW-PASS` with an open PR the SHA-bound receipt is the durable record/);
 
 // ── 3. Folded rows are re-verified, not re-reported ─────────────────────────
 
@@ -423,6 +423,11 @@ assert.match(auditDocs, /Check \(1-14\)/);
 assert.match(auditDocs, /Checks run: <n>\/14/);
 assert.doesNotMatch(auditDocs, /MEDIUM/);
 
+// IS-2: audit-docs citation in product-audit / AUDIT_DIMENSIONS.md — audit-docs owns the count.
+const auditDimensions = read("skills/product-audit/references/AUDIT_DIMENSIONS.md");
+assert.doesNotMatch(auditDimensions, /audit-docs checks 1–13/);
+assert.match(auditDimensions, /run `audit-docs` checks mechanically/);
+
 // IS-2: product-audit uses closed class set, not postpone/tradeoff.
 const productAudit = read("skills/product-audit/SKILL.md");
 assert.doesNotMatch(productAudit, /\bpostpone\b/);
@@ -480,6 +485,12 @@ assert.match(read("skills/execute-phase/references/FOLDING.md"), /LEDGERS\.md.*g
 // P4 Task 4: GATE-RAN in PERSIST_AND_DECIDE.md.
 assert.match(persist, /GATE-RAN/);
 assert.match(persist, /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
+
+// P4 Task 5: isMarkRow recognizes GATE-RAN (triage F24, triage F14 pin).
+const unitRouteSource = read("scripts/unit-route.mjs");
+// isMarkRow must contain the GATE-RAN pattern
+assert.match(unitRouteSource, /export const isMarkRow[\s\S]*?GATE-RAN/);
+
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
 // The planning-side loop rules are code, not prose: this block reads the
