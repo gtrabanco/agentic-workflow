@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.1.0
+version: 3.2.0
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -97,12 +97,12 @@ Verdict: <one-line honest health verdict>
   Installed tooling ....... ✓ | ⚠ | ✗ | n-a
 
 ## Findings (severity-ranked, one F-sequence for the whole audit)
-  F1 [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|postpone|tradeoff>
+  F1 [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore>
   F2 [SEV] ...
   [example — scope-export recurrence] F<k> [med] Workflow discipline — <N>
     consecutive units exported scope via `## Amendments`/descope issues —
     features are being cut too big for real capacity — evidence: <unit list +
-    amendments/issues> — class: postpone — route: #64 (atomicity/split rules)
+    amendments/issues> — class: proposal — route: #64 (atomicity/split rules)
 
 ## Delta vs audit <prior-id>
   New: F<k>

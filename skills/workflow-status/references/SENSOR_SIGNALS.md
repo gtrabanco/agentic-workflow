@@ -83,8 +83,9 @@ mechanized.*
 
     A row is **open** under the router's own predicate (`scripts/unit-route.mjs`
     `isOpen`), never a re-derived one: `folded: yes`, `—`, `-`, `n/a` and an empty
-    cell all close it. The id shapes `VF-<n>` (a finding's verification mark) and
-    `REVIEW-RAN` (a review mark) are **never** findings — a ledger pads a mark row
+    cell all close it. The id shapes `VF-<n>` (a finding's verification mark),
+    `REVIEW-RAN` (a review mark) and `GATE-RAN` (a gate-run mark) are **never**
+    findings — a ledger pads a mark row
     with empty cells, so it reaches the row parser looking like an open finding and
     would otherwise project a suggestion for a merged unit. A **decision-required**
     open row contributes **nothing**: it outranks the fold in the route table (which

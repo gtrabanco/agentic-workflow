@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.6.0
+version: 3.7.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -152,12 +152,14 @@ sequential/headless fallbacks; never collapse independent adversarial passes.
 Orchestrates internal finders (`review-code`, `review-security`, `review-verify`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`), then
 one `review-implementation` classifier and `review-debt` transform, isolated by
-default; installed platform packs are optional. `triage-issue` is user-invoked
-only for independent proposals (D3). It is Stage 4: checkpoint reviews are
+default; installed platform packs are optional. `triage-issue` is user-invoked,
+never auto-run (D3), for independent proposals, audit findings, and
+`--prioritize-now` runs. It is Stage 4: checkpoint reviews are
 optional, the end review is mandatory and fresh. `fix-now` is routed to the
 unit's fold cycle — a separate `/fold-findings` invocation, never run by this review;
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
-proposals. `audit-pr` consumes only the verified PR-comment receipt, never the
+proposals. `audit-pr` consumes
+only the verified PR-comment receipt, never the
 chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
 correction path is `/fold-findings`, then re-run `/review-change` on the changed
 HEAD (bounded at two cycles — a third cycle never starts without an explicit
