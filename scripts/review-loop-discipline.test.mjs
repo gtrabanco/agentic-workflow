@@ -37,7 +37,7 @@ assert.match(classify, /deflating a real defect to `low` to unblock a review is 
 // The severity vocabulary is consistent end-to-end: finder scale maps onto the
 // classification scale, and only high/med rows persist.
 assert.match(persist, /finding of severity `high`\s+or `med`/);
-assert.match(persist, /critical.*high.*major.*med.*minor.*low/s);
+assert.match(classify, /critical.*high.*major.*med.*minor.*low/s);
 assert.match(persist, /never persisted to the fold ledger/);
 assert.match(outputGuardrails, /`low`\s+findings are report-only notes that never block/);
 assert.match(persist, /Notes \(low · report-only/);
@@ -52,7 +52,7 @@ assert.match(reviewProcess, /never a `workflow` finding/);
 // The review never dirties the tree it will next be judged against.
 assert.match(persist, /Commit the ledger append/);
 assert.match(persist, /docs\(<unit>\): persist review findings/);
-assert.match(persist, /On\s+`REVIEW-PASS` with an open PR no ledger write happens/);
+assert.match(persist, /On\s+`REVIEW-PASS` with an open PR the SHA-bound receipt is the durable record/);
 
 // ── 3. Folded rows are re-verified, not re-reported ─────────────────────────
 
@@ -198,6 +198,9 @@ assert.match(folding, /edit an existing test's expectation/i);
 
 const foldSkill = read("skills/fold-findings/SKILL.md");
 const foldProcess = read("skills/fold-findings/references/FOLD_PROCESS.md");
+const reviewChangeSkill = read("skills/review-change/SKILL.md");
+const envelopeCore = read("skills/workflow-status/references/ENVELOPE_CORE.md");
+const sensorCore = read("skills/workflow-status/references/SENSOR_CORE.md");
 
 // 10a. The fixed REPAIR-RECEIPT block is printed as the ABSOLUTE-last output —
 // its header and every one of its five fields (repaired ids + finding-mark@1
@@ -274,9 +277,11 @@ assert.match(foldPolicy, /materializ/);
 
 // 10j. Version — fold-findings is bumped for this contract. The exact pin is
 // maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
-// conditional replan destination) and fix #244 moved it 1.5.0 → 1.5.1
-// (the freeze-batch consumer contract), the assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.5\.1/);
+// conditional replan destination), fix #244 moved it 1.5.0 → 1.5.1
+// (the freeze-batch consumer contract), and feature 32 moved it 1.5.1 → 1.6.0
+// (sole-flipper provenance cited to the ledger-ownership map), the assertion
+// unchanged in strength.
+assert.match(foldSkill, /version: 1\.6\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
@@ -333,6 +338,165 @@ assert.match(ledgers, /materializ/);
 assert.match(ledgers, /never .*re-derive|never re-derives/);
 assert.match(ledgers, /single writer of every finding mark is `review-change`/);
 assert.match(ledgers, /VF-/);
+
+// ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
+//
+// The planning-side loop rules are code, not prose: this block reads the
+// carriers directly, so a regression of any rule fails here even when the
+// superseded sentences are gone. The existing code-side assertions above stay
+// byte-unchanged (AC8's no-weakening walk).
+
+// ── 13.5. Feature 32 (P2) — contract prose alignment pins ───────────────────
+//
+// IS-1: sole flipper provenance — fold-findings:folded-flag is the sole writer
+// of `folded: no → yes` across all surfaces. IS-5(b): triage-issue's three modes
+// named in review-change surfaces. IS-5(c): plan-feature verify-vs-write split.
+// IS-5(a): sensor NRS split (draft/contradicted/resolved block, missing = notice).
+
+// IS-1: fold-findings/SKILL.md cites the map, not the cycle
+assert.match(foldSkill, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: PERSIST_AND_DECIDE.md cites the map, not the cycle
+assert.match(persist, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: FOLDING.md cites the map
+assert.match(folding, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+// IS-1: no surviving old claim in docs/workflow/ (tutorial scan) — AC-01
+let workflowDocs = "";
+try {
+  workflowDocs = execFileSync("grep", ["-rnE", "only step that ever flips|one and only ledger state transition", "docs/workflow/", "--include=*.md"], { encoding: "utf8", stderr: "inherit" }).toString();
+} catch {
+  // grep returns exit 1 when no matches — that's the expected pass condition
+}
+assert.equal(workflowDocs, "", "no contradicting sole-flipper restatement survives in docs/workflow/ outside GOLDEN_FIXTURE.md");
+
+// IS-5(b): triage-issue's three modes in review-change surfaces. The reviewChange
+// clause is pinned to the `triage-issue` sentence itself — a match from any other
+// adjacent sentence (the F11 defect) is no longer accepted.
+assert.match(reviewChangeSkill, /`triage-issue` is user-invoked[\s\S]{0,120}?for independent proposals, audit findings, and\s+`--prioritize-now` runs/s);
+assert.doesNotMatch(reviewChangeSkill, /user-invoked\s+only for independent proposals/);
+assert.match(outputGuardrails, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+assert.match(persist, /independent[\s\S]*proposals.*audit findings.*--prioritize-now/s);
+
+// IS-5(c): plan-feature verify-vs-roadmap
+const planFeature = read("skills/plan-feature/SKILL.md");
+const planScaffold = read("skills/plan-feature-scaffold/SKILL.md");
+assert.match(planFeature, /verifies.*repairs.*roadmap.*plan-feature-scaffold.*sole writer.*defined → planned/s);
+assert.match(planScaffold, /defined → planned.*write.*owns/);
+
+// IS-5(a): sensor NRS split — draft/contradicted/resolved block, missing = notice
+assert.match(envelopeCore, /\`draft\`, \`contradicted\`, or \`resolved\`/);
+assert.match(envelopeCore, /absent ledger is a non-blocking notice/);
+assert.match(sensorCore, /\`draft\`[,\s]+\`contradicted\`/);
+assert.match(sensorCore, /absent ledger emits a non-blocking substrate notice/);
+
+
+// ── 14. Feature 32 (P3) — classification single-owner contract pins ─────────
+
+// IS-2: canonical severity conversion table exists in CLASSIFY.md with all four
+// producer scales mapped onto high|med|low.
+assert.match(classify, /Severity conversion \(canonical table\)/);
+assert.match(classify, /Producer scale.*→ `high`.*→ `med`.*→ `low`/s);
+assert.match(classify, /Ledger \(`CLASSIFY.md` itself\): `high`/);
+assert.match(classify, /Finder \(nine review passes\): `critical`/);
+assert.match(classify, /Planning/);
+assert.match(classify, /`audit-docs`/);
+assert.match(classify, /Unknown scale.*fail closed/);
+
+// IS-2: fail-closed for unknown scales.
+assert.match(classify, /fail closed.*guess|guess.*fail closed/s);
+
+// IS-3: derived blocking gate — four citation categories and no-citation outcome.
+assert.match(classify, /Derived blocking gate/);
+assert.match(classify, /finding.*blocks.*only when the reviewer cites/);
+assert.match(classify, /ACCEPTANCE criterion.*unverified/i);
+assert.match(classify, /Obligation row/);
+assert.match(classify, /gate.*red.*at the reviewed head/i);
+assert.match(classify, /open confirmed.*fix-now/i);
+assert.match(classify, /report-note.*proposal.*never blocking|never blocking.*report-note.*proposal/s);
+assert.match(classify, /D10[\s\S]*verdict[\s\S]*unchanged/i);
+
+// IS-3: report-note definition cited to LEDGERS.md §3.
+assert.match(classify, /LEDGERS.md.*§3/);
+
+// IS-2: audit-docs report contract — 14 checks, no MEDIUM.
+const auditDocs = read("skills/audit-docs/SKILL.md");
+assert.match(auditDocs, /Check \(1-14\)/);
+assert.match(auditDocs, /Checks run: <n>\/14/);
+assert.doesNotMatch(auditDocs, /MEDIUM/);
+
+// IS-2: audit-docs citation in product-audit / AUDIT_DIMENSIONS.md — audit-docs owns the count.
+const auditDimensions = read("skills/product-audit/references/AUDIT_DIMENSIONS.md");
+assert.doesNotMatch(auditDimensions, /audit-docs checks 1–13/);
+assert.match(auditDimensions, /run `audit-docs` checks mechanically/);
+
+// IS-2: product-audit uses closed class set, not postpone/tradeoff.
+const productAudit = read("skills/product-audit/SKILL.md");
+assert.doesNotMatch(productAudit, /\bpostpone\b/);
+assert.doesNotMatch(productAudit, /\btradeoff\b/);
+assert.match(productAudit, /fix-now.*replan-in-unit.*decision-required.*proposal.*ignore|fix-now.*replan-in-unit/s);
+
+// IS-2: PERSIST_AND_DECIDE.md finder-scale maps to canonical table, not ad-hoc.
+assert.doesNotMatch(persist, /critical.*high.*major.*med.*minor.*low/s);
+assert.match(persist, /canonical table.*CLASSIFY\.md|CLASSIFY\.md.*canonical table/s);
+
+// IS-2: audit-pr closure-integrity scale is pass/blocker/n-a.
+const auditPr = read("skills/audit-pr/SKILL.md");
+assert.match(auditPr, /pass \/ blocker \/ n-a/);
+assert.doesNotMatch(auditPr, /pass.*blocker.*warning.*n-a/);
+assert.doesNotMatch(auditPr, /\bwarning\b.*blocker|\bblocker\b.*\bwarning\b/s);
+
+// ── 15. Feature 32 (P4) — gate-run receipt pins ──────────────────────────────
+
+// P4 Task 2: gate-ran@1 mark in LEDGERS.md.
+assert.match(ledgers, /gate-ran@1/);
+assert.match(ledgers, /GATE-RAN \|\s*HEAD/);
+assert.match(ledgers, /additive slots|additive-slots|fields after.*additive|trailing.*slot/s);
+assert.match(ledgers, /manifest.*slot|reserved.*slot.*manifest|manifest.*sha/s);
+assert.match(ledgers, /identical-head|identical\s+head.*reuse|reuse.*identical.*head|changed.*head.*re-run/s);
+assert.match(ledgers, /execute-phase:gate-ran-marks/);
+assert.match(ledgers, /review-change:review-gate-ran-marks/);
+assert.match(ledgers, /review-change:review-gate-ran-marks.*execute-phase:gate-ran-marks|execute-phase:gate-ran-marks.*review-change:review-gate-ran-marks/s);
+
+// P4 Task 3: template projections have the same owner cell.
+const featTemplate = read("docs/features/_TEMPLATE/LEDGERS.md");
+const fixTemplate = read("docs/fix/_TEMPLATE/LEDGERS.md");
+// Both templates must contain the same gate-ran recorder column-sets.
+assert.match(featTemplate, /execute-phase:gate-ran-marks/);
+assert.match(featTemplate, /review-change:review-gate-ran-marks/);
+assert.match(fixTemplate, /execute-phase:gate-ran-marks/);
+assert.match(fixTemplate, /review-change:review-gate-ran-marks/);
+// Byte-equal owner cells: extract the review-findings owner from live LEDGERS and both templates.
+const liveRow = ledgers.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+const featRow = featTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+const fixRow = fixTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
+assert.ok(liveRow && featRow && fixRow, "all three rows exist");
+// The owner portion (second field) should be identical across all three.
+const liveOwner = liveRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+const featOwner = featRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+const fixOwner = fixRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
+assert.equal(featOwner, liveOwner, "features template owner cell matches live");
+assert.equal(fixOwner, liveOwner, "fix template owner cell matches live");
+
+// P4 Task 4: GATE-RAN in EXECUTION_CONTRACT.md and FOLDING.md.
+assert.match(read("skills/execute-phase/references/EXECUTION_CONTRACT.md"), /gate-ran@1|GATE-RAN\s*\|/);
+assert.match(read("skills/execute-phase/references/EXECUTION_CONTRACT.md"), /identical-head|identical\s+head.*reuse|reuse.*identical.*head|changed.*head.*re-run|gate-ran|GATE-RAN/s);
+assert.match(read("skills/execute-phase/references/FOLDING.md"), /GATE-RAN/);
+assert.match(read("skills/execute-phase/references/FOLDING.md"), /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
+
+// P4 Task 4: GATE-RAN in PERSIST_AND_DECIDE.md.
+assert.match(persist, /GATE-RAN/);
+assert.match(persist, /LEDGERS\.md.*gate-ran|gate-ran.*LEDGERS\.md/s);
+
+// P4 Task 5: isMarkRow recognizes GATE-RAN (triage F24, triage F14 pin).
+const unitRouteSource = read("scripts/unit-route.mjs");
+// isMarkRow must contain the GATE-RAN pattern
+assert.match(unitRouteSource, /export const isMarkRow[\s\S]*?GATE-RAN/);
+
+// Triage 32 F31: the four mark-id enumerations name GATE-RAN alongside VF-/REVIEW-RAN,
+// so the documented contract agrees with the guard widened above.
+assert.match(unitRouteSource, /`VF-<n>` carries a finding's verification signature[\s\S]*?`GATE-RAN` a gate run's/);
+assert.match(read("scripts/workflow-status.mjs"), /Mark rows \(`VF-<n>`, `REVIEW-RAN`, `GATE-RAN`\)/);
+assert.match(read("skills/workflow-status/references/SENSOR_SIGNALS.md"), /`GATE-RAN` \(a gate-run mark\)/);
+assert.match(read("skills/replan-findings/SKILL.md"), /`VF-<n>`, `REVIEW-RAN` and\n\s*`GATE-RAN` are marks/);
 
 // ── 13. Planning-side loop carriers (feature 31, D-31-6/E-D31-14) ────────────
 //
