@@ -40,7 +40,6 @@ their own — they are composed by the ones above:
 | `/discover-repository-state` | Freeze verified repository facts. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |
 | `/fold-findings` | Repair persisted fix-now findings. |
-| `/generate-docs` | Generate incremental, diff-driven developer guides. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
 | `/log-session` | Append a structured session entry to `docs/LOGS.md`. |
 | `/plan-feature` | Route designed work into planning and the roadmap. |
