@@ -38,7 +38,6 @@ const planRouting = read("skills/plan-feature/references/ROUTING.md");
 const fromIssue = read("skills/plan-feature-from-issue/SKILL.md");
 const plugin = JSON.parse(read(".claude-plugin/plugin.json"));
 const skillsSh = JSON.parse(read("skills.sh.json"));
-const routing = read("docs/workflow/model-routing.yml");
 
 // --- closed vocabularies (single source of truth: the skills' own text) --------
 
@@ -472,15 +471,9 @@ test("the new skills are distributed without the discovery-exclusion flag", () =
   for (const name of grouped) {
     assert.ok(fs.existsSync(path.join(repoRoot, "skills", name, "SKILL.md")), `grouped skill missing: ${name}`);
   }
-  // review-spec is a user-facing stage: it needs its own declared tier.
-  assert.match(routing, /^review-spec:\n  model: opus\n  effort: high$/m);
-  // evidence-grounding is composed in-turn, so it carries no tier of its own —
-  // the same rule as the phase/verification/planning contracts it sits beside.
-  assert.doesNotMatch(routing, /^evidence-grounding:$/m);
   for (const internal of ["phase-contract", "verification-contract", "planning-preflight", "evidence-grounding"]) {
     assert.equal(/^user-invocable: true$/m.test(read(`skills/${internal}/SKILL.md`)), false, `${internal} must stay out of the menu`);
   }
-  assert.deepEqual([...routing.matchAll(/^([a-z0-9-]+):$/gm)].map((m) => m[1]), [...routing.matchAll(/^([a-z0-9-]+):$/gm)].map((m) => m[1]).sort(), "model-routing keys stay alphabetical");
 });
 
 test("each P2 entrypoint stays within its progressive route", () => {
@@ -771,7 +764,7 @@ test("issue-derived and cross-stage exports are refused at the plan boundary", (
   assert.match(planFeature, /never reviews (its own plan|the plan it just wrote)/);
 });
 
-test("P3 skills are registered, distributed, and routed", () => {
+test("P3 skills are registered and distributed", () => {
   const pluginSkills = plugin.skills.map((entry) => entry.replace("./skills/", ""));
   for (const skill of ["review-plan", "pre-execution-review"]) {
     assert.ok(pluginSkills.includes(skill), `${skill} must be in plugin.json`);
@@ -780,8 +773,6 @@ test("P3 skills are registered, distributed, and routed", () => {
     assert.doesNotMatch(read(`skills/${skill}/SKILL.md`), /^metadata:\n  internal: true$/m, `${skill} must stay discoverable`);
   }
   assert.equal(/^user-invocable: true$/m.test(reviewPlan), true, "review-plan is a menu entry");
-  assert.match(routing, /^review-plan:\n  model: opus\n  effort: high$/m);
-  assert.doesNotMatch(routing, /^pre-execution-review:$/m, "the shared policy owner carries no route of its own");
   assert.deepEqual(pluginSkills, [...pluginSkills].sort(), "plugin skills stay alphabetical");
 });
 

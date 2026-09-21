@@ -1,5 +1,38 @@
 # Migration notes
 
+## 2026-09-21 — the `#claude` branch and per-skill model routing are retired
+
+**What changed.** The `#claude` branch is gone, and with it the per-skill
+`model:`/`effort:` distribution it carried. `docs/workflow/model-routing.yml`
+(the tier source of truth) and `.github/scripts/inject_claude_frontmatter.py`
+(the injector) were deleted; `sync-derived-branches.yml` no longer builds
+the branch and now only mirrors `#inheritance`. The generated guide
+`docs/site/guides/workflow/model-routing.md` was removed with its source, and
+the root pre-execution suite dropped its routing assertions. Skill descriptions
+and Portability sections no longer point at a pinned-tier install.
+
+**Why.** Since v3 the default branch has been model-agnostic — every skill
+inherits the host session's model and effort — so the derived branch had become
+a second, drifting distribution maintained for a use case the default already
+covers. The README's tier table and the NaN/open-weight guidance remain as
+advice, not as an injected configuration.
+
+**What you have to do:**
+
+- **Pinned `#claude`?** Switch to the default install
+  (`npx skills add gtrabanco/agentic-workflow`) or to the `#inheritance` alias.
+  Per-skill tiers are gone by design: pick the model for each turn yourself,
+  following the [capability classes](../../README.md#capability-classes) in the
+  README (strongest model for planning/review/audit, cheaper for execution).
+- **Pinned `#inheritance`?** Nothing to do — it keeps working as an exact
+  mirror of the default branch.
+- **Maintaining a fork with its own injected-tier branch?** The CI pattern was
+  removed with the job; if you still want one, keep the injector in your fork.
+  This repository no longer has a tier source of truth to inject from.
+
+**Nothing about skill behavior changed.** The skills resolve their own model
+per the host session, exactly as they already did on the default branch.
+
 ## 2026-09-21 — the agent guide is `AGENTS.md`, and `CLAUDE.md` is retired (`init-workspace` 3.0.0, **breaking for the scaffold's file name**)
 
 **What changed.** The scaffold wrote the guide as `CLAUDE.md` and shipped an
@@ -611,7 +644,7 @@ behavior). Before v3, `npx skills add gtrabanco/agentic-workflow` (no `#ref`)
 installed the opinionated distribution: every skill pinned its own
 `model:`/`effort:` frontmatter (Opus/high for judgment skills, Sonnet/medium
 for mechanical ones, etc. — see the README's "Recommended model & effort"
-table). A separate `#inheritance` branch, auto-synced by CI, stripped those
+table, now titled ["Choosing a model"](../../README.md#choosing-a-model)). A separate `#inheritance` branch, auto-synced by CI, stripped those
 two lines from every skill so it could be installed model-agnostic instead.
 
 **v3 flips which branch is the default:**
@@ -619,20 +652,22 @@ two lines from every skill so it could be installed model-agnostic instead.
 | Ref | Before v3 | From v3 |
 |---|---|---|
 | *(none)* — `npx skills add gtrabanco/agentic-workflow` | opinionated, per-skill Claude tiers pinned | **model-agnostic** — no skill pins a tier; each inherits the host session's model/effort |
-| `#claude` | did not exist | **new** — the opinionated, per-skill-tuned distribution that used to be the default; a frozen snapshot of pre-v3 `main`, kept current by CI from `docs/workflow/model-routing.yml` |
+| `#claude` | did not exist | **new** — the opinionated, per-skill-tuned distribution that used to be the default; a frozen snapshot of pre-v3 `main`, kept current by CI from `docs/workflow/model-routing.yml`. **Retired 2026-09-21** — see the retirement note above. |
 | `#inheritance` | model-agnostic (stripped from `main` by CI) | **unchanged in content**, now force-pushed as an exact mirror of the (already model-agnostic) default branch — kept only as a stable alias for anyone who pinned it before v3 |
 
 **Why:** using this workflow shouldn't lock a project into one AI vendor's
 model lineup. The discipline (docs, SPECs, phases, review, the merge gate) is
 the product; which model executes it shouldn't be a hidden default. Moving
 the responsibility of picking the right model to the user, with `#claude`
-still available for anyone who wants Claude's tiers hand-tuned per skill,
+still available for anyone who wants Claude's tiers hand-tuned per skill
+*(retired 2026-09-21 — see the note above)*,
 reduces that lock-in cost without removing the option.
 
 **Action needed:**
 
 - **On Claude Code and relying on the default install's per-skill tiers?**
-  Re-install with `#claude`: `npx skills add gtrabanco/agentic-workflow#claude`.
+  *(Historical: `#claude` was retired 2026-09-21.)* Re-install with `#claude`:
+  `npx skills add gtrabanco/agentic-workflow#claude`.
   Nothing else changes — same skills, same behavior, just the tiers you had
   before v3.
 - **Already pinned `#inheritance`?** Nothing to do. It still resolves, with
@@ -642,8 +677,9 @@ reduces that lock-in cost without removing the option.
   do — the plain install command already gives you this branch.
 - **Maintaining a fork or a similar split for your own project?** See
   `.github/workflows/sync-derived-branches.yml` for the CI pattern (mirror +
-  frontmatter-injection-from-config), and `docs/workflow/model-routing.yml`
-  for the per-skill tier source of truth.
+  frontmatter-injection-from-config). *(Superseded 2026-09-21: the injector and
+  tier file were removed with the `#claude` branch; the workflow now only mirrors
+  `#inheritance`.)*
 
 No skill's instructions, checklists, or output contracts changed in this
 release (see the per-skill patch-bump rows dated 2026-07-04 in

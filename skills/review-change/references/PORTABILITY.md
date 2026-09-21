@@ -13,7 +13,7 @@ enables:
   tiers as `--adversarial N` (subagents / headless / fresh conversations); an
   agent with none of them runs the documented inline fallback: sequential
   in-turn passes, each reduced to its findings table before the next starts.
-- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
+- **No per-skill `model:`/`effort:`** — no skill pins a tier; pick tiers yourself:
   this review needs your **strongest** model. Never review a change with a
   model weaker than the one that wrote it — and prefer a different model family
   than the writer's: same-family instances share training blind spots,

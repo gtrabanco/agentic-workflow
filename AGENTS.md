@@ -415,7 +415,7 @@ hoists.
 | Skill directories | kebab-case (`execute-phase`) |
 | Markdown docs | kebab-case or SCREAMING_CASE per existing siblings |
 | Skill `name:` | matches the directory name exactly |
-| Machine/config surfaces (`.claude-plugin/plugin.json` `skills` array, `docs/workflow/model-routing.yml` top-level keys) | alphabetical |
+| Machine/config surfaces (`.claude-plugin/plugin.json` `skills` array) | alphabetical |
 | Narrative surfaces (README "The skills" `###` sections, `docs/workflow/SKILLS.md`) | flow order (the stage a skill runs at: Setup, Design, Plan, Execute, Review & audit, Decide, Document, Session, Repo maintenance, Autopilot) — never alphabetized |
 
 ---

@@ -36,9 +36,6 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 > lock you into one vendor's model lineup — you pick the model, the skills just
 > run the discipline.
 >
-> - **On Claude Code and want the hand-tuned, per-skill Opus/Sonnet + effort
->   tiers this project used to ship by default?** Install the **`#claude`**
->   branch instead: `npx skills add gtrabanco/agentic-workflow#claude`.
 > - **Already pinned `#inheritance`?** Nothing to do — `#inheritance` keeps
 >   working, kept in sync as an exact alias of the default branch.
 > - **Everyone else** (any other agent, or you'd rather choose tiers yourself):
@@ -185,7 +182,7 @@ Projects that do not declare the document remain compatible.
 
 | Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md, and updates the skill and model tables in README.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array and `model-routing.yml`'s keys stay alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
+| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md, and updates the skill table in README.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array stays alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
 
@@ -226,94 +223,41 @@ never as a dependency. See `docs/workflow/RECOMMENDED_SKILLS.md`.
 > frontmatter); changes are logged in [`CHANGELOG.md`](CHANGELOG.md). Upgrade an
 > install with `npx skills update`.
 
-## Recommended model & effort
+## Choosing a model
 
-**This section documents the `#claude` branch** —
-`npx skills add gtrabanco/agentic-workflow#claude`. The **default branch**
-(`main`, aliased as `#inheritance`) carries none of this: every skill simply
-inherits whatever model and effort your agent session is already using, so
-there's nothing to configure and nothing to go stale.
+Every skill **inherits whatever model and effort your agent session is already
+using** — no skill pins a tier, so there's nothing to configure and nothing to
+go stale. Every user-facing skill also ships a **Portability** section with
+explicit fallbacks for agents without a slash menu, model tiers, or
+`/loop`/subagents (follow the target `SKILL.md` in a fresh conversation;
+strongest model for planning/review/audit, cheaper for execution; manual
+re-invocation guided by each skill's closing `→ Next:` block). The workflow is
+the contract; the guidance below is for choosing your own models.
 
-On the `#claude` branch, each skill **pre-sets its model and effort** in
-frontmatter (table below), sourced from
-[`docs/workflow/model-routing.yml`](docs/workflow/model-routing.yml). The
-model uses a floating tier alias (`opus`/`sonnet`/`haiku`) that auto-updates to the
-latest version — so it never goes stale. Both apply only for that skill's turn;
-your session model/effort resume afterward. **You stay in control:** to change
-them, edit `model-routing.yml` (the source CI reads to rebuild the `claude`
-branch — never edit the `claude` branch's frontmatter directly, it's
-force-pushed on every change to `main`).
+### Capability classes
 
-**On agents other than Claude Code**, or on the default branch, these tiers
-don't apply — and that's covered: every user-facing skill ships a
-**Portability** section with explicit fallbacks (no slash menu → follow the
-target `SKILL.md` in a fresh conversation; no model tiers → strongest model
-for planning/review/audit, cheaper for execution; no `/loop`/subagents →
-manual re-invocation guided by each skill's closing `→ Next:` block). The
-workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
+The skills are model-agnostic by design: nothing in the workflow depends on a
+specific vendor or tier. This table is a mental-model guide for which *kind* of
+model to point each skill at:
 
-| Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
-| ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
-| `discover-repository-state` | Sonnet     | medium | evidence collection and frozen repository-state snapshot                                                                                                                                 |
-| `resolve-repository-state` | Opus       | high   | contradiction resolution and repository-state judgment                                                                                                                                  |
-| `review-spec` | Opus | high | independent Product-half review in a clean context; never weaker than the model that wrote the half |
-| `review-plan` | Opus | high | independent Engineering-plan review in a clean context; never weaker than the model that cut the phases |
-| `design-feature` | Opus       | high   | product-definition judgement: raw-idea interview + capability closure, composed by callers only at ≥ this tier                                                                          |
-| `plan-feature`   | Opus       | high   | router + engineering planning: its internal scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                           |
-| `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
-| `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — whole unit by default, fresh/compact phase transactions (Opus if logic is subtle)                                                                  |
-| `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
-| `fold-findings`  | Opus       | high   | never weaker than the review tier that produced the finding; a subtle logic/security finding earns its own strongest-available pass                                                     |
-| `audit-pr`       | Opus       | high   | whole-PR merge-readiness judgement                                                                                                                                                       |
-| `product-audit`  | Opus       | max    | product-wide multi-axis sweep + proposals (max effort for the widest context sweep)                                                                                                      |
-| `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
-| `triage-issue`   | Opus       | high   | verify triggers against the code; judgement call                                                                                                                                         |
-| `log-session`    | Sonnet     | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free)                                              |
-| `workflow-status`| Sonnet     | medium | mechanical state reading + dependency-closure computation — a sensor, never judgment                                                                                                     |
-| `generate-docs`  | Sonnet     | medium | structured summarization of a diff into guide pages; the graph is tool-generated, never model-inferred (Opus never needed)                                                               |
-| `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
-
-> The internal skills aren't selected directly. Because they're composed
-> **within a caller's turn**, they inherit that turn's model/effort (a skill's
-> `model`/`effort` is fixed at turn start) — the values in their frontmatter
-> (`review-implementation`, `plan-feature-from-issue`, `review-code`,
-> `review-security` high; `plan-feature-scaffold` and the rest of the review
-> pack medium) are declared defaults for a direct run, which is why the
-> `plan-feature` and `review-change` orchestrators themselves carry `high`.
->
-> Rule of thumb: **planning, judgement, review and audit → Opus** (high, or max for
-> the product-wide sweep); **mechanical execution → Sonnet, medium** (bump to Opus
-> when the logic is subtle).
-
-### Model equivalence (non-Claude / free-inference models)
-
-The Claude tiers above (the `#claude` branch) set a reference bar, but nothing
-in the workflow depends on them — the skills are model-agnostic by design
-(that's the point of the default branch). If you're on the default branch,
-this table is just a mental-model guide for which "kind" of model to point
-each skill at yourself; if you installed `#claude` anyway and want to swap
-its pinned tiers for a different vendor, edit `docs/workflow/model-routing.yml`
-accordingly:
-
-| Claude default | Capability class | Use it for |
-|---|---|---|
-| Opus + `high`/`max` | **Frontier reasoning** — the strongest model you have, reasoning/thinking mode on | planning, review, audit, triage, the merge gate |
-| Sonnet + `medium` | **Mid workhorse** — a solid coding model at default settings | mechanical execution per SPEC, doc checks, session logs |
-| Haiku | **Small & cheap** — any fast lightweight model | optional grep-shaped evidence gathering |
+| Capability class | Use it for |
+|---|---|
+| **Frontier reasoning** — the strongest model you have, reasoning/thinking mode on | planning, review, audit, triage, the merge gate |
+| **Mid workhorse** — a solid coding model at default settings | mechanical execution per SPEC, doc checks, session logs |
+| **Small & cheap** — any fast lightweight model | optional grep-shaped evidence gathering |
 
 **Concrete picks** (open-weight, as of **July 2026** — this landscape moves
 fast; sanity-check against a current leaderboard before pinning):
 
-- **Frontier reasoning** (⇔ Opus + `high`/`max`): **DeepSeek V4** (tops
+- **Frontier reasoning**: **DeepSeek V4** (tops
   LiveCodeBench/Codeforces among open models), **Kimi K2.6** (strongest for
   agentic/repo-level coding and tool use), **GLM-5.x / GLM-4.7 Thinking**,
   **Qwen3 235B-A22B** — run in reasoning/thinking mode. Closed non-Claude
   equivalents: the top GPT / Gemini reasoning tier.
-- **Mid workhorse** (⇔ Sonnet + `medium`): **DeepSeek V3.2** (the value pick
+- **Mid workhorse**: **DeepSeek V3.2** (the value pick
   via API), **Qwen3-Coder / Qwen3 32B**, **GLM-5.1**, or any of the frontier
   picks with reasoning mode off.
-- **Small & cheap** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
+- **Small & cheap**: **Qwen3 4–14B**, **Mistral Small 3.1**,
   **Gemma 3 27B**, **Phi-4-mini** — local-friendly, fine for grep-shaped work.
 
 ### Running the whole flow on a small/cheap fleet
@@ -461,28 +405,21 @@ audio/retrieval/image models — not used by the workflow. Model strength above
 is framed by active-params + role, not benchmark numbers — sanity-check
 against a current leaderboard before pinning; this landscape moves fast.
 
-**Already on the default branch (or `#inheritance`)?** No pinning to remove —
-that's the point. Every skill already **inherits your session's model and
-effort**; the plain install command gives you this:
+**Installing on the default branch (or `#inheritance`)?** Every skill
+**inherits your session's model and effort** — the plain install command gives
+you exactly that:
 
 ```sh
 npx skills add gtrabanco/agentic-workflow
 ```
 
-**Want the Claude-tuned tiers pinned per skill instead?** Install `#claude`
-(see the breaking-change note near the top of this README):
-
-```sh
-npx skills add gtrabanco/agentic-workflow#claude
-```
-
 `effort:` maps to your model's reasoning/thinking budget (`high` → maximum
 reasoning; `medium` → default; no such control → just honor the strong/cheap
-split above). Two invariants survive any mapping: **never review a change with a
-model weaker than the one that wrote it — and prefer a different model family
-than the writer's** (same-family instances share training blind spots,
-cross-family decorrelates errors), and **audit verdicts (the merge gate)
-get the strongest model you have**. Expect weaker models to follow the workflow
+split above). Two invariants hold under any mapping: **never review a change
+with a model weaker than the one that wrote it — and prefer a different model
+family than the writer's** (same-family instances share training blind spots,
+cross-family decorrelates errors), and **audit verdicts (the merge gate) get
+the strongest model you have**. Expect weaker models to follow the workflow
 correctly — the skills are written as checklists and fixed output formats — but
 produce shallower judgment; the discipline holds, the ceiling moves.
 
@@ -588,12 +525,8 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 
 ```sh
 # From the root of the TARGET repository — install all the skills.
-# Default branch: model-agnostic, every skill inherits YOUR session's model
-# and effort. On Claude Code and want the hand-tuned per-skill tiers this
-# project shipped by default before v3? Add #claude — see the breaking-change
-# note above.
+# Model-agnostic: every skill inherits YOUR session's model and effort.
 npx skills add gtrabanco/agentic-workflow
-npx skills add gtrabanco/agentic-workflow#claude          # Claude-optimized tiers
 
 # Pick specific skills, or target a specific agent:
 npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
@@ -711,15 +644,13 @@ Desktop app and terminal share the same mechanism. Category subfolders
 detected fine.
 
 ```sh
-# Install (Hermes ignores model:/effort: anyway, so the default branch's
-# model-agnostic skills — inheriting whatever model your Hermes session
-# runs — are the right pick here, not #claude):
+# Install (Hermes ignores model:/effort: anyway, so the model-agnostic
+# skills — inheriting whatever model your Hermes session runs — fit here):
 npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
 #   → copies each skill to ~/.hermes/skills/<skill>/  ✔ detected by desktop & terminal
 
 # Update later — re-run the add per agent, NOT `skills update`:
 npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
-npx skills add gtrabanco/agentic-workflow#claude --agent claude-code --global -y   # if you also install globally for Claude Code
 #   Why: the global lockfile tracks ONE ref per skill name (last install wins),
 #   so a blanket `skills update --global` can repoint every agent's copy to the
 #   same ref — re-running each add refreshes each copy from its own ref.
@@ -737,7 +668,7 @@ skills:
 ```
 
 (Local `~/.hermes/skills/` wins on name collisions; missing dirs are silently
-skipped.) Pick your session model per the [model-equivalence table](#model-equivalence-non-claude--free-inference-models)
+skipped.) Pick your session model per the [capability classes](#capability-classes)
 — on NaN.builders, per the picks above.
 
 **Invoking:** in Hermes, `/<name>` loads **bundles**, not individual skills —
