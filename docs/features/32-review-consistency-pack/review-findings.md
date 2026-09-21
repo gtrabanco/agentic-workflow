@@ -107,3 +107,32 @@ co-occurring note, not a scale value) and the per-skill sibling-headroom claim
 | VF-20 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:9 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck `skills.plan-feature` carries no `referenceEstimateMax`, so `defaults.referenceEstimateMax` 2200 applies; `skills/plan-feature/references/ROUTING.md` → 2151 est < `ceil(2151 x 1.10) = 2367` | perf | confirmed | finding-mark | n/a | n/a |
 
 | REVIEW-RAN | HEAD 24f88736e9683397d9769233f34cb0c130412a56 | n/a | n/a | review-mark | n/a | n/a |
+Cycle 5 re-review ran on 2026-09-21 (`review-change`, head
+`3912d9c127ae6923a0090d57d78e0390e0c0faee`, PR #249). Per-pass isolated finders for the applicable
+axes (code, verify, security, perf, brand); the verification pass, the
+classifier (`review-implementation`) and the debt transform (`review-debt`)
+each ran in a separate isolated context. Every folded `yes` row (F1–F13) was
+re-verified at its cited location: F2–F13 hold, F1's route ceilings are a
+regression (recorded below). The F14–F20 rows are the open rows this cycle
+re-verified: their code fixes landed at 3912d9c1, but the fold did not flip
+them, re-bundle the Pi mirror, or re-base the review-change route ceilings.
+This cycle sits above the two-cycle cap (four prior REVIEW-RAN marks); the
+residue routes to `/triage-issue --prioritize-now`.
+
+| id | file:line | axis | severity | class | route | folded |
+| --- | --- | --- | --- | --- | --- | --- |
+| F21 | packages/pi-agentic-workflow/skills/product-audit/references/AUDIT_DIMENSIONS.md:1 · packages/pi-agentic-workflow/skills/review-change/references/PERSIST_AND_DECIDE.md:1 · packages/pi-agentic-workflow/skills/review-implementation/references/CLASSIFY.md:1 | verify | high | fix-now | fold into current unit (source owner): run `bun run bundle:skills` in `packages/pi-agentic-workflow` and commit the three rebuilt mirrors so `test/skill-parity.test.mjs` goes green (CLAUDE.md Verification: the committed mirror stays byte-identical to `skills/`), and make the CHANGELOG 0.13.0 row match the published bytes | no |
+| F22 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:76 | perf | med | fix-now | regression of F1 — fold into current unit (source owner): re-base the four `review-change:*` route ceilings to `ceil(measured x 1.10)` (adversarial 19418→19472, default-backend/default-web 17600→17654, synthesize 18114→18168) and their `routeLinesMax` (1401→1405, 1282→1286, 1306→1311), naming the F14–F20 fold's CLASSIFY.md/PERSIST_AND_DECIDE.md growth source; `node scripts/check-skill-context.mjs --routes` and `scripts/check-skill-context.test.mjs` must go green | no |
+| F23 | docs/features/32-review-consistency-pack/review-findings.md:93-99 | workflow | med | fix-now | fold into current unit: flip F14–F20 to `folded: yes` (their defects are fixed at 3912d9c1) or record why any stays open, so `node scripts/unit-route.mjs 32` stops reporting `open-rows: 7` / `route: fold` | no |
+| F24 | scripts/unit-route.mjs:114-117 | code | med | fix-now | fold into current unit (source owner): add `/^GATE-RAN$/i` to `isMarkRow` and pin it in `scripts/review-loop-discipline.test.mjs`, so a `gate-ran@1` mark row never parses as an open finding | no |
+| F25 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:75 · :79 | brand | med | fix-now | fold into current unit (source owner): reword both `workflow-status` `sources` entries to name the real growth unit — `skills/workflow-status/SKILL.md` (1606 est / 127 lines) and `references/SENSOR_SIGNALS.md` (2512 est / 150 lines) are byte-identical to main, so feature 32 P4 did not grow them | no |
+| F26 | skills/review-change/references/PERSIST_AND_DECIDE.md:45-52 | brand | med | fix-now | regression of F15 — fold into current unit: state one write path — fold the `REVIEW-RAN` and `GATE-RAN` marks into step 11's single ledger commit and drop the clause that says no additional ledger write happens beyond step 11, which the adjacent GATE-RAN duty contradicts | no |
+
+| VF-21 | packages/pi-agentic-workflow/skills/product-audit/references/AUDIT_DIMENSIONS.md:1 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck `diff -rq skills packages/pi-agentic-workflow/skills` → the three named files differ; `node --test test/skill-parity.test.mjs` exits 1 at head | verify | confirmed | finding-mark | n/a | n/a |
+| VF-22 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:76 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck `node scripts/check-skill-context.mjs --routes` exits 1 with the four review-change failures at head and exits 0 at 24f88736 (git worktree) | perf | confirmed | finding-mark | n/a | n/a |
+| VF-23 | docs/features/32-review-consistency-pack/review-findings.md:93-99 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck the F14–F20 `folded` cell reads `no` while `git show 3912d9c1 --stat` touches their files; `node scripts/unit-route.mjs 32` prints `open-rows: 7`, `route: fold` | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-24 | scripts/unit-route.mjs:114-117 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck `openRows` on a GATE-RAN row with four pipe-joined cmds returns `[{id:"GATE-RAN",...,folded:"exit 0"}]` (`isMarkRow` matches only `VF-`/`REVIEW-RAN`) | code | confirmed | finding-mark | n/a | n/a |
+| VF-25 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:75 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck `git show origin/main:skills/workflow-status/SKILL.md` = head = 127 lines / 6424 B; `SENSOR_SIGNALS.md` = 150 lines / 10048 B on main and head; the branch diff touches neither | brand | confirmed | finding-mark | n/a | n/a |
+| VF-26 | skills/review-change/references/PERSIST_AND_DECIDE.md:45 · reviewer review-change · HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee · recheck direct read: :45 says no additional ledger write happens beyond step 11 and :48 says a reviewer also records a `GATE-RAN` mark; :51 lists the mark separately from step 11's commit | brand | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 3912d9c127ae6923a0090d57d78e0390e0c0faee | n/a | n/a | review-mark | n/a | n/a |
