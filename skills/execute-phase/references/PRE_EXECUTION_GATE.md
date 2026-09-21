@@ -75,4 +75,4 @@ re-review, while the schedule keeps the late write from being planned at all.
 Each project keeps its own **normalizer inventory** in one place, naming every mutating
 step, its check-only mode where it has one, and the side of the freeze it sits on. In
 this repository that list is in the `## Verification` section of the project guide
-(`CLAUDE.md`), which a plan snapshot already binds as its `project-guide` context row.
+(`AGENTS.md`), which a plan snapshot already binds as its `project-guide` context row.

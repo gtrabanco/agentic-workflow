@@ -10,11 +10,11 @@ the SPEC/feature/fix templates, and the conventions. This repo ships that
 substrate as a generic, copyable scaffold in `template/`:
 
 ```sh
-# Scaffold a new project's way of working (CLAUDE.md, docs/ tree, .github templates):
+# Scaffold a new project's way of working (AGENTS.md, docs/ tree, .github templates):
 npx degit gtrabanco/agentic-workflow/template my-project
 ```
 
-Then fill in the placeholders in `CLAUDE.md` (commands, the documentation map,
+Then fill in the placeholders in `AGENTS.md` (commands, the documentation map,
 your architecture) and delete the doc folders you don't need (e.g. `frontend/`
 for a non-UI project). The skills read this scaffold at runtime, so the two halves
 fit together.

@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.2.0
+version: 3.2.1
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -125,7 +125,7 @@ Verdict: <one-line honest health verdict>
   (none — <why>)
 
 ### Tooling — register / re-design
-  - <skill|MCP> — register in CLAUDE.md (Optional review extras): <why> — route: user edits CLAUDE.md
+  - <skill|MCP> — register in AGENTS.md (Optional review extras): <why> — route: user edits AGENTS.md
   - <skill|MCP> — would change <feature> scope: <why> — route: /design-feature <slug>
   (none — <why>)
 
@@ -161,7 +161,7 @@ security items to track first").
   lineage lives only in Delta mappings as `<audit-id> F<k>`, never global slugs or
   replaced ids. When the user accepts, route: `triage-issue` files/classifies,
   `plan-feature` adds roadmap work, `plan-fix` scopes a concrete fix.
-- **Never registers tooling or edits `CLAUDE.md`.** The tooling sweep proposes a
+- **Never registers tooling or edits `AGENTS.md`.** The tooling sweep proposes a
   skill/MCP to register, but the user (or a routed `design-feature` run)
   performs the edit; a scope-affecting discovery routes to
   `/design-feature <slug>`, which the user approves.
@@ -201,7 +201,7 @@ product-audit (whole product, all axes, periodic)
    └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / plan-fix
                 ├─ Roadmap: add .......... ▶ plan-feature
                 ├─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)
-                └─ Tooling: register/re-design ▶ user edits CLAUDE.md / design-feature
+                └─ Tooling: register/re-design ▶ user edits AGENTS.md / design-feature
 ```
 
 - Broader than `review-change` (one change) and `audit-pr` (one PR); subsumes

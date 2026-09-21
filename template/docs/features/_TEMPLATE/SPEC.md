@@ -1,7 +1,7 @@
 # NN — <feature-slug>
 
 > Feature specification. This is the **feature doc** read at the start
-> of the workflow (`CLAUDE.md` → Feature workflow). Fill every section.
+> of the workflow (`AGENTS.md` → Feature workflow). Fill every section.
 > Detailed phase tasks live in `PLAN.md` / `TASKS.md`, generated in
 > planning mode from this spec.
 >

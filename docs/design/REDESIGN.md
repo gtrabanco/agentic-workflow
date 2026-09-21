@@ -112,7 +112,7 @@ Same two-step rhythm as features; one obvious name pair (`plan-*` → `execute-*
 classified table) and (b) invoking **only the applicable** external skills, then
 synthesizing one report.
 
-It decides applicability by **reading the project** (the CLAUDE.md doc map: does
+It decides applicability by **reading the project** (the AGENTS.md doc map: does
 `docs/frontend/` exist? is it web? a CLI? a library? infra?) and the change's
 footprint (which files/areas it touches):
 
@@ -173,7 +173,7 @@ ones:
 - If web: `web-perf`, an SEO skill.
 - Never suggests UI/SEO skills for a CLI / library / infra project.
 
-It records which are expected in the project's CLAUDE.md so `review-change` /
+It records which are expected in the project's AGENTS.md so `review-change` /
 `product-audit` know what to compose.
 
 ## 10. `execute-phase` automation
@@ -234,5 +234,5 @@ no stack leak) → commit → (push) → your review.
 - **Docs sync on completion.** When the build finishes, update **all**
   documentation to the new skill set: `README.md`,
   `docs/workflow/*` (SKILLS, FEATURE_WORKFLOW, ISSUE_WORKFLOW, REVIEW_AND_CLASSIFY,
-  REPLICATE, PORTABLE_PROMPT), `CLAUDE.md`, and the **Notion** mirror.
+  REPLICATE, PORTABLE_PROMPT), `AGENTS.md`, and the **Notion** mirror.
 ```

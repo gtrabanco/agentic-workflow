@@ -32,6 +32,6 @@ test("package-lock.json must not exist (bun is the sole package manager)", () =>
   assert.equal(
     existsSync(join(PKG_DIR, "package-lock.json")),
     false,
-    "package-lock.json resurrected — delete it; bun.lock is the sole lockfile (CLAUDE.md → Packages)",
+    "package-lock.json resurrected — delete it; bun.lock is the sole lockfile (AGENTS.md → Packages)",
   );
 });

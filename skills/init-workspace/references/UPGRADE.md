@@ -4,13 +4,14 @@ Entered when Step 0 finds an existing **agentic-workflow scaffold** (not a
 bare or foreign repo). Bootstrap mode (the Process section above) never
 engages here — upgrade mode reuses the same discovery + interview machinery,
 scoped to **only the blocks the current template has that this project
-lacks**. Seven ordered steps:
+lacks**. Eight ordered steps:
 
 1. **Locate the current template.** Fetch the current `template/` the same
    way bootstrap does — `npx degit gtrabanco/agentic-workflow/template <temp-dir>`
    (always into a temp dir here, never into the target); the SSH/local-path
    variant applies verbatim for a private source.
-2. **Diff the substrate.** Compare the project's `CLAUDE.md` (and the `docs/`
+2. **Diff the substrate.** Compare the project's agent guide (`AGENTS.md`,
+   or a legacy `CLAUDE.md`) (and the `docs/`
    blocks its documentation map references) against the fetched template.
    Produce the list of blocks/conventions the template carries that this
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
@@ -50,16 +51,39 @@ lacks**. Seven ordered steps:
    `path-protection.md` page are proposed from the template; an existing
    owner-written `path-policy.json` is never clobbered and is listed as a
    residual instead. Leave honest placeholders where the user skipped.
-6. **Seed missing urgency labels, additively (feature 15).** Independent of
-   the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
+6. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
+   effect.** Older releases of this workflow wrote the guide as `CLAUDE.md`;
+   current ones write `AGENTS.md`, and current Claude Code reads `AGENTS.md`.
+   When the project has a `CLAUDE.md`, three ordered moves — never skip (a):
+   a. **Reconcile first.** Diff `CLAUDE.md` against `AGENTS.md` and fold every
+      block, rule, or value that exists only in `CLAUDE.md` into `AGENTS.md`,
+      keeping the project's own wording and values. Name each folded item in the
+      report; when nothing is unique, say that plainly instead of implying a
+      merge happened.
+   b. **Then ask once, stating the risk.** A user may deliberately be on a Claude
+      Code release that reads only `CLAUDE.md`, and deleting the file would stop
+      their agent from seeing the guide at all. Present the choice as remove
+      (one guide, nothing left to drift) or keep (older client), and take the
+      answer. Never delete a tailored `CLAUDE.md` because "the template moved
+      on".
+   c. **On yes:** delete `CLAUDE.md`, keeping the reconciliation from (a) already
+      written. **On keep:** leave the file byte-identical and list it as a
+      residual naming the reason (the user's client still reads it) — a kept
+      legacy guide is a decision, not drift.
+
+   This step is the only writer of `CLAUDE.md` in upgrade mode, and it is never
+   reached without the answer from (b).
+7. **Seed missing urgency labels, additively (feature 15).** Independent of
+   the agent-guide/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and
    `fix-next` labels (`gh label list`); create whichever is missing with the
    same `gh label create` calls bootstrap mode uses (see Process step 9) —
    never touch a label that already exists (additive-only, same never-clobber
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
-7. **Report + hand off.** Summarize blocks added, filled, and skipped
-   (residuals), the urgency labels seeded (or already present), then print the
+8. **Report + hand off.** Summarize blocks added, filled, and skipped
+   (residuals), the legacy `CLAUDE.md` outcome (folded items and removed, or kept
+   with the reason), the urgency labels seeded (or already present), then print the
    recommendation to run `product-audit` next to see which newly-available
    *capabilities* apply to the code (upgrade mode migrates the substrate only,
    never the code).
@@ -81,8 +105,9 @@ lacks**. Seven ordered steps:
   separately, via an explicit bootstrap adapt-in-place run, whether to
   re-tailor it.
 - **Bootstrap stays unchanged on a bare or foreign repo.** If Step 0's
-  scaffold markers (`CLAUDE.md` + `docs/features/ROADMAP.md` or
-  `docs/workflow/`) are absent — no repo, an empty repo, or a `CLAUDE.md`
+  scaffold markers (an agent guide — `AGENTS.md` or a legacy `CLAUDE.md` — plus
+  `docs/features/ROADMAP.md` or
+  `docs/workflow/`) are absent — no repo, an empty repo, or a guide
   that isn't this workflow's — upgrade mode never engages; the existing
   bootstrap Process (merge/adapt/abort) runs exactly as before this mode was
   added.

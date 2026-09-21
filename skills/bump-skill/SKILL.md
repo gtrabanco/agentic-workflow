@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.3.3
+version: 2.3.4
 metadata:
   internal: true
 description: >
@@ -101,7 +101,7 @@ be worked on from any agent:
 
 - Run after any manual edit to a skill or after `execute-phase` touches a
   skill file, and before the commit.
-- `CLAUDE.md` section "Version every change" is the policy this skill
+- `AGENTS.md` section "Version every change" is the policy this skill
   enforces mechanically.
 - Major bumps that introduce renames feed into `docs/workflow/MIGRATION.md`,
   which `init-workspace` reads when installing.

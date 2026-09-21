@@ -90,5 +90,5 @@ body:
       options:
         - label: I checked the ROADMAP — this is not already planned under a different number.
           required: true
-        - label: I read CLAUDE.md and the relevant docs for this area.
+        - label: I read AGENTS.md and the relevant docs for this area.
           required: false

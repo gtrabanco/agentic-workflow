@@ -69,7 +69,7 @@ sessions opt in by creating a local, gitignored mount
 skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
 
 The skills are the **behavior**; `template/` is the **substrate** they read (a
-generic `CLAUDE.md` + documentation map, SPEC/feature/fix templates, and GitHub
+generic `AGENTS.md` + documentation map, SPEC/feature/fix templates, and GitHub
 templates). Scaffold a new project's way of working with
 `npx degit gtrabanco/agentic-workflow/template my-project` — see
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
@@ -103,7 +103,7 @@ merge.**
 
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Fetches and adapts `template/` by interview: gate, doc map, architecture, capability inventory, optional invariants, and injection-safe labels. It detects Claude Code, Cursor, Copilot, or OpenCode and offers the repository-scoped safety guard explicitly — never installs or overwrites hooks without consent. Existing scaffolds enter additive **upgrade mode** and receive only missing blocks/adapters. |
+| `init-workspace` | Fetches and adapts `template/` by interview: gate, doc map, architecture, capability inventory, optional invariants, and injection-safe labels. It detects Claude Code, Cursor, Copilot, or OpenCode and offers the repository-scoped safety guard explicitly — never installs or overwrites hooks without consent. Existing scaffolds enter **upgrade mode** (additive: only missing blocks/adapters) which also reconciles and retires a legacy `CLAUDE.md` into `AGENTS.md`, and only with consent — a client that reads only the old name may keep it. |
 | `discover-repository-state` | Creates and freezes an evidence-backed repository-state ledger before planning or implementation; facts, decisions, documentation, planned work, and inference remain distinct |
 | `resolve-repository-state` | Sole writer for an explicit repository-state contradiction; verifies the competing evidence and publishes the next frozen snapshot |
 
@@ -686,7 +686,7 @@ installed by older releases before its logic moved to `design-feature`, and
 
 `npx skills add …` / `npx skills update` only refreshes the **skills**
 (behavior) — on a project that already has the documentation scaffold, run
-this ordered path to bring the **substrate** (`CLAUDE.md` + `docs/`) forward
+this ordered path to bring the **substrate** (`AGENTS.md` + `docs/`) forward
 too:
 
 1. Update the skills: `npx skills update` (or a fresh `npx skills add …`).

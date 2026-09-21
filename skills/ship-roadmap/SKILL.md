@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 5.2.2
+version: 5.2.3
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -44,7 +44,7 @@ one bug, or exploratory work use the manual planning/execution flow instead.
 
 ## Step 0 — Discover the project (always first)
 
-Read before acting: `CLAUDE.md`/`AGENTS.md` Workflow conventions, documentation
+Read before acting: `AGENTS.md` Workflow conventions, documentation
 map, `docs/features/ROADMAP.md`, fix index, architecture doc, and `.github/`
 templates. Then establish:
 

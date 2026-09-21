@@ -1497,7 +1497,7 @@ const scheduleVerdict = ({ steps, freezeAt }) => {
 // The repository's normalizer inventory, parsed from its own grammar block rather
 // than remembered: `side` is where the step sits relative to the freeze row.
 const INVENTORY_HEADER = "normalizer-inventory@1";
-const guide = read("CLAUDE.md");
+const guide = read("AGENTS.md");
 const inventoryRows = () => {
   const start = guide.indexOf(INVENTORY_HEADER);
   if (start === -1) return null;
@@ -1576,7 +1576,7 @@ test("normalizer order: a post-freeze byte change voids the receipts that bound 
 
 test("normalizer inventory: one home, and every entry names its side of the freeze", () => {
   const rows = inventoryRows();
-  assert.ok(rows, "CLAUDE.md carries the repository's normalizer inventory");
+  assert.ok(rows, "AGENTS.md carries the repository's normalizer inventory");
   const byStep = new Map(rows.map((r) => [r.step, r]));
   assert.equal(byStep.size, rows.length, "no step is listed twice");
   // the categories AC19 names, closed against this repository's real surfaces
@@ -1610,9 +1610,9 @@ test("normalizer inventory: one home, and every entry names its side of the free
   assert.deepEqual(scheduleVerdict(inventorySchedule(moved)),
     { ok: false, offenders: ["bun run bundle:skills"] }, "re-marking a bundler as a tail step is refused");
   // one home: the grammar block exists once, and the gate points at it generically
-  const homes = ["CLAUDE.md", ...fs.readdirSync(path.join(root, "docs", "workflow")).filter((n) => n.endsWith(".md")).map((n) => `docs/workflow/${n}`)]
+  const homes = ["AGENTS.md", ...fs.readdirSync(path.join(root, "docs", "workflow")).filter((n) => n.endsWith(".md")).map((n) => `docs/workflow/${n}`)]
     .filter((f) => read(f).includes(INVENTORY_HEADER));
-  assert.deepEqual(homes, ["CLAUDE.md"], "the inventory is declared in exactly one file");
+  assert.deepEqual(homes, ["AGENTS.md"], "the inventory is declared in exactly one file");
   assert.match(execGate, /normalizer inventory/i, "the gate sends an executor to the project's inventory");
   assert.ok(!execGate.includes(INVENTORY_HEADER), "no copy of the inventory leaks into the gate");
   // the guide cites the rule instead of restating it
