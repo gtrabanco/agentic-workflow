@@ -2068,3 +2068,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change cycle 3 on feature 32 (cycle 3 cap hit) → triage-issue --prioritize-now F11+F12+F13 → fold-findings 3 atomic groups, all folded, gate green
 - **Decisions:** Cycle 3: review-change found 3 new fix-now findings (F11: self-contradictory triage-issue relationship paragraph in review-change/SKILL.md, F12: stale plan-feature budget ceiling 3079<3109, F13: P5 close-out tasks unticked) — two-cycle cap reached (3 REVIEW-RAN marks). Triage classified all 3 as fix-now (complete corrections fitting current unit). Folded in 3 atomic commits: c0cd516e (F11: reworded review-change/SKILL.md + tightened AC-06 pin + re-bundled Pi mirror), 411db912 (F12: re-based plan-feature.mainEstimateMax to 3109), 24f88736 (F13: ticked 9 P5 tasks). All 11 gates green at head 24f88736. Unit route: close-out, open-rows 0.
 - **Next:** rerun /review-change on this HEAD to verify the unit is clean for /audit-pr — after merge: /plan-feature --next for the next roadmap unit (row 50, review-loop-convergence)
+
+## 2026-09-21T17:58:24Z — feat/32-review-consistency-pack — manual
+- **Commits:** 60 (`44acea68…212f6809`)
+- **Files:** 70 files
+- **Summary:** Re-established SPEC receipt (SPEC-REVIEW-32-5 PASS after stale-context CLAUDE.md move) and re-cut engineering half (32-plan-2) resolving all PLAN-REVIEW-32-1 findings F13–F19, then review-plan PASS
+- **Decisions:** SPEC-REVIEW-32-5: parent Product byte-identical (675349ef…), only CLAUDE.md moved by feature 60 merge — re-review minted fresh spec snapshot. Plan repair batch 32-plan-2: router tooling gap (reads only review-findings.md, not planning-findings.md) — repair authorised by review-plan FAIL route table instead of unit-route replan; P30-3 comparator limitation accepted for L1 judgment on spec-product-v1 projection; CHANGELOG collision resolved by row renumbering (not LEGACY_DUPLICATE_VERSION_ROWS extension).
+- **Next:** /review-plan 32-review-consistency-pack — but already PASS at HEAD 33b65e7e (PLAN-REVIEW-PASS). Next: execute-phase 32-review-consistency-pack to implement the 5-phase plan
