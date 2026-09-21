@@ -191,3 +191,35 @@ unmarked cycle-6 prose); the residue routes to
 
 | REVIEW-RAN | HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 | node --test scripts/*.test.mjs \| node scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
+
+Cycle 7 adversarial re-review ran on 2026-09-22 (`review-change --adversarial 2`, head
+`8e0f1f56faf40086544d44aac24b526c1c0bfae8`, PR #249). Two context-clean
+adversarial reviewers (R1 correctness/logic, R2 security/inputs) each ran the
+applicable finder checklists over the branch diff vs `main`. The
+verification pass, the classifier (`review-implementation`), and the debt
+transform (`review-debt`) each ran in a separate isolated context. Every
+folded `yes` row (F1–F34) was re-verified at its cited location: holds.
+
+This cycle sits **above the two-cycle cap** (13 prior `REVIEW-RAN` marks);
+the user explicitly invoked `--adversarial 2` as their escape.
+
+The three phase-lint.mjs findings (F35–F37) are **branch divergence**: the
+feature branch forked at `71b3b0fd` before PR #248 (`3de3180b`) merged to
+main. The diff shows PR #248's fixes as deletions because the feature branch
+never incorporated them. Merging this branch as-is would revert those fixes.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F35 | scripts/phase-lint.mjs:143 | code | high | fix-now | fold into current unit (source owner): branch divergence — rebase onto main to incorporate PR #248's `matchAll` linearization (F99); merge as-is reverts the O(n) optimization to O(n²) `split()` on adversarial tokens | no |
+| F36 | scripts/phase-lint.mjs:601 | code | high | fix-now | fold into current unit (source owner): branch divergence — rebase onto main to incorporate PR #248's `[A-Za-z0-9]` guard on OUTCOME_ANCHOR (F42); merge as-is allows bare `→.`/`→!` to pass the box-8 done-when gate | no |
+| F37 | scripts/phase-lint.mjs:52-59 | code | med | fix-now | fold into current unit (source owner): branch divergence — rebase onto main to incorporate PR #248's F12/F15 frozen-grammar documentation comments (13 lines) | no |
+| F38 | skills/review-change/SKILL.md:157-159 | brand | med | fix-now | fold into current unit (source owner): restore the "independent work becomes proposals" clause or equivalent so the paragraph tells the executor what happens to non-fix-now/non-replan findings; OUTPUT_AND_GUARDRAILS.md documents this but the SKILL.md paragraph is self-incomplete | no |
+| F39 | skills/audit-docs/SKILL.md:75 | verify | med | fix-now | fold into current unit (source owner): restore the "run the command shown, don't infer" discipline instruction removed in this diff; without it, audit checks could be inferred rather than mechanically run | no |
+
+| VF-39 | scripts/phase-lint.mjs:143 · reviewer review-change --adversarial 2 · HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 · recheck `git show main:scripts/phase-lint.mjs | grep -n matchAll` → line 154 has `matchAll`; feature branch `:143` has `split()`; `git log --oneline 71b3b0fd..main -- scripts/phase-lint.mjs` → `3de3180b` (PR #248) | code | confirmed | finding-mark | n/a | n/a |
+| VF-40 | scripts/phase-lint.mjs:601 · reviewer review-change --adversarial 2 · HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 · recheck `git show main:scripts/phase-lint.mjs | grep OUTCOME_ANCHOR` → line 619 has `[A-Za-z0-9]` after `\S`; feature branch `:601` has bare `\S` | code | confirmed | finding-mark | n/a | n/a |
+| VF-41 | scripts/phase-lint.mjs:52-59 · reviewer review-change --adversarial 2 · HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 · recheck `git show main:scripts/phase-lint.mjs | sed -n '56,60p'` → F12 grammar comment present on main; feature branch `:50-60` → no F12 comment | code | confirmed | finding-mark | n/a | n/a |
+| VF-42 | skills/review-change/SKILL.md:157-159 · reviewer review-change --adversarial 2 · HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 · recheck direct read: `:157` reads "`replan-in-unit` adds user-confirmed phases" with no successor clause about independent work; old text had "and independent work becomes proposals" | brand | confirmed | finding-mark | n/a | n/a |
+| VF-43 | skills/audit-docs/SKILL.md:75 · reviewer review-change --adversarial 2 · HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 · recheck `git show main:skills/audit-docs/SKILL.md | grep -n "don't infer"` → line 78 present on main; feature branch `:75` → deleted | verify | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 8e0f1f56faf40086544d44aac24b526c1c0bfae8 | n/a | n/a | review-mark | n/a | n/a |
