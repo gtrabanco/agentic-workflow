@@ -3,7 +3,11 @@
 **Tests first where they pay.** For core/domain and orchestration phases, write
 the phase's acceptance/integration tests first (red), then implement to green —
 the SPEC's dev scenarios are the test list, so its failure modes get exercised,
-not just documented. UI and adapter glue may test after implementation.
+not just documented. UI and adapter glue may test after implementation. The red
+run is evidence, not a claim: record the test command, its exit status, and the
+failing test names in the phase's `progress.md` receipt **before** implementation
+starts — a tests-first phase whose red run was never recorded fails the phase
+completion gate.
 
 Map each change to the project's layers per its architecture doc; build inner layers first, outer last:
 

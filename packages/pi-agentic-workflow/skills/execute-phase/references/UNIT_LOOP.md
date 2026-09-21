@@ -37,7 +37,9 @@ For each queued phase:
    whole invocation with its existing fixed block.
 3. Prefer a fresh worker context when the host supports subagents/headless
    workers; give it only `ACCEPTANCE.md`, `SPEC.md`, this phase's tasks, the last
-   `progress.md` receipt, and the selected workflow contracts. The conductor
+   `progress.md` receipt, and the selected workflow contracts — including this
+   phase's test-ordering rule from `CLOSEOUT.md` (tests-first or test-after),
+   which the worker consumes, never re-derives. The conductor
    keeps receipts, never raw source context. Without that primitive, execute
    inline and apply the same input cap.
 4. Implement the phase, run its exact validators and normal project gate, update
