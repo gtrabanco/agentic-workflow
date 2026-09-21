@@ -2106,3 +2106,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-plan 32-review-consistency-pack → PLAN-REVIEW-FAIL (F13-F19)
 - **Decisions:** Parent SPEC-REVIEW-32-4 stale-context from CLAUDE.md moves (L1); plan cut pre-merge against now-merged dep 31+60 (L2/P2/P12); normative-drift.changelog row red at head (P10); 8+ evidence path:line stale post-merge (P12); PLAN.md ledger counts miscounted (P12); feature 31 materiality contract overlaps edited surfaces (P1/P2); roadmap write clobbered by merge (F19 env)
 - **Next:** re-cut engineering half: re-base on post-merge head e1c008bc, reconcile IS-3/dep 31 overlap, fix PLAN.md counts, land on head where normative-drift is green, then re-run /review-plan 32
+
+## 2026-09-21T18:06:41Z — feat/32-review-consistency-pack — manual
+- **Commits:** 70 (`44acea68…55bf6b80`)
+- **Files:** 6 files
+- **Summary:** Feature 32 review-consistency-pack: F21-F22 plan repair batch — PE-011 cite re-base + O9 to P2, then full review-change fold cycles and execution
+- **Decisions:** PE-011: correct ledger-ownership.test.mjs cites are :56-57 (projection paths), :66-74 (TRUTH_CLASSES), :158-163 (one row per class), :173 (unique ledger), :202-204 (owner-cell equality); O9 moved wholesale P1→P2 with validator extended by review-loop-discipline IS-5(a)-text pin — phase column marks where obligation RESOLVES; SPEC.md §Phases is Engineering-half (outside spec-product-v1 projection) — editing does not rotate Product digest (675349ef… byte-identical); check-skill-context.test.mjs pre-existing fail on route ceilings (confirmed at parent commit 45f70b09); plan snapshot a29feeca…
+- **Next:** Re-run /review-plan 32-review-consistency-pack to get PLAN-REVIEW-PASS, then execute-phase 32-review-consistency-pack
