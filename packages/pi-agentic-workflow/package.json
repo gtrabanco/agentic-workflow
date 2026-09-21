@@ -44,6 +44,7 @@
   "scripts": {
     "build": "tsc",
     "bundle:skills": "bun scripts/bundle-skills.mjs",
+    "bundle:skills:check": "bun scripts/bundle-skills.mjs --check",
     "test": "tsc && bun test test/*.test.mjs",
     "test:node": "tsc && node --test test/*.test.mjs",
     "prepublishOnly": "bun run build && bun run test",
