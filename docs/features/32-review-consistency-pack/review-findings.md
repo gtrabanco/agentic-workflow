@@ -150,3 +150,44 @@ commit; F23 (ledger flip) is this action; F24 (isMarkRow/GATE-RAN) fixed
 in `scripts/unit-route.mjs` with a pin in `review-loop-discipline.test.mjs`;
 F25 (budget provenance false claims) reworded; F26 (PERSIST_AND_DECIDE
 self-contradiction) reconciled.
+
+Cycle 6 re-review ran on 2026-09-21 (`review-change`, head
+`c4a552c0ac2406e651a621c02abb7c3a30288626`, PR #249) — completing the cycle-6
+persist, which the prose above left without its `REVIEW-RAN` mark and without a
+receipt. Per-pass isolated finders for the applicable axes (code, verify,
+security, perf, brand); the verification pass, the classifier
+(`review-implementation`) and the debt transform (`review-debt`) each ran in a
+separate isolated context. The delta review escalated to a **full pass** on the
+**width** trigger (changed lines in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`
+lines 413–498 sit more than 50 lines from every cited line in that file).
+Every folded `yes` row (F1–F26) was re-verified at its cited location: 19 hold,
+F25 is a regression (recorded as F27), and six rows carry historical citation
+drift (F1/F3/F6/F10/F17/F22 — the repaired defect holds, only the cited line
+moved). All 12 candidate findings verified `confirmed` (0 refuted). This cycle
+sits above the two-cycle cap (five completed `REVIEW-RAN` marks plus the
+unmarked cycle-6 prose); the residue routes to
+`/triage-issue --prioritize-now`.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F27 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:76 | perf | med | fix-now | regression of F25 — fold into current unit (source owner): the workflow-status `mainSources` claims `skills/workflow-status/SKILL.md` is "byte-identical to main", but the branch bumped `version:` 3.7.0 → 3.8.0; reword to "only the version line changed; size unchanged — baseline inherited from main" | no |
+| F28 | skills/plan-feature/SKILL.md:94 | brand | med | fix-now | fold into current unit (source owner): replace `repair registration if needed` with main's named condition (`if any of the three is missing or wrong, fix the entry now`); `CLAUDE.md:128` bans "if needed" and this is its only occurrence in `skills/` at HEAD | no |
+| F29 | skills/pre-execution-review/references/LEDGERS.md:121 | code | med | fix-now | fold into current unit (source owner): call `fold-findings:folded-flag` the map's **owner** entry, not its "annotator" (the annotator is `scripts/ledger-provenance.mjs`, per the `ledger-ownership@1` row) | no |
+| F31 | scripts/unit-route.mjs:108-116 · scripts/workflow-status.mjs:739 · skills/workflow-status/references/SENSOR_SIGNALS.md:86-87 · skills/replan-findings/SKILL.md:70 | code | med | fix-now | fold into current unit (source owner): add `GATE-RAN` to the four mark-id enumerations now that `isMarkRow` matches it, so the documented contract agrees with the guard | no |
+| F34 | CLAUDE.md:330-332 · skills/pre-execution-review/references/LEDGERS.md:211 | code | med | fix-now | fold into current unit (source owner): register `block:gate-ran@1` in the `normative-surfaces@1` inventory (or record the deferral in `known-issues.md` with a re-trigger), so the drift gate covers the new mark grammar | no |
+
+| VF-27 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:76 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `diff <(git show origin/main:skills/workflow-status/SKILL.md) skills/workflow-status/SKILL.md` → `version: 3.7.0 → 3.8.0` (NOT byte-identical) while the JSON claims "byte-identical to main" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-28 | skills/plan-feature/SKILL.md:94 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck direct read: `:94` reads "repair registration if needed"; `CLAUDE.md:128` bans "if needed"; `git show origin/main:… 94p` reads "if any of the three is missing or wrong, fix the entry now"; `git blame` → `8e5220e49` | brand | confirmed | finding-mark | n/a | n/a |
+| VF-29 | skills/pre-execution-review/references/LEDGERS.md:121 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck direct read: `:121` calls `fold-findings:folded-flag` the "annotator" while `:145` puts it in the OWNER cell and `scripts/ledger-provenance.mjs` in the annotator cell; `git blame` → `8e5220e49` | code | confirmed | finding-mark | n/a | n/a |
+| VF-30 | skills/execute-phase/references/FOLDING.md:43 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `grep -nE "gate-ran" skills/execute-phase/references/EXECUTION_CONTRACT.md` → only `## Gate-run mark` and its pointer to `LEDGERS.md (§gate-ran@1)`; no local block id | brand | confirmed | finding-mark | n/a | n/a |
+| VF-31 | scripts/unit-route.mjs:108-116 · scripts/workflow-status.mjs:739 · skills/workflow-status/references/SENSOR_SIGNALS.md:86-87 · skills/replan-findings/SKILL.md:70 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck direct read: all four enumerations name only `VF-<n>`/`REVIEW-RAN` while `unit-route.mjs:116` also matches `/^GATE-RAN$/i` | code | confirmed | finding-mark | n/a | n/a |
+| VF-32 | skills/audit-docs/SKILL.md:77-79 · CHANGELOG.md:578 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `git show bb2d8484 -- skills/audit-docs/SKILL.md` removes "run the command shown, don't infer." (old `:78`); tree-wide grep finds no replacement; the 2.1.0 CHANGELOG row says only "No check was added or removed" | code | confirmed | finding-mark | n/a | n/a |
+| VF-33 | skills/review-change/references/PERSIST_AND_DECIDE.md:45 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck direct read: `:45` reads `docs(<unit>): persist review findings` (no range) while `CHANGELOG.md:438` documents `docs(<unit>): persist review findings F<n>–F<m>` | code | confirmed | finding-mark | n/a | n/a |
+| VF-34 | CLAUDE.md:330-332 · skills/pre-execution-review/references/LEDGERS.md:211 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `awk '/normative-surfaces@1/,/^```$/' CLAUDE.md \| grep ledger` → exactly 3 rows (`ledger-ownership@1`, `review-mark@1`, `finding-mark@1`); no `gate-ran@1` row | code | confirmed | finding-mark | n/a | n/a |
+| VF-35 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:28 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `wc -l skills/plan-feature/SKILL.md` → 208 while `:28` reads "2826 est / 209 lines" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-36 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:130 · :357 · :392 · :512 · :527 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck `Math.ceil(Buffer.byteLength(text,'utf8')/4)`: `origin/main` LEDGERS = 3462, HEAD = 3930, delta = 468 ≠ the declared "+423 estimate" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-37 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:45 · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck exact arithmetic: `ceil(2730 x 1.10) = 3003` while `:45` states 3004; `node scripts/check-skill-context.mjs` exits 0 | perf | confirmed | finding-mark | n/a | n/a |
+| VF-38 | docs/features/32-review-consistency-pack/review-findings.md (F1, F3, F6, F10, F17, F22) · reviewer review-change · HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 · recheck cited lines now point at unrelated text (budget `:34`/`:40` = `},`, `:49` = `referenceSources`, `:76` = workflow-status note; CHANGELOG `:426`/`:574`/`:651` = header/blank/row) while the underlying repairs hold (`check-skill-context.mjs` and `--routes` exit 0, test fail 0) | workflow | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD c4a552c0ac2406e651a621c02abb7c3a30288626 | node --test scripts/*.test.mjs \| node scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
