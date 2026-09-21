@@ -1,0 +1,58 @@
+name: Root suite
+
+# The repository's own suites — `scripts/*.test.mjs`: the normative-drift gate,
+# the pre-execution contract/sensor/timeline suites, the golden fixture, phase
+# lint, the skill-context budgets, the receipt and hand-off contracts — ran only
+# by hand until this workflow existed. Nothing enforced them.
+#
+# That gap is not theoretical. A package version bump shipped without its
+# `CHANGELOG.md` row, which is exactly what `normative-drift.test.mjs` exists to
+# refuse, and it reached `main`: the publish workflows run the *package* suites,
+# which cannot see a repository-wide drift gate. This job runs on every change
+# to any path, because the suites read the whole tree.
+#
+# No `bun install` at the repository root: there is no root package. The one
+# prerequisite is the schema package's build output, which
+# `scripts/schema-runtime.mjs` resolves as `packages/agentic-workflow-schema/dist`
+# and which is gitignored — the pre-execution fixtures symlink `packages/` into a
+# temp repo and require it, so without the build those suites fail on a missing
+# module rather than on a defect.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: root-suite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  root-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          # Keep in lockstep with the publish workflows: 1.4.0 writes lockfile
+          # version 2, which an older bun cannot parse.
+          bun-version: 1.4.0
+
+      - name: Build the schema package (the suites resolve its dist/)
+        run: bun install --frozen-lockfile && bun run build
+        working-directory: packages/agentic-workflow-schema
+
+      - name: Root suites
+        run: node --test scripts/*.test.mjs
