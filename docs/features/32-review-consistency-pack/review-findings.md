@@ -73,3 +73,37 @@ the findings below are genuinely new (no `regression of` row).
 | VF-13 | docs/features/32-review-consistency-pack/TASKS.md:68-76 · reviewer review-change · HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 · recheck: P5 `## P5 — Hardening & PR` carries 9 `- [ ]` and 0 ticks while P1–P4 are fully ticked; `progress.md` P5 receipt reads "Next: PR #249 opened · Unit done"; `ROADMAP.md:42` reads `done · [#249]`; `UNIT_LOOP.md:17-18` declares an unticked phase unfinished | workflow | confirmed | finding-mark | n/a | n/a |
 
 | REVIEW-RAN | HEAD 5ae908b19ca8a5153903e5c23808ee7fbeff51a6 | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 4 re-review ran on 2026-09-19 (`review-change`, head
+`24f88736e9683397d9769233f34cb0c130412a56`, PR #249). Per-pass isolated finders
+for the five applicable axes (code, verify, security, perf, brand); the
+verification pass, the classifier (`review-implementation`) and the debt
+transform (`review-debt`) each ran in a separate isolated context. Every folded
+`yes` row (F1–F13) was re-verified at its cited location and holds. Cycle 4 sits
+**above the two-cycle cap** (three prior `REVIEW-RAN` marks): the new fix-now
+rows repeat the F6/F7/F10/F12 budget-re-basis family and the F3/F5 wording
+family, so the residue routes to `/triage-issue --prioritize-now` — a fourth
+fold never starts without explicit user instruction. Refuted candidates: the
+`audit-pr` `warning` scale claim (ED-32-5 / B-02 record `warning` as a
+co-occurring note, not a scale value) and the per-skill sibling-headroom claim
+(`SKILL_CONTEXT_BUDGETS.json:34` declares it a `schemaVersion: 1` limitation).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F14 | skills/product-audit/references/AUDIT_DIMENSIONS.md:15 | code | med | fix-now | fold into current unit (source owner): replace the restated range "audit-docs checks 1–13" with a citation to `audit-docs` as the count owner (14 checks) so check 14 is swept; pin in `review-loop-discipline` | no |
+| F15 | skills/review-change/references/PERSIST_AND_DECIDE.md:45-47 | code | med | fix-now | fold into current unit (source owner): reconcile "no ledger write happens" with the adjacent `GATE-RAN` mark duty (itself a ledger write) and add that duty to the "only mutations" sentence | no |
+| F16 | skills/review-implementation/references/CLASSIFY.md:11-13 | code | med | fix-now | fold into current unit (source owner): name `scripts/workflow-status.mjs`'s `SEVERITY_VOCABULARY` as the sensor's envelope projection of the same table, or scope the "no ad-hoc conversion" claim, so the declared single home is true | no |
+| F17 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:49 | perf | med | fix-now | fold into current unit (source owner): re-base `review-change.referenceEstimateMax` to `ceil(2799 x 1.10) = 3079` at a declared re-basis naming the growth source | no |
+| F18 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:66 · :72 | perf | med | fix-now | fold into current unit (source owner): re-base `workflow-status.referenceEstimateMax` to `ceil(2512 x 1.10) = 2764` and refresh the declared baseline (`2512 est`) | no |
+| F19 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:64-65 · :69 | perf | med | fix-now | fold into current unit (source owner): re-base `workflow-status.mainEstimateMax` to `ceil(1606 x 1.10) = 1767` and `mainLinesMax` to `ceil(127 x 1.10) = 140`, refreshing the declared baseline (`1606 est / 127 lines`) | no |
+| F20 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:9 · :25-28 | perf | med | fix-now | fold into current unit (source owner): declare `plan-feature.referenceEstimateMax` at `ceil(2151 x 1.10) = 2367` (the entry currently inherits `defaults` 2200, below the floor) | no |
+
+| VF-14 | skills/product-audit/references/AUDIT_DIMENSIONS.md:15 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck direct read: :15 reads "run `audit-docs` checks 1–13" while `skills/audit-docs/SKILL.md:120` reads `Check (1-14)` and :124 `<n>/14` | code | confirmed | finding-mark | n/a | n/a |
+| VF-15 | skills/review-change/references/PERSIST_AND_DECIDE.md:45-47 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck direct read: :45 "On `REVIEW-PASS` with an open PR no ledger write happens" beside :47 "A reviewer also records a `GATE-RAN` mark"; `LEDGERS.md` §gate-ran@1 puts that mark in `review-findings.md` | code | confirmed | finding-mark | n/a | n/a |
+| VF-16 | skills/review-implementation/references/CLASSIFY.md:11-13 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck `grep -n SEVERITY_VOCABULARY scripts/workflow-status.mjs` → :718-721 (also present on origin/main); the "Only this section may convert" claim is `+` in `git diff main...HEAD` | code | confirmed | finding-mark | n/a | n/a |
+| VF-17 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:49 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck `Math.ceil(Buffer.byteLength(text,'utf8')/4)` on `skills/review-change/references/REVIEW_PROCESS.md` → 2799 est; declared ceiling 2800 < `ceil(2799 x 1.10) = 3079` | perf | confirmed | finding-mark | n/a | n/a |
+| VF-18 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:66 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck the same estimator on `skills/workflow-status/references/SENSOR_SIGNALS.md` → 2512 est; ceiling 2527 < `ceil(2512 x 1.10) = 2764`; declared baseline :72 reads "measured 2297 est" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-19 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:64-65 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck the estimator on `skills/workflow-status/SKILL.md` → 1606 est / 127 lines (checker `lineCount`); ceilings 1680/136 < `ceil(1606 x 1.10) = 1767` / `ceil(127 x 1.10) = 140`; declared baseline "1527 est / 123 lines" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-20 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:9 · reviewer review-change · HEAD 24f88736e9683397d9769233f34cb0c130412a56 · recheck `skills.plan-feature` carries no `referenceEstimateMax`, so `defaults.referenceEstimateMax` 2200 applies; `skills/plan-feature/references/ROUTING.md` → 2151 est < `ceil(2151 x 1.10) = 2367` | perf | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 24f88736e9683397d9769233f34cb0c130412a56 | n/a | n/a | review-mark | n/a | n/a |
