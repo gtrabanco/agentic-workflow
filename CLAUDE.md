@@ -250,11 +250,12 @@ This repo has no application build. "Green" means:
   there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
   `envelope.schema.json` + version bump) — same PR, always.
-- If `packages/pi-agentic-workflow/` was touched: `bun run test` passes there,
-  and any change to a `skills/<name>/SKILL.md` is re-bundled into the package
-  with `npm run bundle:skills` (the committed `packages/pi-agentic-workflow/skills/`
-  mirror stays byte-identical to `skills/`; `test/alias-coverage.test.mjs`
-  reads both trees) — same PR, always.
+- If `packages/pi-agentic-workflow/` was touched: `bun run test` passes there.
+  Nothing to re-bundle by hand: `skills/` at the repo root is the only skills
+  tree in git, and the package stages its filtered copy at test and pack time
+  (that copy is gitignored and deleted again by `postpack`).
+  `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
+  trees; the staged one is always rebuilt first, so it is never stale.
 
 **Runtime convention (one rule, everywhere):** scripts run with **bun first**
 (`bun scripts/x.mjs`, `bun run <pkg-script>`); when bun is absent, the same
@@ -279,7 +280,7 @@ block and refuses the schedule if a mutating step is ever re-marked as a tail st
 normalizer-inventory@1
 step | kind | side
 bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, the CHANGELOG table, README/SKILLS cells) | before
-bun run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
+bun run bundle:skills | generator (stages the pack-time skill bundle at `packages/pi-agentic-workflow/skills/`; gitignored and removed by `postpack`, so it is build output, never a committed mirror) | before
 bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
 generate-verification-schemas.mjs | generator (writes the verification schema projections) | before
@@ -362,9 +363,9 @@ skills/review-spec/references/OUTPUT.md + skills/review-plan/references/OUTPUT.m
 
 The two schema generators are the clean example of the split the rule turns on: the
 same script rewrites a projection or reports on it, and only the reporting mode may
-run after a freeze. `bundle:skills` must run after the last edit under `skills/` and
-before any freeze, because `test/skill-parity.test.mjs` fails a drifted mirror. No
-script or skill may keep a second copy of this list.
+run after a freeze. `bundle:skills` stages a gitignored build artifact that the
+package's own lifecycle stages and removes again, so no one has to sequence it by
+hand. No script or skill may keep a second copy of this list.
 
 ---
 

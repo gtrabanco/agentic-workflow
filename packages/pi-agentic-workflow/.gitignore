@@ -1,6 +1,13 @@
 node_modules/
 dist/
 
+# The skill bundle is pack-time build output, generated from the canonical
+# repository `skills/` tree by `bun run bundle:skills` (see scripts/bundle-skills.mjs).
+# It is never committed: one tree in git means no agent can edit the copy
+# instead of the source, and no copy can silently drift. .npmignore keeps npm
+# from honouring this entry while packing.
+skills/
+
 # bun is the sole package manager (CLAUDE.md → Packages) — an npm
 # package-lock.json here is drift and the lockfile-policy test fails on it
 package-lock.json
