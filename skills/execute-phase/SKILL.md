@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 4.7.1
+version: 4.8.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
