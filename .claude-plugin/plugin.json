@@ -1,6 +1,6 @@
 {
   "name": "agentic-workflow",
-  "description": "Stack-agnostic agent skills for a disciplined, doc-driven feature/issue workflow: design, plan, execute by phases, review, audit, and ship — with a full internal review pack and merge gates.",
+  "description": "Stack-agnostic agent skills for a disciplined, doc-driven feature/issue workflow: design, plan, execute by phases, review, audit, and ship \u2014 with a full internal review pack and merge gates.",
   "version": "1.0.0",
   "author": {
     "name": "Gabriel Trabanco",
@@ -25,7 +25,6 @@
     "./skills/evidence-grounding",
     "./skills/execute-phase",
     "./skills/fold-findings",
-    "./skills/generate-docs",
     "./skills/implementation-discovery",
     "./skills/init-workspace",
     "./skills/log-session",

@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**19 user-facing skills** (one menu entry each) + **19 internal steps**
+**18 user-facing skills** (one menu entry each) + **21 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the
@@ -133,12 +133,6 @@ deterministic readiness result, never a verdict.
 |---|---|---|
 | `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch; `--prioritize-now` triages unresolved review findings and routes oversized work to a plan with new phases | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
 
-## Document
-
-| Skill | Role | Hands off to |
-|---|---|---|
-| `generate-docs` | Turn a unit's diff into developer docs on the project's own docs site: incremental how-to guides via a discovered adapter (Starlight MDX reference, plain-markdown fallback), a knowledge/call map rendered from a project-declared deterministic command (never model-inferred), opt-in `--review` export of review reports. Provenance frontmatter (`generated-by`/`source-unit`) lets `audit-docs` catch orphan/stale pages | the unit's close-out commit (pages ride the unit's PR); `audit-docs` for drift |
-
 ## Autopilot — the whole flow, end to end
 
 | Skill | Role | Hands off to |
@@ -173,7 +167,6 @@ with no arguments uses the default stated here.
 | `discover-repository-state` | `/discover-repository-state` | Reads repository evidence and writes a frozen Normalized Repository State; contradictions route to `/resolve-repository-state`. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] [--max-attempts N] \| [--force]` | Target only → execute every remaining phase and close the unit. Explicit `P<k>` → execute exactly that phase. `--max-attempts N` bounds phase repair attempts (default 3). `--force` is the recorded user-only dependency/status override. |
 | `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs the complete pending fix-now queue, grouping only compatible corrections. IDs restrict the queue. Every member still receives its own `FOLDED \| DISPUTED \| BLOCKED` result. |
-| `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | Scope defaults to the current branch's diff vs the default branch; a slug/fix/path narrows or redirects it. `--review` → additionally export the most recent `review-change` report as a docs page (opt-in, never automatic). |
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (additive: proposes only the new/missing template blocks), which also reconciles and retires a legacy `CLAUDE.md` into `AGENTS.md` — with consent only. |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |

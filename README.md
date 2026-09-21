@@ -23,32 +23,18 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ others](https://skills.sh) — installed with the
 [`skills`](https://github.com/vercel-labs/skills) CLI (see
 [Install](#install)).
-
 > The examples in `docs/` are generic and illustrative; the skills
 > themselves are stack-agnostic and architecture-agnostic.
 
-> ## ⚠️ Breaking change (v3, 2026-07-04): the default branch is now model-agnostic
->
-> `npx skills add gtrabanco/agentic-workflow` (no `#ref`) now installs what used
-> to be the **`#inheritance`** variant: no skill carries `model:`/`effort:`
-> frontmatter, so every skill simply **inherits whatever model and effort your
-> agent session is already using**. The goal: using this workflow should never
-> lock you into one vendor's model lineup — you pick the model, the skills just
-> run the discipline.
->
-> - **Already pinned `#inheritance`?** Nothing to do — `#inheritance` keeps
->   working, kept in sync as an exact alias of the default branch.
-> - **Everyone else** (any other agent, or you'd rather choose tiers yourself):
->   the plain install command below already gives you this branch — no action
->   needed.
->
-> See [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) for the full
-> rationale and upgrade notes.
+> The model-agnostic install (`npx skills add gtrabanco/agentic-workflow`)
+> carries no skill `model:`/`effort:` frontmatter — every skill simply
+> **inherits whatever model and effort your agent session is already using**.
+> The goal: using this workflow should never lock you into one vendor's model lineup — you pick the model, the skills just run the discipline.
 
 ## What's inside
 
 ```
-skills/                  39 source skills (19 user-facing + 19 workflow internals + 1 metadata-internal; 38 discoverable)
+skills/                  39 source skills (19 user-facing + 20 workflow internals + 1 metadata-internal; 38 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -80,7 +66,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**19 user-facing skills** (one menu entry each) + internal contracts composed
+**18 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the `plan-feature` router's two planning steps, the two pre-execution
 evidence owners (`evidence-grounding` for authoring readiness,
 `pre-execution-review` for the shared review cycle and the planning ledgers), the
@@ -167,9 +153,9 @@ Projects that do not declare the document remain compatible.
 
 ### Document
 
-| Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `generate-docs` | Turns a unit's diff into **developer documentation on the project's own docs site** — incremental how-to guides through a discovered adapter (Starlight MDX first-class, plain markdown fallback), a **knowledge/call map** rendered from a project-declared deterministic command (the model never infers graph edges), and opt-in `--review` export of review reports. Provenance frontmatter lets `audit-docs` catch orphan/stale pages; never scaffolds a site, never edits code. |
+| Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
 
 ### Session
 
@@ -405,7 +391,7 @@ audio/retrieval/image models — not used by the workflow. Model strength above
 is framed by active-params + role, not benchmark numbers — sanity-check
 against a current leaderboard before pinning; this landscape moves fast.
 
-**Installing on the default branch (or `#inheritance`)?** Every skill
+**Installing.** Every skill
 **inherits your session's model and effort** — the plain install command gives
 you exactly that:
 
@@ -540,10 +526,6 @@ npx skills list
 npx skills update
 npx skills remove plan-feature
 
-# Already pinned #inheritance before v3? It still works — kept as an exact
-# alias of the (now model-agnostic) default branch:
-npx skills add gtrabanco/agentic-workflow#inheritance
-
 # Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
 npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …then `npx skills experimental_install` restores the exact set from skills-lock.json.
@@ -579,7 +561,7 @@ without selecting skills interactively, pass all published skill names to one
 npx skills remove --yes \
   audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
   execute-phase pre-execution-review \
-  fold-findings generate-docs implementation-discovery init-workspace log-session \
+  fold-findings implementation-discovery init-workspace log-session \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \

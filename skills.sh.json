@@ -72,7 +72,6 @@
       "title": "Documentation and session",
       "description": "Generate developer documentation and leave compact handoff records.",
       "skills": [
-        "generate-docs",
         "log-session"
       ]
     },
