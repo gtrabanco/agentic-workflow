@@ -3,7 +3,7 @@ name: audit-docs
 user-invocable: true
 version: 2.1.0
 argument-hint: "[--fix]"
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Audit cross-document coherence: docs ↔ roadmap ↔ code ↔ fix index ↔ issues.

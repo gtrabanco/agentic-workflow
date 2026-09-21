@@ -3,7 +3,7 @@ name: review-spec
 user-invocable: true
 version: 1.8.0
 argument-hint: <NN-slug | path/to/SPEC.md>
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Independent read-only review of a frozen Product half before engineering

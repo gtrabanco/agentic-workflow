@@ -3,7 +3,7 @@ name: review-change
 user-invocable: true
 version: 3.7.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Review a change with only applicable internal axes, classify every finding,
@@ -157,7 +157,8 @@ never auto-run (D3), for independent proposals, audit findings, and
 `--prioritize-now` runs. It is Stage 4: checkpoint reviews are
 optional, the end review is mandatory and fresh. `fix-now` is routed to the
 unit's fold cycle — a separate `/fold-findings` invocation, never run by this review;
-`replan-in-unit` adds user-confirmed phases. `audit-pr` consumes
+`replan-in-unit` adds user-confirmed phases, and independent work becomes
+proposals. `audit-pr` consumes
 only the verified PR-comment receipt, never the
 chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
 correction path is `/fold-findings`, then re-run `/review-change` on the changed

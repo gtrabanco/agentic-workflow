@@ -2,7 +2,7 @@
 name: replan-findings
 user-invocable: false
 version: 1.1.1
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: the conditional replan entry. Loaded only when
