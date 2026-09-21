@@ -44,12 +44,13 @@
   "scripts": {
     "build": "tsc",
     "bundle:skills": "bun scripts/bundle-skills.mjs",
-    "bundle:skills:check": "bun scripts/bundle-skills.mjs --check",
-    "test": "tsc && bun test test/*.test.mjs",
-    "test:node": "tsc && node --test test/*.test.mjs",
-    "prepublishOnly": "bun run build && bun run test",
-    "mutation": "bun scripts/mutation-check.mjs",
-    "prepare": "bun run build"
+    "clean:skills": "bun scripts/bundle-skills.mjs --clean",
+    "test": "bun run bundle:skills && tsc && bun test test/*.test.mjs",
+    "test:node": "bun run bundle:skills && tsc && node --test test/*.test.mjs",
+    "prepublishOnly": "bun run build && bun run bundle:skills && bun run test",
+    "postpack": "bun run clean:skills",
+    "mutation": "bun run bundle:skills && bun scripts/mutation-check.mjs",
+    "prepare": "bun run build && bun run bundle:skills"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=0.87.0"

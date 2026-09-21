@@ -1,15 +1,14 @@
-// bundle-skills.mjs — rebuild the package's skill bundle from the canonical
-// repository `skills/` tree. `skills/` at the repo root stays the single source
-// of truth (SPEC D-E3): this script is the only writer of the bundle, and
-// `test/skill-parity.test.mjs` fails the build on any byte drift in either
-// direction. Nothing here edits skill prose.
+// bundle-skills.mjs — build the package's skill bundle from the canonical
+// repository `skills/` tree. `skills/` at the repo root is the single source of
+// truth: it is the only skills tree in git, and the copy this script stages
+// under the package is pack-time build output, gitignored and removed again by
+// `--clean` once the tarball exists. Nothing here edits skill prose.
 //
-// `--check` re-bundles into a scratch directory and compares it against the
-// committed bundle WITHOUT writing anything, then exits non-zero listing every
-// missing / drifted / hand-added path. That is what makes the CI order safe:
-// the check runs first and still catches committed-bundle drift, and the write
-// mode runs after it so the artifact that gets packed is always regenerated
-// from the canonical tree rather than trusted from git.
+// Lifecycle (package.json): `prepare` stages it for local work, `test` stages it
+// before asserting, `prepublishOnly` stages it before the gate, and `postpack`
+// removes it. Keeping the staged copy out of git is the point: a second tree on
+// disk is a tree an agent can edit by mistake — and that edit would be silently
+// thrown away by the next rebuild.
 //
 // Inclusion rule (SPEC S2): bundle every skill EXCEPT the ones whose frontmatter
 // declares `metadata.internal: true` — repo-maintenance skills such as
@@ -22,8 +21,7 @@
 // folded scalars (`description: >`) are skipped because every continuation line
 // is indented, so no nested line can be mistaken for a top-level key.
 
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -156,62 +154,12 @@ export function bundleSkills({ sourceDir, targetDir }) {
 }
 
 /**
- * Compare the committed bundle against a fresh bundling of the source tree,
- * writing nothing. Distinguishes the three ways a bundle goes stale so the
- * report names the repair instead of just saying "drift".
- * @param {{ sourceDir: string, targetDir: string }} options
- * @returns {{ ok: boolean, missing: string[], drifted: string[], extra: string[], skills: number, files: number }}
+ * Remove the staged bundle. The package's `postpack` hook runs this so the
+ * copy cannot outlive the tarball it was built for.
+ * @param {{ targetDir: string }} options
  */
-export function checkBundle({ sourceDir, targetDir }) {
-  const source = resolve(sourceDir);
-  const target = resolve(targetDir);
-  const scratch = mkdtempSync(join(tmpdir(), "pi-aw-bundle-check-"));
-  const missing = [];
-  const drifted = [];
-  const extra = [];
-
-  try {
-    const expected = bundleSkills({ sourceDir: source, targetDir: scratch });
-    for (const slug of expected.included) {
-      const fromSource = listFiles(join(scratch, slug));
-      const committedDir = join(target, slug);
-      if (!existsSync(committedDir)) {
-        missing.push(`${slug}/`);
-        continue;
-      }
-      const fromBundle = listFiles(committedDir);
-      for (const rel of fromSource) {
-        if (!fromBundle.includes(rel)) {
-          missing.push(`${slug}/${rel}`);
-        } else if (!readFileSync(join(committedDir, rel)).equals(readFileSync(join(scratch, slug, rel)))) {
-          drifted.push(`${slug}/${rel}`);
-        }
-      }
-      for (const rel of fromBundle) {
-        if (!fromSource.includes(rel)) extra.push(`${slug}/${rel}`);
-      }
-    }
-
-    // A directory the source never produced: a stale skill, or one the
-    // inclusion rule excludes (an internal skill committed by mistake).
-    if (existsSync(target)) {
-      const included = new Set(expected.included);
-      for (const entry of readdirSync(target, { withFileTypes: true })) {
-        if (entry.isDirectory() && !included.has(entry.name)) extra.push(`${entry.name}/`);
-      }
-    }
-
-    return {
-      ok: missing.length === 0 && drifted.length === 0 && extra.length === 0,
-      missing,
-      drifted,
-      extra,
-      skills: expected.included.length,
-      files: expected.files,
-    };
-  } finally {
-    rmSync(scratch, { recursive: true, force: true });
-  }
+export function cleanBundle({ targetDir }) {
+  rmSync(resolve(targetDir), { recursive: true, force: true });
 }
 
 const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -222,23 +170,9 @@ if (invokedDirectly) {
     targetDir: join(packageDir, "skills"),
   };
 
-  if (process.argv.includes("--check")) {
-    const report = checkBundle(dirs);
-    if (report.ok) {
-      console.log(`bundle in sync with skills/ (${report.skills} skills, ${report.files} files)`);
-    } else {
-      const sections = [
-        ["missing", report.missing],
-        ["drifted", report.drifted],
-        ["not in skills/", report.extra],
-      ].filter(([, list]) => list.length > 0);
-      console.error(
-        `bundle is stale — run \`bun run bundle:skills\` and commit the result\n${sections
-          .map(([label, list]) => `  ${label}: ${list.join(", ")}`)
-          .join("\n")}`,
-      );
-      process.exitCode = 1;
-    }
+  if (process.argv.includes("--clean")) {
+    cleanBundle(dirs);
+    console.log("removed the staged skill bundle (git holds the canonical skills/ tree)");
   } else {
     const result = bundleSkills(dirs);
     console.log(

@@ -1,0 +1,10 @@
+# npm falls back to .gitignore when this file is absent — and the package's
+# .gitignore lists `skills/` (pack-time build output, staged by `bundle:skills`
+# and removed again by the `postpack` hook). This file exists so that fallback
+# never applies: `skills/` is named by the `files` whitelist in package.json and
+# must ship in the tarball.
+#
+# Keep in sync with .gitignore, minus `skills/`.
+node_modules/
+dist/
+package-lock.json
