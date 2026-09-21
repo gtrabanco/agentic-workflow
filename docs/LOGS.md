@@ -2113,3 +2113,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 32 review-consistency-pack: F21-F22 plan repair batch — PE-011 cite re-base + O9 to P2, then full review-change fold cycles and execution
 - **Decisions:** PE-011: correct ledger-ownership.test.mjs cites are :56-57 (projection paths), :66-74 (TRUTH_CLASSES), :158-163 (one row per class), :173 (unique ledger), :202-204 (owner-cell equality); O9 moved wholesale P1→P2 with validator extended by review-loop-discipline IS-5(a)-text pin — phase column marks where obligation RESOLVES; SPEC.md §Phases is Engineering-half (outside spec-product-v1 projection) — editing does not rotate Product digest (675349ef… byte-identical); check-skill-context.test.mjs pre-existing fail on route ceilings (confirmed at parent commit 45f70b09); plan snapshot a29feeca…
 - **Next:** Re-run /review-plan 32-review-consistency-pack to get PLAN-REVIEW-PASS, then execute-phase 32-review-consistency-pack
+
+## 2026-09-21T18:07:53Z — feat/32-review-consistency-pack — manual
+- **Commits:** 67 (`44acea68…13b050af`)
+- **Files:** 70 files
+- **Summary:** review-plan 32-review-consistency-pack → PLAN-REVIEW-FAIL (F21–F24): PE-011 stale path:line cites, O9/phase mismatch (P1→P2), AC-02 grep dir, AC-10 bibliography already present
+- **Decisions:** PLAN-REVIEW-FAIL found in review-plan run: F21 (L2/P12: PE-011 ledger-ownership cites don't resolve), F22 (L4: O9 obligation in P1 but task is P2), F23 (L5: AC-02 grep on directory without -r), F24 (L5: AC-10 bibliography append unsatisfiable — feature 31 already added entry); all committed as PLAN-REVIEW-32-2
+- **Next:** re-cut engineering half: re-base on post-merge head, fix PE-011 cites and O9 phase, then /review-plan 32
