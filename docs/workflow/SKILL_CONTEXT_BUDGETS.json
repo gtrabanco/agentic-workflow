@@ -113,9 +113,10 @@
         "evidence-grounding"
       ],
       "templates": [],
-      "routeEstimateMax": 16948,
-      "routeLinesMax": 1165,
+      "routeEstimateMax": 17168,
+      "routeLinesMax": 1176,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -126,10 +127,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 28409,
-      "routeLinesMax": 1909,
+      "routeEstimateMax": 28629,
+      "routeLinesMax": 1920,
 
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 59 P4 (#237)": "batched design-interview form protocol in INTERVIEW.md + design-feature/SKILL.md; ceiling = ceil(measured x 1.10)",
@@ -153,9 +155,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12350,
-      "routeLinesMax": 882,
+      "routeEstimateMax": 12478,
+      "routeLinesMax": 889,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -177,9 +180,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12363,
-      "routeLinesMax": 877,
+      "routeEstimateMax": 12491,
+      "routeLinesMax": 885,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -201,9 +205,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12234,
-      "routeLinesMax": 863,
+      "routeEstimateMax": 12361,
+      "routeLinesMax": 871,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -225,9 +230,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12395,
-      "routeLinesMax": 886,
+      "routeEstimateMax": 12523,
+      "routeLinesMax": 894,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -249,9 +255,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12548,
-      "routeLinesMax": 884,
+      "routeEstimateMax": 12676,
+      "routeLinesMax": 891,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -273,9 +280,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12148,
-      "routeLinesMax": 865,
+      "routeEstimateMax": 12275,
+      "routeLinesMax": 873,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -297,9 +305,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12311,
-      "routeLinesMax": 878,
+      "routeEstimateMax": 12438,
+      "routeLinesMax": 886,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -322,9 +331,10 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13481,
-      "routeLinesMax": 980,
+      "routeEstimateMax": 13648,
+      "routeLinesMax": 984,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
@@ -356,9 +366,10 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 25704,
-      "routeLinesMax": 1800,
+      "routeEstimateMax": 25924,
+      "routeLinesMax": 1811,
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
@@ -392,10 +403,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 28708,
-      "routeLinesMax": 2050,
+      "routeEstimateMax": 28928,
+      "routeLinesMax": 2061,
 
       "sources": {
+        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)",
