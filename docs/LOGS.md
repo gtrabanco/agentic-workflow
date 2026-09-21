@@ -2047,3 +2047,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 32 review-consistency-pack — final adversarial review (cycle 8, --adversarial 2) and REVIEW-PASS
 - **Decisions:** Cycle 8 with 2 context-clean adversarial reviewers (R1 correctness, R2 security) found 2 minor code-quality findings (F40: CLASSIFY.md SEVERITY_VOCABULARY projection claim, F41: redundant NRS_BLOCKING guard in workflow-status.mjs) — both classify as ignore. All 11 acceptance criteria pass. All health gates green. Receipt posted to PR #249 and verified current. Unit 32 is review-closed.
 - **Next:** /audit-pr 249 — merge gate
+## 2026-09-21T17:56:01Z — feat/32-review-consistency-pack — manual
+- **Commits:** 56 (`44acea68…59b69137`)
+- **Files:** 70 files
+- **Summary:** Execute P3 (classification single-owner contract) and P4 (gate-run receipt) for feature 32
+- **Decisions:** P3: canonical severity conversion table (CLASSIFY.md) with ledger/finder/planning/audit-docs scales mapped to high|med|low; derived blocking gate rule with 4 citation categories; vocabulary alignment across review pack skills (product-audit closed class set, audit-pr pass/blocker/n-a scale, audit-docs phantom MEDIUM removed, PERSIST_AND_DECIDE.md finder-scale pointer removed). P4: GATE-RAN mark in LEDGERS.md with fixed format, additive-slots, reserved manifest slot, identical-head reuse rule; CHANGELOG version collision fix (feature 60 pre-execution-review 2.3.0→2.4.0, feature 31 retains 2.3.0); template projection byte-equality; 7 skill version bumps; context budget re-basis for pre-execution-review (3557→4274) and review-implementation new entry (2939).
+- **Next:** Execute P5 (Hardening & PR): run full verification ladder, Pi mirror parity, open PR, update roadmap row
