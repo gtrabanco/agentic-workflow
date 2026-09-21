@@ -19,6 +19,13 @@ name: Publish Pi package
 # npm-CLI-specific tooling Bun doesn't replicate. `bun install` also runs the
 # package's `prepare` script (tsc build).
 #
+# Skills are bundled in two ORDERED steps, and the order is the whole point:
+# `bundle:skills:check` exits non-zero when the committed bundle has drifted
+# from the canonical `skills/` tree, and the write mode runs only after it, so
+# the packed artifact is regenerated rather than trusted from git. Rebuilding
+# first would make `test/skill-parity.test.mjs` compare a fresh copy with
+# itself — a green guard that can never fail.
+#
 # Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
 # exchanges this job's GitHub OIDC token (the id-token: write permission
 # below) for a short-lived publish token at publish time, scoped to exactly
@@ -88,7 +95,9 @@ jobs:
           # rule — 1.4.0 writes lockfile version 2).
           bun-version: 1.4.0
       - run: bun install --frozen-lockfile
-      - name: Bundle skills (must run before test — test checks source vs bundle parity)
+      - name: Skill bundle drift guard (before any rebuild)
+        run: bun run bundle:skills:check
+      - name: Rebuild skill bundle (the packed artifact is generated, not trusted)
         run: bun run bundle:skills
       - name: Build + test (node runtime — the guaranteed fallback)
         run: bun run test:node
@@ -124,11 +133,21 @@ jobs:
       - name: Install + build (bun, frozen lockfile; prepare runs tsc)
         run: bun install --frozen-lockfile
 
-      - name: Bundle skills (must run before test — test checks source vs bundle parity)
+      - name: Skill bundle drift guard (before any rebuild)
+        run: bun run bundle:skills:check
+
+      - name: Rebuild skill bundle (the packed artifact is generated, not trusted)
         run: bun run bundle:skills
 
       - name: Test (the gate — never publish red)
         run: bun run test
+
+      # A suite that cannot fail proves nothing, so the mutants are re-applied
+      # against a mirror of this commit before anything reaches the registry.
+      # Runs only here: it rebuilds the package per mutant (~3 min), and the
+      # node-compat job already proves the same code on the Node toolchain.
+      - name: Mutation gate (every ruled-out mutation must break a named test)
+        run: bun run mutation
 
       - name: Skip when the version is already published
         id: version

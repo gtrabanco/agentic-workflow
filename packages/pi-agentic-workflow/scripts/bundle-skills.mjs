@@ -4,6 +4,13 @@
 // `test/skill-parity.test.mjs` fails the build on any byte drift in either
 // direction. Nothing here edits skill prose.
 //
+// `--check` re-bundles into a scratch directory and compares it against the
+// committed bundle WITHOUT writing anything, then exits non-zero listing every
+// missing / drifted / hand-added path. That is what makes the CI order safe:
+// the check runs first and still catches committed-bundle drift, and the write
+// mode runs after it so the artifact that gets packed is always regenerated
+// from the canonical tree rather than trusted from git.
+//
 // Inclusion rule (SPEC S2): bundle every skill EXCEPT the ones whose frontmatter
 // declares `metadata.internal: true` — repo-maintenance skills such as
 // `bump-skill` must not ship to target projects. Skills with
@@ -15,7 +22,8 @@
 // folded scalars (`description: >`) are skipped because every continuation line
 // is indented, so no nested line can be mistaken for a top-level key.
 
-import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -147,14 +155,94 @@ export function bundleSkills({ sourceDir, targetDir }) {
   return { included, excluded, files };
 }
 
+/**
+ * Compare the committed bundle against a fresh bundling of the source tree,
+ * writing nothing. Distinguishes the three ways a bundle goes stale so the
+ * report names the repair instead of just saying "drift".
+ * @param {{ sourceDir: string, targetDir: string }} options
+ * @returns {{ ok: boolean, missing: string[], drifted: string[], extra: string[], skills: number, files: number }}
+ */
+export function checkBundle({ sourceDir, targetDir }) {
+  const source = resolve(sourceDir);
+  const target = resolve(targetDir);
+  const scratch = mkdtempSync(join(tmpdir(), "pi-aw-bundle-check-"));
+  const missing = [];
+  const drifted = [];
+  const extra = [];
+
+  try {
+    const expected = bundleSkills({ sourceDir: source, targetDir: scratch });
+    for (const slug of expected.included) {
+      const fromSource = listFiles(join(scratch, slug));
+      const committedDir = join(target, slug);
+      if (!existsSync(committedDir)) {
+        missing.push(`${slug}/`);
+        continue;
+      }
+      const fromBundle = listFiles(committedDir);
+      for (const rel of fromSource) {
+        if (!fromBundle.includes(rel)) {
+          missing.push(`${slug}/${rel}`);
+        } else if (!readFileSync(join(committedDir, rel)).equals(readFileSync(join(scratch, slug, rel)))) {
+          drifted.push(`${slug}/${rel}`);
+        }
+      }
+      for (const rel of fromBundle) {
+        if (!fromSource.includes(rel)) extra.push(`${slug}/${rel}`);
+      }
+    }
+
+    // A directory the source never produced: a stale skill, or one the
+    // inclusion rule excludes (an internal skill committed by mistake).
+    if (existsSync(target)) {
+      const included = new Set(expected.included);
+      for (const entry of readdirSync(target, { withFileTypes: true })) {
+        if (entry.isDirectory() && !included.has(entry.name)) extra.push(`${entry.name}/`);
+      }
+    }
+
+    return {
+      ok: missing.length === 0 && drifted.length === 0 && extra.length === 0,
+      missing,
+      drifted,
+      extra,
+      skills: expected.included.length,
+      files: expected.files,
+    };
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
 const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) {
   const packageDir = dirname(dirname(fileURLToPath(import.meta.url)));
-  const result = bundleSkills({
+  const dirs = {
     sourceDir: join(packageDir, "..", "..", "skills"),
     targetDir: join(packageDir, "skills"),
-  });
-  console.log(
-    `bundled ${result.included.length} skills (${result.files} files) · excluded: ${result.excluded.join(", ") || "none"}`,
-  );
+  };
+
+  if (process.argv.includes("--check")) {
+    const report = checkBundle(dirs);
+    if (report.ok) {
+      console.log(`bundle in sync with skills/ (${report.skills} skills, ${report.files} files)`);
+    } else {
+      const sections = [
+        ["missing", report.missing],
+        ["drifted", report.drifted],
+        ["not in skills/", report.extra],
+      ].filter(([, list]) => list.length > 0);
+      console.error(
+        `bundle is stale — run \`bun run bundle:skills\` and commit the result\n${sections
+          .map(([label, list]) => `  ${label}: ${list.join(", ")}`)
+          .join("\n")}`,
+      );
+      process.exitCode = 1;
+    }
+  } else {
+    const result = bundleSkills(dirs);
+    console.log(
+      `bundled ${result.included.length} skills (${result.files} files) · excluded: ${result.excluded.join(", ") || "none"}`,
+    );
+  }
 }
