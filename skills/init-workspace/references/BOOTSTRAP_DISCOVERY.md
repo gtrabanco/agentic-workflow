@@ -60,11 +60,11 @@
      template's `Performance commands` block next to the verification gate,
      so `review-perf` can measure instead of guess.
    - **Docs site** — does the project have (or want) a developer docs website
-     the `generate-docs` skill can write into? If yes, fill the template's
+     a developer docs site can be written to? If yes, fill the template's
      `Docs site` block in `AGENTS.md` (format: starlight/docusaurus/markdown,
      content dir, build command, optional knowledge-map command — proposed
      from discovery: an `astro.config.*` + `@astrojs/starlight` dependency
-     means Starlight). If no, leave the block commented out — `generate-docs`
+     means Starlight). If no, leave the block commented out —
      then reports NOT-CONFIGURED instead of guessing. Never scaffold the
      website itself.
    - **Naming conventions** and **MCP servers**, if any.
