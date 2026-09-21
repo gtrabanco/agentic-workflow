@@ -13,6 +13,10 @@ convert — a consumer facing an unknown scale **fails closed** (no ad-hoc
 conversion). The table replaces the ad-hoc mapping that lived at
 `PERSIST_AND_DECIDE.md`.
 
+The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs:718-721`)
+is a direct projection of this table onto the envelope schema's `high|med|low`
+enum, not a competing converter; it always produces a value listed here.
+
 | Producer scale | → `high` | → `med` | → `low` |
 |---|---|---|---|
 | Ledger (`CLASSIFY.md` itself): `high` | self | — | — |

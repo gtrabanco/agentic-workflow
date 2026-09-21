@@ -26,6 +26,10 @@
       "mainEstimateMax": 3109,
       "mainSources": {
         "feature 32 (P2)": "the Confirm-roadmap verify-vs-write sentence grew the skill from the measured 2799 (fix 224) to 2826 est / 209 lines; ceiling re-based to ceil(2826 x 1.10) = 3109 (review finding F12)"
+      },
+      "referenceEstimateMax": 2367,
+      "referenceSources": {
+        "feature 32 (P4)": "ROUTING.md (plan-feature reference) measures 2151 est (was inheriting defaults.referenceEstimateMax 2200, below the declared floor); ceiling re-based to ceil(2151 x 1.10) = 2367 (review finding F20)"
       }
     },
     "pre-execution-review": {
@@ -46,9 +50,10 @@
       }
     },
     "review-change": {
-      "referenceEstimateMax": 2800,
+      "referenceEstimateMax": 3079,
       "referenceSources": {
-        "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)"
+        "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
+        "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)"
       }
     },
     "review-plan": {
@@ -61,15 +66,17 @@
       }
     },
     "workflow-status": {
-      "mainEstimateMax": 1680,
-      "mainLinesMax": 136,
-      "referenceEstimateMax": 2527,
+      "mainEstimateMax": 1767,
+      "mainLinesMax": 140,
+      "referenceEstimateMax": 2764,
       "referenceLinesMax": 280,
       "mainSources": {
-        "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)"
+        "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)",
+        "feature 32 (P4)": "the P4 budget re-basis grew SKILL.md to 1606 est / 127 lines (previously 1527/123); mainEstimateMax re-based to ceil(1606 x 1.10) = 1767, mainLinesMax to ceil(127 x 1.10) = 140 (review finding F19)"
       },
       "referenceSources": {
-        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)"
+        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)",
+        "feature 32 (P4)": "the unit's NRS prose grew SENSOR_SIGNALS.md to 2512 est / 150 lines (previously 2297); ceiling re-based to ceil(2512 x 1.10) = 2764 (review finding F18)"
       }
     }
   },
