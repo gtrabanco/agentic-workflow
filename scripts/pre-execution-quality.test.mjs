@@ -527,7 +527,9 @@ const snapshotRecipe = read("skills/pre-execution-review/references/SNAPSHOT.md"
 const scaffold = read("skills/plan-feature-scaffold/SKILL.md");
 const scaffoldProcess = read("skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md");
 const planFix = read("skills/plan-fix/SKILL.md");
+// 61-P1: the features _TEMPLATE is the new single unit document.
 const featureTemplate = read("docs/features/_TEMPLATE/SPEC.md");
+const unitDocTemplate = featureTemplate;
 const fixTemplate = read("docs/fix/_TEMPLATE/SPEC.md");
 
 const LEDGER_COLUMNS = {
@@ -615,15 +617,22 @@ test("the planning ledger set is defined once, in the shared owner", () => {
 test("evidence and obligation ledgers are frozen with XS/S embedding rules", () => {
   assert.match(policyLedgers, /XS\/S embeds both tables in the SPEC to stay within the size's artifact budget/);
   // templates must expose both ledgers for feature and fix units
-  for (const [name, t] of [["feature", featureTemplate], ["fix", fixTemplate]]) {
-    assert.ok(/^(#{2,3}) Planning evidence$/m.test(t), `${name} template needs a Planning evidence section`);
-    assert.ok(/^(#{2,3}) Obligations$/m.test(t), `${name} template needs an Obligations section`);
-    assert.ok(/validator/i.test(t), `${name} template's obligation table must carry a validator column`);
+  for (const [name, t] of [["unit-doc", unitDocTemplate]]) {
+    assert.ok(/^## Evidence$/m.test(t), `${name} template carries the Evidence section (61-P1 home for ledger rows)`);
+    assert.ok(/^## Tasks$/m.test(t), `${name} template carries the Tasks section`);
+    assert.ok(/validator|verified-by/i.test(t), `${name} template's obligation table must carry a validator column`);
   }
-  // the templates' own presence gate must demand both ledgers
-  for (const [name, t] of [["feature", featureTemplate], ["fix", fixTemplate]]) {
-    assert.ok(/Planning evidence`? and `?###? Obligations|Planning evidence.*obligations|obligations?.*validator/i.test(t), `${name} template must lint its ledgers`);
-    assert.ok(/no obligation is `deferred`|no `deferred` row/i.test(t), `${name} template must forbid deferred/exported obligations`);
+  // the templates' own presence gate must demand the ledger sections
+  // (61-P1: the unit-doc template demands Evidence rows; the fix template
+  // keeps its legacy Planning evidence gate until P8b retires it)
+  // 61-P1: the unit-doc template forbids scope growth in Non-goals instead of
+  // a `deferred` obligation row (the deferred state lives in the roadmap).
+  const antiDeferral = [
+    ["unit-doc", unitDocTemplate, /Findings discovered during implementation never expand scope/],
+    ["fix", fixTemplate, /no obligation is `deferred`|no `deferred` row/i],
+  ];
+  for (const [name, t, anti] of antiDeferral) {
+    assert.ok(anti.test(t), `${name} template must forbid deferred/exported obligations`);
   }
   // scaffold writes planning-evidence.md for M/L, embedded for XS/S, rotates revision
   assert.match(scaffoldProcess, /planning-evidence\.md/);
@@ -867,11 +876,10 @@ test("a build the canonical builder refuses ends in one named form at both stage
 });
 
 // --- P4: routing enforcement (mirrors workflow-status step 6a, execute-phase's
-// pre-execution gate, ship-roadmap's stage order, and the owning-stage split) ---
+// pre-execution gate, lane router's stage order, and the owning-stage split) ---
 
 const sensorDoc = read("skills/workflow-status/references/PRE_EXECUTION.md");
 const execGate = read("skills/execute-phase/references/PRE_EXECUTION_GATE.md");
-const advance = read("skills/ship-roadmap/references/ADVANCE.md");
 const loopFold = read("skills/pre-execution-review/references/POLICY.md");
 const classify = read("skills/review-implementation/references/CLASSIFY.md");
 const auditGates = read("skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md");
@@ -912,7 +920,7 @@ const sensorRoute = ({ status, depsMet = true, spec, plan, legacy = false }) => 
 const executeAdmits = ({ plan, legacy = false }) =>
   receiptLabel(plan, "plan", legacy) === "current" ? "EDIT" : "PRE-EXECUTION GATE BLOCKED";
 
-// ship-roadmap's stage order.
+// lane router's stage order (the former ship-roadmap).
 const NEXT_STAGE = {
   idea: "DESIGN", defined: "REVIEW-SPEC", planned: "REVIEW-PLAN", "in-progress": "EXECUTE",
 };
@@ -970,9 +978,6 @@ test("route fixtures: feature and fix paths, and the autopilot stage order", () 
   assert.equal(autopilotStage({ status: "defined", spec: okSpec() }), "PLAN");
   assert.equal(autopilotStage({ status: "planned", plan: null }), "REVIEW-PLAN");
   assert.equal(autopilotStage({ status: "planned", plan: ok() }), "EXECUTE");
-  assert.match(advance, /\[DESIGN → REVIEW-SPEC\] → PLAN → REVIEW-PLAN → EXECUTE/);
-  assert.match(advance, /plan-fix → REVIEW-PLAN → EXECUTE[\s\S]{0,4}\(`--fix`\)/);
-  assert.match(read("skills/ship-roadmap/references/RECOVERY_AND_SELECTION.md"), /`plan-fix` → REVIEW-PLAN → EXECUTE/);
   // fix units: reviewed on their own receipt, with no Product hop to substitute
   const fixPlan = { ...ok(), unit: "fix-12" };
   assert.equal(executeAdmits({ plan: fixPlan }), "EDIT");
@@ -1011,9 +1016,8 @@ test("route fixtures: no partial-success envelope and no auto-issued deferral", 
   // obligations cannot be exported to clear a gate
   assert.match(auditGates, /Any `planned`, `in-progress`, blank, or `deferred` row is/);
   assert.match(auditGates, /wearing a new name/);
-  assert.match(descope, /obligation-ledger row/);
+  assert.match(descope, /obligation row/); // 61-P4: DESCOPE.md re-worded to the unit doc rows
   assert.match(legacyAdoption, /An automatic forge issue/);
-  assert.match(advance, /No stage between PLAN and EXECUTE may create a forge/);
 });
 
 test("route fixtures: legacy adoption constructs evidence and never coerces it", () => {
@@ -1024,7 +1028,7 @@ test("route fixtures: legacy adoption constructs evidence and never coerces it",
   assert.match(legacyAdoption, /### 6\. Legacy adoption/);
   assert.match(legacyAdoption, /Construct, never coerce/);
   assert.match(legacyAdoption, /byte-identical/);
-  assert.match(execGate, /adopt through `pre-execution-review`'s legacy rule/);
+  assert.match(legacyAdoption, /report it as `legacy`/); // 61-P4: legacy wording re-homed to POLICY.md
   assert.match(sensorDoc, /it never edits a unit to make the\nlabel disappear/);
 });
 
@@ -1259,7 +1263,7 @@ test("gate rejections: the four typed blocks print reason and return route, neve
   assert.equal(blocks.length, 6, "dependency, status ×2 (idea, defined), phase-lint, path-protection and the receipt gate each carry a trace");
   for (const [, type, reason, route] of blocks) {
     assert.ok(reason.replace(/[<>]/g, "").trim(), `${type} names a reason`);
-    assert.match(route, /\/(execute-phase|design-feature|plan-feature|review-plan)/, `${type} routes to the command that clears it`);
+    assert.match(route, /\/(execute-phase|unit-lane|design-feature|plan-feature|review-plan)/, `${type} routes to the command that clears it`);
   }
   assert.ok(!/GATE REJECTION — (?!dependency|status|phase-lint|path-protection|stale-or-missing-receipt)/.test(gates), "no gate block invents a sixth type");
   // the executor points at the owner instead of re-deriving the rule
@@ -1540,7 +1544,7 @@ test("normalizer order: a mutating step scheduled after the freeze row is refuse
   // rule placement: stated once, in the gate that owns the fixed pre-flight order
   assert.match(execGate, /^### Normalizer order/m, "the gate carries the ordering section");
   assert.match(execGate, /strictly before the freeze row/, "mutating steps are ordered before the freeze");
-  assert.match(execGate, /only check-only steps follow/, "check-only steps are the only permitted tail");
+  assert.match(execGate, /after it only check-only/, "check-only steps are the only permitted tail");
   assert.match(execGate, /check-only mode.*may[^\n]*follow|only the check-only mode/, "a dual-mode step contributes only its check-only mode afterwards");
   const owners = skillDocs.filter((f) => /strictly before the freeze row/.test(read(path.relative(root, f))));
   assert.deepEqual(owners.map((f) => path.relative(root, f)), ["skills/execute-phase/references/PRE_EXECUTION_GATE.md"],

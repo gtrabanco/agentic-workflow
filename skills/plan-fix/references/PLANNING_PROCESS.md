@@ -144,5 +144,8 @@ fix-mode-routes@1
 # owner: plan-fix
 mode | flag | route
 issue-set-planned | n/a | review-plan
-after-plan-pass | --fix | execute-phase
+after-plan-pass | n/a | unit-lane
 ```
+
+Note: feature 61 P4 removed execute-phase's `--fix` flag — fixes are units in
+the lane; the conductor's triage decides their steps.

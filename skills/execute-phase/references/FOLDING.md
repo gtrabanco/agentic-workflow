@@ -43,9 +43,27 @@ unchecked — an unpushed fix does not exist for CI, the reviewer, or the merge.
 
 → Next: /unit-lane <NN-slug> — the conductor continues
   · all steps done → /review-change (mandatory end review)
-  · REVIEW-FAIL → /fold-findings, then re-run /review-change
+  · REVIEW-FAIL → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr
 ```
 
 No auto-merge. Explicit `P<k>` stops after one step; omitted-step mode gates
 and commits every remaining step before the same final review.
+## Gate-run marks (gate-ran@1)
+
+Every verification gate this cycle runs records a `GATE-RAN` mark in the unit
+doc's Evidence section at the head it actually ran:
+`GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>`. A green run is recorded;
+a red run is also recorded (exit code ≠ 0 is evidence, not silence). Any skill
+may consume a green mark only at the identical HEAD — a changed head re-runs
+the gate. The recorders are `execute-phase:gate-ran-marks` and
+`review-change:review-gate-ran-marks` (the shape and ownership live in
+`pre-execution-review`'s `LEDGERS.md`, §gate-ran@1).
+
+## Finishing the unit — the last step is always an open PR
+
+When the final triaged step closes: mark the unit done, push the branch, and
+open the PR with `gh pr create` (per the project's Workflow conventions) —
+regardless of the review still to come. The PR body carries the unit doc's
+Evidence section as its verification record and closes the unit's tracked
+issues via `Closes #N`.
