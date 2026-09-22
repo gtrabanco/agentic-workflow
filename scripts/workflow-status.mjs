@@ -963,57 +963,169 @@ function summarize(units, startable, designCandidates, openPrs) {
   return parts.join(", ");
 }
 
-function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash }) {
+/**
+ * Feature 61 (P7) — deterministic next-step ranking.
+ *
+ * Priority queue (first non-empty wins):
+ *   1. Blocking (NRS draft/contradicted, substrate blockers)     → keep existing recommended
+ *   2. Crash-resume RESUMABLE                                     → /execute-phase <unit> P<N>
+ *   3. Crash-ambiguous                                            → /workflow-status
+ *   4. In-flight unit on the current branch (planned/in-progress) → /execute-phase <unit> P<N>
+ *   5. Urgent issues (label `urgent` or `fix-next`)              → /triage-issue <n>
+ *   6. Triaged issues (disposition labels)                       → /triage-issue <n> or plan route
+ *   7. Defined features (deps met)                               → /review-spec /plan-feature
+ *   8. Idea status rows                                          → /design-feature
+ *   9. Nothing to do                                             → /workflow-status
+ *
+ * Emits `reason` (closed code from the queue level) and
+ * `candidate_count` (candidates at that level). Additive — no removed fields.
+ */
+function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash, units, forge, phases, currentBranch }) {
   const alternatives = [];
+
+  // Level 1 — Blocking conditions (NRS draft / contradicted / substrate blockers)
+  // Keep existing behavior verbatim.
+  if (nrs && NRS_BLOCKING.has(nrs.status)) {
+    alternatives.push("/discover-repository-state");
+    const command = nrs.status === "contradicted"
+      ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
+      : "/discover-repository-state";
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs", reason: "blocking", candidate_count: 1 };
+  }
+
   // Feature 32 (P1) — missing ledger is a notice (non-blocking); add it to
   // alternatives and continue so startable/gate rows can still be recommended.
   if (nrs && nrs.status === "missing") {
     alternatives.push("/discover-repository-state");
   }
-  else if (nrs && NRS_BLOCKING.has(nrs.status)) {
-    const command = nrs.status === "contradicted"
-      ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
-      : "/discover-repository-state";
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs" };
-  }
+
+  // Level 2 — Crash-resume (existing behavior)
   if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
     const command = crash.branches[0].resume_command;
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume" };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume", reason: "in-flight", candidate_count: 1 };
   }
+
+  // Level 3 — Crash-ambiguous (existing behavior)
   if (crash?.verdict === "AMBIGUOUS") {
-    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous" };
+    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous", reason: "blocking", candidate_count: 1 };
   }
-  if (startable.length > 0) {
-    const command = startable[0].next;
-    for (const unit of startable.slice(1)) alternatives.push(unit.next);
-    for (const row of receiptRows.filter((entry) => entry.label !== "current")) alternatives.push(row.recommended);
-    for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "startable" };
+
+  // Feature 61 (P7) — Level 4: in-flight unit on the current branch.
+  // A unit that is planned/in-progress on the current branch has execution
+  // priority over queued work.
+  const inFlightUnit = currentBranch && units.find((unit) => {
+    const branch = currentBranch;
+    return branch.endsWith(unit.id)
+      || branch.includes(unit.id)
+      || (unit.issue != null && branch.includes(`/${unit.issue}-`))
+      || (unit.slug && branch.includes(unit.slug));
+  });
+  if (inFlightUnit) {
+    const phases_ = phases.get(inFlightUnit.id);
+    let command;
+    if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
+      command = crash.branches[0].resume_command;
+    } else if (phases_?.current) {
+      command = `/execute-phase ${inFlightUnit.nn ?? inFlightUnit.issue} ${phases_.current}`;
+    } else {
+      // No coherent phase — fall through to lower-priority levels.
+    }
+    if (command) {
+      return { recommended: command, alternatives, tier: tierFor(command), kind: "in-flight", reason: "in-flight", candidate_count: 1 };
+    }
   }
-  // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
-  // enter is not current is demoted out of `startable_now`, so without a branch of its
-  // own the promised `/review-spec`//`/review-plan` next never fired and the unit
-  // vanished into the bland fallback. It ranks above a fresh design candidate: an
-  // in-flight unit blocked only by a review gate is closer to done than an unstarted
-  // idea.
+
+  // Feature 61 (P7) — Level 5: urgent issues (label `urgent` or `fix-next`),
+  // oldest first. /triage-issue <n> for untriaged.
+  const urgentIssues_ = readUrgencyForResolve(forge.openIssues);
+  if (urgentIssues_.length > 0) {
+    const command = `/triage-issue ${urgentIssues_[0].number}`;
+    for (const issue of urgentIssues_.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "urgent", reason: "urgent-issue", candidate_count: urgentIssues_.length };
+  }
+
+  // Feature 61 (P7) — Level 6: triaged issues (have disposition labels),
+  // oldest first. Follow up per its disposition label.
+  const triagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Triaged = has disposition label (wontfix, postponed, promoted)
+    // and is NOT urgent/fix-next (those go to level 5)
+    return names.some((n) => ["wontfix", "postponed", "promoted"].includes(n))
+      && !names.includes("urgent")
+      && !names.includes("fix-next");
+  }) ?? [];
+  if (triagedIssues.length > 0) {
+    const command = `/triage-issue ${triagedIssues[0].number}`;
+    for (const issue of triagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "triaged", reason: "triaged-issue", candidate_count: triagedIssues.length };
+  }
+
+  // Feature 61 (P7) — Level 7: defined features with deps met, oldest first.
+  // /review-spec if no current SPEC-REVIEW-PASS, else /plan-feature.
+  // Also covers planned/in-progress units with current receipts (ready to execute).
+  // We check `startable` for defined units first, then non-defined startable units.
+  const definedFeatures = startable.filter((s) => {
+    const unit = units.find((u) => u.id === s.id);
+    return unit && unit.status === "defined";
+  });
+  if (definedFeatures.length > 0) {
+    const command = definedFeatures[0].next;
+    for (const unit of definedFeatures.slice(1)) alternatives.push(unit.next);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "defined", reason: "defined-feature", candidate_count: definedFeatures.length };
+  }
+
+  // Gate-blocked: units whose receipt for the stage they are about to enter
+  // is not current — they need review before execution. This preserves the
+  // existing behavior where a planned unit with a stale receipt recommends
+  // /review-plan (or /review-spec for defined units).
   const gateBlocked = receiptRows.filter((row) => row.label !== "current");
   if (gateBlocked.length > 0) {
     const command = gateBlocked[0].recommended;
     for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
-    for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "gate" };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "gate", reason: "defined-feature", candidate_count: gateBlocked.length };
   }
+
+  // Feature 61 (P7) — Level 8: idea status rows, oldest first.
+  // /design-feature <slug>
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "design" };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "design", reason: "idea", candidate_count: designCandidates.length };
   }
-  if (untriaged.count > 0) {
-    const command = `/triage-issue ${untriaged.oldest_open.join(" ")}`;
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriage" };
+
+  // Feature 61 (P7) — Level 9: untriaged issues (no disposition label,
+  // no urgent/fix-next), oldest first. /triage-issue <n>
+  const untriagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Untriaged = no disposition label AND not urgent/fix-next
+    const hasDisposition = names.some((n) => ["wontfix", "postponed", "promoted"].includes(n));
+    return !hasDisposition && !names.includes("urgent") && !names.includes("fix-next");
+  }) ?? [];
+  if (untriagedIssues.length > 0) {
+    const command = `/triage-issue ${untriagedIssues[0].number}`;
+    for (const issue of untriagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriaged", reason: "urgent-issue", candidate_count: untriagedIssues.length };
   }
+
+  // Feature 61 (P7) — Level 10: nothing to do — idle fallback.
   const command = "/workflow-status";
-  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback" };
+  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback", reason: "idle", candidate_count: 1 };
+}
+
+/**
+ * Feature 61 (P7) — extract urgency labels only (deduplicated from readUrgency
+ * so resolveNext has its own isolated call). Returns issues with `urgent` or
+ * `fix-next` labels sorted oldest first.
+ */
+function readUrgencyForResolve(issues) {
+  const result = [];
+  for (const issue of issues ?? []) {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    const label = names.includes("urgent") ? "urgent" : names.includes("fix-next") ? "fix-next" : null;
+    if (label) result.push({ number: issue.number, title: issue.title, label });
+  }
+  result.sort((a, b) => a.number - b.number);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -1289,9 +1401,9 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     : null;
 
   const designCandidates_ = designCandidates;
-  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash, units, forge, phases, currentBranch: gitState.branch });
   // The resolver's internal branch tag never ships in the envelope.
-  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier };
+  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier, reason: nextResolution.reason, candidate_count: nextResolution.candidate_count };
   // Step 13 — additive advisory: the class-routed triggers the driver can act on
   // now, never reordering `recommended`/`alternatives`/`tier`.
   next.suggested = nextSuggested;
