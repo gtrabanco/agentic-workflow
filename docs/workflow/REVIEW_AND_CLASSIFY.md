@@ -127,11 +127,11 @@ gate, because the whole point is to catch what one reviewer would miss.
 - **Cost note: 2–3× the most expensive review stage**, because N reviewers each
   run the full findings engine. That cost is exactly why the mode stays
   opt-in for interactive use.
-- **`ship-roadmap` enables it as a hard floor** — `--adversarial 2` for
-  `L`/sensitive-flagged features in its unattended REVIEW stage, because no
-  human is present to exercise the skip judgment the interactive advisory
-  relies on. This floor is deliberately **not aligned** with the interactive
-  advisory (which stays opt-in) — the two serve different contexts on purpose.
+- **The lane's deterministic router (`unit-lane` / `workflow-status` step 6a)
+  enables it as a hard floor** — the retired `ship-roadmap` used `--adversarial 2`
+  for `L`/sensitive-flagged features in its unattended REVIEW stage; the lane's
+  router now governs that floor. The interactive advisory stays opt-in — the
+  two serve different contexts on purpose.
 
 ## Where it sits
 

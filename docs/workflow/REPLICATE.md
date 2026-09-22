@@ -30,13 +30,15 @@ Two ways to install the skills into a repo. They're complementary.
 
 The installable set is **17 user-facing + 13 internal** (30 total):
 
-- **User-facing (17):** `init-workspace`, `discover-repository-state`,
+- **User-facing (18):** `init-workspace`, `discover-repository-state`,
   `resolve-repository-state`, `design-feature`, `plan-feature`, `plan-fix`,
   `execute-phase`, `review-change`, `audit-pr`, `audit-docs`, `product-audit`,
-  `fold-findings`, `triage-issue`, `ship-roadmap`,
+  `fold-findings`, `triage-issue`, `review-spec`, `review-plan`,
   `log-session`, `workflow-status`.
-- **Internal (13):** `plan-feature-from-issue`, `plan-feature-scaffold`,
-  `orchestration-envelope`, `review-implementation`, `review-code`,
+- **Internal (20):** `plan-feature-from-issue`, `plan-feature-scaffold`,
+  `orchestration-envelope`, `pre-execution-review`, `planning-preflight`,
+  `phase-contract`, `verification-contract`, `implementation-discovery`,
+  `replan-findings`, `evidence-grounding`, `review-implementation`, `review-code`,
   `review-security`, `review-verify`, `review-debt`, `review-design`,
   `review-a11y`, `review-brand`, `review-perf`, and `review-seo`. These are
   hidden from the menu and dispatched by the user-facing workflow routers.

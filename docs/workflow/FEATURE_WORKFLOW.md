@@ -217,9 +217,10 @@ receipt and unit docs; manual per-phase invocation remains available through an
 explicit `P<k>`, but is no longer the default.
 
 > Want the **whole roadmap** built this way — every feature through every stage,
-> with you only at the merges? That's the `ship-roadmap` autopilot: one upfront
-> interview, then a `/loop`-driven run of this exact flow, feature by feature,
-> ending in a final report. See its entry in [SKILLS.md](SKILLS.md).
+> with you only at the merges? The former `ship-roadmap` autopilot owned this
+> role but is retired (feature 61 P9); its deterministic routing lives in
+> `workflow-status` / `unit-lane` and the unattended-conductor role is deferred
+> to roadmap row 62.
 
 During execution, domain knowledge skills auto-load as guardrails: the
 project's stack/domain guardrail skills (architecture pattern, domain rules,

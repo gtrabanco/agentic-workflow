@@ -171,7 +171,7 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > cheaper for mechanical execution, and never review a change with a model weaker
 > than the one that wrote it; *no `/loop`/subagents* → re-invoke manually and follow
 > the closing `→ Next:` block. Tailor per skill (e.g. hooks for `log-session`,
-> subagents for `ship-roadmap`). Additionally, whenever a skill body references a
+> subagents for autopilot-level orchestration (deferred to roadmap row 62)). Additionally, whenever a skill body references a
 > Claude Code-specific feature, pair it **inline** with the generic fallback — the
 > instruction must be executable by an agent that has never heard of Claude Code.
 
