@@ -81,13 +81,15 @@ docs, release), with guards that bite when a unit outgrows the light path.
    Verification: `skills/ship-roadmap/` directory is gone; all ~12 referencing
    surfaces (roadmap, skills/tables, templates, docs) are updated.
 
-8. **Runner package `packages/agwo`**: A new bun-managed package at
-   `packages/agentic-workflow/` owns all runtime scripts: workflow-status, phase-lint,
-   path-guard, receipts, evidence runner, future configurator.
-   `packages/pi-agentic-workflow` becomes a thin pi integration layer depending
-   on `agwo`. `packages/agentic-workflow-schema` is untouched. Root `scripts/`
-   keeps only repo-own dev/CI checks. Verification: `bun test` passes under
-   `packages/agentic-workflow/`; `pi-agentic-workflow` lists `@gtrabanco/agentic-workflow` as its only dependency.
+8. **Runner crate**: the existing bun-managed crate `packages/agentic-workflow`
+    (npm `@gtrabanco/agentic-workflow`, CLI bin `agentic-workflow`) owns all runtime
+    scripts: workflow-status, phase-lint, path-guard, receipts, the evidence
+    runner (the VerificationPlan v1 / VerificationReceipt v1 consumer), and the
+    future configurator. `packages/pi-agentic-workflow` becomes a thin pi layer
+    depending on it. `packages/agentic-workflow-schema` is untouched. Root
+    `scripts/` keeps only repo-own dev/CI checks. Verification: `bun test`
+    passes under `packages/agentic-workflow/`; `pi-agentic-workflow` lists it
+    as its only runtime dependency.
 
 9. **Runtime rule**: The runtime that launched pi decides for runner-spawned
    scripts — pi under bun spawns bun, pi under node spawns node — resolved by
@@ -129,9 +131,9 @@ docs, release), with guards that bite when a unit outgrows the light path.
     document, and no published contract still names `PLAN.md`/`ACCEPTANCE.md`
     as a binding surface.
 
-14. **Typed file services**: `agwo edit` exposes one entry point per file
+14. **Typed file services**: `agentic-workflow edit` exposes one entry point per file
     kind (UnitDoc, Roadmap, Changelog, Budgets, Manifest) as an SDK
-    (`packages/agwo/src/edit/`, importable by pi plugins and web) with a thin
+    (`packages/agentic-workflow/src/edit/`, importable by pi plugins and web) with a thin
     CLI wrapper; files are created only in their fixed format, edited only
     through the handler's closed operations, and every operation validates the
     post-state against its file schema and emits a receipt with before/after
@@ -158,7 +160,7 @@ docs, release), with guards that bite when a unit outgrows the light path.
 Every new catalog step added after this feature requires: a triage rule
 (applicability + budget), a deterministic guard (scope/size), and a budget
 entry in `catalog.json`. The roadmap and `docs/workflow/SKILLS.md` must stay
-in sync when skills are removed or absorbed. The runner crate (`agwo` bin) becomes
+in sync when skills are removed or absorbed. The runner crate (bin `agentic-workflow`) becomes
 the central deployment target — any script addition must pass the package's
 test suite. The single-unit document convention must be propagated to the
 `template/` directory so target projects adopt it. Each file kind has ONE
@@ -246,10 +248,10 @@ README, template, docs diagrams, MIGRATION, budgets routes) are updated.
 
 P9 — **Delete ship-roadmap**: Remove `skills/ship-roadmap/` directory. Migrate
 urgency micro-judge, `--adversarial 2` floor, batch-design/JIT design, closeout,
-and re-point all referencing surfaces to the deterministic router in `agwo`.
+and re-point all referencing surfaces to the deterministic router in the runner crate.
 (feature 58 will later replace the full conductor role — document as deferred).
 
-P10 — **Runner crate + `agwo edit` + schema migration**: the new
+P10 — **Runner crate + `agentic-workflow edit` + schema migration**: the new
 bun-managed package owns all runtime scripts — workflow-status, phase-lint,
 path-guard, receipts, evidence runner, future configurator — and the root
 scripts that bind to removed artifacts are re-bound or retired:
@@ -260,8 +262,8 @@ homes. The schema package migrates its published vocabularies: the closed
 Product/Plan heading lists become the unit document's closed section list,
 snapshot/verification/receipt contracts bind the unit-doc digest, additive
 minor release. `packages/pi-agentic-workflow` depends on `@gtrabanco/agentic-workflow` as
-its only runtime dependency (CLI bin: `agwo`); root `scripts/` keeps only repo-own dev/CI checks.
-`agwo edit` ships the typed file services — one entry point per file
+its only runtime dependency (CLI bin: `agentic-workflow`); root `scripts/` keeps only repo-own dev/CI checks.
+`agentic-workflow edit` ships the typed file services — one entry point per file
 kind, each owning its format completely: `UnitDoc` (create from the canonical
 template — a unit doc cannot be born malformed — plus section set and
 evidence/progress/next operations), `Roadmap` (row upsert/annotate with the
@@ -308,7 +310,7 @@ on the new lane. Final review against AGENTS.md conventions.
 | crate | bun test (packages/agentic-workflow) | 0 | 92 pass / 0 fail | orchestrator |
 | schema | bun test (packages/agentic-workflow-schema) | 0 | 717 pass / 0 fail | orchestrator |
 | pi | bun run test (packages/pi-agentic-workflow) | 0 | 266 pass / 0 fail | orchestrator |
-| AC-14 | node packages/agentic-workflow/bin/agwo.mjs unit-doc 61-adaptive-unit-lane validate | 0 | this document validates | orchestrator |
+| AC-14 | node packages/agentic-workflow/bin/agentic-workflow.mjs unit-doc 61-adaptive-unit-lane validate | 0 | this document validates | orchestrator |
 
 ## Progress log
 
@@ -324,7 +326,7 @@ on the new lane. Final review against AGENTS.md conventions.
 - 2026-09-22 — P8b pipeline retired → 6b7dc311/909c55be/c6bdd2b4 — next: P10
 - 2026-09-22 — P10 runner crate + typed file services → a917a542 — next: P11
 - 2026-09-22 — P11 substrate adoption → 79d8ce5d — next: dogfood
-- 2026-09-22 — Dogfood: this document validated by agwo unit-doc validate — next: merge PR #251
+- 2026-09-22 — Dogfood: this document validated by agentic-workflow unit-doc validate — next: merge PR #251
 
 ## Next
 
@@ -334,7 +336,7 @@ Owner review of PR #251; merge lands the lane, then row 62 (pi-native conductor)
 
 - Closes (absorbed, closed by this feature's PR): [#229](https://github.com/gtrabanco/agentic-workflow/issues/229) (row 54, two-level artifacts) · [#205](https://github.com/gtrabanco/agentic-workflow/issues/205) (row 50, review-loop convergence) · [#218](https://github.com/gtrabanco/agentic-workflow/issues/218) (row 51, review-evidence substrate) · [#194](https://github.com/gtrabanco/agentic-workflow/issues/194) (row 42, deterministic review-change) · [#182](https://github.com/gtrabanco/agentic-workflow/issues/182) (row 35, scoped receipt verifier)
 - Partially absorbed (re-scoped or unified in P2): [#233](https://github.com/gtrabanco/agentic-workflow/issues/233) (row 58 — deletion here, conductor later) · [#206](https://github.com/gtrabanco/agentic-workflow/issues/206) (row 46 → research catalog step) · [#173](https://github.com/gtrabanco/agentic-workflow/issues/173) (row 33 → surviving skills only) · [#227](https://github.com/gtrabanco/agentic-workflow/issues/227) (row 53 → unit-doc template) · [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (row 41) · [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (row 45)
-- Superseded: [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (row 44 — scripts move to `agwo`, not into skill folders) · #176 route-slimming (rows disappear instead of slimming)
+- Superseded: [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (row 44 — scripts move into the runner crate, not into skill folders) · #176 route-slimming (rows disappear instead of slimming)
 - Related reading: `docs/workflow/REPOSITORY_STATE.md` (frozen facts substrate) · feature 60's path-protection policy (reused unmodified) · the 2026-09-15 bureaucracy-reduction execution order in the roadmap (this feature supersedes its Phase 2/3 sequencing)
 
 ## Open questions

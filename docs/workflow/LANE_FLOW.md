@@ -168,15 +168,15 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `workflow-status` | Read the sensor envelope |
 | `bun scripts/unit-route.mjs --triage <NN> [--json]` | Triage a unit |
 | `bun scripts/diff-guard.mjs --base <ref>` | Diff-size guard check |
-| `agwo unit-doc create` | Create a unit doc (SDK) |
-| `agwo unit-doc setSection` | Replace a section (SDK) |
-| `agwo unit-doc evidence_addRow` | Append evidence row (SDK) |
-| `agwo unit-doc progress_logEntry` | Add progress entry (SDK) |
-| `agwo unit-doc validate` | Validate the doc schema (SDK) |
-| `agwo roadmap rowUpsert` | Upsert a roadmap row (SDK) |
-| `agwo changelog rowAdd` | Add a changelog row (SDK) |
-| `agwo budgets ceilingRebase` | Rebase budget ceiling (SDK) |
-| `agwo manifest skillAdd` / `skillRemove` | Update manifest (SDK) |
+| `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
+| `agentic-workflow unit-doc setSection` | Replace a section (SDK) |
+| `agentic-workflow unit-doc evidence_addRow` | Append evidence row (SDK) |
+| `agentic-workflow unit-doc progress_logEntry` | Add progress entry (SDK) |
+| `agentic-workflow unit-doc validate` | Validate the doc schema (SDK) |
+| `agentic-workflow roadmap rowUpsert` | Upsert a roadmap row (SDK) |
+| `agentic-workflow changelog rowAdd` | Add a changelog row (SDK) |
+| `agentic-workflow budgets ceilingRebase` | Rebase budget ceiling (SDK) |
+| `agentic-workflow manifest skillAdd` / `skillRemove` | Update manifest (SDK) |
 
 ---
 
