@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deterministic runner for the agentic-workflow lane: file services (agwo edit), sensors, guards and receipts. No dependencies.",
   "license": "MIT",
   "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
