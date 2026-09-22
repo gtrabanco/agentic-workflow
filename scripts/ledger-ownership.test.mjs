@@ -53,7 +53,6 @@ const thisFile = fileURLToPath(import.meta.url);
 const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test", file]);
 
 const MAP_REL = "skills/pre-execution-review/references/LEDGERS.md";
-const FEATURE_TEMPLATE_REL = "docs/features/_TEMPLATE/LEDGERS.md";
 const FIX_TEMPLATE_REL = "docs/fix/_TEMPLATE/LEDGERS.md";
 const PROVENANCE_REL = "scripts/ledger-provenance.mjs";
 
@@ -443,7 +442,9 @@ function scannedScripts(base) {
 
 function state() {
   const mapText = read(MAP_REL);
-  const templates = { [FEATURE_TEMPLATE_REL]: read(FEATURE_TEMPLATE_REL), [FIX_TEMPLATE_REL]: read(FIX_TEMPLATE_REL) };
+  // Feature 61 P1 retired the features-template LEDGERS projection; the fix
+// template remains the single projection fixture until P8b retires it too.
+const templates = { [FIX_TEMPLATE_REL]: read(FIX_TEMPLATE_REL) };
   const sources = scannedScripts(root);
   const declared = declaredOwnerScan({
     mapText,
@@ -499,12 +500,12 @@ test("scan 1 fails a map row with no declared owner", () => {
 
 test("scan 1 fails a template ledger row with no owner (AC16's named fixture)", () => {
   const { mapText, templates, sources } = state();
-  const line = rowOf(templates[FEATURE_TEMPLATE_REL], "known-issues.md | ");
+  const line = rowOf(templates[FIX_TEMPLATE_REL], "known-issues.md | ");
   const cells = splitRow(line);
   const blanked = `${cells[0]} |  | ${cells[2]}`;
   const scan = declaredOwnerScan({
     mapText,
-    templates: { ...templates, [FEATURE_TEMPLATE_REL]: templates[FEATURE_TEMPLATE_REL].replace(line, blanked) },
+    templates: { ...templates, [FIX_TEMPLATE_REL]: templates[FIX_TEMPLATE_REL].replace(line, blanked) },
     knownSkills: knownSkills(),
     annotatorSources: sources,
     label: "fixture",
@@ -519,7 +520,7 @@ test("scan 1 fails a template owner reworded away from the map", () => {
   const { mapText, templates, sources } = state();
   const scan = declaredOwnerScan({
     mapText,
-    templates: { ...templates, [FEATURE_TEMPLATE_REL]: patchFragment(templates[FEATURE_TEMPLATE_REL], "execute-phase:phase-entries", "execute-phase:whatever") },
+    templates: { ...templates, [FIX_TEMPLATE_REL]: patchFragment(templates[FIX_TEMPLATE_REL], "execute-phase:phase-entries", "execute-phase:whatever") },
     knownSkills: knownSkills(),
     annotatorSources: sources,
     label: "fixture",
@@ -529,12 +530,12 @@ test("scan 1 fails a template owner reworded away from the map", () => {
 
 test("scan 1 fails a dropped and an invented template row", () => {
   const { mapText, templates, sources } = state();
-  const features = templates[FEATURE_TEMPLATE_REL];
+  const features = templates[FIX_TEMPLATE_REL];
   const decisionsLine = rowOf(features, "decisions.md | plan-feature-scaffold:create");
   const run = (templateText) =>
     declaredOwnerScan({
       mapText,
-      templates: { ...templates, [FEATURE_TEMPLATE_REL]: templateText },
+      templates: { ...templates, [FIX_TEMPLATE_REL]: templateText },
       knownSkills: knownSkills(),
       annotatorSources: sources,
       label: "fixture",
@@ -542,7 +543,7 @@ test("scan 1 fails a dropped and an invented template row", () => {
 
   const dropped = run(features.replace(decisionsLine, ""));
   assert.ok(
-    dropped.failures.some((f) => /missing the "docs\/features\/<NN>-<slug>\/decisions\.md" row/.test(f)),
+    dropped.failures.some((f) => /missing the "docs\/fix\/<issue>-<topic>\/decisions\.md" row/.test(f)),
     JSON.stringify(dropped.failures),
   );
 
@@ -568,8 +569,8 @@ test("scan 1 fails two owners on one column set", () => {
     mapText,
     templates: {
       ...templates,
-      [FEATURE_TEMPLATE_REL]: patchFragment(
-        templates[FEATURE_TEMPLATE_REL],
+      [FIX_TEMPLATE_REL]: patchFragment(
+        templates[FIX_TEMPLATE_REL],
         "execute-phase:phase-entries",
         "execute-phase:phase-entries + audit-docs:phase-entries",
       ),
@@ -621,7 +622,7 @@ test("both scans fail closed on a missing or malformed ownership block", () => {
   const badHeader = run({ mapText: patchFragment(mapText, "annotator-token | validator", "token | validator") });
   assert.ok(badHeader.failures.some((f) => /header must be exactly/.test(f)), JSON.stringify(badHeader.failures));
 
-  const noTemplates = run({ templates: { ...templates, [FEATURE_TEMPLATE_REL]: "# projection\n\nnothing machine readable here\n" } });
+  const noTemplates = run({ templates: { ...templates, [FIX_TEMPLATE_REL]: "# projection\n\nnothing machine readable here\n" } });
   assert.ok(noTemplates.failures.some((f) => /no ledger-ownership@1 block/.test(f)), JSON.stringify(noTemplates.failures));
 
   const shortRow = run({ mapText: patchFragment(mapText, "| none | none |", "| none |") });
@@ -756,7 +757,7 @@ function makeTree(t, { extraScripts = {}, templates = {} } = {}) {
     fs.writeFileSync(path.join(dir, rel), text);
   };
   write(MAP_REL, real(MAP_REL));
-  write(FEATURE_TEMPLATE_REL, templates[FEATURE_TEMPLATE_REL] ?? real(FEATURE_TEMPLATE_REL));
+  write(FIX_TEMPLATE_REL, templates[FIX_TEMPLATE_REL] ?? real(FIX_TEMPLATE_REL));
   write(FIX_TEMPLATE_REL, templates[FIX_TEMPLATE_REL] ?? real(FIX_TEMPLATE_REL));
   for (const skill of knownSkills(repoRoot)) {
     if (skill === "human-owner") continue;
@@ -786,11 +787,11 @@ test("node --test exits non-zero on the undeclared-writer fixture tree", (t) => 
 
 test("node --test exits non-zero when a template row loses its owner", (t) => {
   if (isChildRun) return t.skip("the child run is itself the injected tree");
-  const features = fs.readFileSync(path.join(repoRoot, FEATURE_TEMPLATE_REL), "utf8");
+  const features = fs.readFileSync(path.join(repoRoot, FIX_TEMPLATE_REL), "utf8");
   const line = rowOf(features, "known-issues.md | ");
   const cells = splitRow(line);
   const dir = makeTree(t, {
-    templates: { [FEATURE_TEMPLATE_REL]: features.replace(line, `${cells[0]} |  | ${cells[2]}`) },
+    templates: { [FIX_TEMPLATE_REL]: features.replace(line, `${cells[0]} |  | ${cells[2]}`) },
   });
   const run = runSuiteAgainst(dir);
   assert.notEqual(run.status, 0, "an owner-less template row must fail the suite");

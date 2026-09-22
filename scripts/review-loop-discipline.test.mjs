@@ -457,23 +457,19 @@ assert.match(ledgers, /review-change:review-gate-ran-marks/);
 assert.match(ledgers, /review-change:review-gate-ran-marks.*execute-phase:gate-ran-marks|execute-phase:gate-ran-marks.*review-change:review-gate-ran-marks/s);
 
 // P4 Task 3: template projections have the same owner cell.
-const featTemplate = read("docs/features/_TEMPLATE/LEDGERS.md");
+// Feature 61 P1 retired the features-template LEDGERS copy (the unit doc
+// carries its own evidence sections); the fix-template copy goes at P8b.
 const fixTemplate = read("docs/fix/_TEMPLATE/LEDGERS.md");
 // Both templates must contain the same gate-ran recorder column-sets.
-assert.match(featTemplate, /execute-phase:gate-ran-marks/);
-assert.match(featTemplate, /review-change:review-gate-ran-marks/);
 assert.match(fixTemplate, /execute-phase:gate-ran-marks/);
 assert.match(fixTemplate, /review-change:review-gate-ran-marks/);
-// Byte-equal owner cells: extract the review-findings owner from live LEDGERS and both templates.
+// Byte-equal owner cells: the review-findings owner in the live LEDGERS and the
+// surviving fix-template projection must agree.
 const liveRow = ledgers.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
-const featRow = featTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
 const fixRow = fixTemplate.match(/review-findings.*?\|.*?scripts\/ledger-provenance/m);
-assert.ok(liveRow && featRow && fixRow, "all three rows exist");
-// The owner portion (second field) should be identical across all three.
+assert.ok(liveRow && fixRow, "both rows exist");
 const liveOwner = liveRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
-const featOwner = featRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
 const fixOwner = fixRow[0].match(/review-findings.*\|\s*(.*?)\s*\|/s)?.[1] || "";
-assert.equal(featOwner, liveOwner, "features template owner cell matches live");
 assert.equal(fixOwner, liveOwner, "fix template owner cell matches live");
 
 // P4 Task 4: GATE-RAN in EXECUTION_CONTRACT.md and FOLDING.md.

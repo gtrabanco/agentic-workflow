@@ -73,7 +73,7 @@ post_comment() {
   {
     printf '%s\n' "$marker"
     printf '%s\n' '## agentic-workflow: auto-merged'
-    printf '\n- **Mode:** %sship-roadmap --fullauto%s\n' "$tick" "$tick"
+    printf '\n- **Mode:** %sthe former ship-roadmap --fullauto (retired, feature 61 P9)%s\n' "$tick" "$tick"
     printf -- '- **Run:** %s%s%s\n' "$tick" "$run_id" "$tick"
     printf -- '- **Audited head:** %s%s%s\n' "$tick" "$head_sha" "$tick"
     printf -- '- **Merge commit:** %s%s%s\n' "$tick" "$merge_sha" "$tick"

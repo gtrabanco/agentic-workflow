@@ -1,0 +1,9 @@
+# Feature 61 — decisions & justification records
+
+## Path protection
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/next-recommendations.test.mjs | P4 | 2026-09-22 | execute-phase | pin re-aim: the executor terminal hand-offs were re-homed after UNIT_LOOP.md and CLOSEOUT.md retired (feature 61 P4); the review-before-fold assertion is re-pointed at the surviving SKILL.md and FOLDING.md surfaces.
+```

@@ -85,7 +85,12 @@ Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.
    step is `implement` and the unit has `Tasks` P1…Pn. Parse the `Tasks` section
    (not PLAN.md/TASKS.md). Exit 1 → STOP. If the script is absent, apply the
    eight `phase-contract` rules by hand, label weaker, and disclose.
-3. **Dependency/invariant checks** — per unit-lane's triage catalog rules:
+3. **Pre-write mapper** — for `implement` steps, settle the pre-write mapper
+   contract before branch creation, planning commit, or source/test edit:
+   ([implementation-discovery](../implementation-discovery/SKILL.md)): it closes
+   the seven evidence questions and routes `READY | REPLAN | NEEDS-DESIGN |
+   BLOCKED`; only `READY` authorizes the first write.
+4. **Dependency/invariant checks** — per unit-lane's triage catalog rules:
    ensure required dependencies are merged; architectural invariants preserved
    or backed by an explicit recorded decision (block `violates`/`introduces`/
    `changes` before edits).
@@ -145,7 +150,7 @@ Steps: <n> · Commits: <sha list> · Gate: PASS
 PR: <url>
 
 → Next: /review-change on the changed HEAD — the mandatory end review
-  · findings (REVIEW-FAIL) → /fold-findings, then re-run /review-change
+  · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr
 ```
 
@@ -219,6 +224,6 @@ a turn invokes to perform one triaged step of a unit under the full gate machine
 ```
 → Next: /unit-lane <NN-slug> — the conductor continues with the next triaged step
   · all steps done → /review-change — the mandatory end review
-  · findings (REVIEW-FAIL) → /fold-findings, then re-run /review-change
+  · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr — the merge gate
 ```
