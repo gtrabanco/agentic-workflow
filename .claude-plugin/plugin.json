@@ -54,6 +54,7 @@
     "./skills/review-verify",
     "./skills/ship-roadmap",
     "./skills/triage-issue",
+    "./skills/unit-lane",
     "./skills/verification-contract",
     "./skills/workflow-status"
   ]
