@@ -127,10 +127,10 @@ const routeTable = spawnSync(process.execPath, [path.join(repoRoot, "scripts/che
 assert.equal(routeTable.status, 0, routeTable.stderr);
 assert.match(routeTable.stdout, /PASS route budgets/);
 
-const filteredRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "plan-feature:scoped"], { encoding: "utf8" });
+const filteredRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "execute-phase:feature"], { encoding: "utf8" });
 assert.equal(filteredRoute.status, 0, filteredRoute.stderr);
-assert.match(filteredRoute.stdout, /plan-feature:scoped/);
-assert(!filteredRoute.stdout.includes("plan-feature:issue"), "filtered route should not include other routes");
+assert.match(filteredRoute.stdout, /execute-phase:feature/);
+assert(!filteredRoute.stdout.includes("execute-phase:fix"), "filtered route should not include other routes");
 
 const bareRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--route"], { encoding: "utf8" });
 assert.notEqual(bareRoute.status, 0);
@@ -193,13 +193,13 @@ runFixtureRoute(
 
 runFixtureRoute(
   "route budget regression",
-  (manifest) => { manifest.routes["plan-feature:scoped"].routeEstimateMax = 10; },
+  (manifest) => { manifest.routes["execute-phase:feature"].routeEstimateMax = 10; },
   /route estimate .* >/,
 );
 
 runFixtureRoute(
   "route lines regression",
-  (manifest) => { manifest.routes["plan-fix:issue"].routeLinesMax = 5; },
+  (manifest) => { manifest.routes["execute-phase:feature"].routeLinesMax = 5; },
   /route lines .* >/,
 );
 
@@ -274,7 +274,7 @@ runFixtureRoute(
     fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     manifest.policy = { name: "relative-headroom", headroom: 0.1 };
-    const route = manifest.routes["review-plan:default"];
+    const route = manifest.routes["execute-phase:feature"];
     route.routeEstimateMax = Number.MAX_SAFE_INTEGER;
     route.routeLinesMax = Number.MAX_SAFE_INTEGER;
     const write = () => fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
@@ -282,7 +282,7 @@ runFixtureRoute(
     const cli = (args) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), ...args], { encoding: "utf8" });
     const probe = cli(["--routes", "--json"]);
     assert.equal(probe.status, 0, `unbounded fixture must pass: ${probe.stdout}\n${probe.stderr}`);
-    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "review-plan:default").totalEstimate;
+    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "execute-phase:feature").totalEstimate;
     // The oracle is the declared formula computed exactly: ceil(measured × 1.1)
     // via integer arithmetic (measured × 11 / 10) — no float product anywhere.
     const exactFloor = Math.ceil((measured * 11) / 10);

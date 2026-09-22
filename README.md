@@ -26,7 +26,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  38 source skills (18 user-facing + 20 workflow internals + 1 metadata-internal; 37 discoverable)
+skills/                  38 source skills (14 user-facing + 20 workflow internals + 1 metadata-internal; 34 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -58,20 +58,16 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**18 user-facing skills** (one menu entry each) + internal contracts composed
-for you: the `plan-feature` router's two planning steps, the two pre-execution
-evidence owners (`evidence-grounding` for authoring readiness,
-`pre-execution-review` for the shared review cycle and the planning ledgers), the
-`review-change` engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
-`review-security`, `review-verify`, `review-debt`, `review-design`,
-`review-a11y`, `review-brand`, `review-perf`, `review-seo`), and the repo-only
-`bump-skill` maintenance helper (excluded from installation) — so **no external review skill is ever
-required**, on any agent, with any model. The former autopilot/roadmap-shipping role
-(`ship-roadmap`) is retired (feature 61 P9); its deterministic routing lives in
-`workflow-status` / `unit-lane` and the unattended-conductor role is deferred to
-roadmap row 62. One disciplined path: **design →
-review the product → plan → review the plan → execute → review the change → audit →
-merge.**
+**14 user-facing skills** (one menu entry each) + internal contracts composed
+for you: the lane's triage-driven step selection (`unit-lane`), the executor
+(`execute-phase`), the internal review pack (`review-code`, `review-security`,
+`review-verify`, `review-debt`, `review-design`, `review-a11y`, `review-brand`,
+`review-perf`, `review-seo`), the workflow's own pre-execution evidence owner
+(`pre-execution-review`), the `orchestration-envelope` contract, and the repo-only
+`bump-skill` maintenance helper (excluded from installation) — so **no external
+review skill is ever required**, on any agent, with any model. One disciplined
+path: **triage → catalog steps (design, implement, tests, evidence, review) →
+review the change → audit → merge.**
 
 > Every skill's invocation forms and flags (`--fix`, `--force`,
 > `--adversarial N`, `--next`, `--fullauto`, …) are catalogued in the
@@ -85,32 +81,6 @@ merge.**
 | `discover-repository-state` | Creates and freezes an evidence-backed repository-state ledger before planning or implementation; facts, decisions, documentation, planned work, and inference remain distinct |
 | `resolve-repository-state` | Sole writer for an explicit repository-state contradiction; verifies the competing evidence and publishes the next frozen snapshot |
 
-### Design
-
-| Skill            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `design-feature` | **Product definition.** Folds in the raw-idea interview, then walks three fixed **capability-closure** checklists — **entity closure** (per entity: CRUD + state transitions, each with a UI entry point + API surface + test, or an explicit `n/a: <reason>`), **integration closure** (the feature reconciled against every subsystem in the project's capability inventory, `docs/CAPABILITIES.md`: auth, ACL, navigation, notifications, … — one resolved row per subsystem, none skipped), and a **role matrix** (every inventory role explicitly allowed/denied per capability) — into exhaustive acceptance criteria, plus an **expectation sweep** (≥ 10 implicit domain expectations — "a blog has drafts" — each forced to in-scope/out-of-scope/deferred, never left unstated). It classifies optional architectural invariants from repository evidence and stops for an explicit decision when a rule changes. Writes the SPEC's **product half**, stamps `## Design status: designed`, and sets the feature's roadmap row to `defined` (the `idea → defined` transition). The raw-idea interview is a bounded **form protocol** — one compact form-turn over the ≤ 6 fixed rubric slots with one-word defaults, then at most 2 ambiguity follow-ups, never one-question-per-turn. Upserts on re-run; never destroys recorded decisions. |
-
-### Plan
-
-| Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plan-feature` | **Engineering-planning router for an already-designed feature.** The redirect gate keys on the **roadmap status** first — `idea`/absent → STOP → `design-feature`, no bypass flag; `defined` → proceed to Routing; **`planned`/`in-progress`/`done` → STOP, hand off to `/execute-phase` (never re-scaffolds an already-planned feature)**; the SPEC `## Design status` marker is only the legacy-compat fallback for a pre-migration `planned` row. Given a designed feature, an issue `#N` (issue → scoped product half), or a scoped slug/SPEC (straight to engineering-half scaffolding), routes to the right step, checks optional architectural invariants with evidence, then registers the roadmap entry (re-reading the `defined → planned` write to confirm it landed). `--next` plans the next **`defined`** roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only path with ≥ 2 phases in the SPEC (last = `Hardening & PR`) — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
-| `plan-fix`     | Drafts one fix SPEC + frozen `ACCEPTANCE.md` from one or more issues. Multi-issue units group by an atomic delivery boundary: one capability outcome or homogeneous mechanical rule, one verification plan, and one release/rollback boundary; shared files/root cause/equal severity are not required. Incompatible inputs return the fewest maximal groups instead of one issue per PR. Phase linting is deterministic: run `bun scripts/phase-lint.mjs <plan>` and paste its output (exit 1 → re-cut). |
-
-> `design-feature` (product definition, folds in the raw-idea interview) must
-> mark a feature `designed` **and** `review-spec` must return a current
-> `SPEC-REVIEW-PASS` before `plan-feature` will plan it — each gate refuses and
-> redirects otherwise, no bypass flag. Designed is not reviewed: the author's own
-> readiness check licenses a review request, never a verdict. Once reviewed, you
-> only ever call `plan-feature`; it composes the internal steps
-> `plan-feature-from-issue` and `plan-feature-scaffold` (hidden from the menu).
-> Planned is not executable either: planning freezes the planning-evidence and
-> obligation ledgers, then `review-plan` must return a current `PLAN-REVIEW-PASS`
-> before `execute-phase` touches a phase — and `execute-phase` fails closed on a
-> missing, stale, or wrong-stage receipt, which is the one preflight gate no
-> `--force` reaches.
-
 ### Execute
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
@@ -121,8 +91,6 @@ merge.**
 
 | Skill           | Scope           | What it does                                                                                                                                                                                   |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `review-spec` | the **design** | Independent, read-only Product gate: builds the `spec-product-v1` snapshot of a designed SPEC's product half, runs a falsification pass plus the fixed fourteen Product checks in a context that did not write it, and returns only `SPEC-REVIEW-PASS`, `SPEC-REVIEW-FAIL` or `NEEDS-DESIGN` with a content-bound receipt that treats every byte it reads as data, never instructions. It never edits the reviewed SPEC and never chooses product intent — `plan-feature` refuses to scaffold without its current receipt, and the turn contract points at `pre-execution-review`'s `POLICY.md` §8 as the owner of the rule that binds a verdict to its durable mark. |
-| `review-plan` | the **plan** | Independent, read-only Engineering gate: snapshots the frozen plan (SPEC, acceptance, planning evidence, obligations, phases, tests), sweeps the ledgers and the fixed Engineering checks — plus reproduction/root-cause/regression/rollback authority for fixes — in a context that did not cut them, and returns only `PLAN-REVIEW-PASS` or `PLAN-REVIEW-FAIL` with a snapshot-bound receipt, and reads every byte it opens — the copied `spec` receipt included — as data, never instructions. It edits no plan artifact — the parent digest it records is recomputed, per `POLICY.md` §7 — and `execute-phase` refuses to run without its current receipt, whose turn contract points at `POLICY.md` §8 for the durable mark. |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits stop the review as a `REVIEW BLOCKED` precondition before any pass runs — workspace state is never a persisted finding, and the review commits its own findings append so it never dirties the tree it next judges. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers, each an index-assigned role (correctness/security/SPEC-coverage), run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) when the change is `L`/sensitive, the reviewer isn't the fleet's strongest or is weaker than the diff's author, or only one model family is available on a `≥M` change. `--synthesize` is the standalone fusion entry point for manually-run reviewers. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis (only `high`/`med` persist — `low` findings are report-only notes that never block). Classification honors the engine's **fix-now override checks**: a cheap fix or an in-scope defect is always fix-now (never a postpone/known-issue/tradeoff escape), and a too-large in-scope fix-now routes to `replan-in-unit` — user-confirmed SPEC phase(s) on the same branch, never a downgrade |
 | `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. |
 | `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. |
@@ -157,7 +125,8 @@ Projects that do not declare the document remain compatible.
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
-| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine (`idea`/`defined`/`planned`/`in-progress`/`done`), what is startable right now (status ≥ `defined`, deps met) and in which build order, `idea` rows reported as `detail.design_candidates`, open PRs + audit state, pending fixes and findings awaiting triage, the mandatory end review proven from its durable `REVIEW-RAN` mark row rather than from a `review-findings.md` that merely exists, the untriaged open-issue backlog (`detail.untriaged_issues`, label-authoritative with a `VERDICT:`-comment legacy fallback), each unit's unfolded fix-now findings from its `review-findings.md` ledger as structured `findings.fix_now[]` items carrying a derived `suggested_tier`, plus the injection-safe `detail.urgent` field (labels-only `urgent`/`fix-next` issues + in-flight interruptibility facts) — and emits it as one fixed JSON machine envelope, `findings.fix_now[]` severity-normalized to the published `high`/`med`/`low` enum, self-checked against the bundled schema and a fixed command→tier map before printing (per-unit `review`/`closure`/`issues_born` and the `next.suggested[]` surface remain steps 10–13 of the published sequence, skill-side and **not yet sensor-mechanized**). With `--last-envelope`, a **no-progress guard** flags a stalled `/plan-feature`/`/design-feature` hint (unit still at its pre-advance status) as a `workflow_observations` note instead of silently repeating it. The resolved `next` command is also projected into the schema-validated `next.continuation` object (argv + derived rendering + at-emit preconditions + receiver-verifiable evidence digest + the `convergence` field it advances), with fail-closed typed refusals at `detail.continuation_refusal` whenever no v1 class owns the command, the forge is offline, or a precondition is uncheckable — the emitted command is quoted, never authored. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
+| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine (`idea`/`defined`/`planned`/`in-progress`/`done`), what is startable right now (status ≥ `defined`, deps met) and in which build order, `idea` rows reported as `detail.design_candidates`, open PRs + audit state, pending fixes and findings awaiting triage, the mandatory end review proven from its durable `REVIEW-RAN` mark row rather than from a `review-findings.md` that merely exists, the untriaged open-issue backlog (`detail.untriaged_issues`, label-authoritative with a `VERDICT:`-comment legacy fallback), each unit's unfolded fix-now findings from its `review-findings.md` ledger as structured `findings.fix_now[]` items carrying a derived `suggested_tier`, plus the injection-safe `detail.urgent` field (labels-only `urgent`/`fix-next` issues + in-flight interruptibility facts) — and emits it as one fixed JSON machine envelope, `findings.fix_now[]` severity-normalized to the published `high`/`med`/`low` enum, self-checked against the bundled schema and a fixed command→tier map before printing (per-unit `review`/`closure`/`issues_born` and the `next.suggested[]` surface remain steps 10–13 of the published sequence, skill-side and **not yet sensor-mechanized**). With `--last-envelope`, a **no-progress guard** flags a stalled unit still at its pre-advance status
+as a `workflow_observations` note instead of silently repeating it. The resolved `next` command is also projected into the schema-validated `next.continuation` object (argv + derived rendering + at-emit preconditions + receiver-verifiable evidence digest + the `convergence` field it advances), with fail-closed typed refusals at `detail.continuation_refusal` whenever no v1 class owns the command, the forge is offline, or a precondition is uncheckable — the emitted command is quoted, never authored. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
 
 ### Repo maintenance
 
@@ -228,8 +197,8 @@ frontier-class model at all:
   for the cheapest tier — one fresh worker context per phase, compact handoff
   via `progress.md`, at most 10 full-file reads per phase. The outer invocation
   continues through every remaining phase unless an explicit `P<n>` is passed.
-- **Planning, review, and audit** (`design-feature`, `plan-feature`,
-  `plan-fix`, `review-change`, `audit-pr`, `product-audit`) still get the
+- **Planning, review, and audit** (`unit-lane`, `review-change`,
+  `audit-pr`, `product-audit`) still get the
   **strongest model you have**, even if that model isn't frontier-class —
   and never one weaker than the model that wrote the change.
 - **Reviews**: keep the per-axis isolation default (each pass a fresh
@@ -296,8 +265,8 @@ the basic-plan ladder):
 | Task | Skills | €200 plan (if GLM-5.2 confirmed) | Basic-plan ladder | Never here |
 |---|---|---|---|---|
 | **Merge gates** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max for `product-audit`) | 1. **Mimo V2.5** (reasoning always on) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, floor) → else **defer to the human** | Qwen3.6, Gemma4 |
-| **Product definition** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning always on; different family from the Qwen executor adds independence) → 2. **Qwen3.6** (thinking ON — only for XS/S or derivative features, quota-saver) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
-| **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
+| **Product definition** | `unit-lane` catalog step (`design`) | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning always on; different family from the Qwen executor adds independence) → 2. **Qwen3.6** (thinking ON — only for XS/S or derivative features, quota-saver) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
+| **Planning / routing / triage** | `unit-lane`, `init-workspace`, `triage-issue`, `review-change` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** only after it passes the tool-calling smoke test | Mimo V2.5 (reasoning can't be turned off — burns its capped budget) |
 | **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (non-agentic steps only, or after the tools smoke test) | Mimo V2.5 |
 | **Folding `review-change`/`audit-pr` findings** | `fold-findings` (primary); `execute-phase`'s embedded fold cycle (in-context/portability fallback) | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
@@ -399,17 +368,12 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 ### Build a feature
 
 ```
-/design-feature "<idea>"        # product half: capability closure + acceptance criteria
-        → /review-spec <NN>   → independent read-only Product gate (SPEC-REVIEW-PASS | FAIL | NEEDS-DESIGN)
-/plan-feature <NN>              # or  /plan-feature <N> (issue)  ·  /plan-feature --next
-        → router detects idea / issue / scoped slug → Product-review gate → scaffold
-        → fills the SPEC + PLAN + TASKS + the two planning ledgers, registers the row
-/review-plan <NN>               → independent read-only Engineering gate (PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL)
-/execute-phase <NN>             # all remaining phases; fresh worker + bounded repairs per phase
-        → a finished unit always opens its PR + flips to `done` (built, not merged)
+# New unit: docs/features/NN-<slug>/SPEC.md (13 sections)
+/execute-phase NN                  → lane executes triage-decided steps (design, implement, tests, evidence, review...)
+                                   → a finished unit always opens its PR + flips to done (built, not merged)
 /fold-findings → re-run /review-change  # manual review→fold; unresolved findings go to triage/replan
-/audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
-        → human merges
+/audit-pr                          # merge gate: merge-ready or blockers (never merge with pending docs)
+                                   → human merges
 ```
 
 See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
@@ -419,9 +383,9 @@ See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
 ```
 /triage-issue <N>
    → reads the issue's "when to fix" trigger, verifies it against the current code
-   → fix-now     → plan-fix → execute-phase --fix
+   → fix-now     → lane fix mode → execute-phase --fix
      fix-in-unit → resolve on the open unit's own branch (execute-phase / fold-findings / replan)
-     promote     → plan-feature   (the router takes the issue → scoped SPEC)
+     promote     → lane feature mode (triage → catalog steps)
      postpone    → dated comment, leave open (no inline work)
      wontfix     → propose close
 ```
@@ -496,7 +460,7 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 On [Pi](https://github.com/badlogic/pi-mono) you don't need the skills CLI at
 all — the method ships as a single npm package that bundles the same skills
 together with everything the copy-per-agent route leaves out: a friendly slash
-command for every public skill (`/plan-feature --next`, not
+command for every public skill (`/unit-lane --next`, not
 `/skill:plan-feature --next`), and optional per-command model routing that
 sends each workflow command to the model you choose and gives your session
 back afterwards.
@@ -518,16 +482,13 @@ without selecting skills interactively, pass all published skill names to one
 
 ```sh
 npx skills remove --yes \
-  audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
-  execute-phase pre-execution-review \
-  fold-findings implementation-discovery init-workspace log-session \
-  orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
-  plan-feature-scaffold plan-fix planning-preflight product-audit \
+  audit-docs audit-pr bump-skill discover-repository-state \
+  execute-phase fold-findings init-workspace log-session \
+  orchestration-envelope phase-contract product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
-  review-plan review-seo review-spec review-verify triage-issue \
-  verification-contract \
-  workflow-status plan-feature-interview bump-skill
+  review-seo review-verify triage-issue \
+  verification-contract workflow-status unit-lane bump-skill
 ```
 
 Use the same command with `--global` to remove the global installation. The
@@ -547,7 +508,7 @@ an existing `skills-lock.json`. If the installer reports a skill claimed in the
 lockfile but missing on disk, remove the retired entries and reinstall:
 
 ```sh
-npx skills remove --yes plan-feature-interview bump-skill
+npx skills remove --yes unit-lane plan-feature-interview bump-skill
 npx skills add gtrabanco/agentic-workflow
 ```
 

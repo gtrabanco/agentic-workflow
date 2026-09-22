@@ -94,7 +94,7 @@ test("AC1: a tracked issue with no unit folder routes to plan-from-issue", () =>
   const result = run(["20"]);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(routeLine(result.stdout), "plan-from-issue");
-  assert.match(result.stdout, /^next: \/plan-fix 20$/m);
+  assert.match(result.stdout, /^next: \/unit-lane --fix 20$/m);
 });
 
 // ===========================================================================
@@ -302,7 +302,7 @@ test("F34: a roadmap row's own issue number resolves instead of dead-ending", ()
   const result = run(["140"]);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(routeLine(result.stdout), "plan-from-issue");
-  assert.equal(nextLine(result.stdout), "/plan-feature --from-issue 140");
+  assert.equal(nextLine(result.stdout), "/unit-lane --from-issue 140");
 });
 
 test("F32/OB-17: an archived unit (no status source, no open row) answers `historical`", () => {
