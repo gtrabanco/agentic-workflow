@@ -580,6 +580,11 @@ function unitDirFor(unit) {
   return unit.kind === "fix" ? `docs/fix/${unit.issue}-${slug}` : `docs/features/${unit.id}`;
 }
 
+/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
+ *  repository is refused, and the unit is reported instead of read.
+ *  (retired pre-execution receipt sensing — SAFE_SEGMENT kept for unitDirFor) */
+const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 function recommendedFor(label, unit) {
   return `/unit-lane ${unit.id}`;
 }
@@ -701,7 +706,7 @@ function readSuggestions(unit, unitDir) {
   const rows = readOpenRows(unitDir);
   const plan = rows.filter((row) => routeOfRow(row) === "replan");
   if (plan.length > 0) {
-    const command = `/unit-lane ${unit.nn ?? unit.issue}`;
+    const command = `/unit-lane ${unit.id}`;
     return [{
       command,
       trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
@@ -1219,8 +1224,18 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       recommended: `/unit-lane ${unit.id}`,
       reason: "unit-doc currency is checked per step by unit-lane/execute-phase",
     });
+    // Startable next-command: defined/planned → /unit-lane; in-progress → /execute-phase
+    // done-but-unmerged → /audit-pr (gate).
+    let startableCommand;
+    if (unit.status === "in-progress") {
+      startableCommand = `/execute-phase ${unit.nn ?? unit.issue} P1`;
+    } else if (unit.status === "done" && isOpenPr(unit)) {
+      startableCommand = `/audit-pr`; // unit's PR number from unit.pr
+    } else {
+      startableCommand = `/unit-lane ${unit.id}`;
+    }
     {
-      startable.push({ id: unit.id, next: command });
+      startable.push({ id: unit.id, next: startableCommand });
     }
   }
 

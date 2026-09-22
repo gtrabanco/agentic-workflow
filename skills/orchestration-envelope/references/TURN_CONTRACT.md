@@ -41,7 +41,7 @@ preserving the fixed block shape.
 turn-contract-receipt@1
 ok-line:    TURN-CONTRACT ok
 fail-line:  TURN-CONTRACT fail box<N>: <code>
-codes:      branch-default | not-a-repo | no-commits | acceptance-missing |
+codes:      branch-default | not-a-repo | no-commits | unit-doc-missing |
             phase-lint-failed | pr-not-open | pr-head-mismatch |
             pr-unreachable | dirty-tree | ahead-of-remote
 exit:       0 ok | 1 contract fail | 2 usage error
