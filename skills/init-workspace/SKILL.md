@@ -109,6 +109,33 @@ loads exactly upgrade and skips bootstrap plus portability.
 - Honor the project's **Workflow conventions** once present; on an existing repo,
   don't work on its default branch and never commit/push unless asked.
 
+## Unit document conventions (the adaptive lane)
+
+The adaptive lane (feature 61) replaces the fixed pipeline with a single-unit-
+document model. Every NEW unit produces one `SPEC.md` under
+`docs/features/<NN>-<slug>/` with 13 sections: Objective, Why, User outcome,
+Acceptance criteria, Non-goals, Future cost, Applicable tests, Known pre-existing
+issues, Tasks, Evidence, Progress log, Next, References.
+
+Conventions written into the project's AGENTS.md:
+
+- **Triage**: the lane conductor (`/unit-lane` / `workflow-status`) returns a
+  deterministic ordered list of steps (research, design, plan, implement,
+  tests, evidence, review, docs, release).
+- **Guards**: `scripts/diff-guard.mjs` measures `git diff --stat` at boundaries;
+  overflow → mandatory re-triage. Anti-gaming: "NEVER shrink a diff by deleting
+  comments, blank lines, docs or tests."
+- **Evidence rows**: one per AC — what was run, exit/digest, output (≤2 lines),
+  verified-by. Verified, not claimed.
+- **Progress log**: dated entries (`YYYY-MM-DD HH:MM`) per step taken.
+- **Commit format**: `type(scope): description` (conventional commits).
+- **Roadmap status**: `idea → defined → planned → in-progress → done`.
+
+These are written by bootstrap (fresh) and upgrade mode (additive-only for pre-
+lane installs). A pre-lane project gets only: the lane conventions section in
+AGENTS.md, the unit doc template under `docs/features/_TEMPLATE/`, and the
+docs-map row for the unit doc.
+
 ## Normalized Repository State
 
 Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
@@ -137,8 +164,9 @@ OpenCode adapter does not load this fallback.
   adapts. Use that when you want the raw scaffold and will fill it yourself.
 - `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
   project (behavior). This skill adapts the **substrate** (docs). Complementary.
-- After init: `discover-repository-state` → `design-feature` → `plan-feature` →
-  `execute-phase`; run `audit-docs` to confirm the scaffold is coherent.
+- After init: `discover-repository-state` → `workflow-status` (to see what's
+  startable) → `/unit-lane` (the lane conductor); run `audit-docs` to confirm
+  the scaffold is coherent.
 
 ## Done when
 
@@ -148,11 +176,13 @@ OpenCode adapter does not load this fallback.
   `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade),
   and every accepted safety adapter is active and fixture-tested — or explicitly
   listed as a residual when its hook API/dependency was unavailable.
+  The adaptive lane conventions (unit document, triage, catalog steps, guards,
+  evidence, commit formats) are written into AGENTS.md.
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
   → Next: /discover-repository-state — freeze repository evidence before planning
-    · raw idea → /design-feature "<idea>" after discovery
-    · next roadmap entry → /plan-feature --next after discovery
+    · raw idea → /workflow-status → /unit-lane (the lane conductor)
+    · next roadmap entry → /unit-lane (tridirection decides catalog steps)
     · confirm the scaffold is coherent → /audit-docs
   ```

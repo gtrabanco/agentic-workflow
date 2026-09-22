@@ -5,7 +5,7 @@
  *
  * One read-only pass over the current repository that emits the fixed
  * Envelope v2 document on stdout (feature 38). The script is the single
- * producer of the envelope; consumers (drivers, `ship-roadmap`, humans) read
+ * producer of the envelope; consumers (drivers, former `ship-roadmap` conductor, lane router, humans) read
  * the JSON and never assemble it.
  *
  * Collection follows the published `SENSOR_CORE` sequence (steps 1-9 including
@@ -65,7 +65,6 @@ export const FATAL_EXIT_CODE = 1;
  * dozens of in-flight units priced one spawn per unit/stage with no bound. Past
  * the cap the row degrades by name instead of spawning, so the run stays bounded.
  */
-export const PRE_EXECUTION_MAX_SENSES = 16;
 
 const FIVE_STATES = ["idea", "defined", "planned", "in-progress", "done"];
 const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
@@ -73,15 +72,12 @@ const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
 const TIER_MAP = new Map([
   ["/discover-repository-state", "strong"],
   ["/resolve-repository-state", "strong"],
-  ["/plan-feature", "strong"],
-  ["/design-feature", "strong"],
+  ["/unit-lane", "strong"],
   ["/review-change", "strong"],
   ["/audit-pr", "strong"],
   ["/triage-issue", "strong"],
   ["/product-audit", "strong"],
   ["/execute-phase", "cheap"],
-  ["/review-spec", "strong"],
-  ["/review-plan", "strong"],
 ]);
 
 const USAGE = `Usage: bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]
@@ -578,80 +574,19 @@ function newestReceipt(progressText, stage) {
   return parseReceipts(progressText).filter((receipt) => receipt.stage === stage).pop() ?? null;
 }
 
-/** Sense one stage's receipt through the verifier; returns `{label, ...}`. */
-function senseStage(unitDir, unitId, stage, parent, counter = null) {
-  // Past the run's spawn cap the row degrades by name instead of spawning (F20).
-  if (counter && counter.value >= PRE_EXECUTION_MAX_SENSES) {
-    counter.capped += 1;
-    return {
-      label: "missing",
-      verdict: null,
-      boundDigest: null,
-      observedDigest: null,
-      reason: `pre-execution sense cap (${PRE_EXECUTION_MAX_SENSES}) reached`,
-      capped: true,
-    };
-  }
-  const verifier = path.join(SENSOR_REPO, "scripts", "pre-execution-snapshot.mjs");
-  if (!fs.existsSync(verifier)) {
-    return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "snapshot verifier absent" };
-  }
-  const progress = readProject(path.join(unitDir, "progress.md"));
-  const receipt = newestReceipt(progress, stage);
-  if (!receipt) {
-    return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "no receipt for this stage" };
-  }
-  // `--root`/`--dir` bind the verifier to the SENSED repository and unit: it resolves
-  // its repository from its own location by default, so a foreign project's receipts
-  // were re-derived against the sensor's checkout — fabricated `missing`/`stale` rows.
-  const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
-  // #221 — a fix unit binds no parent: SNAPSHOT.md's rule is "a fix check must omit
-  // it — the snapshot it re-derives has to be the same shape the reviewer bound".
-  // Keyed on the receipt's own recorded `Unit kind: fix` (PE-013), never a dir-prefix
-  // re-derivation the verifier owns (pre-execution-snapshot.mjs:208). This makes the
-  // no-parent rule hold independent of what any lineage line or spec sense produced,
-  // so the sensor never spawns `verify --parent null` for a fix receipt.
-  const boundParent =
-    receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);
-  if (stage === "plan" && boundParent) args.push("--parent", boundParent);
-  if (counter) counter.value += 1;
-  const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });
-  let payload = null;
-  try { payload = JSON.parse(result.stdout); } catch { payload = null; }
-  const observedDigest = payload?.observedDigest ?? null;
-  if (payload && payload.current === true && payload.verdictIsPass === true) {
-    return { label: "current", verdict: payload.receipt?.verdict ?? receipt.verdict, boundDigest: payload.receipt?.snapshot ?? receipt.snapshot, observedDigest, reason: null };
-  }
-  const reasonCode = payload?.structural?.reasonCode ?? null;
-  const label = reasonCode === "impossible-timeline" ? "impossible-timeline"
-    : (payload?.digestMatches === false || reasonCode) ? "stale"
-    : (receipt.verdict && receipt.verdict !== "pass") ? "missing"
-    : "missing";
-  return {
-    label,
-    verdict: payload?.receipt?.verdict ?? receipt.verdict,
-    boundDigest: payload?.receipt?.snapshot ?? receipt.snapshot,
-    observedDigest,
-    reason: reasonCode ?? "receipt is not current",
-  };
-}
-
-/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
- *  repository is refused, and the unit is reported instead of read. */
-const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-
 function unitDirFor(unit) {
   const slug = String(unit.slug ?? "");
   if (!SAFE_SEGMENT.test(slug)) return null;
   return unit.kind === "fix" ? `docs/fix/${unit.issue}-${slug}` : `docs/features/${unit.id}`;
 }
 
-/** The stage a unit is about to enter, per its resolved status. */
-const stageFor = (unit) => (unit.status === "defined" ? "spec" : "plan");
+/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
+ *  repository is refused, and the unit is reported instead of read.
+ *  (retired pre-execution receipt sensing — SAFE_SEGMENT kept for unitDirFor) */
+const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
-function recommendedFor(label, unit, stage) {
-  if (label === "current") return stage === "spec" ? `/plan-feature ${unit.id}` : `/execute-phase ${unit.nn ?? unit.issue}`;
-  return stage === "spec" ? `/review-spec ${unit.id}` : `/review-plan ${unit.nn ?? unit.issue}`;
+function recommendedFor(label, unit) {
+  return `/unit-lane ${unit.id}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -771,11 +706,11 @@ function readSuggestions(unit, unitDir) {
   const rows = readOpenRows(unitDir);
   const plan = rows.filter((row) => routeOfRow(row) === "replan");
   if (plan.length > 0) {
-    const command = unit.kind === "fix" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;
+    const command = `/unit-lane ${unit.id}`;
     return [{
       command,
       trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
-      source_skill: "review-change",
+      source_skill: "unit-lane",
     }];
   }
   if (rows.some((row) => routeOfRow(row) === "decision")) return [];
@@ -925,18 +860,13 @@ function hintGuard(hintInfo, units, envelopeState, recomputedNext) {
   const hint = hintInfo.hint ?? {};
   const recommended = typeof hint?.next?.recommended === "string" ? hint.next.recommended : "";
   const bySlug = (slug) => units.find((unit) => unit.id === slug || unit.slug === slug || unit.id.endsWith(slug));
-  const planMatch = /^\/plan-feature\s+(\S+)/.exec(recommended);
-  const designMatch = /^\/design-feature\s+(\S+)/.exec(recommended);
+  // The unit lane's next-command is /unit-lane <slug> or /execute-phase <unit> P<N>.
+  // We only track the defined→planned transition hint divergence (see #51).
+  const planMatch = /^\/unit-lane\s+(\S+)/.exec(recommended);
   if (planMatch) {
     const unit = bySlug(planMatch[1]);
     if (unit && unit.status === "defined") {
-      observations.push(`${unit.id} still 'defined' after the hint's /plan-feature ${unit.id} recommendation — suspected dropped defined→planned write (see #51)`);
-    }
-  }
-  if (designMatch) {
-    const unit = bySlug(designMatch[1]);
-    if (unit && unit.status === "idea") {
-      observations.push(`${unit.id} still 'idea' after the hint's /design-feature ${unit.id} recommendation — suspected dropped idea→defined write (see #51)`);
+      observations.push(`${unit.id} still 'defined' after the hint's /unit-lane ${unit.id} recommendation — triage not yet applied`);
     }
   }
   if (hint.state && hint.state !== envelopeState) {
@@ -963,57 +893,158 @@ function summarize(units, startable, designCandidates, openPrs) {
   return parts.join(", ");
 }
 
-function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash }) {
+/**
+ * Feature 61 (P7) — deterministic next-step ranking.
+ *
+ * Priority queue (first non-empty wins):
+ *   1. Blocking (NRS draft/contradicted, substrate blockers)     → keep existing recommended
+ *   2. Crash-resume RESUMABLE                                     → /execute-phase <unit> P<N>
+ *   3. Crash-ambiguous                                            → /workflow-status
+ *   4. In-flight unit on the current branch (planned/in-progress) → /execute-phase <unit> P<N>
+ *   5. Urgent issues (label `urgent` or `fix-next`)              → /triage-issue <n>
+ *   6. Triaged issues (disposition labels)                       → /triage-issue <n> or plan route
+ *   7. Defined features (deps met)                               → /unit-lane
+ *   8. Idea status rows                                          → /unit-lane
+ *   9. Nothing to do                                             → /workflow-status
+ *
+ * Emits `reason` (closed code from the queue level) and
+ * `candidate_count` (candidates at that level). Additive — no removed fields.
+ */
+function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash, units, forge, phases, currentBranch }) {
   const alternatives = [];
+
+  // Level 1 — Blocking conditions (NRS draft / contradicted / substrate blockers)
+  // Keep existing behavior verbatim.
+  if (nrs && NRS_BLOCKING.has(nrs.status)) {
+    alternatives.push("/discover-repository-state");
+    const command = nrs.status === "contradicted"
+      ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
+      : "/discover-repository-state";
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs", reason: "blocking", candidate_count: 1 };
+  }
+
   // Feature 32 (P1) — missing ledger is a notice (non-blocking); add it to
   // alternatives and continue so startable/gate rows can still be recommended.
   if (nrs && nrs.status === "missing") {
     alternatives.push("/discover-repository-state");
   }
-  else if (nrs && NRS_BLOCKING.has(nrs.status)) {
-    const command = nrs.status === "contradicted"
-      ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
-      : "/discover-repository-state";
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs" };
-  }
+
+  // Level 2 — Crash-resume (existing behavior)
   if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
     const command = crash.branches[0].resume_command;
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume" };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume", reason: "in-flight", candidate_count: 1 };
   }
+
+  // Level 3 — Crash-ambiguous (existing behavior)
   if (crash?.verdict === "AMBIGUOUS") {
-    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous" };
+    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous", reason: "blocking", candidate_count: 1 };
   }
-  if (startable.length > 0) {
-    const command = startable[0].next;
-    for (const unit of startable.slice(1)) alternatives.push(unit.next);
-    for (const row of receiptRows.filter((entry) => entry.label !== "current")) alternatives.push(row.recommended);
-    for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "startable" };
+
+  // Feature 61 (P7) — Level 4: in-flight unit on the current branch.
+  // A unit that is planned/in-progress on the current branch has execution
+  // priority over queued work.
+  const inFlightUnit = currentBranch && units.find((unit) => {
+    const branch = currentBranch;
+    return branch.endsWith(unit.id)
+      || branch.includes(unit.id)
+      || (unit.issue != null && branch.includes(`/${unit.issue}-`))
+      || (unit.slug && branch.includes(unit.slug));
+  });
+  if (inFlightUnit) {
+    const phases_ = phases.get(inFlightUnit.id);
+    let command;
+    if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
+      command = crash.branches[0].resume_command;
+    } else if (phases_?.current) {
+      command = `/execute-phase ${inFlightUnit.nn ?? inFlightUnit.issue} ${phases_.current}`;
+    } else {
+      // No coherent phase — fall through to lower-priority levels.
+    }
+    if (command) {
+      return { recommended: command, alternatives, tier: tierFor(command), kind: "in-flight", reason: "in-flight", candidate_count: 1 };
+    }
   }
-  // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
-  // enter is not current is demoted out of `startable_now`, so without a branch of its
-  // own the promised `/review-spec`//`/review-plan` next never fired and the unit
-  // vanished into the bland fallback. It ranks above a fresh design candidate: an
-  // in-flight unit blocked only by a review gate is closer to done than an unstarted
-  // idea.
-  const gateBlocked = receiptRows.filter((row) => row.label !== "current");
-  if (gateBlocked.length > 0) {
-    const command = gateBlocked[0].recommended;
-    for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
-    for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "gate" };
+
+  // Feature 61 (P7) — Level 5: urgent issues (label `urgent` or `fix-next`),
+  // oldest first. /triage-issue <n> for untriaged.
+  const urgentIssues_ = readUrgencyForResolve(forge.openIssues);
+  if (urgentIssues_.length > 0) {
+    const command = `/triage-issue ${urgentIssues_[0].number}`;
+    for (const issue of urgentIssues_.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "urgent", reason: "urgent-issue", candidate_count: urgentIssues_.length };
   }
+
+  // Feature 61 (P7) — Level 6: triaged issues (have disposition labels),
+  // oldest first. Follow up per its disposition label.
+  const triagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Triaged = has disposition label (wontfix, postponed, promoted)
+    // and is NOT urgent/fix-next (those go to level 5)
+    return names.some((n) => ["wontfix", "postponed", "promoted"].includes(n))
+      && !names.includes("urgent")
+      && !names.includes("fix-next");
+  }) ?? [];
+  if (triagedIssues.length > 0) {
+    const command = `/triage-issue ${triagedIssues[0].number}`;
+    for (const issue of triagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "triaged", reason: "triaged-issue", candidate_count: triagedIssues.length };
+  }
+
+  // Feature 61 (P7) — Level 7: defined features with deps met, oldest first.
+  // /unit-lane to run triage or continue through the adaptive lane.
+  // Planned/in-progress units route to /execute-phase directly (no plan-receipt
+  // currency check required — the unit doc's triage block is the authority).
+  const definedFeatures = startable.filter((s) => {
+    const unit = units.find((u) => u.id === s.id);
+    return unit && unit.status === "defined";
+  });
+  if (definedFeatures.length > 0) {
+    const command = definedFeatures[0].next;
+    for (const unit of definedFeatures.slice(1)) alternatives.push(unit.next);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "defined", reason: "defined-feature", candidate_count: definedFeatures.length };
+  }
+
+  // Feature 61 (P7) — Level 8: idea status rows, oldest first.
+  // /unit-lane <slug> to create and triage
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "design" };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "design", reason: "idea", candidate_count: designCandidates.length };
   }
-  if (untriaged.count > 0) {
-    const command = `/triage-issue ${untriaged.oldest_open.join(" ")}`;
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriage" };
+
+  // Feature 61 (P7) — Level 9: untriaged issues (no disposition label,
+  // no urgent/fix-next), oldest first. /triage-issue <n>
+  const untriagedIssues = forge.openIssues?.filter((issue) => {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    // Untriaged = no disposition label AND not urgent/fix-next
+    const hasDisposition = names.some((n) => ["wontfix", "postponed", "promoted"].includes(n));
+    return !hasDisposition && !names.includes("urgent") && !names.includes("fix-next");
+  }) ?? [];
+  if (untriagedIssues.length > 0) {
+    const command = `/triage-issue ${untriagedIssues[0].number}`;
+    for (const issue of untriagedIssues.slice(1)) alternatives.push(`/triage-issue ${issue.number}`);
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriaged", reason: "urgent-issue", candidate_count: untriagedIssues.length };
   }
+
+  // Feature 61 (P7) — Level 10: nothing to do — idle fallback.
   const command = "/workflow-status";
-  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback" };
+  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback", reason: "idle", candidate_count: 1 };
+}
+
+/**
+ * Feature 61 (P7) — extract urgency labels only (deduplicated from readUrgency
+ * so resolveNext has its own isolated call). Returns issues with `urgent` or
+ * `fix-next` labels sorted oldest first.
+ */
+function readUrgencyForResolve(issues) {
+  const result = [];
+  for (const issue of issues ?? []) {
+    const names = (issue.labels ?? []).map((label) => (typeof label === "string" ? label : label.name));
+    const label = names.includes("urgent") ? "urgent" : names.includes("fix-next") ? "fix-next" : null;
+    if (label) result.push({ number: issue.number, title: issue.title, label });
+  }
+  result.sort((a, b) => a.number - b.number);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -1034,9 +1065,9 @@ export const CONTINUATION_CLASSES = Object.freeze([
  */
 function continuationClassFor(verb, label) {
   if (verb === "/workflow-status") return "status-refresh";
-  if (verb === "/review-spec" || verb === "/review-plan") {
-    return label === "stale" || label === "impossible-timeline" ? "planning-gate-rerun" : "review-receipt-refresh";
-  }
+  // Feature 61 P8b: the review-spec/review-plan verbs are retired — the lane
+  // conductor is the single execution verb, re-run through status-refresh.
+  if (verb === "/unit-lane") return "status-refresh";
   return null;
 }
 
@@ -1060,9 +1091,9 @@ function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable
   const verb = tokens[0] ?? "";
   let row = null;
   let stage = "plan";
-  if (verb === "/review-spec" || verb === "/review-plan") {
+  if (verb === "/unit-lane") {
     row = receiptRows.find((entry) => entry.recommended === command) ?? null;
-    stage = row?.stage ?? (verb === "/review-spec" ? "spec" : "plan");
+    stage = row?.stage ?? "spec";
   }
   const kind = continuationClassFor(verb, row?.label ?? null);
   if (kind === null) return { ok: false, refusal: "no-decision-available" };
@@ -1154,13 +1185,12 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const designCandidates = [];
   const blocked = {};
   const gateBlockers = [];
-  const senseCounter = { value: 0, capped: 0 };
   /** A `done` row whose linked PR is still open: a unit at the merge gate. */
   const isOpenPr = (unit) => Boolean(unit.pr && (forge.openPrs ?? []).some((pr) => pr.number === unit.pr.number));
   for (const unit of units) {
     const unmetDeps = dependencies.unmetFor(unit);
     if (unit.status === "idea") {
-      designCandidates.push({ id: unit.id, status: "idea", next: `/design-feature ${unit.id}` });
+      designCandidates.push({ id: unit.id, status: "idea", next: `/unit-lane ${unit.id}` });
       continue;
     }
     if (unmetDeps.length > 0) {
@@ -1177,41 +1207,38 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       observations.push(`${unit.id}: slug '${unit.slug}' is not a safe path segment — its files are not read`);
       continue;
     }
-    const stage = stageFor(unit);
-    const specSense = senseStage(dir, unit.id, "spec", undefined, senseCounter);
-    const planSense = stage === "plan" ? senseStage(dir, unit.id, "plan", specSense.observedDigest, senseCounter) : null;
-    const sense = stage === "plan" ? planSense : specSense;
-    const label = sense.label;
-    const row = {
+    // Feature 61 P8b — the spec/plan receipt stages are retired: no per-unit
+    // receipt rows are sensed or emitted (detail.pre_execution is empty), the
+    // verifier spawn cap never engages, and receipt currency is the unit doc's
+    // triage block checked per step by unit-lane/execute-phase. Status routes:
+    // defined/planned → the lane conductor; in-progress → the step executor;
+    // done-but-unmerged → the merge gate.
+    receiptRows.push({
       unit: unit.id,
       unitDir: dir,
-      stage,
-      label,
-      verdict: sense.verdict,
-      boundDigest: sense.boundDigest,
-      observedDigest: sense.observedDigest,
-      recommended: recommendedFor(label, unit, stage),
-      reason: sense.reason,
-    };
-    receiptRows.push(row);
-    if (label === "current") {
-      // A done row with an open PR has no execution left: its next act is the merge
-      // gate, not another phase.
-      const command = unit.status === "done" ? `/audit-pr ${unit.pr.number}` : recommendedFor("current", unit, stage);
-      startable.push({ id: unit.id, next: command });
+      stage: "lane",
+      label: "current",
+      verdict: "READY",
+      boundDigest: null,
+      observedDigest: null,
+      recommended: `/unit-lane ${unit.id}`,
+      reason: "unit-doc currency is checked per step by unit-lane/execute-phase",
+    });
+    // Startable next-command: defined/planned → /unit-lane; in-progress → /execute-phase
+    // done-but-unmerged → /audit-pr (gate).
+    let startableCommand;
+    if (unit.status === "in-progress") {
+      startableCommand = `/execute-phase ${unit.nn ?? unit.issue} P1`;
+    } else if (unit.status === "done" && isOpenPr(unit)) {
+      startableCommand = `/audit-pr`; // unit's PR number from unit.pr
     } else {
-      gateBlockers.push({
-        kind: "gate",
-        id: unit.id,
-        scope: "unit",
-        detail: `${unit.id} ${stage}-stage receipt is ${label} — ${row.recommended}`,
-      });
+      startableCommand = `/unit-lane ${unit.id}`;
+    }
+    {
+      startable.push({ id: unit.id, next: startableCommand });
     }
   }
 
-  if (senseCounter.capped > 0) {
-    observations.push(`pre-execution sensing capped at ${PRE_EXECUTION_MAX_SENSES} verifier invocation(s) — ${senseCounter.capped} row(s) degraded`);
-  }
 
   // Steps 7-9 per unit.
   const phases = new Map();
@@ -1226,7 +1253,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     // A closed unit is not under review: only a unit about to enter (or sitting at)
     // the review gate pays the mark's git spawns (F34).
     const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
-    const mark = markEligible ? readReviewMark(dir, stageFor(unit)) : null;
+    const mark = markEligible ? readReviewMark(dir, "lane") : null;
     if (mark) marks.set(unit.id, mark);
     fixNow.push(...readFixNow(dir, observations));
     nextSuggested.push(...readSuggestions(unit, dir));
@@ -1289,9 +1316,9 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     : null;
 
   const designCandidates_ = designCandidates;
-  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash, units, forge, phases, currentBranch: gitState.branch });
   // The resolver's internal branch tag never ships in the envelope.
-  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier };
+  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier, reason: nextResolution.reason, candidate_count: nextResolution.candidate_count };
   // Step 13 — additive advisory: the class-routed triggers the driver can act on
   // now, never reordering `recommended`/`alternatives`/`tier`.
   next.suggested = nextSuggested;

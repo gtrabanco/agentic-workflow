@@ -48,7 +48,7 @@ function assertByteIdentical(sourceDir, bundleDir, slug) {
 
 test("AC2: bundle exists and covers every shipped skill", () => {
   const source = readSourceSkills();
-  assert.ok(source.length >= 30, `expected the canonical skills/ tree to be discoverable, found ${source.length}`);
+  assert.ok(source.length >= 28, `expected the canonical skills/ tree to be discoverable, found ${source.length}`); // 61-P8b: 28 after retiring the fixed pipeline
 
   assert.deepEqual(
     bundledDirs(),
@@ -60,7 +60,7 @@ test("AC2: bundle exists and covers every shipped skill", () => {
 test("AC2: every user-invocable skill is bundled", () => {
   const bundled = new Set(bundledDirs());
   const publicSkills = readSourceSkills().filter((s) => s.userInvocable);
-  assert.ok(publicSkills.length >= 15, `expected the public skill set to be non-trivial, found ${publicSkills.length}`);
+  assert.ok(publicSkills.length >= 13, `expected the public skill set to be non-trivial, found ${publicSkills.length}`);
   for (const skill of publicSkills) {
     assert.ok(bundled.has(skill.slug), `public skill ${skill.slug} missing from the bundle`);
   }

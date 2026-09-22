@@ -26,11 +26,12 @@ additively, and reports residuals.
 
 ## Automated merge
 
-Direct merge commands are always blocked. `ship-roadmap --fullauto` is the sole
-automated merge authority and calls `fullauto-merge.sh` only after a fresh
-SHA-bound audit. The wrapper creates a transient marker under the git common
-directory, removes it on every exit, and posts an idempotent audit comment on
-the merged PR. It never creates a persistent `.automerge` permission.
+Direct merge commands are always blocked. The former `ship-roadmap --fullauto`
+was the sole automated merge authority and called `fullauto-merge.sh` only after
+a fresh SHA-bound audit. The wrapper created a transient marker under the git
+common directory, removed it on every exit, and posted an idempotent audit
+comment on the merged PR. It never created a persistent `.automerge` permission.
+The unattended-conductor role is deferred to roadmap row 62.
 
 These hooks are defense-in-depth, not a sandbox. Keep secret-manager controls
 and forge branch protection/rulesets enabled.

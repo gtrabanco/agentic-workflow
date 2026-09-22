@@ -13,8 +13,13 @@ out to do, what was decided and *why*, and where to resume.
   summary, the decisions made, and the concrete next step. Do it before
   `/clear`, before closing for the day, or at any natural stopping point.
 
-Newest entries go at the **bottom** (chronological, append-only). Don't edit or
-tidy past entries — they're a record.
+**Adaptive lane note.** The unit SPEC.md carries its own **Progress log**
+(section 11: dated `YYYY-MM-DD HH:MM` entries per step, what was done, commit
+sha or evidence, what is next) and **Evidence** section (what was run, exit
+digest, verified-by). LOGS.md is the cross-unit session journal; the unit
+Progress log is the per-unit step ledger. They complement each other — run
+`/log-session` at the end of each catalog step to capture the human-readable
+session context alongside the machine-readable Progress log in the unit doc.
 
 ## Entry format
 

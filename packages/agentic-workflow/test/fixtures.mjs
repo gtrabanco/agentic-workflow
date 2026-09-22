@@ -60,7 +60,8 @@ function bareRemote(root, dir, branch) {
 function unitBranch(root, name, branch, acceptance = "frozen") {
   const dir = newRepo(root, name, "main");
   git(dir, "checkout", "-q", "-b", branch);
-  commitFile(dir, `docs/features/${branch.split("/")[1]}/ACCEPTANCE.md`, `${acceptance}\n`);
+  // Feature 61: the unit document is the frozen surface at HEAD.
+  commitFile(dir, `docs/features/${branch.split("/")[1]}/SPEC.md`, `unit doc\n`);
   return dir;
 }
 
@@ -114,10 +115,10 @@ function buildFixtures(root) {
   fx.empty = path.join(root, "empty");
   gitInit(fx.empty, "feature/x");
 
-  // Unit directory exists but ACCEPTANCE.md is absent at HEAD.
+  // Unit branch exists but the unit doc is absent at HEAD.
   fx.missing = newRepo(root, "missing", "main");
   git(fx.missing, "checkout", "-q", "-b", "feat/missing");
-  commitFile(fx.missing, "docs/features/missing/SPEC.md", "no acceptance here\n");
+  commitFile(fx.missing, "docs/features/missing/.gitkeep", "");
 
   // Not unit-shaped -> box2 not applicable.
   fx.plain = newRepo(root, "plain", "main");
@@ -236,7 +237,7 @@ export function receiptCases(ctx) {
   return [
     { name: "box1 default branch", dir: ctx.fx.default, code: 1, line: "TURN-CONTRACT fail box1: branch-default" },
     { name: "box1 not a repo", dir: ctx.fx.notrepo, code: 1, line: "TURN-CONTRACT fail box1: not-a-repo" },
-    { name: "box2 acceptance missing", dir: ctx.fx.missing, code: 1, line: "TURN-CONTRACT fail box2: acceptance-missing" },
+    { name: "box2 unit-doc missing", dir: ctx.fx.missing, code: 1, line: "TURN-CONTRACT fail box2: unit-doc-missing" },
     { name: "box2 not applicable", dir: ctx.fx.plain, code: 0, line: "TURN-CONTRACT ok" },
     { name: "box2 unit path is a file", dir: ctx.fx.unitfile, code: 0, line: "TURN-CONTRACT ok" },
     { name: "box3 no commits", dir: ctx.fx.nocommits, code: 1, line: "TURN-CONTRACT fail box3: no-commits" },

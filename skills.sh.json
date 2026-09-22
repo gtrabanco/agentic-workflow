@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "Unit lane",
+      "description": "One adaptive lane per unit: triage decides the steps, guards and evidence keep it honest.",
+      "skills": [
+        "unit-lane"
+      ]
+    },
+    {
       "title": "Setup and state",
       "description": "Bootstrap a repository and keep evidence-backed workflow state visible.",
       "skills": [
@@ -16,12 +23,6 @@
       "title": "Design and plan",
       "description": "Close product requirements and turn them into executable feature or fix phases.",
       "skills": [
-        "design-feature",
-        "plan-feature",
-        "plan-feature-from-issue",
-        "plan-feature-scaffold",
-        "plan-fix",
-        "evidence-grounding",
         "pre-execution-review"
       ]
     },
@@ -37,8 +38,6 @@
       "title": "Review and audit",
       "description": "Review a frozen design or a change, gate a PR, audit documentation, or inspect product health.",
       "skills": [
-        "review-spec",
-        "review-plan",
         "review-change",
         "audit-pr",
         "audit-docs",
@@ -73,14 +72,6 @@
       "description": "Generate developer documentation and leave compact handoff records.",
       "skills": [
         "log-session"
-      ]
-    },
-    {
-      "title": "Autopilot and orchestration",
-      "description": "Run the full roadmap or supply the driver-facing envelope contract.",
-      "skills": [
-        "ship-roadmap",
-        "orchestration-envelope"
       ]
     }
   ]

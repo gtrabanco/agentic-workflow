@@ -56,7 +56,8 @@
     "@earendil-works/pi-coding-agent": ">=0.87.0"
   },
   "dependencies": {
-    "@earendil-works/pi-tui": "0.87.0"
+    "@earendil-works/pi-tui": "0.87.0",
+    "@gtrabanco/agentic-workflow": "file:../agentic-workflow"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

@@ -74,19 +74,28 @@ the frozen ledger and route missing or contradictory state to these skills.
    issue. Writes the SPEC's **product half** and stamps `## Design status:
    designed`. Upserts on re-run (never destroys recorded decisions).
 
-**Plan**
-2. `plan-feature` — the ROUTER and the only engineering-planning entry in the
-   menu. Given an undesigned feature (no `## Design status: designed`),
-   **STOP and redirect** to `/design-feature <slug>` (no bypass flag). Given a
-   designed feature, an issue `#N`, a scoped slug/SPEC, or `--next` (next
-   roadmap item), dispatch to the right internal step below, then ensure the
-   roadmap entry and print the next step: `execute-phase NN P1` (M/L and
-   XS/S alike — XS/S phases live in the SPEC).
-3. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
-   it in the fix index, commit on a fix branch, and STOP for review.
+**Lane conductor**
+2. `unit-lane` — the lane conductor. Given a slug, creates the unit doc from
+   the template, runs triage (returns ordered catalog steps), and orchestrates
+   the full lane: research → design → plan → implement → tests → evidence →
+   review → docs → release. Triage decides which steps apply; each runs as an
+   atomic gate/commit. The triage catalog lists closed-step names, their
+   applicability rules, and budget tiers.
+3. `execute-phase` — run one catalog step as an atomic gate/commit (or all
+   remaining steps). Each step gets a fresh worker context, acceptance-blob
+   check, and commit.
 
-**Internal planning steps** (`user-invocable: false` — invoked only by the router)
-4. `plan-feature-from-issue` — convert a feature-request issue into a scoped,
+**Lane catalog steps** (`user-invocable: false` — invoked by `unit-lane`)
+4. `planning-preflight` — internal planning gate: consumes the normalized
+   repository state and makes the final architectural classification;
+   used by the lane's design and plan steps.
+5. `replan-findings` — conditional replan entry: loaded when triage detects
+   a unit outgrowing the light path; turns the router's bounded read set into
+   appended catalog steps without a full planning preflight.
+6. `implementation-discovery` — bounded, read-only pre-write mapper contract:
+   closes seven evidence questions, emits one fixed compact map, and routes
+   `READY | REPLAN | NEEDS-DESIGN | BLOCKED` before any source write.
+7. `evidence-grounding` — authoring-side evidence contract + readiness
    **sized** SPEC product half (confirm it's a feature, not a bug/debt; translate
    to docs language; map to roadmap; close gaps by asking, or hand a thin issue
    to `design-feature`; wire `Closes #N`; satisfy capability closure).
@@ -169,13 +178,13 @@ the frozen ledger and route missing or contradictory state to these skills.
    dated re-confirmation comment. Never implement deferred work inline. Accept
    several issue numbers in one batch (independent verdicts, one summary table).
 
-**Autopilot**
-13. `ship-roadmap` — end-to-end conductor driven by /loop. ONE upfront interview
-   (product/scale/lifespan; features — elicit and build the complete roadmap if
-   absent; stack — use or recommend; architecture — use or recommend PROPORTIONAL
-   to the app, never defaulting to a named pattern; quality bars; ops; forge;
-   autonomy and budget), then founds the substrate if missing, writes the
-   roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
+**Autopilot** (retired — feature 61 P9)
+13. `ship-roadmap` — the former end-to-end conductor driven by /loop. ONE upfront
+   interview (product/scale/lifespan; features — elicit and build the complete
+   roadmap if absent; stack — use or recommend; architecture — use or recommend
+   PROPORTIONAL to the app, never defaulting to a named pattern; quality bars;
+   ops; forge; autonomy and budget), then founds the substrate if missing, writes
+   the roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
    cheap-tier subagent per phase following execute-phase) → review (compose
    review-change) → PR → merge gate (compose audit-pr) → next feature. Default:
    opens PRs, the human merges; --fullauto is the sole automated merge
@@ -187,6 +196,8 @@ the frozen ledger and route missing or contradictory state to these skills.
    open (with reopening triggers), discovered feature proposals, manual
    verification checklist, product-audit cadence. The conductor's tier must be
    >= every skill it composes; the product-audit skill is always a hand-off.
+   Retired (feature 61 P9): its deterministic routing lives in `workflow-status`
+   / `unit-lane` and the unattended-conductor role is deferred to roadmap row 62.
 
 Compose with (do not duplicate) the project's own companion review skills
 (`/code-review`, `/security-review`, `/verify`, and any design/a11y/brand/perf/SEO
@@ -200,8 +211,9 @@ profile from `@gtrabanco/agentic-workflow-schema`, appends the generated
 `renderOutputInstruction(skill)` to a worker invocation, and parses the final
 result with `parseTurn({skill, text, context})`. `workflow-status` keeps the
 strict Envelope v2 sensor result; other driven workers return compact
-SkillOutcome v1. `ship-roadmap` is the conductor and keeps its native `SHIP:`
-banner and closing `→ Next:` block, so it is not a worker profile.
+SkillOutcome v1. `workflow-status` is the sensor (Envelope v2); the former
+conductor (`ship-roadmap`) kept its native `SHIP:` banner and closing `→ Next:`
+block, so it was not a worker profile.
 
 On an absent, malformed, or invalid result, the driver re-invokes the same
 session exactly once with `Emit only the machine result for the turn above.` A
@@ -234,7 +246,8 @@ created and how to use it.
 - The prompt is intentionally **discovery-driven**: it asks the agent to learn
   each project's rules instead of hardcoding this repo's. That's what lets you
   "work the same way" everywhere while still respecting each project's architecture.
-- After it runs, drive features with `plan-feature` (the router) and fixes with
-  `plan-fix`, execute with `execute-phase`, review with `review-change`, gate the
-  PR with `audit-pr`, and triage issues with `triage-issue` — exactly as
-  documented in `docs/workflow/`.
+- After it runs, drive features and fixes with `unit-lane` (the lane
+  conductor — triage → catalog steps → evidence → review), execute with
+  `execute-phase`, review with `review-change`, gate the PR with `audit-pr`,
+  and triage issues with `triage-issue` — exactly as documented in
+  `docs/workflow/`.

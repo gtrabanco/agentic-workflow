@@ -5,6 +5,13 @@ without turning every skill into a large JSON prompt: it asks for a small
 machine result at the invocation boundary and combines it with facts compiled
 from the repository documents.
 
+> **Feature 61 P8 purge:** `review-spec` and `review-plan` are retired (absorbed
+> into the lane). The transition table in the schema package no longer has rows
+> for these skills; the `WorkflowIntent` union still lists them for backward
+> compat but they are not callable from a unit-lane context. The pre-execution
+> evidence contracts (`PreExecutionArtifactSnapshot`, `PreExecutionReviewReceipt`)
+> remain as schema exports for the lane's review step to consume.
+
 ```
   selected docs + repository facts ──► WorkflowSnapshot v1
                                          │

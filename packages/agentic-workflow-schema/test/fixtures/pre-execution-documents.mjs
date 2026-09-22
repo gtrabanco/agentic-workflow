@@ -30,14 +30,28 @@ export const POLICY_VERSION = "2026-08-30";
  * missing heading); any other override replaces its body verbatim.
  */
 export function toySpec(overrides = {}) {
+  /* Feature 61: migrated from the retired two-half SPEC vocabulary to the
+  * unit document's 13-section list (AC15); the selector validates against
+  * UNIT_DOC_REQUIRED_SECTIONS. */
+
+  // Feature 61: migrated from the retired two-half SPEC vocabulary to the
+  // unit document's 13-section list (AC15); the selector validates against
+  // UNIT_DOC_REQUIRED_SECTIONS.
   const parts = {
     title: "# Toy feature",
-    Goal: "## Goal\n\nShip the thing.\n",
-    Branch: "## Branch\n\n`feat/toy`\n",
-    Size: "## Size\n\n`S` — small.\n",
-    Dependencies: "## Dependencies\n\n- none\n",
-    "Product half": "## Product half\n\n### Scope\n\n- **S1:** the thing.\n",
-    "Design status": "## Design status\n\n`designed`\n",
+    Objective: "## Objective\n\nShip the thing.\n",
+    Why: "## Why\n\nBecause the customer needs it.\n",
+    "User outcome": "## User outcome\n\nUsers can do X.\n",
+    "Acceptance criteria": "## Acceptance criteria\n\n- [x] S1 is done.\n",
+    "Non-goals": "## Non-goals\n\n- Not S2.\n",
+    "Future cost": "## Future cost\n\nNone known.\n",
+    "Applicable tests": "## Applicable tests\n\n- Unit tests.\n",
+    "Known pre-existing issues": "## Known pre-existing issues\n\nNone.\n",
+    Tasks: "## Tasks\n\n- [x] Implement S1.\n",
+    Evidence: "## Evidence\n\nNo external evidence.\n",
+    "Progress log": "## Progress log\n\n- P1 done.\n",
+    Next: "## Next\n\nShip it.\n",
+    References: "## References\n\n[Link](https://example.com)\n",
   };
   let text = "";
   for (const [heading, body] of Object.entries({ ...parts, ...overrides })) {

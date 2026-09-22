@@ -1,5 +1,5 @@
 name: Bug / fix
-description: Report a defect to be scoped into a fix SPEC.
+description: Report a defect to be scoped into a fix SPEC via the lane (triage → catalog steps → evidence → review).
 title: "fix: <short title>"
 labels: ["fix", "needs-triage"]
 body:

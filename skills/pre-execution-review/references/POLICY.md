@@ -218,6 +218,7 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   phase-lint | PREFLIGHT.md
   path-protection | PREFLIGHT.md
   stale-or-missing-receipt | PRE_EXECUTION_GATE.md
+  stale-unit-doc | PRE_EXECUTION_GATE.md
   ```
 
   `execute-phase` appends that trace to the unit's `progress.md`, under

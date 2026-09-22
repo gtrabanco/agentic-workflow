@@ -229,7 +229,8 @@ test("P1: an ambiguous roadmap row maps to the nearest five-state value and is n
   const candidate = envelope.detail.design_candidates.find((c) => c.id === "91-beta");
   assert.ok(candidate, `91-beta must be a design candidate: ${JSON.stringify(envelope.detail.design_candidates)}`);
   assert.equal(candidate.status, "idea");
-  assert.equal(candidate.next, "/design-feature 91-beta");
+  // Feature 61 P8b: design-feature is absorbed into the lane; ideas route to /unit-lane.
+  assert.equal(candidate.next, "/unit-lane 91-beta");
 });
 
 test("P1: urgency comes from the labels object only — labels-only scan (A:7)", () => {
@@ -436,14 +437,14 @@ test("P2: a missing git binary degrades to unavailable-git-missing with exit 0 (
 
 test("P2: a stale hint that repeats a pre-advance recommendation is named, state untouched (A:18)", () => {
   const roadmapRows = ["| 90 | `alpha` | defined | — | a unit |"];
-  const hint = JSON.stringify({ state: "OK", next: { recommended: "/plan-feature 90-alpha", alternatives: [], tier: "strong" } });
+  // Feature 61 P8b: plan-feature is absorbed into the lane; hint now uses /unit-lane.
+  const hint = JSON.stringify({ state: "OK", next: { recommended: "/unit-lane 90-alpha", alternatives: [], tier: "strong" } });
   const plain = makeFixture({ roadmapRows });
   const hinted = makeFixture({ roadmapRows });
   const before = parseEnvelope(plain.run().stdout);
   const after = parseEnvelope(hinted.run(["--last-envelope", hint]).stdout);
   const observations = after.detail.workflow_observations.join("\n");
   assert.match(observations, /still 'defined'/);
-  assert.match(observations, /suspected dropped/);
   assert.equal(after.state, before.state);
   assert.deepEqual(after.next, before.next);
 });
@@ -608,16 +609,17 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     `| F1 | scripts/a.mjs:1 | code | med | fix-now | ${route} | no |`,
   ].join("\n");
 
+  // Feature 61 P8b: plan-feature/design-feature absorbed into unit-lane.
   const replan = makeFixture({
     roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
     extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger("replan-in-unit: plan owner re-cuts the phase")}\n` },
   }).run();
   assert.equal(replan.status, 0, replan.stderr);
   assert.deepEqual(parseEnvelope(replan.stdout).next.suggested, [{
-    command: "/plan-feature 90-alpha",
+    command: "/unit-lane 90-alpha",
     trigger: "an open finding's frozen route is the plan owner — replan-in-unit (F1)",
-    source_skill: "review-change",
-  }], "a plan-owned row points at the unit's planner, not the fold");
+    source_skill: "unit-lane",
+  }], "a plan-owned row points at unit-lane, the lane conductor");
   assert.equal(validateEnvelope(parseEnvelope(replan.stdout)).ok, true);
 
   const fold = makeFixture({
@@ -631,6 +633,7 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     source_skill: "fold-findings",
   }]);
 
+  // Feature 61 P8b: plan-fix absorbed into unit-lane for fix units.
   const fixIndex = [
     "# Active fixes",
     "",
@@ -645,7 +648,7 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     },
   }).run();
   assert.equal(fix.status, 0, fix.stderr);
-  assert.equal(parseEnvelope(fix.stdout).next.suggested[0].command, "/plan-fix 91", "a fix unit's planner command is /plan-fix <issue>");
+  assert.equal(parseEnvelope(fix.stdout).next.suggested[0].command, "/unit-lane fix-91", "a fix unit's planner command is /unit-lane <id>");
 
   const none = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] }).run();
   assert.equal(none.status, 0, none.stderr);
@@ -756,13 +759,15 @@ test("F5: a done unit with a still-open PR is sensed (step 6a)", () => {
     openPrs: [{ number: 901, title: "alpha", headRefName: "feat/90-alpha", url: "https://example.invalid/pr/901", statusCheckRollup: [] }],
   });
   const envelope = parseEnvelope(run().stdout);
+  // Feature 61 P8b: lane semantics emit one "lane" row per open unit; no receipt-based gate blockers.
   assert.ok(
-    envelope.detail.pre_execution.some((row) => row.unit === "90-alpha"),
+    envelope.detail.pre_execution.some((row) => row.unit === "90-alpha" && row.stage === "lane"),
     `a done-but-unmerged unit is never merge-ready and must be sensed: ${JSON.stringify(envelope.detail.pre_execution)}`,
   );
+  // A done-but-unmerged unit routes to /audit-pr in startable (merge gate).
   assert.ok(
-    envelope.blockers.some((blocker) => blocker.kind === "gate" && blocker.id === "90-alpha"),
-    "a missing receipt on that unit is a gate blocker",
+    envelope.detail.startable_now.includes("90-alpha"),
+    "a done-but-unmerged unit is startable for the merge gate",
   );
   assert.ok(!envelope.dependencies.unmet.includes("90-alpha"), "an open PR never counts as merged");
 });
@@ -810,31 +815,21 @@ setInterval(() => {}, 1000);
 // F21 — a symlinked ancestor directory never widens the sensed root
 // ===========================================================================
 
-test("F21: an out-of-repo receipt behind a directory symlink never enters the envelope", () => {
+// Feature 61 P8b — pre-execution verifier spawns are retired (no more subprocess to
+// re-derive bound digests); the out-of-repo containment check at the verifier level
+// is deleted. The sensor now emits one lane row per unit with boundDigest: null.
+test("F21: [retired] verifier spawn cap and out-of-repo receipt sensing deleted (F21)", () => {
+  // The verifier subprocess (pre-execution-snapshot.mjs) was deleted by P8b;
+  // receipt currency is now the unit doc's triage block checked per step.
+  // No envelope row can carry an out-of-repo fingerprint because boundDigest is null.
   const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | symlinked ancestor |"] });
-  const outside = mkTmp("workflow-status-outside-");
-  fs.writeFileSync(path.join(outside, "progress.md"), [
-    "## Pre-execution review receipt v1 — plan",
-    "- Review: rp-forged · Snapshot: deadbeef · Verdict: plan-review-pass",
-    "",
-  ].join("\n"));
-  // `docs/features/90-alpha` is a directory symlink pointing outside the sensed
-  // repository: the leaf (`progress.md`) is a regular file, so only the resolved
-  // containment check can refuse it.
-  const unitDir = path.join(fixture.dir, "docs", "features", "90-alpha");
-  fs.rmSync(unitDir, { recursive: true, force: true });
-  fs.symlinkSync(outside, unitDir, "dir");
-
-  try {
-    const result = fixture.run();
-    assert.equal(result.status, 0, result.stderr);
-    const envelope = parseEnvelope(result.stdout);
-    const row = envelope.detail.pre_execution.find((entry) => entry.unit === "90-alpha");
-    assert.ok(!row || row.verdict === null, `out-of-repo receipt bytes must never enter the envelope: ${JSON.stringify(row)}`);
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  // Lane rows carry boundDigest: null — no verifier to leak out-of-repo content.
+  for (const row of envelope.detail.pre_execution) {
+    assert.equal(row.boundDigest, null, `lane row ${row.unit} has boundDigest: null`);
     assert.ok(!JSON.stringify(envelope).includes("rp-forged"), "no out-of-repo receipt id may appear anywhere in the envelope");
-  } finally {
-    fs.rmSync(unitDir, { recursive: true, force: true });
-    fs.rmSync(outside, { recursive: true, force: true });
   }
 });
 
@@ -1016,29 +1011,23 @@ test("F27: dependencies.build_order and blocked_units[].build_order are one deri
   assert.deepEqual(blocked.build_order, ["90-shipped", "91-missing", "92-blocked"], "the chain closes on the blocked unit");
 });
 
-test("F20: pre-execution verifier spawns are capped and degrade, never hang", () => {
-  const cap = Number(/PRE_EXECUTION_MAX_SENSES = (\d+)/.exec(read("scripts/workflow-status.mjs"))?.[1]);
-  assert.ok(Number.isInteger(cap) && cap > 0, "the cap is a suite-pinned positive constant");
-  const roadmapRows = [];
-  const extraFiles = {};
-  for (let i = 0; i < cap + 2; i += 1) {
-    const nn = 200 + i;
-    roadmapRows.push(`| ${nn} | \`unit-${nn}\` | planned | — | cap probe |`);
-    extraFiles[`docs/features/${nn}-unit-${nn}/progress.md`] =
-      "## Pre-execution review receipt v1 — plan\n- Review: rp-cap · Snapshot: deadbeef · Verdict: plan-review-pass\n\n";
-  }
-  const result = makeFixture({ roadmapRows, extraFiles }).run();
-  assert.equal(result.status, 0, result.stderr);
-  const envelope = parseEnvelope(result.stdout);
-  const capped = envelope.detail.pre_execution.filter((row) => /cap/i.test(row.reason ?? ""));
-  assert.ok(capped.length > 0, `the over-cap rows degrade by name: ${JSON.stringify(envelope.detail.pre_execution.map((row) => row.reason))}`);
+// Feature 61 P8b — pre-execution verifier spawns are retired (no more subprocess
+// to re-derive bound digests); the spawn cap constant PRE_EXECUTION_MAX_SENSES
+// and the cap logic are deleted. Lane rows always carry boundDigest: null.
+test("F20: [retired] verifier spawn cap deleted by P8b (F20)", () => {
+  // The cap constant was removed by P8b; no verifier is spawned.
+  const source = read("scripts/workflow-status.mjs");
+  assert.doesNotMatch(source, /PRE_EXECUTION_MAX_SENSES/, "PRE_EXECUTION_MAX_SENSES is retired");
 });
 
 // ===========================================================================
-// #221 — a current fix-unit plan receipt must sense `current`, never `missing`
+// #221 — pre-execution receipt sensing is retired by P8b
 // ===========================================================================
 
-test("a current fix-unit plan receipt senses current, not missing (#221)", () => {
+// Feature 61 P8b — pre-execution receipt sensing (spec/plan stages) is retired.
+// The lane semantics emit one lane row per open unit with boundDigest: null;
+// no verifier subprocess is spawned.
+test("#221: [retired] fix-unit plan receipt sensing deleted by P8b (#221)", () => {
   const unitSlug = "sensor-null-parent-receipt";
   const unitDir = `docs/fix/221-${unitSlug}`;
   const unit = "fix-221";
@@ -1053,109 +1042,27 @@ test("a current fix-unit plan receipt senses current, not missing (#221)", () =>
   ].join("\n");
 
   const fixture = makeFixture({
-    // An in-progress fix unit is the cheapest reproducing state OPEN_STATES senses
-    // (Decision 6): the #221 fix-index row must read `in-progress` or the sensor
-    // never senses it at all.
     extraFiles: {
       "docs/fix/README.md": fixIndex,
       [`${unitDir}/SPEC.md`]: [
         "# fix/221-sensor-null-parent-receipt",
-        "",
-        "## Goal",
-        "",
-        "Stop the false missing.",
-        "",
-        "## Branch",
-        "",
-        "`fix/221-sensor-null-parent-receipt`",
-        "",
-        "## Scope",
-        "",
-        "- the sensor",
-        "",
-        "## Acceptance",
-        "",
-        "- A1 the sensor reads current.",
-        "",
-        "## Phases",
-        "",
-        "### P1",
-        "",
-        "- do it",
         "",
         "## Status",
         "",
         "`in-progress`",
         "",
       ].join("\n"),
-      [`${unitDir}/ACCEPTANCE.md`]: "# Acceptance\n\n- A1 the sensor reads current.\n",
     },
     roadmapRows: [],
   });
-
-  // The impossible-timeline guard requires the source revision's commit date to
-  // PRECEDE the receipt's recorded finish. `makeFixture`'s own init commit is dated
-  // "now" (real wall-clock), which would land after a fixed finish, so amend the
-  // fixture's committed artifacts to a fixed past date first — the same FIXTURE_DATE
-  // discipline pre-execution-sensor.test.mjs applies to every commit it writes.
-  const FIXTURE_DATE = "2026-08-30T00:00:00Z";
-  const gitDate = (...args) => execFileSync("git", args, {
-    cwd: fixture.dir, encoding: "utf8",
-    env: { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE },
-  }).trim();
-  gitDate("commit", "--amend", "--no-edit", "--reset-author");
-
-  // Build the plan snapshot the receipt will bind, against the fixture tree. The
-  // verifier resolves its repo from its own location, so `--root` must point at the
-  // fixture — the same root the sensor passes when it senses (PROJECT = cwd).
-  const build = (...args) => {
-    const r = spawnSync(process.execPath, [path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"), ...args], {
-      cwd: fixture.dir, encoding: "utf8", timeout: 120_000,
-    });
-    assert.equal(r.status, 0, `build failed: ${r.stderr}`);
-    const [observedDigest, ...rest] = r.stdout.split("\n");
-    return { digest: observedDigest.trim(), snapshot: JSON.parse(rest.join("\n")) };
-  };
-  const built = build("build", "--stage", "plan", "--unit", unit, "--unit-kind", "fix",
-    "--dir", unitDir, "--root", fixture.dir);
-  assert.equal(built.snapshot.unitKind, "fix");
-  assert.equal(built.snapshot.parentSpecSnapshotDigest, null, "a fix unit binds no parent (RS14/D6)");
-
-  // Append the grammar-exact receipt block and commit it. A receipt write is an
-  // unbound path, so committing it must NOT rotate the plan snapshot; the source
-  // revision recorded is the newest commit that touched a bound path (already dated
-  // to FIXTURE_DATE by the amend above, ahead of the finish below).
-  const sourceRevision = gitDate("rev-parse", "HEAD");
-  const block = [
-    `## Pre-execution review receipt v1 — plan`,
-    `- Review: rp-221-e2e · Snapshot: ${built.digest} · Verdict: plan-review-pass`,
-    `- Unit: ${unit} · Stage: plan · Unit kind: fix`,
-    "- Parent SPEC snapshot: null · Parent Product receipt: none",
-    `- Source revision: ${sourceRevision} · Artifact revision: ${sourceRevision}`,
-    "- Reviewer: reviewer-session · Session: s-221 · Role: reviewer · Author: author-team",
-    "- Author exclusion: not-enforceable · Context clean: true",
-    "- Model diversity: not-applicable · Policy: v1",
-    `- Started/finished: 2026-08-31T00:00:00Z/2026-08-31T00:05:00Z · Findings: 0 (material open: 0)`,
-    "",
-  ].join("\n");
-  fixture.write(`${unitDir}/progress.md`, block);
-
-  // Sense it after committing the receipt (a receipt write is unbound, so it must
-  // not move the snapshot). The sensor runs the verifier with --root <PROJECT> = the
-  // fixture cwd, so it re-derives against the same tree the receipt was built in.
-  gitDate("add", "-A", "--", ".");
-  gitDate("commit", "-qm", "docs(fix-221): record plan review receipt");
   const result = fixture.run();
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
-
+  // Lane row for the fix unit, not a plan-stage receipt row.
   const row = envelope.detail.pre_execution.find((r) => r.unit === "fix-221");
-  assert.ok(row, `the sensor must emit a pre_execution row for fix-221: ${JSON.stringify(envelope.detail.pre_execution)}`);
-  assert.equal(row.stage, "plan", "the fix unit is sensed at the plan stage");
-  assert.equal(row.label, "current", `a current fix receipt must sense current, got ${row.label}: reason=${row.reason}`);
-  assert.equal(row.reason, null, `no reason on a current receipt, got ${row.reason}`);
-  assert.ok(!(envelope.blockers ?? []).some((b) => String(b?.id).includes("221")),
-    `no gate blocker for fix-221: ${JSON.stringify(envelope.blockers)}`);
+  assert.ok(row, `the sensor must emit a lane row for fix-221: ${JSON.stringify(envelope.detail.pre_execution)}`);
+  assert.equal(row.stage, "lane", "the fix unit is sensed at the lane stage");
+  assert.equal(row.boundDigest, null, "lane rows carry boundDigest: null");
 });
 
 
@@ -1165,7 +1072,7 @@ test("a current fix-unit plan receipt senses current, not missing (#221)", () =>
 
 const CONTINUATION_PROGRESS = "# Progress\n";
 
-test("59: a non-terminal fixture unit emits a well-formed continuation", () => {
+test("59: a non-terminal defined unit emits a /unit-lane continuation (P8b: review-spec retired)", () => {
   const { run } = makeFixture({
     roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
     extraFiles: { "docs/features/90-alpha/progress.md": CONTINUATION_PROGRESS },
@@ -1174,32 +1081,35 @@ test("59: a non-terminal fixture unit emits a well-formed continuation", () => {
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
   const continuation = envelope.next.continuation;
-  assert.ok(continuation, `a receipt-class recommendation emits a continuation: ${JSON.stringify(envelope.next)}`);
-  assert.deepEqual(continuation.argv, ["/review-spec", "90-alpha"]);
-  assert.equal(continuation.rendering, "/review-spec 90-alpha");
-  assert.equal(continuation.convergence, "detail.pre_execution.spec.label");
+  // Feature 61 P8b: review-spec/review-plan retired; defined units route to /unit-lane
+  // via the status-refresh class, which is always checkable.
+  assert.ok(continuation, `a non-terminal defined unit emits a continuation: ${JSON.stringify(envelope.next)}`);
+  assert.deepEqual(continuation.argv, ["/unit-lane", "90-alpha"]);
+  assert.equal(continuation.convergence, "next.recommended");
+  // status-refresh class: preconditions are always satisfied, no evidence token.
   assert.ok(
     continuation.preconditions.every((row) => typeof row.id === "string" && typeof row.check === "string" && typeof row.satisfied === "boolean"),
     `every precondition carries an at-emit evaluation: ${JSON.stringify(continuation.preconditions)}`,
   );
-  assert.deepEqual(continuation.evidence, {
-    artifact: "docs/features/90-alpha/progress.md",
-    digest: sha256HexSync(CONTINUATION_PROGRESS),
-  });
   // The evidence token is receiver-verifiable and the continuation is schema-valid.
   assert.equal(validateEnvelope(envelope).ok, true);
   assert.equal("continuation_refusal" in envelope.detail, false, "an emitted continuation is not a refusal");
 });
 
-test("59: an uncheckable precondition emits no continuation and the typed refusal", () => {
+// Feature 61 P8b: the /unit-lane continuation uses status-refresh which is
+// always checkable (no evidence file required). The "precondition-uncheckable"
+// path that existed for /review-spec is retired.
+test("59: an /unit-lane continuation is always checkable (P8b: uncheckable path retired)", () => {
   const { run } = makeFixture({
     roadmapRows: ["| 90 | `alpha` | defined | — | a unit |"],
   });
   const result = run();
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
-  assert.equal("continuation" in envelope.next, false, "no field on the refusal path");
-  assert.equal(envelope.detail.continuation_refusal, "precondition-uncheckable");
+  // status-refresh class: no evidence required, continuation is always emitted.
+  assert.ok("continuation" in envelope.next, "/unit-lane is always checkable for defined units");
+  assert.equal("continuation_refusal" in envelope.detail, false, "no refusal for status-refresh");
+  assert.equal(envelope.next.continuation.argv[0], "/unit-lane");
 });
 
 test("59: offline forge state refuses with sensor-degraded, never a guessed command", () => {

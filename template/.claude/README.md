@@ -53,6 +53,6 @@ dumps, direct `.env` reads, and direct merge commands while allowing assignments
 such as `export NODE_ENV=test`. It requires `jq`; a missing parser fails closed.
 
 This is defense-in-depth, not a sandbox. Keep forge branch protection/rulesets
-and secret-manager controls enabled. Automated merging is available only through
-the transient `ship-roadmap --fullauto` wrapper; the guard has no persistent
-allow marker.
+and secret-manager controls enabled. Automated merging is not available by
+default; the lane's deterministic router (workflow-status / unit-lane) governs
+the pipeline but does not auto-merge. The guard has no persistent allow marker.

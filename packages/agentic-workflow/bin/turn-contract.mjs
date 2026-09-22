@@ -106,7 +106,8 @@ function main(argv) {
   if (currentBranch.startsWith("feat/")) unitDir = `docs/features/${currentBranch.slice("feat/".length)}`;
   else if (currentBranch.startsWith("fix/")) unitDir = `docs/fix/${currentBranch.slice("fix/".length)}`;
   if (unitDir !== "" && isDir(path.join(root, unitDir))) {
-    if (!git(root, ["cat-file", "-e", `HEAD:${unitDir}/ACCEPTANCE.md`]).ok) return fail(2, "acceptance-missing");
+    // Feature 61: the unit document is the frozen surface (ACCEPTANCE.md is retired).
+    if (!git(root, ["cat-file", "-e", `HEAD:${unitDir}/SPEC.md`]).ok) return fail(2, "unit-doc-missing");
     const lint = path.join(root, "scripts", "phase-lint.mjs");
     const tasks = path.join(root, unitDir, "TASKS.md");
     if (existsSync(lint) && existsSync(tasks)) {

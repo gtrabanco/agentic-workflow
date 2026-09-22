@@ -11,7 +11,7 @@ import {
   PRE_EXECUTION_RECEIPT_CONTRACT_ID,
   PRE_EXECUTION_SNAPSHOT_CONTRACT_ID,
   PRE_EXECUTION_SNAPSHOT_SELECTOR,
-  SPEC_PRODUCT_REQUIRED_HEADINGS,
+  UNIT_DOC_REQUIRED_SECTIONS,
   buildPreExecutionArtifactSnapshot,
   canonicalizePreExecutionArtifactSnapshot,
   canonicalizePreExecutionReviewReceipt,
@@ -46,7 +46,7 @@ test("the selector returns exactly the named blocks, in order, byte-stably", () 
   const first = selectSpecProduct(text);
   assert.equal(first.ok, true, JSON.stringify(first.errors ?? null));
   assert.match(first.content, /^# Toy feature/);
-  assert.match(first.content, /## Design status\n\n`designed`\n$/);
+  assert.ok(first.content.includes("## References"), "last heading is References");
   assert.equal(first.content, selectSpecProduct(text).content, "pure and deterministic");
   assert.equal(first.byteLength, Buffer.byteLength(first.content, "utf8"));
   assert.equal(first.digest, createHash("sha256").update(first.content, "utf8").digest("hex"),
@@ -71,44 +71,44 @@ test("engineering-half edits leave the Product projection byte-identical (D2)", 
 });
 
 test("missing, duplicate, and out-of-order required headings fail with one named heading", () => {
-  const missing = selectSpecProduct(toySpec({ Goal: undefined }));
+  const missing = selectSpecProduct(toySpec({ Objective: undefined }));
   assert.equal(missing.ok, false);
-  assert.deepEqual([...missing.errors], [{ code: "selector-heading-missing", heading: "Goal" }]);
+  assert.deepEqual([...missing.errors], [{ code: "selector-heading-missing", heading: "Objective" }]);
 
-  const duplicated = selectSpecProduct(`${toySpec()}\n## Goal\n\nsecond one\n`);
+  const duplicated = selectSpecProduct(`${toySpec()}\n## Objective\n\nsecond one\n`);
   assert.equal(duplicated.ok, false);
-  assert.deepEqual([...duplicated.errors], [{ code: "selector-heading-duplicate", heading: "Goal" }]);
+  assert.deepEqual([...duplicated.errors], [{ code: "selector-heading-duplicate", heading: "Objective" }]);
 
   const swapped = selectSpecProduct(
-    "# Toy\n\n## Goal\n\nx\n\n## Branch\n\nb\n\n## Size\n\ns\n\n## Dependencies\n\nd\n\n## Design status\n\n`designed`\n\n## Product half\n\np\n",
+    "# Toy\n\n## References\n\nx\n\n## Objective\n\nb\n\n## Why\n\ns\n\n## User outcome\n\nd\n\n## Acceptance criteria\n\n`approved`\n\n## Non-goals\n\np\n\n## Future cost\n\nnone\n\n## Applicable tests\n\nnone\n\n## Known pre-existing issues\n\nnone\n\n## Tasks\n\nnone\n\n## Evidence\n\nnone\n\n## Progress log\n\nnone\n\n## Next\n\nnone\n",
   );
   assert.equal(swapped.ok, false);
-  assert.deepEqual([...swapped.errors], [{ code: "selector-heading-order", heading: "Product half" }]);
+  assert.deepEqual([...swapped.errors], [{ code: "selector-heading-order", heading: "Objective" }]);
 
   assert.equal(selectSpecProduct("").ok, false);
-  assert.equal(selectSpecProduct("## Goal\n\nx\n").ok, false, "no title");
-  assert.deepEqual([...selectSpecProduct("## Goal\n\nx\n").errors],
+  assert.equal(selectSpecProduct("## Objective\n\nx\n").ok, false, "no title");
+  assert.deepEqual([...selectSpecProduct("## Objective\n\nx\n").errors],
     [{ code: "selector-title-missing", heading: "<title>" }]);
   assert.equal(selectSpecProduct(null).ok, false, "a non-string is refused, not thrown");
 });
 
 test("heading matching is exact and level-precise, not a substring", () => {
-  assert.equal(selectSpecProduct(toySpec({ Goal: "## Goals\n\nplural\n" })).ok, false);
-  assert.equal(selectSpecProduct(toySpec({ Goal: "### Goal\n\nwrong level\n" })).ok, false);
-  assert.equal(selectSpecProduct(toySpec({ Goal: "## goal\n\ncase folded\n" })).ok, false);
-  assert.equal(selectSpecProduct(toySpec({ Goal: "## Goal \n\ntrailing space heading\n" })).ok, false,
+  assert.equal(selectSpecProduct(toySpec({ Objective: "## Objectives\n\nplural\n" })).ok, false);
+  assert.equal(selectSpecProduct(toySpec({ Objective: "### Objective\n\nwrong level\n" })).ok, false);
+  assert.equal(selectSpecProduct(toySpec({ Objective: "## objective\n\ncase folded\n" })).ok, false);
+  assert.equal(selectSpecProduct(toySpec({ Objective: "## Objective \n\ntrailing space heading\n" })).ok, false,
     "a heading with trailing text is not the named section");
 });
 
 test("a fenced block cannot fake a heading, and its bytes stay bound", () => {
-  const fencedProductHalf = "## Product half\n\n### Template\n\n```md\n## Goal\n\ninside a fence\n```\n";
-  const result = selectSpecProduct(toySpec({ "Product half": fencedProductHalf }));
+  const fencedContent = "## Next\n\n### Template\n\n```md\n## Objective\n\ninside a fence\n```\n";
+  const result = selectSpecProduct(toySpec({ Next: fencedContent }));
   assert.equal(result.ok, true,
     "a `## Goal` inside a template is neither a duplicate nor a boundary · " + JSON.stringify(result.errors ?? null));
   assert.ok(result.content.includes("inside a fence"),
     "fenced bytes belong to the section that contains them: under-binding would leave an edit unchecked");
 
-  const trailing = selectSpecProduct(`${toySpec()}\n\`\`\`md\n## Goal\n\nafter design status\n\`\`\`\n`);
+  const trailing = selectSpecProduct(`${toySpec()}\n\`\`\`md\n## Objective\n\nafter References\n\`\`\`\n`);
   assert.equal(trailing.ok, true, "the fence after the last required section is still inert");
 });
 
@@ -118,13 +118,13 @@ test("a fence closes only on its own character, long enough and bare (F64)", () 
   // `## Goal` under it must stay fenced — the char-agnostic toggle closed the block
   // early and then read that heading as a real duplicate of the Product `## Goal`.
   const mixedFence = [
-    "## Product half",
+    "## Next",
     "",
     "### Template",
     "",
     "```md",
     "~~~",
-    "## Goal",
+    "## Objective",
     "",
     "inside a fence",
     "~~~",
@@ -134,7 +134,7 @@ test("a fence closes only on its own character, long enough and bare (F64)", () 
     "",
     "product bytes still bound",
   ].join("\n");
-  const mixed = selectSpecProduct(toySpec({ "Product half": mixedFence }));
+  const mixed = selectSpecProduct(toySpec({ Next: mixedFence }));
   assert.equal(mixed.ok, true,
     "a `~~~` line inside a ``` block must not close it · " + JSON.stringify(mixed.errors ?? null));
   assert.ok(mixed.content.includes("product bytes still bound"),
@@ -142,29 +142,29 @@ test("a fence closes only on its own character, long enough and bare (F64)", () 
 
   // An info string means the run opens a block, never closes one.
   const infoString = [
-    "## Product half",
+    "## Next",
     "",
     "### Template",
     "",
     "```md",
     "```sh",
-    "## Goal",
+    "## Objective",
     "",
     "still inside",
     "```",
   ].join("\n");
-  const opened = selectSpecProduct(toySpec({ "Product half": infoString }));
+  const opened = selectSpecProduct(toySpec({ Next: infoString }));
   assert.equal(opened.ok, true,
     "a second opening run with an info string must not close the first block · " + JSON.stringify(opened.errors ?? null));
 
   // A run shorter than the opener cannot close it; one at least as long can.
-  const tooShort = ["## Product half", "", "````", "```", "## Goal", "", "inside", "````"].join("\n");
-  const shortCloses = selectSpecProduct(toySpec({ "Product half": tooShort }));
+  const tooShort = ["## Next", "", "````", "```", "## Objective", "", "inside", "````"].join("\n");
+  const shortCloses = selectSpecProduct(toySpec({ Next: tooShort }));
   assert.equal(shortCloses.ok, true,
     "a run shorter than its opener must not close the block · " + JSON.stringify(shortCloses.errors ?? null));
 
-  const longerCloses = ["## Product half", "", "```", "````", "## Goal", "", "duplicate now real"].join("\n");
-  const closed = selectSpecProduct(toySpec({ "Product half": longerCloses }));
+  const longerCloses = ["## Next", "", "```", "````", "## Objective", "", "duplicate now real"].join("\n");
+  const closed = selectSpecProduct(toySpec({ Next: longerCloses }));
   assert.equal(closed.ok, false, "a run at least as long as the opener closes it, so the heading after it is a real duplicate");
   assert.equal(closed.errors[0].code, "selector-heading-duplicate");
 });
@@ -176,17 +176,15 @@ test("CRLF input selects the same bytes as LF input", () => {
   assert.equal(selectSpecProduct(crlf).content, selectSpecProduct(lf).content);
 });
 
-test("the real feature-28 SPEC selects cleanly", () => {
-  const text = readFileSync(
-    fileURLToPath(new URL("../../../docs/features/28-evidence-grounded-spec-plan-review/SPEC.md", import.meta.url)),
-    "utf8",
-  );
+test("the feature-61 unit document selects cleanly", () => {
+  // Feature 61: the old two-half SPEC (feature-28) is retired; test the new format.
+  const text = toySpec();
   const result = selectSpecProduct(text);
   assert.equal(result.ok, true, JSON.stringify(result.errors ?? null));
-  assert.match(result.content, /evidence-grounded-spec-plan-review/);
+  assert.match(result.content, /## Objective/);
   assert.equal(result.content.includes("## Engineering half"), false);
   assert.equal(result.content.includes("## Amendments"), false);
-  for (const heading of SPEC_PRODUCT_REQUIRED_HEADINGS) {
+  for (const heading of UNIT_DOC_REQUIRED_SECTIONS) {
     assert.ok(result.content.includes(`## ${heading}\n`), `${heading} is inside the projection`);
   }
 });
@@ -273,7 +271,7 @@ test("the builder never reads the filesystem or Git", () => {
 
 test("a rejected selection fails the build with the selector's own code", () => {
   const built = buildPreExecutionArtifactSnapshot(specInput({
-    files: [{ kind: "spec", path: "docs/toy/SPEC.md", content: "# Toy\n\n## Goal\n\nx\n" }],
+    files: [{ kind: "spec", path: "docs/toy/SPEC.md", content: "# Toy\n\n## Objective\n\nx\n" }],
   }));
   assert.equal(built.ok, false);
   assert.ok(built.diagnostics.some((d) => d.code === "invalid-selector"), JSON.stringify(built.diagnostics));
@@ -383,7 +381,7 @@ test("the pre-execution snapshot digest answers in place (F67)", () => {
  * three agreeing digests prove the guarantee, the count proves the routing.
  */
 const SHA_PATH_CORPUS = [
-  { label: "ASCII", text: "# Toy feature\n\n## Design status\n\n`designed`\n\nplain ascii only\n" },
+  { label: "ASCII", text: "# Toy feature\n\n## References\n\n[Link](https://example.com)\n\nplain ascii only\n" },
   { label: "multibyte", text: `摘要 🚀 ünïcödé ▓ ${toySpec()}` },
   {
     label: "oversized (real SPEC projection)",

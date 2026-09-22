@@ -13,17 +13,19 @@ every row must have a folder (or be explicitly marked "scheduled").
 ## Status legend
 
 The pipeline's single ground-truth state machine — every sensor and executor
-reads this column, not a SPEC-local marker:
+reads this column. The adaptive lane uses the same five states, but the
+transitions go through the lane conductor (`unit-lane`) instead of standalone
+skills:
 
 ```
-idea ──design-feature / plan-feature-from-issue──▶ defined
-        (stamps ## Design status: designed)
+idea ──/unit-lane (triage → design step)──▶ defined
+        (SPEC.md with product half + closure)
                                                      │
-                        plan-feature-scaffold        │
-             (fills engineering half + artifacts)    ▼
+                        /unit-lane (plan step)      │
+             (SPEC.md engineering half complete)    ▼
                                                    planned
                                                      │
-                     execute-phase P1                │
+                     execute-phase (catalog steps)   │
               (branch open; row → in-progress)       ▼
                                                  in-progress
                                                      │
@@ -33,30 +35,32 @@ idea ──design-feature / plan-feature-from-issue──▶ defined
 ```
 
 - `idea` — a roadmap row exists (the wishlist); no completed product design.
-  **No new file** — a thin row *is* the idea. Next action: `/design-feature
-  <slug>`. Set by whoever adds the row (human or `ship-roadmap` founding).
-- `defined` — `SPEC.md` exists with the **product half complete** (`## Design
-  status: designed`, capability closure filled). Next action: `/plan-feature
-  <slug>`. Set by `design-feature` or `plan-feature-from-issue`.
-- `planned` — full SPEC (**engineering half filled**) + planning artifacts
-  exist. Next action: `/execute-phase <NN>`. Set by `plan-feature-scaffold`
-  (XS/S SPEC-only sizes included — scaffold still runs and lands here).
-- `in-progress` — branch open, phases executing. Set by `execute-phase` P1.
+  **No new file** — a thin row *is* the idea. Next action: `/unit-lane <NN>`
+  (tridirection, creates unit doc, runs triage → design step). Set by whoever
+  adds the row.
+- `defined` — `SPEC.md` exists with the **product half complete** (capability
+  closure satisfied, acceptance criteria induced from user scenarios). Next
+  action: `/unit-lane <NN>` (tridirection, runs plan step → `planned`).
+- `planned` — full SPEC (**engineering half filled**, tasks P1…Pn, evidence
+  table, progress log section). Next action: `/unit-lane <NN>` (tridirection,
+  returns ordered catalog steps) → `execute-phase`. Set by the plan step.
+- `in-progress` — branch open, catalog steps executing. Set by `execute-phase`.
 - `done` — built and its PR open (the last step opened the PR); **merge state
   lives in the forge**, not the status — a `done` row may still be awaiting a
   human merge. Set by the PR-open step.
 
-Each transition is owned by exactly one skill (a write) — no status is ever
-inferred, and no second skill writes the same edge.
+Each transition is owned by exactly one lane step (a write) — no status is ever
+inferred, and no second step writes the same edge.
 
 ## Conventions
 
 - Numbers are assigned in order and never reused.
 - A feature that depends on another cannot start until its dependency is **merged**
   (not merely `done` — a `done` dep with an open PR isn't on `main` yet).
-- A unit is **executable only when `planned`** (or above). `execute-phase`'s
-  dependency gate STOPs and redirects a sub-`planned` unit: `idea` →
-  `/design-feature <slug>`, `defined` → `/plan-feature <slug>`.
+- A unit is **executable only when `planned`** (or above). The lane's
+  `execute-phase` dependency gate STOPs and redirects a sub-`planned` unit:
+  `idea` → `/unit-lane <NN>` (tridirection, design step), `defined` →
+  `/unit-lane <NN>` (tridirection, plan step).
 - **Legacy compat:** a pre-U4 roadmap row still reading a plain `planned` with
   no five-state history, whose SPEC's product half is complete, is treated as
   `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.
