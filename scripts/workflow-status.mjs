@@ -5,7 +5,7 @@
  *
  * One read-only pass over the current repository that emits the fixed
  * Envelope v2 document on stdout (feature 38). The script is the single
- * producer of the envelope; consumers (drivers, `ship-roadmap`, humans) read
+ * producer of the envelope; consumers (drivers, former `ship-roadmap` conductor, lane router, humans) read
  * the JSON and never assemble it.
  *
  * Collection follows the published `SENSOR_CORE` sequence (steps 1-9 including

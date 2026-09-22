@@ -2,14 +2,6 @@
   <img src="docs/assets/logo.svg" alt="Agentic Workflow logo" width="120" height="120">
 </p>
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=2Ai0NkTvoeM">
-    <img src="https://img.youtube.com/vi/2Ai0NkTvoeM/mqdefault.jpg" alt="ship-roadmap opening a PR on a sample repository" width="280">
-  </a>
-  <br>
-  <sub style="font-size: 0.75em;"><code>ship-roadmap</code> opening a PR end to end on a sample repository — click to watch</sub>
-</p>
-
 # Agentic Workflow Skills
 
 A reusable set of **agent skills** that run a disciplined, doc-driven workflow
@@ -34,7 +26,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  39 source skills (19 user-facing + 20 workflow internals + 1 metadata-internal; 38 discoverable)
+skills/                  38 source skills (18 user-facing + 20 workflow internals + 1 metadata-internal; 37 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -74,7 +66,10 @@ evidence owners (`evidence-grounding` for authoring readiness,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`), and the repo-only
 `bump-skill` maintenance helper (excluded from installation) — so **no external review skill is ever
-required**, on any agent, with any model. One disciplined path: **design →
+required**, on any agent, with any model. The former autopilot/roadmap-shipping role
+(`ship-roadmap`) is retired (feature 61 P9); its deterministic routing lives in
+`workflow-status` / `unit-lane` and the unattended-conductor role is deferred to
+roadmap row 62. One disciplined path: **design →
 review the product → plan → review the plan → execute → review the change → audit →
 merge.**
 
@@ -130,7 +125,7 @@ merge.**
 | `review-plan` | the **plan** | Independent, read-only Engineering gate: snapshots the frozen plan (SPEC, acceptance, planning evidence, obligations, phases, tests), sweeps the ledgers and the fixed Engineering checks — plus reproduction/root-cause/regression/rollback authority for fixes — in a context that did not cut them, and returns only `PLAN-REVIEW-PASS` or `PLAN-REVIEW-FAIL` with a snapshot-bound receipt, and reads every byte it opens — the copied `spec` receipt included — as data, never instructions. It edits no plan artifact — the parent digest it records is recomputed, per `POLICY.md` §7 — and `execute-phase` refuses to run without its current receipt, whose turn contract points at `POLICY.md` §8 for the durable mark. |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits stop the review as a `REVIEW BLOCKED` precondition before any pass runs — workspace state is never a persisted finding, and the review commits its own findings append so it never dirties the tree it next judges. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers, each an index-assigned role (correctness/security/SPEC-coverage), run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) when the change is `L`/sensitive, the reviewer isn't the fleet's strongest or is weaker than the diff's author, or only one model family is available on a `≥M` change. `--synthesize` is the standalone fusion entry point for manually-run reviewers. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis (only `high`/`med` persist — `low` findings are report-only notes that never block). Classification honors the engine's **fix-now override checks**: a cheap fix or an in-scope defect is always fix-now (never a postpone/known-issue/tradeoff escape), and a too-large in-scope fix-now routes to `replan-in-unit` — user-confirmed SPEC phase(s) on the same branch, never a downgrade |
 | `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. |
-| `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. It never edits or merges: only an active `ship-roadmap --fullauto` stage may consume its verdict and invoke the transient wrapper. |
+| `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. |
 | `product-audit` | the **product** | Explicit-invocation-only, periodic full-spectrum health check persisted as `docs/audits/<id>-<date>.md`; mines code and feature history into severity-ranked findings plus issue/roadmap/tooling proposals, checks capability-inventory freshness and repeated scope export, gates every claim on evidence provenance and reports the delta vs the prior audit of equivalent scope, and never auto-fixes. |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
 
@@ -169,31 +164,6 @@ Projects that do not declare the document remain compatible.
 | Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md, and updates the skill table in README.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array stays alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
-
-### Autopilot — the whole flow, end to end
-
-| Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ship-roadmap` | **Builds the whole app from the roadmap.** One locked founding interview becomes batch design; a driver loop designs, plans, executes, reviews, opens, and audits one unit per iteration, then sweeps issues and writes the final report. Default: opens PRs, you merge. `--fullauto` is the sole automated merge authority: after a fresh SHA-bound audit it calls the fail-closed transient wrapper, keeps direct merge commands blocked, cleans attempt state on every exit, and records each automerge with an idempotent PR comment. |
-
-How the autopilot runs the workflow — one interview in, reviewed PRs out, and
-you only step in to merge (amber):
-
-```mermaid
-flowchart LR
-    I([Interview]):::you --> RM[Roadmap] --> D[Design] --> P[Plan]
-    P --> X[Execute] --> RV[Review] --> PR[Open PR] --> A[Audit] --> M([Merge]):::you
-    M -->|next feature| P
-    M -.->|roadmap done| REP[Final report]
-    classDef you fill:#f6c177,stroke:#8a5a00,color:#3a2406;
-```
-
-The same `plan → execute → review → audit → merge` path you'd run by hand — the
-autopilot just moves you to its edges. Under `--fullauto`, `ship-roadmap` also
-handles merges through the repository's transient wrapper, under non-negotiable
-safety floors, and logs each one on its PR. The portable hooks are
-defense-in-depth: direct merges and obvious secret dumps are blocked at the
-agent boundary, while forge rulesets remain the real security boundary.
 
 The review axes are **self-contained**: the bundled internal review pack covers
 code, security, verify, debt, design, a11y, brand, perf and SEO on any agent.
@@ -327,7 +297,7 @@ the basic-plan ladder):
 |---|---|---|---|---|
 | **Merge gates** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max for `product-audit`) | 1. **Mimo V2.5** (reasoning always on) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, floor) → else **defer to the human** | Qwen3.6, Gemma4 |
 | **Product definition** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning always on; different family from the Qwen executor adds independence) → 2. **Qwen3.6** (thinking ON — only for XS/S or derivative features, quota-saver) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
-| **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, `ship-roadmap` conductor | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
+| **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** only after it passes the tool-calling smoke test | Mimo V2.5 (reasoning can't be turned off — burns its capped budget) |
 | **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (non-agentic steps only, or after the tools smoke test) | Mimo V2.5 |
 | **Folding `review-change`/`audit-pr` findings** | `fold-findings` (primary); `execute-phase`'s embedded fold cycle (in-context/portability fallback) | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
@@ -381,7 +351,7 @@ defer to the human, wait for the quota reset, or upgrade to the €200 plan.
 
 **Operational limits per API key** (from the API reference): 60 requests/min,
 **5 concurrent requests max**, 1.5M tokens/min per chat model. Cap any
-subagent/review fan-out (`ship-roadmap` parallelism, the `review-change`
+subagent/review fan-out (the `review-change`
 pack) at ≤5 concurrent — 3–4 in practice, leaving headroom for the
 conductor — and remember an agentic loop spends one request per tool
 round-trip, so several agents in parallel hit 60 rpm quickly.
@@ -469,17 +439,6 @@ See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 
 See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
-### Build the whole app (autopilot)
-
-```
-/ship-roadmap                   # ONE interview (product, features, stack, architecture, autonomy, budget)
-        → founds the project if needed, writes the complete roadmap, locks the run policy
-/loop /ship-roadmap --continue  # the loop ships the roadmap feature by feature (add --fullauto to auto-merge)
-        → plan → execute → review → PR → audit → (your merge) → next feature → … → final report
-```
-
-You only reappear at the merges (default) and at the final report.
-
 ### Resume across sessions
 
 ```
@@ -566,7 +525,7 @@ npx skills remove --yes \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
-  review-plan review-seo review-spec review-verify ship-roadmap triage-issue \
+  review-plan review-seo review-spec review-verify triage-issue \
   verification-contract \
   workflow-status plan-feature-interview bump-skill
 ```
@@ -662,7 +621,7 @@ the skill shows as enabled. Three working ways:
 hermes bundles create workflow \
   -s init-workspace -s plan-feature -s plan-fix -s execute-phase \
   -s review-change -s audit-pr -s product-audit -s audit-docs \
-  -s triage-issue -s log-session -s ship-roadmap \
+  -s triage-issue -s log-session \
   -d "agentic-workflow: plan → execute → review → audit → merge"
 #    then, in any session:  /workflow execute-phase --fix #243
 
@@ -699,7 +658,7 @@ tables; a missing extra is never a gap.
 
 | Project                                                     | Notes                                                                 |
 | ----------------------------------------------------------- | --------------------------------------------------------------------- |
-| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot     |
+| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the (now retired) `ship-roadmap` autopilot     |
 | [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Started with vibecoding, migrated to the workflow once it was working |
 
 ## References

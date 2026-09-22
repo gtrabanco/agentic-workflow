@@ -63,7 +63,7 @@ Notion ("Agentic Workflow").
    audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
    product-audit ── product-wide health check → issues + roadmap proposals (periodic)
 
-   AUTOPILOT:  ship-roadmap ── interview once ─▶ found + roadmap ─▶
-               /loop { the FEATURE chain above, feature by feature } ─▶ final report
-               (you merge the PRs — or --fullauto under safety floors)
+   # The former autopilot conductor (`ship-roadmap`) is retired (feature 61 P9);
+   # its deterministic routing lives in `workflow-status` / `unit-lane`.
+   # The unattended-conductor role is deferred to roadmap row 62.
 ```
