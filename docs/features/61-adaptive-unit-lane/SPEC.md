@@ -258,8 +258,18 @@ evidence/progress/next operations), `Roadmap` (row upsert/annotate with the
 no-invented-issue rule), `Changelog` (versioned row add per table),
 `Budgets` (ceiling re-base that refuses to shrink without a declared
 growth source), `Manifest` (skill add/remove across plugin.json +
-skills.sh.json + counts). Each handler validates the post-state against its
-file schema and emits an edit receipt (schema-id + before/after digests).
+skills.sh.json + counts). Granularity reaches the section: each unit-doc
+section is a typed sub-artifact with its own published grammar —
+evidence-table@1 (AC / command / exit-digest / verified-by), progress-log@1
+(dated entries), known-issues@1 (affects/does-not-affect enum),
+triage-block@1 (the unit-route fixed block), verdict@1 (PASS | FAIL +
+evidence-reproduced + AC-hash) beside the existing path-protection-records@1
+— so handlers expose typed operations (evidence.addRow,
+progress.logEntry, references.link) instead of free-text section writes, and
+gates such as "evidence rows complete for the step's ACs" become schema
+validations executed by UnitDoc.validate() rather than model judgment. Each
+handler validates the post-state against its file schema and emits an edit
+receipt (schema-id + before/after digests).
 
 
 P11 — **Substrate adoption**: `init-workspace` bootstrap and upgrade mode
