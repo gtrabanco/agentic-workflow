@@ -122,6 +122,13 @@ docs, release), with guards that bite when a unit outgrows the light path.
     AGENTS.md describes the adaptive lane; upgrade mode on a pre-lane repo
     adds the new blocks without destroying existing ones.
 
+13. **Machine vocabularies migrate**: The schema package publishes the unit
+    document's closed section list (replacing the two-half SPEC heading
+    lists), and every snapshot/receipt binding points at the unit-doc digest.
+    Verification: the schema's emitted contracts validate a real unit
+    document, and no published contract still names `PLAN.md`/`ACCEPTANCE.md`
+    as a binding surface.
+
 ## Non-goals
 
 - No replacement orchestrator for ship-roadmap: this feature only DELETES the
@@ -176,11 +183,16 @@ each with `applicable_if` rules, `budget_tier`, and `requires_gate` flags.
 Extend `scripts/unit-route.mjs` `--triage` mode to read scope from a single
 SPEC.md and emit an ordered step list.
 
-P4 — **Implement step (dogfood slice)**: Extend `execute-phase` to consume the
-triage-decided step list from the unit doc instead of a fixed phase set. A unit
-runs only the triaged steps, each as an atomic gate/commit. First dogfood: pick
-one XS feature folder, convert to single-file format, run through triage +
-implement.
+P4 — **Implement step + executor reshape (dogfood slice)**: `execute-phase`
+consumes the triage-decided step list from the unit doc instead of a fixed
+phase set, and its whole reference set is rewritten onto the unit document —
+the unit loop, the phase completion gate, close-out, the descope/amendment
+guard, the handoff and batch/portability contracts, and the GATE-RAN marks
+re-bound from `ACCEPTANCE.md`/`progress.md` to the unit doc's evidence and
+progress sections (ten reference files; those that lose their purpose are
+deleted, not rewritten). Each step runs as an atomic gate/commit. First
+dogfood: pick one XS feature folder, convert to single-file format, run
+through triage + implement.
 
 P5 — **Diff-size guard**: Add `scripts/diff-guard.mjs` that measures `git
 diff --stat` at phase boundaries, enforces the budget from `catalog.json`, and
@@ -196,62 +208,52 @@ in-flight units → urgent/fix-next issues → triaged issues → defined featur
 ideas. Labels are read from GitHub via `gh issue list --label`. No hand-off
 templates — the next command is the exact invocation string.
 
-P8 — **Absorb plan-feature / plan-fix**: Retire both skills as standalone
-user-invocable commands. Their catalog-step variants (`design`, `plan`) become
-entries in `catalog.json`. Update all ~12 referencing surfaces (roadmap,
-SKILLS.md, README, template, docs/workflow diagrams, MIGRATION.md, skills/
-tables, etc.).
+P8 — **Absorb the fixed-pipeline skills**: `plan-feature`, `plan-fix`,
+`review-spec`, `review-plan`, `design-feature`, `planning-preflight`,
+`replan-findings`, and `implementation-discovery` cease to be standalone
+commands — their judgment core becomes catalog steps (`design`, `plan`,
+`review`), `pre-execution-review`'s policy content (materiality bar, repair
+classes, bounded cycles, ledger shapes) folds into the review step's contract
+with its tables living in the unit document, and the pre-write mapper's seven
+questions fold into triage/research. The five-state roadmap machine's
+transition owners are re-assigned to the catalog steps (audit-docs updated to
+check the new owners). The ~12 referencing surfaces (roadmap, SKILLS.md,
+README, template, docs diagrams, MIGRATION, budgets routes) are updated.
 
 P9 — **Delete ship-roadmap**: Remove `skills/ship-roadmap/` directory. Migrate
 urgency micro-judge, `--adversarial 2` floor, batch-design/JIT design, closeout,
 and re-point all referencing surfaces to the deterministic router in `agwo`.
 (feature 58 will later replace the full conductor role — document as deferred).
 
-P10 — **Runner package `packages/agwo`**: Create the new bun-managed package.
-Move runtime scripts from root `scripts/` into `packages/agwo/src/` (workflow-
-status, phase-lint, path-guard, receipts, evidence runner, config).
-`packages/pi-agentic-workflow` depends on `agwo` as its only dependency. Root
-`scripts/` keeps only repo-own dev/CI checks. Tests pass under `packages/agwo/`.
+P10 — **Runner package `packages/agwo` + schema migration**: the new
+bun-managed package owns all runtime scripts — workflow-status, phase-lint,
+path-guard, receipts, evidence runner, future configurator — and the root
+scripts that bind to removed artifacts are re-bound or retired:
+`pre-execution-snapshot.mjs` binds the unit doc's digest instead of
+SPEC/PLAN/ACCEPTANCE blobs, `phase-lint.mjs` parses the unit doc's task
+grammar, `review-receipt.mjs`/`audit-pr-gate.mjs` consume the new receipt
+homes. The schema package migrates its published vocabularies: the closed
+Product/Plan heading lists become the unit document's closed section list,
+snapshot/verification/receipt contracts bind the unit-doc digest, additive
+minor release. `packages/pi-agentic-workflow` depends on `agwo` as its only
+runtime dependency; root `scripts/` keeps only repo-own dev/CI checks.
 
 P11 — **Substrate adoption**: `init-workspace` bootstrap and upgrade mode
 write the new way of working into target projects — the updated AGENTS.md
 conventions (unit document, catalog, guards, evidence, commit formats), the
 `template/` tree's new unit-doc template and documentation map, additive-only
 upgrade blocks for pre-lane installs (never clobbering a recorded decision).
+The tutorial is rewritten with the lane — `docs/workflow/`'s feature/issue
+flows, review-and-classify, invariants, orchestration, and a MIGRATION entry
+— and the forge templates follow: the issue templates route into the triage
+lane (not into retired skills), the PR template's receipt section matches the
+new evidence records, and `log-session`/`session-close` align with the unit
+doc's progress log instead of a parallel LOGS.md ledger.
 
-P12 — **Hardening**: Integration test covering the full lane (triage → unit doc
-→ implement → evidence → guard bite → re-triage) on the dogfood XS unit. Update
-`docs/workflow/SKILLS.md` and README skill table. Golden fixture smoke test.
-Final review against AGENTS.md conventions.
-
-## References
-
-- Closes (absorbed, closed by this feature's PR): [#229](https://github.com/gtrabanco/agentic-workflow/issues/229) (row 54, two-level artifacts) · [#205](https://github.com/gtrabanco/agentic-workflow/issues/205) (row 50, review-loop convergence) · [#218](https://github.com/gtrabanco/agentic-workflow/issues/218) (row 51, review-evidence substrate) · [#194](https://github.com/gtrabanco/agentic-workflow/issues/194) (row 42, deterministic review-change) · [#182](https://github.com/gtrabanco/agentic-workflow/issues/182) (row 35, scoped receipt verifier)
-- Partially absorbed (re-scoped or unified in P2): [#233](https://github.com/gtrabanco/agentic-workflow/issues/233) (row 58 — deletion here, conductor later) · [#206](https://github.com/gtrabanco/agentic-workflow/issues/206) (row 46 → research catalog step) · [#173](https://github.com/gtrabanco/agentic-workflow/issues/173) (row 33 → surviving skills only) · [#227](https://github.com/gtrabanco/agentic-workflow/issues/227) (row 53 → unit-doc template) · [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (row 41) · [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (row 45)
-- Superseded: [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (row 44 — scripts move to `agwo`, not into skill folders) · #176 route-slimming (rows disappear instead of slimming)
-- Related reading: `docs/workflow/REPOSITORY_STATE.md` (frozen facts substrate) · feature 60's path-protection policy (reused unmodified) · the 2026-09-15 bureaucracy-reduction execution order in the roadmap (this feature supersedes its Phase 2/3 sequencing)
-
-## Open questions
-
-1. **Triage budget tiers per step**: What budget (line count, phase time, model
-   tier) should each step have? Proposed default: research (xhigh/60min), design
-   (opus/45min), plan (sonnet/30min), implement (sonnet/45min), tests (sonnet/
-   30min), evidence (cheap/15min), review (opus/30min), docs (cheap/10min),
-   release (sonnet/15min). Adjust per measured data.
-
-2. **Triage accuracy on vague units**: When the unit's SPEC content is too
-   vague to triage reliably, what is the fallback? Proposed default: prompt the
-   user with concrete options (ask-don't-infer), then re-run triage on the
-   clarified input.
-
-3. **Diff-size guard budget origin**: Where does the per-phase budget come from?
-   Proposed default: defined in `catalog.json` per step, with a `budget_lines`
-   field. The budget is the maximum allowed `git diff --stat` line count after
-   one honest split. If a phase cannot fit after splitting once, report the real
-   count with an `exception` flag.
-
-4. **Migration path for existing units**: How do existing multi-file units
-   transition to single-file? Proposed default: no migration. Existing units
-   remain untouched. New units use the single-file format. The lane detects the
-   format on read and adapts — multi-file units get a `--convert` flag if
-   desired.
+P12 — **Hardening**: Integration test covering the full lane (triage → unit
+doc → implement → evidence → guard bite → re-triage) on the dogfood XS unit.
+Retire the absorbed skills' budget entries and route ceilings from the context
+budgets, re-aim the repo's own normative-surfaces and rendered-facts tables
+(review verdict vocabularies whose owning skills are gone), update
+`docs/workflow/SKILLS.md` and README tables. Golden fixture smoke test rebuilt
+on the new lane. Final review against AGENTS.md conventions.
