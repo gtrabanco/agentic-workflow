@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * agwo — CLI router for agentic-workflow typed file services.
+ * agentic-workflow — CLI router for agentic-workflow typed file services.
  *
  * Usage:
- *   agwo unit-doc <NN-slug> [--dir <root>] <op> [args...]
- *   agwo roadmap <op> [args...]
- *   agwo changelog <op> [args...]
- *   agwo budgets <op> [args...]
- *   agwo manifest <op> [args...]
+ *   agentic-workflow unit-doc <NN-slug> [--dir <root>] <op> [args...]
+ *   agentic-workflow roadmap <op> [args...]
+ *   agentic-workflow changelog <op> [args...]
+ *   agentic-workflow budgets <op> [args...]
+ *   agentic-workflow manifest <op> [args...]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -63,7 +63,7 @@ function refuse(reason) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agwo <unit-doc|roadmap|changelog|budgets|manifest> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest> ...");
   process.exit(1);
 }
 
