@@ -82,12 +82,12 @@ docs, release), with guards that bite when a unit outgrows the light path.
    surfaces (roadmap, skills/tables, templates, docs) are updated.
 
 8. **Runner package `packages/agwo`**: A new bun-managed package at
-   `packages/agwo/` owns all runtime scripts: workflow-status, phase-lint,
+   `packages/agentic-workflow/` owns all runtime scripts: workflow-status, phase-lint,
    path-guard, receipts, evidence runner, future configurator.
    `packages/pi-agentic-workflow` becomes a thin pi integration layer depending
    on `agwo`. `packages/agentic-workflow-schema` is untouched. Root `scripts/`
    keeps only repo-own dev/CI checks. Verification: `bun test` passes under
-   `packages/agwo/`; `pi-agentic-workflow` lists `agwo` as its only dependency.
+   `packages/agentic-workflow/`; `pi-agentic-workflow` lists `@gtrabanco/agentic-workflow` as its only dependency.
 
 9. **Runtime rule**: The runtime that launched pi decides for runner-spawned
    scripts — pi under bun spawns bun, pi under node spawns node — resolved by
@@ -158,7 +158,7 @@ docs, release), with guards that bite when a unit outgrows the light path.
 Every new catalog step added after this feature requires: a triage rule
 (applicability + budget), a deterministic guard (scope/size), and a budget
 entry in `catalog.json`. The roadmap and `docs/workflow/SKILLS.md` must stay
-in sync when skills are removed or absorbed. The runner package `agwo` becomes
+in sync when skills are removed or absorbed. The runner crate (`agwo` bin) becomes
 the central deployment target — any script addition must pass the package's
 test suite. The single-unit document convention must be propagated to the
 `template/` directory so target projects adopt it. Each file kind has ONE
@@ -239,7 +239,7 @@ urgency micro-judge, `--adversarial 2` floor, batch-design/JIT design, closeout,
 and re-point all referencing surfaces to the deterministic router in `agwo`.
 (feature 58 will later replace the full conductor role — document as deferred).
 
-P10 — **Runner package `packages/agwo` + schema migration**: the new
+P10 — **Runner crate + `agwo edit` + schema migration**: the new
 bun-managed package owns all runtime scripts — workflow-status, phase-lint,
 path-guard, receipts, evidence runner, future configurator — and the root
 scripts that bind to removed artifacts are re-bound or retired:
@@ -249,8 +249,8 @@ grammar, `review-receipt.mjs`/`audit-pr-gate.mjs` consume the new receipt
 homes. The schema package migrates its published vocabularies: the closed
 Product/Plan heading lists become the unit document's closed section list,
 snapshot/verification/receipt contracts bind the unit-doc digest, additive
-minor release. `packages/pi-agentic-workflow` depends on `agwo` as its only
-runtime dependency; root `scripts/` keeps only repo-own dev/CI checks.
+minor release. `packages/pi-agentic-workflow` depends on `@gtrabanco/agentic-workflow` as
+its only runtime dependency (CLI bin: `agwo`); root `scripts/` keeps only repo-own dev/CI checks.
 `agwo edit` ships the typed file services — one entry point per file
 kind, each owning its format completely: `UnitDoc` (create from the canonical
 template — a unit doc cannot be born malformed — plus section set and
