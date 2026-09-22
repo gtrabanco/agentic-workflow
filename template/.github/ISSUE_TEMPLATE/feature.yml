@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose new product capability to be planned into a SPEC.
+description: Propose new product capability to be planned into a SPEC via the lane (triage → catalog steps → evidence → review).
 title: "feat: <short title>"
 labels: ["feature", "needs-triage"]
 body:

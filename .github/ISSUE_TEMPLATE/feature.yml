@@ -12,8 +12,10 @@ body:
         commits, PRs) are kept in English.
 
         This issue becomes the starting point of `docs/features/NN-<slug>/SPEC.md`.
-        Be specific where you can; leave fields blank if you genuinely do
-        not know.
+        The lane conductor (`/unit-lane`) will triage this unit and decide the
+        catalog steps needed (research, design, plan, implement, tests,
+        evidence, review, docs, release). Be specific where you can; leave
+        fields blank if you genuinely do not know.
 
   - type: textarea
     id: goal

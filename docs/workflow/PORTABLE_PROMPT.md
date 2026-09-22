@@ -74,19 +74,28 @@ the frozen ledger and route missing or contradictory state to these skills.
    issue. Writes the SPEC's **product half** and stamps `## Design status:
    designed`. Upserts on re-run (never destroys recorded decisions).
 
-**Plan**
-2. `plan-feature` — the ROUTER and the only engineering-planning entry in the
-   menu. Given an undesigned feature (no `## Design status: designed`),
-   **STOP and redirect** to `/design-feature <slug>` (no bypass flag). Given a
-   designed feature, an issue `#N`, a scoped slug/SPEC, or `--next` (next
-   roadmap item), dispatch to the right internal step below, then ensure the
-   roadmap entry and print the next step: `execute-phase NN P1` (M/L and
-   XS/S alike — XS/S phases live in the SPEC).
-3. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
-   it in the fix index, commit on a fix branch, and STOP for review.
+**Lane conductor**
+2. `unit-lane` — the lane conductor. Given a slug, creates the unit doc from
+   the template, runs triage (returns ordered catalog steps), and orchestrates
+   the full lane: research → design → plan → implement → tests → evidence →
+   review → docs → release. Triage decides which steps apply; each runs as an
+   atomic gate/commit. The triage catalog lists closed-step names, their
+   applicability rules, and budget tiers.
+3. `execute-phase` — run one catalog step as an atomic gate/commit (or all
+   remaining steps). Each step gets a fresh worker context, acceptance-blob
+   check, and commit.
 
-**Internal planning steps** (`user-invocable: false` — invoked only by the router)
-4. `plan-feature-from-issue` — convert a feature-request issue into a scoped,
+**Lane catalog steps** (`user-invocable: false` — invoked by `unit-lane`)
+4. `planning-preflight` — internal planning gate: consumes the normalized
+   repository state and makes the final architectural classification;
+   used by the lane's design and plan steps.
+5. `replan-findings` — conditional replan entry: loaded when triage detects
+   a unit outgrowing the light path; turns the router's bounded read set into
+   appended catalog steps without a full planning preflight.
+6. `implementation-discovery` — bounded, read-only pre-write mapper contract:
+   closes seven evidence questions, emits one fixed compact map, and routes
+   `READY | REPLAN | NEEDS-DESIGN | BLOCKED` before any source write.
+7. `evidence-grounding` — authoring-side evidence contract + readiness
    **sized** SPEC product half (confirm it's a feature, not a bug/debt; translate
    to docs language; map to roadmap; close gaps by asking, or hand a thin issue
    to `design-feature`; wire `Closes #N`; satisfy capability closure).
@@ -237,7 +246,8 @@ created and how to use it.
 - The prompt is intentionally **discovery-driven**: it asks the agent to learn
   each project's rules instead of hardcoding this repo's. That's what lets you
   "work the same way" everywhere while still respecting each project's architecture.
-- After it runs, drive features with `plan-feature` (the router) and fixes with
-  `plan-fix`, execute with `execute-phase`, review with `review-change`, gate the
-  PR with `audit-pr`, and triage issues with `triage-issue` — exactly as
-  documented in `docs/workflow/`.
+- After it runs, drive features and fixes with `unit-lane` (the lane
+  conductor — triage → catalog steps → evidence → review), execute with
+  `execute-phase`, review with `review-change`, gate the PR with `audit-pr`,
+  and triage issues with `triage-issue` — exactly as documented in
+  `docs/workflow/`.

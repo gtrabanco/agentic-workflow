@@ -1,22 +1,23 @@
 # Capability inventory
 
 > The maintained list of this project's **cross-cutting subsystems** and
-> **roles** — the substrate `design-feature`'s *Integration closure* walks so
-> no feature ships without deciding how it touches auth, ACL, navigation, and
-> the rest. A model cannot reliably *guess* which subsystems your project has,
-> but it can *walk a list* — this file is that list.
+> **roles** — the substrate the lane's `design` catalog step's *Integration
+> closure* walks so no feature ships without deciding how it touches auth, ACL,
+> navigation, and the rest. A model cannot reliably *guess* which subsystems
+> your project has, but it can *walk a list* — this file is that list.
 >
 > **Ownership & lifecycle:** seeded by `init-workspace` (from discovery +
 > interview); **extended by `execute-phase`** whenever a phase introduces a new
 > subsystem, role, or permission (additive, in the same commit as the code);
 > freshness-checked by `product-audit` (inventory ↔ code drift is a Process &
-> docs finding); **read by `design-feature`** for every feature's Integration
-> closure. Keep every row honest — a subsystem marked `no` is as load-bearing
-> as one marked `yes` (it tells the designer what does NOT exist yet).
+> docs finding); **read by the `design` catalog step** for every feature's
+> Integration closure. Keep every row honest — a subsystem marked `no` is as
+> load-bearing as one marked `yes` (it tells the designer what does NOT exist
+> yet).
 
 ## Roles
 
-Every role/permission level the project has. `design-feature`'s role matrix
+Every role/permission level the project has. The lane's `design` step role matrix
 must list EVERY row here with an explicit `allowed`/`denied` per capability.
 
 | Role | Description | Granted where |
