@@ -51,16 +51,16 @@ if [ -n "$default_branch" ] && [ "$current_branch" = "$default_branch" ]; then
   fail 1 branch-default
 fi
 
-# box2 — frozen acceptance present at HEAD for a unit-shaped branch. Presence
-# check only: this shim runs no other runtime (the phase-lint clause is
-# engine-only).
+# box2 — unit doc present at HEAD for a unit-shaped branch. In the adaptive
+# lane model, the unit doc (SPEC.md) carries the Evidence and Progress sections
+# that replace the old ACCEPTANCE.md; presence at HEAD is the frozen surface.
 unit_dir=""
 case "$current_branch" in
   feat/*) unit_dir="docs/features/${current_branch#feat/}" ;;
   fix/*) unit_dir="docs/fix/${current_branch#fix/}" ;;
 esac
 if [ -n "$unit_dir" ] && [ -d "$repo_root/$unit_dir" ]; then
-  git -C "$repo_root" cat-file -e "HEAD:$unit_dir/ACCEPTANCE.md" 2>/dev/null || fail 2 acceptance-missing
+  git -C "$repo_root" cat-file -e "HEAD:$unit_dir/SPEC.md" 2>/dev/null || fail 2 unit-doc-missing
 fi
 
 # box3 — at least one commit on this branch that is not on the default.

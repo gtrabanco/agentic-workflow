@@ -9,11 +9,17 @@ table**. Reach for `review-change` for the full, right-sized review; call
 the skills (`.claude/skills/review-change/SKILL.md`,
 `.claude/skills/review-implementation/SKILL.md`); this is the practical when/how.
 
+> **Feature 61 P8 purge:** `review-spec` and `review-plan` are retired (absorbed
+> into the lane's review catalog step). The `replan-in-unit` route that used to
+> name `plan-feature` / `plan-fix` now names `unit-lane`. The pre-execution
+> evidence contracts (`PreExecutionArtifactSnapshot`, `PreExecutionReviewReceipt`)
+> stay as schema exports but are consumed by the lane, not by standalone skills.
+
 ## When to use it
 
-- **Stage 4 of the feature workflow** — over the completed branch, right before
+- **Stage 3 of the lane** — over the completed branch, right before
   opening the PR.
-- **Mid-feature**, when you want a triaged read of what's wrong and what to
+- **Mid-unit**, when you want a triaged read of what's wrong and what to
   actually do about it (not just a flat bug list).
 - Whenever you'd otherwise run your two manual prompts — *"review for X, Y, Z —
   findings only"* then *"classify those findings into a decision table"*. This
@@ -72,15 +78,12 @@ and **decision-required** (blocks until the user decides) exist; `postpone` / `t
 finding gets a real destination — never silently lost, and no backlog created by
 the review (D3):
 
-- **fix-now** → folds directly into the current unit's open phase. Never a
-  tracked issue, never `plan-fix` (AC 12).
+- **fix-now** → folds directly into the current unit's open step. Never a
+  tracked issue (AC 12).
 - **fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`; its
-  `route: replan` line names the planner (`/plan-feature` for a feature,
-  `/plan-fix` for a fix), which appends user-confirmed phase(s) to the unit's
-  SPEC `## Phases` ledger (before the hardening close-out, or after it plus a
-  fresh final hardening phase if it already ran); a fresh `/review-plan <unit>`
-  passes, then `execute-phase` runs them on the same branch — never a downgrade
-  (AC 12).
+  `route: replan` line triggers `unit-lane` to append user-confirmed steps to
+  the unit's catalog (via triage re-run), then `execute-phase` runs them on
+  the same branch — never a downgrade (AC 12).
 - **fix-now / decision-required** → stop and surface the decision; the unit
   blocks until the user decides.
 - **proposal** (independent future capability) → batched in the report with a
@@ -127,18 +130,18 @@ gate, because the whole point is to catch what one reviewer would miss.
 - **Cost note: 2–3× the most expensive review stage**, because N reviewers each
   run the full findings engine. That cost is exactly why the mode stays
   opt-in for interactive use.
-- **`ship-roadmap` enables it as a hard floor** — `--adversarial 2` for
-  `L`/sensitive-flagged features in its unattended REVIEW stage, because no
-  human is present to exercise the skip judgment the interactive advisory
-  relies on. This floor is deliberately **not aligned** with the interactive
-  advisory (which stays opt-in) — the two serve different contexts on purpose.
+- **The lane's deterministic router (`unit-lane` / `workflow-status` step 6a)
+  enables it as a hard floor** — the retired `ship-roadmap` used `--adversarial 2`
+  for `L`/sensitive-flagged features in its unattended REVIEW stage; the lane's
+  router now governs that floor. The interactive advisory stays opt-in — the
+  two serve different contexts on purpose.
 
 ## Where it sits
 
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
-one pass. Routes **fix-now** into the current unit's open phase, **replan-in-unit**
-through `node scripts/unit-route.mjs <unit>` and the planner it names into new
-user-confirmed SPEC phases (fresh `/review-plan` before execution), surfaces
+one pass. Routes **fix-now** into the current unit's open step, **replan-in-unit**
+through `node scripts/unit-route.mjs <unit>` triggering `unit-lane` to append
+user-confirmed catalog steps, surfaces
 **decision-required** to the user,
 and batches independent **proposals** for the user to route to `triage-issue`.

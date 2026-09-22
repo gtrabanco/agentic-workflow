@@ -80,7 +80,7 @@ test("AC3: every bundled user-invocable skill registers one command, named after
   const catalogue = readCatalogue(bundleSkills);
   const names = catalogue.commands.map((command) => command.name).sort();
 
-  assert.ok(expected.length >= 15, `the real bundle should expose a dozen-plus commands, got ${expected.length}`);
+  assert.ok(expected.length >= 13, `the real bundle should expose a dozen-plus commands, got ${expected.length}`);
   assert.deepEqual(names, expected);
   assert.equal(new Set(names).size, names.length, "no command name is claimed twice");
 });
@@ -89,12 +89,12 @@ test("AC3: `agentic-workflow-settings` is registered alongside the skill aliases
   const root = mkdtempSync(join(tmpdir(), "paw-alias-"));
   try {
     const skillsDir = join(root, "skills");
-    mkdirSync(join(skillsDir, "plan-feature"), { recursive: true });
-    writeFileSync(join(skillsDir, "plan-feature", "SKILL.md"), skillFile("plan-feature", { description: "Plan a feature" }));
+    mkdirSync(join(skillsDir, "synthetic"), { recursive: true });
+    writeFileSync(join(skillsDir, "synthetic", "SKILL.md"), skillFile("synthetic", { description: "Synthetic fixture skill" }));
 
     const { registered } = extensionOver(skillsDir);
-    assert.deepEqual([...registered.keys()], ["plan-feature", SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
-    assert.equal(registered.get("plan-feature").description, "Plan a feature");
+    assert.deepEqual([...registered.keys()], ["synthetic", SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
+    assert.equal(registered.get("synthetic").description, "Synthetic fixture skill");
     assert.equal(typeof registered.get(SETTINGS_COMMAND).handler, "function");
     assert.equal(typeof registered.get(SETTINGS_COMMAND_ALIAS).handler, "function");
   } finally {
@@ -106,14 +106,14 @@ test("AC6/OB-5: the /aw-settings alias opens the same settings handler with no s
   const root = mkdtempSync(join(tmpdir(), "paw-alias-settings-"));
   try {
     const skillsDir = join(root, "skills");
-    mkdirSync(join(skillsDir, "plan-feature"), { recursive: true });
-    writeFileSync(join(skillsDir, "plan-feature", "SKILL.md"), skillFile("plan-feature", { description: "Plan a feature" }));
+    mkdirSync(join(skillsDir, "synthetic"), { recursive: true });
+    writeFileSync(join(skillsDir, "synthetic", "SKILL.md"), skillFile("synthetic", { description: "Synthetic fixture skill" }));
 
     const { registered, calls, noopContext } = extensionOver(skillsDir);
     assert.equal(registered.get(SETTINGS_COMMAND).description, "Show and configure per-command model routing");
     assert.equal(registered.get(SETTINGS_COMMAND_ALIAS).description, registered.get(SETTINGS_COMMAND).description, "the alias keeps the same description");
     // Registered-command count: exactly the skill command plus the two console names.
-    assert.equal([...registered.keys()].length, 3, "plan-feature + settings command + aw-settings alias");
+    assert.equal([...registered.keys()].length, 3, "synthetic + settings command + aw-settings alias");
 
     // The alias handler opens the same console: it invokes the shared settings
     // handler, so no separate route key or config surface is introduced.
@@ -192,11 +192,11 @@ test("P2 carry-in: a configured route whose command does not exist is reported, 
     loadConfig: () => ({
       ok: true,
       problems: [],
-      config: configFor({ commands: { "plan-featue": { model: "openai/gpt-5.2" } } }),
+      config: configFor({ commands: { "unit-lan": { model: "openai/gpt-5.2" } } }),
     }),
     hint: { pending: () => false, acknowledge: () => true },
     settingsCommand: SETTINGS_COMMAND,
-    knownCommands: new Set(["plan-feature", SETTINGS_COMMAND]),
+    knownCommands: new Set(["unit-lane", SETTINGS_COMMAND]),
   });
 
   const notes = [];
@@ -210,14 +210,14 @@ test("P2 carry-in: a configured route whose command does not exist is reported, 
     hasConfiguredAuth: () => true,
   };
 
-  await router.dispatch({ name: "plan-feature", skill: "plan-feature" }, "", ctx);
+  await router.dispatch({ name: "unit-lane", skill: "unit-lane" }, "", ctx);
   const typo = notes.find((message) => message.includes("match no command"));
   assert.ok(typo, `expected a typo report in ${JSON.stringify(notes)}`);
-  assert.match(typo, /plan-featue/u);
+  assert.match(typo, /unit-lan/u);
   assert.match(typo, /agentic-workflow-settings/u);
 
   notes.length = 0;
-  await router.dispatch({ name: "plan-feature", skill: "plan-feature" }, "", ctx);
+  await router.dispatch({ name: "unit-lane", skill: "unit-lane" }, "", ctx);
   assert.deepEqual(notes, [], "the report is once per session, not once per command");
 });
 
@@ -286,8 +286,8 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
       ui: { notify: () => {} },
       modelRegistry: { find: () => undefined, hasConfiguredAuth: () => false },
     };
-    await registered.get("plan-feature").handler("--next", ctx);
-    const sent = surfaceCalls.find(([call, arg]) => call === "sendUserMessage" && arg === "/skill:plan-feature --next");
+    await registered.get("unit-lane").handler("--next", ctx);
+    const sent = surfaceCalls.find(([call, arg]) => call === "sendUserMessage" && arg === "/skill:unit-lane --next");
     assert.ok(sent, `the entry dispatched to Pi: ${JSON.stringify(surfaceCalls)}`);
     assert.equal(sent[2].expandPromptTemplates, true);
   } finally {

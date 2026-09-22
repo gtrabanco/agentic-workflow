@@ -1376,3 +1376,13 @@ responding to a persisted verdict is never a loop defect).
 | The version-only rule is `bump-skill`'s own guardrail — it constrains what `bump-skill` edits, not the unit's direct SKILL.md edits | repository | `skills/bump-skill/SKILL.md:81` ("Never change anything in a SKILL.md except the `version:` line") | branch head @ 2026-09-18 | current | proven | AC14's corrected walk |
 | Same-root-cause staleness: the Integration-closure row "Versioning/release surfaces" said "four skill minor bumps" against AC14's "eight touched skills" (D-31-12's four→eight widening lagged the row) | repository | SPEC Integration-closure row, pre-patch bytes of this write | branch head @ 2026-09-18 | current | proven | corrected in this batch; verified by the row's own Test cell pointing at AC14 |
 | Receipt state at authoring start: `verify --stage spec` → exit 0, `structural.fresh: true`, `digestMatches: true`, receipt `spec-review-31-14` FAIL current (`verdictIsPass: false`) — this batch moves Product bound bytes with no wording-only determination, so the receipt stays superseded; the next `/review-spec` is cycle 2 of the window `spec-review-31-13`'s PASS opened (second cycle allowed when correctness needs it — POLICY §4) | repository | `node scripts/pre-execution-snapshot.mjs verify --stage spec --unit 31-planning-review-materiality` (run 2026-09-18) | branch head @ 2026-09-18 | current | proven | the re-review hand-off |
+
+## Path-protection escape records
+
+Append-only rows the Tier 1 checkpoint gate verifies. See the `path-protection-records@1` grammar in the turn contract.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/pre-execution-attribution.test.mjs | P8b | 2026-09-22 | execute-phase | P8b migrate editedSpec() fixture: Goal is not a required section in UNIT_DOC_REQUIRED_SECTIONS, so the old override was a no-op on the Product projection; change to Objective override to exercise stale-artifact-content.
+```

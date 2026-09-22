@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "steps": [
+    "research",
+    "design",
+    "plan",
+    "implement",
+    "tests",
+    "evidence",
+    "review",
+    "docs",
+    "release"
+  ],
+  "catalog": {
+    "research": {
+      "applies_when": "unit_type == 'feature' && scope != 'trivial'",
+      "skipped_when": "unit_type in ['docs', 'chore'] || scope == 'trivial'",
+      "requires_gate": false,
+      "budget_tier": "cheap"
+    },
+    "design": {
+      "applies_when": "unit_type == 'feature' && scope != 'trivial'",
+      "skipped_when": "unit_type in ['docs', 'chore'] || scope == 'trivial'",
+      "requires_gate": false,
+      "budget_tier": "strong"
+    },
+    "plan": {
+      "applies_when": "unit_type in ['feature', 'fix'] && scope != 'trivial'",
+      "skipped_when": "unit_type in ['docs', 'chore'] || scope == 'trivial'",
+      "requires_gate": false,
+      "budget_tier": "cheap"
+    },
+    "implement": {
+      "applies_when": "unit_type in ['feature', 'fix', 'chore']",
+      "skipped_when": "unit_type == 'docs'",
+      "requires_gate": false,
+      "budget_tier": "strong"
+    },
+    "tests": {
+      "applies_when": "unit_type in ['feature', 'fix'] && scope != 'trivial' && tests_section != 'n/a'",
+      "skipped_when": "unit_type == 'docs' || scope == 'trivial' || tests_section == 'n/a'",
+      "requires_gate": false,
+      "budget_tier": "strong"
+    },
+    "evidence": {
+      "applies_when": "true",
+      "skipped_when": "false",
+      "requires_gate": true,
+      "budget_tier": "strong"
+    },
+    "review": {
+      "applies_when": "unit_type in ['feature', 'fix'] && scope != 'trivial'",
+      "skipped_when": "unit_type == 'docs' || scope == 'trivial'",
+      "requires_gate": true,
+      "budget_tier": "strong"
+    },
+    "docs": {
+      "applies_when": "unit_type == 'docs' || (unit_type in ['feature', 'fix'] && scope != 'trivial')",
+      "skipped_when": "unit_type == 'chore' || scope == 'trivial'",
+      "requires_gate": false,
+      "budget_tier": "cheap"
+    },
+    "release": {
+      "applies_when": "unit_type == 'feature' && scope in ['medium', 'large', 'xlarge']",
+      "skipped_when": "unit_type != 'feature' || scope in ['trivial', 'small', 'xs']",
+      "requires_gate": true,
+      "budget_tier": "strong"
+    }
+  }
+}

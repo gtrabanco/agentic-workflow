@@ -1,8 +1,8 @@
 # Agentic workflow
 
 How we build with agentic programming in this repo: the end-to-end flow for a
-**feature** and for an **issue**, the **skills** that drive each step, and how to
-**replicate** the whole system in another project.
+**feature** and for an **issue** through the adaptive lane, the **skills** that
+drive each step, and how to **replicate** the whole system in another project.
 
 This is the versioned, in-repo copy. A reader-friendly multi-page mirror lives in
 Notion ("Agentic Workflow").
@@ -11,6 +11,7 @@ Notion ("Agentic Workflow").
 
 | Doc | What it covers |
 |---|---|
+| [LANE_FLOW.md](LANE_FLOW.md) | How a unit flows through the adaptive lane: lifecycle, triage rules, guards, evidence, review, deterministic next-step, command cheat-sheet, and programmatic contract |
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (fix-now / postpone / wontfix / promote) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
@@ -52,18 +53,19 @@ Notion ("Agentic Workflow").
                  └─────┬──────────┬──────────┬──────────┘
                        │          │          └─ leave open + dated comment
                        │          │
-              plan-fix │          │ plan-feature  (router takes the issue → SPEC)
-                       │          │
+              lane fix │   lane   │
+                       │  feature │
                        ▼          ▼
-   FEATURE:   plan-feature ──▶ execute-phase ──▶ review-change ──▶ audit-pr ──▶ PR
-              (router:                            (auto every       (merge
-               idea│issue│scoped)                  2 phases)         gate)
-   FIX:        plan-fix ──▶ execute-phase --fix ──▶ review-change ──▶ audit-pr ──▶ PR
+   ISSUE──▶ triage ──▶ /unit-lane (conductor) ──▶ catalog steps ──▶ review-change ──▶ audit-pr ──▶ PR
+              │           unit-lane│ (triage decides:            (auto after   (merge
+              │                    implement, evidence, etc.)   all steps)   gate)
+              │
+              └─ promote ──▶ /unit-lane (feature mode)
 
    audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
    product-audit ── product-wide health check → issues + roadmap proposals (periodic)
 
-   AUTOPILOT:  ship-roadmap ── interview once ─▶ found + roadmap ─▶
-               /loop { the FEATURE chain above, feature by feature } ─▶ final report
-               (you merge the PRs — or --fullauto under safety floors)
+   # ship-roadmap is retired (feature 61 P9); its deterministic routing lives
+   # in `workflow-status` / `unit-lane`.
+   # The unattended-conductor role is deferred to roadmap row 62.
 ```

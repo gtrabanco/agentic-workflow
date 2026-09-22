@@ -127,10 +127,10 @@ const routeTable = spawnSync(process.execPath, [path.join(repoRoot, "scripts/che
 assert.equal(routeTable.status, 0, routeTable.stderr);
 assert.match(routeTable.stdout, /PASS route budgets/);
 
-const filteredRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "plan-feature:scoped"], { encoding: "utf8" });
+const filteredRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "execute-phase:feature"], { encoding: "utf8" });
 assert.equal(filteredRoute.status, 0, filteredRoute.stderr);
-assert.match(filteredRoute.stdout, /plan-feature:scoped/);
-assert(!filteredRoute.stdout.includes("plan-feature:issue"), "filtered route should not include other routes");
+assert.match(filteredRoute.stdout, /execute-phase:feature/);
+assert(!filteredRoute.stdout.includes("execute-phase:fix"), "filtered route should not include other routes");
 
 const bareRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--route"], { encoding: "utf8" });
 assert.notEqual(bareRoute.status, 0);
@@ -193,13 +193,13 @@ runFixtureRoute(
 
 runFixtureRoute(
   "route budget regression",
-  (manifest) => { manifest.routes["plan-feature:scoped"].routeEstimateMax = 10; },
+  (manifest) => { manifest.routes["execute-phase:feature"].routeEstimateMax = 10; },
   /route estimate .* >/,
 );
 
 runFixtureRoute(
   "route lines regression",
-  (manifest) => { manifest.routes["plan-fix:issue"].routeLinesMax = 5; },
+  (manifest) => { manifest.routes["execute-phase:feature"].routeLinesMax = 5; },
   /route lines .* >/,
 );
 
@@ -274,7 +274,7 @@ runFixtureRoute(
     fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     manifest.policy = { name: "relative-headroom", headroom: 0.1 };
-    const route = manifest.routes["review-plan:default"];
+    const route = manifest.routes["execute-phase:feature"];
     route.routeEstimateMax = Number.MAX_SAFE_INTEGER;
     route.routeLinesMax = Number.MAX_SAFE_INTEGER;
     const write = () => fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
@@ -282,7 +282,7 @@ runFixtureRoute(
     const cli = (args) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), ...args], { encoding: "utf8" });
     const probe = cli(["--routes", "--json"]);
     assert.equal(probe.status, 0, `unbounded fixture must pass: ${probe.stdout}\n${probe.stderr}`);
-    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "review-plan:default").totalEstimate;
+    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "execute-phase:feature").totalEstimate;
     // The oracle is the declared formula computed exactly: ceil(measured × 1.1)
     // via integer arithmetic (measured × 11 / 10) — no float product anywhere.
     const exactFloor = Math.ceil((measured * 11) / 10);
@@ -314,30 +314,31 @@ runFixtureRoute(
   /route reference must be a flat file name/,
 );
 
-// Execute route selection: each mode route records exactly one workflow resource.
+// Execute route selection: feature 61 P4 retired the per-mode WORKFLOWS_*
+// resources (the triage catalog selects steps now), so no route may name one,
+// and every referenced file must exist.
 
 {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
-  for (const mode of ["feature", "small", "fix", "legacy"]) {
-    const refs = manifest.routes[`execute-phase:${mode}`].references["execute-phase"];
-    assert.equal(refs.filter((n) => n.startsWith("WORKFLOWS_")).length, 1, `execute-phase:${mode} must select exactly one workflow resource`);
+  for (const [routeName, route] of Object.entries(manifest.routes)) {
+    if (!routeName.startsWith("execute-phase:")) continue;
+    const refs = route.references["execute-phase"] ?? [];
+    assert.equal(refs.filter((n) => n.startsWith("WORKFLOWS_")).length, 0, `${routeName} must not select a retired mode workflow`);
     for (const name of refs) assert(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
   }
-  const finalPrRefs = manifest.routes["execute-phase:final-pr"].references["execute-phase"];
-  assert.equal(finalPrRefs.filter((n) => n.startsWith("WORKFLOWS_")).length, 0, "final-pr must not select a mode workflow");
 }
 
-// Policy route selection: final-pr, descope, and finding each record only its
-// required policy resource (forge body / descope / opportunistic finding).
+// Policy route selection: final-pr and descope each record only their
+// required policy resource. Feature 61 P4 folded the opportunistic-finding
+// policy into the SKILL.md body, so the finding route carries no policy file.
 
 {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-  const policyFiles = ["FORGE_BODY.md", "DESCOPE.md", "OPPORTUNISTIC_FINDING.md"];
+  const policyFiles = ["FORGE_BODY.md", "DESCOPE.md"];
   const policyFor = {
     "execute-phase:final-pr": "FORGE_BODY.md",
     "execute-phase:descope": "DESCOPE.md",
-    "execute-phase:finding": "OPPORTUNISTIC_FINDING.md",
   };
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
   for (const [route, expected] of Object.entries(policyFor)) {
@@ -347,6 +348,8 @@ runFixtureRoute(
     assert.equal(selected[0], expected, `${route} must record its required policy resource`);
     for (const name of refs) assert(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
   }
+  assert.match(fs.readFileSync(path.join(repoRoot, "skills/execute-phase/references/EXECUTION_CONTRACT.md"), "utf8"), /Opportunistic finding policy/);
+  assert.equal(manifest.routes["execute-phase:finding"].references["execute-phase"].filter((n) => n === "OPPORTUNISTIC_FINDING.md").length, 0, "the retired finding policy file is not referenced");
   assert.ok(!manifest.routes["execute-phase:final-pr"].references["execute-phase"].includes("DESCOPE.md"), "final-pr must not load descope");
   assert.ok(!manifest.routes["execute-phase:final-pr"].references["execute-phase"].includes("OPPORTUNISTIC_FINDING.md"), "final-pr must not load finding policy");
   assert.ok(!fs.existsSync(path.join(executeRefsDir, "ISSUE_POLICY.md")), "ISSUE_POLICY.md must be split");
@@ -366,14 +369,14 @@ runFixtureRoute(
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
   const owners = [
     { box: "Branch verified FIRST", owner: "EXECUTION_CONTRACT.md", marker: "## Branch" },
-    { box: "All pre-edit gates (phase-lint, architectural invariants, dependency) RUN", owner: "PREFLIGHT.md", marker: "## Phase-lint pre-flight guard" },
-    { box: "`git add`, `git commit -m", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED with the phase" },
-    { box: "Unit finished (single-pass/--fix/final phase)", owner: "CLOSEOUT.md", marker: "gh pr create" },
+    { box: "All pre-edit gates (phase-lint, architectural invariants, dependency) RUN", owner: "PREFLIGHT.md", marker: "phase-lint.mjs <unit-doc>" },
+    { box: "`git add`, `git commit -m", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED" },
+    { box: "Unit finished (single-pass/--fix/final phase)", owner: "FOLDING.md", marker: "gh pr create" },
     { box: "Clean-tree check LAST (`git status --porcelain` RUN", owner: "FOLDING.md", marker: "git status --porcelain" },
     { box: "Artifact language: explicit user > project docs > English", owner: "FORGE_BODY.md", marker: "Language precedence" },
     { box: "Descope guard applied to every issue created this turn", owner: "DESCOPE.md", marker: "## Descope guard" },
-    { box: "Out-of-scope findings classified per Opportunistic finding policy", owner: "OPPORTUNISTIC_FINDING.md", marker: "## Opportunistic finding policy" },
-    { box: "Closing `→ Next:` block printed as ABSOLUTE last output", owner: "CLOSEOUT.md", marker: "→ Next:" },
+    { box: "Out-of-scope findings classified per Opportunistic finding policy", owner: "EXECUTION_CONTRACT.md", marker: "Opportunistic finding policy" },
+    { box: "Closing `→ Next:` block printed as ABSOLUTE last output", owner: "FOLDING.md", marker: "→ Next:" },
     { box: "Machine result emitted if driver requested", owner: "EXECUTION_CONTRACT.md", marker: "## Normalized Repository State" },
     { box: "No reconstruction from memory — missing reference → STOP", owner: "EXECUTION_CONTRACT.md", marker: "## Architectural invariants" },
   ];
@@ -390,21 +393,18 @@ runFixtureRoute(
 // observable outcomes.
 
 {
+  // Feature 61 P4: the mode workflows are retired — the triage catalog selects
+  // steps now, so the mode routes carry no WORKFLOWS_* and no policy files.
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
-  const modeWorkflow = {
-    feature: "WORKFLOWS_FEATURE.md",
-    small: "WORKFLOWS_SMALL_PHASED.md",
-    fix: "WORKFLOWS_FIX.md",
-    legacy: "WORKFLOWS_LEGACY.md",
-  };
+  const retiredModeWorkflows = ["WORKFLOWS_FEATURE.md", "WORKFLOWS_SMALL_PHASED.md", "WORKFLOWS_FIX.md", "WORKFLOWS_LEGACY.md"];
   const policyFiles = ["FORGE_BODY.md", "DESCOPE.md", "OPPORTUNISTIC_FINDING.md"];
-  for (const [mode, workflow] of Object.entries(modeWorkflow)) {
-    const refs = manifest.routes[`execute-phase:${mode}`].references["execute-phase"];
-    assert.ok(refs.includes(workflow), `execute-phase:${mode} must load ${workflow}`);
+  for (const mode of ["feature", "small", "fix", "legacy"]) {
+    const refs = manifest.routes[`execute-phase:${mode}`].references["execute-phase"] ?? [];
     for (const name of refs) {
-      if (name.startsWith("WORKFLOWS_")) assert.equal(name, workflow, `execute-phase:${mode} must not load other mode workflows`);
+      assert.ok(!retiredModeWorkflows.includes(name), `execute-phase:${mode} must not load retired mode workflow ${name}`);
       assert.ok(!policyFiles.includes(name), `execute-phase:${mode} must not load policy files`);
+      assert.ok(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
     }
   }
   for (const route of ["execute-phase:final-pr", "execute-phase:descope", "execute-phase:finding"]) {

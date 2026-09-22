@@ -32,9 +32,9 @@
      infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
      (e.g. `frontend/` for a non-UI project).
    - **Capability inventory** (`docs/CAPABILITIES.md` — the substrate
-     `design-feature`'s Integration closure walks). Seed it from discovery,
-     not raw placeholders: on an existing codebase, propose the roles and the
-     `yes|no|partial` state of each template subsystem row (auth, ACL,
+     the lane's `design` catalog step's Integration closure walks). Seed it from
+     discovery, not raw placeholders: on an existing codebase, propose the roles
+     and the `yes|no|partial` state of each template subsystem row (auth, ACL,
      navigation, notifications, search, audit, settings, jobs, storage, i18n,
      flags, billing, public API) from what the code actually shows; on an
      empty repo, walk the same fixed rows with the user (`no` is a valid,

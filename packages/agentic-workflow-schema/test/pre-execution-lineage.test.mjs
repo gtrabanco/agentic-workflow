@@ -91,7 +91,7 @@ test("every stale dimension answers its own deterministic code", async () => {
   const cases = [
     ["stale-artifact-content", () => builtSpec("rev-1"),
       () => builtSpec("rev-1", {
-        files: [{ kind: "spec", path: "docs/toy/SPEC.md", content: toySpec({ Goal: "## Goal\n\nShip the other thing.\n" }) }],
+        files: [{ kind: "spec", path: "docs/toy/SPEC.md", content: toySpec({ Objective: "## Objective\n\nShip the other thing.\n" }) }],
       })],
     ["stale-context", () => builtSpec(),
       () => builtSpec("rev-1", {
@@ -144,7 +144,7 @@ test("mutate-then-revert with a rotated revision cannot resurrect a PASS (S6)", 
     files: [{
       kind: "spec",
       path: "docs/toy/SPEC.md",
-      content: toySpec({ "Product half": "## Product half\n\n### Scope\n\n- new\n" }),
+      content: toySpec({ Objective: "## Objective\n\nShip the new thing.\n" }),
     }],
   }));
   const reverted = mustBuild(builtSpec("rev-3"));

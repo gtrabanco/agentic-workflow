@@ -213,14 +213,24 @@ function parseStamp(value: unknown): number | null {
   return Number.isNaN(ms) ? null : ms;
 }
 
-/** The Product-half headings the selector binds, in required order. */
-export const SPEC_PRODUCT_REQUIRED_HEADINGS = Object.freeze([
-  "Goal",
-  "Branch",
-  "Size",
-  "Dependencies",
-  "Product half",
-  "Design status",
+/** The unit document's closed 13-section list (feature 61 P8). The two-half
+ * SPEC was retired: plan-feature, plan-fix, review-spec, review-plan, and
+ * design-feature are absorbed into the lane. The lane uses a single unit
+ * document with these sections; the selector reads them in order. */
+export const UNIT_DOC_REQUIRED_SECTIONS = Object.freeze([
+  "Objective",
+  "Why",
+  "User outcome",
+  "Acceptance criteria",
+  "Non-goals",
+  "Future cost",
+  "Applicable tests",
+  "Known pre-existing issues",
+  "Tasks",
+  "Evidence",
+  "Progress log",
+  "Next",
+  "References",
 ] as const);
 
 /** One artifact bound into a snapshot, by the exact bytes the reviewer read. */
@@ -460,7 +470,7 @@ function selectionError(code: SpecProductSelectorError["code"], heading: string)
  *
  * The selection is byte-exact and total: the level-1 title and the required
  * level-2 sections (Goal, Branch, Size, Dependencies, Product half, Design
- * status), ending at the first boundary heading after Design status, with trailing
+ * status), ending at the first boundary heading after References, with trailing
  * blank lines removed and exactly one final newline. Everything the selector does
  * NOT take — Amendments, the Engineering half, later appendices — stays outside
  * Product authority, so a Plan-phase write can never rotate a Product digest and
@@ -509,7 +519,7 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   if (titleLine === -1) return selectionError("selector-title-missing", "<title>");
 
-  for (const required of SPEC_PRODUCT_REQUIRED_HEADINGS) {
+  for (const required of UNIT_DOC_REQUIRED_SECTIONS) {
     if (!headings.some((heading) => heading.name === required)) {
       return selectionError("selector-heading-missing", required);
     }
@@ -517,14 +527,14 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   const seen = new Set<string>();
   for (const heading of headings) {
-    if (!(SPEC_PRODUCT_REQUIRED_HEADINGS as readonly string[]).includes(heading.name)) continue;
+    if (!(UNIT_DOC_REQUIRED_SECTIONS as readonly string[]).includes(heading.name)) continue;
     if (seen.has(heading.name)) return selectionError("selector-heading-duplicate", heading.name);
     seen.add(heading.name);
   }
 
   let highest = -1;
   for (const heading of headings) {
-    const index = (SPEC_PRODUCT_REQUIRED_HEADINGS as readonly string[]).indexOf(heading.name);
+    const index = (UNIT_DOC_REQUIRED_SECTIONS as readonly string[]).indexOf(heading.name);
     if (index === -1) continue;
     if (index < highest) return selectionError("selector-heading-order", heading.name);
     highest = index;
@@ -533,7 +543,7 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
   // The projection ends at the first boundary heading (level 1 or 2) after the
   // Design-status section opens — never inside a fence.
   let designLine = -1;
-  for (const heading of headings) if (heading.name === "Design status") designLine = heading.line;
+  for (const heading of headings) if (heading.name === "References") designLine = heading.line;
   let end = lines.length;
   openFence = null;
   for (let i = 0; i < lines.length; i++) {

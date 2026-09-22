@@ -52,11 +52,11 @@ assert() {
 
 # ---- shared fixtures -------------------------------------------------------
 
-# ok: main + feat/ok with a committed ACCEPTANCE.md at HEAD; clean, no upstream.
+# ok: main + feat/ok with a committed SPEC.md at HEAD; clean, no upstream.
 ok_repo=$tmp/ok
 new_branch "$ok_repo" main
 gitc -C "$ok_repo" checkout -q -b feat/ok
-commit_file "$ok_repo" docs/features/ok/ACCEPTANCE.md 'frozen'
+commit_file "$ok_repo" docs/features/ok/SPEC.md 'frozen'
 
 # default: a repo sitting on its default branch.
 default_repo=$tmp/default
@@ -70,11 +70,11 @@ nocommits_repo=$tmp/nocommits
 new_branch "$nocommits_repo" main
 gitc -C "$nocommits_repo" checkout -q -b feat/none
 
-# missing: unit-shaped branch whose unit dir has no ACCEPTANCE.md at HEAD.
+# missing: unit-shaped branch whose unit dir has no SPEC.md at HEAD.
 missing_repo=$tmp/missing
 new_branch "$missing_repo" main
 gitc -C "$missing_repo" checkout -q -b feat/missing
-commit_file "$missing_repo" docs/features/missing/SPEC.md 'no acceptance here'
+commit_file "$missing_repo" docs/features/missing/ROADMAP.md 'not a unit doc'
 
 # plain: non-unit-shaped branch, otherwise clean (box2 is not-applicable).
 plain_repo=$tmp/plain
@@ -97,7 +97,7 @@ gitc init -q -b feature/x "$empty_repo"
 unicode_repo=$tmp/unicode
 new_branch "$unicode_repo" main
 gitc -C "$unicode_repo" checkout -q -b feat/unicode
-commit_file "$unicode_repo" docs/features/unicode/ACCEPTANCE.md 'frozen'
+commit_file "$unicode_repo" docs/features/unicode/SPEC.md 'frozen'
 printf 'x\n' > "$unicode_repo/a b.txt"
 printf 'x\n' > "$unicode_repo/café.txt"
 
@@ -106,7 +106,7 @@ printf 'x\n' > "$unicode_repo/café.txt"
 corrupt_repo=$tmp/corrupt
 new_branch "$corrupt_repo" main
 gitc -C "$corrupt_repo" checkout -q -b feat/corrupt
-commit_file "$corrupt_repo" docs/features/corrupt/ACCEPTANCE.md 'frozen'
+commit_file "$corrupt_repo" docs/features/corrupt/SPEC.md 'frozen'
 printf 'not a git index\n' > "$corrupt_repo/.git/index"
 
 # bigstatus: porcelain past the engine's 1 MiB read cap and past the shim's pipe
@@ -114,7 +114,7 @@ printf 'not a git index\n' > "$corrupt_repo/.git/index"
 bigstatus_repo=$tmp/bigstatus
 new_branch "$bigstatus_repo" main
 gitc -C "$bigstatus_repo" checkout -q -b feat/bigstatus
-commit_file "$bigstatus_repo" docs/features/bigstatus/ACCEPTANCE.md 'frozen'
+commit_file "$bigstatus_repo" docs/features/bigstatus/SPEC.md 'frozen'
 seg=$(printf 'd%.0s' $(seq 1 200))
 long_dir=$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg/$seg
 mkdir -p "$bigstatus_repo/$long_dir"
@@ -131,14 +131,14 @@ done
 dirty_repo=$tmp/dirty
 new_branch "$dirty_repo" main
 gitc -C "$dirty_repo" checkout -q -b feat/dirty
-commit_file "$dirty_repo" docs/features/dirty/ACCEPTANCE.md 'frozen'
+commit_file "$dirty_repo" docs/features/dirty/SPEC.md 'frozen'
 printf 'dirty\n' >> "$dirty_repo/README.md"
 
 # ahead: pushed to a bare remote, then one local commit on top.
 ahead_repo=$tmp/ahead
 new_branch "$ahead_repo" main
 gitc -C "$ahead_repo" checkout -q -b feat/ahead
-commit_file "$ahead_repo" docs/features/ahead/ACCEPTANCE.md 'frozen'
+commit_file "$ahead_repo" docs/features/ahead/SPEC.md 'frozen'
 gitc init -q --bare "$tmp/ahead-remote.git"
 gitc -C "$ahead_repo" remote add origin "$tmp/ahead-remote.git"
 gitc -C "$ahead_repo" push -qu origin feat/ahead
@@ -148,7 +148,7 @@ commit_file "$ahead_repo" extra.txt 'local only'
 dirtyahead_repo=$tmp/dirtyahead
 new_branch "$dirtyahead_repo" main
 gitc -C "$dirtyahead_repo" checkout -q -b feat/dirtyahead
-commit_file "$dirtyahead_repo" docs/features/dirtyahead/ACCEPTANCE.md 'frozen'
+commit_file "$dirtyahead_repo" docs/features/dirtyahead/SPEC.md 'frozen'
 gitc init -q --bare "$tmp/da-remote.git"
 gitc -C "$dirtyahead_repo" remote add origin "$tmp/da-remote.git"
 gitc -C "$dirtyahead_repo" push -qu origin feat/dirtyahead
@@ -170,7 +170,7 @@ gitc -C "$numeric_repo" push -qu origin 123
 hidden_repo=$tmp/hidden
 new_branch "$hidden_repo" main
 gitc -C "$hidden_repo" checkout -q -b feat/hidden
-commit_file "$hidden_repo" docs/features/hidden/ACCEPTANCE.md 'frozen'
+commit_file "$hidden_repo" docs/features/hidden/SPEC.md 'frozen'
 gitc -C "$hidden_repo" config status.showUntrackedFiles no
 printf 'x\n' > "$hidden_repo/untracked.txt"
 
@@ -179,14 +179,14 @@ printf 'x\n' > "$hidden_repo/untracked.txt"
 index_repo=$tmp/index
 new_branch "$index_repo" main
 gitc -C "$index_repo" checkout -q -b feat/index
-commit_file "$index_repo" docs/features/index/ACCEPTANCE.md 'frozen'
+commit_file "$index_repo" docs/features/index/SPEC.md 'frozen'
 touch -t 202001010000 "$index_repo/README.md"
 
 # box4 fixtures: branch with an upstream (a bare remote), clean.
 b4_repo=$tmp/b4
 new_branch "$b4_repo" main
 gitc -C "$b4_repo" checkout -q -b feat/b4
-commit_file "$b4_repo" docs/features/b4/ACCEPTANCE.md 'frozen'
+commit_file "$b4_repo" docs/features/b4/SPEC.md 'frozen'
 gitc init -q --bare "$tmp/b4-remote.git"
 gitc -C "$b4_repo" remote add origin "$tmp/b4-remote.git"
 gitc -C "$b4_repo" push -qu origin feat/b4
@@ -234,7 +234,7 @@ assert "box1 not a repo" 1 'TURN-CONTRACT fail box1: not-a-repo'
 
 run_dir=$missing_repo
 run
-assert "box2 acceptance missing" 1 'TURN-CONTRACT fail box2: acceptance-missing'
+assert "box2 unit-doc missing" 1 'TURN-CONTRACT fail box2: unit-doc-missing'
 
 run_dir=$plain_repo
 run
@@ -370,7 +370,7 @@ if [ "$(id -u)" -ne 0 ]; then
   plumbing_repo=$tmp/plumbing
   new_branch "$plumbing_repo" main
   gitc -C "$plumbing_repo" checkout -q -b feat/plumbing
-  commit_file "$plumbing_repo" docs/features/plumbing/ACCEPTANCE.md 'frozen'
+  commit_file "$plumbing_repo" docs/features/plumbing/SPEC.md 'frozen'
   chmod 000 "$plumbing_repo/.git"
   run_dir=$plumbing_repo
   run
