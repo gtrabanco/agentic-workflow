@@ -40,38 +40,60 @@ const { PRE_EXECUTION_FRESHNESS_CODES, buildPreExecutionArtifactSnapshot, digest
 
 const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 
-/** The Product half the `spec-product-v1` selector binds, plus one engineering section. */
-const specText = (goal = "Ship the thing.") => `# Toy unit
+/** A unit doc the `spec-product-v1` selector accepts (13-section, feature 61). */
+const specText = (objective = "Ship the thing.") => `# Toy unit
 
-## Goal
+## Objective
 
-${goal}
+${objective}
 
-## Branch
+## Why
 
-\`feat/toy\`
+Because the customer needs it.
 
-## Size
+## User outcome
 
-\`S\` — small.
+Users can do X.
 
-## Dependencies
+## Acceptance criteria
 
-- none
+- [x] S1 is done.
 
-## Product half
+## Non-goals
 
-### Scope
+- Not S2.
 
-- **S1:** the thing.
+## Future cost
 
-## Design status
+None known.
 
-\`designed\`
+## Applicable tests
 
-## Engineering half
+- Unit tests.
 
-Not part of the Product projection.
+## Known pre-existing issues
+
+None.
+
+## Tasks
+
+- [x] Implement S1.
+
+## Evidence
+
+No external evidence.
+
+## Progress log
+
+- P1 done.
+
+## Next
+
+Ship it.
+
+## References
+
+[Link](https://example.com)
 `;
 
 const ACCEPTANCE = "# Acceptance\n\n- A1 the thing ships.\n";
@@ -527,9 +549,19 @@ test("RS14: a feature plan snapshot without --parent names the remedy", (t) => {
 test("RS14: a fix unit binds no parent and reaches the no-receipt path", (t) => {
   const f = makeRepo(t, { dir: "docs/fix/99-toy-fix", unit: "fix-99" });
   f.write("docs/fix/99-toy-fix/SPEC.md", [
-    "# Fix 99 — the sensor", "## Goal", "", "Stop stale-ifying receipts.", "## Branch", "", "`fix/99`",
-    "## Scope", "", "- the sensor", "## Acceptance", "", "- A1", "## Phases", "", "### P1", "", "- do it",
-    "## Status", "", "`planned`", "",
+    "# Fix 99 — the sensor", "## Objective", "", "Stop stale-ifying receipts.",
+    "## Why", "", "No Product half to bind.",
+    "## User outcome", "", "Clean plan receipts.",
+    "## Acceptance criteria", "", "- A1",
+    "## Non-goals", "", "- S2.",
+    "## Future cost", "", "None.",
+    "## Applicable tests", "", "n/a — no tests step for this unit",
+    "## Known pre-existing issues", "", "None.",
+    "## Tasks", "", "- P1 do it.",
+    "## Evidence", "", "- PE-1 verified.",
+    "## Progress log", "", "- P1 done.",
+    "## Next", "", "Merge.",
+    "## References", "", "none",
   ].join("\n"));
   f.commit("docs(fix-99): the fix SPEC has no Product half");
   const built = f.build("--stage", "plan", "--dir", "docs/fix/99-toy-fix", "--unit", "fix-99", "--unit-kind", "fix");
