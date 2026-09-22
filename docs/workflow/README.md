@@ -52,18 +52,19 @@ Notion ("Agentic Workflow").
                  └─────┬──────────┬──────────┬──────────┘
                        │          │          └─ leave open + dated comment
                        │          │
-              plan-fix │          │ plan-feature  (router takes the issue → SPEC)
-                       │          │
+              lane fix │   lane   │
+                       │  feature │
                        ▼          ▼
-   FEATURE:   plan-feature ──▶ execute-phase ──▶ review-change ──▶ audit-pr ──▶ PR
-              (router:                            (auto every       (merge
-               idea│issue│scoped)                  2 phases)         gate)
-   FIX:        plan-fix ──▶ execute-phase --fix ──▶ review-change ──▶ audit-pr ──▶ PR
+   ISSUE──▶ triage ──▶ /unit-lane (conductor) ──▶ catalog steps ──▶ review-change ──▶ audit-pr ──▶ PR
+              │           unit-lane│ (triage decides:            (auto after   (merge
+              │                    implement, evidence, etc.)   all steps)   gate)
+              │
+              └─ promote ──▶ /unit-lane (feature mode)
 
    audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
    product-audit ── product-wide health check → issues + roadmap proposals (periodic)
 
-   # The former autopilot conductor (`ship-roadmap`) is retired (feature 61 P9);
-   # its deterministic routing lives in `workflow-status` / `unit-lane`.
+   # ship-roadmap is retired (feature 61 P9); its deterministic routing lives
+   # in `workflow-status` / `unit-lane`.
    # The unattended-conductor role is deferred to roadmap row 62.
 ```

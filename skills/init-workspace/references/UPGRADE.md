@@ -33,13 +33,23 @@ lacks**. Eight ordered steps:
    dated migration note so the proposal explains *why* the block exists and
    *what* it migrates. If `MIGRATION.md` is absent, proceed on the template
    diff alone and say so in the report — never block on a missing note.
-4. **Propose only the missing blocks — one short, batched interview round.**
-   Each item is the block, a discovery-based default (the same detection
-   bootstrap mode already runs — e.g. `astro.config.*` + Starlight ⇒ `Docs
-   site` default, Biome ⇒ the complexity-lint slot, the remote URL ⇒ forge),
-   and the `MIGRATION.md` rationale when available. The user accepts, edits,
-   or skips each block. **Never re-ask what the project already answered** —
-   a block that's already filled is skipped, not re-interviewed.
+4. **Propose the adaptive lane conventions (feature 61 P11).** For pre-lane
+   installs (before the fixed pipeline was retired), propose these missing
+   blocks additively — **never clobber existing content**:
+   - The **unit document conventions** section in AGENTS.md (the 13-section
+     SPEC.md, triage-driven step selection, diff-size guard, evidence rows,
+     dated progress log, closed commit format `type(scope): description`).
+   - The **unit doc template** under `docs/features/_TEMPLATE/SPEC.md` if
+     absent — the same 13-section template used by new units.
+   - The **lane workflow doc** under `docs/workflow/` if absent: `FEATURE_WORKFLOW.md`
+     (unit doc → triage → catalog steps → evidence → review → release),
+     `ISSUE_WORKFLOW.md` (issues route through triage to the lane).
+   - A **documentation-map row** for `docs/features/_TEMPLATE/SPEC.md` and the
+     lane workflow docs if missing from the existing map.
+   Each item is accepted, edited, or skipped by the user. **Never re-ask what
+   the project already answered** — a block that's already filled is skipped,
+   not re-interviewed. The lane conventions are additive only: existing content
+   is never rewritten, only new blocks are inserted where missing.
 5. **Write additively.** Insert accepted blocks, including a missing
    `docs/workflow/REPOSITORY_STATE.md`; fill raw, still-placeholder
    blocks with the confirmed values. **Never rewrite a block the project has
