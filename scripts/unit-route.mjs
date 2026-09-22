@@ -347,10 +347,178 @@ folder). The last two print no route at all. Diagnostics go to stderr, the
 script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 `;
 
+
+// ---------------------------------------------------------------------------
+// Triage mode (--triage <unit>) — feature 61 P3: the closed catalog decides
+// which steps a unit needs. Deterministic over the unit doc's observable
+// facts; the model never re-derives the step list, it consumes this block.
+// ---------------------------------------------------------------------------
+
+const UNIT_DOC_SECTIONS = [
+  "Objective", "Why", "User outcome", "Acceptance criteria", "Non-goals",
+  "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
+  "Evidence", "Progress log", "Next", "References",
+];
+const UNIT_TYPES = ["feature", "fix", "docs", "chore"];
+const UNIT_SCOPES = ["trivial", "xs", "small", "standard", "medium", "large", "xlarge"];
+
+function triageFail(code, message) {
+  process.stderr.write(`TRIAGE ERROR — ${message}\n`);
+  process.exit(code);
+}
+
+function loadCatalog() {
+  const catalog = JSON.parse(fs.readFileSync(new URL("./catalog.json", import.meta.url), "utf8"));
+  if (catalog.schemaVersion !== 1) {
+    triageFail(2, `unsupported schemaVersion: ${catalog.schemaVersion} (expected 1)`);
+  }
+  const closed = ["research", "design", "plan", "implement", "tests", "evidence", "review", "docs", "release"];
+  if (JSON.stringify(catalog.steps) !== JSON.stringify(closed)) {
+    triageFail(2, `catalog: must have exactly 9 steps in the closed order`);
+  }
+  return catalog;
+}
+
+function frontmatterOf(text) {
+  const fm = /^---\n([\s\S]*?)\n---/.exec(text);
+  const out = {};
+  if (!fm) return out;
+  for (const line of fm[1].split("\n")) {
+    const kv = /^([a-zA-Z_-]+):\s*(.*)$/.exec(line.trim());
+    if (kv) out[kv[1]] = kv[2].trim();
+  }
+  return out;
+}
+
+function sectionBody(text, name) {
+  const re = new RegExp(`^## ${name}\\s*$`, "m");
+  const m = re.exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const next = /^## /m.exec(rest);
+  return next ? rest.slice(0, next.index) : rest;
+}
+
+function unitFacts(doc, unitDir) {
+  const fm = frontmatterOf(doc);
+  let type;
+  if (fm.type !== undefined) {
+    if (!UNIT_TYPES.includes(fm.type)) {
+      triageFail(2, `unit type cannot be determined: '${sanitize(fm.type)}' is not one of ${UNIT_TYPES.join(", ")}`);
+    }
+    type = fm.type;
+  } else if (unitDir.startsWith("docs/fix/")) {
+    type = "fix";
+  } else if (unitDir.startsWith("docs/features/")) {
+    type = "feature";
+  } else {
+    triageFail(2, "unit type cannot be determined: no type frontmatter and the folder is neither a feature nor a fix tree");
+  }
+  let scope;
+  if (fm.scope !== undefined) {
+    if (!UNIT_SCOPES.includes(fm.scope)) {
+      triageFail(2, `invalid scope '${sanitize(fm.scope)}' (one of ${UNIT_SCOPES.join(", ")})`);
+    }
+    scope = fm.scope;
+  } else {
+    const objective = sectionBody(doc, "Objective") || "";
+    const objectiveLines = objective.split("\n").filter((l) => l.trim()).length;
+    const acBody = sectionBody(doc, "Acceptance criteria") || "";
+    const acCount = (acBody.match(/^\d+\./gm) || []).length;
+    scope = objectiveLines <= 3 && acCount <= 2 ? "trivial" : "standard";
+  }
+  const testsBody = sectionBody(doc, "Applicable tests") || "";
+  const tests = /n\/a/i.test(testsBody) ? "n/a" : "declared";
+  return { type, scope, tests };
+}
+
+function triageSteps(catalog, facts) {
+  const { type, scope, tests } = facts;
+  const nonTrivial = scope !== "trivial";
+  const codeUnit = type === "feature" || type === "fix";
+  const applies = {
+    research: type === "feature" && nonTrivial,
+    design: type === "feature" && nonTrivial,
+    plan: codeUnit && nonTrivial,
+    implement: type !== "docs",
+    tests: codeUnit && nonTrivial && tests !== "n/a",
+    docs: type === "docs" || (codeUnit && nonTrivial),
+    evidence: true,
+    review: codeUnit && nonTrivial,
+    release: type === "feature" && ["medium", "large", "xlarge"].includes(scope),
+  };
+  const reasons = {
+    research: type === "docs" || type === "chore" ? "docs/chore unit" : "trivial scope",
+    design: type === "docs" || type === "chore" ? "docs/chore unit" : "trivial scope",
+    plan: type === "docs" || type === "chore" ? "docs/chore unit" : "trivial scope",
+    implement: "docs unit",
+    tests: type === "docs" ? "docs unit" : scope === "trivial" ? "trivial scope" : "tests n/a",
+    docs: type === "chore" ? "chore unit" : "trivial scope",
+    review: type === "docs" ? "docs unit" : "trivial scope",
+    release: type !== "feature" ? "not a feature" : "small scope",
+  };
+  const steps = [];
+  const skipped = [];
+  for (const step of catalog.steps) {
+    if (applies[step]) steps.push(step);
+    else skipped.push({ step, reason: reasons[step] });
+  }
+  const budget = steps.some((s) => ["design", "tests", "review"].includes(s)) ? "strong" : "cheap";
+  return { steps, skipped, budget };
+}
+
+function runTriage(token, { json = false } = {}) {
+  const catalog = loadCatalog();
+  const { matches, clean } = resolveUnit(token);
+  if (matches.length > 1) {
+    triageFail(2, `ambiguous unit: ${sanitize(clean)} matches ${matches.map((entry) => sanitize(entry.dir)).join(", ")}`);
+  }
+  if (matches.length === 0) {
+    triageFail(2, `unit not found: ${sanitize(clean)}`);
+  }
+  const unitDir = matches[0].dir;
+  const specPath = path.join(PROJECT, unitDir, "SPEC.md");
+  let doc;
+  try {
+    doc = fs.readFileSync(specPath, "utf8");
+  } catch {
+    triageFail(2, `unit doc not found: ${unitDir}/SPEC.md`);
+  }
+  const missing = UNIT_DOC_SECTIONS.filter((name) => sectionBody(doc, name) === null);
+  if (missing.length > 0) {
+    triageFail(2, `missing mandatory sections: ${missing.join(", ")}`);
+  }
+  const facts = unitFacts(doc, unitDir);
+  const result = triageSteps(catalog, facts);
+  const unitLabel = clean;
+  const skippedText = result.skipped.length === 0
+    ? "none"
+    : result.skipped.map((entry) => `${entry.step}: ${entry.reason}`).join(", ");
+  if (!json) {
+    process.stdout.write(
+      `TRIAGE — ${unitLabel} (${facts.type})\n` +
+      `Steps: ${result.steps.join(", ")}\n` +
+      `Skipped: ${skippedText}\n` +
+      `Budget: ${result.budget}\n`,
+    );
+  }
+  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, budget: result.budget };
+}
+
 function main(argv) {
   const args = argv.slice(2).filter((arg) => arg !== "");
   if (args.length === 1 && (args[0] === "--help" || args[0] === "-h")) {
     process.stdout.write(USAGE);
+    return;
+  }
+  if (args[0] === "--triage") {
+    if (args.length < 2 || args.length > 3 || (args.length === 3 && args[2] !== "--json")) {
+      fail(1, "usage: node scripts/unit-route.mjs --triage <unit> [--json]");
+    }
+    const result = runTriage(args[1], { json: args[2] === "--json" });
+    if (args[2] === "--json") {
+      process.stdout.write(JSON.stringify(result) + "\n");
+    }
     return;
   }
   if (args.length === 0) fail(1, "usage: node scripts/unit-route.mjs <unit|issue>");
