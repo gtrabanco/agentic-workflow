@@ -1,92 +1,86 @@
-## Review checkpoint triggers (feature mode)
+## Review checkpoint triggers
 
 The recommended, skippable checkpoint fires on **what accumulated since the
-last checkpoint**, not on a phase count — a phase-counter cadence re-miscalibrates
-whenever phase size changes (see `#77`). After each phase commit, check all
-three; recommend the checkpoint (naming which trigger fired) the moment any
-one does:
+last checkpoint**, not on a step count — a step-counter cadence re-miscalibrates
+whenever step size changes. After each step commit, check all three; recommend
+the checkpoint (naming which trigger fired) the moment any one does:
 
-1. **Layer boundary** — the phase about to start declares a different
-   `Layer:` (the phase-lint enum) than the phase just committed. The just-closed
-   layer is a coherent reviewable unit.
+1. **Layer boundary** — the step about to start declares a different `Layer:`
+   (the phase-lint enum) than the step just committed. The just-closed layer is
+   a coherent reviewable unit.
 2. **Accumulation** — the unreviewed diff since the last-reviewed marker
    exceeds **> 400 changed lines (insertions + deletions) OR > 8 changed
-   files**, measured with `git diff --stat <baseline>..HEAD`. Covers a long run
-   of small same-layer phases the layer-boundary trigger would miss.
-3. **Sensitivity** — the phase just committed touches auth, payments,
+   files**, measured with `git diff --stat <baseline>..HEAD`.
+3. **Sensitivity** — the step just committed touches auth, payments,
    destructive migrations, secrets, or CI config → recommend an **immediate**
-   checkpoint on closing it, regardless of the other two triggers. This is a
-   **single-reviewer** recommendation and does not change `review-change`'s
-   own once-per-unit adversarial cadence (`skills/review-change/SKILL.md`
-   "Cadence — once per unit") — the two are independent mechanisms.
+   checkpoint on closing it. This is a single-reviewer recommendation and does
+   not change `review-change`'s own once-per-unit adversarial cadence — the two
+   are independent mechanisms.
 
-**Last-reviewed marker.** Home: `progress.md`'s header line
-`Last reviewed: <sha>`. Sole writer: `execute-phase` — stamped with the
-just-committed phase's sha immediately after a checkpoint is taken (review
-happens in a separate turn, so this skill records the marker at the start of
-the *next* phase it executes, using the sha the user confirmed was reviewed).
-If the marker is absent (unit's first checkpoint, or a legacy `progress.md`
-predating this rule), the baseline is `git merge-base <default-branch> HEAD` —
-never treat a missing marker as a blocker or crash condition.
+**Last-reviewed marker.** Home: the unit doc's Evidence section header line
+`Last reviewed: <sha>`. Sole writer: `execute-phase` — stamped after a checkpoint
+is taken (the next step records the sha the user confirmed was reviewed). If
+absent (unit's first checkpoint), the baseline is
+`git merge-base <default-branch> HEAD` — never treat a missing marker as a
+blocker or crash condition.
 
 ## Allowed & forbidden (fixed lists — no interpretation)
 
-**Allowed changes in a phase:**
-- The phase's own tasks (from `TASKS.md`, or the SPEC for single-pass/fix)
-- Tests for the behavior this phase adds or alters
-- The per-phase doc updates listed in the completion gate below
+**Allowed changes in a step:**
+- The step's own tasks (from the unit doc's `Tasks` section)
+- Tests for the behavior this step adds or alters
+- The per-step doc updates listed in the step completion gate below
 - The smallest refactor strictly required to land a task (state why in the commit)
 - An `Autofix` or `Opportunistic Fix` that passes every box in the
   *Opportunistic finding policy* below
 
 **Forbidden — never, even if it "would help":**
-- New abstractions beyond what the SPEC names (an interface with one
-  implementation is a violation)
-- New dependencies not justified in the SPEC
-- Public API / contract changes the SPEC doesn't name
+- New abstractions beyond what the unit doc's Acceptance criteria name
+- New dependencies not justified in the unit doc
+- Public API / contract changes the unit doc doesn't name
 - Architecture changes (layers, boundaries, patterns)
 - Refactoring unrelated code
-- Building future phases or features early
+- Building future steps or features early
 - Folding a discovered finding into the branch before it passes the
   *Opportunistic finding policy*
-- Creating an issue that descopes a SPEC acceptance criterion or phase task
-  without a user-approved, dated `## Amendments` entry (see *Descope guard*
-  under *Issue policy* below) — an issue may never be the first record of a
-  descope
+- Creating an issue that descopes an acceptance criterion without explicit user
+  approval and a dated `## References` entry (see *Descope guard* below)
+  — an issue may never be the first record of a descope
 
 Something forbidden looks necessary → stop, record it in `decisions.md` or
 `known-issues.md`, and surface it — never do it silently.
 
-## Gate-run mark
+## Step completion gate
 
-The phase completion gate records a `GATE-RAN` mark at the head it ran and
-consumes an identical-head green mark instead of re-running. The mark's shape,
-ownership, and reuse rule are declared in `LEDGERS.md` (§gate-ran@1).
+The step completion gate verifies that Evidence rows are complete for the
+step's acceptance criteria, the unit doc is committed clean, and the diff guard
+(if applicable) passed. The mark's shape, ownership, and reuse rule are
+declared in `LEDGERS.md` (§gate-ran@1).
 
-```text
+```
 GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
 ```
 
-- **Record**: whoever runs the project gate records a mark at the head the gate
-  actually ran. A green run is recorded; a red run is also recorded (exit code
-  ≠ 0 is evidence, not silence).
-- **Consume**: any skill may consume a green run only at the identical HEAD. A
-  changed head ⇒ re-run the gate.
-- **Recorder column-sets**: `execute-phase:gate-ran-marks` (executor phase gates)
-  and `review-change:review-gate-ran-marks` (reviewer gate runs) are declared in
-  the `review-findings` truth-class row's owner cell.
+- **Record**: whoever runs the gate records a mark at the head the gate
+  actually ran (green or red). A red run (exit code ≠ 0) is recorded as
+  evidence, not silence.
+- **Consume**: any skill may consume a green run only at the identical HEAD.
+  A changed head ⇒ re-run the gate.
+- **Recorder column-sets**: `execute-phase:gate-ran-marks` (executor steps)
+  and `review-change:review-gate-ran-marks` (reviewer steps) are declared in
+  the Evidence truth-class row's owner cell.
 
-## Phase completion gate — pass only if (every box, every phase)
+## Step completion gate — pass only if (every box, every step)
 
 ```
 ✓ Verification gate green — type-check + tests + build actually RUN (paste exit
   status), never assumed
-✓ Every task of this phase checked off in TASKS.md, each mapped to evidence
-  (code path or test name)
-✓ Tests updated/added for every behavior this phase changed
-✓ Tests-first red run recorded (core/domain + orchestration phases, n/a for
-  test-after UI/adapter phases) — the failing first run's command, exit status,
-  and failing test names are in the phase's `progress.md` receipt
+✓ Every task of this step checked off in the unit doc's `Tasks` section, each
+  mapped to an Evidence row (code path or test name)
+✓ Tests updated/added for every behavior this step changed
+✓ Tests-first red run recorded (core/domain + orchestration steps, n/a for
+  test-after UI/adapter steps) — the failing first run's command, exit status,
+  and failing test names are in the unit doc's `Progress` log
 ✓ No TODO/FIXME/HACK markers left in the diff
 ✓ No duplicated logic (reuse the existing helper — cite it if one existed)
 ✓ No dead code introduced (unused imports, functions, unreachable branches)
@@ -94,30 +88,23 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
   consumers)
 ✓ Architecture doc respected (dependency directions, layer boundaries)
 ✓ Architectural invariants preserved or backed by an explicit recorded decision
-✓ Docs updated — at minimum verify each of: TASKS.md (checkboxes),
-  progress.md (one handoff entry in the fixed schema — Done / Remains /
-  Gotchas / Files / Next), testing.md, known-issues.md, decisions.md (if any
-  decision was taken), SPEC.md (only if scope/acceptance changed — with the
-  change logged), docs/CAPABILITIES.md (only if this phase introduced a new
-  cross-cutting subsystem, role, or permission — append the row, additive,
-  never rewrite existing ones; explicitly n/a when the project has no
-  inventory file)
-✓ Docs COMMITTED with the phase — after the phase commit,
-  `git status --porcelain -- docs/` returns nothing. Doc updates ride the
-  phase commit (same `git add`), never sit uncommitted "for later"
+✓ Evidence rows complete for the step's ACs — unit doc committed clean
+  (one dated `YYYY-MM-DD HH:MM` Progress entry, all Evidence rows current)
+✓ Docs COMMITTED with the step — the unit doc carries all required sections
+  (Tasks, Evidence, Progress, References); no orphan files remain
 ```
 
-A phase that cannot tick every box is **not done**: fix within the phase's
-scope, or record the blocker in `known-issues.md`, leave the work uncommitted,
-and stop with a clear report. Never commit red; never tick a box you didn't
-verify.
+A step that cannot tick every box is **not done**: fix within the step's
+scope, or record the blocker in the unit doc's `Progress` log, leave the
+work uncommitted, and stop with a clear report. Never commit red; never tick
+a box you didn't verify.
 
 ## Branch
 
 | Mode | Format |
 |------|--------|
-| feature / single-pass | `feat/<NN>-<slug>` |
-| `--fix` | `fix/<issue-number>-<topic>` |
+| unit step | `feat/<NN-slug>` |
+| fix unit | `fix/<issue-number>-<topic>` |
 
 Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/ambiguous, ask. Never commit, amend, or force-push on `main`.
 
@@ -136,6 +123,8 @@ planned work, and inference never prove implementation. A present ledger whose
 status is `draft`, `contradicted`, or `resolved` stops implementation and routes
 to discovery or resolution first. If no ledger exists, inspect the repository
 directly and record `n/a: no normalized repository state`; NRS is optional.
+Unit doc evidence rows (Evidence, Progress) are the single source of truth
+for step completion — no separate ACCEPTANCE.md, progress.md, or TASKS.md.
 
 ## Architectural invariants
 
@@ -143,7 +132,7 @@ Before any edit, discover the optional project invariant document declared in
 the documentation map (normally
 `docs/architecture/ARCHITECTURAL_INVARIANTS.md`). If absent, record
 `n/a: no project invariants declared` and continue. For every applicable rule,
-cite its ID and repository evidence and classify the phase as `preserves`,
+cite its ID and repository evidence and classify the step as `preserves`,
 `violates`, `introduces`, or `changes`. Use frozen NRS facts when present, but
 the repository remains authoritative and conflicting evidence routes to the
 resolver.
@@ -154,16 +143,16 @@ project's declared authority. A decision record alone is not sufficient: the
 declared authority must apply the decision to the invariant document, and the
 resulting rule must be re-evaluated and evidenced as `preserves` before the
 phase can resume. The executor does not edit the invariant document itself.
-Do not alter the SPEC or tests to make the phase pass, and do not convert the
-decision into phase work. Return exactly:
+Do not alter the unit doc or tests to make the step pass, and do not convert
+the decision into step work. Return exactly:
 
 ```
-ARCHITECTURAL INVARIANT GATE — <NN|fix n> <P<k>|single-pass> BLOCKED
+ARCHITECTURAL INVARIANT GATE — <NN-slug> <P<k>> BLOCKED
 Invariant: <ID> — <violates|introduces|changes>
 Evidence: <repository path:line or command result>
 Decision required: <project-declared architectural authority>
 
-→ Next: <decision path> — record the explicit architectural decision, then re-run this phase
+→ Next: <decision path> — record the explicit architectural decision, then re-run this step
   · evidence conflict → /resolve-repository-state — reconcile the frozen fact first
   · no invariant document → record n/a and continue only when no other rule applies
 ```
