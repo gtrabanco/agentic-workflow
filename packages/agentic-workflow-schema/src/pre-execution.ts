@@ -470,7 +470,7 @@ function selectionError(code: SpecProductSelectorError["code"], heading: string)
  *
  * The selection is byte-exact and total: the level-1 title and the required
  * level-2 sections (Goal, Branch, Size, Dependencies, Product half, Design
- * status), ending at the first boundary heading after Design status, with trailing
+ * status), ending at the first boundary heading after References, with trailing
  * blank lines removed and exactly one final newline. Everything the selector does
  * NOT take — Amendments, the Engineering half, later appendices — stays outside
  * Product authority, so a Plan-phase write can never rotate a Product digest and
@@ -543,7 +543,7 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
   // The projection ends at the first boundary heading (level 1 or 2) after the
   // Design-status section opens — never inside a fence.
   let designLine = -1;
-  for (const heading of headings) if (heading.name === "Design status") designLine = heading.line;
+  for (const heading of headings) if (heading.name === "References") designLine = heading.line;
   let end = lines.length;
   openFence = null;
   for (let i = 0; i < lines.length; i++) {
