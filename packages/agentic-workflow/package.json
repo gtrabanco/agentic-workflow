@@ -1,18 +1,29 @@
 {
   "name": "@gtrabanco/agentic-workflow",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Producer crate for the deterministic agentic-workflow scripts; later producers land their scripts as subcommands here.",
+  "version": "0.1.1",
+  "description": "Deterministic runner for the agentic-workflow lane: file services (agwo edit), sensors, guards and receipts. No dependencies.",
   "license": "MIT",
-  "author": "Gabriel Trabanco <gtrabanco@users.noreply.github.com>",
+  "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gtrabanco/agentic-workflow.git",
     "directory": "packages/agentic-workflow"
   },
   "type": "module",
+  "bin": {
+    "agentic-workflow": "./bin/agentic-workflow.mjs"
+  },
   "engines": {
     "node": ">=18",
     "bun": ">=1.4"
-  }
+  },
+  "scripts": {
+    "test": "bun test test/",
+    "test:node": "node --test"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ]
 }

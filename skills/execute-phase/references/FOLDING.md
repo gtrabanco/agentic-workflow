@@ -10,21 +10,20 @@ own turn (e.g. no slash-command menu, or an agent that folds without leaving
 its current context).
 
 When `review-change` findings (fix-now) or `audit-pr` blockers are folded back
-into a branch that already has an open PR, the fold is complete **only** when
-every step below ran — fixing the code and stopping is the classic way findings
-end up "solved" locally but absent from the merged PR:
+into a unit branch that already has an open PR, the fold is complete **only**
+when every step below ran — fixing the code and stopping is the classic way
+findings end up "solved" locally but absent from the merged PR:
 
 ```
 ✓ Fixes implemented (scope: only the routed findings — nothing extra)
 ✓ Gate RUN and green (exit codes pasted)
 ✓ Never edit an existing test's expectation to match behaviour — a setup
   repair keeps assertions at least as strong and never touches expectations
-✓ Per-phase / unit docs updated where the finding touched them
-  (known-issues.md entry resolved? progress.md notes the fold)
-✓ Each folded finding's row in the unit's `review-findings.md` ledger (if one
-  exists — the ledger is optional; a unit with no fix-now findings has none)
-  flipped `folded: no → yes` — the one and only ledger state transition,
-  `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer
+✓ Evidence rows updated where the finding touched them (the finding's row
+  in the unit doc's Evidence ledger flipped `folded: no → yes` — the one and
+  only state transition, `ledger-ownership@1` / `fold-findings:folded-flag`
+  is the sole writer)
+✓ Progress log advanced with a dated entry noting the fold
 ✓ `git add` + `git commit` RUN (sha pasted) — e.g.
   `fix(<scope>): fold review findings — <summary>`
 ✓ `git push` RUN (PR is open → every commit pushes immediately)
@@ -35,41 +34,36 @@ Then hand back to the gate that sent you (`/review-change` re-review, or
 `/audit-pr` re-audit). Never report findings as resolved while any box is
 unchecked — an unpushed fix does not exist for CI, the reviewer, or the merge.
 
-## Gate-run mark (P4)
-
-A `GATE-RAN` mark is appended to the unit's `review-findings.md` ledger at the
-head the gate actually ran. The mark's shape and ownership rule are declared in
-`LEDGERS.md` (§gate-ran@1). A green run is recorded; a red run is also recorded.
-The identical-head reuse rule is documented in `EXECUTION_CONTRACT.md` (§gate-ran).
-
-Final-phase / single-pass / fix hand-off:
+## Closing recommendation (printed after step or unit complete)
 
 ```
-<unit> implemented, gate green, marked done.
-PR opened: <FULL PR URL — always printed here; not every agent shows open PRs>
-Roadmap/fix-index row: done · #<n> (linked and pushed)
-→ Next: /review-change on the changed HEAD (the mandatory end review)
-  · REVIEW-FAIL → /fold-findings (only on a REVIEW-FAIL), then re-run /review-change (unresolved findings go to triage/replan)
-  · clean    → /audit-pr (merge gate) → human merges
-  · findings → fold fix-now into this PR; independent work remains a proposal until user triage; re-review
+✓ Step executed, Evidence rows updated, Progress log advanced
+✓ Gate green (or red-gate repaired within --max-attempts)
+✓ Unit doc committed clean
+
+→ Next: /unit-lane <NN-slug> — the conductor continues
+  · all steps done → /review-change (mandatory end review)
+  · REVIEW-FAIL → /fold-findings repairs them; a fresh /review-change follows the fold
+  · merge gate after REVIEW-PASS → /audit-pr
 ```
 
-This never auto-merges. Explicit `P<n>` stops after one phase; omitted-phase
-mode gates and commits every remaining phase before the same final review.
+No auto-merge. Explicit `P<k>` stops after one step; omitted-step mode gates
+and commits every remaining step before the same final review.
+## Gate-run marks (gate-ran@1)
 
-### Marking done (status semantics)
+Every verification gate this cycle runs records a `GATE-RAN` mark in the unit
+doc's Evidence section at the head it actually ran:
+`GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>`. A green run is recorded;
+a red run is also recorded (exit code ≠ 0 is evidence, not silence). Any skill
+may consume a green mark only at the identical HEAD — a changed head re-runs
+the gate. The recorders are `execute-phase:gate-ran-marks` and
+`review-change:review-gate-ran-marks` (the shape and ownership live in
+`pre-execution-review`'s `LEDGERS.md`, §gate-ran@1).
 
-A unit flips to **`done` when its last step runs — opening the PR — even though it
-isn't merged yet.** `done` means *built and PR-open*; merge state lives in the forge
-(the open/merged PR), not in the status. **A `done` row always carries its PR
-reference** — `done · [#<pr>](<pr-url>)` — added right after `gh pr create`
-returns the URL (follow-up `docs: link PR #<n>` commit on the same branch);
-`done` without a PR link is the tell-tale of an unfinished close-out. The flip is a doc change, so it rides the
-PR-bound commit (never a lone commit on the default branch). **Never merge with docs
-still pending, and never drop the issue / fix-index entry before merge** — those are
-`audit-pr`'s gates, not removed at done-time.
+## Finishing the unit — the last step is always an open PR
 
-**One phase = one worker context when available.** Whole-unit mode is one user
-invocation, not one growing raw context: subagent/headless hosts use a fresh
-worker per phase; inline-only hosts reduce state to compact receipts. Explicit
-phase invocation remains the strict fresh-conversation fallback.
+When the final triaged step closes: mark the unit done, push the branch, and
+open the PR with `gh pr create` (per the project's Workflow conventions) —
+regardless of the review still to come. The PR body carries the unit doc's
+Evidence section as its verification record and closes the unit's tracked
+issues via `Closes #N`.

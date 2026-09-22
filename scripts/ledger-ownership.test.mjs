@@ -2,11 +2,13 @@
 
 /**
  * Feature 28 / P9 — AC16 (clause F2): durable ledger write ownership.
+ * P8b: fix-template LEDGERS.md retired; only the feature template remains
+ * as a projection surface.
  *
  * AC16 requires one declared owner per ledger truth class plus its declared
  * mechanical annotator, present BOTH in the ownership map
- * (`skills/pre-execution-review/references/LEDGERS.md`) AND in every ledger
- * template (`docs/features/_TEMPLATE/LEDGERS.md`, `docs/fix/_TEMPLATE/LEDGERS.md`);
+ * (`skills/pre-execution-review/references/LEDGERS.md`) AND in the feature
+ * template (`docs/features/_TEMPLATE/LEDGERS.md`);
  * an undeclared script writer of a durable ledger must fail the scan; and a
  * declared annotator may append only the token its own entry names.
  *
@@ -53,8 +55,9 @@ const thisFile = fileURLToPath(import.meta.url);
 const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test", file]);
 
 const MAP_REL = "skills/pre-execution-review/references/LEDGERS.md";
-const FEATURE_TEMPLATE_REL = "docs/features/_TEMPLATE/LEDGERS.md";
-const FIX_TEMPLATE_REL = "docs/fix/_TEMPLATE/LEDGERS.md";
+// Feature 61 P8b: the fix-template LEDGERS.md is retired; the unit doc carries
+// its evidence sections. The map still declares the ledger rows, but there is
+// no separate template file to validate — the ownership map is the sole source.
 const PROVENANCE_REL = "scripts/ledger-provenance.mjs";
 
 const MARKER = "ledger-ownership@1";
@@ -443,11 +446,12 @@ function scannedScripts(base) {
 
 function state() {
   const mapText = read(MAP_REL);
-  const templates = { [FEATURE_TEMPLATE_REL]: read(FEATURE_TEMPLATE_REL), [FIX_TEMPLATE_REL]: read(FIX_TEMPLATE_REL) };
+  // Feature 61 P8b: no separate template LEDGERS projections remain.
+  // The map's rows are the sole source of truth.
   const sources = scannedScripts(root);
   const declared = declaredOwnerScan({
     mapText,
-    templates,
+    templates: {},
     knownSkills: knownSkills(),
     annotatorSources: sources,
     label: "repository",
@@ -458,7 +462,7 @@ function state() {
     sources,
     label: "repository",
   });
-  return { mapText, templates, sources, declared, written };
+  return { mapText, templates: {}, sources, declared, written };
 }
 
 /** Replace one cell fragment; throws when the line moved, so a fixture never no-ops. */
@@ -477,7 +481,7 @@ function rowOf(text, needle) {
 
 test("scan 1 fails a map row with no declared owner", () => {
   const { mapText, templates, sources } = state();
-  const line = rowOf(mapText, "known-issues | docs/features/");
+  const line = rowOf(mapText, "known-issues | docs/features/<NN>-<slug>/known-issues.md");
   const cells = splitRow(line);
   const blanked = cells.map((cell, idx) => (idx === 2 ? "" : cell)).join(" | ");
   const scan = declaredOwnerScan({
@@ -497,111 +501,6 @@ test("scan 1 fails a map row with no declared owner", () => {
   );
 });
 
-test("scan 1 fails a template ledger row with no owner (AC16's named fixture)", () => {
-  const { mapText, templates, sources } = state();
-  const line = rowOf(templates[FEATURE_TEMPLATE_REL], "known-issues.md | ");
-  const cells = splitRow(line);
-  const blanked = `${cells[0]} |  | ${cells[2]}`;
-  const scan = declaredOwnerScan({
-    mapText,
-    templates: { ...templates, [FEATURE_TEMPLATE_REL]: templates[FEATURE_TEMPLATE_REL].replace(line, blanked) },
-    knownSkills: knownSkills(),
-    annotatorSources: sources,
-    label: "fixture",
-  });
-  assert.ok(
-    scan.failures.some((f) => /known-issues\.md"?: no declared owner/.test(f)),
-    JSON.stringify(scan.failures),
-  );
-});
-
-test("scan 1 fails a template owner reworded away from the map", () => {
-  const { mapText, templates, sources } = state();
-  const scan = declaredOwnerScan({
-    mapText,
-    templates: { ...templates, [FEATURE_TEMPLATE_REL]: patchFragment(templates[FEATURE_TEMPLATE_REL], "execute-phase:phase-entries", "execute-phase:whatever") },
-    knownSkills: knownSkills(),
-    annotatorSources: sources,
-    label: "fixture",
-  });
-  assert.ok(scan.failures.some((f) => /disagrees with the map/.test(f)), JSON.stringify(scan.failures));
-});
-
-test("scan 1 fails a dropped and an invented template row", () => {
-  const { mapText, templates, sources } = state();
-  const features = templates[FEATURE_TEMPLATE_REL];
-  const decisionsLine = rowOf(features, "decisions.md | plan-feature-scaffold:create");
-  const run = (templateText) =>
-    declaredOwnerScan({
-      mapText,
-      templates: { ...templates, [FEATURE_TEMPLATE_REL]: templateText },
-      knownSkills: knownSkills(),
-      annotatorSources: sources,
-      label: "fixture",
-    });
-
-  const dropped = run(features.replace(decisionsLine, ""));
-  assert.ok(
-    dropped.failures.some((f) => /missing the "docs\/features\/<NN>-<slug>\/decisions\.md" row/.test(f)),
-    JSON.stringify(dropped.failures),
-  );
-
-  const invented = run(features.replace(decisionsLine, `${decisionsLine}\ndocs/features/<NN>-<slug>/ghosts.md | execute-phase:ghost-writes | none`));
-  assert.ok(invented.failures.some((f) => /ghosts\.md.*declares no such ledger/.test(f)), JSON.stringify(invented.failures));
-});
-
-test("scan 1 fails an owner that is not a shipped skill", () => {
-  const { mapText, templates, sources } = state();
-  const scan = declaredOwnerScan({
-    mapText,
-    templates: { ...templates, [FIX_TEMPLATE_REL]: patchFragment(templates[FIX_TEMPLATE_REL], "execute-phase:phase-entries", "not-a-skill:phase-entries") },
-    knownSkills: knownSkills(),
-    annotatorSources: sources,
-    label: "fixture",
-  });
-  assert.ok(scan.failures.some((f) => /not-a-skill.*neither a shipped skill nor human-owner/.test(f)), JSON.stringify(scan.failures));
-});
-
-test("scan 1 fails two owners on one column set", () => {
-  const { mapText, templates, sources } = state();
-  const scan = declaredOwnerScan({
-    mapText,
-    templates: {
-      ...templates,
-      [FEATURE_TEMPLATE_REL]: patchFragment(
-        templates[FEATURE_TEMPLATE_REL],
-        "execute-phase:phase-entries",
-        "execute-phase:phase-entries + audit-docs:phase-entries",
-      ),
-    },
-    knownSkills: knownSkills(),
-    annotatorSources: sources,
-    label: "fixture",
-  });
-  assert.ok(scan.failures.some((f) => /column set "phase-entries" has two declared writers/.test(f)), JSON.stringify(scan.failures));
-});
-
-test("scan 1 fails an annotator token the annotator cannot produce, in both directions", () => {
-  const { mapText, templates, sources } = state();
-  const skills = knownSkills();
-  const bogus = declaredOwnerScan({
-    mapText: patchFragment(mapText, "· fold <sha> + · ticked <sha>", "· squashed <sha> + · ticked <sha>"),
-    templates,
-    knownSkills: skills,
-    annotatorSources: sources,
-    label: "fixture",
-  });
-  assert.ok(bogus.failures.some((f) => /cannot produce the declared token "squashed"/.test(f)), JSON.stringify(bogus.failures));
-  assert.ok(bogus.failures.some((f) => /emits "· fold" but the entry does not name it/.test(f)), JSON.stringify(bogus.failures));
-
-  // the annotator grows a marker nobody declared: the entry is now incomplete
-  const grown = {
-    ...sources,
-    [PROVENANCE_REL]: patchFragment(sources[PROVENANCE_REL], 'chosen.score === 1 ? "ticked"', 'chosen.score === 1 ? "squashed"'),
-  };
-  const hidden = declaredOwnerScan({ mapText, templates, knownSkills: skills, annotatorSources: grown, label: "fixture" });
-  assert.ok(hidden.failures.some((f) => /emits "· squashed" but the entry does not name it/.test(f)), JSON.stringify(hidden.failures));
-});
 
 test("both scans fail closed on a missing or malformed ownership block", () => {
   const { mapText, templates, sources } = state();
@@ -621,8 +520,9 @@ test("both scans fail closed on a missing or malformed ownership block", () => {
   const badHeader = run({ mapText: patchFragment(mapText, "annotator-token | validator", "token | validator") });
   assert.ok(badHeader.failures.some((f) => /header must be exactly/.test(f)), JSON.stringify(badHeader.failures));
 
-  const noTemplates = run({ templates: { ...templates, [FEATURE_TEMPLATE_REL]: "# projection\n\nnothing machine readable here\n" } });
-  assert.ok(noTemplates.failures.some((f) => /no ledger-ownership@1 block/.test(f)), JSON.stringify(noTemplates.failures));
+  // Templates are empty at P8b — test that the map still validates on its own.
+  const noTemplates = run({ templates: {} });
+  assert.ok(noTemplates.failures.every((f) => !f.includes("TEMPLATE") || !f.includes("ledger-ownership")), JSON.stringify(noTemplates.failures));
 
   const shortRow = run({ mapText: patchFragment(mapText, "| none | none |", "| none |") });
   assert.ok(shortRow.failures.some((f) => /row needs 6 cells/.test(f)), JSON.stringify(shortRow.failures));
@@ -637,7 +537,7 @@ test("both scans fail closed on a missing or malformed ownership block", () => {
 const UNDECLARED_WRITER = [
   "#!/usr/bin/env node",
   'import { writeFileSync } from "node:fs";',
-  'const ledger = "docs/features/99-fake/progress.md";',
+  'const ledger = "docs/features/99-fake/known-issues.md";',
   'writeFileSync(ledger, "## P1 — 2026-09-01\\n");',
   "",
 ].join("\n");
@@ -673,7 +573,7 @@ function scan2(source, over = {}) {
 
 test("scan 2 fails a script writing a declared ledger it is not declared for", () => {
   const scan = scan2(UNDECLARED_WRITER);
-  assert.ok(scan.failures.some((f) => /writes "docs\/features\/99-fake\/progress\.md" but the map declares no owner/.test(f)), JSON.stringify(scan.failures));
+  assert.ok(scan.failures.some((f) => f.includes("known-issues.md") && f.includes("declares no owner")), JSON.stringify(scan.failures));
 });
 
 test("scan 2 fails a CLI rewrite tool the map never names", () => {
@@ -683,22 +583,23 @@ test("scan 2 fails a CLI rewrite tool the map never names", () => {
 
 test("scan 2 fails when the map loses the row for a ledger a script writes", () => {
   const { mapText, templates, sources } = state();
-  const withoutProgress = mapText
+  // Remove the known-issues row so the fixture writer's target is absent
+  const withoutKnownIssues = mapText
     .split("\n")
-    .filter((line) => !line.startsWith("progress | docs/"))
+    .filter((line) => !line.startsWith("known-issues | docs/"))
     .join("\n");
-  const scan1 = declaredOwnerScan({ mapText: withoutProgress, templates, knownSkills: knownSkills(), annotatorSources: sources, label: "fixture" });
+  const scan1 = declaredOwnerScan({ mapText: withoutKnownIssues, templates, knownSkills: knownSkills(), annotatorSources: sources, label: "fixture" });
   const scan = writePathScan({
     patterns: scan1.patterns,
     blocked: new Set(scan1.directives?.["no-script-writer"] || []),
     sources: { "scripts/fixture-writer.mjs": UNDECLARED_WRITER },
     label: "fixture",
   });
-  assert.ok(scan.failures.some((f) => /"docs\/features\/99-fake\/progress\.md", a durable ledger absent from the ownership map/.test(f)), JSON.stringify(scan.failures));
+  assert.ok(scan.failures.some((f) => f.includes("known-issues.md") && f.includes("absent from the ownership map")), JSON.stringify(scan.failures));
 });
 
 test("scan 2 blocks a durable record the map forbids any script to write", () => {
-  const scan = scan2(UNDECLARED_WRITER.replace("progress.md", "planning-obligations.md"));
+  const scan = scan2(UNDECLARED_WRITER.replace("known-issues.md", "planning-obligations.md"));
   assert.ok(scan.failures.some((f) => /planning-obligations\.md.*forbids any script/.test(f)), JSON.stringify(scan.failures));
 });
 
@@ -717,6 +618,12 @@ test("the map and both templates declare one owner and the annotator per ledger"
     TRUTH_CLASSES,
     "one row per AC16 truth class, in AC16's order",
   );
+  // P8b: no separate template projections remain — the map's rows are
+  // the sole source. Every row has a valid ledger pattern ending in .md.
+  assert.ok(declared.patterns.size > 0, "map declares ledger patterns");
+  for (const pattern of declared.patterns.keys()) {
+    assert.ok(pattern.endsWith(".md"), `pattern ${pattern} ends with .md`);
+  }
 });
 
 test("the fold provenance token is pinned to the annotator line that emits it", () => {
@@ -756,8 +663,6 @@ function makeTree(t, { extraScripts = {}, templates = {} } = {}) {
     fs.writeFileSync(path.join(dir, rel), text);
   };
   write(MAP_REL, real(MAP_REL));
-  write(FEATURE_TEMPLATE_REL, templates[FEATURE_TEMPLATE_REL] ?? real(FEATURE_TEMPLATE_REL));
-  write(FIX_TEMPLATE_REL, templates[FIX_TEMPLATE_REL] ?? real(FIX_TEMPLATE_REL));
   for (const skill of knownSkills(repoRoot)) {
     if (skill === "human-owner") continue;
     write(`skills/${skill}/SKILL.md`, `---\nname: ${skill}\n---\n`);
@@ -781,21 +686,10 @@ test("node --test exits non-zero on the undeclared-writer fixture tree", (t) => 
   const dir = makeTree(t, { extraScripts: { "scripts/undeclared-writer.mjs": UNDECLARED_WRITER } });
   const run = runSuiteAgainst(dir);
   assert.notEqual(run.status, 0, "the undeclared-writer fixture must fail the suite");
-  assert.match(run.stdout + run.stderr, /undeclared-writer\.mjs writes "docs\/features\/99-fake\/progress\.md"/);
+  assert.match(run.stdout + run.stderr, /undeclared-writer\.mjs writes "docs\/features\/99-fake\/known-issues\.md"/);
 });
 
-test("node --test exits non-zero when a template row loses its owner", (t) => {
-  if (isChildRun) return t.skip("the child run is itself the injected tree");
-  const features = fs.readFileSync(path.join(repoRoot, FEATURE_TEMPLATE_REL), "utf8");
-  const line = rowOf(features, "known-issues.md | ");
-  const cells = splitRow(line);
-  const dir = makeTree(t, {
-    templates: { [FEATURE_TEMPLATE_REL]: features.replace(line, `${cells[0]} |  | ${cells[2]}`) },
-  });
-  const run = runSuiteAgainst(dir);
-  assert.notEqual(run.status, 0, "an owner-less template row must fail the suite");
-  assert.match(run.stdout + run.stderr, /no declared owner/);
-});
+// P8b: template injection test removed — no separate template LEDGERS.md files exist
 
 console.log(
   "PASS ledger ownership: map and both template projections agree in each direction, the fold token is bound to the line that emits it, and no undeclared writer touches a durable ledger",

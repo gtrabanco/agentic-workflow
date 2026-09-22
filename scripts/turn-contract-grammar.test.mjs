@@ -21,7 +21,7 @@ const EXPECTED_CODES = [
   "branch-default",
   "not-a-repo",
   "no-commits",
-  "acceptance-missing",
+  "unit-doc-missing",
   "phase-lint-failed",
   "pr-not-open",
   "pr-head-mismatch",

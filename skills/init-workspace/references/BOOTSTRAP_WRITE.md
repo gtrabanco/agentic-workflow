@@ -1,11 +1,13 @@
 ## Write and verify the bootstrap
 
 4. **Write the adapted scaffold.** Fill the `AGENTS.md` placeholders (commands,
-   the documentation map rows, architecture); keep the
-   `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
-   `.github/` templates; keep `.agentic-workflow/hooks/` and activate only the
-   adapters explicitly accepted in the interview; prune unused doc folders and
-   map rows. Leave honest placeholders where the user hasn't decided — never
+   the documentation map rows, architecture); write the **adaptive lane
+   conventions** (unit document, triage, catalog steps, guards, evidence rows,
+   dated progress log, closed commit format `type(scope): description`); keep
+   the `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and
+   the `.github/` templates; keep `.agentic-workflow/hooks/` and activate only
+   the adapters explicitly accepted in the interview; prune unused doc folders
+   and map rows. Leave honest placeholders where the user hasn't decided — never
    invent values.
 5. **Seed Normalized Repository State.** Copy
    `template/docs/workflow/REPOSITORY_STATE.md` to
@@ -19,6 +21,10 @@
    optional: an absent document means no project invariants are declared, not
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
+6. **Propagate the unit doc template.** Ensure
+   `docs/features/_TEMPLATE/SPEC.md` exists with all 13 mandatory sections.
+   This is the template used when creating new unit documents.
+
 7. **Install accepted agent safety hooks.** Keep the canonical policy and
    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
@@ -58,7 +64,8 @@
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-11. **Report.** List what was created, which placeholders still need human input,
+12. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
-   skipped, with reason), and the next step: `discover-repository-state` →
-   `design-feature` → `plan-feature` → `execute-phase`.
+   skipped, with reason), and the next step:
+   `discover-repository-state` → `/unit-lane` (or `workflow-status`) → catalog
+   steps → `execute-phase`.

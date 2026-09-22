@@ -68,15 +68,13 @@ mechanized.*
       `{command: "/review-change --adversarial 2", trigger: "<which
       checklist box fired>", source_skill: "review-change"}` (`#76`).
     - `closure.state: "absent-legacy"` on a unit about to receive new
-      planned work → `{command: "/design-feature <slug>", trigger: "closure
-      absent, SPEC predates the rule — retrofit trigger", source_skill:
+      planned work → `{command: "/unit-lane <slug>", trigger: "closure
+      absent, SPEC predates the rule — retrofit trigger (design-feature absorbed by lane)", source_skill:
       "audit-pr"}` (`#78`).
     - a unit's `review-findings.md` ledger carries an open row whose frozen
-      route is the plan owner → `{command: "/plan-feature <unit>" |
-      "/plan-fix <issue>", trigger: "an open finding's frozen route is the plan
-      owner — replan-in-unit (<ids>)", source_skill: "review-change"}`
-      (`#224`) — the same class→destination decision `scripts/unit-route.mjs`
-      owns; and
+      route is the plan owner → `{command: "/unit-lane <id>", trigger: "an open finding's frozen route is the plan
+      owner — replan-in-unit (<ids>)", source_skill: "unit-lane"}`
+      (`#224`, P8b: plan-feature/plan-fix absorbed into lane);
     - a unit's `review-findings.md` ledger carries any other open row →
       `{command: "/fold-findings", trigger: "unfolded fix-now finding(s) on
       the ledger", source_skill: "fold-findings"}` (`#65`).

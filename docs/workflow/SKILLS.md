@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**18 user-facing skills** (one menu entry each) + **21 internal steps**
+**13 user-facing skills** (one menu entry each) + **21 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the
@@ -13,11 +13,14 @@ internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
 `review-seo`). Additionally, **one metadata-internal** contract not discoverable
 by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 19
+which the CLI respects to exclude from `npx skills add` discovery). The 18
 user-facing skills cover setup, repository-state discovery/resolution, design,
 pre-execution review (product and plan), planning, execution, review, audit,
-finding folds, docs generation, issue triage, roadmap shipping, session logging,
-and workflow status. **bump-skill** is a
+finding folds, docs generation, issue triage, session logging,
+and workflow status. The former autopilot/roadmap-shipping role is retired (feature 61 P9);
+its deterministic routing lives in `workflow-status` / `unit-lane` and the
+unattended-conductor role is deferred to roadmap row 62 (pi-native conductor).
+**bump-skill** is a
 repo-only maintenance tool (not a workflow skill) and is excluded from the
 workflow skill index entirely.
 
@@ -92,7 +95,7 @@ deterministic readiness result, never a verdict.
 | `evidence-grounding` | Authoring-side evidence contract + readiness preflight (`stage: spec` and `stage: plan`): claim→authority→artifact rows, the fixed readiness vocabulary, and the revision rotation that lets a reviewer detect its own write, plus the delegate-only read-only pass whose wide reading is conserved as one versioned `delegated-evidence.md` per unit (advisory until the authoring skill spot-checks its citations; `partial` or `blocked` blocks readiness) — and it governs a reader who did not write the artifact, whoever asked.. `user-invocable: false` — composed by `design-feature`, `plan-feature-scaffold` and `plan-fix`; it can never emit a review PASS |
 | `pre-execution-review` | Single owner of the shared review cycle (clean-context independence, truthful author-exclusion and diversity labels, unioned findings, counter-evidence-only dismissal, untrusted content, repair classes, no-progress, `CONVERGENCE-ANOMALY`, legacy adoption, write-then-report marking of terminal verdicts and typed gate rejections) and of the planning ledger table shapes, homes and writers, including the durable review mark's row. `user-invocable: false` — composed by `review-spec`, `review-plan` and the authoring skills; it emits no verdict |
 | `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
-| `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — `ship-roadmap` remains a native-banner conductor |
+| `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — the former `ship-roadmap` autopilot conductor is retired (feature 61 P9); its deterministic routing lives in `workflow-status` / `unit-lane` |
 | `verification-contract` | Freezes acceptance before implementation, defines validation levels, and binds evidence to the current acceptance blob and code receipt. `user-invocable: false` — planners, executors, and reviewers compose it |
 | `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
 | `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
@@ -118,7 +121,7 @@ deterministic readiness result, never a verdict.
 |---|---|---|---|
 | `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | manual `fold-findings` → re-run `review-change` (recommended on failure) |
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
-| `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
+| `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
@@ -132,12 +135,6 @@ deterministic readiness result, never a verdict.
 | Skill | Role | Hands off to |
 |---|---|---|
 | `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch; `--prioritize-now` triages unresolved review findings and routes oversized work to a plan with new phases | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
-
-## Autopilot — the whole flow, end to end
-
-| Skill | Role | Hands off to |
-|---|---|---|
-| `ship-roadmap` | **Conductor.** One upfront interview and a driver loop ship the roadmap and issue sweep. Default: opens PRs, human merges. `--fullauto` is the sole automated merge authority and uses the transient fail-closed wrapper plus an idempotent PR comment; direct merges remain blocked | human merges / `triage-issue` batch / `product-audit` |
 
 ## Session
 
@@ -176,7 +173,6 @@ with no arguments uses the default stated here.
 | `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
-| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` must be present on each iteration and uses the repository wrapper after a fresh MERGE-READY verdict. `--continue` resumes one stage. |
 | `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Issue batches produce independent verdicts plus one summary table; review-finding mode attempts every unresolved finding now and routes oversized work to `plan-feature`/`plan-fix` plus new manual phases. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
 
@@ -221,10 +217,9 @@ audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 
-ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
-                 roadmap → /loop { review-spec → plan-feature → review-plan → execute-phase (fresh cheap workers)
-                 → PR → fold-findings → re-run review-change → audit-pr → merge } → final report;
-                 human at the merges (default) and at product-audit (always)
+# The former autopilot conductor (`ship-roadmap`) is retired (feature 61 P9);
+# its deterministic routing lives in `workflow-status` / `unit-lane`.
+# The unattended-conductor role is deferred to roadmap row 62.
 ```
 
 ## Design rules every skill follows

@@ -7,8 +7,8 @@ that gives your session back afterwards.
 
 - **Canonical skills, unchanged.** The package ships the same `SKILL.md` files as
   this repository, byte for byte — no Pi-specific fork to drift.
-- **Friendly commands.** Type `/plan-feature --next`, not
-  `/skill:plan-feature --next`.
+- **Friendly commands.** Type `/unit-lane <slug>`, not
+  `/skill:unit-lane <slug>`.
 - **Routing you can forget about.** Nothing is configured by default: every
   command runs on the model you already have.
 
@@ -36,20 +36,15 @@ their own — they are composed by the ones above:
 | --- | --- |
 | `/audit-docs` | Check that docs, roadmap, code and the fix index agree. |
 | `/audit-pr` | The merge gate: is this PR ready? |
-| `/design-feature` | Turn a raw idea into a designed SPEC. |
 | `/discover-repository-state` | Freeze verified repository facts. |
 | `/execute-phase` | Implement the remaining phases of a planned unit. |
 | `/fold-findings` | Repair persisted fix-now findings. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
 | `/log-session` | Append a structured session entry to `docs/LOGS.md`. |
-| `/plan-feature` | Route designed work into planning and the roadmap. |
-| `/plan-fix` | Draft a phased fix SPEC from one or more issues. |
 | `/product-audit` | Audit the product surface, not just the diff. |
 | `/resolve-repository-state` | Resolve a contradiction in frozen facts. |
 | `/review-change` | Review a change with the applicable axes. |
-| `/review-plan` | Review a frozen plan in a clean context. |
-| `/review-spec` | Review a designed SPEC in a clean context. |
-| `/ship-roadmap` | Find or continue a roadmap, one stage per run. |
+| `/unit-lane` | Run the adaptive lane on a unit: triage, steps, evidence, release. |
 | `/triage-issue` | Verify an issue or finding against current code. |
 | `/workflow-status` | Read-only state of the repository and roadmap. |
 

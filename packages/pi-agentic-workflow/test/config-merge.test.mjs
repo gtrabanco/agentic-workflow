@@ -100,7 +100,7 @@ test("AC5: an absent onSettle resolves to the shipped keep via the loader", () =
 test("AC5: a command with no route anywhere resolves to the effective default route", () => {
   const globalCfg = valid('{"default":{"model":"openai/gpt-5.2","thinking":"medium"}}', "global");
   const merged = mergeConfigs(globalCfg, {});
-  assert.deepEqual(effectiveRoute(merged, "plan-feature"), { model: "openai/gpt-5.2", thinking: "medium" });
+  assert.deepEqual(effectiveRoute(merged, "unit-lane"), { model: "openai/gpt-5.2", thinking: "medium" });
 });
 
 test("AC5: merging two empty files yields the shipped default exactly", () => {
@@ -130,15 +130,15 @@ test("AC5: merge is a pure read — neither validated file is mutated", () => {
 // an array when these landed.
 
 test("AC7: a model chain merges project-over-global per key and round-trips its order", () => {
-  const globalCfg = valid('{"commands":{"plan-feature":{"model":["global/m1","global/m2"]}}}', "global");
+  const globalCfg = valid('{"commands":{"unit-lane":{"model":["global/m1","global/m2"]}}}', "global");
   const projectCfg = valid(
-    '{"commands":{"plan-feature":{"model":["project/m1","project/m2","project/m3"],"thinking":"high"}}}',
+    '{"commands":{"unit-lane":{"model":["project/m1","project/m2","project/m3"],"thinking":"high"}}}',
     "project",
   );
 
   const merged = mergeConfigs(globalCfg, projectCfg);
-  assert.deepEqual(merged.commands["plan-feature"].model, ["project/m1", "project/m2", "project/m3"]);
-  assert.equal(merged.commands["plan-feature"].thinking, "high");
+  assert.deepEqual(merged.commands["unit-lane"].model, ["project/m1", "project/m2", "project/m3"]);
+  assert.equal(merged.commands["unit-lane"].thinking, "high");
 });
 
 test("AC7: a chain declared only at global scope survives into the merged route", () => {
@@ -152,35 +152,35 @@ test("AC7/OB-6: legacy `inherit` and single-string model files parse and merge u
   assert.equal(inheritCfg.default.model, "inherit");
   assert.deepEqual(mergeConfigs(inheritCfg, {}).default, { model: "inherit", thinking: "high" });
 
-  const singleCfg = valid('{"commands":{"plan-feature":{"model":"openai/gpt-5.2"}}}', "global");
+  const singleCfg = valid('{"commands":{"unit-lane":{"model":"openai/gpt-5.2"}}}', "global");
   const merged = mergeConfigs(singleCfg, {});
-  assert.equal(merged.commands["plan-feature"].model, "openai/gpt-5.2");
-  assert.equal(typeof merged.commands["plan-feature"].model, "string");
+  assert.equal(merged.commands["unit-lane"].model, "openai/gpt-5.2");
+  assert.equal(typeof merged.commands["unit-lane"].model, "string");
 });
 
 test("AC7/OB-11: a non-reference chain element is rejected naming the loaders model path", () => {
-  const result = parseConfigFile('{"commands":{"plan-feature":{"model":["a/m1","not-a-reference"]}}}');
+  const result = parseConfigFile('{"commands":{"unit-lane":{"model":["a/m1","not-a-reference"]}}}');
   assert.equal(result.ok, false);
   assert.equal(result.issues.length, 1);
-  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.unit-lane.model"]);
   assert.match(result.issues[0].message, /not-a-reference/u);
   assert.ok(result.issues[0].message.includes('provider/modelId'), `expected a reference hint: ${result.issues[0].message}`);
 });
 
 test("AC7/OB-6: a chain longer than 4 entries is rejected naming the limit", () => {
   const chain = ["a/m1", "a/m2", "a/m3", "a/m4", "a/m5"];
-  const result = parseConfigFile(`{"commands":{"plan-feature":{"model":${JSON.stringify(chain)}}}}`);
+  const result = parseConfigFile(`{"commands":{"unit-lane":{"model":${JSON.stringify(chain)}}}}`);
   assert.equal(result.ok, false);
   assert.equal(result.issues.length, 1);
-  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.unit-lane.model"]);
   assert.match(result.issues[0].message, /4/u);
 });
 
 test("AC7/OB-6: an empty chain array is rejected", () => {
-  const result = parseConfigFile('{"commands":{"plan-feature":{"model":[]}}}');
+  const result = parseConfigFile('{"commands":{"unit-lane":{"model":[]}}}');
   assert.equal(result.ok, false);
   assert.equal(result.issues.length, 1);
-  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.unit-lane.model"]);
   assert.match(result.issues[0].message, /non-empty/u);
 });
 
@@ -204,8 +204,8 @@ test("AC12 loader leg: schema violations name the offending path", () => {
     ['{"default":{"model":"not-a-provider-model"}}', "$.default.model"],
     ['{"default":{"model":42}}', "$.default.model"],
     ['{"default":{"thinking":"ultracode"}}', "$.default.thinking"],
-    ['{"commands":{"plan-feature":{"thinking":"high","extra":1}}}', "$.commands.plan-feature.extra"],
-    ['{"commands":{"plan-feature":"openai/gpt-5.2"}}', "$.commands.plan-feature"],
+    ['{"commands":{"unit-lane":{"thinking":"high","extra":1}}}', "$.commands.unit-lane.extra"],
+    ['{"commands":{"unit-lane":"openai/gpt-5.2"}}', "$.commands.unit-lane"],
     ['{"onUnavailableRoute":"continue"}', "$.onUnavailableRoute"],
     ['{"onSettle":"restore-and-dance"}', "$.onSettle"],
     ['{"default":{"model":"inherit","thinking":"high"},"unknown":true}', "$.unknown"],

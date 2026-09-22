@@ -12,6 +12,7 @@ body:
         commits, PRs) are kept in English.
 
         This issue becomes the starting point of `docs/fix/<n>-<topic>/SPEC.md`.
+        Triage routes this into the lane's fix mode (implement, evidence steps).
         The PR that fixes it must close this issue via `Closes #<n>`.
 
   - type: textarea

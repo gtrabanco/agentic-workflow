@@ -1,5 +1,55 @@
 # Migration notes
 
+## 2026-09-22 — the fixed pipeline is retired, absorbed into the lane (feature 61 P8)
+
+**What changed.** `design-feature`, `plan-feature` (+ `plan-feature-scaffold`,
+`plan-feature-from-issue`), `plan-fix`, `review-spec`, `review-plan`,
+`planning-preflight`, `replan-findings`, `implementation-discovery`, and
+`evidence-grounding` cease to be standalone user-invocable commands. Their
+functionality is absorbed into the lane's catalog steps (`design`, `plan`,
+`review`) and triage-driven step selection. Every NEW unit produces one
+`SPEC.md` with 13 sections (Objective, Why, User outcome, Acceptance criteria,
+Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
+Evidence, Progress log, Next, References) instead of separate SPEC/PLAN/TASKS/
+ACCEPTANCE files.
+
+The lane: `skills/unit-lane` (conductor) + `skills/execute-phase` (executor) +
+the review pack (`review-change`, `review-implementation`).
+
+**Schema changes.** `@gtrabanco/agentic-workflow-schema` 4.4.0 replaces
+`SPEC_PRODUCT_REQUIRED_HEADINGS` (two-half SPEC headings) with
+`UNIT_DOC_REQUIRED_SECTIONS` (13-section unit doc). The `pre-execution-verdict`
+vocabulary (`PRE_EXECUTION_VERDICTS`, `VERDICTS_BY_STAGE`) stays exported —
+still used by the lane's review step for the sensor's blockers. The transition
+table drops `review-spec` and `review-plan` rows.
+
+**What you have to do:**
+
+- **Existing skills installed?** They still work. The skills CLI doesn't prune
+  automatically — run `npx skills remove --yes design-feature plan-feature
+  plan-feature-from-issue plan-feature-scaffold plan-fix review-spec review-plan
+  planning-preflight replan-findings implementation-discovery evidence-grounding`
+  to clean up old skill folders.
+- **Docs to update?** Run `init-workspace` in upgrade mode — it will propose
+  the updated AGENTS.md conventions (unit document, catalog, guards, evidence)
+  and the new workflow docs.
+- **New units?** Use the single-file format (`SPEC.md` with 13 sections) under
+  `docs/features/<NN>-<slug>/` or `docs/fix/<N>-<topic>/`.
+- **Old skills referenced in docs?** Replace:
+  - `/design-feature` → lane catalog step (no direct command; triage decides)
+  - `/plan-feature` → lane catalog step (no direct command; triage decides)
+  - `/plan-fix` → lane fix mode
+  - `/review-spec` → lane review step
+  - `/review-plan` → lane review step
+  - `plan-feature --next` → unit-lane decides next unit
+  - `unit-route.mjs route: replan` → now prints `unit-lane --triage <unit>`
+
+**Nothing breaks existing units.** Legacy multi-file units (separate
+PLAN/TASKS/ACCEPTANCE) remain valid. The lane's triage step adapts to the
+format it finds. Only NEW units use the single-file format.
+
+---
+
 ## 2026-09-21 — the `#claude` branch and per-skill model routing are retired
 
 **What changed.** The `#claude` branch is gone, and with it the per-skill
