@@ -1,5 +1,5 @@
 /**
- * File-schema vocabularies for agwo edit typed file services.
+ * File-schema vocabularies for agentic-workflow edit typed file services.
  *
  * Canonical definitions: section lists, table columns, operation names,
  * and operation receipts.  Consumers in UnitDoc, Roadmap, Changelog,

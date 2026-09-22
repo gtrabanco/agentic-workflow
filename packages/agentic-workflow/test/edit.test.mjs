@@ -1,5 +1,5 @@
 /**
- * Tests for agwo edit — typed file services SDK.
+ * Tests for agentic-workflow edit — typed file services SDK.
  *
  * Uses node:test with temp directories for isolation.
  * Covers: UnitDoc, Roadmap, Changelog, Budgets, Manifest, receipts, CLI smoke.
@@ -26,7 +26,7 @@ let unitDir;
 let specPath;
 
 before(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), "agwo-edit-"));
+  tmpDir = mkdtempSync(join(tmpdir(), "agentic-workflow-edit-"));
   unitDir = join(tmpDir, "docs", "features", "61-test-slug");
   mkdirSync(unitDir, { recursive: true });
   specPath = join(unitDir, "SPEC.md");
@@ -111,14 +111,14 @@ describe("UnitDoc", () => {
   it("progress entry with valid format succeeds", () => {
     const receipt = progress_logEntry(specPath, {
       ts: "2026-09-22 14:30",
-      what: "implemented agwo edit",
+      what: "implemented agentic-workflow edit",
       ref: "abc123def",
       next: "write tests",
     });
     strictEqual(receipt.ok, true);
 
     const content = readFileSync(specPath, "utf8");
-    ok(content.includes("2026-09-22 14:30 — implemented agwo edit → abc123def — next: write tests"));
+    ok(content.includes("2026-09-22 14:30 — implemented agentic-workflow edit → abc123def — next: write tests"));
   });
 
   it("validate returns violations for missing sections", () => {
@@ -204,7 +204,7 @@ describe("Changelog", () => {
       version: "0.1.0",
       date: "2026-09-22",
       type: "feature",
-      what: "Added agwo edit typed file services",
+      what: "Added agentic-workflow edit typed file services",
     });
     strictEqual(receipt.ok, true);
 
@@ -215,7 +215,7 @@ describe("Changelog", () => {
     const unitDocContent = parts[1];
     const roadmapIdx = unitDocContent.indexOf("#### `roadmap`");
     const unitDocOnly = roadmapIdx === -1 ? unitDocContent : unitDocContent.slice(0, roadmapIdx);
-    ok(unitDocOnly.includes("| 0.1.0 | 2026-09-22 | feature | Added agwo edit"));
+    ok(unitDocOnly.includes("| 0.1.0 | 2026-09-22 | feature | Added agentic-workflow edit"));
   });
 });
 
@@ -312,12 +312,12 @@ describe("Receipts", () => {
 // ── CLI smoke test ───────────────────────────────────────────────────────
 
 describe("CLI smoke", () => {
-  it("spawn bin/agwo.mjs unit-doc create --json parses", (t, done) => {
-    const testDir = mkdtempSync(join(tmpdir(), "agwo-cli-"));
+  it("spawn bin/agentic-workflow.mjs unit-doc create --json parses", (t, done) => {
+    const testDir = mkdtempSync(join(tmpdir(), "agentic-workflow-cli-"));
     const testUnitDir = join(testDir, "docs", "features", "cli-test");
     mkdirSync(testUnitDir, { recursive: true });
 
-    const agwoPath = join(process.cwd(), "bin", "agwo.mjs");
+    const agwoPath = join(process.cwd(), "bin", "agentic-workflow.mjs");
 
     const proc = spawn("node", [agwoPath, "unit-doc", "cli-test", "create", "--json"], {
       cwd: testDir,
