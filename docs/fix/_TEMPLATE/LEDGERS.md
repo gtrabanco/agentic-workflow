@@ -16,7 +16,7 @@ docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + re
 docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none
 docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none
 docs/fix/<issue>-<topic>/decisions.md | plan-feature-scaffold:create + design-feature:product-decisions + plan-feature:engineering-decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none
-docs/fix/README.md | design-feature:idea-or-defined-row + plan-feature-scaffold:planned-row + plan-fix:fix-index-row + execute-phase:status-and-pr-link + ship-roadmap:founding-and-flip + audit-docs:low-risk-row-repair | none
+docs/fix/README.md | unit-lane:row-registration + execute-phase:status-and-pr-link + audit-docs:low-risk-row-repair | none
 docs/fix/<issue>-<topic>/ACCEPTANCE.md | plan-feature-scaffold:feature-freeze + plan-fix:fix-freeze + human-owner:approved-amendment | none
 ```
 

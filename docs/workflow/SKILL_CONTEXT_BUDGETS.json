@@ -130,7 +130,6 @@
       "templates": [],
       "routeEstimateMax": 28624,
       "routeLinesMax": 1920,
-
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -150,8 +149,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md",
           "DESCOPE.md"
         ]
@@ -175,9 +172,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "WORKFLOWS_FEATURE.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md"
         ]
       },
@@ -200,8 +194,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md",
           "FORGE_BODY.md"
         ]
@@ -225,10 +217,7 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
-          "FOLDING.md",
-          "OPPORTUNISTIC_FINDING.md"
+          "FOLDING.md"
         ]
       },
       "templates": [],
@@ -250,9 +239,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "WORKFLOWS_FIX.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md"
         ]
       },
@@ -275,9 +261,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "WORKFLOWS_LEGACY.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md"
         ]
       },
@@ -300,9 +283,6 @@
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
-          "WORKFLOWS_SMALL_PHASED.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md"
         ]
       },
@@ -324,11 +304,7 @@
       "references": {
         "execute-phase": [
           "PRE_EXECUTION_GATE.md",
-          "UNIT_LOOP.md",
           "EXECUTION_CONTRACT.md",
-          "WORKFLOWS_FEATURE.md",
-          "HANDOFF.md",
-          "CLOSEOUT.md",
           "FOLDING.md"
         ]
       },
@@ -378,7 +354,6 @@
         "feature 32 P3/P4": "feature 32 P4 (plus pre-existing drift): the unit grew the shared pre-execution-review/LEDGERS.md reference (+423 estimate) and that growth propagated here; this route was already over its stale ceiling before the unit. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
-
     },
     "plan-feature:scoped": {
       "skills": [
@@ -408,10 +383,10 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 28941,
-      "routeLinesMax": 2061,
-
+      "routeEstimateMax": 28948,
+      "routeLinesMax": 2064,
       "sources": {
+        "61-P4 fix-route note": "the fix-mode route cell re-pointed at unit-lane with a P4 note; ceiling re-based to ceil(measured x 1.10).",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
@@ -537,7 +512,6 @@
       "templates": [],
       "routeEstimateMax": 19516,
       "routeLinesMax": 1251,
-
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
@@ -554,7 +528,6 @@
       "templates": [],
       "routeEstimateMax": 17873,
       "routeLinesMax": 1198,
-
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "triage 32 F28/F29/F31 fold": "the review fold's contract-text corrections (plan-feature Confirm-roadmap condition, pre-execution-review/LEDGERS.md owner-entry wording, GATE-RAN mark enumerations) grew this route's loaded text; ceiling re-based to ceil(measured x 1.10).",
@@ -568,7 +541,6 @@
     "name": "relative-headroom",
     "headroom": 0.1,
     "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10)); 2026-09-16 (feature 59 P3 — quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 — design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4); 2026-09-18 (feature 60 P3 — the path-protection checkpoint contract grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md, so the execute-phase reference ceiling and every route those files load are re-set to ceil(measured x 1.10); growth source feature 60 P3 checkpoint-contract adoption); 2026-09-19 (feature 32 P3/P4 — the gate-ran@1 appended-text mark grew pre-execution-review/LEDGERS.md from the measured 3462 (main) to 3930 est after the F4 gate-ran edit (ceiling 4323), and CLASSIFY.md grew review-implementation from the measured 2076 to 2671 est (ceiling 2939); the unit's skill-contract text also grew the references loaded by 19 routes, including five (design-feature:repair, plan-feature:scaffold, plan-fix:issue, review-plan:default, review-spec:default) whose stale ceilings predated this unit; every affected route ceiling and both reference ceilings re-based to ceil(measured x 1.10) with the growth source named on each entry); 2026-09-21 (main sync — re-basis #7: the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so all 22 routes measured 2 units higher at once and the twelve whose ceilings carried at most 2 units of slack went over — design-feature:product/repair, plan-feature:issue/scaffold/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize, review-plan:default, review-spec:default; feature 32's fold F35-F39 (9aa33530) added one line to review-change and audit-docs on top. Their routeEstimateMax ceilings are re-set to ceil(measured x 1.10); no lines ceiling moved and no skill ceiling moved)",
-
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",

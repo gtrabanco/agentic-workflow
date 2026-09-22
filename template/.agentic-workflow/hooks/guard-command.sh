@@ -48,10 +48,10 @@ fi
 # (`cmd=gh; $cmd pr merge`) is out of scope by design, so do not rely on this
 # guard as a sandbox — the forge branch rule / CI is the enforcement boundary.
 if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?gh([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+pr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-  deny "direct pull-request merge; use ship-roadmap --fullauto"
+  deny "direct pull-request merge; the unattended-conductor role is deferred to roadmap row 62"
 fi
 if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])glab([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+mr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
-  deny "direct merge-request merge; use ship-roadmap --fullauto"
+  deny "direct merge-request merge; the unattended-conductor role is deferred to roadmap row 62"
 fi
 if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?git([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+merge([^[:alnum:]_-]|$)'; then
   deny "direct git merge"

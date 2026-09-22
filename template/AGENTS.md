@@ -126,9 +126,10 @@ this line; with `branches` declared, no skill may create a worktree.
 **Agent safety hooks:** `<Claude Code | Cursor | Copilot | OpenCode | none>`.
 When enabled, repository adapters call `.agentic-workflow/hooks/guard-command.sh`
 before shell/read tools. Direct environment dumps, `.env` reads, and merge
-commands are blocked. Automated merge is available only inside an active
+commands are blocked. Automated merge was available only inside an active
 `ship-roadmap --fullauto` attempt through the transient wrapper; never grant an
-agent-wide or session-persistent merge permission. Hooks are defense-in-depth —
+agent-wide or session-persistent merge permission. The unattended-conductor
+role is deferred to roadmap row 62. Hooks are defense-in-depth —
 forge branch protection/rulesets remain required.
 
 **Hard rules (always honored).**
