@@ -129,6 +129,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### [`@gtrabanco/agentic-workflow`](packages/agentic-workflow/)
 | Version | Date | Type | What changed |
+| 0.1.1 | 2026-09-22 | patch | **Bin rename: `agwo` → `agentic-workflow`.** The unscoped `agwo` npm name (and the agwo.party domain) is reserved for the future public human-facing runner, so the internal crate keeps the namespace and renames its CLI. Same 92-test suite; publishes from CI via Trusted Publishing (registered by the owner). |
 | 0.1.0 | 2026-09-22 | minor | **Feature 61 P10 — the runner crate ships `agentic-workflow edit`:** first release of the deterministic runner. `bin/agwo.mjs` routes the five typed file services (`unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`) over the `src/edit/` SDK — one entry point per file kind, creation only in the fixed 13-section format, edits only through closed operations, post-state validated against the schema package file-schemas, atomic writes, and an edit receipt (schema-id + before/after sha256) per operation. Also carries the turn-contract engine bound to the unit document (`unit-doc-missing`). No dependencies; bun-or-node. First publish is manual (owner). |
 |---|---|---|---|
 | 0.0.0 | 2026-09-10 | — | **Producer crate vehicle (feature 37, P1)**: private placeholder package reserving the `agentic-workflow` producer surface — `private: true`, version `0.0.0`, zero dependencies, nothing published. Current producers: none yet. |
