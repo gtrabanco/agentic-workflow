@@ -165,6 +165,16 @@ test suite. The single-unit document convention must be propagated to the
 owner (its typed service) — a second implementation of a format, in any
 language or surface, is a defect; new file kinds are new services with their
 own schema, never flags on an existing one.
+## Applicable tests
+
+`node --test scripts/*.test.mjs` (root suites) · `bun test` in packages/agentic-workflow,
+packages/agentic-workflow-schema, packages/pi-agentic-workflow ·
+`bun scripts/check-skill-context.mjs` · `node --test scripts/normative-drift.test.mjs`.
+
+## Known pre-existing issues
+
+- Route-budget ceilings carried slack from retired routes — does-not-affect (re-based per phase).
+- Subagent reports occasionally claim green without running gates — affects execution pacing (mitigated by orchestrator re-execution), does-not-affect the landed contract.
 
 ## Tasks
 
@@ -271,7 +281,6 @@ validations executed by UnitDoc.validate() rather than model judgment. Each
 handler validates the post-state against its file schema and emits an edit
 receipt (schema-id + before/after digests).
 
-
 P11 — **Substrate adoption**: `init-workspace` bootstrap and upgrade mode
 write the new way of working into target projects — the updated AGENTS.md
 conventions (unit document, catalog, guards, evidence, commit formats), the
@@ -291,3 +300,64 @@ budgets, re-aim the repo's own normative-surfaces and rendered-facts tables
 (review verdict vocabularies whose owning skills are gone), update
 `docs/workflow/SKILLS.md` and README tables. Golden fixture smoke test rebuilt
 on the new lane. Final review against AGENTS.md conventions.
+## Evidence
+
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+| AC-1..13 | node --test scripts/*.test.mjs | 0 | 554 pass / 0 fail | orchestrator |
+| crate | bun test (packages/agentic-workflow) | 0 | 92 pass / 0 fail | orchestrator |
+| schema | bun test (packages/agentic-workflow-schema) | 0 | 717 pass / 0 fail | orchestrator |
+| pi | bun run test (packages/pi-agentic-workflow) | 0 | 266 pass / 0 fail | orchestrator |
+| AC-14 | node packages/agentic-workflow/bin/agwo.mjs unit-doc 61-adaptive-unit-lane validate | 0 | this document validates | orchestrator |
+
+## Progress log
+
+- 2026-09-22 — SPEC proposed + roadmap row 61 → 65b7699a — next: P1
+- 2026-09-22 — P1 unit-doc template → ebbde642 — next: P2
+- 2026-09-22 — P2 roadmap reconciliation → 5a566e01 — next: P3
+- 2026-09-22 — P3 triage catalog → 73fe4332 — next: P4
+- 2026-09-22 — P4 executor reshape → f3e5a062/a5fab0ff — next: P5
+- 2026-09-22 — P5 diff-guard → cd0b81eb — next: P7
+- 2026-09-22 — P7 deterministic router → 84bdfbb7 — next: P8
+- 2026-09-22 — P8a conductor skill → 6c115bd3 — next: P9
+- 2026-09-22 — P9 ship-roadmap retired → 44267b1d — next: P10
+- 2026-09-22 — P8b pipeline retired → 6b7dc311/909c55be/c6bdd2b4 — next: P10
+- 2026-09-22 — P10 runner crate + typed file services → a917a542 — next: P11
+- 2026-09-22 — P11 substrate adoption → 79d8ce5d — next: dogfood
+- 2026-09-22 — Dogfood: this document validated by agwo unit-doc validate — next: merge PR #251
+
+## Next
+
+Owner review of PR #251; merge lands the lane, then row 62 (pi-native conductor).
+
+## References
+
+- Closes (absorbed, closed by this feature's PR): [#229](https://github.com/gtrabanco/agentic-workflow/issues/229) (row 54, two-level artifacts) · [#205](https://github.com/gtrabanco/agentic-workflow/issues/205) (row 50, review-loop convergence) · [#218](https://github.com/gtrabanco/agentic-workflow/issues/218) (row 51, review-evidence substrate) · [#194](https://github.com/gtrabanco/agentic-workflow/issues/194) (row 42, deterministic review-change) · [#182](https://github.com/gtrabanco/agentic-workflow/issues/182) (row 35, scoped receipt verifier)
+- Partially absorbed (re-scoped or unified in P2): [#233](https://github.com/gtrabanco/agentic-workflow/issues/233) (row 58 — deletion here, conductor later) · [#206](https://github.com/gtrabanco/agentic-workflow/issues/206) (row 46 → research catalog step) · [#173](https://github.com/gtrabanco/agentic-workflow/issues/173) (row 33 → surviving skills only) · [#227](https://github.com/gtrabanco/agentic-workflow/issues/227) (row 53 → unit-doc template) · [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (row 41) · [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (row 45)
+- Superseded: [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (row 44 — scripts move to `agwo`, not into skill folders) · #176 route-slimming (rows disappear instead of slimming)
+- Related reading: `docs/workflow/REPOSITORY_STATE.md` (frozen facts substrate) · feature 60's path-protection policy (reused unmodified) · the 2026-09-15 bureaucracy-reduction execution order in the roadmap (this feature supersedes its Phase 2/3 sequencing)
+
+## Open questions
+
+1. **Triage budget tiers per step**: What budget (line count, phase time, model
+   tier) should each step have? Proposed default: research (xhigh/60min), design
+   (opus/45min), plan (sonnet/30min), implement (sonnet/45min), tests (sonnet/
+   30min), evidence (cheap/15min), review (opus/30min), docs (cheap/10min),
+   release (sonnet/15min). Adjust per measured data.
+
+2. **Triage accuracy on vague units**: When the unit's SPEC content is too
+   vague to triage reliably, what is the fallback? Proposed default: prompt the
+   user with concrete options (ask-don't-infer), then re-run triage on the
+   clarified input.
+
+3. **Diff-size guard budget origin**: Where does the per-phase budget come from?
+   Proposed default: defined in `catalog.json` per step, with a `budget_lines`
+   field. The budget is the maximum allowed `git diff --stat` line count after
+   one honest split. If a phase cannot fit after splitting once, report the real
+   count with an `exception` flag.
+
+4. **Migration path for existing units**: How do existing multi-file units
+   transition to single-file? Proposed default: no migration. Existing units
+   remain untouched. New units use the single-file format. The lane detects the
+   format on read and adapts — multi-file units get a `--convert` flag if
+   desired.
