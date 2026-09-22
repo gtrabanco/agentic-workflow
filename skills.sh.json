@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "Unit lane",
+      "description": "One adaptive lane per unit: triage decides the steps, guards and evidence keep it honest.",
+      "skills": [
+        "unit-lane"
+      ]
+    },
+    {
       "title": "Setup and state",
       "description": "Bootstrap a repository and keep evidence-backed workflow state visible.",
       "skills": [
