@@ -111,12 +111,9 @@ Read the unit doc's status from the roadmap (the five-state machine —
 ## Pre-execution review gate (after the own-status gate, before step execution)
 
 A triaged unit says the artifacts exist, never that an independent reviewer accepted
-them. Before any edit, require a current `PLAN-REVIEW-PASS` or `SPEC-REVIEW-PASS`;
-missing, stale, or wrong-stage each fail closed with the fixed gate block, and
-**`--force` never reaches this gate** — it overrides ordering stops the user may
-re-order, not a verdict only a reviewer can produce. Fix units run the same check
-on their own receipt (`/review-plan fix-<N>`). The slot immediately after this
-gate and before the first write is owned by the pre-write mapper contract — load
+them. The lane conductor (`unit-lane`) triages at invocation and the unit doc's
+triage block is the authority. The slot immediately after this gate and before
+the first write is owned by the bounded implementation discovery contract — load
 [`implementation-discovery`](<../implementation-discovery/SKILL.md>) and settle it
 before any branch/planning/source write; it routes READY | REPLAN | NEEDS-DESIGN
 | BLOCKED and is the only contract allowed to confirm the map here. Full rule,
@@ -129,7 +126,9 @@ Consume `skills/verification-contract/SKILL.md`. For a current-format unit,
 the Evidence section in the unit doc **is** the acceptance manifest — each
 acceptance criterion has a corresponding Evidence row with command, exit/digest,
 and output. No sibling file; the unit doc's Evidence section header carries the
-last-reviewed sha.
+last-reviewed sha. The unit doc's triage block (pasted verbatim from
+`scripts/unit-route.mjs --triage`) is the step authority: `execute-phase` runs
+only what the triage block demands.
 
 - No Evidence rows → start with the unit doc's Acceptance criteria (the
   Acceptance section header). The first step's completion adds its Evidence rows.

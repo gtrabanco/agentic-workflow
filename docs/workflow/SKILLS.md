@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**18 user-facing skills** (one menu entry each) + **21 internal steps**
+**13 user-facing skills** (one menu entry each) + **21 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the

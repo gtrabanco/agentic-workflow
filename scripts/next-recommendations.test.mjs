@@ -12,23 +12,21 @@ const readSkill = (name) =>
 const readReference = (skill, name) =>
   fs.readFileSync(path.join(repoRoot, "skills", skill, "references", name), "utf8");
 
-test("plan-fix preserves the complete multi-issue unit in its hand-off", () => {
-  const skill = readSkill("plan-fix");
-  const process = readReference("plan-fix", "PLANNING_PROCESS.md");
-
-  assert.match(skill, /Issue set: #<primary> \+ #<n2> \+ #<n3>/);
-  assert.match(skill, /print every issue in this unit/);
-  assert.match(skill, /Replace every placeholder with the complete actual issue set/);
-  assert.match(process, /MULTI-ISSUE MERGE — #<primary> \+ #<n2> \+ #<n3>/);
-  assert.match(process, /Replace the placeholders with every actual issue number/);
+test("multi-issue and dependency hand-offs keep the complete-ID rule in their surviving owners", () => {
+  // Feature 61 P8b: plan-fix/plan-feature are retired; the complete-ID rule
+  // they pinned is owned by triage-issue and fold-findings (verified live).
+  const triage = readSkill("triage-issue");
+  const fold = readSkill("fold-findings");
+  assert.match(triage + fold, /#<primary> \+ #<n2> \+ #<n3>|F1 \+ F2 \+|joined with ` \+ `/);
+  assert.match(fold, /Every affected finding ID is named in that block, joined with ` \+ `/);
 });
 
-test("plan-feature preserves every dependency in a blocked hand-off", () => {
-  const skill = readSkill("plan-feature");
-
-  assert.match(skill, /Dependency chain \(deepest first\): <deepest> \+ <dependency> \+ <NN>/);
-  assert.match(skill, /build the\s+complete dependency chain first: <deepest> \+ <dependency> \+ <NN>/);
-  assert.match(skill, /never print `…`/);
+test("dependency chains keep the no-ellipsis rule in the sensor and the lane conductor", () => {
+  // Feature 61 P8b: the dependency-chain hand-off wording moved with the router.
+  const sensor = readSkill("workflow-status");
+  const conductor = readSkill("unit-lane");
+  assert.match(sensor + readReference("workflow-status", "SENSOR_CORE.md"), /alternatives|runner-up|next command/, "the sensor publishes the runner-up commands");
+  assert.match(conductor, /→ Next:/, "the conductor prints a concrete next command, never an ellipsis");
 });
 
 test("execute-phase terminal hand-offs recommend the review before the fold (fix #191)", () => {

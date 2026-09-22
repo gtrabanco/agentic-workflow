@@ -6,9 +6,9 @@ Plan snapshot binds them, and `execute-phase` may not invent a substitute.
 
 | Ledger | Home | Written by | Read by |
 |---|---|---|---|
-| Planning evidence | `planning-evidence.md` (M/L) · `### Planning evidence` inside the SPEC (XS/S) | the authoring planner | `review-plan`, then the phase slice for `execute-phase` |
-| Obligations | `planning-obligations.md` (M/L) · `### Obligations` inside the SPEC (XS/S) | the authoring planner, then the phase owner for `status` | `review-plan`, `execute-phase`, `fold-findings`, `audit-pr` |
-| Findings | `planning-findings.md` (one per unit, both stages) | reviewers append; only the stage's author resolves | the author skill, `review-plan` on re-review, `audit-pr` |
+| Planning evidence | `### Planning evidence` inside the unit doc (XS/S) · separate file (M/L) | `unit-lane:planning-evidence` | `execute-phase`, `fold-findings`, `audit-pr` |
+| Obligations | `### Obligations` inside the unit doc (XS/S) · separate file (M/L) | `unit-lane:obligations` | `execute-phase`, `fold-findings`, `audit-pr` |
+| Findings | `review-findings.md` (one per unit, both stages) | reviewers append; only the stage's author resolves | `execute-phase` on re-review, `audit-pr` |
 
 XS/S embeds both tables in the SPEC to stay within the size's artifact budget;
 the Plan snapshot then binds them through the whole-SPEC row (kind `spec`), and
@@ -19,10 +19,9 @@ M/L freeze the separate files and bind them with their own rows. Never both.
 
 Row shape — the base row, the closed `authority-kind` / `freshness` vocabularies,
 the prefixed stable `id`, and the `affected-decision-or-obligation` Plan-stage
-extension with its full column order — is owned by the `evidence-grounding`
-reference `ROWS.md` (§ "Plan-stage table — one declared extension"): one
-definition, no second copy. This ledger owns only the lifecycle rules and uses
-markdown headings, nothing else. Ids are stable (`PE-001`, `PE-002`, …): an
+extension with its full column order — is owned by the unit-lane's planning
+reference: one definition, no second copy. This ledger owns only the lifecycle
+rules and uses markdown headings, nothing else. Ids are stable (`PE-001`, `PE-002`, …): an
 obligation or finding cites a row by id, so renumbering the table is a replan,
 not a formatting edit.
 
@@ -36,8 +35,8 @@ Rules specific to this ledger:
 - An assumption about a model's or service's behaviour that was never sampled is
   `unknown` with an owner — `ASSUMPTION-UNVERIFIED` is what the row *means*, and
   the row must stay visible in the artifact rather than becoming a citation.
-- `review-plan` reads the whole table; `execute-phase` reads only the rows whose
-  `affected-decision-or-obligation` names its frozen phase.
+- `execute-phase` reads only the rows whose `affected-decision-or-obligation`
+names its frozen phase; the unit-lane plans the table before `execute-phase` runs.
 
 ### 2. Obligations
 
@@ -101,9 +100,9 @@ status | resolution-evidence | resolving-artifact-revision
 - `status` is `open | resolved | dismissed`. `dismissed` requires
   counter-evidence that falsifies the finding ([POLICY.md](POLICY.md) §2); the
   evidence goes in `resolution-evidence`, not in chat.
-- The author resolves a row through its own route: `design-feature` for
-  `class: product`, `plan-feature` / `plan-fix` for `class: plan`, and the
-  candidate loop (`review-change` → `fold-findings`) only for
+- The author resolves a row through its own route: `unit-lane` for
+  `class: product` and `class: plan`, and the candidate loop
+  (`review-change` → `fold-findings`) only for
   `class: source | environment | runtime`.
 - `resolving-artifact-revision` is the `artifactRevisionId` of the write that
   closed the row — the link that lets a re-review prove the snapshot actually
@@ -125,41 +124,41 @@ its `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
 annotation — never a `yes` of its own.
 
 `scripts/ledger-ownership.test.mjs` reads the block below as the single source of
-truth for the seven AC16 truth classes and the projections in
-`docs/features/_TEMPLATE/LEDGERS.md` and `docs/fix/_TEMPLATE/LEDGERS.md` as its
-copies. It fails closed on a missing or malformed block, an owner-less row, drift
-in either direction, a token the annotator cannot produce, and any non-test script
-under `scripts/` or `packages/<name>/scripts/` whose write or append target names a
-durable ledger its row does not name it for. Cells carry bare values: ` · ` joins
-ledgers, ` + ` joins owners, an owner is `<skill>:<column-set>` (the literal
-`human-owner` marks the person, the only authority for an amendment), and a `#`
-line is a directive. A script that writes only generated artifacts names no ledger
-and is out of scope; a copy or shell rewrite stays the reviewer's job. Validator
-commands follow the repository's runtime convention: **bun first** (`bun test …`),
-with the same command under `node --test …` when bun is absent — both runtimes
-must pass; the CI node-compat job enforces the fallback.
+truth for the seven AC16 truth classes and the projection in
+`docs/fix/_TEMPLATE/LEDGERS.md` as its copy (the features-template projection
+was retired at P8b). It fails closed on a missing or malformed block, an owner-less
+row, drift in either direction, a token the annotator cannot produce, and any
+non-test script under `scripts/` or `packages/<name>/scripts/` whose write or append
+target names a durable ledger its row does not name it for. Cells carry bare values:
+` · ` joins ledgers, ` + ` joins owners, an owner is `<skill>:<column-set>` (the
+literal `human-owner` marks the person, the only authority for an amendment), and a
+`#` line is a directive. A script that writes only generated artifacts names no
+ledger and is out of scope; a copy or shell rewrite stays the reviewer's job.
+Validator commands follow the repository's runtime convention: **bun first**
+(`bun test …`), with the same command under `node --test …` when bun is absent —
+both runtimes must pass; the CI node-compat job enforces the fallback.
 
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
 review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + review-change:review-gate-ran-marks + audit-pr:audit-rows + triage-issue:triage-rows + execute-phase:gate-ran-marks + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | bun test scripts/ledger-provenance.test.mjs
-planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none | none | bun test scripts/pre-execution-quality.test.mjs
-progress | docs/features/<NN>-<slug>/progress.md · docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none | none | bun test scripts/pre-execution-sensor.test.mjs
-known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
-decisions | docs/features/<NN>-<slug>/decisions.md · docs/fix/<issue>-<topic>/decisions.md | plan-feature-scaffold:create + design-feature:product-decisions + plan-feature:engineering-decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none | none | bun test scripts/ledger-ownership.test.mjs
+planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | unit-lane:planning-findings + fold-findings:source-class-resolutions | none | none | bun test scripts/pre-execution-quality.test.mjs
+progress | docs/features/<NN>-<slug>/SPEC.md · docs/fix/<issue>-<topic>/SPEC.md | unit-lane:progress-entries + execute-phase:phase-entries + execute-phase:gate-rejection-traces | none | none | bun test scripts/pre-execution-sensor.test.mjs
+known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | unit-lane:known-entries + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
+decisions | docs/features/<NN>-<slug>/decisions.md · docs/fix/<issue>-<topic>/decisions.md | unit-lane:decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none | none | bun test scripts/ledger-ownership.test.mjs
 roadmap | docs/features/ROADMAP.md · docs/fix/README.md | unit-lane:row-registration + execute-phase:status-and-pr-link + audit-docs:low-risk-row-repair | none | none | bun test scripts/bounded-delivery-loops.test.mjs
-acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | plan-feature-scaffold:feature-freeze + plan-fix:fix-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md
+acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | unit-lane:acceptance-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md
 # no-script-writer: SPEC.md · PLAN.md · TASKS.md · CHECKLIST.md · testing.md · architecture-notes.md · planning-evidence.md · planning-obligations.md · delegated-evidence.md
 ```
 
 `SPEC.md`, `PLAN.md`, `TASKS.md`, `testing.md` and `architecture-notes.md` are
 durable unit records, but not ledgers with a row lifecycle of their own: their
-writers are the phases that already order them (`plan-feature-scaffold` creates
-them, `execute-phase` ticks and appends), so the directive line keeps any script
-away from them instead of forking the table above. Same for the two frozen
-planning ledgers at the top of this file, and for `delegated-evidence.md`: a
-versioned artifact of a delegated reading pass, whose writer and zones are stated
-by `evidence-grounding`'s `references/DELEGATION.md`, not by this map.
+writers are the phases that already order them (`unit-lane` creates them, `execute-phase`
+ticks and appends), so the directive line keeps any script away from them instead
+of forking the table above. Same for the two frozen planning ledgers at the top
+of this file, and for `delegated-evidence.md`: a versioned artifact of a delegated
+reading pass, whose writer and zones are stated by the triage/research step's
+documentation, not by this map.
 
 ### The durable review mark
 
@@ -236,7 +235,8 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code> | [reserved trailing slot: `
   declares `execute-phase:gate-ran-marks` (executor phase gates) and
   `review-change:review-gate-ran-marks` (reviewer gate runs), distinct column-set
   names per the one-writer-per-column-set rule.
-- **Owner extension**: the identical owner cell is mirrored into both template
-  projections (`docs/features/_TEMPLATE/LEDGERS.md` and `docs/fix/_TEMPLATE/LEDGERS.md`).
+- **Owner extension**: the identical owner cell is mirrored into the fix-template
+  projection (`docs/fix/_TEMPLATE/LEDGERS.md`); the features-template projection
+  was retired at P8b because the unit doc carries its evidence sections.
 - **No new truth-class row**: the grammar admits no new row — the existing
   `review-findings.md` ledger pattern is reused with extended owner cells.

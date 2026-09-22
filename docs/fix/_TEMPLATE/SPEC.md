@@ -2,14 +2,9 @@
 
 > Fix specification. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. Lighter than a feature spec — no
-> separate planning artifacts: the SPEC and sibling `ACCEPTANCE.md` are the
-> source of truth, and its `## Phases` section is the execution ledger.
-
-## Goal
-
-One paragraph: what this fix repairs and why it cannot wait for a
-regular feature cycle.
+> entry in `docs/fix/README.md`. The single unit doc carries all planning
+> and evidence sections; legacy fix templates with separate PLAN/ACCEPTANCE
+> files are not migrated (see Non-goals).
 
 ## Issue
 
@@ -17,24 +12,27 @@ regular feature cycle.
 via `Closes #<n>` in the body (or the forge's equivalent auto-close
 convention).
 
+## Goal
+
+One paragraph: what this fix repairs and why it cannot wait for a
+regular feature cycle (2-4 lines).
+
+## Why
+
+The defect's root cause: what broke, where, and why. Reference the commit,
+feature, or decision where the defect was introduced if known.
+
+## User outcome
+
+From the user's perspective: what they can do or observe after this fix ships.
+
 ## Branch
 
 `fix/<issue-number>-<topic>`
 
 ## Depends on
 
-Other fixes (by folder name) that must merge first. Empty if
-independent.
-
-## Root cause
-
-What broke, where, and why. Reference the commit, feature, or
-decision where the defect was introduced if known.
-
-## Detected in
-
-When and how the defect surfaced — review finding, incident, failing
-test, customer report, etc.
+Other fixes (by folder name) that must merge first. Empty if independent.
 
 ## Scope
 
@@ -47,108 +45,51 @@ The exact change set.
 Adjacent issues this fix deliberately does NOT touch. Link to their
 own fix folder or feature where each belongs.
 
-### Planning evidence
+### Regression scope
 
-The fix's own authority, without a Product half: reproduction, root cause with
-code evidence, regression scope, rollback path, and the affected invariant or use
-case — one compact row each. Never an exploration transcript.
+What previously-working behaviour must NOT break. Each row: the scenario
+and the test/command that verifies it.
 
-| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
-|---|---|---|---|---|---|---|---|
+## Acceptance criteria
 
-### Obligations
+Numbered list. Each AC is a runnable command where possible, or labelled
+`read-verified` — never unlabelled prose.
 
-One row per normative behaviour, applicable invariant, affected use case, and
-required failure state. Status is `planned | in-progress | verified | n/a |
-deferred`; `n/a` requires evidence, and no current-unit obligation may be
-`deferred` to a follow-up issue.
+## Non-goals
 
-| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
-|---|---|---|---|---|---|---|---|---|
+What this fix is NOT. Regression scope is declared above; findings discovered
+during implementation never expand scope beyond the declared regression boundary.
 
-## Acceptance
+## Known pre-existing issues
 
-Objective, verifiable conditions for "done". Each criterion is a runnable
-command where possible, or labelled `read-verified` — never unlabelled prose.
+Each: `<issue/observation>` + explicit `affects` or `does-not-affect` this unit.
+A red gate is never excused by an unrecorded issue.
 
-### Spec-lint (mechanical — presence checks only)
+## Tasks
 
-Run by `plan-fix` before committing the draft; fail-closed, no quality
-judgement. Any FAIL → fix the SPEC before the commit.
+P1…Pn with stable IDs, one line each, smallest first. Final task is verification
+when the unit has behavior.
 
-- [ ] No template placeholders left (`grep -nE '<(topic|n|task|command|expected)'`
-      over the filled sections returns nothing — the `### P1` scaffold lines
-      are replaced, not kept).
-- [ ] `### Out of scope` has ≥ 1 concrete bullet — never empty.
-- [ ] Every `## Acceptance` criterion is a runnable command OR labelled
-      `read-verified`.
-- [ ] Every phase passes the 8-box Phase-lint below (already mandatory,
-      owned by `skills/phase-contract/SKILL.md`).
-- [ ] `### Planning evidence` has a `current` row for the reproduction, the root
-      cause, the regression scope, and the rollback path — none blank, none
-      `n/a`.
-- [ ] `### Obligations` has one row per normative behaviour, applicable invariant,
-      affected use case, and required failure state, each with a phase and a
-      validator; no `deferred` row and none exported to a follow-up issue.
+## Evidence
 
-## Phases
+One row per acceptance criterion: what was run, exit status/digest, observed output
+(≤2 lines), verified-by.
 
-Execution ledger — `execute-phase --fix <n>` runs **all remaining phases by
-default** and ticks tasks here; an explicit `P<n>` runs exactly one phase.
-**Always ≥ 2 phases**: `P1..Pn` implement the fix
-(each task independently checkable, no judgement); the final phase is
-always `Hardening & PR` — keep its pre-written tasks **literally**, never
-paraphrase or merge them into an implementation phase.
+> Evidence is verified, not claimed — a reviewer re-runs it.
 
-### Phase-lint (owned by `skills/phase-contract/SKILL.md`)
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
 
-Every implementation phase below must pass all 8 boxes before it is emitted
-(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
-unticked box blocks emission/execution until the phase is re-cut or split.
-Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
-record the result here as `Phase-lint: PASS (8/8) · fingerprint
-<P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
+## Progress log
 
-### P1 — <implementation>
+One entry per step taken. Format exactly:
+`YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
 
-Layer: `<schema/db|domain|api|ui|config/infra|docs|hardening>`. Done-when:
-`<command>` → `<expected outcome>`.
+## Next
 
-- [ ] <task — independently checkable, mapped to evidence>
+The single next action.
 
-### P2 — Hardening & PR
+## References
 
-Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
-
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
-      Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #<n>`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
-
-## Testing
-
-What test confirms the fix, at what layer (unit / integration /
-architecture). Prefer integration over heavy mocking.
-
-Declare the test set in the `path-protection-plan@1` block of this SPEC's
-`## Phases`: `freeze-after: <P<n>|none>` plus one justified
-`created | <repo-relative path or glob> | <one-line justification>` /
-`not-created | <test name> | <one-line justification>` /
-`ignored | <test name> | <one-line justification>` row per test decision.
-Placeholder tokens only — never a project glob.
-
-## Rollback
-
-How to revert safely if the fix misbehaves in production. State the
-single command or PR-revert flow, plus any data-side cleanup.
-
-## Status
-
-`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
-
-(Removed from `docs/fix/README.md` only **after** the PR merges.)
+Issues, roadmap rows, related material. The PR closes the tracked issue via
+`Closes #<n>`. `none` if empty.

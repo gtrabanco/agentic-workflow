@@ -317,12 +317,6 @@ closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
 gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes
 preflight-gate-traces | skills/execute-phase/references/PREFLIGHT.md | fenced:GATE REJECTION — | gate-rejection-type | no
 pre-execution-gate-trace | skills/execute-phase/references/PRE_EXECUTION_GATE.md | fenced:GATE REJECTION — | gate-rejection-type | no
-plan-mode-routing | skills/plan-feature/references/ROUTING.md | block:plan-mode-routes@1 | skill+flag | no
-fix-mode-routing | skills/plan-fix/references/PLANNING_PROCESS.md | block:fix-mode-routes@1 | skill+flag | no
-review-spec-verdicts | skills/review-spec/references/OUTPUT.md | fenced:SPEC-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
-review-plan-verdicts | skills/review-plan/references/OUTPUT.md | fenced:PLAN-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
-review-spec-handoff | skills/review-spec/references/OUTPUT.md | fenced:→ Next: | skill | no
-review-plan-handoff | skills/review-plan/references/OUTPUT.md | fenced:→ Next: | skill | no
 sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One label per stage | n/a | no
 snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
 ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block:ledger-ownership@1 | n/a | no
@@ -355,7 +349,7 @@ surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
 CHANGELOG.md | version-tables | frontmatter:version | equals-each
 CHANGELOG.md | package-versions | package:version | equals-each
-skills/review-spec/references/OUTPUT.md + skills/review-plan/references/OUTPUT.md | literal:agentic-workflow/pre-execution-review-receipt@1 | const:PRE_EXECUTION_RECEIPT_CONTRACT_ID | equals
+
 ```
 
 The two schema generators are the clean example of the split the rule turns on: the

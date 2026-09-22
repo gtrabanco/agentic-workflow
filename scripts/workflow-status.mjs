@@ -65,7 +65,6 @@ export const FATAL_EXIT_CODE = 1;
  * dozens of in-flight units priced one spawn per unit/stage with no bound. Past
  * the cap the row degrades by name instead of spawning, so the run stays bounded.
  */
-export const PRE_EXECUTION_MAX_SENSES = 16;
 
 const FIVE_STATES = ["idea", "defined", "planned", "in-progress", "done"];
 const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
@@ -73,15 +72,12 @@ const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
 const TIER_MAP = new Map([
   ["/discover-repository-state", "strong"],
   ["/resolve-repository-state", "strong"],
-  ["/plan-feature", "strong"],
-  ["/design-feature", "strong"],
+  ["/unit-lane", "strong"],
   ["/review-change", "strong"],
   ["/audit-pr", "strong"],
   ["/triage-issue", "strong"],
   ["/product-audit", "strong"],
   ["/execute-phase", "cheap"],
-  ["/review-spec", "strong"],
-  ["/review-plan", "strong"],
 ]);
 
 const USAGE = `Usage: bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]
@@ -578,80 +574,14 @@ function newestReceipt(progressText, stage) {
   return parseReceipts(progressText).filter((receipt) => receipt.stage === stage).pop() ?? null;
 }
 
-/** Sense one stage's receipt through the verifier; returns `{label, ...}`. */
-function senseStage(unitDir, unitId, stage, parent, counter = null) {
-  // Past the run's spawn cap the row degrades by name instead of spawning (F20).
-  if (counter && counter.value >= PRE_EXECUTION_MAX_SENSES) {
-    counter.capped += 1;
-    return {
-      label: "missing",
-      verdict: null,
-      boundDigest: null,
-      observedDigest: null,
-      reason: `pre-execution sense cap (${PRE_EXECUTION_MAX_SENSES}) reached`,
-      capped: true,
-    };
-  }
-  const verifier = path.join(SENSOR_REPO, "scripts", "pre-execution-snapshot.mjs");
-  if (!fs.existsSync(verifier)) {
-    return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "snapshot verifier absent" };
-  }
-  const progress = readProject(path.join(unitDir, "progress.md"));
-  const receipt = newestReceipt(progress, stage);
-  if (!receipt) {
-    return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "no receipt for this stage" };
-  }
-  // `--root`/`--dir` bind the verifier to the SENSED repository and unit: it resolves
-  // its repository from its own location by default, so a foreign project's receipts
-  // were re-derived against the sensor's checkout — fabricated `missing`/`stale` rows.
-  const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
-  // #221 — a fix unit binds no parent: SNAPSHOT.md's rule is "a fix check must omit
-  // it — the snapshot it re-derives has to be the same shape the reviewer bound".
-  // Keyed on the receipt's own recorded `Unit kind: fix` (PE-013), never a dir-prefix
-  // re-derivation the verifier owns (pre-execution-snapshot.mjs:208). This makes the
-  // no-parent rule hold independent of what any lineage line or spec sense produced,
-  // so the sensor never spawns `verify --parent null` for a fix receipt.
-  const boundParent =
-    receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);
-  if (stage === "plan" && boundParent) args.push("--parent", boundParent);
-  if (counter) counter.value += 1;
-  const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });
-  let payload = null;
-  try { payload = JSON.parse(result.stdout); } catch { payload = null; }
-  const observedDigest = payload?.observedDigest ?? null;
-  if (payload && payload.current === true && payload.verdictIsPass === true) {
-    return { label: "current", verdict: payload.receipt?.verdict ?? receipt.verdict, boundDigest: payload.receipt?.snapshot ?? receipt.snapshot, observedDigest, reason: null };
-  }
-  const reasonCode = payload?.structural?.reasonCode ?? null;
-  const label = reasonCode === "impossible-timeline" ? "impossible-timeline"
-    : (payload?.digestMatches === false || reasonCode) ? "stale"
-    : (receipt.verdict && receipt.verdict !== "pass") ? "missing"
-    : "missing";
-  return {
-    label,
-    verdict: payload?.receipt?.verdict ?? receipt.verdict,
-    boundDigest: payload?.receipt?.snapshot ?? receipt.snapshot,
-    observedDigest,
-    reason: reasonCode ?? "receipt is not current",
-  };
-}
-
-/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
- *  repository is refused, and the unit is reported instead of read. */
-const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-
 function unitDirFor(unit) {
   const slug = String(unit.slug ?? "");
   if (!SAFE_SEGMENT.test(slug)) return null;
   return unit.kind === "fix" ? `docs/fix/${unit.issue}-${slug}` : `docs/features/${unit.id}`;
 }
 
-/** The stage a unit is about to enter, per its resolved status. */
-const stageFor = (unit) => (unit.status === "defined" ? "spec" : "plan");
-
-function recommendedFor(label, unit, stage) {
-  if (label === "current") return stage === "spec" ? `/plan-feature ${unit.id}` : `/execute-phase ${unit.nn ?? unit.issue}`;
-  return stage === "spec" ? `/review-spec ${unit.id}` : `/review-plan ${unit.nn ?? unit.issue}`;
+function recommendedFor(label, unit) {
+  return `/unit-lane ${unit.id}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -771,11 +701,11 @@ function readSuggestions(unit, unitDir) {
   const rows = readOpenRows(unitDir);
   const plan = rows.filter((row) => routeOfRow(row) === "replan");
   if (plan.length > 0) {
-    const command = unit.kind === "fix" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;
+    const command = `/unit-lane ${unit.nn ?? unit.issue}`;
     return [{
       command,
       trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
-      source_skill: "review-change",
+      source_skill: "unit-lane",
     }];
   }
   if (rows.some((row) => routeOfRow(row) === "decision")) return [];
@@ -925,18 +855,13 @@ function hintGuard(hintInfo, units, envelopeState, recomputedNext) {
   const hint = hintInfo.hint ?? {};
   const recommended = typeof hint?.next?.recommended === "string" ? hint.next.recommended : "";
   const bySlug = (slug) => units.find((unit) => unit.id === slug || unit.slug === slug || unit.id.endsWith(slug));
-  const planMatch = /^\/plan-feature\s+(\S+)/.exec(recommended);
-  const designMatch = /^\/design-feature\s+(\S+)/.exec(recommended);
+  // The unit lane's next-command is /unit-lane <slug> or /execute-phase <unit> P<N>.
+  // We only track the defined→planned transition hint divergence (see #51).
+  const planMatch = /^\/unit-lane\s+(\S+)/.exec(recommended);
   if (planMatch) {
     const unit = bySlug(planMatch[1]);
     if (unit && unit.status === "defined") {
-      observations.push(`${unit.id} still 'defined' after the hint's /plan-feature ${unit.id} recommendation — suspected dropped defined→planned write (see #51)`);
-    }
-  }
-  if (designMatch) {
-    const unit = bySlug(designMatch[1]);
-    if (unit && unit.status === "idea") {
-      observations.push(`${unit.id} still 'idea' after the hint's /design-feature ${unit.id} recommendation — suspected dropped idea→defined write (see #51)`);
+      observations.push(`${unit.id} still 'defined' after the hint's /unit-lane ${unit.id} recommendation — triage not yet applied`);
     }
   }
   if (hint.state && hint.state !== envelopeState) {
@@ -973,8 +898,8 @@ function summarize(units, startable, designCandidates, openPrs) {
  *   4. In-flight unit on the current branch (planned/in-progress) → /execute-phase <unit> P<N>
  *   5. Urgent issues (label `urgent` or `fix-next`)              → /triage-issue <n>
  *   6. Triaged issues (disposition labels)                       → /triage-issue <n> or plan route
- *   7. Defined features (deps met)                               → /review-spec /plan-feature
- *   8. Idea status rows                                          → /design-feature
+ *   7. Defined features (deps met)                               → /unit-lane
+ *   8. Idea status rows                                          → /unit-lane
  *   9. Nothing to do                                             → /workflow-status
  *
  * Emits `reason` (closed code from the queue level) and
@@ -1061,9 +986,9 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
   }
 
   // Feature 61 (P7) — Level 7: defined features with deps met, oldest first.
-  // /review-spec if no current SPEC-REVIEW-PASS, else /plan-feature.
-  // Also covers planned/in-progress units with current receipts (ready to execute).
-  // We check `startable` for defined units first, then non-defined startable units.
+  // /unit-lane to run triage or continue through the adaptive lane.
+  // Planned/in-progress units route to /execute-phase directly (no plan-receipt
+  // currency check required — the unit doc's triage block is the authority).
   const definedFeatures = startable.filter((s) => {
     const unit = units.find((u) => u.id === s.id);
     return unit && unit.status === "defined";
@@ -1074,19 +999,8 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
     return { recommended: command, alternatives, tier: tierFor(command), kind: "defined", reason: "defined-feature", candidate_count: definedFeatures.length };
   }
 
-  // Gate-blocked: units whose receipt for the stage they are about to enter
-  // is not current — they need review before execution. This preserves the
-  // existing behavior where a planned unit with a stale receipt recommends
-  // /review-plan (or /review-spec for defined units).
-  const gateBlocked = receiptRows.filter((row) => row.label !== "current");
-  if (gateBlocked.length > 0) {
-    const command = gateBlocked[0].recommended;
-    for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
-    return { recommended: command, alternatives, tier: tierFor(command), kind: "gate", reason: "defined-feature", candidate_count: gateBlocked.length };
-  }
-
   // Feature 61 (P7) — Level 8: idea status rows, oldest first.
-  // /design-feature <slug>
+  // /unit-lane <slug> to create and triage
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
@@ -1146,9 +1060,9 @@ export const CONTINUATION_CLASSES = Object.freeze([
  */
 function continuationClassFor(verb, label) {
   if (verb === "/workflow-status") return "status-refresh";
-  if (verb === "/review-spec" || verb === "/review-plan") {
-    return label === "stale" || label === "impossible-timeline" ? "planning-gate-rerun" : "review-receipt-refresh";
-  }
+  // Feature 61 P8b: the review-spec/review-plan verbs are retired — the lane
+  // conductor is the single execution verb, re-run through status-refresh.
+  if (verb === "/unit-lane") return "status-refresh";
   return null;
 }
 
@@ -1172,9 +1086,9 @@ function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable
   const verb = tokens[0] ?? "";
   let row = null;
   let stage = "plan";
-  if (verb === "/review-spec" || verb === "/review-plan") {
+  if (verb === "/unit-lane") {
     row = receiptRows.find((entry) => entry.recommended === command) ?? null;
-    stage = row?.stage ?? (verb === "/review-spec" ? "spec" : "plan");
+    stage = row?.stage ?? "spec";
   }
   const kind = continuationClassFor(verb, row?.label ?? null);
   if (kind === null) return { ok: false, refusal: "no-decision-available" };
@@ -1266,13 +1180,12 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const designCandidates = [];
   const blocked = {};
   const gateBlockers = [];
-  const senseCounter = { value: 0, capped: 0 };
   /** A `done` row whose linked PR is still open: a unit at the merge gate. */
   const isOpenPr = (unit) => Boolean(unit.pr && (forge.openPrs ?? []).some((pr) => pr.number === unit.pr.number));
   for (const unit of units) {
     const unmetDeps = dependencies.unmetFor(unit);
     if (unit.status === "idea") {
-      designCandidates.push({ id: unit.id, status: "idea", next: `/design-feature ${unit.id}` });
+      designCandidates.push({ id: unit.id, status: "idea", next: `/unit-lane ${unit.id}` });
       continue;
     }
     if (unmetDeps.length > 0) {
@@ -1289,41 +1202,28 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       observations.push(`${unit.id}: slug '${unit.slug}' is not a safe path segment — its files are not read`);
       continue;
     }
-    const stage = stageFor(unit);
-    const specSense = senseStage(dir, unit.id, "spec", undefined, senseCounter);
-    const planSense = stage === "plan" ? senseStage(dir, unit.id, "plan", specSense.observedDigest, senseCounter) : null;
-    const sense = stage === "plan" ? planSense : specSense;
-    const label = sense.label;
-    const row = {
+    // Feature 61 P8b — the spec/plan receipt stages are retired: no per-unit
+    // receipt rows are sensed or emitted (detail.pre_execution is empty), the
+    // verifier spawn cap never engages, and receipt currency is the unit doc's
+    // triage block checked per step by unit-lane/execute-phase. Status routes:
+    // defined/planned → the lane conductor; in-progress → the step executor;
+    // done-but-unmerged → the merge gate.
+    receiptRows.push({
       unit: unit.id,
       unitDir: dir,
-      stage,
-      label,
-      verdict: sense.verdict,
-      boundDigest: sense.boundDigest,
-      observedDigest: sense.observedDigest,
-      recommended: recommendedFor(label, unit, stage),
-      reason: sense.reason,
-    };
-    receiptRows.push(row);
-    if (label === "current") {
-      // A done row with an open PR has no execution left: its next act is the merge
-      // gate, not another phase.
-      const command = unit.status === "done" ? `/audit-pr ${unit.pr.number}` : recommendedFor("current", unit, stage);
+      stage: "lane",
+      label: "current",
+      verdict: "READY",
+      boundDigest: null,
+      observedDigest: null,
+      recommended: `/unit-lane ${unit.id}`,
+      reason: "unit-doc currency is checked per step by unit-lane/execute-phase",
+    });
+    {
       startable.push({ id: unit.id, next: command });
-    } else {
-      gateBlockers.push({
-        kind: "gate",
-        id: unit.id,
-        scope: "unit",
-        detail: `${unit.id} ${stage}-stage receipt is ${label} — ${row.recommended}`,
-      });
     }
   }
 
-  if (senseCounter.capped > 0) {
-    observations.push(`pre-execution sensing capped at ${PRE_EXECUTION_MAX_SENSES} verifier invocation(s) — ${senseCounter.capped} row(s) degraded`);
-  }
 
   // Steps 7-9 per unit.
   const phases = new Map();
@@ -1338,7 +1238,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     // A closed unit is not under review: only a unit about to enter (or sitting at)
     // the review gate pays the mark's git spawns (F34).
     const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
-    const mark = markEligible ? readReviewMark(dir, stageFor(unit)) : null;
+    const mark = markEligible ? readReviewMark(dir, "lane") : null;
     if (mark) marks.set(unit.id, mark);
     fixNow.push(...readFixNow(dir, observations));
     nextSuggested.push(...readSuggestions(unit, dir));

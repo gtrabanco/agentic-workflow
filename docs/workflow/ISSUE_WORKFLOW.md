@@ -1,10 +1,10 @@
-# Issue workflow (end-to-end)
+# Issue workflow — through the lane (end-to-end)
 
 What happens to an issue from the moment it lands to a defensible, recorded
-decision. The hub skill is `triage-issue`; the spokes route to fix, feature, or
-deferral. Several issues can be triaged in one batch (`triage-issue 12 14 17`) —
-independent verdicts, one summary table. Compatible fix-now issues may then be
-planned as one atomic delivery unit instead of one branch and PR per issue.
+decision. The hub skill is `triage-issue`; the spokes route to the lane (unit
+doc → catalog steps → review → release) or to deferral. Several issues can be
+triaged in one batch (`triage-issue 12 14 17`) — independent verdicts, one
+summary table.
 
 > Forge commands below use `gh` (GitHub) — the canonical example. The project's
 > **Workflow conventions** declare its forge; on GitLab/Gitea run the declared
@@ -25,8 +25,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 Well-formed issues in this repo carry their own decision criteria:
 
 - **Severity** (e.g. low/perf, low/maintainability).
-- A **"When to fix"** / **trigger** clause — often signal-based ("revisit at the
-  pagination milestone", "when a 3rd consumer appears").
+- A **"When to fix"** / **trigger** clause — often signal-based.
 - **"Acceptance (when triggered)"** — what done looks like *if* it fires.
 
 Honor that contract instead of acting on reflex.
@@ -41,21 +40,14 @@ This is the step that separates evidence from vibes. Actually check:
 
 Cite the evidence (paths, counts, line refs) in the decision.
 
-> Illustrative examples:
-> - A perf issue (an unbounded query on a hot path) — classified `postpone` at
->   filing; brought forward and fixed once judged a safe, cacheable lookup.
-> - A duplicated helper across two modules — trigger is "a 3rd consumer";
->   verified only 2 exist → stayed deferred with a **dated re-confirmation**
->   comment, nothing implemented.
-
 ## Stage 3 — Classify and route
 
 | Verdict | When | Route |
 |---|---|---|
-| **fix-now** | Defect, or the trigger is met | `plan-fix` → `execute-phase --fix`; add to fix index |
-| **fix-in-unit** | The issue already belongs to a unit that is currently open (a scope-membership check runs before classification) | Resolve on that unit's own branch: fold into its ledger/phase (`/execute-phase <NN> P<k>` or `/fold-findings`), an incremental replan (`design-feature`/`plan-feature`/a SPEC `## Amendments` entry), or a scope-bleed restore — never a new standalone unit, never `/plan-fix` |
-| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped, **sized** SPEC; small `XS/S` features go SPEC-only with ≥ 2 phases in the SPEC → `execute-phase <NN>`) |
-| **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment; **don't implement inline** |
+| **fix-now** | Defect, or the trigger is met | Lane fix mode → `execute-phase --fix`; add to fix index |
+| **fix-in-unit** | The issue already belongs to a unit that is currently open | Resolve on that unit's own branch via the lane's catalog steps |
+| **promote-to-feature** | It's really new capability | Lane feature mode → triage → catalog steps |
+| **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
 
 If the call hinges on product/risk judgment rather than evidence, present the
@@ -64,38 +56,20 @@ verdict + options and let the user decide before acting.
 ## Stage 4 — The fix path (when fix-now)
 
 **Open-unit note.** A `fix-in-unit` verdict skips this fix path entirely — the
-issue resolves on the **already-open** unit's own branch (fold into its
-ledger/phase, or an incremental replan), never through a new `fix/<N>-<topic>`
-branch. Everything below applies only to a genuine `fix-now` (no open unit
-claims the issue).
+issue resolves on the **already-open** unit's own branch, never through a new
+`fix/<N>-<topic>` branch. Everything below applies only to a genuine `fix-now`.
 
-`plan-fix` accepts one or more issues. It groups the set when all boxes pass:
-one user-visible capability outcome or one homogeneous mechanical rule, one
-verification plan, compatible release/rollback, no isolation conflict, and an
-aggregate size no larger than M. Shared root cause, files, and severity are not
-requirements. If the full set fails, it returns the fewest maximal compatible
-groups rather than defaulting to one PR per issue.
+`triage-issue` accepts one or more issues and routes them through the lane:
 
-For each group it drafts `docs/fix/<N>-<topic>/SPEC.md` plus frozen
-`ACCEPTANCE.md`, surfaces blockers/risks, registers every member in the fix
-index, and commits on one fix branch. Then `execute-phase --fix <N>`:
-
-1. Verifies every referenced issue and the frozen acceptance manifest; it does
-   not create unrelated issues for findings.
-2. Verifies/creates branch `fix/<N>-<topic>` (never `main`).
-3. Implements every remaining phase in the unit, using a fresh worker context
-   and bounded repair attempts per phase.
-4. Runs the gate (type-check, tests, build).
-5. **Marks the fix `done` and opens the PR with `Closes #N` (always — never
-   branch-only).** `done` means built, not merged.
+1. Groups compatible issues (one capability outcome or homogeneous mechanical rule).
+2. For each group, creates the unit doc under `docs/fix/<N>-<topic>/SPEC.md`.
+3. Runs triage on the unit doc.
+4. The lane executes the triage-decided steps (implement, evidence, review).
+5. Marks the fix `done` and opens the PR with `Closes #N`.
 6. Runs the mandatory manual review→fold path: `/fold-findings`, then re-run
-   `/review-change` on the changed HEAD (it resumes with the prior fold queue when
-   `review-change` already ran). Unresolved findings go to
-   `/triage-issue --prioritize-now`; oversized work is replanned into new
-   phases and the user resumes `/execute-phase` manually. Then `/audit-pr`
-   acts as the merge gate (never merge with pending docs).
-7. **Only after merge:** removes the entry from `docs/fix/README.md` — never before
-   (don't drop issue tracking early).
+   `/review-change`. Unresolved findings go to `/triage-issue --prioritize-now`.
+7. Then `/audit-pr` acts as the merge gate.
+8. **Only after merge:** removes the entry from `docs/fix/README.md`.
 
 ## Stage 5 — Report and keep docs coherent
 
@@ -103,19 +77,16 @@ Whatever the verdict:
 
 - Post the decision as a **dated issue comment** with the evidence you checked.
 - **Label application is part of the verdict, not a separate confirmation.**
-  A **fix-now + high-severity** verdict applies the matching urgency label
-  (`urgent` / `fix-next`); a **postpone** / **promote** / **wontfix** verdict
-  applies the matching disposition label (`postponed` / `promoted` /
-  `wontfix`). Both are owned solely by `triage-issue`, both are fully
-  determined by the evidence-based verdict just reached — never a parse of
-  issue text — so applying either needs no separate confirmation.
+  A **fix-now + high-severity** verdict applies `urgent` / `fix-next`; a
+  **postpone** / **promote** / **wontfix** verdict applies the matching
+  disposition label (`postponed` / `promoted` / `wontfix`). Both are owned
+  solely by `triage-issue`.
 - If it became an active fix → it's in the fix index; if it merged/closed →
   remove the stale index row.
-- Any **other** GitHub state mutation (closing, unrelated labels) still needs
-  confirmation when ambiguous.
+- Any **other** GitHub state mutation still needs confirmation when ambiguous.
 
-A periodic `audit-docs` run catches fix-index rows whose issue already
-closed, deferred issues that quietly became actionable, and similar drift.
+A periodic `audit-docs` run catches fix-index rows whose issue already closed,
+deferred issues that quietly became actionable, and similar drift.
 
 ## Worked example
 
