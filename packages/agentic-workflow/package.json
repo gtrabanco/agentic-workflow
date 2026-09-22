@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Producer crate for the deterministic agentic-workflow scripts; later producers land their scripts as subcommands here.",
   "license": "MIT",
   "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
@@ -10,6 +10,9 @@
     "directory": "packages/agentic-workflow"
   },
   "type": "module",
+  "bin": {
+    "agwo": "./bin/agwo.mjs"
+  },
   "engines": {
     "node": ">=18",
     "bun": ">=1.4"

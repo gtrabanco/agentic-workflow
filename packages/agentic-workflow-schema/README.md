@@ -463,10 +463,19 @@ const POLICY_VERSION = "2026-08-30";
 
 // The caller reads the documents: this package never touches Git or the filesystem.
 const spec = [
-  "# Toy feature", "", "## Goal", "", "Ship one usable slice.", "",
-  "## Branch", "", "`feat/toy`", "", "## Size", "", "`S`", "",
-  "## Dependencies", "", "- none", "", "## Product half", "", "### Scope", "",
-  "- **S1:** the slice.", "", "## Design status", "", "`designed`", "",
+  "# Toy feature", "", "## Objective", "", "Ship one usable slice.", "",
+  "## Why", "", "The customer needs it.", "",
+  "## User outcome", "", "Users can do X.", "",
+  "## Acceptance criteria", "", "- [x] S1 done.", "",
+  "## Non-goals", "", "- Not S2.", "",
+  "## Future cost", "", "None known.", "",
+  "## Applicable tests", "", "- Unit tests.", "",
+  "## Known pre-existing issues", "", "None.", "",
+  "## Tasks", "", "- [x] Implement S1.", "",
+  "## Evidence", "", "No external evidence.", "",
+  "## Progress log", "", "- P1 done.", "",
+  "## Next", "", "Ship it.", "",
+  "## References", "", "[Link](https://example.com)", "",
 ].join("\n");
 
 /** 1. Freeze the exact bytes a reviewer may rely on, at one causal revision. */
