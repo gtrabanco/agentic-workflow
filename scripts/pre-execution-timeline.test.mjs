@@ -29,37 +29,60 @@ const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"
 
 const git = (cwd, env, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", env }).trim();
 
-const specText = (goal = "Ship the thing.") => `# Toy unit
+/** A unit doc the `spec-product-v1` selector accepts (13-section, feature 61). */
+const specText = (objective = "Ship the thing.") => `# Toy unit
 
-## Goal
+## Objective
 
-${goal}
+${objective}
 
-## Branch
+## Why
 
-\`feat/toy\`
+Because the customer needs it.
 
-## Size
+## User outcome
 
-\`S\` — small.
+Users can do X.
 
-## Dependencies
+## Acceptance criteria
 
-- none
+- [x] S1 is done.
 
-## Product half
+## Non-goals
 
-### Scope
+- Not S2.
 
-- **S1:** the thing.
+## Future cost
 
-## Design status
+None known.
 
-\`designed\`
+## Applicable tests
 
-## Engineering half
+- Unit tests.
 
-Not part of the Product projection.
+## Known pre-existing issues
+
+None.
+
+## Tasks
+
+- [x] Implement S1.
+
+## Evidence
+
+No external evidence.
+
+## Progress log
+
+- P1 done.
+
+## Next
+
+Ship it.
+
+## References
+
+[Link](https://example.com)
 `;
 
 const ACCEPTANCE = "# Acceptance\n\n- A1 the thing ships.\n";

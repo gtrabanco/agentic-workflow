@@ -44,7 +44,7 @@ const build = async (input) => {
 };
 
 /** The Product bytes a reviewer would have read at some other moment. */
-const editedSpec = () => toySpec({ Goal: "## Goal\n\nShip the other thing.\n" });
+const editedSpec = () => toySpec({ Objective: "## Objective\n\nShip the other thing.\n" });
 
 /**
  * What a receipt block records about the snapshot it bound. `verify` parses these
