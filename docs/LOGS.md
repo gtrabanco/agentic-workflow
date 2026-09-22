@@ -2301,3 +2301,10 @@ out to do, what was decided and *why*, and where to resume.
 **Gotchas**: subagent reports can claim green without running gates — always re-execute; concurrent agents on shared working trees cause cross-edits (one SPEC tail was truncated by a slice bug and one by an agent); path-protection guard requires a fenced `path-protection-records@1` record before touching `*.test.*`.
 **Files**: `docs/features/61-adaptive-unit-lane/SPEC.md` · `skills/unit-lane/` · `scripts/{catalog.json,unit-route.mjs,diff-guard.mjs,workflow-status.mjs}` · `packages/agentic-workflow/{bin/agwo.mjs,src/edit/}` · `packages/agentic-workflow-schema/src/file-schemas.ts` · `packages/pi-agentic-workflow/src/runtime.ts` · `skills/execute-phase/**` (5.0.0).
 **Next**: owner review of PR #251 → merge → row 62 (pi-native conductor) → first manual publish of the runner crate.
+
+## 2026-09-22T23:36:28Z — fix/pi-package-tarball-gate — manual
+- **Commits:** 0 (we are on a different branch; feature 61 commits landed via PR #251 squash-merge into main)
+- **Files:** —
+- **Summary:** Feature 61 completed and merged as PR #251 (state: MERGED, 2026-09-22T23:25:47Z). Runner crate published as @gtrabanco/agentic-workflow 0.1.1 via Trusted Publishing CI on merge (bin renamed from agwo to agentic-workflow; agwo npm name reserved for the future public runner). pi dependency flip and 0.14.0 bump deferred to follow-up PR. Lane flow + programmatic contract documented in LANE_FLOW.md.
+- **Decisions:** bin agwo → agentic-workflow (agwo reserved for agwo.party future runner); pi uses file: dep until post-merge follow-up; publish CI mirrors schema pattern (Trusted Publishing OIDC, no token, version-differs skip); open issues re-grouped (6 Closes #, not Absorbs — non-closing keywords don't auto-close in GitHub).
+- **Next:** Follow-up PR: flip pi dep from file: to 0.1.1 + bump 0.14.0 + add CHANGELOG row + CI publishes pi. Then roadmap row 62 (pi-native conductor, contract in LANE_FLOW.md's programmatic section).
