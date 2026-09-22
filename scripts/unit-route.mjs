@@ -535,14 +535,14 @@ function main(argv) {
   if (matches.length === 0) {
     const numeric = /^\d+$/.test(clean);
     if (numeric && fixIndexIssues().has(clean)) {
-      const command = `/plan-fix ${clean}`;
+      const command = `/unit-lane --fix ${clean}`;
       print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]) });
       return;
     }
     // A roadmap row's own issue number is the other tracked-issue surface this
     // command documents, so it resolves instead of dead-ending (F34).
     if (numeric && roadmapIssues().has(clean)) {
-      const command = `/plan-feature --from-issue ${clean}`;
+      const command = `/unit-lane --from-issue ${clean}`;
       print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]) });
       return;
     }
@@ -561,7 +561,7 @@ function main(argv) {
   if (rows.some((row) => routeOfRow(row) === "replan")) {
     route = "replan";
     selected = rows.filter((row) => routeOfRow(row) === "replan");
-    command = unit.kind === "fix" ? `/plan-fix ${unit.number}` : `/plan-feature ${unit.slug}`;
+    command = unit.kind === "fix" ? `/unit-lane --fix ${unit.number}` : `/unit-lane ${unit.slug}`;
   } else if (rows.some((row) => routeOfRow(row) === "decision")) {
     route = "decision";
     selected = rows.filter((row) => routeOfRow(row) === "decision");

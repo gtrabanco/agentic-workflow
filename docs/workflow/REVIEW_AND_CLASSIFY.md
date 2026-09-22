@@ -9,11 +9,17 @@ table**. Reach for `review-change` for the full, right-sized review; call
 the skills (`.claude/skills/review-change/SKILL.md`,
 `.claude/skills/review-implementation/SKILL.md`); this is the practical when/how.
 
+> **Feature 61 P8 purge:** `review-spec` and `review-plan` are retired (absorbed
+> into the lane's review catalog step). The `replan-in-unit` route that used to
+> name `plan-feature` / `plan-fix` now names `unit-lane`. The pre-execution
+> evidence contracts (`PreExecutionArtifactSnapshot`, `PreExecutionReviewReceipt`)
+> stay as schema exports but are consumed by the lane, not by standalone skills.
+
 ## When to use it
 
-- **Stage 4 of the feature workflow** — over the completed branch, right before
+- **Stage 3 of the lane** — over the completed branch, right before
   opening the PR.
-- **Mid-feature**, when you want a triaged read of what's wrong and what to
+- **Mid-unit**, when you want a triaged read of what's wrong and what to
   actually do about it (not just a flat bug list).
 - Whenever you'd otherwise run your two manual prompts — *"review for X, Y, Z —
   findings only"* then *"classify those findings into a decision table"*. This

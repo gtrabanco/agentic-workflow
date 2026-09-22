@@ -84,8 +84,8 @@ claude-api. No documents to ship → no office skills.
 
 ## How these reinforce our workflow skills
 
-- **Plan** — `engineering:system-design` + `doc-coauthoring` sharpen
-  `plan-feature` (the router covering the idea, issue, and scoped-slug entry paths).
+- **Lane catalog steps** — `engineering:system-design` + `doc-coauthoring` sharpen
+  the lane's `design` and `plan` steps.
 - **Review** — `code-review` + `simplify` + `security-review` feed
   `review-implementation`'s findings; ours adds the **classification** they lack.
 - **Decide / debt** — `engineering:tech-debt` ↔ `triage-issue`;

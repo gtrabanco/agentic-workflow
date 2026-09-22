@@ -1,8 +1,8 @@
 # Agentic workflow
 
 How we build with agentic programming in this repo: the end-to-end flow for a
-**feature** and for an **issue**, the **skills** that drive each step, and how to
-**replicate** the whole system in another project.
+**feature** and for an **issue** through the adaptive lane, the **skills** that
+drive each step, and how to **replicate** the whole system in another project.
 
 This is the versioned, in-repo copy. A reader-friendly multi-page mirror lives in
 Notion ("Agentic Workflow").

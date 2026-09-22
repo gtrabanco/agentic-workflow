@@ -305,57 +305,31 @@ test("class status-refresh: the emitted /workflow-status continuation parses, ch
 });
 
 // ---------------------------------------------------------------------------
-// Class 2 — planning-gate re-run
+// Class 2 (retired) → lane currency — feature 61 P8b
 // ---------------------------------------------------------------------------
+// The planning-gate-rerun and review-receipt-refresh classes exercised the
+// spec/plan receipt staleness of the retired pipeline: drift a bound byte, the
+// receipt goes stale, /review-spec re-runs the review and advances
+// detail.pre_execution.spec.label. The lane replaces receipt currency with the
+// unit doc's triage block: a defined unit emits a /unit-lane continuation
+// (status-refresh class) whose convergence is the sensor's own recommendation.
 
-test("class planning-gate-rerun: the emitted /review-spec continuation parses, checks, and advances detail.pre_execution.spec.label", () => {
+test("lane currency: a defined unit emits a /unit-lane continuation that converges by re-sensing", () => {
   const fixture = makeFixture({ status: "defined" });
-  fixture.recordReceipt("spec");
-  fixture.commit("docs: record the first spec receipt");
-  // Drift a bound Product byte: the receipt goes stale, the gate class owns it.
-  fixture.write(`${fixture.unitDir}/SPEC.md`, specText("Ship the other thing."));
-  fixture.commit("docs: repair the Goal");
-
   const first = envelopeOf(fixture.runSensor());
   const continuation = first.next.continuation;
-  assert.ok(continuation, "a stale receipt emits a continuation");
-  assert.deepEqual(continuation.argv, ["/review-spec", fixture.unit]);
-  assert.equal(continuation.convergence, "detail.pre_execution.spec.label");
-  assert.equal(convergenceValue(first, continuation.convergence), "stale");
+  assert.ok(continuation, "a non-terminal defined unit emits a continuation");
+  assert.deepEqual(continuation.argv, ["/unit-lane", fixture.unit]);
+  assert.equal(continuation.convergence, "next.recommended");
 
   // 1. parses
   assert.deepEqual(parseContinuationArgv(continuation.rendering), continuation.argv);
   // 2. checkable
   assertPreconditionsCheckable(fixture, continuation);
-
-  // 3. execute exactly as emitted: the review skill rebuilds the snapshot and
-  // persists the receipt; the same convergence field must move stale → current.
-  const second = executeContinuation(fixture, continuation);
-  assert.equal(convergenceValue(second, continuation.convergence), "current");
-});
-
-// ---------------------------------------------------------------------------
-// Class 3 — review-receipt refresh
-// ---------------------------------------------------------------------------
-
-test("class review-receipt-refresh: the emitted /review-spec continuation parses, checks, and advances detail.pre_execution.spec.label", () => {
-  const fixture = makeFixture({ status: "defined", extraFiles: { "docs/features/90-alpha/progress.md": "# Progress\n" } });
-  const first = envelopeOf(fixture.runSensor());
-  const continuation = first.next.continuation;
-  assert.ok(continuation, "a missing receipt emits a continuation");
-  assert.deepEqual(continuation.argv, ["/review-spec", fixture.unit]);
-  assert.equal(continuation.convergence, "detail.pre_execution.spec.label");
-  assert.equal(convergenceValue(first, continuation.convergence), "missing");
-
-  // 1. parses
-  assert.deepEqual(parseContinuationArgv(continuation.rendering), continuation.argv);
-  // 2. checkable
-  assertPreconditionsCheckable(fixture, continuation);
-
-  // 3. execute exactly as emitted: the receipt-refresh command persists the
-  // receipt; the convergence field must move missing → current.
-  const second = executeContinuation(fixture, continuation);
-  assert.equal(convergenceValue(second, continuation.convergence), "current");
+  // 3. the class is status-refresh: re-sensing advances next.recommended by
+  //    reflecting the same startable state (the conductor owns real movement).
+  const second = envelopeOf(fixture.runSensor());
+  assert.equal(convergenceValue(second, "next.recommended"), continuation.argv.join(" "));
 });
 
 // ---------------------------------------------------------------------------

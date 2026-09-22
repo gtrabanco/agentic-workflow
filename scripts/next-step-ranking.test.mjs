@@ -362,7 +362,7 @@ test("Level 7: Defined feature — reason: defined-feature", () => {
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
   assert.equal(envelope.next.reason, "defined-feature", "defined status sets reason to defined-feature");
-  assert.ok(envelope.next.recommended.includes("/review-spec") || envelope.next.recommended.includes("/plan-feature"));
+  assert.ok(envelope.next.recommended.includes("/unit-lane"), `defined routes to the lane conductor, got: ${envelope.next.recommended}`);
 });
 
 test("Level 7: Defined feature — oldest first", () => {
@@ -379,7 +379,7 @@ test("Level 7: Defined feature — oldest first", () => {
   // The fixture builder writes rows in order, so 90 appears first in the parsed list
   // if sorted by NN. The parsed order depends on the fixture rows as written.
   // We just verify the reason is correct, not the specific command.
-  assert.ok(envelope.next.recommended.includes("/review-spec") || envelope.next.recommended.includes("/plan-feature"));
+  assert.ok(envelope.next.recommended.includes("/unit-lane"), `defined routes to the lane conductor, got: ${envelope.next.recommended}`);
 });
 
 // ===========================================================================
@@ -394,7 +394,7 @@ test("Level 8: Idea status — reason: idea", () => {
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
   assert.equal(envelope.next.reason, "idea", "idea status sets reason to idea");
-  assert.equal(envelope.next.recommended, "/design-feature 90-alpha");
+  assert.ok(envelope.next.recommended.startsWith("/unit-lane"), envelope.next.recommended);
 });
 
 // ===========================================================================
@@ -571,14 +571,14 @@ test("next.recommended is the exact invocation string", () => {
   const envelope = parseEnvelope(result.stdout);
   assert.equal(envelope.next.recommended, "/triage-issue 42");
 
-  // Idea: /design-feature <id>
+  // Idea: /unit-lane "<idea>" — the conductor owns design now
   const fixture2 = makeFixture({
     roadmapRows: ["| 55 | `slug` | idea | — | i |"],
   });
   const result2 = fixture2.run();
   assert.equal(result2.status, 0, result2.stderr);
   const envelope2 = parseEnvelope(result2.stdout);
-  assert.equal(envelope2.next.recommended, "/design-feature 55-slug");
+  assert.ok(envelope2.next.recommended.startsWith("/unit-lane"), envelope2.next.recommended);
 
   // Idle: /workflow-status
   const fixture3 = makeFixture({
