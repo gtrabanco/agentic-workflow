@@ -169,13 +169,13 @@ the frozen ledger and route missing or contradictory state to these skills.
    dated re-confirmation comment. Never implement deferred work inline. Accept
    several issue numbers in one batch (independent verdicts, one summary table).
 
-**Autopilot**
-13. `ship-roadmap` — end-to-end conductor driven by /loop. ONE upfront interview
-   (product/scale/lifespan; features — elicit and build the complete roadmap if
-   absent; stack — use or recommend; architecture — use or recommend PROPORTIONAL
-   to the app, never defaulting to a named pattern; quality bars; ops; forge;
-   autonomy and budget), then founds the substrate if missing, writes the
-   roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
+**Autopilot** (retired — feature 61 P9)
+13. `ship-roadmap` — the former end-to-end conductor driven by /loop. ONE upfront
+   interview (product/scale/lifespan; features — elicit and build the complete
+   roadmap if absent; stack — use or recommend; architecture — use or recommend
+   PROPORTIONAL to the app, never defaulting to a named pattern; quality bars;
+   ops; forge; autonomy and budget), then founds the substrate if missing, writes
+   the roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
    cheap-tier subagent per phase following execute-phase) → review (compose
    review-change) → PR → merge gate (compose audit-pr) → next feature. Default:
    opens PRs, the human merges; --fullauto is the sole automated merge
@@ -187,6 +187,8 @@ the frozen ledger and route missing or contradictory state to these skills.
    open (with reopening triggers), discovered feature proposals, manual
    verification checklist, product-audit cadence. The conductor's tier must be
    >= every skill it composes; the product-audit skill is always a hand-off.
+   Retired (feature 61 P9): its deterministic routing lives in `workflow-status`
+   / `unit-lane` and the unattended-conductor role is deferred to roadmap row 62.
 
 Compose with (do not duplicate) the project's own companion review skills
 (`/code-review`, `/security-review`, `/verify`, and any design/a11y/brand/perf/SEO
@@ -200,8 +202,9 @@ profile from `@gtrabanco/agentic-workflow-schema`, appends the generated
 `renderOutputInstruction(skill)` to a worker invocation, and parses the final
 result with `parseTurn({skill, text, context})`. `workflow-status` keeps the
 strict Envelope v2 sensor result; other driven workers return compact
-SkillOutcome v1. `ship-roadmap` is the conductor and keeps its native `SHIP:`
-banner and closing `→ Next:` block, so it is not a worker profile.
+SkillOutcome v1. `workflow-status` is the sensor (Envelope v2); the former
+conductor (`ship-roadmap`) kept its native `SHIP:` banner and closing `→ Next:`
+block, so it was not a worker profile.
 
 On an absent, malformed, or invalid result, the driver re-invokes the same
 session exactly once with `Emit only the machine result for the turn above.` A

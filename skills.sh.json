@@ -81,14 +81,6 @@
       "skills": [
         "log-session"
       ]
-    },
-    {
-      "title": "Autopilot and orchestration",
-      "description": "Run the full roadmap or supply the driver-facing envelope contract.",
-      "skills": [
-        "ship-roadmap",
-        "orchestration-envelope"
-      ]
     }
   ]
 }
