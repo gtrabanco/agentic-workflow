@@ -62,7 +62,7 @@ test("the verifier is read-only", () => {
 
 test("the status read does not rewrite .git/index", () => {
   const dir = newRepo(ctx.root, "readonlyindex", "feat/readonlyindex");
-  commitFile(dir, "docs/features/readonlyindex/ACCEPTANCE.md", "frozen\n");
+  commitFile(dir, "docs/features/readonlyindex/SPEC.md", "unit doc\n");
   // A stale mtime on a tracked file makes `git status` want to refresh the
   // index; the read must not write it (F10, fold cycle 3 — a porcelain-only
   // before/after comparison cannot observe that write).

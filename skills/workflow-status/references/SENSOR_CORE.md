@@ -48,7 +48,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
    otherwise treat as `idea`. **Unknown status.** A row whose status is **not**
    one of the five states above (e.g. a non-standard `scheduled`) maps to the
    **nearest** five-state value, **defaulting to `idea`** when no nearer value
-   is evident — so it safely routes to `/design-feature` rather than skipping
+   is evident — so it safely routes to `/unit-lane` rather than skipping
    design. Worked example: `scheduled → idea` (cross-reference `#51`, which
    owns the fuller status-vocabulary reconciliation). Note the raw status
    string in `workflow_observations` so the mapping is visible, never silent.
@@ -60,27 +60,23 @@ live evidence against a frozen ledger remains a contradiction candidate.
 6. **Classify readiness — `startable_now` requires status ≥ `defined` AND deps
    met.** For every unit in the roadmap/fix index:
    - status `idea` → list under **`design_candidates`**, next command
-     `/design-feature <slug>`. Never `startable_now`, regardless of deps.
+     `/unit-lane <slug>`. Never `startable_now`, regardless of deps.
    - status `defined` or `planned`, deps met → `startable_now`, with the next
-     command matched to the exact status: `defined` → `/plan-feature <slug>`,
-     `planned` → `/execute-phase <NN>`.
+     command: `defined` → `/unit-lane <slug>` (lane conductor),
+     `planned` → `/execute-phase <NN> <phase>` (step executor).
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
-6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned`,
-   `in-progress`, **or `done` with a linked PR that is still open (unmerged — merge
-   state lives in the forge)** ([pre-execution evidence](PRE_EXECUTION.md)). A
-   done-but-unmerged row is a lifecycle label, never merge-ready, so a stale or
-   missing receipt there surfaces as a gate blocker; merged units stay excluded
-   (the merge itself closes their gates). Read the stage's
-   newest receipt block, re-derive the bound digest with the recipe owner's
-   verify mode (`bun scripts/pre-execution-snapshot.mjs verify --stage
-   <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a
-   git blob id; `structural.reasonCode` names the dimension that drifted), and
-   label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
-   `self-approved`/`author-readiness`/`legacy`/`impossible-timeline` (unresolvable revision or unparsable timeline: fail-open → unflagged). The label **overrides step 6's
-   status-only command**: a unit without a current PASS for the stage it is about to
-   enter is demoted out of `startable_now` into a `gate` blocker naming the missing
-   review, and `detail.pre_execution[]` records the row. A roadmap row is never
-   edited here — sensing only reads.
+6a. **Lane rows — one per open unit (P8b: spec/plan receipts retired).**
+   For every unit at `defined`, `planned`, `in-progress`,
+   **or `done` with a linked PR that is still open (unmerged — merge
+   state lives in the forge)**, emit one `detail.pre_execution[]` row:
+   `{unit, unitDir, stage: "lane", label: "current", verdict: "READY",
+   boundDigest: null, observedDigest: null,
+   recommended: "/unit-lane <id>" (defined/planned/done),
+   reason: "unit-doc currency is checked per step by unit-lane/execute-phase"}`.
+   The spec/plan receipt stages are retired (feature 61 P8b): no per-unit
+   verifier spawns, no bound-digest re-derivations. Receipt currency is
+   now the unit doc's triage block checked per step by `unit-lane`/`execute-phase`.
+   A roadmap row is never edited here — sensing only reads.
 7. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.
 8. **Pending quality gates.** For each unit with commits: has the mandatory

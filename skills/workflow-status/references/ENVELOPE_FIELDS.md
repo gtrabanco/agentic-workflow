@@ -37,7 +37,7 @@ absent-legacy` or `issues_born.n: 0`; the owning note is
            "suggested": [{"command": "/review-change", "trigger": "accumulation: 420 changed lines since last-reviewed sha", "source_skill": "execute-phase"}]},
   "detail": {
     "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
-    "pre_execution": [{"unit": "12-export-api", "stage": "plan", "label": "stale", "verdict": "PLAN-REVIEW-PASS", "boundDigest": "sha256:9f2c…", "observedDigest": "sha256:41ab…", "recommended": "/review-plan 12-export-api", "reason": "docs/features/12-export-api/ACCEPTANCE.md changed after the review"}],
+    "pre_execution": [{"unit": "12-export-api", "unitDir": "docs/features/12-export-api", "stage": "lane", "label": "current", "verdict": "READY", "boundDigest": null, "observedDigest": null, "recommended": "/unit-lane 12-export-api", "reason": "unit-doc currency is checked per step by unit-lane/execute-phase"}],
     "features": [
       {"id": "07-csv-export", "status": "in-progress", "deps": ["01"], "deps_unmet": [],
        "phase": {"current": "P2", "total": 4}, "pr": null,
@@ -79,11 +79,10 @@ absent-legacy` or `issues_born.n: 0`; the owning note is
 ```
 
 `detail.startable_now`, `detail.blocked_units` (with build orders),
-`detail.design_candidates`, `detail.pre_execution` (one row per sensed unit from step
-6a, `{unit, stage, label, verdict, boundDigest, observedDigest, recommended, reason}`,
-`verdict`/`reason` null when absent) and `detail.pending_triage` are the keys an
-orchestrator routes on; a unit appears in `startable_now` only when its
-`pre_execution[].label` is `current` for the stage it is about to enter; every id in `startable_now`/`blocked_units` must appear
+`detail.pre_execution` (one lane row per open unit from step 6a, `{unit, unitDir, stage: "lane", label: "current", verdict: "READY",
+boundDigest: null, observedDigest: null, recommended, reason}`) and
+`detail.pending_triage` are the keys an
+orchestrator routes on; every id in `startable_now`/`blocked_units` must appear
 fully in `features`/`fixes` — an `idea` unit appears ONLY in
 `design_candidates` (and `detail.features`), never in `startable_now`, since
 it has no deps-met check to pass (design precedes dependency startability).
