@@ -129,6 +129,17 @@ docs, release), with guards that bite when a unit outgrows the light path.
     document, and no published contract still names `PLAN.md`/`ACCEPTANCE.md`
     as a binding surface.
 
+14. **Typed file services**: `agwo edit` exposes one entry point per file
+    kind (UnitDoc, Roadmap, Changelog, Budgets, Manifest) as an SDK
+    (`packages/agwo/src/edit/`, importable by pi plugins and web) with a thin
+    CLI wrapper; files are created only in their fixed format, edited only
+    through the handler's closed operations, and every operation validates the
+    post-state against its file schema and emits a receipt with before/after
+    digests. Verification: creating a unit doc yields all 13 sections; a
+    roadmap row with an invented issue link, a changelog row outside its
+    table, and a budget ceiling shrunk without a growth source are each
+    refused before anything is written.
+
 ## Non-goals
 
 - No replacement orchestrator for ship-roadmap: this feature only DELETES the
@@ -150,7 +161,10 @@ entry in `catalog.json`. The roadmap and `docs/workflow/SKILLS.md` must stay
 in sync when skills are removed or absorbed. The runner package `agwo` becomes
 the central deployment target — any script addition must pass the package's
 test suite. The single-unit document convention must be propagated to the
-`template/` directory so target projects adopt it.
+`template/` directory so target projects adopt it. Each file kind has ONE
+owner (its typed service) — a second implementation of a format, in any
+language or surface, is a defect; new file kinds are new services with their
+own schema, never flags on an existing one.
 
 ## Tasks
 
@@ -237,6 +251,16 @@ Product/Plan heading lists become the unit document's closed section list,
 snapshot/verification/receipt contracts bind the unit-doc digest, additive
 minor release. `packages/pi-agentic-workflow` depends on `agwo` as its only
 runtime dependency; root `scripts/` keeps only repo-own dev/CI checks.
+`agwo edit` ships the typed file services — one entry point per file
+kind, each owning its format completely: `UnitDoc` (create from the canonical
+template — a unit doc cannot be born malformed — plus section set and
+evidence/progress/next operations), `Roadmap` (row upsert/annotate with the
+no-invented-issue rule), `Changelog` (versioned row add per table),
+`Budgets` (ceiling re-base that refuses to shrink without a declared
+growth source), `Manifest` (skill add/remove across plugin.json +
+skills.sh.json + counts). Each handler validates the post-state against its
+file schema and emits an edit receipt (schema-id + before/after digests).
+
 
 P11 — **Substrate adoption**: `init-workspace` bootstrap and upgrade mode
 write the new way of working into target projects — the updated AGENTS.md
