@@ -11,6 +11,7 @@ Notion ("Agentic Workflow").
 
 | Doc | What it covers |
 |---|---|
+| [LANE_FLOW.md](LANE_FLOW.md) | How a unit flows through the adaptive lane: lifecycle, triage rules, guards, evidence, review, deterministic next-step, command cheat-sheet, and programmatic contract |
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (fix-now / postpone / wontfix / promote) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |

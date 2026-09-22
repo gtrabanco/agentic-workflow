@@ -49,6 +49,20 @@ Example outputs:
 - Trivial fix (color change) → `[implement, evidence]` — no tests, no review
 - Core-logic feature → full ordered list including `tests` and `review`
 
+**Triage rules** (from `scripts/catalog.json`):
+
+| Unit condition                     | Steps returned                                                        | Skipped reason(s)                               |
+|------------------------------------|-----------------------------------------------------------------------|-------------------------------------------------|
+| `type:docs`                        | `docs, evidence`                                                      | research, design, plan, implement, tests, review, release (docs/chore/unit) |
+| `type:chore`                       | `implement, evidence`                                                 | research, design, plan, tests, review, docs, release (not code unit / chore) |
+| `scope:trivial` (feature/fix/chore)| `implement, evidence`                                                 | research, design, plan, tests, review, docs, release (trivial scope) |
+| `feature` + non-trivial + small/standard | `research, design, plan, implement, tests, evidence, review, docs` | release (small scope)                           |
+| `fix` + non-trivial                | `plan, implement, tests, evidence, review, docs` (or `implement, tests, evidence, review, docs` if scope trivial) | research, design, release (not a feature) |
+| `feature` + medium/large/xlarge    | all 9 steps (research → release)                                      | none                                            |
+
+Execution order: research → design → plan → implement → tests → evidence →
+review → docs → release. The catalog returns a filtered, ordered subset.
+
 ## Stage 1 — Catalog steps
 
 Each step in the triage-decided order is a bounded phase:
