@@ -23,7 +23,7 @@ A maintainer gets a single unit document per feature/fix under
 `docs/features/<NN>-<slug>/` that contains objective, why, user outcome,
 acceptance criteria, non-goals, future cost, applicable tests, known
 pre-existing issues, tasks, evidence with its verification, a dated progress
-log, and next step. They invoke one command (`/unit-lane <NN>` or the triage
+log, next step, and references (issues / roadmap rows / related material). They invoke one command (`/unit-lane <NN>` or the triage
 step) and the system tells them exactly what to do next, chosen from a closed
 catalog of steps (research, design, plan, implement, tests, evidence, review,
 docs, release), with guards that bite when a unit outgrows the light path.
@@ -103,6 +103,25 @@ docs, release), with guards that bite when a unit outgrows the light path.
     feature folder (e.g. a small `XS` unit) follows the new single-file format
     end-to-end.
 
+11. **Roadmap & forge reconciliation**: Every roadmap row affected by this
+    feature is annotated in one pass — fully absorbed rows become `folded → 61`
+    (number kept, never reused), superseded rows record the reason, partially
+    absorbed ones are either re-scoped in place or unified into new roadmap
+    rows, and rows the owner declines carry an explicit won't-do note. Every
+    absorbed issue is closed by this feature's PR via `Closes #N`, and the
+    unit's References section lists the full mapping. Verification: no open
+    roadmap row or open issue still points at machinery this feature removed.
+
+12. **Substrate adoption (`init-workspace` + `template/`)**: The scaffold
+    ships the new way of working — `init-workspace` bootstrap and upgrade mode
+    write the updated AGENTS.md conventions (unit document, catalog, guards,
+    evidence, commit formats), the `template/` tree carries the new unit-doc
+    template and documentation map, and a repo upgraded before this feature
+    gets only the missing blocks additively (never clobbering recorded
+    decisions). Verification: a fresh bootstrap produces a project whose
+    AGENTS.md describes the adaptive lane; upgrade mode on a pre-lane repo
+    adds the new blocks without destroying existing ones.
+
 ## Non-goals
 
 - No replacement orchestrator for ship-roadmap: this feature only DELETES the
@@ -137,56 +156,80 @@ an unrecorded pre-existing failure nor blamed on one that was), tasks P1…Pn,
 evidence with verification records (each evidence item carries what was run,
 its exit status/digest, and who verified it against which acceptance criterion),
 a progress log (one dated `YYYY-MM-DD HH:MM` entry per step taken: what was
-done, the resulting commit/evidence, and what is next), and next step.
-Propagate to `template/`.
+done, the resulting commit/evidence, and what is next), next step, and
+references (issues, roadmap rows, related material worth exploring). Propagate
+to `template/`.
 
-P2 — **Triage catalog**: Create `scripts/catalog.json` listing the closed steps
+P2 — **Roadmap & forge reconciliation**: one owner-approved pass over the
+roadmap and the forge: fully absorbed rows (54/229, 50/205, 51/218, 42/194,
+35/182) become `folded → 61`; 58/233 records the deletion-half absorption (its
+conductor half stays open as a new row); 46/206, 33/173, 53/227, 41/174,
+45/201 are re-scoped in place or unified into new row(s) where that beats two
+half-overlapping rows; 44/198 and #176 record supersession; the declined rows
+get an explicit won't-do note. New roadmap rows are cut here (the #233
+pi-native conductor is the first candidate). Each absorbed issue is closed by
+this feature's PR via `Closes #N`.
+
+P3 — **Triage catalog**: Create `scripts/catalog.json` listing the closed steps
 (research, design, plan, implement, tests, evidence, review, docs, release),
 each with `applicable_if` rules, `budget_tier`, and `requires_gate` flags.
 Extend `scripts/unit-route.mjs` `--triage` mode to read scope from a single
 SPEC.md and emit an ordered step list.
 
-P3 — **Implement step (dogfood slice)**: Extend `execute-phase` to consume the
+P4 — **Implement step (dogfood slice)**: Extend `execute-phase` to consume the
 triage-decided step list from the unit doc instead of a fixed phase set. A unit
 runs only the triaged steps, each as an atomic gate/commit. First dogfood: pick
 one XS feature folder, convert to single-file format, run through triage +
 implement.
 
-P4 — **Diff-size guard**: Add `scripts/diff-guard.mjs` that measures `git
+P5 — **Diff-size guard**: Add `scripts/diff-guard.mjs` that measures `git
 diff --stat` at phase boundaries, enforces the budget from `catalog.json`, and
 expels the unit for re-triage when exceeded. Anti-gaming rule baked in as code.
 
-P5 — **Path-protection wiring**: Integrate feature 60's path guards into the
+P6 — **Path-protection wiring**: Integrate feature 60's path guards into the
 lane's guard layer (run at phase checkpoints). Reuse existing
 `packages/agentic-workflow/src/path-policy.mjs` without modification.
 
-P6 — **Deterministic next-step**: Extend `scripts/workflow-status.mjs` and the
+P7 — **Deterministic next-step**: Extend `scripts/workflow-status.mjs` and the
 schema's `decideWorkflowAction()` to compute the next command from priority:
 in-flight units → urgent/fix-next issues → triaged issues → defined features →
 ideas. Labels are read from GitHub via `gh issue list --label`. No hand-off
 templates — the next command is the exact invocation string.
 
-P7 — **Absorb plan-feature / plan-fix**: Retire both skills as standalone
+P8 — **Absorb plan-feature / plan-fix**: Retire both skills as standalone
 user-invocable commands. Their catalog-step variants (`design`, `plan`) become
 entries in `catalog.json`. Update all ~12 referencing surfaces (roadmap,
 SKILLS.md, README, template, docs/workflow diagrams, MIGRATION.md, skills/
 tables, etc.).
 
-P8 — **Delete ship-roadmap**: Remove `skills/ship-roadmap/` directory. Migrate
+P9 — **Delete ship-roadmap**: Remove `skills/ship-roadmap/` directory. Migrate
 urgency micro-judge, `--adversarial 2` floor, batch-design/JIT design, closeout,
 and re-point all referencing surfaces to the deterministic router in `agwo`.
 (feature 58 will later replace the full conductor role — document as deferred).
 
-P9 — **Runner package `packages/agwo`**: Create the new bun-managed package.
+P10 — **Runner package `packages/agwo`**: Create the new bun-managed package.
 Move runtime scripts from root `scripts/` into `packages/agwo/src/` (workflow-
 status, phase-lint, path-guard, receipts, evidence runner, config).
 `packages/pi-agentic-workflow` depends on `agwo` as its only dependency. Root
 `scripts/` keeps only repo-own dev/CI checks. Tests pass under `packages/agwo/`.
 
-P10 — **Hardening**: Integration test covering the full lane (triage → unit doc
+P11 — **Substrate adoption**: `init-workspace` bootstrap and upgrade mode
+write the new way of working into target projects — the updated AGENTS.md
+conventions (unit document, catalog, guards, evidence, commit formats), the
+`template/` tree's new unit-doc template and documentation map, additive-only
+upgrade blocks for pre-lane installs (never clobbering a recorded decision).
+
+P12 — **Hardening**: Integration test covering the full lane (triage → unit doc
 → implement → evidence → guard bite → re-triage) on the dogfood XS unit. Update
 `docs/workflow/SKILLS.md` and README skill table. Golden fixture smoke test.
 Final review against AGENTS.md conventions.
+
+## References
+
+- Closes (absorbed, closed by this feature's PR): [#229](https://github.com/gtrabanco/agentic-workflow/issues/229) (row 54, two-level artifacts) · [#205](https://github.com/gtrabanco/agentic-workflow/issues/205) (row 50, review-loop convergence) · [#218](https://github.com/gtrabanco/agentic-workflow/issues/218) (row 51, review-evidence substrate) · [#194](https://github.com/gtrabanco/agentic-workflow/issues/194) (row 42, deterministic review-change) · [#182](https://github.com/gtrabanco/agentic-workflow/issues/182) (row 35, scoped receipt verifier)
+- Partially absorbed (re-scoped or unified in P2): [#233](https://github.com/gtrabanco/agentic-workflow/issues/233) (row 58 — deletion here, conductor later) · [#206](https://github.com/gtrabanco/agentic-workflow/issues/206) (row 46 → research catalog step) · [#173](https://github.com/gtrabanco/agentic-workflow/issues/173) (row 33 → surviving skills only) · [#227](https://github.com/gtrabanco/agentic-workflow/issues/227) (row 53 → unit-doc template) · [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (row 41) · [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (row 45)
+- Superseded: [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (row 44 — scripts move to `agwo`, not into skill folders) · #176 route-slimming (rows disappear instead of slimming)
+- Related reading: `docs/workflow/REPOSITORY_STATE.md` (frozen facts substrate) · feature 60's path-protection policy (reused unmodified) · the 2026-09-15 bureaucracy-reduction execution order in the roadmap (this feature supersedes its Phase 2/3 sequencing)
 
 ## Open questions
 
