@@ -26,7 +26,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  38 source skills (14 user-facing + 20 workflow internals + 1 metadata-internal; 34 discoverable)
+skills/                  28 source skills (13 user-facing + 14 workflow internals + 1 metadata-internal; 27 discoverable — bump-skill is repo-only)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -58,7 +58,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**14 user-facing skills** (one menu entry each) + internal contracts composed
+**13 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the lane's triage-driven step selection (`unit-lane`), the executor
 (`execute-phase`), the internal review pack (`review-code`, `review-security`,
 `review-verify`, `review-debt`, `review-design`, `review-a11y`, `review-brand`,

@@ -126,11 +126,10 @@ this line; with `branches` declared, no skill may create a worktree.
 **Agent safety hooks:** `<Claude Code | Cursor | Copilot | OpenCode | none>`.
 When enabled, repository adapters call `.agentic-workflow/hooks/guard-command.sh`
 before shell/read tools. Direct environment dumps, `.env` reads, and merge
-commands are blocked. Automated merge was available only inside an active
-`ship-roadmap --fullauto` attempt through the transient wrapper; never grant an
-agent-wide or session-persistent merge permission. The unattended-conductor
-role is deferred to roadmap row 62. Hooks are defense-in-depth —
-forge branch protection/rulesets remain required.
+commands are blocked. Automated merge is not available by default — the lane's
+conductor (`unit-lane`) orchestrates the pipeline but does not auto-merge.
+Never grant an agent-wide or session-persistent merge permission. Hooks are
+defense-in-depth — forge branch protection/rulesets remain required.
 
 **Hard rules (always honored).**
 - **Branch & PR:** never work on `main`; one PR per unit against `main`; never
@@ -154,6 +153,20 @@ answer materially changes the artifact — make routine choices silently and rec
 them. Each question states: **what** is being decided; its **scope** (files,
 behavior, consumers affected); its **criticality** (critical / high / medium /
 low); and each **option** with pros and cons separately, recommendation flagged.
+
+**Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
+or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/` with
+13 mandatory sections (Objective, Why, User outcome, Acceptance criteria,
+Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
+Evidence, Progress log, Next, References). The unit's path is decided by a triage
+pass against a closed catalog (research, design, plan, implement, tests,
+evidence, review, docs, release). The lane conductor (`/unit-lane`) orchestrates;
+`execute-phase` runs each step as an atomic gate/commit. A diff-size guard
+(`scripts/diff-guard.mjs`) expels units that exceed their budget back to triage.
+Evidence rows document what was run, exit status, and verified-by. The progress
+log uses dated entries (`YYYY-MM-DD HH:MM`). Commit format: `type(scope):
+description` (conventional commits). Roadmap rows follow `idea → defined →
+planned → in-progress → done`.
 
 ---
 
@@ -235,43 +248,56 @@ required test layer for a change in its SPEC.
 
 ## Feature workflow
 
-Features are planned before they are coded. Flow:
+Features produce one `SPEC.md` (from `docs/features/_TEMPLATE/SPEC.md`),
+registered in `docs/features/ROADMAP.md`. The lane flow:
 
-1. `SPEC.md` (from `docs/features/_TEMPLATE/SPEC.md`)
-2. `PLAN.md`
-3. `TASKS.md`
-4. execution by phase (one phase per commit, gate-verified)
-5. hardening
-6. verification & review
-7. PR
+1. **Unit doc** — create `docs/features/<NN>-<slug>/SPEC.md` from the template
+2. **Triage** — the lane conductor (`/unit-lane` / `workflow-status`) returns a
+   deterministic ordered list of steps (research, design, plan, implement,
+   tests, evidence, review, docs, release — some skipped by triage)
+3. **Catalog steps** — each step runs as an atomic gate/commit via
+   `execute-phase` (diff-size guard bites when the budget is exceeded → re-triage)
+4. **Evidence** — verify each acceptance criterion: what was run, exit status/
+   digest, observed output, verified-by
+5. **Review** — independent review pass; findings classified (fix-now /
+   replan-in-unit / decision-required / proposal / ignore)
+6. **Release** — version bumps, changelog (M/L features); skipped for XS/S
+7. **PR** — open with `Closes #N` (absorbed issues) and flip roadmap row to
+   `done`
 
-Phases are labelled **`P1, P2, …`** ("phases") everywhere — `PLAN.md`, `TASKS.md`,
-`progress.md`, commits — never `S1`/"Steps". The label is `execute-phase`'s
-argument (`execute-phase NN P2`), so it must stay uniform.
+Phases are labelled **`P1, P2, …`** ("phases") everywhere — in the unit
+SPEC.md's Tasks section, evidence rows, and commits — never `S1`/"Steps". The
+label is `execute-phase`'s argument (`execute-phase NN P2`), so it must stay
+uniform.
 
-**One phase = one session.** Never execute two phases in one conversation on a
-non-frontier model — models degrade over long horizons, and a fresh session per
-phase is what preserves the cheap-execution guarantee. With `/loop`, this is
-already how the batch shape re-invokes per phase; without it, re-invoke
-`execute-phase` by hand for each phase in a fresh conversation.
+**One step = one session.** Never execute two catalog steps in one conversation
+on a non-frontier model — models degrade over long horizons, and a fresh session
+per step is what preserves the cheap-execution guarantee. With `/loop`, this is
+already how the batch shape re-invokes per step; without it, re-invoke
+`execute-phase` by hand for each step in a fresh conversation.
 
-Start a new feature by copying `docs/features/_TEMPLATE/SPEC.md` to
-`docs/features/<NN>-<slug>/SPEC.md` and registering it in
-`docs/features/ROADMAP.md` (the source of truth for numbering, order, and
-dependencies).
-
-**Fix-now fold ledger.** Step 6 (verification & review) writes fix-now
-findings from `review-change`/`audit-pr` to `docs/features/<NN>-<slug>/review-findings.md`
+**Review findings** persist to `docs/features/<NN>-<slug>/review-findings.md`
 (fixed schema `| id | file:line | axis | severity | class | route | folded |`,
-`folded` starting `no`) — the same ledger for both, deduped by `file:line`+axis;
-`execute-phase`'s fold cycle ticks each folded row `folded: yes`. Fixes use the
-same convention at `docs/fix/<n>-<topic>/review-findings.md`.
+`folded` starting `no`); `execute-phase`'s fold cycle ticks each folded row
+`folded: yes`.
 
 ## Fix workflow
 
-A fix is lighter than a feature: only a `SPEC.md` (from
-`docs/fix/_TEMPLATE/SPEC.md`), registered in `docs/fix/README.md`, no planning
-artifacts. Every fix has a tracked issue; its PR closes it.
+Every NEW fix produces one `SPEC.md` under `docs/fix/<N>-<topic>/` (from
+`docs/fix/_TEMPLATE/SPEC.md`), registered in `docs/fix/README.md`. The flow:
+
+1. **Unit doc** — create `docs/fix/<N>-<topic>/SPEC.md` from the template
+2. **Triage** — the lane conductor returns a lightweight step list
+   (typically: implement, evidence)
+3. **Catalog steps** — each step runs as an atomic gate/commit via `execute-phase`
+4. **Evidence** — verify the fix against each acceptance criterion
+5. **Review** — independent review pass
+6. **PR** — open with `Closes #N`; the fix's tracked issue auto-closes
+
+**Review findings** persist to `docs/fix/<N>-<topic>/review-findings.md` (same
+schema as feature units).
+
+After merge: remove the entry from `docs/fix/README.md`.
 
 ---
 
@@ -287,14 +313,14 @@ optional:
   and exit; an opt-in hook re-injects the last entry to resume context. Copy
   `.claude/settings.json.example` to enable; see `.claude/README.md`.
 
-**Context hygiene rule:** end of a unit or phase → `/log-session` then a NEW
+**Context hygiene rule:** end of a catalog step → `/log-session` then a NEW
 conversation, never compact — compaction re-reads the whole transcript with
 the current session model, right when the context is most expensive to
-re-read; a fresh conversation is ~free because this SPEC/TASKS/progress + the
-session log already are the persistent memory. Compact only mid-phase, for
-unpersisted state you can't afford to lose, and prefer committing WIP + a
-`progress.md` note instead. Details: `docs/workflow/FEATURE_WORKFLOW.md` →
-*Context hygiene & cost*.
+re-read; a fresh conversation is ~free because the unit SPEC.md's Evidence
+and Progress log sections plus the session log already are the persistent
+memory. Compact only mid-step, for unpersisted state you can't afford to
+lose, and prefer committing WIP + updating the unit's Progress log instead.
+Details: `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost*.
 
 ---
 

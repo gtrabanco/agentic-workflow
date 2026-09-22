@@ -73,8 +73,8 @@ command where possible, or labelled `read-verified` — never unlabelled prose.
 
 ### Spec-lint (mechanical — presence checks only)
 
-Run by `plan-fix` before committing the draft; fail-closed, no quality
-judgement. Any FAIL → fix the SPEC before the commit.
+Run by the lane's triage step (fix mode) before committing the draft;
+fail-closed, no quality judgement. Any FAIL → fix the SPEC before the commit.
 
 - [ ] No template placeholders left (`grep -nE '<(topic|n|task|command|expected)'`
       over the filled sections returns nothing — the `### P1` scaffold lines
