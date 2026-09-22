@@ -53,7 +53,9 @@ const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 const LEDGERS_REL = "skills/pre-execution-review/references/LEDGERS.md";
 const SENSOR_CORE_REL = "skills/workflow-status/references/SENSOR_CORE.md";
 const PRE_EXECUTION_REL = "skills/workflow-status/references/PRE_EXECUTION.md";
-const TEMPLATE_RELS = ["docs/features/_TEMPLATE/LEDGERS.md", "docs/fix/_TEMPLATE/LEDGERS.md"];
+// Feature 61 P1 retired the features-template LEDGERS copy (the unit doc carries
+// its evidence sections); the fix-template copy goes when P4/P8 reshape the fix flow.
+const TEMPLATE_RELS = ["docs/fix/_TEMPLATE/LEDGERS.md"];
 
 /** The fold ledger's fixed columns, owned by `review-change`'s PERSIST_AND_DECIDE.md. */
 const FOLD_COLUMNS = ["id", "file:line", "axis", "severity", "class", "route", "folded"];
