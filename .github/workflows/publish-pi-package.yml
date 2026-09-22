@@ -143,19 +143,36 @@ jobs:
       # directory the whitelist named but nothing produced. Packs a throwaway
       # tarball and inspects it. `postpack` removes the staged copy afterwards;
       # `prepublishOnly` stages a fresh one for the real pack.
+      #
+      # The gate compares the tarball against the staged bundle file-for-file
+      # instead of a fixed minimum count. A constant desyncs from the source of
+      # truth the moment a skill is added or retired — that is exactly how this
+      # step went red on a deliberate retirement (feature 61), with the bundle
+      # itself perfectly correct. The staged `skills/` tree is the contract; the
+      # list must be captured BEFORE `npm pack`, because `postpack` deletes it.
       - name: Tarball carries the skill bundle
         run: |
+          bun run bundle:skills
+          EXPECTED=$(find skills -type f | sed 's|^|package/|' | sort)
+          EXPECTED_COUNT=$(printf '%s\n' "$EXPECTED" | grep -c . || true)
+          [ "$EXPECTED_COUNT" -gt 0 ] \
+            || { echo "::error::no staged skill files — check the repository skills/ tree"; exit 1; }
+
           npm pack --pack-destination "$RUNNER_TEMP" >/dev/null
           TGZ=$(ls "$RUNNER_TEMP"/gtrabanco-pi-agentic-workflow-*.tgz)
           # List once: piping tar into grep -q makes tar die on SIGPIPE and spray
           # "write error" into a gate log, which is how people learn to ignore it.
           LISTING=$(tar tzf "$TGZ")
-          COUNT=$(printf '%s\n' "$LISTING" | grep -c '^package/skills/' || true)
-          echo "skill files in the tarball: $COUNT"
-          printf '%s\n' "$LISTING" | grep -qx 'package/skills/audit-docs/SKILL.md' \
-            || { echo "::error::tarball is missing the skill bundle — check package.json 'files' and .npmignore"; exit 1; }
-          [ "$COUNT" -ge 100 ] \
-            || { echo "::error::only $COUNT skill files in the tarball"; exit 1; }
+          ACTUAL=$(printf '%s\n' "$LISTING" | grep '^package/skills/' | sort || true)
+          echo "skill files in the tarball: $(printf '%s\n' "$ACTUAL" | grep -c . || true)"
+
+          MISSING=$(comm -23 <(printf '%s\n' "$EXPECTED") <(printf '%s\n' "$ACTUAL") || true)
+          if [ -n "$MISSING" ]; then
+            echo "::error::tarball is missing staged skill files — check package.json 'files' and .npmignore:"
+            printf '%s\n' "$MISSING"
+            exit 1
+          fi
+          echo "the tarball carries every staged skill file ($EXPECTED_COUNT)"
 
       - name: Skip when the version is already published
         id: version
