@@ -123,19 +123,19 @@ test("AC13 through the adapter: the project config is read from Pi's cwd, and on
   // `projectTrusted: true` or `cwd: process.cwd()`, one of the two assertions
   // below stops holding.
   const entry = await shippedEntry({
-    projectConfig: { commands: { "plan-feature": { model: "openai/gpt-5.2" } } },
+    projectConfig: { commands: { "unit-lane": { model: "openai/gpt-5.2" } } },
   });
   try {
     const untrusted = entry.context({ trusted: false });
-    await entry.registered.get("plan-feature").handler("", untrusted);
+    await entry.registered.get("unit-lane").handler("", untrusted);
     assert.deepEqual(entry.calls.setModel, [], "an untrusted project must not be able to steer the model");
     assert.deepEqual(
       entry.calls.sendUserMessage.map(([content]) => content),
-      ["/skill:plan-feature"],
+      ["/skill:unit-lane"],
       "the command still runs, unrouted",
     );
 
-    await entry.registered.get("plan-feature").handler("", entry.context({ trusted: true }));
+    await entry.registered.get("unit-lane").handler("", entry.context({ trusted: true }));
     assert.deepEqual(
       entry.calls.setModel.map((model) => `${model.provider}/${model.id}`),
       ["openai/gpt-5.2"],
@@ -152,7 +152,7 @@ test("AC7/AC8 through the adapter: the listener guards and the restore are the o
     const before = { provider: "anthropic", id: "claude-sonnet-4-5" };
     const handlerCtx = entry.context({ model: before });
     handlerCtx.isProjectTrusted = () => false; // the route lives in the global file
-    await entry.registered.get("plan-feature").handler("x", handlerCtx);
+    await entry.registered.get("unit-lane").handler("x", handlerCtx);
     assert.equal(entry.calls.setModel.length, 1, "the turn applied a model");
     assert.deepEqual(entry.calls.setThinkingLevel, ["high"], "and the level the route named");
 
@@ -184,7 +184,7 @@ test("AC7/AC8 through the adapter: the listener guards and the restore are the o
 test("AC7 through the adapter: a model the operator picked mid-turn is left in place", async () => {
   const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2" }, onSettle: "restore" } });
   try {
-    await entry.registered.get("plan-feature").handler("", entry.context());
+    await entry.registered.get("unit-lane").handler("", entry.context());
     const operatorModel = { provider: "anthropic", id: "claude-opus-4-5" };
     entry.operatorSelectsModel(operatorModel);
     entry.handlers.get("agent_settled")(undefined, entry.context({ model: operatorModel }));
@@ -263,7 +263,7 @@ test("AC13 through the factory: an untrusted project is never read, even when th
       hasConfiguredAuth: () => true,
       availableModels: () => [{ provider: "openai", id: "gpt-5.2" }],
     };
-    await router.dispatch({ name: "plan-feature", skill: "plan-feature" }, "", ctx);
+    await router.dispatch({ name: "unit-lane", skill: "unit-lane" }, "", ctx);
     assert.deepEqual(readPaths, [join(agentDir, "pi-agentic-workflow.json")], "the project file is not opened");
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -296,7 +296,7 @@ test("AC7 through the adapter: a level the operator moved mid-turn survives the 
   // reached through the code Pi runs.
   const entry = await shippedEntry({ thinking: "medium", globalConfig: { default: { thinking: "low" } } });
   try {
-    await entry.registered.get("plan-feature").handler("", entry.context());
+    await entry.registered.get("unit-lane").handler("", entry.context());
     assert.deepEqual(entry.calls.setThinkingLevel, ["low"], "the route moved the level");
 
     entry.operatorSelectsThinking("xhigh");

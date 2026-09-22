@@ -3870,3 +3870,17 @@ export type {
   EnvelopeContinuation,
 } from "./continuation.js";
 export type { ContinuationCanonicalVector } from "./continuation-vectors.js";
+
+// ── File-schema vocabularies (agwo edit) ──────────────────────────────────
+// UNIT_DOC_REQUIRED_SECTIONS is already exported from pre-execution.ts (P8).
+export {
+  EVIDENCE_COLUMNS,
+  PROGRESS_ENTRY_PATTERN,
+  ROADMAP_COLUMNS,
+  CHANGELOG_SECTION_PATTERN,
+  BUDGETS_OPERATIONS,
+  MANIFEST_OPERATIONS,
+  UNIT_DOC_OPERATIONS,
+  ROADMAP_OPERATIONS,
+  CHANGELOG_OPERATIONS,
+} from "./file-schemas.js";
