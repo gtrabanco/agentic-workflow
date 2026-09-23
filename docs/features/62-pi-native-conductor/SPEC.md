@@ -117,7 +117,7 @@ Budget: strong
 
 ## Next
 
-Diff guard → exception record (large unit) → push → PR (Closes #233) → roadmap row 62 → owner review.
+Owner review of PR #254 → merge (after #253) → runner-crate publish follows the lane.
 
 ## References
 
