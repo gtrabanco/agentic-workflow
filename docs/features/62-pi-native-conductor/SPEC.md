@@ -84,12 +84,13 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 
 ## Progress log
 
-One entry per step taken. Format exactly:
-`YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+- 2026-09-23 10:20 — unit doc created from template, triage run (steps skipped: none after tests declared) → 5e58da47 — next: research
+- 2026-09-23 10:40 — research step: ship-roadmap archaeology from git history (44267b1d~1) + issue #233 + pi/schema/sensor integration map; frozen design: native `advance` command, envelope→snapshot mapping, deterministic urgency judge (fail-safe FINISH_FIRST), unattended adversarial floor, closeout gate, banners ADVANCE: COMPLETE/BLOCKED/STOPPED → evidence (subagent reports, this session) — next: implement P1–P8
+- 2026-09-23 10:45 — design+plan frozen in SPEC (12 ACs, P1–P8 tests-first); schema 4.5.0 pinned; tests-first agent + docs agent launched (nan/qwen3.6 + nan/mimo-v2.5) → commit — next: implementation
 
 ## Next
 
-The single next action.
+Implement P2–P6 (conductor modules) making the tests-first suite green, then P7 verification gates.
 
 ## References
 
