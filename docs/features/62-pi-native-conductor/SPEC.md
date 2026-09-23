@@ -101,6 +101,7 @@ Budget: strong
 | 11 | `bun test test/conductor-snapshot.test.mjs` | 0 | mapping table + purity | main agent |
 | 12 | full gates: root `node --test scripts/*.test.mjs`; schema `bun run test`; pi `bun run test` + `test:node`; `npm pack --dry-run` | 0 / 0 / 0 / 0 | 554 · 717 · 339 (bun) · 339 (node) all pass; pack 216.5 kB / 142 files | main agent |
 | — | smoke: real sensor spawn vs this repo + decide | 0 | `ok: true state=NEEDS_INPUT next=/workflow-status` | main agent |
+| — | `bun scripts/diff-guard.mjs --base main --unit 62` | 1 (BREACH) | Lines: 2306 > 400 · Files: 31 > 8 — **recorded exception**: roadmap-sized L unit (module + tests-first suite + config/extension wiring + docs + release); one honest split attempted (tests-first + docs ran as parallel scoped work, never shrinking the diff); nothing was deleted to fit the budget | main agent |
 
 ## Progress log
 
