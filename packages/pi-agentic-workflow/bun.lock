@@ -6,7 +6,8 @@
       "name": "@gtrabanco/pi-agentic-workflow",
       "dependencies": {
         "@earendil-works/pi-tui": "0.87.0",
-        "@gtrabanco/agentic-workflow": "0.1.1",
+        "@gtrabanco/agentic-workflow": "file:../agentic-workflow",
+        "@gtrabanco/agentic-workflow-schema": "4.5.0",
       },
       "devDependencies": {
         "@types/node": "24.13.3",
@@ -137,6 +138,8 @@
     "@google/genai": ["@google/genai@1.52.0", "", { "dependencies": { "google-auth-library": "^10.3.0", "p-retry": "^4.6.2", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-gwSvbpiN/17O9TbsqSsE/OzZcpv5Fo4RQjdngGgogtuB9RsyJ8ZHhX5KjHj1bp5N9snN2eK8LDGXSaWW2hof8Q=="],
 
     "@gtrabanco/agentic-workflow": ["@gtrabanco/agentic-workflow@0.1.1", "", { "bin": { "agentic-workflow": "bin/agentic-workflow.mjs" } }, "sha512-nbMmd8lobVGdYTyfrC6q6ckDi7RYz0+EbJUtWE2/QjOBtuy8JFLhVOsIhn5Jo3eVv13skEA4IrQDu1BXYp0QeQ=="],
+
+    "@gtrabanco/agentic-workflow-schema": ["@gtrabanco/agentic-workflow-schema@4.5.0", "", {}, "sha512-imSVnxsFeXzBMv11xT9izkOpufuipr4XZyyxh6j0NZAonFsKST4DW5oNa9iUqO0aNTN3udp2uOn5o8ITei/Zmw=="],
 
     "@mariozechner/clipboard": ["@mariozechner/clipboard@0.3.9", "", { "optionalDependencies": { "@mariozechner/clipboard-darwin-arm64": "0.3.9", "@mariozechner/clipboard-darwin-universal": "0.3.9", "@mariozechner/clipboard-darwin-x64": "0.3.9", "@mariozechner/clipboard-linux-arm64-gnu": "0.3.9", "@mariozechner/clipboard-linux-arm64-musl": "0.3.9", "@mariozechner/clipboard-linux-riscv64-gnu": "0.3.9", "@mariozechner/clipboard-linux-x64-gnu": "0.3.9", "@mariozechner/clipboard-linux-x64-musl": "0.3.9", "@mariozechner/clipboard-win32-arm64-msvc": "0.3.9", "@mariozechner/clipboard-win32-x64-msvc": "0.3.9" } }, "sha512-ABnA53mdfkGZwOFUdZNv2S0CWGO/EIuPj8Vv9xmBFmSYg/qFc7ihO6q5FcQjvoE67kZpWkEc4AhD6B/os04yuA=="],
 
