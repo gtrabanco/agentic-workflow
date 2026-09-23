@@ -21,9 +21,18 @@ An operator invokes one pi command (e.g. `/advance` or the conductor entry) and 
 
 ## Acceptance criteria
 
-Numbered list. Each AC is induced from a concrete user scenario ("I do X and observe Y").
-Make each AC command-verified where possible. If the request is too vague to state an AC,
-STOP and ask the user with concrete options — never invent one.
+1. **Native `advance` command**: after installing the package, a pi session exposes an `advance` command registered by package code (not derived from a skill dir), which runs the deterministic conductor loop and prints one envelope-of-record block per iteration. Verification: the package test harness dispatches `advance` through `createSession()` and observes the loop run against a scripted sensor double.
+2. **Decide-then-invoke loop**: each iteration runs the repo's sensor (`scripts/workflow-status.mjs`, spawned with `runtimeBin`), validates the Envelope v2 JSON, feeds the mapped snapshot + policy to `decideWorkflowAction()`, and on `invoke` sends the decision's command through the existing router — the `argv` of `next.continuation` (or `next.recommended`) is never mutated; a display-only rendering may be printed. Verification: a test with a fake envelope asserting `sendUserMessage` receives exactly the mapped `/skill:<verb> <args>` string.
+3. **Fail-closed refusals**: sensor spawn failure, non-JSON output, schema-invalid envelope, or a `degradations[]`-present envelope the policy refuses → typed refusal from `CONTINUATION_REFUSALS` (`sensor-degraded`, `precondition-uncheckable`, `rendering-failed`, `no-decision-available`), nothing invoked, loop stops with the refusal code printed. Verification: one test per refusal code.
+4. **Sense and stop verdicts**: a `sense` decision re-runs the sensor once and, if the revision is still stale or evidence missing, stops without invoking; every `stop` decision ends the loop with its reason code (`stop-*` closed set) and detail surfaced to the operator. Verification: table-driven tests over decision outputs.
+5. **Deterministic urgency judge**: with `detail.urgent` present — no urgent issues → no judge; an issue labeled `fix-next` → queued head-of-line next iteration, never interrupting; `interruptibility.dirty == false` → `INTERRUPT_NOW` (in-flight unit parked with a WIP commit note before selecting the urgent fix); `tasks_from_boundary <= 1` → `FINISH_FIRST`; the ambiguous middle → fail-safe `FINISH_FIRST`. No model call in the judge. Verification: table-driven tests over the four short-circuit rows + fail-safe row.
+6. **Unattended adversarial floor**: when the run is unattended (`--unattended`/`--fullauto`), an invocation of a review-class command carries `--adversarial 2` for L/sensitive units and `--adversarial 3` for security/auth units, resolved from config + envelope unit facts; attended runs add nothing. Verification: tests asserting the appended flag per unit class.
+7. **Closeout gate between iterations**: a stage counts only when `git status --porcelain` is empty and the branch is not ahead of its upstream; a dirty/unpushed end marks the iteration partial, and 3 consecutive partials on the same unit stop the loop with a park reason. Verification: tests with scripted git doubles.
+8. **Terminal banners**: loop end prints exactly one of `ADVANCE: COMPLETE` (nothing startable), `ADVANCE: BLOCKED` (with unblock map from the envelope), `ADVANCE: STOPPED` (cap/refusal/needs-input), or the refusal/stop code — never a bare hang. Iteration cap (config, default 12) stops with `stop-failed` + cap detail. Verification: tests per banner.
+9. **Merge authority intact**: the conductor never merges — when the envelope reports a merge-ready PR awaiting human merge, the loop stops with `stop-needs-input` naming `/audit-pr` + human merge. `--fullauto` changes nothing about merging in this unit (feature 20 floors stay). Verification: test asserting no merge command is ever sent.
+10. **Run log**: every iteration appends one line (`YYYY-MM-DD HH:MM — <decision kind/code> — <command or stop> — <iteration k/cap>`) to a gitignored run log next to the workflow state; the file is never committed. Verification: test asserting the log line format and `.gitignore` coverage.
+11. **Snapshot mapping is deterministic and tested**: the envelope→`WorkflowSnapshot` mapping is a pure function with table-driven tests (each envelope field lands in the snapshot field the schema type declares); `decideWorkflowAction` receives no other source of truth. Verification: mapping tests + property test reuse from the schema package.
+12. **Gates stay green**: root suite, schema suite, and pi package suite (incl. `test:node` node-compat) pass at merge time; the conductor is consumer-only — no envelope field, reason code, or refusal code changes. Verification: full gate run recorded in Evidence.
 
 ## Non-goals
 
@@ -39,10 +48,6 @@ STOP and ask the user with concrete options — never invent one.
 - The conductor must keep working when the sensor degrades (`degradations[]` present) — fail closed to a typed refusal, never guess.
 - Retired-skill aliases must not reappear: the conductor's command names live in the pi package, not in `skills/`.
 
-## Future cost
-
-Standing obligations this unit imposes on future work. Each row: the rule + who it binds.
-
 ## Applicable tests
 
 - `packages/pi-agentic-workflow/test/` — new conductor suites copied from the existing harness (fake pi context, registered-command dispatch): decision-table mapping (each `next.reason` → the exact continuation), refusal paths (all `CONTINUATION_REFUSALS` codes), precondition gate (unsatisfied precondition → typed refusal, no invocation), urgency micro-judge and unattended adversarial floor, batch-design and closeout steps.
@@ -56,7 +61,17 @@ Standing obligations this unit imposes on future work. Each row: the rule + who 
 
 ## Tasks
 
-P1…Pn with stable IDs, one line each, smallest first. Final task is verification when the unit has behavior.
+Tests come first in every phase (never change a test to pass it):
+
+- P1 — Tests-first: conductor suite skeleton in `packages/pi-agentic-workflow/test/` copied from `test/dispatch-refusals.test.mjs` + `test/runtime.test.mjs` harness patterns; scripted sensor double; add `@gtrabanco/agentic-workflow-schema` (exact pin) dependency.
+- P2 — Envelope→snapshot pure mapping (`src/conductor/snapshot.ts`) + sensor client (`src/conductor/sensor.ts`: spawn via `runtimeBin`, parse, validate, fail-closed refusals) with their tests green.
+- P3 — Decision mapping + verbatim invocation (`src/conductor/decide.ts`, `src/conductor/invoke.ts`) over the existing router; sense/stop/refusal handling; tests green.
+- P4 — Deterministic urgency judge + in-flight parking (`src/conductor/urgency.ts`); tests green.
+- P5 — Unattended adversarial floor + closeout gate + run log + loop caps/banners (`src/conductor/{adversarial,closeout,loop}.ts`); tests green.
+- P6 — Register the native `advance` command in `src/extension/factory.ts` + config keys (`advance.iterationsCap`, `advance.sensitivePaths`, `advance.securityPaths`); node-compat (`test:node`) green.
+- P7 — Verification: full gates (root suite, schema suite, pi suite, npm pack tarball assertion) recorded as Evidence rows.
+- P8 — Docs: conductor section in `docs/workflow/ORCHESTRATION.md` + `docs/workflow/LANE_FLOW.md` command table + package README; pi package version bump + CHANGELOG row (same PR).
+
 
 ## Evidence
 
@@ -78,4 +93,11 @@ The single next action.
 
 ## References
 
-Issues, roadmap rows, related material. The PR closes absorbed issues via `Closes #N`. `none` if empty.
+- Issue [#233](https://github.com/gtrabanco/agentic-workflow/issues/233) — `Closes #233` (the pi-agentic-workflow command route; the AWL-runner route stays open as future work for the public runner).
+- Roadmap row 62, `docs/features/ROADMAP.md`.
+- Feature 61 (PR [#251](https://github.com/gtrabanco/agentic-workflow/pull/251)) — retired `ship-roadmap`; landed the lane, sensor priority queue, continuation contract.
+- Feature 20 — merge-authority rules the conductor inherits unchanged.
+- `docs/workflow/LANE_FLOW.md` §Programmatic contract — envelope + continuation constraints.
+- `docs/workflow/ORCHESTRATION.md` — canonical urgency pause-vs-finish rubric (feature 15).
+- Follow-up publish PR [#253](https://github.com/gtrabanco/agentic-workflow/pull/253) — pi 0.14.0 dependency flip; lands before this unit's release step.
+
