@@ -2309,6 +2309,12 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** bin agwo → agentic-workflow (agwo reserved for agwo.party future runner); pi uses file: dep until post-merge follow-up; publish CI mirrors schema pattern (Trusted Publishing OIDC, no token, version-differs skip); open issues re-grouped (6 Closes #, not Absorbs — non-closing keywords don't auto-close in GitHub).
 - **Next:** Follow-up PR: flip pi dep from file: to 0.1.1 + bump 0.14.0 + add CHANGELOG row + CI publishes pi. Then roadmap row 62 (pi-native conductor, contract in LANE_FLOW.md's programmatic section).
 
+## 2026-09-23 — chore/61-pi-package-followup + feat/62-pi-native-conductor — manual
+- **Commits:** chore/61 (1: 6710c306) · feat/62 (6: 4f2ed8a8…3128c9b4)
+- **Files:** pi package (dep flip 0.1.1 + 0.14.0), CHANGELOG, ROADMAP rows 61+62, unit doc 62, docs/workflow, pi src/conductor (9 modules) + config + extension, 8 test files, decisions.md
+- **Summary:** Feature 61 follow-up published as PR #253 (pi 0.14.0: runner dep file:→0.1.1, CHANGELOG row, roadmap row 61 → done · #251). Feature 62 (pi-native conductor) executed through the adaptive unit lane: unit doc + triage + research (ship-roadmap archaeology via git history, issue #233, pi/schema/sensor map) + design (12 ACs, tests-first) + implementation + release. PR #254 opened (Closes #233). Subagents on nan/qwen3.6 (tests, implementation, archaeology) and nan/mimo-v2.5 (docs, integration map) — all output re-executed by the orchestrator.
+- **Decisions:** conductor never merges (feature 20 authority; --fullauto only enables the unattended adversarial floor); one stage per invocation by default, --continue for the bounded loop; deterministic urgency judge (fail-safe FINISH_FIRST, no model call); envelope→snapshot mapping is consumer-side (no schema producer exists); sensor validates with object-level validateEnvelope (the strict fenced parser rejects the sensor's documented next.reason/candidate_count — schema drift recorded, no schema change in this unit); three test-infra defects repaired under recorded path-protection justifications (fixture SyntaxError, assertion TypeError, exact registered-set growth for AC1).
+- **Next:** owner merges #253 then #254 (rebase 62 on 61's dep flip; version 0.15.0 publishes via Trusted Publishing on merge) → roadmap continues at row 45 re-plan / row 41 / row 36 per the post-61 ordering.
 ## 2026-09-23T20:51:46Z — main — manual
 - **Commits:** 0
 - **Files:** —
@@ -2316,3 +2322,28 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Conductor: sensor->decide->invoke verbatim, juez de urgencia determinista, never merges (feature 20), one-stage-per-invocation default, --continue para loop completo. Subagents: nan/qwen3.6 + nan/mimo-v2.5 sobre general-purpose (Explore ignora el override de modelo y cae a claude-haiku 403).
 - **Next:** Owner merges PR #254 (Closes #233); CI publica pi-agentic-workflow 0.15.0. Siguiente: roadmap row 45 re-plan o row 36/41 post-62 ordering.
 
+## 2026-09-23T21:16:38Z — feat/62-pi-native-conductor — manual
+- **Commits:** 11 (`5e58da47…78377352`)
+- **Files:** 35 files
+- **Summary:** Review PR #254 (feat/62-pi-native-conductor, 2306 lines, 33 files) — review-change with 4 axes (code, security, verify, perf); decision: REVIEW-FAIL (F1: missing ACCEPTANCE.md); fold-findings created ACCEPTANCE.md manifest and fold ledger, gate 1610/0, pushed 78377352
+- **Decisions:** Missing ACCEPTANCE.md is a workflow-discipline gate (verification-contract): created manifest from SPEC's 12 ACs with stable IDs, named validators, quality floor, and commands; fold ledger (review-findings.md) created F1 folded: yes in the same commit
+- **Next:** Re-run /review-change on PR #254 after F1 fold; if PASS → /audit-pr → human merge
+
+## 2026-09-23T21:42:19Z — feat/62-pi-native-conductor — manual
+- **Commits:** 15 (`5e58da47…56d9a904`)
+- **Files:** 35 files
+- **Summary:** audit-pr PR #254 (feat/62-pi-native-conductor) — received BLOCKED: absent review receipt + missing pre-execution lineage artifacts (legacy unit). 2 blockers, 1 design-debt warning, 2 non-blocking nits (F4 unfolded). Hygiene clean, CI green, all phases complete, traceability OK.
+- **Next:** clear /review-change to produce REVIEW-PASS receipt at 56d9a90, re-run /audit-pr. Then /design-feature pi-native-conductor for closure rows.
+## 2026-09-23T21:42:33Z — feat/62-pi-native-conductor — manual
+- **Commits:** 16 (`5e58da47…d92c809f`)
+- **Files:** 35 files
+- **Summary:** Adversarial review of PR #254 (feat/62-pi-native-conductor) with --adversarial 2: inline review (subagents unavailable due to model errors) found F2 (ADVANCE: COMPLETE/BLOCKED banners never produced — code only outputs STOPPED/CONTINUE) and F3 (parkInFlight fire-and-forget async leaves repo dirty on failure) — fold-findings repaired both: added COMPLETE/BLOCKED banner pre-check paths in loop.ts (tests +), awaited parkInFlight in conductor-command.ts, gate 340/0
+- **Decisions:** Subagent model availability failed (both R1/R2 400 errors) — fell back to inline adversarial review. F2: COMPLETE/BLOCKED paths needed pre-decision envelope check (nothing startable = COMPLETE, blockers present = BLOCKED). F3: parkInFlight return type changed to Promise<void> and awaited in loop.
+- **Next:** Re-run /review-change on PR #254 to validate fold; if PASS → /audit-pr → human merge
+
+## 2026-09-23T22:00:00Z — feat/62-pi-native-conductor — manual
+- **Commits:** 19 (`5e58da47…56d9a904`)
+- **Files:** `docs/features/62-pi-native-conductor/review-findings.md` (F4 row added), `loop.ts` (36 lines changed), `types.ts` (1), `conductor-command.ts` (1), `conductor-loop.test.mjs` (28)
+- **Summary:** review-change cycle 3 on PR #254 — inline adversarial review (subagents unavailable, fell back to inline) found F2 (COMPLETE/BLOCKED banners never produced) + F3 (parkInFlight fire-and-forget async); fold-findings repaired both: added COMPLETE/BLOCKED banner pre-check in loop.ts (tests pass), awaited parkInFlight in conductor-command.ts, gate 340/0. Second pass found F4 (duplicate DEFAULT_CONDUCTOR_CONFIG: frozen in types.ts:32, mutable alias DEFAULT_CONDUCTOR_CONFIG_LOOP in loop.ts:29 — mutation risk). F4 persisted to fold ledger, committed, pushed.
+- **Decisions:** (1) F2 fix: COMPLETE/BLOCKED banner pre-checks moved to before the decision step so they fire on envelope content (no next.recommended = COMPLETE, blockers present = BLOCKED). (2) F3 fix: parkInFlight await moved into the urgency interrupt-now path so the WIP commit completes before the next iteration. (3) F4 is a maintainability defect requiring removal of loop.ts duplicate and import from types.js — fold-findings not yet run.
+- **Next:** /fold-findings to repair F4 (loop.ts:29 — remove duplicate, import from ./types.js), then /review-change to validate. If PASS → /audit-pr → human merge. PR #254 state: OPEN, HEAD 56d9a904.

@@ -165,6 +165,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `/fold-findings` | Repair persisted fix-now review findings |
 | `/review-change` | Review a change with applicable axes |
 | `/audit-pr` | Merge gate audit on a PR |
+| `advance` | Pi-native conductor: sensor → decide → invoke loop (feature 62) |
 | `workflow-status` | Read the sensor envelope |
 | `bun scripts/unit-route.mjs --triage <NN> [--json]` | Triage a unit |
 | `bun scripts/diff-guard.mjs --base <ref>` | Diff-size guard check |
@@ -343,3 +344,35 @@ Returns `{ verdict: "pass" | "fail", reason, offenders[] }`.
 `reason` is from `PATH_GUARD_REASONS`: `{clean, justified, approved,
 protected-modification, approval-required, undeclared-test, unmatched-record,
 malformed-declaration, missing-config, malformed-config}`.
+
+### 8. Conductor (`advance`) — consumer loop
+
+`advance` is a native pi package command (feature 62), not a skill. The
+conductor drives units end-to-end through one deterministic loop:
+
+```
+sensor (Envelope v2) → decideWorkflowAction() → /skill:<verb> <args>
+```
+
+Per iteration: (1) spawn `scripts/workflow-status.mjs` via `runtimeBin`,
+(2) validate the Envelope v2 JSON, (3) map to `WorkflowSnapshot`, (4) feed
+snapshot + policy to `decideWorkflowAction()`, (5) on `invoke` send the
+decision's command verbatim through the pi router (`argv` never mutated).
+Unattended runs append `--adversarial 2` for L/sensitive units and
+`--adversarial 3` for security/auth units.
+
+Refusals are the closed set `{precondition-uncheckable, rendering-failed,
+no-decision-available, sensor-degraded}`; stop codes are the schema's closed
+`stop-*` set. The iteration cap defaults to 12.
+
+Terminal banners: `ADVANCE: COMPLETE` (nothing startable),
+`ADVANCE: BLOCKED` (with unblock map), `ADVANCE: STOPPED`
+(cap / refusal / needs-input), or `ADVANCE: CONTINUE` (one stage advanced —
+the default wiring stops after one invocation because the invoked skill must
+settle before the next sensor run can see its effect; re-invoke, or pass
+`--continue` for the bounded full loop). The conductor **never merges** — a
+merge-ready PR triggers `stop-needs-input` naming `/audit-pr` and human merge.
+
+The urgency judge is deterministic (no model call): `fix-next` queues
+head-of-line; `urgent` + clean boundary → `INTERRUPT_NOW`; `tasks_from_boundary
+<= 1` or ambiguous → `FINISH_FIRST`.

@@ -51,6 +51,8 @@ export interface ConfigFile {
   onSettle?: SettlePolicy;
   /** The tighten-only path-protection override (feature 60, AC10). */
   pathProtection?: PathProtectionOverride;
+  /** Conductor (advance) knobs (feature 62). */
+  advance?: AdvanceConfigFile;
 }
 
 export type UnavailableRoutePolicy = "stop" | "inherit";
@@ -80,6 +82,10 @@ export interface EffectiveConfig {
   onSettle: SettlePolicy;
   /** The effective path-protection policy: the shipped floor tightened by any override. */
   pathProtection: ResolvedPathPolicy;
+  /** The effective advance (conductor) knobs (feature 62). Resolved by
+   *  mergeConfigs; the shipped DEFAULT_CONFIG predates it and leaves it
+   *  absent — consumers fall back to DEFAULT_ADVANCE_CONFIG. */
+  advance?: AdvanceConfig;
 }
 
 export interface ConfigProblem {
@@ -93,3 +99,31 @@ export interface ConfigPaths {
   global: string;
   project: string;
 }
+
+// ---------------------------------------------------------------------------
+// Advance (conductor) configuration
+// ---------------------------------------------------------------------------
+
+/** Per-iteration control knobs for the conductor loop. */
+export interface AdvanceConfigFile {
+  iterationsCap?: number;
+  sensitivePaths?: string[];
+  securityPaths?: string[];
+  runLogPath?: string;
+}
+
+/** Effective advance configuration with all fields resolved. */
+export interface AdvanceConfig {
+  iterationsCap: number;
+  sensitivePaths: string[];
+  securityPaths: string[];
+  runLogPath: string;
+}
+
+/** The shipped advance defaults (mirrors conductor DEFAULT_CONDUCTOR_CONFIG). */
+export const DEFAULT_ADVANCE_CONFIG: Readonly<AdvanceConfig> = {
+  iterationsCap: 12,
+  sensitivePaths: [] as string[],
+  securityPaths: [] as string[],
+  runLogPath: ".agentic-workflow/advance-run.log",
+};
