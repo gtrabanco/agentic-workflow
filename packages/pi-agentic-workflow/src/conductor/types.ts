@@ -131,7 +131,7 @@ export interface LoopDeps {
   config: ConductorConfig;
   attended: boolean;
   judgeUrgency: (envelope: EnvelopeLike) => UrgencyResult;
-  parkInFlight: () => void;
+  parkInFlight: () => Promise<void>;
   /** Working directory the sensor runs in (defaults to process.cwd()). */
   cwd?: string;
   /** Runtime binary for the sensor spawn (defaults to "bun"). */
