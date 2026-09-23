@@ -176,11 +176,29 @@ test("AC4: sense → re-sense → STOPPED if still stale", async () => {
   assert.equal(result.banner, "ADVANCE: STOPPED");
 });
 
-// AC8: nothing startable banner
-test("AC8: nothing startable → ADVANCE banner", async () => {
-  const deps = buildDeps({ decide: () => makeDecision({ kind: "stop", intent: "stop", targets: [], reasonCode: "stop-blocked" }) });
-  const result = await runConductorLoop(deps);
-  assert.ok(result.banner.includes("ADVANCE:")); assert.equal(result.iterations, 0);
+// AC8: COMPLETE banner — nothing startable (no recommended action, no blockers)
+test("AC8: nothing startable → ADVANCE: COMPLETE", async () => {
+  const deps = buildDeps({
+    decide: () => makeDecision(),
+  });
+  // Override the envelope to have no recommended and no blockers
+  const result = await runConductorLoop({
+    ...deps,
+    runSensor: async () => ({ ok: true, envelope: { ...makeEnv(), next: { ...makeEnv().next, recommended: "" }, blockers: [] } }),
+  });
+  assert.equal(result.banner, "ADVANCE: COMPLETE"); assert.equal(result.iterations, 0);
+});
+
+// AC8: BLOCKED banner — blockers present with unblock info
+test("AC8: blocked → ADVANCE: BLOCKED", async () => {
+  const deps = buildDeps({
+    decide: () => makeDecision(),
+  });
+  const result = await runConductorLoop({
+    ...deps,
+    runSensor: async () => ({ ok: true, envelope: { ...makeEnv(), blockers: [{ kind: "dependency", detail: "missing: d1" }, { kind: "auth", detail: "token expired" }] } }),
+  });
+  assert.equal(result.banner, "ADVANCE: BLOCKED"); assert.ok(result.detail.includes("blocked")); assert.ok(result.detail.includes("dependency"));
 });
 
 // AC9: fullauto unattended never merges

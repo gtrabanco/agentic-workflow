@@ -98,12 +98,44 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
 
     const envelope = sensorResult.envelope;
 
-    // ── 2. Urgency judge (deterministic; AC5) ───────────────────────────
+    // ── 2. Banner pre-check: COMPLETE or BLOCKED before any decision (AC8) ──
+    // COMPLETE: nothing startable — no recommended action and no blockers
+    const nextRecommended = (envelope.next as Record<string, unknown>)?.recommended;
+    const blockers = (envelope.blockers as Array<Record<string, unknown>>) ?? [];
+    if (!nextRecommended && blockers.length === 0) {
+      deps.appendRunLog(
+        formatLogLine("stop", "stop-nothing-startable", "nothing-startable", iteration, cap),
+      );
+      return {
+        banner: "ADVANCE: COMPLETE",
+        stopCode: "stop-nothing-startable",
+        detail: "nothing startable — no recommended action and no blockers",
+        iterations: 0,
+      };
+    }
+
+    // BLOCKED: blockers present with unblock information from the envelope
+    if (blockers.length > 0) {
+      const unblockInfo = blockers
+        .map((b) => `${(b.kind as string) ?? "unknown"}: ${(b.detail as string) ?? ""}`)
+        .join("; ");
+      deps.appendRunLog(
+        formatLogLine("stop", "stop-blocked", "blocked", iteration, cap),
+      );
+      return {
+        banner: "ADVANCE: BLOCKED",
+        stopCode: "stop-blocked",
+        detail: `blocked — ${unblockInfo}`,
+        iterations: 0,
+      };
+    }
+
+    // ── 3. Urgency judge (deterministic; AC5) ───────────────────────────
     const urgency = deps.judgeUrgency(envelope);
     if (urgency.verdict === "interrupt-now") {
       // Park the in-flight unit, then let the next iteration's sensor route
       // to the urgent issue (the sensor's priority queue already ranks it).
-      deps.parkInFlight();
+      await deps.parkInFlight();
       deps.appendRunLog(
         formatLogLine("urgent", "INTERRUPT_NOW", `issue ${urgency.issue ?? "?"}`, iteration, cap),
       );
