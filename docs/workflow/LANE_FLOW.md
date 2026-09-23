@@ -366,9 +366,12 @@ no-decision-available, sensor-degraded}`; stop codes are the schema's closed
 `stop-*` set. The iteration cap defaults to 12.
 
 Terminal banners: `ADVANCE: COMPLETE` (nothing startable),
-`ADVANCE: BLOCKED` (with unblock map), or `ADVANCE: STOPPED`
-(cap / refusal / needs-input). The conductor **never merges** — a merge-ready
-PR triggers `stop-needs-input` naming `/audit-pr` and human merge.
+`ADVANCE: BLOCKED` (with unblock map), `ADVANCE: STOPPED`
+(cap / refusal / needs-input), or `ADVANCE: CONTINUE` (one stage advanced —
+the default wiring stops after one invocation because the invoked skill must
+settle before the next sensor run can see its effect; re-invoke, or pass
+`--continue` for the bounded full loop). The conductor **never merges** — a
+merge-ready PR triggers `stop-needs-input` naming `/audit-pr` and human merge.
 
 The urgency judge is deterministic (no model call): `fix-next` queues
 head-of-line; `urgent` + clean boundary → `INTERRUPT_NOW`; `tasks_from_boundary

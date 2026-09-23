@@ -102,6 +102,9 @@ export type DispatchOutcome =
   | { status: "refused"; reason: RefusalReason; message: string };
 
 /** Slash name of the settings console (SPEC S4, AC3, AC10). */
+/** The native conductor command (feature 62): sensor → decide → invoke loop. */
+export const ADVANCE_COMMAND = "advance";
+
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
 /** Shorthand alias for the same console — a pointer to the same handler, never a separate route (OB-5, AC6). */
 export const SETTINGS_COMMAND_ALIAS = "aw-settings";

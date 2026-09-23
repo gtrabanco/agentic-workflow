@@ -1,6 +1,7 @@
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "./defaults.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy, mergePathProtectionOverrides } from "./path-policy.js";
-import type { ConfigFile, EffectiveConfig, Route, RouteFile } from "./types.js";
+import { DEFAULT_ADVANCE_CONFIG } from "./types.js";
+import type { AdvanceConfig, ConfigFile, EffectiveConfig, Route, RouteFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -41,7 +42,7 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     commands[name] = resolveRoute(effectiveDefault, globalCommands[name], projectCommands[name]);
   }
 
-  return {
+  const merged: EffectiveConfig = {
     default: effectiveDefault,
     commands,
     onUnavailableRoute:
@@ -51,6 +52,24 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
       SHIPPED_PATH_POLICY,
       mergePathProtectionOverrides(globalFile.pathProtection, projectFile.pathProtection),
     ),
+  };
+  // Advance knobs appear only when a scope declares them, so configs that
+  // predate feature 62 keep their exact resolved shape (no undefined key).
+  const advance = mergeAdvance(globalFile.advance, projectFile.advance);
+  if (advance !== undefined) merged.advance = advance;
+  return merged;
+}
+
+/** Project-over-global merge of the advance (conductor) knobs (feature 62).
+ *  Absent from the result when neither scope declares any — the resolved
+ *  shape of pre-62 configs is byte-stable. */
+function mergeAdvance(global: ConfigFile["advance"], project: ConfigFile["advance"]): AdvanceConfig | undefined {
+  if (global === undefined && project === undefined) return undefined;
+  return {
+    iterationsCap: pick(DEFAULT_ADVANCE_CONFIG.iterationsCap, project?.iterationsCap, global?.iterationsCap),
+    sensitivePaths: project?.sensitivePaths ?? global?.sensitivePaths ?? [...DEFAULT_ADVANCE_CONFIG.sensitivePaths],
+    securityPaths: project?.securityPaths ?? global?.securityPaths ?? [...DEFAULT_ADVANCE_CONFIG.securityPaths],
+    runLogPath: pick(DEFAULT_ADVANCE_CONFIG.runLogPath, project?.runLogPath, global?.runLogPath),
   };
 }
 

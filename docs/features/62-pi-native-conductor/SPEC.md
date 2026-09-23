@@ -75,12 +75,32 @@ Tests come first in every phase (never change a test to pass it):
 
 ## Evidence
 
-One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
+Triaged steps (verbatim, authoritative):
+
+```
+TRIAGE — 62-pi-native-conductor (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Skipped: none
+Budget: strong
+```
 
 > Evidence is verified, not claimed — a reviewer re-runs it.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| 1 | `bun run test` (packages/pi-agentic-workflow) | 0 | 339 pass / 0 fail — loop end-to-end against scripted doubles; `advance` registered in `factory.ts` | main agent |
+| 2 | loop + smoke: `runSensor` → `decideFromEnvelope` on the real repo envelope | 0 | `decision: sense sense-initial` — argv mapped verbatim, never mutated | main agent |
+| 3 | `bun test test/conductor-sensor.test.mjs` | 0 | spawn failure / non-JSON / invalid / degraded → `sensor-degraded` | main agent |
+| 4 | `bun test test/conductor-decide.test.mjs` + loop AC4 | 0 | sense → re-sense → STOPPED; stop codes surfaced | main agent |
+| 5 | `bun test test/conductor-urgency.test.mjs` | 0 | 5 rows table-driven; no model call | main agent |
+| 6 | `bun test test/conductor-invoke.test.mjs` | 0 | attended none / unattended L 2 / security 3 | main agent |
+| 7 | `bun test test/conductor-closeout.test.mjs` | 0 | clean iff porcelain empty ∧ ahead 0; 3 partials park | main agent |
+| 8 | `bun test test/conductor-loop.test.mjs` | 0 | COMPLETE / BLOCKED / STOPPED / CONTINUE banners + cap | main agent |
+| 9 | loop AC9 tests | 0 | merge-ready → stop-needs-input naming /audit-pr; no merge sent | main agent |
+| 10 | loop AC10 test | 0 | `YYYY-MM-DD HH:MM — kind/code — cmd — k/cap` | main agent |
+| 11 | `bun test test/conductor-snapshot.test.mjs` | 0 | mapping table + purity | main agent |
+| 12 | full gates: root `node --test scripts/*.test.mjs`; schema `bun run test`; pi `bun run test` + `test:node`; `npm pack --dry-run` | 0 / 0 / 0 / 0 | 554 · 717 · 339 (bun) · 339 (node) all pass; pack 216.5 kB / 142 files | main agent |
+| — | smoke: real sensor spawn vs this repo + decide | 0 | `ok: true state=NEEDS_INPUT next=/workflow-status` | main agent |
 
 ## Progress log
 
@@ -88,9 +108,15 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 - 2026-09-23 10:40 — research step: ship-roadmap archaeology from git history (44267b1d~1) + issue #233 + pi/schema/sensor integration map; frozen design: native `advance` command, envelope→snapshot mapping, deterministic urgency judge (fail-safe FINISH_FIRST), unattended adversarial floor, closeout gate, banners ADVANCE: COMPLETE/BLOCKED/STOPPED → evidence (subagent reports, this session) — next: implement P1–P8
 - 2026-09-23 10:45 — design+plan frozen in SPEC (12 ACs, P1–P8 tests-first); schema 4.5.0 pinned; tests-first agent + docs agent launched (nan/qwen3.6 + nan/mimo-v2.5) → commit — next: implementation
 
+- 2026-09-23 10:45 — design+plan frozen in SPEC (12 ACs, P1–P8 tests-first); schema 4.5.0 pinned; tests-first agent + docs agent launched (nan/qwen3.6 + nan/mimo-v2.5) → 2791f4ed — next: implementation
+- 2026-09-23 11:30 — tests-first: 84 tests / 8 files (AC1–AC12), red on absent module → evidence (agent report) — next: implement
+- 2026-09-23 13:30 — implement: src/conductor/ (9 modules, 1081 LOC) + config wiring + factory registration; defects found in review and fixed (urgency judge unwired in loop, invocation rebuilt discarding adversarial floor, sensor cwd bug, hardcoded retired-skill command list, log separator, bare-JSON parse contract, sense bound) → working tree — next: gates
+- 2026-09-23 13:45 — tests repaired under path-protection justification (sensor fixture SyntaxError, loop assertion TypeError, alias-coverage registration set) + real-env smoke fix (validateEnvelope over strict fenced parser: sensor emits documented next.reason/candidate_count) → 339/339 bun + node — next: release
+- 2026-09-23 14:00 — release: pi 0.15.0 bump, CHANGELOG row, docs banners (ADVANCE: CONTINUE), evidence rows → commit — next: diff guard + PR
+
 ## Next
 
-Implement P2–P6 (conductor modules) making the tests-first suite green, then P7 verification gates.
+Diff guard → exception record (large unit) → push → PR (Closes #233) → roadmap row 62 → owner review.
 
 ## References
 

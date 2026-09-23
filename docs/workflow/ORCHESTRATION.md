@@ -199,5 +199,9 @@ the closed `CONTINUATION_REFUSALS` set; stop codes are the schema's closed
 The conductor never merges — when the envelope reports a merge-ready PR, the
 loop stops with `stop-needs-input` naming `/audit-pr` and human merge. Terminal
 banners are exactly `ADVANCE: COMPLETE`, `ADVANCE: BLOCKED` (with unblock map),
-or `ADVANCE: STOPPED`. This replaces the `ship-roadmap` stage loop retired in
-feature 61 and fulfils issue #233's pi-command route.
+`ADVANCE: STOPPED`, or `ADVANCE: CONTINUE` — the default wiring advances one
+stage per invocation (the invoked skill must settle before the next sensor run
+can observe its effect); `--continue` runs the bounded full loop and
+`--fullauto`/`--unattended` enable the unattended adversarial floor. This
+replaces the `ship-roadmap` stage loop retired in feature 61 and fulfils issue
+#233's pi-command route.
