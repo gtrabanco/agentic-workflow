@@ -2308,3 +2308,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 61 completed and merged as PR #251 (state: MERGED, 2026-09-22T23:25:47Z). Runner crate published as @gtrabanco/agentic-workflow 0.1.1 via Trusted Publishing CI on merge (bin renamed from agwo to agentic-workflow; agwo npm name reserved for the future public runner). pi dependency flip and 0.14.0 bump deferred to follow-up PR. Lane flow + programmatic contract documented in LANE_FLOW.md.
 - **Decisions:** bin agwo → agentic-workflow (agwo reserved for agwo.party future runner); pi uses file: dep until post-merge follow-up; publish CI mirrors schema pattern (Trusted Publishing OIDC, no token, version-differs skip); open issues re-grouped (6 Closes #, not Absorbs — non-closing keywords don't auto-close in GitHub).
 - **Next:** Follow-up PR: flip pi dep from file: to 0.1.1 + bump 0.14.0 + add CHANGELOG row + CI publishes pi. Then roadmap row 62 (pi-native conductor, contract in LANE_FLOW.md's programmatic section).
+
+## 2026-09-23T20:51:46Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Feature 62 (pi-native conductor): rebase sobre PR #253 ya merged, rebase limpo, PR #254 en verde listo para merge. Feature 61 follow-up ya merged como PR #253.
+- **Decisions:** Conductor: sensor->decide->invoke verbatim, juez de urgencia determinista, never merges (feature 20), one-stage-per-invocation default, --continue para loop completo. Subagents: nan/qwen3.6 + nan/mimo-v2.5 sobre general-purpose (Explore ignora el override de modelo y cae a claude-haiku 403).
+- **Next:** Owner merges PR #254 (Closes #233); CI publica pi-agentic-workflow 0.15.0. Siguiente: roadmap row 45 re-plan o row 36/41 post-62 ordering.
+
