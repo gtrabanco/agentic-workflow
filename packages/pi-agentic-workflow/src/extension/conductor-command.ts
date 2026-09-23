@@ -104,7 +104,7 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
         gitProbe: () => gitProbe(ctx.cwd),
         appendRunLog: (line: string) => appendRunLog(config, ctx.cwd, line),
         parkInFlight: () => {
-          void parkInFlight(ctx.cwd);
+          return parkInFlight(ctx.cwd);
         },
       });
 
