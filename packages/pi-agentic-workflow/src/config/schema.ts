@@ -13,7 +13,7 @@ import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequire
  * default, and that decision belongs to the loader.
  */
 
-const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle", "pathProtection"]);
+const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle", "pathProtection", "advance"]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
 
@@ -55,6 +55,44 @@ function isUnavailableRoutePolicy(value: unknown): value is UnavailableRoutePoli
 
 function isSettlePolicy(value: unknown): value is SettlePolicy {
   return SETTLE_POLICIES.includes(value as SettlePolicy);
+}
+
+/** Strict validator for the optional `advance` conductor config (feature 62). */
+const ADVANCE_KEYS = new Set(["iterationsCap", "sensitivePaths", "securityPaths", "runLogPath"]);
+
+function checkAdvance(value: unknown, path: string, issues: ConfigIssue[]): ConfigFile["advance"] | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: "must be an object" });
+    return undefined;
+  }
+  const out: NonNullable<ConfigFile["advance"]> = {};
+  for (const key of Object.keys(value)) {
+    if (!ADVANCE_KEYS.has(key)) {
+      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown advance key "${key}" (allowed: iterationsCap, sensitivePaths, securityPaths, runLogPath)` });
+      continue;
+    }
+    const v = value[key];
+    if (key === "iterationsCap") {
+      if (typeof v !== "number" || !Number.isInteger(v) || v < 1) {
+        issues.push({ path: `${path}.iterationsCap`, message: "must be a positive integer" });
+        continue;
+      }
+      out.iterationsCap = v;
+    } else if (key === "runLogPath") {
+      if (typeof v !== "string" || v.length === 0) {
+        issues.push({ path: `${path}.runLogPath`, message: "must be a non-empty string" });
+        continue;
+      }
+      out.runLogPath = v;
+    } else {
+      if (!Array.isArray(v) || v.some((e) => typeof e !== "string")) {
+        issues.push({ path: `${path}.${key}`, message: "must be an array of strings" });
+        continue;
+      }
+      (out as Record<string, unknown>)[key] = v;
+    }
+  }
+  return out;
 }
 
 /** Strict validator for the optional `pathProtection` override (feature 60, AC10). */
@@ -197,7 +235,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance)`,
       });
     }
   }
@@ -246,6 +284,10 @@ function validateConfig(value: unknown): ParseResult {
     }
   }
 
+  if (value.advance !== undefined) {
+    const advance = checkAdvance(value.advance, "$.advance", issues);
+    if (advance) config.advance = advance;
+  }
   if (value.pathProtection !== undefined) {
     const override = checkPathProtection(value.pathProtection, "$.pathProtection", issues);
     if (override) config.pathProtection = override;

@@ -168,3 +168,40 @@ This protocol is portable across interactive agents, CLIs, API sessions, and
 CI jobs. Agents without session resumption may perform the one repair in a
 fresh invocation containing the prior turn, but must still keep the one-repair
 bound and record that weaker recovery mode.
+
+## pi-native conductor (`advance`)
+
+Feature 62 ships `advance` as a native pi package command from
+`@gtrabanco/pi-agentic-workflow`, replacing the retired `ship-roadmap` skill's
+orchestration role (feature 61 P9, PR #251). The conductor is deterministic
+code, not model-held procedure: sensor → decide → invoke, one iteration at a
+time.
+
+Each iteration runs the repo's sensor (`scripts/workflow-status.mjs` via
+`runtimeBin`), validates the Envelope v2 JSON, maps it to a `WorkflowSnapshot`,
+and feeds both to `decideWorkflowAction()`. On an `invoke` verdict the
+conductor sends the printed continuation verbatim — `/skill:<verb> <args>` —
+through the existing pi router; the `argv` of `next.continuation` is never
+mutated. A display-only rendering may be printed. Unattended runs append
+`--adversarial 2` for L/sensitive units and `--adversarial 3` for security/auth
+units.
+
+The deterministic urgency judge drives pause-vs-finish without a model call:
+`fix-next` queues head-of-line without interrupting; `urgent` + clean boundary
+(`interruptibility.dirty == false`) triggers `INTERRUPT_NOW` (in-flight unit
+parked); `tasks_from_boundary <= 1` or ambiguous → `FINISH_FIRST` (fail-safe).
+
+Between iterations a closeout gate checks `git status --porcelain` and branch
+push status. Three consecutive partials on the same unit park it. Refusals are
+the closed `CONTINUATION_REFUSALS` set; stop codes are the schema's closed
+`stop-*` set; the iteration cap defaults to 12 (configurable).
+
+The conductor never merges — when the envelope reports a merge-ready PR, the
+loop stops with `stop-needs-input` naming `/audit-pr` and human merge. Terminal
+banners are exactly `ADVANCE: COMPLETE`, `ADVANCE: BLOCKED` (with unblock map),
+`ADVANCE: STOPPED`, or `ADVANCE: CONTINUE` — the default wiring advances one
+stage per invocation (the invoked skill must settle before the next sensor run
+can observe its effect); `--continue` runs the bounded full loop and
+`--fullauto`/`--unattended` enable the unattended adversarial floor. This
+replaces the `ship-roadmap` stage loop retired in feature 61 and fulfils issue
+#233's pi-command route.

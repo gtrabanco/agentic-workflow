@@ -5,7 +5,8 @@ import type { Catalogue } from "../routing/catalogue.js";
 import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
 import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
-import { SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
+import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
+import { registerAdvanceCommand } from "./conductor-command.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 
@@ -89,6 +90,7 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
 
   const knownCommands = new Set<string>([
     ...catalogue.commands.map((entry) => entry.name),
+    ADVANCE_COMMAND,
     SETTINGS_COMMAND,
     SETTINGS_COMMAND_ALIAS,
   ]);
@@ -118,6 +120,10 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
       ctx.notify(`Settings could not be opened: ${(error as Error).message}`, "error");
     }
   };
+
+  // The native conductor command (feature 62): registered in code, not derived
+  // from a skill dir, and able to invoke every catalogue command by name.
+  registerAdvanceCommand(registrar, { surface, readConfig: read }, knownCommands);
 
   registrar.registerCommand(SETTINGS_COMMAND, {
     description: "Show and configure per-command model routing",
