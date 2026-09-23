@@ -57,7 +57,8 @@
   },
   "dependencies": {
     "@earendil-works/pi-tui": "0.87.0",
-    "@gtrabanco/agentic-workflow": "file:../agentic-workflow"
+    "@gtrabanco/agentic-workflow": "file:../agentic-workflow",
+    "@gtrabanco/agentic-workflow-schema": "4.5.0"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
