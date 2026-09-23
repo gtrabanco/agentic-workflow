@@ -2334,3 +2334,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 35 files
 - **Summary:** audit-pr PR #254 (feat/62-pi-native-conductor) — received BLOCKED: absent review receipt + missing pre-execution lineage artifacts (legacy unit). 2 blockers, 1 design-debt warning, 2 non-blocking nits (F4 unfolded). Hygiene clean, CI green, all phases complete, traceability OK.
 - **Next:** clear /review-change to produce REVIEW-PASS receipt at 56d9a90, re-run /audit-pr. Then /design-feature pi-native-conductor for closure rows.
+## 2026-09-23T21:42:33Z — feat/62-pi-native-conductor — manual
+- **Commits:** 16 (`5e58da47…d92c809f`)
+- **Files:** 35 files
+- **Summary:** Adversarial review of PR #254 (feat/62-pi-native-conductor) with --adversarial 2: inline review (subagents unavailable due to model errors) found F2 (ADVANCE: COMPLETE/BLOCKED banners never produced — code only outputs STOPPED/CONTINUE) and F3 (parkInFlight fire-and-forget async leaves repo dirty on failure) — fold-findings repaired both: added COMPLETE/BLOCKED banner pre-check paths in loop.ts (tests +), awaited parkInFlight in conductor-command.ts, gate 340/0
+- **Decisions:** Subagent model availability failed (both R1/R2 400 errors) — fell back to inline adversarial review. F2: COMPLETE/BLOCKED paths needed pre-decision envelope check (nothing startable = COMPLETE, blockers present = BLOCKED). F3: parkInFlight return type changed to Promise<void> and awaited in loop.
+- **Next:** Re-run /review-change on PR #254 to validate fold; if PASS → /audit-pr → human merge
