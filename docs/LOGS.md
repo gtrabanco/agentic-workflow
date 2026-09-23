@@ -2322,3 +2322,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Conductor: sensor->decide->invoke verbatim, juez de urgencia determinista, never merges (feature 20), one-stage-per-invocation default, --continue para loop completo. Subagents: nan/qwen3.6 + nan/mimo-v2.5 sobre general-purpose (Explore ignora el override de modelo y cae a claude-haiku 403).
 - **Next:** Owner merges PR #254 (Closes #233); CI publica pi-agentic-workflow 0.15.0. Siguiente: roadmap row 45 re-plan o row 36/41 post-62 ordering.
 
+## 2026-09-23T21:16:38Z — feat/62-pi-native-conductor — manual
+- **Commits:** 11 (`5e58da47…78377352`)
+- **Files:** 35 files
+- **Summary:** Review PR #254 (feat/62-pi-native-conductor, 2306 lines, 33 files) — review-change with 4 axes (code, security, verify, perf); decision: REVIEW-FAIL (F1: missing ACCEPTANCE.md); fold-findings created ACCEPTANCE.md manifest and fold ledger, gate 1610/0, pushed 78377352
+- **Decisions:** Missing ACCEPTANCE.md is a workflow-discipline gate (verification-contract): created manifest from SPEC's 12 ACs with stable IDs, named validators, quality floor, and commands; fold ledger (review-findings.md) created F1 folded: yes in the same commit
+- **Next:** Re-run /review-change on PR #254 after F1 fold; if PASS → /audit-pr → human merge
