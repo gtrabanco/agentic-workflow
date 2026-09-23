@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/pi-agentic-workflow",
-  "version": "0.13.3",
+  "version": "0.14.0",
   "description": "Pi package: canonical agentic-workflow skills, friendly slash commands, and per-command model routing.",
   "keywords": [
     "pi-package",
@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@earendil-works/pi-tui": "0.87.0",
-    "@gtrabanco/agentic-workflow": "file:../agentic-workflow"
+    "@gtrabanco/agentic-workflow": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
