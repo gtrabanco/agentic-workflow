@@ -126,13 +126,14 @@ exact command tokens.
      third cycle never starts without an explicit user instruction)
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit or owned by plan? → `node
-        scripts/unit-route.mjs <unit>` prints `route: replan` and names the
-        planner (`/plan-feature <unit>` for a feature, `/plan-fix <n>` for a fix);
-        the planner re-cuts the plan on this branch, a fresh `/review-plan <unit>`
-        passes, then `/execute-phase <unit>` (yes: list the finding ids; no: omit
+        scripts/unit-route.mjs <unit>` prints `route: replan` and the planner
+        command (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>` for a
+        fix); the lane re-runs its plan step on this branch, its review step
+        gates, then `/execute-phase <unit>` (yes: list the finding ids; no: omit
         this line)
-      · any finding owned by product? → /design-feature <unit>, then /review-spec
-        <unit> (yes: list the ids; no: omit this line)
+      · any finding owned by product? → /unit-lane <unit> — the lane's design
+        step repairs the half, its review step re-judges it (yes: list the ids;
+        no: omit this line)
       · independent proposals → present to the user; only the user routes them
         to /triage-issue
      · adversarial recommendation checklist fired AND this run was

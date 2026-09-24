@@ -108,15 +108,12 @@ the key's presence.
 |---|---|
 | `/discover-repository-state` | `strong` |
 | `/resolve-repository-state` | `strong` |
-| `/plan-feature` | `strong` |
-| `/design-feature` | `strong` |
+| `/unit-lane` | `strong` |
 | `/review-change` | `strong` |
 | `/audit-pr` | `strong` |
 | `/triage-issue` | `strong` |
 | `/product-audit` | `strong` |
 | `/execute-phase` | `cheap` |
-| `/review-spec` | `strong` |
-| `/review-plan` | `strong` |
 
 `next.tier` is read off this map by matching the resolved `next.recommended`
 command's name (ignoring its arguments) — never guessed and never copied from

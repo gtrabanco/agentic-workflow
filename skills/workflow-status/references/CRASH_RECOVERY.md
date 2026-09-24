@@ -23,12 +23,12 @@ section *classifies*; the resume command it recommends does the acting.
   caller's persisted envelope against the recomputed state and report the
   divergence in one line. The hint never overrides recomputed state.
 - ✓ **No-progress guard (optional, requires `--last-envelope`).** When the
-  hint's `next.recommended` was `/plan-feature <slug>` or `/design-feature
-  <slug>` for a given unit, and this run's own recomputed status for that
-  **same unit** is still at the **same pre-advance status** the hint expected
-  to move it off of (`defined` for a `/plan-feature` hint; `idea` for a
-  `/design-feature` hint) — either the recommended command ran but its status
-  write was dropped, or it never ran at all; this guard cannot distinguish the
+  hint's `next.recommended` was `/unit-lane <slug>` for a given unit, and this
+  run's own recomputed status for that **same unit** is still at the **same
+  pre-advance status** the hint expected to move it off of (`idea`/`defined` —
+  the lane's triage write lands when the unit doc is created) — either the
+  recommended command ran but its status write was dropped, or it never ran at
+  all; this guard cannot distinguish the
   two from the envelope alone, so the note names it as a **suspected** stall,
   not a confirmed dropped write. Emit a `workflow_observations` note (see
   `## Machine envelope` for the exact note shape). This is strictly additive:
