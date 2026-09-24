@@ -86,21 +86,21 @@ P8 — Review + PR.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
-| 6 | | | | |
-| 7 | | | | |
-| 8 | | | | |
-| 9 | | | | |
-| 10 | | | | |
-| 11 | | | | |
-| 12 | | | | |
-| 13 | | | | |
-| 14 | | | | |
-| 15 | | | | |
+| 1 | `bun test test/model-profiles.test.mjs` | 0 | `recommendedModels` defaults true; `false` drops nan from `effectiveProfileOrder` | main agent |
+| 2 | `bun test test/model-profiles.test.mjs` | 0 | execute-phase → `[nan/deepseek-v4-flash, nan/glm5.3-flash]`; product-audit → `[nan/glm5.3, nan/mimo-v2.5, nan/deepseek-v4-flash]` | main agent |
+| 3 | `bun test test/model-profiles.test.mjs` | 0 | nan unavailable → `resolveProfileChain` `[]`; `effectiveRoute` stays `inherit/inherit` | main agent |
+| 4 | `bun test test/model-profiles.test.mjs` | 0 | explicit model/thinking (incl. `inherit`) makes the `default` profile win; nan is candidate 2 | main agent |
+| 5 | `bun test test/model-profiles.test.mjs test/config-merge.test.mjs` | 0 | `profiles` merge key-by-key across scopes; any number of named profiles | main agent |
+| 6 | `bun test test/model-profiles.test.mjs` | 0 | `profileOrder` honoured in order; nan appended (no duplicate) | main agent |
+| 7 | `bun test test/profile-fallback.test.mjs` | 0 | unavailable `work` → `profileSwitched {from:work,to:fb}`, `setModel ["fb/1"]` | main agent |
+| 8 | `bun test test/profile-fallback.test.mjs` | 0 | `command` records nothing; `flow` records and persists the demotion across dispatches | main agent |
+| 9 | `bun test test/profile-fallback.test.mjs` | 0 | a demotion older than `retryAfterSeconds` is cleared and the top profile re-probed | main agent |
+| 10 | `bun test test/profile-fallback.test.mjs test/conductor-loop.test.mjs` | 0 | `restart` defers (no send, demotion recorded), next dispatch sends once; `continue` sends once | main agent |
+| 11 | `bun test test/settings-console.test.mjs` | 0 | scope → profile → routes; rotate clears demotion; toggle/materialize `recommendedModels`; nan read-only | main agent |
+| 12 | `bun test test/conductor-loop.test.mjs` | 0 | `advance` stages route through the router; a refused dispatch stops with `stop-dispatch-refused` | main agent |
+| 13 | `bun run test && bun run test:node` (package) · `node --test scripts/*.test.mjs` (root) | 0 · 0 | 404 pass / 0 fail bun + node · 561 pass / 0 fail root; old configs resolve identically | main agent |
+| 14 | `bun test test/settings-console.test.mjs` | 0 | merged view renders `profiles: default → nan`, active profile, recommended mode | main agent |
+| 15 | `bun test test/model-profiles.test.mjs` | 0 | 16 schema tests: every invalid new key rejected with a path-addressed issue | main agent |
 
 ## Progress log
 
@@ -117,3 +117,5 @@ The single next action: `/execute-phase 63`
 
 Feature row: `docs/features/ROADMAP.md` row 63 (status: `defined`). No linked issues yet.
 2026-09-24 22:20 — P6 done: `advance` stages now route through the router (`profileSwitched` + `resume`), with a deferred restart path and a bounded re-iteration; 3 new tests; package 403/0 bun + node → working tree — next: P7
+2026-09-24 22:35 — P7 done: README `Model profiles` section, CHANGELOG 0.16.0 row, package version bump; package 403/0 bun + node, root 561/0 → working tree — next: P8
+2026-09-24 22:40 — P8: hardening — a router-refused stage dispatch now stops the loop with `stop-dispatch-refused` instead of a phantom invoke; new conductor test; package 404/0 bun + node → working tree — next: PR
