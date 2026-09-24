@@ -25,12 +25,11 @@
        append a provenance-marked row to the unit's `review-findings.md` (see
        *Ledger-append mechanism* below).
      - *changes the unit's shape* → **incremental replan** on the same unit:
-       name the exact command — `design-feature <slug> "<instruction>"`
-       (product half, upsert) for a product-shape change, `plan-feature
-       <slug>` (re-run, engineering half) for an engineering-shape change, or
-       a user-approved, dated `## Amendments` entry per #66's mechanism (fix
-       units). Never write "replan if needed" — always name which of the
-       three applies and why.
+       name the exact command — `/unit-lane <slug>` (the lane re-reads the
+       SPEC, re-triages, and re-runs its `design`/`plan` catalog steps) — or a
+       user-approved, dated `## Amendments` entry per #66's mechanism (fix
+       units). Never write "replan if needed" — always name which applies and
+       why.
      - *born as an un-amended descope of an unmerged unit* →
        **scope-bleed restore**: the route is restore-the-criterion-in-the-unit
        (no matching `## Amendments` entry); the issue closes as
@@ -38,13 +37,15 @@
    - No candidate matched → fall through to today's four-verdict
      classification below, unchanged.
 4. **Classify** into one of:
-   - **fix-now** — defect or trigger met → route to `plan-fix` then
-     `execute-phase --fix`; add the entry to the fix index. **High severity** →
+   - **fix-now** — defect or trigger met → route to `/unit-lane --fix <n>`
+     (creates the fix unit and triages it; the lane's `implement` step runs
+     it); add the entry to the fix index. **High severity** →
      apply the urgency label per *Urgency label vocabulary* above (`urgent` by
      default; `fix-next` when the call is "queue it next" rather than "maybe
      interrupt now" — see that section's table). Non-high severity → no label.
-   - **promote-to-feature** — really new capability → route to `plan-feature`
-     (the router handles the issue path). Apply the `promoted` disposition
+   - **promote-to-feature** — really new capability → route to
+     `/unit-lane --from-issue <n>` (creates the feature unit from the issue and
+     triages it). Apply the `promoted` disposition
      label per *Disposition label vocabulary* above.
    - **postpone** — valid but trigger unmet → leave open; post a **dated
      re-confirmation** comment stating what you checked and why it stays

@@ -85,7 +85,7 @@ project at runtime** (agent guide, documentation map, architecture, roadmap, fix
 index). Nothing in them is hardcoded to this repo's paths.
 
 > **Single skill / different ref.** The source accepts a path to one skill
-> (`.../tree/main/skills/plan-feature`), a full git URL, or a local path
+> (`.../tree/main/skills/unit-lane`), a full git URL, or a local path
 > (`npx skills add ./path/to/agentic-workflow`). See the `skills` README for all
 > source formats.
 

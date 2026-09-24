@@ -2,12 +2,12 @@
 
 **No-progress guard note (`workflow_observations`, requires `--last-envelope`,
 see the crash-recovery checklist above)** — when the hint's `next.recommended`
-targeted `/plan-feature <slug>` or `/design-feature <slug>` and this run still
+targeted `/unit-lane <slug>` and this run still
 classifies that same unit at the same pre-advance status, append a note of the
 exact shape:
-`"<slug> still 'defined' after the hint's /plan-feature <slug> recommendation — suspected dropped defined→planned write (see #51)"`
-(swap `defined`/`/plan-feature` for `idea`/`/design-feature` on the design
-side). The recommendation itself is unaffected — this only adds visibility.
+`"<slug> still 'defined' after the hint's /unit-lane <slug> recommendation — triage not yet applied"`
+(the note fires for a `defined` unit; the lane's triage write is what moves it
+off `idea`/`defined`). The recommendation itself is unaffected — this only adds visibility.
 
 **Shape vs. current output — read this before trusting the example below.** The
 example is the envelope's **intended shape**, not everything the deterministic
@@ -33,10 +33,10 @@ absent-legacy` or `issues_born.n: 0`; the owning note is
   "dependencies": {"unmet": [], "build_order": []},
   "recommendations": {"product_audit": false, "reason": null},
   "needs_input": null,
-  "next": {"recommended": "/review-change", "alternatives": ["/plan-feature 05"], "tier": "strong",
+  "next": {"recommended": "/review-change", "alternatives": ["/unit-lane 05"], "tier": "strong",
            "suggested": [{"command": "/review-change", "trigger": "accumulation: 420 changed lines since last-reviewed sha", "source_skill": "execute-phase"}]},
   "detail": {
-    "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
+    "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/unit-lane 08-billing-webhooks"}],
     "pre_execution": [{"unit": "12-export-api", "unitDir": "docs/features/12-export-api", "stage": "lane", "label": "current", "verdict": "READY", "boundDigest": null, "observedDigest": null, "recommended": "/unit-lane 12-export-api", "reason": "unit-doc currency is checked per step by unit-lane/execute-phase"}],
     "features": [
       {"id": "07-csv-export", "status": "in-progress", "deps": ["01"], "deps_unmet": [],
@@ -87,7 +87,7 @@ fully in `features`/`fixes` — an `idea` unit appears ONLY in
 `design_candidates` (and `detail.features`), never in `startable_now`, since
 it has no deps-met check to pass (design precedes dependency startability).
 `05-auth` above illustrates `defined` (not yet `planned`): startable, next
-`/plan-feature`, phase fields null (no planning artifacts yet).
+`/unit-lane`, phase fields null (no planning artifacts yet).
 
 ## The `--compact` projection
 

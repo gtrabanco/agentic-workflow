@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 2.1.1
+version: 2.2.0
 argument-hint: "[--fix]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -156,7 +156,7 @@ enables:
 
 ## Relationship to other skills
 
-- Complements `plan-feature` (which *creates* the docs this audits) and
+- Complements `unit-lane` (which *creates* the docs this audits) and
   `triage-issue` (which keeps the fix index honest).
 - Run standalone anytime; no required predecessor.
 
@@ -168,6 +168,6 @@ enables:
 
   ```
   → Next: apply the approved low-risk fixes, then re-run /audit-docs to confirm clean
-    · real drift (not cosmetic) → /triage-issue   · a concrete defect → /plan-fix
+    · real drift (not cosmetic) → /triage-issue   · a concrete defect → /unit-lane --fix <n>
     · already clean → nothing to do
   ```

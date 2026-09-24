@@ -11,7 +11,7 @@ fused table.
 no message (today's default). `--adversarial` passed **without** a valid N
 (no number given, or a number `< 2`) → usage error: state that `--adversarial`
 needs an integer N≥2 and fall back to the single-reviewer path — never
-silently run 1. `ship-roadmap`'s hard floor always passes `N=2`.
+silently run 1. `advance`'s hard floor always passes `N=2`.
 
 **Why N reviewers.** A single adversarial, context-clean reviewer (see the
 turn-contract box) decorrelates some blind spots; running N independent

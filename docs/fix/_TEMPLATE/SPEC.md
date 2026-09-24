@@ -1,10 +1,12 @@
 # fix/<issue-number>-<topic>
 
-> Fix specification. Copy this folder to
+> Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. The single unit doc carries all planning
-> and evidence sections; legacy fix templates with separate PLAN/ACCEPTANCE
-> files are not migrated (see Non-goals).
+> entry in `docs/fix/README.md`. This is the same closed 13-section unit
+> doc `scripts/unit-route.mjs --triage` reads for a feature; the fix
+> template keeps four extra sections (`Issue`, `Branch`, `Depends on`,
+> `Regression scope`) on top. Legacy fix templates with separate
+> PLAN/ACCEPTANCE files are not migrated (see Non-goals).
 
 ## Issue
 
@@ -12,10 +14,9 @@
 via `Closes #<n>` in the body (or the forge's equivalent auto-close
 convention).
 
-## Goal
+## Objective
 
-One paragraph: what this fix repairs and why it cannot wait for a
-regular feature cycle (2-4 lines).
+What this fix repairs and why it cannot wait for a regular feature cycle (2-4 lines).
 
 ## Why
 
@@ -26,30 +27,6 @@ feature, or decision where the defect was introduced if known.
 
 From the user's perspective: what they can do or observe after this fix ships.
 
-## Branch
-
-`fix/<issue-number>-<topic>`
-
-## Depends on
-
-Other fixes (by folder name) that must merge first. Empty if independent.
-
-## Scope
-
-### In scope
-
-The exact change set.
-
-### Out of scope
-
-Adjacent issues this fix deliberately does NOT touch. Link to their
-own fix folder or feature where each belongs.
-
-### Regression scope
-
-What previously-working behaviour must NOT break. Each row: the scenario
-and the test/command that verifies it.
-
 ## Acceptance criteria
 
 Numbered list. Each AC is a runnable command where possible, or labelled
@@ -57,8 +34,18 @@ Numbered list. Each AC is a runnable command where possible, or labelled
 
 ## Non-goals
 
-What this fix is NOT. Regression scope is declared above; findings discovered
+What this fix is NOT. Regression scope is declared below; findings discovered
 during implementation never expand scope beyond the declared regression boundary.
+
+## Future cost
+
+Standing obligations this fix imposes on future work. Each row: the rule + who it binds.
+Write `none` if it imposes none.
+
+## Applicable tests
+
+The tests this fix will run (triage-decided). Write exactly
+`n/a — no tests step for this fix` when there is none.
 
 ## Known pre-existing issues
 
@@ -93,3 +80,17 @@ The single next action.
 
 Issues, roadmap rows, related material. The PR closes the tracked issue via
 `Closes #<n>`. `none` if empty.
+
+## Branch
+
+`fix/<issue-number>-<topic>`
+
+## Depends on
+
+Other fixes (by folder name) that must merge first. Empty if independent.
+
+## Regression scope
+
+What previously-working behaviour must NOT break. Each row: the scenario
+and the test/command that verifies it. Write `n/a` if the fix cannot regress
+existing behaviour.
