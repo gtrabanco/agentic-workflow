@@ -72,7 +72,7 @@ export interface RouterDeps<M extends ModelRef = ModelRef> {
 }
 
 export interface Router<M extends ModelRef = ModelRef> {
-  dispatch(command: WorkflowCommand, args: string, ctx: InvocationContext<M>): Promise<DispatchOutcome>;
+  dispatch(command: WorkflowCommand, args: string, ctx: InvocationContext<M>, opts?: { onProfileSwitch?: "continue" | "restart" }): Promise<DispatchOutcome>;
   /** Pi `model_select` — distinguishes our own switch from the operator's. */
   noteModelSelect(model: M): void;
   /** Pi `thinking_level_select` — same distinction for the thinking level. */
@@ -193,7 +193,7 @@ export function createRouter<M extends ModelRef = ModelRef>({
       await restore(turn, surface(ctx), ctx, "finished");
     },
 
-    async dispatch(command: WorkflowCommand, args: string, ctx): Promise<DispatchOutcome> {
+    async dispatch(command: WorkflowCommand, args: string, ctx, opts): Promise<DispatchOutcome> {
       if (pending) {
         // Refuse even when `ctx.isIdle()` reads true: idleness says the agent loop
         // is quiet, not that the routed turn is over, and guessing here is how a
@@ -353,6 +353,23 @@ export function createRouter<M extends ModelRef = ModelRef>({
       if (chosen && preferred && chosen.profile !== preferred.profile) {
         profileSwitched = { from: preferred.profile, to: chosen.profile };
         if (fallbackCfg.applyTo === "flow") ps.record(chosen.profile);
+      }
+
+      // AC10 restart: when onProfileSwitch === "restart" AND applyTo === "flow",
+      // record the demotion but do NOT apply the model or send — return deferred
+      // so the loop re-runs the iteration under the fallback profile.
+      if (
+        opts?.onProfileSwitch === "restart"
+        && fallbackCfg.applyTo === "flow"
+        && profileSwitched
+      ) {
+        return {
+          status: "dispatched",
+          routed: false,
+          hintShown: false,
+          profileSwitched,
+          deferred: true,
+        };
       }
 
       // -----------------------------------------------------------------
