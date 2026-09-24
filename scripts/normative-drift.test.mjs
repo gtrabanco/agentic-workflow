@@ -1193,9 +1193,11 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
     );
   }
 
-  // Both planner commands must appear in the block (AC1)
-  assert.ok(blockContent.includes("/plan-fix"), "the block must name /plan-fix");
-  assert.ok(blockContent.includes("/plan-feature"), "the block must name /plan-feature");
+  // Both planner command forms must appear in the block (AC1; P8b: the lane
+  // absorbed plan-fix/plan-feature — `/unit-lane <slug>` for a feature,
+  // `/unit-lane --fix <n>` for a fix).
+  assert.ok(blockContent.includes("/unit-lane"), "the block must name /unit-lane");
+  assert.ok(blockContent.includes("--fix"), "the block must name the --fix form");
 
   // --- Part 2: the closing-block decision table (AC1 extended) ---
   // The table is read through the sensor's own markdownTable helper, so the
@@ -1207,26 +1209,26 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
   const consumerCell = freezeRow[freezeRow.length - 1];
   // Must name both planner tokens and mark the router invocation as discovery
   assert.ok(
-    consumerCell.includes("/plan-fix"),
-    "the freeze-batch consumer cell must name /plan-fix (got: " + JSON.stringify(consumerCell) + ")"
+    consumerCell.includes("/unit-lane"),
+    "the freeze-batch consumer cell must name /unit-lane (got: " + JSON.stringify(consumerCell) + ")"
   );
   assert.ok(
-    consumerCell.includes("/plan-feature"),
-    "the freeze-batch consumer cell must name /plan-feature (got: " + JSON.stringify(consumerCell) + ")"
+    consumerCell.includes("--fix"),
+    "the freeze-batch consumer cell must name the --fix form (got: " + JSON.stringify(consumerCell) + ")"
   );
   // The router invocation may appear as a description of the discovery step,
   // but the consumer (first token before →) must be a planner command
   const consumerTokens = consumerCell.split(/→/);
   const primaryConsumer = consumerTokens[0].trim();
   assert.ok(
-    primaryConsumer.includes("/plan-fix") || primaryConsumer.includes("/plan-feature"),
+    primaryConsumer.includes("/unit-lane"),
     "the primary consumer (before →) must be a planner command, not a host command (got: " + JSON.stringify(primaryConsumer) + ")"
   );
 
   // --- Part 3: both skill files carry the tokens and format sentences (AC1 + AC2 + AC3) ---
   for (const [rel, text] of [[skillRel, skill], [processRel, process]]) {
-    assert.ok(text.includes("/plan-fix"), `${rel} must name /plan-fix`);
-    assert.ok(text.includes("/plan-feature"), `${rel} must name /plan-feature`);
+    assert.ok(text.includes("/unit-lane"), `${rel} must name /unit-lane`);
+    assert.ok(text.includes("--fix"), `${rel} must name the --fix form`);
     assert.ok(
       text.includes("bare folder number or the full slug"),
       `${rel} must carry the unit format sentence`
@@ -1241,7 +1243,7 @@ test("#244 freeze-batch hand-off: closing block shape and consumer are correct",
 // #244 (F10) — the freeze-batch trigger admits a `decision-required` row, whose
 // router conclusion is `decision` ("stop and surface to the user"), not a
 // planner. The block, the decision-table cell, and both skill files must carry
-// that branch, or a decision-only batch is misrouted to `/plan-fix`.
+// that branch, or a decision-only batch is misrouted to `/unit-lane`.
 test("#244 freeze-batch hand-off: the decision-required branch surfaces the user decision", (t) => {
   const skillRel = "skills/fold-findings/SKILL.md";
   const processRel = "skills/fold-findings/references/FOLD_PROCESS.md";

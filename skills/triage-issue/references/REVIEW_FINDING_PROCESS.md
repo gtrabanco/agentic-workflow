@@ -15,11 +15,11 @@ after `/fold-findings` leaves rows unresolved.
      remains on the current unit. Route it to `/fold-findings` or an explicit
      `/execute-phase <unit> P<n>`.
    - A correction too large for the current fold is `replan-in-unit`. Run
-     `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the
-     planner (`/plan-feature <unit>` for a feature, `/plan-fix <issue-number>`
-     for a fix) and the fresh `/review-plan <unit>` that must pass before
-     execution. The plan must append concrete `P<n>` phases to the unit's
-     SPEC and preserve the finding's acceptance evidence.
+     `node scripts/unit-route.mjs <unit>`; its `route: replan` line prints the
+     planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
+     for a fix — which re-runs the lane's `plan` step and appends concrete
+     `P<n>` phases to the unit's SPEC, preserving the finding's acceptance
+     evidence. The lane's `review` step gates execution.
    - A product, architecture, or acceptance decision that blocks safe work is
      `decision-required`. Ask the user; do not guess or weaken the finish line.
    - A finding disproved by current evidence is `disputed`. Preserve the row
@@ -35,7 +35,7 @@ Return exactly one block per finding:
 REVIEW FINDING <F-k> — <short title>
 Checked: <commands and evidence>
 VERDICT: fix-now | replan-in-unit | decision-required | disputed
-Action taken: <current-unit fold/phase | plan-feature | plan-fix | user decision>
+Action taken: <current-unit fold/phase | unit-lane | user decision>
 ```
 
 Close with every finding ID mapped to its own command, joined with ` + `, and
