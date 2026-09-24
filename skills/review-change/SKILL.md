@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.7.1
+version: 3.8.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -42,8 +42,8 @@ finding.
 ## Review-end turn boundary
 
 On `REVIEW-FAIL` or `NEEDS-DECISION`, this skill **ends at the report**: it
-never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`,
-`/design-feature` or `/triage-issue` — those are separate user-initiated invocations,
+never invokes `/fold-findings`, `/execute-phase`, `/unit-lane` or
+`/triage-issue` — those are separate user-initiated invocations,
 run in a fresh turn (a programmatic outer driver may compose the same
 sequence in-turn, per `REVIEW_PROCESS.md`). The review's only mutations are the
 ledger commit (persist step 11) and, on `REVIEW-PASS` with a PR, the

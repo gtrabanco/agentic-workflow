@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.6.0
+version: 1.7.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -123,9 +123,9 @@ frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
 `folded: yes` flips, no commits. The receipt records the `REPLAN-ROUTE` branch
 and every retained (unfolded) row id, and the loop stops. The consumer is the
 conclusion the already-run router printed, never the invocation itself: on
-`route: replan` the planner it named — `/plan-fix <n>` for a fix unit or
-`/plan-feature <slug>` for a feature unit; on `route: decision` stop and
-surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
+`route: replan` the planner command it printed — `/unit-lane <slug>` for a
+feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
+and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
 `node scripts/unit-route.mjs <unit>` is the discovery step the fold already
 ran; it is never the recommendation.
 
@@ -173,7 +173,7 @@ or touched outside the queue.
   · all FOLDED (<F1> + <F2> + …) → /review-change — re-review the branch now that all listed findings are fixed
   · any DISPUTED (<F1> + <F2> + …) → user decision — resolve every evidenced dispute without creating backlog
   · any BLOCKED (<F1> + <F2> + …) → supply the listed missing inputs, then re-run /fold-findings
-  · any REPLAN (<F1> + <F2> + …) → /plan-fix <n> or /plan-feature <slug> — the planner appends the proposed phases to the unit's SPEC, the user confirms them, then a fresh /review-plan must pass before /execute-phase on this unit
+  · any REPLAN (<F1> + <F2> + …) → /unit-lane <slug> or /unit-lane --fix <n> — the lane re-runs its plan step, appends the phases to the unit's SPEC; its review step gates before /execute-phase on this unit
   · any DECISION (<F1> + <F2> + …) → stop and surface the decision to the user — a `route: decision` conclusion names no planner, so the unit waits on the user before any plan or code change
 ```
 
@@ -182,8 +182,8 @@ several lines, never joined into one prose line.
 
 Replace placeholders with every actual affected finding ID before printing; never
 print `<F2>`, `…`, or a single representative ID in a live hand-off. Resolve the
-`/plan-fix <n>` / `/plan-feature <slug>` unit argument the same way — never carry
-`<n>` or `<slug>` into a live hand-off.
+`/unit-lane <slug>` / `/unit-lane --fix <n>` unit argument the same way — never
+carry `<slug>` or `<n>` into a live hand-off.
 
 ## Closing-block decision branch (choose one, at emission)
 
@@ -193,7 +193,7 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/plan-fix <n>` (fix) or `/plan-feature <slug>` (feature) when the router concludes `replan` — user confirms, fresh `/review-plan` passes, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |

@@ -145,5 +145,5 @@ mechanized.*
     `CRASH RECOVERY` sub-block to the report.
 18. **Report.** Print a short human summary (table: unit | status | deps unmet |
     PR | next gate) plus a **design candidates** line (`idea` units and their
-    `/design-feature` next command) plus the `CRASH RECOVERY` sub-block, then
+    `/unit-lane` next command) plus the `CRASH RECOVERY` sub-block, then
     the envelope. With `--json-only`, envelope only.

@@ -12,8 +12,8 @@ break a weak local model (Qwen3.6 35B / Gemma4 26B).
 
 ## When to run
 
-After editing any **executor-path** skill: `execute-phase`, `plan-feature`,
-`plan-feature-scaffold`, `plan-feature-from-issue`, `design-feature`, or any
+After editing any **executor-path** skill: `unit-lane`, `execute-phase`,
+`triage-issue`, `fold-findings`, or any
 skill in the `review-*` pack. Optional but recommended before the PR for that edit.
 
 ## The fixture
@@ -24,7 +24,8 @@ under `scripts/fixtures/golden-fixture/`: `toy-spec.md` (the `designed` toy SPEC
 `toy-plan-nonatomic.md` (expected `BLOCKED`), `expected/phase-lint-toy-plan.txt`
 (byte-exact linter stdout), `envelope/` samples, `audit-target/` (its `EXPECTED.md` holds the four traps), and `RUN_LOG_NOTES.md`.
 
-For `design-feature`/`plan-feature-from-issue` (raw idea or issue input) use this
+For `unit-lane "<idea>"` / `unit-lane --from-issue <n>` (raw idea or issue input)
+use this
 one-liner instead of the SPEC: "Add an `export-csv` command to the toy CLI that
 writes the current in-memory record list to a CSV file at a given path." For every
 other executor-path skill, run directly against the committed SPEC.
@@ -74,11 +75,11 @@ Pass only if **every** box holds:
 Any unchecked box = **FAIL**. The fix is a wording tightening of the skill, a
 separate targeted change — this procedure surfaces the regression, never edits the skill.
 
-### Form-turn shape (`design-feature`) — add-don't-replace
+### Form-turn shape (`unit-lane` design step) — add-don't-replace
 
 Feature 59 batches the raw-idea interview into one compact form. These boxes
 **join** the fixed pass criteria above; they never replace one, and the run-log
-table below stays unchanged. A `design-feature` run passes this shape only if:
+table below stays unchanged. A `unit-lane` design-step run passes this shape only if:
 
 - ✓ The first interview turn presents ONE compact form covering the ≤ 6 fixed
   rubric slots plus the identity rows, each row carrying a recommended default —

@@ -90,11 +90,11 @@ The pipeline's single ground-truth state machine — every sensor and executor
 reads this column, not a SPEC-local marker:
 
 ```
-idea ──design-feature / plan-feature-from-issue──▶ defined
-        (stamps ## Design status: designed)
+idea ──/unit-lane "<idea>" / --from-issue──▶ defined
+        (unit doc created; catalog triage recorded in its Evidence)
                                                      │
-                        plan-feature-scaffold        │
-             (fills engineering half + artifacts)    ▼
+                     /unit-lane <slug> (plan step)   │
+             (engineering half + Tasks P1…Pn)        ▼
                                                    planned
                                                      │
                      execute-phase P1                │
@@ -106,19 +106,18 @@ idea ──design-feature / plan-feature-from-issue──▶ defined
                                                     done
 ```
 
-- `idea` — a roadmap row exists (the wishlist); no completed product design.
-  **No new file** — a thin row *is* the idea. Next action: `/design-feature
-  <slug>`. Set by whoever adds the row (human or `ship-roadmap` founding).
-- `defined` — `SPEC.md` exists with the **product half complete** (`## Design
-  status: designed`, capability closure filled). Next action: `/review-spec <slug>`;
-  only a current `SPEC-REVIEW-PASS` makes the next action `/plan-feature <slug>`.
-  Set by `design-feature` or `plan-feature-from-issue`.
-- `planned` — full SPEC (**engineering half filled**) + planning artifacts
-  exist. Next action: `/review-plan <NN>`; it becomes `/execute-phase <NN>` only
-  while a current `PLAN-REVIEW-PASS` is bound to those exact bytes — **planned is not
-  executable**. Set by `plan-feature-scaffold`
-  (XS/S SPEC-only sizes included — scaffold still runs and lands here).
-- `in-progress` — branch open, phases executing. Set by `execute-phase` P1.
+- `idea` — a roadmap row exists (the wishlist); no unit doc yet.
+  **No new file** — a thin row *is* the idea. Next action:
+  `/unit-lane "<idea>"` (or `/unit-lane --from-issue <n>` for a tracked issue).
+  Set by whoever adds the row.
+- `defined` — the unit doc (`docs/features/<NN>-<slug>/SPEC.md`) exists with its
+  product half; the catalog steps have not all been planned. Next action:
+  `/unit-lane <slug>` (or `/unit-lane --fix <n>` for a fix). Set by `unit-lane`.
+- `planned` — the unit doc carries `Tasks P1…Pn` and the triage block. Next
+  action: `/execute-phase <NN>` (the lane may run the steps itself). Set by
+  `unit-lane`'s `plan` step.
+- `in-progress` — branch open, steps executing. Set by `/unit-lane` or
+  `execute-phase` P1.
 - `done` — built and its PR open (the last step opened the PR); **merge state
   lives in the forge**, not the status — a `done` row may still be awaiting a
   human merge. Set by the PR-open step.
@@ -137,13 +136,13 @@ inferred, and no second skill writes the same edge.
 - Numbers are assigned in order and never reused.
 - A feature that depends on another cannot start until its dependency is **merged**
   (not merely `done` — a `done` dep with an open PR isn't on `main` yet).
-- A unit is **executable only when `planned` (or above) _and_ reviewed**: a current
-  `PLAN-REVIEW-PASS` bound to its bytes is the second condition, never the status
-  itself. `execute-phase`'s dependency gate STOPs and redirects a sub-`planned` unit:
-  `idea` → `/design-feature <slug>`, `defined` → `/plan-feature <slug>` (after
-  `/review-spec <slug>` if the Product half has no current PASS); its pre-execution
-  gate STOPs a `planned`/`in-progress` unit whose Plan review is missing, stale, or
-  from the wrong stage → `/review-plan <NN>`.
+- A unit is **executable once the lane's triage has produced its `Tasks`** —
+  `planned` (or above) is the gate. `execute-phase`'s dependency gate STOPs and
+  redirects a sub-`planned` unit: `idea` → `/unit-lane "<idea>"` (or
+  `--from-issue <n>`), `defined` → `/unit-lane <slug>` (or `/unit-lane --fix <n>`).
+  The lane's `review` catalog step and `review-change` are the quality gates
+  (feature 61 retired the standalone `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS`
+  pre-execution receipts).
 - **Legacy compat:** a pre-U4 roadmap row still reading a plain `planned` with
   no five-state history, whose SPEC's product half is complete, is treated as
   `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.
