@@ -242,6 +242,18 @@ test("AC10: a deferred send with profileResume restart re-runs the iteration, th
 });
 
 
+// AC12: a refused stage dispatch stops the loop instead of logging an invoke
+test("AC12: a refused stage dispatch stops the loop instead of logging an invoke", async () => {
+  const logLines = [];
+  const baseDeps = buildDeps({ appendRunLog: (line) => logLines.push(line) });
+  baseDeps.sendUserMessage = async () => ({ ok: false });
+  const result = await runConductorLoop(baseDeps);
+  assert.equal(result.banner, "ADVANCE: STOPPED");
+  assert.equal(result.stopCode, "stop-dispatch-refused");
+  assert.ok(logLines.some((l) => /stop\/stop-dispatch-refused/u.test(l)), "logs the refusal");
+  assert.ok(!logLines.some((l) => /invoke\//u.test(l)), "no invoke line");
+});
+
 // AC10: a non-deferred send runs once
 test("AC10: a non-deferred send runs once", async () => {
   let callCount = 0;
