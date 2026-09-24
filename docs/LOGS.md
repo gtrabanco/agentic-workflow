@@ -2409,3 +2409,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Published `@gtrabanco/pi-agentic-workflow@0.15.3` — the lane migration re-bundle following PR #256
 - **Decisions:** PR #256 changed 16 skills routing surfaces (ship-roadmap→advance, plan-feature/plan-fix→unit-lane) but never triggered an npm publish (workflow only fires on `packages/pi-agentic-workflow/**`). Created a commit bumping package version 0.15.2→0.15.3 with CHANGELOG row, dispatched `publish-pi-package.yml` workflow, verified publish succeeded and 0.15.3 is live on npm.
 - **Next:** Future skill-only changes after a `chore(skills)` commit need an explicit `chore(pi-package): publish X.Y.Z — <re-bundle>` commit to trigger the workflow
+## 2026-09-24T21:13:39Z — main — manual
+- **Commits:** 1 (`fd8828b5…fd8828b5`)
+- **Files:** docs/LOGS.md
+- **Summary:** Post-log-entry correction of README NaN model guidance and PR creation
+- **Decisions:** (1) nan/qwen3.6 fabricó datos de modelos (tamaños, cuotas, reasoning APIs); revertí su edición. (2) Yo redacté el bloque correcto (factos del catálogo actual https://nan.builders/docs/models) y delegué en qwen3.6 solo el empalme mecánico (node -e splice), no razonamiento factual. (3) PR #257 docs/nan-models-current creada y fusionada; #256 (lane drift) ya fusionada. (4) Issue #258 creada para endurecer contratos needs-input (sin implementar).
+- **Next:** workflow-status — descubrir siguiente unidad startable; issue #258 para hardening de contratos interactivos pendiente de implementar
