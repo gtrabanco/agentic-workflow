@@ -32,7 +32,7 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
    inventory freshness**: cross-check `docs/CAPABILITIES.md` against the code —
    roles, permissions, or cross-cutting subsystems present in the code but
    missing from the inventory (or vice versa) are a Process & docs finding
-   (`design-feature`'s Integration closure is only as good as this file). If
+   (`unit-lane`'s design step Integration closure is only as good as this file). If
    the project has no inventory file, propose seeding it from the template —
    a finding, never an auto-fix.
 4. **Mine accumulated suggestions** — read every feature folder's `decisions.md`,

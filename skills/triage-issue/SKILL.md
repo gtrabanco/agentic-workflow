@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.8.0
+version: 2.9.0
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -106,20 +106,21 @@ classification, label ownership, and persisted-output contracts do not change.
 ## Relationship to other skills
 
 ```
-                 ┌─ fix-now ─────────▶ plan-fix ─▶ execute-phase --fix
+                 ┌─ fix-now ─────────▶ /unit-lane --fix <n> ─▶ the lane's implement step
                  ├─ fix-in-unit ─────▶ execute-phase <NN> P<k> (fold into phase)
 triage-issue ────┤                    or fold-findings (ledger row)
-                 │                    or unit-route → plan-feature / plan-fix (replan)
-                 ├─ promote ─────────▶ plan-feature (router → from-issue)
+                 │                    or unit-route <unit> → /unit-lane <unit> (replan)
+                 ├─ promote ─────────▶ /unit-lane --from-issue <n> (feature from issue)
                  ├─ postpone ────────▶ dated comment, leave open
                  └─ wontfix ─────────▶ propose close
 ```
 
 In review-finding mode, `replan-in-unit` runs `node scripts/unit-route.mjs
-<unit>`: its `route: replan` line names the planner (`/plan-feature` for a
-feature, `/plan-fix` for a fix), with new `P<n>` phases appended to the same
-unit and a fresh `/review-plan` before execution. The user manually runs those
-phases; this skill never implements them.
+<unit>`: its `route: replan` line prints the planner command — `/unit-lane
+<unit>` for a feature, `/unit-lane --fix <n>` for a fix — which re-runs the
+lane's `plan` catalog step and appends new `P<n>` phases to the same unit. The
+lane's own `review` step is the gate before execution. The user manually runs
+those phases; this skill never implements them.
 
 ## Done when
 
@@ -136,8 +137,8 @@ phases; this skill never implements them.
 
   Batch:
   → Next: apply every verdict: #<n1> → <command> + #<n2> → <command> + #<n3> → <command>
-    · fix-now → /plan-fix <n>   · promote → /plan-feature <n>
-    · fix-in-unit → /execute-phase <NN> P<k> or /fold-findings — never /plan-fix
+    · fix-now → /unit-lane --fix <n>   · promote → /unit-lane --from-issue <n>
+    · fix-in-unit → /execute-phase <NN> P<k> or /fold-findings — never a new planner skill
     · postpone → dated comment, leave open   · wontfix → propose close
     · same inconsistency across several issues → /product-audit (a recurring pattern,
       not isolated tickets — sweep the product rather than triaging one by one)

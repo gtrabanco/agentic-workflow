@@ -2,7 +2,7 @@
 
 This skill is the **sole owner and sole writer** of the workflow's urgency
 labels. No other skill defines, spells, or applies them — `workflow-status`
-only *reads* them (labels-only, presence-only) and `ship-roadmap` only
+only *reads* them (labels-only, presence-only) and `advance` only
 *consumes* what `workflow-status` reports.
 
 | Label | Color | Meaning |
@@ -38,8 +38,8 @@ verdict — never a separate, silent step:
    landing).
 
 A **fix-now + non-high** severity verdict routes normally (fix index +
-`plan-fix`) but applies **no** label — only high severity reaches the urgent
-tier.
+`/unit-lane --fix <n>`) but applies **no** label — only high severity reaches
+the urgent tier.
 
 ## Disposition label vocabulary (owned here)
 

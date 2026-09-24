@@ -1,8 +1,8 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.0.0
-argument-hint: <NN-slug | "<idea>"> [--retriage]
+version: 1.1.0
+argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
   close in a single document. Triggers: "unit-lane", "run the lane",
@@ -36,7 +36,13 @@ done:
 
 - A known unit slug: `unit-lane <NN-slug>`
 - A raw idea (no slug yet): `unit-lane "<idea description>"`
+- A tracked fix issue (no fix folder yet): `unit-lane --fix <issue-number>`
+- A tracked roadmap feature issue (no feature folder yet): `unit-lane --from-issue <issue-number>`
 - Force re-triage: `unit-lane <NN-slug> --retriage`
+
+Both `--fix <n>` and `--from-issue <n>` are the exact forms
+`scripts/unit-route.mjs` prints for a tracked issue with no unit folder
+(`route: plan-from-issue`) — never invent a different spelling.
 
 ## Step 0 — Discover the project
 
@@ -48,11 +54,20 @@ exists, read its current `SPEC.md` to avoid overwriting.
 
 ### 1. Resolve or create the unit doc
 
-If the idea has no slug, assign the next number from `docs/features/ROADMAP.md`
-and create `docs/features/<NN>-<slug>/SPEC.md` from the template. Fill
-objective, why, user outcome, and non-goals from the invocation. Acceptance
-criteria are induced from user scenarios — **ask-don't-infer**; if the request
-is too vague, STOP and ask the user with concrete options. See
+If the unit folder already exists, read its `SPEC.md` and continue. Otherwise
+create it from the tree the unit belongs to:
+
+| Invocation | Folder | Template | Index to register |
+|---|---|---|---|
+| `<NN-slug>` / `"<idea>"` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/features/ROADMAP.md` |
+| `--fix <issue-number>` | `docs/fix/<issue-number>-<topic>/` | `docs/fix/_TEMPLATE/SPEC.md` | `docs/fix/README.md` |
+| `--from-issue <issue-number>` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/features/ROADMAP.md` (row links `#<issue-number>`) |
+
+For `--fix`/`--from-issue`, read the tracked issue in the forge first and keep
+its number; the folder name carries it (`fix/<issue-number>-<topic>`). Fill
+objective, why, user outcome, and non-goals from the invocation (or the issue).
+Acceptance criteria are induced from user scenarios — **ask-don't-infer**; if the
+request is too vague, STOP and ask the user with concrete options. See
 [the unit doc template](references/STEPS.md) for section order.
 
 ### 2. Triage — read the catalog, never re-derive
@@ -119,8 +134,8 @@ unit doc's status, and print the closing block.
 
 ## Relationship to other skills
 
-`unit-lane` absorbs the fixed-pipeline skills (design-feature, plan-feature,
-review-spec, review-plan) into catalog steps. The review pack axes
+`unit-lane` absorbed the retired fixed-pipeline skills (design-feature,
+plan-feature, review-spec, review-plan) into catalog steps. The review pack axes
 (`review-implementation`, `review-code`, `review-security`, `review-perf`,
 `review-a11y`, `review-debt`) compose the review step; `triage-issue` feeds
 issues into the lane; `workflow-status` computes the next lane invocation.

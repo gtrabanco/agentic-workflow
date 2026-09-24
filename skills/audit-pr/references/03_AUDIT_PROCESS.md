@@ -53,5 +53,5 @@
    SHA re-posts (newest wins) — and it **refuses to post for a BLOCKED verdict**,
    so the page never shows a stale green flag.
 8. **Report** — the verdict block below, always headed by the PR's full URL.
-   In an active `ship-roadmap --fullauto` AUDIT stage, return the verdict to the
+   In an active `advance --fullauto` AUDIT stage, return the verdict to the
    conductor; never run its merge wrapper from this skill.
