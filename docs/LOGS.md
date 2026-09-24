@@ -2387,3 +2387,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Resolved merge conflict on PR #257 (docs/nan-models-current) and merged it into main. The conflict was in README.md — main had the old NaN model catalog (GLM-5.2/Mimo V2.5) while the PR had the updated catalog (glm5.3/glm5.3-flash/deepseek-v4-flash). Resolved by accepting the PR's updated catalog as it reflects current NaN offerings. PR #257 merged to main at commit 8c802b8b.
 - **Decisions:** (1) PR #257 had a single README.md conflict — the lane's `design` step section referencing different models as "rung 2". PR had `glm5.3-flash` as rung 2, main had `Qwen3.6 with thinking on`. Accepted PR version because it reflects the current NaN model catalog. (2) Local branch was fast-forwarded to origin/docs/nan-models-current after merge.
 - **Next:** PR #257 is merged. Run /workflow-status to discover next startable unit.
+## 2026-09-24T21:07:38Z — main — manual
+- **Commits:** 2 (`f4dd9662…6f0679f7`)
+- **Files:** docs/LOGS.md
+- **Summary:** Post-log-entry correction of README NaN model guidance and PR creation
+- **Decisions:** (1) nan/qwen3.6 fabricó datos de modelos (tamaños, cuotas, reasoning APIs); revertí su edición. (2) Yo redacté el bloque correcto (factos del catálogo actual https://nan.builders/docs/models) y delegué en qwen3.6 solo el empalme mecánico (node -e splice), no razonamiento factual. (3) PR #257 docs/nan-models-current creada y fusionada; #256 (lane drift) ya estaba fusionada.
+- **Next:** workflow-status — descubrir siguiente unidad startable; punto pendiente: endurecer contratos needs-input (decidir si delegar en modelo fuerte del catálogo o solo empalme mecánico con qwen3.6)
+
