@@ -42,4 +42,4 @@ from the triage catalog, not step descopes):
 `audit-pr`'s obligation-closure check all key off this same `## References` log
 — it is the single authoritative record of every descope, defined once here.
 Nothing else in the pre-execution route creates an issue: a missing or failed
-`PLAN-REVIEW-PASS` is closed by `/review-plan`, never by a tracker item.
+the lane's `review` step closes it, never a tracker item.

@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.9.0
+version: 3.9.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>] [--compact]"
@@ -30,15 +30,14 @@ report — it never assembles the envelope by hand.
   stdout, never assembled by the model
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
-  `/plan-feature`) AND the script computed it from the unit's resolved status
-  **and** its current pre-execution evidence: `idea`/undesigned →
-  `/design-feature <slug>`; `defined` → `/plan-feature <slug>` only on a current
-  `SPEC-REVIEW-PASS`, else `/review-spec <slug>`; `planned`/`in-progress` → `/execute-phase <NN>` only on a
-  current `PLAN-REVIEW-PASS`, else `/review-plan <NN>` (step 6a)
+  `/unit-lane`) AND the script computed it from the unit's resolved status:
+  `idea`/`defined` → `/unit-lane <slug>` (or `/unit-lane --fix <n>` for a fix);
+  `planned`/`in-progress` → `/execute-phase <NN>` (its triage block is the
+  authority; no separate plan-receipt currency check, step 6a)
 ✓ `detail.crash_recovery` carries a verdict from the decision table and the
   envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
   AMBIGUOUS→NEEDS_INPUT)
-✓ Every `detail.design_candidates[].next` begins with `/design-feature `
+✓ Every `detail.design_candidates[].next` begins with `/unit-lane `
 ✓ Every degraded dimension is named in `detail.degradations` as
   `unavailable-<source>-<cause>` — and, when `--last-envelope` was supplied, the
   no-progress guard's `workflow_observations` note is present (never a silently
@@ -99,11 +98,11 @@ the JSON contract.
 
 ## Relationship to other skills
 
-- The **sensor** counterpart to `ship-roadmap`'s conductor: an external
-  orchestrator calls `workflow-status` → routes on the envelope → invokes
-  `plan-feature` / `execute-phase` / `review-change` / `audit-pr` /
-  `triage-issue` directly, choosing the model per step — the same loop without
-  the in-agent autopilot.
+- The **sensor** counterpart to `advance`'s conductor: an external
+  orchestrator (or `advance` itself) calls `workflow-status` → routes on the
+  envelope → invokes `unit-lane` / `execute-phase` / `review-change` /
+  `audit-pr` / `triage-issue` directly, choosing the model per step — the same
+  loop without the in-agent autopilot.
 - Read-only sibling of `audit-docs` (which judges coherence and can fix) and
   `product-audit` (which judges health): this one only reports state.
 - Schema owner: `orchestration-envelope` (internal).
@@ -118,7 +117,7 @@ the JSON contract.
   `detail.crash_recovery` were read from the envelope, and the envelope `state`
   matches the crash-recovery verdict.
 - With `--last-envelope` supplied: the no-progress guard ran — a stalled
-  `/plan-feature`/`/design-feature` hint surfaces as a `workflow_observations`
+  `/unit-lane` hint surfaces as a `workflow_observations`
   note, never a silent bland repeat, with no new write path introduced.
 - The human summary (unless `--json-only`) and the envelope are printed, envelope
   last.

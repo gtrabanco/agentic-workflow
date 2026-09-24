@@ -23,7 +23,7 @@ model identity, so this skill never tries; it states the condition in prose
 and lets the human (or the orchestrator that knows which model is running)
 judge it.
 
-**N ladder (fixed).** `N=2` is the default (the `ship-roadmap` floor). Bump to
+**N ladder (fixed).** `N=2` is the default (the `advance` floor). Bump to
 `N=3` when either holds: the change has a security/auth surface, or all
 available reviewers share one model family (the third reviewer buys back some
 of the decorrelation a single family can't provide). `N>3` is **explicitly

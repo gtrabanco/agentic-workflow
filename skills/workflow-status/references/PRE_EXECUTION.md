@@ -1,5 +1,10 @@
 ## Pre-execution receipt sensing (step 6a)
 
+> **Legacy (feature 61 P8b):** the spec/plan pre-execution receipt stages are
+> retired — the sensor now senses the unit doc's single triage block
+> (`stage: lane`, see `ENVELOPE_FIELDS.md`). This reference is retained for
+> units that still carry those receipts; the live sensing is the `lane` stage.
+
 Roadmap status says what exists; only a receipt bound to the current bytes says
 whether the unit may be executed. Sense it like every other signal — read the file,
 recompute the digest, never trust the prose sitting around the block.
