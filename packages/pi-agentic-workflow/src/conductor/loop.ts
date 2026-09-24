@@ -232,6 +232,15 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
       }
 
       const sendResult = await deps.sendUserMessage(invocation);
+      if (sendResult.ok === false) {
+        deps.appendRunLog(formatLogLine("stop", "stop-dispatch-refused", invocation, iteration, cap));
+        return {
+          banner: "ADVANCE: STOPPED",
+          stopCode: "stop-dispatch-refused",
+          detail: "the stage dispatch was refused (the router already explained why)",
+          iterations: iteration - 1,
+        };
+      }
       if (sendResult.deferred === true) {
         // AC10 restart: the routing recorded the demotion instead of sending; re-run
         // the iteration so the stage is decided and served under the fallback profile.
