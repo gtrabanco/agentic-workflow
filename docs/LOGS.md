@@ -2367,3 +2367,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Triage of issues 173 174 180 183 192
 - **Decisions:** All four postponed items are valid roadmap features at idea status not bug fixes not urgent. 180 is active with PR 235 open defined status no label needed. Issue 174 explicitly deferred pending feat 61 executor reshaping now landed and needs re-plan. 183 golden-fixture metric row already shipped via feature 55 reducing scope to 2 items only.
 - **Next:** Activate any postponed issue via design-feature: turn-contract-single-owner 173 pi-state-flow-lifecycle 174 re-plan vs 61 verification-contract-hygiene 183 doc-toolchain-index 192. Or continue with the next startable unit from workflow-status.
+
+## 2026-09-24T19:05:07Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Ran workflow-status sensor: 65 units, 1 startable (40-versioned-skills-releases), 22 design candidates, 10 fix-now findings, 12 untriaged issues
+- **Next:** /unit-lane 40-versioned-skills-releases — the critical path unit that unblocks 57-per-release-bilingual and the full build chain
+
