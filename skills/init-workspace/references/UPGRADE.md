@@ -4,7 +4,7 @@ Entered when Step 0 finds an existing **agentic-workflow scaffold** (not a
 bare or foreign repo). Bootstrap mode (the Process section above) never
 engages here — upgrade mode reuses the same discovery + interview machinery,
 scoped to **only the blocks the current template has that this project
-lacks**. Eight ordered steps:
+lacks**. Nine ordered steps:
 
 1. **Locate the current template.** Fetch the current `template/` the same
    way bootstrap does — `npx degit gtrabanco/agentic-workflow/template <temp-dir>`
@@ -91,7 +91,15 @@ lacks**. Eight ordered steps:
    never touch a label that already exists (additive-only, same never-clobber
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
-8. **Report + hand off.** Summarize blocks added, filled, and skipped
+
+8. **Provision the Serena project config, additively only (Refs #219).** Load
+   [SERENA](SERENA.md). Append the `.gitignore` block only if the target
+   does not already contain it. Write `.serena/project.yml` only if it is
+   absent — never touch an existing one. Report what was skipped and why.
+   Run the health check and record the result. If Serena is not installed,
+   offer install or record as a residual. This step is additive-only; it
+   never rewrites or deletes, consistent with upgrade mode's rule.
+9. **Report + hand off.** Summarize blocks added, filled, and skipped
    (residuals), the legacy `CLAUDE.md` outcome (folded items and removed, or kept
    with the reason), the urgency labels seeded (or already present), then print the
    recommendation to run `product-audit` next to see which newly-available
