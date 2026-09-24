@@ -1,10 +1,10 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.8.1
+version: 3.9.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
-argument-hint: "[--json-only] [--last-envelope <json|path>]"
+argument-hint: "[--json-only] [--last-envelope <json|path>] [--compact]"
 description: >
   Read-only workflow sensor: run the deterministic script, read the fixed
   machine envelope, interpret the recommendation. Never edits. Triggers:
@@ -25,9 +25,9 @@ report — it never assembles the envelope by hand.
 
 ```
 ✓ The script was RUN — `bun scripts/workflow-status.mjs [--json-only]
-  [--last-envelope <json|path>]` (node is the fallback when bun is absent, per
-  the repository's runtime convention); the envelope is the script's stdout, never
-  assembled by the model
+  [--last-envelope <json|path>] [--compact]` (node is the fallback when bun is
+  absent, per the repository's runtime convention); the envelope is the script's
+  stdout, never assembled by the model
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
   `/plan-feature`) AND the script computed it from the unit's resolved status
@@ -50,6 +50,12 @@ report — it never assembles the envelope by hand.
 ```
 
 With `--json-only`, skip the human-readable summary: print the envelope alone.
+
+## Compact mode — `--compact`
+
+`--compact` emits the same envelope with repository history dropped (~half the
+bytes on a mature repo); the exact keep/drop set is in
+[envelope fields](references/ENVELOPE_FIELDS.md).
 
 ## When to use
 
