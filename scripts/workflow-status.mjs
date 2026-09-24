@@ -80,7 +80,7 @@ const TIER_MAP = new Map([
   ["/execute-phase", "cheap"],
 ]);
 
-const USAGE = `Usage: bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]
+const USAGE = `Usage: bun scripts/workflow-status.mjs [OPTIONS]
 
 Read-only workflow sensor: compute repository, roadmap, dependency, PR, finding,
 and recovery state, then print the fixed Envelope v2 JSON on stdout.
@@ -88,6 +88,12 @@ and recovery state, then print the fixed Envelope v2 JSON on stdout.
 Options:
   --json-only                  accepted no-op (output is already envelope-only)
   --last-envelope <json|path>  persisted hint envelope (inline JSON or a file path)
+  --compact                    reduced envelope: a "done" row leaves
+                               detail.features/detail.fixes only once its PR is
+                               proven merged, and a finding's evidence memo is
+                               reduced to a fingerprint. Every decision field
+                               (next, startable_now, design_candidates,
+                               workflow_observations, ...) is unchanged
   --help                       print this usage and exit 0
   --version                    print the schema package version and exit 0
 `;
@@ -306,6 +312,11 @@ function readForgeState(budget = forgeBudget()) {
     return { data: parsed, available: true };
   };
 
+  // Step 2 — forge state. The three reads run sequentially: measured on this
+  // repository, spawnSync beats three `exec` calls in parallel (each spawns a
+  // full node process, and the three `gh` calls answer in ~200-300 ms), so the
+  // parallelism a reader might expect here was tried and is not free. The shared
+  // FORGE_DIMENSION_MS budget bounds the whole dimension either way (F19).
   const first = readList("openPrs");
   if (!first.available) {
     const code = degradationFor(first.failure ?? {}, first.malformed);
@@ -1132,9 +1143,30 @@ function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable
   });
 }
 
-function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent }) {
+/**
+ * In compact mode a finding's `route` is the multi-paragraph evidence memo the
+ * reviewer wrote, and it is what makes the envelope tens of kilobytes: the
+ * finding's identity (`id`, `file`, `axis`, `severity`, `class`, `suggested_tier`)
+ * is the actionable half, and the memo is re-read from the unit's
+ * `review-findings.md` ledger when the fold actually runs. The fingerprint keeps
+ * the original length visible so a consumer can tell a stub from a real row and
+ * knows where the bytes live. Never applied to the full envelope, whose route
+ * text stays byte-identical.
+ */
+function compactRoute(route) {
+  if (typeof route !== "string" || route.length < 80) return route;
+  return `...(${route.length} char evidence, see the unit review-findings.md)`;
+}
+
+function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent, merged, compact }) {
   const features = [];
   const fixes = [];
+  // `merged` is the resolver's own proof that a `done` row's PR shipped. In compact
+  // mode those rows are the historical tail — 40 of this repository's 65 units — and
+  // they are exactly what no consumer of "what can I do now" needs. A row is dropped
+  // only on positive proof of merge, so an unmerged `done` row (still at the merge
+  // gate) survives in both modes.
+  const hidden = (unit) => Boolean(compact && merged?.has(unit.id));
   for (const unit of units) {
     const phase = phases.get(unit.id) ?? null;
     const mark = marks.get(unit.id) ?? null;
@@ -1150,17 +1182,27 @@ function buildProjections({ units, forge, readiness, phases, marks, fixNow, obse
       merge_ready: null,
     };
     if (entry.review_pending === null) entry.review_pending = false;
+    if (hidden(unit)) continue;
     if (unit.kind === "fix") fixes.push({ ...entry, issue: unit.issue });
     else features.push(entry);
   }
-  return { features, fixes, fixNow, observations, urgent };
+  // Observations are NEVER reduced, in either mode. Every note the sensor writes is
+  // a signal — an unmapped roadmap status, a slug that refused its files, a ledger
+  // severity outside the published enum, git and forge state, or the `--last-envelope`
+  // guard's divergence note — and they total about a kilobyte, so "trimming" them
+  // would trade a real signal for no size win. The compact win is `features` and the
+  // findings' route memos, which are ten times larger and pure history.
+  const visibleFixNow = compact
+    ? fixNow.map((finding) => ({ ...finding, route: compactRoute(finding.route) }))
+    : fixNow;
+  return { features, fixes, fixNow: visibleFixNow, observations, urgent };
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-export async function buildEnvelope({ lastEnvelope = null } = {}) {
+export async function buildEnvelope({ lastEnvelope = null, compact = false } = {}) {
   const schema = await loadSchemaRuntime();
   const nrs = readRepositoryState();
   const gitState = readGitState();
@@ -1275,7 +1317,18 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     merge_ready: false,
   }));
 
-  const projections = buildProjections({ units, forge, readiness: { unmetFor: dependencies.unmetFor }, phases, marks, fixNow, observations, urgent: urgentIssues });
+  const projections = buildProjections({
+    units,
+    forge,
+    readiness: { unmetFor: dependencies.unmetFor },
+    phases,
+    marks,
+    fixNow,
+    observations,
+    urgent: urgentIssues,
+    merged: dependencies.merged,
+    compact,
+  });
 
   const runScopedBlockers = [];
   if (nrs && NRS_BLOCKING.has(nrs.status)) {
@@ -1410,7 +1463,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       audit_pending: null,
     },
     findings: {
-      fix_now: fixNow,
+      fix_now: projections.fixNow,
       issues_filed: [],
       untriaged: untriagedNumbers.length,
       decisions_recorded: 0,
@@ -1456,12 +1509,13 @@ function ciOf(pr) {
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const opts = { jsonOnly: false, lastEnvelope: null };
+  const opts = { jsonOnly: false, lastEnvelope: null, compact: false };
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (token === "--help") return { help: true };
     if (token === "--version") return { version: true };
     if (token === "--json-only") { opts.jsonOnly = true; continue; }
+    if (token === "--compact") { opts.compact = true; continue; }
     if (token === "--last-envelope") {
       const value = argv[i + 1];
       if (value === undefined) return { error: "--last-envelope requires a value" };
@@ -1490,7 +1544,10 @@ async function main(argv = process.argv.slice(2)) {
     return FATAL_EXIT_CODE;
   }
 
-  const { envelope, schema } = await buildEnvelope({ lastEnvelope: parsed.opts.lastEnvelope });
+  const { envelope, schema } = await buildEnvelope({
+    lastEnvelope: parsed.opts.lastEnvelope,
+    compact: parsed.opts.compact,
+  });
   const validation = schema.validateEnvelope(envelope);
   if (!validation.ok) {
     process.stderr.write(`envelope self-check failed: ${(validation.errors ?? []).join("; ")}\n`);

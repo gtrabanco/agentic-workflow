@@ -88,3 +88,38 @@ fully in `features`/`fixes` — an `idea` unit appears ONLY in
 it has no deps-met check to pass (design precedes dependency startability).
 `05-auth` above illustrates `defined` (not yet `planned`): startable, next
 `/plan-feature`, phase fields null (no planning artifacts yet).
+
+## The `--compact` projection
+
+The envelope above is the complete one. `--compact` emits the **same shape and the
+same decisions** with repository history dropped, because a poll loop pays for
+that history in context on every read while no consumer of "what can I do now"
+reads it. On this repository it is roughly half the bytes.
+
+Exactly two fields change:
+
+- `detail.features` / `detail.fixes`: a `done` row is dropped **only on positive
+  proof its linked PR merged** (the merge resolver). An unmerged `done` row is
+  still at the merge gate and stays; every row in `idea`/`defined`/`planned`/
+  `in-progress` stays in both modes, so `detail.startable_now` and
+  `detail.blocked_units` keep naming every unit either way.
+- `findings.fix_now[].route`: the reviewer's multi-paragraph evidence memo becomes
+  `...(N char evidence, see the unit review-findings.md)`, keeping the original
+  length visible. `id`, `file`, `axis`, `severity`, `class` and `suggested_tier`
+  are untouched, and the memo is on disk in the unit's `review-findings.md`, which
+  is where the fold reads it.
+
+`detail.workflow_observations` is **not** reduced in either mode. Every note the
+sensor writes is a signal — an unmapped roadmap status, a slug that refused its
+files, a ledger severity outside the published enum, git and forge state, the
+`--last-envelope` guard's divergence note — and they total about a kilobyte, so
+trimming them would trade a real signal for no measurable win. The size comes from
+`features` and the route memos, which are an order of magnitude larger and pure
+history.
+
+Everything else is byte-identical: `state`, `summary`, `unit`, `phase`, `pr`,
+`gates`, `blockers`, `dependencies`, `recommendations`, `needs_input`, all of
+`next` (`recommended`, `alternatives`, `tier`, `reason`, `candidate_count`,
+`suggested`, `continuation`), `detail.repository_state`, `design_candidates`,
+`pre_execution`, `review_loop_cycles`, `crash_recovery` and `urgent`. A consumer
+may therefore switch modes per read without changing how it parses.
