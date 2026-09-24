@@ -40,10 +40,15 @@ existing legacy consumers.
 
 The envelope has a **deterministic producer**: the read-only sensor script
 `scripts/workflow-status.mjs`. Run it as
-`bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`
+`bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>] [--compact]`
 (node is the fallback when bun is absent);
 it executes the published `SENSOR_CORE` sequence, self-validates the result, and
-prints one Envelope v2 JSON document on stdout. Declared
+prints one Envelope v2 JSON document on stdout. `--compact` emits the same
+envelope with repository history dropped (proved-merged units out of
+`detail.features`, the findings' evidence memos fingerprinted) — the field set and
+the decision fields are unchanged, so a poll loop can use it and a consumer can
+switch modes per read (`skills/workflow-status/references/ENVELOPE_FIELDS.md`).
+Declared
 `unavailable-<source>-<cause>` degradations live in `detail`, while diagnostics go
 to **stderr**: a `validateEnvelope` mismatch prints `envelope self-check failed: …`
 and still exits 0, and an unexpected failure exits non-zero naming itself as
