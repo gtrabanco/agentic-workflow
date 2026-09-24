@@ -2380,3 +2380,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Investigate workflow-status slowness, implement --compact flag reducing envelope by 51%, and publish 0.15.2
 - **Decisions:** (1) The script is fast (~3s); slowness is CLI emission (43KB = ~11k tokens) forcing the model to process all 62 roadmap rows in detail.features + multi-paragraph evidence in findings.fix_now[].route. (2) --compact drops proved-merged done rows from detail.features/fixes and fingerprints evidence memos (length preserved, source on disk), while decision fields and workflow_observations stay byte-identical. (3) Three parallel gh calls were rejected after benchmarking: sequential spawnSync is faster than parallel exec due to node process spawn overhead (~200-300ms per call × 3 spawns). (4) workflow-status skill bumped to v3.9.0, pi-agentic-workflow package to 0.15.2.
 - **Next:** Run full test suite and audit-pr if this session produced a PR, otherwise continue with the next startable unit from workflow-status
+
+## 2026-09-24T22:55:00Z — main — manual
+- **Commits:** 2 commits landed on main during the session (3b25ee46, 8c802b8b) — these were PRs merged by the human (not authored in this session)
+- **Files:** — (session worked on remote PR resolution, not local file changes)
+- **Summary:** Resolved merge conflict on PR #257 (docs/nan-models-current) and merged it into main. The conflict was in README.md — main had the old NaN model catalog (GLM-5.2/Mimo V2.5) while the PR had the updated catalog (glm5.3/glm5.3-flash/deepseek-v4-flash). Resolved by accepting the PR's updated catalog as it reflects current NaN offerings. PR #257 merged to main at commit 8c802b8b.
+- **Decisions:** (1) PR #257 had a single README.md conflict — the lane's `design` step section referencing different models as "rung 2". PR had `glm5.3-flash` as rung 2, main had `Qwen3.6 with thinking on`. Accepted PR version because it reflects the current NaN model catalog. (2) Local branch was fast-forwarded to origin/docs/nan-models-current after merge.
+- **Next:** PR #257 is merged. Run /workflow-status to discover next startable unit.
