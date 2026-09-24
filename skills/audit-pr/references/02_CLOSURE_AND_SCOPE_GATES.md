@@ -17,15 +17,15 @@
 >   decision was *taken and recorded*, never that UI/API surface exists. Never
 >   push a blank row into inventing surface to pass this gate.
 > - **Feature SPEC, block absent** → the SPEC predates or bypassed
->   `design-feature`. Never a blocker — emit a dated **warning**, PR still
+>   `unit-lane`. Never a blocker — emit a dated **warning**, PR still
 >   merges:
 >   ```
 >   design-debt: closure absent, SPEC predates the rule (dated <YYYY-MM-DD>)
 >   ```
 >   This warning is itself the **retrofit trigger**: the next unit of work that
->   touches this feature must fill the closure via `/design-feature <slug>`
+>   touches this feature must fill the closure via `/unit-lane <slug>`
 >   (upsert — fills only the missing rows, destroys nothing recorded) *before*
->   that new work is planned. See `design-feature`'s upsert semantics for the
+>   that new work is planned. See `unit-lane`'s design-step upsert semantics for the
 >   other half of this contract.
 
 > **`done` ≠ merge-ready.** A unit flips to `done` when its PR opens (built, not
@@ -96,8 +96,7 @@ verdict:
    feature unit — its named `— spec` parent re-derives the same way. Bound artifacts
    are frozen: new implementation-phase files are allowed, edits to a bound artifact
    are not. Stale, missing, wrong-stage **or impossible-timeline** lineage → **BLOCKED**,
-   `→ Next: /review-plan <unit>` (or `/review-spec <unit>` when the parent is the
-   broken link). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
+   `→ Next: /unit-lane <unit>` (the lane's `review` step re-derives the artifact). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
 2. **Obligations are closed.** Every row of the unit's obligation ledger is
    `verified` — with the validator that ran on this candidate — or an explicit
    `n/a: <reason>`. Any `planned`, `in-progress`, blank, or `deferred` row is

@@ -22,16 +22,16 @@ lost, and none becomes reviewer-created backlog (D3):
 
 - **fix-now** → persisted to the unit's `review-findings.md` fold ledger, then
   routed to the current phase's fold cycle (`/fold-findings`, invoked after this review ends)
-  — never a tracked issue, never `plan-fix`. Classification honors
+  — never a tracked issue, never a standalone replan. Classification honors
   `review-implementation`'s **current-unit contract**: in-scope defects are
   always fix-now / replan-in-unit — never a postpone/tradeoff/wontfix/new-issue
   escape.
 - **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
   class and ledger row; run `node scripts/unit-route.mjs <unit>` — its
-  `route: replan` line names the planner (`/plan-feature <unit>` for a feature,
-  `/plan-fix <n>` for a fix). The planner re-cuts the plan on this branch, the
-  user confirms the appended SPEC phase(s), a fresh `/review-plan <unit>` passes,
-  and only then `execute-phase` runs them.
+  `route: replan` line prints the planner command (`/unit-lane <unit>` for a
+  feature, `/unit-lane --fix <n>` for a fix). The lane re-runs its plan step on
+  this branch, the user confirms the appended SPEC phase(s), its review step
+  gates, and only then `execute-phase` runs them.
 - **fix-now / `decision-required`** → stop and surface the decision to the user;
   the unit blocks until decided. No issue is created.
 - **proposal** (independent future capability) → batched in the report with a

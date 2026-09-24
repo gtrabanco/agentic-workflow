@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 2.2.0
+version: 2.2.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -36,8 +36,9 @@ copy a second schema here.
   driver appends `renderOutputInstruction(skill)` to that invocation. It has
   the small model-owned fields: outcome, next intent/targets, blockers,
   questions, discoveries, and evidence references.
-- `ship-roadmap` is the conductor, not a worker profile: it keeps its native
-  terminal `SHIP:` banner and is parsed by its own fixed turn contract.
+- `advance` (the companion pi package command) is the conductor, not a worker
+  profile: it runs as deterministic code over the sensor envelope and never
+  emits a worker SkillOutcome.
 - Interactive invocations emit their normal human-readable reports; no driver
   result is required.
 

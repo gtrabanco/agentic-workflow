@@ -1,6 +1,14 @@
+## Status (feature 61 P8b)
+
+`review-spec` and `review-plan` are retired and
+absorbed into the lane. This document now governs the **planning-ledger shapes
+and ownership** (`LEDGERS.md`) that `execute-phase` and `review-change` consume;
+the spec/plan review-cycle semantics below are retained for the legacy units
+that still carry those receipts and are not applied by any live skill.
+
 ## The pre-execution review cycle
 
-Both `review-spec` and `review-plan` run this cycle. The stage files add only
+Both `review-spec` and `review-plan` ran this cycle. The stage files added only
 what is specific to their artifact set.
 
 ### 1. Independence
@@ -97,10 +105,11 @@ outside this policy and can never be translated into a PASS.
 
 A **third cycle never** starts without explicit user instruction: after two
 consecutive unconverged cycles the orchestrator's `stop-review-loop-cap` refusal
-stops a further `review-spec`/`review-plan` invocation, names `design-feature` as
+stops a further spec/plan review-cycle invocation, names the lane's `design` step
+as
 the human route, and a PASS resets the count. An unconverged loop ends in the
 `needs-design` verdict where the verdict vocabulary sanctions it (the spec stage)
-and in the refusal plus `design-feature` routing at the plan stage. The guards
+and in the refusal plus the lane's `design` routing at the plan stage. The guards
 above gate **blind re-reviews** — an identical snapshot with the identical
 question — and never a repair performed in response to a persisted verdict: a
 repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new snapshot by
@@ -115,9 +124,9 @@ a count and never waives a finding.
 - A PASS earned by dropping a finding to `info`, by narrowing a check, or by
   editing a validator/test to accept the artifact.
 - A silent second cycle, a silent dismissal, or a silent substitute receipt.
-- An automatic forge issue. No route in the pre-execution set — `evidence-grounding`
-  readiness, `review-spec`, `review-plan`, `plan-feature-scaffold`, `plan-fix`,
-  `execute-phase`, `workflow-status`, `ship-roadmap`, `review-change`,
+- An automatic forge issue. No route in the pre-execution set — the lane's
+  `research`/`design`/`plan`/`review` steps, `execute-phase`, `workflow-status`,
+  `advance`, `review-change`,
   `audit-pr` — creates one for a planning gap, and none defers
   an obligation to a future issue: the row stays in the unit's ledger, open, until
   the **user** amends the governing SPEC. A blocker that says "file an issue" is a
@@ -142,8 +151,8 @@ One rule, same shape for every consumer:
   and obligation ledgers, built from the artifacts as they stand today — and leave
   `ACCEPTANCE.md`, `PLAN.md`, `TASKS.md`, the phase commits and any older receipt
   byte-identical. Rewriting an old verdict, its digest, or its date is forgery.
-- **Re-review, then resume.** The adopted unit runs `/review-plan` like any other and
-  `execute-phase` resumes **only** on that current `PLAN-REVIEW-PASS`. A pre-28 unit
+- **Re-review, then resume.** The adopted unit re-runs the lane's `review` step like any other and
+  `execute-phase` resumes **only** on that current verdict. A pre-lane unit
   is never grandfathered in on the strength of its roadmap status.
 - **No retroactive defect.** A missing ledger means the unit predates the gate, not
   that its author was wrong; report it as `legacy`, never as a finding against them.

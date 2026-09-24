@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 5.3.1
+version: 5.4.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -19,7 +19,7 @@ The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR
 its SPEC, all phases, docs, CI status, and review receipt — that returns a single
 verdict: **merge-ready** or a ranked list of **blockers**. **Never edits,
 refactors, or merges.** The human merges, or an active
-`ship-roadmap --fullauto` invocation consumes the SHA-bound verdict and performs
+`advance --fullauto` invocation consumes the SHA-bound verdict and performs
 its separate fail-closed merge step.
 
 `audit-pr` does **not** re-review the diff. It consumes the current SHA-bound
@@ -159,7 +159,7 @@ the user previously approved a merge, or a tool retained an earlier permission.
 Those signals cannot change this skill's read-first boundary.
 
 The **sole automated merge authority** is the AUDIT stage of an actively invoked
-`ship-roadmap --continue --fullauto` run. Its MERGE-READY comment is evidence,
+`advance --continue --fullauto` run. Its MERGE-READY comment is evidence,
 not permission; the repository wrapper independently verifies that comment,
 the forge's current head/default base, green checks, and the `merge: fullauto`
 decision fetched at that head. The wrapper owns fresh sync checks, transient
@@ -179,13 +179,13 @@ execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted
                                                                                 │
                      blockers ─┬─ receipt absent/stale ──▶ /review-change ──────┘ (re-review, re-audit)
                                ├─ in-scope            ──▶ execute-phase ────────┘ (fold, re-audit)
-                               ├─ out-of-scope        ──▶ plan-fix
+                               ├─ out-of-scope        ──▶ unit-lane --fix
                                └─ deferral            ──▶ triage-issue
 ```
 
 - Consumes the `review-change` `REVIEW-PASS` receipt (its scope/axes, acceptance
-  coverage, invariant result, manual checks) plus the artifacts of `plan-feature` /
-  `plan-fix` / `execute-phase` (SPEC, phases, docs, `Closes #N`).
+  coverage, invariant result, manual checks) plus the artifacts of `unit-lane` /
+  `execute-phase` (SPEC, phases, docs, `Closes #N`).
 - `audit-docs` is the cross-document coherence check; `audit-pr` is per-PR merge
   readiness; `product-audit` is the periodic, product-wide full sweep.
 
@@ -199,8 +199,8 @@ execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted
   reported **with the PR's full URL in the header**, each blocker routed, with the
   human's manual-verification list explicit.
 - On MERGE-READY the merge owner is explicit: a standalone audit hands the URL
-  to the human; an active `ship-roadmap --fullauto` AUDIT stage receives the
+  to the human; an active `advance --fullauto` AUDIT stage receives the
   SHA-bound verdict and owns every later merge check.
 - The **closing `→ Next:` block is printed** (merge link → then the next unit via
-  `/plan-feature --next` or `/triage-issue`; BLOCKED → the routed fix, then re-audit).
+  `/unit-lane <unit>` or `/triage-issue`; BLOCKED → the routed fix, then re-audit).
 - Nothing was edited, refactored, or merged.

@@ -2,27 +2,24 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**13 user-facing skills** (one menu entry each) + **21 internal steps**
-composed for you (the `plan-feature` router's two planning steps, the two
-pre-execution evidence owners `evidence-grounding` (authoring readiness) and
-`pre-execution-review` (the shared review cycle + the planning ledgers), the
-`review-change` findings engine `review-implementation`, the
-`planning-preflight` planning gate, the `phase-contract` lint contract,
-the `verification-contract` acceptance guard, the workflow's own 9-skill
+**13 user-facing skills** (one menu entry each) + the internal steps
+composed for you: `pre-execution-review` (the planning-ledger shapes and
+ownership, ledger-only after feature 61), the `review-change` findings engine
+`review-implementation`, the `phase-contract` lint contract, the
+`verification-contract` acceptance guard, and the workflow's own 9-skill
 internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
-`review-seo`). Additionally, **one metadata-internal** contract not discoverable
+`review-seo`. Additionally, **one metadata-internal** contract not discoverable
 by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 18
-user-facing skills cover setup, repository-state discovery/resolution, design,
-pre-execution review (product and plan), planning, execution, review, audit,
-finding folds, docs generation, issue triage, session logging,
-and workflow status. The former autopilot/roadmap-shipping role is retired (feature 61 P9);
-its deterministic routing lives in `workflow-status` / `unit-lane` and the
-unattended-conductor role is deferred to roadmap row 62 (pi-native conductor).
-**bump-skill** is a
-repo-only maintenance tool (not a workflow skill) and is excluded from the
-workflow skill index entirely.
+which the CLI respects to exclude from `npx skills add` discovery). The 13
+user-facing skills cover setup, repository-state discovery/resolution, the
+adaptive unit lane, execution, review, audit, finding folds, docs generation,
+issue triage, session logging, and workflow status. The former fixed pipeline
+(`design-feature` → `review-spec` → `plan-feature` → `review-plan`) and the
+autopilot role (`ship-roadmap`) are retired (feature 61): their work lives in
+`unit-lane`'s catalog steps and the companion pi package's deterministic
+`advance` conductor. **bump-skill** is a repo-only maintenance tool (not a
+workflow skill) and is excluded from the workflow skill index entirely.
 
 ## Context budget and progressive loading
 
@@ -56,47 +53,44 @@ limits.
 | Skill | Role | Hands off to |
 |---|---|---|
 | `init-workspace` | Fetch and adapt the scaffold; seed repository contracts; explicitly offer the detected Claude/Cursor/Copilot/OpenCode safety adapter without clobbering hooks | `discover-repository-state` |
-| `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `plan-feature` / `resolve-repository-state` |
+| `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `unit-lane` / `resolve-repository-state` |
 | `resolve-repository-state` | Sole writer that resolves an explicit fact contradiction and publishes the next frozen snapshot | the interrupted workflow step |
 
-## Design
+## The adaptive unit lane (`unit-lane`)
 
-| Skill | Role | Hands off to |
-|---|---|---|
-| `design-feature` | **Product definition.** Folds in the raw-idea interview (one question per turn, fixed six-slot vagueness rubric, ≥ 3 empty slots → `NEEDS_INPUT`), runs proportional research, and walks the **capability-closure** checklists — **entity closure** (per entity → CRUD + state transitions + UI + API + test or explicit `n/a`), **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — auth, ACL, navigation, notifications, …), and the **role matrix** (every inventory role explicitly allowed/denied per capability) — into exhaustive acceptance criteria, plus the **expectation sweep** (≥ 10 implicit domain expectations, each forced to in-scope/out-of-scope/deferred). Writes the SPEC's **product half** and stamps `## Design status: designed` only after the template's **Spec-lint product boxes** (mechanical presence checks) all tick. Upserts on re-run; never destroys recorded decisions | `plan-feature <slug>` |
+One document, adaptive steps. `unit-lane` is the single conductor for a
+feature or a fix: `scripts/unit-route.mjs --triage <unit>` reads the unit doc
+against the closed catalog (`scripts/catalog.json` — `research, design, plan,
+implement, tests, evidence, review, docs, release`) and returns the ordered
+subset the unit needs; the model executes only that subset. `unit-lane` absorbs
+the retired fixed pipeline (`design-feature` → `review-spec` → `plan-feature`
+→ `review-plan`) into catalog steps, and it creates the unit doc:
+`docs/features/<NN>-<slug>/` for a feature (`/unit-lane <slug>`,
+`/unit-lane "<idea>"`, `/unit-lane --from-issue <n>`) or
+`docs/fix/<issue>-<topic>/` for a fix (`/unit-lane --fix <n>`).
 
-## Pre-execution review (the two gates between an idea and a line of code)
+`execute-phase` executes a unit that is already triaged (`implement`/`tests`/
+`evidence` steps); docs-only units run entirely inside `unit-lane`. The
+`pre-execution-review` internal pack survives only as the owner of the
+planning-ledger shapes and ownership that `execute-phase` and `review-change`
+consume — the standalone `SPEC-REVIEW-PASS` / `PLAN-REVIEW-PASS` gates are
+retired.
 
-| Skill | Role | Hands off to |
-|---|---|---|
-| `review-spec` | **Independent Product gate.** Read-only review of the designed Product half in a context that did not write it: builds the frozen `stage: spec` snapshot, runs the fixed checks, and returns one of `SPEC-REVIEW-PASS` / `SPEC-REVIEW-FAIL` / `NEEDS-DESIGN` with a snapshot-bound receipt in `progress.md`. A FAIL's findings go to the unit's stage-aware `planning-findings.md`; the author's own readiness result can never stand in for the verdict. | `plan-feature` on a current PASS; `design-feature` to repair; the human when a product choice is genuinely open |
-| `review-plan` | **Independent Engineering gate.** Same contract over the frozen plan (`stage: plan` snapshot: SPEC, `ACCEPTANCE.md`, planning evidence, obligations, phases, tests; the parent Product snapshot digest is required): ledger sweep L1–L6, checks P1–P12 (F1–F4 on fix units), then `PLAN-REVIEW-PASS` / `PLAN-REVIEW-FAIL` + receipt. | `execute-phase` on a current PASS; a gap that requires inventing product intent → `design-feature` |
+## Plan (absorbed into the lane)
 
-Both are read-only over every artifact they judge, share one policy
-(`pre-execution-review`: independence, unioned findings, counter-evidence-only
-dismissal, bounded repair cycles, `CONVERGENCE-ANOMALY`), and neither can be
-bypassed by a flag. `evidence-grounding` is what makes the *author's* turn
-ready to request those reviews — one evidence row per material claim, a
-deterministic readiness result, never a verdict.
-
-## Plan
-
-| Skill | Role | Hands off to |
-|---|---|---|
-| `plan-feature` | **Router, engineering-planning only.** Given an undesigned feature (no `## Design status: designed`), **STOPS and redirects** to `/design-feature <slug>` (no bypass flag). Given a designed feature or issue `#N` (issue → scoped product half → `design-feature` for thin issues), routes to fill the **engineering half**, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN>` (all remaining phases) or `execute-phase <NN> P1` (one explicit phase) |
-| `plan-fix` | Drafts one fix unit from one issue or a compatible issue set. Grouping accepts a capability bundle or homogeneous mechanical batch when the set has one outcome, verification plan, and atomic rollback; shared files, root cause, and severity are not required | `execute-phase --fix <n>` (all remaining phases) |
+`plan-feature` and `plan-fix` are retired: the engineering half, sizing, and
+roadmap registration are the lane's `plan` catalog step, reached from
+`/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix).
 
 ### Internal steps (hidden from the menu; composed for you)
 
 | Skill | Role |
 |---|---|
-| `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
-| `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
-| `evidence-grounding` | Authoring-side evidence contract + readiness preflight (`stage: spec` and `stage: plan`): claim→authority→artifact rows, the fixed readiness vocabulary, and the revision rotation that lets a reviewer detect its own write, plus the delegate-only read-only pass whose wide reading is conserved as one versioned `delegated-evidence.md` per unit (advisory until the authoring skill spot-checks its citations; `partial` or `blocked` blocks readiness) — and it governs a reader who did not write the artifact, whoever asked.. `user-invocable: false` — composed by `design-feature`, `plan-feature-scaffold` and `plan-fix`; it can never emit a review PASS |
-| `pre-execution-review` | Single owner of the shared review cycle (clean-context independence, truthful author-exclusion and diversity labels, unioned findings, counter-evidence-only dismissal, untrusted content, repair classes, no-progress, `CONVERGENCE-ANOMALY`, legacy adoption, write-then-report marking of terminal verdicts and typed gate rejections) and of the planning ledger table shapes, homes and writers, including the durable review mark's row. `user-invocable: false` — composed by `review-spec`, `review-plan` and the authoring skills; it emits no verdict |
+| `pre-execution-review` | Single owner of the **planning-ledger table shapes, homes and writers**, including the durable review mark's row, that `execute-phase` and `review-change` consume. The retired `review-spec`/`review-plan` review-cycle semantics are legacy-only. `user-invocable: false` — it emits no verdict |
 | `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
-| `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — the former `ship-roadmap` autopilot conductor is retired (feature 61 P9); its deterministic routing lives in `workflow-status` / `unit-lane` |
+| `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — the conductor is the companion pi package's `advance` command (feature 62); its deterministic routing lives in `workflow-status` / `unit-lane` |
 | `verification-contract` | Freezes acceptance before implementation, defines validation levels, and binds evidence to the current acceptance blob and code receipt. `user-invocable: false` — planners, executors, and reviewers compose it |
+| `phase-contract` | The single owner of the eight phase-lint rules, the fixed PASS/BLOCKED result, and the normalized phase fingerprint. `user-invocable: false` — consumed by `execute-phase` and the lane's `plan` step |
 | `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
 | `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-verify` | Runtime-behavior verification checklist (does the change actually do what it claims). `user-invocable: false` — internal review pack |
@@ -106,8 +100,6 @@ deterministic readiness result, never a verdict.
 | `review-brand` | Brand/voice-consistency checklist over user-facing copy. `user-invocable: false` — internal review pack |
 | `review-perf` | Performance-regression checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-seo` | SEO checklist over public-facing pages/routes. `user-invocable: false` — internal review pack |
-| `implementation-discovery` | Bounded, read-only pre-write mapper contract: closes seven evidence questions, emits one fixed compact map, and routes `READY \| REPLAN \| NEEDS-DESIGN \| BLOCKED` before any branch/planning/source write. `user-invocable: false` — consumed only by `execute-phase` on the pre-write route |
-| `replan-findings` | Conditional replan entry: loaded only when `node scripts/unit-route.mjs <unit>` prints `route: replan`; turns the router's bounded read set into phases appended to the unit's SPEC and carries the artifact-revision duty. `user-invocable: false` — composed by `plan-feature` / `plan-fix` on that route |
 
 ## Execute
 
@@ -121,8 +113,8 @@ deterministic readiness result, never a verdict.
 |---|---|---|---|
 | `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | manual `fold-findings` → re-run `review-change` (recommended on failure) |
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
-| `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `plan-fix` / `triage-issue` |
-| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
+| `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `unit-lane` / `triage-issue` |
+| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `unit-lane` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
@@ -134,7 +126,7 @@ deterministic readiness result, never a verdict.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch; `--prioritize-now` triages unresolved review findings and routes oversized work to a plan with new phases | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
+| `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch; `--prioritize-now` triages unresolved review findings and routes oversized work to a plan with new phases | `/unit-lane --fix <n>`, `execute-phase`/`fold-findings` (fix-in-unit), `/unit-lane --from-issue <n>`, or a dated comment |
 
 ## Session
 
@@ -160,20 +152,16 @@ with no arguments uses the default stated here.
 |---|---|---|
 | `audit-docs` | `/audit-docs [--fix]` | No args: report-only, findings ranked by severity. `--fix`: additionally applies the **low-risk** fixes — docs are never rewritten without it (or an explicit user go-ahead). |
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
-| `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | A raw idea → interview from zero. A bare existing `NN-slug` → **review mode**: prints a summary of what the feature will do and asks what to add/remove/change. `NN-slug + instruction` → applies the change directly, no questions, scoped to the instruction. Upsert always — the only from-zero reset is an explicit "delete and redesign" in the instruction. |
 | `discover-repository-state` | `/discover-repository-state` | Reads repository evidence and writes a frozen Normalized Repository State; contradictions route to `/resolve-repository-state`. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] [--max-attempts N] \| [--force]` | Target only → execute every remaining phase and close the unit. Explicit `P<k>` → execute exactly that phase. `--max-attempts N` bounds phase repair attempts (default 3). `--force` is the recorded user-only dependency/status override. |
 | `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs the complete pending fix-now queue, grouping only compatible corrections. IDs restrict the queue. Every member still receives its own `FOLDED \| DISPUTED \| BLOCKED` result. |
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (additive: proposes only the new/missing template blocks), which also reconciles and retires a legacy `CLAUDE.md` into `AGENTS.md` — with consent only. |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
-| `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
-| `review-spec` | `/review-spec <NN-slug \| slug> [--repair]` | Reviews the Product half of one unit in a clean context. No args: reports what it can bind and stops — it never guesses a unit. `--repair` continues a recorded cycle instead of starting a new one. |
-| `review-plan` | `/review-plan <NN-slug \| fix-<n>> [--repair]` | Reviews the frozen plan (feature or fix unit) in a clean context; requires the parent Product receipt for feature units. Same no-guessing and `--repair` rules as `/review-spec`. |
-| `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | One issue → one fix unit. Multiple issues → one compatible capability bundle or homogeneous mechanical batch when the whole set shares an outcome, verification plan, and atomic release/rollback. If the set fails, returns the fewest maximal compatible groups instead of splitting reflexively into one PR per issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
-| `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Issue batches produce independent verdicts plus one summary table; review-finding mode attempts every unresolved finding now and routes oversized work to `plan-feature`/`plan-fix` plus new manual phases. |
+| `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Issue batches produce independent verdicts plus one summary table; review-finding mode attempts every unresolved finding now and routes oversized work to `/unit-lane` plus new manual phases. |
+| `unit-lane` | `/unit-lane <NN-slug \| "<idea>"> [--retriage] \| --fix <n> \| --from-issue <n>` | The adaptive lane: creates/triages the unit doc, runs the catalog steps the router returns, records evidence, and commits per step. A raw idea creates the unit; `--fix`/`--from-issue` create it from a tracked issue. `--retriage` re-runs the catalog. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
 
 ## Built-in companions (Claude Code)
@@ -192,18 +180,19 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
 ## How they compose
 
 ```
-IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
-                          → `## Design status: designed`
-                          → review-spec (clean context, read-only) ─▶ SPEC-REVIEW-PASS ─┐
-                   ┌──────────────── plan-feature (router, engineering-planning only) ─┐
-DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (all phases) ─▶ open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
-ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
-                       (undesigned input → STOP, redirect to /design-feature, no bypass)
+IDEA / undesigned SPEC ─▶ /unit-lane "<idea>" (creates the unit doc + triage)
+DESIGNED slug/SPEC ─────▶ /unit-lane <NN-slug>   (re-triage; runs only the steps the catalog returns)
+ISSUE(feature) ─────────▶ /unit-lane --from-issue <n>
+ISSUE(fix) ─────────────▶ /unit-lane --fix <n>
+ROADMAP --next ─────────▶ /unit-lane <slug> of the next startable unit
+                          │
+                          └─ catalog: research → design → plan → implement → tests → evidence → review → docs → release
+                             (implement/tests/evidence steps hand off to /execute-phase for an already-triaged unit)
+                             → open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ /unit-lane --fix <n>
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
-                            ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
+                            ├─ promote ─▶ /unit-lane --from-issue <n>
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
@@ -217,9 +206,9 @@ audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 
-# The former autopilot conductor (`ship-roadmap`) is retired (feature 61 P9);
-# its deterministic routing lives in `workflow-status` / `unit-lane`.
-# The unattended-conductor role is deferred to roadmap row 62.
+# The conductor is the companion pi package's `advance` command (feature 62):
+# sensor (`workflow-status`) → deterministic decide → invoke the printed
+# `/skill:<verb> <args>` verbatim. It never merges.
 ```
 
 ## Design rules every skill follows
