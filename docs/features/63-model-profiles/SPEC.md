@@ -116,3 +116,4 @@ The single next action: `/execute-phase 63`
 ## References
 
 Feature row: `docs/features/ROADMAP.md` row 63 (status: `defined`). No linked issues yet.
+2026-09-24 22:20 — P6 done: `advance` stages now route through the router (`profileSwitched` + `resume`), with a deferred restart path and a bounded re-iteration; 3 new tests; package 403/0 bun + node → working tree — next: P7

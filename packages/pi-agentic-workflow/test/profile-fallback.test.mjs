@@ -276,3 +276,30 @@ test("AC8: a flow demotion persists across dispatches until the retry window ela
   assert.deepEqual(session.log.setModel, ["fb/1", "fb/1"], "both dispatches stay on the demoted profile");
   assert.equal(imStore.demotion()?.profile, "fb", "the demotion is not cleared by a dispatch");
 });
+
+// ---------------------------------------------------------------------------
+// AC10: onProfileSwitch restart defers the send, records the demotion, and the next dispatch sends on the fallback
+// ---------------------------------------------------------------------------
+
+test("AC10: onProfileSwitch restart defers the send, records the demotion, and the next dispatch sends on the fallback", async () => {
+  const imStore = createInMemoryStore();
+  const config = configFor({
+    profiles: { work: { default: { model: "w/1" } }, fb: { default: { model: "fb/1" } } },
+    profileOrder: ["work", "fb"],
+    recommendedModels: false,
+    profileFallback: { applyTo: "flow", resume: "restart" },
+  });
+  const session = createSession({ config, models: { "fb/1": true }, profileState: imStore, knownCommands: ["plan-feature", "design-feature", "execute-phase", "agentic-workflow-settings"] });
+
+  const first = await session.router.dispatch({ name: "plan-feature", skill: "plan-feature" }, "", session.context(), { onProfileSwitch: "restart" });
+  assert.equal(first.status, "dispatched");
+  assert.equal(first.deferred, true, "the restart deferred the send");
+  assert.deepEqual(session.log.sendUserMessage, [], "nothing was sent on the deferred dispatch");
+  assert.equal(imStore.demotion()?.profile, "fb", "the demotion was recorded");
+
+  const second = await session.router.dispatch({ name: "plan-feature", skill: "plan-feature" }, "", session.context(), { onProfileSwitch: "restart" });
+  assert.equal(second.status, "dispatched");
+  assert.equal(second.deferred, undefined, "the second dispatch sends");
+  assert.deepEqual(session.log.setModel, ["fb/1"], "it runs on the fallback profile");
+  assert.equal(session.log.sendUserMessage.length, 1, "exactly one send");
+});
