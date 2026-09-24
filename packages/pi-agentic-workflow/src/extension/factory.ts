@@ -132,7 +132,7 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
 
   // The native conductor command (feature 62): registered in code, not derived
   // from a skill dir, and able to invoke every catalogue command by name.
-  registerAdvanceCommand(registrar, { surface, readConfig: read }, knownCommands);
+  registerAdvanceCommand(registrar, { router, readConfig: read }, knownCommands);
 
   registrar.registerCommand(SETTINGS_COMMAND, {
     description: "Show and configure per-command model routing",
