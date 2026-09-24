@@ -9,6 +9,7 @@ import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../ro
 import { registerAdvanceCommand } from "./conductor-command.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
+import { createProfileStateStore, stateFilePath } from "../routing/state.js";
 
 /**
  * The Pi-free half of the extension entry (SPEC "Command surface (api)").
@@ -52,6 +53,8 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
   settings: SettingsHandler<M>;
   /** Overridable so a test can hand the router an in-memory configuration. */
   loadConfig?: (ctx: InvocationContext<M>) => LoadedConfig;
+  /** P4: profile demotion state store (optional — defaults to file-backed). */
+  profileState?: import("../routing/state.js").ProfileStateStore;
 }
 
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
@@ -94,7 +97,9 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     SETTINGS_COMMAND,
     SETTINGS_COMMAND_ALIAS,
   ]);
-  const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands });
+  // P4: build the profile state store when not provided.
+  const profileState = deps.profileState ?? createProfileStateStore({ path: stateFilePath(agentDir) });
+  const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands, profileState });
 
   for (const command of catalogue.commands) {
     registrar.registerCommand(command.name, {
