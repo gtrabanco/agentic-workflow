@@ -287,10 +287,12 @@ assert.match(foldPolicy, /materializ/);
 // 10j. Version — fold-findings is bumped for this contract. The exact pin is
 // maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
 // conditional replan destination), fix #244 moved it 1.5.0 → 1.5.1
-// (the freeze-batch consumer contract), and feature 32 moved it 1.5.1 → 1.6.0
-// (sole-flipper provenance cited to the ledger-ownership map), the assertion
+// (the freeze-batch consumer contract), feature 32 moved it 1.5.1 → 1.6.0
+// (sole-flipper provenance cited to the ledger-ownership map), and the lane
+// reference migration moved it 1.6.0 → 1.7.0 (the #244 consumer now names
+// `/unit-lane`, the lane command the router prints), the assertion
 // unchanged in strength.
-assert.match(foldSkill, /version: 1\.6\.0/);
+assert.match(foldSkill, /version: 1\.7\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);

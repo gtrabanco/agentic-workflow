@@ -1,13 +1,13 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.5
+version: 1.0.6
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: the single owner of the eight phase-lint rules, the fixed
   PASS/BLOCKED result, and the normalized phase fingerprint. Consumed by
-  plan-feature-scaffold, plan-fix, and execute-phase. Not a menu entry.
+  `execute-phase` and the lane's `plan` step. Not a menu entry.
 ---
 
 # Phase Contract (internal)
@@ -18,8 +18,7 @@ the same rules before any edit. Nothing else may define what a valid phase is.
 
 ## When to use
 
-- `plan-feature-scaffold` — lint every phase of a feature plan before emission.
-- `plan-fix` — lint every phase of a fix SPEC before commit.
+- The lane's `plan` step — lint every phase before emission.
 - `execute-phase` — phase-lint pre-flight guard before editing a phase.
 - Templates store the contract version + fingerprint + lint result, never the
   eight rules (they point here).
