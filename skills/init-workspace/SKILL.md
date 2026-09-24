@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.0.1
+version: 3.1.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -58,7 +58,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Progressive loading — bootstrap or upgrade, never both
 
-The reference allowlist is exactly the four linked paths below. Never invent or
+The reference allowlist is exactly the five linked paths below. Never invent or
 read another `references/` path. Step 0 selects exactly one route:
 
 **Hard rule for an existing Claude Code, Cursor, Copilot, or OpenCode
@@ -69,8 +69,12 @@ or portability unless the runtime platform has no named adapter at all.
 - Bare/foreign repository: read
   [bootstrap discovery](references/BOOTSTRAP_DISCOVERY.md), complete its
   interview, then read [bootstrap write](references/BOOTSTRAP_WRITE.md).
+  Both the discovery and write routes load
+  [SERENA language servers](references/SERENA.md) for stack detection.
 - Existing agentic-workflow scaffold: read [upgrade](references/UPGRADE.md)
   only. Its additive-only rule is absolute; do not replay bootstrap.
+  The upgrade route loads [SERENA language servers](references/SERENA.md)
+  for the additive provisioning step.
 - No named adapter exists for the detected runtime platform: add
   [portability](references/PORTABILITY.md) only for that fallback. Claude Code,
   Cursor, Copilot, and OpenCode are named supported adapters; a missing adapter
@@ -99,6 +103,11 @@ loads exactly upgrade and skips bootstrap plus portability.
   on its own. **The urgency label seeding is additive-only the same way:**
   create a missing `urgent`/`fix-next` label, never touch one that already
   exists (name, color, or description a project already customized).
+- **Serena convention.** `.serena/project.yml` is committed; `project.local.yml`
+  and `cache` stay local. Never write `.serena/` config without consent. LSP
+  never verifies documents — Serena's LSP evidence requires an initialised
+  language server (TypeScript false positives on `.md`/`.yml` when no markdown
+  server exists). Document verification is a script's job.
 - **Never redefine the urgency label vocabulary here.** `skills/triage-issue
   /SKILL.md` is the sole owner of the `urgent`/`fix-next` names, colors, and
   apply rules — this skill only seeds those two labels into the repo; it never
@@ -178,6 +187,8 @@ OpenCode adapter does not load this fallback.
   listed as a residual when its hook API/dependency was unavailable.
   The adaptive lane conventions (unit document, triage, catalog steps, guards,
   evidence, commit formats) are written into AGENTS.md.
+- The Serena project config is provisioned (or reported as a residual with the
+  reason, and the health check ran).
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
