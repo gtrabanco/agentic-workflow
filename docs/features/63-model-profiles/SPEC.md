@@ -111,7 +111,7 @@ P8 — Review + PR.
 
 ## Next
 
-The single next action: `/execute-phase 63`
+The unit is built and its PR is open: **https://github.com/gtrabanco/agentic-workflow/pull/259**. Next action: human review + merge (the roadmap row is already `done`). After merge, publish `@gtrabanco/pi-agentic-workflow@0.16.0` via `publish-pi-package.yml` (the version differs from the registry).
 
 ## References
 
@@ -119,3 +119,4 @@ Feature row: `docs/features/ROADMAP.md` row 63 (status: `defined`). No linked is
 2026-09-24 22:20 — P6 done: `advance` stages now route through the router (`profileSwitched` + `resume`), with a deferred restart path and a bounded re-iteration; 3 new tests; package 403/0 bun + node → working tree — next: P7
 2026-09-24 22:35 — P7 done: README `Model profiles` section, CHANGELOG 0.16.0 row, package version bump; package 403/0 bun + node, root 561/0 → working tree — next: P8
 2026-09-24 22:40 — P8: hardening — a router-refused stage dispatch now stops the loop with `stop-dispatch-refused` instead of a phantom invoke; new conductor test; package 404/0 bun + node → working tree — next: PR
+2026-09-24 22:45 — P8 done: review + hardening + PR against `main` → https://github.com/gtrabanco/agentic-workflow/pull/259 — roadmap row 63 flipped to `done`
