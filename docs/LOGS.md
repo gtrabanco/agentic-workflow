@@ -2374,3 +2374,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Ran workflow-status sensor: 65 units, 1 startable (40-versioned-skills-releases), 22 design candidates, 10 fix-now findings, 12 untriaged issues
 - **Next:** /unit-lane 40-versioned-skills-releases — the critical path unit that unblocks 57-per-release-bilingual and the full build chain
 
+## 2026-09-24T21:05:43Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Investigate workflow-status slowness, implement --compact flag reducing envelope by 51%, and publish 0.15.2
+- **Decisions:** (1) The script is fast (~3s); slowness is CLI emission (43KB = ~11k tokens) forcing the model to process all 62 roadmap rows in detail.features + multi-paragraph evidence in findings.fix_now[].route. (2) --compact drops proved-merged done rows from detail.features/fixes and fingerprints evidence memos (length preserved, source on disk), while decision fields and workflow_observations stay byte-identical. (3) Three parallel gh calls were rejected after benchmarking: sequential spawnSync is faster than parallel exec due to node process spawn overhead (~200-300ms per call × 3 spawns). (4) workflow-status skill bumped to v3.9.0, pi-agentic-workflow package to 0.15.2.
+- **Next:** Run full test suite and audit-pr if this session produced a PR, otherwise continue with the next startable unit from workflow-status
