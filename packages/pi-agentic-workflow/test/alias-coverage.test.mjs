@@ -284,7 +284,7 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
       isIdle: () => true,
       isProjectTrusted: () => true,
       ui: { notify: () => {} },
-      modelRegistry: { find: () => undefined, hasConfiguredAuth: () => false },
+      modelRegistry: { find: () => undefined, hasConfiguredAuth: () => false, getAll: () => [] },
     };
     await registered.get("unit-lane").handler("--next", ctx);
     const sent = surfaceCalls.find(([call, arg]) => call === "sendUserMessage" && arg === "/skill:unit-lane --next");

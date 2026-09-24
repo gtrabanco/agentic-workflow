@@ -105,6 +105,8 @@ P8 — Review + PR.
 ## Progress log
 
 2026-09-24 21:18 — P1 done: SPEC.md created with product + engineering halves, evidence table skeleton, and progress log → `feat/63-model-profiles` branch — next: P2
+2026-09-24 21:26 — P2–P3 done: config layer (types/schema/defaults/merge), built-in code-only `nan` profile, `resolveProfileChain`/`effectiveProfileOrder`, and a `declared` surface so an explicit `inherit` is a real override; 45 profile tests, package 386/0, root suite 561/0 → 234dc839 — next: P4
+2026-09-24 21:45 — P4 done: router profile-chain probing, demotion state store + retry window, `profileSwitched` outcome, factory wiring; 7 profile-fallback tests (incl. a persistence regression that caught a premature demotion clear); package 393/0 bun + node, root suite green → working tree — next: P5
 
 ## Next
 

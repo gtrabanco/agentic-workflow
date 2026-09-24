@@ -1,4 +1,5 @@
-import { effectiveRoute } from "../config/merge.js";
+import { resolveProfileChain, effectiveProfileOrder } from "../config/profiles.js";
+import type { ProfileCandidate } from "../config/types.js";
 import { parseModelReference } from "../config/schema.js";
 import type { LoadedConfig } from "../config/load.js";
 import type { SettlePolicy, ThinkingLevel } from "../config/types.js";
@@ -11,6 +12,7 @@ import type {
   WorkflowCommand,
 } from "./types.js";
 import { modelRefKey } from "./types.js";
+import type { ProfileStateStore } from "./state.js";
 
 /**
  * Routed dispatch — the `idle → routing → dispatched → settled → restored`
@@ -63,6 +65,10 @@ export interface RouterDeps<M extends ModelRef = ModelRef> {
   settingsCommand: string;
   /** Command names that actually exist — a route for anything else is a typo. */
   knownCommands: ReadonlySet<string>;
+  /** Profile demotion state store (P4, feature 63). */
+  profileState?: ProfileStateStore;
+  /** Wall-clock now (P4). Default: Date.now. */
+  now?: () => number;
 }
 
 export interface Router<M extends ModelRef = ModelRef> {
@@ -119,11 +125,21 @@ export function createRouter<M extends ModelRef = ModelRef>({
   hint,
   settingsCommand,
   knownCommands,
+  profileState,
+  now,
 }: RouterDeps<M>): Router<M> {
   let pending: PendingTurn<M> | undefined;
   // Reported once per session: an operator who ignores it once does not need it
   // on every command, and a route that matches nothing must not fail silently.
   let unknownRoutesReported = false;
+
+  // P4: in-memory no-op for profileState when not provided.
+  const ps = profileState ?? {
+    demotion: (): undefined => undefined,
+    record: (): true => true,
+    clear: (): true => true,
+  };
+  const nowFn = now ?? Date.now;
 
   const refuse = (ctx: InvocationContext<M>, reason: RefusalReason, message: string): DispatchOutcome => {
     ctx.notify(message, "error");
@@ -223,45 +239,60 @@ export function createRouter<M extends ModelRef = ModelRef>({
       }
 
       const session = surface(ctx);
-      const route = effectiveRoute(loaded.config, command.name);
-      let target: M | undefined;
-      /** The reference string behind `target`, for the select-failure message (a chain names the chosen entry). */
-      let chosenRef: string | undefined;
 
-      if (route.model === "inherit") {
-        // inherit: no probe — run on the session model (OB-9).
-      } else if (typeof route.model === "string") {
-        // Single reference: behaviour and message shape unchanged (OB-9).
-        const reference = parseModelReference(route.model);
-        const found = reference ? ctx.find(reference.provider, reference.id) : undefined;
-        const blocker = !found
-          ? "is not in the model registry"
-          : !ctx.hasConfiguredAuth(found)
-            ? "has no configured credentials"
-            : undefined;
+      // -----------------------------------------------------------------
+      // P4: Profile-chain probing (feature 63, AC7–AC9)
+      // -----------------------------------------------------------------
+      const fallbackCfg = loaded.config.profileFallback;
 
-        if (blocker) {
-          if (loaded.config.onUnavailableRoute !== "inherit") {
-            return refuse(
-              ctx,
-              "unavailable-route",
-              `/${command.name} stopped: the configured model ${route.model} ${blocker}. ${configureHint}`,
-            );
-          }
-          ctx.notify(
-            `/${command.name}: ${route.model} ${blocker}, so it runs on the current session model. ${configureHint}`,
-            "warning",
-          );
-        } else {
-          target = found;
-          chosenRef = route.model;
+      // Demotion window — only when applyTo is "flow".
+      const chainOpts = { providerAvailable: (provider: string) => {
+        const available = ctx.availableModels;
+        return available && available().some((m) => m.provider === provider);
+      } };
+      let demotion = fallbackCfg.applyTo === "flow" ? ps.demotion() : undefined;
+      if (demotion) {
+        const age = nowFn() - Date.parse(demotion.at);
+        const windowMs = fallbackCfg.retryAfterSeconds * 1000;
+        if (!Number.isFinite(age) || age >= windowMs) {
+          ps.clear();
+          demotion = undefined;
         }
-      } else {
-        // Chain: probe entries in order with only ctx.find + hasConfiguredAuth
-        // (no session mutation), collecting one skip reason per entry, and apply
-        // the first usable one (OB-8, OB-9, OB-10).
-        const reasons: string[] = [];
-        for (const reference of route.model) {
+      }
+
+      const order = effectiveProfileOrder(loaded.config, chainOpts);
+      const startIndex = demotion ? order.indexOf(demotion.profile) : -1;
+
+      let demotionStart = startIndex;
+      if (demotion && demotionStart < 0) {
+        // The demoted profile is no longer in the order — drop the stale record.
+        ps.clear();
+        demotion = undefined;
+        demotionStart = -1;
+      }
+
+      const candidates = resolveProfileChain(loaded.config, command.name, chainOpts);
+      const considered = demotionStart > 0 ? candidates.filter((c) => order.indexOf(c.profile) >= demotionStart) : candidates;
+
+      // Find the preferred candidate (first with a declared model).
+      const preferred = considered.find((c) => c.declared.model);
+
+      // Model resolution: first candidate with a declared, usable model.
+      let chosen: ProfileCandidate | undefined;
+      let target: M | undefined;
+      /** The reference string behind `target`, for the select-failure message. */
+      let chosenRef: string | undefined;
+      const reasons: string[] = [];
+
+      for (const c of considered) {
+        if (!c.declared.model) continue;
+        if (c.route.model === "inherit") {
+          chosen = c;
+          break;
+        }
+        // Probe c.route.model (string or chain) — reuse the existing probe shape.
+        const refs = typeof c.route.model === "string" ? [c.route.model] : c.route.model;
+        for (const reference of refs) {
           const parsed = parseModelReference(reference);
           const found = parsed ? ctx.find(parsed.provider, parsed.id) : undefined;
           if (!found) {
@@ -272,27 +303,61 @@ export function createRouter<M extends ModelRef = ModelRef>({
             reasons.push(`${reference} has no configured credentials`);
             continue;
           }
+          // First usable entry for this candidate.
+          chosen = c;
           target = found;
           chosenRef = reference;
           break;
         }
-        if (!target) {
-          const tried = route.model.join(", ");
-          const detail = reasons.join("; ");
-          if (loaded.config.onUnavailableRoute !== "inherit") {
-            return refuse(
-              ctx,
-              "unavailable-route",
-              `/${command.name} stopped: the configured model chain ${tried} is unavailable (${detail}). ${configureHint}`,
-            );
-          }
-          ctx.notify(
-            `/${command.name}: the configured model chain ${tried} is unavailable (${detail}), so it runs on the current session model. ${configureHint}`,
-            "warning",
-          );
-        }
+        if (chosen) break;
+        // Every entry in this candidate's chain was unusable.
+        const tried = refs.join(", ");
+        reasons.push(`${c.profile}: all models in [${tried}] unavailable`);
       }
 
+      // Thinking: the first candidate that declares thinking, else "inherit".
+      const thinkingCandidate = considered.find((c) => c.declared.thinking);
+      const routeThinking = thinkingCandidate?.route.thinking ?? "inherit";
+
+      // Handle no chosen candidate — fallback to onUnavailableRoute.
+      if (!chosen && preferred) {
+        // Build the chain detail for the notification, matching the old shape.
+        const triedRefs: string[] = [];
+        const detailParts: string[] = [];
+        for (const c of considered) {
+          if (!c.declared.model) continue;
+          if (c.route.model === "inherit") continue;
+          const refs = typeof c.route.model === "string" ? [c.route.model] : c.route.model;
+          triedRefs.push(...refs);
+          // Collect the first skip reason per entry for the detail.
+          const entryReasons = reasons.filter((r) => refs.some((ref) => r.startsWith(ref)));
+          detailParts.push(...entryReasons);
+        }
+        const tried = triedRefs.join(", ");
+        const detail = detailParts.join("; ");
+
+        if (loaded.config.onUnavailableRoute !== "inherit") {
+          return refuse(
+            ctx,
+            "unavailable-route",
+            `/${command.name} stopped: the configured model chain ${tried} is unavailable (${detail}). ${configureHint}`,
+          );
+        }
+        ctx.notify(
+          `/${command.name}: the configured model chain ${tried} is unavailable (${detail}), so it runs on the current session model. ${configureHint}`,
+          "warning",
+        );
+      }
+
+      let profileSwitched: { from: string; to: string } | undefined;
+      if (chosen && preferred && chosen.profile !== preferred.profile) {
+        profileSwitched = { from: preferred.profile, to: chosen.profile };
+        if (fallbackCfg.applyTo === "flow") ps.record(chosen.profile);
+      }
+
+      // -----------------------------------------------------------------
+      // Legacy: model application (target + thinking)
+      // -----------------------------------------------------------------
       const snapshot = { model: ctx.model, thinking: session.getThinkingLevel() };
       const applied: PendingTurn<M>["applied"] = { model: undefined, thinking: undefined };
 
@@ -310,21 +375,21 @@ export function createRouter<M extends ModelRef = ModelRef>({
             `/${command.name}: ${chosenRef} could not be selected, so it runs on the current session model. ${configureHint}`,
             "warning",
           );
+          // A failed select must not clear the demotion.
+          // Demotion is cleared only by expiry (top of dispatch), manual rotation/clear, or the console.
         } else {
           applied.model = target;
-          // Pi re-derives thinking inside `setModel`; whatever level the session
-          // holds now came from us, not from the operator.
           applied.modelThinking = session.getThinkingLevel();
         }
       }
-      if (route.thinking !== "inherit") {
-        session.setThinkingLevel(route.thinking);
+      if (routeThinking !== "inherit") {
+        session.setThinkingLevel(routeThinking);
         // The *effective* level, never the requested one: Pi clamps a level the model
         // cannot run (`_modelSupportsThinking` → `clampThinkingLevel`) and announces
         // that one a microtask later. Bookkeeping the request made our own clamped
         // write read as an operator move, so the restore preserved the clamp instead
         // of the operator's level (N-3).
-        applied.thinking = session.getThinkingLevel() ?? route.thinking;
+        applied.thinking = session.getThinkingLevel() ?? routeThinking;
       }
 
       let hintShown = false;
@@ -387,7 +452,8 @@ export function createRouter<M extends ModelRef = ModelRef>({
         );
       }
 
-      return { status: "dispatched", routed: Boolean(applied.model || applied.thinking), hintShown };
+      return { status: "dispatched", routed: Boolean(applied.model || applied.thinking), hintShown, ...(profileSwitched ? { profileSwitched } : {}) };
+
     },
   };
 }
