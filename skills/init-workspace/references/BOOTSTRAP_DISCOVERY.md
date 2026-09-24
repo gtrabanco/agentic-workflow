@@ -67,4 +67,5 @@
      means Starlight). If no, leave the block commented out —
      then reports NOT-CONFIGURED instead of guessing. Never scaffold the
      website itself.
-   - **Naming conventions** and **MCP servers**, if any.
+   - **Naming conventions**, **MCP servers**, and **Serena language servers** (see
+     [SERENA](SERENA.md) for the mapping), if any.
