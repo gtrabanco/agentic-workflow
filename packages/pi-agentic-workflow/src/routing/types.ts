@@ -98,7 +98,7 @@ export type RefusalReason =
   | "dispatch-failed";
 
 export type DispatchOutcome =
-  | { status: "dispatched"; routed: boolean; hintShown: boolean }
+  | { status: "dispatched"; routed: boolean; hintShown: boolean; profileSwitched?: { from: string; to: string } }
   | { status: "refused"; reason: RefusalReason; message: string };
 
 /** Slash name of the settings console (SPEC S4, AC3, AC10). */

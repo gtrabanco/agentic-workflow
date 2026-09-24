@@ -27,7 +27,7 @@ export const MUTANTS = [
   { file: "src/routing/dispatch.ts", from: 'if (loaded.config.onUnavailableRoute !== "inherit") {', to: "if (false) {", suite: "unavailable-stop", rule: "AC9 unavailable route stops" },
   { file: "src/routing/dispatch.ts", from: "session.sendUserMessage(invocation, { expandPromptTemplates: true });", to: "session.sendUserMessage(invocation, {});", suite: "argument-forwarding", rule: "Pi expands the template" },
   { file: "src/routing/dispatch.ts", from: "`/skill:${command.name}`", to: "`/skill:${command.skill}`", suite: "alias-coverage", rule: "AC3 dispatch the name Pi expands (F3)" },
-  { file: "src/routing/dispatch.ts", from: "applied.thinking = session.getThinkingLevel() ?? route.thinking;", to: "applied.thinking = route.thinking;", suite: "restore-after-settle", rule: "AC8 record the clamped level (N-3)" },
+  { file: "src/routing/dispatch.ts", from: "applied.thinking = session.getThinkingLevel() ?? routeThinking;", to: "applied.thinking = routeThinking;", suite: "restore-after-settle", rule: "AC8 record the clamped level (N-3)" },
   { file: "src/routing/dispatch.ts", from: "if (!touched) return;", to: "if (!turn.applied.thinking) return;", suite: "restore-after-settle", rule: "AC8 restore the level a model switch moved (F1)" },
   { file: "src/routing/dispatch.ts", from: "if (applied && modelRefKey(applied) === modelRefKey(model)) return;", to: "", suite: "restore-after-settle", rule: "AC7 own switch is not an operator move" },
   { file: "src/routing/dispatch.ts", from: "await restore(turn, surface(ctx), ctx, `undo:", to: "await Promise.resolve();", suite: "restore-after-settle", rule: "N-4 undo restores the session" },
