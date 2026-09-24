@@ -6,12 +6,12 @@
       "name": "@gtrabanco/pi-agentic-workflow",
       "dependencies": {
         "@earendil-works/pi-tui": "0.87.0",
-        "@gtrabanco/agentic-workflow": "file:../agentic-workflow",
+        "@gtrabanco/agentic-workflow": "0.1.1",
         "@gtrabanco/agentic-workflow-schema": "4.5.0",
       },
       "devDependencies": {
         "@types/node": "24.13.3",
-        "typescript": "6",
+        "typescript": "6.0.3",
       },
       "peerDependencies": {
         "@earendil-works/pi-coding-agent": ">=0.87.0",
