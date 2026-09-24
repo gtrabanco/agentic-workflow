@@ -1,5 +1,5 @@
-import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
-import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
+import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES, PROFILE_FALLBACK_APPLY_TO, PROFILE_FALLBACK_RESUME, } from "./types.js";
+import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, } from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
@@ -13,7 +13,18 @@ import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequire
  * default, and that decision belongs to the loader.
  */
 
-const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle", "pathProtection", "advance"]);
+const ROOT_KEYS = new Set([
+  "default",
+  "commands",
+  "onUnavailableRoute",
+  "onSettle",
+  "pathProtection",
+  "advance",
+  "recommendedModels",
+  "profiles",
+  "profileOrder",
+  "profileFallback",
+]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
 
@@ -55,6 +66,108 @@ function isUnavailableRoutePolicy(value: unknown): value is UnavailableRoutePoli
 
 function isSettlePolicy(value: unknown): value is SettlePolicy {
   return SETTLE_POLICIES.includes(value as SettlePolicy);
+}
+
+/** Strict validator for `recommendedModels` (feature 63, AC1). */
+function isRecommendedModels(value: unknown): value is boolean {
+  return typeof value === "boolean";
+}
+
+/** Strict validator for the `profileOrder` array (feature 63, AC6). */
+const PROFILE_ORDER_ENTRY = /^[a-z0-9][a-z0-9._-]*$/u;
+
+function checkProfileOrder(value: unknown, issues: ConfigIssue[]): string[] | undefined {
+  if (!Array.isArray(value)) {
+    issues.push({ path: "$.profileOrder", message: "must be an array of non-empty strings" });
+    return undefined;
+  }
+  if (value.length === 0) {
+    issues.push({ path: "$.profileOrder", message: "must be a non-empty array of non-empty strings" });
+    return undefined;
+  }
+  for (let i = 0; i < value.length; i++) {
+    const entry = value[i];
+    if (typeof entry !== "string" || !PROFILE_ORDER_ENTRY.test(entry)) {
+      issues.push({ path: "$.profileOrder", message: "must be a non-empty array of non-empty strings" });
+      return undefined;
+    }
+  }
+  return value;
+}
+
+/** Strict validator for the `profileFallback` object (feature 63). */
+const PROFILE_FALLBACK_KEYS = new Set(["applyTo", "resume", "retryAfterSeconds"]);;
+
+function checkProfileFallback(value: unknown, issues: ConfigIssue[]): NonNullable<ConfigFile["profileFallback"]> | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path: "$.profileFallback", message: "must be an object with applyTo, resume, retryAfterSeconds" });
+    return undefined;
+  }
+  const out: NonNullable<ConfigFile["profileFallback"]> = {};
+  for (const key of Object.keys(value)) {
+    if (!PROFILE_FALLBACK_KEYS.has(key)) {
+      issues.push({ path: `$.profileFallback.${key}`, message: `unknown profileFallback key "${key}" (allowed: applyTo, resume, retryAfterSeconds)` });
+      continue;
+    }
+    const v = value[key];
+    if (key === "applyTo") {
+      if (!PROFILE_FALLBACK_APPLY_TO.includes(v as typeof PROFILE_FALLBACK_APPLY_TO[number])) {
+        issues.push({ path: "$.profileFallback.applyTo", message: `must be one of ${PROFILE_FALLBACK_APPLY_TO.join(", ")}` });
+      } else {
+        out.applyTo = v as typeof PROFILE_FALLBACK_APPLY_TO[number];
+      }
+    } else if (key === "resume") {
+      if (!PROFILE_FALLBACK_RESUME.includes(v as typeof PROFILE_FALLBACK_RESUME[number])) {
+        issues.push({ path: "$.profileFallback.resume", message: `must be one of ${PROFILE_FALLBACK_RESUME.join(", ")}` });
+      } else {
+        out.resume = v as typeof PROFILE_FALLBACK_RESUME[number];
+      }
+    } else if (key === "retryAfterSeconds") {
+      if (typeof v !== "number" || !Number.isInteger(v) || v < 1) {
+        issues.push({ path: "$.profileFallback.retryAfterSeconds", message: "must be a positive integer" });
+      } else {
+        out.retryAfterSeconds = v;
+      }
+    }
+  }
+  return out;
+}
+
+/** Strict validator for one profile file (feature 63, AC5). */
+const PROFILE_FILE_KEYS = new Set(["default", "commands"]);;
+
+function checkProfileFile(value: unknown, path: string, issues: ConfigIssue[]): ProfileFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: "profile must be an object with optional default/commands keys" });
+    return undefined;
+  }
+  const out: ProfileFile = {};
+  for (const key of Object.keys(value)) {
+    if (!PROFILE_FILE_KEYS.has(key)) {
+      issues.push({ path: `${path}.${key}`, message: `unknown profile key "${key}" (allowed: default, commands)` });
+      continue;
+    }
+    if (key === "default") {
+      const route = checkRoute(value[key], `${path}.default`, issues);
+      if (route) out.default = route;
+    } else if (key === "commands") {
+      if (!isRecord(value[key])) {
+        issues.push({ path: `${path}.commands`, message: "commands must be an object mapping command names to routes" });
+      } else {
+        const commands: Record<string, RouteFile> = {};
+        for (const [cmdName, raw] of Object.entries(value[key])) {
+          if (!COMMAND_NAME.test(cmdName)) {
+            issues.push({ path: `${path}.commands.${displayKey(cmdName)}`, message: "command name must be a single lowercase slug" });
+            continue;
+          }
+          const route = checkRoute(raw, `${path}.commands.${displayKey(cmdName)}`, issues);
+          if (route) commands[cmdName] = route;
+        }
+        out.commands = commands;
+      }
+    }
+  }
+  return out;
 }
 
 /** Strict validator for the optional `advance` conductor config (feature 62). */
@@ -235,7 +348,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback)`,
       });
     }
   }
@@ -291,6 +404,44 @@ function validateConfig(value: unknown): ParseResult {
   if (value.pathProtection !== undefined) {
     const override = checkPathProtection(value.pathProtection, "$.pathProtection", issues);
     if (override) config.pathProtection = override;
+  }
+
+  if (value.recommendedModels !== undefined) {
+    if (!isRecommendedModels(value.recommendedModels)) {
+      issues.push({
+        path: "$.recommendedModels",
+        message: `must be a boolean, got ${describe(value.recommendedModels)}`,
+      });
+    } else {
+      config.recommendedModels = value.recommendedModels;
+    }
+  }
+
+  if (value.profiles !== undefined) {
+    if (!isRecord(value.profiles)) {
+      issues.push({ path: "$.profiles", message: "must be an object mapping profile names to profile definitions" });
+    } else {
+      const profiles: Record<string, ProfileFile> = {};
+      for (const [profileName, profileDef] of Object.entries(value.profiles)) {
+        if (!COMMAND_NAME.test(profileName)) {
+          issues.push({ path: `$.profiles.${displayKey(profileName)}`, message: "profile name must be a single lowercase slug" });
+          continue;
+        }
+        const profile = checkProfileFile(profileDef, `$.profiles.${displayKey(profileName)}`, issues);
+        if (profile) profiles[profileName] = profile;
+      }
+      config.profiles = profiles;
+    }
+  }
+
+  if (value.profileOrder !== undefined) {
+    const order = checkProfileOrder(value.profileOrder, issues);
+    if (order) config.profileOrder = order;
+  }
+
+  if (value.profileFallback !== undefined) {
+    const fb = checkProfileFallback(value.profileFallback, issues);
+    if (fb) config.profileFallback = fb;
   }
 
   return issues.length > 0 ? { ok: false, issues } : { ok: true, config };
