@@ -118,4 +118,6 @@ export const SETTINGS_COMMAND_ALIAS = "aw-settings";
 export interface RoutingControls {
   inFlight(): boolean;
   undoInFlight(): Promise<boolean>;
+  /** Clear the recorded profile demotion (feature 63 rotate action). */
+  clearProfileDemotion?(): boolean;
 }

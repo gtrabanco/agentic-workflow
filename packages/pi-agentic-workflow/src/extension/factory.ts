@@ -117,7 +117,11 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     reportCatalogueIssues(ctx);
     // Bound for the console: two verbs and the session they act on, so it cannot
     // reach for `settle` or `dispatch` by accident.
-    const routing = { inFlight: () => router.inFlight(), undoInFlight: () => router.undoInFlight(ctx) };
+    const routing = {
+      inFlight: () => router.inFlight(),
+      undoInFlight: () => router.undoInFlight(ctx),
+      clearProfileDemotion: () => profileState.clear(),
+    };
     try {
       await settings({ catalogue, ctx, routing });
     } catch (error) {
