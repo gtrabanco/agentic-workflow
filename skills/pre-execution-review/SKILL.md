@@ -1,14 +1,16 @@
 ---
 name: pre-execution-review
 user-invocable: false
-version: 2.5.1
+version: 2.6.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal owner of the pre-execution review cycle and the planning ledgers:
   independence, unioned findings, counter-evidence dismissal, no-progress,
   `CONVERGENCE-ANOMALY`, and the evidence/obligation/findings tables. Consumed by
-  `review-spec`, `review-plan`, and the authoring skills. Not a menu entry.
+  `execute-phase`, `review-change`, and the lane's authoring steps for the
+  **planning-ledger shapes and ownership**; the pre-execution verdict owners
+  (`review-spec`/`review-plan`) were retired by feature 61. Not a menu entry.
 ---
 
 # Pre-Execution Review Policy (internal)
@@ -22,15 +24,16 @@ writes nothing, and emits no verdict of its own.
 evidence-grounding  = how an author prepares and self-checks an artifact.
 pre-execution-review = how any pre-execution reviewer judges it, and what the
                        frozen ledgers look like.
-review-spec / review-plan = the only skills that emit a pre-execution verdict.
+lane (design/plan/review steps) = the surviving pre-execution path; feature 61
+                       P8b retired the standalone review-spec / review-plan
+                       verdict skills, so this pack now owns the ledger shapes
+                       the lane and execute-phase consume, not a verdict gate.
 ```
 
 ## When to use
 
-- `review-spec` / `review-plan` — before the first check and again before any
-  repeat, repair, or synthesis step.
-- `design-feature`, `plan-feature`, `plan-feature-scaffold`, `plan-fix` — when
-  writing the ledgers and when a review comes back failed.
+- The lane's `plan`/`review` steps — when writing the ledgers and when a review
+  comes back failed.
 - Nothing else. Candidate-source review (`review-change`), merge gating
   (`audit-pr`) and execution (`execute-phase`) keep their own contracts; this
   skill adds no authority over them.

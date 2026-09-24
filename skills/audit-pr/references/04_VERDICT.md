@@ -27,14 +27,14 @@ Before merge, a human should still verify:
   also print the closure bullet (a warning never blocks, so it co-occurs with a
   MERGE-READY verdict; the two lines print together, never one instead of the other):
   · MERGE-READY, standalone/manual audit → you merge: <full PR URL>, then
-    /plan-feature --next (the next roadmap unit) or pick an issue with /triage-issue
-  · MERGE-READY inside active ship-roadmap --fullauto → return this SHA-bound
+    /unit-lane <next-roadmap-unit> (the next roadmap unit) or pick an issue with /triage-issue
+  · MERGE-READY inside active advance --fullauto → return this SHA-bound
     verdict to the conductor; it runs the transient merge wrapper
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
   · Receipt absent/stale blocker → /review-change (re-review at the head), then
     re-run /audit-pr — never re-review from this audit
   · Closure warning (in addition to the verdict above) or a closure blocker →
-    /design-feature <slug> — fills the missing closure rows (upsert, destroys
+    /unit-lane <slug> — re-runs the design step to fill the missing closure rows (upsert, destroys
     nothing) before further work on this feature is planned; re-run /audit-pr after
   · Scope-bleed blocker → record the missing `## Amendments` entry (user-approved,
     dated, linking the issue) in the governing SPEC, or re-classify the issue as

@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.2.1
+version: 3.3.0
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -117,7 +117,7 @@ Verdict: <one-line honest health verdict>
   (none — <why>)
 
 ### Roadmap — add
-  - <feature> — from: F<k> — <rationale & opportunity> — route: plan-feature
+  - <feature> — from: F<k> — <rationale & opportunity> — route: /unit-lane --from-issue <n>
   (none — <why>)
 
 ### Roadmap — remove / revise
@@ -126,7 +126,7 @@ Verdict: <one-line honest health verdict>
 
 ### Tooling — register / re-design
   - <skill|MCP> — register in AGENTS.md (Optional review extras): <why> — route: user edits AGENTS.md
-  - <skill|MCP> — would change <feature> scope: <why> — route: /design-feature <slug>
+  - <skill|MCP> — would change <feature> scope: <why> — route: /unit-lane <slug>
   (none — <why>)
 
 ## Manual-verification checklist (what automation can't confirm)
@@ -134,7 +134,7 @@ Verdict: <one-line honest health verdict>
 
 Finding set: F<k> + F<j> + F<m> (print every proposed finding; one finding → F<k>)
 → Next: /triage-issue <id> F<k> F<j> F<m> — classify the complete finding set in one batch (opens the ones that warrant it)
-  · accepted bug/debt → /plan-fix   · accepted capability → /plan-feature
+  · accepted bug/debt → /unit-lane --fix <n>   · accepted capability → /unit-lane --from-issue <n>
   · nothing to act on → the persisted report is the record; move on
 ```
 
@@ -159,12 +159,12 @@ security items to track first").
   order, never a different letter per problem type. Once persisted, ids are
   frozen: a later audit gets a new audit id, never renumbers an old file; cross-audit
   lineage lives only in Delta mappings as `<audit-id> F<k>`, never global slugs or
-  replaced ids. When the user accepts, route: `triage-issue` files/classifies,
-  `plan-feature` adds roadmap work, `plan-fix` scopes a concrete fix.
+  replaced ids. When the user accepts, route: `triage-issue` files/classifies, `/unit-lane`
+  adds roadmap work or scopes a concrete fix.
 - **Never registers tooling or edits `AGENTS.md`.** The tooling sweep proposes a
-  skill/MCP to register, but the user (or a routed `design-feature` run)
+  skill/MCP to register, but the user (or a routed `/unit-lane <slug>` run)
   performs the edit; a scope-affecting discovery routes to
-  `/design-feature <slug>`, which the user approves.
+  `/unit-lane <slug>`, which the user approves.
 - Platform-adaptive: run only applicable axes; always list what you skipped and why.
 - **No silent caps.** If you sampled, prioritized, or time-boxed a dimension, say
   so — never present partial coverage as exhaustive.
@@ -198,10 +198,10 @@ product-audit (whole product, all axes, periodic)
    ├─ composes review-change axes (codebase-wide) + audit-docs (doc coherence)
    ├─ mines feature docs (decisions / known-issues / architecture-notes)
    ├─ sweeps installed skills / connected MCP servers (product-wide, periodic)
-   └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / plan-fix
-                ├─ Roadmap: add .......... ▶ plan-feature
+   └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / unit-lane --fix
+                ├─ Roadmap: add .......... ▶ unit-lane --from-issue
                 ├─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)
-                └─ Tooling: register/re-design ▶ user edits AGENTS.md / design-feature
+                └─ Tooling: register/re-design ▶ user edits AGENTS.md / unit-lane
 ```
 
 - Broader than `review-change` (one change) and `audit-pr` (one PR); subsumes
@@ -221,5 +221,4 @@ product-audit (whole product, all axes, periodic)
   with the next incremental audit id, and printed in chat.
 - Nothing else was fixed, filed, or changed — the user decides what to act on.
 - The **closing `→ Next:` block is printed** — typically a batch
-  `/triage-issue <id> F<k> …` for the proposed issues, then `/plan-feature` /
-  `/plan-fix` for the accepted work.
+  `/triage-issue <id> F<k> …` for the proposed issues, then `/unit-lane` for the accepted work.

@@ -43,7 +43,7 @@
 
    | Condition over the taken batch | Batch class | Fold behavior |
    |---|---|---|
-   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner — `/plan-fix <n>` (fix) or `/plan-feature <slug>` (feature) — user confirms, fresh `/review-plan` passes, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
+   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner command the router printed — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
    | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
    | empty queue (zero findings taken) | `none` | receipt only |
 
@@ -58,11 +58,12 @@
    `DISPUTED <evidence → user decision>`; never edit classification or create an
    issue.
 9. **Replan.** If the smallest correct group exceeds a reviewable correction,
-   run `node scripts/unit-route.mjs <unit>` — its `route: replan` line names the
-   planner (`/plan-feature <slug>` or `/plan-fix <n>`) that appends the proposed
+   run `node scripts/unit-route.mjs <unit>` — its `route: replan` line prints the
+   planner command (`/unit-lane <slug>` for a feature, `/unit-lane --fix <n>` for
+   a fix) that appends the proposed
    phases to the unit's SPEC. The `<unit>` argument accepts the bare folder number
-   or the full slug (both resolve). After the user confirms and a fresh
-   `/review-plan <unit>` passes, `/execute-phase <unit>` completes them and ticks
+   or the full slug (both resolve). After the user confirms and the lane's
+   `review` step passes, `/execute-phase <unit>` completes them and ticks
    the rows. When the router concludes `route: decision` instead — a
    `decision-required` row with no replan row — stop and surface the decision to
    the user; no planner runs until the user decides.

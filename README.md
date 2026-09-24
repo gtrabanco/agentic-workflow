@@ -288,7 +288,7 @@ has four distinct model families, spawning `N=2` reviewers from families other
 than the author's is close to free decorrelation, not an extra purchase — the
 quota was already reserved for Merge-gates-class work.
 
-**Why `design-feature` sits in the merge-gate class, not the cheap tier:**
+**Why the lane's `design` step sits in the merge-gate class, not the cheap tier:**
 its output — the SPEC's product half plus capability closure — is the
 **founding assumptions** the rest of the flow builds on, so an error there
 compounds through plan → execute → review, the same blast radius as a
@@ -296,8 +296,8 @@ merge-gate verdict. Mimo V2.5's always-on reasoning is the right spend for it
 (few invocations, high leverage) — unlike mechanical volume, where the same
 always-on reasoning burns quota for no benefit. Qwen3.6 with thinking on is
 acceptable only as rung 2, and only for XS/S or derivative features: the
-raw-idea interview keeps a human in the loop, and `plan-feature`'s
-capability-closure gate re-checks the output downstream (the same
+raw-idea interview keeps a human in the loop, and the lane's `plan` step
+re-checks the capability closure downstream (the same
 re-checked-reasoning caveat below). As with every model choice here,
 sanity-check availability against `GET /v1/models` before pinning.
 
@@ -438,7 +438,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:
-npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
+npx skills add gtrabanco/agentic-workflow --skill unit-lane --skill triage-issue
 npx skills add gtrabanco/agentic-workflow --agent claude-code --agent cursor
 
 # Install for the current user (global) instead of the current project:
@@ -447,7 +447,7 @@ npx skills add gtrabanco/agentic-workflow --global
 # Manage them later:
 npx skills list
 npx skills update
-npx skills remove plan-feature
+npx skills remove unit-lane
 
 # Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
 npx skills add gtrabanco/agentic-workflow#release-2026-07-02
@@ -460,8 +460,8 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 On [Pi](https://github.com/badlogic/pi-mono) you don't need the skills CLI at
 all — the method ships as a single npm package that bundles the same skills
 together with everything the copy-per-agent route leaves out: a friendly slash
-command for every public skill (`/unit-lane --next`, not
-`/skill:plan-feature --next`), and optional per-command model routing that
+command for every public skill (`/unit-lane <slug>`, not
+`/skill:unit-lane <slug>`), and optional per-command model routing that
 sends each workflow command to the model you choose and gives your session
 back afterwards.
 
@@ -514,7 +514,8 @@ npx skills add gtrabanco/agentic-workflow
 
 For a global installation, add `--global` to both commands. These names are not
 published by the current pack: `plan-feature-interview` was an internal helper
-installed by older releases before its logic moved to `design-feature`, and
+installed by older releases before its logic moved into the lane's `design`
+step, and
 `bump-skill` was later reclassified as repository-internal.
 
 ### Updating an existing install
@@ -580,7 +581,7 @@ the skill shows as enabled. Three working ways:
 ```sh
 # 1. One-time: create a bundle → /workflow becomes the slash entry point
 hermes bundles create workflow \
-  -s init-workspace -s plan-feature -s plan-fix -s execute-phase \
+  -s init-workspace -s unit-lane -s execute-phase \
   -s review-change -s audit-pr -s product-audit -s audit-docs \
   -s triage-issue -s log-session \
   -d "agentic-workflow: plan → execute → review → audit → merge"

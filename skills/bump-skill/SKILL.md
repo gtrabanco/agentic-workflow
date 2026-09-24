@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.3.5
+version: 2.3.6
 metadata:
   internal: true
 description: >
@@ -64,7 +64,7 @@ Print a table:
 skill              old → new        bump
 ─────────────────────────────────────────
 execute-phase      1.2.0 → 1.3.0   minor
-plan-fix           1.0.1 → 1.0.2   patch
+unit-lane          1.0.0 → 1.0.1   patch
 ```
 
 Then print the next step:
