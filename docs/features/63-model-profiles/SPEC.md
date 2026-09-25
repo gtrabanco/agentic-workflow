@@ -23,7 +23,7 @@ After this unit ships:
 ## Acceptance criteria
 
 1. `recommendedModels` defaults to `true`; setting it `false` disables the built-in `nan` profile entirely.
-2. With no config and the `nan` provider available, `execute-phase` resolves to `["nan/deepseek-v4-flash", "nan/glm5.3-flash"]` and `product-audit` resolves to `["nan/glm5.3", "nan/mimo-v2.5", "nan/deepseek-v4-flash"]`.
+2. With no config and the `nan` provider available, `execute-phase` resolves to `["nan/deepseek-v4-flash", "nan/glm5.3-flash"]` and `product-audit` resolves to `["nan/glm5.3", "nan/mimo-v2.6-flash", "nan/deepseek-v4-flash"]` *(amended A1, 2026-09-26: the exemplar judgment model is `mimo-v2.6-flash`, not `mimo-v2.5` — NaN catalog refresh, feature 64; the profile mechanics this AC pins are unchanged, and evidence row 2 stays the receipt of the HEAD where it was verified)*.
 3. With `nan` unavailable (provider absent), a fresh install still resolves to `inherit` for every command (bit-for-bit today's behavior).
 4. An explicit user route (global or project, top-level or in a user profile) wins over the built-in `nan` profile for the same command/key.
 5. `profiles` accepts any number of named profiles; each may carry its own `default` + `commands`.
@@ -120,3 +120,5 @@ Feature row: `docs/features/ROADMAP.md` row 63 (status: `defined`). No linked is
 2026-09-24 22:35 — P7 done: README `Model profiles` section, CHANGELOG 0.16.0 row, package version bump; package 403/0 bun + node, root 561/0 → working tree — next: P8
 2026-09-24 22:40 — P8: hardening — a router-refused stage dispatch now stops the loop with `stop-dispatch-refused` instead of a phantom invoke; new conductor test; package 404/0 bun + node → working tree — next: PR
 2026-09-24 22:45 — P8 done: review + hardening + PR against `main` → https://github.com/gtrabanco/agentic-workflow/pull/259 — roadmap row 63 flipped to `done`
+
+2026-09-26 — **Amendment A1 (NaN catalog refresh, feature 64):** AC2's exemplar judgment chain reads `["nan/glm5.3", "nan/mimo-v2.6-flash", "nan/deepseek-v4-flash"]`. `mimo-v2.5` → `mimo-v2.6-flash` was an operator-approved recommendation swap (same Xiaomi family, so reviewer independence from the DeepSeek/GLM executors is preserved; same 1.0B quota, same always-on reasoning, same concurrency cap of 5, OpenAI-`tools`-native). Only the exemplar model id moved — the AC's mechanics (`recommendedModels` + built-in `nan` profile + user routes win) and every other AC are untouched. Evidence row 2 remains the receipt of the HEAD where it was verified (pre-A1); the current expectation is asserted by `test/model-profiles.test.mjs`.
