@@ -2,6 +2,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { mergeConfigs, effectiveRoute } from "../dist/config/merge.js";
 import { parseConfigFile } from "../dist/config/schema.js";
@@ -254,7 +255,7 @@ test("AC2: resolveProfileChain product-audit returns nan with 3-model chain and 
   const candidates = resolveProfileChain(DEFAULT_CONFIG, "product-audit", nanUp);
   assert.deepEqual(candidates[0].route.model, [
     "nan/glm5.3",
-    "nan/mimo-v2.5",
+    "nan/mimo-v2.6-flash",
     "nan/deepseek-v4-flash",
   ]);
   assert.equal(candidates[0].route.thinking, "high");
@@ -263,7 +264,7 @@ test("AC2: resolveProfileChain product-audit returns nan with 3-model chain and 
 test("AC2: resolveProfileChain audit-pr returns expected route", () => {
   const candidates = resolveProfileChain(DEFAULT_CONFIG, "audit-pr", nanUp);
   assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.5", "nan/deepseek-v4-flash"],
+    model: ["nan/mimo-v2.6-flash", "nan/deepseek-v4-flash"],
     thinking: "high",
   });
 });
@@ -271,7 +272,7 @@ test("AC2: resolveProfileChain audit-pr returns expected route", () => {
 test("AC2: resolveProfileChain review-change returns expected route", () => {
   const candidates = resolveProfileChain(DEFAULT_CONFIG, "review-change", nanUp);
   assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.5", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
+    model: ["nan/mimo-v2.6-flash", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
     thinking: "high",
   });
 });
@@ -279,7 +280,7 @@ test("AC2: resolveProfileChain review-change returns expected route", () => {
 test("AC2: resolveProfileChain unit-lane returns expected route", () => {
   const candidates = resolveProfileChain(DEFAULT_CONFIG, "unit-lane", nanUp);
   assert.deepEqual(candidates[0].route, {
-    model: ["nan/mimo-v2.5", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
+    model: ["nan/mimo-v2.6-flash", "nan/glm5.3-flash", "nan/deepseek-v4-flash"],
     thinking: "high",
   });
 });
@@ -398,4 +399,52 @@ test("AC2: RECOMMENDED_PROFILES.nan.commands[execute-phase].model", () => {
     RECOMMENDED_PROFILES.nan.commands["execute-phase"].model,
     ["nan/deepseek-v4-flash", "nan/glm5.3-flash"],
   );
+});
+
+// --- Docs parity. The root README's NaN guidance is the human-facing source of
+// truth for the built-in profile (the package README says so verbatim: the
+// profile "carries the per-command ladders from the README's NaN section").
+// Nothing used to assert this, so a catalog refresh that moved one side and not
+// the other passed silently — which is how the two surfaces had to be reconciled
+// by hand. Two directions are pinned: every model the profile routes to must be
+// documented, and every judgment rung the README names must actually be routed.
+
+test("AC: every model the built-in nan profile routes to is documented in the README's NaN guidance", () => {
+  const root = readFileSync(new URL("../../../README.md", import.meta.url), "utf8");
+  const profiled = new Set(
+    Object.values(RECOMMENDED_PROFILES)
+      .flatMap((profile) => [profile.default, ...Object.values(profile.commands)])
+      .filter(Boolean)
+      .flatMap((route) => route.model ?? [])
+      .map((ref) => ref.split("/")[1]),
+  );
+  assert.ok(profiled.size >= 4, `expected the profile to route several models, got: ${[...profiled]}`);
+  for (const id of profiled) {
+    assert.ok(
+      root.includes(`**${id}**`) || root.includes(`\`${id}\``),
+      `the README's NaN guidance does not document \`${id}\``,
+    );
+  }
+});
+
+test("AC: the README's judgment ladders and the built-in profile agree on rung 1", () => {
+  const root = readFileSync(new URL("../../../README.md", import.meta.url), "utf8");
+  const rung1 = (task) => {
+    const row = new RegExp(`^\\| \\*\\*${task}\\*\\* \\|.*$`, "mu").exec(root);
+    assert.ok(row, `the README has no ladder row for ${task}`);
+    const model = /1\. \*\*([^*]+)\*\*/.exec(row[0]);
+    assert.ok(model, `the ${task} row declares no rung 1`);
+    return model[1];
+  };
+  const routed = new Set(
+    Object.values(RECOMMENDED_PROFILES.nan.commands)
+      .flatMap((route) => route.model ?? [])
+      .map((ref) => ref.split("/")[1]),
+  );
+  for (const task of ["Merge gates", "Product definition", "Execution / mechanical"]) {
+    assert.ok(
+      routed.has(rung1(task)),
+      `${task} rung 1 (\`${rung1(task)}\`) is not routed by the built-in profile`,
+    );
+  }
 });
