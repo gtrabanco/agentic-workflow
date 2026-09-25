@@ -21,11 +21,17 @@
    optional: an absent document means no project invariants are declared, not
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
-6. **Propagate the unit doc template.** Ensure
+7. **Propagate the unit doc template.** Ensure
    `docs/features/_TEMPLATE/SPEC.md` exists with all 13 mandatory sections.
    This is the template used when creating new unit documents.
-
-7. **Install accepted agent safety hooks.** Keep the canonical policy and
+8. **Provision the Serena project config.** Load
+   [SERENA](SERENA.md), ask consent, then: (a) append the `.gitignore`
+   block additively (skip when already present); (b) write `.serena/project.yml`
+   with the `language_servers` list for every detected language (never overwrite
+   an existing file — report it); (c) run the health check from SERENA.md and
+   record the result. If Serena is not installed, offer install or record as a
+   residual.
+9. **Install accepted agent safety hooks.** Keep the canonical policy and
    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
    page at `.agentic-workflow/path-protection.md`, beside the hooks — the
@@ -38,10 +44,10 @@
    an unknown payload, or an existing customized hook file becomes a residual,
    never a silent overwrite. Direct merges remain blocked; do not create a
    `.automerge` exception.
-8. **Offer the workflow skills.** Propose installing them:
+10. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-9. **State that reviews are self-contained; offer optional extras.** The
+11. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -51,7 +57,7 @@
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-10. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+12. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -64,7 +70,7 @@
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-12. **Report.** List what was created, which placeholders still need human input,
+13. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step:
    `discover-repository-state` → `/unit-lane` (or `workflow-status`) → catalog
