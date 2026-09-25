@@ -7,14 +7,21 @@
 // a scope whose file does not parse cannot be overwritten (that file is evidence
 // the operator must fix, not noise to clobber), and the project scope is refused
 // while the project is untrusted — the same gate the loader applies (AC13).
+//
+// P5 (feature 63): the flow is scope → profile → routes. Every command operates
+// on the active profile's route (for "default" this is top-level; for a named
+// profile it is `profiles.<name>`). The profile defaults to "default", so
+// existing tests that never answer a profile prompt keep working unchanged.
 
 import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
+
 import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
 import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
-import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+import type { ConfigFile, ModelRef, ModelSetting, ProfileFile, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
 
@@ -62,6 +69,13 @@ export const prompts = {
   clearOverride: "Clear a command override",
   bulkApply: "Apply one route to several commands",
   bulkClear: "Clear several overrides",
+  switchProfile: "Switch the profile being edited",
+  rotateProfile: "Rotate the active profile",
+  toggleRecommended: "Toggle recommended models",
+  profile: "Which profile?",
+  newProfile: "Name the new profile",
+  profileBuiltIn: (name: string): string => `The "${name}" profile is built into the package and cannot be edited — create a profile to override it.`,
+  profileNamed: (name: string): string => `Editing profile "${name}"`,
   addAnother: "Add another?",
   policy: "Set the unavailable-route policy",
   settle: "Set the post-command model keep/restore policy",
@@ -89,25 +103,35 @@ const INHERIT = "inherit";
 export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOutcome> {
   const paths = configFilePaths(deps.agentDir, deps.cwd);
   const merged = loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile });
-  deps.ui.notify(renderMergedConfig(merged, deps.commands).join("\n"), "info");
-  /** The value in force for a target (the merged route, or the default when the target is "the default route"). */
-  const currentFor = (target: string): Route => effectiveRoute(merged.config, target);
-
+  deps.ui.notify(
+    renderMergedConfig(
+      merged,
+      deps.commands,
+      merged.config.profiles?.nan !== undefined || (deps.models ?? []).some((m) => m.startsWith("nan/"))
+        ? { providerAvailable: (provider) => (deps.models ?? []).some((m) => m.startsWith(`${provider}/`)) }
+        : undefined,
+    ).join("\n"),
+    "info",
+  );
   const opened = await openAScope(deps, paths.global, paths.project);
   if (!opened) return { status: "cancelled", edited: false };
 
   const { scope, path, original } = opened;
   let draft: ConfigFile = original;
+  let active = "default";
 
   for (;;) {
     // Only offered while a turn actually holds the latch: an option that does
     // nothing is how a console becomes noise.
     const choice = await deps.ui.select(prompts.menu, [
+      prompts.switchProfile,
       prompts.setDefaultRoute,
       prompts.setOverride,
       prompts.clearOverride,
       prompts.bulkApply,
       prompts.bulkClear,
+      prompts.rotateProfile,
+      prompts.toggleRecommended,
       prompts.policy,
       prompts.settle,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
@@ -123,51 +147,168 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       return { status: "cancelled", edited: dirty(draft, original) ? await discard(deps.ui) : false };
     }
 
-    if (choice === prompts.setDefaultRoute) {
-      const edited = await editRoute(deps, DEFAULT_ROUTE, currentFor(DEFAULT_ROUTE));
-      if (edited) draft = { ...draft, default: edited };
-      continue;
-    }
-    if (choice === prompts.setOverride) {
-      const name = await pickCommand(deps, commandChoices(deps, draft));
-      if (name === undefined) continue;
-      const route = await editRoute(deps, name, currentFor(name));
-      if (route) draft = { ...draft, commands: { ...draft.commands, [name]: route } };
-      continue;
-    }
-    if (choice === prompts.clearOverride) {
-      const name = await pickCommand(deps, Object.keys(draft.commands ?? {}));
-      if (name === undefined) continue;
-      const rest = { ...draft.commands };
-      delete rest[name];
-      draft = { ...draft, commands: rest };
-      continue;
-    }
-    if (choice === prompts.bulkApply) {
-      // One field pass (model via the chain builder + thinking), applied to every
-      // selected command. A reference missing from the live registry warns per
-      // command but never blocks the write (OB-4 — dispatch's probe stays the
-      // authoritative availability gate).
-      const selected = await pickCommandsMulti(deps, commandChoices(deps, draft));
-      if (selected === undefined || selected.length === 0) continue;
-      const route = await editRoute(deps, selected[0], currentFor(selected[0]));
-      if (route === undefined) continue;
-      const nextCommands = { ...draft.commands };
-      for (const name of selected) {
-        nextCommands[name] = route;
-        warnMissingModel(deps, name, route.model ?? INHERIT);
+    // Profile: switch to another profile (scope → profile → routes)
+    if (choice === prompts.switchProfile) {
+      const picked = await pickProfile(deps, draft, { allowNew: true });
+      if (picked === undefined) continue;
+      // P5: the built-in "nan" profile cannot be edited — create a profile
+      // to override it.
+      if (picked === "nan" && draft.profiles?.nan === undefined) {
+        deps.ui.notify(prompts.profileBuiltIn("nan"), "warning");
+        continue;
       }
-      draft = { ...draft, commands: nextCommands };
+      if (picked !== "default" && !Object.prototype.hasOwnProperty.call(draft.profiles ?? {}, picked)) {
+        draft = { ...draft, profiles: { ...(draft.profiles ?? {}), [picked]: {} } };
+      }
+      active = picked;
+      deps.ui.notify(prompts.profileNamed(active), "info");
       continue;
     }
+
+    // Rotate: move a profile to the front of profileOrder, clear demotion
+    if (choice === prompts.rotateProfile) {
+      const picked = await pickProfile(deps, draft, { allowNew: false });
+      if (picked === undefined) continue;
+      const base = draft.profileOrder && draft.profileOrder.length > 0 ? draft.profileOrder : ["default"];
+      draft = { ...draft, profileOrder: [picked, ...base.filter((n) => n !== picked)] };
+      deps.routing?.clearProfileDemotion?.();
+      continue;
+    }
+
+    // Toggle recommended models
+    if (choice === prompts.toggleRecommended) {
+      const current = draft.recommendedModels ?? merged.config.recommendedModels;
+      draft = { ...draft, recommendedModels: !current };
+      continue;
+    }
+
+    // Set default route on the active profile
+    if (choice === prompts.setDefaultRoute) {
+      const target = active === "default" ? DEFAULT_ROUTE : `profile ${active} default`;
+      const routeFile = active === "default"
+        ? (draft.default ?? {})
+        : (draft.profiles?.[active]?.default ?? {});
+      const currentRoute: Route = {
+        model: routeFile.model ?? "inherit",
+        thinking: routeFile.thinking ?? "inherit",
+      };
+      const edited = await editRoute(deps, target, currentRoute);
+      if (edited) {
+        if (active === "default") {
+          draft = { ...draft, default: edited };
+        } else {
+          draft = {
+            ...draft,
+            profiles: { ...(draft.profiles ?? {}), [active]: { ...(draft.profiles?.[active] ?? {}), default: edited } },
+          };
+        }
+      }
+      continue;
+    }
+
+    // Set override on active profile's commands
+    if (choice === prompts.setOverride) {
+      // Use the full command registry so operators can add new overrides (AC4/OB-3).
+      const cmdNames = [...new Set([...deps.commands, ...Object.keys(draft.commands ?? {})])];
+      const name = await pickCommand(deps, cmdNames);
+      if (name === undefined) continue;
+      // The initial value comes from the merged config so the picker shows the
+      // value in force, matching the original `currentFor(name)` behavior.
+      const effective = effectiveRoute(merged.config, name);
+      const routeFile = active === "default"
+        ? (draft.commands?.[name] ?? {})
+        : (draft.profiles?.[active]?.commands?.[name] ?? {});
+      const currentRoute: Route = {
+        model: typeof routeFile?.model !== "undefined" ? routeFile.model : effective.model,
+        thinking: typeof routeFile?.thinking !== "undefined" ? routeFile.thinking : effective.thinking,
+      };
+      const route = await editRoute(deps, name, currentRoute);
+      if (route) {
+        if (active === "default") {
+          draft = { ...draft, commands: { ...draft.commands, [name]: route } };
+        } else {
+          draft = {
+            ...draft,
+            profiles: {
+              ...(draft.profiles ?? {}),
+              [active]: { ...(draft.profiles?.[active] ?? {}), commands: { ...(draft.profiles?.[active]?.commands ?? {}), [name]: route } },
+            },
+          };
+        }
+      }
+      continue;
+    }
+
+    // Clear override on active profile's commands
+    if (choice === prompts.clearOverride) {
+      const cmdNames = Object.keys(profileOf(draft, active).commands ?? {});
+      const name = await pickCommand(deps, cmdNames);
+      if (name === undefined) continue;
+      if (active === "default") {
+        const rest = { ...draft.commands };
+        delete rest[name];
+        draft = { ...draft, commands: rest };
+      } else {
+        const profile = draft.profiles?.[active] ?? {};
+        const rest = { ...(profile.commands ?? {}) };
+        delete rest[name];
+        draft = { ...draft, profiles: { ...(draft.profiles ?? {}), [active]: { ...profile, commands: rest } } };
+      }
+      continue;
+    }
+
+    // Bulk apply on active profile's commands
+    if (choice === prompts.bulkApply) {
+      // Use the full command registry so operators can apply to new commands (AC4/OB-3).
+      const cmdNames = [...new Set([...deps.commands, ...Object.keys(draft.commands ?? {})])];
+      const selected = await pickCommandsMulti(deps, cmdNames);
+      if (selected === undefined || selected.length === 0) continue;
+      const routeFile = active === "default"
+        ? (draft.commands?.[selected[0]] ?? {})
+        : (draft.profiles?.[active]?.commands?.[selected[0]] ?? {});
+      const currentRoute: Route = {
+        model: (routeFile as RouteFile).model ?? "inherit",
+        thinking: (routeFile as RouteFile).thinking ?? "inherit",
+      };
+      const route = await editRoute(deps, selected[0], currentRoute);
+      if (route === undefined) continue;
+      if (active === "default") {
+        const nextCommands = { ...draft.commands };
+        for (const name of selected) {
+          nextCommands[name] = route;
+          warnMissingModel(deps, name, route.model ?? INHERIT);
+        }
+        draft = { ...draft, commands: nextCommands };
+      } else {
+        const profile = draft.profiles?.[active] ?? {};
+        const nextCommands = { ...profile.commands };
+        for (const name of selected) {
+          nextCommands[name] = route;
+          warnMissingModel(deps, name, route.model ?? INHERIT);
+        }
+        draft = { ...draft, profiles: { ...(draft.profiles ?? {}), [active]: { ...profile, commands: nextCommands } } };
+      }
+      continue;
+    }
+
+    // Bulk clear on active profile's commands
     if (choice === prompts.bulkClear) {
-      const names = await pickCommandsMulti(deps, Object.keys(draft.commands ?? {}));
+      const cmdNames = Object.keys(profileOf(draft, active).commands ?? {});
+      const names = await pickCommandsMulti(deps, cmdNames);
       if (names === undefined || names.length === 0) continue;
-      const rest = { ...draft.commands };
-      for (const name of names) delete rest[name];
-      draft = { ...draft, commands: rest };
+      if (active === "default") {
+        const rest = { ...draft.commands };
+        for (const name of names) delete rest[name];
+        draft = { ...draft, commands: rest };
+      } else {
+        const profile = draft.profiles?.[active] ?? {};
+        const rest = { ...(profile.commands ?? {}) };
+        for (const name of names) delete rest[name];
+        draft = { ...draft, profiles: { ...(draft.profiles ?? {}), [active]: { ...profile, commands: rest } } };
+      }
       continue;
     }
+
     if (choice === prompts.policy) {
       const picked = await deps.ui.select(prompts.policyChoice, [...UNAVAILABLE_ROUTE_POLICIES]);
       if (isPolicy(picked)) draft = { ...draft, onUnavailableRoute: picked };
@@ -179,7 +320,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       continue;
     }
     if (choice === prompts.save) {
-      const saved = await saveScope(deps, scope, path, draft);
+      const saved = await saveScope(deps, scope, path, draft, merged);
       if (saved) return { status: "saved", scope, path, file: clean(draft) };
       continue;
     }
@@ -192,6 +333,39 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
  * without being read, and a scope whose file does not parse is refused so the
  * operator's own file survives (AC10, AC13).
  */
+
+// ---------------------------------------------------------------------------
+// Profile helpers (P5, feature 63)
+// ---------------------------------------------------------------------------
+
+/** The profile file for a named profile or the default. */
+function profileOf(draft: ConfigFile, name: string): ProfileFile {
+  if (name === "default") return { ...(draft.default ? { default: draft.default } : {}), ...(draft.commands ? { commands: draft.commands } : {}) };
+  return draft.profiles?.[name] ?? {};
+}
+
+/**
+ * Pick a profile from the list. `allowNew` adds "Name the new profile" to the
+ * options; the input must match a lowercase slug pattern.
+ */
+async function pickProfile(deps: SettingsDeps, draft: ConfigFile, { allowNew }: { allowNew: boolean }): Promise<string | undefined> {
+  const names = ["default", ...Object.keys(draft.profiles ?? {}).filter((n) => n !== "default")];
+  // "nan" is always listed (built-in unless user-defined)
+  if (!names.includes("nan")) names.push("nan");
+  const options = allowNew ? [...names, prompts.newProfile] : names;
+  const picked = await pagedSelect((title, list) => deps.ui.select(title, list), prompts.profile, options);
+  if (picked === undefined) return undefined;
+  if (picked === prompts.newProfile) {
+    const name = await deps.ui.input(prompts.newProfile, "lowercase slug");
+    if (name === undefined || !/^[a-z0-9][a-z0-9._-]*$/u.test(name.trim())) {
+      deps.ui.notify("Rejected: a profile name must be a lowercase slug.", "error");
+      return undefined;
+    }
+    return name.trim();
+  }
+  return picked;
+}
+
 async function openAScope(
   deps: SettingsDeps,
   globalPath: string,
@@ -493,17 +667,20 @@ function warnMissingModel(deps: SettingsDeps, target: string, model: ModelSettin
   }
 }
 
-function commandChoices(deps: SettingsDeps, draft: ConfigFile): string[] {
-  return [...new Set([...deps.commands, ...Object.keys(draft.commands ?? {})])];
-}
-
 async function saveScope(
   deps: SettingsDeps,
   scope: "global" | "project",
   path: string,
   draft: ConfigFile,
+  merged: { config: { recommendedModels: boolean } },
 ): Promise<boolean> {
   const file = clean(draft);
+  // P5: materialize recommendedModels when the nan provider is available but
+  // the key is absent — the save writes the effective value (AC11).
+  const nanAvailable = (deps.models ?? []).some((m) => m.startsWith("nan/"));
+  if (file.recommendedModels === undefined && nanAvailable) {
+    file.recommendedModels = merged.config.recommendedModels;
+  }
   const text = `${JSON.stringify(file, null, 2)}\n`;
   const problems = problemsFor(file, scope);
   if (problems.length > 0) {
@@ -540,6 +717,8 @@ function describeRouting(file: ConfigFile): string {
   const routes = [
     file.default ? `default: ${file.default.model ?? "inherit"} / ${file.default.thinking ?? "inherit"}` : "default: inherit / inherit",
     ...Object.entries(file.commands ?? {}).map(([name, route]) => `${name}: ${route.model ?? "inherit"} / ${route.thinking ?? "inherit"}`),
+    ...(file.profileOrder && file.profileOrder.length > 0 ? [`profiles: ${file.profileOrder.join(" → ")}`] : []),
+    ...(file.recommendedModels !== undefined ? [`recommended models: ${file.recommendedModels}`] : []),
     `unavailable: ${file.onUnavailableRoute ?? "stop"}`,
     `settle: ${file.onSettle ?? "keep"}`,
   ];
@@ -563,6 +742,16 @@ function clean(draft: ConfigFile): ConfigFile {
   if (Object.keys(commands).length > 0) file.commands = commands;
   if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;
   if (draft.onSettle) file.onSettle = draft.onSettle;
+  if (draft.recommendedModels !== undefined) file.recommendedModels = draft.recommendedModels;
+  if (draft.profiles && Object.keys(draft.profiles).length > 0) {
+    file.profiles = structuredClone(draft.profiles);
+  }
+  if (draft.profileOrder && draft.profileOrder.length > 0) {
+    file.profileOrder = [...draft.profileOrder];
+  }
+  if (draft.profileFallback && Object.keys(draft.profileFallback).length > 0) {
+    file.profileFallback = { ...draft.profileFallback };
+  }
   return file;
 }
 

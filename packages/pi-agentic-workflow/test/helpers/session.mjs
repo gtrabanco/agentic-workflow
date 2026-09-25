@@ -30,13 +30,17 @@ export function routePair({ model = "inherit", thinking = "inherit" } = {}) {
 }
 
 /** EffectiveConfig from the same merge the shipped loader performs. */
-export function configFor({ default: def, commands, onUnavailableRoute, onSettle }) {
+export function configFor({ default: def, commands, onUnavailableRoute, onSettle, profiles, profileOrder, recommendedModels, profileFallback }) {
   return mergeConfigs(
     {
       ...(def ? { default: def } : {}),
       ...(commands ? { commands } : {}),
       ...(onUnavailableRoute ? { onUnavailableRoute } : {}),
       ...(onSettle ? { onSettle } : {}),
+      ...(profiles ? { profiles } : {}),
+      ...(profileOrder ? { profileOrder } : {}),
+      ...(recommendedModels !== undefined ? { recommendedModels } : {}),
+      ...(profileFallback ? { profileFallback } : {}),
     },
     {},
   );
@@ -70,6 +74,8 @@ export function createSession(options = {}) {
      * can never see the case where the session ended somewhere else.
      */
     supportedThinking = {},
+    /** P4: profile state store for demotion testing. */
+    profileState,
   } = options;
 
   let sent = false;
@@ -165,6 +171,7 @@ export function createSession(options = {}) {
     hint: options.hint ?? { pending: () => false, acknowledge: () => true },
     settingsCommand: SETTINGS_COMMAND,
     knownCommands: new Set(options.knownCommands ?? ["plan-feature", "design-feature", "execute-phase", SETTINGS_COMMAND]),
+    profileState,
   });
 
   return {

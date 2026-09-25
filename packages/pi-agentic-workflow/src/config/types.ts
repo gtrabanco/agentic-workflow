@@ -32,10 +32,47 @@ export type ModelSetting = "inherit" | ModelRef | ModelChain;
 /** Cap on chain length (issue deliberation: 8 was "almost certainly a mistake"; 4 keeps the view readable). */
 export const MAX_MODEL_CHAIN = 4;
 
+// ---------------------------------------------------------------------------
+// Model-profiles fields (feature 63)
+// ---------------------------------------------------------------------------
+
+export const PROFILE_FALLBACK_APPLY_TO = ["flow", "command"] as const;
+export type ProfileFallbackApplyTo = (typeof PROFILE_FALLBACK_APPLY_TO)[number];
+
+export const PROFILE_FALLBACK_RESUME = ["continue", "restart"] as const;
+export type ProfileFallbackResume = (typeof PROFILE_FALLBACK_RESUME)[number];
+
+export interface ProfileFile {
+  default?: RouteFile;
+  commands?: Record<string, RouteFile>;
+}
+
+export interface ProfileFallbackConfig {
+  applyTo: ProfileFallbackApplyTo;
+  resume: ProfileFallbackResume;
+  retryAfterSeconds: number;
+}
+
+export const DEFAULT_PROFILE_FALLBACK: Readonly<ProfileFallbackConfig> = {
+  applyTo: "flow",
+  resume: "continue",
+  retryAfterSeconds: 86400,
+};
+
+export interface ProfileCandidate {
+  profile: string;
+  builtIn: boolean;
+  route: Route;
+  declared: { model: boolean; thinking: boolean };
+}
+
 export interface Route {
   model: ModelSetting;
   thinking: ThinkingSetting;
 }
+
+/** Feature 63: which route keys a scope actually declared (vs. the shipped inherit). */
+export interface RouteDeclaration { model: boolean; thinking: boolean; }
 
 /** What one config file may declare (SPEC "Config schema"). */
 export interface RouteFile {
@@ -53,6 +90,16 @@ export interface ConfigFile {
   pathProtection?: PathProtectionOverride;
   /** Conductor (advance) knobs (feature 62). */
   advance?: AdvanceConfigFile;
+  /** When true (default), the built-in provider profiles are included in the
+   *  resolution chain (feature 63, AC1). */
+  recommendedModels?: boolean;
+  /** Named user profiles keyed by profile name (feature 63, AC5). */
+  profiles?: Record<string, ProfileFile>;
+  /** Ordered list of profile names to probe; empty means ["default"] only
+   *  (feature 63, AC6). */
+  profileOrder?: string[];
+  /** Partial override for the profile-fallback demotion policy (feature 63). */
+  profileFallback?: Partial<ProfileFallbackConfig>;
 }
 
 export type UnavailableRoutePolicy = "stop" | "inherit";
@@ -86,6 +133,17 @@ export interface EffectiveConfig {
    *  mergeConfigs; the shipped DEFAULT_CONFIG predates it and leaves it
    *  absent — consumers fall back to DEFAULT_ADVANCE_CONFIG. */
   advance?: AdvanceConfig;
+  /** Whether the built-in provider profiles (currently only "nan") are
+   *  included in the resolution chain (feature 63, AC1). */
+  recommendedModels: boolean;
+  /** Named user profiles keyed by profile name (feature 63, AC5). */
+  profiles: Record<string, ProfileFile>;
+  /** Ordered list of profile names to probe (feature 63, AC6). */
+  profileOrder: string[];
+  /** The effective profile-fallback demotion policy (feature 63). */
+  profileFallback: ProfileFallbackConfig;
+  /** Feature 63: declaredness of the implicit `default` profile. */
+  declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }
 
 export interface ConfigProblem {
