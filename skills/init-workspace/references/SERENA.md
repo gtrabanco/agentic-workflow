@@ -40,11 +40,29 @@ it (additive only — see rules below):
 
 ## Language servers for the detected stack
 
-Map the stack detection signal from Step 0 to the Serena `language_servers`
-entry. Every detected language must be listed — a repo can need several:
+Write language servers in this order: **fixed entries first** (always written,
+regardless of the target), then **detected entries** (from Step 0 signals).
+
+### Fixed entries — always written
+
+| Entry | Why always |
+|---|---|
+| `markdown` | Every scaffolded project has `docs/` and `.md` files (this workflow's own documentation is Markdown) |
+| `json` | Manifests and tool config (`package.json`, `tsconfig.json`, settings) exist in nearly every stack |
+
+### Never auto-detected rule
+
+**`markdown`, `yaml`, and `json` are never auto-detected by Serena — they must
+appear in `language_servers` explicitly, or requests for those file types fall
+back to another server and produce false positives** (e.g. TypeScript diagnostics
+on a `.yml`). Every server listed above (and `yaml` when `.yml`/`.yaml` files
+are present) is explicit-only.
+
+### Detected entries — append when present
 
 | Detected | Entry |
 |---|---|
+| `.yml` / `.yaml` files present (CI workflows, config) | `yaml` |
 | `package.json` / `tsconfig.json` (TypeScript or JavaScript) | `typescript` |
 | `pyproject.toml` / `requirements.txt` | `python` |
 | `go.mod` | `go` |
@@ -68,17 +86,40 @@ rule.)
 
 ## Health check — fail closed at the claim
 
-After activation, confirm the language server initialised by asking Serena
+After activation, confirm **each listed server** initialised by asking Serena
 for the project status and verifying `Language server status: initialized` for
-every language in `language_servers`. If it did not, say so and record it as a
-residual. **Never claim LSP evidence for a run whose server never started.**
+every language in `language_servers`. If a server did not initialise, the
+check names the offending entry. Removing a failing entry (per the startup
+rule below) is the correct remediation — never leave a dead entry in the file.
+**Never claim LSP evidence for a run whose server never started.**
 
-## LSP is for code, not for docs
+### Startup rule (critical)
 
-Verified 2026-09-24: with no markdown/yaml/json server configured, a diagnostic
-request for a `.md` / `.yml` / `.json` file comes back as **TypeScript false
-positives** (the only available server is used as a fallback). So document
-verification is a deterministic script's job, never LSP.
+> **A server that fails to start must not stay listed.** One failing entry
+> disables the whole language-server manager — every symbol call for the
+> project then fails with `Language server manager is not initialized`.
+> After writing the config, the health check must confirm **every** listed
+> server started; any entry that fails is removed from `language_servers`
+> and recorded as a residual with its exact error (e.g. `markdown`: marksman
+> needs the system `libicu` package).
+
+## When a server is missing or fails
+
+`markdown`, `yaml`, and `json` servers exist but are explicit-only and
+experimental: they must be listed by hand or requests fall back and produce
+false positives.
+
+- **Missing (not listed)** → fallback server answers → false positives for that
+  file type (e.g. TypeScript diagnostics on a `.yml`).
+- **Failing (listed but broken)** → whole manager down → every symbol call
+  fails with `Language server manager is not initialized`. Remediation: remove
+  the entry from `language_servers` and record the residual (e.g. `markdown`:
+  marksman needs the system `libicu` package).
+
+Document verification (schema rules like required sections/columns) stays a
+deterministic script's job regardless — LSP serves navigation and diagnostics,
+not our document grammar. `node`+`npm` are required for json/yaml; `libicu` is
+required for marksman.
 
 ## Tool install is a different step
 
