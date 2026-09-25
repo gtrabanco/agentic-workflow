@@ -211,3 +211,66 @@ test("AC9: fullauto (unattended) still never merges", async () => {
   await runConductorLoop({ ...deps, attended: false, config: { ...DEFAULT_CONDUCTOR_CONFIG, iterationsCap: 1 } });
   assert.ok(!sent.some(m => m.includes("merge")));
 });
+
+
+// AC10: a deferred send with profileResume restart re-runs the iteration, then sends
+test("AC10: a deferred send with profileResume restart re-runs the iteration, then sends", async () => {
+  let callCount = 0;
+  const sendUserMessage = async (inv) => {
+    callCount++;
+    if (callCount === 1) {
+      return { ok: true, deferred: true, profileSwitched: { from: "work", to: "fb" } };
+    }
+    return { ok: true };
+  };
+  let logLines = [];
+  const decideCalls = [0];
+  const decide = () => {
+    decideCalls[0]++;
+    if (decideCalls[0] <= 2) return makeDecision();
+    return makeDecision({ kind: "stop", intent: "stop", targets: [], reasonCode: "stop-blocked" });
+  };
+  const baseDeps = buildDeps({
+    decide,
+    appendRunLog: (line) => logLines.push(line),
+  });
+  baseDeps.sendUserMessage = sendUserMessage;
+  const result = await runConductorLoop({ ...baseDeps, profileResume: "restart" });
+  assert.equal(callCount, 2, "sendUserMessage was called twice");
+  assert.ok(logLines.some(l => /switch\/work->fb/u.test(l)), "run log has switch line");
+  assert.equal(result.banner, "ADVANCE: STOPPED");
+});
+
+
+// AC12: a refused stage dispatch stops the loop instead of logging an invoke
+test("AC12: a refused stage dispatch stops the loop instead of logging an invoke", async () => {
+  const logLines = [];
+  const baseDeps = buildDeps({ appendRunLog: (line) => logLines.push(line) });
+  baseDeps.sendUserMessage = async () => ({ ok: false });
+  const result = await runConductorLoop(baseDeps);
+  assert.equal(result.banner, "ADVANCE: STOPPED");
+  assert.equal(result.stopCode, "stop-dispatch-refused");
+  assert.ok(logLines.some((l) => /stop\/stop-dispatch-refused/u.test(l)), "logs the refusal");
+  assert.ok(!logLines.some((l) => /invoke\//u.test(l)), "no invoke line");
+});
+
+// AC10: a non-deferred send runs once
+test("AC10: a non-deferred send runs once", async () => {
+  let callCount = 0;
+  const sendUserMessage = async (inv) => {
+    callCount++;
+    return { ok: true, profileSwitched: { from: "work", to: "fb" } };
+  };
+  const decideCalls = [0];
+  const decide = () => {
+    decideCalls[0]++;
+    // First iteration: invoke so sendUserMessage is called
+    // Second iteration: stop the loop
+    return decideCalls[0] === 1 ? makeDecision() : makeDecision({ kind: "stop", intent: "stop", targets: [], reasonCode: "stop-blocked" });
+  };
+  const baseDeps = buildDeps({ decide });
+  baseDeps.sendUserMessage = sendUserMessage;
+  const result = await runConductorLoop({ ...baseDeps, profileResume: "continue" });
+  assert.equal(callCount, 1, "sendUserMessage was called once");
+  assert.equal(result.banner, "ADVANCE: STOPPED");
+});

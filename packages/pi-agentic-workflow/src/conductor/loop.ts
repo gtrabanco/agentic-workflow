@@ -78,6 +78,7 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
   const bin = deps.runtimeBin ?? "bun";
   let consecutivePartials = 0;
   let consecutiveSenses = 0;
+  let consecutiveDeferred = 0;
   let invoked = 0;
 
   for (let iteration = 1; iteration <= cap; iteration++) {
@@ -230,7 +231,28 @@ export async function runConductorLoop(deps: LoopDeps): Promise<LoopResult> {
         };
       }
 
-      await deps.sendUserMessage(invocation);
+      const sendResult = await deps.sendUserMessage(invocation);
+      if (sendResult.ok === false) {
+        deps.appendRunLog(formatLogLine("stop", "stop-dispatch-refused", invocation, iteration, cap));
+        return {
+          banner: "ADVANCE: STOPPED",
+          stopCode: "stop-dispatch-refused",
+          detail: "the stage dispatch was refused (the router already explained why)",
+          iterations: iteration - 1,
+        };
+      }
+      if (sendResult.deferred === true) {
+        // AC10 restart: the routing recorded the demotion instead of sending; re-run
+        // the iteration so the stage is decided and served under the fallback profile.
+        deps.appendRunLog(formatLogLine("switch", `${sendResult.profileSwitched?.from ?? "?"}->${sendResult.profileSwitched?.to ?? "?"}`, invocation, iteration, cap));
+        consecutiveDeferred++;
+        if (consecutiveDeferred >= 2) {
+          deps.appendRunLog(formatLogLine("stop", "stop-profile-switch-loop", "deferred-twice", iteration, cap));
+          return { banner: "ADVANCE: STOPPED", stopCode: "stop-profile-switch-loop", detail: "profile switch deferred twice without progress", iterations: iteration - 1 };
+        }
+        continue; // do NOT increment `invoked`
+      }
+      consecutiveDeferred = 0;
       deps.appendRunLog(
         formatLogLine("invoke", decision.reasonCode, invocation, iteration, cap),
       );

@@ -24,6 +24,7 @@ import type { ConductorConfig, LoopResult } from "../conductor/types.js";
 import type { CommandRegistrar } from "./factory.js";
 import type { InvocationContext, ModelRef } from "../routing/types.js";
 import { ADVANCE_COMMAND } from "../routing/types.js";
+import type { Router } from "../routing/dispatch.js";
 
 function git(args: string[], cwd: string): Promise<{ ok: boolean; stdout: string }> {
   return new Promise((res) => {
@@ -59,7 +60,7 @@ async function parkInFlight(cwd: string): Promise<void> {
 export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
   registrar: CommandRegistrar<M>,
   deps: {
-    surface: (ctx: InvocationContext<M>) => { sendUserMessage(content: string, options?: { expandPromptTemplates?: boolean }): void };
+    router: Router<M>;
     /** The same bound config reader the router uses (factory's `read`). */
     readConfig: (ctx: InvocationContext<M>) => LoadedConfig;
   },
@@ -76,15 +77,19 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
       // The effective advance knobs: the merged config when it carries the
       // key, the shipped defaults otherwise.
       let config: ConductorConfig = { ...DEFAULT_ADVANCE_CONFIG };
+      let resume: "continue" | "restart" = "continue";
       try {
         const loaded = deps.readConfig(ctx);
-        if (loaded.ok && loaded.config.advance) config = loaded.config.advance;
+        if (loaded.ok) {
+          if (loaded.config.advance) config = loaded.config.advance;
+          resume = (loaded.config.profileFallback?.resume as "continue" | "restart") ?? "continue";
+        }
       } catch {
         // Config trouble falls back to the shipped advance defaults; the loop
         // itself is fail-closed on the sensor side anyway.
+        // `resume` stays "continue".
       }
 
-      const surface = deps.surface(ctx);
       const result: LoopResult = await runConductorLoop({
         cwd: ctx.cwd,
         runtimeBin: runtimeBin(),
@@ -97,10 +102,18 @@ export function registerAdvanceCommand<M extends ModelRef = ModelRef>(
         decide: decideFromEnvelope,
         invocation: invocationFromDecision,
         judgeUrgency,
-        sendUserMessage: (invocation: string) => {
-          surface.sendUserMessage(invocation, { expandPromptTemplates: true });
-          return Promise.resolve({ ok: true });
+        sendUserMessage: async (invocation: string) => {
+          const match = /^\/skill:(\S+)(?:\s+([\s\S]*))?$/u.exec(invocation);
+          const verb = match?.[1] ?? invocation.replace(/^\/skill:/u, "").split(" ")[0];
+          const args = match?.[2] ?? "";
+          const dispatchResult = await deps.router.dispatch({ name: verb, skill: verb }, args, ctx, { onProfileSwitch: resume });
+          return {
+            ok: dispatchResult.status === "dispatched",
+            ...(dispatchResult.status === "dispatched" && dispatchResult.profileSwitched ? { profileSwitched: dispatchResult.profileSwitched } : {}),
+            ...(dispatchResult.status === "dispatched" && dispatchResult.deferred ? { deferred: true } : {}),
+          };
         },
+        profileResume: resume,
         gitProbe: () => gitProbe(ctx.cwd),
         appendRunLog: (line: string) => appendRunLog(config, ctx.cwd, line),
         parkInFlight: () => {

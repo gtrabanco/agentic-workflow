@@ -74,7 +74,7 @@ function writeCollector() {
   return { written, writeFile: (path, text) => written.set(path, text) };
 }
 
-function consoleOver(files, { trusted = true, answers = {}, models, rich = true } = {}) {
+function consoleOver(files, { trusted = true, answers = {}, models, rich = true, routing } = {}) {
   const collector = writeCollector();
   // P5 added the field chooser to every route edit. Default to "both" so the
   // pre-existing fixtures (which supply model + thinking answers) behave as
@@ -97,6 +97,7 @@ function consoleOver(files, { trusted = true, answers = {}, models, rich = true 
     projectTrusted: trusted,
     commands,
     ...(models ? { models } : {}),
+    ...(routing ? { routing } : {}),
     readFile: readFrom(files),
     writeFile: collector.writeFile,
   });
@@ -1367,4 +1368,160 @@ test("settings console model picker: Type another reference from a paged dialog 
   const asked = scripted.questions();
   assert.ok(asked.includes(prompts.model("plan-feature")), "TYPED fell through to the text input");
   assert.ok(fitsCap(scripted));
+});
+
+
+// ---------------------------------------------------------------------------
+// P5 / AC11, AC14: profile → routes flow, rotate, toggle, materialize, built-in nan
+// ---------------------------------------------------------------------------
+
+test("AC11: the console edits a named profile and saves into profiles.<name>", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.switchProfile, prompts.setDefaultRoute, prompts.save],
+        [prompts.profile]: "work",
+        [prompts.model("profile work default")]: "w/1",
+        [prompts.thinking("profile work default")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.profiles?.work?.default, { model: "w/1", thinking: "high" }, "profile work has the default route");
+  assert.equal(saved.default, undefined, "top-level default is not written for a named profile edit");
+  // The notifications should include the profile-named info
+  const messages = scripted.notify.map((entry) => entry.message);
+  assert.ok(messages.some((m) => /Editing profile "work"/iu.test(m)), "the console announced the profile name");
+});
+
+test("AC11: rotate moves the chosen profile to the front and clears the demotion", async () => {
+  let cleared = 0;
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"profiles":{"work":{"default":{"model":"w/1"}}},"profileOrder":["default","work"]}' },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.rotateProfile, prompts.save],
+        [prompts.profile]: "work",
+        [prompts.saveTo(paths.global)]: true,
+      },
+      routing: {
+        inFlight: () => false,
+        undoInFlight: async () => false,
+        clearProfileDemotion: () => {
+          cleared += 1;
+          return true;
+        },
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.profileOrder, ["work", "default"], "profileOrder has work first");
+  assert.equal(cleared, 1, "clearProfileDemotion was called");
+});
+
+test("AC11: toggling recommended models writes recommendedModels:false", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.toggleRecommended, prompts.save],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.equal(saved.recommendedModels, false, "recommendedModels is written as false");
+});
+
+test("AC11: saving with the nan provider available materializes recommendedModels:true when absent", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      models: ["nan/deepseek-v4-flash"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save],
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.modelPicked("the default route")]: "w/1",
+        [prompts.thinking("the default route")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.equal(saved.recommendedModels, true, "recommendedModels is materialized as true");
+});
+
+test("AC11: the built-in nan profile is not editable — cancels after warning", async () => {
+  const { outcome, scripted } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.switchProfile, prompts.cancel],
+        [prompts.profile]: "nan",
+        [prompts.discard]: false,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "cancelled");
+  const messages = scripted.notify.map((entry) => entry.message);
+  assert.ok(
+    messages.some((m) => /nan.*built into the package/iu.test(m)),
+    `the console warned that nan is built-in: ${messages.join("\n")}`,
+  );
+});
+
+test("AC14: the merged view renders the profile order and the nan provider", () => {
+  const text = renderMergedConfig(
+    loadConfig({
+      agentDir,
+      cwd,
+      projectTrusted: true,
+      readFile: readFrom({}),
+    }),
+    commands,
+    { providerAvailable: (p) => p === "nan" },
+  ).join("\n");
+
+  assert.match(text, /profiles:/iu, "the profiles line is present");
+  assert.match(text, /default → nan/u, "the profile order shows default → nan");
+  assert.match(text, /recommended models: on/u, "recommended models is on");
+  assert.match(text, /built-in nan profile in the chain/u, "nan is marked as built-in");
+});
+
+test("AC11: selecting the default profile does not create a profiles.default entry", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.switchProfile, prompts.setDefaultRoute, prompts.save],
+        [prompts.profile]: "default",
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.model("the default route")]: "w/1",
+        [prompts.thinking("the default route")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.equal(saved.profiles, undefined, "no spurious profiles.default entry");
+  assert.deepEqual(saved.default, { model: "w/1", thinking: "high" });
 });

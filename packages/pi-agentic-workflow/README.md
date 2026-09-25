@@ -97,6 +97,55 @@ The first workflow command you run after install says once that routing is
 configurable, then never again. That acknowledgement is stored in
 `~/.pi/agent/pi-agentic-workflow-state.json`, not in your config.
 
+## Model profiles
+
+The routing config above is the **`default` profile**. A profile is one coherent
+set of routes, and you can define as many as you like under `profiles`:
+
+```json
+{
+  "recommendedModels": true,
+  "profileOrder": ["work", "cheap"],
+  "profileFallback": { "applyTo": "flow", "resume": "continue", "retryAfterSeconds": 86400 },
+  "profiles": {
+    "work": { "default": { "model": "anthropic/claude-opus-4-5", "thinking": "high" } },
+    "cheap": { "default": { "model": "openai/gpt-5.2", "thinking": "medium" } }
+  },
+  "default": { "model": "inherit", "thinking": "inherit" },
+  "commands": { "review-change": { "thinking": "max" } }
+}
+```
+
+- **`profileOrder`** — the preference chain, first = most preferred/active. For each
+  command the router probes the profiles in order and the **first whose model is
+  usable** serves it; when the preferred profile's model is unavailable it falls
+  through to the next. A profile participates only for keys it actually declares.
+- **`profiles`** — unlimited named profiles. The implicit **`default`** profile is
+  the top-level `default` + `commands` above, so a config with just those two keys
+  resolves exactly as before.
+- **Built-in `nan` profile.** With `recommendedModels: true` (the default), when the
+  session has models from the `nan` provider, a code-only `nan` profile is appended
+  to the end of the chain (or used alone when you set no `profileOrder`). It carries
+  the per-command ladders from the README's NaN section. Any route you declare —
+  including an explicit `"inherit"` — wins over it. Set `recommendedModels: false`
+  to switch it off; the settings console writes the key explicitly on save when the
+  provider is available.
+- **`profileFallback`** — what happens when the preferred profile's model is
+  unusable:
+  - `applyTo`: `"flow"` (default) records the switch so later commands keep using the
+    fallback profile; `"command"` falls back for this command only and the next
+    command retries the preferred profile.
+  - `resume`: `"continue"` (default) lets the in-flight stage run on the fallback
+    profile; `"restart"` makes the `advance` conductor defer the switch and re-run
+    the stage under the fallback profile instead.
+  - `retryAfterSeconds`: how long a `flow` demotion lasts before the preferred
+    profile is probed again (default `86400`, one day).
+- **Rotation.** `/agentic-workflow-settings` is scope → profile → routes: pick the
+  scope, pick the profile to edit, then edit its routes. `Rotate the active profile`
+  moves a profile to the front of `profileOrder` and clears any recorded demotion.
+  The built-in `nan` profile is shown but not editable — create a profile to
+  override it.
+
 ## Path protection (optional)
 
 The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing
