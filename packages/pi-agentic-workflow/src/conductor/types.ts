@@ -125,7 +125,12 @@ export interface LoopDeps {
     reviewLoopCycles?: { spec?: number; plan?: number };
   }) => ActionDecision;
   invocation: (decision: ActionDecision, opts: InvocationOpts) => InvocationResult;
-  sendUserMessage: (invocation: string) => Promise<{ ok: boolean }>;
+  sendUserMessage: (invocation: string) => Promise<{
+    ok: boolean;
+    profileSwitched?: { from: string; to: string };
+    deferred?: boolean;
+  }>;
+  profileResume?: "continue" | "restart";
   gitProbe: () => Promise<{ porcelain: string; ahead: number }>;
   appendRunLog: (line: string) => void;
   config: ConductorConfig;

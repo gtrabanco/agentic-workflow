@@ -2415,3 +2415,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Post-log-entry correction of README NaN model guidance and PR creation
 - **Decisions:** (1) nan/qwen3.6 fabricó datos de modelos (tamaños, cuotas, reasoning APIs); revertí su edición. (2) Yo redacté el bloque correcto (factos del catálogo actual https://nan.builders/docs/models) y delegué en qwen3.6 solo el empalme mecánico (node -e splice), no razonamiento factual. (3) PR #257 docs/nan-models-current creada y fusionada; #256 (lane drift) ya fusionada. (4) Issue #258 creada para endurecer contratos needs-input (sin implementar).
 - **Next:** workflow-status — descubrir siguiente unidad startable; issue #258 para hardening de contratos interactivos pendiente de implementar
+
+## 2026-09-24T21:29:09Z — feat/63-model-profiles — manual
+- **Commits:** 1 (`011cc85e…011cc85e`)
+- **Files:** docs/features/63-model-profiles/SPEC.md, docs/features/ROADMAP.md
+- **Summary:** Audit completo de issues abiertas y roadmap: cerradas 2 issues obsoletas (#198, #232), re-scoped 2 (#258, #183), actualizados 5 rows del roadmap a folded→61 (35, 42, 50, 51) + 1 nota de absorption (53), añadido comentario de absorción a #227. Issues abiertas bajaron de 13 a 11.
+- **Decisions:** Feature 61 (adaptive unit lane) absorbe/absorbió rows del roadmap que ahora están folded (35, 42, 50, 51). #198 (per-skill package layout) es obsolete porque feature 61 mueve scripts al runner crate. #232 (bilingual ES) absorbido por feature 57. Issue #227 partially absorbed.
+- **Next:** Revisar si hay más rows folded que falten marcar. Priorizar issues abiertas que aún requieren acción (bug #246, features #206, #201 que necesitan replan post-61).
