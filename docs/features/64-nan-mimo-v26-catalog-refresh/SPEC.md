@@ -145,14 +145,17 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 
 2026-09-26 01:20 — P4 done: full gate green — package `bun run test` 406/0, `bun run test:node` 406/0, root suite 561/0, `check-skill-context` PASS (28 skills), `test/model-profiles.test.mjs` 47/0, AC greps 15 / 0 / 1 / 0 → Evidence table above — next: P5 (PR)
 
+2026-09-26 01:35 — P5 done: single PR against `main` → https://github.com/gtrabanco/agentic-workflow/pull/265 — roadmap row 64 carries the PR link. (A concurrent session in this checkout switched branches mid-commit; the commit was cherry-picked onto this branch and the other branch restored to `07d30322`, leaving its uncommitted work untouched.) — next: human review + merge
+
 ## Next
 
-P5 — open the single PR against `main`. The path-protection justification is
-recorded in `decisions.md`; the two dirty `skills/init-workspace/*` files in the
-working tree belong to separate in-flight work and are **not** part of this PR.
+Human review + merge of https://github.com/gtrabanco/agentic-workflow/pull/265.
+On merge, `publish-pi-package.yml` fires (paths filter matches and `0.17.0` ≠
+registry `0.16.0`); flip row 64 to `done` if it has not already landed.
 
 ## References
 
-Roadmap row: `docs/features/ROADMAP.md` row 64. Amends:
+Roadmap row: `docs/features/ROADMAP.md` row 64. PR:
+<https://github.com/gtrabanco/agentic-workflow/pull/265>. Amends:
 `docs/features/63-model-profiles/SPEC.md` (AC2 exemplar chain, amendment A1).
 Catalog: <https://nan.builders/docs/models>. `none` for issues.
