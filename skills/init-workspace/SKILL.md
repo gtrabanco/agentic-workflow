@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.1.0
+version: 3.2.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -105,9 +105,10 @@ loads exactly upgrade and skips bootstrap plus portability.
   exists (name, color, or description a project already customized).
 - **Serena convention.** `.serena/project.yml` is committed; `project.local.yml`
   and `cache` stay local. Never write `.serena/` config without consent. LSP
-  never verifies documents — Serena's LSP evidence requires an initialised
-  language server (TypeScript false positives on `.md`/`.yml` when no markdown
-  server exists). Document verification is a script's job.
+  never verifies documents — false positives happen when a file type's server
+  is not listed (markdown/yaml/json are never auto-detected), and a listed
+  server that fails to start must be removed (one failure disables every
+  server in the project). Document verification is a script's job.
 - **Never redefine the urgency label vocabulary here.** `skills/triage-issue
   /SKILL.md` is the sole owner of the `urgent`/`fix-next` names, colors, and
   apply rules — this skill only seeds those two labels into the repo; it never
