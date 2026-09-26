@@ -2422,3 +2422,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Audit completo de issues abiertas y roadmap: cerradas 2 issues obsoletas (#198, #232), re-scoped 2 (#258, #183), actualizados 5 rows del roadmap a folded→61 (35, 42, 50, 51) + 1 nota de absorption (53), añadido comentario de absorción a #227. Issues abiertas bajaron de 13 a 11.
 - **Decisions:** Feature 61 (adaptive unit lane) absorbe/absorbió rows del roadmap que ahora están folded (35, 42, 50, 51). #198 (per-skill package layout) es obsolete porque feature 61 mueve scripts al runner crate. #232 (bilingual ES) absorbido por feature 57. Issue #227 partially absorbed.
 - **Next:** Revisar si hay más rows folded que falten marcar. Priorizar issues abiertas que aún requieren acción (bug #246, features #206, #201 que necesitan replan post-61).
+
+## 2026-09-25T23:46:35Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Refreshed NaN catalog surface: promoted mimo-v2.6-flash to judgment slots, replacing mimo-v2.5 across README and the built-in profile
+- **Decisions:** Operator chose both surfaces at once: the NaN catalog moved (mimo-v2.6-flash landed 2026-09-22) but neither README guidance nor the built-in profile followed, and nothing asserted the pair so the drift was invisible to CI. The swap preserves reviewer independence (same Xiaomi family from executors), costs the same quota, and is stronger on shared benchmarks. Also: traced the 'GitHub action never published' false alarm — the action did fire, npm's propagation delay (few minutes) made it look like nothing happened, and 2 of the 3 merges didn't touch the paths filter.
+- **Next:** Merge PR #265 (already merged — skip); update local @gtrabanco/pi-agentic-workflow from 0.15.3 to 0.17.0; open separate PR for the two out-of-scope issues: (a) publish-pi-package.yml E409 idempotency on workflow_dispatch races, (b) skills/** paths filter + mandatory version bump rule

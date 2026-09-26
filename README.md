@@ -233,9 +233,15 @@ the picks below split into a premium column and a basic-plan ladder.
 
 **Quota-aware routing rule.** Monthly allowances per member:
 **deepseek-v4-flash** 3B, **glm5.3-flash** 2B, **mimo-v2.5** and
-**mimo-v2.6-flash** 1.0B each, **qwen3.8-flash** 500M tokens; **qwen3.6** and **gemma4** list no cap (treated
-as *unconfirmed*, never asserted as unlimited); **glm5.3** 3,000M per billing
-period plus the 400M rolling-4h window. Reserve the 1M-context budgets for
+**mimo-v2.6-flash** 1.0B each, **qwen3.8-flash** 500M tokens, **glm5.3** 3,000M
+per billing period plus the 400M rolling-4h window. **qwen3.6** and **gemma4**
+are the two *cluster models* and carry **no token counter**: neither has a quota
+row in [the catalog](https://nan.builders/docs/models), the membership FAQ's
+answer to "Is it really unlimited tokens?" is "On the cluster models, no
+counter", and the `nan_member` tier lists "No token counter on the cluster
+models". So on this plan they — not deepseek — are the default for high-volume
+non-judgment work. "Unlimited" is still bounded by the per-key limits below
+(60 rpm, 1.5M tpm per model, 5 concurrent requests per model). Reserve the 1M-context budgets for
 long-context work and merge-gating verdicts; push re-checkable and mechanical
 volume onto the cheaper models.
 
@@ -277,9 +283,20 @@ requires the GLM 5.3 membership — without it, use the basic-plan ladder):
 | **Product definition** | `unit-lane` catalog step (`design`) | glm5.3, High | 1. **mimo-v2.6-flash** (reasoning always on; a different family from the executor adds independence; supersedes mimo-v2.5) → 2. **deepseek-v4-flash** → 3. **glm5.3-flash** (only for XS/S or derivative features — cheaper, still function-calling) | gemma4; qwen3.6/qwen3.8-flash for agentic runs (XML tools) |
 | **Planning / routing / triage** | `unit-lane`, `init-workspace`, `triage-issue`, `review-change` | glm5.3, High | 1. **glm5.3-flash** → 2. **deepseek-v4-flash** → 3. **qwen3.8-flash** (quota-saver) | — |
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | deepseek-v4-flash | 1. **deepseek-v4-flash** → 2. **glm5.3-flash** → 3. **qwen3.8-flash** (only through an XML-aware harness) | mimo-v2.5 / mimo-v2.6-flash (reasoning can't be turned off — burns the capped budget) |
-| **Cheap** | `log-session`, evidence gathering | deepseek-v4-flash | 1. **qwen3.8-flash** → 2. **deepseek-v4-flash** | mimo-v2.5, mimo-v2.6-flash |
+| **Cheap** | `log-session`, evidence gathering | **qwen3.6** — glm5.3's 400M/4h window and deepseek's 3B are both wasted on a log line | 1. **qwen3.6** (no token counter → unlimited; set `reasoning_config: none` so the append pays zero thinking tokens; its OpenAI-`tools` smoke is recorded in [`GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md)) → 2. **qwen3.8-flash** (500M/mo cap) → 3. **deepseek-v4-flash** (only where the harness can't reach qwen3.6) | mimo-v2.5, mimo-v2.6-flash (reasoning can't be turned off) |
 | **Folding `review-change`/`audit-pr` findings** | `fold-findings` (primary); `execute-phase`'s embedded fold cycle (in-context/portability fallback) | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
 | **Adversarial review (`review-change --adversarial N` / `--synthesize`)** | `review-change` | glm5.3 × N, High | reviewers never weaker than the model that authored the diff; worked example: a deepseek-v4-flash-authored change → `--adversarial 2` with **mimo-v2.6-flash** + **glm5.3-flash** — two families neither of which is the executor, free decorrelation already sitting in this fleet; the orchestrating/merge conversation runs per the Planning/routing ladder | a reviewer weaker than the authoring model |
+
+**`unit-lane` spans two rows — pick by the strongest step its triage returns,**
+not by the skill's name. The lane runs every triaged step in one session, so
+the model must cover the highest-class step it will reach: a lane whose triage
+includes `design` is product definition → **mimo-v2.6-flash** first,
+deepseek-v4-flash second; a lane of triage → plan → implement → review with no
+`design` is planning/execution → **glm5.3-flash** first, **deepseek-v4-flash**
+second. deepseek is not categorically "better" or "worse" than mimo here — it is
+the right pick for the volume steps (3B/mo, adaptive reasoning) and the wrong
+pick for `design`, where mimo's always-on reasoning and a family other than the
+executor's are exactly what the founding-assumptions step is paying for.
 
 The folding row routes through the standalone `fold-findings` skill, falling
 back to `execute-phase`'s embedded fold cycle only where a separate
@@ -329,8 +346,8 @@ upgrade to the GLM 5.3 membership.
 | **mimo-v2.6-flash** | parameter count not published (omnimodal successor to the 310B V2.5) | 1M ctx | 1.0B tok/member/mo | Merge gates, long-context and multimodal (image/audio) work; OpenAI-style function calling; a different family from the executors, so it adds reviewer independence | Mechanical/low-effort volume — reasoning can't be turned off, so every cheap task burns the capped budget |
 | **mimo-v2.5** | 310B total · 15B active | 1M ctx | 1.0B tok/member/mo | Previous generation: kept so existing configurations keep working; long-context work | Superseded by mimo-v2.6-flash for every judgment slot; mechanical/low-effort volume — reasoning can't be turned off |
 | **qwen3.8-flash** | 125B total · 6B active | 262K ctx | 500M tok/member/mo | Cheap/mechanical volume; quota-saver; non-agentic steps (XML tool calling) | Agentic tool loops through an OpenAI-`tools` harness; merge-gating verdicts |
-| **qwen3.6** | 35B total · 3B active | 262K ctx | no cap listed | Previous generation: kept so existing configurations keep working; non-agentic steps (XML tool calling) | New agentic executor work; merge-gating verdicts; reviewing code it wrote itself |
-| **gemma4** | 26B total · 4B active | 262K ctx | no cap listed | Small non-agentic tier (single-shot text/vision) | Any judgment call; agentic tool loops (XML-format tool calling) |
+| **qwen3.6** | 35B total · 3B active | 262K ctx | no token counter (cluster model → unlimited) | Unlimited cheap volume: `log-session`, evidence gathering (`reasoning_config: none`); previous generation kept so existing configurations keep working; non-agentic steps (XML tool calling) | New agentic executor work; merge-gating verdicts; reviewing code it wrote itself |
+| **gemma4** | 26B total · 4B active | 262K ctx | no token counter (cluster model → unlimited) | Small non-agentic tier (single-shot text/vision); the other no-counter model for pure text volume | Any judgment call; agentic tool loops (XML-format tool calling — no recorded smoke pass in this repo) |
 
 **Operational limits per API key** (from the API reference): 60 requests/min,
 1.5M tokens/min per chat model for deepseek-v4-flash, mimo-v2.5,
