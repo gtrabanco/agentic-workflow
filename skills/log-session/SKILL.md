@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 2.2.1
+version: 2.3.0
 argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
