@@ -374,6 +374,21 @@ export function attributeFreshness({
   // snapshot's current revision with the manifest's acceptance fingerprint. Pure:
   // the determination and fingerprint arrive as `wordingOnly`, never by a file
   // read. Any mismatch falls through unchanged to the precedence below.
+  //
+  // Fifth condition (SPEC E6, D-31-11): the moved bound artifact must not be the
+  // unit's own acceptance manifest. That fingerprint is a hash of the very
+  // manifest a repair may have moved, so it corroborates the determination only
+  // when the manifest itself did not move — a fingerprint taken after the move is
+  // a self-referential attestation, and the target environment cannot forge
+  // evidence about itself (RFC 9334). The manifest is identified from this
+  // snapshot's own `acceptance` row: a snapshot that binds no acceptance manifest
+  // can name no manifest movement among its changed artifacts, and a plan-stage
+  // snapshot binds exactly the path `verify` hashed. Fails closed on the row
+  // shape rather than skipping the exclusion.
+  const acceptancePaths = (snapshot.artifacts ?? [])
+    .filter((row) => row !== null && typeof row === "object"
+      && row.kind === "acceptance" && typeof row.path === "string" && row.path !== "")
+    .map((row) => row.path);
   if (
     changedArtifacts.length > 0 &&
     changedContexts.length === 0 &&
@@ -385,7 +400,8 @@ export function attributeFreshness({
     typeof wordingOnly.determination.revision === "string" &&
     wordingOnly.determination.revision === snapshot.artifactRevisionId &&
     typeof wordingOnly.acceptanceFingerprint === "string" &&
-    wordingOnly.determination.acceptanceFingerprint === wordingOnly.acceptanceFingerprint
+    wordingOnly.determination.acceptanceFingerprint === wordingOnly.acceptanceFingerprint &&
+    !changedArtifacts.some((movedPath) => acceptancePaths.includes(movedPath))
   ) {
     return Object.freeze({
       fresh: true,
