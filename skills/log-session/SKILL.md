@@ -23,8 +23,10 @@ Capture the *why* and the *what-next* of a working session — the context that
 git history alone never records. A commit says what changed; a session log says
 what you were trying to do, what you decided, and where to resume.
 
-Deliberately cheap (`sonnet`/`medium`): this is structured summarization, not
-judgment. It must never reach for an expensive model.
+Deliberately cheap (`qwen3.6`/`reasoning_config: none` — unlimited; the NaN
+cluster models carry **no token counter**, so this skill pays in bytes, not
+quota): structured summarization, not judgment. It must never reach for an
+expensive model.
 
 ## Turn contract — verify before ending the turn
 
@@ -124,8 +126,9 @@ the HEAD sha and start time at session open.
 
 ## Guardrails
 
-- **Never use an expensive model for this.** It's summarization; `sonnet` is the
-  ceiling, and the hooks do the free mechanical version.
+- **Never use an expensive model for this.** It's summarization; `qwen3.6`
+  (`reasoning_config: none` → zero thinking tokens) is the natural ceiling on
+  the cluster plan, and the hooks do the free mechanical version.
 - **Don't invent facts.** Decisions and next steps come from the actual session
   (your context + git), not plausible-sounding filler. If a section has nothing
   real, omit its line rather than padding.
@@ -147,8 +150,10 @@ enables:
   (Process step 1's no-marker path).
 - **No `/clear`** — read it as your agent's context-reset / new-conversation
   equivalent, in the triggers and in the closing block alike.
-- **No per-skill `model:`/`effort:`** — the intent stands: use a **cheap**
-  model for this. It's summarization, never judgment.
+- **No per-skill `model:`/`effort:`** — the intent stands: use the cheapest
+  available model for this. It's summarization, never judgment. On NaN the
+  cluster models (qwen3.6, gemma4) carry no token counter — set
+  `reasoning_config: none` so the append pays zero thinking tokens.
 
 ## Relationship to other skills
 
