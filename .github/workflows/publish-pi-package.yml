@@ -1,8 +1,10 @@
 name: Publish Pi package
 
 # Publishes @gtrabanco/pi-agentic-workflow to npm whenever a push to main
-# touches the package AND its package.json version is newer than the one on
-# the registry (same-version pushes are a safe no-op). Also runnable by hand
+# touches the package AND that exact version is not on the registry yet
+# (already-published versions are a safe no-op — the gate asks exact-version
+# membership, never "is it the latest": see scripts/npm-version-gate.mjs).
+# Also runnable by hand
 # (workflow_dispatch) — e.g. right after a merge, or to retry a failed run.
 #
 # This is a sibling of publish-schema.yml, not a shared matrix workflow, for
@@ -174,20 +176,21 @@ jobs:
           fi
           echo "the tarball carries every staged skill file ($EXPECTED_COUNT)"
 
+      # Exact-version membership, never dist-tag equality: a revert can walk
+      # main's version backwards onto one that is already published while
+      # `latest` has moved on — "local ≠ latest" then reads as "publish" and npm
+      # refuses the run with EBADVERSION (2026-09-27, run 36355201053). The gate
+      # prints `publish=` for $GITHUB_OUTPUT and, when the decision hides a
+      # divergence, a `notice=` this step turns into an annotation.
       - name: Skip when the version is already published
         id: version
-        run: |
-          LOCAL=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view "$(node -p "require('./package.json').name")" version 2>/dev/null || echo "none")
-          echo "local=$LOCAL published=$PUBLISHED"
-          if [ "$PUBLISHED" = "none" ]; then
-            echo "package is not on the registry yet — the first publish is manual; see this file's header"
-          fi
-          if [ "$LOCAL" = "$PUBLISHED" ]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
+
+      - name: Surface the gate's notice
+        if: steps.version.outputs.notice != ''
+        env:
+          NOTICE: ${{ steps.version.outputs.notice }}
+        run: echo "::warning::$NOTICE"
 
       - name: Publish to npm (Trusted Publishing — no token)
         id: publish
