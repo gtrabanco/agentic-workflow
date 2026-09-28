@@ -2454,3 +2454,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 1 (`44f9c5ae…44f9c5ae`)
 - **Files:** .pi/mcp-adapter.json
 - **Summary:** Renamed .pi/mcp.json → .pi/mcp-adapter.json — mcp adapter file rename
+
+## 2026-09-28T09:04:11Z — main — manual
+- **Commits:** 2 (`991598ae…7a7e229f`)
+- **Files:** .pi/mcp-adapter.json, docs/LOGS.md
+- **Summary:** Ran workflow-status sensor to assess repo state: discovered 71 units, 1 startable (40-versioned-skills-releases), 9 untriaged issues, 10 fix-now findings (including 1 high-sev F99), and 14 unmet dependencies blocking downstream work. No code changes made.
+- **Next:** /triage-issue 192 to clear untriaged backlog, or /unit-lane 40-versioned-skills-releases to start the only defined unit
+
+## 2026-09-28T09:04Z — main — manual
+- **Commits:** 2 (`991598ae` is the session-close temp, `de7a85f0`+`44f9c5ae` since last entry)
+- **Files:** .pi/mcp-adapter.json (renamed from mcp.json), docs/LOGS.md
+- **Summary:** Batch triage-issue on 7 issues (#180 #201 #206 #219 #227 #192 #262): evidence-grounded verdicts with dated forge comments and disposition labels applied via GitHub API.
+- **Decisions:** (1) Row 68 (#260 subagent-first execution) is mechanically gated on rows 66+67 (Engram+Serena provisioning) by the roadmap convention ("cannot start until its dependency is merged"). The 2026-09-27 session log names #260 as the next unit, so rows 66 and 67 are promoted first. (2) Row 40 (#180 versioned-skills-releases) is `defined` with PR #235 merged and SPEC present — promoted from `idea` to ready-for-plan. (3) Engram server on `:7437` is stale (server 0.1.0 vs CLI 2.2.1) — memory writes fail with the exact symptom #262 exists to prevent: unhealth-checked, no recall path. (4) Fix-index drift: rows #182 and #244 remain `done` after PR merge, contradicting the convention that rows are removed post-merge. (5) Exactly one disposition label per issue, checked; all verdict comments posted via --body-file with render verified (no literal backslash-backtick). (6) No member unit existed for any issue — zero roadmap rows at planned/in-progress, zero open PRs, sole fix-index candidate #179 pending (no overlap).
+- **Next:** Run `/unit-lane --from-issue 219` (row 67 Serena provisioning) and `/unit-lane --from-issue 262` (row 66 Engram substrate) — these hard-gate row 68 (#260 subagent-first execution) which is the declared next unit. Then sweep fix-index for stale `done` rows with `/audit-docs`.
