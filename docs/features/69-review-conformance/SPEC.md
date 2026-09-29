@@ -162,6 +162,21 @@ the `tests` triage step therefore runs rather than being skipped.
 - Baseline gate state before this unit's first edit: root suite 578/0 and
   `check-skill-context` PASS, both recorded as R5/R6 — **does-not-affect** (a red
   baseline would have to be recorded here first; it is green).
+- **`scripts/golden-fixture.test.mjs` F1 assertion was a time bomb — affects this
+  unit.** The fold that made the committed-log check "append-safe" (c32525ca)
+  replaced `checked === 0` ("no committed row is dated on/after the 2026-09-18
+  cutoff **yet**") with `checked === 1` for the appended copy — still assuming
+  zero committed post-cutoff rows. AC7 requires this unit to log a 2026-09-29
+  row, which made `checked === 2` and failed the suite (577/578). **Fixed here
+  with a recorded justification**, not silenced: the assertion now compares
+  `result.checked` with `runLogGrammar(DOC).checked + 1`, which is byte-equivalent
+  to the old constant while the log holds zero post-cutoff rows (the state the
+  constant was written for) and remains the exact "the appended row is checked,
+  not skipped" property as rows accumulate — if the appended row were skipped,
+  `result.checked` would equal `committed.checked` and the assertion would fail.
+  The repo root carries no `.agentic-workflow/path-policy.json`, so `scripts/**`
+  is not under the shipped test-freeze policy here; the justification lives in
+  this row because the unit doc is this lane's single record.
 
 ## Tasks
 
@@ -228,6 +243,9 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 5 | `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 · 0 | 578/0 · `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` — every grown ceiling re-based with a declared reason | main agent |
 | 6 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` | 1 · 1 · 1 | one scoped CHANGELOG row per skill; `version:` bumped in each frontmatter by `bump-skill` | main agent |
 | 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) + the manual weak-model run recorded in `docs/workflow/GOLDEN_FIXTURE.md` | 0 | 12 pass / 0 fail; run log carries one dated `PASS` row for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (2026-09-29, `nan/qwen3.6`) | main agent |
+| M2a | run-log row's Result cell rewritten to the closed grammar (`exact 7/7 · invented none · shape ok`) → `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail — the row's own Result cell, not the row, was what broke `RESULT_GRAMMAR` | main agent |
+| M2b | F1 assertion made append-safe (`result.checked === runLogGrammar(DOC).checked + 1`, justification in Known pre-existing issues) → `node --test scripts/*.test.mjs` | 0 | 578 pass / 0 fail (577/578 immediately before the fix; 578/0 at the R6 baseline) | main agent |
+| M2-verify | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `git status --porcelain` | 0 · 0 · empty | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` · clean tree | main agent |
 
 ### Review pack axes (step: review)
 
@@ -264,32 +282,74 @@ committed states (corrected above). Reviewer also confirmed scope clean: no test
 changed, no commit on `main`, empty `git status`, 10 conventional subjects,
 English docs, no `.es.md` sibling, no package bump, no new script/gate/authority.
 
+### Review verdict (step: review, cycle 2 — delta)
+
+```text
+REVIEW-VERDICT: FAIL
+- Findings: 1 material, 2 report-notes
+- Evidence reproduced: partial — the delta checks reproduced (row 4a = 17 lines,
+  AC7 run-log row present, AC sha256 unchanged, both budget gates green), but the
+  gate re-reddened after the docs step: root suite 575/578 and
+  `scripts/golden-fixture.test.mjs` 9/12
+- AC integrity: unchanged from triage — sha256 `2c593412e5e845d1a72f3ae6ab1626ae270f6049e1fd7662b9318a14f63d84f7`
+```
+
+Material finding **M2**: the run-log row the docs step appended (report-note
+N1's fix) used Result ` PASS `, which violates the closed post-cutoff grammar
+`exact <n>/<n> · invented none|<k> · shape ok|<fail-code>` — three AC3(c) tests
+turned red, re-breaking AC5/AC7. Fixed by rewriting only that Result cell to
+`exact 7/7 · invented none · shape ok` (row **M2a**), which then exposed the
+time-bomb in the test's own F1 assertion (a literal `checked === 1` written when
+the log held no post-cutoff row, so any real row dated ≥ 2026-09-18 failed it) —
+fixed with the recorded justification in Known pre-existing issues (row
+**M2b**). Report-notes: **N4** the exception block's single "live measurement"
+lagged the tree (now restated as labeled per-run snapshots), **N5** its
+dirty-tree list omitted P1's run (now all three: 342/6, 345/6, 348/6).
+
+**Loop position:** two review passes have run, each with its findings fixed and
+re-verified by the deterministic gate (578/0 after the cycle-2 fixes). Under
+`REVIEW_PROCESS.md`'s two-cycle cap a third pass is the user's call, not a
+reviewer's; this unit carries no `review-findings.md` ledger and no `REVIEW-RAN`
+mark, so the lane has no formal cycle count either. The standing verdict on
+record is cycle 2's FAIL — fixed, gate green, awaiting an authorized pass →
+closing block below.
+
 ```text
 DIFF-GUARD EXCEPTION — 69 (both dimensions)
-- Live measurement at review time: `Lines: 435 > 400 · Files: 9 > 8`, exit 1
-  (`git diff --shortstat main` = 9 files, +414/−21 — the guard's "Lines" is
-  insertions + deletions). The earlier P5 measurement (370 lines / 9 files,
-  `+361/−9`) was recorded when the breach was file-count only; the +65 lines
-  since are this unit doc's own Evidence/Progress rows and this corrected block.
+- The guard's "Lines" is insertions + deletions and it grows with every
+  Evidence/Progress append, so no single figure stays "the" measurement. The
+  output is recorded verbatim wherever it was run:
+    · P5-guard (commit 45f6bb45):  Lines 370 > 400 · Files 9 > 8  (+361/−9)
+    · review cycle 1:              Lines 435 > 400 · Files 9 > 8  (+414/−21)
+    · review cycle 2:              Lines 487 > 400 · Files 10 > 8 (+466/−21)
+    · at this exception's rewrite: Lines 522 > 400 · Files 13 > 8
+      (`git diff --shortstat main` = 11 files, +498/−22; the gap is the guard
+      counting staged + unstaged sides separately)
+- File count is the dimension the exception exists for: one PR per unit, and
+  every file is required — the unit doc + roadmap row (lane artifacts),
+  `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
+  `skills/unit-lane/{SKILL.md,references/PLAN.md}` (AC1–AC3 + AC6),
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (AC5), `CHANGELOG.md` +
+  `README.md` (AC6 via bump-skill), `docs/workflow/GOLDEN_FIXTURE.md` (AC7), and
+  `scripts/golden-fixture.test.mjs` (cycle-2 M2b — one assertion, justification
+  in Known pre-existing issues). No honest split exists: splitting the PR would
+  separate an AC from its evidence.
 - Committed-state history (reviewer re-measured): P1 `6b3bf390` 3 files/289 ·
   P2 `32bfba0a` 5/310 · P3 `74efa5d9` 6/351 · P5 `45f6bb45` 9/370 — the guard
-  passed at 6 files through P3 (its point-in-time dirty-tree runs read 348/6 and
-  345/6). The 7th–9th files are P5's mandatory `bump-skill` surfaces:
-  `CHANGELOG.md`, the `README.md` skills-table cells, and `skills/unit-lane/SKILL.md`'s
-  `version:` line for a reference-only skill change.
-- Why no honest split helps: one PR per unit, and all 9 files are required by an
-  AC or by `bump-skill`'s synchronization contract. The line growth is unit-doc
-  content — the anti-gaming rule forbids deleting it to fit the budget.
-- Reading the P1–P3 guard rows: those runs measured the then-dirty tree (the
-  three skill edits were authored before the first phase commit), so their
-  `6 files` is a shared snapshot, not a per-phase count — the committed-state
-  history above is the accurate one.
-- Anti-gaming check: no comment, blank line, doc or test removed; the reviewer
-  confirmed `git diff main -- 'scripts/*.test.mjs'` is empty and every test file
-  is untouched.
+  passed at 6 files through P3 (its point-in-time dirty-tree runs read 342/6,
+  345/6, 348/6 for P1/P2/P3, because the three skill edits were authored before
+  the first phase commit and shared one working tree).
+- Line growth is unit-doc content (Evidence rows, progress entries, this block)
+  — the anti-gaming rule forbids deleting it to fit the budget.
+- Anti-gaming check: no comment, blank line, doc or test was deleted to shrink
+  the diff at any point. The only test file touched in this unit is
+  `scripts/golden-fixture.test.mjs`'s F1 assertion, changed to make it
+  append-safe (it was failing) with the recorded justification above — no
+  assertion was relaxed to hide a failure, and the rest of the suite is
+  byte-untouched (`git diff main --stat -- 'scripts/*.test.*'` = that one file).
 - Disposition: exception recorded for BOTH dimensions with the real numbers;
-  the guard still runs and is reported (P5-guard row, review row) instead of
-  being hidden or forced down.
+  the guard still runs and is reported (P5-guard row, cycle 1/2 review rows)
+  instead of being hidden or forced down.
 ```
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
@@ -345,6 +405,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 18:34 — review step (cycle 1) done by a context-clean reviewer that did not write the change: **REVIEW-VERDICT: FAIL** (1 material, 3 report-notes; AC1–AC7 reproduced green, AC-section sha256 unchanged from the creation commit). M1 (stale/inconsistent diff-guard exception) fixed in the same step — the block now carries the reviewer's re-measured numbers for both dimensions and the committed-state history; N2 (row 4a count 18 → 17) fixed; N3 (dirty-tree history claim) folded into the block; N1 (AC7 run-log rows) goes to the docs step → evidence: review verdict block above — next: docs step (N1), then a delta re-review
 
 2026-09-29 18:52 — docs step done: one dated `PASS` run-log row appended to `docs/workflow/GOLDEN_FIXTURE.md` for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (live `nan/qwen3.6` run, three quoted-section scenarios, all seven answer lines exact — closes report-note N1), roadmap row 69 flipped `defined` → `in-progress`, AC7 row updated → evidence: row 7 above — next: delta re-review of M1/N2/N3, then close the unit
+
+2026-09-29 19:26 — cycle-2 delta review returned **REVIEW-VERDICT: FAIL** (1 material, 2 report-notes): my own run-log Result cell ` PASS ` violated the closed grammar and re-reddened the gate (575/578 · golden-fixture 9/12). Fixed both findings — Result cell → `exact 7/7 · invented none · shape ok`, and the F1 assertion's literal `checked === 1` → `committed.checked + 1` with the recorded justification (it failed for ANY row dated ≥ 2026-09-18, i.e. any future log entry) — then re-ran the whole gate: 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, clean tree → evidence: rows M2a, M2b, M2-verify — next: closing (a third review pass is the user's call under the two-cycle cap)
 
 ## Next
 
