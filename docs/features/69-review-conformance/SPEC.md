@@ -227,7 +227,17 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 4 | runs **4a** + **4b** above — the same deterministic retrieval over the declared sources, once with a contradicting claim and once with a clean one | 0 · 1 | contradicting claim → one row citing `AGENTS.md:52-56`; clean claim → zero rows, no block, no gate | main agent |
 | 5 | `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 · 0 | 578/0 · `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` — every grown ceiling re-based with a declared reason | main agent |
 | 6 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` | 1 · 1 · 1 | one scoped CHANGELOG row per skill; `version:` bumped in each frontmatter by `bump-skill` | main agent |
-| 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) — run-log rows for the touched executor-path skills are appended in the `docs` step and recorded in its progress entry | 0 | 12 pass / 0 fail; run-log rows: see the docs-step entry below | main agent |
+| 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) + the manual weak-model run recorded in `docs/workflow/GOLDEN_FIXTURE.md` | 0 | 12 pass / 0 fail; run log carries one dated `PASS` row for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (2026-09-29, `nan/qwen3.6`) | main agent |
+
+### Review pack axes (step: review)
+
+| Axis | Run? | How / why not |
+|---|---|---|
+| `review-verify` (run the gate, confirm real behavior) | yes | the context-clean reviewer re-ran every evidence row and the full gate (exit codes in its report) |
+| `review-code` (correctness, consistency, duplication, simplification) | yes | charter/ownership/sweep wording cross-checked against `pre-execution-review`'s single-owner rule, the fixed report blocks, and the Non-goals; no duplicated rule found |
+| `review-security` / `review-perf` / `review-a11y` / `review-design` / `review-seo` | n/a | wording-only change: no code, no runtime path, no asset, no UI or public web surface |
+| `review-brand` | n/a | no end-user-facing copy changed — skills are agent-facing documentation |
+| `review-debt` | n/a | nothing debt-shaped in the classified table (no fix-now debt item, no TRIGGER) |
 
 ### Review verdict (step: review, cycle 1)
 
@@ -333,6 +343,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 18:05 — evidence step done: one row per AC now exists (1–7, with AC4 evidenced by its two branch runs 4a/4b plus the consolidated row 4), every row from an actual run, every command reproducible → evidence: rows 1–7 above — next: review step
 
 2026-09-29 18:34 — review step (cycle 1) done by a context-clean reviewer that did not write the change: **REVIEW-VERDICT: FAIL** (1 material, 3 report-notes; AC1–AC7 reproduced green, AC-section sha256 unchanged from the creation commit). M1 (stale/inconsistent diff-guard exception) fixed in the same step — the block now carries the reviewer's re-measured numbers for both dimensions and the committed-state history; N2 (row 4a count 18 → 17) fixed; N3 (dirty-tree history claim) folded into the block; N1 (AC7 run-log rows) goes to the docs step → evidence: review verdict block above — next: docs step (N1), then a delta re-review
+
+2026-09-29 18:52 — docs step done: one dated `PASS` run-log row appended to `docs/workflow/GOLDEN_FIXTURE.md` for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (live `nan/qwen3.6` run, three quoted-section scenarios, all seven answer lines exact — closes report-note N1), roadmap row 69 flipped `defined` → `in-progress`, AC7 row updated → evidence: row 7 above — next: delta re-review of M1/N2/N3, then close the unit
 
 ## Next
 
