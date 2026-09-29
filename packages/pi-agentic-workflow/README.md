@@ -246,7 +246,7 @@ dialog.
 
 ## Notes
 
-- Verified against Pi 0.85.1 (2026-09-05) (`pi install`, package skills, friendly
+- Verified against Pi 0.99.1 (2026-09-29) (`pi install`, package skills, friendly
   command registration, routed set/clear, settings console round-trip, `sendUserMessage`
   with prompt template expansion).
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
