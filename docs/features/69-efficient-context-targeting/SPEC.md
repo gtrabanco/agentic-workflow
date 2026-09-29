@@ -232,6 +232,10 @@ R1–R6:
   parses it and the sub-section, the plan step writes it (AC6) (validator:
   `bun scripts/phase-lint.mjs docs/features/69-efficient-context-targeting/SPEC.md`
   exit 0 plus P4's test).
+  **Split out by owner decision D-69-4 (2026-09-29):** the implementation runs
+  in prerequisite fix **#272** (`docs/fix/272-phase-lint-unit-doc-grammar/`);
+  P8 stays here as the verification + evidence step once #272 merges (the ID is
+  stable and never reused).
   - Relevant files: skills/phase-contract/SKILL.md, scripts/phase-lint.mjs, scripts/phase-lint.test.mjs, skills/unit-lane/references/PLAN.md, docs/features/_TEMPLATE/SPEC.md
 - P9 — bounded read set wiring: `execute-phase` reads the listed files plus
   one-hop references and appends forward-propagated files at phase close while
@@ -312,6 +316,11 @@ Budget: strong
   every P carries its `Relevant files:` sub-section — this unit's plan is the
   first consumer of the D-69-1 format → working tree — next: implement, after
   the pre-flight gate question below is answered
+- 2026-09-29 17:10 — owner answered the gate-entry question with **D-69-4:
+  split P8 into a prerequisite fix unit**; issue **#272** opened
+  (`phase-lint` unit-doc bullet grammar + `Relevant files:`), fix unit to be
+  created on its own branch/PR; this unit's implement steps resume when #272
+  merges → issue #272 — next: create + execute fix #272
 
 ## Next
 
@@ -319,14 +328,14 @@ Plan cut: `P1…P10`, validators named, every AC mapped, docs/release left to
 their catalog steps, and every P carries its `Relevant files:` (this unit's own
 plan is the first consumer of the D-69-1 format).
 
-**Blocker before the first `implement` step (reported, not papered over):**
-`execute-phase`'s pre-flight runs `bun scripts/phase-lint.mjs <unit-doc>` on
-every unit doc that has `## Tasks` and STOPs on exit 1 — on this doc it answers
-`BLOCKED: no-phases` (research R4), i.e. the gate blocks the very task (P8) that
-decides it. The owner is asked how to enter `implement`: a recorded `--force`
-per PREFLIGHT (logged in this Progress log before the first edit), an
-`implement` run through the unit-lane conductor's own checklist, or splitting
-P8 out first.
+**Owner decision D-69-4 (2026-09-29): split, not force.** Issue **#272**
+(`docs/fix/272-phase-lint-unit-doc-grammar/`) lands the unit-doc bullet grammar
+and the `Relevant files:` parsing on its own branch and PR; this unit's
+`implement` steps resume after it merges, with the pre-flight gate green and no
+override recorded.
+
+Next action: create + triage fix **#272**, execute it to merge, then
+`/unit-lane 69` resumes at P1.
 
 ## References
 
@@ -355,3 +364,4 @@ P8 out first.
 | D-69-1 | **Keep the lane's `P1 — <task> (validator: …)` bullets; teach `phase-lint` the unit-doc bullet grammar** (the `Relevant files:` sub-section rides the bullet) | `phase-contract` states which of the eight rules apply to the bullet grammar and which are `n/a`; `phase-lint` implements it; the execute-phase pre-flight gate starts parsing unit docs |
 | D-69-2 | **AC10 is measured with the deterministic byte proxy** — per-step read log → `files-read` + `ceil(bytes/4)` (the `SKILL_CONTEXT_BUDGETS.json` metric) | evidence rows are re-runnable byte counts, no provider billing tokens |
 | D-69-3 | **The rg sweep covers everything that says `grep` as an instruction**, README instruction lines included; POSIX shell hooks stay on `grep` (they parse) | AC4's pinned inventory = 10 skill/reference files + `docs/workflow/` sites + the fix-template checklist + README; `template/.agentic-workflow/hooks/*.sh` is excluded by rule |
+| D-69-4 | **Split P8 into a prerequisite fix unit** — asked when the pre-flight gate blocked the first `implement` step (phase-lint `no-phases` on this doc gates P8 itself); the owner chose the split over a recorded `--force` and over the conductor path | fix **#272** (`docs/fix/272-phase-lint-unit-doc-grammar/`) lands the unit-doc bullet grammar + `Relevant files:` parsing first; this unit's implement steps resume after #272 merges; P8 here becomes verification + evidence |
