@@ -214,7 +214,7 @@ Budget: strong
 | 3 | `node /tmp/pl-main.mjs <legacy plan>` vs `node scripts/phase-lint.mjs <legacy plan>` on `59-executable-continuations/PLAN.md` and `27-pi-agentic-workflow/PLAN.md` (main's linter vs this branch's) | 0 = 0 | fingerprints byte-identical (`1a3bf148…`, `85935251…`) — legacy plan files unchanged | main agent |
 | 4 | read-verified: `skills/phase-contract/SKILL.md` diff (mapping section) + `grep -c "never carries a second copy" scripts/phase-lint.mjs` | 0 | mapping stated owner-side; the script header keeps the single-source contract | main agent |
 | 5 | `bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md` | 0 | `verdict PASS` · fingerprint `c382717d…` — 4 phases `PASS (8/8)` | main agent |
-| 6 | pending (bump-skill + CHANGELOG rows run in the `docs` step) | | | |
+| 6 | `node --test scripts/*.test.mjs` + `bun scripts/check-skill-context.mjs` (+ `--routes`) + `bun run test` / `test:node` (packages/pi-agentic-workflow) + frontmatter↔CHANGELOG check (rendered-facts, in the root suite) | 0 · 0 · 0 · 0 | 597 pass; PASS 28 skills · PASS 14 routes; pi 409/409 on bun and node; `phase-contract` 1.1.0, `unit-lane` 1.1.1, pi `0.18.3` each with its newest CHANGELOG row matching | main agent |
 | T1 | `node --test scripts/phase-lint.test.mjs` | 0 | 149 pass / 0 fail — unit-doc grammar corpus + legacy pins | main agent |
 | T2 | `node --test scripts/*.test.mjs` | 0 | 597 pass / 0 fail | main agent |
 | T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
@@ -240,6 +240,18 @@ REVIEW-VERDICT: PASS
 | R-272-1 | code | material → fix-now | `parseUnitDocPhases` did not track fenced code blocks, so a fenced `- P1 —` example inside `## Tasks` linted as a real phase — quoted text produced a false finding (the plan grammar keeps fence inertness; this grammar did not) | **folded in this step**: fence inertness added + pin test `a fenced P<n> example inside ## Tasks is inert, never a phase` — 149/149, own doc fingerprint unchanged (`c382717d…`) |
 | R-272-2 | verify | report-note | `skills/execute-phase/references/PREFLIGHT.md` still describes the gate's success line as `PASS (8/8)`; a unit-doc phase prints `PASS (6/6)`. Behaviour is unaffected (the gate keys off the exit code) | route to feature 69 P9, which edits the same file — never blocks this unit |
 | R-272-3 | debt | report-note | the `Relevant files:` label is English-locked (this repo's docs are English-only); a differently-spelled label is treated as wrapped prose, never as a read set | re-trigger: any non-English or renamed label → add fail-closed handling; recorded, not built |
+
+### `bump-skill` authoring lint (docs step — 7 invariants, reported not repaired)
+
+| # | invariant | result |
+|---|---|---|
+| 1 | visible closing `→ Next:` block on every user-facing entry | ✓ `unit-lane`; `phase-contract` is `user-invocable: false` → n/a |
+| 2 | phases labeled `P1, P2, …`, never `S1` / `Step N` | ✓ — the only `Step …` hits are `unit-lane`'s standard `## Step 0` discovery heading and the checklist line that bans the labels |
+| 3 | `## Portability` in every user-facing skill | ✓ `unit-lane` |
+| 4 | `## Turn contract` opens every user-facing skill | ✓ `unit-lane` |
+| 5 | every skill directory listed in `.claude-plugin/plugin.json` | ✓ both touched skills (27 entries) |
+| 6 | the plugin array stays alphabetical | ✓ `sorted(array) == array` |
+| 7 | `user-invocable: false` **and** absent from the plugin array → `metadata.internal: true` | n/a — `phase-contract` is plugin-listed (exempt), `unit-lane` is user-invocable |
 
 ## Progress log
 
@@ -314,6 +326,12 @@ REVIEW-VERDICT: PASS
   pin test, then folded (fence inertness in `parseUnitDocPhases`) → 149/149,
   own doc fingerprint unchanged; R-272-2 / R-272-3 recorded as report-notes →
   evidence: review verdict block — next: docs
+- 2026-09-29 21:05 — docs step (bump-skill): `phase-contract` 1.0.6 → **1.1.0**
+  (minor — new grammar section), `unit-lane` 1.1.0 → **1.1.1** (patch — plan
+  contract wording), `@gtrabanco/pi-agentic-workflow` 0.18.2 → **0.18.3**
+  (re-bundle publish); CHANGELOG rows added in all three tables plus today's
+  Release-log line; authoring lint reported below (7/7 pass, no repair needed)
+  → gate: root 597/597, budgets 28/14, pi 409+409 — next: close-out P4
 
 ## Next
 
