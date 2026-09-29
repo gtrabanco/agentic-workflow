@@ -101,11 +101,12 @@
       },
       "templates": [],
       "routeEstimateMax": 12484,
-      "routeLinesMax": 889,
+      "routeLinesMax": 916,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)"
       }
     },
     "execute-phase:feature": {
@@ -146,11 +147,12 @@
       },
       "templates": [],
       "routeEstimateMax": 12368,
-      "routeLinesMax": 871,
+      "routeLinesMax": 893,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+        "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)"
       }
     },
     "execute-phase:finding": {

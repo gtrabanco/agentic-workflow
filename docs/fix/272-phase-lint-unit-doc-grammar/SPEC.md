@@ -171,9 +171,9 @@ Done-when: `node --test scripts/phase-lint.test.mjs` exits 0.
 
 Layer: docs
 
-- [ ] State the unit-doc bullet grammar and its eight-rule mapping in skills/phase-contract/SKILL.md
-- [ ] Name the accepted grammars in skills/unit-lane/references/PLAN.md
-- [ ] Note the sub-section's metadata status in docs/features/_TEMPLATE/SPEC.md
+- [x] State the unit-doc bullet grammar and its eight-rule mapping in skills/phase-contract/SKILL.md
+- [x] Name the accepted grammars in skills/unit-lane/references/PLAN.md
+- [x] Note the sub-section's metadata status in docs/features/_TEMPLATE/SPEC.md
 
 Done-when: `bun scripts/check-skill-context.mjs` exits 0.
 
@@ -252,6 +252,16 @@ Budget: strong
   exception row updated with the real content count (707 lines / 4 files;
   the guard counts both sides separately) → evidence: exception row — next:
   tests step
+- 2026-09-29 19:05 — implement P3: `phase-contract` now states both grammars
+  (plan blocks vs unit-doc bullets), the eight-box mapping table (1–2 n/a,
+  3 duplicate-number, 4–7 as written with the final-bullet exemption, 8 = the
+  `(validator: …)` span), the `Relevant files:` metadata rule and the
+  never-authority note; `unit-lane/PLAN.md` and both SPEC templates name the
+  shape; two route ceilings re-based with a declared growth source
+  (`execute-phase:descope` 889→916, `execute-phase:final-pr` 871→893, source
+  "fix #272") after `--routes` failed — budgets PASS 14 routes / 28 skills,
+  root suite 596/596, own lint `PASS` → working tree — next: diff guard + P4
+  is the close-out, so the tests catalog step runs first
 
 ## Next
 
