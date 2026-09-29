@@ -186,9 +186,9 @@ Done-when: `bun scripts/check-skill-context.mjs` exits 0.
 
 Layer: hardening
 
-- [ ] Run the root gate → exit 0 (`node --test scripts/*.test.mjs`)
-- [ ] Run the context budgets → exit 0 (`bun scripts/check-skill-context.mjs`)
-- [ ] Run this unit's own lint → exit 0 (`bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md`)
+- [x] Run the root gate → exit 0 (`node --test scripts/*.test.mjs`)
+- [x] Run the context budgets → exit 0 (`bun scripts/check-skill-context.mjs`)
+- [x] Run this unit's own lint → exit 0 (`bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md`)
 - [ ] open the PR (`gh pr create --body-file <path>`) with `Closes #272` and PRINT THE PR URL
 - [ ] update the fix index row to `done` · [#<pr>](<pr-url>) in the active-fix table
 
@@ -219,7 +219,7 @@ Budget: strong
 | T2 | `node --test scripts/*.test.mjs` | 0 | 597 pass / 0 fail | main agent |
 | T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
 | T4 | `bun run test` (packages/pi-agentic-workflow) | 0 | 409 pass / 0 fail — bundled skill mirror parity | main agent |
-| — | `bun scripts/diff-guard.mjs --base main --unit 272` (re-run at the evidence step) | 1 (BREACH) | `Lines: 842 > 400 · Files: 9 > 8` — **recorded exception** (final count): 822 insertions / 20 deletions across 9 files — unit doc 280, parser 215, corpus 211, phase-contract mapping, unit-lane PLAN, both SPEC templates, budgets JSON, fix-index row — every line AC-mandated; one honest split attempted (P1/P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit** | main agent |
+| — | `bun scripts/diff-guard.mjs --base main --unit 272` (re-run at close-out) | 1 (BREACH) | `Lines: 932 > 400 · Files: 12 > 8` — **recorded exception** (final count): 909 insertions / 23 deletions across 12 files — unit doc, parser + corpus, `phase-contract`, `unit-lane` PLAN + SKILL, both SPEC templates, budgets JSON, fix index, CHANGELOG, pi `package.json` — every line AC-mandated (the bump rows are the docs step's own contract); one honest split attempted (P1/P2/P3/tests/evidence/review/docs landed as separate commits — the guard is cumulative by design) and **nothing was deleted to fit** | main agent |
 
 ### Review verdict (step: review)
 
@@ -332,6 +332,11 @@ REVIEW-VERDICT: PASS
   (re-bundle publish); CHANGELOG rows added in all three tables plus today's
   Release-log line; authoring lint reported below (7/7 pass, no repair needed)
   → gate: root 597/597, budgets 28/14, pi 409+409 — next: close-out P4
+- 2026-09-29 21:25 — close-out gates (P4 first three boxes): root
+  `node --test scripts/*.test.mjs` → 0 (597 pass); budgets → 0 (28 skills /
+  14 routes); this unit's own lint → 0 (`verdict PASS`, `c382717d…`);
+  final diff guard `Lines: 932 > 400 · Files: 12 > 8` recorded with the full
+  file list → exception row — next: push + open the PR
 
 ## Next
 
