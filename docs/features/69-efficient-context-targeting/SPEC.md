@@ -195,7 +195,8 @@ R1–R6:
 - P1 — Tests-first ripgrep contract fixture: `scripts/fixtures/rg-contract/`
   with a gitignored build dir plus `scripts/rg-contract.test.mjs` pinning the
   three legs of AC1 and the 11-vs-12 `dist/index.d.ts` sweep of AC5, red until
-  the fixture exists (validator: `node --test scripts/rg-contract.test.mjs`).
+  the fixture exists (validator: `node --test scripts/rg-contract.test.mjs`
+  exits 0).
   - Relevant files: scripts/fixtures/rg-contract/, scripts/rg-contract.test.mjs
 - P2 — Tests-first rg-absent fallback test: a stub `PATH` holding `grep` but no
   `rg` (R5) runs the canonical search block and it must complete while
@@ -205,24 +206,24 @@ R1–R6:
 - P3 — Tests-first bootstrap installer test: fake `HOME` covers skip-when-present,
   root and sudo refusal, ask-first consent record, user-scoped managers and the
   `~/.local/bin` then `.agentic-workflow/bin/` fallback (AC3) (validator:
-  `node --test scripts/rg-bootstrap.test.mjs`, red against the missing script).
+  `node --test scripts/rg-bootstrap.test.mjs` exits 0 once the installer lands).
   - Relevant files: scripts/rg-bootstrap.test.mjs, skills/init-workspace/references/SERENA.md
 - P4 — Tests-first relevant-files discipline test: `Relevant files:` accepted
   by `phase-lint`'s unit-doc grammar, never-authority (a non-listed file stays
   editable and is logged), and the phase-close forward-propagation append
-  (AC6, AC8, AC9) (validator: `node --test scripts/relevant-files.test.mjs`,
-  red first).
+  (AC6, AC8, AC9) (validator: `node --test scripts/relevant-files.test.mjs`
+  exits 0 — red first).
   - Relevant files: scripts/relevant-files.test.mjs, scripts/phase-lint.test.mjs, docs/features/_TEMPLATE/SPEC.md
 - P5 — rg-first wording sweep over the D-69-3 inventory: default `rg` with the
   declared `command -v rg` then `grep` fallback and the explicit-human-request
-  override rule (AC4) (validator: `bun scripts/check-skill-context.mjs` plus the
-  new rg-first wording discipline test).
-  - Relevant files: skills/audit-docs/SKILL.md, skills/review-security/SKILL.md, skills/review-verify/SKILL.md, skills/review-implementation/SKILL.md, skills/triage-issue/references/ISSUE_PROCESS.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, skills/workflow-status/references/SENSOR_SIGNALS.md, skills/workflow-status/references/ENVELOPE_CORE.md, skills/review-change/SKILL.md, skills/review-change/references/REVIEW_PROCESS.md, docs/workflow/ISSUE_WORKFLOW.md, docs/workflow/PORTABLE_PROMPT.md, template/docs/fix/_TEMPLATE/SPEC.md, README.md
+  override rule (AC4) (validator: `bun scripts/check-skill-context.mjs` exits 0
+  alongside `node --test scripts/rg-wording-discipline.test.mjs`).
+  - Relevant files: skills/audit-docs/SKILL.md, skills/review-security/SKILL.md, skills/review-verify/SKILL.md, skills/review-implementation/SKILL.md, skills/triage-issue/references/ISSUE_PROCESS.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, skills/workflow-status/references/SENSOR_SIGNALS.md, skills/workflow-status/references/ENVELOPE_CORE.md, skills/review-change/SKILL.md, skills/review-change/references/REVIEW_PROCESS.md, docs/workflow/ISSUE_WORKFLOW.md, docs/workflow/PORTABLE_PROMPT.md, template/docs/fix/_TEMPLATE/SPEC.md, README.md, scripts/rg-wording-discipline.test.mjs
 - P6 — contract-grade sweep declarations: every exhaustive sweep instruction
-  declares `rg --no-ignore` or keeps `grep`, while parsing scripts keep their
-  current tool for byte-stable receipts (AC5) (validator: the discipline test
-  asserting each declared sweep site).
-  - Relevant files: skills/audit-docs/SKILL.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, scripts/check-changelog-row.mjs, docs/workflow/ISSUE_WORKFLOW.md
+  declares `rg --no-ignore` (grep stays where the receipt is parsed), while
+  parsing scripts keep their current tool for byte-stable receipts (AC5)
+  (validator: `node --test scripts/rg-wording-discipline.test.mjs` exits 0).
+  - Relevant files: skills/audit-docs/SKILL.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, scripts/check-changelog-row.mjs, docs/workflow/ISSUE_WORKFLOW.md, scripts/rg-wording-discipline.test.mjs
 - P7 — bootstrap installer implementation in the runner crate plus its
   `init-workspace` wiring and the target `.gitignore` append, P3 green (AC3)
   (validator: `node --test scripts/rg-bootstrap.test.mjs` exit 0).
@@ -240,8 +241,9 @@ R1–R6:
 - P9 — bounded read set wiring: `execute-phase` reads the listed files plus
   one-hop references and appends forward-propagated files at phase close while
   `review-change` consumes the lists as its read set around the diff and
-  findings carry affected files (AC7, AC9) (validator: P4's fixture test plus
-  the read-set assertions in it).
+  findings carry affected files (AC7, AC9) (validator:
+  `node --test scripts/relevant-files.test.mjs` exits 0 with the read-set
+  assertions).
   - Relevant files: skills/execute-phase/SKILL.md, skills/execute-phase/references/PREFLIGHT.md, skills/review-change/SKILL.md, skills/review-change/references/REVIEW_PROCESS.md, skills/unit-lane/SKILL.md
 - P10 — Verification of the whole unit: full gate plus every AC evidence row
   including the AC10 byte-proxy delta with vs without the sub-section (validator:
@@ -321,21 +323,25 @@ Budget: strong
   (`phase-lint` unit-doc bullet grammar + `Relevant files:`), fix unit to be
   created on its own branch/PR; this unit's implement steps resume when #272
   merges → issue #272 — next: create + execute fix #272
+- 2026-09-29 21:40 — fix **#272** built end-to-end on
+  `fix/272-phase-lint-unit-doc-grammar` (triage → P1–P3 → tests → evidence →
+  review → docs → close-out): `phase-lint` now parses this doc's bullet grammar;
+  **PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276)** open
+  with `Closes #272` → issue #272 — next: merge #276, then resume here
+- 2026-09-29 21:58 — plan repaired against the new grammar (preview run of
+  fix #272's linter over this doc): P1/P3/P4/P5/P9 validators now carry an
+  explicit expected outcome, P6 lost a standalone `or` (box 5) and gained a
+  backticked validator, P5/P6 `Relevant files` name the discipline test they
+  run; ACs untouched — all 10 phases `PASS (6/6)`, `verdict PASS`, fingerprint
+  `7a6f9049…` → evidence: this entry — next: merge #276, then `/unit-lane 69`
 
 ## Next
 
-Plan cut: `P1…P10`, validators named, every AC mapped, docs/release left to
-their catalog steps, and every P carries its `Relevant files:` (this unit's own
-plan is the first consumer of the D-69-1 format).
-
-**Owner decision D-69-4 (2026-09-29): split, not force.** Issue **#272**
-(`docs/fix/272-phase-lint-unit-doc-grammar/`) lands the unit-doc bullet grammar
-and the `Relevant files:` parsing on its own branch and PR; this unit's
-`implement` steps resume after it merges, with the pre-flight gate green and no
-override recorded.
-
-Next action: create + triage fix **#272**, execute it to merge, then
-`/unit-lane 69` resumes at P1.
+**Prerequisite ready:** fix [#276](https://github.com/gtrabanco/agentic-workflow/pull/276)
+(issue #272) is open with every triaged step run and green gates — merge it,
+then `/unit-lane 69` resumes at **P1** with a green pre-flight gate (this doc's
+10 phases already lint `PASS (6/6)` against the landed grammar, fingerprint
+`7a6f9049…`). No override, no `--force`.
 
 ## References
 
