@@ -88,9 +88,13 @@ blocking it.
    printing `1` for each touched skill.
 7. **Golden-fixture / context re-checks.** `node --test scripts/golden-fixture.test.mjs`
    exits 0, and every touched **executor-path** skill has a dated run-log row in
-   `docs/workflow/GOLDEN_FIXTURE.md` recording `PASS` or `NOT RUN — <explicit
-   reason>` for its fixture (the audit-evidence provenance fixture for
-   `product-audit`). A silent skip fails this AC.
+   `docs/workflow/GOLDEN_FIXTURE.md` whose Result cell matches the enforced
+   grammar (`exact <n>/<n> · invented none\|<k> · shape ok\|<fail-code>`) —
+   post-cutoff rows only (pre-cutoff are grandfathered).
+   A manual weak-model run not executable in this session is recorded with
+   `NOT RUN — <explicit reason>` in the narrative column; the Result cell
+   still matches the grammar.
+   A silent skip fails this AC.
 
 ## Non-goals
 
@@ -225,9 +229,9 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | D1 | design closure — entities/roles/expectation surface reviewed against AC1–AC7 (entities: `review-change`, `product-audit`, `unit-lane` plan step, `SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `GOLDEN_FIXTURE.md` run log; roles: planner, reviewer, auditor, maintainer, CI gates) | recorded | charter → new `## Review charter` in `review-change/SKILL.md`; ownership → `product-audit` frontmatter description + `## When to use`; sweep → `skills/unit-lane/references/PLAN.md` alone (`pre-execution-review` untouched — single-owner rule) | main agent |
 | 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 17 candidate lines across 8 source files (re-counted at review); the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
-| P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit, where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
+| P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit.*where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
-| P3 | AC3's three greps over `skills/unit-lane/references/PLAN.md` (fixed shape 1 · candidate sources 4 · `Advisory only` 1 + routing 3 + `never blocks` 2) + diff guard + context gate | 1 · 4 · 1/3/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
+| P3 | AC3's greps over `skills/unit-lane/references/PLAN.md` (table header 1 · decisions.md 2 · Advisory only 1 + routing 2 + never blocks 2) + diff guard + context gate | 1 · 2 · 1/2/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
 | P4 | `bun scripts/check-skill-context.mjs` with the re-based ceiling | 0 | `PASS context budgets: 28 skills` — `product-audit` `mainEstimateMax` 2800 → 3192, declared reason `feature 69 / issue #270` (2799 → 2901 measured) | main agent |
 | P4b | `node scripts/check-skill-context.mjs --routes` (first run at the tests step was **red**: the charter grew the four `review-change` route loads) → re-based the four route ceilings, then re-run | 1 → 0 | route failures `19509 < 19960`, `17691 < 18142` ×2, `18207 < 18658` (+ the line ceilings) → `PASS route budgets: 14 routes`, each ceiling now `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` source | main agent |
 | P5 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` + bump-skill's 7 authoring-lint rules | 1 · 1 · 1 · lint reported | one scoped CHANGELOG row per skill; lint rules 2–7 pass for all three, rule 1 is a **pre-existing** warning for `review-change` (its closing block is printed from `references/PERSIST_AND_DECIDE.md` step 14, not from `SKILL.md`) | main agent |
@@ -242,7 +246,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 4 | runs **4a** + **4b** above — the same deterministic retrieval over the declared sources, once with a contradicting claim and once with a clean one | 0 · 1 | contradicting claim → one row citing `AGENTS.md:52-56`; clean claim → zero rows, no block, no gate | main agent |
 | 5 | `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 · 0 | 578/0 · `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` — every grown ceiling re-based with a declared reason | main agent |
 | 6 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` | 1 · 1 · 1 | one scoped CHANGELOG row per skill; `version:` bumped in each frontmatter by `bump-skill` | main agent |
-| 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) + the manual weak-model run recorded in `docs/workflow/GOLDEN_FIXTURE.md` | 0 | 12 pass / 0 fail; run log carries one dated `PASS` row for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (2026-09-29, `nan/qwen3.6`) | main agent |
+| 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) + the manual weak-model run recorded in `docs/workflow/GOLDEN_FIXTURE.md` | 0 | 12 pass / 0 fail; GOLDEN_FIXTURE.md carries one dated `exact 7/7 · invented none · shape ok` row for `review-change` 3.9.0 · `product-audit` 3.4.0 · `unit-lane` 1.2.0 (2026-09-29), plus a `NOT RUN` row for the audit-evidence provenance fixture of `product-audit` 3.4.0 | main agent |
 | M2a | run-log row's Result cell rewritten to the closed grammar (`exact 7/7 · invented none · shape ok`) → `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail — the row's own Result cell, not the row, was what broke `RESULT_GRAMMAR` | main agent |
 | M2b | F1 assertion made append-safe (`result.checked === runLogGrammar(DOC).checked + 1`, justification in Known pre-existing issues) → `node --test scripts/*.test.mjs` | 0 | 578 pass / 0 fail (577/578 immediately before the fix; 578/0 at the R6 baseline) | main agent |
 | M2-verify | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `git status --porcelain` | 0 · 0 · empty | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` · clean tree | main agent |
@@ -438,7 +442,7 @@ What is deliberately **not** done here, and why:
    does not mention the new charter; route to `/audit-docs` if that docs pass is
    wanted.
 
-Closing recommendation in the `→ Next:` block below.
+
 
 ## References
 

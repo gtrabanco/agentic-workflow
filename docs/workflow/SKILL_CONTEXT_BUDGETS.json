@@ -298,7 +298,7 @@
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (17701/1277 measured → 19472/1405 declared); the review-change:adversarial route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (default routes 16082 -> 16492 est / 1172 -> 1198 lines); ceiling re-based to ceil(measured x 1.10)"
+        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (18145 -> 19960 est / 1306 -> 1437 lines); ceiling re-based to ceil(measured x 1.10)"
       }
     },
     "review-change:default-backend": {
@@ -327,7 +327,7 @@
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-backend route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (default routes 16082 -> 16492 est / 1172 -> 1198 lines); ceiling re-based to ceil(measured x 1.10)"
+        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)"
       }
     },
     "review-change:default-web": {
@@ -356,7 +356,7 @@
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-web route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (default routes 16082 -> 16492 est / 1172 -> 1198 lines); ceiling re-based to ceil(measured x 1.10)"
+        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)"
       }
     },
     "review-change:synthesize": {
@@ -385,7 +385,7 @@
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16516/1191 measured → 18168/1311 declared); the synthesize route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (default routes 16082 -> 16492 est / 1172 -> 1198 lines); ceiling re-based to ceil(measured x 1.10)"
+        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16961 -> 18658 est / 1220 -> 1342 lines); ceiling re-based to ceil(measured x 1.10)"
       }
     }
   },
