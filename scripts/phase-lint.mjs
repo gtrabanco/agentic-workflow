@@ -724,7 +724,21 @@ function parseUnitDocPhases(text) {
   const seen = new Set();
   let current = null;
   let collectingFiles = false;
+  let fence = null;
   for (const line of body.split("\n")) {
+    const trimmed = line.trim();
+    // Fence inertness — the same contract the plan grammar keeps: a fenced
+    // example of a bullet is quoted text, never a phase, so a unit doc may
+    // show its own shape without linting the example.
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
     const bullet = UNIT_DOC_BULLET.exec(line);
     if (bullet) {
       const number = Number(bullet[1]);
