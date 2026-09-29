@@ -165,24 +165,33 @@ the `tests` triage step therefore runs rather than being skipped.
 
 ## Tasks
 
-- P1 — Research: map the exact wording surfaces (charter clauses in
-  `review-change`, ownership sentence in `product-audit`, sweep home in the lane)
-  and record the measured context-budget ceilings. (validator: greps + `bun scripts/check-skill-context.mjs` exit 0)
-- P2 — Design: fix the charter wording set and the sweep wording set (fixed
-  table shape, candidate sources, advisory contract); confirm AC1–AC3 clauses are
-  all expressible within budget. (validator: AC1–AC3 grep set stated in Evidence)
-- P3 — Plan: cut these tasks from the ACs with validators, smallest first, and
-  run the sweep demonstration both ways. (validator: filled `claim | prior
-  decision | source path | verdict` row + the zero-row clean case in Evidence)
-- P4 — Implement: apply the wording to `skills/review-change/SKILL.md`,
-  `skills/product-audit/SKILL.md`, `skills/unit-lane/references/PLAN.md` (+ the
-  budgets file if a ceiling must be re-based), then `bump-skill` for every
-  touched `SKILL.md`. (validator: AC1–AC3 + AC6 greps; diff guard exit 0)
-- P5 — Docs: CHANGELOG rows, README/roadmap sync, golden-fixture run-log rows.
-  (validator: `node scripts/check-changelog-row.mjs <skill> <version>` = 1 each)
-- P6 — Verification: root suite, context-budget gate, golden-fixture suite, AC
-  greps — all green. (validator: `node --test scripts/*.test.mjs` exit 0 and
-  `bun scripts/check-skill-context.mjs` exit 0)
+- P1 — `review-change`: add a `## Review charter` section after `## Scope` with
+  the four clauses — dismantle the claim · in-scope defects are this review's job
+  (plus other features' requirements) · ask-don't-infer on the expectation
+  surface · repo-wide hunting routes to `product-audit`. (validator: AC1's four
+  greps, ≥1 hit each)
+- P2 — `product-audit`: add the ownership claim to the frontmatter
+  `description:` and one `## When to use` bullet. (validator: AC2's two greps)
+- P3 — `unit-lane` plan step: add the prior-decisions contradiction sweep —
+  fixed `claim | prior decision | source path | verdict` table, candidate source
+  list, two-value verdict, advisory routing — plus its checklist boxes and
+  forbidden lines. (validator: AC3's three greps)
+- P4 — Context budgets: re-base every ceiling the wording grew, each with a
+  declared reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`. (validator:
+  `bun scripts/check-skill-context.mjs` exit 0 and the new reason line present)
+- P5 — Versioning: run `bump-skill` for each touched `SKILL.md` (version +
+  `CHANGELOG.md` row + README/SKILLS table sync). (validator:
+  `node scripts/check-changelog-row.mjs <skill> <version>` prints `1` per touched
+  skill)
+- P6 — Verification: the full gate plus the whole AC grep set, re-running the
+  AC4 demonstration. (validator: `node --test scripts/*.test.mjs` exit 0,
+  `bun scripts/check-skill-context.mjs` exit 0, every AC grep at its expected
+  count)
+
+AC→task map: AC1→P1, AC2→P2, AC3→P3, AC4→plan step now (rows 4a/4b) and re-run
+at P6, AC5→P4+P6, AC6→P5, AC7→P6 plus the catalog's `docs` step, which owns the
+`GOLDEN_FIXTURE.md` run-log rows (docs tasks are deliberately not cut here).
+Ordered smallest-first; P6 is the verification tail.
 
 ## Evidence
 
@@ -198,6 +207,9 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | R4 | `grep -rn 'bug hunt\|security research\|broken-version\|prior decision\|contradiction sweep' skills/` | 0 | one unrelated `RECOMMENDED_SKILLS` row; neither the repo-wide ownership claim nor the sweep exists yet | main agent |
 | R5 | `bun scripts/check-skill-context.mjs` | 0 | PASS, 28 skills — main-est `product-audit` 2799/2800, `review-change` 2327/2800, `unit-lane` 1880/2800; desc-est 71 / 80 / 50 of 120 | main agent |
 | R6 | `node --test scripts/*.test.mjs` (baseline, before any edit) | 0 | 578 pass / 0 fail — fresh worktree needed `packages/agentic-workflow-schema` built first (setup, not a code change) | main agent |
+| D1 | design closure — entities/roles/expectation surface reviewed against AC1–AC7 (entities: `review-change`, `product-audit`, `unit-lane` plan step, `SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `GOLDEN_FIXTURE.md` run log; roles: planner, reviewer, auditor, maintainer, CI gates) | recorded | charter → new `## Review charter` in `review-change/SKILL.md`; ownership → `product-audit` frontmatter description + `## When to use`; sweep → `skills/unit-lane/references/PLAN.md` alone (`pre-execution-review` untouched — single-owner rule) | main agent |
+| 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 18 candidate lines; the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
+| 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
 enough for the golden-fixture manual run is reachable in this session — AC7
@@ -226,6 +238,10 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 15:32 — triage ran (block above pasted verbatim); root suite baseline green (`node --test scripts/*.test.mjs` 578/0 after building `packages/agentic-workflow-schema/dist`, a fresh-worktree setup step) → working tree — next: research step
 
 2026-09-29 15:48 — research step done (rows R1–R6): no charter/sweep wording exists in either skill; 35 decisions.md sources; `## Design status` legacy-only; measured ceilings recorded; placement question and fleet-model question stated as uncertainties → working tree — next: design step
+
+2026-09-29 16:05 — design step done (row D1): the three wording homes fixed — a `## Review charter` section in `review-change` (after `## Scope`, before `## Step 0`, inside its 473-estimate headroom), the ownership claim in `product-audit`'s frontmatter `description:` + `## When to use` bullet (its file sat 1 estimate unit under the ceiling, so the growth ships with a declared `mainEstimateMax` re-basis), and the sweep as a section of `skills/unit-lane/references/PLAN.md` carrying the fixed `claim | prior decision | source path | verdict` table with a two-value verdict vocabulary (`contradicts` → routes to `resolve-repository-state`/`NEEDS-DECISION`, `compatible` → no action); no second copy in `pre-execution-review`, whose own single-owner guardrail forbids restating a shared rule → working tree — next: plan step
+
+2026-09-29 16:22 — plan step done: tasks P1–P6 cut with validators, smallest first, P6 = verification (AC→task map above); the sweep demonstration ran both ways (rows 4a/4b — the contradicting claim cites `AGENTS.md:52-56`, the clean claim returns zero candidates and nothing blocks) → working tree — next: implement (P1)
 
 ## Next
 
