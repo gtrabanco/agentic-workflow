@@ -16,22 +16,25 @@
  *   YYYY-MM-DD HH:MM — <kind/code> — <invocation|stop> — <k>/<cap>
  */
 
+import { DEFAULT_CONDUCTOR_CONFIG } from "./types.js";
 import type {
   CloseoutStatus,
-  ConductorConfig,
   ContinuationPrecondition,
   LoopDeps,
   LoopResult,
 } from "./types.js";
 import { checkCloseout } from "./closeout.js";
 
-/** Default config used when deps.config is not provided. */
-export const DEFAULT_CONDUCTOR_CONFIG: ConductorConfig = {
-  iterationsCap: 12,
-  sensitivePaths: [],
-  securityPaths: [],
-  runLogPath: ".agentic-workflow/advance-run.log",
-};
+/**
+ * The one shipped default, owned by `types.ts` (deeply frozen so that merges
+ * always produce new objects) and re-exported here so this module's surface is
+ * unchanged. `loop.ts` used to declare a SECOND copy of the same object literal:
+ * the package then published two identically-named constants —
+ * `DEFAULT_CONDUCTOR_CONFIG` and its `DEFAULT_CONDUCTOR_CONFIG_LOOP` alias —
+ * which could silently diverge, and the loop's own fallback was mutable while
+ * the published one was frozen.
+ */
+export { DEFAULT_CONDUCTOR_CONFIG };
 
 /**
  * Fallback command-name set used when deps.commandNames is not provided.
