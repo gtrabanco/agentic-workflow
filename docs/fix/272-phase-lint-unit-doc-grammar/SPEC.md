@@ -153,8 +153,8 @@ repaired.
 
 Layer: config/infra
 
-- [ ] Parse the lane's `P<n> — <task> (validator: …)` bullets from a unit doc's `## Tasks` section in scripts/phase-lint.mjs (validator: `node --test scripts/phase-lint.test.mjs`)
-- [ ] Keep `BLOCKED: no-phases` for a document where neither grammar carries a phase, pinned in scripts/phase-lint.test.mjs
+- [x] Parse the lane's `P<n> — <task> (validator: …)` bullets from a unit doc's `## Tasks` section in scripts/phase-lint.mjs (validator: `node --test scripts/phase-lint.test.mjs`)
+- [x] Keep `BLOCKED: no-phases` for a document where neither grammar carries a phase, pinned in scripts/phase-lint.test.mjs
 
 Done-when: `node --test scripts/phase-lint.test.mjs` exits 0.
 
@@ -204,12 +204,13 @@ Budget: strong
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| 1 | pending | | | |
+| 1 | `node --test scripts/phase-lint.test.mjs` + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real unit doc) | 0 · 145 pass | unit-doc bullets lint to `PASS (6/6)` with `P<n>:unit-doc:…` fingerprints; feature 69 now gets rule verdicts instead of `no-phases` | main agent |
 | 2 | pending | | | |
 | 3 | pending | | | |
 | 4 | pending | | | |
 | 5 | pending | | | |
 | 6 | pending | | | |
+| — | `bun scripts/diff-guard.mjs --base main --unit 272` | 1 (BREACH) | Lines: 636 > 400 · Files: 5 ≤ 8 — **recorded exception**: the diff is this unit doc (268) + the parser (178) + its test corpus (183) + the fix-index row (1), every line AC-mandated; one honest split attempted (P1 and P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit**; unit budget declared at 700 lines / 8 files, re-run with `--max-lines 700` after each implement phase | main agent |
 
 ## Progress log
 
@@ -227,6 +228,17 @@ Budget: strong
   AC4→P3, AC5→P4, AC6→P4; smallest first; a validator (command or outcome) per
   task; final task is verification; the bump-skill/CHANGELOG work moved out of
   the plan into the triaged `docs` step → working tree — next: implement P1
+- 2026-09-29 18:05 — implement P1 (tests-first): 18 unit-doc grammar tests
+  added first — 16 failed against the missing parser, the 2 `no-phases` pins
+  already held — then the bullet parser + the boxes 3–8 mapping landed;
+  145/145 in `scripts/phase-lint.test.mjs`, root suite 593/593, legacy
+  `59-executable-continuations/PLAN.md` fingerprint byte-identical
+  (`1a3bf148…`), budgets PASS; this doc's own phase-lint verdict stays
+  `PASS (8/8)` → evidence: AC1 row — next: implement P2
+- 2026-09-29 18:12 — diff guard after P1: `DIFF-GUARD BREACH — 272` /
+  `Lines: 636 > 400 · Files: 5 > 8` (exit 1); exception recorded in the
+  Evidence table (unit doc + parser + corpus are AC-mandated, nothing deleted,
+  P1/P2 split already attempted) → evidence: exception row — next: implement P2
 
 ## Next
 

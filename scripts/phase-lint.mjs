@@ -12,10 +12,20 @@
  * stdout: one fixed, byte-stable text block — a `Phase-lint:` line per phase,
  * one `<rule-id>: <finding>` line per failing rule, a final verdict line, and a
  * `fingerprint: <sha256>` line over the newline-joined per-phase fingerprints.
- * exit: 0 only when every phase is `PASS (8/8)` and the verdict is `PASS`.
+ * exit: 0 only when every phase passes and the verdict is `PASS`.
+ *
+ * Two grammars, one verdict contract (fix #272; the mapping is owned by
+ * `skills/phase-contract/SKILL.md`):
+ *   plan grammar   — `##/###/#### P<n> — Title` + `Layer:` + checkbox tasks
+ *                    + `Done-when:`; every phase reports `PASS (8/8)`.
+ *   unit-doc grammar — `P<n> — <task> (validator: …)` bullets inside the unit
+ *                    doc's `## Tasks` section; boxes 1 and 2 have no input
+ *                    there and are skipped, so a clean phase reports
+ *                    `PASS (6/6)`.
+ * Plan-style phase headings win when a document carries both.
  *
  * Fail-closed reason codes: `missing-plan` (no argument, or a path that does
- * not exist), `no-phases` (readable file with zero phase headings),
+ * not exist), `no-phases` (readable file with no phase in either grammar),
  * `unparseable` (unreadable file, missing/out-of-enum `Layer:` line, or a task
  * target the frozen prefix table cannot map), `lint-blocked` (a rule failure).
  *
@@ -591,11 +601,15 @@ function box6(phase) {
  * other than the final hardening phase" (F39).
  */
 function box7(phase) {
-  const hardened = HARDENING_LAYERS.has(phase.layer);
+  // The two exemptions are both positional: the plan grammar calls the final
+  // hardening/close-out phase `finalCloseOut`; the unit-doc grammar declares no
+  // layer, so its own flag marks the final bullet (the unit doc's
+  // verification/close-out line) — see `skills/phase-contract/SKILL.md`.
+  const hardened = HARDENING_LAYERS.has(phase.layer) || phase.finalUnitDoc === true;
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     const manualGate = !hardened && (/manual/i.test(task) || /\bask the users?\b/i.test(task));
-    const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut;
+    const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut && !phase.finalUnitDoc;
     if (manualGate || forgeGate) {
       findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
     }
@@ -669,10 +683,162 @@ function lintPhase(phase) {
   return { findings };
 }
 
+/**
+ * Unit-doc bullet grammar (fix #272; mapping owned by
+ * `skills/phase-contract/SKILL.md`).
+ *
+ * A lane-written unit doc has no phase headings: its `## Tasks` section holds
+ * one `P<n> — <task> (validator: …)` bullet per phase, and the lines that wrap
+ * under it join the bullet's scan text.
+ */
+const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
+
+/** A `Relevant files:` entry must name a path or a glob — fail closed else. */
+function isPathOrGlob(entry) {
+  if (entry === "" || /\s/.test(entry)) return false;
+  if (entry.includes("*") || entry.includes("?")) return true;
+  return entry.includes("/") || EXTENSIONS.some((extension) => entry.endsWith(extension));
+}
+
+/**
+ * Extract the phases from a unit doc's `## Tasks` section. A blank line or a
+ * heading ends the current bullet's continuation; a second `P<n> —` bullet
+ * starts the next phase; anything else joins the bullet's scan text (so a
+ * wrapped task line is still judged by boxes 4–7).
+ */
+function parseUnitDocPhases(text) {
+  const heading = /^## Tasks[ \t]*$/m.exec(text);
+  if (!heading) return [];
+  const rest = text.slice(heading.index + heading[0].length);
+  const end = /^## /m.exec(rest);
+  const body = end ? rest.slice(0, end.index) : rest;
+
+  const phases = [];
+  const seen = new Set();
+  let current = null;
+  for (const line of body.split("\n")) {
+    const bullet = UNIT_DOC_BULLET.exec(line);
+    if (bullet) {
+      const number = Number(bullet[1]);
+      current = { number, lines: [bullet[2]], duplicate: seen.has(number) };
+      seen.add(number);
+      phases.push(current);
+      continue;
+    }
+    if (!current) continue;
+    if (line.trim() === "" || /^#{1,6}\s/.test(line.trim())) {
+      current = null;
+      continue;
+    }
+    current.lines.push(line.trim());
+  }
+
+  return phases.map((phase) => {
+    const first = (phase.lines[0] || "").trim();
+    const titleEnd = first.indexOf("(validator:");
+    const head = (titleEnd === -1 ? first : first.slice(0, titleEnd)).trim();
+    const title = (head.split(":")[0] || head).trim() || first;
+    const scan = phase.lines.join(" ");
+    const validatorAt = scan.indexOf("(validator:");
+    const validator =
+      validatorAt === -1
+        ? null
+        : scan.slice(validatorAt + "(validator:".length).replace(/\)\s*$/, "").trim();
+    return {
+      number: phase.number,
+      title,
+      tasks: [first],
+      taskScan: [scan],
+      ticks: [],
+      layer: null,
+      kind: "unit-doc",
+      validator,
+      duplicate: phase.duplicate,
+      body: phase.lines,
+    };
+  });
+}
+
+/** Box 8's unit-doc reading: the bullet's `(validator: …)` span is its done-when. */
+function box8UnitDoc(phase) {
+  if (phase.validator === null || phase.validator === "") {
+    return ["bullet carries no `(validator: …)`"];
+  }
+  if (!/`[^`]+`/.test(phase.validator)) return ["`(validator: …)` carries no backticked command"];
+  if (!OUTCOME_ANCHOR.test(phase.validator)) return ["`(validator: …)` carries no expected outcome"];
+  return [];
+}
+
+/** Judge one unit-doc phase against the mapped boxes; returns `{ findings }`. */
+function lintUnitDocPhase(phase, isLast) {
+  phase.finalUnitDoc = isLast;
+  const findings = [];
+  if (phase.duplicate) findings.push({ label: "box-3", reason: `duplicate unit-doc phase P${phase.number}` });
+  for (const [index, check] of BOXES.entries()) {
+    // Boxes 1–2 have no input in this grammar (no separate title line, no
+    // layer); box 3's per-phase budget is structural (a bullet is one task)
+    // and its duplicate case is raised above.
+    if (index <= 2) continue;
+    if (index === 7) {
+      for (const reason of box8UnitDoc(phase)) findings.push({ label: "box-8", reason });
+      continue;
+    }
+    const view = index >= 3 && index <= 6 ? { ...phase, tasks: phase.taskScan } : phase;
+    const result = check(view);
+    if (result && !Array.isArray(result)) {
+      if (result.ambiguous) return { ambiguous: result.ambiguous };
+      for (const reason of result.findings) findings.push({ label: `box-${index + 1}`, reason });
+      continue;
+    }
+    for (const reason of result) findings.push({ label: `box-${index + 1}`, reason });
+  }
+  return { findings };
+}
+
+/** The full run over a unit doc's bullet phases — same block shape, `6/6` boxes. */
+function lintUnitDocPhases(phases) {
+  const fingerprints = [];
+  const results = [];
+  for (const [index, phase] of phases.entries()) {
+    fingerprints.push(`P${phase.number}:unit-doc:${phase.tasks.length}:${titleDeliverable(phase.title)}`);
+    const result = lintUnitDocPhase(phase, index === phases.length - 1);
+    if (result.ambiguous) {
+      return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
+    results.push({ phase, findings: result.findings });
+  }
+
+  const lines = [];
+  let blocked = false;
+  for (const [index, { phase, findings }] of results.entries()) {
+    if (findings.length === 0) {
+      lines.push(`P${phase.number} Phase-lint: PASS (6/6) · fingerprint ${fingerprints[index]}`);
+      continue;
+    }
+    blocked = true;
+    for (const finding of findings) lines.push(`P${phase.number} ${finding.label}: ${finding.reason}`);
+    const summary = findings[0].label.replace(/^box-/, "box ");
+    lines.push(`P${phase.number} Phase-lint: BLOCKED — ${summary}: ${findings[0].reason}`);
+  }
+  lines.push(blocked ? "verdict BLOCKED: lint-blocked" : "verdict PASS");
+  lines.push(`fingerprint: ${digest(fingerprints)}`);
+  return { verdict: blocked ? "BLOCKED: lint-blocked" : "PASS", exitCode: blocked ? 1 : 0, lines };
+}
+
 /** The full run over one Markdown document. */
 export function lintPlan(text) {
-  const phases = parsePhases(normalizeTerminators(text));
-  if (phases.length === 0) return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
+  const normalized = normalizeTerminators(text);
+  const phases = parsePhases(normalized);
+  if (phases.length === 0) {
+    // Second grammar (fix #272): a lane-written unit doc carries no phase
+    // headings, only bullets in its `## Tasks` section. Both grammars are
+    // exhausted before the file may answer `no-phases`.
+    const unitDocPhases = parseUnitDocPhases(normalized);
+    if (unitDocPhases.length === 0) {
+      return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
+    }
+    return lintUnitDocPhases(unitDocPhases);
+  }
 
   for (const phase of phases) {
     // F83 re-cut: the layer declaration is exactly-one. A second `Layer:` line
