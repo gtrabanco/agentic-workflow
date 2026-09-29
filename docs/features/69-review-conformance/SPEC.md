@@ -246,6 +246,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | M2a | run-log row's Result cell rewritten to the closed grammar (`exact 7/7 · invented none · shape ok`) → `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail — the row's own Result cell, not the row, was what broke `RESULT_GRAMMAR` | main agent |
 | M2b | F1 assertion made append-safe (`result.checked === runLogGrammar(DOC).checked + 1`, justification in Known pre-existing issues) → `node --test scripts/*.test.mjs` | 0 | 578 pass / 0 fail (577/578 immediately before the fix; 578/0 at the R6 baseline) | main agent |
 | M2-verify | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `git status --porcelain` | 0 · 0 · empty | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` · clean tree | main agent |
+| CLOSE | final gate: `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `bun scripts/diff-guard.mjs --base main --unit 69` | 0 · 0 · 0 · 1 (BREACH, excepted) | 578/0 · PASS 28 skills · PASS 14 routes · `Lines: 564 > 400 · Files: 11 > 8` (exception block) | main agent |
 
 ### Review pack axes (step: review)
 
@@ -325,6 +326,8 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
     · at this exception's rewrite: Lines 522 > 400 · Files 13 > 8
       (`git diff --shortstat main` = 11 files, +498/−22; the gap is the guard
       counting staged + unstaged sides separately)
+    · final gate (closing):       Lines 564 > 400 · Files 11 > 8
+      — the closing progress entry itself adds a few lines after this run
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
@@ -408,14 +411,40 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 
 2026-09-29 19:26 — cycle-2 delta review returned **REVIEW-VERDICT: FAIL** (1 material, 2 report-notes): my own run-log Result cell ` PASS ` violated the closed grammar and re-reddened the gate (575/578 · golden-fixture 9/12). Fixed both findings — Result cell → `exact 7/7 · invented none · shape ok`, and the F1 assertion's literal `checked === 1` → `committed.checked + 1` with the recorded justification (it failed for ANY row dated ≥ 2026-09-18, i.e. any future log entry) — then re-ran the whole gate: 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, clean tree → evidence: rows M2a, M2b, M2-verify — next: closing (a third review pass is the user's call under the two-cycle cap)
 
+2026-09-29 19:44 — unit closed locally: all nine triaged steps executed; final gate 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, diff-guard BREACH excepted on both dimensions (`Lines 564 > 400 · Files 11 > 8`, exception block); review verdict on record = cycle 2 `FAIL` with its findings fixed and gate-verified (rows M2a/M2b/M2-verify), AC-section sha256 unchanged since creation → working tree — next: operator authorizes `/review-change`, then push + `Closes #270` PR → `/audit-pr`
+
 ## Next
 
-`/unit-lane 69-review-conformance` — continue with the next triaged step.
+All nine triaged steps ran (research · design · plan · implement · tests ·
+evidence · review · docs; `release` skipped by the catalog for small scope) and
+the final gate is green: **578/0**, both budget gates PASS, diff-guard BREACH
+recorded with a full exception.
+
+What is deliberately **not** done here, and why:
+
+1. **A third review pass.** The verdict on record is review cycle 2's `FAIL`,
+   whose findings are fixed and gate-verified (rows M2a/M2b/M2-verify). Under
+   `REVIEW_PROCESS.md`'s two-cycle cap a further pass is the operator's call —
+   it is the next command, not a step this unit may take on its own.
+2. **Push + PR.** The catalog skipped the `release` step, and a unit whose review
+   verdict is `FAIL` must not be presented as merge-ready; the branch
+   `270-review-conformance` is local. After a passing pass: push it, open the
+   single PR against `main` with `Closes #270`, then `/audit-pr`.
+3. **npm re-bundle.** Skill-only changes do not republish the pi package
+   (paths filter + version gate); if the npm channel must carry the charter
+   immediately, bump `packages/pi-agentic-workflow/package.json` (patch) — a
+   deliberate owner decision, never a silent side effect.
+4. **Report-note (proposal, not a finding):** `docs/workflow/REVIEW_AND_CLASSIFY.md`
+   does not mention the new charter; route to `/audit-docs` if that docs pass is
+   wanted.
+
+Closing recommendation in the `→ Next:` block below.
 
 ## References
 
 - Closes #270 — <https://github.com/gtrabanco/agentic-workflow/issues/270>
-- Roadmap row: `docs/features/ROADMAP.md` row 69
+- Roadmap row: `docs/features/ROADMAP.md` row 69 (`in-progress`)
+- Branch: `270-review-conformance` (local until a passing review — see `## Next`)
 - Owner decision record: `docs/LOGS.md` (2026-09-29 — charter restatement,
   Idea 3 contradiction sweep, JEV parked)
 - Candidate decision sources for the sweep: `docs/features/<NN>-<slug>/decisions.md`,
