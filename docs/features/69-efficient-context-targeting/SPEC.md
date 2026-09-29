@@ -79,9 +79,12 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
    `~/.local/bin` when that is writable and on `$PATH`, and (f) otherwise lands
    in `.agentic-workflow/bin/` plus the gitignore entry the `init-workspace`
    template provides. Verified by tests with a fake `HOME`.
-4. **Adoption surface.** Every skill/reference file in this repo whose wording
-   instructs an agent to "grep" is rg-first with the fallback and the override
-   rule (the pinned inventory — ~10 files — is listed in Evidence);
+4. **Adoption surface.** Every instruction site in this repo that tells a reader
+   to `grep` is rg-first with the fallback and the override rule — the pinned
+   inventory is the 10 skill/reference files, the `docs/workflow/` instruction
+   sites, the fix-template checklist and the README instruction lines (owner
+   decision D-69-3: sweep everything that says grep; POSIX shell hooks stay on
+   `grep` — they parse). The full file list is pinned in Evidence;
    `bun scripts/check-skill-context.mjs` is green; `bump-skill` ran for every
    touched skill; CHANGELOG rows exist for each.
 5. **Contract-grade sweeps stay exhaustive.** Where this repo instructs an
@@ -104,9 +107,11 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
 9. **Forward propagation.** When a phase discovers files relevant to later
    phases, it appends them to those phases' sub-sections at phase close;
    documented in the owning skill and covered wherever the check is mechanical.
-10. **Measured delta recorded as Evidence.** Files-read / tokens for one
-    plan → execute → review cycle **with** vs **without** the sub-section
-    (same bar as #192's savings AC).
+10. **Measured delta recorded as Evidence.** For one plan → execute → review
+    cycle **with** vs **without** the sub-section: files-read and estimated
+    tokens from the deterministic byte proxy — per-step read log, `files-read`
+    and `ceil(bytes / 4)`, the same metric `SKILL_CONTEXT_BUDGETS.json` uses
+    (owner decision D-69-2) — recorded as an Evidence row.
 
 ## Non-goals
 
@@ -161,10 +166,11 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
   `scripts/phase-lint.mjs` answers `BLOCKED: no-phases` (exit 1) on every unit
   doc written by the current plan step, while `execute-phase` PREFLIGHT says to
   STOP on any exit 1 whenever `## Tasks` exists — so the pre-flight gate as
-  written would block every implement step. **affects** this unit: P2 changes
-  that exact format, and AC6 pins what phase-lint must accept. Owner is
-  `phase-contract`; the resolution is a design/plan decision recorded here,
-  never an implied scope widen.
+  written would block every implement step. **affects** this unit — and is
+  resolved here by owner decision **D-69-1**: the lane keeps its
+  `P1 — <task> (validator: …)` bullets and `phase-lint` learns the unit-doc
+  bullet grammar (a second grammar, `phase-contract` owns which of the eight
+  rules map to it and which are `n/a`); AC6 pins the acceptance.
 - **`rg` is present twice on this machine** (`~/.pi/agent/bin/rg`, `/usr/bin/rg`)
   — **affects** only the shape of the AC2 test (it must construct an rg-free
   `PATH` that still contains `grep`), not the contract itself.
@@ -172,10 +178,10 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
   default ignore-respect and `--no-ignore`, not the command-line-path override)
   — **does-not-affect** (the bypass is locally verified, R1, and becomes an
   executable fixture assertion in AC1 rather than a citation).
-- **No committed metering tool for “files-read / tokens”** (AC10) exists yet —
-  **affects** evidence collection only: the plan step must name the meter
-  (byte/line counts over the recorded read set) or the AC is reported as a
-  measured-approximation row; never guessed.
+- **No committed metering tool for “files-read / tokens”** (AC10) existed —
+  **affects** evidence collection only, resolved by owner decision **D-69-2**:
+  AC10 uses the deterministic byte proxy (per-step read log → `files-read` +
+  `ceil(bytes/4)`), so a reviewer re-runs the same count; never guessed.
 
 ## Tasks
 
@@ -264,22 +270,28 @@ Budget: strong
   `phase-contract` owner), D-69-2 the AC10 meter, D-69-3 the rg adoption sweep
   boundary beyond skills → evidence: this entry — next: ask the owner, then
   freeze design
+- 2026-09-29 16:12 — design step closed: owner answered D-69-1 (bullets +
+  unit-doc grammar in phase-lint), D-69-2 (byte proxy for AC10), D-69-3 (sweep
+  everything that says grep; POSIX shell hooks excluded); AC4 and AC10 wording
+  tightened to the decisions, decisions table added to References, closure
+  stamped → working tree — next: plan
 
 ## Next
 
-Three owner decisions are being asked (form, 2026-09-29) before the design
-closure can be stamped and the plan step can run:
+Design closure **stamped 2026-09-29** — every AC is scenario-induced and
+command-verified, entity/role/expectation closure holds, and the three open
+questions were answered by the owner (see **References → owner decisions**):
 
-- **D-69-1 — phase/task grammar.** `phase-lint` cannot parse lane-written unit
-  docs (R4: `BLOCKED: no-phases`, exit 1) while `execute-phase`'s pre-flight
-  STOPs on that exit, and feature 61's own SPEC P10 obligates
-  "`phase-lint.mjs` parses the unit doc's task grammar". The `Relevant files:`
-  sub-section has to live in whichever grammar wins.
-- **D-69-2 — AC10 meter.** No committed tool measures "files-read / tokens";
-  the measurement method must be named before evidence can be collected.
-- **D-69-3 — adoption sweep boundary.** Beyond the 10 skill files + script
-  guidance the issue names, 6 more agent-facing instruction sites exist in
-  `docs/workflow/`, `template/` and `README.md` (R3).
+- **D-69-1 — phase/task grammar:** keep the lane's `P1 —` bullets and teach
+  `phase-lint` the unit-doc bullet grammar (`Relevant files:` rides the bullet).
+- **D-69-2 — AC10 meter:** deterministic byte proxy (files-read +
+  `ceil(bytes/4)`), same metric as the skill-context budgets.
+- **D-69-3 — rg sweep boundary:** everything that says `grep` as an
+  instruction, README prose included; POSIX shell hooks excluded (they parse).
+
+Next catalog step: **plan** (`skills/unit-lane/references/PLAN.md`) — cut
+`P1…Pn` smallest-first with validators, AC→task mapping, final task =
+verification, no docs/release tasks.
 
 ## References
 
@@ -300,3 +312,11 @@ closure can be stamped and the plan step can run:
   runtime scripts; #219's shared provisioning pattern.
 - `skills/phase-contract/SKILL.md` — owner of the phase format; the `Relevant
   files:` grammar lands there.
+
+### Owner decisions (2026-09-29, asked as a form, answered by the owner)
+
+| id | decision | consequence in this unit |
+|---|---|---|
+| D-69-1 | **Keep the lane's `P1 — <task> (validator: …)` bullets; teach `phase-lint` the unit-doc bullet grammar** (the `Relevant files:` sub-section rides the bullet) | `phase-contract` states which of the eight rules apply to the bullet grammar and which are `n/a`; `phase-lint` implements it; the execute-phase pre-flight gate starts parsing unit docs |
+| D-69-2 | **AC10 is measured with the deterministic byte proxy** — per-step read log → `files-read` + `ceil(bytes/4)` (the `SKILL_CONTEXT_BUDGETS.json` metric) | evidence rows are re-runnable byte counts, no provider billing tokens |
+| D-69-3 | **The rg sweep covers everything that says `grep` as an instruction**, README instruction lines included; POSIX shell hooks stay on `grep` (they parse) | AC4's pinned inventory = 10 skill/reference files + `docs/workflow/` sites + the fix-template checklist + README; `template/.agentic-workflow/hooks/*.sh` is excluded by rule |
