@@ -134,6 +134,11 @@ malformed. Legacy plan files lint exactly as they did before.
 - `docs/fix/214-model-selection-over-24-options/SPEC.md` answers
   `BLOCKED: unparseable` (legacy shape) — **does-not-affect** (legacy unit,
   never re-triaged; its failure is a different, already-recorded reason code).
+- `scripts/workflow-status-compact.test.mjs` failed once under full-suite load
+  on 2026-09-29 (5 subtests, `4074ms`) and never again — 3/3 standalone on
+  this branch, 2/2 on `main` — **does-not-affect** this unit (no shared surface
+  with phase-lint; recorded so a red gate is never excused by an unrecorded
+  issue; owner may route it as a flake fix).
 - Feature 61 SPEC P10 states the obligation with no evidence row claiming it
   landed — **does-not-affect** (this fix is that obligation; recorded so the
   audit trail is honest).
@@ -204,18 +209,37 @@ Budget: strong
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| 1 | `node --test scripts/phase-lint.test.mjs` + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real unit doc) | 0 · 145 pass | unit-doc bullets lint to `PASS (6/6)` with `P<n>:unit-doc:…` fingerprints; feature 69 now gets rule verdicts instead of `no-phases` | main agent |
-| 2 | `node --test scripts/phase-lint.test.mjs` (3 relevant-files cases) + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real sub-sections) | 0 · 148 pass | empty sub-section → `P1 relevant-files: sub-section carries no entries`; `docs` → `entry \`docs\` is neither a path nor a glob`; feature 69's real lists parse clean | main agent |
-| 3 | pending | | | |
+| 1 | `node --test scripts/phase-lint.test.mjs` + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real unit doc) | 0 · 149 pass | unit-doc bullets lint to `PASS (6/6)` with `P<n>:unit-doc:…` fingerprints; feature 69 now gets rule verdicts instead of `no-phases` | main agent |
+| 2 | `node --test scripts/phase-lint.test.mjs` (3 relevant-files cases) + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real sub-sections) | 0 · 149 pass | empty sub-section → `P1 relevant-files: sub-section carries no entries`; `docs` → `entry \`docs\` is neither a path nor a glob`; feature 69's real lists parse clean | main agent |
 | 3 | `node /tmp/pl-main.mjs <legacy plan>` vs `node scripts/phase-lint.mjs <legacy plan>` on `59-executable-continuations/PLAN.md` and `27-pi-agentic-workflow/PLAN.md` (main's linter vs this branch's) | 0 = 0 | fingerprints byte-identical (`1a3bf148…`, `85935251…`) — legacy plan files unchanged | main agent |
 | 4 | read-verified: `skills/phase-contract/SKILL.md` diff (mapping section) + `grep -c "never carries a second copy" scripts/phase-lint.mjs` | 0 | mapping stated owner-side; the script header keeps the single-source contract | main agent |
 | 5 | `bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md` | 0 | `verdict PASS` · fingerprint `c382717d…` — 4 phases `PASS (8/8)` | main agent |
 | 6 | pending (bump-skill + CHANGELOG rows run in the `docs` step) | | | |
-| T1 | `node --test scripts/phase-lint.test.mjs` | 0 | 148 pass / 0 fail — unit-doc grammar corpus + legacy pins | main agent |
-| T2 | `node --test scripts/*.test.mjs` | 0 | 596 pass / 0 fail | main agent |
+| T1 | `node --test scripts/phase-lint.test.mjs` | 0 | 149 pass / 0 fail — unit-doc grammar corpus + legacy pins | main agent |
+| T2 | `node --test scripts/*.test.mjs` | 0 | 597 pass / 0 fail | main agent |
 | T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
 | T4 | `bun run test` (packages/pi-agentic-workflow) | 0 | 409 pass / 0 fail — bundled skill mirror parity | main agent |
 | — | `bun scripts/diff-guard.mjs --base main --unit 272` (re-run at the evidence step) | 1 (BREACH) | `Lines: 842 > 400 · Files: 9 > 8` — **recorded exception** (final count): 822 insertions / 20 deletions across 9 files — unit doc 280, parser 215, corpus 211, phase-contract mapping, unit-lane PLAN, both SPEC templates, budgets JSON, fix-index row — every line AC-mandated; one honest split attempted (P1/P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit** | main agent |
+
+### Review verdict (step: review)
+
+Axes run: `review-code`, `review-verify`, `review-debt` (read-only linter +
+skill/docs wording — `security`, `perf`, `a11y`, `design`, `brand` n/a: no
+user-facing surface, no secrets, no network, linear parser).
+
+```text
+REVIEW-VERDICT: PASS
+- Findings: 1 material (folded in this step), 2 report-notes
+- Evidence reproduced: yes (every AC row re-run at this HEAD)
+- AC integrity: unchanged from triage — `## Acceptance criteria` sha256
+  c0d5726a… identical in the creation commit (cb74380b) and at HEAD
+```
+
+| id | axis | class | finding | action |
+|---|---|---|---|---|
+| R-272-1 | code | material → fix-now | `parseUnitDocPhases` did not track fenced code blocks, so a fenced `- P1 —` example inside `## Tasks` linted as a real phase — quoted text produced a false finding (the plan grammar keeps fence inertness; this grammar did not) | **folded in this step**: fence inertness added + pin test `a fenced P<n> example inside ## Tasks is inert, never a phase` — 149/149, own doc fingerprint unchanged (`c382717d…`) |
+| R-272-2 | verify | report-note | `skills/execute-phase/references/PREFLIGHT.md` still describes the gate's success line as `PASS (8/8)`; a unit-doc phase prints `PASS (6/6)`. Behaviour is unaffected (the gate keys off the exit code) | route to feature 69 P9, which edits the same file — never blocks this unit |
+| R-272-3 | debt | report-note | the `Relevant files:` label is English-locked (this repo's docs are English-only); a differently-spelled label is treated as wrapped prose, never as a read set | re-trigger: any non-English or renamed label → add fail-closed handling; recorded, not built |
 
 ## Progress log
 
@@ -284,6 +308,12 @@ Budget: strong
   `docs` step (bump-skill + CHANGELOG, the only row that cannot run yet);
   final diff guard `Lines: 842 > 400 · Files: 9 > 8` recorded with the real
   content count → exception row — next: review
+- 2026-09-29 20:20 — review step: axes code/verify/debt over the full diff;
+  R-272-1 (material) — the unit-doc parser had no fence tracking, so a fenced
+  `- P1 —` example inside `## Tasks` linted as a phase; reproduced red by a new
+  pin test, then folded (fence inertness in `parseUnitDocPhases`) → 149/149,
+  own doc fingerprint unchanged; R-272-2 / R-272-3 recorded as report-notes →
+  evidence: review verdict block — next: docs
 
 ## Next
 
