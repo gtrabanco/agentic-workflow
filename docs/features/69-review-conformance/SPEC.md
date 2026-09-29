@@ -42,7 +42,7 @@ its job, not as out-of-scope findings; a non-technical user's product is asked
 about in their terms instead of guessed at. A reader of `product-audit` sees that
 it owns the repo-wide bug/security/broken-version sweep. A planner following the
 lane's plan step fills one fixed table — `claim | prior decision | source path |
-verdict` — for every claim that touches a recorded decision, and an unchecked
+relation` — for every claim that touches a recorded decision, and an unchecked
 claim with no matching decision still plans straight through with nothing
 blocking it.
 
@@ -65,7 +65,7 @@ blocking it.
 3. **The sweep is a checklist item with a fixed evidence shape.**
    `skills/unit-lane/references/PLAN.md` carries the prior-decisions
    contradiction sweep as a checklist item whose evidence row shape is exactly
-   `claim | prior decision | source path | verdict`, naming the candidate sources
+   `claim | prior decision | source path | relation`, naming the candidate sources
    (`decisions.md` per feature/fix folder, architectural invariants, the Normalized
    Repository State via `discover-repository-state`/`resolve-repository-state`,
    `AGENTS.md`, SPEC `## Design status`) and stating the advisory contract: a hit
@@ -122,7 +122,7 @@ blocking it.
 | Rule | Binds |
 |---|---|
 | `review-change` and `product-audit` must keep stating the charter split (change-scoped dismantle vs. repo-wide sweep) | anyone rewording either skill's scope/relationship sections — a rewording that drops one side silently reverts this decision |
-| The plan step's sweep table shape stays exactly `claim \| prior decision \| source path \| verdict` | anyone editing `skills/unit-lane/references/PLAN.md`; changing the shape is a contract change, not a wording tweak |
+| The plan step's sweep table shape stays exactly `claim \| prior decision \| source path \| relation` | anyone editing `skills/unit-lane/references/PLAN.md`; changing the shape is a contract change, not a wording tweak |
 | The sweep stays advisory — it routes, it never blocks, it issues no verdict | anyone tempted to promote a keyword miss into a gate; that promotion is a new decision with its own issue |
 | A wording growth past a context ceiling ships with a declared ceiling re-basis + reason in `SKILL_CONTEXT_BUDGETS.json` | the next author touching `product-audit`/`review-change` (both sat near their ceilings at unit start) |
 | Touched executor-path skills owe a golden-fixture run-log row per edit | whoever edits `review-change`, `product-audit`, or `unit-lane` next |
@@ -192,8 +192,8 @@ the `tests` triage step therefore runs rather than being skipped.
 - P2 — `product-audit`: add the ownership claim to the frontmatter
   `description:` and one `## When to use` bullet. (validator: AC2's two greps)
 - P3 — `unit-lane` plan step: add the prior-decisions contradiction sweep —
-  fixed `claim | prior decision | source path | verdict` table, candidate source
-  list, two-value verdict, advisory routing — plus its checklist boxes and
+  fixed `claim | prior decision | source path | relation` table, candidate source
+  list, two-value relation, advisory routing — plus its checklist boxes and
   forbidden lines. (validator: AC3's three greps)
 - P4 — Context budgets: re-base every ceiling the wording grew, each with a
   declared reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`. (validator:
@@ -442,7 +442,28 @@ What is deliberately **not** done here, and why:
    does not mention the new charter; route to `/audit-docs` if that docs pass is
    wanted.
 
+## Amendments
 
+- **2026-09-29 — acceptance amendment, approved by the operator in this session
+  (issue #270 / feature 69).** (a) **AC7** is re-cut to the enforced closed
+  run-log grammar (the pattern AC7 itself quotes), because the frozen wording
+  asked for a Result cell the gate rejects — the defect F1 found. (b) **AC3**'s
+  evidence-row shape cell is amended from `verdict` to `relation`, matching the
+  shipped `skills/unit-lane/references/PLAN.md:40` (F3's fix for the overloaded
+  noun); every claim surface that stated the old cell — User outcome, AC3,
+  Future cost, task P3, ROADMAP row 69 and the CHANGELOG `unit-lane` 1.2.0 row —
+  is amended with it, while the two dated progress-log entries keep `verdict` as
+  it stood when they were written. Nothing else in `## Acceptance criteria`
+  changes, and this row supersedes the `2c593412…` digest recorded in the two
+  review-verdict blocks above.
+
+## Acceptance receipt v1
+
+- Manifest: legacy `SPEC.md` — the `## Acceptance criteria` section, hashed from
+  the `## Acceptance criteria` heading through the `## Non-goals` heading
+  inclusive (sha256, the method the review-verdict blocks above used)
+- Blob: `be4fab35353c5fad0ec310cecafe7c089b21afafb4d291c7f258ac12d031cba1` · Status: frozen · Verified: 2026-09-29
+- Supersedes: `2c593412e5e845d1a72f3ae6ab1626ae270f6049e1fd7662b9318a14f63d84f7`
 
 ## References
 
