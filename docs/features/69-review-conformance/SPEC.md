@@ -155,6 +155,13 @@ the `tests` triage step therefore runs rather than being skipped.
 - `pre-execution-review`'s LEDGERS/POLICY references sit near their declared
   ceilings — **does-not-affect** (this unit does not touch that skill; the sweep
   lives in the lane's plan step per the issue's "or" placement).
+- Issue #270 lists SPEC `## Design status` among the candidate sources, but only
+  pre-61 units still carry that heading (units 61+ no longer emit it) —
+  **does-not-affect** this unit (the sweep names it as a legacy marker, so a
+  candidate retrieval over an older SPEC still resolves).
+- Baseline gate state before this unit's first edit: root suite 578/0 and
+  `check-skill-context` PASS, both recorded as R5/R6 — **does-not-affect** (a red
+  baseline would have to be recorded here first; it is green).
 
 ## Tasks
 
@@ -185,6 +192,20 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| R1 | `grep -c dismantle skills/review-change/SKILL.md skills/product-audit/SKILL.md` | 0 · 0 | charter wording is absent from both skills — nothing to overwrite, all of AC1/AC2 is new text | main agent |
+| R2 | `ls docs/features/*/decisions.md \| wc -l` · `ls docs/fix/*/decisions.md \| wc -l` | 0 | 33 · 2 — the sweep's primary candidate source exists at unit scale | main agent |
+| R3 | `grep -rln '## Design status' docs/features/*/SPEC.md` | 0 | 35 SPECs carry the marker, every one from units ≤ 60; units 61+ no longer emit it → legacy candidate source | main agent |
+| R4 | `grep -rn 'bug hunt\|security research\|broken-version\|prior decision\|contradiction sweep' skills/` | 0 | one unrelated `RECOMMENDED_SKILLS` row; neither the repo-wide ownership claim nor the sweep exists yet | main agent |
+| R5 | `bun scripts/check-skill-context.mjs` | 0 | PASS, 28 skills — main-est `product-audit` 2799/2800, `review-change` 2327/2800, `unit-lane` 1880/2800; desc-est 71 / 80 / 50 of 120 | main agent |
+| R6 | `node --test scripts/*.test.mjs` (baseline, before any edit) | 0 | 578 pass / 0 fail — fresh worktree needed `packages/agentic-workflow-schema` built first (setup, not a code change) | main agent |
+
+**Research uncertainties stated (not guessed):** (a) whether a fleet model weak
+enough for the golden-fixture manual run is reachable in this session — AC7
+allows an explicit `NOT RUN — <reason>` row, decided at the tests step; (b) the
+issue's "`pre-execution-review` **or** the lane's plan step" placement — resolved
+at the design step by the single-owner rule (one file owns the sweep); (c) npm
+publish for skill-only changes — settled as a recorded pre-existing issue, not a
+unit obligation.
 
 ## Triaged steps
 
@@ -203,6 +224,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 15:21 — unit doc created from `docs/features/_TEMPLATE/SPEC.md` for issue #270; roadmap row 69 registered as `defined` → working tree — next: triage (`bun scripts/unit-route.mjs --triage 69`)
 
 2026-09-29 15:32 — triage ran (block above pasted verbatim); root suite baseline green (`node --test scripts/*.test.mjs` 578/0 after building `packages/agentic-workflow-schema/dist`, a fresh-worktree setup step) → working tree — next: research step
+
+2026-09-29 15:48 — research step done (rows R1–R6): no charter/sweep wording exists in either skill; 35 decisions.md sources; `## Design status` legacy-only; measured ceilings recorded; placement question and fleet-model question stated as uncertainties → working tree — next: design step
 
 ## Next
 
