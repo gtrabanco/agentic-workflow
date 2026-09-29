@@ -189,8 +189,8 @@ Layer: hardening
 - [x] Run the root gate → exit 0 (`node --test scripts/*.test.mjs`)
 - [x] Run the context budgets → exit 0 (`bun scripts/check-skill-context.mjs`)
 - [x] Run this unit's own lint → exit 0 (`bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md`)
-- [ ] open the PR (`gh pr create --body-file <path>`) with `Closes #272` and PRINT THE PR URL
-- [ ] update the fix index row to `done` · [#<pr>](<pr-url>) in the active-fix table
+- [x] open the PR (`gh pr create --body-file <path>`) with `Closes #272` and PRINT THE PR URL
+- [x] update the fix index row to `done` · [#<pr>](<pr-url>) in the active-fix table
 
 Done-when: `bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md` exits 0 with the root suite green and the PR URL printed.
 
@@ -337,19 +337,22 @@ REVIEW-VERDICT: PASS
   14 routes); this unit's own lint → 0 (`verdict PASS`, `c382717d…`);
   final diff guard `Lines: 932 > 400 · Files: 12 > 8` recorded with the full
   file list → exception row — next: push + open the PR
+- 2026-09-29 21:40 — close-out: branch pushed, **PR [#276]** opened against
+  `main` with `Closes #272` and the evidence table in the body; fix-index row
+  flipped to `done` · [#276] → this entry — next: owner review of #276, then
+  feature 69 resumes (D-69-4)
 
 ## Next
 
-Triage is recorded (plan → implement → tests → evidence → review → docs) and
-this unit's own phase-lint gate is green. The **plan** step is satisfied by the
-`## Tasks` above (every AC maps to a task, validators named, smallest first,
-final task = verification, no docs/release tasks) — next: execute **implement
-P1** (the unit-doc bullet parser, tests-first), one phase per commit with the
-diff guard after each.
+**PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276)** is open
+against `main` with `Closes #272`; every triaged step ran (plan → implement
+P1–P3 → tests → evidence → review → docs) and the close-out gates are green.
+Awaiting owner review/merge — then feature **69** resumes (its P8 lives here;
+`/unit-lane 69` picks up at P1 with a green pre-flight gate).
 
 ## References
 
-- Issue [#272](https://github.com/gtrabanco/agentic-workflow/issues/272) — `Closes #272`.
+- Issue [#272](https://github.com/gtrabanco/agentic-workflow/issues/272) — `Closes #272` (PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276)).
 - Feature 69 (`docs/features/69-efficient-context-targeting/SPEC.md`) — research
   R4 found the defect; owner decisions **D-69-1** (keep bullets, teach the
   linter) and **D-69-4** (split P8 here) govern this fix; its AC6 is satisfied
@@ -367,4 +370,7 @@ diff guard after each.
 
 ## Status
 
-`in-progress` — branch open, unit doc created, triage pending.
+`done` — built, PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276)
+open against `main` awaiting review (merge state lives in the forge). Every
+triaged step ran: plan → implement P1–P3 → tests → evidence → review → docs →
+close-out.
