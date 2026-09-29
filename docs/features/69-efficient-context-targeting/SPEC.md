@@ -185,34 +185,65 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
 
 ## Tasks
 
-Tests come first in every phase (never change a test to pass it):
+Tests come first in every phase (never change a test to pass it). Cut by the
+plan step: every AC maps to at least one task, validators named, smallest
+first, final task = verification, docs/release left to their catalog steps.
+Each P carries its `Relevant files:` sub-section — the format D-69-1 assigns to
+`phase-contract` — written from this plan's own discovery plus research rows
+R1–R6:
 
-- P1 — Tests-first for P1: ripgrep contract fixture (three legs), the rg-absent
-  grep-fallback run, and the installer behaviors (fake `HOME`, root refusal,
-  consent record, `~/.local/bin` → `.agentic-workflow/bin` fallback) — red
-  against code that does not exist yet.
-- P2 — Implement the rg-first wording contract over the pinned adoption surface
-  (skill/reference files + script guidance): default `rg`, declared `grep`
-  fallback, `--no-ignore` only on explicit human request.
-- P3 — Implement the contract-grade sweep declarations (`rg --no-ignore` or
-  `grep`) where exhaustive sweeps are instructed; leave parsing scripts on
-  their current tool.
-- P4 — Implement the ask-first, user-scoped, never-root bootstrap installer and
-  its `init-workspace` wiring (including the `.agentic-workflow/bin/` gitignore
-  entry in the template); P1 tests green.
-- P5 — Tests-first for P2: `phase-lint` accepts the `Relevant files:`
-  sub-section, and the never-authority discipline test (non-listed file editable
-  + logged) — red first.
-- P6 — Implement the `Relevant files:` grammar in `phase-contract` and make the
-  plan step write it from its own discovery.
-- P7 — Implement `execute-phase`'s bounded read set (listed files + one-hop
-  references) and the forward-propagation append at phase close.
-- P8 — Implement `review-change` consuming the unit's lists as its read set
-  around the diff, findings carrying their affected files; P5 tests green.
-- P9 — Evidence: run every AC and record its row, plus the measured delta
-  (files-read / tokens with vs without the sub-section) for AC10.
-- P10 — Docs & release: `bump-skill` per touched skill, CHANGELOG rows, package
-  version bumps where a package was touched, roadmap/status update.
+- P1 — Tests-first ripgrep contract fixture: `scripts/fixtures/rg-contract/`
+  with a gitignored build dir plus `scripts/rg-contract.test.mjs` pinning the
+  three legs of AC1 and the 11-vs-12 `dist/index.d.ts` sweep of AC5, red until
+  the fixture exists (validator: `node --test scripts/rg-contract.test.mjs`).
+  - Relevant files: scripts/fixtures/rg-contract/, scripts/rg-contract.test.mjs
+- P2 — Tests-first rg-absent fallback test: a stub `PATH` holding `grep` but no
+  `rg` (R5) runs the canonical search block and it must complete while
+  declaring the fallback (validator: `node --test scripts/rg-fallback.test.mjs`,
+  exit 0 with `command -v rg` failing).
+  - Relevant files: scripts/rg-fallback.test.mjs, scripts/rg-contract.test.mjs
+- P3 — Tests-first bootstrap installer test: fake `HOME` covers skip-when-present,
+  root and sudo refusal, ask-first consent record, user-scoped managers and the
+  `~/.local/bin` then `.agentic-workflow/bin/` fallback (AC3) (validator:
+  `node --test scripts/rg-bootstrap.test.mjs`, red against the missing script).
+  - Relevant files: scripts/rg-bootstrap.test.mjs, skills/init-workspace/references/SERENA.md
+- P4 — Tests-first relevant-files discipline test: `Relevant files:` accepted
+  by `phase-lint`'s unit-doc grammar, never-authority (a non-listed file stays
+  editable and is logged), and the phase-close forward-propagation append
+  (AC6, AC8, AC9) (validator: `node --test scripts/relevant-files.test.mjs`,
+  red first).
+  - Relevant files: scripts/relevant-files.test.mjs, scripts/phase-lint.test.mjs, docs/features/_TEMPLATE/SPEC.md
+- P5 — rg-first wording sweep over the D-69-3 inventory: default `rg` with the
+  declared `command -v rg` then `grep` fallback and the explicit-human-request
+  override rule (AC4) (validator: `bun scripts/check-skill-context.mjs` plus the
+  new rg-first wording discipline test).
+  - Relevant files: skills/audit-docs/SKILL.md, skills/review-security/SKILL.md, skills/review-verify/SKILL.md, skills/review-implementation/SKILL.md, skills/triage-issue/references/ISSUE_PROCESS.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, skills/workflow-status/references/SENSOR_SIGNALS.md, skills/workflow-status/references/ENVELOPE_CORE.md, skills/review-change/SKILL.md, skills/review-change/references/REVIEW_PROCESS.md, docs/workflow/ISSUE_WORKFLOW.md, docs/workflow/PORTABLE_PROMPT.md, template/docs/fix/_TEMPLATE/SPEC.md, README.md
+- P6 — contract-grade sweep declarations: every exhaustive sweep instruction
+  declares `rg --no-ignore` or keeps `grep`, while parsing scripts keep their
+  current tool for byte-stable receipts (AC5) (validator: the discipline test
+  asserting each declared sweep site).
+  - Relevant files: skills/audit-docs/SKILL.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, scripts/check-changelog-row.mjs, docs/workflow/ISSUE_WORKFLOW.md
+- P7 — bootstrap installer implementation in the runner crate plus its
+  `init-workspace` wiring and the target `.gitignore` append, P3 green (AC3)
+  (validator: `node --test scripts/rg-bootstrap.test.mjs` exit 0).
+  - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/, skills/init-workspace/SKILL.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/SERENA.md
+- P8 — Relevant-files format implementation: `phase-contract` states the
+  unit-doc bullet grammar and its eight-rule mapping (D-69-1), `phase-lint`
+  parses it and the sub-section, the plan step writes it (AC6) (validator:
+  `bun scripts/phase-lint.mjs docs/features/69-efficient-context-targeting/SPEC.md`
+  exit 0 plus P4's test).
+  - Relevant files: skills/phase-contract/SKILL.md, scripts/phase-lint.mjs, scripts/phase-lint.test.mjs, skills/unit-lane/references/PLAN.md, docs/features/_TEMPLATE/SPEC.md
+- P9 — bounded read set wiring: `execute-phase` reads the listed files plus
+  one-hop references and appends forward-propagated files at phase close while
+  `review-change` consumes the lists as its read set around the diff and
+  findings carry affected files (AC7, AC9) (validator: P4's fixture test plus
+  the read-set assertions in it).
+  - Relevant files: skills/execute-phase/SKILL.md, skills/execute-phase/references/PREFLIGHT.md, skills/review-change/SKILL.md, skills/review-change/references/REVIEW_PROCESS.md, skills/unit-lane/SKILL.md
+- P10 — Verification of the whole unit: full gate plus every AC evidence row
+  including the AC10 byte-proxy delta with vs without the sub-section (validator:
+  `node --test scripts/*.test.mjs` and `bun scripts/check-skill-context.mjs`
+  exit 0 with the Evidence table complete).
+  - Relevant files: docs/features/69-efficient-context-targeting/SPEC.md, scripts/
 
 ## Evidence
 
@@ -275,23 +306,27 @@ Budget: strong
   everything that says grep; POSIX shell hooks excluded); AC4 and AC10 wording
   tightened to the decisions, decisions table added to References, closure
   stamped → working tree — next: plan
+- 2026-09-29 16:52 — plan step: cut P1…P10 (tests-first P1–P4, wording P5–P6,
+  installer P7, relevant-files format P8, read-set wiring P9, verification P10)
+  with a validator per task, AC→task mapping complete, no docs/release tasks;
+  every P carries its `Relevant files:` sub-section — this unit's plan is the
+  first consumer of the D-69-1 format → working tree — next: implement, after
+  the pre-flight gate question below is answered
 
 ## Next
 
-Design closure **stamped 2026-09-29** — every AC is scenario-induced and
-command-verified, entity/role/expectation closure holds, and the three open
-questions were answered by the owner (see **References → owner decisions**):
+Plan cut: `P1…P10`, validators named, every AC mapped, docs/release left to
+their catalog steps, and every P carries its `Relevant files:` (this unit's own
+plan is the first consumer of the D-69-1 format).
 
-- **D-69-1 — phase/task grammar:** keep the lane's `P1 —` bullets and teach
-  `phase-lint` the unit-doc bullet grammar (`Relevant files:` rides the bullet).
-- **D-69-2 — AC10 meter:** deterministic byte proxy (files-read +
-  `ceil(bytes/4)`), same metric as the skill-context budgets.
-- **D-69-3 — rg sweep boundary:** everything that says `grep` as an
-  instruction, README prose included; POSIX shell hooks excluded (they parse).
-
-Next catalog step: **plan** (`skills/unit-lane/references/PLAN.md`) — cut
-`P1…Pn` smallest-first with validators, AC→task mapping, final task =
-verification, no docs/release tasks.
+**Blocker before the first `implement` step (reported, not papered over):**
+`execute-phase`'s pre-flight runs `bun scripts/phase-lint.mjs <unit-doc>` on
+every unit doc that has `## Tasks` and STOPs on exit 1 — on this doc it answers
+`BLOCKED: no-phases` (research R4), i.e. the gate blocks the very task (P8) that
+decides it. The owner is asked how to enter `implement`: a recorded `--force`
+per PREFLIGHT (logged in this Progress log before the first edit), an
+`implement` run through the unit-lane conductor's own checklist, or splitting
+P8 out first.
 
 ## References
 
