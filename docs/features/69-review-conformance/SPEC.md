@@ -1,0 +1,220 @@
+# 69 — review-conformance
+
+> One-line: ship the two 2026-09-29 owner decisions as contracts and wording —
+> the **dismantle-the-claim** review charter across `review-change` /
+> `product-audit`, and the **advisory prior-decisions contradiction sweep** in
+> the lane's plan step. No machinery, no new authority.
+
+## Objective
+
+Turn two recorded owner decisions (issue #270, `docs/LOGS.md` 2026-09-29) into
+the written contracts the workflow already runs on:
+
+1. **Review charter** — a review's primary job is to try to **dismantle the
+   claim** that what works, works — and works well (programmatically,
+   engineering-wise, decision-wise, and against user expectation). Bugs, security
+   issues and guard skips **inside the current feature's scope are
+   `review-change`'s own job**; expectations are **asked about, not inferred**;
+   the repo-wide open-ended sweep belongs to `product-audit`.
+2. **Prior-decisions contradiction sweep** — before a plan is accepted, sweep its
+   claims against what was already decided in writing and cite the contradicted
+   decision as evidence. Advisory and escalating only: a hit routes, a miss never
+   blocks a clean plan.
+
+## Why
+
+Reviews today hunt arbitrary bugs instead of attacking the delivery claim, and
+open-ended review agents have a measurably low signal-to-noise ratio (CR-Bench,
+<https://arxiv.org/abs/2603.11078>) — exactly why that hunt belongs in
+`product-audit`, where it can be scoped and budgeted. Separately, nothing sweeps
+a new plan against decisions already recorded in the repository (feature
+`decisions.md`, architectural invariants, the Normalized Repository State,
+`AGENTS.md`, SPEC `## Design status`), so a plan can silently contradict an
+accepted decision and only a reader notices later. Both gaps are wording and
+contract gaps — the machinery to route the result already exists
+(`resolve-repository-state`, `NEEDS-DECISION`).
+
+## User outcome
+
+A reviewer (human or model) reading `review-change` sees a charter that tells it
+to attack the unit's own claim and to treat in-scope bugs and security holes as
+its job, not as out-of-scope findings; a non-technical user's product is asked
+about in their terms instead of guessed at. A reader of `product-audit` sees that
+it owns the repo-wide bug/security/broken-version sweep. A planner following the
+lane's plan step fills one fixed table — `claim | prior decision | source path |
+verdict` — for every claim that touches a recorded decision, and an unchecked
+claim with no matching decision still plans straight through with nothing
+blocking it.
+
+## Acceptance criteria
+
+1. **Charter lands in `review-change`.** `skills/review-change/SKILL.md` states,
+   in the skill's own wording: (a) the review's primary job is to attempt to
+   dismantle the claim "what works, works — and works well"; (b) bugs, security
+   issues and guard skips inside the current feature's scope belong to
+   `review-change` — a feature is not complete while it has them; (c) expectations
+   are **asked about, not inferred**, in non-technical terms for non-technical
+   users; (d) repo-wide pure bug hunting, security research and broken-version
+   investigation route to `product-audit`. Verified by four greps over the file,
+   one per clause, all ≥1 hit.
+2. **`product-audit` names its ownership.** Both the frontmatter `description:`
+   and the body of `skills/product-audit/SKILL.md` state that this skill owns the
+   repo-wide pure bug hunting, security research and broken-version investigation
+   (scoped and budgeted there), as distinct from `review-change`'s
+   change-scoped review. Verified by two greps (frontmatter + body).
+3. **The sweep is a checklist item with a fixed evidence shape.**
+   `skills/unit-lane/references/PLAN.md` carries the prior-decisions
+   contradiction sweep as a checklist item whose evidence row shape is exactly
+   `claim | prior decision | source path | verdict`, naming the candidate sources
+   (`decisions.md` per feature/fix folder, architectural invariants, the Normalized
+   Repository State via `discover-repository-state`/`resolve-repository-state`,
+   `AGENTS.md`, SPEC `## Design status`) and stating the advisory contract: a hit
+   routes to `resolve-repository-state` or a `NEEDS-DECISION`, a miss never blocks
+   a clean plan, and the sweep grants no gate authority. Verified by three greps
+   (table header · candidate sources · advisory/routing wording).
+4. **Both branches demonstrated on this repository.** A recorded demonstration:
+   (a) a plan claim that contradicts a decision actually recorded in this repo
+   yields one filled sweep row whose `prior decision` cites that decision's real
+   path; (b) an equivalent clean claim yields zero rows and no block. Verified by
+   the two runs and their outputs pasted into the Evidence section.
+5. **Gates green.** `bun scripts/check-skill-context.mjs` exits 0 (context
+   budgets PASS — any ceiling re-based carries a declared reason in
+   `docs/workflow/SKILL_CONTEXT_BUDGETS.json`), and `node --test scripts/*.test.mjs`
+   exits 0, including `normative-drift` (the fixed `→ Next:` blocks still render)
+   and the CHANGELOG/authoring discipline tests.
+6. **Version discipline.** Every `skills/<name>/SKILL.md` edited by this unit
+   carries a bumped `version:` and a scoped `CHANGELOG.md` row, produced through
+   `bump-skill`. Verified by `node scripts/check-changelog-row.mjs <skill> <version>`
+   printing `1` for each touched skill.
+7. **Golden-fixture / context re-checks.** `node --test scripts/golden-fixture.test.mjs`
+   exits 0, and every touched **executor-path** skill has a dated run-log row in
+   `docs/workflow/GOLDEN_FIXTURE.md` recording `PASS` or `NOT RUN — <explicit
+   reason>` for its fixture (the audit-evidence provenance fixture for
+   `product-audit`). A silent skip fails this AC.
+
+## Non-goals
+
+- **No judging machinery.** JEV/System-One evaluation of contradictions stays
+  parked; candidate retrieval stays deterministic keyword/FTS matching — the
+  hybrid index is #192's.
+- **No new script, gate, verdict or schema.** The sweep routes and escalates; it
+  never blocks, never issues a verdict of its own, and adds no authority. The
+  schema package is not touched.
+- **No repo-wide bug hunt in this unit.** That is `product-audit`'s job,
+  performed there under its own budget.
+- **No routing/behavior change** to `execute-phase`, `audit-pr`, `triage-issue`,
+  `workflow-status`, `fold-findings`, the review pack axes, or
+  `pre-execution-review`'s ledgers — and `review-change`'s fixed report/receipt
+  blocks keep their exact shape (AC5's `normative-drift` + root suite enforce it).
+- **No npm package bump or release.** This is a skill-only change and
+  `publish-pi-package.yml`'s paths filter does not fire on `skills/` (pre-existing
+  publish model, recorded under Known pre-existing issues).
+- **No `.es.md` sibling and no language-switcher link** (repo-wide rule).
+- Findings discovered while implementing route out of this unit; they never widen
+  its scope.
+
+## Future cost
+
+| Rule | Binds |
+|---|---|
+| `review-change` and `product-audit` must keep stating the charter split (change-scoped dismantle vs. repo-wide sweep) | anyone rewording either skill's scope/relationship sections — a rewording that drops one side silently reverts this decision |
+| The plan step's sweep table shape stays exactly `claim \| prior decision \| source path \| verdict` | anyone editing `skills/unit-lane/references/PLAN.md`; changing the shape is a contract change, not a wording tweak |
+| The sweep stays advisory — it routes, it never blocks, it issues no verdict | anyone tempted to promote a keyword miss into a gate; that promotion is a new decision with its own issue |
+| A wording growth past a context ceiling ships with a declared ceiling re-basis + reason in `SKILL_CONTEXT_BUDGETS.json` | the next author touching `product-audit`/`review-change` (both sat near their ceilings at unit start) |
+| Touched executor-path skills owe a golden-fixture run-log row per edit | whoever edits `review-change`, `product-audit`, or `unit-lane` next |
+
+## Applicable tests
+
+- `node --test scripts/*.test.mjs` (root suite: `normative-drift`,
+  `check-skill-context`, `check-changelog-row`, `golden-fixture`,
+  `unit-route`, `turn-contract-grammar`, …)
+- `bun scripts/check-skill-context.mjs` (context budgets + reference reachability)
+- `node --test scripts/golden-fixture.test.mjs` (golden fixture, deterministic half)
+
+The root suite and the context-budget gate are this unit's verification surface;
+the `tests` triage step therefore runs rather than being skipped.
+
+## Known pre-existing issues
+
+- `skills/product-audit/SKILL.md` measured `2799` estimate against the default
+  `mainEstimateMax` of `2800` (1 unit of headroom) — **affects** this unit: any
+  wording added to that file needs a declared `mainEstimateMax` re-basis with a
+  reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`.
+- `skills/review-change/references/REVIEW_PROCESS.md` measured `2799` of its
+  `3079` ceiling — **does-not-affect** unless this unit grows that file (avoid;
+  charter wording belongs in `SKILL.md`, which had ~470 estimate of headroom).
+- `publish-pi-package.yml` paths filter is `packages/pi-agentic-workflow/**`, so
+  a merge that only touches `skills/` never republishes the npm package —
+  **does-not-affect** this unit (no release step; skill-only changes ship from
+  the repo, and `npx skills add` reads `skills/` directly).
+- `docs/workflow/GOLDEN_FIXTURE.md`'s own "When to run" list is current, but
+  `AGENTS.md`'s smoke-test paragraph still names retired skills
+  (`plan-feature`, `plan-feature-scaffold`, `plan-feature-from-issue`,
+  `design-feature`) — **does-not-affect** this unit (docs drift found in
+  research; route to `audit-docs`, never fixed inside this unit).
+- `pre-execution-review`'s LEDGERS/POLICY references sit near their declared
+  ceilings — **does-not-affect** (this unit does not touch that skill; the sweep
+  lives in the lane's plan step per the issue's "or" placement).
+
+## Tasks
+
+- P1 — Research: map the exact wording surfaces (charter clauses in
+  `review-change`, ownership sentence in `product-audit`, sweep home in the lane)
+  and record the measured context-budget ceilings. (validator: greps + `bun scripts/check-skill-context.mjs` exit 0)
+- P2 — Design: fix the charter wording set and the sweep wording set (fixed
+  table shape, candidate sources, advisory contract); confirm AC1–AC3 clauses are
+  all expressible within budget. (validator: AC1–AC3 grep set stated in Evidence)
+- P3 — Plan: cut these tasks from the ACs with validators, smallest first, and
+  run the sweep demonstration both ways. (validator: filled `claim | prior
+  decision | source path | verdict` row + the zero-row clean case in Evidence)
+- P4 — Implement: apply the wording to `skills/review-change/SKILL.md`,
+  `skills/product-audit/SKILL.md`, `skills/unit-lane/references/PLAN.md` (+ the
+  budgets file if a ceiling must be re-based), then `bump-skill` for every
+  touched `SKILL.md`. (validator: AC1–AC3 + AC6 greps; diff guard exit 0)
+- P5 — Docs: CHANGELOG rows, README/roadmap sync, golden-fixture run-log rows.
+  (validator: `node scripts/check-changelog-row.mjs <skill> <version>` = 1 each)
+- P6 — Verification: root suite, context-budget gate, golden-fixture suite, AC
+  greps — all green. (validator: `node --test scripts/*.test.mjs` exit 0 and
+  `bun scripts/check-skill-context.mjs` exit 0)
+
+## Evidence
+
+One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
+
+> Evidence is verified, not claimed — a reviewer re-runs it.
+
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+
+## Triaged steps
+
+```text
+TRIAGE — 69 (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs
+Skipped: release: small scope
+Budget: strong
+```
+
+(`bun scripts/unit-route.mjs --triage 69`, exit 0 — this block is the
+authoritative step list; the model never re-derives, reorders or invents steps.)
+
+## Progress log
+
+2026-09-29 15:21 — unit doc created from `docs/features/_TEMPLATE/SPEC.md` for issue #270; roadmap row 69 registered as `defined` → working tree — next: triage (`bun scripts/unit-route.mjs --triage 69`)
+
+2026-09-29 15:32 — triage ran (block above pasted verbatim); root suite baseline green (`node --test scripts/*.test.mjs` 578/0 after building `packages/agentic-workflow-schema/dist`, a fresh-worktree setup step) → working tree — next: research step
+
+## Next
+
+`/unit-lane 69-review-conformance` — continue with the next triaged step.
+
+## References
+
+- Closes #270 — <https://github.com/gtrabanco/agentic-workflow/issues/270>
+- Roadmap row: `docs/features/ROADMAP.md` row 69
+- Owner decision record: `docs/LOGS.md` (2026-09-29 — charter restatement,
+  Idea 3 contradiction sweep, JEV parked)
+- Candidate decision sources for the sweep: `docs/features/<NN>-<slug>/decisions.md`,
+  `docs/workflow/WORKFLOW_INVARIANTS.md`, `docs/workflow/REPOSITORY_STATE.md`,
+  `AGENTS.md`, SPEC `## Design status`
+- Evidence for the low signal-to-noise claim: <https://arxiv.org/abs/2603.11078>
