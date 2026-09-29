@@ -212,6 +212,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit, where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
+| P3 | AC3's three greps over `skills/unit-lane/references/PLAN.md` (fixed shape 1 · candidate sources 4 · `Advisory only` 1 + routing 3 + `never blocks` 2) + diff guard + context gate | 1 · 4 · 1/3/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
 enough for the golden-fixture manual run is reachable in this session — AC7
@@ -248,6 +249,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 16:41 — P1 done: `## Review charter — dismantle the claim` added to `skills/review-change/SKILL.md` after `## Scope`, four clauses (dismantle · in-scope defects are the review's job · ask-don't-infer at expectation level · repo-wide hunting → `product-audit`); AC1 greps 2/1/1/1, diff guard PASS → evidence: P1 row above — next: P2
 
 2026-09-29 16:47 — P2 done: frontmatter `description:` and a new `## When to use` bullet in `skills/product-audit/SKILL.md` state the repo-wide bug-hunt / security-research / broken-version ownership (line 13 inside frontmatter · line 42 body); diff guard PASS → evidence: P2 row above — next: P3
+
+2026-09-29 16:55 — P3 done: `## Prior-decisions contradiction sweep` added to `skills/unit-lane/references/PLAN.md` (fixed `claim | prior decision | source path | verdict` table with a two-value verdict, five candidate sources, advisory-only routing to `resolve-repository-state`/`NEEDS-DECISION`) plus two checklist boxes and two forbidden lines; greps 1/4/1+3+2, diff guard PASS, budgets PASS → evidence: P3 row above — next: P5 (bump-skill for the three touched skills)
 
 ## Next
 
