@@ -47,17 +47,21 @@ the Normalized Repository State (`discover-repository-state` /
 **Fixed evidence shape** — one row per candidate hit, the decision quoted from
 its source:
 
-| claim | prior decision | source path | verdict |
+| claim | prior decision | source path | relation |
 |---|---|---|---|
 | <the plan claim> | <the recorded decision> | <path:line> | `contradicts` \| `compatible` |
 
-The verdict cell is exactly one of two values: `contradicts` or `compatible`.
+The cell value is exactly one of two values: `contradicts` or `compatible` —
+a row relation, not a stage verdict.
 
 **Advisory only — no new authority.** `contradicts` routes to
-`resolve-repository-state` (the sole writer of frozen facts) or surfaces a
-`NEEDS-DECISION` for the user, per the existing rules. A plan with **no
+`resolve-repository-state` only when the hit is against a frozen NRS fact
+(its only candidate source that carries a `<contradiction-id>` row after a
+`discover-repository-state` step); hits against
+`decisions.md` / `AGENTS.md` / architectural invariants / `## Design status`
+surface a `NEEDS-DECISION` for the user, per the existing rules. A plan with **no
 candidate match is clean and proceeds** — a miss never blocks it, a missed
-candidate can never void a plan, and the sweep issues no verdict and grants no
+candidate can never void a plan, and the sweep issues no stage verdict and grants no
 gate of its own.
 
 ## Checklist (pass only if)
@@ -71,7 +75,7 @@ gate of its own.
 - [ ] Every plan claim touching architecture, engineering or product intent was
       swept against the candidate sources above
 - [ ] Each candidate hit is one fixed-shape row, with the prior decision cited
-      at `path:line` and one of the two verdicts
+      at `path:line` and one of the two relations
 
 ## Forbidden
 
@@ -79,6 +83,6 @@ gate of its own.
 - Do not plan work beyond the unit's acceptance criteria
 - Do not include docs/release tasks here — those are separate catalog steps
 - Do not invent tasks that the ACs do not demand
-- Do not turn the sweep into a gate, verdict or blocking check — it routes, it
+- Do not turn the sweep into a gate, stage verdict or blocking check — it routes, it
   never blocks, and it adds no authority
 - Do not record a `prior decision` that no source `path:line` cites
