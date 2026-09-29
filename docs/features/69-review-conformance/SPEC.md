@@ -208,7 +208,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | R5 | `bun scripts/check-skill-context.mjs` | 0 | PASS, 28 skills — main-est `product-audit` 2799/2800, `review-change` 2327/2800, `unit-lane` 1880/2800; desc-est 71 / 80 / 50 of 120 | main agent |
 | R6 | `node --test scripts/*.test.mjs` (baseline, before any edit) | 0 | 578 pass / 0 fail — fresh worktree needed `packages/agentic-workflow-schema` built first (setup, not a code change) | main agent |
 | D1 | design closure — entities/roles/expectation surface reviewed against AC1–AC7 (entities: `review-change`, `product-audit`, `unit-lane` plan step, `SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `GOLDEN_FIXTURE.md` run log; roles: planner, reviewer, auditor, maintainer, CI gates) | recorded | charter → new `## Review charter` in `review-change/SKILL.md`; ownership → `product-audit` frontmatter description + `## When to use`; sweep → `skills/unit-lane/references/PLAN.md` alone (`pre-execution-review` untouched — single-owner rule) | main agent |
-| 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 18 candidate lines; the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
+| 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 17 candidate lines across 8 source files (re-counted at review); the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit, where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
@@ -229,20 +229,57 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 6 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` | 1 · 1 · 1 | one scoped CHANGELOG row per skill; `version:` bumped in each frontmatter by `bump-skill` | main agent |
 | 7 | `node --test scripts/golden-fixture.test.mjs` (executable half) — run-log rows for the touched executor-path skills are appended in the `docs` step and recorded in its progress entry | 0 | 12 pass / 0 fail; run-log rows: see the docs-step entry below | main agent |
 
+### Review verdict (step: review, cycle 1)
+
 ```text
-DIFF-GUARD EXCEPTION — 69
-- Measured: Lines 370 of 400 · Files 9 of 8 (`--base main`, exit 1).
-- History: P1–P4 each passed at 6 files (+338 → +344 lines); the 7th–9th
-  files are P5's mandatory bump-skill surfaces — `CHANGELOG.md`, `README.md`
-  (skills-table cells, required for a minor bump) and `skills/unit-lane/SKILL.md`
-  (the `version:` line for a reference-only skill change).
-- Why no honest split helps: one PR per unit of work, and every one of the 9
-  files is required by an AC or by `bump-skill`'s own synchronization contract.
-  The 370-line count is well inside the 400 budget; the breach is file count only.
-- Anti-gaming check: no comment, blank line, doc or test was removed at any
-  point — `git diff main --stat` shows +355/−9 across 9 files.
-- Disposition: exception recorded, unit continues; the review step re-runs the
-  guard and reports the same numbers instead of hiding them.
+REVIEW-VERDICT: FAIL
+- Findings: 1 material, 3 report-notes
+- Evidence reproduced: no — AC1–AC7 all reproduced green, but the P5-guard
+  exception block's numbers were stale/internally inconsistent (it claimed
+  “breach is file count only” and `+355/−9`; the live re-run reads
+  `Lines: 435 > 400 · Files: 9 > 8` and the committed P5 stat is `+361/−9`)
+- AC integrity: unchanged from triage — `## Acceptance criteria` sha256
+  `2c593412e5e845d1a72f3ae6ab1626ae270f6049e1fd7662b9318a14f63d84f7`,
+  identical to the creation commit `dfdf9851`
+```
+
+Material finding (review cycle 1) — **M1**: the diff-guard exception overstated
+compliance (both dimensions breach, and one stat in it was wrong). Fixed in this
+same step by rewriting the block above with the reviewer's re-measured numbers.
+Report-notes: **N1** AC7's run-log rows were not yet written (docs step pending,
+row 7's “see the docs-step entry below” dangled); **N2** row 4a said 18 candidate
+lines where the re-run yields 17 (fixed above); **N3** the exception's
+“P1–P4 passed at 6 files (+338 → +344)” was a dirty-tree snapshot, not the
+committed states (corrected above). Reviewer also confirmed scope clean: no test
+changed, no commit on `main`, empty `git status`, 10 conventional subjects,
+English docs, no `.es.md` sibling, no package bump, no new script/gate/authority.
+
+```text
+DIFF-GUARD EXCEPTION — 69 (both dimensions)
+- Live measurement at review time: `Lines: 435 > 400 · Files: 9 > 8`, exit 1
+  (`git diff --shortstat main` = 9 files, +414/−21 — the guard's "Lines" is
+  insertions + deletions). The earlier P5 measurement (370 lines / 9 files,
+  `+361/−9`) was recorded when the breach was file-count only; the +65 lines
+  since are this unit doc's own Evidence/Progress rows and this corrected block.
+- Committed-state history (reviewer re-measured): P1 `6b3bf390` 3 files/289 ·
+  P2 `32bfba0a` 5/310 · P3 `74efa5d9` 6/351 · P5 `45f6bb45` 9/370 — the guard
+  passed at 6 files through P3 (its point-in-time dirty-tree runs read 348/6 and
+  345/6). The 7th–9th files are P5's mandatory `bump-skill` surfaces:
+  `CHANGELOG.md`, the `README.md` skills-table cells, and `skills/unit-lane/SKILL.md`'s
+  `version:` line for a reference-only skill change.
+- Why no honest split helps: one PR per unit, and all 9 files are required by an
+  AC or by `bump-skill`'s synchronization contract. The line growth is unit-doc
+  content — the anti-gaming rule forbids deleting it to fit the budget.
+- Reading the P1–P3 guard rows: those runs measured the then-dirty tree (the
+  three skill edits were authored before the first phase commit), so their
+  `6 files` is a shared snapshot, not a per-phase count — the committed-state
+  history above is the accurate one.
+- Anti-gaming check: no comment, blank line, doc or test removed; the reviewer
+  confirmed `git diff main -- 'scripts/*.test.mjs'` is empty and every test file
+  is untouched.
+- Disposition: exception recorded for BOTH dimensions with the real numbers;
+  the guard still runs and is reported (P5-guard row, review row) instead of
+  being hidden or forced down.
 ```
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
@@ -294,6 +331,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 17:52 — tests step done (rows T1–T4): full root suite 578/0, context + route budgets PASS, golden-fixture suite 12/12, the whole AC grep set at its expected counts and the AC4 demonstration re-run unchanged → evidence: T rows above — next: evidence step
 
 2026-09-29 18:05 — evidence step done: one row per AC now exists (1–7, with AC4 evidenced by its two branch runs 4a/4b plus the consolidated row 4), every row from an actual run, every command reproducible → evidence: rows 1–7 above — next: review step
+
+2026-09-29 18:34 — review step (cycle 1) done by a context-clean reviewer that did not write the change: **REVIEW-VERDICT: FAIL** (1 material, 3 report-notes; AC1–AC7 reproduced green, AC-section sha256 unchanged from the creation commit). M1 (stale/inconsistent diff-guard exception) fixed in the same step — the block now carries the reviewer's re-measured numbers for both dimensions and the committed-state history; N2 (row 4a count 18 → 17) fixed; N3 (dirty-tree history claim) folded into the block; N1 (AC7 run-log rows) goes to the docs step → evidence: review verdict block above — next: docs step (N1), then a delta re-review
 
 ## Next
 
