@@ -231,7 +231,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit.*where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
-| P3 | AC3's greps over `skills/unit-lane/references/PLAN.md` (table header 1 · decisions.md 2 · Advisory only 1 + routing 2 + never blocks 2) + diff guard + context gate | 1 · 2 · 1/2/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
+| P3 | AC3's greps over `skills/unit-lane/references/PLAN.md` (table header `claim \| prior decision \| source path \| relation` 1 · decisions.md 3 · Advisory only 1 + routing 2 + never blocks 2, all re-measured at HEAD after the F8+F9 folds) + diff guard + context gate | 1 · 3 · 1/2/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
 | P4 | `bun scripts/check-skill-context.mjs` with the re-based ceiling | 0 | `PASS context budgets: 28 skills` — `product-audit` `mainEstimateMax` 2800 → 3192, declared reason `feature 69 / issue #270` (2799 → 2901 measured) | main agent |
 | P4b | `node scripts/check-skill-context.mjs --routes` (first run at the tests step was **red**: the charter grew the four `review-change` route loads) → re-based the four route ceilings, then re-run | 1 → 0 | route failures `19509 < 19960`, `17691 < 18142` ×2, `18207 < 18658` (+ the line ceilings) → `PASS route budgets: 14 routes`, each ceiling now `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` source | main agent |
 | P5 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` + bump-skill's 7 authoring-lint rules | 1 · 1 · 1 · lint reported | one scoped CHANGELOG row per skill; lint rules 2–7 pass for all three, rule 1 is a **pre-existing** warning for `review-change` (its closing block is printed from `references/PERSIST_AND_DECIDE.md` step 14, not from `SKILL.md`) | main agent |
@@ -239,10 +239,10 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | T1 | `node --test scripts/*.test.mjs` (full root suite, after every edit) | 0 | 578 pass / 0 fail — same count as the R6 baseline, no test added or removed | main agent |
 | T2 | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` | main agent |
 | T3 | `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail (deterministic half) | main agent |
-| T4 | AC grep set: AC1 `2 / 1 / 1 / 1` (`dismantle`, `guard skip`, `Ask, don`, `repository\* belong to`) · AC2 `1 / 1` · AC3 `1 / 2 / 1 / 1` · AC6 `1 / 1 / 1` | 0 | every clause present at its expected count; AC4 re-run unchanged (8 source files hit, decisive `AGENTS.md:56`; clean claim exit 1) | main agent |
+| T4 | AC grep set: AC1 `2 / 1 / 1 / 1` (`dismantle`, `guard skip`, `Ask, don`, `repository\* belong to`) · AC2 `1 / 1` · AC3 `1 / 3 / 1 / 1` · AC6 `1 / 1 / 1` | 0 | every clause present at its expected count; AC4 re-run unchanged (8 source files hit, decisive `AGENTS.md:56`; clean claim exit 1) | main agent |
 | 1 | four greps over `skills/review-change/SKILL.md`: `grep -c dismantle` · `guard skip` · `Ask, don` · `repository\* belong to` | 2 · 1 · 1 · 1 | all four clauses live in the new `## Review charter — dismantle the claim` (skill 3.9.0) | main agent |
 | 2 | `awk 'NR<=17' skills/product-audit/SKILL.md \| grep -c "repo-wide bug hunt"` · `grep -c "owns the repo-wide sweep" skills/product-audit/SKILL.md` | 1 · 1 | line 13 (frontmatter ends at 17) · line 42 (`## When to use` bullet), skill 3.4.0 | main agent |
-| 3 | `grep -c` over `skills/unit-lane/references/PLAN.md`: fixed table header · `decisions.md` · `Advisory only` · `creates no gate authority\|adds no authority` | 1 · 2 · 1 · 1 | the sweep section carries the fixed shape, the five candidate sources and the advisory contract | main agent |
+| 3 | `grep -c` over `skills/unit-lane/references/PLAN.md`: fixed table header `claim \| prior decision \| source path \| relation` · `decisions.md` · `Advisory only` · `creates no gate authority\|adds no authority` | 1 · 3 · 1 · 1 | the sweep section carries the fixed shape, the five candidate sources and the advisory contract | main agent |
 | 4 | runs **4a** + **4b** above — the same deterministic retrieval over the declared sources, once with a contradicting claim and once with a clean one | 0 · 1 | contradicting claim → one row citing `AGENTS.md:52-56`; clean claim → zero rows, no block, no gate | main agent |
 | 5 | `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 · 0 | 578/0 · `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` — every grown ceiling re-based with a declared reason | main agent |
 | 6 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` | 1 · 1 · 1 | one scoped CHANGELOG row per skill; `version:` bumped in each frontmatter by `bump-skill` | main agent |
@@ -250,7 +250,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | M2a | run-log row's Result cell rewritten to the closed grammar (`exact 7/7 · invented none · shape ok`) → `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail — the row's own Result cell, not the row, was what broke `RESULT_GRAMMAR` | main agent |
 | M2b | F1 assertion made append-safe (`result.checked === runLogGrammar(DOC).checked + 1`, justification in Known pre-existing issues) → `node --test scripts/*.test.mjs` | 0 | 578 pass / 0 fail (577/578 immediately before the fix; 578/0 at the R6 baseline) | main agent |
 | M2-verify | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `git status --porcelain` | 0 · 0 · empty | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` · clean tree | main agent |
-| CLOSE | final gate: `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `bun scripts/diff-guard.mjs --base main --unit 69` | 0 · 0 · 0 · 1 (BREACH, excepted) | 578/0 · PASS 28 skills · PASS 14 routes · `Lines: 564 > 400 · Files: 11 > 8` (exception block) | main agent |
+| CLOSE | final gate: `node --test scripts/*.test.mjs` · `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` · `bun scripts/diff-guard.mjs --base main --unit 69` | 0 · 0 · 0 · 1 (BREACH, excepted) | 578/0 · PASS 28 skills · PASS 14 routes · `Lines: 564 > 400 · Files: 11 > 8` (exception block) → fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` | main agent |
 
 ### Review pack axes (step: review)
 
@@ -311,13 +311,13 @@ fixed with the recorded justification in Known pre-existing issues (row
 lagged the tree (now restated as labeled per-run snapshots), **N5** its
 dirty-tree list omitted P1's run (now all three: 342/6, 345/6, 348/6).
 
-**Loop position:** two review passes have run, each with its findings fixed and
-re-verified by the deterministic gate (578/0 after the cycle-2 fixes). Under
-`REVIEW_PROCESS.md`'s two-cycle cap a third pass is the user's call, not a
-reviewer's; this unit carries no `review-findings.md` ledger and no `REVIEW-RAN`
-mark, so the lane has no formal cycle count either. The standing verdict on
-record is cycle 2's FAIL — fixed, gate green, awaiting an authorized pass →
-closing block below.
+**Loop position:** the durable ledger `review-findings.md` now carries two
+`REVIEW-RAN` marks (`cf595d4c`, `76998c43`) plus `GATE-RAN` rows, so the lane's
+formal cycle count is 2: the cycle-1/cycle-2 verdict blocks above are the
+earlier, pre-ledger review-step runs, and F1–F7 + F8–F11 are the two ledgered
+cycles. Under `REVIEW_PROCESS.md`'s two-cycle cap a further pass is the
+operator's call, never a reviewer's — a third `/review-change` needs their
+explicit instruction → closing block below.
 
 ```text
 DIFF-GUARD EXCEPTION — 69 (both dimensions)
@@ -331,16 +331,16 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       (`git diff --shortstat main` = 11 files, +498/−22; the gap is the guard
       counting staged + unstaged sides separately)
     · final gate (closing):       Lines 564 > 400 · Files 11 > 8
-      — the closing progress entry itself adds a few lines after this run
+      — entries grow after their own run; fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` (the PR merge-base). `main` advanced to `93a7aa48` while this fold ran, so `--base main` now reads `Lines: 1083 > 400 · Files: 21 > 8` — nine unrelated files (merge-guard, `.pi/mcp-adapter.json`, `docs/LOGS.md`, `packages/*`) show as reverse-diff until the branch brings `main` in (conflicts: `CHANGELOG.md`, `docs/features/ROADMAP.md`)
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
   `skills/unit-lane/{SKILL.md,references/PLAN.md}` (AC1–AC3 + AC6),
   `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (AC5), `CHANGELOG.md` +
-  `README.md` (AC6 via bump-skill), `docs/workflow/GOLDEN_FIXTURE.md` (AC7), and
-  `scripts/golden-fixture.test.mjs` (cycle-2 M2b — one assertion, justification
-  in Known pre-existing issues). No honest split exists: splitting the PR would
-  separate an AC from its evidence.
+  `README.md` (AC6 via bump-skill), `docs/workflow/GOLDEN_FIXTURE.md` (AC7),
+  `docs/features/69-review-conformance/review-findings.md` (the fold ledger —
+  `review-change`'s own append), `scripts/golden-fixture.test.mjs` (cycle-2
+  M2b — one assertion, justification in Known pre-existing issues). No honest split exists: splitting the PR separates an AC from its evidence.
 - Committed-state history (reviewer re-measured): P1 `6b3bf390` 3 files/289 ·
   P2 `32bfba0a` 5/310 · P3 `74efa5d9` 6/351 · P5 `45f6bb45` 9/370 — the guard
   passed at 6 files through P3 (its point-in-time dirty-tree runs read 342/6,
@@ -426,10 +426,10 @@ recorded with a full exception.
 
 What is deliberately **not** done here, and why:
 
-1. **A third review pass.** The verdict on record is review cycle 2's `FAIL`,
-   whose findings are fixed and gate-verified (rows M2a/M2b/M2-verify). Under
-   `REVIEW_PROCESS.md`'s two-cycle cap a further pass is the operator's call —
-   it is the next command, not a step this unit may take on its own.
+1. **A third review pass.** The verdict on record is cycle 2's `FAIL` with
+   F8–F11 folded and DEC-1 ratified in the same batch (rows M2a/M2b/M2-verify
+   plus the `## Amendments` row); the two-cycle cap makes the next pass the
+   operator's call — the next command, never a step this unit takes alone.
 2. **Push + PR.** The catalog skipped the `release` step, and a unit whose review
    verdict is `FAIL` must not be presented as merge-ready; the branch
    `270-review-conformance` is local. After a passing pass: push it, open the
