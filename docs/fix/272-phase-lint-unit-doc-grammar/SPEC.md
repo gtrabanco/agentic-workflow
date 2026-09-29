@@ -215,7 +215,7 @@ Budget: strong
 | T2 | `node --test scripts/*.test.mjs` | 0 | 596 pass / 0 fail | main agent |
 | T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
 | T4 | `bun run test` (packages/pi-agentic-workflow) | 0 | 409 pass / 0 fail — bundled skill mirror parity | main agent |
-| — | `bun scripts/diff-guard.mjs --base main --unit 272` | 1 (BREACH) | `Lines: 733 > 400 · Files: 7 > 8` (the guard counts the committed and the working-tree side separately — the real content is **707 lines / 4 files**: unit doc 280, parser 215, corpus 211, fix-index row 1) — **recorded exception**: every line is AC-mandated; one honest split attempted (P1 and P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit**; the final count is re-recorded at the evidence step | main agent |
+| — | `bun scripts/diff-guard.mjs --base main --unit 272` (re-run at the evidence step) | 1 (BREACH) | `Lines: 842 > 400 · Files: 9 > 8` — **recorded exception** (final count): 822 insertions / 20 deletions across 9 files — unit doc 280, parser 215, corpus 211, phase-contract mapping, unit-lane PLAN, both SPEC templates, budgets JSON, fix-index row — every line AC-mandated; one honest split attempted (P1/P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit** | main agent |
 
 ## Progress log
 
@@ -277,6 +277,13 @@ Budget: strong
   unit's own lint `PASS`; pi package 409/409; legacy-plan fingerprints
   byte-identical between main's linter and this branch (rows T1–T4, AC3) →
   evidence rows — next: evidence
+- 2026-09-29 19:55 — evidence step: every AC row re-run at this HEAD —
+  AC1 148/148, AC2 no `relevant-files:` finding on feature 69's real lists
+  (the one match is P8's fingerprint slug), AC3 fingerprints byte-identical,
+  AC4 read-verified, AC5 `verdict PASS` (`c382717d…`), AC6 held for the
+  `docs` step (bump-skill + CHANGELOG, the only row that cannot run yet);
+  final diff guard `Lines: 842 > 400 · Files: 9 > 8` recorded with the real
+  content count → exception row — next: review
 
 ## Next
 
