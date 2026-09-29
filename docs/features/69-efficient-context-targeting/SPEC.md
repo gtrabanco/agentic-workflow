@@ -255,13 +255,31 @@ Budget: strong
   contradiction (R4, routed to `phase-contract`), the double-`rg` PATH trap (R5)
   and the existing ask-first install contract (R6); rows R1–R6 above, gaps
   recorded in Known pre-existing issues → evidence rows R1–R6 — next: design
+- 2026-09-29 15:55 — design step: AC1–AC10 verified as scenario-induced and
+  command-verified; entity/role closure holds (actors: agent-searching,
+  maintainer-provisioning, planner, executor, reviewer, reviewer-of-evidence;
+  entities: `rg` binary, gitignore contract, bootstrap installer, unit-doc
+  phase block, phase-lint, read sets). Closure NOT stamped — three owner
+  decisions are open: D-69-1 phase/task grammar for the sub-section (R4,
+  `phase-contract` owner), D-69-2 the AC10 meter, D-69-3 the rg adoption sweep
+  boundary beyond skills → evidence: this entry — next: ask the owner, then
+  freeze design
 
 ## Next
 
-Execute the **design** step (`skills/unit-lane/references/DESIGN.md`): freeze
-the rg-first wording contract, the installer flow and the `Relevant files:`
-format (owner `phase-contract`), resolving the R4 grammar contradiction in the
-unit doc before any plan is cut.
+Three owner decisions are being asked (form, 2026-09-29) before the design
+closure can be stamped and the plan step can run:
+
+- **D-69-1 — phase/task grammar.** `phase-lint` cannot parse lane-written unit
+  docs (R4: `BLOCKED: no-phases`, exit 1) while `execute-phase`'s pre-flight
+  STOPs on that exit, and feature 61's own SPEC P10 obligates
+  "`phase-lint.mjs` parses the unit doc's task grammar". The `Relevant files:`
+  sub-section has to live in whichever grammar wins.
+- **D-69-2 — AC10 meter.** No committed tool measures "files-read / tokens";
+  the measurement method must be named before evidence can be collected.
+- **D-69-3 — adoption sweep boundary.** Beyond the 10 skill files + script
+  guidance the issue names, 6 more agent-facing instruction sites exist in
+  `docs/workflow/`, `template/` and `README.md` (R3).
 
 ## References
 
