@@ -13,7 +13,6 @@ tmp/
 .mcp.json
 
 # Agents & MCPs
-.engram/
 # Ignore every .serena tree (tool-local state); version ONLY the root project
 # config. Serena's own .serena/.gitignore keeps cache and per-dev overrides local.
 **/.serena/
