@@ -214,7 +214,25 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
 | P3 | AC3's three greps over `skills/unit-lane/references/PLAN.md` (fixed shape 1 · candidate sources 4 · `Advisory only` 1 + routing 3 + `never blocks` 2) + diff guard + context gate | 1 · 4 · 1/3/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
 | P4 | `bun scripts/check-skill-context.mjs` with the re-based ceiling | 0 | `PASS context budgets: 28 skills` — `product-audit` `mainEstimateMax` 2800 → 3192, declared reason `feature 69 / issue #270` (2799 → 2901 measured) | main agent |
+| P4b | `node scripts/check-skill-context.mjs --routes` (first run at the tests step was **red**: the charter grew the four `review-change` route loads) → re-based the four route ceilings, then re-run | 1 → 0 | route failures `19509 < 19960`, `17691 < 18142` ×2, `18207 < 18658` (+ the line ceilings) → `PASS route budgets: 14 routes`, each ceiling now `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` source | main agent |
 | P5 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` + bump-skill's 7 authoring-lint rules | 1 · 1 · 1 · lint reported | one scoped CHANGELOG row per skill; lint rules 2–7 pass for all three, rule 1 is a **pre-existing** warning for `review-change` (its closing block is printed from `references/PERSIST_AND_DECIDE.md` step 14, not from `SKILL.md`) | main agent |
+| P5-guard | `bun scripts/diff-guard.mjs --base main --unit 69` after the bump surfaces landed | 1 (**BREACH**) | `Lines: 370 > 400 · Files: 9 > 8` — exception recorded below; nothing deleted to fit | main agent |
+
+```text
+DIFF-GUARD EXCEPTION — 69
+- Measured: Lines 370 of 400 · Files 9 of 8 (`--base main`, exit 1).
+- History: P1–P4 each passed at 6 files (+338 → +344 lines); the 7th–9th
+  files are P5's mandatory bump-skill surfaces — `CHANGELOG.md`, `README.md`
+  (skills-table cells, required for a minor bump) and `skills/unit-lane/SKILL.md`
+  (the `version:` line for a reference-only skill change).
+- Why no honest split helps: one PR per unit of work, and every one of the 9
+  files is required by an AC or by `bump-skill`'s own synchronization contract.
+  The 370-line count is well inside the 400 budget; the breach is file count only.
+- Anti-gaming check: no comment, blank line, doc or test was removed at any
+  point — `git diff main --stat` shows +355/−9 across 9 files.
+- Disposition: exception recorded, unit continues; the review step re-runs the
+  guard and reports the same numbers instead of hiding them.
+```
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
 enough for the golden-fixture manual run is reachable in this session — AC7
@@ -257,6 +275,10 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 17:02 — P4 done: `product-audit`'s `mainEstimateMax` re-based 2800 → 3192 with the declared `feature 69 / issue #270` reason (measured 2799 → 2901), context gate green — committed with P2 so no red commit exists → evidence: P4 row above — next: P5
 
 2026-09-29 17:14 — P5 done via `bump-skill` (explicitly named skills; its discovery reads `git diff` of `SKILL.md`, and this unit's commits were per-phase): `review-change` 3.8.0 → 3.9.0, `product-audit` 3.3.0 → 3.4.0, `unit-lane` 1.1.0 → 1.2.0 (minor each — a new section/contract statement), one scoped `CHANGELOG.md` row per skill, README skills-table cells for the two user-facing rows updated; authoring lint reported (rule 1 warning on `review-change` is pre-existing) → evidence: P5 row above — next: tests step
+
+2026-09-29 17:22 — diff guard re-run after P5 → **BREACH** (`Files 9 > 8`, lines 370/400 fine); exception recorded in the Evidence section above with the measured numbers, the per-file justification and the anti-gaming check — no re-triage changes the guard's fixed 8-file default, and no file can be honestly dropped → working tree — next: tests step
+
+2026-09-29 17:40 — P4b: the tests step caught what P4's `--routes` had not been run for — the charter grew `review-change`'s loaded route (default routes 16082 → 16492 est / 1172 → 1198 lines), so the four route ceilings (`adversarial`, `default-backend`, `default-web`, `synthesize`) were re-based to `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` reason; `--routes` now `PASS route budgets: 14 routes` → evidence: P4b row above — next: tests step (T rows)
 
 ## Next
 
