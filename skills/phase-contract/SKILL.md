@@ -1,7 +1,7 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.6
+version: 1.1.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
