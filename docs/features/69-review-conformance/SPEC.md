@@ -211,6 +211,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 18 candidate lines; the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit, where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
+| P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
 enough for the golden-fixture manual run is reachable in this session — AC7
@@ -245,6 +246,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 16:22 — plan step done: tasks P1–P6 cut with validators, smallest first, P6 = verification (AC→task map above); the sweep demonstration ran both ways (rows 4a/4b — the contradicting claim cites `AGENTS.md:52-56`, the clean claim returns zero candidates and nothing blocks) → working tree — next: implement (P1)
 
 2026-09-29 16:41 — P1 done: `## Review charter — dismantle the claim` added to `skills/review-change/SKILL.md` after `## Scope`, four clauses (dismantle · in-scope defects are the review's job · ask-don't-infer at expectation level · repo-wide hunting → `product-audit`); AC1 greps 2/1/1/1, diff guard PASS → evidence: P1 row above — next: P2
+
+2026-09-29 16:47 — P2 done: frontmatter `description:` and a new `## When to use` bullet in `skills/product-audit/SKILL.md` state the repo-wide bug-hunt / security-research / broken-version ownership (line 13 inside frontmatter · line 42 body); diff guard PASS → evidence: P2 row above — next: P3
 
 ## Next
 

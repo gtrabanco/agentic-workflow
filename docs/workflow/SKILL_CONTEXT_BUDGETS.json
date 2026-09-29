@@ -26,6 +26,12 @@
         "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3930 (re-measured at this re-basis, after the F4 gate-ran edit); ceiling re-based to ceil(3930 x 1.10) = 4323. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3930, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1."
       }
     },
+    "product-audit": {
+      "mainEstimateMax": 3192,
+      "mainSources": {
+        "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192"
+      }
+    },
     "review-implementation": {
       "referenceEstimateMax": 3004,
       "referenceSources": {
