@@ -2497,3 +2497,14 @@ test("a decision word in a bullet is blocked at box 5", () => {
   assert.equal(status, 1);
   assert.match(stdout, /^P1 box-5: task 1 carries a decision word$/m);
 });
+
+test("a fenced P<n> example inside ## Tasks is inert, never a phase", () => {
+  const file = fixture(
+    "unit-doc-fenced.md",
+    `# 70 — fenced example\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n\n\`\`\`\n- P2 — A quoted example bullet (validator: \`node --test scripts/x.test.mjs\` exits 0)\n\`\`\`\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\)/m);
+  assert.doesNotMatch(stdout, /^P2 /m, "the fenced example must not lint as a phase");
+});
