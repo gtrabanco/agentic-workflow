@@ -213,6 +213,8 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit, where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
 | P3 | AC3's three greps over `skills/unit-lane/references/PLAN.md` (fixed shape 1 · candidate sources 4 · `Advisory only` 1 + routing 3 + `never blocks` 2) + diff guard + context gate | 1 · 4 · 1/3/2 · guard 0 · context 0 | sweep section, fixed table and advisory contract present; budgets PASS | main agent |
+| P4 | `bun scripts/check-skill-context.mjs` with the re-based ceiling | 0 | `PASS context budgets: 28 skills` — `product-audit` `mainEstimateMax` 2800 → 3192, declared reason `feature 69 / issue #270` (2799 → 2901 measured) | main agent |
+| P5 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` + bump-skill's 7 authoring-lint rules | 1 · 1 · 1 · lint reported | one scoped CHANGELOG row per skill; lint rules 2–7 pass for all three, rule 1 is a **pre-existing** warning for `review-change` (its closing block is printed from `references/PERSIST_AND_DECIDE.md` step 14, not from `SKILL.md`) | main agent |
 
 **Research uncertainties stated (not guessed):** (a) whether a fleet model weak
 enough for the golden-fixture manual run is reachable in this session — AC7
@@ -251,6 +253,10 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 16:47 — P2 done: frontmatter `description:` and a new `## When to use` bullet in `skills/product-audit/SKILL.md` state the repo-wide bug-hunt / security-research / broken-version ownership (line 13 inside frontmatter · line 42 body); diff guard PASS → evidence: P2 row above — next: P3
 
 2026-09-29 16:55 — P3 done: `## Prior-decisions contradiction sweep` added to `skills/unit-lane/references/PLAN.md` (fixed `claim | prior decision | source path | verdict` table with a two-value verdict, five candidate sources, advisory-only routing to `resolve-repository-state`/`NEEDS-DECISION`) plus two checklist boxes and two forbidden lines; greps 1/4/1+3+2, diff guard PASS, budgets PASS → evidence: P3 row above — next: P5 (bump-skill for the three touched skills)
+
+2026-09-29 17:02 — P4 done: `product-audit`'s `mainEstimateMax` re-based 2800 → 3192 with the declared `feature 69 / issue #270` reason (measured 2799 → 2901), context gate green — committed with P2 so no red commit exists → evidence: P4 row above — next: P5
+
+2026-09-29 17:14 — P5 done via `bump-skill` (explicitly named skills; its discovery reads `git diff` of `SKILL.md`, and this unit's commits were per-phase): `review-change` 3.8.0 → 3.9.0, `product-audit` 3.3.0 → 3.4.0, `unit-lane` 1.1.0 → 1.2.0 (minor each — a new section/contract statement), one scoped `CHANGELOG.md` row per skill, README skills-table cells for the two user-facing rows updated; authoring lint reported (rule 1 warning on `review-change` is pre-existing) → evidence: P5 row above — next: tests step
 
 ## Next
 

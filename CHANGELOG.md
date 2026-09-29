@@ -462,6 +462,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.9.0 | 2026-09-29 | minor | **Review charter (issue #270 / feature 69):** the new `## Review charter — dismantle the claim` section makes the review's job explicit — attack the claim that what works, works and works well; bugs, security issues and guard skips inside the current feature's scope are `review-change`'s own findings, never out-of-scope ones; expectations are asked about rather than inferred (non-technical phrasing for non-technical users); repo-wide bug hunting, security research and broken-version investigation route to `product-audit`. |
 | 3.8.0 | 2026-09-24 | minor | The replan and product-owned hand-offs name the lane (`/unit-lane <slug>` / `/unit-lane --fix <n>`) instead of the retired planners; the adversarial N ladder cites `advance`. |
 | 3.7.1 | 2026-09-21 | patch | Portability states that no skill pins a model tier, instead of pointing at the retired `#claude` branch. No rule, gate, or output shape changed. |
 | 3.7.0 | 2026-09-19 | minor | **Feature 32 P2/P3/P4: sole-flipper provenance, triage modes, finder-scale pointer, reviewer GATE-RAN mark:** P2 attributes the fold flip to the `ledger-ownership@1` map (dropping the residual duplicate sentence) and names `triage-issue`'s three modes (independent proposals, audit findings, `--prioritize-now`) in the relationship text; P3 replaces the ad-hoc finder severity mapping in `PERSIST_AND_DECIDE.md` with a pointer to the canonical table in `CLASSIFY.md`; P4 states that a reviewer records a `GATE-RAN` mark for the gate run its review performed, declared by the owner column-set `review-change:review-gate-ran-marks`. No rule, flag, or output shape changed. |
@@ -587,6 +588,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.4.0 | 2026-09-29 | minor | **Repo-wide sweep ownership (issue #270 / feature 69):** the frontmatter `description:` and a new `## When to use` bullet state that this skill owns repository-wide open-ended bug hunting, security research and broken-version investigation — scoped, sampled and budgeted per dimension — while `review-change` owns the same hunt against one change; neither absorbs the other's scope. |
 | 3.3.0 | 2026-09-24 | minor | The proposal streams and closing block route accepted work to `/unit-lane` instead of the retired `plan-feature` / `plan-fix` / `design-feature`. |
 | 3.2.1 | 2026-09-21 | patch | The tooling sweep routes registrations to `AGENTS.md` — the project's single agent guide — instead of `CLAUDE.md`, in `SKILL.md` (the report row, the boundary bullet, the decision tree) and `references/AUDIT_PROCESS.md`. No rule, route, or output shape changed. |
 | 3.2.0 | 2026-09-19 | minor | **Feature 32 P4: closed-class vocabulary:** replaces the open `fix-now | postpone | tradeoff` proposal classification vocabulary with a fixed closed class set, so every proposal maps to a bounded disposition without free-text escape. |
@@ -667,6 +669,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `unit-lane`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-09-29 | minor | **Prior-decisions contradiction sweep (issue #270 / feature 69):** the plan step (`references/PLAN.md`) sweeps plan claims against decisions already recorded in writing (`docs/features/<NN>-<slug>/decisions.md`, `docs/fix/<issue>-<topic>/decisions.md`, architectural invariants, the Normalized Repository State, `AGENTS.md`, SPEC `## Design status`) using the fixed evidence shape `claim \| prior decision \| source path \| verdict` and a two-value verdict; advisory only — `contradicts` routes to `resolve-repository-state` or a surfaced `NEEDS-DECISION`, a plan with no candidate match is clean and proceeds, and the sweep creates no gate authority. |
 | 1.1.1 | 2026-09-29 | patch | Plan-step output contract names both grammars phase-lint accepts and requires the machine-checkable validator shape (`<backticked command> <expected outcome>`) plus the optional nested `Relevant files: <path, path…>` line — **metadata, never a task**, the phase's read set, with a file absent from it never out of scope for the executor. No lane behaviour change. |
 | 1.1.0 | 2026-09-24 | minor | The lane declares the `--fix <n>` and `--from-issue <n>` invocations the router already prints, and documents creating a fix unit under `docs/fix/<issue>-<topic>/`.
 
