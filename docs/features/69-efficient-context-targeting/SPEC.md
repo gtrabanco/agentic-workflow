@@ -157,6 +157,25 @@ Two evidence-backed gaps, both verified 2026-09-29 (full record:
 - #219 (shared ask-first provisioning) and #218 (evidence-bound findings) are
   still open ideas — **does-not-affect** (soft cross-links; this unit ships its
   own bootstrap and its own discipline test).
+- **Phase-lint grammar vs the lane's unit-doc task format (research R4):**
+  `scripts/phase-lint.mjs` answers `BLOCKED: no-phases` (exit 1) on every unit
+  doc written by the current plan step, while `execute-phase` PREFLIGHT says to
+  STOP on any exit 1 whenever `## Tasks` exists — so the pre-flight gate as
+  written would block every implement step. **affects** this unit: P2 changes
+  that exact format, and AC6 pins what phase-lint must accept. Owner is
+  `phase-contract`; the resolution is a design/plan decision recorded here,
+  never an implied scope widen.
+- **`rg` is present twice on this machine** (`~/.pi/agent/bin/rg`, `/usr/bin/rg`)
+  — **affects** only the shape of the AC2 test (it must construct an rg-free
+  `PATH` that still contains `grep`), not the contract itself.
+- **Upstream ripgrep docs do not state the explicit-path bypass** (they document
+  default ignore-respect and `--no-ignore`, not the command-line-path override)
+  — **does-not-affect** (the bypass is locally verified, R1, and becomes an
+  executable fixture assertion in AC1 rather than a citation).
+- **No committed metering tool for “files-read / tokens”** (AC10) exists yet —
+  **affects** evidence collection only: the plan step must name the meter
+  (byte/line counts over the recorded read set) or the AC is reported as a
+  measured-approximation row; never guessed.
 
 ## Tasks
 
@@ -214,6 +233,12 @@ Budget: strong
 | 8 | pending | | | |
 | 9 | pending | | | |
 | 10 | pending | | | |
+| R1 | fresh `git init` fixture + `rg 15.2.0` (local), `rg --no-ignore`, `grep -r` (research) | 0 | default traversal skipped gitignored `bundled/` (1 hit: `src/index.ts`); explicit `rg TARGET bundled/` → `bundled/dist/index.d.ts:1`; `--no-ignore` → 2 hits; `grep -r` → 2 hits (no ignore awareness) | main agent |
+| R2 | upstream docs: `github.com/BurntSushi/ripgrep` (README) + `ripgrep.dev/docs/guide/` (research) | 0 | "By default, ripgrep will respect gitignore rules"; `--no-ignore` disables `.gitignore`/`.ignore`/`.rgignore` — matches the local fixture | main agent |
+| R3 | `grep -rln "grep" skills --include=*.md` (research) | 0 | 10 files carry "grep" (8 with a standalone `grep` instruction site, 10 total occurrences); +6 non-hook sites in `template/`/`docs/`/`README`, 2 non-test scripts (`check-changelog-row.mjs`, `phase-lint.mjs`) | main agent |
+| R4 | `bun scripts/phase-lint.mjs` on this SPEC and on `62-pi-native-conductor/SPEC.md` (research) | 1 | `verdict BLOCKED: no-phases` for both — the linter's grammar needs `### P<n> — Title` + `Layer:` + checkboxes + `Done-when:`, the lane's plan step emits `P1 — <task> (validator: …)` bullets | main agent |
+| R5 | `env PATH=/usr/bin:/bin sh -c 'command -v rg'` (research) | 0 | `rg` resolves at `/usr/bin/rg` **and** `~/.pi/agent/bin/rg` — an rg-absent test must build a stub `PATH` holding `grep` only, not drop one directory | main agent |
+| R6 | `skills/init-workspace/references/SERENA.md` §"Tool install is a different step" (research) | 0 | existing ask-first contract: offer install (preferred tool, fallback) or record a residual — the rg bootstrap must reuse it, not invent a second consent pattern; install half tracked by #219 | main agent |
 
 ## Progress log
 
@@ -224,12 +249,19 @@ Budget: strong
   0): steps research, design, plan, implement, tests, evidence, review, docs,
   release — skipped: none, budget strong; block pasted verbatim above; roadmap
   row 69 registered as `defined` — next: research
+- 2026-09-29 15:42 — research step: verified the rg three-leg contract in a
+  fresh fixture + 2 upstream citations, pinned the adoption surface (10 skill
+  files / 6 doc sites / 2 scripts), found the phase-lint ↔ unit-doc grammar
+  contradiction (R4, routed to `phase-contract`), the double-`rg` PATH trap (R5)
+  and the existing ask-first install contract (R6); rows R1–R6 above, gaps
+  recorded in Known pre-existing issues → evidence rows R1–R6 — next: design
 
 ## Next
 
-Execute the first triaged step: **research** (read
-`references/RESEARCH.md` of the `unit-lane` skill, pin the adoption surface and
-the verified `rg` contract as research evidence).
+Execute the **design** step (`skills/unit-lane/references/DESIGN.md`): freeze
+the rg-first wording contract, the installer flow and the `Relevant files:`
+format (owner `phase-contract`), resolving the R4 grammar contradiction in the
+unit doc before any plan is cut.
 
 ## References
 
