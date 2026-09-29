@@ -2286,3 +2286,186 @@ Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
   assert.equal(status, 1, "the wrapped cross-phase move must not pass as a single deliverable");
   assert.match(stdout, /P1 box-6: task 1 moves work to another phase/);
 });
+
+// ---------------------------------------------------------------------------
+// Unit-doc bullet grammar — fix #272 / feature 69 owner decision D-69-1.
+//
+// The lane's plan step writes `P<n> — <task> (validator: …)` bullets into a
+// unit doc's `## Tasks` section (skills/unit-lane/references/PLAN.md). Before
+// this grammar existed
+// the linter answered `BLOCKED: no-phases` on every one of those documents
+// while `execute-phase`'s pre-flight STOPped on that exit, so no lane unit
+// could reach its first edit (feature 61 SPEC P10 obligated the parsing and it
+// never landed).
+//
+// The mapping is owned by `skills/phase-contract/SKILL.md`: boxes 1 and 2 have
+// no input in this grammar (a bullet has no separate title line and declares no
+// layer) and are skipped; boxes 3–8 apply, with box 8 reading the bullet's
+// `(validator: …)` span as its done-when.
+// ---------------------------------------------------------------------------
+
+const UNIT_DOC = `# 70 — unit-doc example
+
+## Objective
+
+Ship one tokenizer.
+
+## Tasks
+
+- P1 — Add the tokenizer (validator: \`node --test scripts/tokenizer.test.mjs\` exits 0)
+  - Relevant files: scripts/tokenizer.mjs, scripts/tokenizer.test.mjs
+- P2 — Document the tokenizer (validator: \`grep -n tokenizer docs/tokenizer.md\` matches)
+
+## Evidence
+
+pending
+`;
+
+test("a unit doc with P<n> bullets lints to PASS with a unit-doc fingerprint", () => {
+  const file = fixture("unit-doc-valid.md", UNIT_DOC);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\) · fingerprint P1:unit-doc:1:add-tokenizer$/m);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(6\/6\) · fingerprint P2:unit-doc:1:document-tokenizer$/m);
+  assert.match(stdout, /^verdict PASS$/m);
+  assert.match(stdout, FINGERPRINT_LINE);
+  assert.doesNotMatch(stdout, /no-phases/);
+});
+
+test("the unit-doc fingerprint is byte-identical across runs", () => {
+  const file = fixture("unit-doc-repeat.md", UNIT_DOC);
+  const first = nodeRun(file);
+  const second = nodeRun(file);
+  assert.equal(first.status, 0);
+  assert.equal(first.stdout, second.stdout);
+});
+
+
+test("## Tasks with no P<n> bullets and no phases still fails closed as no-phases", () => {
+  const file = fixture("unit-doc-empty.md", `# 70 — empty\n\n## Tasks\n\n- write the thing\n\n## Evidence\n\nnone\n`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: no-phases$/m);
+});
+
+test("P<n> bullets outside ## Tasks are not phases", () => {
+  const file = fixture(
+    "unit-doc-outside.md",
+    `# 70 — outside\n\n## Progress log\n\n- 2026-09-29 12:00 — plan step: P1 — Add the tokenizer (validator: \`node --test scripts/x.test.mjs\` exits 0) → abc123 — next: implement\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "progress-log prose must not lint as phases");
+  assert.match(stdout, /^verdict BLOCKED: no-phases$/m);
+});
+
+test("a bullet without a (validator: …) span is blocked at box 8", () => {
+  const file = fixture(
+    "unit-doc-no-validator.md",
+    `# 70 — no validator\n\n## Tasks\n\n- P1 — Add the tokenizer\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: bullet carries no `\(validator: …\)`$/m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
+test("a validator without a backticked command is blocked at box 8", () => {
+  const file = fixture(
+    "unit-doc-validator-not-command.md",
+    `# 70 — prose validator\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: the suite exits 0)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: `\(validator: …\)` carries no backticked command$/m);
+});
+
+test("a validator with a command but no outcome is blocked at box 8", () => {
+  const file = fixture(
+    "unit-doc-validator-no-outcome.md",
+    `# 70 — outcome-less validator\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/tokenizer.test.mjs\`)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: `\(validator: …\)` carries no expected outcome$/m);
+});
+
+test("a standalone or in a bullet is blocked at box 5", () => {
+  const file = fixture(
+    "unit-doc-or.md",
+    `# 70 — either/or\n\n## Tasks\n\n- P1 — Declare the sweep (validator: \`node --test scripts/s.test.mjs\` exits 0 with rg or grep)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: task 1 offers either\/or alternatives$/m);
+});
+
+test("an arrow chain in a bullet is blocked at box 4", () => {
+  const file = fixture(
+    "unit-doc-arrow.md",
+    `# 70 — chain\n\n## Tasks\n\n- P1 — Wire the parser (validator: \`node --test scripts/p.test.mjs\` exits 0 after parse → dispatch → emit)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-4: task 1 is a → chain of 3 steps$/m);
+});
+
+test("a gh pr gate outside the final bullet is blocked at box 7", () => {
+  const file = fixture(
+    "unit-doc-gh-pr-early.md",
+    `# 70 — early gate\n\n## Tasks\n\n- P1 — Open the PR (validator: \`git status --porcelain\` → empty after \`gh pr create\`)\n- P2 — Verify the unit (validator: \`node --test scripts/*.test.mjs\` exits 0)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-7: task 1 carries a manual\/external gate outside the hardening phase$/m);
+});
+
+test("a gh pr gate in the final bullet is allowed", () => {
+  const file = fixture(
+    "unit-doc-gh-pr-final.md",
+    `# 70 — final gate\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n- P2 — Verify and open the PR (validator: \`git status --porcelain\` → empty after \`gh pr create\`)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("duplicate unit-doc phase numbers are blocked at box 3", () => {
+  const file = fixture(
+    "unit-doc-duplicate.md",
+    `# 70 — duplicate\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n- P1 — Document the tokenizer (validator: \`grep -n x docs/x.md\` matches)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-3: duplicate unit-doc phase P1$/m);
+});
+
+test("a wrapped continuation line joins the bullet's scan without becoming a task", () => {
+  const file = fixture(
+    "unit-doc-wrap.md",
+    `# 70 — wrapped\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n  with the state machine wired to dispatch\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\) · fingerprint P1:unit-doc:1:add-tokenizer$/m);
+});
+
+test("plan-style phase headings win when both grammars appear", () => {
+  const file = fixture(
+    "unit-doc-both.md",
+    `# 70 — both grammars\n\n## Tasks\n\n### P1 — Add the tokenizer\n\nLayer: config/infra\n\n- [ ] Create \`scripts/tokenizer.mjs\`\n\nDone-when: \`node --test scripts/t.test.mjs\` → exit 0.\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-tokenizer$/m);
+  assert.doesNotMatch(stdout, /unit-doc:/);
+});
+
+test("a decision word in a bullet is blocked at box 5", () => {
+  const file = fixture(
+    "unit-doc-decide.md",
+    `# 70 — decision word\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0 after you decide the shape)\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: task 1 carries a decision word$/m);
+});
