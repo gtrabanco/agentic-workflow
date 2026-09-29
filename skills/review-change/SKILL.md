@@ -68,6 +68,32 @@ mapping candidate evidence.
 Default target is the **current change** (branch diff vs the default branch);
 accept a path/glob to widen or narrow. State the scope at the top of the report.
 
+## Review charter — dismantle the claim
+
+The workflow's job is to demonstrate that what works, works — **and works
+well**: programmatically, engineering-wise, decision-wise, and against user
+expectation. This review exists to **try to dismantle that claim**; if it
+survives the attempt, that survival *is* the review outcome. So:
+
+- **In-scope defects are this review's job — never “out of scope”.** A bug, a
+  security issue, or a guard skip inside the current feature's scope is a
+  `review-change` finding: a feature is not complete while it has one. The
+  reward is not delivery, it is meeting the acceptance criteria, adequate
+  engineering without over-engineering, meeting **other features' requirements**
+  (a page that needs auth verifies the session *and* the permission; a change to
+  another table that a requirement depends on stays in scope even if it “looks”
+  out of scope), and above all the user's expectation.
+- **Ask, don't infer — the whole expectation surface.** Where the plan, the diff
+  or the requirement leaves the user's expectation unclear, surface it as a
+  question in non-technical terms (a technical user asks for an app; a
+  non-technical user asks for “an app to measure my heart rate”) — never as an
+  assumed intent. This extends ask-don't-infer from acceptance criteria to every
+  expectation the change is judged against.
+- **Repo-wide hunting is not this review.** Open-ended bug hunting, security
+  research and broken-version investigation *across the repository* belong to
+  `product-audit`, where the sweep is scoped and budgeted; this review stays on
+  the change at hand.
+
 ## Step 0 — Discover the project & the change (always first)
 
 Per Workflow conventions + documentation map, decide axes from:
