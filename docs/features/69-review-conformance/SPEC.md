@@ -217,6 +217,10 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | P4b | `node scripts/check-skill-context.mjs --routes` (first run at the tests step was **red**: the charter grew the four `review-change` route loads) → re-based the four route ceilings, then re-run | 1 → 0 | route failures `19509 < 19960`, `17691 < 18142` ×2, `18207 < 18658` (+ the line ceilings) → `PASS route budgets: 14 routes`, each ceiling now `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` source | main agent |
 | P5 | `node scripts/check-changelog-row.mjs review-change 3.9.0` · `… product-audit 3.4.0` · `… unit-lane 1.2.0` + bump-skill's 7 authoring-lint rules | 1 · 1 · 1 · lint reported | one scoped CHANGELOG row per skill; lint rules 2–7 pass for all three, rule 1 is a **pre-existing** warning for `review-change` (its closing block is printed from `references/PERSIST_AND_DECIDE.md` step 14, not from `SKILL.md`) | main agent |
 | P5-guard | `bun scripts/diff-guard.mjs --base main --unit 69` after the bump surfaces landed | 1 (**BREACH**) | `Lines: 370 > 400 · Files: 9 > 8` — exception recorded below; nothing deleted to fit | main agent |
+| T1 | `node --test scripts/*.test.mjs` (full root suite, after every edit) | 0 | 578 pass / 0 fail — same count as the R6 baseline, no test added or removed | main agent |
+| T2 | `bun scripts/check-skill-context.mjs` · `node scripts/check-skill-context.mjs --routes` | 0 · 0 | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` | main agent |
+| T3 | `node --test scripts/golden-fixture.test.mjs` | 0 | 12 pass / 0 fail (deterministic half) | main agent |
+| T4 | AC grep set: AC1 `2 / 1 / 1 / 1` (`dismantle`, `guard skip`, `Ask, don`, `repository\* belong to`) · AC2 `1 / 1` · AC3 `1 / 2 / 1 / 1` · AC6 `1 / 1 / 1` | 0 | every clause present at its expected count; AC4 re-run unchanged (8 source files hit, decisive `AGENTS.md:56`; clean claim exit 1) | main agent |
 
 ```text
 DIFF-GUARD EXCEPTION — 69
@@ -279,6 +283,8 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 2026-09-29 17:22 — diff guard re-run after P5 → **BREACH** (`Files 9 > 8`, lines 370/400 fine); exception recorded in the Evidence section above with the measured numbers, the per-file justification and the anti-gaming check — no re-triage changes the guard's fixed 8-file default, and no file can be honestly dropped → working tree — next: tests step
 
 2026-09-29 17:40 — P4b: the tests step caught what P4's `--routes` had not been run for — the charter grew `review-change`'s loaded route (default routes 16082 → 16492 est / 1172 → 1198 lines), so the four route ceilings (`adversarial`, `default-backend`, `default-web`, `synthesize`) were re-based to `ceil(measured x 1.10)` with the declared `feature 69 / issue #270` reason; `--routes` now `PASS route budgets: 14 routes` → evidence: P4b row above — next: tests step (T rows)
+
+2026-09-29 17:52 — tests step done (rows T1–T4): full root suite 578/0, context + route budgets PASS, golden-fixture suite 12/12, the whole AC grep set at its expected counts and the AC4 demonstration re-run unchanged → evidence: T rows above — next: evidence step
 
 ## Next
 
