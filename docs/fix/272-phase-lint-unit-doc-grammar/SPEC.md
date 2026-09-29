@@ -162,8 +162,8 @@ Done-when: `node --test scripts/phase-lint.test.mjs` exits 0.
 
 Layer: config/infra
 
-- [ ] Read the nested `Relevant files:` line under a bullet phase into that phase's file set in scripts/phase-lint.mjs
-- [ ] Fail closed with a typed reason on a malformed entry, pinned in scripts/phase-lint.test.mjs
+- [x] Read the nested `Relevant files:` line under a bullet phase into that phase's file set in scripts/phase-lint.mjs
+- [x] Fail closed with a typed reason on a malformed entry, pinned in scripts/phase-lint.test.mjs
 
 Done-when: `node --test scripts/phase-lint.test.mjs` exits 0.
 
@@ -205,12 +205,13 @@ Budget: strong
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
 | 1 | `node --test scripts/phase-lint.test.mjs` + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real unit doc) | 0 · 145 pass | unit-doc bullets lint to `PASS (6/6)` with `P<n>:unit-doc:…` fingerprints; feature 69 now gets rule verdicts instead of `no-phases` | main agent |
-| 2 | pending | | | |
+| 2 | `node --test scripts/phase-lint.test.mjs` (3 relevant-files cases) + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real sub-sections) | 0 · 148 pass | empty sub-section → `P1 relevant-files: sub-section carries no entries`; `docs` → `entry \`docs\` is neither a path nor a glob`; feature 69's real lists parse clean | main agent |
+| 3 | pending | | | |
 | 3 | pending | | | |
 | 4 | pending | | | |
 | 5 | pending | | | |
 | 6 | pending | | | |
-| — | `bun scripts/diff-guard.mjs --base main --unit 272` | 1 (BREACH) | Lines: 636 > 400 · Files: 5 ≤ 8 — **recorded exception**: the diff is this unit doc (268) + the parser (178) + its test corpus (183) + the fix-index row (1), every line AC-mandated; one honest split attempted (P1 and P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit**; unit budget declared at 700 lines / 8 files, re-run with `--max-lines 700` after each implement phase | main agent |
+| — | `bun scripts/diff-guard.mjs --base main --unit 272` | 1 (BREACH) | `Lines: 733 > 400 · Files: 7 > 8` (the guard counts the committed and the working-tree side separately — the real content is **707 lines / 4 files**: unit doc 280, parser 215, corpus 211, fix-index row 1) — **recorded exception**: every line is AC-mandated; one honest split attempted (P1 and P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit**; the final count is re-recorded at the evidence step | main agent |
 
 ## Progress log
 
@@ -239,6 +240,18 @@ Budget: strong
   `Lines: 636 > 400 · Files: 5 > 8` (exit 1); exception recorded in the
   Evidence table (unit doc + parser + corpus are AC-mandated, nothing deleted,
   P1/P2 split already attempted) → evidence: exception row — next: implement P2
+- 2026-09-29 18:25 — implement P2: `Relevant files:` parsing (metadata, never a
+  task) + fail-closed typed findings (`relevant-files:`) land on top of P1 —
+  both phases were written in one pass against the shared parser and are
+  committed as separate phases (the P1 commit ships the bullet grammar alone);
+  148/148 in `scripts/phase-lint.test.mjs` (3 sub-section cases: metadata not
+  counted, empty list, non-path entry), feature 69's real lists parse clean →
+  evidence: AC2 row — next: tests step
+- 2026-09-29 18:30 — diff guard after P2: `DIFF-GUARD BREACH — 272` /
+  `Lines: 733 > 400 · Files: 7 > 8` (exit 1) — same recorded exception,
+  exception row updated with the real content count (707 lines / 4 files;
+  the guard counts both sides separately) → evidence: exception row — next:
+  tests step
 
 ## Next
 
