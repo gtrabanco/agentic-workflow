@@ -19,15 +19,18 @@
  *   plan grammar   — `##/###/#### P<n> — Title` + `Layer:` + checkbox tasks
  *                    + `Done-when:`; every phase reports `PASS (8/8)`.
  *   unit-doc grammar — `P<n> — <task> (validator: …)` bullets inside the unit
- *                    doc's `## Tasks` section; boxes 1 and 2 have no input
- *                    there and are skipped, so a clean phase reports
- *                    `PASS (6/6)`.
+ *                    doc's `## Tasks` section, with an optional nested
+ *                    `- Relevant files:` sub-section (metadata, never a task);
+ *                    boxes 1 and 2 have no input there and are skipped, so a
+ *                    clean phase reports `PASS (6/6)`.
  * Plan-style phase headings win when a document carries both.
  *
  * Fail-closed reason codes: `missing-plan` (no argument, or a path that does
  * not exist), `no-phases` (readable file with no phase in either grammar),
  * `unparseable` (unreadable file, missing/out-of-enum `Layer:` line, or a task
- * target the frozen prefix table cannot map), `lint-blocked` (a rule failure).
+ * target the frozen prefix table cannot map), `lint-blocked` (a rule failure,
+ * including a malformed `Relevant files:` sub-section under its own
+ * `relevant-files:` finding id).
  *
  * Read-only: never writes, never calls the network, no external dependencies.
  * Passing more than one path is a usage error (stderr + exit 1), never a
@@ -688,10 +691,14 @@ function lintPhase(phase) {
  * `skills/phase-contract/SKILL.md`).
  *
  * A lane-written unit doc has no phase headings: its `## Tasks` section holds
- * one `P<n> — <task> (validator: …)` bullet per phase, and the lines that wrap
- * under it join the bullet's scan text.
+ * one `P<n> — <task> (validator: …)` bullet per phase, optionally followed by a
+ * nested `- Relevant files: <path, path…>` line. The sub-section is metadata —
+ * it is never counted as a task, never scanned by a rule, and never reaches a
+ * box-2 target; a malformed one fails the phase closed under its own
+ * `relevant-files:` finding id rather than being dropped.
  */
 const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
+const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
 
 /** A `Relevant files:` entry must name a path or a glob — fail closed else. */
 function isPathOrGlob(entry) {
@@ -716,18 +723,31 @@ function parseUnitDocPhases(text) {
   const phases = [];
   const seen = new Set();
   let current = null;
+  let collectingFiles = false;
   for (const line of body.split("\n")) {
     const bullet = UNIT_DOC_BULLET.exec(line);
     if (bullet) {
       const number = Number(bullet[1]);
-      current = { number, lines: [bullet[2]], duplicate: seen.has(number) };
+      current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number) };
       seen.add(number);
       phases.push(current);
+      collectingFiles = false;
       continue;
     }
     if (!current) continue;
+    const files = UNIT_DOC_RELEVANT_FILES.exec(line);
+    if (files) {
+      current.relevantFiles = files[1];
+      collectingFiles = true;
+      continue;
+    }
     if (line.trim() === "" || /^#{1,6}\s/.test(line.trim())) {
       current = null;
+      collectingFiles = false;
+      continue;
+    }
+    if (collectingFiles) {
+      current.relevantFiles = `${current.relevantFiles} ${line.trim()}`;
       continue;
     }
     current.lines.push(line.trim());
@@ -753,6 +773,7 @@ function parseUnitDocPhases(text) {
       layer: null,
       kind: "unit-doc",
       validator,
+      relevantFiles: phase.relevantFiles,
       duplicate: phase.duplicate,
       body: phase.lines,
     };
@@ -767,6 +788,19 @@ function box8UnitDoc(phase) {
   if (!/`[^`]+`/.test(phase.validator)) return ["`(validator: …)` carries no backticked command"];
   if (!OUTCOME_ANCHOR.test(phase.validator)) return ["`(validator: …)` carries no expected outcome"];
   return [];
+}
+
+/** Validate the metadata sub-section; an absent one is valid, a broken one is not. */
+function relevantFilesFindings(phase) {
+  if (phase.relevantFiles === null) return [];
+  const raw = phase.relevantFiles.trim();
+  if (raw === "") return ["sub-section carries no entries"];
+  const findings = [];
+  for (const entry of raw.split(",").map((value) => value.trim())) {
+    if (entry === "") findings.push("entry is empty");
+    else if (!isPathOrGlob(entry)) findings.push(`entry \`${sanitizeEcho(entry)}\` is neither a path nor a glob`);
+  }
+  return findings;
 }
 
 /** Judge one unit-doc phase against the mapped boxes; returns `{ findings }`. */
@@ -792,6 +826,7 @@ function lintUnitDocPhase(phase, isLast) {
     }
     for (const reason of result) findings.push({ label: `box-${index + 1}`, reason });
   }
+  for (const reason of relevantFilesFindings(phase)) findings.push({ label: "relevant-files", reason });
   return { findings };
 }
 

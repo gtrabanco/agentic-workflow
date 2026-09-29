@@ -2291,8 +2291,8 @@ Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
 // Unit-doc bullet grammar — fix #272 / feature 69 owner decision D-69-1.
 //
 // The lane's plan step writes `P<n> — <task> (validator: …)` bullets into a
-// unit doc's `## Tasks` section (skills/unit-lane/references/PLAN.md). Before
-// this grammar existed
+// unit doc's `## Tasks` section (skills/unit-lane/references/PLAN.md), with an
+// optional nested `- Relevant files:` sub-section. Before this grammar existed
 // the linter answered `BLOCKED: no-phases` on every one of those documents
 // while `execute-phase`'s pre-flight STOPped on that exit, so no lane unit
 // could reach its first edit (feature 61 SPEC P10 obligated the parsing and it
@@ -2300,8 +2300,8 @@ Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
 //
 // The mapping is owned by `skills/phase-contract/SKILL.md`: boxes 1 and 2 have
 // no input in this grammar (a bullet has no separate title line and declares no
-// layer) and are skipped; boxes 3–8 apply, with box 8 reading the bullet's
-// `(validator: …)` span as its done-when.
+// layer) and are reported n/a; boxes 3–8 apply, with box 8 reading the
+// bullet's `(validator: …)` span as its done-when.
 // ---------------------------------------------------------------------------
 
 const UNIT_DOC = `# 70 — unit-doc example
@@ -2340,6 +2340,13 @@ test("the unit-doc fingerprint is byte-identical across runs", () => {
   assert.equal(first.stdout, second.stdout);
 });
 
+test("Relevant files is metadata: it never counts as a task", () => {
+  const file = fixture("unit-doc-metadata.md", UNIT_DOC);
+  const { stdout } = nodeRun(file);
+  // P1 carries one bullet plus one Relevant files line; the fingerprint's task
+  // slot must stay 1, or a file list could inflate the box-3 budget.
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\) · fingerprint P1:unit-doc:1:/m);
+});
 
 test("## Tasks with no P<n> bullets and no phases still fails closed as no-phases", () => {
   const file = fixture("unit-doc-empty.md", `# 70 — empty\n\n## Tasks\n\n- write the thing\n\n## Evidence\n\nnone\n`);
@@ -2387,6 +2394,27 @@ test("a validator with a command but no outcome is blocked at box 8", () => {
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
   assert.match(stdout, /^P1 box-8: `\(validator: …\)` carries no expected outcome$/m);
+});
+
+test("an empty Relevant files sub-section fails closed with a typed finding", () => {
+  const file = fixture(
+    "unit-doc-empty-files.md",
+    `# 70 — empty files\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n  - Relevant files:\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 relevant-files: sub-section carries no entries$/m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
+test("a Relevant files entry that is neither a path nor a glob fails closed", () => {
+  const file = fixture(
+    "unit-doc-bad-files.md",
+    `# 70 — bad entry\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n  - Relevant files: docs\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 relevant-files: entry `docs` is neither a path nor a glob$/m);
 });
 
 test("a standalone or in a bullet is blocked at box 5", () => {
