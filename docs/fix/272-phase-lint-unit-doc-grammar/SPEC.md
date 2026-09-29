@@ -207,10 +207,14 @@ Budget: strong
 | 1 | `node --test scripts/phase-lint.test.mjs` + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real unit doc) | 0 · 145 pass | unit-doc bullets lint to `PASS (6/6)` with `P<n>:unit-doc:…` fingerprints; feature 69 now gets rule verdicts instead of `no-phases` | main agent |
 | 2 | `node --test scripts/phase-lint.test.mjs` (3 relevant-files cases) + `node scripts/phase-lint.mjs /tmp/69-spec.md` (feature 69's real sub-sections) | 0 · 148 pass | empty sub-section → `P1 relevant-files: sub-section carries no entries`; `docs` → `entry \`docs\` is neither a path nor a glob`; feature 69's real lists parse clean | main agent |
 | 3 | pending | | | |
-| 3 | pending | | | |
-| 4 | pending | | | |
-| 5 | pending | | | |
-| 6 | pending | | | |
+| 3 | `node /tmp/pl-main.mjs <legacy plan>` vs `node scripts/phase-lint.mjs <legacy plan>` on `59-executable-continuations/PLAN.md` and `27-pi-agentic-workflow/PLAN.md` (main's linter vs this branch's) | 0 = 0 | fingerprints byte-identical (`1a3bf148…`, `85935251…`) — legacy plan files unchanged | main agent |
+| 4 | read-verified: `skills/phase-contract/SKILL.md` diff (mapping section) + `grep -c "never carries a second copy" scripts/phase-lint.mjs` | 0 | mapping stated owner-side; the script header keeps the single-source contract | main agent |
+| 5 | `bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md` | 0 | `verdict PASS` · fingerprint `c382717d…` — 4 phases `PASS (8/8)` | main agent |
+| 6 | pending (bump-skill + CHANGELOG rows run in the `docs` step) | | | |
+| T1 | `node --test scripts/phase-lint.test.mjs` | 0 | 148 pass / 0 fail — unit-doc grammar corpus + legacy pins | main agent |
+| T2 | `node --test scripts/*.test.mjs` | 0 | 596 pass / 0 fail | main agent |
+| T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
+| T4 | `bun run test` (packages/pi-agentic-workflow) | 0 | 409 pass / 0 fail — bundled skill mirror parity | main agent |
 | — | `bun scripts/diff-guard.mjs --base main --unit 272` | 1 (BREACH) | `Lines: 733 > 400 · Files: 7 > 8` (the guard counts the committed and the working-tree side separately — the real content is **707 lines / 4 files**: unit doc 280, parser 215, corpus 211, fix-index row 1) — **recorded exception**: every line is AC-mandated; one honest split attempted (P1 and P2 land as separate commits — the guard is cumulative by design) and **nothing was deleted to fit**; the final count is re-recorded at the evidence step | main agent |
 
 ## Progress log
@@ -262,6 +266,17 @@ Budget: strong
   "fix #272") after `--routes` failed — budgets PASS 14 routes / 28 skills,
   root suite 596/596, own lint `PASS` → working tree — next: diff guard + P4
   is the close-out, so the tests catalog step runs first
+- 2026-09-29 19:15 — diff guard after P3 (run before the P3 commit, output
+  pasted here): `DIFF-GUARD BREACH — 272` / `Lines: 833 > 400 · Files: 10 > 8`
+  (exit 1) — same recorded exception; the file side now counts 9 unique files
+  (unit doc, fix index, parser, corpus, phase-contract, unit-lane PLAN, both
+  templates, budgets JSON), all AC-mandated, none deleted → evidence: exception
+  row (final count at the evidence step) — next: tests
+- 2026-09-29 19:35 — tests step: `node --test scripts/phase-lint.test.mjs`
+  148/148; root suite 596/596; budgets PASS (28 skills / 14 routes); this
+  unit's own lint `PASS`; pi package 409/409; legacy-plan fingerprints
+  byte-identical between main's linter and this branch (rows T1–T4, AC3) →
+  evidence rows — next: evidence
 
 ## Next
 
