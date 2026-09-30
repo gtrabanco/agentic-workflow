@@ -331,7 +331,7 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       (`git diff --shortstat main` = 11 files, +498/−22; the gap is the guard
       counting staged + unstaged sides separately)
     · final gate (closing):       Lines 564 > 400 · Files 11 > 8
-      — entries grow after their own run; fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` (the PR merge-base). `main` advanced to `93a7aa48` while this fold ran, so `--base main` now reads `Lines: 1083 > 400 · Files: 21 > 8` — nine unrelated files (merge-guard, `.pi/mcp-adapter.json`, `docs/LOGS.md`, `packages/*`) show as reverse-diff until the branch brings `main` in (conflicts: `CHANGELOG.md`, `docs/features/ROADMAP.md`)
+      — entries grow after their own run; fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` (the PR merge-base). `main` advanced to `93a7aa48` while this fold ran, so `--base main` read at `93a7aa48` `Lines: 1083 > 400 · Files: 21 > 8` — nine unrelated files (merge-guard, `.pi/mcp-adapter.json`, `docs/LOGS.md`, `packages/*`) show as reverse-diff until the branch brings `main` in (conflicts: `CHANGELOG.md`, `docs/features/ROADMAP.md`); the current main (`37c6cc10`) now reads `Lines: 1130 > 400 · Files: 22 > 8`
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
