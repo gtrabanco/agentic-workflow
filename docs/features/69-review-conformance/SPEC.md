@@ -311,13 +311,14 @@ fixed with the recorded justification in Known pre-existing issues (row
 lagged the tree (now restated as labeled per-run snapshots), **N5** its
 dirty-tree list omitted P1's run (now all three: 342/6, 345/6, 348/6).
 
-**Loop position:** the durable ledger `review-findings.md` now carries three
-`REVIEW-RAN` marks (`cf595d4c`, `76998c43`, `42dfcae2`) plus `GATE-RAN` rows,
-so the lane's formal cycle count is 3 (three ledgered cycles: F1–F7, F8–F11,
-F12–F18). The earlier, pre-ledger review-step verdict blocks above (cycle 1 and
-cycle 2) ran before the fold ledger was established. Under
-`REVIEW_PROCESS.md`'s two-cycle cap a third pass is bounded — a fourth
-`/review-change` needs their explicit instruction → closing block below.
+**Loop position:** the durable ledger `review-findings.md` carries the
+`REVIEW-RAN` marks (count them with
+`grep -c "^| REVIEW-RAN |" docs/features/69-review-conformance/review-findings.md`;
+these marks are the authoritative cycle count, not any prose figure written
+against them). The earlier, pre-ledger review-step verdict blocks above
+(cycle 1 and cycle 2) ran before the fold ledger was established. Under
+`REVIEW_PROCESS.md`'s two-cycle cap the count from the ledger is finite —
+any additional review needs their explicit instruction → closing block below.
 
 ```text
 DIFF-GUARD EXCEPTION — 69 (both dimensions)
@@ -331,7 +332,17 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       (`git diff --shortstat main` = 11 files, +498/−22; the gap is the guard
       counting staged + unstaged sides separately)
     · final gate (closing):       Lines 564 > 400 · Files 11 > 8
-      — entries grow after their own run; fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` (the PR merge-base). `main` advanced to `93a7aa48` while this fold ran, so `--base main` read at `93a7aa48` `Lines: 1083 > 400 · Files: 21 > 8` — nine unrelated files (merge-guard, `.pi/mcp-adapter.json`, `docs/LOGS.md`, `packages/*`) show as reverse-diff until the branch brings `main` in (conflicts: `CHANGELOG.md`, `docs/features/ROADMAP.md`); the current main (`37c6cc10`) now reads `Lines: 1130 > 400 · Files: 22 > 8`
+      — entries grow after their own run; fold F8–F11 re-measured `Lines: 652 > 400 · Files: 12 > 8` on base `10869fdc` (the PR merge-base). The
+      numbers above are snapshots of the diff-guard measurement at the time
+      they were recorded (they are not persistent — every subsequent Evidence/
+      Progress append grows the diff, and the base commit itself moves when
+      `main` advances); to reproduce at any head, re-run
+      `bun scripts/diff-guard.mjs --base <sha> --unit 69` on a clean tree
+      (the guard counts staged + unstaged changes, so a dirty tree adds
+      working-tree bytes to the count). At the merge-base `10869fdc` the final
+      diff is `Lines: 675 > 400 · Files: 12 > 8`; at a later main tip `354c59ed`
+      it is `Lines: 2178 > 400 · Files: 32 > 8` (both measured at HEAD's index
+      with a clean tree).
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
@@ -426,10 +437,12 @@ recorded with a full exception.
 
 What is deliberately **not** done here, and why:
 
-1. **A third review pass.** The verdict on record is cycle 2's `FAIL` with
+1. **A further review pass.** The verdict on record is cycle 2's `FAIL` with
    F8–F11 folded and DEC-1 ratified in the same batch (rows M2a/M2b/M2-verify
-   plus the `## Amendments` row); the two-cycle cap makes the next pass the
-   operator's call — the next command, never a step this unit takes alone.
+   plus the `## Amendments` row); the two-cycle cap is counted from the
+   ledger's `REVIEW-RAN` marks (not from prose that hard-codes a number) —
+   the operator's call on the next pass, and the next command is never
+   a step this unit takes alone.
 2. **Push + PR.** The catalog skipped the `release` step, and a unit whose review
    verdict is `FAIL` must not be presented as merge-ready; the branch
    `270-review-conformance` is local. After a passing pass: push it, open the
