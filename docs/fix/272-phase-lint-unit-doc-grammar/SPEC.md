@@ -214,7 +214,7 @@ Budget: strong
 | 3 | `node /tmp/pl-main.mjs <legacy plan>` vs `node scripts/phase-lint.mjs <legacy plan>` on `59-executable-continuations/PLAN.md` and `27-pi-agentic-workflow/PLAN.md` (main's linter vs this branch's) | 0 = 0 | fingerprints byte-identical (`1a3bf148…`, `85935251…`) — legacy plan files unchanged | main agent |
 | 4 | read-verified: `skills/phase-contract/SKILL.md` diff (mapping section) + `grep -c "never carries a second copy" scripts/phase-lint.mjs` | 0 | mapping stated owner-side; the script header keeps the single-source contract | main agent |
 | 5 | `bun scripts/phase-lint.mjs docs/fix/272-phase-lint-unit-doc-grammar/SPEC.md` | 0 | `verdict PASS` · fingerprint `c382717d…` — 4 phases `PASS (8/8)` | main agent |
-| 6 | `node --test scripts/*.test.mjs` + `bun scripts/check-skill-context.mjs` (+ `--routes`) + `bun run test` / `test:node` (packages/pi-agentic-workflow) + frontmatter↔CHANGELOG check (rendered-facts, in the root suite) | 0 · 0 · 0 · 0 | 597 pass; PASS 28 skills · PASS 14 routes; pi 409/409 on bun and node; `phase-contract` 1.1.0, `unit-lane` 1.1.1, pi `0.18.3` each with its newest CHANGELOG row matching | main agent |
+| 6 | `node --test scripts/*.test.mjs` + `bun scripts/check-skill-context.mjs` (+ `--routes`) + `bun run test` / `test:node` (packages/pi-agentic-workflow) + frontmatter↔CHANGELOG check (rendered-facts, in the root suite) | 0 · 0 · 0 · 0 | 597 pass; PASS 28 skills · PASS 14 routes; pi 409/409 on bun and node; `phase-contract` 1.1.0, `unit-lane` 1.1.1, pi `0.18.5` each with its newest CHANGELOG row matching (0.18.3/0.18.4 were taken by main while this branch was open, so the re-bundle row re-based to 0.18.5) | main agent |
 | T1 | `node --test scripts/phase-lint.test.mjs` | 0 | 149 pass / 0 fail — unit-doc grammar corpus + legacy pins | main agent |
 | T2 | `node --test scripts/*.test.mjs` | 0 | 597 pass / 0 fail | main agent |
 | T3 | `bun scripts/check-skill-context.mjs` + `… --routes` | 0 | PASS 28 skills · PASS 14 routes | main agent |
@@ -328,7 +328,7 @@ REVIEW-VERDICT: PASS
   evidence: review verdict block — next: docs
 - 2026-09-29 21:05 — docs step (bump-skill): `phase-contract` 1.0.6 → **1.1.0**
   (minor — new grammar section), `unit-lane` 1.1.0 → **1.1.1** (patch — plan
-  contract wording), `@gtrabanco/pi-agentic-workflow` 0.18.2 → **0.18.3**
+  contract wording), `@gtrabanco/pi-agentic-workflow` 0.18.2 → **0.18.5**
   (re-bundle publish); CHANGELOG rows added in all three tables plus today's
   Release-log line; authoring lint reported below (7/7 pass, no repair needed)
   → gate: root 597/597, budgets 28/14, pi 409+409 — next: close-out P4
