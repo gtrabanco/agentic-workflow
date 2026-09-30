@@ -339,10 +339,10 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       `main` advances); to reproduce at any head, re-run
       `bun scripts/diff-guard.mjs --base <sha> --unit 69` on a clean tree
       (the guard counts staged + unstaged changes, so a dirty tree adds
-      working-tree bytes to the count). At the merge-base `10869fdc` the final
-      diff is `Lines: 675 > 400 · Files: 12 > 8`; at a later main tip `354c59ed`
-      it is `Lines: 2178 > 400 · Files: 32 > 8` (both measured at HEAD's index
-      with a clean tree).
+      working-tree bytes to the count). At the merge-base `10869fdc` the
+      final diff (measured at the fix commit's parent `2513409^`) is
+      `Lines: 675 > 400 · Files: 12 > 8`; at a later main tip `354c59ed`
+      it is `Lines: 2178 > 400 · Files: 32 > 8` (measured the same way).
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
@@ -454,6 +454,17 @@ What is deliberately **not** done here, and why:
 4. **Report-note (proposal, not a finding):** `docs/workflow/REVIEW_AND_CLASSIFY.md`
    does not mention the new charter; route to `/audit-docs` if that docs pass is
    wanted.
+
+---
+### Fold receipt — batch F19 + F20
+
+- **Repaired:** F19 (loop record: move-proof pointer, no hard-coded count) · F20 (diff-guard: base+head anchor, methodology documented)
+- **`finding-mark@1` refs:** VF-19 · VF-20 (both confirmed by adversarial reviewers)
+- **Refuted:** none
+- **Gate exit codes at fold head `2513409`**: root `0` · context `0` · routes `0` · golden-fixture `0`
+- **Batch class:** `all-repair-in-place` (1 fix commit: `2513409e`)
+  - Fold diff: `+26/−15` (SPEC.md 23 lines, review-findings.md 3 lines folded-flag)
+  - Docs-only + no `high` severity → `RE-REVIEW-OPTIONAL`
 
 ## Amendments
 
