@@ -83,6 +83,6 @@ gate of its own.
 - Do not plan work beyond the unit's acceptance criteria
 - Do not include docs/release tasks here — those are separate catalog steps
 - Do not invent tasks that the ACs do not demand
-- Do not turn the sweep into a gate, stage verdict or blocking check — it routes, it
-  never blocks, and it adds no authority
+- Do not turn the sweep into a gate, stage verdict or blocking check — it routes,
+  it never blocks a miss, and it adds no authority
 - Do not record a `prior decision` that no source `path:line` cites
