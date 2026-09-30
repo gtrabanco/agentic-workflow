@@ -47,3 +47,5 @@
 | VF-20 | docs/features/69-review-conformance/SPEC.md:334 · reviewer review-change · HEAD 2e20bfd8a52eba263679fac88db6b83a4442cbfe · recheck re-run: `bun scripts/diff-guard.mjs --base 37c6cc10 --unit 69` → `Lines: 1147 > 400 · Files: 22 > 8` (SPEC records 1130/22); `--base main` → `Lines: 2172 > 400 · Files: 32 > 8`; `git rev-parse origin/main` → `354c59ed` ≠ `37c6cc10`; `git diff --numstat 37c6cc10 42dfcae2` → 1130/22, i.e. the figure reproduces only at that head; tree clean during runs | verify | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 2513409e58d6f40698825b0edc6eee4709268651 | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD 2513409e58d6f40698825b0edc6eee4709268651 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
+| REVIEW-RAN | HEAD 2b874754d67f4c358d448d116c15e5dda92635f5 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 2b874754d67f4c358d448d116c15e5dda92635f5 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
