@@ -39,3 +39,5 @@
 | GATE-RAN | HEAD 42dfcae21ec4da884dcdfaa87e04a2d057523d59 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
 | REVIEW-RAN | HEAD 0d1d14b3e8900b1616bf66bf12aa7ba49db2d6aa | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD 0d1d14b3e8900b1616bf66bf12aa7ba49db2d6aa | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
+| REVIEW-RAN | HEAD 8ce1365291463d7468f794a5065519f65fd28909 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 8ce1365291463d7468f794a5065519f65fd28909 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
