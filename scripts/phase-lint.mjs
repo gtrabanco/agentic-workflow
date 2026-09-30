@@ -12,12 +12,25 @@
  * stdout: one fixed, byte-stable text block — a `Phase-lint:` line per phase,
  * one `<rule-id>: <finding>` line per failing rule, a final verdict line, and a
  * `fingerprint: <sha256>` line over the newline-joined per-phase fingerprints.
- * exit: 0 only when every phase is `PASS (8/8)` and the verdict is `PASS`.
+ * exit: 0 only when every phase passes and the verdict is `PASS`.
+ *
+ * Two grammars, one verdict contract (fix #272; the mapping is owned by
+ * `skills/phase-contract/SKILL.md`):
+ *   plan grammar   — `##/###/#### P<n> — Title` + `Layer:` + checkbox tasks
+ *                    + `Done-when:`; every phase reports `PASS (8/8)`.
+ *   unit-doc grammar — `P<n> — <task> (validator: …)` bullets inside the unit
+ *                    doc's `## Tasks` section, with an optional nested
+ *                    `- Relevant files:` sub-section (metadata, never a task);
+ *                    boxes 1 and 2 have no input there and are skipped, so a
+ *                    clean phase reports `PASS (6/6)`.
+ * Plan-style phase headings win when a document carries both.
  *
  * Fail-closed reason codes: `missing-plan` (no argument, or a path that does
- * not exist), `no-phases` (readable file with zero phase headings),
+ * not exist), `no-phases` (readable file with no phase in either grammar),
  * `unparseable` (unreadable file, missing/out-of-enum `Layer:` line, or a task
- * target the frozen prefix table cannot map), `lint-blocked` (a rule failure).
+ * target the frozen prefix table cannot map), `lint-blocked` (a rule failure,
+ * including a malformed `Relevant files:` sub-section under its own
+ * `relevant-files:` finding id).
  *
  * Read-only: never writes, never calls the network, no external dependencies.
  * Passing more than one path is a usage error (stderr + exit 1), never a
@@ -591,11 +604,15 @@ function box6(phase) {
  * other than the final hardening phase" (F39).
  */
 function box7(phase) {
-  const hardened = HARDENING_LAYERS.has(phase.layer);
+  // The two exemptions are both positional: the plan grammar calls the final
+  // hardening/close-out phase `finalCloseOut`; the unit-doc grammar declares no
+  // layer, so its own flag marks the final bullet (the unit doc's
+  // verification/close-out line) — see `skills/phase-contract/SKILL.md`.
+  const hardened = HARDENING_LAYERS.has(phase.layer) || phase.finalUnitDoc === true;
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     const manualGate = !hardened && (/manual/i.test(task) || /\bask the users?\b/i.test(task));
-    const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut;
+    const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut && !phase.finalUnitDoc;
     if (manualGate || forgeGate) {
       findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
     }
@@ -669,10 +686,243 @@ function lintPhase(phase) {
   return { findings };
 }
 
+/**
+ * Unit-doc bullet grammar (fix #272; mapping owned by
+ * `skills/phase-contract/SKILL.md`).
+ *
+ * A lane-written unit doc has no phase headings: its `## Tasks` section holds
+ * one `P<n> — <task> (validator: …)` bullet per phase, optionally followed by a
+ * nested `- Relevant files: <path, path…>` line. The sub-section is metadata —
+ * it is never counted as a task, never scanned by a rule, and never reaches a
+ * box-2 target; a malformed one fails the phase closed under its own
+ * `relevant-files:` finding id rather than being dropped.
+ */
+const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
+const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
+
+/** A `Relevant files:` entry must name a path or a glob — fail closed else. */
+function isPathOrGlob(entry) {
+  if (entry === "" || /\s/.test(entry)) return false;
+  if (entry.includes("*") || entry.includes("?")) return true;
+  return entry.includes("/") || EXTENSIONS.some((extension) => entry.endsWith(extension));
+}
+
+/**
+ * Extract the phases from a unit doc's `## Tasks` section, plus any
+ * `Relevant files:` sub-section that belongs to no phase.
+ *
+ * Line rules: a `P<n> —` bullet starts the next phase; wrapped lines join the
+ * bullet's scan text; a heading or a blank line ends the bullet's *prose*
+ * continuation — but the metadata sub-section keeps attaching to the nearest
+ * preceding bullet even across a blank line (F-2: a read set must never vanish
+ * because the author pressed Enter), and a sub-section with no bullet before it
+ * is returned as an orphan so the caller can fail closed instead of dropping it.
+ */
+function parseUnitDocPhases(text) {
+  const heading = /^## Tasks[ \t]*$/m.exec(text);
+  if (!heading) return { phases: [], orphans: [] };
+  const rest = text.slice(heading.index + heading[0].length);
+  const end = /^## /m.exec(rest);
+  const body = end ? rest.slice(0, end.index) : rest;
+
+  const phases = [];
+  const orphans = [];
+  const seen = new Set();
+  let current = null;
+  let mode = "prose";
+  let closed = false;
+  let fence = null;
+  for (const line of body.split("\n")) {
+    const trimmed = line.trim();
+    // Fence inertness — the same contract the plan grammar keeps: a fenced
+    // example of a bullet is quoted text, never a phase, so a unit doc may
+    // show its own shape without linting the example.
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    const bullet = UNIT_DOC_BULLET.exec(line);
+    if (bullet) {
+      const number = Number(bullet[1]);
+      current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number) };
+      seen.add(number);
+      phases.push(current);
+      mode = "prose";
+      closed = false;
+      continue;
+    }
+    const files = UNIT_DOC_RELEVANT_FILES.exec(line);
+    if (files) {
+      if (!current) {
+        orphans.push(trimmed);
+        continue;
+      }
+      current.relevantFiles =
+        current.relevantFiles === null ? files[1] : `${current.relevantFiles} ${files[1]}`;
+      mode = "files";
+      closed = false;
+      continue;
+    }
+    if (!current) continue;
+    if (trimmed === "") {
+      closed = true;
+      continue;
+    }
+    if (/^#{1,6}\s/.test(trimmed)) {
+      current = null;
+      mode = "prose";
+      closed = false;
+      continue;
+    }
+    if (closed) {
+      // Prose after a blank line is a new block, not a continuation of the
+      // bullet; only the metadata line may still attach at this point.
+      current = null;
+      mode = "prose";
+      closed = false;
+      continue;
+    }
+    if (mode === "files") {
+      current.relevantFiles = `${current.relevantFiles} ${trimmed}`;
+      continue;
+    }
+    current.lines.push(trimmed);
+  }
+
+  const built = phases.map((phase) => {
+    const first = (phase.lines[0] || "").trim();
+    const titleEnd = first.indexOf("(validator:");
+    const head = (titleEnd === -1 ? first : first.slice(0, titleEnd)).trim();
+    const title = (head.split(":")[0] || head).trim() || first;
+    const scan = phase.lines.join(" ");
+    const validatorAt = scan.indexOf("(validator:");
+    const validator =
+      validatorAt === -1
+        ? null
+        : scan.slice(validatorAt + "(validator:".length).replace(/\)\s*$/, "").trim();
+    return {
+      number: phase.number,
+      title,
+      tasks: [first],
+      taskScan: [scan],
+      ticks: [],
+      layer: null,
+      kind: "unit-doc",
+      validator,
+      relevantFiles: phase.relevantFiles,
+      duplicate: phase.duplicate,
+      body: phase.lines,
+    };
+  });
+  return { phases: built, orphans };
+}
+
+/** Box 8's unit-doc reading: the bullet's `(validator: …)` span is its done-when. */
+function box8UnitDoc(phase) {
+  if (phase.validator === null || phase.validator === "") {
+    return ["bullet carries no `(validator: …)`"];
+  }
+  if (!/`[^`]+`/.test(phase.validator)) return ["`(validator: …)` carries no backticked command"];
+  if (!OUTCOME_ANCHOR.test(phase.validator)) return ["`(validator: …)` carries no expected outcome"];
+  return [];
+}
+
+/** Validate the metadata sub-section; an absent one is valid, a broken one is not. */
+function relevantFilesFindings(phase) {
+  if (phase.relevantFiles === null) return [];
+  const raw = phase.relevantFiles.trim();
+  if (raw === "") return ["sub-section carries no entries"];
+  const findings = [];
+  for (const entry of raw.split(",").map((value) => value.trim())) {
+    if (entry === "") findings.push("entry is empty");
+    else if (!isPathOrGlob(entry)) findings.push(`entry \`${sanitizeEcho(entry)}\` is neither a path nor a glob`);
+  }
+  return findings;
+}
+
+/** Judge one unit-doc phase against the mapped boxes; returns `{ findings }`. */
+function lintUnitDocPhase(phase, isLast) {
+  phase.finalUnitDoc = isLast;
+  const findings = [];
+  if (phase.duplicate) findings.push({ label: "box-3", reason: `duplicate unit-doc phase P${phase.number}` });
+  for (const [index, check] of BOXES.entries()) {
+    // Boxes 1–2 have no input in this grammar (no separate title line, no
+    // layer); box 3's per-phase budget is structural (a bullet is one task)
+    // and its duplicate case is raised above.
+    if (index <= 2) continue;
+    if (index === 7) {
+      for (const reason of box8UnitDoc(phase)) findings.push({ label: "box-8", reason });
+      continue;
+    }
+    const view = index >= 3 && index <= 6 ? { ...phase, tasks: phase.taskScan } : phase;
+    const result = check(view);
+    if (result && !Array.isArray(result)) {
+      if (result.ambiguous) return { ambiguous: result.ambiguous };
+      for (const reason of result.findings) findings.push({ label: `box-${index + 1}`, reason });
+      continue;
+    }
+    for (const reason of result) findings.push({ label: `box-${index + 1}`, reason });
+  }
+  for (const reason of relevantFilesFindings(phase)) findings.push({ label: "relevant-files", reason });
+  return { findings };
+}
+
+/** The full run over a unit doc's bullet phases — same block shape, `6/6` boxes. */
+function lintUnitDocPhases(phases, orphans = []) {
+  const fingerprints = [];
+  const results = [];
+  for (const [index, phase] of phases.entries()) {
+    fingerprints.push(`P${phase.number}:unit-doc:${phase.tasks.length}:${titleDeliverable(phase.title)}`);
+    const result = lintUnitDocPhase(phase, index === phases.length - 1);
+    if (result.ambiguous) {
+      return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
+    results.push({ phase, findings: result.findings });
+  }
+
+  const lines = [];
+  let blocked = false;
+  for (const [index, { phase, findings }] of results.entries()) {
+    if (findings.length === 0) {
+      lines.push(`P${phase.number} Phase-lint: PASS (6/6) · fingerprint ${fingerprints[index]}`);
+      continue;
+    }
+    blocked = true;
+    for (const finding of findings) lines.push(`P${phase.number} ${finding.label}: ${finding.reason}`);
+    const summary = findings[0].label.replace(/^box-/, "box ");
+    lines.push(`P${phase.number} Phase-lint: BLOCKED — ${summary}: ${findings[0].reason}`);
+  }
+  // A sub-section attached to no bullet is a document-shape failure: reported
+  // under its own id so a read set can never be dropped silently (F-2), even
+  // when the document itself carries no phase.
+  for (let index = 0; index < orphans.length; index += 1) {
+    blocked = true;
+    lines.push("relevant-files: sub-section is not attached to a bullet phase");
+  }
+  lines.push(blocked ? "verdict BLOCKED: lint-blocked" : "verdict PASS");
+  lines.push(`fingerprint: ${digest(fingerprints)}`);
+  return { verdict: blocked ? "BLOCKED: lint-blocked" : "PASS", exitCode: blocked ? 1 : 0, lines };
+}
+
 /** The full run over one Markdown document. */
 export function lintPlan(text) {
-  const phases = parsePhases(normalizeTerminators(text));
-  if (phases.length === 0) return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
+  const normalized = normalizeTerminators(text);
+  const phases = parsePhases(normalized);
+  if (phases.length === 0) {
+    // Second grammar (fix #272): a lane-written unit doc carries no phase
+    // headings, only bullets in its `## Tasks` section. Both grammars are
+    // exhausted before the file may answer `no-phases`.
+    const { phases: unitDocPhases, orphans } = parseUnitDocPhases(normalized);
+    if (unitDocPhases.length === 0) {
+      return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
+    }
+    return lintUnitDocPhases(unitDocPhases, orphans);
+  }
 
   for (const phase of phases) {
     // F83 re-cut: the layer declaration is exactly-one. A second `Layer:` line
