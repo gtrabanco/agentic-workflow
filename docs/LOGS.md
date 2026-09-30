@@ -2499,3 +2499,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Migración MCP a nativo pi 0.99.1: traducción completa de 5 repos (agentic-workflow-loop, bingo-ev, dotSloth, sosfelinosbasti, webs) + 2 configs globales desde dialecto pi-mcp-adapter al nativo, con verificación viva en pi mcp list y corrección de 4 defectos descubiertos por el validador propio del parser.
 - **Decisions:** (1) Worktrees desprendidos origin/main en vez de trabajar en los checkouts de feature branch para no interferir. (2) Mapeo directoTools: true→direct, false/absent→codemode (el adaptador no hacía directos por defecto, toolFilter=false). (3) directTools y lifecycle eliminados (campos adaptador ignorados por pi). (4) directTools:false no es direct: era codemode en el adaptador (toolFilter=false por defecto). (5) disabled:false → fuera del JSON; disabled:true → enabled:false. (6) "$PWD" en args se corrige a "." (pi no expande en args); "$env:" se corrige a "${VAR}" (solo env/headers); "type:remote" se elimina (pi exige undefined|http|streamable-http). (7) Nombres con espacio como "Astro docs" son inválidos en pi (^[A-Za-z0-9_-]+$) → renombrados. (8) GitHub: entradas sin command ni url (dotSloth/github stub) son config error → eliminadas.
 - **Next:** Revisar .serena/project.yml (sin commit); verificar estado de PR #276 de la otra sesión; decidir si cerrar sesión
+
+## 2026-09-30T10:35:24Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** audit-pr and fold-findings on PR #276 (fix phase-lint unit-doc grammar)
+- **Decisions:** audit-pr: VERDICT BLOCKED (4 blockers — missing receipt, merge conflicts, no pre-execution lineage, no CI) and fold-findings: 0/0 foldable (unit 272 has no review-findings.md; blockers are structural/operational, not fix-now code defects)
+- **Next:** Unit 272 needs adoption via /unit-lane 272-phase-lint-unit-doc-grammar to build progress.md + pre-execution ledgers; feature 69 resumes after #272 merges; #275 tracks post-merge reconciliation of #270/#272 drift
