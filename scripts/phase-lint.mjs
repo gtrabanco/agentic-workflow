@@ -708,22 +708,29 @@ function isPathOrGlob(entry) {
 }
 
 /**
- * Extract the phases from a unit doc's `## Tasks` section. A blank line or a
- * heading ends the current bullet's continuation; a second `P<n> —` bullet
- * starts the next phase; anything else joins the bullet's scan text (so a
- * wrapped task line is still judged by boxes 4–7).
+ * Extract the phases from a unit doc's `## Tasks` section, plus any
+ * `Relevant files:` sub-section that belongs to no phase.
+ *
+ * Line rules: a `P<n> —` bullet starts the next phase; wrapped lines join the
+ * bullet's scan text; a heading or a blank line ends the bullet's *prose*
+ * continuation — but the metadata sub-section keeps attaching to the nearest
+ * preceding bullet even across a blank line (F-2: a read set must never vanish
+ * because the author pressed Enter), and a sub-section with no bullet before it
+ * is returned as an orphan so the caller can fail closed instead of dropping it.
  */
 function parseUnitDocPhases(text) {
   const heading = /^## Tasks[ \t]*$/m.exec(text);
-  if (!heading) return [];
+  if (!heading) return { phases: [], orphans: [] };
   const rest = text.slice(heading.index + heading[0].length);
   const end = /^## /m.exec(rest);
   const body = end ? rest.slice(0, end.index) : rest;
 
   const phases = [];
+  const orphans = [];
   const seen = new Set();
   let current = null;
-  let collectingFiles = false;
+  let mode = "prose";
+  let closed = false;
   let fence = null;
   for (const line of body.split("\n")) {
     const trimmed = line.trim();
@@ -745,29 +752,49 @@ function parseUnitDocPhases(text) {
       current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number) };
       seen.add(number);
       phases.push(current);
-      collectingFiles = false;
+      mode = "prose";
+      closed = false;
+      continue;
+    }
+    const files = UNIT_DOC_RELEVANT_FILES.exec(line);
+    if (files) {
+      if (!current) {
+        orphans.push(trimmed);
+        continue;
+      }
+      current.relevantFiles =
+        current.relevantFiles === null ? files[1] : `${current.relevantFiles} ${files[1]}`;
+      mode = "files";
+      closed = false;
       continue;
     }
     if (!current) continue;
-    const files = UNIT_DOC_RELEVANT_FILES.exec(line);
-    if (files) {
-      current.relevantFiles = files[1];
-      collectingFiles = true;
+    if (trimmed === "") {
+      closed = true;
       continue;
     }
-    if (line.trim() === "" || /^#{1,6}\s/.test(line.trim())) {
+    if (/^#{1,6}\s/.test(trimmed)) {
       current = null;
-      collectingFiles = false;
+      mode = "prose";
+      closed = false;
       continue;
     }
-    if (collectingFiles) {
-      current.relevantFiles = `${current.relevantFiles} ${line.trim()}`;
+    if (closed) {
+      // Prose after a blank line is a new block, not a continuation of the
+      // bullet; only the metadata line may still attach at this point.
+      current = null;
+      mode = "prose";
+      closed = false;
       continue;
     }
-    current.lines.push(line.trim());
+    if (mode === "files") {
+      current.relevantFiles = `${current.relevantFiles} ${trimmed}`;
+      continue;
+    }
+    current.lines.push(trimmed);
   }
 
-  return phases.map((phase) => {
+  const built = phases.map((phase) => {
     const first = (phase.lines[0] || "").trim();
     const titleEnd = first.indexOf("(validator:");
     const head = (titleEnd === -1 ? first : first.slice(0, titleEnd)).trim();
@@ -792,6 +819,7 @@ function parseUnitDocPhases(text) {
       body: phase.lines,
     };
   });
+  return { phases: built, orphans };
 }
 
 /** Box 8's unit-doc reading: the bullet's `(validator: …)` span is its done-when. */
@@ -845,7 +873,7 @@ function lintUnitDocPhase(phase, isLast) {
 }
 
 /** The full run over a unit doc's bullet phases — same block shape, `6/6` boxes. */
-function lintUnitDocPhases(phases) {
+function lintUnitDocPhases(phases, orphans = []) {
   const fingerprints = [];
   const results = [];
   for (const [index, phase] of phases.entries()) {
@@ -869,6 +897,13 @@ function lintUnitDocPhases(phases) {
     const summary = findings[0].label.replace(/^box-/, "box ");
     lines.push(`P${phase.number} Phase-lint: BLOCKED — ${summary}: ${findings[0].reason}`);
   }
+  // A sub-section attached to no bullet is a document-shape failure: reported
+  // under its own id so a read set can never be dropped silently (F-2), even
+  // when the document itself carries no phase.
+  for (let index = 0; index < orphans.length; index += 1) {
+    blocked = true;
+    lines.push("relevant-files: sub-section is not attached to a bullet phase");
+  }
   lines.push(blocked ? "verdict BLOCKED: lint-blocked" : "verdict PASS");
   lines.push(`fingerprint: ${digest(fingerprints)}`);
   return { verdict: blocked ? "BLOCKED: lint-blocked" : "PASS", exitCode: blocked ? 1 : 0, lines };
@@ -882,11 +917,11 @@ export function lintPlan(text) {
     // Second grammar (fix #272): a lane-written unit doc carries no phase
     // headings, only bullets in its `## Tasks` section. Both grammars are
     // exhausted before the file may answer `no-phases`.
-    const unitDocPhases = parseUnitDocPhases(normalized);
+    const { phases: unitDocPhases, orphans } = parseUnitDocPhases(normalized);
     if (unitDocPhases.length === 0) {
       return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
     }
-    return lintUnitDocPhases(unitDocPhases);
+    return lintUnitDocPhases(unitDocPhases, orphans);
   }
 
   for (const phase of phases) {
