@@ -37,3 +37,5 @@
 | REVIEW-RAN | HEAD 42dfcae21ec4da884dcdfaa87e04a2d057523d59 | n/a | n/a | review-mark | n/a | n/a |
 | VF-14 | docs/features/69-review-conformance/SPEC.md:314-316 · reviewer review-change · HEAD a2e894627e92b24f4578b30126106fa3284a1178 · recheck re-read: "loop position" now reads "carries three REVIEW-RAN marks (cf595d4c, 76998c43, 42dfcae2)" and "cycle count is 3 (three ledgered cycles: F1–F7, F8–F11, F12–F18)" — count matches ledger `grep -c "^| REVIEW-RAN |"` → 3; :319-320 restated "third pass is bounded" → "fourth /review-change needs their explicit instruction" | verify | confirmed | finding-mark | n/a | n/a |
 | GATE-RAN | HEAD 42dfcae21ec4da884dcdfaa87e04a2d057523d59 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
+| REVIEW-RAN | HEAD 0d1d14b3e8900b1616bf66bf12aa7ba49db2d6aa | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 0d1d14b3e8900b1616bf66bf12aa7ba49db2d6aa | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes | exit 0 | n/a | n/a | n/a |
