@@ -227,7 +227,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | R5 | `bun scripts/check-skill-context.mjs` | 0 | PASS, 28 skills — main-est `product-audit` 2799/2800, `review-change` 2327/2800, `unit-lane` 1880/2800; desc-est 71 / 80 / 50 of 120 | main agent |
 | R6 | `node --test scripts/*.test.mjs` (baseline, before any edit) | 0 | 578 pass / 0 fail — fresh worktree needed `packages/agentic-workflow-schema` built first (setup, not a code change) | main agent |
 | D1 | design closure — entities/roles/expectation surface reviewed against AC1–AC7 (entities: `review-change`, `product-audit`, `unit-lane` plan step, `SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `GOLDEN_FIXTURE.md` run log; roles: planner, reviewer, auditor, maintainer, CI gates) | recorded | charter → new `## Review charter` in `review-change/SKILL.md`; ownership → `product-audit` frontmatter description + `## When to use`; sweep → `skills/unit-lane/references/PLAN.md` alone (`pre-execution-review` untouched — single-owner rule) | main agent |
-| 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 17 candidate lines across 8 source files (re-counted at review); the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, verdict `contradicts`, routed to `resolve-repository-state` | main agent |
+| 4a | claim **“keep the bilingual `.es.md` siblings and add a language-switcher link in this unit's docs”** → `grep -rn "\.es\.md\|language-switcher" AGENTS.md docs/features/*/decisions.md docs/fix/*/decisions.md docs/workflow/WORKFLOW_INVARIANTS.md docs/workflow/REPOSITORY_STATE.md` | 0 | 17 candidate lines across 8 source files (re-counted at review); the contradicting decision is `AGENTS.md:52-56` (+ `docs/features/40-versioned-skills-releases/decisions.md:36`, frozen NRS fact `docs/workflow/REPOSITORY_STATE.md:32` F011) → one row, the `relation` value was `contradicts`, routed to `resolve-repository-state` | main agent |
 | 4b | claim **“add an advisory prior-decisions sweep checklist to the lane's plan step”** → same retrieval command over the same sources | 1 (no matches) | zero candidates → zero sweep rows → the plan proceeds with no block and no gate | main agent |
 | P1 | AC1's four greps over `skills/review-change/SKILL.md` (`dismantle` · `guard skip` · `Ask, don't infer` · `product-audit.*where the sweep`) + `bun scripts/diff-guard.mjs --base main --unit 69` | 2 · 1 · 1 · 1 · guard 0 | all four charter clauses present; `DIFF-GUARD PASS — 69` (+338/−4, 6 files) | main agent |
 | P2 | AC2's two greps over `skills/product-audit/SKILL.md` (`repo-wide bug hunt` at line 13 = inside frontmatter, which ends at 17 · `owns the repo-wide sweep` at line 42) + diff guard | 1 · 1 · guard 0 | ownership stated in both the description and the body; `DIFF-GUARD PASS — 69` (+341/−4, 6 files) | main agent |
@@ -258,7 +258,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 |---|---|---|
 | `review-verify` (run the gate, confirm real behavior) | yes | the context-clean reviewer re-ran every evidence row and the full gate (exit codes in its report) |
 | `review-code` (correctness, consistency, duplication, simplification) | yes | charter/ownership/sweep wording cross-checked against `pre-execution-review`'s single-owner rule, the fixed report blocks, and the Non-goals; no duplicated rule found |
-| `review-security` / `review-perf` / `review-a11y` / `review-design` / `review-seo` | n/a | wording-only change: no code, no runtime path, no asset, no UI or public web surface |
+| `review-security` / `review-perf` / `review-a11y` / `review-design` / `review-seo` | n/a | limited code change (test fix only, no production runtime path), no asset, no UI or public web surface |
 | `review-brand` | n/a | no end-user-facing copy changed — skills are agent-facing documentation |
 | `review-debt` | n/a | nothing debt-shaped in the classified table (no fix-now debt item, no TRIGGER) |
 
@@ -318,7 +318,9 @@ these marks are the authoritative cycle count, not any prose figure written
 against them). The earlier, pre-ledger review-step verdict blocks above
 (cycle 1 and cycle 2) ran before the fold ledger was established. Under
 `REVIEW_PROCESS.md`'s two-cycle cap the count from the ledger is finite —
-any additional review needs their explicit instruction → closing block below.
+the operator's explicit instruction (this adversarial review) was the cap escape;
+the operator's authorization means the cap was respected, not violated.
+Any further review beyond this needs their explicit instruction.
 
 ```text
 DIFF-GUARD EXCEPTION — 69 (both dimensions)
@@ -341,8 +343,10 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       (the guard counts staged + unstaged changes, so a dirty tree adds
       working-tree bytes to the count). At the merge-base `10869fdc` the
       diff grows with every append (it was 675 at the fold's fix parent,
-      699 at HEAD now, 12 files either way); at a later main tip `354c59ed`
-      it was 2178 at that parent, 2202 at HEAD, 32 files either way.
+      699 at fold HEAD 73933ee3, 12 files either way; at branch HEAD 135855ca:
+      701, 12 files); at a later main tip `354c59ed`
+      it was 2178 at that parent, 2202 at that main HEAD, 32 files either way
+      (at branch HEAD 135855ca: 2204, 32 files).
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
@@ -426,11 +430,11 @@ authoritative step list; the model never re-derives, reorders or invents steps.)
 
 2026-09-29 19:26 — cycle-2 delta review returned **REVIEW-VERDICT: FAIL** (1 material, 2 report-notes): my own run-log Result cell ` PASS ` violated the closed grammar and re-reddened the gate (575/578 · golden-fixture 9/12). Fixed both findings — Result cell → `exact 7/7 · invented none · shape ok`, and the F1 assertion's literal `checked === 1` → `committed.checked + 1` with the recorded justification (it failed for ANY row dated ≥ 2026-09-18, i.e. any future log entry) — then re-ran the whole gate: 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, clean tree → evidence: rows M2a, M2b, M2-verify — next: closing (a third review pass is the user's call under the two-cycle cap)
 
-2026-09-29 19:44 — unit closed locally: all nine triaged steps executed; final gate 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, diff-guard BREACH excepted on both dimensions (`Lines 564 > 400 · Files 11 > 8`, exception block); review verdict on record = cycle 2 `FAIL` with its findings fixed and gate-verified (rows M2a/M2b/M2-verify), AC-section sha256 unchanged since creation → working tree — next: operator authorizes `/review-change`, then push + `Closes #270` PR → `/audit-pr`
+2026-09-29 19:44 — unit closed locally: all eight triaged steps executed; final gate 578/0, `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`, diff-guard BREACH excepted on both dimensions (`Lines 564 > 400 · Files 11 > 8`, exception block); review verdict on record = cycle 2 `FAIL` with its findings fixed and gate-verified (rows M2a/M2b/M2-verify), AC-section sha256 unchanged since creation → working tree — next: operator authorizes `/review-change`, then push + `Closes #270` PR → `/audit-pr`
 
 ## Next
 
-All nine triaged steps ran (research · design · plan · implement · tests ·
+All eight triaged steps ran (research · design · plan · implement · tests ·
 evidence · review · docs; `release` skipped by the catalog for small scope) and
 the final gate is green: **578/0**, both budget gates PASS, diff-guard BREACH
 recorded with a full exception.
@@ -438,7 +442,7 @@ recorded with a full exception.
 What is deliberately **not** done here, and why:
 
 1. **A further review pass.** The verdict on record is cycle 2's `FAIL` with
-   F8–F11 folded and DEC-1 ratified in the same batch (rows M2a/M2b/M2-verify
+   F8–F11 folded and the operator's acceptance amendment (## Amendments) ratified in the same batch (rows M2a/M2b/M2-verify
    plus the `## Amendments` row); the two-cycle cap is counted from the
    ledger's `REVIEW-RAN` marks (not from prose that hard-codes a number) —
    the operator's call on the next pass, and the next command is never

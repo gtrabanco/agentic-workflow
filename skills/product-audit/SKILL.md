@@ -11,9 +11,11 @@ license: MIT
 description: >
   Audit the whole product across code, quality, process, docs, roadmap, and
   tooling; it owns the repo-wide bug hunt, security research, and broken-version
-  investigation. Persist one severity-ranked, F-numbered report with proposals;
-  never fix or file work. Triggers: "product-audit", "audit the product", "full
-  health check", "are we product-ready", "CTO review".
+  investigation (scoped and budgeted per dimension, as distinct from
+  `review-change`'s change-scoped review). Persist one severity-ranked,
+  F-numbered report with proposals; never fix or file work. Triggers:
+  "product-audit", "audit the product", "full health check", "are we product-ready",
+  "CTO review".
 ---
 
 # Product Audit
