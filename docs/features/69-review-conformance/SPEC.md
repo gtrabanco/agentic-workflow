@@ -449,8 +449,8 @@ What is deliberately **not** done here, and why:
    a step this unit takes alone.
 2. **Push + PR.** The catalog skipped the `release` step, and a unit whose review
    verdict is `FAIL` must not be presented as merge-ready; the branch
-   `270-review-conformance` is local. After a passing pass: push it, open the
-   single PR against `main` with `Closes #270`, then `/audit-pr`.
+   `270-review-conformance` is pushed and PR #280 is open (`Closes #270`)
+   awaiting a passing review receipt.
 3. **npm re-bundle.** Skill-only changes do not republish the pi package
    (paths filter + version gate); if the npm channel must carry the charter
    immediately, bump `packages/pi-agentic-workflow/package.json` (patch) — a
@@ -497,7 +497,8 @@ What is deliberately **not** done here, and why:
 
 - Closes #270 — <https://github.com/gtrabanco/agentic-workflow/issues/270>
 - Roadmap row: `docs/features/ROADMAP.md` row 69 (`in-progress`)
-- Branch: `270-review-conformance` (local until a passing review — see `## Next`)
+- Branch: `270-review-conformance` (pushed — see `## Next`;
+  PR #280 awaits passing review)
 - Owner decision record: `docs/LOGS.md` (2026-09-29 — charter restatement,
   Idea 3 contradiction sweep, JEV parked)
 - Candidate decision sources for the sweep: `docs/features/<NN>-<slug>/decisions.md`,
