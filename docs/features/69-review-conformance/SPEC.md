@@ -311,13 +311,13 @@ fixed with the recorded justification in Known pre-existing issues (row
 lagged the tree (now restated as labeled per-run snapshots), **N5** its
 dirty-tree list omitted P1's run (now all three: 342/6, 345/6, 348/6).
 
-**Loop position:** the durable ledger `review-findings.md` now carries two
-`REVIEW-RAN` marks (`cf595d4c`, `76998c43`) plus `GATE-RAN` rows, so the lane's
-formal cycle count is 2: the cycle-1/cycle-2 verdict blocks above are the
-earlier, pre-ledger review-step runs, and F1–F7 + F8–F11 are the two ledgered
-cycles. Under `REVIEW_PROCESS.md`'s two-cycle cap a further pass is the
-operator's call, never a reviewer's — a third `/review-change` needs their
-explicit instruction → closing block below.
+**Loop position:** the durable ledger `review-findings.md` now carries three
+`REVIEW-RAN` marks (`cf595d4c`, `76998c43`, `42dfcae2`) plus `GATE-RAN` rows,
+so the lane's formal cycle count is 3 (three ledgered cycles: F1–F7, F8–F11,
+F12–F18). The earlier, pre-ledger review-step verdict blocks above (cycle 1 and
+cycle 2) ran before the fold ledger was established. Under
+`REVIEW_PROCESS.md`'s two-cycle cap a third pass is bounded — a fourth
+`/review-change` needs their explicit instruction → closing block below.
 
 ```text
 DIFF-GUARD EXCEPTION — 69 (both dimensions)
