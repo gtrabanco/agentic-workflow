@@ -2519,3 +2519,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Review-change cycle 10: ran /review-change on feature 69 PR #280 (review-conformance) — 5 isolated finder passes, 7/7 candidates confirmed, REVIEW-FAIL with 4 med fix-now rows (F30–F33: wrong fold tokens on F21–F29, half-applied F25 fold, Spanish cells, SPEC local-state stale) persisted to ledger. Then /fold-findings: all 4 folded (gate green 578/0, delta diff 2 files ±1 line), REPAIR-RECEIPT issued RE-REVIEW-OPTIONAL. Turn contract verified via turn-contract.sh --finished (ok).
 - **Decisions:** Operator's explicit instruction authorized reviewing beyond the two-cycle cap (SPEC loop-position records this). Folded F30–F32 as one atomic batch (review-findings.md, shared root cause: ledger state corrections) and F33 as a second (SPEC.md, single passage correction). E-D3: all fold-diff files are Markdown → RE-REVIEW-OPTIONAL (not REQUIRED). E-D2: no high-severity rows → not forced REQUIRED.
 - **Next:** /review-change re-run on the changed HEAD 6b56fb39 to assess if the review table is now clean; if still FAIL, fold-findings again (second and final fold-cycle before triage-issue --prioritize-now); if PASS, /audit-pr for merge gate
+
+## 2026-09-30T23:52:20Z — 270-review-conformance — manual
+- **Commits:** 41 (`dfdf9851…88b3ca75`)
+- **Files:** 13 files
+- **Summary:** Adversarial review-cycle (adversarial N) on PR #280 (feature 69 review-conformance): discovered F13 was folded without fixing its target (SPEC.md loop position still said 'two marks' while ledger held 3). Repaired F13 (restated to 'three marks cf595d4c, 76998c43, 42dfcae2'), re-ran review-change cycle 4 (R1+R2+R3 all 0 findings), all 15 foldeds confirmed gone. PR #280 open against main.
+- **Decisions:** F13 fold was a false positive — marked folded: yes but SPEC.md:314-320 was untouched; fix was restating loop position for 3 marks instead of 2. Adversarial mode recommended but not needed on cycle 4 (all reviewers agreed).
+- **Next:** Create PR #280 (already done), then /audit-pr on PR #280 to merge gate
