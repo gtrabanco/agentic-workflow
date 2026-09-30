@@ -2508,3 +2508,30 @@ test("a fenced P<n> example inside ## Tasks is inert, never a phase", () => {
   assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\)/m);
   assert.doesNotMatch(stdout, /^P2 /m, "the fenced example must not lint as a phase");
 });
+
+// F-2 (independent review of PR #276, report-note folded at the owner's
+// direction): the fail-closed promise covers a malformed `Relevant files:`
+// entry, but a blank line between a bullet and its nested sub-section detached
+// the read set and dropped it silently. Metadata now attaches to the nearest
+// preceding bullet even across a blank line, and a sub-section with no bullet
+// before it fails closed instead of vanishing.
+test("a Relevant files line after a blank line still attaches to its bullet (F-2)", () => {
+  const file = fixture(
+    "unit-doc-blank-files.md",
+    `# 70 — blank line\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n\n  - Relevant files: docs\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the read set must not be dropped when a blank line precedes it");
+  assert.match(stdout, /^P1 relevant-files: entry `docs` is neither a path nor a glob$/m);
+});
+
+test("a Relevant files sub-section with no bullet before it fails closed (F-2)", () => {
+  const file = fixture(
+    "unit-doc-orphan-files.md",
+    `# 70 — orphan\n\n## Tasks\n\n- P1 — Add the tokenizer (validator: \`node --test scripts/t.test.mjs\` exits 0)\n\n### Notes\n\n- Relevant files: scripts/only-here.mjs\n\n## Evidence\n\nnone\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "an unattached read set must never be silently ignored");
+  assert.match(stdout, /^relevant-files: sub-section is not attached to a bullet phase$/m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
