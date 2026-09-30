@@ -5,6 +5,7 @@ import type { Catalogue } from "../routing/catalogue.js";
 import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
 import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
+import { mergeGuard } from "./merge-guard.js";
 import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
 import { registerAdvanceCommand } from "./conductor-command.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
@@ -62,12 +63,14 @@ export interface ExtensionHandle<M extends ModelRef = ModelRef> {
   catalogue: Catalogue;
   /**
    * The Pi-free predicates the adapter (`index.ts`) binds to Pi's lifecycle
-   * events: the inline-receipt block guard and the dirty-worktree notice. They
-   * travel with the handle so the entry stays a thin translation layer and the
-   * decisions are unit-tested with no session (issue #182).
+   * events: the inline-receipt block guard, the merge guard (owner-only
+   * merges, issue #278), and the dirty-worktree notice. They travel with the
+   * handle so the entry stays a thin translation layer and the decisions are
+   * unit-tested with no session (issues #182, #278).
    */
   guards: {
     receiptGuard: typeof receiptGuard;
+    mergeGuard: typeof mergeGuard;
     dirtyWorktreeWarning: typeof dirtyWorktreeWarning;
   };
 }
@@ -143,5 +146,5 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     handler: settingsHandler,
   });
 
-  return { router, catalogue, guards: { receiptGuard, dirtyWorktreeWarning } };
+  return { router, catalogue, guards: { receiptGuard, mergeGuard, dirtyWorktreeWarning } };
 }

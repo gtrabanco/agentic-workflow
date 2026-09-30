@@ -242,8 +242,15 @@ export default function extension(pi: ExtensionAPI): void {
   // names the script that proves the receipt landed (issue #182). The guard
   // itself filters to `bash`, so every tool call is checked — nesting it under
   // one tool name would make the block unreachable for the calls it exists for.
+  //
+  // Merges are owner-only (issue #278): `gh pr merge`, the `gh api` merge
+  // endpoints, and `git merge` are blocked before anything else runs — a
+  // review waiver is not merge authorization. Read-only git (`merge-tree`,
+  // `merge-base`) and rebases pass; the reason hands the PR URL to the owner.
   pi.on("tool_call", (event, ctx) => {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
+    const merge = guards.mergeGuard({ toolName: event.toolName, command });
+    if (merge.block) return merge;
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
     // Tier 2 path prevention (feature 60): block a write/edit to an existing
