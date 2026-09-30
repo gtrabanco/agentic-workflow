@@ -55,7 +55,10 @@ A red gate is never excused by an unrecorded issue.
 ## Tasks
 
 P1…Pn with stable IDs, one line each, smallest first. Final task is verification
-when the unit has behavior.
+when the unit has behavior. Each task carries its validator — a backticked
+command plus its expected outcome — and may carry a nested
+`Relevant files: <path, path…>` line: **metadata, never a task** (owner:
+`skills/phase-contract/SKILL.md`).
 
 ## Evidence
 
