@@ -340,9 +340,9 @@ DIFF-GUARD EXCEPTION — 69 (both dimensions)
       `bun scripts/diff-guard.mjs --base <sha> --unit 69` on a clean tree
       (the guard counts staged + unstaged changes, so a dirty tree adds
       working-tree bytes to the count). At the merge-base `10869fdc` the
-      final diff (measured at the fix commit's parent `2513409^`) is
-      `Lines: 675 > 400 · Files: 12 > 8`; at a later main tip `354c59ed`
-      it is `Lines: 2178 > 400 · Files: 32 > 8` (measured the same way).
+      diff grows with every append (it was 675 at the fold's fix parent,
+      699 at HEAD now, 12 files either way); at a later main tip `354c59ed`
+      it was 2178 at that parent, 2202 at HEAD, 32 files either way.
 - File count is the dimension the exception exists for: one PR per unit, and
   every file is required — the unit doc + roadmap row (lane artifacts),
   `skills/review-change/SKILL.md` + `skills/product-audit/SKILL.md` +
@@ -462,8 +462,8 @@ What is deliberately **not** done here, and why:
 - **`finding-mark@1` refs:** VF-19 · VF-20 (both confirmed by adversarial reviewers)
 - **Refuted:** none
 - **Gate exit codes at fold head `2513409`**: root `0` · context `0` · routes `0` · golden-fixture `0`
-- **Batch class:** `all-repair-in-place` (1 fix commit: `2513409e`)
-  - Fold diff: `+26/−15` (SPEC.md 23 lines, review-findings.md 3 lines folded-flag)
+- **Batch class:** `all-repair-in-place` (fix commit `2513409e`, correction `2acc6938`)
+  - Fold diff: `+39/−25` (SPEC.md 39 net lines, review-findings.md 17 flagged-to-yes)
   - Docs-only + no `high` severity → `RE-REVIEW-OPTIONAL`
 
 ## Amendments
