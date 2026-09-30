@@ -70,3 +70,6 @@
 | VF-29 | docs/features/69-review-conformance/SPEC.md:60-64 · reviewer review-change · HEAD 135855ca · recheck: AC2 requires both frontmatter AND body to state ownership "(scoped and budgeted there), as distinct from review-change's change-scoped review"; skills/product-audit/SKILL.md:13 frontmatter states "it owns the repo-wide bug hunt, security research, and broken-version investigation" but lacks the scoped/budgeted qualifier and the review-change distinction · spec-drift | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 135855ca908e2c34b9c1c4e5e99f44923dfce9de | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD 135855ca908e2c34b9c1c4e5e99f44923dfce9de | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes · node --test scripts/golden-fixture.test.mjs | exit 0 · PASS · PASS · exit 0 | n/a | n/a | n/a |
+
+| REVIEW-RAN | HEAD ec6ef9c44861e7147c5e73425ee2bf72c3643cf7 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD ec6ef9c44861e7147c5e73425ee2bf72c3643cf7 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| node scripts/check-skill-context.mjs --routes \| node --test scripts/golden-fixture.test.mjs | exit 0 \| PASS \| PASS \| exit 0 | n/a | n/a | n/a |
