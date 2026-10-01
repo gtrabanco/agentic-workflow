@@ -8,6 +8,7 @@
  *   agentic-workflow changelog <op> [args...]
  *   agentic-workflow budgets <op> [args...]
  *   agentic-workflow manifest <op> [args...]
+ *   agentic-workflow doc (--sync | --query <term> | --status | --rebuild) [--json-only]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -24,6 +25,8 @@ import { rowUpsert, annotate as roadmapAnnotate } from "../src/edit/Roadmap.mjs"
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
+import { parseDocArgs } from "../src/doc/grammar.mjs";
+import { runDocOp } from "../src/doc/retrieval.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -63,7 +66,7 @@ function refuse(reason) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc> ...");
   process.exit(1);
 }
 
@@ -72,6 +75,29 @@ const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 
 switch (command) {
+  // ── doc — retrieval entry point (unit 65, D2) ────────────────────────
+  case "doc": {
+    let grammar;
+    try {
+      grammar = parseDocArgs(restArgs);
+    } catch (e) {
+      process.stderr.write(`doc: ${e.message}\n`);
+      process.exit(1);
+    }
+    const envelope = runDocOp(grammar, { rootDir: process.cwd() });
+    if (grammar.jsonOnly) {
+      // AC8: exactly one JSON document on stdout; diagnostics on stderr.
+      process.stdout.write(JSON.stringify(envelope) + "\n");
+    } else {
+      for (const d of envelope.degradations) process.stderr.write(`doc: degradation: ${d}\n`);
+      for (const r of envelope.results) {
+        console.log(`${r.path} · ${r.section ?? "-"} · L${r.lines[0]}-${r.lines[1]} · ${r.score}`);
+      }
+      console.log(`doc ${envelope.command}: ${envelope.results.length} result(s)`);
+    }
+    break;
+  }
+
   // ── unit-doc ─────────────────────────────────────────────────────────
   case "unit-doc": {
     const slug = rawArgs[0];
