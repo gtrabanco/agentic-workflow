@@ -409,6 +409,8 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC25 | `scripts/doc-discipline.test.mjs` AC25 block | 0 · 0 | store path referenced only from the entry point's surfaces; zero matches in skills/** | main agent |
 | AC26 | `scripts/doc-discipline.test.mjs` AC26 block | 0 · 0 · 0 | entry point only in allowlisted discovery steps; zero matches in gate/receipt producers; no decision vocabulary in src/doc | main agent |
 | AC27 | `test/doc.envelope.test.mjs` runtime-dual block | 0 · 0 | identical envelope under bun and node (results/degradations/command/key order) | main agent |
+| T1 | Full applicable-test surface per the Applicable tests section: `node --test scripts/*.test.mjs` · crate `bun run test` · crate `test:node` · `bun scripts/check-skill-context.mjs` · hook tests · discipline suite | 0 · 0 · 0 · 0 · 0 | root 609/0; crate 202/0 + 203/0; budgets PASS 28 skills; no test weakened — every suite was authored red-first per phase and only corrected via recorded justification rows | main agent |
+| R | Review step (see `## Review verdict`) | PASS | 0 material, 4 report-notes; evidence reproduced (full gate re-run at head); AC integrity unchanged from triage | main agent |
 
 **D9 probe (G1)** — one re-runnable line, the plan-time gate D9 prescribes:
 
@@ -540,6 +542,39 @@ One entry per step taken. Format exactly:
 2026-10-01 — implement P9 (transversal discipline suites): `scripts/doc-discipline.test.mjs` (10 tests) riding the root gate — AC25 single-entry-point static allowlist over `git ls-files` (store path = `index.db`; the committed config path is public by design; zero matches in skills/**), AC26 never-authority (the entry point named only by the allowlisted discovery steps + install surface; zero matches in execute-phase/pre-execution-review/phase-contract/verification-contract/orchestration-envelope/audit-pr/workflow-status; no decision vocabulary imported by src/doc), AC4 no-build-step (no SKILL.md reference and no .md write target anywhere in toolchain code), AC24 target-project temp dir (consented scaffold laid out as init-workspace would: config + ignore rule + hook installed + entry point on PATH → hook sync creates the store, `git status` clean, query answers). Suite corrections recorded in `decisions.md` (missing chmod on the PATH wrapper, fixture gitignore, grep ERE/exit-1 handling). The wording growth from P8 pushed four review-change route ceilings — re-based to ceil(measured × 1.10) with declared reasons in the manifest `sources`. Gates: root 609/0, crate 201/0, guard PASS 258/3 → 9e6c6d7d — next: P10
 
 2026-10-01 — implement P10 (verification at head): full validator chain green — root gate 609/0, crate `bun run test` 202/0 + `test:node` 203/0, `check-skill-context` PASS; the AC27 runtime-dual test appended (same invocation under bun and node pins envelope identity; skip-if-no-bun keeps the node-compat CI half honest, recorded in `decisions.md`); AC19 re-measured live: warm sync over the 630-file repo **0.682s, 0 API calls**; the diff guard swept **all ten phase commits** in a worktree pinned at each code commit — every in-flight verdict reproduced (PASS P1/P4a/P4b/P9; recorded-exception BREACH P2/P3/P5/P6/P7/P8); one Evidence row added per kept AC (AC4, AC7–AC27 — 22 rows) — next: docs + release catalog steps, then review
+
+## Review verdict
+
+Run at the review step over the accumulated diff (87b7f34b..ac2d660c, 36 files).
+Axes: review-code, review-security, review-perf, review-verify (gates re-run),
+review-brand (docs copy), review-debt; review-a11y / review-seo / review-design
+are n/a (no UI, no public web surface).
+
+```text
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 4 report-notes
+- Evidence reproduced: yes (full gate re-run at head — root 609/0, crate 202/0 + 203/0)
+- AC integrity: unchanged from triage (AC section byte-identical to the plan commit)
+```
+
+Report-notes (informational, never a cycle restart):
+
+1. **Partial embedding batches persist on provider failure** — `embedPendingChunks`
+   writes per batch without a transaction; a mid-sync provider failure leaves
+   some vectors stored. Self-healing: the next pass embeds exactly the
+   vector-less chunks (AC16's incrementalism covers recovery). No AC misses.
+2. **Vector freshness rides `--sync`, not `ensureFresh`** — the freshness
+   invariant (AC9) inline-syncs content; new chunks gain vectors on the next
+   `--sync` (or CLI sync op), so a hybrid query right after a pull ranks from
+   the keyword list plus the previous vectors. Degradation-honest, no AC names
+   vector freshness. Re-open with a future AC if it bites.
+3. **Freshness check hashes the full corpus per query** — `ensureFresh` runs
+   `collectManifest` on every query (two git calls + per-file sha256). Measured
+   fine at this repo's scale (630 files, sub-second); the re-open condition is
+   D11's own: a corpus that outgrows the scan.
+4. **Blank preamble chunks enter the index** — a file whose preamble range is
+   only whitespace yields a chunk with an empty body; harmless FTS noise, no
+   AC touched.
 
 ## Next
 
