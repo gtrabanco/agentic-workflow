@@ -20,7 +20,7 @@ export const RETRIEVAL_FLAGS = {
 
 function usageError(msg) {
   const e = new Error(
-    `usage: agentic-workflow doc (--sync | --query <term> | --status | --rebuild) [--json-only] — ${msg}`,
+    `usage: agentic-workflow doc (--sync | --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] | --status | --rebuild) [--json-only] — ${msg}`,
   );
   e.code = "USAGE";
   return e;
@@ -33,6 +33,9 @@ function usageError(msg) {
  */
 export function parseDocArgs(argv) {
   const out = { op: null, query: null, jsonOnly: false };
+  const filters = { since: null, until: null, file: null };
+  const FILTER_FLAGS = { "--since": "since", "--until": "until", "--file": "file" };
+  let sawFilter = false;
   if (!Array.isArray(argv) || argv.length === 0) throw usageError("no operation given");
 
   // D2: a positional first token is the half-A branch — not shipped in this unit.
@@ -48,6 +51,16 @@ export function parseDocArgs(argv) {
     if (arg === "--json-only") {
       out.jsonOnly = true;
       i++;
+      continue;
+    }
+    if (arg in FILTER_FLAGS) {
+      const value = argv[i + 1];
+      if (value === undefined || value === "") {
+        throw usageError(`${arg} requires a non-empty value`);
+      }
+      filters[FILTER_FLAGS[arg]] = value;
+      sawFilter = true;
+      i += 2;
       continue;
     }
     const op = RETRIEVAL_FLAGS[arg];
@@ -67,5 +80,13 @@ export function parseDocArgs(argv) {
   }
 
   if (!out.op) throw usageError("no retrieval operation given");
+  // AC14's structured filters belong to queries only.
+  if (out.op === "query") {
+    out.since = filters.since;
+    out.until = filters.until;
+    out.file = filters.file;
+  } else if (sawFilter) {
+    throw usageError("--since/--until/--file are query filters and require --query");
+  }
   return out;
 }

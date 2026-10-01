@@ -42,11 +42,25 @@ describe("doc grammar", () => {
   });
 
   it("parses --query with its term", () => {
-    deepStrictEqual(parseDocArgs(["--query", "backoff"]), { op: "query", query: "backoff", jsonOnly: false });
+    deepStrictEqual(parseDocArgs(["--query", "backoff"]), {
+      op: "query",
+      query: "backoff",
+      jsonOnly: false,
+      since: null,
+      until: null,
+      file: null,
+    });
   });
 
   it("parses --json-only in any position", () => {
-    deepStrictEqual(parseDocArgs(["--json-only", "--query", "x"]), { op: "query", query: "x", jsonOnly: true });
+    deepStrictEqual(parseDocArgs(["--json-only", "--query", "x"]), {
+      op: "query",
+      query: "x",
+      jsonOnly: true,
+      since: null,
+      until: null,
+      file: null,
+    });
     deepStrictEqual(parseDocArgs(["--sync", "--json-only"]), { op: "sync", query: null, jsonOnly: true });
   });
 
