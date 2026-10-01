@@ -258,6 +258,33 @@ The `tests` triage step therefore runs rather than being skipped.
   P3 only: wiring discovery wording into `triage-issue`/`review-change` may
   require declared ceiling re-bases (Future cost row above).
 
+### Research uncertainties (stated, never guessed — the design step resolves them)
+
+- **U1 — split vs sequence (half A vs half B).** The issue explicitly leaves
+  “split into two units vs sequence inside one” to the lane. Research makes no
+  call: design/plan surfaces it as one focused question with concrete options.
+- **U2 — runtime floor vs `node:sqlite`.** Both `node:sqlite` (≥ 22.5,
+  still experimental) and `bun:sqlite` provide FTS5 here (R3), but the packages
+  declare `engines.node >= 18` while CI pins v22.23.1. Options — raise the
+  engine floor, ship a declared `unavailable-sqlite-<runtime>` degradation, or
+  vendor — are a design decision, recorded before any code.
+- **U3 — dependency posture.** The crate is zero-dependency by charter (R1), so
+  remark/unified + TypeBox (half A) and `sqlite-vec` (half B's native extension)
+  each break that claim; vendoring is this repo's measured alternative
+  (`AGENTS.md`: provenance header mandatory). The trade is recorded in design,
+  not assumed here.
+- **U4 — `sqlite-vec` loadability** under bun and under node is unverified (no
+  extension was loaded in R3); a visible gap. P2 ships only on AC15's judge
+  fixture regardless, so the gap bounds effort, not correctness.
+- **U5 — embedding provider/key defaults and provisioning** for target projects
+  remain the issue's open question — ask-first at design, config-pinned,
+  degrade-to-keyword when absent.
+- **U6 — crate README drift (observed).** `packages/agentic-workflow/README.md`
+  still says “Current producers: none yet … feature 42 is the next candidate to
+  add the first crate subcommand” while its bin already exposes five
+  subcommands — **does-not-affect** this unit (route to `audit-docs`; never fixed
+  inside this unit).
+
 ## Tasks
 
 Phase set cut for triage; the plan step re-cuts the final P-phase list with
@@ -285,6 +312,14 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| R1 | `sed -n '1,45p' packages/agentic-workflow/bin/agentic-workflow.mjs` · `head -40 packages/agentic-workflow/README.md` | 0 · 0 | subcommand router (`unit-doc`/`roadmap`/`changelog`/`budgets`/`manifest`), fixed receipt blocks, `EDIT REFUSAL` exit 2; crate charter: “Private, zero dependencies, no build step” | main agent |
+| R2 | `sed -n '1,45p' scripts/workflow-status.mjs` · `grep -n 'export function validateEnvelope\|export function parseEnvelope' packages/agentic-workflow-schema/src/index.ts` | 0 · 0 | the envelope producer pattern: JSON on stdout, diagnostics on stderr, schema runtime loaded from the built `dist/` with a named precondition; `validateEnvelope`/`parseEnvelope` are exported for AC8 | main agent |
+| R3 | `node -e "import('node:sqlite')…fts5"` · `bun -e "…bun:sqlite…fts5"` · `node --version` · `cat .node-version` | 0 · 0 | node v24.21.0: `node:sqlite` + FTS5 **OK**; bun 1.4.3: `bun:sqlite` + FTS5 **OK**; CI pins node **v22.23.1**, both packages declare `engines.node >= 18` | main agent |
+| R4 | `git ls-files .agentic-workflow` · `cat .gitignore` · `grep -rln 'fts5\|index\.db' scripts packages/*/src packages/*/bin` | 0 | only `.agentic-workflow/tmp/.gitkeep` tracked and **no** `.agentic-workflow/` ignore rule → AC7 needs a `.gitignore` line; no SQLite/index code exists anywhere yet | main agent |
+| R5 | `grep -n '^## ' docs/LOGS.md \| head -3` | 0 | `## <ISO timestamp> — <branch> — manual\|auto (+optional suffix)` — timestamp, branch and mode are the queryable header fields; heading shape is stable at unit scale | main agent |
+| R6 | `ls packages/agentic-workflow/src/edit` · `grep -rn 'remark\|unified' --include=package.json packages package.json` · `grep -A8 '"dependencies"' packages/agentic-workflow-schema/package.json` | 0 | half A prior art: `UnitDoc.setSection`/`evidence_addRow`/`progress_logEntry` already do structured section ops with receipts; **no** remark/unified anywhere; schema package's only dep surface is devDep `ajv 8.20.0` + `typescript` | main agent |
+| R7 | `node --test scripts/*.test.mjs` (baseline, before any edit) · `bun scripts/check-skill-context.mjs` | 0 · 0 | 599 pass / 0 fail · `PASS context budgets: 28 skills` | main agent |
+| R8 | `ls template/.agentic-workflow/hooks` · `ls template/.agentic-workflow/hooks/tests` | 0 | consent-installed hook precedent exists (`adapters/`, `turn-contract.sh`, `fullauto-merge.sh`, `tests/`) — the style AC22/AC23 reuse | main agent |
 
 ## Triaged steps
 
@@ -308,9 +343,13 @@ One entry per step taken. Format exactly:
 
 2026-10-01 00:19 — unit doc created from `docs/features/_TEMPLATE/SPEC.md` for issue #192 (27 ACs carried from the issue, phase set P1–P13 lint-clean); roadmap row 65 flipped `idea → defined`; triage run on the full slug (bare `65` is ambiguous with `docs/fix/65-fold-findings-skill`) and its block pasted verbatim above; baseline gates green (root suite 599/0, `check-skill-context` PASS 28 skills, `phase-lint` verdict PASS) → working tree — next: research step (P1)
 
+2026-10-01 00:24 — research step done (rows R1–R8): entry-point home confirmed (crate router, zero-dep charter), envelope-producer + `validateEnvelope` reuse for AC8, SQLite/FTS5 verified on **both** runtimes (node v24.21.0 + bun 1.4.3) against an `engines.node >= 18` floor, no `.agentic-workflow/` ignore rule yet (AC7 needs one), no remark/unified anywhere, session-log header fields stable; six uncertainties U1–U6 stated, none resolved → evidence: R rows above — next: design step (P2)
+
 ## Next
 
-Research step (P1) — the triaged block above is the authoritative step list.
+Design step (P2) — fix the entry-point shape, envelope/degradation contract,
+store layout, chunking/section-ID strategy, and surface U1 (half A vs half B)
+to the user as one focused question with concrete options.
 
 ## References
 
