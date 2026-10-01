@@ -27,3 +27,6 @@ tmp/
 .claude/skills
 # Recursive-language-model engine memory (episode logs) written by analysis runs.
 .rlm/
+
+# Derived retrieval index (unit 65): disposable cache over git, never committed.
+.agentic-workflow/index/
