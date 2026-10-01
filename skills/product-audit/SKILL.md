@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.3.0
+version: 3.4.0
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -10,9 +10,12 @@ author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Audit the whole product across code, quality, process, docs, roadmap, and
-  tooling. Persist one severity-ranked, F-numbered report with proposals; never
-  fix or file work. Triggers: "product-audit", "audit the product", "full health
-  check", "are we product-ready", "CTO review".
+  tooling; it owns the repo-wide bug hunt, security research, and broken-version
+  investigation (scoped and budgeted per dimension, as distinct from
+  `review-change`'s change-scoped review). Persist one severity-ranked,
+  F-numbered report with proposals; never fix or file work. Triggers:
+  "product-audit", "audit the product", "full health check", "are we product-ready",
+  "CTO review".
 ---
 
 # Product Audit
@@ -38,6 +41,11 @@ first on purpose).
 - Periodically (every few features) or at a product-ready milestone.
 - When you want the broad, honest picture — quality, security, debt, docs, and
   roadmap — not the review of a single change (`review-change`) or PR (`audit-pr`).
+- **It owns the repo-wide sweep.** Open-ended, repository-wide bug hunting,
+  security research and broken-version investigation land **here** — scoped,
+  sampled and budgeted per dimension (state what you sampled). The same hunt
+  against one change is `review-change`'s job: neither skill absorbs the other's
+  scope.
 
 Unlike diff, PR, or docs-only reviews, this skill covers the whole product.
 
