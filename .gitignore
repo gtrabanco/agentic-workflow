@@ -30,3 +30,4 @@ tmp/
 
 # Derived retrieval index (unit 65): disposable cache over git, never committed.
 .agentic-workflow/index/
+**/.agentic-workflow/index/
