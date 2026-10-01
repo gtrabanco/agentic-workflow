@@ -11,10 +11,20 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { openDatabase } from "./sqlite.mjs";
+import { loadConfig } from "./config.mjs";
 
 export const MANIFEST_EXPORT_NAME = "manifest.json";
 
-export function storePath(root) {
+export function storePath(root, config) {
+  if (config && config.store?.path) {
+    return join(root, config.store.path);
+  }
+  try {
+    const cfg = loadConfig(root);
+    if (cfg.store?.path) return join(root, cfg.store.path);
+  } catch {
+    // config unreadable — fall through to hardcoded default
+  }
   return join(root, ".agentic-workflow", "index", "index.db");
 }
 

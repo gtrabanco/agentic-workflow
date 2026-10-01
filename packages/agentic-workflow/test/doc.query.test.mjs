@@ -225,14 +225,14 @@ describe("doc status + rebuild", () => {
 // ── CLI end-to-end (AC7 status, AC8 envelope, AC13 offline) ──────────────
 
 describe("doc CLI — query/status/rebuild end-to-end", () => {
-  it("--query --json-only prints exactly one JSON envelope with real results (AC8)", () => {
+  it("--query --json-only prints exactly one JSON envelope with real results (AC8)", async () => {
     const r = spawnSync(process.execPath, [BIN, "doc", "--query", "zanzibar", "--json-only"], {
       cwd: root,
       encoding: "utf8",
     });
     strictEqual(r.status, 0, `stderr: ${r.stderr}`);
     const env = JSON.parse(r.stdout); // whole stdout = one JSON doc
-    const v = validateEnvelope(env);
+    const v = await validateEnvelope(env);
     strictEqual(v.ok, true, JSON.stringify(v.errors));
     ok(env.results.length >= 2);
     ok(env.store.present === true);
