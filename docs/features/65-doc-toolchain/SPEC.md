@@ -578,10 +578,10 @@ Report-notes (informational, never a cycle restart):
 
 ## Next
 
-Implement step — `/execute-phase 65 P1` (runtime floor, `.gitignore` rule,
-dual-runtime FTS5 re-verification), then P2…P10 in order; a conducted lane turn
-runs the same phases as catalog steps. Roadmap row 65 is `planned`; row 71
-`doc-cli` stays `defined` and waits for this unit to merge.
+Unit complete — all triaged steps ran (implement P1–P10, tests, evidence,
+review `PASS`, docs, release). Roadmap row 65 is `done · [#282]`; the PR is
+open against `main` awaiting review/merge. Half A continues in `71-doc-cli`
+(`defined`, `Depends on: 65`) — that merge closes #192, never this one.
 
 ## Path protection (plan declaration)
 
@@ -601,6 +601,11 @@ not-created | fixtures/ trees for the crate suites | every suite builds its thro
 
 ## References
 
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/282 (`feat(65): doc
+  retrieval entry point — half B of the doc toolchain (#192)`)
+- Branch: `feat/65-doc-toolchain` — one PR against `main`, no stacked PRs
+- Head commit at release: `d7799f69` (docs step); release edits land as the
+  branch's final commit
 - Issue [#192](https://github.com/gtrabanco/agentic-workflow/issues/192) — the
   source of the ACs, non-goals, phases (P1 keyword → P2 hybrid → P3 wiring → P4
   documented non-goal) and the TypeBox rationale; `Closes #192` belongs to the
