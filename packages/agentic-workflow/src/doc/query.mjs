@@ -14,10 +14,13 @@
  */
 
 import { join } from "node:path";
+import { decodeVector } from "./embeddings.mjs";
 import { openDatabase } from "./sqlite.mjs";
 import { storePath, storePresent } from "./store.mjs";
 import { ensureFresh } from "./sync.mjs";
+import { storedEmbeddingModel, resolveEmbedConfig, makeOpenAIProvider } from "./embeddings.mjs";
 import { buildEnvelope, buildResultRow } from "./envelope.mjs";
+import { loadConfig } from "./config.mjs";
 
 const LOGS_PATH = "docs/LOGS.md";
 const MAX_RESULTS = 20;
@@ -76,41 +79,107 @@ async function storeValue(root) {
 }
 
 /**
- * Run one keyword query. `filters` carries the optional AC14 structured
- * filter `{since, until, file}`; when any is present, results narrow to
- * matching `docs/LOGS.md` entries. Returns the canonical query envelope.
+ * Run one query. `filters` carries the optional AC14 structured filter
+ * `{since, until, file}`; when any is present, results narrow to matching
+ * `docs/LOGS.md` entries. `opts.mode` is `"keyword"` (default) or
+ * `"hybrid"` (P7); `opts.embedder` overrides the resolved provider for
+ * tests. Returns the canonical query envelope — degraded hybrid answers
+ * keyword-only with the cause declared (AC17/AC18), exit-0 ok throughout.
  */
-export async function queryIndex(root, term, filters = {}) {
+export async function queryIndex(root, term, filters = {}, opts = {}) {
+  const mode = opts.mode ?? "keyword";
   await ensureFresh(root);
   const store = await storeValue(root);
 
   const match = ftsQueryFor(term);
-  if (match === null) {
-    return buildEnvelope({ command: "query", results: [], store });
+  const keywordRows = [];
+  if (match !== null) {
+    const { db } = await openDatabase(storePath(root));
+    const rows = db
+      .prepare(
+        `select c.chunk_id, c.path, c.section, c.line_start, c.line_end, c.meta, c.body, bm25(chunks_fts) as rank
+         from chunks_fts join chunks c on c.rowid = chunks_fts.rowid
+         where chunks_fts match ?
+         order by rank, c.path, c.section, c.line_start
+         limit ${MATCH_POOL}`,
+      )
+      .all(match);
+    db.close();
+    keywordRows.push(...rows);
   }
 
-  const { db } = await openDatabase(storePath(root));
-  const rows = db
-    .prepare(
-      `select c.path, c.section, c.line_start, c.line_end, c.meta, c.body, bm25(chunks_fts) as rank
-       from chunks_fts join chunks c on c.rowid = chunks_fts.rowid
-       where chunks_fts match ?
-       order by rank, c.path, c.section, c.line_start
-       limit ${MATCH_POOL}`,
-    )
-    .all(match);
-  db.close();
-
   const hasLogFilters = filters.since != null || filters.until != null || filters.file != null;
+
+  if (mode === "hybrid") {
+    const provider = opts.embedder !== undefined ? opts.embedder : realProviderOrNull(root);
+    if (provider === null) {
+      // AC17: no key ⇒ declared degradation, keyword still answers.
+      return buildEnvelope({
+        command: "query",
+        results: toResults(keywordRows, hasLogFilters, filters),
+        degradations: ["unavailable-embeddings-not-configured"],
+        store,
+      });
+    }
+    const pinned = await storedEmbeddingModel(root);
+    if (pinned !== null && pinned !== provider.model) {
+      // AC18: never rank across models.
+      return buildEnvelope({
+        command: "query",
+        results: toResults(keywordRows, hasLogFilters, filters),
+        degradations: ["embeddings-model-mismatch"],
+        store,
+      });
+    }
+    const { db } = await openDatabase(storePath(root));
+    const embeddedCount = db.prepare("select count(*) as n from chunks where embedding is not null").get().n;
+    if (embeddedCount === 0) {
+      db.close();
+      return buildEnvelope({
+        command: "query",
+        results: toResults(keywordRows, hasLogFilters, filters),
+        degradations: ["unavailable-embeddings-not-indexed"],
+        store,
+      });
+    }
+    try {
+      const [queryVector] = await provider.embed([term]);
+      const vectorRows = vectorTopK(db, queryVector, MATCH_POOL);
+      db.close();
+      const fused = fuseRrf(keywordRows, vectorRows);
+      const results = toResults(
+        fused.map((r) => ({ ...r, rank: -r.fusedScore })),
+        hasLogFilters,
+        filters,
+      );
+      return buildEnvelope({ command: "query", results, degradations: [], store });
+    } catch (e) {
+      db.close();
+      // AC17: provider down ⇒ declared cause, keyword results survive.
+      return buildEnvelope({
+        command: "query",
+        results: toResults(keywordRows, hasLogFilters, filters),
+        degradations: ["unavailable-embeddings-provider-down"],
+        store,
+      });
+    }
+  }
+
+  const results = toResults(keywordRows, hasLogFilters, filters);
+  return buildEnvelope({ command: "query", results, degradations: [], store });
+}
+
+/** Map ranked store rows to result rows, applying the AC14 log filters. */
+function toResults(rows, hasLogFilters, filters) {
   const results = [];
   for (const r of rows) {
-    const isLog = r.path === LOGS_PATH;
     let meta = {};
     try {
       meta = JSON.parse(r.meta);
     } catch {
       meta = {};
     }
+    const isLog = r.path === LOGS_PATH;
     if (isLog && (hasLogFilters || parseLogEntry(r.body) !== null)) {
       const entry = parseLogEntry(r.body);
       if (entry === null) continue;
@@ -119,23 +188,81 @@ export async function queryIndex(root, term, filters = {}) {
     } else if (hasLogFilters) {
       continue; // structured filters narrow to log entries by definition
     }
+    const score = r.fusedScore !== undefined ? r.fusedScore : -r.rank;
     results.push(
       buildResultRow({
         path: r.path,
         section: r.section,
         lines: [r.line_start, r.line_end],
-        score: -r.rank,
+        score,
         meta,
       }),
     );
     if (results.length >= MAX_RESULTS) break;
   }
-
-  return buildEnvelope({ command: "query", results, store });
+  return results;
 }
 
 /** Status reporting — informational, never syncs. */
 export async function statusIndex(root) {
   const store = await storeValue(root);
   return buildEnvelope({ command: "status", results: [], store });
+}
+
+// ── Hybrid mode (P7) ───────────────────────────────────────────────────
+
+const RRF_K = 60;
+
+function cosine(a, b) {
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  const n = Math.min(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+/** JS-cosine kNN over D4's float32-LE BLOBs (decision D11 — no second vec0 store). */
+function vectorTopK(db, queryVector, pool) {
+  const rows = db
+    .prepare(
+      "select chunk_id, path, section, line_start, line_end, meta, body, embedding from chunks where embedding is not null",
+    )
+    .all();
+  const scored = rows.map((r) => ({ ...r, sim: cosine(decodeVector(r.embedding), queryVector) }));
+  scored.sort((a, b) => b.sim - a.sim || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  return scored.slice(0, pool);
+}
+
+/** Reciprocal-rank fusion over the keyword and vector lists. */
+function fuseRrf(keywordRows, vectorRows) {
+  const fused = new Map();
+  keywordRows.forEach((r, i) => {
+    fused.set(r.chunk_id, { row: r, score: 1 / (RRF_K + i + 1) });
+  });
+  vectorRows.forEach((r, i) => {
+    const contribution = 1 / (RRF_K + i + 1);
+    const existing = fused.get(r.chunk_id);
+    if (existing) existing.score += contribution;
+    else fused.set(r.chunk_id, { row: r, score: contribution });
+  });
+  return [...fused.values()]
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (a.row.path < b.row.path ? -1 : a.row.path > b.row.path ? 1 : 0) ||
+        (a.row.section ?? "").localeCompare(b.row.section ?? "") ||
+        a.row.line_start - b.row.line_start,
+    )
+    .map((e) => ({ ...e.row, fusedScore: e.score }));
+}
+
+function realProviderOrNull(root) {
+  const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
+  return cfg.configured ? makeOpenAIProvider(cfg) : null;
 }

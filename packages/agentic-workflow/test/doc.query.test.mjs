@@ -71,7 +71,7 @@ describe("doc grammar — query filters (AC14 surface)", () => {
   it("parses --since/--until/--file alongside --query in any position", () => {
     deepStrictEqual(
       parseDocArgs(["--file", "docs/x", "--query", "t", "--since", "2026-09-01"]),
-      { op: "query", query: "t", jsonOnly: false, since: "2026-09-01", until: null, file: "docs/x" },
+      { op: "query", query: "t", jsonOnly: false, since: "2026-09-01", until: null, file: "docs/x", mode: "keyword" },
     );
   });
 
@@ -83,6 +83,7 @@ describe("doc grammar — query filters (AC14 surface)", () => {
       since: null,
       until: null,
       file: null,
+      mode: "keyword",
     });
   });
 
