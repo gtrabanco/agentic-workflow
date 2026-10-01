@@ -119,7 +119,7 @@ describe("doc envelope", () => {
     throws(() => buildEnvelope({ command: "query", degradations: ["made-up"] }), /degradation/i);
   });
 
-  it("validates a canonical envelope with TypeBox", () => {
+  it("validates a canonical envelope with TypeBox", async () => {
     const env = JSON.parse(
       JSON.stringify(
         buildEnvelope({
@@ -128,19 +128,19 @@ describe("doc envelope", () => {
         }),
       ),
     );
-    const v = validateEnvelope(env);
+    const v = await validateEnvelope(env);
     strictEqual(v.ok, true, JSON.stringify(v.errors));
   });
 
-  it("rejects a malformed envelope (bad ok type, row missing path)", () => {
+  it("rejects a malformed envelope (bad ok type, row missing path)", async () => {
     const bad = { ok: "yes", command: "query", results: [{ section: "s" }], degradations: [], store: null };
-    const v = validateEnvelope(bad);
+    const v = await validateEnvelope(bad);
     strictEqual(v.ok, false);
     ok(v.errors.length >= 2);
   });
 
-  it("rejects an unknown command value", () => {
-    strictEqual(validateEnvelope({ ok: true, command: "frobnicate", results: [], degradations: [], store: null }).ok, false);
+  it("rejects an unknown command value", async () => {
+    strictEqual((await validateEnvelope({ ok: true, command: "frobnicate", results: [], degradations: [], store: null })).ok, false);
   });
 
   it("survives a JSON roundtrip (no timestamps, stable key order)", () => {
@@ -200,7 +200,7 @@ describe("doc CLI", () => {
     ok(existsSync(tmp));
   });
 
-  it("runs --query --json-only: exit 0, exactly one JSON doc on stdout", () => {
+  it("runs --query --json-only: exit 0, exactly one JSON doc on stdout", async () => {
     const r = spawnSync(process.execPath, [BIN, "doc", "--query", "x", "--json-only"], {
       cwd: tmp,
       encoding: "utf8",
@@ -208,7 +208,7 @@ describe("doc CLI", () => {
     strictEqual(r.status, 0, `stderr: ${r.stderr}`);
     const env = JSON.parse(r.stdout); // throws unless the WHOLE stdout is one JSON doc
     deepStrictEqual(Object.keys(env), ["ok", "command", "results", "degradations", "store"]);
-    const v = validateEnvelope(env);
+    const v = await validateEnvelope(env);
     strictEqual(v.ok, true, JSON.stringify(v.errors));
   });
 

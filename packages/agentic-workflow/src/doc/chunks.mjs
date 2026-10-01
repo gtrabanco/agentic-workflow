@@ -120,7 +120,7 @@ export function scanChunks(markdown, relativePath) {
         id: `${relativePath}#`,
         path: relativePath,
         section: null,
-        lines: [1, to],
+        lines: [contentStart + 1, to],
         meta,
         body,
       });
