@@ -20,8 +20,46 @@
  * refusal (edit services only).
  */
 
-import { Type } from "typebox";
-import { Compile } from "typebox/compile";
+// Lazy TypeBox import — typebox is only loaded when validateEnvelope is called.
+// The bin/hook path that builds envelopes (buildEnvelope, buildResultRow)
+// never calls validateEnvelope, so the cold path stays typebox-free.
+
+let _Type = null;
+let _Compile = null;
+
+async function ensureTypes() {
+  if (_Type === null) {
+    const mod = await import("typebox");
+    _Type = mod.Type;
+    const compileMod = await import("typebox/compile");
+    _Compile = compileMod.Compile;
+  }
+  return { Type: _Type, Compile: _Compile };
+}
+
+let _ResultRowSchema = null;
+let _EnvelopeSchema = null;
+
+async function ensureSchemas() {
+  if (_ResultRowSchema === null) {
+    const { Type, Compile } = await ensureTypes();
+    _ResultRowSchema = Type.Object({
+      path: Type.String(),
+      section: Type.Union([Type.String(), Type.Null()]),
+      lines: Type.Tuple([Type.Integer({ minimum: 1 }), Type.Integer({ minimum: 1 })]),
+      score: Type.Number(),
+      meta: Type.Record(Type.String(), Type.Unknown()),
+    });
+    _EnvelopeSchema = Type.Object({
+      ok: Type.Boolean(),
+      command: Type.Union(DOC_COMMANDS.map((c) => Type.Literal(c))),
+      results: Type.Array(_ResultRowSchema),
+      degradations: Type.Array(Type.String()),
+      store: Type.Union([Type.Null(), Type.Record(Type.String(), Type.Unknown())]),
+    });
+  }
+  return { _ResultRowSchema, _EnvelopeSchema };
+}
 
 export const DOC_COMMANDS = ["sync", "query", "status", "rebuild"];
 
@@ -37,36 +75,21 @@ export function degradationIsKnown(degradation) {
   return DEGRADATION_PATTERNS.some((re) => re.test(degradation));
 }
 
-const ResultRowSchema = Type.Object({
-  path: Type.String(),
-  section: Type.Union([Type.String(), Type.Null()]),
-  lines: Type.Tuple([Type.Integer({ minimum: 1 }), Type.Integer({ minimum: 1 })]),
-  score: Type.Number(),
-  meta: Type.Record(Type.String(), Type.Unknown()),
-});
-
-export const EnvelopeSchema = Type.Object({
-  ok: Type.Boolean(),
-  command: Type.Union(DOC_COMMANDS.map((c) => Type.Literal(c))),
-  results: Type.Array(ResultRowSchema),
-  degradations: Type.Array(Type.String()),
-  // `store` is opaque here: P3 owns its concrete shape (D4). Null until the
-  // store exists.
-  store: Type.Union([Type.Null(), Type.Record(Type.String(), Type.Unknown())]),
-});
 
 let _compiled = null;
 
-function getCompiled() {
+async function getCompiled() {
   if (_compiled === null) {
+    const { _EnvelopeSchema: EnvelopeSchema } = await ensureSchemas();
+    const { Compile } = await ensureTypes();
     _compiled = Compile(EnvelopeSchema);
   }
   return _compiled;
 }
 
 /** TypeBox validation of a full envelope. Returns `{ok, errors[]}`. */
-export function validateEnvelope(value) {
-  const Compiled = getCompiled();
+export async function validateEnvelope(value) {
+  const Compiled = await getCompiled();
   const ok = Compiled.Check(value);
   const errors = ok
     ? []
