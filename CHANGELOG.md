@@ -644,9 +644,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### `triage-issue`
 | Version | Date | Type | What changed |
-| 3.0.0 | 2026-10-01 | minor | **Retrieval-aid discovery (feature 65 P8, AC20/AC21):** Step 0 gains the optional retrieval-aid paragraph — run `agentic-workflow doc --query "<topic terms>" --json-only` once, when the entry point exists, to surface prior findings, decisions and session-log entries before the forge read. Fast path over the same corpus grep covers: missing index, absent entry point or empty answer changes nothing (grep stays the exhaustive fallback), and the index is never a decision authority. |
-
 |---|---|---|---|
+| 2.10.0 | 2026-10-01 | minor | **Retrieval-aid discovery (feature 65 P8, AC20/AC21):** Step 0 gains the optional retrieval-aid paragraph — run `agentic-workflow doc --query "<topic terms>" --json-only` once, when the entry point exists, to surface prior findings, decisions and session-log entries before the forge read. Fast path over the same corpus grep covers: missing index, absent entry point or empty answer changes nothing (grep stays the exhaustive fallback), and the index is never a decision authority. |
 | 2.9.0 | 2026-09-24 | minor | The fix-now/promote/replan hand-offs name the lane's `/unit-lane --fix <n>` / `/unit-lane --from-issue <n>` (the retired `plan-fix`/`plan-feature` are gone), and the urgency vocabulary cites the pi package's `advance` conductor. |
 | 2.8.0 | 2026-09-15 | minor | **Canonical replan destination (fix #224):** the review-finding process and the relationship diagram route `replan-in-unit` through `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner (`/plan-feature` / `/plan-fix`) and the fresh `/review-plan` before execution. |
 | 2.7.0 | 2026-09-04 | minor | Retirement remap (fix #161, P3a): the review-finding process re-runs `/review-change` on a changed HEAD (via `/fold-findings` first) instead of the retired `/loop-review-fold` router. |
