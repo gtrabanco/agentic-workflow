@@ -96,6 +96,10 @@ switch (command) {
     if (grammar.jsonOnly) {
       // AC8: exactly one JSON document on stdout; diagnostics on stderr.
       process.stdout.write(JSON.stringify(envelope) + "\n");
+    } else if (grammar.quiet) {
+      // AC23's hook spelling: --sync --quiet writes nothing on success;
+      // diagnostics stay on stderr. Exit code still reports failure.
+      if (envelope.ok !== true) process.stderr.write(`doc ${envelope.command}: failed\n`);
     } else {
       for (const d of envelope.degradations) process.stderr.write(`doc: degradation: ${d}\n`);
       for (const r of envelope.results) {

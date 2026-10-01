@@ -20,7 +20,7 @@ export const RETRIEVAL_FLAGS = {
 
 function usageError(msg) {
   const e = new Error(
-    `usage: agentic-workflow doc (--sync | --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] | --status | --rebuild) [--json-only] — ${msg}`,
+    `usage: agentic-workflow doc (--sync [--quiet] | --query <term> [--since <ISO>] [--until <ISO>] [--file <path>] [--mode keyword|hybrid] | --status | --rebuild) [--json-only] — ${msg}`,
   );
   e.code = "USAGE";
   return e;
@@ -32,7 +32,7 @@ function usageError(msg) {
  * Throws a usage error (exit 1 territory) on any malformed invocation.
  */
 export function parseDocArgs(argv) {
-  const out = { op: null, query: null, jsonOnly: false };
+  const out = { op: null, query: null, jsonOnly: false, quiet: false };
   const filters = { since: null, until: null, file: null };
   const FILTER_FLAGS = { "--since": "since", "--until": "until", "--file": "file" };
   const MODES = new Set(["keyword", "hybrid"]);
@@ -52,6 +52,11 @@ export function parseDocArgs(argv) {
     const arg = argv[i];
     if (arg === "--json-only") {
       out.jsonOnly = true;
+      i++;
+      continue;
+    }
+    if (arg === "--quiet") {
+      out.quiet = true;
       i++;
       continue;
     }
