@@ -14,7 +14,7 @@
  * gets an inline incremental sync before the caller answers.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { openDatabase } from "./sqlite.mjs";
 import { storePath, storePresent, manifestExportPath } from "./store.mjs";
@@ -127,4 +127,19 @@ export async function ensureFresh(root) {
   }
   await syncIndex(root);
   return { fresh: false, synced: true };
+}
+
+/**
+ * `--rebuild`: discard the disposable cache entirely (db + WAL/SHM + the
+ * manifest export) and resync from scratch. Returns the fresh sync counts
+ * with `rebuilt: true`.
+ */
+export async function rebuildIndex(root) {
+  const base = storePath(root);
+  rmSync(base, { force: true });
+  rmSync(`${base}-wal`, { force: true });
+  rmSync(`${base}-shm`, { force: true });
+  rmSync(manifestExportPath(root), { force: true });
+  const r = await syncIndex(root);
+  return { rebuilt: true, ...r };
 }
