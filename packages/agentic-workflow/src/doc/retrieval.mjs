@@ -56,11 +56,12 @@ export async function runDocOp(grammar, ctx = {}) {
   }
 
   if (grammar.op === "query") {
-    return queryIndex(root, grammar.query, {
-      since: grammar.since,
-      until: grammar.until,
-      file: grammar.file,
-    });
+    return queryIndex(
+      root,
+      grammar.query,
+      { since: grammar.since, until: grammar.until, file: grammar.file },
+      { mode: grammar.mode ?? "keyword" },
+    );
   }
 
   if (grammar.op === "status") {
