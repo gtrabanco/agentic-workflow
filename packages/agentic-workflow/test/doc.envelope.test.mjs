@@ -49,6 +49,7 @@ describe("doc grammar", () => {
       since: null,
       until: null,
       file: null,
+      mode: "keyword",
     });
   });
 
@@ -60,6 +61,7 @@ describe("doc grammar", () => {
       since: null,
       until: null,
       file: null,
+      mode: "keyword",
     });
     deepStrictEqual(parseDocArgs(["--sync", "--json-only"]), { op: "sync", query: null, jsonOnly: true });
   });

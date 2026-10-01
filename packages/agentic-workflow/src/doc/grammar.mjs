@@ -35,7 +35,9 @@ export function parseDocArgs(argv) {
   const out = { op: null, query: null, jsonOnly: false };
   const filters = { since: null, until: null, file: null };
   const FILTER_FLAGS = { "--since": "since", "--until": "until", "--file": "file" };
+  const MODES = new Set(["keyword", "hybrid"]);
   let sawFilter = false;
+  let sawMode = false;
   if (!Array.isArray(argv) || argv.length === 0) throw usageError("no operation given");
 
   // D2: a positional first token is the half-A branch — not shipped in this unit.
@@ -51,6 +53,15 @@ export function parseDocArgs(argv) {
     if (arg === "--json-only") {
       out.jsonOnly = true;
       i++;
+      continue;
+    }
+    if (arg === "--mode") {
+      const value = argv[i + 1];
+      if (value === undefined || value === "") throw usageError("--mode requires a value (keyword | hybrid)");
+      if (!MODES.has(value)) throw usageError(`unknown mode "${value}" (expected keyword | hybrid)`);
+      out.mode = value;
+      sawMode = true;
+      i += 2;
       continue;
     }
     if (arg in FILTER_FLAGS) {
@@ -80,13 +91,14 @@ export function parseDocArgs(argv) {
   }
 
   if (!out.op) throw usageError("no retrieval operation given");
-  // AC14's structured filters belong to queries only.
+  // AC14's structured filters and the P7 mode flag belong to queries only.
   if (out.op === "query") {
     out.since = filters.since;
     out.until = filters.until;
     out.file = filters.file;
-  } else if (sawFilter) {
-    throw usageError("--since/--until/--file are query filters and require --query");
+    out.mode = out.mode ?? "keyword";
+  } else if (sawFilter || sawMode) {
+    throw usageError("--since/--until/--file/--mode are query flags and require --query");
   }
   return out;
 }
