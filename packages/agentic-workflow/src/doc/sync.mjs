@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS chunks (
   line_start INTEGER NOT NULL,
   line_end INTEGER NOT NULL,
   meta TEXT NOT NULL,
-  body TEXT NOT NULL
+  body TEXT NOT NULL,
+  embedding BLOB,
+  emb_model TEXT
 );
 CREATE INDEX IF NOT EXISTS chunks_path ON chunks(path);
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(body, content='chunks', content_rowid='rowid');
