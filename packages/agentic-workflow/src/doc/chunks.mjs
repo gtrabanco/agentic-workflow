@@ -106,7 +106,8 @@ export function scanChunks(markdown, relativePath) {
     return id;
   };
 
-  // Preamble chunk — only when its range is non-empty.
+  // Preamble chunk — only when its range is non-empty and body is non-blank
+  // (AC10: skip frontmatter-only preamble to avoid empty-body noise).
   const firstHeadingLine = headings.length > 0 ? headings[0].line : lines.length + 1;
   if (firstHeadingLine > 1 || headings.length === 0) {
     const to = headings.length > 0 ? firstHeadingLine - 1 : lines.length;
@@ -114,15 +115,17 @@ export function scanChunks(markdown, relativePath) {
       .slice(0, to)
       .filter((_, idx) => !(idx < contentStart))
       .join("\n");
-    chunks.push({
-      id: `${relativePath}#`,
-      path: relativePath,
-      section: null,
-      lines: [1, to],
-      meta,
-      body,
-    });
-    usedIds.add(`${relativePath}#`);
+    if (body.trim() !== "") {
+      chunks.push({
+        id: `${relativePath}#`,
+        path: relativePath,
+        section: null,
+        lines: [1, to],
+        meta,
+        body,
+      });
+      usedIds.add(`${relativePath}#`);
+    }
   }
 
   // Heading sections with their heading-path chain.

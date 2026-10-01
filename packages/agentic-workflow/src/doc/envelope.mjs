@@ -55,14 +55,22 @@ export const EnvelopeSchema = Type.Object({
   store: Type.Union([Type.Null(), Type.Record(Type.String(), Type.Unknown())]),
 });
 
-const CompiledEnvelope = Compile(EnvelopeSchema);
+let _compiled = null;
+
+function getCompiled() {
+  if (_compiled === null) {
+    _compiled = Compile(EnvelopeSchema);
+  }
+  return _compiled;
+}
 
 /** TypeBox validation of a full envelope. Returns `{ok, errors[]}`. */
 export function validateEnvelope(value) {
-  const ok = CompiledEnvelope.Check(value);
+  const Compiled = getCompiled();
+  const ok = Compiled.Check(value);
   const errors = ok
     ? []
-    : [...CompiledEnvelope.Errors(value)].map((e) => `${e.path || "/"}: ${e.message}`);
+    : [...Compiled.Errors(value)].map((e) => `${e.path || "/"}: ${e.message}`);
   return { ok, errors };
 }
 
