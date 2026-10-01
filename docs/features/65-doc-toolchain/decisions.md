@@ -1,5 +1,11 @@
 # 65 — doc-toolchain · decisions.md
 
+## Decision log
+
+| ID | Decision | Rationale |
+|---|---|---|
+| D11 | P7's vector kNN runs as JS cosine over D4's float32-LE BLOBs, not a `sqlite-vec` vec0 table. D9's probe (G1) proved loadability, but D4 already stores the vectors as pinned-model BLOBs in `chunks`; a vec0 table would duplicate every vector into a second store (fixed dim at creation, per-provider rebuilds) — exactly the "complexity that is not needed" D8's criteria exclude. D9's probe stays on record as the measured upgrade path; the vectors are backend-agnostic, and AC15's judge gate gated the ship either way. Re-open only if a live corpus outgrows the JS cosine scan. | D4 + D8 read together; D9's condition was loadability, not storage. |
+
 Escape records required by the path-protection policy (`path-protection-records@1`).
 Append-only: a removal or a lowering is ignored by the gate.
 
