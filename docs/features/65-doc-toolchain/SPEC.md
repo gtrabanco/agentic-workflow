@@ -6,10 +6,13 @@ scope: large
 # 65 — doc-toolchain
 
 > One-line: Markdown stays the single source of truth — half A a deterministic
-> `doc` CLI (section read, remark AST edit, derived structure index, TypeBox
+> `doc` CLI (section read, section-splice edit, derived structure index, TypeBox
 > validation), half B a per-project retrieval index (FTS5 → hybrid) behind ONE
 > entry point; both experimental and disposable, neither ever a decision
 > authority.
+>
+> **Split (D6): this unit ships half B (+ AC4); half A re-homes to the
+> follow-up unit `71-doc-cli`.**
 
 ## Objective
 
@@ -28,9 +31,16 @@ home `packages/agentic-workflow` (the runner crate of feature 61):
    query, inline incremental sync), consent-installed git hooks as fast paths,
    and a declared degradation matrix.
 
-Retrieval must not block on the AST-edit half: the plan step records the
-split-vs-sequencing decision for the two halves (issue's sequencing note), never
-silently interleaves them.
+**Sequencing record (U1 → D6, decided 2026-10-01): split.** This unit (row 65)
+delivers half B — the entry point, the P1 keyword core, the judge-gated hybrid,
+the P3 wiring and the transversal discipline tests — plus AC4 (no build step,
+transversal: this unit grows skills text in P7 and must never write
+`skills/**/SKILL.md` either). Half A's AC1–AC3 and AC5–AC6 re-home to the
+follow-up unit **`71-doc-cli`** (roadmap row + unit doc created at this unit's
+**plan** step; the criteria of D8 bind it; `#192` closes there). The halves
+share D5's stable section-ID function, so the follow-up is additive, never a
+rewrite — retrieval never waits on the AST half (the issue's sequencing note,
+answered rather than silently interleaved).
 
 ## Why
 
@@ -71,6 +81,10 @@ command-verified where a command can verify it, and the Evidence section carries
 one row per AC.
 
 ### Half A — doc toolchain
+
+> **Split record (D6, 2026-10-01):** AC1–AC3 and AC5–AC6 re-home to the
+> follow-up unit `71-doc-cli` — the text below stays verbatim as that unit's
+> source. This unit owns AC4 (transversal — kept here) and AC7–AC27.
 
 1. **Roundtrip is lossless.** MD → AST → MD is byte-identical on unchanged
    input, proven against the golden fixtures and every `skills/**` doc; the
@@ -186,6 +200,10 @@ one row per AC.
 - **Replacing Serena (symbols) or grep (exhaustive/contract-grade sweeps)** —
   the index is the missing third capability (retrieval by meaning).
 - **Committing the `.db`** — gitignored build output, always regenerated.
+- **A query-time cross-encoder rerank model behind a provider API** — out of
+  scope (D9): one more network call, key and degradation path per query that
+  the issue never asked for, and AC15 only needs hybrid to beat keyword.
+  Revisit as a documented P4 opt-in beside the server vector DBs.
 - Findings discovered during implementation never widen this unit; they are
   recorded and routed to their owner.
 
@@ -234,7 +252,10 @@ The `tests` triage step therefore runs rather than being skipped.
   `engines.node >= 18`** — **affects**: P1's FTS5 store must resolve under both
   runtimes without a native dependency install; SQLite availability per runtime
   is the research step's open question (row R…), and a decision to add a
-  dependency is a design decision recorded before any code is written.
+  dependency is a design decision recorded before any code is written —
+  **resolved by design: D7 (engines `node >= 24`, bun primary) + D8 (library
+  policy: TypeBox in, remark out); the engines/README edit lands in implement/
+  docs, never silently.**
 - **`.gitignore` has no `.agentic-workflow/index/` entry yet** — **affects**:
   AC7 asserts `git status` stays empty after first sync; the implement step adds
   the ignore line before that assertion can pass.
@@ -263,22 +284,27 @@ The `tests` triage step therefore runs rather than being skipped.
 - **U1 — split vs sequence (half A vs half B).** The issue explicitly leaves
   “split into two units vs sequence inside one” to the lane. Research makes no
   call: design/plan surfaces it as one focused question with concrete options.
+  → **resolved: D6 — split; half B here, half A → follow-up `71-doc-cli`.**
 - **U2 — runtime floor vs `node:sqlite`.** Both `node:sqlite` (≥ 22.5,
   still experimental) and `bun:sqlite` provide FTS5 here (R3), but the packages
   declare `engines.node >= 18` while CI pins v22.23.1. Options — raise the
   engine floor, ship a declared `unavailable-sqlite-<runtime>` degradation, or
   vendor — are a design decision, recorded before any code.
+  → **resolved: D7 — engines `node >= 24`, bun primary, degradation kept.**
 - **U3 — dependency posture.** The crate is zero-dependency by charter (R1), so
   remark/unified + TypeBox (half A) and `sqlite-vec` (half B's native extension)
   each break that claim; vendoring is this repo's measured alternative
   (`AGENTS.md`: provenance header mandatory). The trade is recorded in design,
   not assumed here.
+  → **resolved: D8 — TypeBox pinned in, remark out, library criteria recorded.**
 - **U4 — `sqlite-vec` loadability** under bun and under node is unverified (no
   extension was loaded in R3); a visible gap. P2 ships only on AC15's judge
   fixture regardless, so the gap bounds effort, not correctness.
+  → **resolved: D9 — probe loadability at plan; JS-cosine fallback; AC15 gates.**
 - **U5 — embedding provider/key defaults and provisioning** for target projects
   remain the issue's open question — ask-first at design, config-pinned,
   degrade-to-keyword when absent.
+  → **resolved: D10 — config file + env-var names + pi-style env precedence.**
 - **U6 — crate README drift (observed).** `packages/agentic-workflow/README.md`
   still says “Current producers: none yet … feature 42 is the next candidate to
   add the first crate subcommand” while its bin already exposes five
@@ -325,7 +351,11 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | D3 | envelope + degradation contract — stdout under `--json-only`: one canonical JSON doc `{ok, command, results[], degradations[], store}`, `results[]` rows `{path, section, lines, score, meta}`; ordering `score desc → path asc → section asc → lines[0] asc`; **no timestamps anywhere** (AC2/AC12). Exit codes: `0` success *including degraded* (AC17), `1` usage/IO, `2` path refusal (crate convention). `degradations[]` is a **closed** vocabulary frozen in code and asserted by test: `unavailable-sqlite-<runtime>`, `unavailable-embeddings-not-configured`, `unavailable-embeddings-<cause>`, `embeddings-model-mismatch` (AC18) — an unknown value fails the test, never ships | recorded | AC8/AC17/AC18 become mechanically checkable; the closed list keeps the degradation matrix (issue's) enumerable | main agent |
 | D4 | store + config + determinism surface — store `.agentic-workflow/index/index.db` (AC7) under an ignore rule `.agentic-workflow/index/` that the implement step adds to `.gitignore` first; config `.agentic-workflow/index.json` is the **committed** surface (shipped by `init-workspace`, defaults when absent — never a hard failure); manifest = db table **plus a canonical JSON export** (sorted keys, per-file sha256 + git HEAD, no timestamps) — AC12's byte-for-byte assertion runs over that export, not SQLite file bytes, so the AC is honestly verifiable; freshness = manifest hash + HEAD checked on **every** query, stale ⇒ inline incremental sync before answering (AC9); vectors stored as float32-LE BLOBs behind a format tag + pinned model column (AC18 fails closed) | recorded | keeps the `.db` disposable build output; separates the committed decision surface (config) from the regenerated cache; makes determinism a property of an exported artifact, not of SQLite page layout | main agent |
 | D5 | chunking + stable IDs — a chunk is one ATX-heading-delimited section found by a **fence-aware** scanner (a `#` inside a fenced code block is never a heading); id = `<relative-path>#<slug of the heading path>` with `-2` style dedupe, derived only from content (no timestamps, no mtimes) ⇒ AC2's run-to-run byte identity; 1-based inclusive `lines` recorded per chunk (AC8 `lines`); frontmatter parsed once per file into chunk metadata, skill chunks carry their `triggers` for `doc index`; half A's structure index and half B's chunks consume **one shared id function**, so both halves cannot drift | recorded | answers the research's chunking/section-ID question; shared id function makes a later half A/B split (U1) additive instead of a rewrite | main agent |
-| D6 | **open — posed to the user, not inferred** (asked 2026-10-01, answered in a later entry): U1 split vs sequence of half A/half B · U2 SQLite runtime-floor posture · U3 dependency posture for half A (remark/TypeBox) · P2 vector backend (`sqlite-vec` native vs pure-JS cosine rerank) · U5 embedding provider/key defaults | pending | design is not stamped complete until these five carry an answer; the rows above are the answer-independent half | main agent |
+| D6 | **U1 — split (user answer 2026-10-01: "follow recommended").** This unit (row 65) delivers half B: entry point, P1 keyword core, P2 judge-gated hybrid, P3 wiring, transversal AC25–AC27, plus AC4 (no build step). Half A's AC1–AC3 + AC5–AC6 re-home to the follow-up unit **`71-doc-cli`** (roadmap row + unit doc created at **plan**, the AC text above kept verbatim as its source; `#192` closes there). Why split: the diff guard's default 400 lines / 8 files per implement step against 27 ACs (feature 69 breached with 7), the halves are independently valuable and independently risky (AC15 can stop half B at P1 without dragging half A), and one unit = one PR | recorded | the issue's own "split vs sequence" note answered, not inferred; plan re-cuts the P-phases to this unit's 22 ACs (AC4 + AC7–AC27) | main agent |
+| D7 | **U2 — runtime floor (user: "node >= 24 but Bun 1.4 preferred and main it is Bun").** `packages/agentic-workflow` engines → `node >= 24`, `bun >= 1.4`; bun stays the primary runtime (repo convention: bun-first manual invocation, `AGENTIC_WORKFLOW_RUNTIME` override), node is the supported floor and the AC27 CI dual. Consequences booked for implement: `.node-version` `v22.23.1 → v24.x` (locally verified v24.21.0) so CI runs the declared floor, and `node:sqlite`/`bun:sqlite` + FTS5 re-verified on those exact versions as the first implement action; the declared `unavailable-sqlite-<runtime>` degradation stays as the belt for any runtime without FTS5 | recorded | U2 closed before any code — a floor CI does not run is a lie the dual-runtime AC27 cannot carry | main agent |
+| D8 | **U3 — dependency posture + library policy (user criteria, recorded verbatim):** adopt stable & maintained libraries (no release younger than 3 days; "not maintained" only when maintenance is genuinely unnecessary); prefer the fewest possible dependencies; never a library that is trivially done natively (left-pad class); never complexity that is not needed; take the lazy path whenever a library meets those prerequisites. Applied: **`typebox` adopted** — exact-pinned (the `1.3.7` already in this repo's tree, far older than 3 days), zero transitive deps, carries AC5's schema authority and the index envelope's validation (D3). **`remark`/`unified` not adopted** — half B never re-prints Markdown (edits splice), so heading/frontmatter scanning is the bounded native class and D5's fence-aware scanner stands; the re-trigger is the golden corpus itself: if the scanner cannot pass every `skills/**` + `docs/**` doc, reconsider read-only `remark-parse` (no stringify) under these same criteria, in whichever unit hits it. `sqlite-vec` → D9 | recorded | the crate README claim moves from "zero dependencies" to "one pinned pure-JS dependency, no native deps, no build step" (docs step); vendoring stays the fallback, never the default | main agent |
+| D9 | **P2 hybrid backend (user: probe first; noted that providers expose rerank + embedding models — scope question answered in Spanish, on the record).** Sequence: at plan, a loadability probe runs `sqlite-vec` under bun **and** node (research U4's gap); loadable + D8 criteria ⇒ `sqlite-vec`; anything else ⇒ pure-JS cosine rerank over the FTS5 top-K (float32-LE BLOBs, no extension). Either path must pass AC15's judge fixture — **no delta ⇒ P2 does not ship** either way. **Provider-side cross-encoder rerank at query time = out of scope**, recorded in Non-goals (future P4-class opt-in) | recorded | U4's unverified loadability becomes a plan-time gate instead of a mid-implementation surprise; the rerank doubt is answered on the record, never silently dropped | main agent |
+| D10 | **U5 — provider/key configuration (user: config JSON + whatever env the user wants + direct env vars as pi does).** Surface: `.agentic-workflow/index.json` (D4) names the provider — OpenAI-compatible `baseUrl` + `model` + **the env-var names to read** (any names the user chooses) — and the entry point also honours direct environment variables in pi's style. Precedence: CLI flag > environment variable > config file > default. Absent everywhere ⇒ keyword-only with `unavailable-embeddings-not-configured` (AC17), never a hard failure; the model stays config-pinned, mismatch fails closed (AC18) | recorded | no key implied and no vendor default (the two rejected options); a team can pin a different provider per project without code changes | main agent |
 
 ## Triaged steps
 
@@ -351,18 +381,19 @@ One entry per step taken. Format exactly:
 
 2026-10-01 00:24 — research step done (rows R1–R8): entry-point home confirmed (crate router, zero-dep charter), envelope-producer + `validateEnvelope` reuse for AC8, SQLite/FTS5 verified on **both** runtimes (node v24.21.0 + bun 1.4.3) against an `engines.node >= 18` floor, no `.agentic-workflow/` ignore rule yet (AC7 needs one), no remark/unified anywhere, session-log header fields stable; six uncertainties U1–U6 stated, none resolved → evidence: R rows above — next: design step (P2)
 
-2026-10-01 00:33 — design step, answer-independent half done (rows D1–D5): design closure recorded (entities/roles/expectations vs AC1–AC27), single `doc` entry-point shape fixed (AC25 holds structurally), envelope + closed degradation vocabulary + exit codes fixed, store/config/manifest determinism surface fixed (AC12 runs over a canonical manifest export), fence-aware chunking + shared stable-ID function fixed; five decisions left open on purpose (D6: U1 split, U2 floor, U3 deps, P2 vector backend, U5 provider) and posed to the user with concrete options → working tree — next: record D6–D10 from the answers, run `phase-lint`, commit the design step, proceed to plan (P3)
+2026-10-01 00:33 — design step, answer-independent half done (rows D1–D5): design closure recorded (entities/roles/expectations vs AC1–AC27), single `doc` entry-point shape fixed (AC25 holds structurally), envelope + closed degradation vocabulary + exit codes fixed, store/config/manifest determinism surface fixed (AC12 runs over a canonical manifest export), fence-aware chunking + shared stable-ID function fixed; five decisions left open on purpose (D6: U1 split, U2 floor, U3 deps, P2 vector backend, U5 provider) and posed to the user with concrete options → evidence: D1–D5 — next: record D6–D10 from the answers, run `phase-lint`, commit the design step, proceed to plan (P3)
+
+2026-10-01 00:47 — design step complete (rows D6–D10): all five user answers recorded — **U1 split** (half B + AC4 stay here, AC1–AC3/AC5–AC6 → follow-up `71-doc-cli`, created at plan), **U2** engines `node >= 24` + bun primary (`.node-version` bump booked for implement), **U3** library criteria recorded verbatim + TypeBox in / remark out, **P2** probe-first with JS-cosine fallback and provider-side rerank ruled out of scope (Non-goals), **U5** config-file + pi-style env precedence (CLI > env > config > default); U1–U5 marked resolved in Research uncertainties → evidence: `grep -c "^| D"` = 10 · `phase-lint` verdict PASS — next: plan step (P3): re-cut phases to the 22 kept ACs, create row/unit `71-doc-cli`, book D7 consequences and the D9 probe as plan-time gate
 
 ## Next
 
-Design step (P2), part 2 — the answer-independent half is recorded (D1–D5:
-closure, entry-point shape, envelope/degradation contract, store/config/
-determinism surface, chunking + stable IDs). Five decisions are open and were
-posed to the user with concrete options (D6): U1 half A/half B split-vs-sequence,
-U2 SQLite runtime floor, U3 dependency posture for half A, P2's vector backend,
-U5 embedding provider/key defaults. On their answers: write D6–D10, re-run
-`bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md`, commit the
-design step, then the plan step (P3).
+Plan step (P3) — re-cut the phase list to this unit's 22 kept ACs (AC4 +
+AC7–AC27) after the D6 split: create roadmap row `71-doc-cli` + its unit doc
+carrying AC1–AC3/AC5–AC6, map every kept AC to a phase with a per-phase
+validator, book the D7 consequences (engines + `.node-version`) and the D9
+sqlite-vec loadability probe as a plan-time gate, run the prior-decisions
+contradiction sweep, then `bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md`
+and commit the plan step.
 
 ## References
 
