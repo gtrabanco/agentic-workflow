@@ -84,7 +84,15 @@ switch (command) {
       process.stderr.write(`doc: ${e.message}\n`);
       process.exit(1);
     }
-    const envelope = runDocOp(grammar, { rootDir: process.cwd() });
+    let envelope;
+    try {
+      envelope = await runDocOp(grammar, { rootDir: process.cwd() });
+    } catch (e) {
+      // IO/store failures are usage/IO territory (exit 1, D3); the message
+      // goes to stderr and stdout stays empty.
+      process.stderr.write(`doc: ${e.message}\n`);
+      process.exit(1);
+    }
     if (grammar.jsonOnly) {
       // AC8: exactly one JSON document on stdout; diagnostics on stderr.
       process.stdout.write(JSON.stringify(envelope) + "\n");
@@ -92,6 +100,10 @@ switch (command) {
       for (const d of envelope.degradations) process.stderr.write(`doc: degradation: ${d}\n`);
       for (const r of envelope.results) {
         console.log(`${r.path} · ${r.section ?? "-"} · L${r.lines[0]}-${r.lines[1]} · ${r.score}`);
+      }
+      if (envelope.store?.lastSync) {
+        const s = envelope.store.lastSync;
+        console.log(`doc sync: files_scanned=${s.files_scanned} files_changed=${s.files_changed} files_deleted=${s.files_deleted} chunks=${envelope.store.chunks}`);
       }
       console.log(`doc ${envelope.command}: ${envelope.results.length} result(s)`);
     }
