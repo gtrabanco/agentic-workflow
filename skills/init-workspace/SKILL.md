@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.2.0
+version: 3.3.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
