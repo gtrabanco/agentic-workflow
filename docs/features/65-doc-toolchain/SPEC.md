@@ -543,6 +543,10 @@ One entry per step taken. Format exactly:
 
 2026-10-01 — implement P10 (verification at head): full validator chain green — root gate 609/0, crate `bun run test` 202/0 + `test:node` 203/0, `check-skill-context` PASS; the AC27 runtime-dual test appended (same invocation under bun and node pins envelope identity; skip-if-no-bun keeps the node-compat CI half honest, recorded in `decisions.md`); AC19 re-measured live: warm sync over the 630-file repo **0.682s, 0 API calls**; the diff guard swept **all ten phase commits** in a worktree pinned at each code commit — every in-flight verdict reproduced (PASS P1/P4a/P4b/P9; recorded-exception BREACH P2/P3/P5/P6/P7/P8); one Evidence row added per kept AC (AC4, AC7–AC27 — 22 rows) — next: docs + release catalog steps, then review
 
+2026-10-01 — tests, evidence, review steps: the full applicable-test surface re-run as T1 (root 609/0; crate 202/0 + 203/0; budgets PASS; no test weakened — red-first authoring with recorded corrections only); REVIEW-VERDICT PASS over the accumulated diff (0 material, 4 report-notes — partial embed batches self-heal, vector freshness rides --sync, per-query corpus hash fine at this scale, blank preamble chunks harmless); AC section byte-identical to the plan commit
+
+2026-10-01 — docs + release steps: crate README dependency claim rewritten from the manifest (D8: one pinned pure-JS dep; the U6 producers-drift left to audit-docs as recorded); crate bumped 0.1.1 → 0.2.0 with its CHANGELOG companion row; bump-skill minors with rows — `triage-issue` 3.0.0, `review-change` 3.10.0, `init-workspace` 3.3.0; branch pushed, PR #282 opened against `main` (body carries the verification record; does not close #192 per D6), roadmap row 65 flipped `planned → done · [#282]`; `git status --porcelain` empty at close → a645cb69 + d7799f69 + 6fe1a274 — next: review/merge the PR, then `/unit-lane 71-doc-cli`
+
 ## Review verdict
 
 Run at the review step over the accumulated diff (87b7f34b..ac2d660c, 36 files).
