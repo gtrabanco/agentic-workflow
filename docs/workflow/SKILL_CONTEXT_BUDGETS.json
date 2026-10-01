@@ -13,6 +13,12 @@
     "audit-docs": {
       "descriptionEstimateMax": 240
     },
+    "init-workspace": {
+      "mainEstimateMax": 3195,
+      "mainSources": {
+        "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)"
+      }
+    },
     "log-session": {
       "descriptionEstimateMax": 230
     },
@@ -40,6 +46,10 @@
       }
     },
     "review-change": {
+      "mainEstimateMax": 3133,
+      "mainSources": {
+        "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)"
+      },
       "referenceEstimateMax": 3079,
       "referenceSources": {
         "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
