@@ -491,6 +491,22 @@ dual-runtime FTS5 re-verification), then P2…P10 in order; a conducted lane tur
 runs the same phases as catalog steps. Roadmap row 65 is `planned`; row 71
 `doc-cli` stays `defined` and waits for this unit to merge.
 
+## Path protection (plan declaration)
+
+The unit's test files, declared for the path-protection gate. Tests are authored
+red-first per phase (the operator rule "do tests before implementation"), so the
+regime stays pre-freeze for the whole unit — every protected modification
+carries a per-phase `justification` record in `decisions.md`, never a silent edit.
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | packages/agentic-workflow/test/doc.*.test.mjs | the crate suites the phases author red-first (P2 envelope/grammar, P3 store/config/manifest, P4 sync, P5 query, P6 embeddings, P7 hybrid)
+created | scripts/doc-*.test.mjs | the P9 transversal discipline suites (single entry point, never-authority, no build step) so they ride the root gate
+not-created | fixtures/ trees for the crate suites | every suite builds its throwaway trees in-process (temp dirs + fixture strings), so a committed fixtures tree would duplicate state and drift (D-60-4 evaluate-and-justify)
+```
+
 ## References
 
 - Issue [#192](https://github.com/gtrabanco/agentic-workflow/issues/192) — the
