@@ -252,13 +252,8 @@ describe("doc CLI", () => {
 
 describe("doc CLI — runtime dual (AC27)", () => {
   it("produces the byte-identical envelope under bun and under node", () => {
-    let hasBun = true;
-    try {
-      spawnSync("bun", ["--version"], { encoding: "utf8" });
-    } catch {
-      hasBun = false;
-    }
-    if (!hasBun) {
+    const bunVer = spawnSync("bun", ["--version"], { encoding: "utf8" });
+    if (bunVer.error || bunVer.status !== 0) {
       return; // node-only environment: the node-compat CI half still ran
     }
     const proj = mkdtempSync(join(tmpdir(), "agentic-workflow-dual-"));
