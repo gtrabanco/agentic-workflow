@@ -301,6 +301,7 @@ The `tests` triage step therefore runs rather than being skipped.
   extension was loaded in R3); a visible gap. P2 ships only on AC15's judge
   fixture regardless, so the gap bounds effort, not correctness.
   → **resolved: D9 — probe loadability at plan; JS-cosine fallback; AC15 gates.**
+  → **probe run 2026-10-01: loadable under node 24.21.0 and bun 1.4.3 (G1)** — D9's `sqlite-vec` branch selected; AC15 still gates the ship.
 - **U5 — embedding provider/key defaults and provisioning** for target projects
   remain the issue's open question — ask-first at design, config-pinned,
   degrade-to-keyword when absent.
@@ -313,22 +314,37 @@ The `tests` triage step therefore runs rather than being skipped.
 
 ## Tasks
 
-Phase set cut for triage; the plan step re-cuts the final P-phase list with
-per-phase layers/validators once design has fixed the shape.
+Phase set re-cut at plan (2026-10-01) to this unit's 22 kept ACs (AC4 +
+AC7–AC27) after the D6 split. Research, design and plan ran as catalog steps
+(rows R1–R8, D1–D10, G1–G4 below); docs and release stay catalog steps,
+deliberately not cut as phases. Ordered smallest-first, one phase = one commit,
+P10 is the verification tail.
 
-- P1 — Research: map the runner crate's router and receipt conventions, the `workflow-status.mjs` envelope producer, SQLite availability under bun and under node, the `.gitignore`/config conventions, and the `docs/LOGS.md` entry heading fields. (validator: `bun scripts/unit-route.mjs --triage 65` exits 0 and rows R1+ exist in the Evidence section)
-- P2 — Design: fix the single entry point's subcommand shape, the envelope and degradation contract, the store/config layout, section-boundary chunking with stable IDs, and the half A vs half B sequencing record. (validator: `grep -c "^| D" docs/features/65-doc-toolchain/SPEC.md` exits 0 with the design rows present)
-- P3 — Plan: cut the final phase list with per-phase validators, map all 27 ACs to a phase, and run the lane's prior-decisions contradiction sweep. (validator: `bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md` exits 0)
-- P4 — Implement: retrieval P1 keyword core in the crate — entry point, envelope contract, manifest freshness, incremental sync, gitignored store and config. (validator: `bun run test` in `packages/agentic-workflow` exits 0)
-- P5 — Implement: half A's `doc` CLI — section read, remark AST edit, derived structure index, TypeBox validation. (validator: `bun run test` in `packages/agentic-workflow` exits 0 with the roundtrip suite present)
-- P6 — Implement: P2 hybrid behind the judge fixture — `sqlite-vec`, embeddings, RRF fusion. (validator: `bun run test` in `packages/agentic-workflow` exits 0 with the hybrid-vs-keyword delta row recorded)
-- P7 — Implement: P3 wiring — discovery allowlist in `triage-issue`/`review-change`, `init-workspace` consent block, hooks, docs. (validator: `bun run test` in `packages/agentic-workflow` exits 0 and `bun scripts/check-skill-context.mjs` exits 0)
-- P8 — Tests: full gate — root suite, crate suites under bun and under node, context budgets, the two discipline tests. (validator: `node --test scripts/*.test.mjs` exits 0)
-- P9 — Evidence: one row per AC with the measured deltas and fixture outputs pasted. (validator: `grep -c "^| " docs/features/65-doc-toolchain/SPEC.md` exits 0 with 27+ rows)
-- P10 — Review: run the review pack axes over the accumulated diff and classify every finding into the fixed decision table. (validator: `grep REVIEW-VERDICT docs/features/65-doc-toolchain/SPEC.md` exits 0)
-- P11 — Docs: experimental labelling, workflow/replicate docs, consent docs, `CHANGELOG.md` rows, roadmap row update. (validator: `bun scripts/check-skill-context.mjs` exits 0 and `node scripts/check-changelog-row.mjs` exits 0)
-- P12 — Release: package version bumps for the touched packages with their `CHANGELOG.md` rows, same PR. (validator: `bun scripts/npm-version-gate.mjs` exits 0)
-- P13 — Verification: re-run every gate at head — root suite, both crate runtimes, context budgets, diff guard. (validator: `node --test scripts/*.test.mjs` exits 0)
+- P1 — Runtime floor and ignored store (D7's booked consequences): `.node-version` set to `v24.21.0`, crate `engines` set to `node >= 24` with `bun >= 1.4` kept, the `.agentic-workflow/index/` ignore rule added before AC7 can assert a clean `git status`, and FTS5 re-verified on both declared runtimes. (validator: `grep -q '.agentic-workflow/index/' .gitignore && node -e "const{DatabaseSync}=require('node:sqlite');new DatabaseSync(':memory:').exec('create virtual table t using fts5(doc)')" && bun -e "const{Database}=require('bun:sqlite');new Database(':memory:').exec('create virtual table t using fts5(doc)')"` exits 0)
+  - Relevant files: ./.node-version, ./.gitignore, packages/agentic-workflow/package.json
+- P2 — `doc` entry point grammar and envelope contract (D2/D3/D8): the retrieval branch under `agentic-workflow doc` (`--sync` / `--query` / `--status` / `--rebuild`), the `--json-only` envelope `{ok, command, results[], degradations[], store}` with its frozen ordering, the closed degradation vocabulary, the exit codes `0`/`1`/`2`, and TypeBox validation of the envelope. (validator: `cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src, packages/agentic-workflow/test, packages/agentic-workflow/package.json
+- P3 — Store, config, and canonical manifest: the gitignored `.agentic-workflow/index/index.db`, the committed `.agentic-workflow/index.json` that defaults when absent, and the manifest export (sorted keys, per-file sha256 plus git HEAD, no timestamps) that AC12's byte-for-byte assertion runs over. (validator: `cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: packages/agentic-workflow/src, packages/agentic-workflow/test, .agentic-workflow/index.json, ./.gitignore
+- P4 — Incremental sync engine: hash-based change detection reporting `files_scanned` and `files_changed`, deletion reaping so no orphan chunk survives, and the freshness invariant (manifest hash plus git HEAD checked on every query, with an inline sync before answering). (validator: `cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: packages/agentic-workflow/src, packages/agentic-workflow/test
+- P5 — Keyword query core: FTS5 search behind `--query --json-only`, the `path + section + lines + score + meta` result rows in the frozen order, `--status`, offline answering with no network and no key (AC13), and the structured session-log filter over date ranges and touched-file paths (AC14). (validator: `cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: packages/agentic-workflow/src, packages/agentic-workflow/test, docs/LOGS.md
+- P6 — Embeddings write path: provider config with pi-style precedence (`CLI > env > config > default`, D10), float32-LE vectors behind a format tag and a pinned model column, re-embedding only the chunks of a changed file asserted by mock API call count (AC16), and the model-mismatch check that fails closed instead of ranking across models (AC18). (validator: `cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: packages/agentic-workflow/src, packages/agentic-workflow/test, packages/agentic-workflow/package.json, .agentic-workflow/index.json
+- P7 — Hybrid query behind the judge gate: RRF fusion over the FTS5 and vector top-K, the keyword-only degradation when no key exists and the provider-down degradation with its cause declared (AC17), the AC15 judge-fixture delta (hybrid top-3 versus keyword; no delta ⇒ P2 does not ship), and the AC19 warm-sync cost bound of at most 1s with zero API calls. (validator: `cd packages/agentic-workflow && bun run test` exits 0 with the AC15 delta row present in Evidence)
+  - Relevant files: packages/agentic-workflow/src, packages/agentic-workflow/test
+- P8 — Discovery wiring and consent: the allowlisted discovery wording in `triage-issue` and `review-change` with their declared context-ceiling re-bases (AC20, AC21), `init-workspace`'s ask-first consent block for the index scaffold and git hooks (AC22), and the three git hooks invoking `--sync --quiet` with their hook tests (AC23). (validator: `bun scripts/check-skill-context.mjs && cd packages/agentic-workflow && bun run test` exits 0)
+  - Relevant files: skills/triage-issue/SKILL.md, skills/review-change/SKILL.md, skills/init-workspace/SKILL.md, template/.agentic-workflow/hooks, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P9 — Transversal discipline suites: the static single-entry-point test over `index.db` paths (AC25), the never-authority discipline test over the discovery allowlist (AC26), the no-build-step assertion that no generator writes into `skills/**/SKILL.md` (AC4), and the temp-dir `init-workspace` run proving the entry point ships to target projects (AC24), all in `scripts/` so they ride the root gate. (validator: `node --test scripts/*.test.mjs` exits 0)
+  - Relevant files: scripts/, packages/agentic-workflow/bin/agentic-workflow.mjs, template/
+- P10 — Verification at head: the full root gate, both crate runtimes (`bun run test` and `bun run test:node`), context budgets, and the diff guard over every implement phase, with one Evidence row per kept AC. (validator: `node --test scripts/*.test.mjs && cd packages/agentic-workflow && bun run test && bun run test:node` exits 0)
+
+AC→task map (22 kept): AC4→P9, AC7→P1+P3, AC8→P2+P5, AC9→P4, AC10→P4,
+AC11→P4, AC12→P3, AC13→P5, AC14→P5, AC15→P7, AC16→P6, AC17→P2+P7, AC18→P6,
+AC19→P7, AC20→P8, AC21→P8, AC22→P8, AC23→P8, AC24→P9, AC25→P9, AC26→P9,
+AC27→P10. Research/design/plan are complete catalog steps, not phases; docs and
+release run after P10 as catalog steps.
 
 ## Evidence
 
@@ -356,6 +372,79 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | D8 | **U3 — dependency posture + library policy (user criteria, recorded verbatim):** adopt stable & maintained libraries (no release younger than 3 days; "not maintained" only when maintenance is genuinely unnecessary); prefer the fewest possible dependencies; never a library that is trivially done natively (left-pad class); never complexity that is not needed; take the lazy path whenever a library meets those prerequisites. Applied: **`typebox` adopted** — exact-pinned (the `1.3.7` already in this repo's tree, far older than 3 days), zero transitive deps, carries AC5's schema authority and the index envelope's validation (D3). **`remark`/`unified` not adopted** — half B never re-prints Markdown (edits splice), so heading/frontmatter scanning is the bounded native class and D5's fence-aware scanner stands; the re-trigger is the golden corpus itself: if the scanner cannot pass every `skills/**` + `docs/**` doc, reconsider read-only `remark-parse` (no stringify) under these same criteria, in whichever unit hits it. `sqlite-vec` → D9 | recorded | the crate README claim moves from "zero dependencies" to "one pinned pure-JS dependency, no native deps, no build step" (docs step); vendoring stays the fallback, never the default | main agent |
 | D9 | **P2 hybrid backend (user: probe first; noted that providers expose rerank + embedding models — scope question answered in Spanish, on the record).** Sequence: at plan, a loadability probe runs `sqlite-vec` under bun **and** node (research U4's gap); loadable + D8 criteria ⇒ `sqlite-vec`; anything else ⇒ pure-JS cosine rerank over the FTS5 top-K (float32-LE BLOBs, no extension). Either path must pass AC15's judge fixture — **no delta ⇒ P2 does not ship** either way. **Provider-side cross-encoder rerank at query time = out of scope**, recorded in Non-goals (future P4-class opt-in) | recorded | U4's unverified loadability becomes a plan-time gate instead of a mid-implementation surprise; the rerank doubt is answered on the record, never silently dropped | main agent |
 | D10 | **U5 — provider/key configuration (user: config JSON + whatever env the user wants + direct env vars as pi does).** Surface: `.agentic-workflow/index.json` (D4) names the provider — OpenAI-compatible `baseUrl` + `model` + **the env-var names to read** (any names the user chooses) — and the entry point also honours direct environment variables in pi's style. Precedence: CLI flag > environment variable > config file > default. Absent everywhere ⇒ keyword-only with `unavailable-embeddings-not-configured` (AC17), never a hard failure; the model stays config-pinned, mismatch fails closed (AC18) | recorded | no key implied and no vendor default (the two rejected options); a team can pin a different provider per project without code changes | main agent |
+| G1 | D9 plan-time loadability probe — the **D9 probe (G1)** one-liner block below | 0 | node 24.21.0 and bun 1.4.3 each print `[{"rowid":1,"distance":0}]` for the `vec0` kNN query → **loadable under both runtimes** ⇒ D9 selects `sqlite-vec` (AC15 still gates the ship) | main agent |
+| G2 | D8 library criteria — the **dependency probe (G2)** block below | 0 | in-tree `typebox` `1.3.7` (published 2026-07-23, 0 transitive deps); `sqlite-vec` `0.1.9` (published 2026-03-31, `MIT OR Apache`, 5 platform `optionalDependencies`) → both pass D8 (older than 3 days, fewest deps, not natively trivial) | main agent |
+| G3 | prior-decisions contradiction sweep — the **sweep command (G3)** block below | 0 | 8 candidate hits, all `compatible`, 0 `contradicts` → table under `## Prior-decisions contradiction sweep` | main agent |
+| G4 | `bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md` | 0 | verdict PASS over P1–P10 (block under `## Plan gate (phase-lint)`) | main agent |
+
+**D9 probe (G1)** — one re-runnable line, the plan-time gate D9 prescribes:
+
+```text
+d=$(mktemp -d) && cd "$d" && printf '{"name":"probe"}' > package.json && npm i sqlite-vec@0.1.9 --silent && node -e "const{DatabaseSync}=require('node:sqlite');const db=new DatabaseSync(':memory:',{allowExtension:true});db.loadExtension('$d/node_modules/sqlite-vec-linux-x64/vec0.so');db.exec('create virtual table v using vec0(embedding float[3])');db.prepare('insert into v(rowid,embedding) values(?,?)').run(1n,'[1,2,3]');console.log(JSON.stringify(db.prepare('select rowid,distance from v where embedding match ? and k=1').all('[1,2,3]')))" && bun -e "const{Database}=require('bun:sqlite');const db=new Database(':memory:');db.loadExtension('$d/node_modules/sqlite-vec-linux-x64/vec0.so');db.exec('create virtual table v using vec0(embedding float[3])');db.prepare('insert into v(rowid,embedding) values(?,?)').run(1n,'[1,2,3]');console.log(JSON.stringify(db.prepare('select rowid,distance from v where embedding match ? and k=1').all('[1,2,3]')))"
+```
+
+**Dependency probe (G2)**:
+
+```text
+node -e "Promise.all(['typebox','sqlite-vec'].map(n=>fetch('https://registry.npmjs.org/'+n).then(r=>r.json()))).then(([t,s])=>console.log('typebox-1.3.7',t.time['1.3.7'],'transitive-deps',Object.keys(t.versions['1.3.7'].dependencies||{}).length,'; sqlite-vec-0.1.9',s.time['0.1.9'],s.license,'optional-platforms',Object.keys(s.versions['0.1.9'].optionalDependencies||{}).length))" && node -p "require('./packages/pi-agentic-workflow/node_modules/typebox/package.json').version"
+```
+
+**Sweep command (G3)** — deterministic keyword match over the candidate sources:
+
+```text
+grep -n "producers land as subcommands" docs/features/60-path-protection-guards/decisions.md && grep -n "exact version" AGENTS.md && grep -n "Vendored third-party code" AGENTS.md && grep -n "Root suites pass" AGENTS.md && grep -n "Runtime convention" AGENTS.md && grep -n "Never change a test" /home/agent/AGENTS.md && grep -n "F007 " docs/workflow/REPOSITORY_STATE.md && grep -n "U3 — dependency posture" docs/features/65-doc-toolchain/SPEC.md
+```
+
+## Prior-decisions contradiction sweep
+
+Run at plan (2026-10-01) over the lane's candidate sources — this repo's
+`AGENTS.md`, the operator `AGENTS.md`, the frozen Normalized Repository State,
+the architectural-invariants contract, and `decisions.md` files — with
+deterministic keyword matching (G3). Fixed shape, advisory only: a `contradicts`
+hit against a frozen NRS fact routes to `resolve-repository-state`, any other
+`contradicts` surfaces a `NEEDS-DECISION`; a miss never blocks a clean plan and
+this sweep issues no verdict of its own. **8 candidate hits, all `compatible`,
+0 `contradicts`.**
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| The entry point is one `agentic-workflow doc` subcommand of the runner crate | “Producer vehicle rule: producers land as subcommands of `packages/agentic-workflow` (crate exists since row 37)” | `docs/features/60-path-protection-guards/decisions.md:37` | `compatible` |
+| The crate gains two pinned dependencies (`typebox@1.3.7`, `sqlite-vec@0.1.9`) | “Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges)” | `AGENTS.md:377` | `compatible` |
+| The libraries are installed, not copied into the tree | “Vendored third-party code carries its provenance … Vendoring is a real alternative to adding a dependency and it is weighed as one” | `AGENTS.md:57` | `compatible` |
+| Tests are written red-first, every gate stays green, and no test is edited to make it pass | “Never change a test to pass it” / “Do tests before implementation with the expected behaviour and features” | `/home/agent/AGENTS.md:4` | `compatible` |
+| Row 65 flips `defined → planned`; row 71 is created `defined` | F007 “Roadmap rows 01-27 are done. Feature 28 is planned from #146; feature 29 is planned from #149 and depends on 28.” (frozen) | `docs/workflow/REPOSITORY_STATE.md:28` | `compatible` |
+| The gate stays the root suite plus the touched-package suites; the new discipline suites live in `scripts/` so they ride it | “Root suites pass: `node --test scripts/*.test.mjs`” | `AGENTS.md:253` | `compatible` |
+| AC27's dual-runtime envelope rides bun-first manual invocation with the node fallback (the existing node-compat CI) | “Runtime convention (two scopes, one override): `AGENTIC_WORKFLOW_RUNTIME=bun\|node` … manual invocation of repo scripts runs bun-first, with the same command under node as the guaranteed fallback” | `AGENTS.md:266` | `compatible` |
+| The crate README dependency claim is rewritten from the manifest at the docs step (TypeBox plus optional `sqlite-vec`) | D8 “the crate README claim moves from 'zero dependencies' to 'one pinned pure-JS dependency, no native deps, no build step'”; D9 “loadable + D8 criteria ⇒ `sqlite-vec`” | `docs/features/65-doc-toolchain/SPEC.md:356` | `compatible` |
+
+Two documented misses, never blocking: `docs/workflow/WORKFLOW_INVARIANTS.md`
+carries the generic evaluation contract with no project-specific rule this plan
+touches, and this repo has no `docs/architecture/ARCHITECTURAL_INVARIANTS.md`.
+The last row is the closest call and is surfaced rather than buried: D8's “no
+native deps” sentence and D9's probe-conditional `sqlite-vec` are read together
+— D9 post-dates D8's sentence and conditions `sqlite-vec` on exactly this probe
+(G1, passed), and the docs step writes the README claim from the actual
+manifest. If the owner reads D8's sentence as a blanket ban on a native
+extension, that is a `NEEDS-DECISION` before the P6/P7 vector phases.
+
+## Plan gate (phase-lint)
+
+`bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md`, exit 0:
+
+```text
+P1 Phase-lint: PASS (6/6) · fingerprint P1:unit-doc:1:runtime-floor-and-ignored-store-d7-s-booked-consequences
+P2 Phase-lint: PASS (6/6) · fingerprint P2:unit-doc:1:doc-entry-point-grammar-and-envelope-contract-d2-d3-d8
+P3 Phase-lint: PASS (6/6) · fingerprint P3:unit-doc:1:store-config-and-canonical-manifest
+P4 Phase-lint: PASS (6/6) · fingerprint P4:unit-doc:1:incremental-sync-engine
+P5 Phase-lint: PASS (6/6) · fingerprint P5:unit-doc:1:keyword-query-core
+P6 Phase-lint: PASS (6/6) · fingerprint P6:unit-doc:1:embeddings-write-path
+P7 Phase-lint: PASS (6/6) · fingerprint P7:unit-doc:1:hybrid-query-behind-judge-gate
+P8 Phase-lint: PASS (6/6) · fingerprint P8:unit-doc:1:discovery-wiring-and-consent
+P9 Phase-lint: PASS (6/6) · fingerprint P9:unit-doc:1:transversal-discipline-suites
+P10 Phase-lint: PASS (6/6) · fingerprint P10:unit-doc:1:verification-at-head
+verdict PASS
+fingerprint: e026a3ed1d32e5d08e389d55f4484830c3db61360168585533fd5f54ca2ee53b
+```
 
 ## Triaged steps
 
@@ -385,23 +474,25 @@ One entry per step taken. Format exactly:
 
 2026-10-01 00:47 — design step complete (rows D6–D10): all five user answers recorded — **U1 split** (half B + AC4 stay here, AC1–AC3/AC5–AC6 → follow-up `71-doc-cli`, created at plan), **U2** engines `node >= 24` + bun primary (`.node-version` bump booked for implement), **U3** library criteria recorded verbatim + TypeBox in / remark out, **P2** probe-first with JS-cosine fallback and provider-side rerank ruled out of scope (Non-goals), **U5** config-file + pi-style env precedence (CLI > env > config > default); U1–U5 marked resolved in Research uncertainties → evidence: `grep -c "^| D"` = 10 · `phase-lint` verdict PASS — next: plan step (P3): re-cut phases to the 22 kept ACs, create row/unit `71-doc-cli`, book D7 consequences and the D9 probe as plan-time gate
 
+2026-10-01 — plan step (P3) complete: **Tasks re-cut** to the 22 kept ACs (AC4 + AC7–AC27) as P1–P10, smallest-first, one commit per phase, every AC mapped to a phase with a per-phase validator (docs and release stay catalog steps, deliberately not cut); roadmap row 65 flipped `defined → planned`; **roadmap row 71 `doc-cli` + unit doc created** (`docs/features/71-doc-cli/SPEC.md`: AC1–AC3/AC5–AC6 verbatim, triage block pasted, rough cut P1–P11 lint-clean, `Depends on: 65`, status `defined`); **D9 plan-time gate run** — `sqlite-vec` loadable under node 24.21.0 **and** bun 1.4.3 (G1), D8's criteria re-checked against the registry (G2); **prior-decisions contradiction sweep** — 8 candidate hits, all `compatible`, 0 `contradicts` (G3); `phase-lint` verdict PASS over P1–P10 (G4) → evidence: G1–G4 + the sweep table — next: implement step, P1 via `/execute-phase 65 P1`
+
 ## Next
 
-Plan step (P3) — re-cut the phase list to this unit's 22 kept ACs (AC4 +
-AC7–AC27) after the D6 split: create roadmap row `71-doc-cli` + its unit doc
-carrying AC1–AC3/AC5–AC6, map every kept AC to a phase with a per-phase
-validator, book the D7 consequences (engines + `.node-version`) and the D9
-sqlite-vec loadability probe as a plan-time gate, run the prior-decisions
-contradiction sweep, then `bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md`
-and commit the plan step.
+Implement step — `/execute-phase 65 P1` (runtime floor, `.gitignore` rule,
+dual-runtime FTS5 re-verification), then P2…P10 in order; a conducted lane turn
+runs the same phases as catalog steps. Roadmap row 65 is `planned`; row 71
+`doc-cli` stays `defined` and waits for this unit to merge.
 
 ## References
 
 - Issue [#192](https://github.com/gtrabanco/agentic-workflow/issues/192) — the
   source of the ACs, non-goals, phases (P1 keyword → P2 hybrid → P3 wiring → P4
-  documented non-goal) and the TypeBox rationale; `Closes #192` at merge.
+  documented non-goal) and the TypeBox rationale; `Closes #192` belongs to the
+  follow-up `71-doc-cli` merge (D6) — this unit must not close it.
 - Roadmap row 65 `doc-toolchain` (`docs/features/ROADMAP.md`) — status
-  `idea → defined` by this invocation.
+  `idea → defined` at creation, `defined → planned` by this plan step.
+- Roadmap row 71 `doc-cli` + `docs/features/71-doc-cli/SPEC.md` — the D6
+  follow-up unit (half A), created by this plan step with `Depends on: 65`.
 - Feature 61 / `packages/agentic-workflow` — the decided entry-point vehicle
   (roadmap row 61, `docs/features/61-adaptive-unit-lane/`).
 - Feature 69 / issue #270 — "the hybrid retrieval index is #192's" (parked
