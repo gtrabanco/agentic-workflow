@@ -298,7 +298,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20082,
+      "routeEstimateMax": 20083,
       "routeLinesMax": 1444,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -328,7 +328,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18264,
+      "routeEstimateMax": 18265,
       "routeLinesMax": 1325,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -358,7 +358,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18264,
+      "routeEstimateMax": 18265,
       "routeLinesMax": 1325,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -388,7 +388,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18780,
+      "routeEstimateMax": 18781,
       "routeLinesMax": 1349,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
