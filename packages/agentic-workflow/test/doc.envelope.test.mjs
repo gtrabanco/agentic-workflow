@@ -247,3 +247,43 @@ describe("doc CLI", () => {
     if (tmp && existsSync(tmp)) rmSync(tmp, { recursive: true, force: true });
   });
 });
+
+// ── AC27 — runtime dual: identical envelope under bun and node ───────────
+
+describe("doc CLI — runtime dual (AC27)", () => {
+  it("produces the byte-identical envelope under bun and under node", () => {
+    let hasBun = true;
+    try {
+      spawnSync("bun", ["--version"], { encoding: "utf8" });
+    } catch {
+      hasBun = false;
+    }
+    if (!hasBun) {
+      return; // node-only environment: the node-compat CI half still ran
+    }
+    const proj = mkdtempSync(join(tmpdir(), "agentic-workflow-dual-"));
+    try {
+      execFileSync("git", ["init", "-q"], { cwd: proj });
+      execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: proj });
+      execFileSync("git", ["config", "user.name", "t"], { cwd: proj });
+      writeFileSync(join(proj, "doc.md"), "# Dual\nthe runtimedual term\n");
+      execFileSync("git", ["add", "-A"], { cwd: proj });
+      execFileSync("git", ["commit", "-qm", "fixture"], { cwd: proj });
+      const args = [BIN, "doc", "--query", "runtimedual", "--json-only"];
+      const bunRun = spawnSync("bun", args, { cwd: proj, encoding: "utf8" });
+      const nodeRun = spawnSync(process.execPath, args, { cwd: proj, encoding: "utf8" });
+      strictEqual(bunRun.status, 0, bunRun.stderr);
+      strictEqual(nodeRun.status, 0, nodeRun.stderr);
+      // envelope identity modulo the absolute store path inside it
+      const strip = (s) => JSON.parse(s).results.map((r) => `${r.path}:${r.section}:${r.lines.join("-")}`).sort();
+      deepStrictEqual(strip(bunRun.stdout), strip(nodeRun.stdout));
+      const envA = JSON.parse(bunRun.stdout);
+      const envB = JSON.parse(nodeRun.stdout);
+      deepStrictEqual(envA.degradations, envB.degradations);
+      deepStrictEqual(envA.command, envB.command);
+      deepStrictEqual(Object.keys(envA), Object.keys(envB));
+    } finally {
+      rmSync(proj, { recursive: true, force: true });
+    }
+  });
+});
