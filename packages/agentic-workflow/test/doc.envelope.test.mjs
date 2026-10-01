@@ -33,12 +33,12 @@ const BIN = join(dirname(fileURLToPath(import.meta.url)), "..", "bin", "agentic-
 
 describe("doc grammar", () => {
   it("parses --sync", () => {
-    deepStrictEqual(parseDocArgs(["--sync"]), { op: "sync", query: null, jsonOnly: false });
+    deepStrictEqual(parseDocArgs(["--sync"]), { op: "sync", query: null, jsonOnly: false, quiet: false });
   });
 
   it("parses --status and --rebuild", () => {
-    deepStrictEqual(parseDocArgs(["--status"]), { op: "status", query: null, jsonOnly: false });
-    deepStrictEqual(parseDocArgs(["--rebuild"]), { op: "rebuild", query: null, jsonOnly: false });
+    deepStrictEqual(parseDocArgs(["--status"]), { op: "status", query: null, jsonOnly: false, quiet: false });
+    deepStrictEqual(parseDocArgs(["--rebuild"]), { op: "rebuild", query: null, jsonOnly: false, quiet: false });
   });
 
   it("parses --query with its term", () => {
@@ -50,6 +50,7 @@ describe("doc grammar", () => {
       until: null,
       file: null,
       mode: "keyword",
+      quiet: false,
     });
   });
 
@@ -62,8 +63,9 @@ describe("doc grammar", () => {
       until: null,
       file: null,
       mode: "keyword",
+      quiet: false,
     });
-    deepStrictEqual(parseDocArgs(["--sync", "--json-only"]), { op: "sync", query: null, jsonOnly: true });
+    deepStrictEqual(parseDocArgs(["--sync", "--json-only"]), { op: "sync", query: null, jsonOnly: true, quiet: false });
   });
 
   it("rejects empty args", () => {

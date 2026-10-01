@@ -57,7 +57,13 @@ first on purpose).
 
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
-template, and the roadmap. In review-finding mode, read the target unit's SPEC,
+template, and the roadmap. **Retrieval aid (optional, never authoritative):**
+when the index entry point exists, run it once before the forge read —
+`agentic-workflow doc --query "<topic terms>" --json-only` — to surface prior
+findings, decisions and session-log entries on this topic. It is a fast path
+over the same corpus grep covers: a missing index, an absent entry point, or an
+empty answer changes nothing (grep stays the exhaustive fallback — AC21), and
+the index is never a decision authority. In review-finding mode, read the target unit's SPEC,
 acceptance, `review-findings.md`, current diff, and PR instead of looking for an
 issue comment. Otherwise read the issue in full, including comments and labels
 (forge CLI per the project's Workflow conventions — examples use `gh`):
