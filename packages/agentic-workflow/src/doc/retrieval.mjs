@@ -16,6 +16,8 @@ import { buildEnvelope } from "./envelope.mjs";
 import { storePath } from "./store.mjs";
 import { syncIndex, rebuildIndex } from "./sync.mjs";
 import { queryIndex, statusIndex } from "./query.mjs";
+import { loadConfig } from "./config.mjs";
+import { resolveEmbedConfig, makeOpenAIProvider, embedPendingChunks } from "./embeddings.mjs";
 
 /**
  * Run one retrieval operation. `grammar` is parseDocArgs' output;
@@ -27,6 +29,13 @@ export async function runDocOp(grammar, ctx = {}) {
 
   if (grammar.op === "sync") {
     const r = await syncIndex(root);
+    // P6: when a provider is configured (D10), embed pending chunks in the
+    // same pass; otherwise the store answers keyword-only (AC17's root).
+    const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
+    let embedded = null;
+    if (cfg.configured) {
+      embedded = await embedPendingChunks(root, makeOpenAIProvider(cfg));
+    }
     return buildEnvelope({
       command: "sync",
       results: [],
@@ -40,6 +49,7 @@ export async function runDocOp(grammar, ctx = {}) {
           files_scanned: r.filesScanned,
           files_changed: r.filesChanged,
           files_deleted: r.filesDeleted,
+          embedded: embedded === null ? 0 : embedded.embedded,
         },
       },
     });
