@@ -7,9 +7,9 @@ name: Publish runner crate
 # Also runnable by hand
 # (workflow_dispatch) — e.g. to retry a failed run.
 #
-# The crate has zero dependencies and no lockfile: the test gate runs the same
-# suite through bun (bun-first convention) and through plain node (the #197
-# fallback guarantee) without any install step. npm still does the actual
+# The crate has one pinned dependency (typebox) and a lockfile: the test gate
+# installs the crate first, then runs the same suite through bun (bun-first
+# convention) and through plain node (the #197 fallback guarantee). npm still does the actual
 # `publish` step, since Trusted Publishing + --provenance are npm-CLI-specific
 # tooling Bun doesn't replicate.
 #
@@ -62,6 +62,8 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version-file: .node-version
+      - name: Install deps (node-compat — typebox is a pinned dependency)
+        run: bun install --frozen-lockfile
       - name: Test (node runtime — the guaranteed fallback)
         run: node --test
 
