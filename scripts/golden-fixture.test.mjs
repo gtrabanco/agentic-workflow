@@ -334,7 +334,20 @@ test("AC3(c): a valid post-cutoff row appended to a log copy keeps the committed
     return committedLogCheck(docPath);
   });
   assert.equal(result.ok, true, result.message);
-  assert.equal(result.checked, 1, "the appended post-cutoff row must be checked, not skipped");
+  // The log is append-only and the cutoff is a fixed date, so the committed
+  // count grows by one with every future run row. Asserting a literal `1`
+  // (the state when this fold landed) made the test fail the first time a real
+  // post-cutoff row was logged — the opposite of the fold's own "append-safe"
+  // goal. Comparing against the committed log's own count keeps the intent
+  // exact: if the appended row were skipped, `result.checked` would still equal
+  // `committed.checked` and this assertion would fail.
+  const committed = runLogGrammar(DOC);
+  assert.equal(committed.ok, true, committed.message);
+  assert.equal(
+    result.checked,
+    committed.checked + 1,
+    "the appended post-cutoff row must be checked, not skipped",
+  );
 });
 
 test("AC3(c): the cutoff accepts a well-formed row and rejects a malformed one", () => {
