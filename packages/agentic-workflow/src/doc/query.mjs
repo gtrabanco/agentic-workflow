@@ -72,6 +72,17 @@ async function storeValue(root) {
     return { path: storePath(root), present: false, files: 0, chunks: 0 };
   }
   const { db } = await openDatabase(storePath(root));
+  // Check if the chunks table exists (AC11: schema-less store is not an error —
+  // it just means sync hasn't run yet, so the table is missing).
+  const tableExists = db
+    .prepare(
+      "select count(*) as n from sqlite_master where type='table' and name='chunks'",
+    )
+    .get().n;
+  if (tableExists === 0) {
+    db.close();
+    return { path: storePath(root), present: true, files: 0, chunks: 0 };
+  }
   const files = db.prepare("select count(distinct path) as n from chunks").get().n;
   const chunks = db.prepare("select count(*) as n from chunks").get().n;
   db.close();

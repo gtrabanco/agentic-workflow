@@ -62,12 +62,23 @@ export function collectManifest(root) {
     maxBuffer: 1024 * 1024,
   }).trim();
   const files = corpusFiles(root).map((rel) => {
-    const bytes = readFileSync(join(root, rel));
+    const abs = join(root, rel);
+    let bytes;
+    try {
+      bytes = readFileSync(abs);
+    } catch (e) {
+      if (e.code === "ENOENT") {
+        // File deleted in working tree but not yet committed — skip it
+        // (AC11: treat as deletion, sync.mjs will reap it)
+        return null;
+      }
+      throw e;
+    }
     return {
       path: rel,
       sha256: createHash("sha256").update(bytes).digest("hex"),
       bytes: bytes.length,
     };
-  });
+  }).filter((f) => f !== null); // drop missing files
   return buildManifest({ head, files });
 }

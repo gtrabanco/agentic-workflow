@@ -91,10 +91,22 @@ export async function syncIndex(root) {
   );
   for (const path of deleted) reap.run(path);
   for (const path of changed) {
-    reap.run(path);
-    const rows = scanChunks(readFileSync(join(root, path), "utf8"), path);
-    for (const c of rows) {
-      insert.run(c.id, c.path, c.section, c.lines[0], c.lines[1], JSON.stringify(c.meta), c.body);
+    const src = join(root, path);
+    try {
+      // Reap existing chunks for this path before re-inserting (original
+      // reap.run(path) before the read — preserved for the non-ENOENT path).
+      reap.run(path);
+      const rows = scanChunks(readFileSync(src, "utf8"), path);
+      for (const c of rows) {
+        insert.run(c.id, c.path, c.section, c.lines[0], c.lines[1], JSON.stringify(c.meta), c.body);
+      }
+    } catch (e) {
+      if (e.code === "ENOENT") {
+        // File deleted in working tree but not yet committed → reap
+        // (AC11: treat as deletion).
+        reap.run(path);
+        deleted.push(path);
+      } else throw e;
     }
   }
 
