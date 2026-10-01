@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "store": {
+    "path": ".agentic-workflow/index/index.db"
+  },
+  "provider": null
+}
