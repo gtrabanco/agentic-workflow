@@ -80,6 +80,14 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     strictEqual(offenders.length, 0, `store-path references outside the entry point: ${offenders.join(", ")}`);
   });
 
+  it("no tracked file matches the store/manifest path pattern (F4 fold)" , () => {
+    const tracked = repoFiles();
+    const offenders = tracked.filter((rel) =>
+      /\.agentic-workflow\/index\/(index\.db|manifest\.json)$/.test(rel),
+    );
+    strictEqual(offenders.length, 0, `tracked store/manifest paths: ${offenders.join(", ")}`);
+  });
+
   it("skills/** never reference the store at all (the strongest form)", () => {
     const hits = filesMatching(
       repoFiles().filter((f) => f.startsWith("skills/")),
@@ -92,6 +100,14 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     const hook = join(REPO_ROOT, "template", ".agentic-workflow", "hooks", "index-sync.sh");
     ok(grepOut(["-cE", "agentic-workflow", hook]).trim() !== "");
     strictEqual(grepOut(["-cE", "index\\.db", hook]).trim(), "");
+  });
+
+  it("no tracked file matches the store/manifest path pattern (F4 fold — never committed)", () => {
+    const tracked = repoFiles();
+    const offenders = tracked.filter((rel) =>
+      /\.agentic-workflow\/index\/(index\.db|manifest\.json)$/.test(rel),
+    );
+    strictEqual(offenders.length, 0, `tracked store/manifest paths: ${offenders.join(", ")}`);
   });
 });
 
