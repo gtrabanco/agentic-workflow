@@ -13,8 +13,8 @@
 
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok, throws, match } from "node:assert";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { spawnSync, execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -172,6 +172,13 @@ describe("doc CLI", () => {
 
   it("sets up an isolated cwd", () => {
     tmp = mkdtempSync(join(tmpdir(), "agentic-workflow-doc-"));
+    // --sync now runs the real engine (P4): the fixture must be a git repo.
+    execFileSync("git", ["init", "-q"], { cwd: tmp });
+    execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: tmp });
+    execFileSync("git", ["config", "user.name", "t"], { cwd: tmp });
+    writeFileSync(join(tmp, "readme.md"), "# Fixture\nbody\n");
+    execFileSync("git", ["add", "-A"], { cwd: tmp });
+    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: tmp });
     ok(existsSync(tmp));
   });
 
