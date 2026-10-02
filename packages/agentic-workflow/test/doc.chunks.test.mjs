@@ -70,6 +70,17 @@ describe("doc chunker (D5)", () => {
     ok(!preamble.body.includes("name:"));
   });
 
+  it("clamps the preamble chunk's lines to the post-frontmatter body (F19)", () => {
+    // frontmatter ends at line 3, so the preamble body occupies lines 4-5:
+    // `lines` must start at 4, never at 1 (a consumer slicing by `lines`
+    // would otherwise land inside the frontmatter block).
+    const md = ["---", "name: x", "---", "intro line", "", "# One", "body"].join("\n");
+    const [preamble] = scanChunks(md, "p.md");
+    deepStrictEqual(preamble.lines, [4, 5]);
+    ok(preamble.body.startsWith("intro line"));
+    ok(!preamble.body.includes("---"));
+  });
+
   it("is deterministic: same input yields byte-identical ids and lines", () => {
     const md = ["# A", "one", "", "## A", "two"].join("\n");
     const a = scanChunks(md, "x.md");
