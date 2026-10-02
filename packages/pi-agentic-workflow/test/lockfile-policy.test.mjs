@@ -60,3 +60,24 @@ test("dependency specs are exact registry versions (publish-safe)", () => {
       "dependencies or devDependencies (AGENTS.md → Packages: versions are pinned)",
   );
 });
+
+// F23: the workspace pins declared in bun.lock must match package.json exactly.
+// Bumping a dep in package.json without regenerating the lock leaves every
+// `bun install --frozen-lockfile` (both CI jobs of publish-pi-package.yml)
+// unable to resolve — the lock is the install contract, not a cache.
+test("bun.lock workspace pins match package.json dependencies (no drift)", () => {
+  const pkg = JSON.parse(readFileSync(join(PKG_DIR, "package.json"), "utf8"));
+  const lock = readFileSync(join(PKG_DIR, "bun.lock"), "utf8");
+  const drifted = [];
+  for (const section of ["dependencies", "devDependencies"]) {
+    for (const [name, spec] of Object.entries(pkg[section] ?? {})) {
+      if (!lock.includes(`"${name}": "${spec}"`)) drifted.push(`${name}: package.json ${spec}`);
+    }
+  }
+  assert.deepEqual(
+    drifted,
+    [],
+    "bun.lock drifted from package.json — run `bun install` in this directory and commit the lock " +
+      "(a stale lock makes `bun install --frozen-lockfile` fail in CI and in every consumer install)",
+  );
+});
