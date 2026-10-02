@@ -10,7 +10,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, sep } from "node:path";
 
 export const CONFIG_VERSION = 1;
 
@@ -46,6 +46,19 @@ export function loadConfig(root) {
   }
   if (parsed.version !== undefined && parsed.version !== CONFIG_VERSION) {
     throw new Error(`index.json version ${parsed.version} is not supported (expected ${CONFIG_VERSION})`);
+  }
+  // Contain store.path inside the repository root (AC7: gitignored cache must not
+  // escape). An absolute path that is outside the root, or a relative path that
+  // resolves outside (contains `..`), is rejected — the `rmSync` in --rebuild
+  // targets this path, so a misconfigured store path is a destructive-write
+  // footgun.
+  if (parsed.store?.path) {
+    const candidate = parsed.store.path;
+    if (!resolve(root, candidate).startsWith(resolve(root) + sep)) {
+      throw new Error(
+        `index.json store.path "${candidate}" escapes the repository root (${root})`,
+      );
+    }
   }
   return { ...structuredClone(DEFAULT_CONFIG), ...parsed };
 }
