@@ -14,7 +14,7 @@
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok, throws, match } from "node:assert";
 import { spawnSync, execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -117,6 +117,17 @@ describe("doc envelope", () => {
 
   it("rejects an unknown degradation at construction time (closed vocabulary)", () => {
     throws(() => buildEnvelope({ command: "query", degradations: ["made-up"] }), /degradation/i);
+  });
+
+  it("keeps typebox off the cold path: no static typebox import in src/doc (F22)", () => {
+    // The hook path builds envelopes without validating them, so typebox must
+    // only ever arrive through the lazy `await import()` inside validateEnvelope —
+    // a static import adds ~650ms to every CLI/hook invocation (measured).
+    const docDir = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "doc");
+    const offenders = readdirSync(docDir)
+      .filter((f) => f.endsWith(".mjs"))
+      .filter((f) => /^import[^\n]*["']typebox/m.test(readFileSync(join(docDir, f), "utf8")));
+    deepStrictEqual(offenders, [], `static typebox import(s) in the cold path: ${offenders.join(", ")}`);
   });
 
   it("validates a canonical envelope with TypeBox", async () => {
