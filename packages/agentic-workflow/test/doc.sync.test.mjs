@@ -10,7 +10,7 @@
 
 import { describe, it, before, after } from "node:test";
 import { strictEqual, deepStrictEqual, ok } from "node:assert";
-import { mkdtempSync, rmSync, existsSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -137,3 +137,37 @@ describe("doc sync engine", () => {
 async function openStoreDb() {
   return (await openDatabase(storePath(root))).db;
 }
+
+// ── F18: a configured store.path works end-to-end (store AND manifest sidecar) ──
+
+describe("doc sync — configured store.path", () => {
+  it("syncs, answers status, and keeps the manifest sidecar beside the configured store", async () => {
+    const cfgRoot = mkdtempSync(join(tmpdir(), "doc-storepath-"));
+    try {
+      execFileSync("git", ["init", "-q"], { cwd: cfgRoot });
+      execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: cfgRoot });
+      execFileSync("git", ["config", "user.name", "t"], { cwd: cfgRoot });
+      writeFileSync(join(cfgRoot, "a.md"), "# Alpha\nalpha body\n");
+      mkdirSync(join(cfgRoot, ".agentic-workflow"));
+      writeFileSync(
+        join(cfgRoot, ".agentic-workflow", "index.json"),
+        JSON.stringify({ version: 1, store: { path: "custom/store.db" }, provider: null }),
+      );
+      execFileSync("git", ["add", "-A"], { cwd: cfgRoot });
+      execFileSync("git", ["commit", "-qm", "fixture"], { cwd: cfgRoot });
+
+      const r = await syncIndex(cfgRoot); // red: ENOENT on the hardcoded manifest dir
+      strictEqual(r.filesScanned, 1);
+      ok(existsSync(join(cfgRoot, "custom", "store.db")), "store honours config.store.path");
+      ok(
+        existsSync(join(cfgRoot, "custom", "manifest.json")),
+        "manifest sidecar lives beside the configured store, not the default dir",
+      );
+      strictEqual(storePath(cfgRoot), join(cfgRoot, "custom", "store.db"));
+      const stats = await storeStats(cfgRoot);
+      ok(stats.chunks > 0, "status answers from the configured store");
+    } finally {
+      rmSync(cfgRoot, { recursive: true, force: true });
+    }
+  });
+});

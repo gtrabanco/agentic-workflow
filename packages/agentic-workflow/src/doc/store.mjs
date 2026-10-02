@@ -9,7 +9,7 @@
  */
 
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { openDatabase } from "./sqlite.mjs";
 import { loadConfig } from "./config.mjs";
 
@@ -17,11 +17,6 @@ export const MANIFEST_EXPORT_NAME = "manifest.json";
 
 /** Default store location: `.agentic-workflow/index/index.db`. */
 const DEFAULT_STORE_DIR = join(".agentic-workflow", "index");
-
-/** Resolve the store's parent directory (the gitignored index dir). */
-function storeDir(root) {
-  return join(root, DEFAULT_STORE_DIR);
-}
 
 /**
  * Resolve the store file path. Honours `config.store.path` when present;
@@ -34,11 +29,14 @@ export function storePath(root) {
 }
 
 /**
- * Canonical manifest export: the sidecar `.agentic-workflow/index/manifest.json`
- * in the same gitignored directory as the store (AC12).
+ * Canonical manifest export: the sidecar `manifest.json` beside the resolved
+ * store — the configured `store.path`'s directory when set (F18: the sidecar
+ * must travel with the store, or a custom store path ENOENTs on sync), else
+ * the default gitignored index dir. AC12's byte-for-byte assertion runs over
+ * that export, never over SQLite page bytes.
  */
 export function manifestExportPath(root) {
-  return join(storeDir(root), MANIFEST_EXPORT_NAME);
+  return join(dirname(storePath(root)), MANIFEST_EXPORT_NAME);
 }
 
 export function storePresent(root) {
