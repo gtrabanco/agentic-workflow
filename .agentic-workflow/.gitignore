@@ -1,0 +1,7 @@
+# Store/cache: ignore everything except the committed config (F28).
+# Whitelist index.json (the committed config file), ignore all else.
+# The `/*` pattern covers both files and directories recursively under .agentic-workflow/;
+# since init-workspace installs store files directly under .agentic-workflow/
+# (not nested), this covers all store paths.
+index.json
+/*

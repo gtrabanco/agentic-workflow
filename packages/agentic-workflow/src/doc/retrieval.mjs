@@ -33,13 +33,26 @@ export async function runDocOp(grammar, ctx = {}) {
     // same pass; otherwise the store answers keyword-only (AC17's root).
     const cfg = resolveEmbedConfig({ config: loadConfig(root), env: process.env });
     let embedded = null;
+    let degradations = [];
     if (cfg.configured) {
-      embedded = await embedPendingChunks(root, makeOpenAIProvider(cfg));
+      try {
+        embedded = await embedPendingChunks(root, makeOpenAIProvider(cfg));
+        if (embedded.skipped === true) {
+          // Model mismatch: keep the frozen key and declare the cause.
+          // (AC18: embeddings-model-mismatch; D3 frozen key set.)
+          degradations = [embedded.reason || "embeddings-model-mismatch"];
+          embedded = { embedded: 0 };
+        }
+      } catch (e) {
+        // AC17: provider-down ⇒ declared cause, ok:true, keyword results survive.
+        degradations = ["unavailable-embeddings-provider-down"];
+        embedded = { embedded: 0 };
+      }
     }
     return buildEnvelope({
       command: "sync",
       results: [],
-      degradations: [],
+      degradations,
       store: {
         path: storePath(root),
         present: true,

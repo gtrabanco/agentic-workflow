@@ -1,7 +1,1 @@
-{
-  "version": 1,
-  "store": {
-    "path": ".agentic-workflow/index/index.db"
-  },
-  "provider": null
-}
+{"version":1,"store":{"path":".agentic-workflow/custom/custom.db"},"provider":null}
