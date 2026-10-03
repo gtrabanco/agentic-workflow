@@ -262,10 +262,10 @@ describe("doc CLI", () => {
 // ── AC27 — runtime dual: identical envelope under bun and node ───────────
 
 describe("doc CLI — runtime dual (AC27)", () => {
-  it("produces the byte-identical envelope under bun and under node", () => {
+  it("produces the byte-identical envelope under bun and under node", (t) => {
     const bunVer = spawnSync("bun", ["--version"], { encoding: "utf8" });
     if (bunVer.error || bunVer.status !== 0) {
-      return; // node-only environment: the node-compat CI half still ran
+      return t.skip("bun unavailable — the node-compat CI half still ran");
     }
     const proj = mkdtempSync(join(tmpdir(), "agentic-workflow-dual-"));
     try {
