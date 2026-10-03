@@ -9,7 +9,7 @@
  * an unknown version fails closed — the reader never guesses.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 
 export const CONFIG_VERSION = 1;
@@ -51,10 +51,21 @@ export function loadConfig(root) {
   // escape). An absolute path that is outside the root, or a relative path that
   // resolves outside (contains `..`), is rejected — the `rmSync` in --rebuild
   // targets this path, so a misconfigured store path is a destructive-write
-  // footgun.
+  // footgun. Uses realpath to reject in-repo symlinks that escape the root.
   if (parsed.store?.path) {
     const candidate = parsed.store.path;
-    if (!resolve(root, candidate).startsWith(resolve(root) + sep)) {
+    const joinedPath = resolve(root, candidate);
+    // realpathSync requires the path to exist; if it doesn't, fall back to a
+    // simple lex-check. A real realpath call is done later at the store/manifest
+    // write site (rebuild/ensureFresh) so symlinks are always caught.
+    let resolvedCandidate;
+    try {
+      resolvedCandidate = realpathSync(joinedPath);
+    } catch {
+      resolvedCandidate = joinedPath; // path doesn't exist yet — lex check below
+    }
+    const resolvedRoot = realpathSync(root);
+    if (!resolvedCandidate.startsWith(resolvedRoot + sep)) {
       throw new Error(
         `index.json store.path "${candidate}" escapes the repository root (${root})`,
       );

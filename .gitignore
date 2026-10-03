@@ -29,5 +29,10 @@ tmp/
 .rlm/
 
 # Derived retrieval index (unit 65): disposable cache over git, never committed.
+# Default: .agentic-workflow/index/ (AC7). F28: extend to any store path under
+# .agentic-workflow/ — a nested .gitignore inside .agentic-workflow/ ignores
+# all files except the committed index.json config so git status stays clean
+# regardless of the configured store.path.
 .agentic-workflow/index/
 **/.agentic-workflow/index/
+.agentic-workflow/.gitignore
