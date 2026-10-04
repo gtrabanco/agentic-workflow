@@ -153,11 +153,34 @@ export async function queryIndex(root, term, filters = {}, opts = {}) {
         store,
       });
     }
+    // F39: the store-wide pin is not enough — a row embedded under a foreign
+    // model (or left unmodelled by an older schema) must fail closed too.
+    const foreignRows = db
+      .prepare(
+        "select count(*) as n from chunks where embedding is not null and (emb_model is null or emb_model is not ?)",
+      )
+      .get(provider.model).n;
+    if (foreignRows > 0) {
+      db.close();
+      return buildEnvelope({
+        command: "query",
+        results: toResults(keywordRows, hasLogFilters, filters),
+        degradations: ["embeddings-model-mismatch"],
+        store,
+      });
+    }
     try {
       const [queryVector] = await provider.embed([term]);
       const vectorRows = vectorTopK(db, queryVector, MATCH_POOL);
-      db.close();
       const fused = fuseRrf(keywordRows, vectorRows);
+      // F46: chunk bodies are huge (≈9 MB across this repo's corpus) and are
+      // needed only for log-entry rows (the AC14 metadata). Fetch them for the
+      // fused candidates that can reach a result row — never for the whole scan.
+      for (const r of fused) {
+        if (r.path === LOGS_PATH && r.body === undefined) {
+          r.body = db.prepare("select body from chunks where chunk_id = ?").get(r.chunk_id)?.body ?? "";
+        }
+      }
       const results = toResults(
         fused.map((r) => ({ ...r, rank: -r.fusedScore })),
         hasLogFilters,
@@ -165,7 +188,16 @@ export async function queryIndex(root, term, filters = {}, opts = {}) {
       );
       return buildEnvelope({ command: "query", results, degradations: [], store });
     } catch (e) {
-      db.close();
+      // F40: a stored vector whose dimensionality differs from the query
+      // vector is corrupt or foreign-shaped — degrade, never truncate-and-rank.
+      if (e instanceof VectorShapeMismatch) {
+        return buildEnvelope({
+          command: "query",
+          results: toResults(keywordRows, hasLogFilters, filters),
+          degradations: ["embeddings-model-mismatch"],
+          store,
+        });
+      }
       // AC17: provider down ⇒ declared cause, keyword results survive.
       return buildEnvelope({
         command: "query",
@@ -173,6 +205,8 @@ export async function queryIndex(root, term, filters = {}, opts = {}) {
         degradations: ["unavailable-embeddings-provider-down"],
         store,
       });
+    } finally {
+      db.close();
     }
   }
 
@@ -191,11 +225,14 @@ function toResults(rows, hasLogFilters, filters) {
       meta = {};
     }
     const isLog = r.path === LOGS_PATH;
-    if (isLog && (hasLogFilters || parseLogEntry(r.body) !== null)) {
-      const entry = parseLogEntry(r.body);
-      if (entry === null) continue;
-      if (hasLogFilters && !logEntryMatches(entry, filters)) continue;
-      meta = entry;
+    if (isLog) {
+      const entry = r.body === undefined ? null : parseLogEntry(r.body); // F46: parsed once per row
+      if (hasLogFilters) {
+        if (entry === null || !logEntryMatches(entry, filters)) continue;
+        meta = entry;
+      } else if (entry !== null) {
+        meta = entry;
+      }
     } else if (hasLogFilters) {
       continue; // structured filters narrow to log entries by definition
     }
@@ -224,11 +261,19 @@ export async function statusIndex(root) {
 
 const RRF_K = 60;
 
+/** A stored vector's dimensionality differs from the query vector (F40). */
+class VectorShapeMismatch extends Error {}
+
 function cosine(a, b) {
+  if (a.length !== b.length) {
+    // F40: truncating to the shorter vector ranked confidently on garbage;
+    // a shape mismatch is a corrupt or foreign-model vector — fail closed.
+    throw new VectorShapeMismatch(`vector dimension mismatch: ${a.length} vs ${b.length}`);
+  }
   let dot = 0;
   let na = 0;
   let nb = 0;
-  const n = Math.min(a.length, b.length);
+  const n = a.length;
   for (let i = 0; i < n; i++) {
     dot += a[i] * b[i];
     na += a[i] * a[i];
@@ -240,9 +285,12 @@ function cosine(a, b) {
 
 /** JS-cosine kNN over D4's float32-LE BLOBs (decision D11 — no second vec0 store). */
 function vectorTopK(db, queryVector, pool) {
+  // F46: the scan scores vectors — it must NOT drag every chunk's body
+  // (megabytes) out of SQLite per query; bodies are fetched lazily for the
+  // few fused candidates that need them.
   const rows = db
     .prepare(
-      "select chunk_id, path, section, line_start, line_end, meta, body, embedding from chunks where embedding is not null",
+      "select chunk_id, path, section, line_start, line_end, meta, embedding from chunks where embedding is not null",
     )
     .all();
   const scored = rows.map((r) => ({ ...r, sim: cosine(decodeVector(r.embedding), queryVector) }));

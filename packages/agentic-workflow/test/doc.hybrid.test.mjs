@@ -21,7 +21,9 @@ import { execFileSync } from "node:child_process";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { queryIndex } from "../src/doc/query.mjs";
 import { syncIndex } from "../src/doc/sync.mjs";
-import { embedPendingChunks } from "../src/doc/embeddings.mjs";
+import { embedPendingChunks, encodeVector } from "../src/doc/embeddings.mjs";
+import { openDatabase } from "../src/doc/sqlite.mjs";
+import { storePath } from "../src/doc/store.mjs";
 
 let root;
 
@@ -181,5 +183,48 @@ describe("hybrid cost", () => {
     const e = semanticEmbedder();
     await queryIndex(root, "transient failure handling", {}, { mode: "hybrid", embedder: e });
     strictEqual(e.state.calls, 1);
+  });
+});
+
+// ── Vector integrity fails closed (F39/F40) ─────────────────────────────
+
+describe("vector integrity fail-closed (F39/F40)", () => {
+  it("a mixed-model store degrades instead of ranking across models (F39)", async () => {
+    // corrupt ONE row's model pin under the fixture provider's own model
+    const { db } = await openDatabase(storePath(root));
+    const row = db.prepare("select chunk_id from chunks where embedding is not null order by chunk_id limit 1").get();
+    db.prepare("update chunks set emb_model = 'judge-OLD' where chunk_id = ?").run(row.chunk_id);
+    try {
+      const env = await queryIndex(root, "backoff", {}, {
+        mode: "hybrid",
+        embedder: semanticEmbedder(),
+      });
+      strictEqual(env.ok, true);
+      deepStrictEqual(env.degradations, ["embeddings-model-mismatch"]);
+      ok(env.results.some((r) => r.path === "retry.md")); // keyword path intact
+    } finally {
+      db.prepare("update chunks set emb_model = 'judge-1' where chunk_id = ?").run(row.chunk_id);
+      db.close();
+    }
+  });
+
+  it("a dimension-mismatched stored vector degrades instead of silently truncating (F40)", async () => {
+    const { db } = await openDatabase(storePath(root));
+    const row = db.prepare("select chunk_id from chunks where embedding is not null order by chunk_id limit 1").get();
+    const good = db.prepare("select embedding from chunks where chunk_id = ?").get(row.chunk_id).embedding;
+    // 5-float vector under the SAME model pin — a corrupt/foreign-shape vector
+    db.prepare("update chunks set embedding = ? where chunk_id = ?").run(encodeVector([1, 2, 3, 4, 5]), row.chunk_id);
+    try {
+      const env = await queryIndex(root, "backoff", {}, {
+        mode: "hybrid",
+        embedder: semanticEmbedder(), // 3-dim query vector
+      });
+      strictEqual(env.ok, true);
+      deepStrictEqual(env.degradations, ["embeddings-model-mismatch"]);
+      ok(env.results.some((r) => r.path === "retry.md")); // keyword path intact
+    } finally {
+      db.prepare("update chunks set embedding = ? where chunk_id = ?").run(good, row.chunk_id);
+      db.close();
+    }
   });
 });
