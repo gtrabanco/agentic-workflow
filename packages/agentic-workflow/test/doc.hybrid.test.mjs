@@ -13,7 +13,7 @@
 
 import { describe, it, before, after } from "node:test";
 import { strictEqual, deepStrictEqual, ok, throws } from "node:assert";
-import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -24,6 +24,7 @@ import { syncIndex } from "../src/doc/sync.mjs";
 import { embedPendingChunks, encodeVector } from "../src/doc/embeddings.mjs";
 import { openDatabase } from "../src/doc/sqlite.mjs";
 import { storePath } from "../src/doc/store.mjs";
+import { runDocOp } from "../src/doc/retrieval.mjs";
 
 let root;
 
@@ -187,6 +188,74 @@ describe("hybrid cost", () => {
 });
 
 // ── Vector integrity fails closed (F39/F40) ─────────────────────────────
+
+// ── Sync-side degradation regressions (F45: F26/F27 folded without tests) ──
+
+describe("sync-side degradations (F45 — the AC17/AC18 sync half)", () => {
+  const ENV_KEY = "DOC65_FOLD_TEST_KEY";
+  function syncFixture() {
+    const cfgRoot = mkdtempSync(join(tmpdir(), "doc-syncdegr-"));
+    execFileSync("git", ["init", "-q"], { cwd: cfgRoot });
+    execFileSync("git", ["config", "user.email", "t@example.test"], { cwd: cfgRoot });
+    execFileSync("git", ["config", "user.name", "t"], { cwd: cfgRoot });
+    writeFileSync(join(cfgRoot, "a.md"), "# Alpha\nalpha body\n");
+    mkdirSync(join(cfgRoot, ".agentic-workflow"), { recursive: true });
+    writeFileSync(
+      join(cfgRoot, ".agentic-workflow", "index.json"),
+      JSON.stringify({
+        version: 1,
+        store: { path: ".agentic-workflow/index/index.db" },
+        provider: { baseUrl: "http://127.0.0.1:1", model: "m1", envVar: ENV_KEY },
+      }),
+    );
+    execFileSync("git", ["add", "-A"], { cwd: cfgRoot });
+    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: cfgRoot });
+    return cfgRoot;
+  }
+
+  it("provider down during --sync ⇒ ok:true, declared cause, embedded: 0 (AC17 sync half)", async () => {
+    const cfgRoot = syncFixture();
+    const prev = process.env[ENV_KEY];
+    process.env[ENV_KEY] = "k";
+    try {
+      const env = await runDocOp({ op: "sync" }, { rootDir: cfgRoot });
+      strictEqual(env.ok, true);
+      deepStrictEqual(env.degradations, ["unavailable-embeddings-provider-down"]);
+      deepStrictEqual(env.store.lastSync, {
+        files_scanned: 1,
+        files_changed: 1,
+        files_deleted: 0,
+        embedded: 0,
+      });
+    } finally {
+      if (prev === undefined) delete process.env[ENV_KEY];
+      else process.env[ENV_KEY] = prev;
+      rmSync(cfgRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("model mismatch during --sync keeps the frozen lastSync key set and declares the cause (AC18 sync half)", async () => {
+    const cfgRoot = syncFixture();
+    const prev = process.env[ENV_KEY];
+    process.env[ENV_KEY] = "k";
+    try {
+      // seed a store pinned to a foreign model, then sync under provider m1
+      const { db } = await openDatabase(join(cfgRoot, ".agentic-workflow", "index", "index.db"));
+      db.exec("create table if not exists meta (key text primary key, value text)");
+      db.prepare("insert or replace into meta (key, value) values ('emb_model', 'other')").run();
+      db.close();
+      const env = await runDocOp({ op: "sync" }, { rootDir: cfgRoot });
+      strictEqual(env.ok, true);
+      deepStrictEqual(env.degradations, ["embeddings-model-mismatch"]);
+      deepStrictEqual(Object.keys(env.store.lastSync), ["files_scanned", "files_changed", "files_deleted", "embedded"]);
+      strictEqual(env.store.lastSync.embedded, 0);
+    } finally {
+      if (prev === undefined) delete process.env[ENV_KEY];
+      else process.env[ENV_KEY] = prev;
+      rmSync(cfgRoot, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("vector integrity fail-closed (F39/F40)", () => {
   it("a mixed-model store degrades instead of ranking across models (F39)", async () => {
