@@ -58,7 +58,11 @@ function parseFrontmatter(lines) {
  * document order. Deterministic: identical input ⇒ identical output.
  */
 export function scanChunks(markdown, relativePath) {
-  const lines = String(markdown).split(/\r?\n/);
+  const content = String(markdown);
+  const lines = content.split(/\r?\n/);
+  // A file ending in a newline splits into one phantom trailing element; it is
+  // not a line, and counting it overshoots every last chunk's line_end (F47).
+  if (lines.length > 1 && lines[lines.length - 1] === "" && /\r?\n$/.test(content)) lines.pop();
 
   // Frontmatter block, only when it opens the file.
   let contentStart = 0;

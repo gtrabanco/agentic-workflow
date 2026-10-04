@@ -25,7 +25,7 @@ describe("doc chunker (D5)", () => {
     strictEqual(chunks[1].section, "One");
     deepStrictEqual(chunks[1].lines, [3, 5]);
     strictEqual(chunks[2].section, "One > Two"); // section carries the heading path (matches the id slug, disambiguates duplicate titles)
-    deepStrictEqual(chunks[2].lines, [6, 8]);
+    deepStrictEqual(chunks[2].lines, [6, 7]); // the trailing \n ends line 7 — the phantom 8th line was F47's overshoot
     ok(chunks[1].body.includes("body one"));
     ok(!chunks[1].body.includes("intro line"));
   });
@@ -79,6 +79,18 @@ describe("doc chunker (D5)", () => {
     deepStrictEqual(preamble.lines, [4, 5]);
     ok(preamble.body.startsWith("intro line"));
     ok(!preamble.body.includes("---"));
+  });
+
+  it("a trailing newline is one phantom split element, never a line (F47)", () => {
+    // '# A', '', 'text line' are the file's 3 real lines; the final \n ends
+    // line 3 and must not become a 4th line (VF-46: lines [1,4] for a 3-line file).
+    const chunks = scanChunks("# A\n\ntext line\n", "x.md");
+    strictEqual(chunks.length, 1);
+    deepStrictEqual(chunks[0].lines, [1, 3]);
+    ok(chunks[0].body.includes("text line"));
+    // a genuinely blank final line still counts as a line
+    const blank = scanChunks("# A\n\ntext line\n\n", "y.md");
+    deepStrictEqual(blank[0].lines, [1, 4]);
   });
 
   it("is deterministic: same input yields byte-identical ids and lines", () => {
