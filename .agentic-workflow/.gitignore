@@ -1,7 +1,8 @@
-# Store/cache: ignore everything except the committed config (F28).
-# Whitelist index.json (the committed config file), ignore all else.
-# The `/*` pattern covers both files and directories recursively under .agentic-workflow/;
-# since init-workspace installs store files directly under .agentic-workflow/
-# (not nested), this covers all store paths.
-index.json
+# Store/cache: ignore everything except the committed config (F28, negation fixed by F38).
+# Last matching pattern wins: `/*` ignores all entries, then `!index.json`
+# re-includes the committed config and `!.gitignore` re-includes this rule
+# file itself. Subdirectories (index/, custom/) and the store files inside
+# them stay ignored — D12 constrains store.path to this dir.
 /*
+!index.json
+!.gitignore

@@ -105,9 +105,24 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
   it("no tracked file matches the store/manifest path pattern (F4 fold — never committed)", () => {
     const tracked = repoFiles();
     const offenders = tracked.filter((rel) =>
-      /\.agentic-workflow\/index\/(index\.db|manifest\.json)$/.test(rel),
+      /\.agentic-workflow\/(index\/(index\.db|manifest\.json)|custom\/[^/]+\.db)$/.test(rel),
     );
     strictEqual(offenders.length, 0, `tracked store/manifest paths: ${offenders.join(", ")}`);
+  });
+
+  it("the nested ignore rules whitelist the committed config and ignore every store path (F38)", () => {
+    // Plain form (no -v): exit 0 = ignored, 1 = not ignored. The -v form exits 0
+    // even when the last matching pattern is a negation, so it cannot answer.
+    const probe = (path) =>
+      spawnSync("git", ["check-ignore", "--no-index", path], { cwd: REPO_ROOT, encoding: "utf8" }).status;
+    // The committed config is public by design (D4): never gitignored.
+    strictEqual(probe(".agentic-workflow/index.json"), 1, "index.json is gitignored — the whitelist is broken");
+    // The tracked rule file itself: never gitignored either.
+    strictEqual(probe(".agentic-workflow/.gitignore"), 1, ".agentic-workflow/.gitignore is gitignored by the root rules");
+    // Store + manifest paths under the ignored dir: always ignored (D12's constraint).
+    for (const p of [".agentic-workflow/index/index.db", ".agentic-workflow/custom/custom.db", ".agentic-workflow/index/manifest.json"]) {
+      strictEqual(probe(p), 0, `${p} is not gitignored`);
+    }
   });
 });
 
@@ -239,5 +254,37 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
     strictEqual(r.status, 0, `stderr: ${r.stderr}`);
     const env = JSON.parse(r.stdout);
     ok(env.results.some((row) => row.path === "guide.md"), JSON.stringify(env.results));
+  });
+
+  it("a configured nested store.path syncs and keeps git status clean (F37 — AC7's configured form)", async () => {
+    // D12: a configured store.path is constrained to .agentic-workflow/; this
+    // target-project-shaped run proves the AC7 porcelain half — a configured
+    // nested store syncs and dirties nothing.
+    const cfgDir = mkdtempSync(join(tmpdir(), "doc-target-cfg-"));
+    const git = (args) => execFileSync("git", args, { cwd: cfgDir, encoding: "utf8" });
+    try {
+      git(["init", "-q"]);
+      git(["config", "user.email", "t@example.test"]);
+      git(["config", "user.name", "t"]);
+      writeFileSync(join(cfgDir, "note.md"), "# Note\n\nconfigured store path content wombatcfg\n");
+      mkdirSync(join(cfgDir, ".agentic-workflow"), { recursive: true });
+      writeFileSync(
+        join(cfgDir, ".agentic-workflow", "index.json"),
+        JSON.stringify({ version: 1, store: { path: ".agentic-workflow/custom/custom.db" }, provider: null }) + "\n",
+      );
+      writeFileSync(join(cfgDir, ".gitignore"), ".agentic-workflow/\n");
+      git(["add", "-A"]);
+      git(["commit", "-qm", "fixture"]);
+      const r = spawnSync(process.execPath, [BIN, "doc", "--sync", "--json-only"], {
+        cwd: cfgDir,
+        encoding: "utf8",
+      });
+      strictEqual(r.status, 0, `stderr: ${r.stderr}`);
+      ok(existsSync(join(cfgDir, ".agentic-workflow", "custom", "custom.db")), "configured store created");
+      const status = execFileSync("git", ["status", "--porcelain"], { cwd: cfgDir, encoding: "utf8" });
+      strictEqual(status.trim(), "", "a configured store dirtied the working tree");
+    } finally {
+      rmSync(cfgDir, { recursive: true, force: true });
+    }
   });
 });

@@ -11,7 +11,7 @@
 
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok, throws } from "node:assert";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -191,5 +191,87 @@ describe("doc manifest", () => {
     const digest = createHash("sha256").update(readFileSync(join(REPO_ROOT, probe))).digest("hex");
     strictEqual(m1.files[probe].sha256, digest);
     ok(Object.keys(m1.files[probe]).length === 2); // sha256 + bytes only
+  });
+});
+
+// ── store.path containment (F36/F37) ────────────────────────────────────
+
+// F37: a configured store.path outside `.agentic-workflow/` is accepted and
+// leaves `git status --porcelain` dirty after --sync (AC7 broken) — the
+// configured store must stay inside the ignored directory. F36: when the
+// configured leaf does not exist yet, the old lexical fallback let a
+// symlinked INTERMEDIATE directory pass containment, so --rebuild's rmSync
+// could replace a pre-existing file outside the repository.
+describe("doc config — store.path containment (F36/F37)", () => {
+  function configWith(storePath) {
+    const tmp = mkdtempSync(join(tmpdir(), "doc-contain-"));
+    mkdirSync(join(tmp, ".agentic-workflow"));
+    writeFileSync(
+      join(tmp, ".agentic-workflow", "index.json"),
+      JSON.stringify({ version: 1, store: { path: storePath }, provider: null }),
+    );
+    return tmp;
+  }
+
+  it("rejects an in-repo store.path outside .agentic-workflow/ (F37)", () => {
+    const tmp = configWith("custom/store.db");
+    try {
+      throws(() => loadConfig(tmp), /\.agentic-workflow\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects .. traversal and absolute paths outside the root", () => {
+    for (const p of ["../outside.db", "/etc/index.db"]) {
+      const tmp = configWith(p);
+      try {
+        throws(() => loadConfig(tmp), /\.agentic-workflow\//);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("accepts a store.path inside .agentic-workflow/, nested or not", () => {
+    for (const p of [".agentic-workflow/index/index.db", ".agentic-workflow/custom/store.db"]) {
+      const tmp = configWith(p);
+      try {
+        strictEqual(loadConfig(tmp).store.path, p);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it("rejects a symlinked intermediate directory when the leaf does not exist (F36)", () => {
+    const tmp = configWith(".agentic-workflow/esc/victim.db");
+    const outside = mkdtempSync(join(tmpdir(), "doc-esc-"));
+    try {
+      // the leaf (.agentic-workflow/esc/victim.db) does NOT exist; its
+      // intermediate dir is a symlink escaping the repository root
+      symlinkSync(outside, join(tmp, ".agentic-workflow", "esc"), "dir");
+      throws(() => loadConfig(tmp), /\.agentic-workflow\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a symlinked .agentic-workflow directory itself (fail closed)", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "doc-contain-"));
+    const outside = mkdtempSync(join(tmpdir(), "doc-esc-"));
+    try {
+      rmSync(join(tmp, ".agentic-workflow"), { force: true });
+      symlinkSync(outside, join(tmp, ".agentic-workflow"), "dir");
+      writeFileSync(
+        join(outside, "index.json"),
+        JSON.stringify({ version: 1, store: { path: ".agentic-workflow/index/index.db" }, provider: null }),
+      );
+      throws(() => loadConfig(tmp), /\.agentic-workflow\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 });
