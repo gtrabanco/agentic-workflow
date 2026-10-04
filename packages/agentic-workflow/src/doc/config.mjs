@@ -10,7 +10,7 @@
  */
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 
 export const CONFIG_VERSION = 1;
 
@@ -28,9 +28,51 @@ export function configPath(root) {
 }
 
 /**
+ * Realpath of the deepest EXISTING ancestor of `p`, with the not-yet-existing
+ * tail re-joined lexically (F36): the configured store leaf usually does not
+ * exist yet, but its intermediate directories do — and an intermediate
+ * symlink escaping the repository must be caught before any write.
+ */
+function realpathDeepest(p) {
+  const tail = [];
+  let cur = p;
+  while (!existsSync(cur)) {
+    const parent = dirname(cur);
+    if (parent === cur) return cur; // filesystem root — nothing to resolve
+    tail.unshift(cur.slice(parent.length + 1));
+    cur = parent;
+  }
+  return join(realpathSync(cur), ...tail);
+}
+
+/**
+ * Contain a configured `store.path` inside the repository's gitignored
+ * `.agentic-workflow/` directory (F36/F37, decision D12):
+ *   - F37: a store outside `.agentic-workflow/` leaves `git status` dirty
+ *     after `--sync` (AC7) — the configured store must stay inside the only
+ *     directory the committed ignore rules cover;
+ *   - F36: containment is anchored at `realpath(root)` and the candidate is
+ *     resolved through the realpath of its deepest existing ancestor, so a
+ *     symlinked intermediate directory (or a symlinked `.agentic-workflow`
+ *     itself) fails closed — `--rebuild`'s `rmSync` targets this path, so a
+ *     misconfigured store path is a destructive-write footgun.
+ */
+function containStorePath(root, candidate) {
+  const anchoredRoot = realpathDeepest(resolve(root));
+  const workflowRoot = join(anchoredRoot, ".agentic-workflow");
+  const resolvedCandidate = realpathDeepest(resolve(root, candidate));
+  if (!resolvedCandidate.startsWith(workflowRoot + sep)) {
+    throw new Error(
+      `index.json store.path "${candidate}" must stay inside .agentic-workflow/ (got "${resolvedCandidate}")`,
+    );
+  }
+}
+
+/**
  * Load the config for the project at `root`: defaults merged under the
- * file's overrides. Throws on unparseable JSON (message names the file) and
- * on an unknown `version` (fail closed).
+ * file's overrides. Throws on unparseable JSON (message names the file),
+ * on an unknown `version` (fail closed), and on a `store.path` outside the
+ * gitignored `.agentic-workflow/` directory (F36/F37 containment).
  */
 export function loadConfig(root) {
   const path = configPath(root);
@@ -47,29 +89,10 @@ export function loadConfig(root) {
   if (parsed.version !== undefined && parsed.version !== CONFIG_VERSION) {
     throw new Error(`index.json version ${parsed.version} is not supported (expected ${CONFIG_VERSION})`);
   }
-  // Contain store.path inside the repository root (AC7: gitignored cache must not
-  // escape). An absolute path that is outside the root, or a relative path that
-  // resolves outside (contains `..`), is rejected — the `rmSync` in --rebuild
-  // targets this path, so a misconfigured store path is a destructive-write
-  // footgun. Uses realpath to reject in-repo symlinks that escape the root.
-  if (parsed.store?.path) {
-    const candidate = parsed.store.path;
-    const joinedPath = resolve(root, candidate);
-    // realpathSync requires the path to exist; if it doesn't, fall back to a
-    // simple lex-check. A real realpath call is done later at the store/manifest
-    // write site (rebuild/ensureFresh) so symlinks are always caught.
-    let resolvedCandidate;
-    try {
-      resolvedCandidate = realpathSync(joinedPath);
-    } catch {
-      resolvedCandidate = joinedPath; // path doesn't exist yet — lex check below
-    }
-    const resolvedRoot = realpathSync(root);
-    if (!resolvedCandidate.startsWith(resolvedRoot + sep)) {
-      throw new Error(
-        `index.json store.path "${candidate}" escapes the repository root (${root})`,
-      );
-    }
+  // Contain store.path inside the repository's gitignored `.agentic-workflow/`
+  // directory (F36/F37, decision D12) — see containStorePath.
+  if (parsed.store?.path !== undefined && parsed.store?.path !== null) {
+    containStorePath(root, parsed.store.path);
   }
   return { ...structuredClone(DEFAULT_CONFIG), ...parsed };
 }
