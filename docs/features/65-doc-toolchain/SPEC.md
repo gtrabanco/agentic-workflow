@@ -410,7 +410,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC26 | `scripts/doc-discipline.test.mjs` AC26 block | 0 · 0 · 0 | entry point only in allowlisted discovery steps; zero matches in gate/receipt producers; no decision vocabulary in src/doc | main agent |
 | AC27 | `test/doc.envelope.test.mjs` runtime-dual block | 0 · 0 | identical envelope under bun and node (results/degradations/command/key order) | main agent |
 | T1 | Full applicable-test surface per the Applicable tests section: `node --test scripts/*.test.mjs` · crate `bun run test` · crate `test:node` · `bun scripts/check-skill-context.mjs` · hook tests · discipline suite | 0 · 0 · 0 · 0 · 0 | root 611/0; crate 205/0 + 206/0; budgets PASS 28 skills; no test weakened — every suite was authored red-first per phase and only corrected via recorded justification rows | main agent |
-| R | Review step (see `## Review verdict`) | PASS | 0 material, 4 report-notes; evidence reproduced (full gate re-run at head); AC integrity unchanged from triage | main agent |
+| R | Review step — re-cut by the F43 plan step (see `## Review verdict`) | FAIL (cycles 1–5) → folds folded, re-review pending | cycle 1: 0 material / 4 report-notes; cycles 2–5 REVIEW-FAIL surfaced 14 fix-now rows (F13–F48 lineage), all folded — 46 ledger rows proven-cited, 1 open (F43, this re-cut) | main agent |
 
 **D9 probe (G1)** — one re-runnable line, the plan-time gate D9 prescribes:
 
@@ -547,21 +547,30 @@ One entry per step taken. Format exactly:
 
 2026-10-01 — docs + release steps: crate README dependency claim rewritten from the manifest (D8: one pinned pure-JS dep; the U6 producers-drift left to audit-docs as recorded); crate bumped 0.1.1 → 0.2.0 with its CHANGELOG companion row; bump-skill minors with rows — `triage-issue` 3.0.0, `review-change` 3.10.0, `init-workspace` 3.3.0; branch pushed, PR #282 opened against `main` (body carries the verification record; does not close #192 per D6), roadmap row 65 flipped `planned → done · [#282]`; `git status --porcelain` empty at close → a645cb69 + d7799f69 + 6fe1a274 — next: review/merge the PR, then `/unit-lane 71-doc-cli`
 
+2026-10-02 — review-fold cycle (cycles 2–5 REVIEW-FAIL → fold): all 21 fix-now rows folded in six atomic batches — F36+F37+F38 (store.path containment + ignore whitelist, 7d24e5cb), F39+F40+F46 (vector scoring fails closed + scan cost 118→36 ms, 6f424bd7), F47 (trailing-newline line_end, 7f8e1082), F44+F45 (judge-fixture vectors static + sync-side regression pins, 0e2d6e5d), F41+F42+F48 (consent gate pinned + discipline allowlist/guard tightened, 186e2941), F34 (default config restored, e24084c4); ledger schema restored and every folded row ticked with provenance (F35+F32, 5ef88c86; annotate pass, dc3af67b); gates at the fold head: root 615/0 · crate 215/0 bun + 216/0 node · budgets PASS · ledger --check exit 0; F43's plan re-cut applied to Evidence row R, `## Review verdict`, `## Next` (roadmap row keeps `done · [#282]` with the review state living here) → this commit — next: `/review-change` delta re-review, then `/audit-pr`
+
 ## Review verdict
 
-Run at the review step over the accumulated diff (87b7f34b..ac2d660c, 36 files).
-Axes: review-code, review-security, review-perf, review-verify (gates re-run),
-review-brand (docs copy), review-debt; review-a11y / review-seo / review-design
-are n/a (no UI, no public web surface).
+The first pass (87b7f34b..ac2d660c, 36 files) returned PASS with 4
+report-notes; the subsequent review-change cycles returned **REVIEW-FAIL**
+(cycle 2: F13–F14; cycle 3: F15–F22; cycle 4: F23–F25; cycle 5: F26–F48),
+surfacing 14 fix-now rows in their folds' wake. **Every finding is now
+folded** — the ledger's provenance recount exits 0 (46 folded rows
+proven-cited; the one open row is F43, whose route is this re-cut). Axes:
+review-code, review-security, review-perf, review-verify (gates re-run),
+review-brand (docs copy), review-debt; review-a11y / review-seo /
+review-design are n/a (no UI, no public web surface).
 
 ```text
-REVIEW-VERDICT: PASS
-- Findings: 0 material, 4 report-notes
-- Evidence reproduced: yes (full gate re-run at head — root 611/0, crate 205/0 + 206/0)
-- AC integrity: unchanged from triage (AC section byte-identical to the plan commit)
+REVIEW-VERDICT (real, after the fold cycle): folds complete — RE-REVIEW REQUIRED
+- Findings: 0 open fix-now rows beyond F43 (this re-cut); 46 ledger rows proven-cited
+- Gates at the fold head: root 615/0 · crate 215/0 (bun) + 216/0 (node) · budgets PASS · ledger --check exit 0
+- AC integrity: AC text unchanged; stale PASS claims above re-cut by this step (F43's route)
 ```
 
-Report-notes (informational, never a cycle restart):
+The first pass's report-notes (informational, never a cycle restart) — note 4
+was superseded by F10's fold (empty-body preamble chunks are no longer
+emitted); notes 1–3 stand:
 
 1. **Partial embedding batches persist on provider failure** — `embedPendingChunks`
    writes per batch without a transaction; a mid-sync provider failure leaves
@@ -578,14 +587,18 @@ Report-notes (informational, never a cycle restart):
    D11's own: a corpus that outgrows the scan.
 4. **Blank preamble chunks enter the index** — a file whose preamble range is
    only whitespace yields a chunk with an empty body; harmless FTS noise, no
-   AC touched.
+   AC touched. *(Superseded: F10's fold emits the preamble chunk only when its
+   body is non-blank.)*
 
 ## Next
 
-Unit complete — all triaged steps ran (implement P1–P10, tests, evidence,
-review `PASS`, docs, release). Roadmap row 65 is `done · [#282]`; the PR is
-open against `main` awaiting review/merge. Half A continues in `71-doc-cli`
-(`defined`, `Depends on: 65`) — that merge closes #192, never this one.
+All fix-now findings (F13–F48 lineage) are folded and provenance-checked;
+the unit awaits its **re-review** — `/review-change` in delta mode over the
+fold commits (7d24e5cb..dc3af67b). After a PASS verdict, PR #282 proceeds to
+`/audit-pr` and merge. Half A continues in `71-doc-cli` (`defined`,
+`Depends on: 65`) — that merge closes #192, never this one. Roadmap row 65
+keeps `done · [#282]` (the deliverable is implemented and the PR open); the
+review-cycle state lives in this document and its ledger.
 
 ## Path protection (plan declaration)
 
