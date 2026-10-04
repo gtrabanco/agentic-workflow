@@ -19,7 +19,7 @@
 import { describe, it, before, after } from "node:test";
 import { strictEqual, ok } from "node:assert";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, cpSync, chmodSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, cpSync, chmodSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -110,6 +110,19 @@ describe("AC25: store paths are referenced only from the entry point's surfaces"
     strictEqual(offenders.length, 0, `tracked store/manifest paths: ${offenders.join(", ")}`);
   });
 
+  it("no tracked file matches the CONFIGURED store path either (F48 — the guard follows config, not the literal default)", () => {
+    let storePath = ".agentic-workflow/index/index.db";
+    try {
+      const cfg = JSON.parse(readFileSync(join(REPO_ROOT, ".agentic-workflow", "index.json"), "utf8"));
+      if (typeof cfg.store?.path === "string" && cfg.store.path !== "") storePath = cfg.store.path;
+    } catch {
+      // default stands when the config is absent/unreadable
+    }
+    const escaped = storePath.split("").map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("");
+    const offenders = repoFiles().filter((rel) => new RegExp(`${escaped}$`).test(rel));
+    strictEqual(offenders.length, 0, `tracked files matching the configured store path ${storePath}: ${offenders.join(", ")}`);
+  });
+
   it("the nested ignore rules whitelist the committed config and ignore every store path (F38)", () => {
     // Plain form (no -v): exit 0 = ignored, 1 = not ignored. The -v form exits 0
     // even when the last matching pattern is a negation, so it cannot answer.
@@ -134,8 +147,6 @@ describe("AC26: the entry point appears only in the allowlisted discovery steps"
     "skills/triage-issue/SKILL.md", // allowlisted discovery step
     "skills/review-change/SKILL.md", // allowlisted discovery step
     "skills/init-workspace/SKILL.md", // consent/install surface (AC22)
-    "skills/unit-lane/SKILL.md", // the lane that carries this unit's own record
-    "skills/65-doc-toolchain/SKILL.md", // n/a — unit docs are not skills; kept explicit
   ];
 
   it("no gate, receipt, or Decision producer invokes the entry point", () => {
@@ -186,6 +197,19 @@ describe("AC4: the toolchain never generates or rewrites skills/**/SKILL.md", ()
     // export; assert no .md path is written anywhere
     const hits = grepOut(["-rnE", "writeFileSync", srcDir]);
     ok(!/\.md/.test(hits), `a .md write target found in the toolchain:\n${hits}`);
+  });
+});
+
+// ── AC22 — the consent gate, mechanically pinned (F41, closes F32) ──────
+
+describe("AC22: the consent gate is declared and mechanically pinned", () => {
+  it("the hook-test-style consent test passes (ask-first contract + no self-installing hook)", () => {
+    const r = spawnSync(
+      "bash",
+      [join(REPO_ROOT, "template", ".agentic-workflow", "hooks", "tests", "test-index-consent.sh")],
+      { encoding: "utf8" },
+    );
+    strictEqual(r.status, 0, `stdout: ${r.stdout}\nstderr: ${r.stderr}`);
   });
 });
 
