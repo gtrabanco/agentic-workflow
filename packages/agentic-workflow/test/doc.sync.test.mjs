@@ -151,19 +151,19 @@ describe("doc sync — configured store.path", () => {
       mkdirSync(join(cfgRoot, ".agentic-workflow"));
       writeFileSync(
         join(cfgRoot, ".agentic-workflow", "index.json"),
-        JSON.stringify({ version: 1, store: { path: "custom/store.db" }, provider: null }),
+        JSON.stringify({ version: 1, store: { path: ".agentic-workflow/custom/store.db" }, provider: null }),
       );
       execFileSync("git", ["add", "-A"], { cwd: cfgRoot });
       execFileSync("git", ["commit", "-qm", "fixture"], { cwd: cfgRoot });
 
       const r = await syncIndex(cfgRoot); // red: ENOENT on the hardcoded manifest dir
       strictEqual(r.filesScanned, 1);
-      ok(existsSync(join(cfgRoot, "custom", "store.db")), "store honours config.store.path");
+      ok(existsSync(join(cfgRoot, ".agentic-workflow", "custom", "store.db")), "store honours config.store.path"),
       ok(
-        existsSync(join(cfgRoot, "custom", "manifest.json")),
+        existsSync(join(cfgRoot, ".agentic-workflow", "custom", "manifest.json")),
         "manifest sidecar lives beside the configured store, not the default dir",
       );
-      strictEqual(storePath(cfgRoot), join(cfgRoot, "custom", "store.db"));
+      strictEqual(storePath(cfgRoot), join(cfgRoot, ".agentic-workflow", "custom", "store.db"));
       const stats = await storeStats(cfgRoot);
       ok(stats.chunks > 0, "status answers from the configured store");
     } finally {
