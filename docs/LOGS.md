@@ -2540,6 +2540,13 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** (1) F12 and F13 are coupled: F12 re-appends the deleted `cf595d4c` mark rows per the `review-mark@1` append-only invariant; landing F12 makes F13's SPEC claim true without touching SPEC — they were folded together so both share the same commit. (2) F16: the sweep's Forbidden bullet ("it never blocks") contradicts its own body ("a miss never blocks") and a `contradicts` hit routing to a blocking `NEEDS-DECISION` — severity floor: behavioral defect raised to med. (3) F18: non-reproducing evidence claim (severity floor applied); anchored to the sha it was taken at rather than dropping it. (4) E-D3: all fold-diff files are Markdown (review-findings.md, PLAN.md, SPEC.md), no high-severity rows → RE-REVIEW-OPTIONAL. (5) This is the fourth cycle of review→fold on this unit — the operator's explicit instruction authorized beyond the two-cycle cap; LOOP CAP REACHED was emitted in the review-change but the fold ran anyway per user instruction.
 - **Next:** /review-change re-run on the changed HEAD a2e89462 to assess if the review table is now clean; if PASS, /audit-pr for merge gate; if FAIL, fold-findings again (third and final fold-cycle before triage-issue --prioritize-now). PR #280 still open at HEAD 5a320ea8 (not yet rebased to a2e89462).
 
+## 2026-10-05T11:35:05Z — feat/65-doc-toolchain — manual
+- **Commits:** 74 (`23afa8d9…6609f48e`)
+- **Files:** 57 files
+- **Summary:** Delta re-review of fold (F49–F53) on feature 65 — PR #282
+- **Decisions:** F49: judge fixture embedder → static concept table (no shared words, unconditional top-1); F50: containment guard runs on every loadConfig branch (absent config, missing store key, explicit path); F51: sync reap/insert in one BEGIN/COMMIT (measured ~11x cold rebuild); F52+F53: SPEC evidence and review verdict re-cut to head tallies (615/0, 16/16, 216/0+217/0, 52/52 proven-cited). All four isolation passes PASS.
+- **Next:** Audit PR #282 for merge via /audit-pr — adversarial recommendation: re-run as /review-change --adversarial 3 first (L change + security surface), then /product-audit if SPEC drift recurs (F21→F43→F52→F53 pattern)
+
 ## 2026-09-30T23:57:22Z — 270-review-conformance — manual
 - **Commits:** 44 (`dfdf9851…b23bb87d`)
 - **Files:** 13 files
@@ -2580,3 +2587,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** cycle 5 adversarial review — found 15 fix-now, froze batch (F43 replan)
 - **Decisions:** F43 replan-in-unit blocks all folds — the plan must re-cut the verdict surfaces before source repair can converge
 - **Next:** /unit-lane 65-doc-toolchain to re-cut the plan; then /fold-findings for all remaining rows
+## 2026-10-05T11:36:55Z — feat/65-doc-toolchain — manual
+- **Commits:** 76 (`23afa8d9…de368a17`)
+- **Files:** 58 files
+- **Summary:** Fold-findings on 65-doc-toolchain: repaired 7 of 8 fix-now rows (F26–F33), left F32 BLOCKED (no programmatic consent gate entry point)
+- **Decisions:** Folded F29 security realpath guard as fix-now instead of replan — the fix is a targeted realpathSync() call in config.mjs, same pattern as repo's own bin/path-guard.mjs; F32 consent gate classified BLOCKED because init-workspace is a SKILL.md user-prompt, not executable code — the SPEC's AC22 consent test must be downgraded or moved to a separate feature
+- **Next:** Run /review-change to verify convergence on 7/8 folded rows, then /unit-lane 65-doc-toolchain to close the half-B unit and bring PR #282 to audit-pr
