@@ -137,6 +137,15 @@ P5 — Verification sweep: full repo gate, context budgets, diff guard.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| AC1 | `node --test scripts/scope-manifest.test.mjs` | 0 | sign emits sorted bound paths + blob digests + 64-hex scope digest, deterministic | scope-manifest suite (red-first at 3177f5ea) |
+| AC2 | `node --test scripts/scope-manifest.test.mjs` | 0 | `fail-closed: a path matching no named class binds` pass (`notes.txt` bound) | scope-manifest suite |
+| AC3 | `node --test scripts/scope-manifest.test.mjs` | 0 | fresh at signed head; non-affecting delta keeps fresh; affecting delta exit 4 naming `src/feature.ts` / `src/extra.ts` | scope-manifest suite |
+| AC4 | `node --test scripts/review-receipt.test.mjs` | 0 | scope marker grammar + render line + legacy parse unchanged; moved-head refusal exempts non-affecting delta | review-receipt suite (29 tests) |
+| AC5 | `node --test scripts/review-receipt.test.mjs` | 0 | CLI verify in a git checkout: foreign commit keeps receipt current (exit 0); affecting commit voids (exit 4) | review-receipt suite (AC3/AC9 both directions) |
+| AC6 | `node --test scripts/audit-pr-receipt.test.mjs` | 0 | scoped receipt + non-affecting delta → MERGE-READY; affecting delta / legacy receipt / unresolvable delta → BLOCKED | audit-pr-receipt suite |
+| AC7 | `grep -n "scope-base" skills/review-change/SKILL.md skills/review-change/references/PERSIST_AND_DECIDE.md` | 0 | both receipt-closeout surfaces pass `--scope-base main`; runtime derives the manifest | read-verified |
+| AC8 | `node --test scripts/*.test.mjs` | 0 | 626 pass / 0 fail; `bun scripts/check-skill-context.mjs` PASS 28 skills + PASS 14 routes (declared re-bases) | full repo gate |
+| — | `bun scripts/diff-guard.mjs --base main --unit 286` | 1 | `DIFF-GUARD BREACH — Lines: 979 > 400 · Files: 13 > 8` | exception recorded: `decisions.md` D-286-3 (real count, nothing shrunk) |
 
 ## Triaged steps
 
@@ -165,21 +174,28 @@ Budget: strong
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | AC1 | scope manifest produced by the CLI with schema-package digests only | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | sign test records the digest shape | planned |
-| O2 | AC2 | non-affecting classes exact + fail-closed on unknown paths | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction class tests | planned |
-| O3 | AC3 | verify re-derives and names drift; fresh on non-affecting delta, stale on affecting | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction verify tests | planned |
-| O4 | AC4 | emit records the manifest; refusal exempts non-affecting delta; legacy markers parse unchanged | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs` | legacy-suite pass + new scope tests | planned |
-| O5 | AC5+AC6 | verify judges the manifest (both directions); audit gate consumes the judge | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` | both-direction tests + gate tests | planned |
-| O6 | AC7+AC8 | consumers record the manifest; full gate green | P4 | P4–P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | planned |
+| O1 | AC1 | scope manifest produced by the CLI with schema-package digests only | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | sign test records the digest shape | verified |
+| O2 | AC2 | non-affecting classes exact + fail-closed on unknown paths | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction class tests | verified |
+| O3 | AC3 | verify re-derives and names drift; fresh on non-affecting delta, stale on affecting | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction verify tests | verified |
+| O4 | AC4 | emit records the manifest; refusal exempts non-affecting delta; legacy markers parse unchanged | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs` | legacy-suite pass + new scope tests | verified |
+| O5 | AC5+AC6 | verify judges the manifest (both directions); audit gate consumes the judge | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` | both-direction tests + gate tests | verified |
+| O6 | AC7+AC8 | consumers record the manifest; full gate green | P4 | P4–P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | verified |
 
 ## Progress log
 
-One entry per step taken. Format exactly:
-`YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+- 2026-10-05 13:52 — unit opened from issue #286: branch `fix/286-affecting-path-receipt-binding`, SPEC drafted, index row → in-progress → b68a9237 — next: triage + plan
+- 2026-10-05 13:58 — triage ran (`bun scripts/unit-route.mjs --triage 286-affecting-path-receipt-binding`), block pasted verbatim; plan step: ledgers cut, decisions D-286-1/D-286-2 recorded → d75eff07 — next: red-first tests
+- 2026-10-05 14:05 — tests step (red-first): `scripts/scope-manifest.test.mjs` (5 tests) + scope cases in review-receipt/audit-pr-receipt suites; red confirmed (module missing / no judgeReceipt) → 3177f5ea — next: implement
+- 2026-10-05 14:20 — implement P2: `scripts/scope-manifest.mjs` sign/verify; two contract bugs caught by the red suite (head digested into the scope digest; cat-file -e empty-output guard) fixed against the tests → cd5b73d5 — next: receipt binding
+- 2026-10-05 14:35 — implement P3: review-receipt scope marker + judgeReceipt + emit/verify judging; audit-pr-gate consumes the judge → 66028dc1 — next: scope-base derivation
+- 2026-10-05 14:45 — emit gains `--scope-base` (runtime derives the manifest — no hand-assembled digests) → f815d3c3 — next: consumers
+- 2026-10-05 14:55 — implement P4: review-change box + PERSIST_AND_DECIDE step 12 + audit-pr Step 1; budgets re-based at declared re-bases → 72317a06 — next: review
+- 2026-10-05 15:00 — diff guard BREACH (979/13 vs 400/8): honest split attempted (four commits), exception recorded D-286-3 — next: review
+- 2026-10-05 15:05 — review ran: 1 med security finding (unvalidated scope value reaching marker bytes) folded immediately at 2d222a88 with its red test; review-findings.md written — next: docs
 
 ## Next
 
-Run triage and execute the triaged steps.
+Open the PR (closes #286); after merge, re-run `audit-pr` on PR #282 (its `.serena` receipt-void reproduction is exactly this fix's case).
 
 ## References
 
