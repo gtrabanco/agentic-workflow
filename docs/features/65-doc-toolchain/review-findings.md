@@ -150,3 +150,14 @@
 | GATE-RAN | HEAD d35817d32d30eba7a11955109b86c2aa358ca198 | (cd packages/pi-agentic-workflow && bun install --frozen-lockfile) | exit 0 |
 | GATE-RAN | HEAD d35817d32d30eba7a11955109b86c2aa358ca198 | bash template/.agentic-workflow/hooks/tests/test-index-sync.sh | exit 0 |
 | GATE-RAN | HEAD d35817d32d30eba7a11955109b86c2aa358ca198 | bash template/.agentic-workflow/hooks/tests/test-index-consent.sh | exit 0 |
+| REVIEW-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | node --test scripts/doc-discipline.test.mjs | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | node scripts/ledger-provenance.mjs docs/features/65-doc-toolchain/review-findings.md --check | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | bun scripts/phase-lint.mjs docs/features/65-doc-toolchain/SPEC.md | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | (cd packages/agentic-workflow && bun run test && bun run test:node) | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | (cd packages/pi-agentic-workflow && bun install --frozen-lockfile) | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | bash template/.agentic-workflow/hooks/tests/test-index-sync.sh | exit 0 |
+| GATE-RAN | HEAD d6a0fbc3cbc39c4fe06f5ec5197bff10b39e1bcd | bash template/.agentic-workflow/hooks/tests/test-index-consent.sh | exit 0 |
