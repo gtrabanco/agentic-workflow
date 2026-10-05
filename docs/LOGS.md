@@ -2611,3 +2611,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 79 (`23afa8d9…1d05f86e`)
 - **Files:** 58 files
 - **Summary:** Unit-lane on feature 65 (doc-toolchain, issue #192): created the SPEC, ran triage (bare '65' ambiguous, used full slug 65-doc-toolchain), committed the unit doc and roadmap row, and completed the research step (P1) with Evidence rows R1–R8 and six uncertainties U1–U6 recorded.
+## 2026-10-05T11:35:05Z — feat/65-doc-toolchain — manual
+- **Commits:** 74 (`23afa8d9…6609f48e`)
+- **Files:** 57 files
+- **Summary:** Delta re-review of fold (F49–F53) on feature 65 — PR #282. All four isolated finder passes (code/security/verify/perf) returned PASS. F49: static AC15 judge table (no shared words, unconditional top-1 `retry.md`). F50: containment on every loadConfig branch (absent config, missing store key, explicit path — symlinked `.agentic-workflow` fails closed). F51: one BEGIN/COMMIT for sync reap/insert (~11x cold rebuild). F52+F53: SPEC evidence/verdict re-cut to head tallies (root 615/0, discipline 16/16, crate 216/0+217/0, ledger 52/52 proven-cited 0 open). Ledger marks committed (94efd299), PR #282 receipt posted and verified current at 94efd299.
+- **Decisions:** (1) Containment must guard the resolved store path on every branch — the absent-config shape was a bypass. (2) One transaction for the whole reap/insert pass recovers previous state on mid-pass failure. (3) A judge fixture must not derive vectors from the same keywords it asserts on — a static concept table is the honest shape.
+- **Next:** Audit PR #282 for merge via /audit-pr — adversarial recommendation: re-run as /review-change --adversarial 3 first (L change + security surface), then /product-audit if SPEC drift recurs (F21→F43→F52→F53 pattern).
