@@ -20,3 +20,11 @@ justification | scripts/scope-manifest.test.mjs | P1 | 2026-10-05 | execute-phas
   vocabulary owned by `scripts/scope-manifest.mjs` (`NON_AFFECTING_PATHS` /
   `NON_AFFECTING_DIRS`); consumers import the matcher, never re-state the
   classes. Extending the list is a reviewed, tested change (SPEC Future cost).
+- **D-286-3 (2026-10-05) — diff-size exception (recorded, not forced).** After the
+  implement steps the diff guard answers
+  `DIFF-GUARD BREACH — Lines: 979 > 400 · Files: 13 > 8`. Honest split attempted
+  (red-first tests / scope-manifest runtime / receipt judging / consumer docs are
+  four separate commits); the remainder is one root cause (the scope binding)
+  spanning two runtimes, three test suites, and the two consumer skills —
+  irreducible without deleting comments, docs or tests, which is forbidden.
+  Exception recorded with the real count: 979 lines, 13 files.
