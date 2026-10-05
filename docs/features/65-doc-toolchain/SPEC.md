@@ -564,11 +564,13 @@ review-brand (docs copy), review-debt; review-a11y / review-seo /
 review-design are n/a (no UI, no public web surface).
 
 ```text
-REVIEW-VERDICT (real, after the cycle-6 fold): folds complete — RE-REVIEW REQUIRED
+REVIEW-VERDICT (real, after the cycle-7 delta re-review): REVIEW-PASS at 94efd299 — receipt current on PR #282
 - Findings: 0 open rows — 52 ledger rows, 52 proven-cited, 0 open (ledger --check exit 0)
-- Gates at the fold head: root 615/0 · discipline 16/16 · crate 216/0 (bun) + 217/0 (node) · budgets PASS 28 skills · hooks ok
+- Gates at the review head: root 615/0 · discipline 16/16 · crate 216/0 (bun) + 217/0 (node) · budgets PASS 28 skills · hooks ok
 - Cycle-6 folds: F49 (judge fixture → static concept table, unconditional top-1), F50 (containment on every config branch, D13), F51 (sync writes in one transaction, 20.2s → 2.1s), F52+F53 (this re-cut)
+- Cycle-7 delta re-review: F49–F53 folds verified (9a8b821b..d6a0fbc3) — REVIEW-PASS receipt bound to 94efd299
 - AC integrity: AC text unchanged; stale gate tallies above re-cut to the head values by this step (F52's route)
+- Open audit blockers (F54–F57, 2026-10-05): pre-execution lineage, stray a.md, this re-cut, tree hygiene — tracked in the ledger
 ```
 
 The first pass's report-notes (informational, never a cycle restart) — note 4
@@ -595,13 +597,14 @@ emitted); notes 1–3 stand:
 
 ## Next
 
-All fix-now findings (F13–F48 lineage) are folded and provenance-checked;
-the unit awaits its **re-review** — `/review-change` in delta mode over the
-fold commits (7d24e5cb..dc3af67b). After a PASS verdict, PR #282 proceeds to
-`/audit-pr` and merge. Half A continues in `71-doc-cli` (`defined`,
-`Depends on: 65`) — that merge closes #192, never this one. Roadmap row 65
-keeps `done · [#282]` (the deliverable is implemented and the PR open); the
-review-cycle state lives in this document and its ledger.
+The cycle-7 delta re-review returned **REVIEW-PASS** (receipt bound to 94efd299,
+`review-receipt.mjs verify` exit 0). The unit is in its `/audit-pr` merge gate:
+the 2026-10-05 audit returned **BLOCKED** with F54–F57 (pre-execution lineage,
+stray `a.md`, this verdict re-cut, tree hygiene) — clear those on-branch, then
+re-run `/review-change` at the settled head and `/audit-pr`. Half A continues
+in `71-doc-cli` (`defined`, `Depends on: 65`) — that merge closes #192, never
+this one. Roadmap row 65 keeps `done · [#282]` (the deliverable is implemented
+and the PR open); the review-cycle state lives in this document and its ledger.
 
 ## Path protection (plan declaration)
 
