@@ -17,3 +17,5 @@ budgets PASS), a11y/brand/seo — n/a (no UI or user-facing copy).
 |---|---|---|---|---|---|---|
 | REVIEW-RAN | HEAD 2d222a88bd7c3e5d9c17402b00dcd90b29bdbd14 | n/a | n/a | review-mark | n/a | n/a |
 | F1 | scripts/review-receipt.mjs (renderReceiptBody) | security | med | fix-now | fold into current phase (source: validate the scope value 64-hex at the body builder, red test) · fold 2d222a88 | yes |
+| F2 | audit-pr Step 1 receipt gate — `bun scripts/review-receipt.mjs verify --pr 288` → exit 3 `missing-review-receipt` at head 2cfafbd7 (no `review-change:pass` marker on PR #288) | Review receipt | high | fix-now | /review-change (re-review at the head), then re-run /audit-pr | no |
+| F3 | docs/fix/286-affecting-path-receipt-binding/ — no `## Pre-execution review receipt v1 — plan` (no progress.md); `pre-execution-snapshot.mjs verify --stage plan --unit 286-affecting-path-receipt-binding` → exit 1 `required artifact(s) absent: .../ACCEPTANCE.md` | Pre-execution lineage | high | fix-now | /unit-lane 286-affecting-path-receipt-binding (lane review step re-derives the artifact; enforcer alignment tracked by #285 / PR #287), then re-run /audit-pr | no |
