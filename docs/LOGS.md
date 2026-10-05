@@ -2574,3 +2574,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr on PR #282 (unit 65 doc-toolchain): full merge-readiness gate returned VERDICT: BLOCKED (5 blockers) — receipt absent, CI red, derived store committed, traceability gap, route budget regression
 - **Decisions:** Never merge from audit; persist blockers to fold ledger (review-findings.md F1–F5) regardless of verdict; accept the block and hand back to /review-change for re-review at the head
 - **Next:** 1) /review-change on PR #282 to post the review receipt at f9845180 — this is the only path forward; 2) on-branch fixes for blockers 2–5 (route ceilings, CI deps, untrack store, roadmap URL) via execute-phase folds; 3) re-run /audit-pr after fixes
+## 2026-10-05T12:08:47Z — feat/65-doc-toolchain — manual
+- **Commits:** 86 (`23afa8d9…79e29dcb`)
+- **Files:** 58 files
+- **Summary:** Fold-findings on PR #282 (feature 65, doc-toolchain): executed review-change (cycle 8) which found 13 fix-now findings across CI, correctness, spec-drift, scope creep, workflow, and brand axes. Then folded all 13: F2 (budget ceilings re-based), F3/F7/F8 (CI install steps + dead skip guard), F4 (git store cleanup), F5 (roadmap URL), F6 (ENOENT crash fix on manifest.mjs/sync.mjs), F9 (AC20 delta docs), F10 (empty preamble chunk filter), F11 (missing table guard), F12 (lazy TypeBox), F13 (version bump correction), F14 (Private→public docs fix). All gates green at HEAD (202/0 bun, 203/0 node).
+- **Decisions:** Ledger rows ticked after commits from prior turns (F2-F8 were committed separately in earlier turns with ledger-delay; F6-F14 fixed and committed here in one batch). Batch class: all-repair-in-place. Behavioral diffs span chunks.mjs, manifest.mjs, query.mjs, envelope.mjs, sync.mjs — RE-REVIEW-REQUIRED (delta).
+- **Next:** /review-change on PR #282 — re-review with all 13 findings now fixed
