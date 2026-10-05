@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # OS / editor cruft
 .DS_Store
 *.swp
@@ -17,9 +20,7 @@ tmp/
 # config. Serena's own .serena/.gitignore keeps cache and per-dev overrides local.
 **/.serena/
 !.serena/
-.serena/*
 !.serena/project.yml
-.opencode/
 # Local state the pre-execution sensor writes inside the worktree.
 # Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/
