@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.2.0
+version: 3.3.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -109,6 +109,16 @@ loads exactly upgrade and skips bootstrap plus portability.
   is not listed (markdown/yaml/json are never auto-detected), and a listed
   server that fails to start must be removed (one failure disables every
   server in the project). Document verification is a script's job.
+- **Retrieval index scaffold and git hooks are consent-gated (AC22).** The
+  index surface — the committed `.agentic-workflow/index.json` config plus the
+  three freshness hooks (`post-merge`, `post-checkout`, `post-rewrite`, all
+  `index-sync.sh` installed into `.git/hooks/`) — is installed **only after an
+  explicit yes** to the question "install the doc retrieval index scaffold and
+  its git hooks?". Without consent: install nothing, record it as a residual
+  (the entry point still runs and builds its index on first query — the hooks
+  are only a freshness fast path), and never write `.git/hooks/` or the config
+  on a later visit without a fresh yes. The hooks are best-effort by contract
+  (`doc --sync --quiet`, always exit 0 — a fast path never breaks git).
 - **Never redefine the urgency label vocabulary here.** `skills/triage-issue
   /SKILL.md` is the sole owner of the `urgent`/`fix-next` names, colors, and
   apply rules — this skill only seeds those two labels into the repo; it never

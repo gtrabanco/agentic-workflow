@@ -60,5 +60,17 @@ jobs:
         run: bun install --frozen-lockfile && bun run build
         working-directory: packages/agentic-workflow-schema
 
+      - name: Install the crate
+        run: bun install --frozen-lockfile
+        working-directory: packages/agentic-workflow
+
+      - name: Crate suite (bun runtime)
+        run: bun run test
+        working-directory: packages/agentic-workflow
+
+      - name: Crate suite (node runtime)
+        run: bun run test:node
+        working-directory: packages/agentic-workflow
+
       - name: Root suites
         run: node --test scripts/*.test.mjs

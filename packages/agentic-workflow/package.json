@@ -1,7 +1,7 @@
 {
   "name": "@gtrabanco/agentic-workflow",
-  "version": "0.1.1",
-  "description": "Deterministic runner for the agentic-workflow lane: file services (agwo edit), sensors, guards and receipts. No dependencies.",
+  "version": "0.2.0",
+  "description": "Deterministic runner for the agentic-workflow lane: file services (agwo edit), sensors, guards and receipts. One pinned pure-JS dependency, no native deps, no build step.",
   "license": "MIT",
   "author": "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>",
   "repository": {
@@ -14,7 +14,7 @@
     "agentic-workflow": "./bin/agentic-workflow.mjs"
   },
   "engines": {
-    "node": ">=18",
+    "node": ">=24",
     "bun": ">=1.4"
   },
   "scripts": {
@@ -25,5 +25,8 @@
     "bin",
     "src",
     "README.md"
-  ]
+  ],
+  "dependencies": {
+    "typebox": "1.3.7"
+  }
 }

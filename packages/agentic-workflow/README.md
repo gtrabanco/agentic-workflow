@@ -5,8 +5,12 @@ created it as the vehicle the roadmap mandated (rows 37/38/42/45, declined 43):
 the first producer feature creates the crate, later producers land their scripts
 as subcommands of it.
 
-- **Private, zero dependencies, no build step.** Repository tooling runs with
-  bun first and node as the guaranteed fallback (`AGENTS.md` §Verification).
+- **Shipped via `@gtrabanco/pi-agentic-workflow` (the pi package), one pinned pure-JS dependency, no native deps, no build step.**
+  Repository tooling runs with bun first and node as the guaranteed fallback
+  (`AGENTS.md` §Verification); `typebox` is exact-pinned and carries the `doc`
+  entry point's envelope validation. The retrieval store lives in a gitignored
+  SQLite database under `.agentic-workflow/index/` — disposable build output,
+  regenerated, never committed.
 - **Scratch convention:** `.agentic-workflow/tmp/` at the repository root holds
   throwaway producer output. It is committed as a directory (`.gitkeep`) so the
   convention exists on a fresh clone.

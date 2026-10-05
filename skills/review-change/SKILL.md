@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.9.0
+version: 3.10.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -102,6 +102,12 @@ Per Workflow conventions + documentation map, decide axes from:
    and optional recorded platform skills (extras only).
 2. **Footprint:** what the diff touches (UI, API, infra, domain). An axis applies
    only when both project and footprint support it.
+3. **Prior findings (optional retrieval aid, never authoritative):** when the
+   index entry point exists, `agentic-workflow doc --query "<change topic>"
+   --json-only` may surface earlier findings, decisions and session-log entries
+   on the same surface before the passes run. A missing index, an absent entry
+   point, or an empty answer changes nothing — grep stays the exhaustive
+   fallback, and the index is never a decision authority.
 
 ## Applicability matrix (default; the project's docs refine it)
 
