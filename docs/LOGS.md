@@ -2567,3 +2567,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 65-doc-toolchain end-to-end (half B of #192) — retrieval index via `agentic-workflow doc` CLI (FTS5/RRF hybrid, embeddings, incremental sync, consent-gated hooks, discipline suites), P1–P10, tests/evidence/review, release PR #282
 - **Decisions:** D6 split: half B ships first via #282, half A (71-doc-cli) closes #192; D11: JS-cosine kNN over D4's float32-LE BLOBs instead of sqlite-vec (AC15 judge gate); diff-guard exceptions recorded honestly for all breached phases; red-first authoring with recorded corrections only
 - **Next:** Review/merge PR #282, then /unit-lane 71-doc-cli (half A, Closes #192)
+
+## 2026-10-05T12:06:13Z — feat/65-doc-toolchain — manual
+- **Commits:** 83 (`23afa8d9…5d82c9a4`)
+- **Files:** 58 files
+- **Summary:** audit-pr on PR #282 (unit 65 doc-toolchain): full merge-readiness gate returned VERDICT: BLOCKED (5 blockers) — receipt absent, CI red, derived store committed, traceability gap, route budget regression
+- **Decisions:** Never merge from audit; persist blockers to fold ledger (review-findings.md F1–F5) regardless of verdict; accept the block and hand back to /review-change for re-review at the head
+- **Next:** 1) /review-change on PR #282 to post the review receipt at f9845180 — this is the only path forward; 2) on-branch fixes for blockers 2–5 (route ceilings, CI deps, untrack store, roadmap URL) via execute-phase folds; 3) re-run /audit-pr after fixes
