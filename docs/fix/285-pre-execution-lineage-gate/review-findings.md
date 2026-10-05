@@ -17,3 +17,18 @@ copy).
 |---|---|---|---|---|---|---|
 | REVIEW-RAN | HEAD ffab7c28d03c02bc022b13bdd7d260cd8edddb13 | n/a | n/a | review-mark | n/a | n/a |
 | F1 | scripts/unit-route.mjs (reasons map, ~line 447) | code | low | report-note | report-note: the triage block's `Skipped:` reason strings are static per unit type ("trivial scope") even when the actual scope is `standard` — misleading prose in an authoritative block. Pre-existing behaviour, outside this fix's regression boundary (fix/285 changes nothing in `unit-route.mjs`); file its own issue if a consumer ever parses those strings. | no |
+| REVIEW-RAN | HEAD b9ea9fa31bb434d5a78b04963633142b14746c08 | n/a | n/a | review-mark | n/a | n/a |
+| F2 | packages/agentic-workflow-schema/package.json:3 · test/release-contract.test.mjs:28 · test/verification-gates.test.mjs:117 | code | high | fix-now | fold into current phase (bump both version pins to 4.6.0; make CI run the schema package's own `bun run test`) | no |
+| F3 | docs/fix/285-pre-execution-lineage-gate/SPEC.md:149 | spec-drift | high | fix-now | fold into current phase (rewrite the `bun run test` Evidence row to exit 1 / 715 pass / 2 fail) | no |
+| F4 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-106 | security | high | fix-now | fold into current phase (replace the `progress.md`-absence discriminator with a non-author-controlled marker; adversarial test) | no |
+| F5 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:120-128 | security | high | fix-now | fold into current phase (require ≥1 obligation row or an explicit `n/a: <reason>`; red test for an empty-present `### Obligations`) | no |
+| F6 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:104-107 | security | med | fix-now | fold into current phase (emit BLOCKED + `→ Next: /unit-lane <unit>` for an absent ledger section) | no |
+| F7 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-101 | security | med | fix-now | fold into current phase (bind the triage output + ledgers with a frozen digest/timestamp anchor; shrunk-objective test) | no |
+| F8 | CHANGELOG.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · README.md · skills/audit-pr/SKILL.md · SPEC `Depends on` | workflow | high | fix-now | coordinate with #288 F10: one PR rebases, single `audit-pr` version, single budget re-base; correct the SPEC "Depends on: None" | no |
+
+Cycle 2 — independent review at HEAD `b9ea9fa3` (2026-10-05). Axes run: code,
+security, verify, perf (perf PASS — no material surface); workflow/spec-drift
+(FAIL); design / a11y / brand / SEO — n/a (no UI or user-facing copy).
+Workspace precondition: clean worktree, branch in sync with `origin`. F1 (the
+low report-note) stays report-only. Low findings (G–K) are report-only notes,
+never ledger rows. Escalation: full pass, not delta.
