@@ -88,16 +88,39 @@ This gate sits downstream of both pre-execution reviews, so it verifies their
 authority **survived the build** — it never re-reviews a plan and never re-judges a
 verdict:
 
-1. **Upstream lineage is current.** The unit's `progress.md` carries
-   `## Pre-execution review receipt v1 — plan` whose digest re-derives identically
-   (`scripts/pre-execution-snapshot.mjs verify --stage plan --parent <the receipt's
-   Product digest>`; a fix unit binds no parent —
-   `structural.reasonCode`/`changedPaths` name the drifted dimension), and — for a
-   feature unit — its named `— spec` parent re-derives the same way. Bound artifacts
-   are frozen: new implementation-phase files are allowed, edits to a bound artifact
-   are not. Stale, missing, wrong-stage **or impossible-timeline** lineage → **BLOCKED**,
-   `→ Next: /unit-lane <unit>` (the lane's `review` step re-derives the artifact). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
-2. **Obligations are closed.** Every row of the unit's obligation ledger is
+1. **Upstream lineage is current** — keyed by the surface the unit carries (fix/285;
+   the lane-era pipeline structurally never writes `progress.md` or
+   `ACCEPTANCE.md`, so demanding them made the gate unsatisfiable for every
+   lane-era unit — issue #285):
+   - **Lane-era unit** (feature 61's single-doc contract: no `progress.md`) —
+     the unit doc's Evidence section carries the `## Triaged steps` block, and
+     its `Steps:` line re-derives identically from the doc's own facts: run
+     `bun scripts/unit-route.mjs --triage <unit>` and compare the block
+     verbatim (steps, skipped, budget). The triage block is a pure function of
+     the unit doc — a missing block, or a `Steps:`/`Skipped:`/`Budget:` line
+     that differs → **BLOCKED**,
+     `→ Next: /unit-lane <unit> --retriage`. An absent ledger section
+     (`### Planning evidence` / `### Obligations`) on a lane-era unit is a
+     producer defect, not an audit pass: the lane's plan step writes them
+     (see item 2).
+   - **Legacy unit** (carries `progress.md` receipts) — the unit's
+     `progress.md` carries
+     `## Pre-execution review receipt v1 — plan` whose digest re-derives
+     identically (`scripts/pre-execution-snapshot.mjs verify --stage plan
+     --parent <the receipt's Product digest>`; a fix unit binds no parent —
+     `structural.reasonCode`/`changedPaths` name the drifted dimension), and —
+     for a feature unit — its named `— spec` parent re-derives the same way.
+     The acceptance manifest binds when present (fix/285): a unit that carries
+     `ACCEPTANCE.md` still binds it in the snapshot. Bound artifacts
+     are frozen: new implementation-phase files are allowed, edits to a bound
+     artifact are not. Stale, missing, wrong-stage **or impossible-timeline**
+     lineage → **BLOCKED**, `→ Next: /unit-lane <unit>` (the lane's `review`
+     step re-derives the artifact).
+   A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
+2. **Obligations are closed.** Every row of the unit's obligation ledger —
+   `### Obligations` inside the unit doc (embedded shape) or
+   `planning-obligations.md` (separate-file shape, per the sizing rule in
+   `pre-execution-review`'s `LEDGERS.md`; never both) — is
    `verified` — with the validator that ran on this candidate — or an explicit
    `n/a: <reason>`. Any `planned`, `in-progress`, blank, or `deferred` row is
    **BLOCKED**, naming the ids. `deferred` is legal only when the user amended the
