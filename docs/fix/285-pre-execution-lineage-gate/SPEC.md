@@ -195,6 +195,7 @@ Budget: strong
 - 2026-10-05 13:50 — implement P4 (producer): templates gain `### Planning evidence` + `### Obligations`; unit-lane PLAN.md cuts both ledgers per LEDGERS.md sizing → ffab7c28 — next: diff guard
 - 2026-10-05 14:00 — diff guard BREACH (617/16 vs 400/8): honest split attempted (three commits), exception recorded D-285-2, real count reported — next: review
 - 2026-10-05 14:05 — review step ran at HEAD ffab7c28 (axes: code, security, perf, verify; a11y/brand/seo n/a) — `review-findings.md` written, 1 low report-note, 0 fix-now — next: docs
+- 2026-10-05 14:20 — docs step: bump-skill over the three touched skills (unit-lane 1.3.0, audit-pr 5.5.0, pre-execution-review 2.7.0), changelog rows, README audit-pr cell; full gate re-run green (619/0) → 7404a423 — next: open PR
 
 ## Next
 
