@@ -21,6 +21,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts", "scope-manifest.mjs");
@@ -113,14 +114,14 @@ test("verify: an affecting delta goes stale naming the path, both for content an
   const manifest = sign(t, { ...f, head: f.unit });
 
   const changed = commit(f.root, { "src/feature.ts": "export const x = 1;\n" }, "feat: touch a bound path");
-  const r1 = run(f.root, ["verify", "--base", f.base, "--head", changed, "--scope", manifest.scope, "--root", f.root]);
+  const r1 = run(f.root, ["verify", "--base", f.base, "--head", changed, "--scope", manifest.scope, "--since", f.unit, "--root", f.root]);
   assert.equal(r1.status, 4, "a changed bound path voids the scope");
   const report1 = JSON.parse(r1.stdout);
   assert.equal(report1.fresh, false);
   assert.deepEqual(report1.drift.changed, ["src/feature.ts"], "the drifted path is named");
 
   const appeared = commit(f.root, { "src/extra.ts": "export {};\n" }, "feat: a new affecting path");
-  const r2 = run(f.root, ["verify", "--base", f.base, "--head", appeared, "--scope", manifest.scope, "--root", f.root]);
+  const r2 = run(f.root, ["verify", "--base", f.base, "--head", appeared, "--scope", manifest.scope, "--since", f.unit, "--root", f.root]);
   assert.equal(r2.status, 4, "a new affecting path voids the scope");
   assert.deepEqual(JSON.parse(r2.stdout).drift.appeared, ["src/extra.ts"]);
 });
