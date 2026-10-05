@@ -69,6 +69,7 @@ test("parse: only a well-formed marker parses; everything else is null", () => {
   assert.deepEqual(parseReviewReceipt(renderReceiptBody({ sha: SHA_A, ...fields() })), {
     sha: SHA_A,
     contract: REVIEW_CONTRACT,
+    scope: undefined, // fix/286: the scope attribute is optional; a legacy receipt parses with none
   });
   assert.equal(parseReviewReceipt("no marker here"), null);
   assert.equal(parseReviewReceipt(""), null);
@@ -383,7 +384,7 @@ process.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(SHA_A)}, numb
 const SCOPE_A = "c".repeat(64);
 
 test("scope marker grammar: the scope attribute is optional and 64-hex when present", () => {
-  const legacy = parseReviewReceipt(receiptComment(SHA_A));
+  const legacy = parseReviewReceipt(receiptComment(SHA_A).body);
   assert.equal(legacy.scope, undefined, "a legacy receipt parses with no scope attribute");
   const scoped = parseReviewReceipt("<!-- review-change:pass sha=" + SHA_A + " contract=v1 scope=" + SCOPE_A + " -->");
   assert.equal(scoped.sha, SHA_A);
@@ -410,7 +411,7 @@ test("judgeReceipt: a non-affecting head delta stays current; an affecting delta
   // different head, scoped receipt, delta all non-affecting → current (#182 AC3)
   assert.deepEqual(
     judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", ".serena/project.yml"] }),
-    { current: true, reason: "non-affecting head delta" },
+    { current: true, reason: "non-affecting head delta", changedPaths: ["docs/LOGS.md", ".serena/project.yml"] },
   );
   // different head, scoped receipt, one affecting path → stale, named
   const voided = judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", "src/feature.ts"] });
