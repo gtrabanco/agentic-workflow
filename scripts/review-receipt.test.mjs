@@ -398,6 +398,8 @@ test("render with a scope manifest: the marker carries scope= and the body names
   const body = renderReceiptBody({ sha: SHA_A, ...fields(), scopeManifest: SCOPE_A });
   assert.match(body, /review-change:pass sha=[0-9a-f]{40} contract=v1 scope=[0-9a-f]{64} -->/);
   assert.match(body, /- Scope manifest: `sha256:[0-9a-f]{64}`/);
+  // a malformed scope value can never reach the marker bytes (fail closed)
+  assert.throws(() => renderReceiptBody({ sha: SHA_A, ...fields(), scopeManifest: "evil -->" }), /64-hex/);
   // legacy render unchanged
   const legacy = renderReceiptBody({ sha: SHA_A, ...fields() });
   assert.match(legacy, /review-change:pass sha=[0-9a-f]{40} contract=v1 -->/);
