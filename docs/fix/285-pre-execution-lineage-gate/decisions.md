@@ -20,3 +20,17 @@ justification | packages/agentic-workflow-schema/package.json | P2 | 2026-10-05 
   half of the requiredness the fix relaxes — AC1 is impossible without it. Amended:
   the schema package's REQUIRED_ARTIFACTS + its pinning test + the package version
   bump are in scope; every other schema surface stays untouched.
+- **D-285-2 (2026-10-05) — diff-size exception (recorded, not forced).** After the
+  three implement steps the diff guard answers
+  `DIFF-GUARD BREACH — Lines: 617 > 400 · Files: 16 > 8`. The unit is one root
+  cause spanning three layers (schema requiredness, audit gate, producer) plus its
+  red-first tests on both sides (repo suite + schema package) — an honest split
+  was attempted (schema / gate / producer are three separate commits) and the
+  remainder is irreducible without deleting comments, docs or tests, which is
+  forbidden. Exception recorded with the real count: 617 lines, 16 files. No
+  budget was gamed; no comment, blank line, doc or test was removed to fit.
+- **D-285-3 (2026-10-05) — Non-goals line amended inline.** The SPEC's
+  Non-goals bullet "Not changing the snapshot digest, receipt grammar, or schema
+  package vocabularies" is reworded to name `REQUIRED_ARTIFACTS` as the one
+  schema surface in scope (per D-285-1); the SPEC is the unit doc, not a frozen
+  plan file, so the amendment is recorded here and reflected in place.
