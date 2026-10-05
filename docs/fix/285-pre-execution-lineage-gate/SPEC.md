@@ -135,6 +135,22 @@ P5 — Verification sweep: full gate `node --test scripts/*.test.mjs`,
 `bun scripts/check-skill-context.mjs` budgets, and the diff guard (validator:
 `node --test scripts/*.test.mjs` exits 0).
 
+P6 — Fold review findings F9–F13 (cycle 4): red-first behavioral tests for a
+`scripts/unit-lineage.mjs` machine surface of audit-pr gate 1 (F10
+non-author-controlled discriminator, F11 obligation-ledger BLOCKED rules, F12
+behavioral triage currency), gate-1 rewrite retracting the phantom digest
+paragraph (F9), and the F1 provenance repair (F13). Validators:
+`node --test scripts/lane-era-lineage.test.mjs` (red before the script exists)
+and `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check`
+exit 0.
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | scripts/unit-lineage.mjs | the machine surface of audit-pr gate 1 — F10/F11 demand a runtime the gate prose routes through, not rules with no reader
+```
+
 ## Evidence
 
 > Evidence is verified, not claimed — a reviewer re-runs it.
