@@ -2561,3 +2561,22 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fold-findings on 65-doc-toolchain: repaired 7 of 8 fix-now rows (F26–F33), left F32 BLOCKED (no programmatic consent gate entry point)
 - **Decisions:** Folded F29 security realpath guard as fix-now instead of replan — the fix is a targeted realpathSync() call in config.mjs, same pattern as repo's own bin/path-guard.mjs; F32 consent gate classified BLOCKED because init-workspace is a SKILL.md user-prompt, not executable code — the SPEC's AC22 consent test must be downgraded or moved to a separate feature
 - **Next:** Run /review-change to verify convergence on 7/8 folded rows, then /unit-lane 65-doc-toolchain to close the half-B unit and bring PR #282 to audit-pr
+
+## 2026-10-05T11:34:09Z — feat/65-doc-toolchain — manual
+- **Commits:** 74 (`23afa8d9…6609f48e`)
+- **Files:** 57 files
+- **Summary:** Unit-lane on feature 65 (doc-toolchain, issue #192): created the SPEC, ran triage (bare '65' ambiguous, used full slug 65-doc-toolchain), committed the unit doc and roadmap row, and completed the research step (P1) with Evidence rows R1–R8 and six uncertainties U1–U6 recorded.
+- **Decisions:** Route token: bare '65' is ambiguous with docs/fix/65-fold-findings-skill, router exits 2 — must always triage with the full slug. SQLite/FTS5 available on both runtimes here (node v24.21.0 + bun 1.4.3) but engine floor is node >= 18 and CI pins v22.23.1 — design step will surface as U2.
+- **Next:** Design step (P2) on docs/features/65-doc-toolchain/SPEC.md: fix entry-point shape, envelope/degradation contract, store layout and chunking strategy, and surface U1 (split half A vs half B, or sequence inside one unit) to the user as one question with concrete options.
+## 2026-10-05T11:34:19Z — feat/65-doc-toolchain — manual
+- **Commits:** 74 (`23afa8d9…6609f48e`)
+- **Files:** 57 files
+- **Summary:** Investigación del siguiente paso post-merge de #270 y estado de #192
+- **Decisions:** 270 no está mergeado: rama local 270-review-conformance (21 ahead, 26 behind main, tree clean, gate 578/0) pero sin PR ni receipt terminal; colisión latente de fila 69: dos ramas (#270 y #269) insertan fila 69 tras la 68 — hay que renumerar; #192 en postponed, ruta /unit-lane --from-issue 192, soft-dep: #269 ships ahead of #192
+- **Next:** Para #270: sync main → /review-change independiente → push+PR Closes #270 → /audit-pr → merge → issue #275 (reconciliación post-merge). Para #192: tras cerrar #270, #275 y feat/69-efficient-context-targeting → /unit-lane --from-issue 192
+## 2026-10-05T11:35:51Z — feat/65-doc-toolchain — manual
+- **Commits:** 75 (`23afa8d9…f1815e44`)
+- **Files:** 58 files
+- **Summary:** cycle 5 adversarial review — found 15 fix-now, froze batch (F43 replan)
+- **Decisions:** F43 replan-in-unit blocks all folds — the plan must re-cut the verdict surfaces before source repair can converge
+- **Next:** /unit-lane 65-doc-toolchain to re-cut the plan; then /fold-findings for all remaining rows
