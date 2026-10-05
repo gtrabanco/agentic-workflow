@@ -34,16 +34,22 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+// The closed non-affecting vocabulary has one owner (fix/286): the scope-manifest
+// runtime. This consumer imports the matcher, it never re-states the classes.
+import { isNonAffecting, changedPathsBetween } from "./scope-manifest.mjs";
+
 /** The one contract version this consumer reads. */
 export const REVIEW_CONTRACT = "v1";
 
 /**
  * The published marker. Anchored to the exact published shape so a malformed
  * marker cannot satisfy a reader: 40 hex (not "abc", not 41), an explicit
- * `contract=`, and the closing delimiter.
+ * `contract=`, and the closing delimiter. The optional `scope=<64-hex>`
+ * attribute (fix/286) records the affecting-path scope manifest the review
+ * signed; a legacy receipt without it keeps head-bound semantics.
  */
 export const REVIEW_MARKER_RE =
-  /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ \n]+) -->/;
+  /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ \n]+)(?: scope=([0-9a-f]{64}))? -->/;
 
 /** The values `- Architectural invariants:` accepts (the fixed report's own set). */
 export const INVARIANT_VALUES = Object.freeze(["pass", "n/a"]);
@@ -81,11 +87,11 @@ export function sanitizeValue(value) {
     .replace(/\$\(/g, "&#36;(");
 }
 
-/** Parse one comment body into `{sha, contract}` or `null`. */
+/** Parse one comment body into `{sha, contract, scope?}` or `null`. */
 export function parseReviewReceipt(body) {
   if (typeof body !== "string") return null;
   const match = REVIEW_MARKER_RE.exec(body);
-  return match ? { sha: match[1], contract: match[2] } : null;
+  return match ? { sha: match[1], contract: match[2], scope: match[3] } : null;
 }
 
 /**
@@ -120,6 +126,33 @@ export function receiptStatus(comments, headSha, contract = REVIEW_CONTRACT) {
 }
 
 /**
+ * The scope-aware judge (fix/286, #182 AC 3/9). A receipt whose sha equals the
+ * head is current. Otherwise a receipt that recorded a scope manifest stays
+ * current when the head delta touches only non-affecting paths — the exact
+ * foreign-commit pattern (session log, agent toolstate) that head-binding
+ * re-reviews over. Any affecting path in the delta voids it, named; so does an
+ * unresolvable delta (fail-closed: `changedPaths: null` is never current) and
+ * a legacy receipt that recorded no scope manifest (head-bound, unchanged).
+ * Pure: the delta is computed by the caller's git-backed CLI layer.
+ */
+export function judgeReceipt({ receipt, headSha, changedPaths }) {
+  if (!receipt || receipt.sha === headSha) {
+    return { current: true, reason: receipt ? `receipt current at ${headSha}` : "no receipt" };
+  }
+  if (!receipt.scope) {
+    return { current: false, changedPaths: [], reason: `receipt at ${receipt.sha}, head is ${headSha} (no scope manifest recorded — head-bound)` };
+  }
+  if (changedPaths === null || changedPaths === undefined) {
+    return { current: false, changedPaths: [], reason: `receipt at ${receipt.sha}, head is ${headSha} — the head delta could not be resolved, so the scope cannot clear it (fail-closed)` };
+  }
+  const affecting = changedPaths.filter((p) => !isNonAffecting(p));
+  if (affecting.length > 0) {
+    return { current: false, changedPaths: affecting, reason: `the head delta touches the reviewed surface: ${affecting.join(", ")}` };
+  }
+  return { current: true, reason: "non-affecting head delta", changedPaths: [...changedPaths] };
+}
+
+/**
  * The idempotent post decision. Same SHA → skip; anything else → post. A receipt
  * for another contract never suppresses this one.
  */
@@ -130,13 +163,19 @@ export function shouldPost(comments, headSha, contract = REVIEW_CONTRACT) {
     : { action: "post", reason: status.reason };
 }
 
-/** The fixed receipt body. `sha` is interpolated as bytes because it is validated, not free text. */
-export function renderReceiptBody({ sha, scope, axes, coverage, invariants, proposals, manual }) {
-  return [
-    `<!-- review-change:pass sha=${sha} contract=${REVIEW_CONTRACT} -->`,
+/** The fixed receipt body. `sha` is interpolated as bytes because it is validated, not free text.
+ * `scopeManifest` (fix/286) is a 64-hex scope digest recorded in the marker + body. */
+export function renderReceiptBody({ sha, scope, axes, coverage, invariants, proposals, manual, scopeManifest }) {
+  const scopeAttr = scopeManifest ? ` scope=${scopeManifest}` : "";
+  const manifestLine = scopeManifest ? `- Scope manifest: \`sha256:${scopeManifest}\`` : null;
+  const lines = [
+    `<!-- review-change:pass sha=${sha} contract=${REVIEW_CONTRACT}${scopeAttr} -->`,
     "## review-change: REVIEW-PASS",
     "",
     `- Reviewed head: \`${sha}\``,
+  ];
+  if (manifestLine) lines.push(manifestLine);
+  lines.push(
     `- Scope and applicable axes: ${sanitizeValue(scope)}`,
     `- Acceptance coverage: ${sanitizeValue(coverage)}`,
     `- Architectural invariants: ${sanitizeValue(invariants)}`,
@@ -144,7 +183,8 @@ export function renderReceiptBody({ sha, scope, axes, coverage, invariants, prop
     `- Future-capability proposals: ${sanitizeValue(proposals)}`,
     `- Manual verification: ${sanitizeValue(manual)}`,
     "",
-  ].join("\n");
+  );
+  return lines.join("\n");
 }
 
 /**
@@ -157,6 +197,9 @@ export function validateEmitOptions(opts = {}) {
   const pr = Number(opts.pr);
   if (!Number.isInteger(pr) || pr <= 0) errors.push("--pr must be a positive integer");
   if (!HEX40.test(String(opts.head ?? ""))) errors.push("--head must be a 40-hex commit SHA");
+  if (opts.scopeManifest !== undefined && opts.scopeManifest !== "" && !/^[a-f0-9]{64}$/.test(String(opts.scopeManifest))) {
+    errors.push("--scope-manifest must be a 64-hex scope digest (from scripts/scope-manifest.mjs sign)");
+  }
   if (!sanitizeValue(opts.scope)) errors.push("--scope is required (the reviewed surface)");
   if (!sanitizeValue(opts.axes)) errors.push("--axes is required (axes run and skipped)");
   if (!sanitizeValue(opts.coverage)) errors.push("--coverage is required (criterion-to-evidence summary)");
@@ -228,7 +271,7 @@ const USAGE = `usage: review-receipt <command> [options]
 
 const VALUE_FLAGS = new Set([
   "--head", "--scope", "--axes", "--coverage", "--invariants", "--proposals", "--manual",
-  "--pr", "--comments-json", "--repo",
+  "--pr", "--comments-json", "--repo", "--scope-manifest", "--root",
 ]);
 const BOOLEAN_FLAGS = new Set(["--dry-run"]);
 const FLAG_ALIASES = { "-R": "--repo" };
@@ -285,6 +328,14 @@ function main() {
 
   const opts = parseArgs(argv.slice(1));
   const repo = opts.repo;
+  // The local git root the head-delta check runs in (fix/286): a consumer that
+  // senses another checkout passes --root, like its sibling runtimes.
+  const gitRoot = opts.root ? path.resolve(opts.root) : process.cwd();
+  /** The changed paths between two revisions in `gitRoot`, or null (fail-closed). */
+  const delta = (fromSha, toSha) => changedPathsBetween((...args) => {
+    const result = spawnSync("git", args, { cwd: gitRoot, encoding: "utf8" });
+    return result.status === 0 ? result.stdout : null;
+  }, fromSha, toSha);
   const fields = {
     scope: opts.scope,
     axes: opts.axes,
@@ -292,6 +343,7 @@ function main() {
     invariants: opts.invariants ?? "n/a",
     proposals: opts.proposals ?? 0,
     manual: opts.manual ?? "none",
+    scopeManifest: opts["scope-manifest"],
   };
 
   if (command === "render") {
@@ -307,7 +359,19 @@ function main() {
     const forge = inline ? null : forgePr(opts.pr, { repo });
     const head = opts.head ?? forge?.head;
     if (!HEX40.test(String(head ?? ""))) throw new Error("--head is required when it cannot be read from the PR");
-    const status = receiptStatus(inline ?? forge.comments, head);
+    let status = receiptStatus(inline ?? forge.comments, head);
+    // fix/286 — the scope-aware judge: a stale-by-sha receipt that recorded a
+    // scope manifest stays current when the head delta (receipt sha → head) is
+    // all non-affecting. The delta is computed locally (git at --root/cwd);
+    // an unresolvable delta stays stale — fail closed.
+    let judge = null;
+    if (status.status === "stale" && status.receipt?.scope) {
+      const changed = delta(status.receipt.sha, head);
+      judge = judgeReceipt({ receipt: status.receipt, headSha: head, changedPaths: changed });
+      if (judge.current) {
+        status = { status: "current", reason: judge.reason, receipt: status.receipt };
+      }
+    }
     const report = {
       current: status.status === "current",
       status: status.status,
@@ -322,6 +386,7 @@ function main() {
       contract: REVIEW_CONTRACT,
       receipt: status.receipt,
       reason: status.reason,
+      ...(judge ? { scopeJudge: judge } : {}),
     };
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     process.exitCode = status.status === "current" ? 0 : status.status === "absent" ? 3 : 4;
@@ -338,9 +403,20 @@ function main() {
   }
   const before = forgePr(opts.pr, { repo });
   if (before.head !== opts.head) {
-    throw new Error(
-      `the PR head is ${before.head} but this receipt names ${opts.head}: the candidate changed during review — re-run the review at the PR head`,
-    );
+    // fix/286 — a head delta whose changed paths are all non-affecting (foreign
+    // commits on a shared checkout) does not make the candidate "changed during
+    // review": the reviewed surface is byte-identical, so the receipt posts at
+    // the reviewed head. Any affecting delta, an unresolvable one, or a receipt
+    // without a scope manifest keeps the refusal — fail closed.
+    const changed = fields.scopeManifest ? delta(opts.head, before.head) : null;
+    const judged = fields.scopeManifest
+      ? judgeReceipt({ receipt: { sha: opts.head, scope: fields.scopeManifest }, headSha: before.head, changedPaths: changed })
+      : { current: false, reason: "no scope manifest recorded — head-bound" };
+    if (!judged.current) {
+      throw new Error(
+        `the PR head is ${before.head} but this receipt names ${opts.head}: the candidate changed during review — re-run the review at the PR head`,
+      );
+    }
   }
   const decision = shouldPost(before.comments, opts.head);
   if (decision.action === "post") postComment(before.number, body, { repo });
