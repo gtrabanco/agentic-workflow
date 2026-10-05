@@ -89,25 +89,42 @@ export async function syncIndex(root) {
   const insert = db.prepare(
     "INSERT INTO chunks (chunk_id, path, section, line_start, line_end, meta, body) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
-  for (const path of deleted) reap.run(path);
-  for (const path of changed) {
-    const src = join(root, path);
-    try {
-      // Reap existing chunks for this path before re-inserting (original
-      // reap.run(path) before the read — preserved for the non-ENOENT path).
-      reap.run(path);
-      const rows = scanChunks(readFileSync(src, "utf8"), path);
-      for (const c of rows) {
-        insert.run(c.id, c.path, c.section, c.lines[0], c.lines[1], JSON.stringify(c.meta), c.body);
-      }
-    } catch (e) {
-      if (e.code === "ENOENT") {
-        // File deleted in working tree but not yet committed → reap
-        // (AC11: treat as deletion).
+  // F51: one transaction for the whole reap/insert pass. Per-row autocommit
+  // paid one fsync per chunk on the cold path (~9.6x measured); a single
+  // BEGIN/COMMIT — with rollback on throw so a mid-pass failure leaves the
+  // previous store state intact — is the fix, never a weakening of the
+  // per-file error semantics (the ENOENT-as-deletion branch still throws
+  // non-ENOENT errors out of the pass).
+  db.exec("BEGIN");
+  try {
+    for (const path of deleted) reap.run(path);
+    for (const path of changed) {
+      const src = join(root, path);
+      try {
+        // Reap existing chunks for this path before re-inserting (original
+        // reap.run(path) before the read — preserved for the non-ENOENT path).
         reap.run(path);
-        deleted.push(path);
-      } else throw e;
+        const rows = scanChunks(readFileSync(src, "utf8"), path);
+        for (const c of rows) {
+          insert.run(c.id, c.path, c.section, c.lines[0], c.lines[1], JSON.stringify(c.meta), c.body);
+        }
+      } catch (e) {
+        if (e.code === "ENOENT") {
+          // File deleted in working tree but not yet committed → reap
+          // (AC11: treat as deletion).
+          reap.run(path);
+          deleted.push(path);
+        } else throw e;
+      }
     }
+    db.exec("COMMIT");
+  } catch (e) {
+    try {
+      db.exec("ROLLBACK");
+    } catch {
+      // the transaction may already be rolled back by the driver
+    }
+    throw e;
   }
 
   // Persist + export the canonical manifest (AC12's compared artifact).

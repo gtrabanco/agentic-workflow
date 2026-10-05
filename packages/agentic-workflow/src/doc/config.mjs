@@ -76,7 +76,14 @@ function containStorePath(root, candidate) {
  */
 export function loadConfig(root) {
   const path = configPath(root);
-  if (!existsSync(path)) return structuredClone(DEFAULT_CONFIG);
+  if (!existsSync(path)) {
+    // F50: the absent-config branch is NOT a containment bypass — the merged
+    // default store path runs through the same check, so a symlinked
+    // `.agentic-workflow` fails closed even with no index.json on disk.
+    const merged = structuredClone(DEFAULT_CONFIG);
+    containStorePath(root, merged.store.path);
+    return merged;
+  }
   let parsed;
   try {
     parsed = JSON.parse(readFileSync(path, "utf8"));
@@ -89,10 +96,13 @@ export function loadConfig(root) {
   if (parsed.version !== undefined && parsed.version !== CONFIG_VERSION) {
     throw new Error(`index.json version ${parsed.version} is not supported (expected ${CONFIG_VERSION})`);
   }
-  // Contain store.path inside the repository's gitignored `.agentic-workflow/`
-  // directory (F36/F37, decision D12) — see containStorePath.
-  if (parsed.store?.path !== undefined && parsed.store?.path !== null) {
-    containStorePath(root, parsed.store.path);
-  }
-  return { ...structuredClone(DEFAULT_CONFIG), ...parsed };
+  // Contain the MERGED store path inside the repository's gitignored
+  // `.agentic-workflow/` directory (F36/F37/F50, decision D12) — see
+  // containStorePath. Runs on every branch: an explicit `store.path`, a
+  // config without a `store` key, and the absent-config default alike.
+  const merged = { ...structuredClone(DEFAULT_CONFIG), ...parsed };
+  // storePath() falls back to the default when `store.path` is falsy —
+  // contain exactly the path that will be used.
+  containStorePath(root, merged.store?.path || DEFAULT_CONFIG.store.path);
+  return merged;
 }

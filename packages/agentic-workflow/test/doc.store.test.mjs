@@ -274,4 +274,19 @@ describe("doc config — store.path containment (F36/F37)", () => {
       rmSync(outside, { recursive: true, force: true });
     }
   });
+
+  it("rejects a symlinked .agentic-workflow even with NO config — containment covers the merged default too (F50)", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "doc-contain-"));
+    const outside = mkdtempSync(join(tmpdir(), "doc-esc-"));
+    try {
+      symlinkSync(outside, join(tmp, ".agentic-workflow"), "dir");
+      // No index.json anywhere: the absent-config branch must still run the
+      // containment check over the DEFAULT store path, or --sync writes (and
+      // --rebuild's rmSync destroys) outside the repository through the symlink.
+      throws(() => loadConfig(tmp), /\.agentic-workflow\//);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
 });
