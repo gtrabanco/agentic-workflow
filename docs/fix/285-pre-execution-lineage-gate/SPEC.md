@@ -214,8 +214,9 @@ Open the PR (closes #285); after merge, re-run `audit-pr` on PR #282 to clear F5
 
 ## Depends on
 
-None (independent of #286's lane; audit-pr reference edits are sequential by
-merge order, not by dependency).
+#288 (fix/286-affecting-path-receipt-binding) — merge order only: audit-pr 5.5.0
++ budget re-basis clash on the shared reference; the second merge to land must
+rebase to absorb the version bump.
 
 ## Regression scope
 
