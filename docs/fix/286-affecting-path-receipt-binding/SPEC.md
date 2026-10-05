@@ -211,9 +211,12 @@ Open the PR (closes #286); after merge, re-run `audit-pr` on PR #282 (its `.sere
 
 ## Depends on
 
-None for the code (PR #287 touches different scripts; the two skill-doc edits
-do not overlap — `review-change`/`audit-pr` SKILL.md receipt sections vs #285's
-`audit-pr/references/02` closure gate — sequential merges, no dependency).
+`#285 / PR #287` — the `audit-pr` SKILL.md version bump (5.5.0) and the shared
+CHANGELOG/README/budget surfaces are co-owned by both lanes. Merge #287 first,
+then rebase #288 onto it so the combined audit-pr version and budget ceilings
+are single-authored (cross-PR collision resolved by merge order). The code
+touches don't overlap (`review-change`/`audit-pr` SKILL.md receipt sections
+vs #285's `audit-pr/references/02` closure gate).
 
 ## Regression scope
 
