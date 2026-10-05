@@ -25,7 +25,7 @@ test("AC8 read-verified: package version is 4.5.0", () => {
   // (4.4.0 → 4.5.0). This pin tracks the release contract, not a behavior: it
   // moves with the same-PR version bump every release records in CHANGELOG.md.
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "4.5.0");
+  assert.equal(pkg.version, "4.6.0");
 });
 
 // AC7 — capability semantics. Repository evidence is authoritative,
