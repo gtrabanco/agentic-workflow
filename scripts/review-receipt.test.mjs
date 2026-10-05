@@ -13,7 +13,7 @@
  */
 
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import {
   REVIEW_CONTRACT,
   REVIEW_MARKER_RE,
+  judgeReceipt,
   latestReceipt,
   parseReviewReceipt,
   receiptStatus,
@@ -370,6 +371,88 @@ process.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(SHA_A)}, numb
   assert.equal(report.head, SHA_A);
   const calls = fs.readFileSync(log, "utf8").trim().split("\n");
   assert.equal(calls.filter((c) => c.startsWith("pr comment")).length, 1, "exactly one post");
+});
+
+// ---------------------------------------------------------------------------
+// fix/286 — the affecting-path scope binding (#182 AC 3/9): the marker gains an
+// optional scope=<64-hex> attribute, the body a Scope manifest line, and the
+// judge accepts a head delta whose changed paths are all non-affecting. Legacy
+// receipts (no scope attribute) keep head-bound semantics.
+// ---------------------------------------------------------------------------
+
+const SCOPE_A = "c".repeat(64);
+
+test("scope marker grammar: the scope attribute is optional and 64-hex when present", () => {
+  const legacy = parseReviewReceipt(receiptComment(SHA_A));
+  assert.equal(legacy.scope, undefined, "a legacy receipt parses with no scope attribute");
+  const scoped = parseReviewReceipt("<!-- review-change:pass sha=" + SHA_A + " contract=v1 scope=" + SCOPE_A + " -->");
+  assert.equal(scoped.sha, SHA_A);
+  assert.equal(scoped.scope, SCOPE_A);
+  // a malformed scope attribute must not satisfy the reader
+  assert.equal(parseReviewReceipt("<!-- review-change:pass sha=" + SHA_A + " contract=v1 scope=nope -->"), null);
+});
+
+test("render with a scope manifest: the marker carries scope= and the body names the manifest", () => {
+  const body = renderReceiptBody({ sha: SHA_A, ...fields(), scopeManifest: SCOPE_A });
+  assert.match(body, /review-change:pass sha=[0-9a-f]{40} contract=v1 scope=[0-9a-f]{64} -->/);
+  assert.match(body, /- Scope manifest: `sha256:[0-9a-f]{64}`/);
+  // legacy render unchanged
+  const legacy = renderReceiptBody({ sha: SHA_A, ...fields() });
+  assert.match(legacy, /review-change:pass sha=[0-9a-f]{40} contract=v1 -->/);
+  assert.doesNotMatch(legacy, /Scope manifest/);
+});
+
+test("judgeReceipt: a non-affecting head delta stays current; an affecting delta voids; no scope stays head-bound", () => {
+  const scoped = { sha: SHA_A, scope: SCOPE_A };
+  const legacy = { sha: SHA_A };
+  // same head → current regardless
+  assert.equal(judgeReceipt({ receipt: legacy, headSha: SHA_A, changedPaths: ["src/x.ts"] }).current, true);
+  // different head, scoped receipt, delta all non-affecting → current (#182 AC3)
+  assert.deepEqual(
+    judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", ".serena/project.yml"] }),
+    { current: true, reason: "non-affecting head delta" },
+  );
+  // different head, scoped receipt, one affecting path → stale, named
+  const voided = judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", "src/feature.ts"] });
+  assert.equal(voided.current, false);
+  assert.deepEqual(voided.changedPaths, ["src/feature.ts"]);
+  // different head, legacy receipt (no scope) → head-bound, stale
+  assert.equal(judgeReceipt({ receipt: legacy, headSha: SHA_B, changedPaths: ["docs/LOGS.md"] }).current, false);
+  // fail-closed: an unresolvable delta is never current
+  assert.equal(judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: null }).current, false);
+});
+
+test("CLI verify in a git checkout: a foreign commit between review and audit leaves the receipt current (AC3/AC9)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const receipt = comment(renderReceiptBody({ sha: head, ...fields(), scopeManifest: SCOPE_A }));
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs/LOGS.md"), "foreign entry\n");
+  execFileSync("git", ["add", "docs/LOGS.md"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "docs(log): foreign"], { cwd: root });
+  const newHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  assert.notEqual(newHead, head);
+
+  const current = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", newHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
+  assert.equal(current.status, 0, "a non-affecting delta must keep the receipt current: " + current.stderr);
+  assert.equal(JSON.parse(current.stdout).status, "current");
+
+  // an affecting commit still voids
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export const x = 1;\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "feat: touch the reviewed surface"], { cwd: root });
+  const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const voided = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
+  assert.equal(voided.status, 4);
+  assert.equal(JSON.parse(voided.stdout).status, "stale");
 });
 
 console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body, emit refuses a moved head");
