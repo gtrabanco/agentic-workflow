@@ -64,6 +64,29 @@ candidate match is clean and proceeds** — a miss never blocks it, a missed
 candidate can never void a plan, and the sweep issues no stage verdict and grants no
 gate of its own.
 
+## Planning ledgers (same step)
+
+Cut both planning ledgers in the same pass — the plan snapshot binds them, and
+the audit's lineage gate closes obligations from them (fix/285). The closed row
+shapes, column orders, and vocabularies are owned by
+`skills/pre-execution-review/references/LEDGERS.md`; this step only decides the
+home and fills the rows:
+
+- **Planning evidence** — one row per Engineering claim the SPEC's Engineering
+  half (or a fix SPEC's Objective/Why) makes. Ids `PE-001`, `PE-002`, …; an
+  unsampled assumption is `unknown` with an owner (`ASSUMPTION-UNVERIFIED`),
+  never a silent citation.
+- **Obligations** — one row per normative behaviour, applicable compatibility
+  invariant, affected use case, and required failure state. Ids `O1`, `O2`, …;
+  exactly one phase and one task each; every row `planned` at cut time,
+  `verified` (or evidenced `n/a`) before the unit ships.
+
+**Home (sizing rule, never both):** XS/S embeds both tables under the unit
+doc's `### Planning evidence` / `### Obligations` headings — the plan snapshot
+binds them through the whole-SPEC row. M/L freezes them as the unit folder's
+`planning-evidence.md` / `planning-obligations.md` and the unit-doc sections
+name those files instead.
+
 ## Checklist (pass only if)
 
 - [ ] Every AC maps to at least one task
@@ -76,6 +99,8 @@ gate of its own.
       swept against the candidate sources above
 - [ ] Each candidate hit is one fixed-shape row, with the prior decision cited
       at `path:line` and one of the two relations
+- [ ] Both planning ledgers are cut (planning evidence + obligations), in the
+      sizing rule's home, with stable ids
 
 ## Forbidden
 
