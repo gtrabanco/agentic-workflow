@@ -60,8 +60,15 @@ exact command tokens.
    bun scripts/review-receipt.mjs emit --pr <N> \
      --head "$(git rev-parse HEAD)" --scope "<reviewed surface>" \
      --axes "<axes run and skipped>" --coverage "<criterion-to-evidence>" \
-     --invariants pass|n/a --proposals <n> --manual "<items or none>"
+     --invariants pass|n/a --proposals <n> --manual "<items or none>" \
+     --scope-base main
    ```
+
+   `--scope-base <ref>` (fix/286) records the affecting-path scope manifest
+   beside the reviewed head: the emitter derives it from the branch delta vs
+   that ref, so a later foreign-only commit (session log, agent toolstate) no
+   longer voids the receipt at the merge gate — any affecting-path delta still
+   voids it. Never hand-assemble the manifest or its digest.
 
    The script is the contract: it refuses a PR whose `headRefOid` differs from
    the reviewed head, posts the one idempotent SHA-bound comment (skipping an
