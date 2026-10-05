@@ -2587,3 +2587,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr on PR #282 — BLOCKED, root-caused pre-execution lineage gate and scoped-receipt absorption, filed issues #285 + #286, re-cut SPEC verdict (F56), pushed .serena config
 - **Decisions:** F54: pre-execution lineage gate unsatisfiable for lane-era units (contract moved to unit doc, producer/enforcers never followed) → issue #285; #182's affecting-path receipts absorbed into feature 61 but never landed → issue #286; F56: SPEC verdict re-cut from RE-REVIEW REQUIRED to REVIEW-PASS (cosmetic drift, not a toolchain bug); ripgrep requirement already tracked as #269 OPEN
 - **Next:** /triage-issue 285 + 286 — classify as feature units; clear F54–F57 on PR #282 branch and re-run audit; coordinate with the parallel session working the same feature branch
+## 2026-10-05T12:11:43Z — feat/65-doc-toolchain — manual
+- **Commits:** 88 (`23afa8d9…6e028d5f`)
+- **Files:** 58 files
+- **Summary:** Triage issues #285 + #286: both high-severity defects from feature 61's incomplete lane-era transition
+- **Decisions:** (1) #285 fix-now/urgent — pre-execution lineage gate demands retired pre-lane artifacts (progress.md, ACCEPTANCE.md) that lane-era units never produce; align enforcers or producer to lane model. (2) #286 fix-now/fix-next — #182's affecting-path receipt binding silently dropped during feature 61 absorption; head-bound receipts re-trigger the failure mode #182 was designed to prevent. (3) Common root cause: both trace to feature 61's three-way contract/producer/enforcer misalignment — best resolved as a single combined fix unit.
+- **Next:** Combined fix unit for #285 + #286 (shared root cause: feature 61 lane-era alignment) OR separate lanes; re-run audit-pr on PR #282 after fixes clear F54–F57
