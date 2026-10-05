@@ -15,7 +15,8 @@ copy).
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| REVIEW-RAN | HEAD ffab7c28d03c02bc022b13bdd7d260cd8edddb13 | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 4fe52c7b87a9b517d62e889fdeffaa904d9081ed | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD e58760ce707e9ab2cf4331bf77ab8e3921e78b2e | n/a | n/a | review-mark | n/a | n/a |
 | F1 | scripts/unit-route.mjs (reasons map, ~line 447) | code | low | report-note | report-note: the triage block's `Skipped:` reason strings are static per unit type ("trivial scope") even when the actual scope is `standard` — misleading prose in an authoritative block. Pre-existing behaviour, outside this fix's regression boundary (fix/285 changes nothing in `unit-route.mjs`); file its own issue if a consumer ever parses those strings. | yes |
 | REVIEW-RAN | HEAD b9ea9fa31bb434d5a78b04963633142b14746c08 | n/a | n/a | review-mark | n/a | n/a |
 | F2 | packages/agentic-workflow-schema/package.json:3 · test/release-contract.test.mjs:28 · test/verification-gates.test.mjs:117 | code | high | fix-now | fold into current phase (bump both version pins to 4.6.0; make CI run the schema package's own `bun run test`) · fold 9477ffe2 | yes |
