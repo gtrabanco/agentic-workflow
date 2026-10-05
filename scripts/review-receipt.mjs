@@ -36,7 +36,7 @@ import { fileURLToPath } from "node:url";
 
 // The closed non-affecting vocabulary has one owner (fix/286): the scope-manifest
 // runtime. This consumer imports the matcher, it never re-states the classes.
-import { isNonAffecting, changedPathsBetween } from "./scope-manifest.mjs";
+import { affectingPathsAt, changedPathsBetween, isNonAffecting, scopeDigestOf } from "./scope-manifest.mjs";
 
 /** The one contract version this consumer reads. */
 export const REVIEW_CONTRACT = "v1";
@@ -265,13 +265,17 @@ const USAGE = `usage: review-receipt <command> [options]
 
   emit    --pr <N> --head <40-hex> --scope <s> --axes <a> --coverage <c>
           [--invariants pass|n/a] [--proposals <n>] [--manual <text>]
-          [-R owner/name] [--dry-run]
+          [--scope-base <ref> | --scope-manifest <64-hex>] [-R owner/name]
+          [--root <repo>] [--dry-run]
           Post the receipt idempotently and confirm it landed at the head.
+          With --scope-base, the affecting-path manifest (fix/286) is derived
+          from the branch delta vs that ref at the head and recorded in the
+          receipt, so a later foreign-only commit does not void it.
 `;
 
 const VALUE_FLAGS = new Set([
   "--head", "--scope", "--axes", "--coverage", "--invariants", "--proposals", "--manual",
-  "--pr", "--comments-json", "--repo", "--scope-manifest", "--root",
+  "--pr", "--comments-json", "--repo", "--scope-manifest", "--scope-base", "--root",
 ]);
 const BOOLEAN_FLAGS = new Set(["--dry-run"]);
 const FLAG_ALIASES = { "-R": "--repo" };
@@ -336,6 +340,23 @@ function main() {
     const result = spawnSync("git", args, { cwd: gitRoot, encoding: "utf8" });
     return result.status === 0 ? result.stdout : null;
   }, fromSha, toSha);
+  // fix/286 — the scope manifest is derived by the runtime when the caller names
+  // the base ref (`--scope-base main`): the reviewed surface is the branch delta
+  // vs that base at the reviewed head. Passing an explicit `--scope-manifest`
+  // digest overrides it; passing neither records no manifest (head-bound).
+  if (opts["scope-base"] && opts["scope-manifest"]) {
+    throw new Error("--scope-base and --scope-manifest are mutually exclusive");
+  }
+  let scopeManifest = opts["scope-manifest"];
+  if (!scopeManifest && opts["scope-base"]) {
+    const gitRun = (...args) => {
+      const result = spawnSync("git", args, { cwd: gitRoot, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
+      return result.status === 0 ? result.stdout : null;
+    };
+    const paths = affectingPathsAt(gitRun, opts["scope-base"], opts.head);
+    if (paths === null) throw new Error(`--scope-base ${opts["scope-base"]}: git could not resolve the delta at ${opts.head}`);
+    scopeManifest = scopeDigestOf({ base: opts["scope-base"], head: opts.head, paths });
+  }
   const fields = {
     scope: opts.scope,
     axes: opts.axes,
@@ -343,7 +364,7 @@ function main() {
     invariants: opts.invariants ?? "n/a",
     proposals: opts.proposals ?? 0,
     manual: opts.manual ?? "none",
-    scopeManifest: opts["scope-manifest"],
+    scopeManifest,
   };
 
   if (command === "render") {

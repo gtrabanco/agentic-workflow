@@ -33,6 +33,7 @@ import {
 } from "./review-receipt.mjs";
 
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), "review-receipt.mjs");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA_A = "a".repeat(40);
 const SHA_B = "b".repeat(40);
 
@@ -454,6 +455,29 @@ test("CLI verify in a git checkout: a foreign commit between review and audit le
   const voided = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
   assert.equal(voided.status, 4);
   assert.equal(JSON.parse(voided.stdout).status, "stale");
+});
+
+test("emit/render derives the scope manifest from --scope-base (the skill never hand-assembles a digest)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-base-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const derived = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(derived.status, 0, derived.stderr);
+  assert.match(derived.stdout, /- Scope manifest: `sha256:[0-9a-f]{64}`/);
+  // the derived digest equals a sign-computed one for the same surface
+  const sign = spawnSync(process.execPath, [path.join(repoRoot, "scripts", "scope-manifest.mjs"), "sign", "--base", "main", "--head", head, "--root", root], { encoding: "utf8" });
+  assert.equal(sign.status, 0, sign.stderr);
+  assert.match(derived.stdout, new RegExp("scope=" + JSON.parse(sign.stdout).scope));
+  // mutually exclusive flags are a usage error
+  const both = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope-manifest", "d".repeat(64), "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(both.status, 1);
 });
 
 console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body, emit refuses a moved head");
