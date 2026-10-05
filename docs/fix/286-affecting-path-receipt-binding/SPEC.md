@@ -192,6 +192,7 @@ Budget: strong
 - 2026-10-05 14:55 — implement P4: review-change box + PERSIST_AND_DECIDE step 12 + audit-pr Step 1; budgets re-based at declared re-bases → 72317a06 — next: review
 - 2026-10-05 15:00 — diff guard BREACH (979/13 vs 400/8): honest split attempted (four commits), exception recorded D-286-3 — next: review
 - 2026-10-05 15:05 — review ran: 1 med security finding (unvalidated scope value reaching marker bytes) folded immediately at 2d222a88 with its red test; review-findings.md written — next: docs
+- 2026-10-05 15:15 — docs step: bump-skill (review-change 3.11.0, audit-pr 5.5.0), changelog rows, README audit-pr cell; full gate re-run green (626/0) — next: open PR
 
 ## Next
 
