@@ -32,16 +32,36 @@ function git(args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" });
 }
 
-// Deterministic "semantic" embedder: meaning → direction, no shared terms
-// required. The judge fixture's whole point lives in this mapping.
+// Deterministic "semantic" embedder — F49: a STATIC concept table, written
+// as fixture data (word → meaning axis) and NOT derived from the fixture's
+// query pattern. The previous form derived vectors from per-branch regexes
+// keyed to the exact query/doc words the judge asserts on — the delta was
+// asserted into existence. Here the query and the paraphrased doc share NO
+// word; they share only the axis the table assigns them, and the AC15 delta
+// is measured by the production cosine + RRF path over this table.
 function semanticEmbedder(model = "judge-1") {
   const state = { calls: 0 };
+  const CONCEPT_AXES = Object.freeze({
+    reliability: ["transient", "failure", "handling", "backoff", "retryable", "retry", "errors", "exponential", "delays", "jitter"],
+    gardening: ["rose", "pruning", "soil", "acidity", "frost"],
+  });
+  const AXIS_VECTORS = Object.freeze({ reliability: [1, 0, 0], gardening: [0, 1, 0] });
+  const UNKNOWN = [0, 0, 1]; // orthogonal: an all-unknown text matches nothing
   const vectorFor = (text) => {
-    const t = text.toLowerCase();
-    if (/transient|failure|handling/.test(t)) return [0.9, 0.1, 0.0];
-    if (/backoff|retryable/.test(t)) return [1.0, 0.05, 0.0]; // same meaning, different words
-    if (/rose|pruning|soil/.test(t)) return [0.0, 0.05, 1.0];
-    return [0.33, 0.33, 0.34];
+    const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
+    let sum = [0, 0, 0];
+    let known = 0;
+    for (const w of words) {
+      for (const [axis, members] of Object.entries(CONCEPT_AXES)) {
+        if (members.includes(w)) {
+          const v = AXIS_VECTORS[axis];
+          sum = [sum[0] + v[0], sum[1] + v[1], sum[2] + v[2]];
+          known += 1;
+          break;
+        }
+      }
+    }
+    return known === 0 ? UNKNOWN : sum.map((s) => s / known);
   };
   return {
     model,
@@ -107,10 +127,9 @@ describe("judge fixture (AC15)", () => {
     });
     ok(env.results.length >= 1, JSON.stringify(env.results));
     ok(env.results.slice(0, 3).some((r) => r.path === "retry.md"), JSON.stringify(env.results));
-    // the unrelated doc does not beat the paraphrase
-    if (env.results.length >= 2) {
-      strictEqual(env.results[0].path, "retry.md");
-    }
+    // the unrelated doc does not beat the paraphrase — unconditional top-1
+    // pin (F49/VF-43: the conditional form could pass without measuring it)
+    strictEqual(env.results[0].path, "retry.md");
     // the measured delta, for Evidence: keyword results = 0, hybrid top-3 = retry.md
     deepStrictEqual(env.degradations, []);
   });
