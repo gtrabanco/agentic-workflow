@@ -166,6 +166,13 @@ export function shouldPost(comments, headSha, contract = REVIEW_CONTRACT) {
 /** The fixed receipt body. `sha` is interpolated as bytes because it is validated, not free text.
  * `scopeManifest` (fix/286) is a 64-hex scope digest recorded in the marker + body. */
 export function renderReceiptBody({ sha, scope, axes, coverage, invariants, proposals, manual, scopeManifest }) {
+  // The scope attribute is interpolated into the marker bytes: only a 64-hex
+  // digest may sit there — anything else could forge marker structure (spaces,
+  // comment delimiters). The emitter's derivation path computes hex; this is
+  // the fail-closed guard for an explicit --scope-manifest value.
+  if (scopeManifest !== undefined && scopeManifest !== "" && !/^[a-f0-9]{64}$/.test(String(scopeManifest))) {
+    throw new Error("--scope-manifest must be a 64-hex scope digest");
+  }
   const scopeAttr = scopeManifest ? ` scope=${scopeManifest}` : "";
   const manifestLine = scopeManifest ? `- Scope manifest: \`sha256:${scopeManifest}\`` : null;
   const lines = [
