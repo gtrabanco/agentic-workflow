@@ -140,7 +140,37 @@ P5 — Verification sweep: full repo gate, context budgets, diff guard.
 
 ## Triaged steps
 
-(pasted verbatim by the triage step)
+```text
+TRIAGE — 286-affecting-path-receipt-binding (fix)
+Steps: plan, implement, tests, evidence, review, docs
+Skipped: research: trivial scope, design: trivial scope, release: not a feature
+Budget: strong
+```
+
+> Authoritative step list from `bun scripts/unit-route.mjs --triage 286-affecting-path-receipt-binding`. Skipped steps recorded as n/a: research — n/a (catalog: fix unit), design — n/a (catalog: fix unit), release — n/a (catalog: fix unit).
+
+### Planning evidence
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | file-read | the receipt runtime compares the receipt sha to the PR head only — no scope manifest, no path digests | `scripts/review-receipt.mjs` (REVIEW_MARKER_RE, receiptStatus) | verified 2026-10-05 | O3, O4 |
+| PE-002 | file-read | the audit gate consumes `receiptStatus` and blocks on any non-current status before reading gates | `scripts/audit-pr-gate.mjs` (auditVerdict, receipt gate first) | verified 2026-10-05 | O5 |
+| PE-003 | file-read | `sha256HexSync` is already exported by the schema package — reuse, no second hash implementation | `packages/agentic-workflow-schema/src/index.ts` (`export { sha256Hex, sha256HexSync }`) | verified 2026-10-05 | O1 |
+| PE-004 | file-read | `emit` refuses when the PR head differs from the reviewed head ("candidate changed during review") | `scripts/review-receipt.mjs` (emit branch) | verified 2026-10-05 | O4 |
+| PE-005 | issue | the non-affecting classes per #182: session log (`docs/LOGS.md`), agent toolstate/memory (`.engram/`, `.pi/`, `.serena/`); fail-closed on unknown paths | issue #182 Expected behaviour 1 + issue #286 proposed fix | verified 2026-10-05 | O2 |
+| PE-006 | issue | AC 3/9 of #182 remain the spec (commit-side, both directions); the workspace-precondition family (box 5, log-session, ahead/behind) stays out | issue #286 proposed fix | verified 2026-10-05 | O3–O6 |
+| PE-007 | file-read | the field reproduction: `.serena` commit `8af3a489` staled a receipt naming `94efd299` on PR #282 with zero reviewed bytes touched | issue #286 body (audit-pr of PR #282, 2026-10-05) | verified 2026-10-05 | O3 |
+
+### Obligations
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | AC1 | scope manifest produced by the CLI with schema-package digests only | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | sign test records the digest shape | planned |
+| O2 | AC2 | non-affecting classes exact + fail-closed on unknown paths | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction class tests | planned |
+| O3 | AC3 | verify re-derives and names drift; fresh on non-affecting delta, stale on affecting | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/scope-manifest.test.mjs` | both-direction verify tests | planned |
+| O4 | AC4 | emit records the manifest; refusal exempts non-affecting delta; legacy markers parse unchanged | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs` | legacy-suite pass + new scope tests | planned |
+| O5 | AC5+AC6 | verify judges the manifest (both directions); audit gate consumes the judge | P3 | P3 (tests in P1) | unit-lane:implement | `node --test scripts/review-receipt.test.mjs scripts/audit-pr-receipt.test.mjs` | both-direction tests + gate tests | planned |
+| O6 | AC7+AC8 | consumers record the manifest; full gate green | P4 | P4–P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | planned |
 
 ## Progress log
 
