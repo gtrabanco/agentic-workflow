@@ -2580,3 +2580,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fold-findings on PR #282 (feature 65, doc-toolchain): executed review-change (cycle 8) which found 13 fix-now findings across CI, correctness, spec-drift, scope creep, workflow, and brand axes. Then folded all 13: F2 (budget ceilings re-based), F3/F7/F8 (CI install steps + dead skip guard), F4 (git store cleanup), F5 (roadmap URL), F6 (ENOENT crash fix on manifest.mjs/sync.mjs), F9 (AC20 delta docs), F10 (empty preamble chunk filter), F11 (missing table guard), F12 (lazy TypeBox), F13 (version bump correction), F14 (Private→public docs fix). All gates green at HEAD (202/0 bun, 203/0 node).
 - **Decisions:** Ledger rows ticked after commits from prior turns (F2-F8 were committed separately in earlier turns with ledger-delay; F6-F14 fixed and committed here in one batch). Batch class: all-repair-in-place. Behavioral diffs span chunks.mjs, manifest.mjs, query.mjs, envelope.mjs, sync.mjs — RE-REVIEW-REQUIRED (delta).
 - **Next:** /review-change on PR #282 — re-review with all 13 findings now fixed
+
+## 2026-10-05T12:09:36Z — feat/65-doc-toolchain — manual
+- **Commits:** 87 (`23afa8d9…261a6e78`)
+- **Files:** 58 files
+- **Summary:** audit-pr on PR #282 — BLOCKED, root-caused pre-execution lineage gate and scoped-receipt absorption, filed issues #285 + #286, re-cut SPEC verdict (F56), pushed .serena config
+- **Decisions:** F54: pre-execution lineage gate unsatisfiable for lane-era units (contract moved to unit doc, producer/enforcers never followed) → issue #285; #182's affecting-path receipts absorbed into feature 61 but never landed → issue #286; F56: SPEC verdict re-cut from RE-REVIEW REQUIRED to REVIEW-PASS (cosmetic drift, not a toolchain bug); ripgrep requirement already tracked as #269 OPEN
+- **Next:** /triage-issue 285 + 286 — classify as feature units; clear F54–F57 on PR #282 branch and re-run audit; coordinate with the parallel session working the same feature branch
