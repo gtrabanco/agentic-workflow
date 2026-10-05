@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # OS / editor cruft
 .DS_Store
 *.swp
@@ -17,9 +20,7 @@ tmp/
 # config. Serena's own .serena/.gitignore keeps cache and per-dev overrides local.
 **/.serena/
 !.serena/
-.serena/*
 !.serena/project.yml
-.opencode/
 # Local state the pre-execution sensor writes inside the worktree.
 # Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/
@@ -27,3 +28,12 @@ tmp/
 .claude/skills
 # Recursive-language-model engine memory (episode logs) written by analysis runs.
 .rlm/
+
+# Derived retrieval index (unit 65): disposable cache over git, never committed.
+# The default store dir .agentic-workflow/index/ plus the nested rule file's
+# `/*` + `!index.json` whitelist cover every configured store path (D12
+# constrains store.path to .agentic-workflow/); the tracked rule file itself is
+# never listed here (F38: an ignored tracked file masks future check-ignore
+# probes and reads as an accidental exclusion).
+.agentic-workflow/index/
+**/.agentic-workflow/index/

@@ -5,7 +5,7 @@
     "": {
       "name": "@gtrabanco/pi-agentic-workflow",
       "dependencies": {
-        "@gtrabanco/agentic-workflow": "0.1.1",
+        "@gtrabanco/agentic-workflow": "0.2.0",
         "@gtrabanco/agentic-workflow-schema": "4.5.0",
       },
       "devDependencies": {
@@ -131,7 +131,7 @@
 
     "@google/genai": ["@google/genai@2.21.0", "", { "dependencies": { "google-auth-library": "^10.3.0", "p-retry": "^4.6.2", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-+PDtco2/Z0ONdzCGekCoCT+O1VJS9xJQNN4XzQpXG/t3El/SWWMkCWlFRO1KmivOHPa4Q0VjUYu1HBKCZ/v33Q=="],
 
-    "@gtrabanco/agentic-workflow": ["@gtrabanco/agentic-workflow@0.1.1", "", { "bin": { "agentic-workflow": "bin/agentic-workflow.mjs" } }, "sha512-nbMmd8lobVGdYTyfrC6q6ckDi7RYz0+EbJUtWE2/QjOBtuy8JFLhVOsIhn5Jo3eVv13skEA4IrQDu1BXYp0QeQ=="],
+    "@gtrabanco/agentic-workflow": ["@gtrabanco/agentic-workflow@0.2.0", "", { "dependencies": { "typebox": "1.3.7" }, "bin": { "agentic-workflow": "bin/agentic-workflow.mjs" } }, "sha512-8xQtpZdifDsnH289o1dl2kYPo8+OweS3qi5p7ubro+m7hc096VvvL/a3i/sR8lHDh+b5QGg+0DTrEurLTU7qiA=="],
 
     "@gtrabanco/agentic-workflow-schema": ["@gtrabanco/agentic-workflow-schema@4.5.0", "", {}, "sha512-imSVnxsFeXzBMv11xT9izkOpufuipr4XZyyxh6j0NZAonFsKST4DW5oNa9iUqO0aNTN3udp2uOn5o8ITei/Zmw=="],
 
@@ -293,7 +293,7 @@
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
-    "typebox": ["typebox@1.3.27", "", {}, "sha512-zu+jc1pcy4UiNThxikUr36f0Rybk9PEeCg/NE6adeWr/SKsdNO4EzZHYRDlv2YCVAfj3Odq3dESSo/jNyoBXzA=="],
+    "typebox": ["typebox@1.3.7", "", {}, "sha512-meKuifc33Pccx0O6PdIzYMq3Og8zvP4TIi/a+Bw3AEMZMxOD0+RHGQvpglEe6Zdy3wZ8nqn/j95h8LUZLk/6Hg=="],
 
     "typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
@@ -310,6 +310,12 @@
     "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
     "@aws-sdk/credential-provider-sso/@aws-sdk/token-providers": ["@aws-sdk/token-providers@3.1138.0", "", { "dependencies": { "@aws-sdk/core": "^3.978.1", "@aws-sdk/nested-clients": "^3.997.46", "@aws-sdk/types": "^3.974.6", "@smithy/core": "^3.35.0", "@smithy/types": "^4.19.0", "tslib": "^2.6.2" } }, "sha512-GpyAr0DD63YOEmYFM6Df+gJuIgC92MMTiBK4FTKfxii5MJ9ge20epR7LyroulscYlG89J+ZB2ivFDPjvfQhzdw=="],
+
+    "@earendil-works/pi-agent-core/typebox": ["typebox@1.3.27", "", {}, "sha512-zu+jc1pcy4UiNThxikUr36f0Rybk9PEeCg/NE6adeWr/SKsdNO4EzZHYRDlv2YCVAfj3Odq3dESSo/jNyoBXzA=="],
+
+    "@earendil-works/pi-ai/typebox": ["typebox@1.3.27", "", {}, "sha512-zu+jc1pcy4UiNThxikUr36f0Rybk9PEeCg/NE6adeWr/SKsdNO4EzZHYRDlv2YCVAfj3Odq3dESSo/jNyoBXzA=="],
+
+    "@earendil-works/pi-coding-agent/typebox": ["typebox@1.3.27", "", {}, "sha512-zu+jc1pcy4UiNThxikUr36f0Rybk9PEeCg/NE6adeWr/SKsdNO4EzZHYRDlv2YCVAfj3Odq3dESSo/jNyoBXzA=="],
 
     "gaxios/https-proxy-agent": ["https-proxy-agent@7.0.6", "", { "dependencies": { "agent-base": "^7.1.2", "debug": "4" } }, "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw=="],
 
