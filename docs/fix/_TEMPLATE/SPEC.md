@@ -60,6 +60,23 @@ command plus its expected outcome — and may carry a nested
 `Relevant files: <path, path…>` line: **metadata, never a task** (owner:
 `skills/phase-contract/SKILL.md`).
 
+### Planning evidence
+
+One row per Engineering claim (the closed column order and vocabularies are owned
+by `skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-evidence.md` and
+this section names it instead — never both.
+
+### Obligations
+
+One row per normative behaviour, compatibility invariant, affected use case, and
+required failure state (`obligation-id | authority-source | affected-use-case-or-invariant | phase | task |
+implementation-owner | validator | required-evidence | status` — shape owned by
+`skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
+and this section names it — never both. Before the unit ships, every row is
+`verified` (or an evidenced `n/a`).
+
 ## Evidence
 
 One row per acceptance criterion: what was run, exit status/digest, observed output

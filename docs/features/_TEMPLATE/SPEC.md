@@ -43,6 +43,23 @@ A red gate is never excused by an unrecorded issue.
 P1…Pn with stable IDs, one line each, smallest first. Final task is verification when the unit has behavior. Each task carries its validator — a backticked command plus its expected outcome (for example
 `(validator: \`node --test scripts/x.test.mjs\` exits 0)`) — and may carry a nested `Relevant files: <path, path…>` line naming that task's read set: **metadata, never a task**. `phase-lint` accepts these bullets and full `## P<n> —` blocks alike (owner: `skills/phase-contract/SKILL.md`), and a file absent from the list is never out of scope for the executor.
 
+### Planning evidence
+
+One row per Engineering claim (the closed column order and vocabularies are owned
+by `skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-evidence.md` and
+this section names it instead — never both.
+
+### Obligations
+
+One row per normative behaviour, compatibility invariant, affected use case, and
+required failure state (`obligation-id | authority-source | affected-use-case-or-invariant | phase | task |
+implementation-owner | validator | required-evidence | status` — shape owned by
+`skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
+and this section names it — never both. Before the unit ships, every row is
+`verified` (or an evidenced `n/a`).
+
 ## Evidence
 
 One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
