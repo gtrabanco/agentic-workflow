@@ -217,7 +217,7 @@ test("the builder refuses a SPEC-stage set with more than the projection row", (
   assert.ok(built.diagnostics.some((d) => d.code === "invalid-artifact-set"), JSON.stringify(built.diagnostics));
 });
 
-test("the plan set requires SPEC + ACCEPTANCE and accepts the size-applicable extras", () => {
+test("the plan set requires SPEC and accepts the size-applicable extras; the acceptance manifest binds when present (fix/285)", () => {
   const minimal = buildPreExecutionArtifactSnapshot(planInput(DIGEST_A));
   assert.equal(minimal.ok, true, JSON.stringify(minimal.diagnostics ?? null));
   assert.deepEqual(minimal.snapshot.artifacts.map((r) => r.path),
@@ -239,8 +239,16 @@ test("the plan set requires SPEC + ACCEPTANCE and accepts the size-applicable ex
   }));
   assert.equal(withLedgers.ok, true, JSON.stringify(withLedgers.diagnostics ?? null));
 
-  const missing = buildPreExecutionArtifactSnapshot(planInput(DIGEST_A, {
+  // fix/285 — a plan snapshot over just the unit doc is the lane-era shape: the
+  // acceptance manifest is a pre-lane artifact the current pipeline structurally
+  // never writes, so it binds when present and is not required. A snapshot with
+  // no spec row at all is still refused (the unit doc is the required row).
+  const specOnly = buildPreExecutionArtifactSnapshot(planInput(DIGEST_A, {
     files: [{ kind: "spec", path: "docs/toy/SPEC.md", content: toySpec() }],
+  }));
+  assert.equal(specOnly.ok, true, JSON.stringify(specOnly.diagnostics ?? null));
+  const missing = buildPreExecutionArtifactSnapshot(planInput(DIGEST_A, {
+    files: [{ kind: "acceptance", path: "docs/toy/ACCEPTANCE.md", content: "# A\n" }],
   }));
   assert.equal(missing.ok, false);
   assert.ok(missing.diagnostics.some((d) => d.code === "missing-artifact-kind"));

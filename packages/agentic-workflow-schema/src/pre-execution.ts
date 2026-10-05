@@ -574,9 +574,12 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 // PreExecutionArtifactSnapshot v1 — semantics the projection cannot state
 // ---------------------------------------------------------------------------
 
-/** The rows each stage REQUIRES. A fix unit has no Product half (D6). */
+/** The rows each stage REQUIRES. A fix unit has no Product half (D6). The
+ * acceptance manifest binds when present (fix/285): it is a pre-lane artifact
+ * lane-era units structurally never write — requiring it refused every
+ * lane-era plan snapshot (issue #285). */
 const REQUIRED_ARTIFACTS: Readonly<Record<PreExecutionStage, readonly PreExecutionArtifactKind[]>> =
-  Object.freeze({ spec: ["spec"], plan: ["spec", "acceptance"] });
+  Object.freeze({ spec: ["spec"], plan: ["spec"] });
 
 function snapshotSemantics(document: Record<string, unknown>, collector: PreExecutionCollector): void {
   const stage = document.stage as PreExecutionStage;
