@@ -120,9 +120,20 @@ gh pr view <N> --json headRefOid,comments
   review evidence, then evaluate the delivery gates below.
 - **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at
   the head; route to `/review-change`.
-- **stale** — a marker exists but its `sha` does not equal `headRefOid`. Any SHA
-  mismatch voids the receipt → **BLOCKER**: route to `/review-change` for a
-  re-review. Do not use a local `git diff` to override the PR-head comparison.
+- **stale** — a marker exists but its `sha` does not equal `headRefOid`. Before
+  voiding, apply the scope-aware judge (fix/286, #182 AC 3/9): a receipt that
+  recorded a scope manifest (`scope=<64-hex>` in the marker) stays **current**
+  when the head delta (receipt sha → head, `git diff --name-only`) touches only
+  non-affecting paths — the closed classes (session log `docs/LOGS.md`, agent
+  toolstate/memory `.engram/`, `.pi/`, `.serena/`) are owned by
+  `scripts/scope-manifest.mjs`; any path matching no named class is affecting.
+  Run `bun scripts/review-receipt.mjs verify --pr <N>` — it computes the delta
+  locally and answers `current` (exit 0) or `stale` (exit 4, naming the
+  affecting paths). A legacy receipt without a scope attribute, an affecting
+  delta, or an unresolvable delta voids the receipt → **BLOCKER**: route to
+  `/review-change` for a re-review. Do not use a local `git diff` to override
+  the PR-head comparison — the delta check only ever *keeps* a scoped receipt
+  current; it never manufactures currency for a scope-less one.
 
 Never compose, reconstruct, or "spot-check" the review from the diff to clear a
 missing/stale receipt — that is `review-change`'s turn, and re-litigating axes

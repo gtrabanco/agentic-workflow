@@ -76,6 +76,12 @@
         "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)",
         "triage 32 F25": "the sensor reference ceiling at ceil(2512 x 1.10) = 2764 (review finding F18); SENSOR_SIGNALS.md measured 2512 est / 150 lines before the F31 fold"
       }
+    },
+    "audit-pr": {
+      "mainEstimateMax": 3294,
+      "mainSources": {
+        "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) — grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
+      }
     }
   },
   "routes": {
@@ -84,10 +90,11 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9754,
-      "routeLinesMax": 609,
+      "routeEstimateMax": 9962,
+      "routeLinesMax": 619,
       "sources": {
-        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)"
+        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
+        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md — route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
     "audit-pr:fix": {
@@ -95,10 +102,11 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9754,
-      "routeLinesMax": 609,
+      "routeEstimateMax": 9962,
+      "routeLinesMax": 619,
       "sources": {
-        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)"
+        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
+        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md — route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:descope": {
@@ -298,8 +306,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20083,
-      "routeLinesMax": 1444,
+      "routeEstimateMax": 20312,
+      "routeLinesMax": 1459,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -309,7 +317,8 @@
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (17701/1277 measured → 19472/1405 declared); the review-change:adversarial route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
         "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (18145 -> 19960 est / 1306 -> 1437 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)"
+        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+        "fix 286 (scope manifest closeout)": "the receipt closeout / scope-aware judge (fix 286) grew the route's skill files — route measured at this re-basis; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:default-backend": {
@@ -328,8 +337,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18265,
-      "routeLinesMax": 1325,
+      "routeEstimateMax": 18494,
+      "routeLinesMax": 1340,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -339,7 +348,8 @@
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-backend route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
         "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)"
+        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) — route measured at this re-basis; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:default-web": {
@@ -358,8 +368,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18265,
-      "routeLinesMax": 1325,
+      "routeEstimateMax": 18494,
+      "routeLinesMax": 1340,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -369,7 +379,8 @@
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured → 17654/1286 declared); the default-web route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
         "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)"
+        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) — route measured at this re-basis; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:synthesize": {
@@ -388,8 +399,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18781,
-      "routeLinesMax": 1349,
+      "routeEstimateMax": 19010,
+      "routeLinesMax": 1364,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -399,7 +410,8 @@
         "triage 32 F22": "the F14–F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16516/1191 measured → 18168/1311 declared); the synthesize route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
         "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
         "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16961 -> 18658 est / 1220 -> 1342 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)"
+        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) — route measured estimate 17281, lines 1240; ceiling = ceil(measured x 1.10)"
       }
     }
   },
