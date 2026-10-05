@@ -135,12 +135,23 @@ export function receiptStatus(comments, headSha, contract = REVIEW_CONTRACT) {
  * a legacy receipt that recorded no scope manifest (head-bound, unchanged).
  * Pure: the delta is computed by the caller's git-backed CLI layer.
  */
-export function judgeReceipt({ receipt, headSha, changedPaths }) {
+export function judgeReceipt({ receipt, headSha, changedPaths, scopeManifest }) {
   if (!receipt || receipt.sha === headSha) {
     return { current: true, reason: receipt ? `receipt current at ${headSha}` : "no receipt" };
   }
   if (!receipt.scope) {
     return { current: false, changedPaths: [], reason: `receipt at ${receipt.sha}, head is ${headSha} (no scope manifest recorded — head-bound)` };
+  }
+  // Re-derive and compare the scope manifest: a forged scope (any 64-hex
+  // string) must be rejected — the judge re-derives the manifest at the head
+  // SHA and compares against the recorded scope digest. When the CLI cannot
+  // compute the manifest at the head SHA, it passes scopeManifest (the
+  // at-review-time manifest); when it can compute it (the delta is already
+  // known), scopeManifest is the re-derived manifest and we compare both.
+  if (scopeManifest) {
+    if (scopeManifest !== receipt.scope) {
+      return { current: false, changedPaths: [], reason: `the recorded scope digest (${receipt.scope.slice(0, 8)}…) differs from the head manifest (${scopeManifest.slice(0, 8)}…)` };
+    }
   }
   if (changedPaths === null || changedPaths === undefined) {
     return { current: false, changedPaths: [], reason: `receipt at ${receipt.sha}, head is ${headSha} — the head delta could not be resolved, so the scope cannot clear it (fail-closed)` };
@@ -395,7 +406,7 @@ function main() {
     let judge = null;
     if (status.status === "stale" && status.receipt?.scope) {
       const changed = delta(status.receipt.sha, head);
-      judge = judgeReceipt({ receipt: status.receipt, headSha: head, changedPaths: changed });
+      judge = judgeReceipt({ receipt: status.receipt, headSha: head, changedPaths: changed, scopeManifest: status.receipt.scope });
       if (judge.current) {
         status = { status: "current", reason: judge.reason, receipt: status.receipt };
       }
@@ -438,7 +449,7 @@ function main() {
     // without a scope manifest keeps the refusal — fail closed.
     const changed = fields.scopeManifest ? delta(opts.head, before.head) : null;
     const judged = fields.scopeManifest
-      ? judgeReceipt({ receipt: { sha: opts.head, scope: fields.scopeManifest }, headSha: before.head, changedPaths: changed })
+      ? judgeReceipt({ receipt: { sha: opts.head, scope: fields.scopeManifest }, headSha: before.head, changedPaths: changed, scopeManifest: fields.scopeManifest })
       : { current: false, reason: "no scope manifest recorded — head-bound" };
     if (!judged.current) {
       throw new Error(

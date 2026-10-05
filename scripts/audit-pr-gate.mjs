@@ -95,7 +95,7 @@ export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
   // precedence: the receipt gate still fires before any gate is read.
   let scopeJudge = null;
   if (status.status === "stale" && status.receipt?.scope) {
-    scopeJudge = judgeReceipt({ receipt: status.receipt, headSha, changedPaths });
+    scopeJudge = judgeReceipt({ receipt: status.receipt, headSha, changedPaths, scopeManifest: status.receipt.scope });
     if (scopeJudge.current) {
       status = { status: "current", reason: scopeJudge.reason, receipt: status.receipt };
     }
@@ -347,8 +347,15 @@ function main() {
     return;
   }
 
-  // comment
-  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates });
+  // comment — shares the same scoped-receipt logic as evaluate (fix/286)
+  const newest = latestReceipt(forge.comments);
+  const changedPaths = newest?.scope && newest.sha !== head
+    ? changedPathsBetween((...args) => {
+        const result = run("git", args);
+        return result.status === 0 ? result.stdout : null;
+      }, newest.sha, head)
+    : undefined;
+  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths });
   const action = mergeCommentAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
   if (action.action === "none") throw new Error(`refusing to post a merge-ready comment: ${verdict.reason}`);
   if (action.action === "post") {
