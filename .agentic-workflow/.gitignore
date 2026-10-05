@@ -1,0 +1,8 @@
+# Store/cache: ignore everything except the committed config (F28, negation fixed by F38).
+# Last matching pattern wins: `/*` ignores all entries, then `!index.json`
+# re-includes the committed config and `!.gitignore` re-includes this rule
+# file itself. Subdirectories (index/, custom/) and the store files inside
+# them stay ignored — D12 constrains store.path to this dir.
+/*
+!index.json
+!.gitignore
