@@ -102,7 +102,30 @@ verdict:
      `→ Next: /unit-lane <unit> --retriage`. An absent ledger section
      (`### Planning evidence` / `### Obligations`) on a lane-era unit is a
      producer defect, not an audit pass: the lane's plan step writes them
-     (see item 2).
+     (see item 2). The gate also requires ≥1 row in the obligation ledger
+     — an empty `### Obligations` table (zero rows) is treated as **BLOCKED**
+     and routed to the lane's plan step, because a vacuous obligations table
+     cannot demonstrate that every obligation was verified; if there are truly
+     no obligations, the section must carry a single `n/a: <reason>` row.
+     An absent ledger section without any row (not even an `n/a:` placeholder)
+     → **BLOCKED**,
+     `→ Next: /unit-lane <unit> --retriage`.
+     
+     **Non-author-controlled discriminator.** The triage block re-derivation
+     does not depend on any author-controlled artifact (`progress.md` /
+     `ACCEPTANCE.md`); it is a pure function of the unit doc's own content,
+     so a unit cannot choose a weaker gate by omitting an author-controlled
+     marker. The triage `Steps:` line comparison is a deterministic, fixed-
+     output check (not a subjective judgment) and is bounded by the unit's
+     own scope.
+     
+     **Frozen digest anchor.** The triage block comparison is anchored by a
+     frozen digest: `bun scripts/unit-route.mjs --triage <unit>` can emit a
+     digest of the triage block alongside the block text; the audit compares
+     both the block and the digest. The digest is derived from the unit doc's
+     content at the time of the triage run, so a later tampering of the unit
+     doc will produce a different digest. A digest anchor is optional: the
+     block-verbatim comparison alone is sufficient for lane-era currency.
    - **Legacy unit** (carries `progress.md` receipts) — the unit's
      `progress.md` carries
      `## Pre-execution review receipt v1 — plan` whose digest re-derives
