@@ -140,6 +140,42 @@ P5 — Verification sweep: full gate `node --test scripts/*.test.mjs`,
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
 
+## Triaged steps
+
+```text
+TRIAGE — 285-pre-execution-lineage-gate (fix)
+Steps: plan, implement, tests, evidence, review, docs
+Skipped: research: trivial scope, design: trivial scope, release: not a feature
+Budget: strong
+```
+
+> Authoritative step list from `bun scripts/unit-route.mjs --triage 285-pre-execution-lineage-gate` — the model never re-derives, reorders, or invents steps. Skipped steps recorded as `n/a: <reason>`: research — n/a (catalog: fix unit), design — n/a (catalog: fix unit), release — n/a (catalog: fix unit).
+
+### Planning evidence
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | file-read | plan stage requires `ACCEPTANCE.md` (`required: true`, kind `acceptance`) — the retired pre-lane artifact | `scripts/pre-execution-contract.mjs:39` | verified 2026-10-05 | O1 |
+| PE-002 | file-read | audit-pr gate 1 demands a `progress.md` plan receipt re-verified via `pre-execution-snapshot.mjs verify --stage plan` | `skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` (§Pre-execution lineage, item 1) | verified 2026-10-05 | O3 |
+| PE-003 | file-read | the sensor already retired the receipt stages: lane-era rows are `stage: "lane"`, `boundDigest: null` | `scripts/workflow-status.mjs` (buildEnvelope, feature 61 P8b comment) | verified 2026-10-05 | O3 |
+| PE-004 | file-read | the ledger contract re-homes Planning evidence + Obligations into the unit doc (XS/S embedded, M/L separate files, never both) | `skills/pre-execution-review/references/LEDGERS.md` (ledger table + sizing note) | verified 2026-10-05 | O3, O4 |
+| PE-005 | grep | the producer never wrote the ledgers: `grep -i obligation skills/unit-lane/` → 0 hits; lane plan step fills Tasks only | `skills/unit-lane/references/PLAN.md` | verified 2026-10-05 | O4 |
+| PE-006 | file-read | unit-doc templates carry no ledger sections | `docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md` | verified 2026-10-05 | O4 |
+| PE-007 | file-read | content pins freeze sentences of reference 02 (`Any \`planned\`…`, `wearing a new name`, `BLOCKED\n   \|, naming the ids`, `may not be exported`, `only emitter of MERGE-READY`, verify-recipe naming, no `git hash-object`) — the gate rewrite must keep them | `scripts/pre-execution-quality.test.mjs` (P4 route-contract tests) | verified 2026-10-05 | O3 |
+| PE-008 | file-read | triage re-derivation is deterministic: `unit-route.mjs --triage` prints `Steps:` from doc facts (type, scope, tests) — comparing the pasted block's `Steps:` line is a mechanical currency check | `scripts/unit-route.mjs` (runTriage, unitFacts) | verified 2026-10-05 | O3 |
+| PE-009 | file-read | acceptance-row requiredness is decided by `STAGE_ARTIFACTS`, not the schema builder — the schema package stays untouched | `scripts/pre-execution-contract.mjs` (buildSnapshot consumes `row.required`) | verified 2026-10-05 | O1, O2 |
+| PE-010 | unknown | whether any consumer other than audit-pr reference 02 keys on the plan-stage `acceptance` requiredness | owner: unit-lane (sweep during P2) | ASSUMPTION-UNVERIFIED | O2 |
+
+### Obligations
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | AC1 | lane-era fix unit builds a plan snapshot with no `ACCEPTANCE.md` | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs` | test cases `plan snapshot builds for a lane-era fix unit`, digest recorded in Evidence | planned |
+| O2 | AC2 | legacy units still bind the acceptance manifest when present | P2 | P2 (tests in P1) | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs` | test case `legacy acceptance manifest still binds when present` | planned |
+| O3 | AC3 | audit-pr lineage gate reads lane-era surfaces; legacy receipt path retained; pinned sentences survive | P3 | P3 | unit-lane:implement | `node --test scripts/pre-execution-quality.test.mjs` | content pins pass post-rewrite | planned |
+| O4 | AC4 | templates + unit-lane plan step produce the ledgers per LEDGERS.md sizing | P4 | P4 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs scripts/ledger-ownership.test.mjs scripts/unit-route.test.mjs` | template + PLAN.md pins pass | planned |
+| O5 | AC5 | full repo gate green, budgets within ceiling | P5 | P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | planned |
+
 ## Progress log
 
 One entry per step taken. Format exactly:
