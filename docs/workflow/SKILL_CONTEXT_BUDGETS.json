@@ -97,11 +97,12 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10113,
-      "routeLinesMax": 632,
+      "routeEstimateMax": 10533,
+      "routeLinesMax": 657,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
+        "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
         "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
@@ -110,11 +111,12 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10113,
-      "routeLinesMax": 632,
+      "routeEstimateMax": 10533,
+      "routeLinesMax": 657,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
+        "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
         "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
