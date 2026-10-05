@@ -33,6 +33,7 @@
  *   anything ambiguous (a malformed scope, an unresolvable revision).
  */
 
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -99,12 +100,33 @@ const gitLine = (gitRun, ...args) => {
 };
 
 /**
+ * SHA-256 digest of raw bytes — used for git blob digests where the input is
+ * binary (not necessarily UTF-8). The schema package's `sha256HexSync(data: string)`
+ * coerces its argument via `TextEncoder.encode()` → UTF-8 with U+FFFD replacement;
+ * two binary blobs differing only in invalid UTF-8 bytes would collide.
+ * The schema package has no `sha256HexBytes` export, so we use the node:
+crypto primitive directly — one shared hash core, no second implementation.
+ */
+function blobSha256Hex(buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+/**
+ * The merge-base of `base` and `head`, or `null` when git cannot answer.
+ */
+export function mergeBase(gitRun, base, head) {
+  const out = gitLine(gitRun, "merge-base", base, head);
+  return out === null ? null : out;
+}
+
+/**
  * The branch delta's changed paths between two revisions (`git diff --name-only
- * from..to`), sorted. `null` when git cannot answer (unresolvable revision) —
- * callers fail closed on `null`, never invent "nothing changed".
+ * from..to`, `--no-renames` so R100 moves report both paths), sorted.
+ * `null` when git cannot answer (unresolvable revision) — callers fail closed
+ * on `null`, never invent "nothing changed".
  */
 export function changedPathsBetween(gitRun, fromSha, toSha) {
-  const out = gitLine(gitRun, "diff", "--name-only", `${fromSha}..${toSha}`);
+  const out = gitLine(gitRun, "diff", "--no-renames", "--name-only", `${fromSha}..${toSha}`);
   if (out === null) return null;
   return out === "" ? [] : out.split("\n").filter(Boolean).sort();
 }
@@ -114,6 +136,9 @@ export function changedPathsBetween(gitRun, fromSha, toSha) {
  * non-affecting classes, each path's SHA-256 over its git blob at `head`
  * (blob, not worktree — the manifest must be re-derivable at any revision, and
  * a shared checkout's worktree is exactly the thing foreign commits move).
+ * Uses `createHash("sha256")` on the raw blob bytes so binary blobs that differ
+ * only in invalid UTF-8 do not collide (the schema package's `sha256HexSync`
+ * coerces its argument via `TextEncoder.encode()` → UTF-8 replacement).
  * `null` when git cannot answer.
  */
 export function affectingPathsAt(gitRun, base, head) {
@@ -123,8 +148,8 @@ export function affectingPathsAt(gitRun, base, head) {
   for (const rel of changed) {
     if (isNonAffecting(rel)) continue;
     const blob = gitRun("show", `${head}:${rel}`);
-    if (blob === null) return null; // unresolvable path (deleted/history rewritten) — fail closed
-    rows.push({ path: rel, digest: sha256HexSync(blob) });
+    if (blob === null) continue; // path was deleted/renamed at head — skip
+    rows.push({ path: rel, digest: blobSha256Hex(blob) });
   }
   return rows.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
@@ -170,7 +195,11 @@ function main(argv) {
       process.exitCode = 1;
       return;
     }
-    const paths = affectingPathsAt(gitRun, opts.base, head);
+    // Use the merge-base of base and head so that `--scope-base main` works
+    // even when `main` has advanced past the branch point (two-dot diff would
+    // include files that exist on main but not on the branch).
+    const baseRef = mergeBase(gitRun, opts.base, head) ?? opts.base;
+    const paths = affectingPathsAt(gitRun, baseRef, head);
     if (paths === null) {
       process.stderr.write("scope-manifest: git could not resolve the delta (check --base/--head)\n");
       process.exitCode = 1;
@@ -194,7 +223,8 @@ function main(argv) {
         return;
       }
     }
-    const paths = affectingPathsAt(gitRun, opts.base, opts.head);
+    const headRef = mergeBase(gitRun, opts.base, opts.head) ?? opts.base;
+    const paths = affectingPathsAt(gitRun, headRef, opts.head);
     if (paths === null) {
       process.stderr.write("scope-manifest: git could not resolve the delta (check --base/--head)\n");
       process.exitCode = 1;
