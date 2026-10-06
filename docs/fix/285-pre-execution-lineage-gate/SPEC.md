@@ -164,6 +164,11 @@ created | scripts/unit-lineage.mjs | the machine surface of audit-pr gate 1 — 
 | AC5 | `node --test scripts/*.test.mjs` | 0 | 619 pass / 0 fail; `bun scripts/check-skill-context.mjs` PASS 28 skills + PASS 14 routes | full repo gate |
 | AC5 | `bun run test` (packages/agentic-workflow-schema) | 0 | 717 pass / 0 fail (schema 4.6.0); check:pre-execution-schemas + check:verification-schemas drift-free | schema package gate |
 | — | `bun scripts/diff-guard.mjs --base main --unit 285` | 1 | `DIFF-GUARD BREACH — Lines: 617 > 400 · Files: 16 > 8` | exception recorded: `decisions.md` D-285-2 (real count reported, nothing shrunk) |
+| — | `node --test scripts/lane-era-lineage.test.mjs` (fold F9–F13, red-first) | 0 | 17 tests pass; behavioral `unit-lineage` suite drives gate 1's runtime over fixture repos (red: 15 fail / 2 pass at `a505c7b7`) | fold `833c1121` |
+| — | `node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate` | 0 | `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (5)` | the gate's own machine surface on this unit |
+| — | `node --test scripts/*.test.mjs` | 0 | 632 pass / 0 fail | full repo gate at `833c1121` |
+| — | `bun scripts/check-skill-context.mjs` | 0 | `PASS context budgets: 28 skills` | full budget sweep at `833c1121` |
+| — | `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` | 0 | `CHECK PASS` | F13: every `folded: yes` row carries a verified fold token |
 
 ## Triaged steps
 
@@ -200,6 +205,7 @@ Budget: strong
 | O3 | AC3 | audit-pr lineage gate reads lane-era surfaces; legacy receipt path retained; pinned sentences survive | P3 | P3 | unit-lane:implement | `node --test scripts/pre-execution-quality.test.mjs` | content pins pass post-rewrite | verified |
 | O4 | AC4 | templates + unit-lane plan step produce the ledgers per LEDGERS.md sizing | P4 | P4 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs scripts/ledger-ownership.test.mjs scripts/unit-route.test.mjs` | template + PLAN.md pins pass | verified |
 | O5 | AC5 | full repo gate green, budgets within ceiling | P5 | P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | verified |
+| O6 | P6 | review findings F9–F13 folded with machine mechanisms: F10 discriminator keyed on a verifying receipt, F11 obligation BLOCKED rules with a reader, F12 behavioral triage currency, F9 digest paragraph retracted, F13 provenance repaired | P6 | P6 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs && node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` | suite green (red-first at a505c7b7) + CHECK PASS in Evidence | verified |
 
 ## Progress log
 
@@ -212,6 +218,8 @@ Budget: strong
 - 2026-10-05 14:00 — diff guard BREACH (617/16 vs 400/8): honest split attempted (three commits), exception recorded D-285-2, real count reported — next: review
 - 2026-10-05 14:05 — review step ran at HEAD ffab7c28 (axes: code, security, perf, verify; a11y/brand/seo n/a) — `review-findings.md` written, 1 low report-note, 0 fix-now — next: docs
 - 2026-10-05 14:20 — docs step: bump-skill over the three touched skills (unit-lane 1.3.0, audit-pr 5.5.0, pre-execution-review 2.7.0), changelog rows, README audit-pr cell; full gate re-run green (619/0) → 7404a423 — next: open PR
+- 2026-10-06 00:10 — fold F9–F13 (cycle 4, task P6): red-first behavioral suite for `scripts/unit-lineage.mjs` (gate 1's machine surface; 15 fail / 2 pass at a505c7b7), script + gate-1 rewrite + routing pin → 833c1121 — next: fold marks + ledger provenance
+- 2026-10-06 00:15 — F13 fold: F1 report-note's bogus `folded: yes` dropped (never folded, no token), cycle-4 fold note recorded; ledger-provenance --check green; SPEC evidence + obligations O6 — next: flip F9–F13 marks
 
 ## Next
 
