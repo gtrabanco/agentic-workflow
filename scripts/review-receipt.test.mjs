@@ -426,6 +426,56 @@ test("judgeReceipt: a non-affecting head delta stays current; an affecting delta
   assert.equal(judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: null }).current, false);
 });
 
+// ---------------------------------------------------------------------------
+// F14: scope re-derivation at call site — the judge's guard must not be a
+// tautology.  The test builds a git checkout, derives a scope at a known
+// head, then calls the verify command with a forged scope value.  If the
+// caller (the CLI) re-derives at judge time, the forged scope is caught.
+// ---------------------------------------------------------------------------
+
+test("F14 — judgeReceipt rejects a forged scope when the CLI re-derives at judge time", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-f14-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  // Build a repo with a non-affecting surface and an affecting surface
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};");
+  // Make one affecting commit on main so that a delta is measurable
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+
+  // Step 1 — emit a receipt with the real scope (via --scope-base main)
+  const emitDerive = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(emitDerive.status, 0, "derive scope from base: " + emitDerive.stderr);
+  const emitBody = emitDerive.stdout;
+
+  // Step 2 — advance the repo with an affecting change (touched src/)
+  fs.writeFileSync(path.join(root, "src/extra.ts"), "export const x = 1;");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "feat: added src/extra"], { cwd: root });
+  const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+
+  // Step 3 — verify with a forged scope: inject a forged scope= in the marker
+  // while the body still carries the old one.  If the CLI re-derives at
+  // judge time (F14 fix), the forged scope does not match the head-derived
+  // manifest and the receipt is stale.
+  const forgedScope = "e".repeat(64);
+  const forgedBody = emitBody.replace(
+    /(<\!-- review-change:pass sha=[0-9a-f]{40} contract=v1) scope=[0-9a-f]{64}/,
+    `$1 scope=${forgedScope}`,
+  );
+  const forgedComment = comment(forgedBody);
+  const verifyOut = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([forgedComment]), encoding: "utf8" });
+  // The forged scope must be caught: the judge re-derives at movedHead and
+  // sees that the recorded scope (forged) does not match.  Result: stale.
+  assert.notEqual(verifyOut.status, 0, "a forged scope must be rejected");
+  const report = JSON.parse(verifyOut.stdout);
+  assert.equal(report.status, "stale", "a forged scope that differs from head-derived manifest must be stale");
+});
+
 test("CLI verify in a git checkout: a foreign commit between review and audit leaves the receipt current (AC3/AC9)", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -437,7 +487,10 @@ test("CLI verify in a git checkout: a foreign commit between review and audit le
   execFileSync("git", ["add", "-A"], { cwd: root });
   execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
   const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
-  const receipt = comment(renderReceiptBody({ sha: head, ...fields(), scopeManifest: SCOPE_A }));
+  // Derive the real scope from the repo so the re-derived manifest matches
+  const render = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(render.status, 0, "derive scope at head: " + render.stderr);
+  const receipt = comment(render.stdout);
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/LOGS.md"), "foreign entry\n");
   execFileSync("git", ["add", "docs/LOGS.md"], { cwd: root });

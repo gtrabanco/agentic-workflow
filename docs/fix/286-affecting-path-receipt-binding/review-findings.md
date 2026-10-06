@@ -17,8 +17,8 @@ budgets PASS), a11y/brand/seo — n/a (no UI or user-facing copy).
 |---|---|---|---|---|---|---|
 | REVIEW-RAN | HEAD 2d222a88bd7c3e5d9c17402b00dcd90b29bdbd14 | n/a | n/a | review-mark | n/a | n/a |
 | F1 | scripts/review-receipt.mjs (renderReceiptBody) | security | med | fix-now | fold into current phase (source: validate the scope value 64-hex at the body builder, red test) · fold 2d222a88 | yes |
-| F2 | audit-pr Step 1 receipt gate — `bun scripts/review-receipt.mjs verify --pr 288` → exit 3 `missing-review-receipt` at head 2cfafbd7 (no `review-change:pass` marker on PR #288) | Review receipt | high | fix-now | /review-change (re-review at the head), then re-run /audit-pr | no |
-| F3 | docs/fix/286-affecting-path-receipt-binding/ — no `## Pre-execution review receipt v1 — plan` (no progress.md); `pre-execution-snapshot.mjs verify --stage plan --unit 286-affecting-path-receipt-binding` → exit 1 `required artifact(s) absent: .../ACCEPTANCE.md` | Pre-execution lineage | high | fix-now | /unit-lane 286-affecting-path-receipt-binding (lane review step re-derives the artifact; enforcer alignment tracked by #285 / PR #287), then re-run /audit-pr | no |
+| F2 | scripts/audit-pr-gate.mjs, scripts/review-receipt.mjs | workflow | high | fix-now | /review-change (re-review at the head), then re-run /audit-pr | no |
+| F3 | scripts/pre-execution-snapshot.mjs, docs/fix/286-affecting-path-receipt-binding/ | workflow | high | fix-now | /unit-lane 286-affecting-path-receipt-binding (lane review step re-derives the artifact; enforcer alignment tracked by #285 / PR #287), then re-run /audit-pr | no |
 | REVIEW-RAN | HEAD de71f51548729de10a0346e655deea31f46ef81f | n/a | n/a | review-mark | n/a | n/a |
 | F4 | scripts/scope-manifest.mjs:92,125-127 | code | high | fix-now | fold into current phase (hash the blob bytes — `sha256Bytes`/`createHash` — not the ToString-coerced string; binary-blob fixture) · fold 4e8d638 | yes |
 | F5 | scripts/scope-manifest.mjs:105-109 | security | high | fix-now | fold into current phase (`git diff --name-only --no-renames`; R100-move-into-non-affecting regression test) · fold 4e8d638 | yes |
@@ -26,13 +26,8 @@ budgets PASS), a11y/brand/seo — n/a (no UI or user-facing copy).
 | F7 | scripts/scope-manifest.mjs:105 | code | med | fix-now | fold into current phase (resolve the merge base before the delta; main-advanced test) · fold 4e8d638 | yes |
 | F8 | scripts/review-receipt.mjs:132-136,148 | security | med | fix-now | fold into current phase (re-derive and compare the scope manifest at judge time) · fold 4e8d638 | yes |
 | F9 | scripts/scope-manifest.mjs:123-125 | perf | med | fix-now | fold into current phase (one `git cat-file --batch` for the blob set) · fold 4e8d638 | yes |
-| F5 | scripts/scope-manifest.mjs:105-109 | security | high | fix-now | fold into current phase (`git diff --name-only --no-renames`; R100-move-into-non-affecting regression test) | no |
-| F6 | scripts/audit-pr-gate.mjs:341 vs :351 | security | high | fix-now | fold into current phase (thread `changedPaths` into the `comment` branch; evaluate/comment agreement test) | no |
-| F7 | scripts/scope-manifest.mjs:105 | code | med | fix-now | fold into current phase (resolve the merge base before the delta; main-advanced test) | no |
-| F8 | scripts/review-receipt.mjs:132-136,148 | security | med | fix-now | fold into current phase (re-derive and compare the scope manifest at judge time) | no |
-| F9 | scripts/scope-manifest.mjs:123-125 | perf | med | fix-now | fold into current phase (one `git cat-file --batch` for the blob set) | no |
 | F10 | CHANGELOG.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · README.md · skills/audit-pr/SKILL.md · SPEC `Depends on` | workflow | high | fix-now | rebase onto #287, re-run bump-skill + budget re-base with a single `audit-pr` version, correct the false SPEC "Depends on: None" · fold 4e8d638 | yes |
-| F11 | docs/fix/286-affecting-path-receipt-binding/review-findings.md (F2/F3 rows) | workflow | med | fix-now | fold into current phase (normalize `axis`/`file:line` columns to the ledger schema; re-commit as `docs` · fold 4e8d638 | yes |
+| F11 | docs/fix/286-affecting-path-receipt-binding/review-findings.md (F2/F3 rows) | workflow | med | fix-now | fold into current phase (normalize `axis`/`file:line` columns to the ledger schema; re-commit as `docs`) | yes |
 
 Cycle 2 — independent review at HEAD `de71f515` (2026-10-05). Axes run: code,
 security, verify, perf (all four FAIL); workflow/spec-drift (FAIL); design /
