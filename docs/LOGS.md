@@ -2606,3 +2606,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Audit-pr #288 (fix/286-affecting-path-receipt-binding): BLOCKED — receipt absent on PR, pre-execution lineage unsatisfiable (enforcer mis-alignment tracked by #285/PR #287). All other gates pass.
 - **Decisions:** (1) Receipt absent: no review-change comment on PR #288 (comments and reviews both empty) → blocker 1, route /review-change. (2) Pre-execution lineage: lane-era unit has no progress.md/ACCEPTANCE.md, so pre-execution-snapshot.mjs verify --stage plan fails — blocker 2, route /unit-lane; this is issue #285 tracked as companion PR #287 (still OPEN). (3) 12 commits delivered on the branch across P1–P5, all tests green 626/0, budgets PASS.
 - **Next:** Run /review-change to post a receipt at the head, then re-run /audit-pr 288. If the lane route still refuses due to #285's enforcer gap, merge PR #287 (fix 285: pre-execution lineage gate reads lane-era surfaces) first, then re-run /unit-lane 286-affecting-path-receipt-binding
+
+## 2026-10-06T20:36Z — main — manual
+- **Commits:** 1 (`de71f515`) on branch `fix/286-affecting-path-receipt-binding`
+- **Files:** `docs/fix/286-affecting-path-receipt-binding/review-findings.md`
+- **Summary:** Committed and pushed fix/286 branch: added review findings F2 (audit-pr Step 1 receipt gate failing — PR #288 missing `review-change:pass` marker) and F3 (pre-execution snapshot missing required artifacts — no `ACCEPTANCE.md` or `progress.md`) to `review-findings.md`. The fix/286 branch is already pushed; the working tree is clean on `main`.
+- **Next:** Address F2 — run `/review-change` to re-review at the current head and get the `review-change:pass` marker for PR #288, then re-run `/audit-pr`. Address F3 — run `/unit-lane 286-affecting-path-receipt-binding` to re-derive the missing acceptance artifacts, then re-run `/audit-pr`.
