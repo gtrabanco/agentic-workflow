@@ -40,6 +40,18 @@ copy).
 | VF-3 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:105-112 · reviewer review-change · HEAD 7bec8d4b · recheck `grep -rn Obligations scripts/*.mjs` (excluding tests → none) + `node --test scripts/lane-era-lineage.test.mjs` green with both states untested | security | confirmed | finding-mark | n/a | n/a |
 | VF-4 | scripts/lane-era-lineage.test.mjs:161-174 · reviewer review-change · HEAD 7bec8d4b · recheck direct read (five `assert.match` prose pins, no command execution) | code | confirmed | finding-mark | n/a | n/a |
 | VF-5 | docs/fix/285-pre-execution-lineage-gate/review-findings.md:20 · reviewer review-change · HEAD 7bec8d4b · recheck `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` → exit 1, `CHECK FAIL: 1 folded row(s) lack a verified commit token: F1` | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | (cd packages/agentic-workflow-schema && bun run test) | exit 0 |
+| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | bun scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check | exit 0 |
+| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate | exit 0 |
+| F14 | scripts/unit-lineage.mjs:123 | security | high | fix-now | fold into a red-first batch: `classifyObligations` closure reads the `status` cell only — drop the `\|\| /^n\/a/i.test(id)` disjunct, and pin an `n/a`-id + `planned`-status row as BLOCKED | no |
+| F15 | scripts/unit-lineage.mjs:135-140 | security | high | fix-now | fold into the same batch: `obligationLedger` must reject the dual-home shape (embedded + `planning-obligations.md`) as BLOCKED instead of returning on the first hit; red-first fixture with an embedded closed ledger and a separate open row | no |
+| F16 | CHANGELOG.md:554 · skills/audit-pr/SKILL.md:4 | workflow | med | fix-now | fold: correct the audit-pr 5.5.0 release note to the merged gate (`unit-lineage.mjs` runtime; the "frozen digest anchor" paragraph is retracted) and bump `audit-pr`'s `version:` per the version-every-change rule (`bump-skill`) | no |
+| VF-6 | scripts/unit-lineage.mjs:123 · reviewer review-change · HEAD 30135b1b · recheck import `obligationLedger`/`classifyObligations` + reproducer: embedded row `\| n/a: not applicable \| AC1 \| planned \|` → `{"ok":true,"count":1}` | security | confirmed | finding-mark | n/a | n/a |
+| VF-7 | scripts/unit-lineage.mjs:135-140 · reviewer review-change · HEAD 30135b1b · recheck `obligationLedger(embedded-closed, separate-open)` returns the embedded table (`{"ok":true}`) and never reads the open file | security | confirmed | finding-mark | n/a | n/a |
+| VF-8 | CHANGELOG.md:554 · reviewer review-change · HEAD 30135b1b · recheck direct read of the 5.5.0 row against the retracted-paragraph text in `02_CLOSURE_AND_SCOPE_GATES.md:126-131` and `audit-pr`'s unchanged `version: 5.5.0` | workflow | confirmed | finding-mark | n/a | n/a |
 
 Cycle 2 — independent review at HEAD `b9ea9fa3` (2026-10-05). Axes run: code,
 security, verify, perf (perf PASS — no material surface); workflow/spec-drift
@@ -73,3 +85,31 @@ yes` mark was bogus (no fold token exists because no fold exists), dropped to
 `folded: no`, which is the state `ledger-provenance.mjs --check` demands of a
 report-note. Red-first: the behavioral suite ran 15 fail / 2 pass at
 `a505c7b7` before the script existed.
+
+Cycle 5 — independent review at HEAD `30135b1b` (2026-10-06). Axes run: code,
+security, verify, perf, spec-drift, workflow. design / a11y / brand / SEO — n/a
+(no UI or user-facing copy). Workspace precondition: clean worktree, branch in
+sync with `origin`. Full pass, not delta (the fold diff is 723 changed lines and
+touches files outside the folded rows' cited set — width + size triggers). All
+gates green at the head: repo suite 632/0, schema package 717/0, context budgets
+PASS, `ledger-provenance --check` CHECK PASS, `unit-lineage` OK. Every `folded:
+yes` row re-verified: F2–F8 and F9–F13 are gone at their cited locations (F9 by
+retraction; F10 by the verifying-receipt discriminator; F11/F12 by the behavioral
+suite). The fold's own runtime did not survive the adversarial pass: `unit-lineage
+.mjs` certifies `obligations closed` for a `planned` row whose **id** column reads
+`n/a` (F14) and ignores open rows in `planning-obligations.md` when an embedded
+`### Obligations` section is also present (F15 — the "never both" rule has no
+reader), both reproduced live. F16 is the release-note bookkeeping the fold left
+stale. Verdict: REVIEW-FAIL — 3 open fix-now rows. Two reviewer candidates were
+**refuted** by direct recheck and are reported with counter-evidence, not
+persisted: a prose-only `### Obligations` section and a bare-`n/a`
+`planning-obligations.md` both correctly answer BLOCKED.
+
+LOOP CAP REACHED — 285-pre-execution-lineage-gate
+- Cycles: 2 (two review→fold cycles: `9477ffe2`, `833c1121`/`9864c82c`; 4
+  `REVIEW-RAN` marks) without convergence — the cycle-4 fold introduced F14/F15
+  in its own runtime.
+- Open fix-now ids: F14 + F15 + F16 (F1 stays a `low` report-note, never folded).
+- Route: /triage-issue --prioritize-now 285-pre-execution-lineage-gate F14 F15 F16
+  (or the programmatic outer driver). A third /fold-findings cycle never starts
+  without an explicit user instruction.
