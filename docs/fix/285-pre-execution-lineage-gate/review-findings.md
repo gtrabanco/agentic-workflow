@@ -17,7 +17,7 @@ copy).
 |---|---|---|---|---|---|---|
 | REVIEW-RAN | HEAD 4fe52c7b87a9b517d62e889fdeffaa904d9081ed | n/a | n/a | review-mark | n/a | n/a |
 | REVIEW-RAN | HEAD e58760ce707e9ab2cf4331bf77ab8e3921e78b2e | n/a | n/a | review-mark | n/a | n/a |
-| F1 | scripts/unit-route.mjs (reasons map, ~line 447) | code | low | report-note | report-note: the triage block's `Skipped:` reason strings are static per unit type ("trivial scope") even when the actual scope is `standard` — misleading prose in an authoritative block. Pre-existing behaviour, outside this fix's regression boundary (fix/285 changes nothing in `unit-route.mjs`); file its own issue if a consumer ever parses those strings. | yes |
+| F1 | scripts/unit-route.mjs (reasons map, ~line 447) | code | low | report-note | report-note: the triage block's `Skipped:` reason strings are static per unit type ("trivial scope") even when the actual scope is `standard` — misleading prose in an authoritative block. Pre-existing behaviour, outside this fix's regression boundary (fix/285 changes nothing in `unit-route.mjs`); file its own issue if a consumer ever parses those strings. | no |
 | REVIEW-RAN | HEAD b9ea9fa31bb434d5a78b04963633142b14746c08 | n/a | n/a | review-mark | n/a | n/a |
 | F2 | packages/agentic-workflow-schema/package.json:3 · test/release-contract.test.mjs:28 · test/verification-gates.test.mjs:117 | code | high | fix-now | fold into current phase (bump both version pins to 4.6.0; make CI run the schema package's own `bun run test`) · fold 9477ffe2 | yes |
 | F3 | docs/fix/285-pre-execution-lineage-gate/SPEC.md:149 | spec-drift | high | fix-now | fold into current phase (rewrite the `bun run test` Evidence row to exit 1 / 715 pass / 2 fail) · fold 9477ffe2 | yes |
@@ -61,3 +61,15 @@ Escalation: full pass, not delta (fold diff + ledger growth exceeded the delta
 size trigger). Five new fix-now rows (F9–F13), four of them `regression of
 <id>`: the F4–F7 fold answered its findings with prose, and the suite that
 called the repairs green asserted words, not mechanisms.
+
+Cycle 4 fold — `833c1121` (2026-10-06). F9–F12 folded as one mechanism:
+`scripts/unit-lineage.mjs`, the machine surface of gate 1 — the discriminator
+keys on a verifying plan receipt (F10), the absent/empty/open obligation rules
+have a reader and fixture tests (F11), the triage currency check re-derives
+behaviorally over fixture repos (F12), and the phantom-digest paragraph is
+retracted (F9 — resolved by retraction, `unit-route.mjs` untouched). F13 folds
+separately: F1 was a `low` report-note that was never folded — its `folded:
+yes` mark was bogus (no fold token exists because no fold exists), dropped to
+`folded: no`, which is the state `ledger-provenance.mjs --check` demands of a
+report-note. Red-first: the behavioral suite ran 15 fail / 2 pass at
+`a505c7b7` before the script existed.

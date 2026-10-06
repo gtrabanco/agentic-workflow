@@ -49,3 +49,20 @@ justification | docs/fix/285-pre-execution-lineage-gate/decisions.md | P5 | 2026
   package vocabularies" is reworded to name `REQUIRED_ARTIFACTS` as the one
   schema surface in scope (per D-285-1); the SPEC is the unit doc, not a frozen
   plan file, so the amendment is recorded here and reflected in place.
+- **D-285-4 (2026-10-06) — cycle-4 fold (F9–F13) answered with mechanisms, not
+  prose.** Cycle 4 rejected the F4–F7 fold because its repairs were sentences
+  with no reader and no test. This fold adds `scripts/unit-lineage.mjs`, the
+  machine surface of audit-pr gate 1, and rewrites gate 1 to route through it:
+  (a) F10's replan route is executed as task P6 — the discriminator keys on a
+  **verifying** plan receipt (`pre-execution-snapshot.mjs verify --stage plan`
+  exit 0), never on author-controlled `progress.md` presence; a receipt that
+  does not re-derive falls through to the lane-era checks, so no unit can choose
+  a weaker gate. (b) F9 is resolved by **retraction**: the "frozen digest
+  anchor" paragraph named a digest `unit-route.mjs --triage` never emitted; the
+  byte binding the gate needs is already provided by the triage output being a
+  pure function of the unit doc's bytes, so implementing a digest surface would
+  be an unnecessary CLI change. (c) F11/F12 are the behavioral suite in
+  `scripts/lane-era-lineage.test.mjs` driving the runtime over fixture repos
+  (red-first: 15 fail / 2 pass at `a505c7b7`). (d) F13: F1 was a `low`
+  report-note that was never folded — its `folded: yes` mark was bogus and is
+  dropped to `folded: no`.
