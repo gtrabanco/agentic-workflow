@@ -157,7 +157,7 @@ created | scripts/unit-lineage.mjs | the machine surface of audit-pr gate 1 — 
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| AC1 | `node --test scripts/lane-era-lineage.test.mjs` | 0 | `plan snapshot builds for a lane-era fix unit with no ACCEPTANCE.md and no progress.md` pass; build prints 64-hex digest | lane-era-lineage suite (red-first: failed at 36af142c with the issue's exact `required artifact(s) absent` error) |
+| AC1 | `node --test scripts/lane-era-lineage.test.mjs` | 0 | `plan snapshot builds for a lane-era fix unit with no ACCEPTANCE.md and no progress.md` pass; build prints 64-hex digest | lane-era-lineage suite (red-first: failed at bc5e109c with the issue's exact `required artifact(s) absent` error) |
 | AC2 | `node --test scripts/lane-era-lineage.test.mjs` | 0 | `legacy acceptance manifest still binds when present` pass; kind `acceptance` bound at `<unit>/ACCEPTANCE.md` | lane-era-lineage suite |
 | AC3 | `node --test scripts/lane-era-lineage.test.mjs scripts/pre-execution-quality.test.mjs` | 0 | AC3 pins pass post-rewrite; all reference-02 content pins intact | lane-era-lineage suite + pre-execution-quality P4 pins |
 | AC4 | `node --test scripts/lane-era-lineage.test.mjs scripts/ledger-ownership.test.mjs scripts/unit-route.test.mjs` | 0 | template + PLAN.md pins pass; ledger ownership and triage contracts unbroken | lane-era-lineage + ledger-ownership + unit-route suites |
@@ -165,11 +165,11 @@ created | scripts/unit-lineage.mjs | the machine surface of audit-pr gate 1 — 
 | AC5 | `bun run test` (packages/agentic-workflow-schema) | 0 | 717 pass / 0 fail (schema 4.6.0); check:pre-execution-schemas + check:verification-schemas drift-free | schema package gate |
 | — | `bun scripts/diff-guard.mjs --base main --unit 285` | 1 | `DIFF-GUARD BREACH — Lines: 617 > 400 · Files: 16 > 8` | exception recorded: `decisions.md` D-285-2 (real count reported, nothing shrunk) |
 | — | `bun scripts/diff-guard.mjs --base origin/main --unit 285` | 1 | `DIFF-GUARD BREACH — Lines: 1335 > 400 · Files: 25 > 8` | head-true count after the cycle-4 fold (D-285-2 exception stands; real count reported, nothing shrunk) |
-| — | `node packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/285-pre-execution-lineage-gate --phase P6 --base 8c6d12db` | 0 | `PATH-GUARD pass — justified · checked: 7` | P6 checkpoint over the fold's committed range |
-| — | `node --test scripts/lane-era-lineage.test.mjs` (fold F9–F13, red-first) | 0 | 17 tests pass; behavioral `unit-lineage` suite drives gate 1's runtime over fixture repos (red: 15 fail / 2 pass at `a505c7b7`) | fold `833c1121` |
+| — | `node packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/285-pre-execution-lineage-gate --phase P6 --base 6490798b` | 0 | `PATH-GUARD pass — justified · checked: 7` | P6 checkpoint over the fold's committed range |
+| — | `node --test scripts/lane-era-lineage.test.mjs` (fold F9–F13, red-first) | 0 | 17 tests pass; behavioral `unit-lineage` suite drives gate 1's runtime over fixture repos (red: 15 fail / 2 pass at `a4400147`) | fold `9c745ef1` |
 | — | `node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate` | 0 | `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (5)` | the gate's own machine surface on this unit |
-| — | `node --test scripts/*.test.mjs` | 0 | 632 pass / 0 fail | full repo gate at `833c1121` |
-| — | `bun scripts/check-skill-context.mjs` | 0 | `PASS context budgets: 28 skills` | full budget sweep at `833c1121` |
+| — | `node --test scripts/*.test.mjs` | 0 | 632 pass / 0 fail | full repo gate at `9c745ef1` |
+| — | `bun scripts/check-skill-context.mjs` | 0 | `PASS context budgets: 28 skills` | full budget sweep at `9c745ef1` |
 | — | `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` | 0 | `CHECK PASS` | F13: every `folded: yes` row carries a verified fold token |
 
 ## Triaged steps
@@ -207,22 +207,22 @@ Budget: strong
 | O3 | AC3 | audit-pr lineage gate reads lane-era surfaces; legacy receipt path retained; pinned sentences survive | P3 | P3 | unit-lane:implement | `node --test scripts/pre-execution-quality.test.mjs` | content pins pass post-rewrite | verified |
 | O4 | AC4 | templates + unit-lane plan step produce the ledgers per LEDGERS.md sizing | P4 | P4 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs scripts/ledger-ownership.test.mjs scripts/unit-route.test.mjs` | template + PLAN.md pins pass | verified |
 | O5 | AC5 | full repo gate green, budgets within ceiling | P5 | P5 | unit-lane:implement | `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs` | gate output in Evidence | verified |
-| O6 | P6 | review findings F9–F13 folded with machine mechanisms: F10 discriminator keyed on a verifying receipt, F11 obligation BLOCKED rules with a reader, F12 behavioral triage currency, F9 digest paragraph retracted, F13 provenance repaired | P6 | P6 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs && node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` | suite green (red-first at a505c7b7) + CHECK PASS in Evidence | verified |
+| O6 | P6 | review findings F9–F13 folded with machine mechanisms: F10 discriminator keyed on a verifying receipt, F11 obligation BLOCKED rules with a reader, F12 behavioral triage currency, F9 digest paragraph retracted, F13 provenance repaired | P6 | P6 | unit-lane:implement | `node --test scripts/lane-era-lineage.test.mjs && node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` | suite green (red-first at a4400147) + CHECK PASS in Evidence | verified |
 
 ## Progress log
 
-- 2026-10-05 13:09 — unit opened from issue #285: branch `fix/285-pre-execution-lineage-gate`, SPEC drafted from fix template, index row → in-progress → 94d8eb9d — next: triage
-- 2026-10-05 13:15 — triage ran (`bun scripts/unit-route.mjs --triage 285-pre-execution-lineage-gate`), block pasted verbatim; plan step: tasks cut, planning evidence + obligations ledgers cut (embedded shape) → 4f06c1d3 — next: red-first tests
-- 2026-10-05 13:22 — tests step (red-first): `scripts/lane-era-lineage.test.mjs` written; AC1/AC3/AC4 red (AC1 reproduces the issue's exact exit-1 error), AC2 green as the legacy baseline → 36af142c — next: implement
-- 2026-10-05 13:40 — implement P2 (enforcer A): schema `REQUIRED_ARTIFACTS.plan` → `["spec"]` (package 4.6.0, same-PR bump + changelog row), repo plan-stage row `required: false`, SNAPSHOT.md requiredness wording; red-first in the schema package too (two pinned tests updated first, red confirmed, then source) → 245dea2c — next: enforcer B
-- 2026-10-05 13:45 — implement P3 (enforcer B): audit-pr 02 gate 1 rewritten (lane-era triage currency + unit-doc obligations; legacy verify path retained); context budgets re-based (per-skill 2469; routes 10113/632) at declared re-basis → 8b0fcbfa — next: producer
-- 2026-10-05 13:50 — implement P4 (producer): templates gain `### Planning evidence` + `### Obligations`; unit-lane PLAN.md cuts both ledgers per LEDGERS.md sizing → ffab7c28 — next: diff guard
+- 2026-10-05 13:09 — unit opened from issue #285: branch `fix/285-pre-execution-lineage-gate`, SPEC drafted from fix template, index row → in-progress → 0761e6ed — next: triage
+- 2026-10-05 13:15 — triage ran (`bun scripts/unit-route.mjs --triage 285-pre-execution-lineage-gate`), block pasted verbatim; plan step: tasks cut, planning evidence + obligations ledgers cut (embedded shape) → 9e7eadb3 — next: red-first tests
+- 2026-10-05 13:22 — tests step (red-first): `scripts/lane-era-lineage.test.mjs` written; AC1/AC3/AC4 red (AC1 reproduces the issue's exact exit-1 error), AC2 green as the legacy baseline → bc5e109c — next: implement
+- 2026-10-05 13:40 — implement P2 (enforcer A): schema `REQUIRED_ARTIFACTS.plan` → `["spec"]` (package 4.6.0, same-PR bump + changelog row), repo plan-stage row `required: false`, SNAPSHOT.md requiredness wording; red-first in the schema package too (two pinned tests updated first, red confirmed, then source) → 5846af9c — next: enforcer B
+- 2026-10-05 13:45 — implement P3 (enforcer B): audit-pr 02 gate 1 rewritten (lane-era triage currency + unit-doc obligations; legacy verify path retained); context budgets re-based (per-skill 2469; routes 10113/632) at declared re-basis → 2284f2ca — next: producer
+- 2026-10-05 13:50 — implement P4 (producer): templates gain `### Planning evidence` + `### Obligations`; unit-lane PLAN.md cuts both ledgers per LEDGERS.md sizing → 233295d8 — next: diff guard
 - 2026-10-05 14:00 — diff guard BREACH (617/16 vs 400/8): honest split attempted (three commits), exception recorded D-285-2, real count reported — next: review
-- 2026-10-05 14:05 — review step ran at HEAD ffab7c28 (axes: code, security, perf, verify; a11y/brand/seo n/a) — `review-findings.md` written, 1 low report-note, 0 fix-now — next: docs
-- 2026-10-05 14:20 — docs step: bump-skill over the three touched skills (unit-lane 1.3.0, audit-pr 5.5.0, pre-execution-review 2.7.0), changelog rows, README audit-pr cell; full gate re-run green (619/0) → 7404a423 — next: open PR
-- 2026-10-06 00:10 — fold F9–F13 (cycle 4, task P6): red-first behavioral suite for `scripts/unit-lineage.mjs` (gate 1's machine surface; 15 fail / 2 pass at a505c7b7), script + gate-1 rewrite + routing pin → 833c1121 — next: fold marks + ledger provenance
-- 2026-10-06 00:15 — F13 fold: F1 report-note's bogus `folded: yes` dropped (never folded, no token), cycle-4 fold note recorded; ledger-provenance --check green; SPEC evidence + obligations O6 → 9864c82c — next: flip F9–F13 marks
-- 2026-10-06 00:20 — fold marks: F9–F13 `folded: yes` (tokens 833c1121 / 9864c82c); CHECK PASS 12 proven-cited / 1 open (F1 report-note); P6 path-guard pass; full suite 632/0; schema package 717/0; budgets PASS → 525bf469 — next: push, then cycle-5 review on the new HEAD
+- 2026-10-05 14:05 — review step ran at HEAD 233295d8 (axes: code, security, perf, verify; a11y/brand/seo n/a) — `review-findings.md` written, 1 low report-note, 0 fix-now — next: docs
+- 2026-10-05 14:20 — docs step: bump-skill over the three touched skills (unit-lane 1.3.0, audit-pr 5.5.0, pre-execution-review 2.7.0), changelog rows, README audit-pr cell; full gate re-run green (619/0) → fcaf1633 — next: open PR
+- 2026-10-06 00:10 — fold F9–F13 (cycle 4, task P6): red-first behavioral suite for `scripts/unit-lineage.mjs` (gate 1's machine surface; 15 fail / 2 pass at a4400147), script + gate-1 rewrite + routing pin → 9c745ef1 — next: fold marks + ledger provenance
+- 2026-10-06 00:15 — F13 fold: F1 report-note's bogus `folded: yes` dropped (never folded, no token), cycle-4 fold note recorded; ledger-provenance --check green; SPEC evidence + obligations O6 → 49b27f7c — next: flip F9–F13 marks
+- 2026-10-06 00:20 — fold marks: F9–F13 `folded: yes` (tokens 9c745ef1 / 49b27f7c); CHECK PASS 12 proven-cited / 1 open (F1 report-note); P6 path-guard pass; full suite 632/0; schema package 717/0; budgets PASS → 4463e9e9 — next: push, then cycle-5 review on the new HEAD
 
 ## Next
 
