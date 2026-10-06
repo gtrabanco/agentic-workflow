@@ -2625,3 +2625,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fix lanes 285 + 286: delivered the pre-execution lineage gate and the affecting-path receipt binding, two high-severity defects from feature 61's incomplete lane-era transition
 - **Decisions:** 1) #285: schema 4.6.0 drops acceptance manifest from plan required set; audit-pr closure gate reads lane-era surfaces (triage re-derivation + unit-doc obligations); producer: unit-lane cuts both ledgers. 2) #286: new scope-manifest CLI (sign/verify); review-receipt gains scope judge (non-affecting delta = current); audit-pr consumes judge at merge gate. Both red-first, both diff-guard exceptions recorded.
 - **Next:** Merge PR #287 (fix/285: pre-execution lineage gate, still OPEN), then /audit-pr 288 to confirm clean, then /audit-pr 282 to clear F54-F57 on the doc-toolchain branch
+## 2026-10-06T22:42:29Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Fold-findings on PRs #288 (286) and #287 (285): repaired all fix-now findings across both units — F2-F18 (schema revert, scope re-derive, merge-base fix, N+1 perf, ledger normalization, spec-drift) — committed and pushed, 626/626 tests passing. F2/F3 for #288 remain open (blocked on #287 merge first). Both PRs merged to main.
+- **Decisions:** (1) Schema revert 4.6.0→4.5.0 because #285 code was not on #288 branch; (2) merge #287 first then rebase #288 — enforcer fix must land before receipt binding; (3) F2 (#288 receipt absent) and F3 (#288 lineage unsatisfiable) block merge until #287 lands; (4) D-286-3 diff exception: 1393 lines/17 files irreducible without deleting docs/tests
+- **Next:** Verify both PRs are merged (287 then 288), re-run /audit-pr on any still-open PRs, then move to PR #282 (doc-toolchain) to clear F54-F57
