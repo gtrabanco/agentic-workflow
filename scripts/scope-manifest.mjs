@@ -131,6 +131,49 @@ export function changedPathsBetween(gitRun, fromSha, toSha) {
   return out === "" ? [] : out.split("\n").filter(Boolean).sort();
 }
 
+/** Read multiple git blobs via a single `git cat-file --batch` call. Returns
+ * Map<index, buffer> or null when git fails. Specs are built internally as
+ * `<head>:<rel>` and existence is checked with `cat-file -e` per path (cheap,
+ * O(1)). Outputs are ordered: the N-th parsed blob corresponds to the N-th
+ * surviving spec. Correlates by index to preserve the original path order. */
+function batchBlobs(gitRun, head, relPaths) {
+  // Filter to specs that exist at head (cheap O(1) each).
+  const existing = [];
+  for (let i = 0; i < relPaths.length; i++) {
+    if (gitRun("cat-file", "-e", `${head}:${relPaths[i]}`) !== null) {
+      existing.push({ index: i, spec: `${head}:${relPaths[i]}` });
+    }
+  }
+  if (existing.length === 0) return new Map();
+
+  // `git cat-file --batch` reads specs from stdin, one per line.
+  const specsStr = existing.map((e) => e.spec).join("\n") + "\n";
+  const result = spawnSync("git", ["cat-file", "--batch"], {
+    input: Buffer.from(specsStr, "utf8"),
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.status !== 0) return null;
+
+  // Parse batch output: each entry is `sha type size\ndata\n`.
+  const blobs = new Map(); // index → buffer
+  let pos = 0;
+  let specIdx = 0;
+  while (pos < result.stdout.length && specIdx < existing.length) {
+    const nl1 = result.stdout.indexOf(0x0a, pos); // \n = 0x0a
+    if (nl1 === -1) break;
+    const line = result.stdout.subarray(pos, nl1).toString("ascii");
+    pos = nl1 + 1;
+    const parts = line.split(" ");
+    if (parts.length !== 3) break;
+    const size = Number(parts[2]);
+    if (pos + size > result.stdout.length) break;
+    blobs.set(existing[specIdx].index, result.stdout.subarray(pos, pos + size));
+    pos += size + 1; // data + trailing LF
+    specIdx++;
+  }
+  return blobs;
+}
+
 /**
  * The affecting surface at `head`: the branch delta vs `base`, minus the
  * non-affecting classes, each path's SHA-256 over its git blob at `head`
@@ -140,16 +183,27 @@ export function changedPathsBetween(gitRun, fromSha, toSha) {
  * only in invalid UTF-8 do not collide (the schema package's `sha256HexSync`
  * coerces its argument via `TextEncoder.encode()` → UTF-8 replacement).
  * `null` when git cannot answer.
+ *
+ * Uses one `git cat-file --batch` for all blobs (F9/F15 fix) instead of one
+ * `git show` per path — reduces N spawn invocations to one.
  */
 export function affectingPathsAt(gitRun, base, head) {
   const changed = changedPathsBetween(gitRun, base, head);
   if (changed === null) return null;
-  const rows = [];
+  const blobPaths = [];
   for (const rel of changed) {
     if (isNonAffecting(rel)) continue;
-    const blob = gitRun("show", `${head}:${rel}`);
-    if (blob === null) continue; // path was deleted/renamed at head — skip
-    rows.push({ path: rel, digest: blobSha256Hex(blob) });
+    blobPaths.push(rel);
+  }
+  if (blobPaths.length === 0) return [];
+
+  const blobMap = batchBlobs(gitRun, head, blobPaths);
+  if (blobMap === null) return null;
+
+  const rows = [];
+  for (let i = 0; i < blobPaths.length; i++) {
+    const blob = blobMap.get(i);
+    if (blob) rows.push({ path: blobPaths[i], digest: blobSha256Hex(blob) });
   }
   return rows.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }

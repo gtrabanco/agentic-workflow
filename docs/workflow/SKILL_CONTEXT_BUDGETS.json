@@ -80,11 +80,7 @@
     "audit-pr": {
       "mainEstimateMax": 3294,
       "mainSources": {
-        "fix 286 (scope-aware judge)": "Step 1 stale branch applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) \u2014 grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
-      },
-      "referenceEstimateMax": 2469,
-      "referenceSources": {
-        "fix 285 (AC3)": "the lane-era lineage gate rewrite (triage-block currency for lane-era units, embedded/separate obligations homes, legacy verify path retained) grew 02_CLOSURE_AND_SCOPE_GATES.md from the measured 2200 (the default reference ceiling) to 2244; ceiling re-based to ceil(2244 x 1.10) = 2469, reason declared (fix/285)"
+        "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) \u2014 grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
       }
     }
   },
@@ -94,12 +90,11 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10113,
-      "routeLinesMax": 632,
+      "routeEstimateMax": 9962,
+      "routeLinesMax": 619,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
-        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
-        "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)"
+        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
     "audit-pr:fix": {
@@ -107,12 +102,11 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10113,
-      "routeLinesMax": 632,
+      "routeEstimateMax": 9962,
+      "routeLinesMax": 619,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
-        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
-        "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)"
+        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:descope": {

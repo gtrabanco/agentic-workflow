@@ -131,3 +131,68 @@ test("verify: a malformed scope digest is a usage error (exit 1), never fresh", 
   const r = run(f.root, ["verify", "--base", f.base, "--head", f.unit, "--scope", "nope", "--root", f.root]);
   assert.equal(r.status, 1);
 });
+
+test("batch cat-file --batch: exercises the single-invocation path with multiple affected paths", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scope-manifest-batch-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  // Base commit with one file
+  const base = commit(root, { "src/main.ts": "base\n" }, "base");
+  // Branch with 8 affected paths (batches exercise the cat-file path)
+  git(root, "checkout", "-qb", "feat/batch-test");
+  const affected = {
+    "src/a.ts": "a\n",
+    "src/b.ts": "b\n",
+    "src/c.ts": "c\n",
+    "src/d.ts": "d\n",
+    "src/e.ts": "e\n",
+    "src/f.ts": "f\n",
+    "src/g.ts": "g\n",
+    "src/h.ts": "h\n",
+  };
+  const head = commit(root, affected, "feat: batch-test files");
+  // Sign and verify the manifest
+  const r = run(root, ["sign", "--base", base, "--head", head, "--root", root]);
+  assert.equal(r.status, 0, `sign failed: ${r.stderr}`);
+  const manifest = JSON.parse(r.stdout);
+  assert.equal(manifest.contract, "scope-manifest-v1");
+  const paths = manifest.paths.map((row) => row.path).sort();
+  assert.deepEqual(paths, Object.keys(affected).sort(), "all affected paths present");
+  assert.equal(paths.length, 8, "exactly 8 affected paths (batch exercise)");
+  // Verify each digest is correct
+  for (const row of manifest.paths) {
+    const blob = execFileSync("git", ["show", `${head}:${row.path}`], { cwd: root });
+    assert.equal(row.digest, createHash("sha256").update(blob).digest("hex"),
+      `${row.path}: digest matches git blob`);
+  }
+  // Verify the scope digest is deterministic
+  const r2 = run(root, ["sign", "--base", base, "--head", head, "--root", root]);
+  assert.equal(r2.status, 0);
+  assert.equal(JSON.parse(r2.stdout).scope, manifest.scope, "scope digest is deterministic");
+});
+
+test("batch path: mixed affected + non-affecting paths", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scope-manifest-mixed-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  const base = commit(root, { "docs/LOGS.md": "base\n" }, "base");
+  git(root, "checkout", "-qb", "feat/mixed");
+  const head = commit(root, {
+    "src/one.ts": "one\n",
+    "docs/LOGS.md": "updated log\n",
+    "src/two.ts": "two\n",
+    ".pi/state.json": "{}\n",
+  }, "feat: mixed paths");
+  const r = run(root, ["sign", "--base", base, "--head", head, "--root", root]);
+  assert.equal(r.status, 0, `sign failed: ${r.stderr}`);
+  const manifest = JSON.parse(r.stdout);
+  const paths = manifest.paths.map((row) => row.path);
+  assert.deepEqual(paths, ["src/one.ts", "src/two.ts"],
+    "only affected paths present; non-affecting dirs excluded");
+});
