@@ -164,6 +164,8 @@ created | scripts/unit-lineage.mjs | the machine surface of audit-pr gate 1 — 
 | AC5 | `node --test scripts/*.test.mjs` | 0 | 619 pass / 0 fail; `bun scripts/check-skill-context.mjs` PASS 28 skills + PASS 14 routes | full repo gate |
 | AC5 | `bun run test` (packages/agentic-workflow-schema) | 0 | 717 pass / 0 fail (schema 4.6.0); check:pre-execution-schemas + check:verification-schemas drift-free | schema package gate |
 | — | `bun scripts/diff-guard.mjs --base main --unit 285` | 1 | `DIFF-GUARD BREACH — Lines: 617 > 400 · Files: 16 > 8` | exception recorded: `decisions.md` D-285-2 (real count reported, nothing shrunk) |
+| — | `bun scripts/diff-guard.mjs --base origin/main --unit 285` | 1 | `DIFF-GUARD BREACH — Lines: 1335 > 400 · Files: 25 > 8` | head-true count after the cycle-4 fold (D-285-2 exception stands; real count reported, nothing shrunk) |
+| — | `node packages/agentic-workflow/bin/path-guard.mjs --unit docs/fix/285-pre-execution-lineage-gate --phase P6 --base 8c6d12db` | 0 | `PATH-GUARD pass — justified · checked: 7` | P6 checkpoint over the fold's committed range |
 | — | `node --test scripts/lane-era-lineage.test.mjs` (fold F9–F13, red-first) | 0 | 17 tests pass; behavioral `unit-lineage` suite drives gate 1's runtime over fixture repos (red: 15 fail / 2 pass at `a505c7b7`) | fold `833c1121` |
 | — | `node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate` | 0 | `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (5)` | the gate's own machine surface on this unit |
 | — | `node --test scripts/*.test.mjs` | 0 | 632 pass / 0 fail | full repo gate at `833c1121` |
@@ -219,11 +221,14 @@ Budget: strong
 - 2026-10-05 14:05 — review step ran at HEAD ffab7c28 (axes: code, security, perf, verify; a11y/brand/seo n/a) — `review-findings.md` written, 1 low report-note, 0 fix-now — next: docs
 - 2026-10-05 14:20 — docs step: bump-skill over the three touched skills (unit-lane 1.3.0, audit-pr 5.5.0, pre-execution-review 2.7.0), changelog rows, README audit-pr cell; full gate re-run green (619/0) → 7404a423 — next: open PR
 - 2026-10-06 00:10 — fold F9–F13 (cycle 4, task P6): red-first behavioral suite for `scripts/unit-lineage.mjs` (gate 1's machine surface; 15 fail / 2 pass at a505c7b7), script + gate-1 rewrite + routing pin → 833c1121 — next: fold marks + ledger provenance
-- 2026-10-06 00:15 — F13 fold: F1 report-note's bogus `folded: yes` dropped (never folded, no token), cycle-4 fold note recorded; ledger-provenance --check green; SPEC evidence + obligations O6 — next: flip F9–F13 marks
+- 2026-10-06 00:15 — F13 fold: F1 report-note's bogus `folded: yes` dropped (never folded, no token), cycle-4 fold note recorded; ledger-provenance --check green; SPEC evidence + obligations O6 → 9864c82c — next: flip F9–F13 marks
+- 2026-10-06 00:20 — fold marks: F9–F13 `folded: yes` (tokens 833c1121 / 9864c82c); CHECK PASS 12 proven-cited / 1 open (F1 report-note); P6 path-guard pass; full suite 632/0; schema package 717/0; budgets PASS → 525bf469 — next: push, then cycle-5 review on the new HEAD
 
 ## Next
 
-Open the PR (closes #285); after merge, re-run `audit-pr` on PR #282 to clear F54–F57.
+PR #287 carries the fold: re-run `/review-change` on the new HEAD (cycle 5 —
+the F9–F13 fold changed gate 1's mechanism, so an independent re-review is due);
+after merge, re-run `audit-pr` on PR #282 to clear F54–F57.
 
 ## References
 
