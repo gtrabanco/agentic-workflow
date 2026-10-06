@@ -33,9 +33,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-// `receiptStatus` is the review receipt's own grammar; importing it (rather than
-// restating it) is what keeps one parser for one grammar.
-import { receiptStatus } from "./review-receipt.mjs";
+// `receiptStatus`/`judgeReceipt` are the review receipt's own grammar; importing
+// them (rather than restating it) is what keeps one parser for one grammar —
+// fix/286 adds the scope-aware judge to the same import.
+import { judgeReceipt, latestReceipt, receiptStatus } from "./review-receipt.mjs";
+import { changedPathsBetween } from "./scope-manifest.mjs";
 
 export const AUDIT_CONTRACT = "v1";
 export const AUDIT_MARKER_RE = /<!-- audit-pr:merge-ready sha=([0-9a-f]{40}) -->/;
@@ -84,8 +86,20 @@ export function newestAuditComment(comments) {
  * current does each gate get read, and every gate that is not exactly `pass`
  * blocks.
  */
-export function auditVerdict({ comments, headSha, gates = {} }) {
-  const status = receiptStatus(comments, headSha);
+export function auditVerdict({ comments, headSha, gates = {}, changedPaths }) {
+  let status = receiptStatus(comments, headSha);
+  // fix/286 (#182 AC 3/9) — a receipt that recorded a scope manifest stays
+  // current across a head delta whose changed paths are all non-affecting
+  // (foreign session-log/toolstate commits); any affecting path, an
+  // unresolvable delta, or a legacy scope-less receipt keeps the BLOCKED
+  // precedence: the receipt gate still fires before any gate is read.
+  let scopeJudge = null;
+  if (status.status === "stale" && status.receipt?.scope) {
+    scopeJudge = judgeReceipt({ receipt: status.receipt, headSha, changedPaths, scopeManifest: status.receipt.scope });
+    if (scopeJudge.current) {
+      status = { status: "current", reason: scopeJudge.reason, receipt: status.receipt };
+    }
+  }
   if (status.status !== "current") {
     return {
       verdict: "BLOCKED",
@@ -93,6 +107,7 @@ export function auditVerdict({ comments, headSha, gates = {} }) {
       route: "/review-change",
       gatesEvaluated: false,
       blockers: [status.reason],
+      ...(scopeJudge && !scopeJudge.current ? { scopeJudge } : {}),
     };
   }
   const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass").map((name) => `gate ${name} failed`);
@@ -105,6 +120,7 @@ export function auditVerdict({ comments, headSha, gates = {} }) {
     route: null,
     gatesEvaluated: true,
     blockers: [],
+    ...(scopeJudge?.current ? { scopeJudge } : {}),
   };
 }
 
@@ -312,7 +328,17 @@ function main() {
   }
 
   if (command === "evaluate") {
-    const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates });
+    // fix/286 — when the receipt is stale-by-sha but scoped, the head delta is
+    // computed locally (git in this checkout) and the scope-aware judge decides;
+    // an unresolvable delta stays null → the judge fails closed.
+    const newest = latestReceipt(forge.comments);
+    const changedPaths = newest?.scope && newest.sha !== head
+      ? changedPathsBetween((...args) => {
+          const result = run("git", args);
+          return result.status === 0 ? result.stdout : null;
+        }, newest.sha, head)
+      : undefined;
+    const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths });
     const action = mergeCommentAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
     process.stdout.write(
       `${JSON.stringify({ ...verdict, head, pr: forge.number ?? null, action: action.action, actionReason: action.reason }, null, 2)}\n`,
@@ -321,8 +347,15 @@ function main() {
     return;
   }
 
-  // comment
-  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates });
+  // comment — shares the same scoped-receipt logic as evaluate (fix/286)
+  const newest = latestReceipt(forge.comments);
+  const changedPaths = newest?.scope && newest.sha !== head
+    ? changedPathsBetween((...args) => {
+        const result = run("git", args);
+        return result.status === 0 ? result.stdout : null;
+      }, newest.sha, head)
+    : undefined;
+  const verdict = auditVerdict({ comments: forge.comments, headSha: head, gates, changedPaths });
   const action = mergeCommentAction({ verdict: verdict.verdict, comments: forge.comments, headSha: head });
   if (action.action === "none") throw new Error(`refusing to post a merge-ready comment: ${verdict.reason}`);
   if (action.action === "post") {
