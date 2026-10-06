@@ -190,8 +190,11 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   git(root, "config", "user.email", "fixture@example.invalid");
   git(root, "config", "user.name", "Fixture");
   git(root, "config", "commit.gpgsign", "false");
-  git(root, "add", "-A", "--", ".");
-  git(root, "commit", "-qm", "fixture: lane-era fix unit");
+  // every fixture commit predates the receipt's recorded finish (2026-08-31), so
+  // the verifier's impossible-timeline guard never mis-flags a legacy receipt
+  const datedEnv = { ...process.env, GIT_COMMITTER_DATE: "2026-08-30T00:00:00Z", GIT_AUTHOR_DATE: "2026-08-30T00:00:00Z" };
+  execFileSync("git", ["add", "-A", "--", "."], { cwd: root, env: datedEnv });
+  execFileSync("git", ["commit", "-qm", "fixture: lane-era fix unit"], { cwd: root, env: datedEnv });
   const run = (...args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], {
     cwd: root, encoding: "utf8", timeout: 120000,
   });

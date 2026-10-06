@@ -88,45 +88,19 @@ This gate sits downstream of both pre-execution reviews, so it verifies their
 authority **survived the build** — it never re-reviews a plan and never re-judges a
 verdict:
 
-1. **Upstream lineage is current** — keyed by the surface the unit carries (fix/285;
-   the lane-era pipeline structurally never writes `progress.md` or
-   `ACCEPTANCE.md`, so demanding them made the gate unsatisfiable for every
-   lane-era unit — issue #285):
-   - **Lane-era unit** (feature 61's single-doc contract: no `progress.md`) —
-     the unit doc's Evidence section carries the `## Triaged steps` block, and
-     its `Steps:` line re-derives identically from the doc's own facts: run
-     `bun scripts/unit-route.mjs --triage <unit>` and compare the block
-     verbatim (steps, skipped, budget). The triage block is a pure function of
-     the unit doc — a missing block, or a `Steps:`/`Skipped:`/`Budget:` line
-     that differs → **BLOCKED**,
-     `→ Next: /unit-lane <unit> --retriage`. An absent ledger section
-     (`### Planning evidence` / `### Obligations`) on a lane-era unit is a
-     producer defect, not an audit pass: the lane's plan step writes them
-     (see item 2). The gate also requires ≥1 row in the obligation ledger
-     — an empty `### Obligations` table (zero rows) is treated as **BLOCKED**
-     and routed to the lane's plan step, because a vacuous obligations table
-     cannot demonstrate that every obligation was verified; if there are truly
-     no obligations, the section must carry a single `n/a: <reason>` row.
-     An absent ledger section without any row (not even an `n/a:` placeholder)
-     → **BLOCKED**,
-     `→ Next: /unit-lane <unit> --retriage`.
-     
-     **Non-author-controlled discriminator.** The triage block re-derivation
-     does not depend on any author-controlled artifact (`progress.md` /
-     `ACCEPTANCE.md`); it is a pure function of the unit doc's own content,
-     so a unit cannot choose a weaker gate by omitting an author-controlled
-     marker. The triage `Steps:` line comparison is a deterministic, fixed-
-     output check (not a subjective judgment) and is bounded by the unit's
-     own scope.
-     
-     **Frozen digest anchor.** The triage block comparison is anchored by a
-     frozen digest: `bun scripts/unit-route.mjs --triage <unit>` can emit a
-     digest of the triage block alongside the block text; the audit compares
-     both the block and the digest. The digest is derived from the unit doc's
-     content at the time of the triage run, so a later tampering of the unit
-     doc will produce a different digest. A digest anchor is optional: the
-     block-verbatim comparison alone is sufficient for lane-era currency.
-   - **Legacy unit** (carries `progress.md` receipts) — the unit's
+1. **Upstream lineage is current** — run the machine check and read its fixed
+   verdict; the gate never re-implements the check by hand:
+   `bun scripts/unit-lineage.mjs --unit <unit>` prints exactly one of
+   `LINEAGE OK — legacy …` / `LINEAGE OK — lane-era …` (pass) or
+   `LINEAGE BLOCKED — <reason>` followed by a `→ Next:` route (**BLOCKED** —
+   that route). The check keys the lane-era/legacy split on evidence, not on an
+   author-controlled artifact (fix/285; the lane-era pipeline structurally never
+   writes `progress.md` or `ACCEPTANCE.md`, so demanding them made the gate
+   unsatisfiable for every lane-era unit — issue #285):
+   - **Legacy path** — opened only when the unit's `progress.md` carries a
+     `## Pre-execution review receipt v1 — plan` whose digest **re-derives**
+     (`scripts/pre-execution-snapshot.mjs verify --stage plan` exits 0 over the
+     bound bytes): the unit's
      `progress.md` carries
      `## Pre-execution review receipt v1 — plan` whose digest re-derives
      identically (`scripts/pre-execution-snapshot.mjs verify --stage plan
@@ -136,9 +110,30 @@ verdict:
      The acceptance manifest binds when present (fix/285): a unit that carries
      `ACCEPTANCE.md` still binds it in the snapshot. Bound artifacts
      are frozen: new implementation-phase files are allowed, edits to a bound
-     artifact are not. Stale, missing, wrong-stage **or impossible-timeline**
-     lineage → **BLOCKED**, `→ Next: /unit-lane <unit>` (the lane's `review`
-     step re-derives the artifact).
+     artifact are not. A receipt that does not re-derive — stale, missing,
+     wrong-stage **or impossible-timeline** — is never a pass: the check falls
+     through to the lane-era path, so a planted or stale `progress.md` cannot
+     buy a weaker gate (and a unit doc with no lane-era surface left is then
+     **BLOCKED**, `→ Next: /unit-lane <unit>`).
+   - **Lane-era path** (feature 61's single-doc contract) — the unit doc's
+     Evidence section carries the `## Triaged steps` block whose `Steps:` /
+     `Skipped:` / `Budget:` lines re-derive identically from the doc's own
+     facts (`bun scripts/unit-route.mjs --triage <unit>`), and the obligation
+     ledger carries ≥1 row with every row `verified` or an explicit
+     `n/a: <reason>` (see item 2 for the ledger shapes). This comparison binds
+     the unit doc's **bytes**: the triage output is a pure function of the
+     doc's content, so any tampering — with the pasted block *or* with the
+     facts (Tasks, scope, tests) the block is derived from — changes the
+     re-derived lines and the check answers **BLOCKED**,
+     `→ Next: /unit-lane <unit> --retriage`. No separate digest surface is
+     needed (the earlier "frozen digest anchor" wording claimed
+     `unit-route.mjs --triage` emits a digest of the pasted block; it never
+     did, and the paragraph is retracted — review finding F9). An absent or
+     empty obligation ledger is a producer defect, not an audit pass: the
+     lane's plan step writes the ledgers (see item 2), and a vacuous ledger
+     cannot demonstrate closure — **BLOCKED**, `→ Next: /unit-lane <unit>`; if
+     there are truly no obligations, the ledger carries a single
+     `n/a: <reason>` row.
    A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
 2. **Obligations are closed.** Every row of the unit's obligation ledger —
    `### Obligations` inside the unit doc (embedded shape) or
