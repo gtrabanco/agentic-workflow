@@ -36,7 +36,7 @@ import { fileURLToPath } from "node:url";
 
 // The closed non-affecting vocabulary has one owner (fix/286): the scope-manifest
 // runtime. This consumer imports the matcher, it never re-states the classes.
-import { affectingPathsAt, changedPathsBetween, isNonAffecting, scopeDigestOf } from "./scope-manifest.mjs";
+import { affectingPathsAt, changedPathsBetween, isNonAffecting, mergeBase, scopeDigestOf } from "./scope-manifest.mjs";
 
 /** The one contract version this consumer reads. */
 export const REVIEW_CONTRACT = "v1";
@@ -403,10 +403,28 @@ function main() {
     // scope manifest stays current when the head delta (receipt sha → head) is
     // all non-affecting. The delta is computed locally (git at --root/cwd);
     // an unresolvable delta stays stale — fail closed.
+    // fix/286 — scope re-derivation: the judge's guard compares the recorded
+    // scope against a freshly-derived manifest at `head`; without re-deriving
+    // at the call site the comparison was a tautology (F14).
     let judge = null;
     if (status.status === "stale" && status.receipt?.scope) {
       const changed = delta(status.receipt.sha, head);
-      judge = judgeReceipt({ receipt: status.receipt, headSha: head, changedPaths: changed, scopeManifest: status.receipt.scope });
+      // Re-derive the scope manifest at `head` to validate the judge's guard
+      let reDerivedScope = status.receipt.scope;
+      if (status.receipt.scope) {
+        try {
+          const gitRun = (...args) => {
+            const result = spawnSync("git", args, { cwd: gitRoot, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
+            return result.status === 0 ? result.stdout : null;
+          };
+          const resolvedBase = mergeBase(gitRun, "main", head) ?? "main";
+          const paths = affectingPathsAt(gitRun, resolvedBase, head);
+          if (paths !== null) {
+            reDerivedScope = scopeDigestOf({ base: "main", head, paths });
+          }
+        } catch { /* fall through: can't derive, use recorded */ }
+      }
+      judge = judgeReceipt({ receipt: status.receipt, headSha: head, changedPaths: changed, scopeManifest: reDerivedScope });
       if (judge.current) {
         status = { status: "current", reason: judge.reason, receipt: status.receipt };
       }
@@ -447,9 +465,26 @@ function main() {
     // review": the reviewed surface is byte-identical, so the receipt posts at
     // the reviewed head. Any affecting delta, an unresolvable one, or a receipt
     // without a scope manifest keeps the refusal — fail closed.
+    // fix/286 — scope re-derivation: the judge's guard compares the recorded
+    // scope against a freshly-derived manifest at `before.head`; without
+    // re-deriving at the call site the comparison was a tautology (F14).
     const changed = fields.scopeManifest ? delta(opts.head, before.head) : null;
+    let reDerivedScope = fields.scopeManifest;
+    if (fields.scopeManifest) {
+      try {
+        const gitRun = (...args) => {
+          const result = spawnSync("git", args, { cwd: gitRoot, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
+          return result.status === 0 ? result.stdout : null;
+        };
+        const resolvedBase = mergeBase(gitRun, "main", before.head) ?? "main";
+        const paths = affectingPathsAt(gitRun, resolvedBase, before.head);
+        if (paths !== null) {
+          reDerivedScope = scopeDigestOf({ base: "main", head: before.head, paths });
+        }
+      } catch { /* fall through: can't derive, use recorded */ }
+    }
     const judged = fields.scopeManifest
-      ? judgeReceipt({ receipt: { sha: opts.head, scope: fields.scopeManifest }, headSha: before.head, changedPaths: changed, scopeManifest: fields.scopeManifest })
+      ? judgeReceipt({ receipt: { sha: opts.head, scope: fields.scopeManifest }, headSha: before.head, changedPaths: changed, scopeManifest: reDerivedScope })
       : { current: false, reason: "no scope manifest recorded — head-bound" };
     if (!judged.current) {
       throw new Error(

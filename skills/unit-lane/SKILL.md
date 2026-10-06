@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.3.0
+version: 1.2.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
