@@ -1060,6 +1060,11 @@ test("P4 route contracts are pinned to the text that grants them", () => {
   assert.match(auditGates, /row is\n   \*\*BLOCKED\*\*, naming the ids/);
   assert.match(auditGates, /may not be exported to a follow-up issue to clear the/);
   assert.match(auditGates, /remains the only emitter of `MERGE-READY`/);
+  // gate 1 routes through its machine surface (fix/285 F9–F13): the prose names
+  // the runtime and its fixed verdict vocabulary, never a hand-reimplementation
+  assert.match(auditGates, /unit-lineage\.mjs/);
+  assert.match(auditGates, /LINEAGE OK/);
+  assert.match(auditGates, /LINEAGE BLOCKED/);
   // execution admits an edit only on the PASS, in fix mode on its own receipt
   assert.match(execGate, /require\n`PLAN-REVIEW-PASS`|require[\s\S]{0,40}`PLAN-REVIEW-PASS`/);
 });
