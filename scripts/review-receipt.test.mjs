@@ -13,7 +13,7 @@
  */
 
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import {
   REVIEW_CONTRACT,
   REVIEW_MARKER_RE,
+  judgeReceipt,
   latestReceipt,
   parseReviewReceipt,
   receiptStatus,
@@ -32,6 +33,7 @@ import {
 } from "./review-receipt.mjs";
 
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), "review-receipt.mjs");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHA_A = "a".repeat(40);
 const SHA_B = "b".repeat(40);
 
@@ -68,6 +70,7 @@ test("parse: only a well-formed marker parses; everything else is null", () => {
   assert.deepEqual(parseReviewReceipt(renderReceiptBody({ sha: SHA_A, ...fields() })), {
     sha: SHA_A,
     contract: REVIEW_CONTRACT,
+    scope: undefined, // fix/286: the scope attribute is optional; a legacy receipt parses with none
   });
   assert.equal(parseReviewReceipt("no marker here"), null);
   assert.equal(parseReviewReceipt(""), null);
@@ -370,6 +373,166 @@ process.stdout.write(JSON.stringify({ headRefOid: ${JSON.stringify(SHA_A)}, numb
   assert.equal(report.head, SHA_A);
   const calls = fs.readFileSync(log, "utf8").trim().split("\n");
   assert.equal(calls.filter((c) => c.startsWith("pr comment")).length, 1, "exactly one post");
+});
+
+// ---------------------------------------------------------------------------
+// fix/286 — the affecting-path scope binding (#182 AC 3/9): the marker gains an
+// optional scope=<64-hex> attribute, the body a Scope manifest line, and the
+// judge accepts a head delta whose changed paths are all non-affecting. Legacy
+// receipts (no scope attribute) keep head-bound semantics.
+// ---------------------------------------------------------------------------
+
+const SCOPE_A = "c".repeat(64);
+
+test("scope marker grammar: the scope attribute is optional and 64-hex when present", () => {
+  const legacy = parseReviewReceipt(receiptComment(SHA_A).body);
+  assert.equal(legacy.scope, undefined, "a legacy receipt parses with no scope attribute");
+  const scoped = parseReviewReceipt("<!-- review-change:pass sha=" + SHA_A + " contract=v1 scope=" + SCOPE_A + " -->");
+  assert.equal(scoped.sha, SHA_A);
+  assert.equal(scoped.scope, SCOPE_A);
+  // a malformed scope attribute must not satisfy the reader
+  assert.equal(parseReviewReceipt("<!-- review-change:pass sha=" + SHA_A + " contract=v1 scope=nope -->"), null);
+});
+
+test("render with a scope manifest: the marker carries scope= and the body names the manifest", () => {
+  const body = renderReceiptBody({ sha: SHA_A, ...fields(), scopeManifest: SCOPE_A });
+  assert.match(body, /review-change:pass sha=[0-9a-f]{40} contract=v1 scope=[0-9a-f]{64} -->/);
+  assert.match(body, /- Scope manifest: `sha256:[0-9a-f]{64}`/);
+  // a malformed scope value can never reach the marker bytes (fail closed)
+  assert.throws(() => renderReceiptBody({ sha: SHA_A, ...fields(), scopeManifest: "evil -->" }), /64-hex/);
+  // legacy render unchanged
+  const legacy = renderReceiptBody({ sha: SHA_A, ...fields() });
+  assert.match(legacy, /review-change:pass sha=[0-9a-f]{40} contract=v1 -->/);
+  assert.doesNotMatch(legacy, /Scope manifest/);
+});
+
+test("judgeReceipt: a non-affecting head delta stays current; an affecting delta voids; no scope stays head-bound", () => {
+  const scoped = { sha: SHA_A, scope: SCOPE_A };
+  const legacy = { sha: SHA_A };
+  // same head → current regardless
+  assert.equal(judgeReceipt({ receipt: legacy, headSha: SHA_A, changedPaths: ["src/x.ts"] }).current, true);
+  // different head, scoped receipt, delta all non-affecting → current (#182 AC3)
+  assert.deepEqual(
+    judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", ".serena/project.yml"] }),
+    { current: true, reason: "non-affecting head delta", changedPaths: ["docs/LOGS.md", ".serena/project.yml"] },
+  );
+  // different head, scoped receipt, one affecting path → stale, named
+  const voided = judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: ["docs/LOGS.md", "src/feature.ts"] });
+  assert.equal(voided.current, false);
+  assert.deepEqual(voided.changedPaths, ["src/feature.ts"]);
+  // different head, legacy receipt (no scope) → head-bound, stale
+  assert.equal(judgeReceipt({ receipt: legacy, headSha: SHA_B, changedPaths: ["docs/LOGS.md"] }).current, false);
+  // fail-closed: an unresolvable delta is never current
+  assert.equal(judgeReceipt({ receipt: scoped, headSha: SHA_B, changedPaths: null }).current, false);
+});
+
+// ---------------------------------------------------------------------------
+// F14: scope re-derivation at call site — the judge's guard must not be a
+// tautology.  The test builds a git checkout, derives a scope at a known
+// head, then calls the verify command with a forged scope value.  If the
+// caller (the CLI) re-derives at judge time, the forged scope is caught.
+// ---------------------------------------------------------------------------
+
+test("F14 — judgeReceipt rejects a forged scope when the CLI re-derives at judge time", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-f14-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  // Build a repo with a non-affecting surface and an affecting surface
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};");
+  // Make one affecting commit on main so that a delta is measurable
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+
+  // Step 1 — emit a receipt with the real scope (via --scope-base main)
+  const emitDerive = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(emitDerive.status, 0, "derive scope from base: " + emitDerive.stderr);
+  const emitBody = emitDerive.stdout;
+
+  // Step 2 — advance the repo with an affecting change (touched src/)
+  fs.writeFileSync(path.join(root, "src/extra.ts"), "export const x = 1;");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "feat: added src/extra"], { cwd: root });
+  const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+
+  // Step 3 — verify with a forged scope: inject a forged scope= in the marker
+  // while the body still carries the old one.  If the CLI re-derives at
+  // judge time (F14 fix), the forged scope does not match the head-derived
+  // manifest and the receipt is stale.
+  const forgedScope = "e".repeat(64);
+  const forgedBody = emitBody.replace(
+    /(<\!-- review-change:pass sha=[0-9a-f]{40} contract=v1) scope=[0-9a-f]{64}/,
+    `$1 scope=${forgedScope}`,
+  );
+  const forgedComment = comment(forgedBody);
+  const verifyOut = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([forgedComment]), encoding: "utf8" });
+  // The forged scope must be caught: the judge re-derives at movedHead and
+  // sees that the recorded scope (forged) does not match.  Result: stale.
+  assert.notEqual(verifyOut.status, 0, "a forged scope must be rejected");
+  const report = JSON.parse(verifyOut.stdout);
+  assert.equal(report.status, "stale", "a forged scope that differs from head-derived manifest must be stale");
+});
+
+test("CLI verify in a git checkout: a foreign commit between review and audit leaves the receipt current (AC3/AC9)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  // Derive the real scope from the repo so the re-derived manifest matches
+  const render = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(render.status, 0, "derive scope at head: " + render.stderr);
+  const receipt = comment(render.stdout);
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs/LOGS.md"), "foreign entry\n");
+  execFileSync("git", ["add", "docs/LOGS.md"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "docs(log): foreign"], { cwd: root });
+  const newHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  assert.notEqual(newHead, head);
+
+  const current = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", newHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
+  assert.equal(current.status, 0, "a non-affecting delta must keep the receipt current: " + current.stderr);
+  assert.equal(JSON.parse(current.stdout).status, "current");
+
+  // an affecting commit still voids
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export const x = 1;\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "feat: touch the reviewed surface"], { cwd: root });
+  const movedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const voided = spawnSync(process.execPath, [script, "verify", "--comments-json", "-", "--head", movedHead, "--root", root], { input: JSON.stringify([receipt]), encoding: "utf8" });
+  assert.equal(voided.status, 4);
+  assert.equal(JSON.parse(voided.stdout).status, "stale");
+});
+
+test("emit/render derives the scope manifest from --scope-base (the skill never hand-assembles a digest)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "review-receipt-scope-base-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: root });
+  execFileSync("git", ["config", "user.email", "fixture@example.invalid"], { cwd: root });
+  execFileSync("git", ["config", "user.name", "Fixture"], { cwd: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/unit.ts"), "export {};\n");
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "base"], { cwd: root });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const derived = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(derived.status, 0, derived.stderr);
+  assert.match(derived.stdout, /- Scope manifest: `sha256:[0-9a-f]{64}`/);
+  // the derived digest equals a sign-computed one for the same surface
+  const sign = spawnSync(process.execPath, [path.join(repoRoot, "scripts", "scope-manifest.mjs"), "sign", "--base", "main", "--head", head, "--root", root], { encoding: "utf8" });
+  assert.equal(sign.status, 0, sign.stderr);
+  assert.match(derived.stdout, new RegExp("scope=" + JSON.parse(sign.stdout).scope));
+  // mutually exclusive flags are a usage error
+  const both = spawnSync(process.execPath, [script, "render", "--head", head, "--scope-base", "main", "--scope-manifest", "d".repeat(64), "--scope", "s", "--axes", "a", "--coverage", "c", "--root", root], { encoding: "utf8" });
+  assert.equal(both.status, 1);
 });
 
 console.log("PASS review-receipt: marker grammar, newest-wins, current/absent/stale, idempotent post, injection-safe body, emit refuses a moved head");
