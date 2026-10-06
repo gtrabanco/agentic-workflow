@@ -2612,3 +2612,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** `docs/fix/286-affecting-path-receipt-binding/review-findings.md`
 - **Summary:** Committed and pushed fix/286 branch: added review findings F2 (audit-pr Step 1 receipt gate failing — PR #288 missing `review-change:pass` marker) and F3 (pre-execution snapshot missing required artifacts — no `ACCEPTANCE.md` or `progress.md`) to `review-findings.md`. The fix/286 branch is already pushed; the working tree is clean on `main`.
 - **Next:** Address F2 — run `/review-change` to re-review at the current head and get the `review-change:pass` marker for PR #288, then re-run `/audit-pr`. Address F3 — run `/unit-lane 286-affecting-path-receipt-binding` to re-derive the missing acceptance artifacts, then re-run `/audit-pr`.
+
+## 2026-10-06T20:38Z — main — manual
+- **Commits:** 0
+- **Files:** (none — entry only)
+- **Summary:** fold-findings on PRs #288 (286-affecting-path-receipt-binding) and #287 (285-pre-execution-lineage-gate): repaired all fix-now findings across both units, committed and pushed, 626/626 tests passing. Folded F4-F9 (#288: blob hashing, --no-renames, changedPaths, merge-base, scope manifest judge, perf batch); F10-F11 (cross-PR collision, ledger normalization); F2-F8 (#287: schema version pins, SPEC Evidence, non-author-controlled discriminator, obligations validation, absent ledger BLOCKED, frozen digest anchor, cross-PR coordination). F2/F3 for #288 remain open (replan-in-unit — need #287 merge first).
+- **Decisions:** (1) Both PRs pushed, all fix-now findings folded, repo tests 626/0. (2) Merge order: #287 first (enforcer path fix), then rebase #288 onto it. (3) F2 (#288: audit-pr Step 1 receipt gate — PR #288 missing `review-change:pass` marker) and F3 (#288: pre-execution lineage gate unsatisfiable without #287's enforcer fix) block #288's audit-pr until merged.
+- **Next:** Merge order: #287 first (enforcer path fix), then rebase #288 onto it, then re-run /review-change on both heads. F2+F3 for #288 need resolution after merge.
