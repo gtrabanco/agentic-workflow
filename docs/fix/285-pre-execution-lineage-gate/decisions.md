@@ -63,6 +63,6 @@ justification | docs/fix/285-pre-execution-lineage-gate/decisions.md | P6 | 2026
   pure function of the unit doc's bytes, so implementing a digest surface would
   be an unnecessary CLI change. (c) F11/F12 are the behavioral suite in
   `scripts/lane-era-lineage.test.mjs` driving the runtime over fixture repos
-  (red-first: 15 fail / 2 pass at `a505c7b7`). (d) F13: F1 was a `low`
+  (red-first: 15 fail / 2 pass at `a4400147`). (d) F13: F1 was a `low`
   report-note that was never folded — its `folded: yes` mark was bogus and is
   dropped to `folded: no`.

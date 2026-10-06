@@ -3,7 +3,7 @@
 Mark and finding shapes are owned by `skills/pre-execution-review/references/LEDGERS.md`
 (`review-mark@1` / `finding-mark@1` — cited, not re-declared).
 
-Axes run at HEAD `ffab7c28d03c02bc022b13bdd7d260cd8edddb13`: code/correctness
+Axes run at HEAD `233295d535d4d2f8977aa84439e88156c17ba876`: code/correctness
 (schema requiredness relaxation + CLI consumer sweep: every `acceptance`-row
 consumer already handles absence — `attributeFreshness`'s acceptance-exclusion
 explicitly tolerates a snapshot that binds no manifest; the wording-only route
@@ -15,52 +15,52 @@ copy).
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| REVIEW-RAN | HEAD 4fe52c7b87a9b517d62e889fdeffaa904d9081ed | n/a | n/a | review-mark | n/a | n/a |
-| REVIEW-RAN | HEAD e58760ce707e9ab2cf4331bf77ab8e3921e78b2e | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD ee5a9f7096096a7ad4ba3c1274facda400076ade | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD a1aab57cbbb307a3d27ac174a56ff6ae3cab92d6 | n/a | n/a | review-mark | n/a | n/a |
 | F1 | scripts/unit-route.mjs (reasons map, ~line 447) | code | low | report-note | report-note: the triage block's `Skipped:` reason strings are static per unit type ("trivial scope") even when the actual scope is `standard` — misleading prose in an authoritative block. Pre-existing behaviour, outside this fix's regression boundary (fix/285 changes nothing in `unit-route.mjs`); file its own issue if a consumer ever parses those strings. | no |
-| REVIEW-RAN | HEAD b9ea9fa31bb434d5a78b04963633142b14746c08 | n/a | n/a | review-mark | n/a | n/a |
-| F2 | packages/agentic-workflow-schema/package.json:3 · test/release-contract.test.mjs:28 · test/verification-gates.test.mjs:117 | code | high | fix-now | fold into current phase (bump both version pins to 4.6.0; make CI run the schema package's own `bun run test`) · fold 9477ffe2 | yes |
-| F3 | docs/fix/285-pre-execution-lineage-gate/SPEC.md:149 | spec-drift | high | fix-now | fold into current phase (rewrite the `bun run test` Evidence row to exit 1 / 715 pass / 2 fail) · fold 9477ffe2 | yes |
-| F4 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-106 | security | high | fix-now | fold into current phase (replace the `progress.md`-absence discriminator with a non-author-controlled marker; adversarial test) · fold 9477ffe2 | yes |
-| F5 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:120-128 | security | high | fix-now | fold into current phase (require ≥1 obligation row or an explicit `n/a: <reason>`; red test for an empty-present `### Obligations`) · fold 9477ffe2 | yes |
-| F6 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:104-107 | security | med | fix-now | fold into current phase (emit BLOCKED + `→ Next: /unit-lane <unit>` for an absent ledger section) · fold 9477ffe2 | yes |
-| F7 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-101 | security | med | fix-now | fold into current phase (bind the triage output + ledgers with a frozen digest/timestamp anchor; shrunk-objective test) · fold 9477ffe2 | yes |
-| F8 | CHANGELOG.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · README.md · skills/audit-pr/SKILL.md · SPEC `Depends on` | workflow | high | fix-now | coordinate with #288 F10: one PR rebases, single `audit-pr` version, single budget re-base; correct the SPEC "Depends on: None" · fold 9477ffe2 | yes |
-| REVIEW-RAN | HEAD 7bec8d4bd3f2c0490bd556ab6595ab8b8fb7800c | n/a | n/a | review-mark | n/a | n/a |
-| GATE-RAN | HEAD 7bec8d4bd3f2c0490bd556ab6595ab8b8fb7800c | node --test scripts/*.test.mjs | exit 0 |
-| GATE-RAN | HEAD 7bec8d4bd3f2c0490bd556ab6595ab8b8fb7800c | bun scripts/check-skill-context.mjs | exit 0 |
-| GATE-RAN | HEAD 7bec8d4bd3f2c0490bd556ab6595ab8b8fb7800c | (cd packages/agentic-workflow-schema && bun run test) | exit 0 |
-| F9 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:122-129 | code,security | high | fix-now | regression of F7 — the "Frozen digest anchor" names a `unit-route.mjs --triage` digest the CLI never emits; retract the paragraph or implement the digest and assert it · fold 833c1121 | yes |
-| F10 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-139 | security | high | fix-now | regression of F4 — the lane-era/legacy discriminator is still author-controlled `progress.md` presence; replan route: key it on a non-author-controlled signal and bind the unit-doc bytes (`node scripts/unit-route.mjs 285-pre-execution-lineage-gate` → route: replan) · fold 833c1121 | yes |
-| F11 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:104-112 | security | med | fix-now | regression of F5 + F6 — the empty-or-absent `### Obligations` → BLOCKED rules are prose with no reader and no test; add the assertion over a fixture unit doc · fold 833c1121 | yes |
-| F12 | scripts/lane-era-lineage.test.mjs:161-174 | code,verify | high | fix-now | AC3 is asserted by substring presence only; add a behavioural assertion that runs `unit-route.mjs --triage` over the fixture and compares the `Steps:` line · fold 833c1121 | yes |
-| F13 | docs/fix/285-pre-execution-lineage-gate/review-findings.md:20 | workflow | med | fix-now | `ledger-provenance.mjs --check` exits 1 — F1 is `folded: yes` with no fold token, and a `low` report-note is never persisted to the fold ledger; drop the row to a report note or record its real fold token · fold 9864c82c | yes |
-| VF-1 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:122-129 · reviewer review-change · HEAD 7bec8d4b · recheck direct read + `node scripts/unit-route.mjs --triage 285-pre-execution-lineage-gate --json` (keys unit,type,steps,skipped,budget — no digest) | security | confirmed | finding-mark | n/a | n/a |
-| VF-2 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95 · reviewer review-change · HEAD 7bec8d4b · recheck direct read ("no `progress.md`" vs "carries `progress.md` receipts") + `grep -rn 'Triaged steps' scripts/*.mjs` (only the test fixture) | security | confirmed | finding-mark | n/a | n/a |
-| VF-3 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:105-112 · reviewer review-change · HEAD 7bec8d4b · recheck `grep -rn Obligations scripts/*.mjs` (excluding tests → none) + `node --test scripts/lane-era-lineage.test.mjs` green with both states untested | security | confirmed | finding-mark | n/a | n/a |
-| VF-4 | scripts/lane-era-lineage.test.mjs:161-174 · reviewer review-change · HEAD 7bec8d4b · recheck direct read (five `assert.match` prose pins, no command execution) | code | confirmed | finding-mark | n/a | n/a |
-| VF-5 | docs/fix/285-pre-execution-lineage-gate/review-findings.md:20 · reviewer review-change · HEAD 7bec8d4b · recheck `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` → exit 1, `CHECK FAIL: 1 folded row(s) lack a verified commit token: F1` | workflow | confirmed | finding-mark | n/a | n/a |
-| REVIEW-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | n/a | n/a | review-mark | n/a | n/a |
-| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node --test scripts/*.test.mjs | exit 0 |
-| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | (cd packages/agentic-workflow-schema && bun run test) | exit 0 |
-| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | bun scripts/check-skill-context.mjs | exit 0 |
-| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check | exit 0 |
-| GATE-RAN | HEAD 30135b1b25fa65eca59ecad54f516508fd9934f5 | node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate | exit 0 |
-| F14 | scripts/unit-lineage.mjs:123 | security | high | fix-now | fold into a red-first batch: `classifyObligations` closure reads the `status` cell only — drop the `\|\| /^n\/a/i.test(id)` disjunct, and pin an `n/a`-id + `planned`-status row as BLOCKED · fold 251968c7 | yes |
-| F15 | scripts/unit-lineage.mjs:135-140 | security | high | fix-now | fold into the same batch: `obligationLedger` must reject the dual-home shape (embedded + `planning-obligations.md`) as BLOCKED instead of returning on the first hit; red-first fixture with an embedded closed ledger and a separate open row · fold 251968c7 | yes |
-| F16 | CHANGELOG.md:554 · skills/audit-pr/SKILL.md:4 | workflow | med | fix-now | fold: correct the audit-pr 5.5.0 release note to the merged gate (`unit-lineage.mjs` runtime; the "frozen digest anchor" paragraph is retracted) and bump `audit-pr`'s `version:` per the version-every-change rule (`bump-skill`) · fold 251968c7 | yes |
-| VF-6 | scripts/unit-lineage.mjs:123 · reviewer review-change · HEAD 30135b1b · recheck import `obligationLedger`/`classifyObligations` + reproducer: embedded row `\| n/a: not applicable \| AC1 \| planned \|` → `{"ok":true,"count":1}` | security | confirmed | finding-mark | n/a | n/a |
-| VF-7 | scripts/unit-lineage.mjs:135-140 · reviewer review-change · HEAD 30135b1b · recheck `obligationLedger(embedded-closed, separate-open)` returns the embedded table (`{"ok":true}`) and never reads the open file | security | confirmed | finding-mark | n/a | n/a |
-| VF-8 | CHANGELOG.md:554 · reviewer review-change · HEAD 30135b1b · recheck direct read of the 5.5.0 row against the retracted-paragraph text in `02_CLOSURE_AND_SCOPE_GATES.md:126-131` and `audit-pr`'s unchanged `version: 5.5.0` | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD e2d51af5fe0d99971fe433cdb493d2d4c26b3512 | n/a | n/a | review-mark | n/a | n/a |
+| F2 | packages/agentic-workflow-schema/package.json:3 · test/release-contract.test.mjs:28 · test/verification-gates.test.mjs:117 | code | high | fix-now | fold into current phase (bump both version pins to 4.6.0; make CI run the schema package's own `bun run test`) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F3 | docs/fix/285-pre-execution-lineage-gate/SPEC.md:149 | spec-drift | high | fix-now | fold into current phase (rewrite the `bun run test` Evidence row to exit 1 / 715 pass / 2 fail) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F4 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-106 | security | high | fix-now | fold into current phase (replace the `progress.md`-absence discriminator with a non-author-controlled marker; adversarial test) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F5 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:120-128 | security | high | fix-now | fold into current phase (require ≥1 obligation row or an explicit `n/a: <reason>`; red test for an empty-present `### Obligations`) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F6 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:104-107 | security | med | fix-now | fold into current phase (emit BLOCKED + `→ Next: /unit-lane <unit>` for an absent ledger section) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F7 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-101 | security | med | fix-now | fold into current phase (bind the triage output + ledgers with a frozen digest/timestamp anchor; shrunk-objective test) · fold fcfcc79 (ticked 39b06a7) | yes |
+| F8 | CHANGELOG.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · README.md · skills/audit-pr/SKILL.md · SPEC `Depends on` | workflow | high | fix-now | coordinate with #288 F10: one PR rebases, single `audit-pr` version, single budget re-base; correct the SPEC "Depends on: None" · fold fcfcc79 (ticked 39b06a7) | yes |
+| REVIEW-RAN | HEAD 632205c969f27fc60daf302cfbba270d6dcf9a02 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 632205c969f27fc60daf302cfbba270d6dcf9a02 | node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 632205c969f27fc60daf302cfbba270d6dcf9a02 | bun scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 632205c969f27fc60daf302cfbba270d6dcf9a02 | (cd packages/agentic-workflow-schema && bun run test) | exit 0 |
+| F9 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:122-129 | code,security | high | fix-now | regression of F7 — the "Frozen digest anchor" names a `unit-route.mjs --triage` digest the CLI never emits; retract the paragraph or implement the digest and assert it · fold 9c745ef (ticked 4463e9e) | yes |
+| F10 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95-139 | security | high | fix-now | regression of F4 — the lane-era/legacy discriminator is still author-controlled `progress.md` presence; replan route: key it on a non-author-controlled signal and bind the unit-doc bytes (`node scripts/unit-route.mjs 285-pre-execution-lineage-gate` → route: replan) · fold 9c745ef (ticked 4463e9e) | yes |
+| F11 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:104-112 | security | med | fix-now | regression of F5 + F6 — the empty-or-absent `### Obligations` → BLOCKED rules are prose with no reader and no test; add the assertion over a fixture unit doc · fold 9c745ef (ticked 4463e9e) | yes |
+| F12 | scripts/lane-era-lineage.test.mjs:161-174 | code,verify | high | fix-now | AC3 is asserted by substring presence only; add a behavioural assertion that runs `unit-route.mjs --triage` over the fixture and compares the `Steps:` line · fold 9c745ef (ticked 4463e9e) | yes |
+| F13 | docs/fix/285-pre-execution-lineage-gate/review-findings.md:20 | workflow | med | fix-now | `ledger-provenance.mjs --check` exits 1 — F1 is `folded: yes` with no fold token, and a `low` report-note is never persisted to the fold ledger; drop the row to a report note or record its real fold token · fold 4463e9e | yes |
+| VF-1 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:122-129 · reviewer review-change · HEAD 632205cb · recheck direct read + `node scripts/unit-route.mjs --triage 285-pre-execution-lineage-gate --json` (keys unit,type,steps,skipped,budget — no digest) | security | confirmed | finding-mark | n/a | n/a |
+| VF-2 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:95 · reviewer review-change · HEAD 632205cb · recheck direct read ("no `progress.md`" vs "carries `progress.md` receipts") + `grep -rn 'Triaged steps' scripts/*.mjs` (only the test fixture) | security | confirmed | finding-mark | n/a | n/a |
+| VF-3 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:105-112 · reviewer review-change · HEAD 632205cb · recheck `grep -rn Obligations scripts/*.mjs` (excluding tests → none) + `node --test scripts/lane-era-lineage.test.mjs` green with both states untested | security | confirmed | finding-mark | n/a | n/a |
+| VF-4 | scripts/lane-era-lineage.test.mjs:161-174 · reviewer review-change · HEAD 632205cb · recheck direct read (five `assert.match` prose pins, no command execution) | code | confirmed | finding-mark | n/a | n/a |
+| VF-5 | docs/fix/285-pre-execution-lineage-gate/review-findings.md:20 · reviewer review-change · HEAD 632205cb · recheck `node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check` → exit 1, `CHECK FAIL: 1 folded row(s) lack a verified commit token: F1` | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | (cd packages/agentic-workflow-schema && bun run test) | exit 0 |
+| GATE-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | bun scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | node scripts/ledger-provenance.mjs docs/fix/285-pre-execution-lineage-gate/review-findings.md --check | exit 0 |
+| GATE-RAN | HEAD 180427da7b82850f3527e0cb88aaf87358732c32 | node scripts/unit-lineage.mjs --unit 285-pre-execution-lineage-gate | exit 0 |
+| F14 | scripts/unit-lineage.mjs:123 | security | high | fix-now | fold into a red-first batch: `classifyObligations` closure reads the `status` cell only — drop the `\|\| /^n\/a/i.test(id)` disjunct, and pin an `n/a`-id + `planned`-status row as BLOCKED · fold 41e38b3 | yes |
+| F15 | scripts/unit-lineage.mjs:135-140 | security | high | fix-now | fold into the same batch: `obligationLedger` must reject the dual-home shape (embedded + `planning-obligations.md`) as BLOCKED instead of returning on the first hit; red-first fixture with an embedded closed ledger and a separate open row · fold 41e38b3 | yes |
+| F16 | CHANGELOG.md:554 · skills/audit-pr/SKILL.md:4 | workflow | med | fix-now | fold: correct the audit-pr 5.5.0 release note to the merged gate (`unit-lineage.mjs` runtime; the "frozen digest anchor" paragraph is retracted) and bump `audit-pr`'s `version:` per the version-every-change rule (`bump-skill`) · fold 41e38b3 | yes |
+| VF-6 | scripts/unit-lineage.mjs:123 · reviewer review-change · HEAD 180427db · recheck import `obligationLedger`/`classifyObligations` + reproducer: embedded row `\| n/a: not applicable \| AC1 \| planned \|` → `{"ok":true,"count":1}` | security | confirmed | finding-mark | n/a | n/a |
+| VF-7 | scripts/unit-lineage.mjs:135-140 · reviewer review-change · HEAD 180427db · recheck `obligationLedger(embedded-closed, separate-open)` returns the embedded table (`{"ok":true}`) and never reads the open file | security | confirmed | finding-mark | n/a | n/a |
+| VF-8 | CHANGELOG.md:554 · reviewer review-change · HEAD 180427db · recheck direct read of the 5.5.0 row against the retracted-paragraph text in `02_CLOSURE_AND_SCOPE_GATES.md:126-131` and `audit-pr`'s unchanged `version: 5.5.0` | workflow | confirmed | finding-mark | n/a | n/a |
 
-Cycle 2 — independent review at HEAD `b9ea9fa3` (2026-10-05). Axes run: code,
+Cycle 2 — independent review at HEAD `e2d51af3` (2026-10-05). Axes run: code,
 security, verify, perf (perf PASS — no material surface); workflow/spec-drift
 (FAIL); design / a11y / brand / SEO — n/a (no UI or user-facing copy).
 Workspace precondition: clean worktree, branch in sync with `origin`. F1 (the
 low report-note) stays report-only. Low findings (G–K) are report-only notes,
 never ledger rows. Escalation: full pass, not delta.
 
-Cycle 4 — independent review at HEAD `7bec8d4b` (2026-10-05). Axes run: code
+Cycle 4 — independent review at HEAD `632205cb` (2026-10-05). Axes run: code
 (FAIL — the audit gate names a triage digest `unit-route.mjs` never emits; AC3
 is a substring-only test), security (FAIL — the F4/F5/F6/F7 folds are prose
 without a mechanism; F4 marked `folded: yes` while the `progress.md`
@@ -74,7 +74,7 @@ size trigger). Five new fix-now rows (F9–F13), four of them `regression of
 <id>`: the F4–F7 fold answered its findings with prose, and the suite that
 called the repairs green asserted words, not mechanisms.
 
-Cycle 4 fold — `833c1121` (2026-10-06). F9–F12 folded as one mechanism:
+Cycle 4 fold — `9c745ef1` (2026-10-06). F9–F12 folded as one mechanism:
 `scripts/unit-lineage.mjs`, the machine surface of gate 1 — the discriminator
 keys on a verifying plan receipt (F10), the absent/empty/open obligation rules
 have a reader and fixture tests (F11), the triage currency check re-derives
@@ -84,9 +84,9 @@ separately: F1 was a `low` report-note that was never folded — its `folded:
 yes` mark was bogus (no fold token exists because no fold exists), dropped to
 `folded: no`, which is the state `ledger-provenance.mjs --check` demands of a
 report-note. Red-first: the behavioral suite ran 15 fail / 2 pass at
-`a505c7b7` before the script existed.
+`a4400147` before the script existed.
 
-Cycle 5 — independent review at HEAD `30135b1b` (2026-10-06). Axes run: code,
+Cycle 5 — independent review at HEAD `180427db` (2026-10-06). Axes run: code,
 security, verify, perf, spec-drift, workflow. design / a11y / brand / SEO — n/a
 (no UI or user-facing copy). Workspace precondition: clean worktree, branch in
 sync with `origin`. Full pass, not delta (the fold diff is 723 changed lines and
@@ -106,7 +106,7 @@ persisted: a prose-only `### Obligations` section and a bare-`n/a`
 `planning-obligations.md` both correctly answer BLOCKED.
 
 LOOP CAP REACHED — 285-pre-execution-lineage-gate
-- Cycles: 2 (two review→fold cycles: `9477ffe2`, `833c1121`/`9864c82c`; 4
+- Cycles: 2 (two review→fold cycles: `fcfcc792`, `9c745ef1`/`49b27f7c`; 4
   `REVIEW-RAN` marks) without convergence — the cycle-4 fold introduced F14/F15
   in its own runtime.
 - Open fix-now ids: F14 + F15 + F16 (F1 stays a `low` report-note, never folded).
