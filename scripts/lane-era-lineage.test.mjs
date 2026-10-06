@@ -359,6 +359,36 @@ test("unit-lineage: an explicit n/a obligations row passes", (t) => {
   assert.match(r.stdout, /LINEAGE OK — lane-era/);
 });
 
+// F14 — `n/a` in the obligation-id column must not close a `planned` row
+// (only the status column determines closure per LEDGERS.md)
+test("unit-lineage: n/a in obligation-id column + planned status is BLOCKED (F14)", (t) => {
+  const { root } = makeRepo(t, { obligations: "na" });
+  // replace the n/a row with an n/a-id + planned row
+  const specPath = path.join(root, UNIT_DIR, "SPEC.md");
+  const spec = fs.readFileSync(specPath, "utf8");
+  const replaced = spec.replace(
+    `| n/a | none | no normative behaviour in this fix | — | — | — | — | — | n/a: truly no obligations |`,
+    `| n/a: not applicable | AC1 | fallback use | P1 | task | unit-lane | cmd | evidence | planned |`
+  );
+  fs.writeFileSync(specPath, replaced);
+  const r = lineage(root);
+  assert.equal(r.status, 1, `n/a-id + planned must BLOCK: ${r.stdout}`);
+  assert.match(r.stdout, /LINEAGE BLOCKED/);
+  assert.match(r.stdout, /n\/a: not applicable/, "the verdict names the open obligation id");
+});
+
+// F15 — "never both" enforced: embedded closed ledger + separate open file = BLOCKED
+test("unit-lineage: embedded+separate-file ledgers (never both) is BLOCKED (F15)", (t) => {
+  const { root } = makeRepo(t, { obligations: "verified" });
+  // add a separate-file ledger with an open row
+  fs.writeFileSync(path.join(root, UNIT_DIR, "planning-obligations.md"),
+    `| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |\n|---|---|---|---|---|---|---|---|---|\n| O2 | AC2 | secondary | P2 | task | unit-lane | cmd | evidence | planned |\n`);
+  const r = lineage(root);
+  assert.equal(r.status, 1, `never both must BLOCK: ${r.stdout}`);
+  assert.match(r.stdout, /LINEAGE BLOCKED/);
+  assert.match(r.stdout, /never both/i, "the reason cites the never-both rule");
+});
+
 test("unit-lineage: a planted progress.md cannot select a weaker gate (F10)", (t) => {
   const { root } = makeRepo(t, { obligations: "open" });
   // an author-planted receipt that does not re-derive (no bound digest at all):

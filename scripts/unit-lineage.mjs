@@ -101,6 +101,9 @@ const isSeparatorRow = (cells) => cells.every((c) => /^:?-{2,}:?$/.test(c.trim()
  * ran on this candidate) or an explicit `n/a:` — anything else (planned,
  * in-progress, blank, deferred) is open. Returns `{ present, rows }` where each
  * row is `{ id, status, open }`, or `{ present: false }` when no table exists.
+ * The `obligation-id` column must be `O\d+` or `AC-<name>`; `n/a` in that
+ * column is a contract violation (the `status` column is the sole closure
+ * signal per LEDGERS.md).
  */
 export function parseObligationTable(text) {
   if (text === null || text === undefined) return { present: false };
@@ -120,7 +123,9 @@ export function parseObligationTable(text) {
     if (cells.length < 2 || isSeparatorRow(cells)) continue;
     const id = cells[0] || "(blank id)";
     const status = cells[cells.length - 1] || "";
-    const na = /^n\/a/i.test(status) || /^n\/a/i.test(id);
+    // Only the status column determines closure (LEDGERS.md: `obligation-id`
+    // is reserved for O\d+/AC-<name>; n/a there is a contract violation)
+    const na = /^n\/a/i.test(status);
     rows.push({ id, status, open: !na && !/^verified$/i.test(status) });
   }
   return { present: true, rows };
@@ -132,7 +137,19 @@ export function parseObligationTable(text) {
  */
 export function obligationLedger(doc, separateFileText) {
   const embedded = parseObligationTable(subsectionBody(doc, "Obligations"));
-  if (embedded.present) return { source: "embedded", ...embedded };
+  if (embedded.present) {
+    // "never both" — reject if a second shape is also present (LEDGERS.md)
+    if (separateFileText !== null) {
+      const separate = parseObligationTable(separateFileText);
+      if (separate.present) {
+        return { source: "both", present: true, rows: [],
+          ok: false, reason: "never both: embedded and separate-file ledgers present simultaneously" };
+      }
+      // Separate has content but no valid table — use embedded (n/a note is a discharge)
+      return { source: "embedded", ...embedded };
+    }
+    return { source: "embedded", ...embedded };
+  }
   const separate = parseObligationTable(separateFileText);
   if (separate.present) return { source: "separate", ...separate };
   // a separate-file ledger may also discharge its duties with an `n/a:` note
@@ -150,6 +167,7 @@ export function compareTriagedLines(pasted, rederived) {
 
 /** Classify the ledger: `{ ok, count, open }` per the closure rules. */
 export function classifyObligations(ledger) {
+  if (ledger.ok === false) return { ok: false, count: 0, open: [], reason: ledger.reason ?? "pre-classification check failed" };
   if (!ledger.present) return { ok: false, count: 0, open: [], reason: "no obligation ledger found (neither the embedded `### Obligations` section nor planning-obligations.md)" };
   if (ledger.rows.length === 0) return { ok: false, count: 0, open: [], reason: "the obligation ledger is empty (zero rows) — a vacuous ledger cannot demonstrate closure; if there are truly no obligations, carry a single `n/a: <reason>` row" };
   const open = ledger.rows.filter((r) => r.open);
