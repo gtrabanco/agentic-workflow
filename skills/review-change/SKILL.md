@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.10.0
+version: 3.11.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -30,6 +30,13 @@ For a final PR review, the turn is incomplete until this additional box passes:
   comments, and exits non-zero unless the newest exact-HEAD
   `review-change:pass` marker is confirmed, so its exit code IS this box
 ```
+
+When the receipt emitter runs, it also records the affecting-path scope
+manifest (fix/286) so a foreign-only commit after the review (a session-log or
+toolstate commit on a shared checkout) does not void the receipt at the merge
+gate — pass `--scope-base main` (the unit's base ref) and the runtime derives
+the manifest itself; never hand-assemble a digest. A receipt without a scope
+manifest stays head-bound (legacy semantics).
 
 The receipt closeout is a precondition of the report, not a follow-up: do not
 print the fixed report block on a non-zero exit. A clean report without a

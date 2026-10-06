@@ -42,6 +42,30 @@ test("current receipt + all gates pass → MERGE-READY with the verdict and no r
   assert.equal(result.gatesEvaluated, true);
 });
 
+test("fix/286: a non-affecting head delta keeps a scoped receipt current; an affecting delta still BLOCKS", () => {
+  const sha = "a".repeat(40);
+  const moved = "b".repeat(40);
+  const scope = "c".repeat(64);
+  const gates = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
+  const comments = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none", scopeManifest: scope }) }];
+  // non-affecting delta (foreign session-log + toolstate commits) -> the receipt
+  // stays current and the gates ARE evaluated (#182 AC3/AC9 at the merge gate)
+  const ok = auditVerdict({ comments, headSha: moved, gates, changedPaths: ["docs/LOGS.md", ".serena/project.yml"] });
+  assert.equal(ok.verdict, "MERGE-READY", JSON.stringify(ok));
+  assert.equal(ok.gatesEvaluated, true);
+  // one affecting path in the delta -> BLOCKED, routed to re-review (unchanged)
+  const voided = auditVerdict({ comments, headSha: moved, gates, changedPaths: ["docs/LOGS.md", "src/feature.ts"] });
+  assert.equal(voided.verdict, "BLOCKED");
+  assert.equal(voided.route, "/review-change");
+  // a legacy receipt (no scope) stays head-bound: any delta voids
+  const legacyComments = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const headBound = auditVerdict({ comments: legacyComments, headSha: moved, gates, changedPaths: ["docs/LOGS.md"] });
+  assert.equal(headBound.verdict, "BLOCKED");
+  // fail-closed: an unresolvable delta never reads as current
+  const unknown = auditVerdict({ comments, headSha: moved, gates, changedPaths: null });
+  assert.equal(unknown.verdict, "BLOCKED");
+});
+
 test("current receipt but a gate fails → BLOCKED with the gate blocker (not a review failure)", () => {
   const sha = "a".repeat(40);
   const gates = Object.fromEntries(GATE_NAMES.map((name) => [name, "pass"]));
