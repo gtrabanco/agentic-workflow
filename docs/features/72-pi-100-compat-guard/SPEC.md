@@ -199,7 +199,8 @@ steps.
 ## Progress log
 
 2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit 220d880d — next: P1 implement
-2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit a6d0e2bf — next: P2 README baseline
+2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit a6d0e2bf — next: P3 issue evidence comments
+2026-10-07 17:40 — P2: README Notes baseline updated (1.0.4 verified + 0.99.1 floor at one glance) → commit 5699fcdb — next: P3 issue evidence comments
 
 ## Next
 

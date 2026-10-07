@@ -246,9 +246,11 @@ dialog.
 
 ## Notes
 
-- Verified against Pi 0.99.1 (2026-09-29) (`pi install`, package skills, friendly
+- Verified against Pi 1.0.4 (2026-10-07), and against the peer floor Pi 0.99.1
+  (2026-09-29) (`pi install`, package skills, friendly
   command registration, routed set/clear, settings console round-trip, `sendUserMessage`
-  with prompt template expansion).
+  with prompt template expansion). CI type-checks both pi legs on every PR
+  (root-suite.yml's `pi-compat-guard` job).
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.
