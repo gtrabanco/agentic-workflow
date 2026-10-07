@@ -30,6 +30,17 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename, relative, resolve } from "node:path";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
+/**
+ * Filter out clearly non-SHA strings the regex catches as valid hex but aren't
+ * real commits. GitHub issue URLs like `#issuecomment-5436882280` produce 10+
+ * digit sequences that pass `[0-9a-f]{7,40}` — the git `rev-parse` call would
+ * still fail, but we skip it to avoid noise.  Valid short SHAs can be
+ * all-decimal (e.g. `3958001`), so we only reject strings > 12 chars (git
+ * short-sha cap is 12, and a 40-char full SHA always has at least one
+ * non-decimal hex digit in practice).
+ */
+const isPossibleSHA = (s) =>
+  (s.length >= 7 && s.length <= 12) || s.length === 40;
 const ROW_RE = /^\|\s*(F\d+)\s*\|/;
 /**
  * Cell boundaries are UNESCAPED pipes. A markdown table escapes a literal pipe inside
@@ -51,11 +62,19 @@ const checkOnly = args.includes("--check");
 const annotate = args.includes("--annotate");
 
 const run = (rest, opts = {}) =>
-  execFileSync("git", rest, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], ...opts });
+  execFileSync("git", rest, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024, ...opts });
 const git = (...rest) => {
   try {
     return run(rest);
-  } catch {
+  } catch (err) {
+    // Walk errors are fatal — log instead of silently swallowing the
+    // failure (the old 1 MB maxBuffer silently ate this on repos whose
+    // full history exceeds that; the walk then produced zero candidates
+    // and the merge-base..HEAD gate excluded everything).
+    // Expected failures (merge-base not-ancestor, rev-parse of a
+    // false-positive token) are handled by the caller; we only log
+    // so the problem is visible, never set exitCode here.
+    process.stderr.write(`GIT ERROR: ${err.message}\n`);
     return "";
   }
 };
@@ -70,7 +89,7 @@ const isAncestor = (a, b) => {
   }
 };
 
-const topRoot = git("rev-parse", "show-toplevel").trim();
+const topRoot = git("rev-parse", "--show-toplevel").trim();
 const short = (sha) => sha.slice(0, 7);
 // A closed pipe (`| head`) is how a human reads the report, not an error.
 for (const stream of [process.stdout, process.stderr])
@@ -165,6 +184,7 @@ function filesOf(sha) {
 function verifiedTokens(text) {
   const out = [];
   for (const token of text.match(COMMIT_TOKEN_RE) ?? []) {
+    if (!isPossibleSHA(token)) continue;
     const full = git("rev-parse", "--verify", "--quiet", `${token}^{commit}`).trim();
     if (full && isAncestor(full, "HEAD")) out.push(full);
   }
@@ -204,12 +224,13 @@ for (const sha of git("log", "--reverse", "--format=%H", "--", rel).split("\n").
 }
 
 // --- 2. branch commits whose message names a finding id ----------------------
-// One `git log` call for the whole walk: NUL separates records, \x1f splits the
-// sha from its (multi-line) message. When `main` has not diverged — a fresh clone,
-// or a repo whose branch IS main — the range is empty, so walk HEAD itself.
+// The candidate walk now covers every commit reachable from HEAD; the
+// `merge-base(main,HEAD)..HEAD` gate previously excluded commits that
+// were folded by the merge into main, so the fold-leaf SHAs could be
+// invisible to the walk after a branch rebase. Walking HEAD restores
+// the full history regardless of merge-base position.
 const head = git("rev-parse", "HEAD").trim();
-const mergeBase = git("merge-base", "main", "HEAD").trim();
-const since = mergeBase && mergeBase !== head ? `${mergeBase}..HEAD` : "HEAD";
+const since = "HEAD";
 const namedById = new Map();
 for (const record of git("log", "--reverse", `--format=%x00%H%x1f%B`, since).split("\0")) {
   const [sha, message] = record.split("\x1f");
