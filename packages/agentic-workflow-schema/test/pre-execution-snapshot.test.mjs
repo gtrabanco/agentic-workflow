@@ -313,14 +313,19 @@ test("RS14: the builder produces a parentless fix plan snapshot from caller byte
   );
 });
 
-test("AC1: the plan required set is SPEC + ACCEPTANCE, extras are additive", () => {
-  for (const artifacts of [
-    [{ kind: "spec", path: "docs/x/SPEC.md", selector: "whole-file", byteLength: 1, digest: DIGEST_A }],
-    [{ kind: "acceptance", path: "docs/x/ACCEPTANCE.md", selector: "whole-file", byteLength: 1, digest: DIGEST_A }],
-  ]) {
-    const result = ok(planSnapshot({ artifacts }));
-    assert.ok(codes(result).includes("missing-artifact-kind"), JSON.stringify(artifacts[0].kind));
-  }
+test("the plan required set is SPEC; the acceptance manifest binds when present (fix/285)", () => {
+  // lane-era shape: a plan snapshot over just the unit doc is satisfiable — the
+  // acceptance manifest is a pre-lane artifact the current pipeline structurally
+  // never writes (issue #285), so requiring it refused every lane-era unit.
+  const laneEra = ok(planSnapshot({
+    artifacts: [{ kind: "spec", path: "docs/x/SPEC.md", selector: "whole-file", byteLength: 1, digest: DIGEST_A }],
+  }));
+  assert.equal(laneEra.ok, true, rows(laneEra));
+  // acceptance alone is still not a plan snapshot: the unit doc is the required row
+  const acceptanceOnly = ok(planSnapshot({
+    artifacts: [{ kind: "acceptance", path: "docs/x/ACCEPTANCE.md", selector: "whole-file", byteLength: 1, digest: DIGEST_A }],
+  }));
+  assert.ok(codes(acceptanceOnly).includes("missing-artifact-kind"), JSON.stringify(acceptanceOnly.diagnostics));
   const withLedgers = ok(planSnapshot({
     artifacts: [
       { kind: "acceptance", path: "docs/x/ACCEPTANCE.md", selector: "whole-file", byteLength: 1, digest: DIGEST_A },

@@ -36,7 +36,12 @@ export const STAGE_ARTIFACTS = {
   ],
   plan: [
     { kind: "spec", file: "SPEC.md", required: true },
-    { kind: "acceptance", file: "ACCEPTANCE.md", required: true },
+    // fix/285 — the acceptance manifest is a pre-lane artifact: units that still
+    // carry one bind it; a lane-era unit (whose acceptance criteria live in the
+    // unit doc) builds without the row. Required made every lane-era plan
+    // snapshot unsatisfiable — the enforcer demanded a file the current pipeline
+    // structurally never writes (issue #285).
+    { kind: "acceptance", file: "ACCEPTANCE.md", required: false },
     { kind: "planning-evidence", file: "planning-evidence.md", required: false },
     { kind: "obligations", file: "planning-obligations.md", required: false },
     { kind: "plan", file: "PLAN.md", required: false },
