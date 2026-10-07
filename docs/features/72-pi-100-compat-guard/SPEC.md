@@ -111,6 +111,11 @@ exists.
 
 ## Known pre-existing issues
 
+- Issue #283's AC1/AC3 name pi `1.0.0` (the npm `latest` at audit time,
+  2026-10-02); the in-repo re-verification (2026-10-07) resolves `latest` to
+  **pi 1.0.4** and is clean there too. Affects the ACs' literals only — the
+  README baseline is written from the re-verification (`1.0.4`, 2026-10-07),
+  which is the intent of AC3 (a current, at-a-glance baseline).
 - Issue #283 states the AC5 bump as `0.18.5 → 0.18.6`; the package is at
   `0.19.0` at execution time (0.19.0 shipped via PR #282 on 2026-10-05).
   Affects AC5's literals only — the patch-bump rule is applied from the actual
@@ -176,6 +181,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
 | R1 | inspected issue #283 + both workflows + package manifests/lockfile/README | 0 | surfaces mapped: tsc today runs only in publish flow vs lockfile 0.99.1 | pi (opus, unit-lane) |
+| P1 | two-leg temp-copy `tsc --noEmit` (local, exact job commands) | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -192,7 +198,8 @@ steps.
 
 ## Progress log
 
-2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit ad72bc65 — next: P1 implement
+2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit 220d880d — next: P1 implement
+2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit a6d0e2bf — next: P2 README baseline
 
 ## Next
 
