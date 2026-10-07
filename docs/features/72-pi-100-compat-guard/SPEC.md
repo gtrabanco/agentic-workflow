@@ -50,6 +50,36 @@ re-based where the repo moved on, see Known pre-existing issues):
    row in the same PR (repo rule: touched package ⇒ same-PR bump + row). No
    `bump-skill` (no `SKILL.md` touched).
 
+### Design closure
+
+- Entity closure: `pi-compat-guard` job (runs the two-leg type-check on every
+  PR and push); README Notes (the at-a-glance verified-version record); issue
+  #283 comments (the AC1 evidence + AC4 hygiene record); package version +
+  changelog row (the same-PR release record). Each names its role; nothing
+  else in the unit changes.
+- Role closure: PR contributor (sees the red guard with the offending leg
+  named), CI runner (executes the job on PR + main + dispatch), package
+  consumer (reads the README baseline), issue reader (reproduces AC1/AC4 from
+  the posted comments).
+- Expectation sweep: a type error in either leg fails the PR; a clean run
+  passes both legs; an npm lockfile appearing under `packages/` is rejected by
+  `test/lockfile-policy.test.mjs` regardless of the guard; the `latest` leg
+  tracking the dist-tag is accepted behaviour (the tripwire), not drift.
+
+### Prior-decisions contradiction sweep
+
+Candidate sources checked 2026-10-07: `docs/workflow/WORKFLOW_INVARIANTS.md`,
+`docs/workflow/REPOSITORY_STATE.md` (W001 — pi package, compatible),
+`AGENTS.md`, `docs/features/27-pi-agentic-workflow/decisions.md`,
+`docs/features/65-doc-toolchain/decisions.md`. No unit-specific decisions.md
+exists.
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| guard installs pi via npm in a temp copy | npm lockfiles are banned under `packages/`; bun.lock is the sole lockfile | AGENTS.md (Packages / lockfile policy) | `compatible` (the guard installs `--no-package-lock` outside the tree and O1 verifies it) |
+| same-PR patch bump + changelog row | touched package ⇒ same-PR bump + row | AGENTS.md (Packages / version bumps) | `compatible` (is AC5) |
+| one PR for the whole unit | one PR per unit of work, against `main` | AGENTS.md (Working rules) | `compatible` |
+
 ## Non-goals
 
 - No `src/` changes — the audit found none required (COMPAT-OK).
@@ -95,15 +125,20 @@ re-based where the repo moved on, see Known pre-existing issues):
   two-leg temp-copy `tsc --noEmit` command sequence), then encode it as a
   `pi-compat-guard` job in `.github/workflows/root-suite.yml` (validator:
   local two-leg run exits 0 with both legs' tsc clean).
+  - Relevant files: .github/workflows/root-suite.yml
 - P2 — Update `packages/pi-agentic-workflow/README.md` Notes (validator:
   `grep -n "Verified against Pi 1.0.0" packages/pi-agentic-workflow/README.md` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/README.md
 - P3 — Post AC1 evidence + AC4 dev-hygiene comments on issue #283 (validator:
   `gh issue view 283 --json comments` shows both).
+  - Relevant files: docs/features/72-pi-100-compat-guard/SPEC.md
 - P4 — Version discipline: `package.json` 0.19.0 → 0.19.1 + `CHANGELOG.md` row
   (validator: `node --test scripts/normative-drift.test.mjs` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/package.json, CHANGELOG.md
 - P5 — Verification: package suite + root suites green on the full diff
   (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 and
   `node --test scripts/*.test.mjs` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/, scripts/
 
 ### Planning evidence
 
@@ -113,6 +148,18 @@ re-based where the repo moved on, see Known pre-existing issues):
 | E2 | `tsc` for this package currently only runs in `publish-pi-package.yml`, against lockfile pi 0.99.1 | `.github/workflows/publish-pi-package.yml`; `packages/pi-agentic-workflow/bun.lock` | 2026-10-07 (read both) |
 | E3 | `root-suite.yml` is PR-triggered and already builds the schema package | `.github/workflows/root-suite.yml` | 2026-10-07 (read) |
 | E4 | `test/lockfile-policy.test.mjs` fails the suite on an npm lockfile | `packages/pi-agentic-workflow/test/lockfile-policy.test.mjs` | 2026-10-07 (read) |
+
+**Research record (R1):** sources inspected 2026-10-07 — issue #283 body
+(audit evidence + ACs), `.github/workflows/root-suite.yml` +
+`publish-pi-package.yml` (where tsc runs today),
+`packages/pi-agentic-workflow/{package.json,tsconfig.json,bun.lock,README.md}`
+(peer floor, compile include, pinned lockfile resolution, stale baseline),
+`packages/agentic-workflow-schema/package.json` (dist entry points for the
+local-resolution question). Stated uncertainties, closed during P1: whether
+npm resolves the package.json deps + pi legs in a bare temp copy with
+`--ignore-scripts` (yes — verified by the local run), and which pi-tui version
+pairs with each leg (`0.99.1` with the floor, `latest` with latest, matching
+the audit's pairing). Evidence row: R1 in Evidence.
 
 ### Obligations
 
@@ -128,6 +175,7 @@ re-based where the repo moved on, see Known pre-existing issues):
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| R1 | inspected issue #283 + both workflows + package manifests/lockfile/README | 0 | surfaces mapped: tsc today runs only in publish flow vs lockfile 0.99.1 | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -143,6 +191,8 @@ This block is authoritative — the model never re-derives, reorders, or invents
 steps.
 
 ## Progress log
+
+2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit ad72bc65 — next: P1 implement
 
 ## Next
 
