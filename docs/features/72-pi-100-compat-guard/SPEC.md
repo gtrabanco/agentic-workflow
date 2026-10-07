@@ -211,11 +211,11 @@ steps.
 2026-10-07 17:50 — P3: AC1 re-verification + AC4 hygiene comments posted on #283 → commit 13ecdb65 — next: P4 version bump + changelog
 2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit 2ed7b482 — next: P5 full verification
 2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit d5f52b55 — next: evidence + review
+2026-10-07 18:35 — evidence + review steps (verdict PASS, 0 material findings); obligations verified; PR #290 opened, roadmap row 72 → done · #290 → commit recorded in the merge — next: owner merge
 
 ## Next
 
-Open the PR (one PR for the unit, against `main`, `Closes #283`); the merge is
-the owner's — the roadmap row flips to `done · <PR>` in the PR-opening commit.
+PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against `main` (`Closes #283`); the merge is the owner's.
 
 ## Review verdict
 
