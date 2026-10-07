@@ -182,6 +182,13 @@ the audit's pairing). Evidence row: R1 in Evidence.
 |---|---|---|---|---|
 | R1 | inspected issue #283 + both workflows + package manifests/lockfile/README | 0 | surfaces mapped: tsc today runs only in publish flow vs lockfile 0.99.1 | pi (opus, unit-lane) |
 | P1 | two-leg temp-copy `tsc --noEmit` (local, exact job commands) | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean | pi (opus, unit-lane) |
+| AC1 | re-verification re-run in-repo; verbatim commands + result pasted on #283 | 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean — [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043115659) | pi (opus, unit-lane) |
+| AC2 | `pi-compat-guard` job encoded in root-suite.yml (line 88); validated locally by the identical two-leg run | 0 / 0 | both legs' `tsc --noEmit` clean; installs `--no-package-lock` outside `packages/` | pi (opus, unit-lane) |
+| AC3 | `grep -n "Verified against Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 | line 249: 1.0.4 (2026-10-07) + floor 0.99.1 (2026-09-29) at one glance | pi (opus, unit-lane) |
+| AC4 | dev-hygiene sequence posted on #283 (`rm -rf node_modules && bun install --frozen-lockfile`) | 0 | [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043116055) | pi (opus, unit-lane) |
+| AC5 | `node --test scripts/normative-drift.test.mjs`; `grep '"version"' packages/pi-agentic-workflow/package.json` | 0 / 0 | 18 pass / 0 fail; version reads `0.19.1`; changelog row present | pi (opus, unit-lane) |
+| T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
+| T2 | `node --test scripts/*.test.mjs` (root suites) | 0 | 648 pass / 0 fail; one first-run red traced to a stale local schema dist (pre-existing, green after rebuild — not this diff) | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -199,13 +206,36 @@ steps.
 ## Progress log
 
 2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit 220d880d — next: P1 implement
-2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit @P1@ — next: P2 README baseline
-2026-10-07 17:40 — P2: README Notes baseline updated (1.0.4 verified + 0.99.1 floor at one glance) → commit @P2@ — next: P3 issue evidence comments
-2026-10-07 17:50 — P3: AC1 re-verification + AC4 hygiene comments posted on #283 → commit @P3@ — next: P4 version bump + changelog
-2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit @P4@ — next: P5 full verification
-2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit @P5@ — next: evidence + review
+2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit d5a80aad — next: P2 README baseline
+2026-10-07 17:40 — P2: README Notes baseline updated (1.0.4 verified + 0.99.1 floor at one glance) → commit 930372a3 — next: P3 issue evidence comments
+2026-10-07 17:50 — P3: AC1 re-verification + AC4 hygiene comments posted on #283 → commit 13ecdb65 — next: P4 version bump + changelog
+2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit 2ed7b482 — next: P5 full verification
+2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit d5f52b55 — next: evidence + review
 
 ## Next
+
+Open the PR (one PR for the unit, against `main`, `Closes #283`); the merge is
+the owner's — the roadmap row flips to `done · <PR>` in the PR-opening commit.
+
+## Review verdict
+
+```text
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 2 report-notes
+- Evidence reproduced: yes (grep / version / drift-test / comment-count
+  re-run 2026-10-07; AC section byte-identical since the unit-doc commit —
+  0 changed numbered-AC lines in `git diff 71c7ed90 HEAD`)
+- AC integrity: unchanged from triage
+```
+
+Report-notes (non-blocking):
+1. The `latest` leg resolves at run time, so the guard's PR results are not
+   pinned/reproducible byte-wise — accepted by AC2's design (the tripwire IS
+   the dist-tag).
+2. On the dev machine `/tmp` is a small tmpfs that pi 1.0.4's dependency tree
+   does not fit; the local re-verification ran its temp copy under
+   `$HOME/.cache` (noted on the issue; the CI job keeps `mktemp -d` — GitHub
+   runners are unconstrained).
 
 ## References
 
