@@ -20,12 +20,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is 4.5.0", () => {
+test("AC8 read-verified: package version is 4.6.0", () => {
   // Feature 61 P10 shipped the agwo edit file-schema vocabularies.
   // (4.4.0 → 4.5.0). This pin tracks the release contract, not a behavior: it
   // moves with the same-PR version bump every release records in CHANGELOG.md.
+  // fix/285 bumped REQUIRED_ARTIFACTS.plan requiredness (fix/285).
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "4.5.0");
+  assert.equal(pkg.version, "4.6.0");
 });
 
 // AC7 — capability semantics. Repository evidence is authoritative,

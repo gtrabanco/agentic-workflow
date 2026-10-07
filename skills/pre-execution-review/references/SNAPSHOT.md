@@ -28,9 +28,15 @@ digest at all; the fixed form that stands in the digest's place is each stage's
 
 Rules the builder enforces and no caller may improvise around:
 
-- **`SPEC.md` and `ACCEPTANCE.md` are required** for their stage: a missing one is
+- **`SPEC.md` is required** for its stage: a missing one is
   refused, not silently dropped, because dropping it would bind a smaller set than
   the contract reviewed.
+- **`ACCEPTANCE.md` binds when present** (fix/285): the acceptance manifest is a
+  pre-lane artifact. A unit that carries one (pre-lane and adoption units) binds
+  it as the `acceptance` row; a lane-era unit whose acceptance criteria live in
+  the unit doc builds without that row. Requiring the manifest made every
+  lane-era plan snapshot unsatisfiable — the enforcer demanded a file the
+  current pipeline structurally never writes (issue #285).
 - **A ledger that lives inside the SPEC has no row** (D20): an XS/S or fix unit
   embeds `### Planning evidence` / `### Obligations`, so those rows are absent and
   their bytes are already bound by the `spec` row. Never point a row at a file that

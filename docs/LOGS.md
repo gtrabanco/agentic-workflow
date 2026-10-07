@@ -2631,3 +2631,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fold-findings on PRs #288 (286) and #287 (285): repaired all fix-now findings across both units — F2-F18 (schema revert, scope re-derive, merge-base fix, N+1 perf, ledger normalization, spec-drift) — committed and pushed, 626/626 tests passing. F2/F3 for #288 remain open (blocked on #287 merge first). Both PRs merged to main.
 - **Decisions:** (1) Schema revert 4.6.0→4.5.0 because #285 code was not on #288 branch; (2) merge #287 first then rebase #288 — enforcer fix must land before receipt binding; (3) F2 (#288 receipt absent) and F3 (#288 lineage unsatisfiable) block merge until #287 lands; (4) D-286-3 diff exception: 1393 lines/17 files irreducible without deleting docs/tests
 - **Next:** Verify both PRs are merged (287 then 288), re-run /audit-pr on any still-open PRs, then move to PR #282 (doc-toolchain) to clear F54-F57
+
+## 2026-10-07T16:34:42Z — fix/285-pre-execution-lineage-gate — manual
+- **Commits:** 26 (`8babbf63…a63e3a38`)
+- **Files:** 27 files
+- **Summary:** GPG commit signature fix — rebased and force-pushed fix/285-pre-execution-lineage-gate after force-push lost signatures
+- **Decisions:** 1) Remote branch was rewritten by an external force-push (reflog shows forced-update of origin/fix/285-pre-execution-lineage-gate from a7610692 to c7b4b08c), which discarded locally-signed commits. 2) Main branch HEAD (b548b3a6) has no GPG signature — commits were made before commit.gpgsign=true was active. 3) GitHub created a merge commit with key B5690EEE (not in our keyring). Fix: git rebase origin/main on local branch, resolved LOGS.md conflicts by accepting ours, force-pushed with --force-with-lease.
+- **Next:** Continue work on fix/285-pre-execution-lineage-gate; all remote commits now signed with key 16BFCDB4 (B8629F2451528D18). Re-run /audit-pr 287 to confirm the PR now shows as verified-signed on GitHub.
+
