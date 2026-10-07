@@ -203,6 +203,7 @@ steps.
 2026-10-07 17:40 — P2: README Notes baseline updated (1.0.4 verified + 0.99.1 floor at one glance) → commit @P2@ — next: P3 issue evidence comments
 2026-10-07 17:50 — P3: AC1 re-verification + AC4 hygiene comments posted on #283 → commit @P3@ — next: P4 version bump + changelog
 2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit @P4@ — next: P5 full verification
+2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit @P5@ — next: evidence + review
 
 ## Next
 
