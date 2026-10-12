@@ -268,6 +268,7 @@ steps.
 2026-10-12 (P6) — aborted-settle handling: AC7 test fakes in restore-after-settle (2 tests) + shipped-adapter (2 tests) + mutation-table update; forward `event.aborted` from handler into `settle(ctx, aborted)`; all 431 tests pass including mutation table → commit d7942d98 — next: P7 AC6 re-verification + baselines
 2026-10-12 (P7) — AC6 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 and latest (pi 1.1.0); README Notes baseline updated to Pi 1.1.0 (2026-10-12); CHANGELOG 0.19.1 row extended to cover scope extension (aborted-settle handling); normative-drift green, package suite + root suites green → commit 95c5c11e — next: evidence row update + full verification
 2026-10-12 17:13 (fold F17–F20, replan route) — plan-artifact repairs only: F17 Known-issues version/date pair re-cut (1.0.4 → 2026-10-07 run, 1.1.0 → 2026-10-12 run); F18 verdict evidence clause re-cut to the AC6/AC7 diff lines + 2026-10-12 re-check date; F19 scope-extension dates 2026-10-07→2026-10-12 (SPEC ×3 + decisions.md ×4); F20 P2 validator repointed at `Pi 1.1.0`; phase-lint + lineage + validator greps green — next: ledger fold marks → commit
+2026-10-12 22:17 (fold F21, replan route) — Review verdict evidence clause re-bound to the ledger's REVIEW-RAN/GATE-RAN marks (head-SHA embedding behind the F14 → F18 → F21 recurrences removed as a class; no re-cut to yet another SHA); folded list extended to F21; F1 note repointed at the settled PR head. POLICY §4: no review-change repeat on this plan-rooted finding — next: gates → ledger fold marks → commit
 
 ## Next
 
@@ -279,12 +280,20 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 REVIEW-VERDICT: BLOCKED
 - Findings: 1 open (F1 — review receipt, high/fix-now; BLOCKED: fix requires
   `/review-change` to run and verify receipt on this HEAD)
-- Evidence reproduced: yes (grep / version / drift-test / comment-count
-  re-run 2026-10-12 at head 60ae862c; `git diff 71c7ed90 HEAD --
+- Evidence reproduced: yes — the reproduction receipts are the sibling
+  ledger's marks, not a SHA embedded here (embedding one made F14 → F18 →
+  F21 recur: any SHA this doc names is stale by the next commit; the ledger
+  is the record): every review cycle appends a REVIEW-RAN row naming the
+  head it reviewed plus per-command GATE-RAN rows to
+  `docs/features/72-pi-100-compat-guard/review-findings.md`, and the last
+  REVIEW-RAN mark is the reviewed head this verdict speaks for. The
+  cycle-6 grep / version / drift-test / comment-count re-runs (2026-10-12)
+  are the GATE-RAN rows bound to that mark. Diff-scoped AC check,
+  reproducible at any head: `git diff 71c7ed90 HEAD --
   docs/features/72-pi-100-compat-guard/SPEC.md | grep -E '^[+-][0-9]+\.'`
   adds exactly 2 numbered-AC lines — AC6 and AC7, the scope-extension
   criteria; folded:
-  F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20)
+  F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20+F21)
 - AC integrity: AC1–AC5 unchanged from triage; AC6/AC7 added by the
   2026-10-12 scope extension
 
@@ -302,8 +311,14 @@ version/date pair re-cut to the run that produced each literal — 1.0.4 →
 AC6/AC7 lines the diff actually adds and the 2026-10-12 re-check date), F19
 (scope-extension dates 2026-10-07→2026-10-12 across SPEC + decisions.md),
 F20 (P2 validator repointed at `Pi 1.1.0`) — all repair-in-place.
+F21 folded via FOLD FIX cycle 6 (replan route): F21 (verdict evidence
+clause re-bound to the ledger's REVIEW-RAN/GATE-RAN marks; the head-SHA
+embedding behind the F14 → F18 → F21 recurrences is removed as a class,
+so the clause no longer self-invalidates) — repair-in-place. Per review
+POLICY §4 no further review-change repeat is issued on this plan-rooted
+finding; the next verdict authority is the merge gate (/audit-pr).
 F1 remains open (BLOCKED: fix requires `/review-change` to run and verify
-receipt on this HEAD).
+the receipt on the settled PR head).
 ```
 
 Report-notes (non-blocking):
