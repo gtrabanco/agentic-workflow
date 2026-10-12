@@ -5,10 +5,10 @@
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
-justification | packages/pi-agentic-workflow/test/restore-after-settle.test.mjs | P6 | 2026-10-07 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
-justification | packages/pi-agentic-workflow/test/shipped-adapter.test.mjs | P6 | 2026-10-07 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
-justification | packages/pi-agentic-workflow/src/extension/index.ts | P6 | 2026-10-07 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
-justification | packages/pi-agentic-workflow/src/routing/dispatch.ts | P6 | 2026-10-07 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
+justification | packages/pi-agentic-workflow/test/restore-after-settle.test.mjs | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
+justification | packages/pi-agentic-workflow/test/shipped-adapter.test.mjs | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
+justification | packages/pi-agentic-workflow/src/extension/index.ts | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
+justification | packages/pi-agentic-workflow/src/routing/dispatch.ts | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
 ```
 
 ## AC7 — Aborted-settle design decision
