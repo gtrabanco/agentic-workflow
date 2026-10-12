@@ -1,7 +1,8 @@
 # 72 — pi-100-compat-guard
 
 > One-line: re-verify the pi 1.0.0 compatibility baseline, add a PR-time two-leg
-> pi drift guard, and refresh the package's verification records (issue #283).
+> pi drift guard, refresh the package's verification records (issue #283), and —
+> scope extension 2026-10-07 (pi 1.1.0) — adopt `agent_settled.aborted`.
 
 ## Objective
 
@@ -26,6 +27,12 @@ pi sees the PR fail with the offending leg named, before merge. The README
 states the verified pi version at a glance. The issue carries the verbatim
 re-verification evidence and a one-command dev-hygiene refresh.
 
+**Scope extension (2026-10-07, pi 1.1.0):** the pi 1.1 changelog sweep found no
+breaking change (COMPAT-OK re-confirmed) and one additive surface the package
+can put to work: `agent_settled` now carries `aborted`, distinguishing a
+cancelled run from a finished one. The unit folds that adoption in as AC6/AC7
+(P6/P7) so the open PR ships it instead of leaving it as follow-up drift.
+
 ## Acceptance criteria
 
 From issue #283 (its own ACs, not induced — verbatim intent, exact versions
@@ -48,15 +55,31 @@ re-based where the repo moved on, see Known pre-existing issues):
    `bun.lock`, posted as a comment on issue #283.
 5. **AC5 — Version discipline.** `package.json` patch bump + `CHANGELOG.md`
    row in the same PR (repo rule: touched package ⇒ same-PR bump + row). No
-   `bump-skill` (no `SKILL.md` touched).
+   `bump-skill` (no `SKILL.md` touched). The changelog row text covers the
+   scope extension too (the PR is unmerged; the single 0.19.1 bump absorbs it).
+6. **AC6 — pi 1.1.0 compat re-verified.** The two-leg guard run re-executed
+   with the `latest` leg resolving to pi 1.1.0, clean; the README Notes
+   baseline is updated to `Pi 1.1.0` with the verification date.
+7. **AC7 — Aborted-settle handling.** When pi reports `agent_settled` with
+   `aborted: true`, the extension closes the routed turn (state cleared,
+   latches released) **without restoring the snapshot** — an interrupted turn
+   must not silently swap the session model underneath the operator, matching
+   the backing-off stance already taken for an operator mid-turn change. The
+   dirty-worktree warning still runs on abort (an aborted run is exactly when
+   half-applied edits can be left behind). Non-aborted settle behavior is
+   byte-for-byte unchanged. Tests are written first (fakes in the
+   `restore-after-settle` / `shipped-adapter` style) and pin: no
+   `setModel`/`setThinkingLevel` calls on abort, turn state cleared, warning
+   emitted on dirty tree, and the unchanged non-aborted path.
 
 ### Design closure
 
 - Entity closure: `pi-compat-guard` job (runs the two-leg type-check on every
   PR and push); README Notes (the at-a-glance verified-version record); issue
   #283 comments (the AC1 evidence + AC4 hygiene record); package version +
-  changelog row (the same-PR release record). Each names its role; nothing
-  else in the unit changes.
+  changelog row (the same-PR release record). Scope extension adds: the
+  settle-path aborted flag (extension handler → `settle()`), the AC7 test
+  fakes, and the 1.1.0 baseline refresh (AC6). Nothing else in the unit changes.
 - Role closure: PR contributor (sees the red guard with the offending leg
   named), CI runner (executes the job on PR + main + dispatch), package
   consumer (reads the README baseline), issue reader (reproduces AC1/AC4 from
@@ -82,9 +105,10 @@ exists.
 
 ## Non-goals
 
-- No `src/` changes — the audit found none required (COMPAT-OK).
-- No peer-range change: stays `>=0.99.1` (raising to `>=1.0.0` would needlessly
-  drop working 0.99.x support).
+- ~~No `src/` changes~~ — lifted by the 2026-10-07 scope extension: AC7 touches
+  `src/extension/index.ts` + `src/routing/dispatch.ts` (`settle()` gains an
+  aborted flag; the event handler forwards it). Still no peer-range change:
+  stays `>=0.99.1`.
 - No `skills/` or `template/` changes: the harness/skills sweep found zero
   references to any changed pi surface (stack-agnostic holds).
 - Not the place for classifier / virtual-model adoption — that stays on the
@@ -147,6 +171,26 @@ exists.
   (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 and
   `node --test scripts/*.test.mjs` exits 0).
   - Relevant files: packages/pi-agentic-workflow/, scripts/
+- P6 — AC7 aborted-settle handling, tests first: add failing fakes for
+  `agent_settled` with `aborted: true` (turn state cleared, no
+  `setModel`/`setThinkingLevel`, dirty-tree warning still emitted), then
+  forward the flag from the handler (`src/extension/index.ts`) into
+  `settle()` (`src/routing/dispatch.ts`) to skip restoration on abort
+  (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 with
+  the new cases present in `test/restore-after-settle.test.mjs` and
+  `test/shipped-adapter.test.mjs`).
+  - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts,
+    packages/pi-agentic-workflow/src/routing/dispatch.ts,
+    packages/pi-agentic-workflow/test/restore-after-settle.test.mjs,
+    packages/pi-agentic-workflow/test/shipped-adapter.test.mjs
+- P7 — AC6 re-verification against pi 1.1.0 + baselines: re-run the two-leg
+  guard locally (latest leg now resolves 1.1.0), update the README Notes
+  baseline to `Pi 1.1.0` with today's date, and extend the CHANGELOG row text
+  to name the aborted-settle handling (validator: two-leg `tsc --noEmit`
+  exits 0 on both legs and `grep -n "Pi 1.1.0"
+  packages/pi-agentic-workflow/README.md` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/README.md,
+    packages/pi-agentic-workflow/CHANGELOG.md (root)
 
 ### Planning evidence
 
@@ -176,6 +220,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | O1 | AGENTS.md (lockfile policy) | No npm lockfile under `packages/` | P1 | P5 | pi-compat-guard job | `test/lockfile-policy.test.mjs` inside package suite | suite output | verified |
 | O2 | AGENTS.md (same-PR bump) | Touched package ⇒ same-PR version bump + changelog row | P4 | P4 | AC5 | `normative-drift.test.mjs` | suite output | verified |
 | O3 | Issue #283 AC2 | Guard installs pi outside the lockfile path | P1 | P1 | pi-compat-guard job | two-leg run output | verbatim output | verified |
+| O4 | AGENTS.md (tests before implementation) | AC7 behavior pinned by failing-first tests before `src/` changes | P6 | P6 | extension + routing settle path | new fakes in restore-after-settle / shipped-adapter suites | suite output with new cases | planned (P6) |
 
 ## Evidence
 
@@ -192,6 +237,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | AC5 | `node --test scripts/normative-drift.test.mjs`; `grep '"version"' packages/pi-agentic-workflow/package.json` | 0 / 0 | 18 pass / 0 fail; version reads `0.19.1`; changelog row present | pi (opus, unit-lane) |
 | T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
 | T2 | `node --test scripts/*.test.mjs` (root suites) | 0 | 648 pass / 0 fail; one first-run red traced to a stale local schema dist (pre-existing, green after rebuild — not this diff) | pi (opus, unit-lane) |
+| P6 | new AC7 test fakes + adapter abort forward: 431 pass / 0 fail (3 new test files modified + 1 new decisions.md) | 0 | mutation table clean; 4 new AC7 tests (restore-after-settle: 2, shipped-adapter: 2) all pass | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -215,6 +261,8 @@ steps.
 2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit 2ed7b482 — next: P5 full verification
 2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit d5f52b55 — next: evidence + review
 2026-10-07 18:35 — evidence + review steps (verdict PASS, 0 material findings); obligations verified; PR #290 opened, roadmap row 72 → done · #290 → commit recorded in the merge — next: owner merge
+2026-10-07 (late) — scope extension (pi 1.1.0 sweep): COMPAT-OK re-confirmed; AC6/AC7 added (P6 aborted-settle adoption, P7 1.1.0 re-verification + baselines); `src/` non-goal lifted; research via subagent (nan/qwen3.6) mapped the settle surface (index.ts:313 handler, dispatch.ts:93 restore, tests: restore-after-settle / on-settle-keep / shipped-adapter / receipt-guard) — next: P6 tests-first
+2026-10-07 (P6) — aborted-settle handling: AC7 test fakes in restore-after-settle (2 tests) + shipped-adapter (2 tests) + mutation-table update; forward `event.aborted` from handler into `settle(ctx, aborted)`; all 431 tests pass including mutation table → commit d7942d98 — next: P7 AC6 re-verification + baselines
 
 ## Next
 
