@@ -238,6 +238,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
 | T2 | `node --test scripts/*.test.mjs` (root suites) | 0 | 648 pass / 0 fail; one first-run red traced to a stale local schema dist (pre-existing, green after rebuild — not this diff) | pi (opus, unit-lane) |
 | P6 | new AC7 test fakes + adapter abort forward: 431 pass / 0 fail (3 new test files modified + 1 new decisions.md) | 0 | mutation table clean; 4 new AC7 tests (restore-after-settle: 2, shipped-adapter: 2) all pass | pi (opus, unit-lane) |
+| P7 | two-leg `tsc --noEmit` against 0.99.1 and latest (pi 1.1.0); README Notes → Pi 1.1.0 (2026-10-07); CHANGELOG row extended with scope extension text | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.1.0) clean; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md` exits 0 | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -263,6 +264,7 @@ steps.
 2026-10-07 18:35 — evidence + review steps (verdict PASS, 0 material findings); obligations verified; PR #290 opened, roadmap row 72 → done · #290 → commit recorded in the merge — next: owner merge
 2026-10-07 (late) — scope extension (pi 1.1.0 sweep): COMPAT-OK re-confirmed; AC6/AC7 added (P6 aborted-settle adoption, P7 1.1.0 re-verification + baselines); `src/` non-goal lifted; research via subagent (nan/qwen3.6) mapped the settle surface (index.ts:313 handler, dispatch.ts:93 restore, tests: restore-after-settle / on-settle-keep / shipped-adapter / receipt-guard) — next: P6 tests-first
 2026-10-07 (P6) — aborted-settle handling: AC7 test fakes in restore-after-settle (2 tests) + shipped-adapter (2 tests) + mutation-table update; forward `event.aborted` from handler into `settle(ctx, aborted)`; all 431 tests pass including mutation table → commit d7942d98 — next: P7 AC6 re-verification + baselines
+2026-10-07 (P7) — AC6 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 and latest (pi 1.1.0); README Notes baseline updated to Pi 1.1.0 (2026-10-07); CHANGELOG 0.19.1 row extended to cover scope extension (aborted-settle handling); normative-drift green, package suite + root suites green → commit  (next: evidence + review)
 
 ## Next
 
