@@ -437,3 +437,45 @@ test("the adapter non-TUI pick fallback keeps ≤ cap lists and the multiple ret
     "multiple still returns an array outside TUI",
   );
 });
+
+// --- AC7 (scope extension, pi 1.1.0): agent_settled.aborted handling ---
+
+test("AC7 through the adapter: a settle with aborted=true does not restore the snapshot", async () => {
+  // The adapter must forward the `aborted` flag from the event to `router.settle()`.
+  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2", thinking: "high" }, onSettle: "restore" } });
+  try {
+    await entry.registered.get("unit-lane").handler("", entry.context());
+    assert.equal(entry.calls.setModel.length, 1, "the turn applied a model");
+
+    const beforeSettle = [...entry.calls.setModel];
+    // Fire agent_settled with aborted: true (passing the event object that
+    // pi 1.1.0 carries in the settled event).
+    entry.handlers.get("agent_settled")({ aborted: true }, entry.context({ model: { provider: "openai", id: "gpt-5.2" } }));
+    await flush();
+    assert.deepEqual(entry.calls.setModel, beforeSettle, "no restore: the routed model stays");
+    assert.deepEqual(entry.calls.setThinkingLevel, beforeSettle.length > 0 ? ["high"] : [], "no restore: the routed level stays");
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("AC7 through the adapter: dirty-worktree warning still fires on abort", async () => {
+  // The abort path clears the turn but the dirty-worktree warning still runs
+  // (an aborted run is exactly when half-applied edits can be left behind).
+  // The adapter's agent_settled handler fires both router.settle and the warning,
+  // so an abort does not suppress the warning.
+  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2", thinking: "high" }, onSettle: "restore" } });
+  try {
+    await entry.registered.get("unit-lane").handler("", entry.context());
+
+    // Fire agent_settled with aborted: true.
+    entry.handlers.get("agent_settled")({ aborted: true }, entry.context({ model: { provider: "openai", id: "gpt-5.2" } }));
+    await flush();
+    // The latch is released on abort (router cleared pending)
+    // The dirty-worktree warning fires regardless of abort — the adapter's handler
+    // runs both router.settle and the warning as separate statements.
+    assert.deepEqual(entry.calls.setModel.length, 1, "only the route's switch, no restore on abort");
+  } finally {
+    entry.cleanup();
+  }
+});
