@@ -264,7 +264,7 @@ steps.
 2026-10-07 18:35 — evidence + review steps (verdict PASS, 0 material findings); obligations verified; PR #290 opened, roadmap row 72 → done · #290 → commit recorded in the merge — next: owner merge
 2026-10-07 (late) — scope extension (pi 1.1.0 sweep): COMPAT-OK re-confirmed; AC6/AC7 added (P6 aborted-settle adoption, P7 1.1.0 re-verification + baselines); `src/` non-goal lifted; research via subagent (nan/qwen3.6) mapped the settle surface (index.ts:313 handler, dispatch.ts:93 restore, tests: restore-after-settle / on-settle-keep / shipped-adapter / receipt-guard) — next: P6 tests-first
 2026-10-07 (P6) — aborted-settle handling: AC7 test fakes in restore-after-settle (2 tests) + shipped-adapter (2 tests) + mutation-table update; forward `event.aborted` from handler into `settle(ctx, aborted)`; all 431 tests pass including mutation table → commit d7942d98 — next: P7 AC6 re-verification + baselines
-2026-10-07 (P7) — AC6 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 and latest (pi 1.1.0); README Notes baseline updated to Pi 1.1.0 (2026-10-07); CHANGELOG 0.19.1 row extended to cover scope extension (aborted-settle handling); normative-drift green, package suite + root suites green → commit  (next: evidence + review)
+2026-10-07 (P7) — AC6 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 and latest (pi 1.1.0); README Notes baseline updated to Pi 1.1.0 (2026-10-07); CHANGELOG 0.19.1 row extended to cover scope extension (aborted-settle handling); normative-drift green, package suite + root suites green → commit 95c5c11e — next: evidence row update + full verification
 
 ## Next
 
