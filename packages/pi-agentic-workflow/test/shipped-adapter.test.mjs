@@ -13,6 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -466,6 +467,10 @@ test("AC7 through the adapter: dirty-worktree warning still fires on abort", asy
   // so an abort does not suppress the warning.
   const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2", thinking: "high" }, onSettle: "restore" } });
   try {
+    // Seed a dirty git repo so readGitStatusBounded returns non-empty output.
+    spawnSync("git", ["init"], { cwd: entry.cwd, stdio: "ignore" });
+    writeFileSync(join(entry.cwd, "dirty.txt"), "uncommitted\n");
+
     await entry.registered.get("unit-lane").handler("", entry.context());
 
     // Fire agent_settled with aborted: true.
@@ -475,6 +480,8 @@ test("AC7 through the adapter: dirty-worktree warning still fires on abort", asy
     // The dirty-worktree warning fires regardless of abort — the adapter's handler
     // runs both router.settle and the warning as separate statements.
     assert.deepEqual(entry.calls.setModel.length, 1, "only the route's switch, no restore on abort");
+    assert.ok(entry.calls.notify.some(([msg]) => msg.includes("dirty")),
+      "the dirty-worktree warning fires on abort");
   } finally {
     entry.cleanup();
   }
