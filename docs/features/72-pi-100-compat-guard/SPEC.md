@@ -279,7 +279,7 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 ```text
 REVIEW-VERDICT: BLOCKED
 - Findings: 1 open (F1 — review receipt, high/fix-now; BLOCKED: fix requires
-  `/review-change` to run and verify receipt on this HEAD)
+  `/review-change` to run and verify the receipt on the settled PR head)
 - Evidence reproduced: yes — the reproduction receipts are the sibling
   ledger's marks, not a SHA embedded here (embedding one made F14 → F18 →
   F21 recur: any SHA this doc names is stale by the next commit; the ledger
