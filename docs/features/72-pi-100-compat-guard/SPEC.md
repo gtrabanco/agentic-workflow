@@ -126,16 +126,19 @@ exists.
 
 ## Tasks
 
-- P1 — Write the AC2 guard first as a runnable local script shape (the exact
-  two-leg temp-copy `tsc --noEmit` command sequence), then encode it as a
-  `pi-compat-guard` job in `.github/workflows/root-suite.yml` (validator:
-  local two-leg run exits 0 with both legs' tsc clean).
+- P1 — Encode the AC2 guard as a `pi-compat-guard` job in
+  `.github/workflows/root-suite.yml` (the two-leg temp-copy `tsc --noEmit`
+  sequence: see research R1); (validator:
+  `./node_modules/.bin/tsc --noEmit` in a temp copy with pi legs 0.99.1 and latest
+  exits 0).
   - Relevant files: .github/workflows/root-suite.yml
 - P2 — Update `packages/pi-agentic-workflow/README.md` Notes (validator:
-  `grep -n "Verified against Pi 1.0.0" packages/pi-agentic-workflow/README.md` exits 0).
+  `grep -n "Verified against Pi 1.0.4" packages/pi-agentic-workflow/README.md` exits 0
+  and `grep -n "0.99.1" packages/pi-agentic-workflow/README.md` exits 0).
   - Relevant files: packages/pi-agentic-workflow/README.md
 - P3 — Post AC1 evidence + AC4 dev-hygiene comments on issue #283 (validator:
-  `gh issue view 283 --json comments` shows both).
+  `gh issue view 283 --json comments` exits 0 and the comment count is ≥ 2),
+  expected outcome: ≥ 2 comments.
   - Relevant files: docs/features/72-pi-100-compat-guard/SPEC.md
 - P4 — Version discipline: `package.json` 0.19.0 → 0.19.1 + `CHANGELOG.md` row
   (validator: `node --test scripts/normative-drift.test.mjs` exits 0).
@@ -226,6 +229,10 @@ REVIEW-VERDICT: PASS
   re-run 2026-10-07; AC section byte-identical since the unit-doc commit —
   0 changed numbered-AC lines in `git diff 71c7ed90 HEAD`)
 - AC integrity: unchanged from triage
+
+The review-findings.md ledger was reconciled: F2 (false blocker, fixed by F3's
+withdrawal), README overclaim (F4), PASS verdict drift (F5), and phase-lint
+BLOCKED (F6) all folded as all-repair-in-place.
 ```
 
 Report-notes (non-blocking):
