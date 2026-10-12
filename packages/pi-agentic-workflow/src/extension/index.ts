@@ -310,12 +310,16 @@ export default function extension(pi: ExtensionAPI): void {
     });
     return decision.block ? { block: true, reason: decision.reason } : undefined;
   });
-  pi.on("agent_settled", (_event, ctx) => {
-    void router.settle(toInvocationContext(ctx));
+  pi.on("agent_settled", (event, ctx) => {
+    // pi 1.1.0+: event may carry { aborted: true }
+    const aborted = (event as unknown as Record<string, unknown>)?.aborted === true;
+    void router.settle(toInvocationContext(ctx), aborted);
     // Terminal hygiene is said out loud once the turn is over; a clean tree
     // stays silent. The probe is time-bounded (2000 ms) and swallows timeout,
     // spawn error and non-zero status, so an unresponsive git can never park
     // the settled turn — best-effort by construction (issue #182 F4).
+    // The dirty-worktree warning still fires on abort (an aborted run is exactly
+    // when half-applied edits can be left behind).
     const warning = guards.dirtyWorktreeWarning(readGitStatusBounded(ctx.cwd));
     if (warning) ctx.ui.notify(warning, "warning");
   });

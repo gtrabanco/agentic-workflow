@@ -443,3 +443,51 @@ test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollb
   assert.equal(outcome.reason, "dispatch-failed");
   assert.doesNotMatch(outcome.message, /put back/u, "nothing was moved, so nothing was put back");
 });
+
+// --- AC7 (scope extension, pi 1.1.0): agent_settled.aborted handling ---
+
+test("AC7: a settle with aborted=true does not restore the snapshot — model stays routed", async () => {
+  // An aborted turn must not silently swap the session model underneath the operator.
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "openai/gpt-5.2");
+
+  const beforeSettle = [...session.log.setModel]; // capture route calls
+  await session.settle(true); // aborted
+  assert.equal(session.log.setModel.length, beforeSettle.length,
+    "no additional setModel calls on abort");
+  assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
+    "no restore calls on abort");
+});
+
+test("AC7: a settle with aborted=true does not restore the snapshot — keep policy", async () => {
+  // `keep` policy is the shipped default: the model stays either way, but abort
+  // must still not attempt any restore calls.
+  const session = createSession({
+    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" }, onSettle: "keep" }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "max");
+
+  const beforeSettle = [...session.log.setModel];
+  await session.settle(true); // aborted
+  assert.equal(session.log.setModel.length, beforeSettle.length,
+    "no additional setModel calls on abort");
+  assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
+    "no restore calls on abort");
+});
+
+test("AC7: a settle without aborted still restores (non-aborted path is unchanged)", async () => {
+  // Verify the non-aborted path is byte-for-byte unchanged: restore still works.
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "max");
+
+  const beforeSettle = [...session.log.setModel];
+  await session.settle(false); // non-aborted
+  assert.ok(session.log.setModel.length > beforeSettle.length, "restore still sends setModel");
+});

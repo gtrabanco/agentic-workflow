@@ -78,7 +78,7 @@ export interface Router<M extends ModelRef = ModelRef> {
   /** Pi `thinking_level_select` — same distinction for the thinking level. */
   noteThinkingLevelSelect(level: ThinkingLevel): void;
   /** Pi `agent_settled` — restores whatever this turn still owns. */
-  settle(ctx: InvocationContext<M>): Promise<void>;
+  settle(ctx: InvocationContext<M>, aborted?: boolean): Promise<void>;
   /** True while a routed turn owns the session. The console shows and clears it. */
   inFlight(): boolean;
   /**
@@ -179,12 +179,18 @@ export function createRouter<M extends ModelRef = ModelRef>({
       return true;
     },
 
-    async settle(ctx): Promise<void> {
+    async settle(ctx, aborted): Promise<void> {
       const turn = pending;
       if (!turn) return;
       // Cleared first: the restore fires its own select events, and a turn that is
       // already over must not read them as operator changes.
       pending = undefined;
+      // `aborted`: pi 1.1.0 added `agent_settled.aborted` to distinguish a
+      // cancelled run from a finished one. An aborted turn is cleared without
+      // restoring the snapshot — an interrupted run must not silently swap the
+      // session model underneath the operator, matching the backing-off stance
+      // for an operator mid-turn change (AC7, pi 1.1.0 scope extension).
+      if (aborted) return;
       // `keep`: leave the routed model and thinking level in the open chat window,
       // so a follow-up edit or question keeps running on the model that planned it.
       // The operator's own mid-turn choice is still untouched (nothing is restored,
