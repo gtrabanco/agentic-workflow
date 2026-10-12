@@ -133,7 +133,7 @@ exists.
   exits 0).
   - Relevant files: .github/workflows/root-suite.yml
 - P2 — Update `packages/pi-agentic-workflow/README.md` Notes (validator:
-  `grep -n "Verified against Pi 1.0.4" packages/pi-agentic-workflow/README.md` exits 0
+  `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` exits 0
   and `grep -n "0.99.1" packages/pi-agentic-workflow/README.md` exits 0).
   - Relevant files: packages/pi-agentic-workflow/README.md
 - P3 — Post AC1 evidence + AC4 dev-hygiene comments on issue #283 (validator:
@@ -187,7 +187,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | P1 | two-leg temp-copy `tsc --noEmit` (local, exact job commands) | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean | pi (opus, unit-lane) |
 | AC1 | re-verification re-run in-repo; verbatim commands + result pasted on #283 | 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean — [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043115659) | pi (opus, unit-lane) |
 | AC2 | `pi-compat-guard` job encoded in root-suite.yml (line 88); validated locally by the identical two-leg run | 0 / 0 | both legs' `tsc --noEmit` clean; installs `--no-package-lock` outside `packages/` | pi (opus, unit-lane) |
-| AC3 | `grep -n "Verified against Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 | line 249: 1.0.4 (2026-10-07) + floor 0.99.1 (2026-09-29) at one glance | pi (opus, unit-lane) |
+| AC3 | `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 | line 251: Pi 1.0.4 (2026-10-07) + floor 0.99.1 (2026-09-29) at one glance | pi (opus, unit-lane) |
 | AC4 | dev-hygiene sequence posted on #283 (`rm -rf node_modules && bun install --frozen-lockfile`) | 0 | [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043116055) | pi (opus, unit-lane) |
 | AC5 | `node --test scripts/normative-drift.test.mjs`; `grep '"version"' packages/pi-agentic-workflow/package.json` | 0 / 0 | 18 pass / 0 fail; version reads `0.19.1`; changelog row present | pi (opus, unit-lane) |
 | T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
@@ -223,8 +223,9 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 ## Review verdict
 
 ```text
-REVIEW-VERDICT: PASS
-- Findings: 0 material, 2 report-notes
+REVIEW-VERDICT: BLOCKED
+- Findings: 1 open (F1 — review receipt, high/fix-now; BLOCKED: fix requires
+  `/review-change` to run and verify receipt on this HEAD)
 - Evidence reproduced: yes (grep / version / drift-test / comment-count
   re-run 2026-10-07; AC section byte-identical since the unit-doc commit —
   0 changed numbered-AC lines in `git diff 71c7ed90 HEAD`)
@@ -233,6 +234,8 @@ REVIEW-VERDICT: PASS
 The review-findings.md ledger was reconciled: F2 (false blocker, fixed by F3's
 withdrawal), README overclaim (F4), PASS verdict drift (F5), and phase-lint
 BLOCKED (F6) all folded as all-repair-in-place.
+F1 remains open (BLOCKED: fix requires `/review-change` to run and verify
+receipt on this HEAD).
 ```
 
 Report-notes (non-blocking):
