@@ -458,11 +458,17 @@ test("AC7: a settle with aborted=true does not restore the snapshot — model st
     "no additional setModel calls on abort");
   assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
     "no restore calls on abort");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is released on abort — later dispatches are not refused");
 });
 
 test("AC7: a settle with aborted=true does not restore the snapshot — keep policy", async () => {
   // `keep` policy is the shipped default: the model stays either way, but abort
-  // must still not attempt any restore calls.
+  // must still release the latch so subsequent dispatches are accepted.
+  // Under keep, settle returns early via `turn.settlePolicy === "keep"`, so
+  // only asserting `inFlight() === false` distinguishes a working abort guard
+  // (release) from a broken one (latch held — same outcome as keep but via
+  // a different code path that would wedge after a later abort).
   const session = createSession({
     config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" }, onSettle: "keep" }),
     models: AVAILABLE,
@@ -472,6 +478,7 @@ test("AC7: a settle with aborted=true does not restore the snapshot — keep pol
 
   await session.dispatch(COMMAND, "x");
   assert.equal(session.state.thinking, "max");
+  assert.ok(session.router.inFlight(), "turn is in-flight before settle");
 
   const beforeSettle = [...session.log.setModel];
   await session.settle(true); // aborted
@@ -479,6 +486,8 @@ test("AC7: a settle with aborted=true does not restore the snapshot — keep pol
     "no additional setModel calls on abort");
   assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
     "no restore calls on abort");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is released on abort (keep policy does not prevent latch release)");
 });
 
 test("AC7: a settle without aborted still restores (non-aborted path is unchanged)", async () => {
