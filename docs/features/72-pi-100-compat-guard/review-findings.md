@@ -190,3 +190,12 @@
 | GATE-RAN | HEAD 754f181f | bun scripts/review-receipt.mjs verify --pr 290 | exit 3 (absent) | n/a | n/a | n/a |
 | GATE-RAN | HEAD 754f181f | grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md | exit 1 (stale validator literal) | n/a | n/a | n/a |
 | GATE-RAN | HEAD 754f181f | bun scripts/diff-guard.mjs --base 588f825a --unit 72 | exit 0 (166 lines / 6 files) | n/a | n/a | n/a |
+| F36 | `docs/features/72-pi-100-compat-guard/SPEC.md:332` — **new (cycle 13 re-review)** — the F34 rewrite replaced the verdict token with `REVIEW-VERDICT: see review-findings.md`, outside the closed set `REVIEW-VERDICT: PASS \| FAIL` fixed by `skills/unit-lane/references/REVIEW.md:19,31` ("Verdict uses only the closed set: PASS or FAIL"). With every row closed (`node scripts/unit-route.mjs 72-pi-100-compat-guard` → `open-rows: 0`), `PASS` was available | plan | high | fix-now | source — fold: restore `REVIEW-VERDICT: PASS` and keep the ledger-derived bullets, then re-run `bun scripts/phase-lint.mjs …/SPEC.md` to exit 0 · fold 6bafd0f3 | yes |
+| VF-36 | `docs/features/72-pi-100-compat-guard/SPEC.md:332` · reviewer review-change · HEAD 1be91c0c9c1b20abe2d91107fb3b3b2b14e3aed6 · recheck direct read: the verdict line read `see review-findings.md`; `skills/unit-lane/references/REVIEW.md:19` declares the closed set `PASS \| FAIL` and `:31` repeats it; `node scripts/unit-route.mjs 72-pi-100-compat-guard` → `open-rows: 0` | plan | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 1be91c0c9c1b20abe2d91107fb3b3b2b14e3aed6 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md | exit 0 (PASS 9/9) | n/a | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | node --test scripts/*.test.mjs | exit 0 (648 pass / 0 fail) | n/a | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | (cd packages/pi-agentic-workflow && bun run test) | exit 0 (434 pass / 0 fail) | n/a | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | node scripts/ledger-provenance.mjs docs/features/72-pi-100-compat-guard/review-findings.md --check | exit 0 (CHECK PASS) | n/a | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard | exit 0 (obligations closed 4) | n/a | n/a | n/a |
+| GATE-RAN | HEAD 1be91c0c | temp-copy mutant: if (rolledBack) -> if (false && rolledBack) -> bun test test/dispatch-refusals.test.mjs | exit 1 (8 pass / 1 fail — F35 pin load-bearing) | n/a | n/a | n/a |
