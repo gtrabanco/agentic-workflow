@@ -101,6 +101,56 @@ test("AC12: refusal is decided per dispatch, so editing a broken file needs no r
 // configured nothing. The loader's own rule is that a present file which cannot
 // be honoured is a problem.
 
+// --- AC9 (pi 1.2.0 scope extension): busy-window semantics ---
+//
+// pi 1.2.0 widened the busy window: ctx.isIdle() returns false earlier (while
+// a run starts, including during before_agent_start handlers). The package's
+// dispatch guard already handles this via the if (!ctx.isIdle()) branch — the
+// busy refusal must stay identical. This suite pins that nothing changed.
+
+test("AC9 (pi 1.2.0): a busy-refusal leaves the session untouched", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "plan-feature": { model: "openai/gpt-5.2", thinking: "high" } } }),
+    models: AVAILABLE,
+    idle: false,
+  });
+
+  const outcome = await session.dispatch(
+    { name: "plan-feature", skill: "plan-feature" },
+    "27-pi-agentic-workflow",
+  );
+
+  assert.equal(outcome.status, "refused");
+  assert.equal(outcome.reason, "busy");
+  assert.match(outcome.message, /busy/u, "the refusal names busy");
+  assert.match(outcome.message, /is busy/u, "the refusal names the agent");
+  assert.match(outcome.message, /plan-feature/u, "the refusal names the command");
+  assert.match(outcome.message, /idle/u, "the refusal advises idle");
+  assertUntouched(session);
+});
+
+test("AC9 (pi 1.2.0): the busy guard runs before model/thinking application, so an idle-at-guard send-failure is dispatch-failed", async () => {
+  // The idle check is FIRST (dispatch.ts line 216). If the session is idle,
+  // the route applies, then sendUserMessage throws because the run started
+  // mid-way — that is a dispatch-failed, not a busy refusal.
+  const session = createSession({
+    config: configFor({ commands: { "plan-feature": { model: "openai/gpt-5.2", thinking: "high" } } }),
+    models: AVAILABLE,
+    idle: true,    // idle at guard time → route applies
+    sendThrows: true, // but send throws → turn never started
+  });
+
+  const outcome = await session.dispatch(
+    { name: "plan-feature", skill: "plan-feature" },
+    "27-pi-agentic-workflow",
+  );
+
+  assert.equal(outcome.status, "refused");
+  assert.equal(outcome.reason, "dispatch-failed", "idle at guard time → send failure, not busy");
+  assert.match(outcome.message, /put back/u, "the applied level was rolled back");
+  assert.equal(session.router.inFlight(), false, "the latch is not held");
+});
+
 test("AC12: a present-but-unreadable config file refuses the dispatch instead of routing on defaults", async () => {
   const session = createSession({
     config: configFor({ default: { model: "openai/gpt-5.2" } }),
