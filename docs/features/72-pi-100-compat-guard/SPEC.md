@@ -33,6 +33,17 @@ can put to work: `agent_settled` now carries `aborted`, distinguishing a
 cancelled run from a finished one. The unit folds that adoption in as AC6/AC7
 (P6/P7) so the open PR ships it instead of leaving it as follow-up drift.
 
+**Scope extension (2026-10-12, pi 1.2.0):** the pi 1.2 changelog sweep found one
+behavior change that widens the busy window — `ctx.isIdle()` returns false earlier
+(while a run starts, including during `before_agent_start` handlers) and
+`sendUserMessage()` now requires `deliverAs` during a starting run. The package's
+dispatch guard (`dispatch.ts` busy check) and its `sendUserMessage` call are the
+affected surfaces, and both already handle the wider window correctly (COMPAT-OK).
+`BeforeAgentStartEvent.messageType` became a union, but the package does not use
+`before_agent_start` (grep-verified). No other breaking change touches the
+package's API inventory. AC8 re-verifies two-leg `tsc --noEmit`; AC9 adds tests
+that pin the busy-refusal behavior and the dispatch-failed rollback.
+
 ## Acceptance criteria
 
 From issue #283 (its own ACs, not induced — verbatim intent, exact versions
@@ -71,6 +82,15 @@ re-based where the repo moved on, see Known pre-existing issues):
    `restore-after-settle` / `shipped-adapter` style) and pin: no
    `setModel`/`setThinkingLevel` calls on abort, turn state cleared, warning
    emitted on dirty tree, and the unchanged non-aborted path.
+8. **AC8 — pi 1.2.0 compat re-verified.** Two-leg `tsc --noEmit` re-executed
+   against the `latest` dist-tag (resolves to pi 1.2.0, clean); peer floor leg
+   (0.99.1) via the lockfile-pinned `node_modules` also clean; README baseline
+   updated to `Pi 1.2.0` with verification date.
+9. **AC9 — busy-window semantics pinned.** `sendUserMessage` that throws after
+   the `isIdle()` check passes rolls back the routing entirely (no half-applied
+   model/thinking change, latch released); the `busy` refusal path is unchanged
+   (1.2.0 merely widens the window, the refusal text/behavior stay identical).
+   Tests written first in the style of the existing dispatch-failing tests.
 
 ### Design closure
 
@@ -138,9 +158,11 @@ exists.
 - Issue #283's AC1/AC3 name pi `1.0.0` (the npm `latest` at audit time,
   2026-10-02); the in-repo re-verification (2026-10-07) resolves `latest` to
   **pi 1.0.4** and is clean there too, and the 2026-10-12 re-run (P7) resolves
-  it to **pi 1.1.0**, also clean. Affects the ACs' literals only — the
-  baseline was superseded by AC6/P6 (aborted-settle adoption, 2026-10-12) and
-  AC7/P7 (pi 1.1.0 re-verification + baselines, 2026-10-12).
+  it to **pi 1.1.0**, also clean, and the P8 re-run resolves it to **pi 1.2.0**,
+  also clean. Affects the ACs' literals only — the baseline was superseded by
+  AC6/P6 (aborted-settle adoption, 2026-10-12), AC7/P7 (pi 1.1.0
+  re-verification + baselines, 2026-10-12), and AC8/P8 (pi 1.2.0
+  re-verification, 2026-10-12).
 - Issue #283 states the AC5 bump as `0.18.5 → 0.18.6`; the package is at
   `0.19.0` at execution time (0.19.0 shipped via PR #282 on 2026-10-05).
   Affects AC5's literals only — the patch-bump rule is applied from the actual
@@ -192,6 +214,23 @@ exists.
   packages/pi-agentic-workflow/README.md` exits 0).
   - Relevant files: packages/pi-agentic-workflow/README.md,
     CHANGELOG.md
+- P8 — AC8 pi 1.2.0 two-leg re-verification: copy the package to a temp dir,
+  install `@earendil-works/pi-coding-agent@latest` outside the lockfile, run
+  `tsc --noEmit` (validator: exit 0 on both legs); record verbatim commands,
+  output, and the resolved version (`npm view @earendil-works/pi-coding-agent
+  version`); if `latest` resolves beyond 1.2.0 pin to `@1.2.0` and note it;
+  clean up the temp dir (validator: no stray files remain). If `tsc` reports
+  NEW errors vs the 1.1.0 run: STOP and report the exact errors.
+  - Relevant files: packages/pi-agentic-workflow/README.md,
+    docs/features/72-pi-100-compat-guard/SPEC.md (Evidence rows)
+- P9 — AC9 busy-window semantics: add tests in the style of the existing
+  dispatch-failing suite that pin the 1.2.0 busy-window behavior — a
+  `sendUserMessage` throw after the `isIdle()` check passes rolls back the
+  routing entirely (no half-applied model/thinking change, latch released); the
+  `busy` refusal text/behavior is unchanged (validator: `bun run test` in the
+  package exits 0 with the new cases).
+  - Relevant files: packages/pi-agentic-workflow/test/dispatch-refusals.test.mjs,
+    packages/pi-agentic-workflow/test/restore-after-settle.test.mjs
 
 ### Planning evidence
 
@@ -243,6 +282,8 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | F17–F20 | fold gates: `bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md`; `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 / 0 / 0 / 1 | phase-lint PASS; LINEAGE OK; README:251 `Pi 1.1.0 (2026-10-12)`; stale validator gone; scope-extension dates now agree with commits d7942d98/95c5c11e (both 2026-10-12) | pi (opus, unit-lane) |
 | F25–F28 | fold gates: `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `bun run test` (package); `node --test scripts/*.test.mjs`; `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `grep -n "1.0.0" packages/pi-agentic-workflow/README.md`; `grep -n "does not restore the snapshot — keep policy" test/restore-after-settle.test.mjs` | 0 / 0 / 0 / 0 / 0 / 0 / 1 / 1 | provenance CHECK PASS (F18/VF-16 pipes escaped, F7/F8→b3295209, F22–F24→cfe3c114); phase-lint PASS 7/7; LINEAGE OK (4); package 431/0; root 648/0; guard 55 lines / 4 files (at fold 9f3a694b); stale `1.0.0` leg literal gone (README:252 now names legs `0.99.1` + `latest`→1.1.0); keep-policy test renamed to state only the latch-release claim | pi (opus, unit-lane) |
 | F29–F30 | fold gates: `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `bun scripts/diff-guard.mjs --base 399aec74 --unit 72`; `git diff --numstat cfe3c114 9f3a694b`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `node --test scripts/normative-drift.test.mjs`; `node --test scripts/*.test.mjs`; `bun run test` (package) | 0 × 7 | guard 88 lines / 4 files (at fold 588f825a) and 30 lines / 2 files vs 399aec74; numstat cfe3c114→9f3a694b = 4 files / 55 lines (the re-cut F25–F28 receipt now reproduces); phase-lint PASS 7/7; LINEAGE OK (4); provenance CHECK PASS; drift 18/0; root 648/0; package 431/0 | pi (opus, unit-lane) |
+| P8 | two-leg `tsc --noEmit` against 0.99.1 (peer-floor leg via lockfile-pinned node_modules) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.2.0) clean; COMPAT-OK | pi (opus, unit-lane) |
+| P9 | new AC9 tests in dispatch-refusals.test.mjs (2) + restore-after-settle.test.mjs (1): 434 pass / 0 fail (3 new tests total) | 0 | busy-refusal leaves session untouched; idle-at-guard send-failure → dispatch-failed with full rollback; no half-applied state | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -274,6 +315,8 @@ steps.
 2026-10-12 22:30 (fold F21 close-out) — ledger F21 flipped folded:yes (fold 4eb18169), REVIEW-RAN/GATE-RAN marks appended at HEAD 4eb18169 (phase-lint PASS 7/7, lineage OK obligations 4, normative-drift 0, root suites 648/0, package suite 431/0, diff-guard 34 lines / 2 files); residual "on this HEAD" wording in the Findings clause repointed at the settled PR head (ae4f59b0). F1 is the only open row — next: owner decision — /review-change on the settled head or /audit-pr
 2026-10-14 08:22 (fold F25–F28, cycle 9) — F25: keep-policy abort test renamed to "releases the latch — keep policy" and its comment re-cut to the observable claim (guard-absence unobservable on the keep path; the restore-policy case pins the guard); F26: ledger provenance repaired (F18/VF-16 pipes escaped, F7/F8 re-cited b3295209, F22–F24 re-cited cfe3c114 → CHECK PASS); F27: README:252 names the actual legs (`0.99.1` + `latest`→1.1.0), `1.0.0` literal gone; F28: verdict folded list extended through F28 — all gates green (provenance 0, phase-lint 7/7, lineage 4, package 431/0, root 648/0, diff-guard 55/4) → fold 9f3a694b — next: marks + close-out commit
 2026-10-14 15:51 (fold F29+F30, cycle 10 replan route) — F29: the three diff-guard receipts re-cut to the value the command prints at the cited head (55 lines / 4 files at fold 9f3a694b — `git diff --numstat cfe3c114 9f3a694b` → 4 files / 55 lines; the recorded 61/5 matched no state); F30: the cycle-6 GATE-RAN binding sentence cut from the Review verdict (a binding any later appended mark invalidates — cut, not re-cut, per the finding's route); verdict folded list extended through F30 — all gates green (phase-lint 7/7, lineage 4, provenance 0, drift 18/0, root 648/0, package 431/0, guard 88/4 vs cfe3c114) → fold 588f825a — next: F1 is the only open row (owner: /review-change on the settled PR head) → /audit-pr
+2026-10-12 (P8) — AC8 pi 1.2.0 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 (peer-floor leg) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up; COMPAT-OK — next: P9 busy-window tests
+2026-10-12 (P9) — AC9 busy-window semantics: 3 new tests added (dispatch-refusals: 2, restore-after-settle: 1); package suite 434 pass / 0 fail (up from 431); README baseline updated to Pi 1.2.0 (2026-10-12) — next: commits + final verification
 
 ## Next
 

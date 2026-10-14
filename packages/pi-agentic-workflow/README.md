@@ -248,9 +248,9 @@ dialog.
 
 - Verified against the peer floor Pi 0.99.1 (2026-09-29) (`pi install`, package skills, friendly
   command registration, routed set/clear, settings console round-trip, `sendUserMessage`
-  with prompt template expansion). Also verified against Pi 1.1.0 (2026-10-12) via a local
+  with prompt template expansion). Also verified against Pi 1.2.0 (2026-10-12) via a local
   two-leg `tsc --noEmit` run (legs `0.99.1` + `latest`, the `latest` leg resolving to pi
-  1.1.0; COMPAT-OK); continuously against the
+  1.2.0; COMPAT-OK); continuously against the
   `latest` dist-tag by the `pi-compat-guard` PR gate (the leg is a moving tripwire,
   not a pinned version — a breaking release shows red here first).
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
