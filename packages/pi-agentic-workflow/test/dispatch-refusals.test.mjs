@@ -106,7 +106,9 @@ test("AC12: refusal is decided per dispatch, so editing a broken file needs no r
 // pi 1.2.0 widened the busy window: ctx.isIdle() returns false earlier (while
 // a run starts, including during before_agent_start handlers). The package's
 // dispatch guard already handles this via the if (!ctx.isIdle()) branch — the
-// busy refusal must stay identical. This suite pins that nothing changed.
+// busy refusal must stay identical. These two cases are the pi 1.2.0
+// regression tripwire; the refusal contract itself is owned by the AC12 busy
+// case above.
 
 test("AC9 (pi 1.2.0): a busy-refusal leaves the session untouched", async () => {
   const session = createSession({
@@ -140,6 +142,9 @@ test("AC9 (pi 1.2.0): the busy guard runs before model/thinking application, so 
     sendThrows: true, // but send throws → turn never started
   });
 
+  const beforeModel = `${session.state.model.provider}/${session.state.model.id}`;
+  const beforeThinking = session.state.thinking;
+
   const outcome = await session.dispatch(
     { name: "plan-feature", skill: "plan-feature" },
     "27-pi-agentic-workflow",
@@ -147,7 +152,14 @@ test("AC9 (pi 1.2.0): the busy guard runs before model/thinking application, so 
 
   assert.equal(outcome.status, "refused");
   assert.equal(outcome.reason, "dispatch-failed", "idle at guard time → send failure, not busy");
-  assert.match(outcome.message, /put back/u, "the applied level was rolled back");
+  // The refusal message's "put back" clause is a claim about the `rolledBack`
+  // boolean (`dispatch.ts`), not proof the restore ran: assert the observable
+  // state the rollback must produce, so a rollback ablation fails here.
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, beforeModel,
+    "the model is back to the pre-dispatch value");
+  assert.equal(session.state.thinking, beforeThinking,
+    "the thinking level is back to the pre-dispatch value");
+  assert.deepEqual(session.log.sendUserMessage, [], "nothing was sent");
   assert.equal(session.router.inFlight(), false, "the latch is not held");
 });
 

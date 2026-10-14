@@ -9,9 +9,9 @@ justification | packages/pi-agentic-workflow/test/restore-after-settle.test.mjs 
 justification | packages/pi-agentic-workflow/test/shipped-adapter.test.mjs | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
 justification | packages/pi-agentic-workflow/src/extension/index.ts | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
 justification | packages/pi-agentic-workflow/src/routing/dispatch.ts | P6 | 2026-10-12 | execute-phase | scope extension (pi 1.1.0 sweep, AC6/AC7)
-justification | packages/pi-agentic-workflow/src/routing/dispatch.ts | P9 | 2026-10-12 | execute-phase | pi 1.2.0 scope extension (AC9: busy-window semantics tests)
-justification | packages/pi-agentic-workflow/test/dispatch-refusals.test.mjs | P9 | 2026-10-12 | execute-phase | pi 1.2.0 scope extension (AC9: busy-window semantics tests)
-justification | packages/pi-agentic-workflow/test/restore-after-settle.test.mjs | P9 | 2026-10-12 | execute-phase | pi 1.2.0 scope extension (AC9: extend existing dispatch-failed test)
+justification | packages/pi-agentic-workflow/src/routing/dispatch.ts | P9 | 2026-10-14 | execute-phase | pi 1.2.0 scope extension (AC9: busy-window semantics tests)
+justification | packages/pi-agentic-workflow/test/dispatch-refusals.test.mjs | P9 | 2026-10-14 | execute-phase | pi 1.2.0 scope extension (AC9: busy-window semantics tests)
+justification | packages/pi-agentic-workflow/test/restore-after-settle.test.mjs | P9 | 2026-10-14 | execute-phase | pi 1.2.0 scope extension (AC9: extend existing dispatch-failed test)
 ```
 
 ## AC7 — Aborted-settle design decision
