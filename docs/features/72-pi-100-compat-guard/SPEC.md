@@ -331,7 +331,7 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 
 ```text
 REVIEW-VERDICT: PASS
-- Findings: 0 material, 0 report-notes — the open list is `review-findings.md`
+- Findings: 0 material, 2 report-notes — the open list is `review-findings.md`
   (recomputed by `scripts/ledger-provenance.mjs --check`; `scripts/unit-route.mjs`
   reports `open-rows: 0`).
 - Evidence reproduced: yes — the ledger's REVIEW-RAN rows name the reviewed
