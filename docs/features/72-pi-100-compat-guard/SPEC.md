@@ -294,7 +294,8 @@ REVIEW-VERDICT: BLOCKED
   docs/features/72-pi-100-compat-guard/SPEC.md | grep -E '^[+-][0-9]+\.'`
   adds exactly 2 numbered-AC lines — AC6 and AC7, the scope-extension
   criteria; folded:
-  F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20+F21)
+  F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20+F21
+  +F22+F23+F24)
 - AC integrity: AC1–AC5 unchanged from triage; AC6/AC7 added by the
   2026-10-12 scope extension
 

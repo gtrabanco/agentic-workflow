@@ -462,13 +462,14 @@ test("AC7: a settle with aborted=true does not restore the snapshot — model st
     "the latch is released on abort — later dispatches are not refused");
 });
 
-test("AC7: a settle with aborted=true does not restore the snapshot — keep policy", async () => {
-  // `keep` policy is the shipped default: the model stays either way, but abort
-  // must still release the latch so subsequent dispatches are accepted.
-  // Under keep, settle returns early via `turn.settlePolicy === "keep"`, so
-  // only asserting `inFlight() === false` distinguishes a working abort guard
-  // (release) from a broken one (latch held — same outcome as keep but via
-  // a different code path that would wedge after a later abort).
+test("AC7: a settle with aborted=true releases the latch — keep policy", async () => {
+  // `keep` policy is the shipped default. Under keep, settle() returns at the
+  // settlePolicy check regardless of `aborted`, so guard-absence is NOT
+  // observable on this path (the restore-policy abort case above pins the
+  // abort guard itself). This case pins only what the keep path can see: the
+  // latch is released — it does fail under the mutant that returns before
+  // `pending = undefined` (the latch stays held) — and no restore calls are
+  // made.
   const session = createSession({
     config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" }, onSettle: "keep" }),
     models: AVAILABLE,
