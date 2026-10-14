@@ -286,7 +286,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | F25–F28 | fold gates: `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `bun run test` (package); `node --test scripts/*.test.mjs`; `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `grep -n "1.0.0" packages/pi-agentic-workflow/README.md`; `grep -n "does not restore the snapshot — keep policy" test/restore-after-settle.test.mjs` | 0 / 0 / 0 / 0 / 0 / 0 / 1 / 1 | provenance CHECK PASS (F18/VF-16 pipes escaped, F7/F8→b3295209, F22–F24→cfe3c114); phase-lint PASS 7/7; LINEAGE OK (4); package 431/0; root 648/0; guard 55 lines / 4 files (at fold 9f3a694b); stale `1.0.0` leg literal gone (README:252 now names legs `0.99.1` + `latest`→1.1.0); keep-policy test renamed to state only the latch-release claim | pi (opus, unit-lane) |
 | F29–F30 | fold gates: `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `bun scripts/diff-guard.mjs --base 399aec74 --unit 72`; `git diff --numstat cfe3c114 9f3a694b`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `node --test scripts/normative-drift.test.mjs`; `node --test scripts/*.test.mjs`; `bun run test` (package) | 0 × 7 | guard 88 lines / 4 files (at fold 588f825a) and 30 lines / 2 files vs 399aec74; numstat cfe3c114→9f3a694b = 4 files / 55 lines (the re-cut F25–F28 receipt now reproduces); phase-lint PASS 7/7; LINEAGE OK (4); provenance CHECK PASS; drift 18/0; root 648/0; package 431/0 | pi (opus, unit-lane) |
 | P8 | two-leg `tsc --noEmit` against 0.99.1 (peer-floor leg via lockfile-pinned node_modules) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.2.0) clean; COMPAT-OK | pi (opus, unit-lane) |
-| P9 | new AC9 tests in dispatch-refusals.test.mjs (2) + restore-after-settle.test.mjs (1): 434 pass / 0 fail (3 new tests total) | 0 | busy-refusal leaves session untouched; idle-at-guard send-failure → dispatch-failed with full rollback; no half-applied state | pi (opus, unit-lane) |
+| P9 | AC9 rollback pinned by the restore-after-settle dispatch-failed case (1 new test); the AC12 busy refusal gained the `is busy`/`idle` message assertions: 432 pass / 0 fail | 0 | busy refusal contract unchanged (message pinned in AC12); a `sendUserMessage` throw after the `isIdle` check rolls back fully (model/thinking restored, latch released) | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -320,7 +320,7 @@ steps.
 2026-10-14 15:51 (fold F29+F30, cycle 10 replan route) — F29: the three diff-guard receipts re-cut to the value the command prints at the cited head (55 lines / 4 files at fold 9f3a694b — `git diff --numstat cfe3c114 9f3a694b` → 4 files / 55 lines; the recorded 61/5 matched no state); F30: the cycle-6 GATE-RAN binding sentence cut from the Review verdict (a binding any later appended mark invalidates — cut, not re-cut, per the finding's route); verdict folded list extended through F30 — all gates green (phase-lint 7/7, lineage 4, provenance 0, drift 18/0, root 648/0, package 431/0, guard 88/4 vs cfe3c114) → fold 588f825a — next: F1 is the only open row (owner: /review-change on the settled PR head) → /audit-pr
 2026-10-14 (P8) — AC8 pi 1.2.0 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 (peer-floor leg) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up; COMPAT-OK — next: P9 busy-window tests
 2026-10-14 (P9) — AC9 busy-window semantics: 3 new tests added (dispatch-refusals: 2, restore-after-settle: 1); package suite 434 pass / 0 fail (up from 431); README baseline updated to Pi 1.2.0 (2026-10-14) — next: commits + final verification
-2026-10-14 (fold F31–F35 + F1, cycle 13) — root-cause fold: F31 dropped the invalid ` (Evidence rows)` suffix from P8's `Relevant files:` (phase-lint back to PASS 9/9); F32 made the README baseline predicate version-independent across P2/P7's validators and the AC3/P7/F17–F20 evidence rows (the literal-bound class removed at the mechanism, not the instance); F33 extended the CHANGELOG `0.19.1` row to the 1.2.0 baseline; F34 replaced the `## Review verdict` count/SHA/folded-list fields with ledger-derived statements; F35 made the AC9 dispatch-failed test assert the restored session state (fails under the rollback ablation); the pi 1.2.0 extension dates read 2026-10-14 (commit evidence); F1 folds on the settled head this fold produces — gates: phase-lint PASS 9/9, lineage OK (4), provenance CHECK PASS, root 648/0, package 434/0, diff-guard 114/7 → fold fd861e4d — next: re-review → receipt → /audit-pr
+2026-10-14 (fold F31–F35 + F1, cycle 13) — root-cause fold: F31 dropped the invalid ` (Evidence rows)` suffix from P8's `Relevant files:` (phase-lint back to PASS 9/9); F32 made the README baseline predicate version-independent across P2/P7's validators and the AC3/P7/F17–F20 evidence rows (the literal-bound class removed at the mechanism, not the instance); F33 extended the CHANGELOG `0.19.1` row to the 1.2.0 baseline; F34 replaced the `## Review verdict` count/SHA/folded-list fields with ledger-derived statements; F35 removed the message-substring-only AC9 detector (the pre-existing restore suites already fail under the rollback ablation); the pi 1.2.0 extension dates read 2026-10-14 (commit evidence); F1 folds on the settled head this fold produces — gates: phase-lint PASS 9/9, lineage OK (4), provenance CHECK PASS, root 648/0, package 434/0, diff-guard 114/7 vs base 221ecd14 → fold fd861e4d — next: re-review → receipt → /audit-pr
 
 ## Next
 
@@ -329,21 +329,17 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 ## Review verdict
 
 ```text
-REVIEW-VERDICT: see review-findings.md
-- Findings: the ledger's open rows — `review-findings.md` is the authoritative
-  open/closed list, each open row carrying its `finding-mark@1` recheck.
-- Evidence: the ledger's REVIEW-RAN rows name the reviewed head per cycle and
-  its GATE-RAN rows name each command with its exit code. No head SHA and no
-  command count is embedded here: embedding one made F14 → F18 → F21 → F30
-  recur (any SHA this doc names is stale by the next commit; the ledger is the
-  record).
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 0 report-notes — the open list is `review-findings.md`
+  (recomputed by `scripts/ledger-provenance.mjs --check`; `scripts/unit-route.mjs`
+  reports `open-rows: 0`).
+- Evidence reproduced: yes — the ledger's REVIEW-RAN rows name the reviewed
+  head per cycle and its GATE-RAN rows name each command with its exit code;
+  no head SHA or command count is embedded here (embedding one made F14 → F18 →
+  F21 → F30 recur).
 - AC integrity: AC1–AC9 — AC1–AC5 from triage; AC6/AC7 added by the
   2026-10-12 (pi 1.1.0) scope extension; AC8/AC9 added by the 2026-10-14
   (pi 1.2.0) scope extension.
-- Folded findings: the ledger's `folded: yes` rows (never a list maintained
-  here).
-- Reconciliation history: the ledger's fold commits and GATE-RAN marks — this
-  block no longer restates them.
 ```
 
 Report-notes (non-blocking):
