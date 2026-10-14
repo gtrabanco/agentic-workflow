@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -48,7 +48,9 @@ Both `--fix <n>` and `--from-issue <n>` are the exact forms
 
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 `docs/features/_TEMPLATE/SPEC.md` (the unit doc template). If the unit folder
-exists, read its current `SPEC.md` to avoid overwriting.
+exists, read its current `SPEC.md` to avoid overwriting. If this work returns
+to an area other unit docs already touch, scan their `## Future` sections and
+surface each open row as plan-now / keep-deferred / discard before continuing.
 
 ## Process
 
@@ -67,7 +69,11 @@ For `--fix`/`--from-issue`, read the tracked issue in the forge first and keep
 its number; the folder name carries it (`fix/<issue-number>-<topic>`). Fill
 objective, why, user outcome, and non-goals from the invocation (or the issue).
 Acceptance criteria are induced from user scenarios — **ask-don't-infer**; if the
-request is too vague, STOP and ask the user with concrete options. See
+request is too vague, STOP and ask the user with concrete options. Open
+decisions that are not acceptance criteria run through the design step's
+**gap interview** — one batched form-turn with recommended options + why,
+`Decide for me` (recorded in `decisions.md`), and cheap defaults recorded as
+assumptions. See
 [the unit doc template](references/STEPS.md) for section order.
 
 ### 2. Triage — read the catalog, never re-derive
@@ -113,13 +119,16 @@ Before every commit:
 ### 6. Close the unit
 
 When all triaged steps are done, run the review pack axis summary, update the
-unit doc's status, and print the closing block.
+unit doc's status, resolve every `## Future` row with the user (planned now —
+registered on explicit request only —, kept deferred, or discarded, dated),
+and print the closing block.
 
 ## Guardrails
 
 **Allowed:**
 - Only the triaged steps listed by the catalog
 - Changes scoped to the acceptance criteria
+- Deferred user ideas recorded in the unit doc's `## Future`, never implemented
 - Documentation updates in docs/ and template/
 - Conventional commit messages per the project's Workflow conventions
 

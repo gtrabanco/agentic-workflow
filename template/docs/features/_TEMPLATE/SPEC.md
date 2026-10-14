@@ -24,6 +24,15 @@ STOP and ask the user with concrete options — never invent one.
 
 What this unit is NOT. Findings discovered during implementation never expand scope.
 
+## Future
+
+Ideas the user deferred ("down the road I'd like…"), captured verbatim with a
+date and a status: `open`, `planned`, or `discarded <YYYY-MM-DD>`. This unit
+never implements, specs, or tasks a row here. Write `none` when nothing was
+deferred. Reviewed at unit close, on session resume, and whenever later work
+returns to the same area — each open row is then offered as
+plan-now / keep-deferred / discard.
+
 ## Future cost
 
 Standing obligations this unit imposes on future work. Each row: the rule + who it binds.
