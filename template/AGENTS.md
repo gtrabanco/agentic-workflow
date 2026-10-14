@@ -153,6 +153,13 @@ answer materially changes the artifact — make routine choices silently and rec
 them. Each question states: **what** is being decided; its **scope** (files,
 behavior, consumers affected); its **criticality** (critical / high / medium /
 low); and each **option** with pros and cons separately, recommendation flagged.
+Batch independent questions into a single turn; ask one question first only
+when its answer changes the others. Choices the user delegates ("decide for
+me") and cheap-to-change defaults are recorded with their reason (the unit
+folder's `decisions.md`), never left silent. Ideas the user defers ("down the
+road I'd like…") go to the unit doc's `## Future` — never implemented without a
+new explicit request. Installing a missing tool always requires explicit
+consent.
 
 **Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/` with

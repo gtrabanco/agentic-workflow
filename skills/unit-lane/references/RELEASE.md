@@ -25,6 +25,8 @@ Write into the unit doc's **References** section:
 ## Checklist (pass only if)
 
 - [ ] PR created on `main` with `Closes #N` from the References section
+- [ ] Future sweep: every `## Future` row resolved with the user (planned —
+      registered on explicit request only —, kept deferred, or discarded, dated)
 - [ ] Branch follows the project's Workflow conventions
 - [ ] Commit messages follow conventional format (`type(scope): description`)
 - [ ] PR body includes the Evidence section as verification record
