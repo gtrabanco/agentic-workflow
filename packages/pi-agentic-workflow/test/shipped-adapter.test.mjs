@@ -454,7 +454,7 @@ test("AC7 through the adapter: a settle with aborted=true does not restore the s
     entry.handlers.get("agent_settled")({ aborted: true }, entry.context({ model: { provider: "openai", id: "gpt-5.2" } }));
     await flush();
     assert.deepEqual(entry.calls.setModel, beforeSettle, "no restore: the routed model stays");
-    assert.deepEqual(entry.calls.setThinkingLevel, beforeSettle.length > 0 ? ["high"] : [], "no restore: the routed level stays");
+    assert.deepEqual(entry.calls.setThinkingLevel, ["high"], "no restore: the routed level stays");
   } finally {
     entry.cleanup();
   }

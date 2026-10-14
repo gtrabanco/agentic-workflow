@@ -2,7 +2,9 @@
 
 > One-line: re-verify the pi 1.0.0 compatibility baseline, add a PR-time two-leg
 > pi drift guard, refresh the package's verification records (issue #283), and —
-> scope extension 2026-10-12 (pi 1.1.0) — adopt `agent_settled.aborted`.
+> scope extensions 2026-10-12 (pi 1.1.0) — adopt `agent_settled.aborted` — and
+> 2026-10-14 (pi 1.2.0) — re-verify the two-leg type-check and pin the widened
+> busy window.
 
 ## Objective
 
@@ -33,7 +35,7 @@ can put to work: `agent_settled` now carries `aborted`, distinguishing a
 cancelled run from a finished one. The unit folds that adoption in as AC6/AC7
 (P6/P7) so the open PR ships it instead of leaving it as follow-up drift.
 
-**Scope extension (2026-10-12, pi 1.2.0):** the pi 1.2 changelog sweep found one
+**Scope extension (2026-10-14, pi 1.2.0):** the pi 1.2 changelog sweep found one
 behavior change that widens the busy window — `ctx.isIdle()` returns false earlier
 (while a run starts, including during `before_agent_start` handlers) and
 `sendUserMessage()` now requires `deliverAs` during a starting run. The package's
@@ -162,7 +164,7 @@ exists.
   also clean. Affects the ACs' literals only — the baseline was superseded by
   AC6/P6 (aborted-settle adoption, 2026-10-12), AC7/P7 (pi 1.1.0
   re-verification + baselines, 2026-10-12), and AC8/P8 (pi 1.2.0
-  re-verification, 2026-10-12).
+  re-verification, 2026-10-14).
 - Issue #283 states the AC5 bump as `0.18.5 → 0.18.6`; the package is at
   `0.19.0` at execution time (0.19.0 shipped via PR #282 on 2026-10-05).
   Affects AC5's literals only — the patch-bump rule is applied from the actual
@@ -180,8 +182,9 @@ exists.
   exits 0).
   - Relevant files: .github/workflows/root-suite.yml
 - P2 — Update `packages/pi-agentic-workflow/README.md` Notes (validator:
-  `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md` exits 0
-  and `grep -n "0.99.1" packages/pi-agentic-workflow/README.md` exits 0).
+  `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md`
+  exits 0 and `grep -n "0.99.1" packages/pi-agentic-workflow/README.md` exits 0).
+  The predicate is version-independent so a future baseline bump cannot stale it.
   - Relevant files: packages/pi-agentic-workflow/README.md
 - P3 — Post AC1 evidence + AC4 dev-hygiene comments on issue #283 (validator:
   `gh issue view 283 --json comments` exits 0 and the comment count is ≥ 2),
@@ -210,7 +213,7 @@ exists.
   guard locally (latest leg now resolves 1.1.0), update the README Notes
   baseline to `Pi 1.1.0` with today's date, and extend the CHANGELOG row text
   to name the aborted-settle handling (validator: two-leg `tsc --noEmit`
-  exits 0 on both legs and `grep -n "Pi 1.1.0"
+  exits 0 on both legs and `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+"
   packages/pi-agentic-workflow/README.md` exits 0).
   - Relevant files: packages/pi-agentic-workflow/README.md,
     CHANGELOG.md
@@ -222,7 +225,7 @@ exists.
   clean up the temp dir (validator: no stray files remain). If `tsc` reports
   NEW errors vs the 1.1.0 run: STOP and report the exact errors.
   - Relevant files: packages/pi-agentic-workflow/README.md,
-    docs/features/72-pi-100-compat-guard/SPEC.md (Evidence rows)
+    docs/features/72-pi-100-compat-guard/SPEC.md
 - P9 — AC9 busy-window semantics: add tests in the style of the existing
   dispatch-failing suite that pin the 1.2.0 busy-window behavior — a
   `sendUserMessage` throw after the `isIdle()` check passes rolls back the
@@ -272,14 +275,14 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | P1 | two-leg temp-copy `tsc --noEmit` (local, exact job commands) | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean | pi (opus, unit-lane) |
 | AC1 | re-verification re-run in-repo; verbatim commands + result pasted on #283 | 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean — [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043115659) | pi (opus, unit-lane) |
 | AC2 | `pi-compat-guard` job encoded in root-suite.yml (line 88); validated locally by the identical two-leg run | 0 / 0 | both legs' `tsc --noEmit` clean; installs `--no-package-lock` outside `packages/` | pi (opus, unit-lane) |
-| AC3 | `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md` | 0 | line 251: Pi 1.1.0 (2026-10-12) + floor 0.99.1 (2026-09-29) at one glance | pi (opus, unit-lane) |
+| AC3 | `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md` | 0 | README:251 reads Pi 1.2.0 (2026-10-14) + floor 0.99.1 (2026-09-29) at one glance; the predicate is version-independent so a baseline bump cannot stale it | pi (opus, unit-lane) |
 | AC4 | dev-hygiene sequence posted on #283 (`rm -rf node_modules && bun install --frozen-lockfile`) | 0 | [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043116055) | pi (opus, unit-lane) |
 | AC5 | `node --test scripts/normative-drift.test.mjs`; `grep '"version"' packages/pi-agentic-workflow/package.json` | 0 / 0 | 18 pass / 0 fail; version reads `0.19.1`; changelog row present | pi (opus, unit-lane) |
 | T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
 | T2 | `node --test scripts/*.test.mjs` (root suites) | 0 | 648 pass / 0 fail; one first-run red traced to a stale local schema dist (pre-existing, green after rebuild — not this diff) | pi (opus, unit-lane) |
 | P6 | new AC7 test fakes + adapter abort forward: 431 pass / 0 fail (3 new test files modified + 1 new decisions.md) | 0 | mutation table clean; 4 new AC7 tests (restore-after-settle: 2, shipped-adapter: 2) all pass | pi (opus, unit-lane) |
-| P7 | two-leg `tsc --noEmit` against 0.99.1 and latest (pi 1.1.0); README Notes → Pi 1.1.0 (2026-10-12); CHANGELOG row extended with scope extension text | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.1.0) clean; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md` exits 0 | pi (opus, unit-lane) |
-| F17–F20 | fold gates: `bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md`; `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 / 0 / 0 / 1 | phase-lint PASS; LINEAGE OK; README:251 `Pi 1.1.0 (2026-10-12)`; stale validator gone; scope-extension dates now agree with commits d7942d98/95c5c11e (both 2026-10-12) | pi (opus, unit-lane) |
+| P7 | two-leg `tsc --noEmit` against 0.99.1 and latest (pi 1.1.0); README Notes → Pi 1.1.0 (2026-10-12); CHANGELOG row extended with scope extension text | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.1.0) clean; `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md` exits 0 (baseline at P7: Pi 1.1.0; superseded by P8 → Pi 1.2.0) | pi (opus, unit-lane) |
+| F17–F20 | fold gates: `bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md`; `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 / 0 / 0 / 1 | phase-lint PASS; LINEAGE OK; the README baseline predicate is version-independent (at the fold: Pi 1.1.0); stale `Pi 1.0.4` literal gone; scope-extension dates agree with commits d7942d98/95c5c11e (both 2026-10-12) | pi (opus, unit-lane) |
 | F25–F28 | fold gates: `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `bun run test` (package); `node --test scripts/*.test.mjs`; `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `grep -n "1.0.0" packages/pi-agentic-workflow/README.md`; `grep -n "does not restore the snapshot — keep policy" test/restore-after-settle.test.mjs` | 0 / 0 / 0 / 0 / 0 / 0 / 1 / 1 | provenance CHECK PASS (F18/VF-16 pipes escaped, F7/F8→b3295209, F22–F24→cfe3c114); phase-lint PASS 7/7; LINEAGE OK (4); package 431/0; root 648/0; guard 55 lines / 4 files (at fold 9f3a694b); stale `1.0.0` leg literal gone (README:252 now names legs `0.99.1` + `latest`→1.1.0); keep-policy test renamed to state only the latch-release claim | pi (opus, unit-lane) |
 | F29–F30 | fold gates: `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `bun scripts/diff-guard.mjs --base 399aec74 --unit 72`; `git diff --numstat cfe3c114 9f3a694b`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `node --test scripts/normative-drift.test.mjs`; `node --test scripts/*.test.mjs`; `bun run test` (package) | 0 × 7 | guard 88 lines / 4 files (at fold 588f825a) and 30 lines / 2 files vs 399aec74; numstat cfe3c114→9f3a694b = 4 files / 55 lines (the re-cut F25–F28 receipt now reproduces); phase-lint PASS 7/7; LINEAGE OK (4); provenance CHECK PASS; drift 18/0; root 648/0; package 431/0 | pi (opus, unit-lane) |
 | P8 | two-leg `tsc --noEmit` against 0.99.1 (peer-floor leg via lockfile-pinned node_modules) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.2.0) clean; COMPAT-OK | pi (opus, unit-lane) |
@@ -315,8 +318,8 @@ steps.
 2026-10-12 22:30 (fold F21 close-out) — ledger F21 flipped folded:yes (fold 4eb18169), REVIEW-RAN/GATE-RAN marks appended at HEAD 4eb18169 (phase-lint PASS 7/7, lineage OK obligations 4, normative-drift 0, root suites 648/0, package suite 431/0, diff-guard 34 lines / 2 files); residual "on this HEAD" wording in the Findings clause repointed at the settled PR head (ae4f59b0). F1 is the only open row — next: owner decision — /review-change on the settled head or /audit-pr
 2026-10-14 08:22 (fold F25–F28, cycle 9) — F25: keep-policy abort test renamed to "releases the latch — keep policy" and its comment re-cut to the observable claim (guard-absence unobservable on the keep path; the restore-policy case pins the guard); F26: ledger provenance repaired (F18/VF-16 pipes escaped, F7/F8 re-cited b3295209, F22–F24 re-cited cfe3c114 → CHECK PASS); F27: README:252 names the actual legs (`0.99.1` + `latest`→1.1.0), `1.0.0` literal gone; F28: verdict folded list extended through F28 — all gates green (provenance 0, phase-lint 7/7, lineage 4, package 431/0, root 648/0, diff-guard 55/4) → fold 9f3a694b — next: marks + close-out commit
 2026-10-14 15:51 (fold F29+F30, cycle 10 replan route) — F29: the three diff-guard receipts re-cut to the value the command prints at the cited head (55 lines / 4 files at fold 9f3a694b — `git diff --numstat cfe3c114 9f3a694b` → 4 files / 55 lines; the recorded 61/5 matched no state); F30: the cycle-6 GATE-RAN binding sentence cut from the Review verdict (a binding any later appended mark invalidates — cut, not re-cut, per the finding's route); verdict folded list extended through F30 — all gates green (phase-lint 7/7, lineage 4, provenance 0, drift 18/0, root 648/0, package 431/0, guard 88/4 vs cfe3c114) → fold 588f825a — next: F1 is the only open row (owner: /review-change on the settled PR head) → /audit-pr
-2026-10-12 (P8) — AC8 pi 1.2.0 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 (peer-floor leg) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up; COMPAT-OK — next: P9 busy-window tests
-2026-10-12 (P9) — AC9 busy-window semantics: 3 new tests added (dispatch-refusals: 2, restore-after-settle: 1); package suite 434 pass / 0 fail (up from 431); README baseline updated to Pi 1.2.0 (2026-10-12) — next: commits + final verification
+2026-10-14 (P8) — AC8 pi 1.2.0 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 (peer-floor leg) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up; COMPAT-OK — next: P9 busy-window tests
+2026-10-14 (P9) — AC9 busy-window semantics: 3 new tests added (dispatch-refusals: 2, restore-after-settle: 1); package suite 434 pass / 0 fail (up from 431); README baseline updated to Pi 1.2.0 (2026-10-14) — next: commits + final verification
 
 ## Next
 
@@ -325,48 +328,21 @@ PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against
 ## Review verdict
 
 ```text
-REVIEW-VERDICT: BLOCKED
-- Findings: 1 open (F1 — review receipt, high/fix-now; BLOCKED: fix requires
-  `/review-change` to run and verify the receipt on the settled PR head)
-- Evidence reproduced: yes — the reproduction receipts are the sibling
-  ledger's marks, not a SHA embedded here (embedding one made F14 → F18 →
-  F21 recur: any SHA this doc names is stale by the next commit; the ledger
-  is the record): every review cycle appends a REVIEW-RAN row naming the
-  head it reviewed plus per-command GATE-RAN rows to
-  `docs/features/72-pi-100-compat-guard/review-findings.md`, and the last
-  REVIEW-RAN mark is the reviewed head this verdict speaks for.
-  Diff-scoped AC check,
-  reproducible at any head: `git diff 71c7ed90 HEAD --
-  docs/features/72-pi-100-compat-guard/SPEC.md | grep -E '^[+-][0-9]+\.'`
-  adds exactly 2 numbered-AC lines — AC6 and AC7, the scope-extension
-  criteria; folded:
-  F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20+F21
-  +F22+F23+F24+F25+F26+F27+F28+F29+F30)
-- AC integrity: AC1–AC5 unchanged from triage; AC6/AC7 added by the
-  2026-10-12 scope extension
-
-The review-findings.md ledger was reconciled: F2 (false blocker, fixed by F3's
-withdrawal), README overclaim (F4), PASS verdict drift (F5), and phase-lint
-BLOCKED (F6) all folded as all-repair-in-place.
-F7–F16 folded via FOLD FIX Group B: F7 (byte-identity claim), F8 (scope
-extension), F9 (P2/P7 validator grep/AC3 text), F10 (CHANGELOG path), F11
-(O4 status), F12 (P2/AC3 `Pi 1.1.0`), F13 (Known issues superseded), F14
-(review evidence clause), F15 (dates 2026-10-07→2026-10-12), F16 (roadmap
-row) — all repair-in-place.
-F17–F20 folded via FOLD FIX cycle 4 (replan route): F17 (Known-issues
-version/date pair re-cut to the run that produced each literal — 1.0.4 →
-2026-10-07, 1.1.0 → 2026-10-12), F18 (this evidence clause re-cut to the
-AC6/AC7 lines the diff actually adds and the 2026-10-12 re-check date), F19
-(scope-extension dates 2026-10-07→2026-10-12 across SPEC + decisions.md),
-F20 (P2 validator repointed at `Pi 1.1.0`) — all repair-in-place.
-F21 folded via FOLD FIX cycle 6 (replan route): F21 (verdict evidence
-clause re-bound to the ledger's REVIEW-RAN/GATE-RAN marks; the head-SHA
-embedding behind the F14 → F18 → F21 recurrences is removed as a class,
-so the clause no longer self-invalidates) — repair-in-place. Per review
-POLICY §4 no further review-change repeat is issued on this plan-rooted
-finding; the next verdict authority is the merge gate (/audit-pr).
-F1 remains open (BLOCKED: fix requires `/review-change` to run and verify
-the receipt on the settled PR head).
+REVIEW-VERDICT: see review-findings.md
+- Findings: the ledger's open rows — `review-findings.md` is the authoritative
+  open/closed list, each open row carrying its `finding-mark@1` recheck.
+- Evidence: the ledger's REVIEW-RAN rows name the reviewed head per cycle and
+  its GATE-RAN rows name each command with its exit code. No head SHA and no
+  command count is embedded here: embedding one made F14 → F18 → F21 → F30
+  recur (any SHA this doc names is stale by the next commit; the ledger is the
+  record).
+- AC integrity: AC1–AC9 — AC1–AC5 from triage; AC6/AC7 added by the
+  2026-10-12 (pi 1.1.0) scope extension; AC8/AC9 added by the 2026-10-14
+  (pi 1.2.0) scope extension.
+- Folded findings: the ledger's `folded: yes` rows (never a list maintained
+  here).
+- Reconciliation history: the ledger's fold commits and GATE-RAN marks — this
+  block no longer restates them.
 ```
 
 Report-notes (non-blocking):
