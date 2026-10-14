@@ -37,6 +37,15 @@ Numbered list. Each AC is a runnable command where possible, or labelled
 What this fix is NOT. Regression scope is declared below; findings discovered
 during implementation never expand scope beyond the declared regression boundary.
 
+## Future
+
+Ideas the user deferred ("down the road I'd like…"), captured verbatim with a
+date and a status: `open`, `planned`, or `discarded <YYYY-MM-DD>`. This unit
+never implements, specs, or tasks a row here. Write `none` when nothing was
+deferred. Reviewed at unit close, on session resume, and whenever later work
+returns to the same area — each open row is then offered as
+plan-now / keep-deferred / discard.
+
 ## Future cost
 
 Standing obligations this fix imposes on future work. Each row: the rule + who it binds.

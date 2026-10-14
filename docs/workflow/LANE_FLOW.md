@@ -119,6 +119,7 @@ The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 13 sections:
 | 3 | User outcome | From the user's perspective |
 | 4 | Acceptance criteria | Numbered, scenario-induced list |
 | 5 | Non-goals | What this unit is NOT |
+| — | Future (extra) | User-deferred ideas, verbatim; never implemented. Reviewed at close, on session resume, and when work returns to the area |
 | 6 | Future cost | Obligations on future work |
 | 7 | Applicable tests | Triage-decided; `n/a` when no tests |
 | 8 | Known pre-existing issues | Each marked `affects` / `does-not-affect` |
