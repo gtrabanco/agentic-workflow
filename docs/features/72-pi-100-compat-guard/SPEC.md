@@ -241,6 +241,7 @@ the audit's pairing). Evidence row: R1 in Evidence.
 | P6 | new AC7 test fakes + adapter abort forward: 431 pass / 0 fail (3 new test files modified + 1 new decisions.md) | 0 | mutation table clean; 4 new AC7 tests (restore-after-settle: 2, shipped-adapter: 2) all pass | pi (opus, unit-lane) |
 | P7 | two-leg `tsc --noEmit` against 0.99.1 and latest (pi 1.1.0); README Notes → Pi 1.1.0 (2026-10-12); CHANGELOG row extended with scope extension text | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.1.0) clean; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md` exits 0 | pi (opus, unit-lane) |
 | F17–F20 | fold gates: `bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `grep -n "Pi 1.1.0" packages/pi-agentic-workflow/README.md`; `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 / 0 / 0 / 1 | phase-lint PASS; LINEAGE OK; README:251 `Pi 1.1.0 (2026-10-12)`; stale validator gone; scope-extension dates now agree with commits d7942d98/95c5c11e (both 2026-10-12) | pi (opus, unit-lane) |
+| F25–F28 | fold gates: `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `bun run test` (package); `node --test scripts/*.test.mjs`; `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `grep -n "1.0.0" packages/pi-agentic-workflow/README.md`; `grep -n "does not restore the snapshot — keep policy" test/restore-after-settle.test.mjs` | 0 / 0 / 0 / 0 / 0 / 0 / 1 / 1 | provenance CHECK PASS (F18/VF-16 pipes escaped, F7/F8→b3295209, F22–F24→cfe3c114); phase-lint PASS 7/7; LINEAGE OK (4); package 431/0; root 648/0; guard 61 lines / 5 files; stale `1.0.0` leg literal gone (README:252 now names legs `0.99.1` + `latest`→1.1.0); keep-policy test renamed to state only the latch-release claim | pi (opus, unit-lane) |
 
 ## Triaged steps
 
@@ -270,6 +271,7 @@ steps.
 2026-10-12 17:13 (fold F17–F20, replan route) — plan-artifact repairs only: F17 Known-issues version/date pair re-cut (1.0.4 → 2026-10-07 run, 1.1.0 → 2026-10-12 run); F18 verdict evidence clause re-cut to the AC6/AC7 diff lines + 2026-10-12 re-check date; F19 scope-extension dates 2026-10-07→2026-10-12 (SPEC ×3 + decisions.md ×4); F20 P2 validator repointed at `Pi 1.1.0`; phase-lint + lineage + validator greps green — next: ledger fold marks → commit
 2026-10-12 22:17 (fold F21, replan route) — Review verdict evidence clause re-bound to the ledger's REVIEW-RAN/GATE-RAN marks (head-SHA embedding behind the F14 → F18 → F21 recurrences removed as a class; no re-cut to yet another SHA); folded list extended to F21; F1 note repointed at the settled PR head. POLICY §4: no review-change repeat on this plan-rooted finding — next: gates → ledger fold marks → commit
 2026-10-12 22:30 (fold F21 close-out) — ledger F21 flipped folded:yes (fold 4eb18169), REVIEW-RAN/GATE-RAN marks appended at HEAD 4eb18169 (phase-lint PASS 7/7, lineage OK obligations 4, normative-drift 0, root suites 648/0, package suite 431/0, diff-guard 34 lines / 2 files); residual "on this HEAD" wording in the Findings clause repointed at the settled PR head (ae4f59b0). F1 is the only open row — next: owner decision — /review-change on the settled head or /audit-pr
+2026-10-14 08:22 (fold F25–F28, cycle 9) — F25: keep-policy abort test renamed to "releases the latch — keep policy" and its comment re-cut to the observable claim (guard-absence unobservable on the keep path; the restore-policy case pins the guard); F26: ledger provenance repaired (F18/VF-16 pipes escaped, F7/F8 re-cited b3295209, F22–F24 re-cited cfe3c114 → CHECK PASS); F27: README:252 names the actual legs (`0.99.1` + `latest`→1.1.0), `1.0.0` literal gone; F28: verdict folded list extended through F28 — all gates green (provenance 0, phase-lint 7/7, lineage 4, package 431/0, root 648/0, diff-guard 61/5) → fold 9f3a694b — next: marks + close-out commit
 
 ## Next
 
@@ -295,7 +297,7 @@ REVIEW-VERDICT: BLOCKED
   adds exactly 2 numbered-AC lines — AC6 and AC7, the scope-extension
   criteria; folded:
   F2+F3+F4+F5+F6+F7+F8+F9+F10+F11+F12+F13+F14+F15+F16+F17+F18+F19+F20+F21
-  +F22+F23+F24)
+  +F22+F23+F24+F25+F26+F27+F28)
 - AC integrity: AC1–AC5 unchanged from triage; AC6/AC7 added by the
   2026-10-12 scope extension
 
