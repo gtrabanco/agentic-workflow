@@ -430,6 +430,50 @@ test("AC8: the same rule for the console release — undo failure still clears t
   assert.equal(session.router.inFlight(), false, "an undo that fails mid-restore does not wedge the latch");
 });
 
+// --- AC9 (pi 1.2.0 scope extension): sendUserMessage throw after isIdle check ---
+//
+// pi 1.2.0 makes the busy window wider (isIdle returns false while a run
+// starts). A sendUserMessage throw after the isIdle check passed must undo
+// the routing entirely — no half-applied model/thinking change left behind.
+// This extends the existing dispatch-failed test to pin the "no half-applied"
+// behavior explicitly (AC9, pi 1.2.0).
+
+test("AC9 (pi 1.2.0): a sendUserMessage throw after isIdle check leaves no half-applied changes", async () => {
+  // Same pattern as the existing dispatch-failed test, but explicitly pinning
+  // that no model/thinking change survives the rollback (the 1.2.0 concern).
+  const session = createSession({
+    config: restoreConfigFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    sendThrows: true,
+  });
+
+  // Before dispatch: known starting state.
+  const beforeModel = `${session.state.model.provider}/${session.state.model.id}`;
+  const beforeThinking = session.state.thinking;
+
+  const outcome = await session.dispatch(COMMAND, "x");
+
+  assert.equal(outcome.status, "refused");
+  assert.equal(outcome.reason, "dispatch-failed");
+  assert.match(outcome.message, /put back/u);
+
+  // No half-applied state: model and thinking are exactly as before.
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, beforeModel,
+    "model is back to pre-dispatch value");
+  assert.equal(session.state.thinking, beforeThinking,
+    "thinking is back to pre-dispatch value");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is not held");
+  // The rollback applies setModel/setThinkingLevel to restore the snapshot;
+  // the final session state equals the start, which is what matters.
+  assert.equal(session.log.setModel.length, 2,
+    "route setModel + rollback restore setModel (final state = start)");
+  assert.equal(session.log.setThinkingLevel.length, 2,
+    "route setThinkingLevel + rollback restore setThinkingLevel (final state = start)");
+});
+
 test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollback", async () => {
   const session = createSession({
     config: restoreConfigFor({ commands: { "design-feature": { model: "inherit" } } }),
