@@ -2783,3 +2783,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** F3 is not a replan — `unit-route.mjs` says `route: fold`, not `replan-in-unit`. The owning stage is `plan` (SPEC.md / review-findings.md), but the fold repairer can rewrite plan artifacts in-place; only true `replan-in-unit` needs the lane's plan step. F2 FOLD: the unit-lineage.mjs gate proves fix/285 removed the legacy artifact demand. F4 FOLD: bind behavioural list to 0.99.1 only, state 1.0.4 as type-checked baseline. F6 FOLD: rewrite all three validator spans to command+expected outcome, re-run phase-lint to exit 0. Guard itself sound — mutation-tested green, both legs clean, no npm lockfile leak.
 - **Next:** /audit-pr — merge gate for PR #290 (unit 72 review PASS, receipt current); /product-audit — recurring SPEC drift on units 65+72.
 
+## 2026-10-15T20:56:22Z — main — manual
+- **Commits:** 7 (`e78f27e8…9a1425ed`)
+- **Files:** docs/LOGS.md
+- **Summary:** Issue audit: 20 open issues across the project — 1 fully resolved (#281), 1 combinable group (#246+#291 → #293), 6 partials (283, 219, 183, 269, 180, 275), and 12 fully open issues.
+- **Decisions:** 1) #281 closed — merge-guard verified present in both source (ce945e34/PR#279, ancestor of HEAD) and published npm 0.19.0 tarball. 2) #246+#291 combined into #293 (lane route + close-out seam) because both fix the same surface (scripts/unit-route.mjs + skills/*/references/); verbatim evidence carried in the new issue. 3) No roadmap rows needed marking — #246, #291, #281 were plain bugs, not features (0 hits in ROADMAP.md/fix index). 4) Used nan/qwen3.6 subagents for the audit to minimize token cost.
+- **Next:** /workflow-status to pick next unit; or triage_issue/execute-phase on the prioritized list: #292 (npm parity gate) → #293+246+291 (lane route + close-out) → #283 (merge PR #290) → #258 (needs-input hardening) → #275 (close reconciliation).
+
