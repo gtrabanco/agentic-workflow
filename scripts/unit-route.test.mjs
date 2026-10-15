@@ -291,11 +291,34 @@ test("F30: the ledger's annotated closed spellings are not open rows", () => {
   assert.equal(rowLine(result.stdout), "F24", "the annotated `yes` spellings are closed; the annotated `no` is open");
 });
 
-test("F31: the execute route names the frozen `--fix <n>` invocation for a fix unit", () => {
+test("F31/#291: the execute route names the frozen `--fix <n>` invocation, one phase and the tier", () => {
   const result = run(["22-execute-fix"]);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(routeLine(result.stdout), "execute");
-  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22");
+  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22 P2 (tier: cheap)");
+});
+
+test("#291 AC3: the feature execute route names exactly one phase and the execution tier", () => {
+  const result = run(["13-execute-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  // The unit's Progress log records P1; the first unfinished phase is P2.
+  assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+});
+
+test("#291 AC3: a planned unit with an untouched Progress log hands off P1", () => {
+  const result = run(["14-empty-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  assert.equal(nextLine(result.stdout), "/execute-phase 14-empty-unit P1 (tier: cheap)");
+});
+
+test("#291 AC3: the execute route fails closed when no phase is parseable — never a bare whole-unit command", () => {
+  const result = run(["17-phaseless-unit"]);
+  assert.equal(result.status, 1);
+  assert.equal(routeLine(result.stdout), null, "no route block on stdout");
+  assert.ok(result.stderr.includes("no parseable phase"), result.stderr);
+  assert.ok(!/execute-phase/.test(result.stdout), "the bare whole-unit command is never emitted");
 });
 
 test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {

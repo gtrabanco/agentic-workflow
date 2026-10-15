@@ -39,4 +39,5 @@ justification | scripts/phase-lint.mjs | P2 | 2026-10-15 | execute-phase | expor
 justification | skills/unit-lane/SKILL.md,skills/unit-lane/references/ | P3 | 2026-10-15 | execute-phase | issue #291 AC1-AC4: per-phase hand-off contract and close-out ladder in the lane
 justification | skills/execute-phase/SKILL.md | P4 | 2026-10-15 | execute-phase | issue #291 AC3/AC4: closing hand-off names the next single phase + tier, resumes the lane after the last phase
 justification | docs/workflow/LANE_FLOW.md | P5 | 2026-10-15 | execute-phase | issue #291 AC5: flow docs match the phase-named route and tiered triage block
+justification | scripts/fixtures/unit-route/docs/features/ROADMAP.md,scripts/fixtures/unit-route/docs/features/17-phaseless-unit/SPEC.md,scripts/fixtures/unit-route/docs/features/13-execute-unit/SPEC.md,scripts/fixtures/unit-route/docs/fix/22-execute-fix/SPEC.md | P2 | 2026-10-15 | execute-phase | issue #291 AC3: red-first execute-route tests need unit docs whose Tasks/Progress-log state pins P1/P2 hand-offs and the fail-closed phaseless case; fixture roadmap row admits unit 17
 ```

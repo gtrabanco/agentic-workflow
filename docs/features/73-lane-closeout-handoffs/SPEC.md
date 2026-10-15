@@ -169,10 +169,15 @@ Budget: strong
 | AC4 (triage half) | `node --test scripts/catalog.test.mjs` | exit 0 | 15/15 pass — tiers match `catalog.json`, `implement: cheap` (D1), aggregate derived | pi (opus, unit-lane) |
 | AC4 (triage half) | `node --test scripts/lane-era-lineage.test.mjs` | exit 0 | 19/19 pass — currency check unaffected by the `Tiers:` line | pi (opus, unit-lane) |
 | AC4 (triage half) | `node --test scripts/unit-route.test.mjs` | exit 1 → 22/26 | 22 pre-existing pass; 4 red are P2's own red-first tests, committed only at P2 | pi (opus, unit-lane) |
+| AC3 | `UNIT_ROUTE_REPO=…/unit-route node scripts/unit-route.mjs 13\|14\|22\|17` | exit 0 / 0 / 0 / 1 | `/execute-phase 13-execute-unit P2 (tier: cheap)` · `14… P1` · `--fix 22 P2` · phaseless → fail-closed, no bare command | pi (opus, unit-lane) |
+| AC3 | `node --test scripts/unit-route.test.mjs` | exit 0 | 26/26 pass — phase-named execute route, untouched-log P1, fail-closed no-phase | pi (opus, unit-lane) |
+| AC4 (one-source) | `node --test scripts/phase-lint.test.mjs` | exit 0 | 151/151 pass — `parseUnitDocPhases` exported, parser unchanged | pi (opus, unit-lane) |
+| AC3 (sandbox mirrors) | `node --test scripts/workflow-status-sensor.test.mjs scripts/review-loop-discipline.test.mjs scripts/normative-drift.test.mjs scripts/lane-era-lineage.test.mjs scripts/catalog.test.mjs` | exit 0 | 67 + 1 + 18 + 34 pass — sandboxes mirror the router's new `phase-lint` import | pi (opus, unit-lane) |
 
 ## Progress log
 
-- 2026-10-15 23:15 — P1 — triage emits per-step `budget_tier` from `catalog.json` (one source), aggregate derived, `implement` flipped cheap per D1 → see commit — next: the execute-route phase hand-off
+- 2026-10-15 23:15 — P1 — triage emits per-step `budget_tier` from `catalog.json` (one source), aggregate derived, `implement` flipped cheap per D1 → 4b587661 — next: the execute-route phase hand-off
+- 2026-10-15 23:15 — P2 — execute route hands off one phase + the execution tier, fail-closed on a phaseless Tasks section; `parseUnitDocPhases` exported as the one phase parser; sandbox mirrors carry the router's new import → see commit — next: the lane's per-phase hand-off contract in the skill text
 
 ## Next
 
