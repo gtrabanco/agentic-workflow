@@ -1,0 +1,359 @@
+# 72 — pi-100-compat-guard
+
+> One-line: re-verify the pi 1.0.0 compatibility baseline, add a PR-time two-leg
+> pi drift guard, refresh the package's verification records (issue #283), and —
+> scope extensions 2026-10-12 (pi 1.1.0) — adopt `agent_settled.aborted` — and
+> 2026-10-14 (pi 1.2.0) — re-verify the two-leg type-check and pin the widened
+> busy window.
+
+## Objective
+
+Close the three compatibility-verification gaps the 2026-10-02 audit of
+`@gtrabanco/pi-agentic-workflow` found after pi 1.0.0 shipped: a stale README
+baseline, no PR-time type-check of the package, and a frozen lockfile that pins
+the peer to 0.99.1. The code is compatible as-is (COMPAT-OK) — this unit fixes
+the *verification* so future pi API drift cannot reach or hide from us.
+
+## Why
+
+pi 1.0.0 shipped 2026-10-01 (changelog range audited: 0.87.0 → 1.0.0). The
+package's `tsc` only runs inside `publish-pi-package.yml` — post-merge, only
+when the version differs from the registry — and even then against the
+lockfile's pi 0.99.1, so it can never see a newer pi. The audit's temp-copy
+type-check against pi 1.0.0 was clean; nothing records or re-runs it.
+
+## User outcome
+
+A contributor whose change breaks against the pi peer floor or against latest
+pi sees the PR fail with the offending leg named, before merge. The README
+states the verified pi version at a glance. The issue carries the verbatim
+re-verification evidence and a one-command dev-hygiene refresh.
+
+**Scope extension (2026-10-12, pi 1.1.0):** the pi 1.1 changelog sweep found no
+breaking change (COMPAT-OK re-confirmed) and one additive surface the package
+can put to work: `agent_settled` now carries `aborted`, distinguishing a
+cancelled run from a finished one. The unit folds that adoption in as AC6/AC7
+(P6/P7) so the open PR ships it instead of leaving it as follow-up drift.
+
+**Scope extension (2026-10-14, pi 1.2.0):** the pi 1.2 changelog sweep found one
+behavior change that widens the busy window — `ctx.isIdle()` returns false earlier
+(while a run starts, including during `before_agent_start` handlers) and
+`sendUserMessage()` now requires `deliverAs` during a starting run. The package's
+dispatch guard (`dispatch.ts` busy check) and its `sendUserMessage` call are the
+affected surfaces, and both already handle the wider window correctly (COMPAT-OK).
+`BeforeAgentStartEvent.messageType` became a union, but the package does not use
+`before_agent_start` (grep-verified). No other breaking change touches the
+package's API inventory. AC8 re-verifies two-leg `tsc --noEmit`; AC9 adds tests
+that pin the busy-refusal behavior and the dispatch-failed rollback.
+
+## Acceptance criteria
+
+From issue #283 (its own ACs, not induced — verbatim intent, exact versions
+re-based where the repo moved on, see Known pre-existing issues):
+
+1. **AC1 — Re-verification recorded.** The audit's temp-copy type-check is
+   re-run in-repo against pi 1.0.0 and its commands + verbatim result are
+   pasted as a comment on issue #283 (evidence, not assertion).
+2. **AC2 — PR-time drift guard.** A PR-triggered job (in `root-suite.yml`)
+   type-checks `packages/pi-agentic-workflow` against two pi legs: (a) the peer
+   floor `0.99.1`, (b) `latest` (currently 1.0.0). Any type error fails the PR.
+   The pi install for both legs happens outside the lockfile path — temp copy +
+   `npm install --no-save --no-package-lock`; no npm lockfile may appear under
+   `packages/` (`test/lockfile-policy.test.mjs` fails the suite on it).
+3. **AC3 — README baseline updated.** `packages/pi-agentic-workflow/README.md`
+   Notes show the verified version `Pi 1.0.0 (2026-10-02)` and the peer floor
+   `0.99.1` at one glance (0.99.1 line kept as history).
+4. **AC4 — Dev hygiene documented.** One command sequence that refreshes the
+   package's stale `node_modules` to the lockfile floor without touching
+   `bun.lock`, posted as a comment on issue #283.
+5. **AC5 — Version discipline.** `package.json` patch bump + `CHANGELOG.md`
+   row in the same PR (repo rule: touched package ⇒ same-PR bump + row). No
+   `bump-skill` (no `SKILL.md` touched). The changelog row text covers the
+   scope extension too (the PR is unmerged; the single 0.19.1 bump absorbs it).
+6. **AC6 — pi 1.1.0 compat re-verified.** The two-leg guard run re-executed
+   with the `latest` leg resolving to pi 1.1.0, clean; the README Notes
+   baseline is updated to `Pi 1.1.0` with the verification date.
+7. **AC7 — Aborted-settle handling.** When pi reports `agent_settled` with
+   `aborted: true`, the extension closes the routed turn (state cleared,
+   latches released) **without restoring the snapshot** — an interrupted turn
+   must not silently swap the session model underneath the operator, matching
+   the backing-off stance already taken for an operator mid-turn change. The
+   dirty-worktree warning still runs on abort (an aborted run is exactly when
+   half-applied edits can be left behind). Non-aborted settle behavior is
+   byte-for-byte unchanged. Tests are written first (fakes in the
+   `restore-after-settle` / `shipped-adapter` style) and pin: no
+   `setModel`/`setThinkingLevel` calls on abort, turn state cleared, warning
+   emitted on dirty tree, and the unchanged non-aborted path.
+8. **AC8 — pi 1.2.0 compat re-verified.** Two-leg `tsc --noEmit` re-executed
+   against the `latest` dist-tag (resolves to pi 1.2.0, clean); peer floor leg
+   (0.99.1) via the lockfile-pinned `node_modules` also clean; README baseline
+   updated to `Pi 1.2.0` with verification date.
+9. **AC9 — busy-window semantics pinned.** `sendUserMessage` that throws after
+   the `isIdle()` check passes rolls back the routing entirely (no half-applied
+   model/thinking change, latch released); the `busy` refusal path is unchanged
+   (1.2.0 merely widens the window, the refusal text/behavior stay identical).
+   Tests written first in the style of the existing dispatch-failing tests.
+
+### Design closure
+
+- Entity closure: `pi-compat-guard` job (runs the two-leg type-check on every
+  PR and push); README Notes (the at-a-glance verified-version record); issue
+  #283 comments (the AC1 evidence + AC4 hygiene record); package version +
+  changelog row (the same-PR release record). Scope extension adds: the
+  settle-path aborted flag (extension handler → `settle()`), the AC7 test
+  fakes, and the 1.1.0 baseline refresh (AC6). Nothing else in the unit changes.
+- Role closure: PR contributor (sees the red guard with the offending leg
+  named), CI runner (executes the job on PR + main + dispatch), package
+  consumer (reads the README baseline), issue reader (reproduces AC1/AC4 from
+  the posted comments).
+- Expectation sweep: a type error in either leg fails the PR; a clean run
+  passes both legs; an npm lockfile appearing under `packages/` is rejected by
+  `test/lockfile-policy.test.mjs` regardless of the guard; the `latest` leg
+  tracking the dist-tag is accepted behaviour (the tripwire), not drift.
+
+### Prior-decisions contradiction sweep
+
+Candidate sources checked 2026-10-07: `docs/workflow/WORKFLOW_INVARIANTS.md`,
+`docs/workflow/REPOSITORY_STATE.md` (W001 — pi package, compatible),
+`AGENTS.md`, `docs/features/27-pi-agentic-workflow/decisions.md`,
+`docs/features/65-doc-toolchain/decisions.md`. No unit-specific decisions.md
+exists.
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| guard installs pi via npm in a temp copy | npm lockfiles are banned under `packages/`; bun.lock is the sole lockfile | AGENTS.md (Packages / lockfile policy) | `compatible` (the guard installs `--no-package-lock` outside the tree and O1 verifies it) |
+| same-PR patch bump + changelog row | touched package ⇒ same-PR bump + row | AGENTS.md (Packages / version bumps) | `compatible` (is AC5) |
+| one PR for the whole unit | one PR per unit of work, against `main` | AGENTS.md (Working rules) | `compatible` |
+
+## Non-goals
+
+- ~~No `src/` changes~~ — lifted by the 2026-10-12 scope extension: AC7 touches
+  `src/extension/index.ts` + `src/routing/dispatch.ts` (`settle()` gains an
+  aborted flag; the event handler forwards it). Still no peer-range change:
+  stays `>=0.99.1`.
+- No `skills/` or `template/` changes: the harness/skills sweep found zero
+  references to any changed pi surface (stack-agnostic holds).
+- Not the place for classifier / virtual-model adoption — that stays on the
+  parked JEV-later list (recovery trigger unchanged).
+- Independent of #281 (open package bug — fix separately, do not bundle) and
+  #274 (pi tool-surface feature — rebase note posted there).
+
+## Future cost
+
+- The guard job's floor leg (`0.99.1`) and the package's peer floor must move
+  together — binds whoever bumps the peer range in
+  `packages/pi-agentic-workflow/package.json`.
+- The `latest` leg tracks the npm `latest` dist-tag by design: a future pi
+  breaking release surfaces as a red PR in *this* repo, which is the intended
+  tripwire — binds whoever reacts to the red guard.
+
+## Applicable tests
+
+- `bun run test` in `packages/pi-agentic-workflow` (the suite includes
+  `test/lockfile-policy.test.mjs`, which refuses an npm lockfile under
+  `packages/` — directly relevant to the temp-copy install pattern).
+- The new guard's two-leg `tsc --noEmit` run locally (AC2's validator).
+- Root suites: `node --test scripts/*.test.mjs`.
+
+## Known pre-existing issues
+
+- Issue #283's AC1/AC3 name pi `1.0.0` (the npm `latest` at audit time,
+  2026-10-02); the in-repo re-verification (2026-10-07) resolves `latest` to
+  **pi 1.0.4** and is clean there too, and the 2026-10-12 re-run (P7) resolves
+  it to **pi 1.1.0**, also clean, and the P8 re-run resolves it to **pi 1.2.0**,
+  also clean. Affects the ACs' literals only — the baseline was superseded by
+  AC6/P6 (aborted-settle adoption, 2026-10-12), AC7/P7 (pi 1.1.0
+  re-verification + baselines, 2026-10-12), and AC8/P8 (pi 1.2.0
+  re-verification, 2026-10-14).
+- Issue #283 states the AC5 bump as `0.18.5 → 0.18.6`; the package is at
+  `0.19.0` at execution time (0.19.0 shipped via PR #282 on 2026-10-05).
+  Affects AC5's literals only — the patch-bump rule is applied from the actual
+  version (`0.19.0 → 0.19.1`).
+- Issue #283 states local dev `node_modules` is at 0.85.1; it is already at the
+  lockfile floor 0.99.1 (verified 2026-10-07). Does-not-affect: AC4 still
+  documents the refresh sequence for the next time it drifts.
+
+## Tasks
+
+- P1 — Encode the AC2 guard as a `pi-compat-guard` job in
+  `.github/workflows/root-suite.yml` (the two-leg temp-copy `tsc --noEmit`
+  sequence: see research R1); (validator:
+  `./node_modules/.bin/tsc --noEmit` in a temp copy with pi legs 0.99.1 and latest
+  exits 0).
+  - Relevant files: .github/workflows/root-suite.yml
+- P2 — Update `packages/pi-agentic-workflow/README.md` Notes (validator:
+  `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md`
+  exits 0 and `grep -n "0.99.1" packages/pi-agentic-workflow/README.md` exits 0).
+  The predicate is version-independent so a future baseline bump cannot stale it.
+  - Relevant files: packages/pi-agentic-workflow/README.md
+- P3 — Post AC1 evidence + AC4 dev-hygiene comments on issue #283 (validator:
+  `gh issue view 283 --json comments` exits 0 and the comment count is ≥ 2),
+  expected outcome: ≥ 2 comments.
+  - Relevant files: docs/features/72-pi-100-compat-guard/SPEC.md
+- P4 — Version discipline: `package.json` 0.19.0 → 0.19.1 + `CHANGELOG.md` row
+  (validator: `node --test scripts/normative-drift.test.mjs` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/package.json, CHANGELOG.md
+- P5 — Verification: package suite + root suites green on the full diff
+  (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 and
+  `node --test scripts/*.test.mjs` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/, scripts/
+- P6 — AC7 aborted-settle handling, tests first: add failing fakes for
+  `agent_settled` with `aborted: true` (turn state cleared, no
+  `setModel`/`setThinkingLevel`, dirty-tree warning still emitted), then
+  forward the flag from the handler (`src/extension/index.ts`) into
+  `settle()` (`src/routing/dispatch.ts`) to skip restoration on abort
+  (validator: `bun run test` in `packages/pi-agentic-workflow` exits 0 with
+  the new cases present in `test/restore-after-settle.test.mjs` and
+  `test/shipped-adapter.test.mjs`).
+  - Relevant files: packages/pi-agentic-workflow/src/extension/index.ts,
+    packages/pi-agentic-workflow/src/routing/dispatch.ts,
+    packages/pi-agentic-workflow/test/restore-after-settle.test.mjs,
+    packages/pi-agentic-workflow/test/shipped-adapter.test.mjs
+- P7 — AC6 re-verification against pi 1.1.0 + baselines: re-run the two-leg
+  guard locally (latest leg now resolves 1.1.0), update the README Notes
+  baseline to `Pi 1.1.0` with today's date, and extend the CHANGELOG row text
+  to name the aborted-settle handling (validator: two-leg `tsc --noEmit`
+  exits 0 on both legs and `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+"
+  packages/pi-agentic-workflow/README.md` exits 0).
+  - Relevant files: packages/pi-agentic-workflow/README.md,
+    CHANGELOG.md
+- P8 — AC8 pi 1.2.0 two-leg re-verification: copy the package to a temp dir,
+  install `@earendil-works/pi-coding-agent@latest` outside the lockfile, run
+  `tsc --noEmit` (validator: exit 0 on both legs); record verbatim commands,
+  output, and the resolved version (`npm view @earendil-works/pi-coding-agent
+  version`); if `latest` resolves beyond 1.2.0 pin to `@1.2.0` and note it;
+  clean up the temp dir (validator: no stray files remain). If `tsc` reports
+  NEW errors vs the 1.1.0 run: STOP and report the exact errors.
+  - Relevant files: packages/pi-agentic-workflow/README.md,
+    docs/features/72-pi-100-compat-guard/SPEC.md
+- P9 — AC9 busy-window semantics: add tests in the style of the existing
+  dispatch-failing suite that pin the 1.2.0 busy-window behavior — a
+  `sendUserMessage` throw after the `isIdle()` check passes rolls back the
+  routing entirely (no half-applied model/thinking change, latch released); the
+  `busy` refusal text/behavior is unchanged (validator: `bun run test` in the
+  package exits 0 with the new cases).
+  - Relevant files: packages/pi-agentic-workflow/test/dispatch-refusals.test.mjs,
+    packages/pi-agentic-workflow/test/restore-after-settle.test.mjs
+
+### Planning evidence
+
+| id | claim | source | verified |
+|---|---|---|---|
+| E1 | Audit temp-copy `tsc --noEmit` against pi 1.0.0 was clean | Issue #283 body (audit evidence, 2026-10-02) | re-run in P1 |
+| E2 | `tsc` for this package currently only runs in `publish-pi-package.yml`, against lockfile pi 0.99.1 | `.github/workflows/publish-pi-package.yml`; `packages/pi-agentic-workflow/bun.lock` | 2026-10-07 (read both) |
+| E3 | `root-suite.yml` is PR-triggered and already builds the schema package | `.github/workflows/root-suite.yml` | 2026-10-07 (read) |
+| E4 | `test/lockfile-policy.test.mjs` fails the suite on an npm lockfile | `packages/pi-agentic-workflow/test/lockfile-policy.test.mjs` | 2026-10-07 (read) |
+
+**Research record (R1):** sources inspected 2026-10-07 — issue #283 body
+(audit evidence + ACs), `.github/workflows/root-suite.yml` +
+`publish-pi-package.yml` (where tsc runs today),
+`packages/pi-agentic-workflow/{package.json,tsconfig.json,bun.lock,README.md}`
+(peer floor, compile include, pinned lockfile resolution, stale baseline),
+`packages/agentic-workflow-schema/package.json` (dist entry points for the
+local-resolution question). Stated uncertainties, closed during P1: whether
+npm resolves the package.json deps + pi legs in a bare temp copy with
+`--ignore-scripts` (yes — verified by the local run), and which pi-tui version
+pairs with each leg (`0.99.1` with the floor, `latest` with latest, matching
+the audit's pairing). Evidence row: R1 in Evidence.
+
+### Obligations
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | AGENTS.md (lockfile policy) | No npm lockfile under `packages/` | P1 | P5 | pi-compat-guard job | `test/lockfile-policy.test.mjs` inside package suite | suite output | verified |
+| O2 | AGENTS.md (same-PR bump) | Touched package ⇒ same-PR version bump + changelog row | P4 | P4 | AC5 | `normative-drift.test.mjs` | suite output | verified |
+| O3 | Issue #283 AC2 | Guard installs pi outside the lockfile path | P1 | P1 | pi-compat-guard job | two-leg run output | verbatim output | verified |
+| O4 | AGENTS.md (tests before implementation) | AC7 behavior pinned by failing-first tests before `src/` changes | P6 | P6 | extension + routing settle path | new fakes in restore-after-settle / shipped-adapter suites | suite output with new cases | verified |
+
+## Evidence
+
+> Evidence is verified, not claimed — a reviewer re-runs it.
+
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+| R1 | inspected issue #283 + both workflows + package manifests/lockfile/README | 0 | surfaces mapped: tsc today runs only in publish flow vs lockfile 0.99.1 | pi (opus, unit-lane) |
+| P1 | two-leg temp-copy `tsc --noEmit` (local, exact job commands) | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean | pi (opus, unit-lane) |
+| AC1 | re-verification re-run in-repo; verbatim commands + result pasted on #283 | 0 | leg 0.99.1 clean; leg latest (=pi 1.0.4) clean — [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043115659) | pi (opus, unit-lane) |
+| AC2 | `pi-compat-guard` job encoded in root-suite.yml (line 88); validated locally by the identical two-leg run | 0 / 0 | both legs' `tsc --noEmit` clean; installs `--no-package-lock` outside `packages/` | pi (opus, unit-lane) |
+| AC3 | `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md` | 0 | README:251 reads Pi 1.2.0 (2026-10-14) + floor 0.99.1 (2026-09-29) at one glance; the predicate is version-independent so a baseline bump cannot stale it | pi (opus, unit-lane) |
+| AC4 | dev-hygiene sequence posted on #283 (`rm -rf node_modules && bun install --frozen-lockfile`) | 0 | [comment](https://github.com/gtrabanco/agentic-workflow/issues/283#issuecomment-6043116055) | pi (opus, unit-lane) |
+| AC5 | `node --test scripts/normative-drift.test.mjs`; `grep '"version"' packages/pi-agentic-workflow/package.json` | 0 / 0 | 18 pass / 0 fail; version reads `0.19.1`; changelog row present | pi (opus, unit-lane) |
+| T1 | `bun run test` in packages/pi-agentic-workflow (incl. lockfile-policy) | 0 | 426 pass / 0 fail across 35 files | pi (opus, unit-lane) |
+| T2 | `node --test scripts/*.test.mjs` (root suites) | 0 | 648 pass / 0 fail; one first-run red traced to a stale local schema dist (pre-existing, green after rebuild — not this diff) | pi (opus, unit-lane) |
+| P6 | new AC7 test fakes + adapter abort forward: 431 pass / 0 fail (3 new test files modified + 1 new decisions.md) | 0 | mutation table clean; 4 new AC7 tests (restore-after-settle: 2, shipped-adapter: 2) all pass | pi (opus, unit-lane) |
+| P7 | two-leg `tsc --noEmit` against 0.99.1 and latest (pi 1.1.0); README Notes → Pi 1.1.0 (2026-10-12); CHANGELOG row extended with scope extension text | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.1.0) clean; `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md` exits 0 (baseline at P7: Pi 1.1.0; superseded by P8 → Pi 1.2.0) | pi (opus, unit-lane) |
+| F17–F20 | fold gates: `bun scripts/phase-lint.mjs docs/features/72-pi-100-compat-guard/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `grep -nE "Also verified against Pi [0-9]+\.[0-9]+\.[0-9]+" packages/pi-agentic-workflow/README.md`; `grep -n "Pi 1.0.4" packages/pi-agentic-workflow/README.md` | 0 / 0 / 0 / 1 | phase-lint PASS; LINEAGE OK; the README baseline predicate is version-independent (at the fold: Pi 1.1.0); stale `Pi 1.0.4` literal gone; scope-extension dates agree with commits d7942d98/95c5c11e (both 2026-10-12) | pi (opus, unit-lane) |
+| F25–F28 | fold gates: `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `bun run test` (package); `node --test scripts/*.test.mjs`; `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `grep -n "1.0.0" packages/pi-agentic-workflow/README.md`; `grep -n "does not restore the snapshot — keep policy" test/restore-after-settle.test.mjs` | 0 / 0 / 0 / 0 / 0 / 0 / 1 / 1 | provenance CHECK PASS (F18/VF-16 pipes escaped, F7/F8→b3295209, F22–F24→cfe3c114); phase-lint PASS 7/7; LINEAGE OK (4); package 431/0; root 648/0; guard 55 lines / 4 files (at fold 9f3a694b); stale `1.0.0` leg literal gone (README:252 now names legs `0.99.1` + `latest`→1.1.0); keep-policy test renamed to state only the latch-release claim | pi (opus, unit-lane) |
+| F29–F30 | fold gates: `bun scripts/diff-guard.mjs --base cfe3c114 --unit 72`; `bun scripts/diff-guard.mjs --base 399aec74 --unit 72`; `git diff --numstat cfe3c114 9f3a694b`; `bun scripts/phase-lint.mjs …/SPEC.md`; `bun scripts/unit-lineage.mjs --unit 72-pi-100-compat-guard`; `node scripts/ledger-provenance.mjs …/review-findings.md --check`; `node --test scripts/normative-drift.test.mjs`; `node --test scripts/*.test.mjs`; `bun run test` (package) | 0 × 7 | guard 88 lines / 4 files (at fold 588f825a) and 30 lines / 2 files vs 399aec74; numstat cfe3c114→9f3a694b = 4 files / 55 lines (the re-cut F25–F28 receipt now reproduces); phase-lint PASS 7/7; LINEAGE OK (4); provenance CHECK PASS; drift 18/0; root 648/0; package 431/0 | pi (opus, unit-lane) |
+| P8 | two-leg `tsc --noEmit` against 0.99.1 (peer-floor leg via lockfile-pinned node_modules) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up | 0 / 0 | leg 0.99.1 clean; leg latest (=pi 1.2.0) clean; COMPAT-OK | pi (opus, unit-lane) |
+| P9 | AC9 rollback pinned by the restore-after-settle dispatch-failed case (1 new test); the AC12 busy refusal gained the `is busy`/`idle` message assertions: 432 pass / 0 fail | 0 | busy refusal contract unchanged (message pinned in AC12); a `sendUserMessage` throw after the `isIdle` check rolls back fully (model/thinking restored, latch released) | pi (opus, unit-lane) |
+
+## Triaged steps
+
+```text
+TRIAGE — 72-pi-100-compat-guard (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs
+Skipped: release: small scope
+Budget: strong
+```
+
+Run 2026-10-07 via `bun scripts/unit-route.mjs --triage 72-pi-100-compat-guard`.
+This block is authoritative — the model never re-derives, reorders, or invents
+steps.
+
+## Progress log
+
+2026-10-07 17:20 — research+design+plan records written (R1 row, design closure, prior-decisions sweep clean) → commit 220d880d — next: P1 implement
+2026-10-07 17:35 — P1: `pi-compat-guard` job encoded in root-suite.yml; two-leg local run green (0.99.1 + latest=1.0.4) → commit d5a80aad — next: P2 README baseline
+2026-10-07 17:40 — P2: README Notes baseline updated (1.0.4 verified + 0.99.1 floor at one glance) → commit 930372a3 — next: P3 issue evidence comments
+2026-10-07 17:50 — P3: AC1 re-verification + AC4 hygiene comments posted on #283 → commit 13ecdb65 — next: P4 version bump + changelog
+2026-10-07 18:00 — P4: package.json 0.19.0→0.19.1 + CHANGELOG row; normative-drift green → commit 2ed7b482 — next: P5 full verification
+2026-10-07 18:20 — P5 (tests step): package suite 426 pass / 0 fail; root suites 648 pass / 0 fail (one red first traced to a stale local schema dist, pre-existing; green after rebuild) → commit d5f52b55 — next: evidence + review
+2026-10-07 18:35 — evidence + review steps (verdict PASS, 0 material findings); obligations verified; PR #290 opened, roadmap row 72 → done · #290 → commit recorded in the merge — next: owner merge
+2026-10-12 (late) — scope extension (pi 1.1.0 sweep): COMPAT-OK re-confirmed; AC6/AC7 added (P6 aborted-settle adoption, P7 1.1.0 re-verification + baselines); `src/` non-goal lifted; research via subagent (nan/qwen3.6) mapped the settle surface (index.ts:313 handler, dispatch.ts:93 restore, tests: restore-after-settle / on-settle-keep / shipped-adapter / receipt-guard) — next: P6 tests-first
+2026-10-12 (P6) — aborted-settle handling: AC7 test fakes in restore-after-settle (2 tests) + shipped-adapter (2 tests) + mutation-table update; forward `event.aborted` from handler into `settle(ctx, aborted)`; all 431 tests pass including mutation table → commit d7942d98 — next: P7 AC6 re-verification + baselines
+2026-10-12 (P7) — AC6 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 and latest (pi 1.1.0); README Notes baseline updated to Pi 1.1.0 (2026-10-12); CHANGELOG 0.19.1 row extended to cover scope extension (aborted-settle handling); normative-drift green, package suite + root suites green → commit 95c5c11e — next: evidence row update + full verification
+2026-10-12 17:13 (fold F17–F20, replan route) — plan-artifact repairs only: F17 Known-issues version/date pair re-cut (1.0.4 → 2026-10-07 run, 1.1.0 → 2026-10-12 run); F18 verdict evidence clause re-cut to the AC6/AC7 diff lines + 2026-10-12 re-check date; F19 scope-extension dates 2026-10-07→2026-10-12 (SPEC ×3 + decisions.md ×4); F20 P2 validator repointed at `Pi 1.1.0`; phase-lint + lineage + validator greps green — next: ledger fold marks → commit
+2026-10-12 22:17 (fold F21, replan route) — Review verdict evidence clause re-bound to the ledger's REVIEW-RAN/GATE-RAN marks (head-SHA embedding behind the F14 → F18 → F21 recurrences removed as a class; no re-cut to yet another SHA); folded list extended to F21; F1 note repointed at the settled PR head. POLICY §4: no review-change repeat on this plan-rooted finding — next: gates → ledger fold marks → commit
+2026-10-12 22:30 (fold F21 close-out) — ledger F21 flipped folded:yes (fold 4eb18169), REVIEW-RAN/GATE-RAN marks appended at HEAD 4eb18169 (phase-lint PASS 7/7, lineage OK obligations 4, normative-drift 0, root suites 648/0, package suite 431/0, diff-guard 34 lines / 2 files); residual "on this HEAD" wording in the Findings clause repointed at the settled PR head (ae4f59b0). F1 is the only open row — next: owner decision — /review-change on the settled head or /audit-pr
+2026-10-14 08:22 (fold F25–F28, cycle 9) — F25: keep-policy abort test renamed to "releases the latch — keep policy" and its comment re-cut to the observable claim (guard-absence unobservable on the keep path; the restore-policy case pins the guard); F26: ledger provenance repaired (F18/VF-16 pipes escaped, F7/F8 re-cited b3295209, F22–F24 re-cited cfe3c114 → CHECK PASS); F27: README:252 names the actual legs (`0.99.1` + `latest`→1.1.0), `1.0.0` literal gone; F28: verdict folded list extended through F28 — all gates green (provenance 0, phase-lint 7/7, lineage 4, package 431/0, root 648/0, diff-guard 55/4) → fold 9f3a694b — next: marks + close-out commit
+2026-10-14 15:51 (fold F29+F30, cycle 10 replan route) — F29: the three diff-guard receipts re-cut to the value the command prints at the cited head (55 lines / 4 files at fold 9f3a694b — `git diff --numstat cfe3c114 9f3a694b` → 4 files / 55 lines; the recorded 61/5 matched no state); F30: the cycle-6 GATE-RAN binding sentence cut from the Review verdict (a binding any later appended mark invalidates — cut, not re-cut, per the finding's route); verdict folded list extended through F30 — all gates green (phase-lint 7/7, lineage 4, provenance 0, drift 18/0, root 648/0, package 431/0, guard 88/4 vs cfe3c114) → fold 588f825a — next: F1 is the only open row (owner: /review-change on the settled PR head) → /audit-pr
+2026-10-14 (P8) — AC8 pi 1.2.0 re-verification: two-leg `tsc --noEmit` clean on both 0.99.1 (peer-floor leg) and latest (pi 1.2.0); `npm view @earendil-works/pi-coding-agent version` → 1.2.0; temp dir cleaned up; COMPAT-OK — next: P9 busy-window tests
+2026-10-14 (P9) — AC9 busy-window semantics: 3 new tests added (dispatch-refusals: 2, restore-after-settle: 1); package suite 434 pass / 0 fail (up from 431); README baseline updated to Pi 1.2.0 (2026-10-14) — next: commits + final verification
+2026-10-14 (fold F31–F35 + F1, cycle 13) — root-cause fold: F31 dropped the invalid ` (Evidence rows)` suffix from P8's `Relevant files:` (phase-lint back to PASS 9/9); F32 made the README baseline predicate version-independent across P2/P7's validators and the AC3/P7/F17–F20 evidence rows (the literal-bound class removed at the mechanism, not the instance); F33 extended the CHANGELOG `0.19.1` row to the 1.2.0 baseline; F34 replaced the `## Review verdict` count/SHA/folded-list fields with ledger-derived statements; F35 removed the message-substring-only AC9 detector (the pre-existing restore suites already fail under the rollback ablation); the pi 1.2.0 extension dates read 2026-10-14 (commit evidence); F1 folds on the settled head this fold produces — gates: phase-lint PASS 9/9, lineage OK (4), provenance CHECK PASS, root 648/0, package 434/0, diff-guard 114/7 vs base 221ecd14 → fold fd861e4d — next: re-review → receipt → /audit-pr
+2026-10-14 (fold F36, cycle 13 re-review) — F36: the `## Review verdict` token restored to the closed set (`REVIEW-VERDICT: PASS`) while keeping the ledger-derived bullets; the re-review's duplicate-detector minors folded (the dispatch-refusals AC9 busy case removed — its two message assertions moved into the AC12 busy case — and the AC9 rollback duplicate removed, the restore suites already fail under the rollback ablation); P9 Evidence re-cut to the de-duplicated set (432 pass) — gates: phase-lint PASS 9/9, lineage OK (4), provenance CHECK PASS, root 648/0, package 432/0 → fold 6bafd0f3 — next: final verify → receipt → /audit-pr
+
+## Next
+
+PR [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) opened against `main` (`Closes #283`); the merge is the owner's.
+
+## Review verdict
+
+```text
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 2 report-notes — the open list is `review-findings.md`
+  (recomputed by `scripts/ledger-provenance.mjs --check`; `scripts/unit-route.mjs`
+  reports `open-rows: 0`).
+- Evidence reproduced: yes — the ledger's REVIEW-RAN rows name the reviewed
+  head per cycle and its GATE-RAN rows name each command with its exit code;
+  no head SHA or command count is embedded here (embedding one made F14 → F18 →
+  F21 → F30 recur).
+- AC integrity: AC1–AC9 — AC1–AC5 from triage; AC6/AC7 added by the
+  2026-10-12 (pi 1.1.0) scope extension; AC8/AC9 added by the 2026-10-14
+  (pi 1.2.0) scope extension.
+```
+
+Report-notes (non-blocking):
+1. The `latest` leg resolves at run time, so the guard's PR results are not
+   pinned/reproducible byte-wise — accepted by AC2's design (the tripwire IS
+   the dist-tag).
+2. On the dev machine `/tmp` is a small tmpfs that pi 1.0.4's dependency tree
+   does not fit; the local re-verification ran its temp copy under
+   `$HOME/.cache` (noted on the issue; the CI job keeps `mktemp -d` — GitHub
+   runners are unconstrained).
+
+## References
+
+- Issue [#283](https://github.com/gtrabanco/agentic-workflow/issues/283) (this PR closes it via `Closes #283`).
+- Sequencing precondition: PR [#282](https://github.com/gtrabanco/agentic-workflow/pull/282) merged 2026-10-05 — satisfied.
+- Roadmap row 72 in `docs/features/ROADMAP.md`.

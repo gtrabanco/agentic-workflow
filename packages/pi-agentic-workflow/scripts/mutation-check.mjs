@@ -35,7 +35,7 @@ export const MUTANTS = [
   { file: "src/config/load.ts", from: 'const projectFile = projectTrusted ? loadScope("project", paths.project, readFile, problems) : {};', to: 'const projectFile = loadScope("project", paths.project, readFile, problems);', suite: "untrusted-project-config", rule: "AC13 untrusted project never read" },
   { file: "src/routing/catalogue.ts", from: 'meta.userInvocable = value === "true";', to: 'meta.userInvocable = value !== "false";', suite: "alias-coverage", rule: "F8 a command needs an explicit true" },
   { file: "src/extension/index.ts", from: 'pi.on("model_select", (event) => router.noteModelSelect(event.model));', to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter wires model_select" },
-  { file: "src/extension/index.ts", from: "void router.settle(toInvocationContext(ctx));", to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter settles" },
+  { file: "src/extension/index.ts", from: "const aborted = (event as unknown as Record<string, unknown>)?.aborted === true;\n    void router.settle(toInvocationContext(ctx), aborted);", to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter settles" },
   { file: "src/extension/index.ts", from: 'pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));', to: "void router;", suite: "shipped-adapter", rule: "N-1 the adapter wires thinking_level_select" },
   { file: "src/extension/index.ts", from: "isProjectTrusted: () => ctx.isProjectTrusted(),", to: "isProjectTrusted: () => true,", suite: "shipped-adapter", rule: "N-1 trust comes from Pi" },
   { file: "src/extension/index.ts", from: "    cwd: ctx.cwd,", to: "    cwd: process.cwd(),", suite: "shipped-adapter", rule: "N-1 the project file comes from Pi's cwd" },
@@ -59,6 +59,10 @@ export const MUTANTS = [
   // Keep-on-settle (0.9.0 / onSettle): the shipped policy leaves the routed model
   // in the window instead of restoring it. The suite is `on-settle-keep`.
   { file: "src/routing/dispatch.ts", from: "if (turn.settlePolicy === \"keep\") return;", to: "if (turn.settlePolicy === \"keep\") await restore(turn, surface(ctx), ctx, \"finished\");", suite: "on-settle-keep", rule: "keep leaves the routed model in the window" },
+  // F22 (fold cycle 8): the abort return must stay BELOW the latch-clear so
+  // an aborted turn releases the latch before exiting — if it's above, the
+  // latch stays held and every later dispatch is refused (AC7).
+  { file: "src/routing/dispatch.ts", from: "pending = undefined;\n      // `aborted`: pi 1.1.0 added `agent_settled.aborted` to distinguish a\n      // cancelled run from a finished one. An aborted turn is cleared without\n      // restoring the snapshot — an interrupted run must not silently swap the\n      // session model underneath the operator, matching the backing-off stance\n      // for an operator mid-turn change (AC7, pi 1.1.0 scope extension).\n      if (aborted) return;", to: "// `aborted`: pi 1.1.0 added `agent_settled.aborted` to distinguish a\n      // cancelled run from a finished one. An aborted turn is cleared without\n      // restoring the snapshot — an interrupted run must not silently swap the\n      // session model underneath the operator, matching the backing-off stance\n      // for an operator mid-turn change (AC7, pi 1.1.0 scope extension).\n      if (aborted) return;\n      pending = undefined;", suite: "restore-after-settle", rule: "F22 abort must not clear the latch before returning" },
   { file: "src/settings/console.ts", from: "if (draft.onSettle) file.onSettle = draft.onSettle;", to: 'if (draft.onSettle && draft.onSettle !== "keep") file.onSettle = draft.onSettle;', suite: "settings-console", rule: "F4 an explicit keep onSettle is saved" },
 ];
 

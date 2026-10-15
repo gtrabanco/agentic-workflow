@@ -24,6 +24,8 @@ function assertUntouched(session) {
   assert.deepEqual(session.log.setThinkingLevel, [], "no thinking level was set");
 }
 
+// Also owns the AC9 message contract: the folded AC9 busy case's `is busy`/`idle`
+// assertions live here.
 test("AC12: a busy agent is refused before anything happens", async () => {
   const session = createSession({ config: configFor({ commands: routedCommands }), models: AVAILABLE, idle: false });
   const outcome = await session.dispatch(COMMAND, "27-pi-agentic-workflow", { isIdle: () => false });
@@ -31,7 +33,9 @@ test("AC12: a busy agent is refused before anything happens", async () => {
   assert.equal(outcome.status, "refused");
   assert.equal(outcome.reason, "busy");
   assert.match(outcome.message, /busy/u);
+  assert.match(outcome.message, /is busy/u, "the refusal names the agent");
   assert.match(outcome.message, /\/plan-feature/u);
+  assert.match(outcome.message, /idle/u, "the refusal advises idle");
   assertUntouched(session);
 });
 

@@ -56,6 +56,14 @@
       "sessions": 46,
       "memories": 24,
       "prompts": 97
+    },
+    {
+      "id": "7e6ff539",
+      "created_by": "agent",
+      "created_at": "2026-10-12T13:09:47.685244676Z",
+      "sessions": 21,
+      "memories": 12,
+      "prompts": 24
     }
   ]
 }
