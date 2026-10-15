@@ -121,7 +121,7 @@ none
 - P1 — unit-route triage emits each step's `budget_tier` from `scripts/catalog.json` and derives the aggregate from those tiers (hardcoded rule deleted), flipping the `implement` step's tier to `cheap` per decision D1 (validator: `node --test scripts/unit-route.test.mjs scripts/catalog.test.mjs` exits 0)
   - Relevant files: scripts/unit-route.mjs, scripts/catalog.json, scripts/unit-route.test.mjs, scripts/catalog.test.mjs
 - P2 — unit-route's execute route prints `/execute-phase <slug|fix> P<k> (tier: <execution-tier>)` with the first unfinished phase derived from the unit doc, never the bare whole-unit command (validator: `node --test scripts/unit-route.test.mjs` exits 0)
-  - Relevant files: scripts/unit-route.mjs, scripts/unit-route.test.mjs
+  - Relevant files: scripts/unit-route.mjs, scripts/phase-lint.mjs, scripts/unit-route.test.mjs
 - P3 — `unit-lane` SKILL.md + references carry the per-phase hand-off contract at execution boundaries and the close-out ladder with the receipt stage and the `/audit-pr` terminal stage (validator: `bun scripts/check-skill-context.mjs --routes` exits 0)
   - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/
 - P4 — `execute-phase` SKILL.md closing hand-off names the next single phase and the tier, resumes the lane after the last phase, and requires the Progress entry to name the phase id; relationship section aligned with the lane (validator: `bun scripts/check-skill-context.mjs --routes` exits 0)
