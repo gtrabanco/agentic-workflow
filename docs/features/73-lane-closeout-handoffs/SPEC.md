@@ -173,11 +173,15 @@ Budget: strong
 | AC3 | `node --test scripts/unit-route.test.mjs` | exit 0 | 26/26 pass — phase-named execute route, untouched-log P1, fail-closed no-phase | pi (opus, unit-lane) |
 | AC4 (one-source) | `node --test scripts/phase-lint.test.mjs` | exit 0 | 151/151 pass — `parseUnitDocPhases` exported, parser unchanged | pi (opus, unit-lane) |
 | AC3 (sandbox mirrors) | `node --test scripts/workflow-status-sensor.test.mjs scripts/review-loop-discipline.test.mjs scripts/normative-drift.test.mjs scripts/lane-era-lineage.test.mjs scripts/catalog.test.mjs` | exit 0 | 67 + 1 + 18 + 34 pass — sandboxes mirror the router's new `phase-lint` import | pi (opus, unit-lane) |
+| AC3/AC4 (skill contract) | `bun scripts/check-skill-context.mjs --routes` | exit 0 | PASS route budgets: 14 routes | pi (opus, unit-lane) |
+| AC1/AC2/AC3 (skill contract) | `node --test scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs scripts/continuation-discipline.test.mjs scripts/review-loop-discipline.test.mjs scripts/pre-execution-quality.test.mjs` | exit 0 | 7 + 24 pass — closing-hand-off grammar, receipt ladder, per-phase hand-off wording conform | pi (opus, unit-lane) |
 
 ## Progress log
 
 - 2026-10-15 23:15 — P1 — triage emits per-step `budget_tier` from `catalog.json` (one source), aggregate derived, `implement` flipped cheap per D1 → 4b587661 — next: the execute-route phase hand-off
-- 2026-10-15 23:15 — P2 — execute route hands off one phase + the execution tier, fail-closed on a phaseless Tasks section; `parseUnitDocPhases` exported as the one phase parser; sandbox mirrors carry the router's new import → see commit — next: the lane's per-phase hand-off contract in the skill text
+- 2026-10-15 23:15 — P2 — execute route hands off one phase + the execution tier, fail-closed on a phaseless Tasks section; `parseUnitDocPhases` exported as the one phase parser; sandbox mirrors carry the router's new import → d5a0f3e5 — next: the lane's per-phase hand-off contract in the skill text
+- 2026-10-15 23:20 — diff-guard (base 9e5aba25 → d5a0f3e5): `Lines: 235 · Files: 13 > 8` — **BREACH on file count, exception recorded**: honest split attempted (P1 and P2 are separate scoped commits); the 13 files are 2 source + 3 test (red-first pins + 2 sandbox mirrors of the router's new import) + 4 fixtures the red tests require + 2 unit-doc bookkeeping files; lines are under budget and no test, doc or fixture may be deleted to shrink the count (anti-gaming rule) — next: P3 skill wording
+- 2026-10-15 23:30 — P3 — lane skill carries the per-phase hand-off contract (execution steps never inline, one `P<k>` + tier per hand-off), the close-out ladder with the receipt stage, and `/audit-pr` as the terminal gate → see commit — next: execute-phase's mirror contract
 
 ## Next
 
