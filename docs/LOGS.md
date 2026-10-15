@@ -2797,3 +2797,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr 290 (unit 72 pi-100-compat-guard): BLOCKED — absent review receipt + missing pre-execution lineage. F1: no `review-change:pass sha=...` marker on PR #290 (zero comments, zero reviews). F2: no pre-execution snapshot receipts (`pre-execution-snapshot.mjs verify --stage spec` → `missing-receipt-snapshot`; plan stage → legacy adoption state). Persisted to `docs/features/72-pi-100-compat-guard/review-findings.md`, committed locally `285192ff` (not pushed).
 - **Decisions:** Unit 72 SPEC names closure as `### Design closure` (SPEC:53) but audit-pr mechanical detector greps `Capability closure` — fires non-blocking design-debt warning. Same pattern as units 61,63,64,65,69,71.
 - **Next:** unit 72 already merged and cycle 15 /unit-lane repaired the lineage (F2). F1 is paper-trail only — unit 72 merged, `/review-change` marker would be cosmetic.
+
+## 2026-10-15T22:18:03Z — feat/73-lane-closeout-handoffs — manual
+- **Commits:** 2 (`22e96166…2a9d6daa`)
+- **Files:** docs/features/73-lane-closeout-handoffs/SPEC.md, docs/features/73-lane-closeout-handoffs/decisions.md, docs/features/ROADMAP.md
+- **Summary:** Audit of pi 1.3.0 changelog vs project roadmap/issues — documented impact in 3 issues (#284, #260, #262); audit of Engram 3.3.2 changelog vs #262 recall discipline rewrite required; all comments posted to GitHub.
+- **Decisions:** Pi 1.3.0 prerequirements for #284 (tools persistence on resume) and #66 (mem tools on resume) are now verified as satisfied; #260 subagent-first codemode hangs blocker is resolved. Engram 3.3.x: mem_current_project replaces the project-resolution part of the health check in #262; recall discipline must be rewritten (omitted selectors now resolve to current project, not global) — documented as comment in #262.
+- **Next:** Update issue #262 body to rewrite the recall discipline per the new Engram scoping contract (omitted selectors → project-scoped, all_projects explicit).
