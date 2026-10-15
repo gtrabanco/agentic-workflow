@@ -430,6 +430,50 @@ test("AC8: the same rule for the console release — undo failure still clears t
   assert.equal(session.router.inFlight(), false, "an undo that fails mid-restore does not wedge the latch");
 });
 
+// --- AC9 (pi 1.2.0 scope extension): sendUserMessage throw after isIdle check ---
+//
+// pi 1.2.0 makes the busy window wider (isIdle returns false while a run
+// starts). A sendUserMessage throw after the isIdle check passed must undo
+// the routing entirely — no half-applied model/thinking change left behind.
+// This extends the existing dispatch-failed test to pin the "no half-applied"
+// behavior explicitly (AC9, pi 1.2.0).
+
+test("AC9 (pi 1.2.0): a sendUserMessage throw after isIdle check leaves no half-applied changes", async () => {
+  // Same pattern as the existing dispatch-failed test, but explicitly pinning
+  // that no model/thinking change survives the rollback (the 1.2.0 concern).
+  const session = createSession({
+    config: restoreConfigFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    sendThrows: true,
+  });
+
+  // Before dispatch: known starting state.
+  const beforeModel = `${session.state.model.provider}/${session.state.model.id}`;
+  const beforeThinking = session.state.thinking;
+
+  const outcome = await session.dispatch(COMMAND, "x");
+
+  assert.equal(outcome.status, "refused");
+  assert.equal(outcome.reason, "dispatch-failed");
+  assert.match(outcome.message, /put back/u);
+
+  // No half-applied state: model and thinking are exactly as before.
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, beforeModel,
+    "model is back to pre-dispatch value");
+  assert.equal(session.state.thinking, beforeThinking,
+    "thinking is back to pre-dispatch value");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is not held");
+  // The rollback applies setModel/setThinkingLevel to restore the snapshot;
+  // the final session state equals the start, which is what matters.
+  assert.equal(session.log.setModel.length, 2,
+    "route setModel + rollback restore setModel (final state = start)");
+  assert.equal(session.log.setThinkingLevel.length, 2,
+    "route setThinkingLevel + rollback restore setThinkingLevel (final state = start)");
+});
+
 test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollback", async () => {
   const session = createSession({
     config: restoreConfigFor({ commands: { "design-feature": { model: "inherit" } } }),
@@ -442,4 +486,62 @@ test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollb
   const outcome = await session.dispatch(COMMAND, "x");
   assert.equal(outcome.reason, "dispatch-failed");
   assert.doesNotMatch(outcome.message, /put back/u, "nothing was moved, so nothing was put back");
+});
+
+// --- AC7 (scope extension, pi 1.1.0): agent_settled.aborted handling ---
+
+test("AC7: a settle with aborted=true does not restore the snapshot — model stays routed", async () => {
+  // An aborted turn must not silently swap the session model underneath the operator.
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "openai/gpt-5.2");
+
+  const beforeSettle = [...session.log.setModel]; // capture route calls
+  await session.settle(true); // aborted
+  assert.equal(session.log.setModel.length, beforeSettle.length,
+    "no additional setModel calls on abort");
+  assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
+    "no restore calls on abort");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is released on abort — later dispatches are not refused");
+});
+
+test("AC7: a settle with aborted=true releases the latch — keep policy", async () => {
+  // `keep` policy is the shipped default. Under keep, settle() returns at the
+  // settlePolicy check regardless of `aborted`, so guard-absence is NOT
+  // observable on this path (the restore-policy abort case above pins the
+  // abort guard itself). This case pins only what the keep path can see: the
+  // latch is released — it does fail under the mutant that returns before
+  // `pending = undefined` (the latch stays held) — and no restore calls are
+  // made.
+  const session = createSession({
+    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" }, onSettle: "keep" }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "max");
+  assert.ok(session.router.inFlight(), "turn is in-flight before settle");
+
+  const beforeSettle = [...session.log.setModel];
+  await session.settle(true); // aborted
+  assert.equal(session.log.setModel.length, beforeSettle.length,
+    "no additional setModel calls on abort");
+  assert.deepEqual(session.log.setThinkingLevel.slice(beforeSettle.length), [],
+    "no restore calls on abort");
+  assert.equal(session.router.inFlight(), false,
+    "the latch is released on abort (keep policy does not prevent latch release)");
+});
+
+test("AC7: a settle without aborted still restores (non-aborted path is unchanged)", async () => {
+  // Verify the non-aborted path is byte-for-byte unchanged: restore still works.
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "max");
+
+  const beforeSettle = [...session.log.setModel];
+  await session.settle(false); // non-aborted
+  assert.ok(session.log.setModel.length > beforeSettle.length, "restore still sends setModel");
 });

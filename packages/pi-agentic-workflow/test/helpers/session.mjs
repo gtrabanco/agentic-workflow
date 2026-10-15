@@ -200,9 +200,9 @@ export function createSession(options = {}) {
       return state.thinking;
     },
     /** Pi `agent_settled`: the routed turn is over; the session is idle again. */
-    async settle() {
+    async settle(aborted = false) {
       state.idle = true;
-      await router.settle(toContext());
+      await router.settle(toContext(), aborted);
     },
     dispatch(command, args = "", contextOverrides = {}) {
       const base = toContext();

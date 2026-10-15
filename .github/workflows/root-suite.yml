@@ -74,3 +74,44 @@ jobs:
 
       - name: Root suites
         run: node --test scripts/*.test.mjs
+
+  # Compatibility guard for @gtrabanco/pi-agentic-workflow (issue #283): the
+  # package's own tsc only runs in publish-pi-package.yml — post-merge, and
+  # against the pi version the frozen bun.lock pins — so a pi API change could
+  # reach main unseen. This job type-checks src/ against TWO pi legs, both
+  # installed OUTSIDE the lockfile path (temp copy + `npm install --no-save
+  # --no-package-lock`; an npm lockfile under packages/ is refused by
+  # test/lockfile-policy.test.mjs): (a) the peer floor 0.99.1 — keep this pin
+  # in lockstep with the peerDependencies floor in
+  # packages/pi-agentic-workflow/package.json; (b) `latest` — the npm dist-tag
+  # by design, so a breaking pi release trips this PR red here first.
+  pi-compat-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Type-check src against the peer floor and latest pi (temp copy, no lockfile)
+        run: |
+          set -euo pipefail
+          for leg in 0.99.1 latest; do
+            tmp="$(mktemp -d)"
+            cp -r packages/pi-agentic-workflow/src "$tmp/src"
+            cp packages/pi-agentic-workflow/tsconfig.json packages/pi-agentic-workflow/package.json "$tmp/"
+            echo "::group::pi leg $leg"
+            (
+              cd "$tmp"
+              npm install --ignore-scripts --no-save --no-package-lock \
+                "@earendil-works/pi-coding-agent@$leg" \
+                "@earendil-works/pi-tui@$leg" >/dev/null
+              ./node_modules/.bin/tsc --noEmit
+            )
+            echo "::endgroup::"
+            rm -rf "$tmp"
+            echo "pi leg $leg: tsc --noEmit clean"
+          done
