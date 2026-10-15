@@ -159,14 +159,20 @@ none
 ```
 TRIAGE — 73 (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
 Skipped: none
 Budget: strong
 ```
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| AC4 (triage half) | `node --test scripts/catalog.test.mjs` | exit 0 | 15/15 pass — tiers match `catalog.json`, `implement: cheap` (D1), aggregate derived | pi (opus, unit-lane) |
+| AC4 (triage half) | `node --test scripts/lane-era-lineage.test.mjs` | exit 0 | 19/19 pass — currency check unaffected by the `Tiers:` line | pi (opus, unit-lane) |
+| AC4 (triage half) | `node --test scripts/unit-route.test.mjs` | exit 1 → 22/26 | 22 pre-existing pass; 4 red are P2's own red-first tests, committed only at P2 | pi (opus, unit-lane) |
 
 ## Progress log
+
+- 2026-10-15 23:15 — P1 — triage emits per-step `budget_tier` from `catalog.json` (one source), aggregate derived, `implement` flipped cheap per D1 → see commit — next: the execute-route phase hand-off
 
 ## Next
 
