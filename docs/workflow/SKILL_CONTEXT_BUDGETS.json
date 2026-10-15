@@ -69,6 +69,10 @@
       }
     },
     "execute-phase": {
+      "mainEstimateMax": 3222,
+      "mainSources": {
+        "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222"
+      },
       "referenceEstimateMax": 3232,
       "referenceSources": {
         "feature 60 P3": "the path-protection checkpoint step in PREFLIGHT.md grew the reference to 2938 est; ceiling re-based to ceil(2938 x 1.10)"
@@ -137,8 +141,9 @@
       },
       "templates": [],
       "routeEstimateMax": 12484,
-      "routeLinesMax": 916,
+      "routeLinesMax": 928,
       "sources": {
+        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at this re-basis; ceiling = ceil(measured x 1.10) = 928",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
@@ -183,8 +188,9 @@
       },
       "templates": [],
       "routeEstimateMax": 12368,
-      "routeLinesMax": 893,
+      "routeLinesMax": 905,
       "sources": {
+        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at this re-basis; ceiling = ceil(measured x 1.10) = 905",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
@@ -250,9 +256,9 @@
       },
       "templates": [],
       "routeEstimateMax": 12282,
-      "routeLinesMax": 873,
+      "routeLinesMax": 878,
       "sources": {
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at this re-basis; ceiling = ceil(measured x 1.10) = 878",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
         "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
       }
