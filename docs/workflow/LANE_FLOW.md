@@ -16,12 +16,20 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
    facts (type, scope, tests) and returns a deterministic ordered step list.
 4. **catalog steps** — the triaged steps run in order (research → design →
    plan → implement → tests → evidence → review → docs → release).
-   Each step is an atomic gate/commit.
+   Judgment steps (research, design, plan, evidence, docs, review) run inline,
+   one atomic gate/commit each; execution steps (implement, tests) hand off to
+   `/execute-phase <NN> P<k> (tier: <tier>)` — one phase per turn, tier from
+   the triage block's `Tiers:` line — and the lane resumes after the last
+   phase.
 5. **evidence** — every acceptance criterion is verified with run output.
    Evidence rows go in the unit doc's Evidence table.
 6. **review** — the review pack composes axes (code, security, perf, …);
    findings are classified (fix-now / replan-in-unit / decision-required).
-7. **merge** — `audit-pr` on the final PR; `workflow-status` reports the lane.
+   At close-out the receipt stage verifies the PR's `review-change:pass`
+   receipt (`review-receipt.mjs verify --pr <N>`): current → `/audit-pr`; else
+   the lane hands off to `/review-change` before the gate is ever named.
+7. **merge** — `audit-pr` on the final PR (the terminal stage; a current
+   review receipt is its precondition); `workflow-status` reports the lane.
 
 ## Triage — what the unit needs and why
 
@@ -49,9 +57,15 @@ Triage output block:
 ```
 TRIAGE — 61-adaptive-unit-lane (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
 Skipped: none
 Budget: strong
 ```
+
+The `Tiers:` line carries each selected step's `budget_tier` from
+`scripts/catalog.json` (one source of truth) and `Budget:` derives from it
+(any strong → strong). The `implement` tier is the execution tier named on
+per-phase hand-offs.
 
 Paste this block **verbatim** into the unit doc's Evidence section header. It is
 the authority — the model never re-derives, reorders, or invents steps.
@@ -161,7 +175,8 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `/unit-lane <NN>` | Lane conductor: triage + steps + doc updates in one document |
 | `/unit-lane <NN> --retriage` | Force re-triage |
 | `/unit-lane "<idea>"` | Create a unit from a raw idea |
-| `/execute-phase <NN> [P<k>]` | Execute one step or all remaining steps |
+| `/execute-phase <NN> P<k>` | Execute one phase (one phase per turn) |
+| `/execute-phase <NN>` | Operator choice only: loop all remaining steps |
 | `/execute-phase <NN> --fix <n>` | Execute a fix unit |
 | `/fold-findings` | Repair persisted fix-now review findings |
 | `/review-change` | Review a change with applicable axes |
@@ -265,6 +280,7 @@ Human text:
 ```
 TRIAGE — <slug> (<type>)
 Steps: <step, step, …>
+Tiers: <step>: <cheap | strong>, …
 Skipped: <step>: <reason>, … | none
 Budget: strong | cheap
 ```
@@ -276,6 +292,7 @@ JSON (`--json`):
   "type": "feature | fix | docs | chore",
   "steps": ["<step>…"],
   "skipped": [{ "step", "reason" }],
+  "tiers": { "<step>": "cheap | strong" },
   "budget": "strong | cheap"
 }
 ```
