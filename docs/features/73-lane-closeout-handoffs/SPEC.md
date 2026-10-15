@@ -179,6 +179,8 @@ Budget: strong
 | AC5 (flow docs) | `node --test scripts/doc-discipline.test.mjs` | exit 0 | 16/16 pass — lifecycle, tiered triage block + JSON shape, per-phase command table | pi (opus, unit-lane) |
 | AC6 (smoke) | golden-fixture weak-model run (nan/qwen3.6, 5 scenarios + re-run) | exact 5/5 · invented none · shape ok | run-log row in GOLDEN_FIXTURE.md; first run caught the last-phase `P<k+1>` defect → wording split into two end-states, re-run exact | pi (opus, unit-lane) |
 | AC5 (versions) | `node --test scripts/*.test.mjs` | exit 0 | 654/654 pass — version rows match frontmatter (rendered-facts gate), run-log grammar, full gate green | pi (opus, unit-lane) |
+| AC5 (packages) | `bun run test` (pi-agentic-workflow / agentic-workflow-schema) | exit 0 | 432 + 717 pass — staged skill mirror parity, envelope schemas untouched | pi (opus, unit-lane) |
+| — (review) | review pack axes over `a308095b..HEAD` (code · security · perf · verify) | exit 0 | see `REVIEW-VERDICT` below; evidence re-run at HEAD | pi (opus, unit-lane) |
 
 ## Progress log
 
@@ -189,6 +191,33 @@ Budget: strong
 - 2026-10-15 23:45 — P4 — execute-phase closing hand-off names the next single phase + tier, resumes the lane after the last phase, whole-unit mode demoted to explicit operator choice, Progress entry names the phase id; context ceilings re-based with declared source (issue #291) → 11f99cea — next: flow docs
 - 2026-10-15 23:55 — P5 — LANE_FLOW.md lifecycle (hand-off steps, receipt stage, terminal gate), tiered triage block + JSON shape, per-phase command table → e242a44b — next: verification + versions
 - 2026-10-16 00:10 — P6 — full gate green (654/654), budgets PASS, golden-fixture smoke run (caught + fixed the last-phase `P<k+1>` defect), bump-skill: unit-lane 1.5.0 + execute-phase 5.1.0, CHANGELOG rows + release-log line, README cells → see commit — next: review + release
+
+### Review verdict (close-out)
+
+```
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 2 report-notes
+- Evidence reproduced: yes (full gate re-run at HEAD: 654/654 + 432 + 717)
+- AC integrity: unchanged from triage
+```
+
+Report-notes (non-blocking):
+1. `unit-lineage.mjs`'s triage-currency check compares only `Steps/Skipped/Budget`
+   — the new `Tiers:` line is not part of the lineage comparison. Intentional
+   scope cut (unit-route/unit-lineage not in the plan's relevant files for that
+   change); re-trigger condition: if a future unit edits `budget_tier` values in
+   `catalog.json`, stale pasted blocks keep passing lineage — wire `Tiers` into
+   `TRIAGE_LINE_NAMES` then.
+2. The diff-guard file-count exception recorded 2026-10-15 23:20 (13 files > 8)
+   stands for this unit: the count is red-first tests' fixtures + sandbox
+   mirrors; lines stayed under budget.
+
+### Receipt stage (close-out ladder)
+
+No PR existed at review time; the release step opens it below. With the PR
+open and no `review-change:pass` receipt yet (the lane's in-doc verdict is not
+the machine receipt), the closing recommendation is `/review-change` —
+`/audit-pr` is not named before its precondition exists.
 
 ## Next
 
