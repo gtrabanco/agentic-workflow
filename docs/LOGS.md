@@ -2714,6 +2714,14 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Final audit-pr run (cycle 14) on the settled PR #290 HEAD (399aec74). Verdict: BLOCKED (1 blocker) — review receipt absent at head (zero PR comments/reviews), `review-receipt.mjs` exits 3. All 13 other gates pass (CI green, tree/branch hygiene, lineage 4/4 obligations, phase-lint 7/7, descope pass, closure design-debt warning only). Unit 72 already merged to main (ac0782df). The F1 blocker is the final review-change that never ran to post a REVIEW-PASS marker at the settled head. audit-pr confirmed the same blocker persists from cycle 13.
 - **Next:** /triage-issue or /workflow-status for the next unit. The F1 audit-pr blocker is now just a paper trail item — unit 72 is merged and complete.
 
+
+## 2026-10-15T20:51:14Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Unit 72 scope extension (pi 1.1.0): P6 aborted-settle handling + P7 AC6 re-verification, plus final fold-findings cycles
+- **Decisions:** P6: settle() gains optional aborted parameter; when true, the turn is cleared without restoring the snapshot — matching the backing-off stance for an operator mid-turn change. P7: README baseline updated to Pi 1.1.0, CHANGELOG row extended.
+- **Next:** Unit 72 is fully done (merged). Next: /workflow-status for what to build next.
+
 ## 2026-10-15T20:49:40Z — main — manual
 - **Commits:** 0
 - **Files:** —
