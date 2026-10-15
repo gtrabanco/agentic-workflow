@@ -2728,3 +2728,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** /review-change on unit 72 pi-compat-guard blocked by workspace-state precondition (branch ahead of remote, 4 unpushed commits; tree clean). No passes ran, no findings table, no ledger write, no verdict. Unit 72 is already merged to main (ac0782df).
 - **Decisions:** The F1 audit-pr blocker on the merged PR #290 is purely paper-trail — unit 72 is complete. No further action on the stale review receipt.
 - **Next:** /triage-issue or /workflow-status for the next unit.
+
+## 2026-10-15T20:53:12Z — main — manual
+- **Commits:** 2 (`e78f27e8…670df4a6`)
+- **Files:** docs/LOGS.md
+- **Summary:** review-change on unit 72: cycle 4 delta re-review (fold diff 60ae862c..f58872cf) returned REVIEW-FAIL with 4 med plan-owned fix-now rows (F17–F20), regressions of folds F13/F14/F15/F12; persisted F17-F20 + marks, committed 92ab117a, pushed. PR #290 merged.
+- **Decisions:** plan-owned findings route to /unit-lane (replan), not /fold-findings: each fold re-derived from pre-move copy so the sweep never closed; review-end turn boundary prohibits auto-invoking /fold-findings or /unit-lane
+- **Next:** /unit-lane 72-pi-100-compat-guard re-cuts the SPEC (Known-issues version/date pair, Review verdict evidence clause, scope-extension dates, P2 validator) against live literals, lane review gates, then /execute-phase 72-pi-100-compateguard
