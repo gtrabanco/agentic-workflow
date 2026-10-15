@@ -2646,13 +2646,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr #290 (unit 72-pi-100-compat-guard) — MERGE-READY, 13/13 gates, receipt current
 - **Next:** merge #290, then /unit-lane 73 or /triage-issue
 
-## 2026-10-15T19:39:51Z — main — manual
-- **Commits:** 1 (`2f8afacf…2f8afacf`)
-- **Files:** docs/LOGS.md
-- **Summary:** Unit 72: final review cycles, all findings folded, PR merged
-- **Decisions:** F1 was a review receipt blocker requiring /review-change to re-run at settled head; F31-F36 were report-notes on verdict count, AC9 dedup, and AC12 ownership — all fixed as repair-in-place plan artifacts. F1+31-35 folded as a single batch (fold fd861e4d), F36 fixed by restoring closed-set verdict token (fold 6bafd0f3). Final cycle 13 re-review confirmed all green. PR #290 merged to main, closes #283.
-- **Next:** /audit-pr ran on settled PR (13/13 gates pass); unit 72 is complete. Next unit on the roadmap.
-
 ## 2026-10-15T19:39:08Z — main — manual
 - **Commits:** 6 (`6e49c065…2f8afacf`) on branch `feat/72-pi-100-compat-guard` (merged to main via PR #290)
 - **Files:** docs/features/72-pi-100-compat-guard/{SPEC.md,review-findings.md,decisions.md}, CHANGELOG.md, packages/pi-agentic-workflow/{README.md,test/dispatch-refusals.test.mjs,test/shipped-adapter.test.mjs}, docs/features/ROADMAP.md (7 files)
@@ -2686,3 +2679,21 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Repair plan-rooted review finding F21 (third recurrence of the F14→F18 head-SHA drift) in unit 72
 - **Decisions:** No more SHA-embedded evidence clauses: the ledger REVIEW-RAN/GATE-RAN marks are the authoritative reviewed head — embedding any SHA in the verdict clause always self-invalidates by the next commit; POLICY §4 blocks repeat review-change on this plan-rooted finding, so the repair landed via the lane (replan-in-unit)
 - **Next:** Owner decides on F1 (review receipt needs /review-change on the settled PR head) or /audit-pr to proceed with merge gate
+
+## 2026-10-15T19:42:01Z — main — manual
+- **Commits:** 3 (`2f8afacf…38e4ba4e`)
+- **Files:** docs/LOGS.md (log entry)
+- **Summary:** Cycle 9-13: review-change → fold-findings loop — F25-F28 found, freeze-batch, unit-lane repair (F28 replan), cycles 10-13, audit-pr MERGE-READY
+- **Decisions:** F28 (SPEC ## Review verdict folded list) is plan-owned: freeze-batch prevents fold of F25-F27; unit-lane handles the plan half. Root cause class: prose statements about machine values (versions, counts, SHAs, folded lists) that become stale on every commit — the same class as F14→F18→F21→F28 across 5 recurrences.
+- **Next:** /unit-lane 73 or /triage-issue
+## 2026-10-15T19:43:29Z — main — manual
+- **Commits:** 4 (`2f8afacf…61e69154`)
+- **Files:** docs/LOGS.md
+- **Summary:** Unit 72 pi-100-compat-guard: completed the full replan-repair loop (cycles 10-13), folded all remaining findings F1+F29+F30+F36, verified the settled PR #290 as MERGE-READY via audit-pr, and merged to main. 10+ fold-findings cycles repaired SPEC drift, ledger provenance, diff-guard receipts, and self-invalidating evidence clauses. Scope extension added pi 1.2.0 compat re-verification and AC8/AC9. Terminal state: PR #290 merged (ac0782df), unit 72 closed, all 36+ review findings folded, package 0.19.1 shipped.
+- **Decisions:** 1) F30 (self-invalidating verdict binding, regression of F21): cut the cycle-6 GATE-RAN binding sentence entirely rather than re-pointing — any later mark invalidates a bound run-set, the F14→F18→F21→F30 recurrence class; 2) F29 (diff-guard receipt mis-transcribed): ground-truthed first (55 lines/4 files at fold head, 61/5 matched no state), re-cut all three recorded occurrences; 3) The replan route's plan-step model is the only effective way to repair these self-referential ledger/SPEC drifts since the review-findings.md is the authority the fold operates against.
+## 2026-10-15T19:43:47Z — main — manual
+- **Commits:** 4 (`2f8afacf…61e69154`)
+- **Files:** docs/LOGS.md
+- **Summary:** unit 72 pi-100-compat-guard: completed and merged (PR #290)
+- **Decisions:** cycle 6 review found SPEC.md ## Review verdict binding evidence to a stale head — classified fix-now (plan-owned); unit-lane repaired the clause; 13 cycles total; audit-pr confirmed MERGE-READY; PR #290 merged on 2026-10-15
+- **Next:** unit 72 ledger close-out; merge any remaining cycles
