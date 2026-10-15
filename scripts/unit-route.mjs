@@ -463,8 +463,19 @@ function triageSteps(catalog, facts) {
     if (applies[step]) steps.push(step);
     else skipped.push({ step, reason: reasons[step] });
   }
-  const budget = steps.some((s) => ["design", "tests", "review"].includes(s)) ? "strong" : "cheap";
-  return { steps, skipped, budget };
+  // #291 AC4: the per-step tiers come from the catalog's own `budget_tier` —
+  // one source of truth — and the aggregate is derived from them, never a
+  // second rule. A selected step without a tier fails closed.
+  const tiers = {};
+  for (const step of steps) {
+    const tier = catalog.catalog[step].budget_tier;
+    if (tier !== "cheap" && tier !== "strong") {
+      triageFail(2, `catalog: step ${step} has no budget_tier (expected cheap or strong)`);
+    }
+    tiers[step] = tier;
+  }
+  const budget = steps.some((step) => tiers[step] === "strong") ? "strong" : "cheap";
+  return { steps, skipped, tiers, budget };
 }
 
 function runTriage(token, { json = false } = {}) {
@@ -498,11 +509,12 @@ function runTriage(token, { json = false } = {}) {
     process.stdout.write(
       `TRIAGE — ${unitLabel} (${facts.type})\n` +
       `Steps: ${result.steps.join(", ")}\n` +
+      `Tiers: ${result.steps.map((step) => `${step}: ${result.tiers[step]}`).join(", ")}\n` +
       `Skipped: ${skippedText}\n` +
       `Budget: ${result.budget}\n`,
     );
   }
-  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, budget: result.budget };
+  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget };
 }
 
 function main(argv) {
