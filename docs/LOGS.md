@@ -2673,3 +2673,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Repair plan-rooted review finding F21 (third recurrence of the F14→F18 head-SHA drift) in unit 72-pi-100-compat-guard — the `## Review verdict` evidence clause embedded `head 60ae862c` which 8 later commits invalidated, and re-cutting to a new SHA (F18 fold) always re-triggered the same drift.
 - **Decisions:** No more SHA-embedded evidence clauses: the ledger REVIEW-RAN/GATE-RAN marks are the authoritative reviewed head — embedding any SHA in the verdict clause always self-invalidates by the next commit; POLICY §4 blocks repeat review-change on this plan-rooted finding, so the repair landed via the lane (replan-in-unit). Residual "on this HEAD" in the Findings clause repointed at "the settled PR head" (same drift class).
 - **Next:** Owner decides on F1 (review receipt needs /review-change on the settled PR head) or /audit-pr to proceed with merge gate
+
+## 2026-10-15T19:42:00Z — main — manual
+- **Commits:** 3 (`2f8afacf…38e4ba4e`)
+- **Files:** docs/LOGS.md
+- **Summary:** Cycle 9 fold (F25-F28): keep-policy test claim fix, ledger provenance repair, README legs correction, verdict list closure — all gates green
+- **Decisions:** (1) F25 keep-policy test: renamed to latch-release claim, comment states guard-absence is unobservable on keep path — the restore-policy case alone pins the abort guard
+- **Next:** Unit 72 is complete (PR #290 merged). Next: /triage-issue for the next unit or /workflow-status for what to build.
+## 2026-10-15T19:42:13Z — main — manual
+- **Commits:** 3 (`2f8afacf…38e4ba4e`)
+- **Files:** docs/LOGS.md
+- **Summary:** Repair plan-rooted review finding F21 (third recurrence of the F14→F18 head-SHA drift) in unit 72
+- **Decisions:** No more SHA-embedded evidence clauses: the ledger REVIEW-RAN/GATE-RAN marks are the authoritative reviewed head — embedding any SHA in the verdict clause always self-invalidates by the next commit; POLICY §4 blocks repeat review-change on this plan-rooted finding, so the repair landed via the lane (replan-in-unit)
+- **Next:** Owner decides on F1 (review receipt needs /review-change on the settled PR head) or /audit-pr to proceed with merge gate
