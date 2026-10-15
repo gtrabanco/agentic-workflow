@@ -177,6 +177,8 @@ Budget: strong
 | AC1/AC2/AC3 (skill contract) | `node --test scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs scripts/continuation-discipline.test.mjs scripts/review-loop-discipline.test.mjs scripts/pre-execution-quality.test.mjs` | exit 0 | 7 + 24 pass — closing-hand-off grammar, receipt ladder, per-phase hand-off wording conform | pi (opus, unit-lane) |
 | AC3/AC4 (executor contract) | `bun scripts/check-skill-context.mjs && --routes` | exit 0 | PASS 28 skills · PASS 14 routes — execute-phase mirror contract in budget, ceilings re-based with declared source | pi (opus, unit-lane) |
 | AC5 (flow docs) | `node --test scripts/doc-discipline.test.mjs` | exit 0 | 16/16 pass — lifecycle, tiered triage block + JSON shape, per-phase command table | pi (opus, unit-lane) |
+| AC6 (smoke) | golden-fixture weak-model run (nan/qwen3.6, 5 scenarios + re-run) | exact 5/5 · invented none · shape ok | run-log row in GOLDEN_FIXTURE.md; first run caught the last-phase `P<k+1>` defect → wording split into two end-states, re-run exact | pi (opus, unit-lane) |
+| AC5 (versions) | `node --test scripts/*.test.mjs` | exit 0 | 654/654 pass — version rows match frontmatter (rendered-facts gate), run-log grammar, full gate green | pi (opus, unit-lane) |
 
 ## Progress log
 
@@ -185,7 +187,8 @@ Budget: strong
 - 2026-10-15 23:20 — diff-guard (base 9e5aba25 → d5a0f3e5): `Lines: 235 · Files: 13 > 8` — **BREACH on file count, exception recorded**: honest split attempted (P1 and P2 are separate scoped commits); the 13 files are 2 source + 3 test (red-first pins + 2 sandbox mirrors of the router's new import) + 4 fixtures the red tests require + 2 unit-doc bookkeeping files; lines are under budget and no test, doc or fixture may be deleted to shrink the count (anti-gaming rule) — next: P3 skill wording
 - 2026-10-15 23:30 — P3 — lane skill carries the per-phase hand-off contract (execution steps never inline, one `P<k>` + tier per hand-off), the close-out ladder with the receipt stage, and `/audit-pr` as the terminal gate → d235446b — next: execute-phase's mirror contract
 - 2026-10-15 23:45 — P4 — execute-phase closing hand-off names the next single phase + tier, resumes the lane after the last phase, whole-unit mode demoted to explicit operator choice, Progress entry names the phase id; context ceilings re-based with declared source (issue #291) → 11f99cea — next: flow docs
-- 2026-10-15 23:55 — P5 — LANE_FLOW.md lifecycle (hand-off steps, receipt stage, terminal gate), tiered triage block + JSON shape, per-phase command table → see commit — next: verification + versions
+- 2026-10-15 23:55 — P5 — LANE_FLOW.md lifecycle (hand-off steps, receipt stage, terminal gate), tiered triage block + JSON shape, per-phase command table → e242a44b — next: verification + versions
+- 2026-10-16 00:10 — P6 — full gate green (654/654), budgets PASS, golden-fixture smoke run (caught + fixed the last-phase `P<k+1>` defect), bump-skill: unit-lane 1.5.0 + execute-phase 5.1.0, CHANGELOG rows + release-log line, README cells → see commit — next: review + release
 
 ## Next
 

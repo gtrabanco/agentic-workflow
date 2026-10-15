@@ -85,7 +85,7 @@ review the change → audit → merge.**
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute-phase` | With no phase argument, executes **all remaining feature/fix phases** through PR close-out; explicit `P<n>` keeps one-phase atomic mode. Every phase retains its own acceptance-blob check, phase/invariant/dependency gates, tests, docs, and commit. Unit-loop mode uses fresh workers where available, compact receipts otherwise, skips intermediate review stops, and halts on red/no-progress/attempt budget. Discoveries become `Autofix`, `Opportunistic Fix`, or a proposal—never an automatic issue. Each phase's pre-flight runs `bun scripts/phase-lint.mjs <plan>` and pastes its output. |
+| `execute-phase` | Executes **one phase per turn** (`<NN> P<k>`, tier attached) with its own acceptance-blob check, phase/invariant/dependency gates, tests, docs, and commit — the closing hand-off names the next single phase and the catalog tier, and resumes `unit-lane` after the last phase. Looping all remaining phases (`<NN>` with no phase) is an explicit operator choice only. Halts on red/no-progress/attempt budget. Discoveries become `Autofix`, `Opportunistic Fix`, or a proposal—never an automatic issue. Each phase's pre-flight runs `bun scripts/phase-lint.mjs <plan>` and pastes its output. |
 
 ### Review & audit — _change → PR → product_
 
@@ -288,10 +288,12 @@ requires the GLM 5.3 membership — without it, use the basic-plan ladder):
 | **Adversarial review (`review-change --adversarial N` / `--synthesize`)** | `review-change` | glm5.3 × N, High | reviewers never weaker than the model that authored the diff; worked example: a deepseek-v4-flash-authored change → `--adversarial 2` with **mimo-v2.6-flash** + **glm5.3-flash** — two families neither of which is the executor, free decorrelation already sitting in this fleet; the orchestrating/merge conversation runs per the Planning/routing ladder | a reviewer weaker than the authoring model |
 
 **`unit-lane` spans two rows — pick by the strongest step its triage returns,**
-not by the skill's name. The lane runs every triaged step in one session, so
-the model must cover the highest-class step it will reach: a lane whose triage
+not by the skill's name. The lane runs its judgment steps (triage, design,
+plan, evidence, review, close-out) in one session, so the model must cover the
+highest-class step it will reach; execution phases hand off to `execute-phase`
+one turn each at the phase's catalog tier. A lane whose triage
 includes `design` is product definition → **mimo-v2.6-flash** first,
-deepseek-v4-flash second; a lane of triage → plan → implement → review with no
+deepseek-v4-flash second; a lane of triage → plan with no
 `design` is planning/execution → **glm5.3-flash** first, **deepseek-v4-flash**
 second. deepseek is not categorically "better" or "worse" than mimo here — it is
 the right pick for the volume steps (3B/mo, adaptive reasoning) and the wrong
