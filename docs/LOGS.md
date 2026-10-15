@@ -2775,3 +2775,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr 290 (unit 72 pi-100-compat-guard): BLOCKED — absent review receipt + missing pre-execution lineage
 - **Decisions:** Unit 72 SPEC names closure as `### Design closure` (SPEC:53) but audit-pr mechanical detector greps `Capability closure` — fires non-blocking design-debt warning. Same pattern as units 61,63,64,65,69,71. Persisted F1 review-receipt + F2 lineage to review-findings.md, committed locally (not pushed).
 - **Next:** /workflow-status to identify next unit; unit 72 F1 is paper-trail only — merged already, only F2 (missing ledgers) was repaired in cycle 15 via /unit-lane
+
+## 2026-10-15T20:56Z — main — manual
+- **Commits:** 0 (session work only: review-change + fold-findings on unit 72, no local commits)
+- **Files:** —
+- **Summary:** Reviewed unit 72 (PR #290, PR-time `pi-compat-guard` guard) with `/review-change --adversarial 2` (N=2). Found 6 fix-now rows: F1 (review-receipt absent), F2 (false blocker — unit-lineage.mjs gate OK since fix/285), F3 (ledger falsely demands F2 withdrawal), F4 (README Notes overclaim, bound behavioural list to 1.0.4), F5 (SPEC REVIEW-VERDICT: PASS stale vs ledger), F6 (Tasks phase-lint BLOCKED: P1/P3 box 8, P2 stale grep). Folded F2-F6 (all-repair-in-place: ledger withdrawal + README reword + SPEC verdict/validators rewrite), left F1 BLOCKED (requires /review-change post-fold). F3 confirmed: no replan — all rows folded in-place via `fold: withdraw/reword/rewrite` on plan artifacts. Re-review on changed HEAD: PASS, review-receipt current.
+- **Decisions:** F3 is not a replan — `unit-route.mjs` says `route: fold`, not `replan-in-unit`. The owning stage is `plan` (SPEC.md / review-findings.md), but the fold repairer can rewrite plan artifacts in-place; only true `replan-in-unit` needs the lane's plan step. F2 FOLD: the unit-lineage.mjs gate proves fix/285 removed the legacy artifact demand. F4 FOLD: bind behavioural list to 0.99.1 only, state 1.0.4 as type-checked baseline. F6 FOLD: rewrite all three validator spans to command+expected outcome, re-run phase-lint to exit 0. Guard itself sound — mutation-tested green, both legs clean, no npm lockfile leak.
+- **Next:** /audit-pr — merge gate for PR #290 (unit 72 review PASS, receipt current); /product-audit — recurring SPEC drift on units 65+72.
+
