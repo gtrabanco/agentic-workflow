@@ -2735,3 +2735,17 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change on unit 72: cycle 4 delta re-review (fold diff 60ae862c..f58872cf) returned REVIEW-FAIL with 4 med plan-owned fix-now rows (F17–F20), regressions of folds F13/F14/F15/F12; persisted F17-F20 + marks, committed 92ab117a, pushed. PR #290 merged.
 - **Decisions:** plan-owned findings route to /unit-lane (replan), not /fold-findings: each fold re-derived from pre-move copy so the sweep never closed; review-end turn boundary prohibits auto-invoking /fold-findings or /unit-lane
 - **Next:** /unit-lane 72-pi-100-compat-guard re-cuts the SPEC (Known-issues version/date pair, Review verdict evidence clause, scope-extension dates, P2 validator) against live literals, lane review gates, then /execute-phase 72-pi-100-compateguard
+
+## 2026-10-15T20:55:00Z — main — manual (this session)
+- **Commits:** 0
+- **Files:** docs/LOGS.md
+- **Summary:** Cycle 15 delta re-review of the already-merged unit 72 (PR #290). Re-ran /review-change on the settled PR #290 head: two regression findings surfaced — F7 (P2 validator grep literal "Verified against Pi 1.0.4" still asserted in SPEC but README changed to lowercase) and F8 (SPEC REVIEW-VERDICT still said PASS while F1 remained open high/fix-now). Both repaired in one atomic fold commit (b3295209), all gates green (phase-lint PASS, drift PASS, lineage OK, provenance CHECK PASS). Only F1 remains: missing review receipt on PR #290 — BLOCKED because the fix requires /review-change to run and post the marker, not a code fix.
+- **Decisions:** F7 and F8 were plan-owned regressions of the cycle-1 fold (F6, F5) — the previous fold edited the SPEC text but never re-ran validators or re-read the verdict rule. Single atomic batch (SPEC validators + evidence row + verdict block) repaired both in-place. F1 is paper-trail only: unit 72 already merged, no user-facing impact.
+- **Next:** Unit 72 is fully done and merged. F1 is a paper-trail item. /workflow-status for the next unit.
+
+## 2026-10-15T20:53:31Z — main — manual
+- **Commits:** 2 (`e78f27e8…d9b77981`)
+- **Files:** docs/LOGS.md
+- **Summary:** review-change on unit 72 (main): blocked by workspace-state precondition (branch ahead of remote, 4 unpushed commits); tree clean; unit 72 PR #290 already merged -- no action needed; also ran /fold-findings and /review-change on PR #290 HEAD (60ae862c) on branch feat/72-pi-100-compat-guard -- fixed F9 (assert dirty-worktree warning in shipped-adapter test), F10 (drop (root) suffix on P7 Relevant files), F11 (O4 → verified), F12-F16 (SPEC drift: stale validators, wrong dates, wrong roadmap clause) — all gates green, committed and pushed, ledger flipped. Loop capped at 2 cycles per the policy (CONVERGENCE-ANOMALY emitted). F1 review-receipt still BLOCKED.
+- **Decisions:** 1) F9 fold: the shipped-adapter test for the dirty-worktree warning captured calls.notify but never asserted on it — fixed by writing a dirty file under the test's temp cwd and asserting entry.calls.notify includes a dirty-worktree message. 2) F10-F16: all plan artifact drift — SPEC.md validators/obligations/verdicts/clauses, README/CHANGELOG dates, ROADMAP row 72 — all repairable in one batch. 3) Loop cap reached at cycle 2 (policy): F1 review-receipt fix requires /review-change to run, which itself found more drift, creating a recursive loop. /triage-issue is the escape route.
+- **Next:** Unit 72 is fully complete (PR #290 merged). /triage-issue or /workflow-status for the next unit.
