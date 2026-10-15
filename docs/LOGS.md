@@ -2639,3 +2639,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) Remote branch was rewritten by an external force-push (reflog shows forced-update of origin/fix/285-pre-execution-lineage-gate from a7610692 to c7b4b08c), which discarded locally-signed commits. 2) Main branch HEAD (b548b3a6) has no GPG signature — commits were made before commit.gpgsign=true was active. 3) GitHub created a merge commit with key B5690EEE (not in our keyring). Fix: git rebase origin/main on local branch, resolved LOGS.md conflicts by accepting ours, force-pushed with --force-with-lease.
 - **Next:** Continue work on fix/285-pre-execution-lineage-gate; all remote commits now signed with key 16BFCDB4 (B8629F2451528D18). Re-run /audit-pr 287 to confirm the PR now shows as verified-signed on GitHub.
 
+
+## 2026-10-15T19:38:10Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** audit-pr #290 (unit 72-pi-100-compat-guard) — MERGE-READY, 13/13 gates, receipt current
+- **Next:** merge #290, then /unit-lane 73 or /triage-issue
