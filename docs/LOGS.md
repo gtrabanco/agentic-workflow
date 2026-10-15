@@ -2790,3 +2790,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) #281 closed — merge-guard verified present in both source (ce945e34/PR#279, ancestor of HEAD) and published npm 0.19.0 tarball. 2) #246+#291 combined into #293 (lane route + close-out seam) because both fix the same surface (scripts/unit-route.mjs + skills/*/references/); verbatim evidence carried in the new issue. 3) No roadmap rows needed marking — #246, #291, #281 were plain bugs, not features (0 hits in ROADMAP.md/fix index). 4) Used nan/qwen3.6 subagents for the audit to minimize token cost.
 - **Next:** /workflow-status to pick next unit; or triage_issue/execute-phase on the prioritized list: #292 (npm parity gate) → #293+246+291 (lane route + close-out) → #283 (merge PR #290) → #258 (needs-input hardening) → #275 (close reconciliation).
 
+
+## 2026-10-15T20:55:00Z — main — manual (audit-pr block)
+- **Commits:** 0
+- **Files:** docs/features/72-pi-100-compat-guard/review-findings.md
+- **Summary:** audit-pr 290 (unit 72 pi-100-compat-guard): BLOCKED — absent review receipt + missing pre-execution lineage. F1: no `review-change:pass sha=...` marker on PR #290 (zero comments, zero reviews). F2: no pre-execution snapshot receipts (`pre-execution-snapshot.mjs verify --stage spec` → `missing-receipt-snapshot`; plan stage → legacy adoption state). Persisted to `docs/features/72-pi-100-compat-guard/review-findings.md`, committed locally `285192ff` (not pushed).
+- **Decisions:** Unit 72 SPEC names closure as `### Design closure` (SPEC:53) but audit-pr mechanical detector greps `Capability closure` — fires non-blocking design-debt warning. Same pattern as units 61,63,64,65,69,71.
+- **Next:** unit 72 already merged and cycle 15 /unit-lane repaired the lineage (F2). F1 is paper-trail only — unit 72 merged, `/review-change` marker would be cosmetic.
