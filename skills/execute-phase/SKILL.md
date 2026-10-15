@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 5.0.1
+version: 5.1.0
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -231,9 +231,22 @@ gate machinery.
 
 ## Closing recommendation
 
+Exactly one end-state applies — pick by the unit's Tasks section, never print a
+phase id the Tasks section does not define:
+
+Phases remain:
+
 ```
 → Next: /execute-phase <NN-slug> P<k+1> (tier: <tier>) — one phase per turn; <tier> is the catalog's implement entry
-  · last phase done → /unit-lane <NN-slug> — resume the conductor for the remaining judgment steps
+  · whole-unit operator run complete → /review-change (mandatory end review)
+  · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
+  · merge gate after REVIEW-PASS → /audit-pr — the merge gate
+```
+
+The last phase just closed (a lane-run unit):
+
+```
+→ Next: /unit-lane <NN-slug> — resume the conductor for the remaining judgment steps
   · whole-unit operator run complete → /review-change (mandatory end review)
   · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr — the merge gate
