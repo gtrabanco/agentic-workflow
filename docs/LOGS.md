@@ -2704,3 +2704,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Cycle 9 fold (F25-F28): keep-policy test claim fix, ledger provenance repair, README legs correction, verdict list closure — all gates green
 - **Decisions:** (1) F25 keep-policy test: renamed to latch-release claim, comment states guard-absence is unobservable on keep path — the restore-policy case alone pins the abort guard
 - **Next:** Unit 72 is complete (PR #290 merged). Next: /triage-issue for the next unit or /workflow-status for what to build.
+## 2026-10-15T19:46:14Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Cycle 10 fold-findings on unit 72: repaired and folded F29+F30 (diff-guard mis-transcribed receipt + self-invalidating verdict binding sentence), all gates green. Session concluded the 72-pi-100-compat-guard unit — PR #290 merged (ac0782df), all 36+ review findings folded, unit 72 closed.
