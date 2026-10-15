@@ -39,7 +39,8 @@ done:
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
 ✓ Evidence rows updated (command → exit/digest → output → verified-by)
-✓ Progress log updated with a dated `YYYY-MM-DD HH:MM` entry (what, commit, next)
+✓ Progress log updated with a dated `YYYY-MM-DD HH:MM` entry that names the
+  phase id (what, commit, next)
 ✓ Diff guard passed (on implement steps) — see `diff-guard` in PREFLIGHT.md
 ✓ → Next: block printed as the absolute last output
 ```
@@ -139,10 +140,13 @@ After each step: run the project's verification gate (type-check + tests + build
 ### 7. Whole-unit mode
 
 When invoked as `<NN-slug>` with no step: loop all remaining steps, one commit
-each. After each step: gates, execute, diff guard (if implement), evidence/
-progress update, commit. Skip intermediate review checkpoints; the mandatory end
-review covers the full accumulated diff. On gate red at any step: repair that
-step (up to `--max-attempts`), then continue the loop. Terminal:
+each. This is an **explicit operator choice only** — the lane's hand-offs
+always name exactly one phase (`<NN-slug> P<k>`), so a bare `<NN-slug>` from a
+lane hand-off is a defect; re-read the hand-off before looping. After each
+step: gates, execute, diff guard (if implement), evidence/progress update,
+commit. Skip intermediate review checkpoints; the mandatory end review covers
+the full accumulated diff. On gate red at any step: repair that step (up to
+`--max-attempts`), then continue the loop. Terminal:
 
 ```text
 UNIT LOOP — <unit> COMPLETE
@@ -195,12 +199,17 @@ These files must be loaded when their topic is active:
 
 ## Relationship to other skills
 
-`unit-lane` conducts (triage → steps → doc updates); this executes (one step at a
-time or all remaining). `fold-findings` handles review finding repairs. The review
-pack axes (`review-implementation`, `review-code`, `review-security`, `review-perf`,
+`unit-lane` conducts (triage → judgment steps → close-out ladder) and hands
+execution off **one phase per turn** (`<NN-slug> P<k>` with the catalog tier);
+this executes the named phase — or, as an explicit operator choice only, all
+remaining steps. The closing hand-off names exactly one phase and the tier
+while phases remain, and resumes the lane after the last one.
+`fold-findings` handles review finding repairs. The review pack axes
+(`review-implementation`, `review-code`, `review-security`, `review-perf`,
 `review-a11y`, `review-debt`) compose the review step; `workflow-status` routes
-here. `triage-issue` feeds issues into the lane. This skill is the **step executor**
-a turn invokes to perform one triaged step of a unit under the full gate machinery.
+here. `triage-issue` feeds issues into the lane. This skill is the **step
+executor** a turn invokes to perform one triaged step of a unit under the full
+gate machinery.
 
 ## Portability (agents other than Claude Code)
 
@@ -215,15 +224,17 @@ a turn invokes to perform one triaged step of a unit under the full gate machine
 
 ## Done when
 
-- Requested scope is implemented (all remaining steps, one explicit step), gate
-  is green, unit doc Evidence/Progress are current, and the work is committed.
+- Requested scope is implemented (the named phase, or all remaining steps in an
+  explicit operator run), gate is green, unit doc Evidence/Progress are current
+  (the Progress entry names the phase id), and the work is committed.
 - **The closing `→ Next:` block is printed.**
 
 ## Closing recommendation
 
 ```
-→ Next: /unit-lane <NN-slug> — the conductor continues with the next triaged step
-  · all steps done → /review-change — the mandatory end review
+→ Next: /execute-phase <NN-slug> P<k+1> (tier: <tier>) — one phase per turn; <tier> is the catalog's implement entry
+  · last phase done → /unit-lane <NN-slug> — resume the conductor for the remaining judgment steps
+  · whole-unit operator run complete → /review-change (mandatory end review)
   · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr — the merge gate
 ```
