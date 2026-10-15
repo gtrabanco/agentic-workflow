@@ -2749,3 +2749,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change on unit 72 (main): blocked by workspace-state precondition (branch ahead of remote, 4 unpushed commits); tree clean; unit 72 PR #290 already merged -- no action needed; also ran /fold-findings and /review-change on PR #290 HEAD (60ae862c) on branch feat/72-pi-100-compat-guard -- fixed F9 (assert dirty-worktree warning in shipped-adapter test), F10 (drop (root) suffix on P7 Relevant files), F11 (O4 → verified), F12-F16 (SPEC drift: stale validators, wrong dates, wrong roadmap clause) — all gates green, committed and pushed, ledger flipped. Loop capped at 2 cycles per the policy (CONVERGENCE-ANOMALY emitted). F1 review-receipt still BLOCKED.
 - **Decisions:** 1) F9 fold: the shipped-adapter test for the dirty-worktree warning captured calls.notify but never asserted on it — fixed by writing a dirty file under the test's temp cwd and asserting entry.calls.notify includes a dirty-worktree message. 2) F10-F16: all plan artifact drift — SPEC.md validators/obligations/verdicts/clauses, README/CHANGELOG dates, ROADMAP row 72 — all repairable in one batch. 3) Loop cap reached at cycle 2 (policy): F1 review-receipt fix requires /review-change to run, which itself found more drift, creating a recursive loop. /triage-issue is the escape route.
 - **Next:** Unit 72 is fully complete (PR #290 merged). /triage-issue or /workflow-status for the next unit.
+
+## 2026-10-15T20:54:13Z — main — manual
+- **Commits:** 0 (session work: report issues to GitHub, no local commits)
+- **Files:** /tmp/issue-lane.UipkN0.md, /tmp/issue-piver.38LOZZ.md (temp, cleaned)
+- **Summary:** Investigated and filed two bug issues on gtrabanco/agentic-workflow: #291 (unit-lane review leaves no receipt, never orders audit-pr, per-step model tiers unreachable) and #292 (skills/dependency changes never version @gtrabanco/pi-agentic-workflow — npm stuck at 0.19.0 while main's skills moved). Both verified with field evidence: unit 72/PR #290 for #291 (SPEC has REVIEW-VERDICT: PASS but review-receipt verify exits 3, zero PR comments); registry-vs-main check for #292 (npm 0.19.0 published 2026-10-05, 10 commits to skills/ since, 0 to pi-package tree).
+- **Decisions:** Both issues follow the fix-template structure (What's broken / Detected in / Evidence / Reproduction / Expected / Actual / Root cause / Acceptance criteria / Severity / Depends on). Both use field evidence, not speculation. #292 traces the #164→#180 gap: the recommended PR CI gate was never built and #180 remains OPEN.
+- **Next:** triage-issue 291 292 to route both through the lane.
+
+## 2026-10-15T20:54Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Closing session — no repo changes made in this turn. Tree clean, no uncommitted work.
+- **Next:** /triage-issue or /workflow-status for the next unit.
