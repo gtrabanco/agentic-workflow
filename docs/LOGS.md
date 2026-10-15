@@ -2697,3 +2697,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** unit 72 pi-100-compat-guard: completed and merged (PR #290)
 - **Decisions:** cycle 6 review found SPEC.md ## Review verdict binding evidence to a stale head — classified fix-now (plan-owned); unit-lane repaired the clause; 13 cycles total; audit-pr confirmed MERGE-READY; PR #290 merged on 2026-10-15
 - **Next:** unit 72 ledger close-out; merge any remaining cycles
+
+## 2026-10-15T19:45:03Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Cycle 9 fold (F25-F28): keep-policy test claim fix, ledger provenance repair, README legs correction, verdict list closure — all gates green
+- **Decisions:** (1) F25 keep-policy test: renamed to latch-release claim, comment states guard-absence is unobservable on keep path — the restore-policy case alone pins the abort guard
+- **Next:** Unit 72 is complete (PR #290 merged). Next: /triage-issue for the next unit or /workflow-status for what to build.
