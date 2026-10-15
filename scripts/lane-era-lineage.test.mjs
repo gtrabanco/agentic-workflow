@@ -183,7 +183,9 @@ function makeRepo(t, { acceptance = false, obligations = null } = {}) {
   write("AGENTS.md", GUIDE);
   // The lineage gate's machine surface plus the router it re-derives the triage
   // block with, copied into the sandbox so the CLI runs against fixture bytes.
-  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "catalog.json"]) {
+  // phase-lint.mjs is the router's own import (#291 AC3: the one phase parser
+  // serves the execute route) — the sandbox mirrors the real import graph.
+  for (const name of ["unit-lineage.mjs", "unit-route.mjs", "phase-lint.mjs", "catalog.json"]) {
     fs.copyFileSync(path.join(repoRoot, "scripts", name), path.join(root, "scripts", name));
   }
   git(root, "init", "-q", "-b", "main");

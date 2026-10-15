@@ -711,6 +711,10 @@ function isPathOrGlob(entry) {
  * Extract the phases from a unit doc's `## Tasks` section, plus any
  * `Relevant files:` sub-section that belongs to no phase.
  *
+ * Exported for `scripts/unit-route.mjs`'s execute route (#291 AC3): the one
+ * phase parser serves both the linter and the router's first-unfinished-phase
+ * hand-off — never a second parser.
+ *
  * Line rules: a `P<n> —` bullet starts the next phase; wrapped lines join the
  * bullet's scan text; a heading or a blank line ends the bullet's *prose*
  * continuation — but the metadata sub-section keeps attaching to the nearest
@@ -718,7 +722,7 @@ function isPathOrGlob(entry) {
  * because the author pressed Enter), and a sub-section with no bullet before it
  * is returned as an orphan so the caller can fail closed instead of dropping it.
  */
-function parseUnitDocPhases(text) {
+export function parseUnitDocPhases(text) {
   const heading = /^## Tasks[ \t]*$/m.exec(text);
   if (!heading) return { phases: [], orphans: [] };
   const rest = text.slice(heading.index + heading[0].length);

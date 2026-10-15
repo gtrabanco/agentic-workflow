@@ -25,6 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { parseUnitDocPhases } from "./phase-lint.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -478,6 +479,52 @@ function triageSteps(catalog, facts) {
   return { steps, skipped, tiers, budget };
 }
 
+/**
+ * The `implement` step's catalog tier — the execution tier named on per-phase
+ * hand-offs (decision D1, issue #291 AC4). One source: `scripts/catalog.json`.
+ */
+function executionTier() {
+  return loadCatalog().catalog.implement.budget_tier;
+}
+
+/**
+ * The phases a unit's `## Progress log` records as done: the first `P<n>`
+ * token of each entry names the phase the entry is about (the lane runs one
+ * phase per turn-commit), so a `next: P<k>` tail never marks k done.
+ */
+function recordedPhases(doc) {
+  const body = sectionBody(doc, "Progress log");
+  const done = new Set();
+  if (body === null) return done;
+  for (const line of body.split("\n")) {
+    const match = /\bP(\d+)\b/.exec(line);
+    if (match) done.add(Number(match[1]));
+  }
+  return done;
+}
+
+/**
+ * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
+ * doc's `## Tasks` section that the `## Progress log` does not record. A unit
+ * with no doc (or no Tasks section) is untouched work — P1. A Tasks section
+ * that parses to no phase fails closed: the route never emits a bare
+ * whole-unit command (#291 AC3).
+ */
+function firstUnfinishedPhase(unit) {
+  const doc = readProject(`${unit.dir}/SPEC.md`);
+  if (doc === null || sectionBody(doc, "Tasks") === null) return 1;
+  const { phases } = parseUnitDocPhases(doc);
+  if (phases.length === 0) {
+    fail(1, `no parseable phase in ${unit.dir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
+  }
+  const done = recordedPhases(doc);
+  const unfinished = phases.map((phase) => phase.number).filter((number) => !done.has(number));
+  if (unfinished.length === 0) {
+    fail(1, `every phase of ${unit.dir}/SPEC.md is recorded in its Progress log — re-triage the unit or settle its index status`);
+  }
+  return Math.min(...unfinished);
+}
+
 function runTriage(token, { json = false } = {}) {
   const catalog = loadCatalog();
   const { matches, clean } = resolveUnit(token);
@@ -599,9 +646,16 @@ function main(argv) {
   } else {
     route = "execute";
     selected = [];
+    // #291 AC3/AC4: the hand-off names exactly one phase and the execution
+    // tier — never the bare whole-unit command. Whole-unit mode survives only
+    // as an explicit operator choice (`execute-phase`'s own §7).
+    const phase = firstUnfinishedPhase(unit);
+    const tier = executionTier();
     // The frozen fix invocation is `--fix <n>` (`execute-phase`'s own hint), so the
     // machine signal names it instead of the feature-shaped command (F31).
-    command = unit.kind === "fix" ? `/execute-phase --fix ${unit.number}` : `/execute-phase ${unit.slug}`;
+    command = unit.kind === "fix"
+      ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+      : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
   }
 
   const base = route === "replan" || route === "decision" || route === "fold"

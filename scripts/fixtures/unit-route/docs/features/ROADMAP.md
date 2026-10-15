@@ -8,5 +8,6 @@
 | 13 | `execute-unit` | in-progress | — | all folded |
 | 14 | `empty-unit` | planned | — | no ledger · Issue [#140](https://example.invalid/issues/140) |
 | 15 | `done-unit` | done | — | terminal route |
+| 17 | `phaseless-unit` | planned | — | Tasks section parses to nothing |
 | 37 | `phase-lint-script` | idea | — | dogfood target |
 | 40 | `cited-paths` | in-progress | — | cap case |

@@ -322,8 +322,10 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
   // The F13 fold added the router edge to that graph (the sensor imports the
   // router's row semantics); the sandbox mirrors it, so the assertions stay "the
-  // named precondition, never a module-not-found".
+  // named precondition, never a module-not-found". #291 AC3 added the router's
+  // phase-parser import, mirrored the same way.
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -346,8 +348,10 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
   // The F13 fold added the router edge to that graph (the sensor imports the
   // router's row semantics); the sandbox mirrors it, so the assertions stay "the
-  // named precondition, never a module-not-found".
+  // named precondition, never a module-not-found". #291 AC3 added the router's
+  // phase-parser import, mirrored the same way.
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",
