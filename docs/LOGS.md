@@ -2762,3 +2762,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** —
 - **Summary:** Closing session — no repo changes made in this turn. Tree clean, no uncommitted work.
 - **Next:** /triage-issue or /workflow-status for the next unit.
+## 2026-10-15T20:55:49Z — main — manual
+- **Commits:** 70 (`71c7ed90…bbc2c7ab`)
+- **Files:** 30 files
+- **Summary:** Unit 72-pi-100-compat-guard (issue #283): full unit-lane from idea to merged PR — triage, implement, PR #290, multi-cycle review/audit/fix via review-change + fold-findings (36+ findings), finally MERGE-READY and merged 2026-10-15. Also shipped unit-lane gap interview + Future section (feature 61+).
+- **Decisions:** (1) npm latest resolved to pi 1.0.4 at execution (the issue said 1.0.0); re-verified clean on both legs, recorded the drift in Known issues. (2) /tmp is a small tmpfs (5.8G) — pi 1.0.4 deps don't fit; local runs used /home/agent/.cache (CI unaffected). (3) lane-era-lineage.test.mjs false-red with stale schema dist (predates 4.6.0 fix); rebuild resolves. (4) Self-referential shas: recorded in the NEXT commit. (5) 36+ review findings from review-change/audit-pr across diff-guard, scope creep, review verdict, evidence clauses, and test-policy issues; fixed in multiple fold-findings rounds.
+- **Next:** No immediate next unit — PR #290 merged. Next actionable roadmap rows: #69 (done), #71 (defined, depends on 65). Consider starting unit 73 or running product-audit.
+
+## 2026-10-15T20:55:45Z — main — manual
+- **Commits:** 5 (`e78f27e8…bbc2c7ab`)
+- **Files:** docs/LOGS.md
+- **Summary:** audit-pr 290 (unit 72 pi-100-compat-guard): BLOCKED — absent review receipt + missing pre-execution lineage
+- **Decisions:** Unit 72 SPEC names closure as `### Design closure` (SPEC:53) but audit-pr mechanical detector greps `Capability closure` — fires non-blocking design-debt warning. Same pattern as units 61,63,64,65,69,71. Persisted F1 review-receipt + F2 lineage to review-findings.md, committed locally (not pushed).
+- **Next:** /workflow-status to identify next unit; unit 72 F1 is paper-trail only — merged already, only F2 (missing ledgers) was repaired in cycle 15 via /unit-lane
