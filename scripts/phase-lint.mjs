@@ -59,15 +59,14 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import {
   parseUnitDocPhases as _parseUnitDocPhases,
-  FENCE_OPEN,
-  FENCE_CLOSE,
   openFence,
   closesFence,
 } from "./unit-doc-phases.mjs";
 
-// Local binding for internal callers; re-export for sandbox mirrors.
+// Local binding for internal callers.
 const parseUnitDocPhases = _parseUnitDocPhases;
-export { _parseUnitDocPhases as parseUnitDocPhases }; // re-export for sandbox mirrors
+
+
 
 const LAYERS = ["schema/db", "domain", "api", "ui", "config/infra", "docs", "hardening", "close-out"];
 const HARDENING_LAYERS = new Set(["hardening", "close-out"]);
