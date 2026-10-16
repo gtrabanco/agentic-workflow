@@ -524,14 +524,50 @@ function recordedPhases(doc) {
       // Only the entry head's own phase token may record a done phase — the
       // token that appears after the leading date and em-dash that opens
       // the entry.  A phase id cited later in prose (e.g. "diff-guard …
-      // P1 and P2 are separate scoped commits") must NOT count.  Anchor
-      // the match to the first P<n> after the date/em-dash prefix.
-      const afterDash = head.includes(" — ")
-        ? head.slice(head.indexOf(" — ") + 3)
-        : head;
-      // Match the first P<n> after the date/em-dash prefix.
-      const firstTokenMatch = /^[Pp](\d+)/.exec(afterDash);
-      if (firstTokenMatch) done.add(Number(firstTokenMatch[1]));
+      // P1 and P2 are separate scoped commits") must NOT count.  (F8: accept
+      // the documented `YYYY-MM-DD HH:MM — <action> — next: …`
+      // form where the phase id appears after an action keyword in the head
+      // before the arrow (→), not only as the first post-dash token.)
+      //
+      // The `next:` tail is already stripped above.  Find the arrow position
+      // and restrict matching to the head portion before it.
+      const arrowIdx = head.indexOf(" →");
+      const headWork = arrowIdx === -1 ? head : head.slice(0, arrowIdx);
+      // Match P<n> that follows the entry head's `— ` prefix.  Two cases:
+      // 1) Direct: `— P<digits>` (the original anchor, e.g. `— P2 — implemented`).
+      // 2) Action-word: a known action keyword followed by P<digits>, with
+      //    up to 3 intervening words (e.g. `— diff guard after P1`).
+      //    Closed list prevents "reverted the P2 spike" from matching
+      //    (reverted is not a known action).
+      const knownActions = new Set([
+        "implement", "research", "design", "plan", "diff", "diff-guard",
+        "diff guard", "bump", "evidence", "docs", "release", "tests",
+        "re-run",
+      ]);
+      let found = false;
+      const dashIdx = headWork.indexOf(" — ");
+      if (dashIdx !== -1) {
+        const after = headWork.slice(dashIdx + 3);
+        // 1) Direct: P immediately after dash.
+        const pMatch = /^\s*\b[Pp](\d+)/.exec(after);
+        if (pMatch) {
+          done.add(Number(pMatch[1]));
+          found = true;
+        }
+        // 2) Action-word: known action keyword then P<digits>, up to
+        //    3 intervening words between action and P.
+        if (!found) {
+          const actionMatch = /([a-zA-Z][a-zA-Z-]*(?:\s[a-zA-Z][a-zA-Z-]*)*)[\s:]+([a-zA-Z]+[\s:]+){0,3}\b[Pp](\d+)/.exec(after);
+          if (actionMatch) {
+            const firstWord = actionMatch[1].split(/\s/)[0];
+            if (knownActions.has(firstWord.toLowerCase()) ||
+                knownActions.has(actionMatch[1].toLowerCase())) {
+              done.add(Number(actionMatch[3]));
+            }
+          }
+        }
+      }
+
     } else if (entryStarted && !entryEnded) {
       // Continuation line within an active entry — do NOT match.
     }
