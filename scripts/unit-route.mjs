@@ -489,18 +489,42 @@ function executionTier() {
 
 /**
  * The phases a unit's `## Progress log` records as done: only phase-led
- * entry heads (not `next:` tails) name a done phase.
+ * entry heads (not `next:` tails) name a done phase. A Progress log entry is
+ * a markdown list item (`-`/`*`/`+`); indented lines after a blank line are
+ * continuation prose, not an entry head, so they must be skipped. Within the
+ * head, the `next: P<k>` suffix is stripped before matching — the `P<n>`
+ * token the head itself records is the one (and only one) that counts.
  */
 function recordedPhases(doc) {
   const body = sectionBody(doc, "Progress log");
   const done = new Set();
   if (body === null) return done;
+  let entryStarted = false;
+  let entryEnded = false;
   for (const line of body.split("\n")) {
-    // `next: P<k>` tails never mark k done — split on `next:` and match P<n>
-    // only in the head (the entry's own phase record).
-    const head = line.split(/\s+next:.*$/i)[0];
-    const match = /P(\d+)/.exec(head);
-    if (match) done.add(Number(match[1]));
+    // A blank line ends the entry's prose continuation.
+    if (/^\s*$/.test(line)) {
+      entryStarted = false;
+      entryEnded = true;
+      continue;
+    }
+    // A new entry head: a list-item marker at the start.
+    if (/^\s*[-*+]\s/.test(line)) {
+      // If we are still in a prior entry after a blank line, that entry is
+      // closed — but continuation lines across a blank line do not re-open
+      // it. (The blank-line break above sets entryStarted=false.)
+      entryStarted = true;
+      entryEnded = false;
+      // Strip `next: …` tails and match the entry's own phase token.
+      const head = line.split(/\s+next:.*$/i)[0];
+      // Only the head's first line (not a wrapped continuation) may record a
+      // phase — require the marker to be present so we know we are on an entry
+      // head rather than orphan prose.
+      const match = /P(\d+)/.exec(head);
+      if (match) done.add(Number(match[1]));
+    } else if (entryStarted && !entryEnded) {
+      // Continuation line within an active entry — do NOT match.
+    }
   }
   return done;
 }
@@ -681,7 +705,7 @@ function print({ unit, status, route, command, openCount, rows, readSet }) {
   if (!ROUTES.includes(route)) fail(1, `internal error: unknown route ${sanitize(route)}`);
   const shown = readSet.slice(0, READ_SET_MAX);
   const remainder = readSet.length - shown.length;
-  const record = { unit, status, route, rows, readSet };
+  const record = { unit, status, route, rows, readSet, command };
   const lines = [
     `UNIT ROUTE — ${sanitize(unit)}`,
     `unit: ${sanitize(unit)}`,
