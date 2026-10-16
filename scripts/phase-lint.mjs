@@ -57,6 +57,11 @@ import fs from "node:fs";
 import process from "node:process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { parseUnitDocPhases as _parseUnitDocPhases } from "./unit-doc-phases.mjs";
+
+// Local binding for internal callers; re-export for sandbox mirrors.
+const parseUnitDocPhases = _parseUnitDocPhases;
+export { _parseUnitDocPhases as parseUnitDocPhases }; // re-export for sandbox mirrors
 
 const LAYERS = ["schema/db", "domain", "api", "ui", "config/infra", "docs", "hardening", "close-out"];
 const HARDENING_LAYERS = new Set(["hardening", "close-out"]);
@@ -697,133 +702,12 @@ function lintPhase(phase) {
  * box-2 target; a malformed one fails the phase closed under its own
  * `relevant-files:` finding id rather than being dropped.
  */
-const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
-const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
 
 /** A `Relevant files:` entry must name a path or a glob — fail closed else. */
 function isPathOrGlob(entry) {
   if (entry === "" || /\s/.test(entry)) return false;
   if (entry.includes("*") || entry.includes("?")) return true;
   return entry.includes("/") || EXTENSIONS.some((extension) => entry.endsWith(extension));
-}
-
-/**
- * Extract the phases from a unit doc's `## Tasks` section, plus any
- * `Relevant files:` sub-section that belongs to no phase.
- *
- * Exported for `scripts/unit-route.mjs`'s execute route (#291 AC3): the one
- * phase parser serves both the linter and the router's first-unfinished-phase
- * hand-off — never a second parser.
- *
- * Line rules: a `P<n> —` bullet starts the next phase; wrapped lines join the
- * bullet's scan text; a heading or a blank line ends the bullet's *prose*
- * continuation — but the metadata sub-section keeps attaching to the nearest
- * preceding bullet even across a blank line (F-2: a read set must never vanish
- * because the author pressed Enter), and a sub-section with no bullet before it
- * is returned as an orphan so the caller can fail closed instead of dropping it.
- */
-export function parseUnitDocPhases(text) {
-  const heading = /^## Tasks[ \t]*$/m.exec(text);
-  if (!heading) return { phases: [], orphans: [] };
-  const rest = text.slice(heading.index + heading[0].length);
-  const end = /^## /m.exec(rest);
-  const body = end ? rest.slice(0, end.index) : rest;
-
-  const phases = [];
-  const orphans = [];
-  const seen = new Set();
-  let current = null;
-  let mode = "prose";
-  let closed = false;
-  let fence = null;
-  for (const line of body.split("\n")) {
-    const trimmed = line.trim();
-    // Fence inertness — the same contract the plan grammar keeps: a fenced
-    // example of a bullet is quoted text, never a phase, so a unit doc may
-    // show its own shape without linting the example.
-    if (fence) {
-      if (closesFence(trimmed, fence)) fence = null;
-      continue;
-    }
-    const opened = openFence(trimmed);
-    if (opened) {
-      fence = opened;
-      continue;
-    }
-    const bullet = UNIT_DOC_BULLET.exec(line);
-    if (bullet) {
-      const number = Number(bullet[1]);
-      current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number) };
-      seen.add(number);
-      phases.push(current);
-      mode = "prose";
-      closed = false;
-      continue;
-    }
-    const files = UNIT_DOC_RELEVANT_FILES.exec(line);
-    if (files) {
-      if (!current) {
-        orphans.push(trimmed);
-        continue;
-      }
-      current.relevantFiles =
-        current.relevantFiles === null ? files[1] : `${current.relevantFiles} ${files[1]}`;
-      mode = "files";
-      closed = false;
-      continue;
-    }
-    if (!current) continue;
-    if (trimmed === "") {
-      closed = true;
-      continue;
-    }
-    if (/^#{1,6}\s/.test(trimmed)) {
-      current = null;
-      mode = "prose";
-      closed = false;
-      continue;
-    }
-    if (closed) {
-      // Prose after a blank line is a new block, not a continuation of the
-      // bullet; only the metadata line may still attach at this point.
-      current = null;
-      mode = "prose";
-      closed = false;
-      continue;
-    }
-    if (mode === "files") {
-      current.relevantFiles = `${current.relevantFiles} ${trimmed}`;
-      continue;
-    }
-    current.lines.push(trimmed);
-  }
-
-  const built = phases.map((phase) => {
-    const first = (phase.lines[0] || "").trim();
-    const titleEnd = first.indexOf("(validator:");
-    const head = (titleEnd === -1 ? first : first.slice(0, titleEnd)).trim();
-    const title = (head.split(":")[0] || head).trim() || first;
-    const scan = phase.lines.join(" ");
-    const validatorAt = scan.indexOf("(validator:");
-    const validator =
-      validatorAt === -1
-        ? null
-        : scan.slice(validatorAt + "(validator:".length).replace(/\)\s*$/, "").trim();
-    return {
-      number: phase.number,
-      title,
-      tasks: [first],
-      taskScan: [scan],
-      ticks: [],
-      layer: null,
-      kind: "unit-doc",
-      validator,
-      relevantFiles: phase.relevantFiles,
-      duplicate: phase.duplicate,
-      body: phase.lines,
-    };
-  });
-  return { phases: built, orphans };
 }
 
 /** Box 8's unit-doc reading: the bullet's `(validator: …)` span is its done-when. */

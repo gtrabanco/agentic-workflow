@@ -321,6 +321,36 @@ test("#291 AC3: the execute route fails closed when no phase is parseable — ne
   assert.ok(!/execute-phase/.test(result.stdout), "the bare whole-unit command is never emitted");
 });
 
+test("#291 F1: Progress log `next: P<k>` tail never marks k done — only entry heads count", () => {
+  // F1 reproducer: a Progress entry whose only `P<k>` is in the `next:` tail.
+  // Before the fix, `recordedPhases` matched the `next: P2` and would skip P1.
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f1-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Replace the Progress log so that P1 is ONLY in the `next:` tail.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — design records written → deadbeef00000000000000000000000000000000 — next: P1 implement"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // P1 was NOT recorded (only in `next:` tail), so the first unfinished is P1.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P1 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
 test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {
   const result = run(["140"]);
   assert.equal(result.status, 0, result.stderr);
