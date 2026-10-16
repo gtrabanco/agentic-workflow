@@ -351,6 +351,108 @@ test("#291 F1: Progress log `next: P<k>` tail never marks k done — only entry 
   }
 });
 
+test("#291 F4: Progress log entry head with mid-prose P<n> mention does NOT mark that phase done", () => {
+  // F4 reproducer: an entry whose head mentions a later phase in prose
+  // ("- ... diff-guard ... P1 and P2 are separate scoped commits ...").
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f4-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Tasks P1,P2,P3; Progress log: P1 done, then a prose entry mentioning P2.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — reverted the P2 spike; nothing shipped → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // The prose "reverted the P2 spike" must NOT mark P2 done, so the first
+    // unfinished is P2 (P1 was the only recorded phase).
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F4b: indented list-marker continuation line does NOT re-open an entry", () => {
+  // F4b reproducer: an indented list marker after a blank line re-opened the
+  // previous code path. Indented markers are continuation prose.
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f4b-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Tasks P1,P2,P3; Progress log: P1 done, then an indented list-marker
+  // line that mentions P2 in prose.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — note from review\n  - P2 spiked and reverted; nothing shipped"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // The indented list marker must NOT re-open an entry, so P2 is NOT
+    // recorded and the first unfinished is P2.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F7: long Progress-log line uses linear scan (not quadratic split)", () => {
+  // F7 reproducer: a single very long Progress-log line must not trigger
+  // quadratic backtracking from the split(/\s+next:.*$/i) pattern.
+  // The fix replaces it with indexOf(" next:") which is O(n).
+  // This test verifies correctness (no P<n> from the long whitespace run
+  // is accidentally captured).
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f7-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Replace the Progress log with a P1-done entry followed by a line of
+  // 50000 spaces (no " next:" at all).  A quadratic split would stall;
+  // a linear scan should return instantly and not capture any phase id.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n" + " ".repeat(50000) + "x"
+    )
+  );
+  try {
+    const t0 = Date.now();
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    const elapsed = Date.now() - t0;
+    assert.equal(result.status, 0, result.stderr);
+    // The long whitespace line must not capture any phase id.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+    // Must complete in under 500ms (quadratic would take many seconds).
+    assert.ok(elapsed < 500, `F7 linear scan took ${elapsed}ms (expected <500ms)`);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
 test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {
   const result = run(["140"]);
   assert.equal(result.status, 0, result.stderr);

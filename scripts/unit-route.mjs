@@ -508,20 +508,30 @@ function recordedPhases(doc) {
       entryEnded = true;
       continue;
     }
-    // A new entry head: a list-item marker at the start.
-    if (/^\s*[-*+]\s/.test(line)) {
+    // A new entry head: a list-item marker at the column-zero start (no
+    // leading whitespace — indented markers are continuation prose).
+    if (/^[-*+]\s/.test(line)) {
       // If we are still in a prior entry after a blank line, that entry is
       // closed — but continuation lines across a blank line do not re-open
       // it. (The blank-line break above sets entryStarted=false.)
       entryStarted = true;
       entryEnded = false;
-      // Strip `next: …` tails and match the entry's own phase token.
-      const head = line.split(/\s+next:.*$/i)[0];
-      // Only the head's first line (not a wrapped continuation) may record a
-      // phase — require the marker to be present so we know we are on an entry
-      // head rather than orphan prose.
-      const match = /P(\d+)/.exec(head);
-      if (match) done.add(Number(match[1]));
+      // Find the first " next:" on this line (if any) and take the head
+      // before it — linear scan, no re-anchoring split.  (F7: avoid the
+      // quadratic split(/\s+next:.*$/i).)
+      const nextIdx = line.indexOf(" next:");
+      const head = nextIdx === -1 ? line : line.slice(0, nextIdx);
+      // Only the entry head's own phase token may record a done phase — the
+      // token that appears after the leading date and em-dash that opens
+      // the entry.  A phase id cited later in prose (e.g. "diff-guard …
+      // P1 and P2 are separate scoped commits") must NOT count.  Anchor
+      // the match to the first P<n> after the date/em-dash prefix.
+      const afterDash = head.includes(" — ")
+        ? head.slice(head.indexOf(" — ") + 3)
+        : head;
+      // Match the first P<n> after the date/em-dash prefix.
+      const firstTokenMatch = /^[Pp](\d+)/.exec(afterDash);
+      if (firstTokenMatch) done.add(Number(firstTokenMatch[1]));
     } else if (entryStarted && !entryEnded) {
       // Continuation line within an active entry — do NOT match.
     }
