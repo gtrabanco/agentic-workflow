@@ -221,11 +221,18 @@ the machine receipt), the closing recommendation is `/review-change` —
 
 ## Next
 
-Run the triage (`bun scripts/unit-route.mjs --triage 73`) and paste its block
-as the authoritative step list.
+Unit closed on PR [#297](https://github.com/gtrabanco/agentic-workflow/pull/297).
+The close-out ladder's receipt stage resolved to `→ Next: /review-change
+73-lane-closeout-handoffs` — the PR has no `review-change:pass` receipt yet
+(the lane's in-doc verdict is not the machine receipt), so `/audit-pr` is not
+named until `/review-change` posts it.
 
 ## References
 
 - Issue [#291](https://github.com/gtrabanco/agentic-workflow/issues/291)
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/297
+- Branch: `feat/73-lane-closeout-handoffs`
+- Commit: 95003725 (head at PR open)
 - Related: #260, #201, #246 (out of scope)
 - Live observation: PR #290 / unit 72 F1 (`docs/features/72-pi-100-compat-guard/review-findings.md`)
+- Closes #291
