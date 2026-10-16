@@ -25,7 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseUnitDocPhases } from "./phase-lint.mjs";
+import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -488,16 +488,18 @@ function executionTier() {
 }
 
 /**
- * The phases a unit's `## Progress log` records as done: the first `P<n>`
- * token of each entry names the phase the entry is about (the lane runs one
- * phase per turn-commit), so a `next: P<k>` tail never marks k done.
+ * The phases a unit's `## Progress log` records as done: only phase-led
+ * entry heads (not `next:` tails) name a done phase.
  */
 function recordedPhases(doc) {
   const body = sectionBody(doc, "Progress log");
   const done = new Set();
   if (body === null) return done;
   for (const line of body.split("\n")) {
-    const match = /\bP(\d+)\b/.exec(line);
+    // `next: P<k>` tails never mark k done — split on `next:` and match P<n>
+    // only in the head (the entry's own phase record).
+    const head = line.split(/\s+next:.*$/i)[0];
+    const match = /P(\d+)/.exec(head);
     if (match) done.add(Number(match[1]));
   }
   return done;
