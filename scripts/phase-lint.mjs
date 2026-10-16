@@ -57,7 +57,13 @@ import fs from "node:fs";
 import process from "node:process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import { parseUnitDocPhases as _parseUnitDocPhases } from "./unit-doc-phases.mjs";
+import {
+  parseUnitDocPhases as _parseUnitDocPhases,
+  FENCE_OPEN,
+  FENCE_CLOSE,
+  openFence,
+  closesFence,
+} from "./unit-doc-phases.mjs";
 
 // Local binding for internal callers; re-export for sandbox mirrors.
 const parseUnitDocPhases = _parseUnitDocPhases;
@@ -91,8 +97,6 @@ function trimEmphasisEdges(raw) {
   while (end > start && "*_~".includes(raw[end - 1])) end -= 1;
   return raw.slice(start, end);
 }
-const FENCE_OPEN = /^(`{3,}|~{3,})/;
-const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
 const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
 const ENUMERATED = /\((?:\d+|[a-z]|[ivxlcdm]{2,4})\)|\b(?:first|second|third|fourth|fifth)\b|(?<!\S)\d+[.)](?!\S)/gi;
@@ -274,18 +278,6 @@ function titleDeliverable(title) {
     .replace(/\b(?:the|a|an)\b/g, " ")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-/** The fence a line opens, or null: three-or-more backticks (optional info string) or tildes. */
-function openFence(trimmed) {
-  const match = FENCE_OPEN.exec(trimmed);
-  return match ? { char: match[1][0], length: match[1].length } : null;
-}
-
-/** A closing fence: only the same character repeated at equal-or-greater length. */
-function closesFence(trimmed, fence) {
-  const match = FENCE_CLOSE.exec(trimmed);
-  return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
 }
 
 /**

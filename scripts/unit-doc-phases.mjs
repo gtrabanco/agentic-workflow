@@ -9,20 +9,20 @@
  */
 
 /** A fence the line opens, or null: three-or-more backticks/tildes. */
-const FENCE_OPEN = /^(`{3,}|~{3,})/;
+export const FENCE_OPEN = /^(`{3,}|~{3,})/;
 /** A closing fence: same character at equal-or-greater length. */
-const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
+export const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 /** A `P<n> —` task bullet. */
 const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
 /** Metadata line that attaches relevant-files to the preceding bullet. */
 const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
 
-function openFence(trimmed) {
+export function openFence(trimmed) {
   const match = FENCE_OPEN.exec(trimmed);
   return match ? { char: match[1][0], length: match[1].length } : null;
 }
 
-function closesFence(trimmed, fence) {
+export function closesFence(trimmed, fence) {
   const match = FENCE_CLOSE.exec(trimmed);
   return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
 }
