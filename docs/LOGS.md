@@ -2816,3 +2816,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** docs/LOGS.md (append)
 - **Summary:** log-session: this session was the prior run that completed the full review-change → triage-issue → fold-findings cycle on PR #297 (unit 73 lane-closeout-handoffs), folded F4+F7, verified all gates, then ran review-change again which converged cleanly. The session log entry below is a duplicate capture for the current run boundary.
 - **Next:** /clear — the current session context is captured below
+
+## 2026-10-16T23:57:54Z — feat/73-lane-closeout-handoffs — manual
+- **Commits:** 26 (`22e96166…0c0c10bb`)
+- **Files:** 27 files
+- **Summary:** review-change on unit 73 — REVIEW-FAIL, fold-findings replan freeze. F10 (recordedPhases false-positive matcher) classified as replan-in-unit; F11 (conductor diff-guard wording) and F12 (stale Evidence counts) folded in the same batch to keep the gate green at fold time. Fold-findings batch contained a replan-class row so freeze-batch triggered: nothing folded, route: replan → /unit-lane 73-lane-closeout-handoffs.
+- **Decisions:** F10 (recordedPhases) classified as replan-in-unit rather than fix-now — the fold loop patched individual spellings without fixing the root cause; F11+F12 folded alongside F10 in the same batch.
+- **Next:** /unit-lane 73-lane-closeout-handoffs to run the plan step and append phases for the Progress-log head grammar (F10), the lane wording contradiction (F11), and the Evidence count refresh (F12)
