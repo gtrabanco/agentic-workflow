@@ -2,42 +2,55 @@
 
 ## Purpose
 
-Execute the plan's tasks against the code. One phase per commit. Layer order
-respected. Guard enforced.
+Hand the plan's phases to the executor, one phase per turn. The conductor
+never runs an execution phase inline — per-step model routing is reachable
+only across a turn boundary (issue #291 AC3/AC4).
 
 ## Inputs
 
 - The unit's Tasks section (filled by the plan step)
-- The project's architecture doc (layer rules)
-- The diff guard baseline from the triage step's reference
+- The triage block's `Tiers:` line (the `implement` entry is the execution tier)
+- The unit's Progress log (which phases are done)
 
 ## Fixed output contract
 
-After each phase commit, update the unit doc's **Evidence** section and
-**Progress log**:
+At each execution boundary, print exactly one phase hand-off and end the turn:
+
+```
+→ Next: /execute-phase <NN-slug> P<k> (tier: <tier>) — run phase P<k>; the lane resumes after the last phase
+  · no unfinished phase → continue the close-out ladder
+```
+
+`<k>` = first unfinished phase (lowest `P<n>` bullet the Progress log does not
+record; `bun scripts/unit-route.mjs <NN-slug>` prints it). `<tier>` = the
+`implement` entry of the triage block's `Tiers:` line. Never the bare
+whole-unit command.
+
+When the last phase's turn closes, `execute-phase` resumes the lane. Verify
+its work landed in the unit doc before continuing:
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| P1 | <git commit sha> | 0 · <sha> | <result ≤2 lines> | <model> |
+| P1 | <phase validator> | 0 · <sha> | <result ≤2 lines> | <executor model> |
 
 ## Checklist (pass only if)
 
-- [ ] Phases executed in P1, P2, … order from the Tasks section
-- [ ] One phase per commit (no bundling)
-- [ ] Layer order respected (inner layers don't import outer)
-- [ ] `git status --porcelain` is empty after each commit
-- [ ] Diff guard passed after each phase (see step 4 in SKILL.md)
-- [ ] Red run avoided — tests pass before committing, or tests-first red-run
-    evidence recorded
+- [ ] Every phase handed off as `/execute-phase <NN-slug> P<k> (tier: <tier>)`
+      — exactly one phase, never a bare whole-unit command
+- [ ] Phases ran in P1, P2, … order from the Tasks section
+- [ ] Each executor turn recorded its Evidence row and dated Progress entry
+- [ ] Diff guard run at the lane's resume (see step 4 in SKILL.md)
+- [ ] `git status --porcelain` is empty when the lane resumes
 
 ## Allowed
 
-- Changes scoped to the phase's acceptance criteria only
-- Bug fixes in affected paths that the phase touches
+- Changes scoped to the phase's acceptance criteria only (enforced by the
+  executor's own gates)
 - Documentation updates in the same commit as the code change
 
 ## Forbidden
 
+- Never run an execution phase inline at the conductor's tier
 - No unrelated refactors in the same commit
 - No new abstractions or dependencies beyond what the unit doc demands
 - Never commit red (test failure)

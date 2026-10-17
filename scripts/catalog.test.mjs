@@ -33,13 +33,16 @@ const run = (args, { root = CATALOG_FIXTURE } = {}) => spawnSync(
 );
 
 const parseTextOutput = (stdout) => {
-  const lines = stdout.trim().split("\n");
   return {
-    id: lines[0].match(/^TRIAGE — (.+?) \((.+)\)$/)?.[1] || null,
-    type: lines[0].match(/^TRIAGE — (.+?) \((.+)\)$/)?.[2] || null,
-    steps: lines[1].match(/^Steps: (.+)$/)?.[1]?.split(", ").filter(Boolean) || [],
-    skipped: lines[2].match(/^Skipped: (.+)$/)?.[1] || "none",
-    budget: lines[3].match(/^Budget: (.+)$/)?.[1] || null,
+    id: /^TRIAGE — (.+?) \((.+)\)$/m.exec(stdout)?.[1] || null,
+    type: /^TRIAGE — (.+?) \((.+)\)$/m.exec(stdout)?.[2] || null,
+    steps: /^Steps: (.+)$/m.exec(stdout)?.[1]?.split(", ").filter(Boolean) || [],
+    tiers: Object.fromEntries(
+      [...(/^Tiers: (.+)$/m.exec(stdout)?.[1]?.matchAll(/([a-z]+): (cheap|strong)/g) ?? [])]
+        .map((match) => [match[1], match[2]]),
+    ),
+    skipped: /^Skipped: (.+)$/m.exec(stdout)?.[1] || "none",
+    budget: /^Budget: (.+)$/m.exec(stdout)?.[1] || null,
   };
 };
 
@@ -82,7 +85,10 @@ test("docs-only unit yields [docs, evidence]", () => {
   const triage = parseTextOutput(result.stdout);
   assert.deepEqual(triage.steps, ["evidence", "docs"]);
   assert.equal(triage.type, "docs");
-  assert.equal(triage.budget, "cheap", "a docs-only unit needs no design/tests/review — never a strong budget");
+  // #291 AC4: the aggregate is derived from the step tiers, not a second rule —
+  // `evidence` carries the catalog's strong tier, so a docs-only unit's budget
+  // is strong even though no design/tests/review step applies.
+  assert.equal(triage.budget, "strong", "the budget derives from the step tiers (evidence is strong)");
   // Verify skipped entries exist
   assert.ok(triage.skipped !== "none", "some steps should be skipped");
   assert.ok(triage.skipped.includes("implement"), "implement should be skipped for docs");
@@ -105,6 +111,36 @@ test("trivial fix yields [implement, evidence]", () => {
   assert.ok(triage.skipped.includes("review"), "review should be skipped for trivial fix");
   assert.ok(triage.skipped.includes("plan"), "plan should be skipped for trivial fix");
   assert.ok(triage.skipped.includes("docs"), "docs should be skipped for trivial fix");
+  // #291 AC4: derived aggregate — implement (cheap, decision D1) + evidence (strong).
+  assert.equal(triage.budget, "strong");
+});
+
+// ===========================================================================
+// #291 AC4 — per-step budget tiers reach the triage output
+// ===========================================================================
+
+test("triage output carries each selected step's budget_tier from catalog.json", () => {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
+  const result = run(["--triage", "93-core-feature"]);
+  assert.equal(result.status, 0, result.stderr);
+  const triage = parseTextOutput(result.stdout);
+  assert.deepEqual(triage.tiers, Object.fromEntries(
+    triage.steps.map((step) => [step, catalog.catalog[step].budget_tier]),
+  ));
+});
+
+test("the implement step's tier is cheap (decision D1, issue #291)", () => {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
+  assert.equal(catalog.catalog.implement.budget_tier, "cheap");
+});
+
+test("the aggregate budget is derived from the step tiers, not a second rule", () => {
+  const result = run(["--triage", "91-docs-only", "--json"]);
+  assert.equal(result.status, 0, result.stderr);
+  const json = JSON.parse(result.stdout);
+  const anyStrong = json.steps.some((step) => json.tiers[step] === "strong");
+  assert.equal(json.budget, anyStrong ? "strong" : "cheap");
+  assert.ok(json.tiers, "the JSON payload carries the per-step tiers");
 });
 
 // ===========================================================================

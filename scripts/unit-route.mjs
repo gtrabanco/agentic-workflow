@@ -25,6 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -463,8 +464,137 @@ function triageSteps(catalog, facts) {
     if (applies[step]) steps.push(step);
     else skipped.push({ step, reason: reasons[step] });
   }
-  const budget = steps.some((s) => ["design", "tests", "review"].includes(s)) ? "strong" : "cheap";
-  return { steps, skipped, budget };
+  // #291 AC4: the per-step tiers come from the catalog's own `budget_tier` —
+  // one source of truth — and the aggregate is derived from them, never a
+  // second rule. A selected step without a tier fails closed.
+  const tiers = {};
+  for (const step of steps) {
+    const tier = catalog.catalog[step].budget_tier;
+    if (tier !== "cheap" && tier !== "strong") {
+      triageFail(2, `catalog: step ${step} has no budget_tier (expected cheap or strong)`);
+    }
+    tiers[step] = tier;
+  }
+  const budget = steps.some((step) => tiers[step] === "strong") ? "strong" : "cheap";
+  return { steps, skipped, tiers, budget };
+}
+
+/**
+ * The `implement` step's catalog tier — the execution tier named on per-phase
+ * hand-offs (decision D1, issue #291 AC4). One source: `scripts/catalog.json`.
+ */
+function executionTier() {
+  return loadCatalog().catalog.implement.budget_tier;
+}
+
+/**
+ * The phases a unit's `## Progress log` records as done: only phase-led
+ * entry heads (not `next:` tails) name a done phase. A Progress log entry is
+ * a markdown list item (`-`/`*`/`+`); indented lines after a blank line are
+ * continuation prose, not an entry head, so they must be skipped. Within the
+ * head, the `next: P<k>` suffix is stripped before matching — the `P<n>`
+ * token the head itself records is the one (and only one) that counts.
+ */
+function recordedPhases(doc) {
+  const body = sectionBody(doc, "Progress log");
+  const done = new Set();
+  if (body === null) return done;
+  let entryStarted = false;
+  let entryEnded = false;
+  for (const line of body.split("\n")) {
+    // A blank line ends the entry's prose continuation.
+    if (/^\s*$/.test(line)) {
+      entryStarted = false;
+      entryEnded = true;
+      continue;
+    }
+    // A new entry head: a list-item marker at the column-zero start (no
+    // leading whitespace — indented markers are continuation prose).
+    if (/^[-*+]\s/.test(line)) {
+      // If we are still in a prior entry after a blank line, that entry is
+      // closed — but continuation lines across a blank line do not re-open
+      // it. (The blank-line break above sets entryStarted=false.)
+      entryStarted = true;
+      entryEnded = false;
+      // Find the first " next:" on this line (if any) and take the head
+      // before it — linear scan, no re-anchoring split.  (F7: avoid the
+      // quadratic split(/\s+next:.*$/i).)
+      const nextIdx = line.indexOf(" next:");
+      const head = nextIdx === -1 ? line : line.slice(0, nextIdx);
+      // Only the entry head's own phase token may record a done phase — the
+      // token that appears after the leading date and em-dash that opens
+      // the entry.  A phase id cited later in prose (e.g. "diff-guard …
+      // P1 and P2 are separate scoped commits") must NOT count.  (F8: accept
+      // the documented `YYYY-MM-DD HH:MM — <action> — next: …`
+      // form where the phase id appears after an action keyword in the head
+      // before the arrow (→), not only as the first post-dash token.)
+      //
+      // The `next:` tail is already stripped above.  Find the arrow position
+      // and restrict matching to the head portion before it.
+      const arrowIdx = head.indexOf(" →");
+      const headWork = arrowIdx === -1 ? head : head.slice(0, arrowIdx);
+      // Match P<n> that follows the entry head's `— ` prefix.  Two cases:
+      // 1) Direct: `— P<digits>` (the original anchor, e.g. `— P2 — implemented`).
+      // 2) Action-word: a known action keyword followed by P<digits>, with
+      //    up to 3 intervening words (e.g. `— diff guard after P1`).
+      //    Closed list prevents "reverted the P2 spike" from matching
+      //    (reverted is not a known action).
+      const knownActions = new Set([
+        "implement", "research", "design", "plan", "diff", "diff-guard",
+        "diff guard", "bump", "evidence", "docs", "release", "tests",
+        "re-run",
+      ]);
+      let found = false;
+      const dashIdx = headWork.indexOf(" — ");
+      if (dashIdx !== -1) {
+        const after = headWork.slice(dashIdx + 3);
+        // 1) Direct: P immediately after dash.
+        const pMatch = /^\s*\b[Pp](\d+)/.exec(after);
+        if (pMatch) {
+          done.add(Number(pMatch[1]));
+          found = true;
+        }
+        // 2) Action-word: known action keyword then P<digits>, up to
+        //    3 intervening words between action and P.
+        if (!found) {
+          const actionMatch = /([a-zA-Z][a-zA-Z-]*(?:\s[a-zA-Z][a-zA-Z-]*)*)[\s:]+([a-zA-Z]+[\s:]+){0,3}\b[Pp](\d+)/.exec(after);
+          if (actionMatch) {
+            const firstWord = actionMatch[1].split(/\s/)[0];
+            if (knownActions.has(firstWord.toLowerCase()) ||
+                knownActions.has(actionMatch[1].toLowerCase())) {
+              done.add(Number(actionMatch[3]));
+            }
+          }
+        }
+      }
+
+    } else if (entryStarted && !entryEnded) {
+      // Continuation line within an active entry — do NOT match.
+    }
+  }
+  return done;
+}
+
+/**
+ * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
+ * doc's `## Tasks` section that the `## Progress log` does not record. A unit
+ * with no doc (or no Tasks section) is untouched work — P1. A Tasks section
+ * that parses to no phase fails closed: the route never emits a bare
+ * whole-unit command (#291 AC3).
+ */
+function firstUnfinishedPhase(unit) {
+  const doc = readProject(`${unit.dir}/SPEC.md`);
+  if (doc === null || sectionBody(doc, "Tasks") === null) return 1;
+  const { phases } = parseUnitDocPhases(doc);
+  if (phases.length === 0) {
+    fail(1, `no parseable phase in ${unit.dir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
+  }
+  const done = recordedPhases(doc);
+  const unfinished = phases.map((phase) => phase.number).filter((number) => !done.has(number));
+  if (unfinished.length === 0) {
+    fail(1, `every phase of ${unit.dir}/SPEC.md is recorded in its Progress log — re-triage the unit or settle its index status`);
+  }
+  return Math.min(...unfinished);
 }
 
 function runTriage(token, { json = false } = {}) {
@@ -498,11 +628,12 @@ function runTriage(token, { json = false } = {}) {
     process.stdout.write(
       `TRIAGE — ${unitLabel} (${facts.type})\n` +
       `Steps: ${result.steps.join(", ")}\n` +
+      `Tiers: ${result.steps.map((step) => `${step}: ${result.tiers[step]}`).join(", ")}\n` +
       `Skipped: ${skippedText}\n` +
       `Budget: ${result.budget}\n`,
     );
   }
-  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, budget: result.budget };
+  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget };
 }
 
 function main(argv) {
@@ -587,9 +718,16 @@ function main(argv) {
   } else {
     route = "execute";
     selected = [];
+    // #291 AC3/AC4: the hand-off names exactly one phase and the execution
+    // tier — never the bare whole-unit command. Whole-unit mode survives only
+    // as an explicit operator choice (`execute-phase`'s own §7).
+    const phase = firstUnfinishedPhase(unit);
+    const tier = executionTier();
     // The frozen fix invocation is `--fix <n>` (`execute-phase`'s own hint), so the
     // machine signal names it instead of the feature-shaped command (F31).
-    command = unit.kind === "fix" ? `/execute-phase --fix ${unit.number}` : `/execute-phase ${unit.slug}`;
+    command = unit.kind === "fix"
+      ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+      : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
   }
 
   const base = route === "replan" || route === "decision" || route === "fold"
@@ -613,7 +751,7 @@ function print({ unit, status, route, command, openCount, rows, readSet }) {
   if (!ROUTES.includes(route)) fail(1, `internal error: unknown route ${sanitize(route)}`);
   const shown = readSet.slice(0, READ_SET_MAX);
   const remainder = readSet.length - shown.length;
-  const record = { unit, status, route, rows, readSet };
+  const record = { unit, status, route, rows, readSet, command };
   const lines = [
     `UNIT ROUTE — ${sanitize(unit)}`,
     `unit: ${sanitize(unit)}`,

@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Run and verify the tests the triage determined are applicable.
+Run and verify the tests the triage determined are applicable. Test execution
+rides the executor's phases (each phase's `validator:` runs the project's
+gate); when the tests step is the turn's own boundary, it hands off like
+implement does — one `/execute-phase <NN-slug> P<k> (tier: <tier>)` turn,
+never inline.
 
 ## Inputs
 
