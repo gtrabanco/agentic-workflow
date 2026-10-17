@@ -82,12 +82,12 @@ P6 — Verification: full root suites + Pi package suites green; gate demonstrat
 
 | id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | AC1/AC2 | `skills/**` or `packages/pi-agentic-workflow/**` changed vs base without a version bump ⇒ gate exits non-zero naming the package + CHANGELOG row | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | failing-case test rows | planned |
-| O2 | AC1/AC2 | registry latest > exact pin ⇒ gate exits non-zero with the fix message | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | drift test rows | planned |
-| O3 | AC3 | registry unreachable ⇒ `--pins` exits 0 with a visible degradation notice (never fails on network) | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | degraded test row | planned |
-| O4 | AC3 | content mode is fully offline and deterministic (git + filesystem only) | P1 | P1 | scripts/version-parity-gate.mjs | `node scripts/version-parity-gate.mjs --content --base origin/main` | clean-run output | planned |
-| O5 | AC1 | bump present but CHANGELOG companion row absent ⇒ gate fails | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | row-absent test row | planned |
-| O6 | AC4 | shipped bundle byte-equivalent to repo `skills/` at the release commit | P6 | P6 | release step | staged-bundle vs `skills/` diff empty | parity diff output | planned |
+| O1 | AC1/AC2 | `skills/**` or `packages/pi-agentic-workflow/**` changed vs base without a version bump ⇒ gate exits non-zero naming the package + CHANGELOG row | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | failing-case test rows | verified |
+| O2 | AC1/AC2 | registry latest > exact pin ⇒ gate exits non-zero with the fix message | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | drift test rows | verified |
+| O3 | AC3 | registry unreachable ⇒ `--pins` exits 0 with a visible degradation notice (never fails on network) | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | degraded test row | verified |
+| O4 | AC3 | content mode is fully offline and deterministic (git + filesystem only) | P1 | P1 | scripts/version-parity-gate.mjs | `node scripts/version-parity-gate.mjs --content --base origin/main` | clean-run output | verified |
+| O5 | AC1 | bump present but CHANGELOG companion row absent ⇒ gate fails | P2 | P2 | scripts/version-parity-gate.mjs | `node --test scripts/version-parity-gate.test.mjs` | row-absent test row | verified |
+| O6 | AC4 | shipped bundle byte-equivalent to repo `skills/` at the release commit | P6 | P6 | release step | staged-bundle vs `skills/` diff empty | parity diff output | verified |
 
 ## Triaged steps
 
@@ -105,18 +105,51 @@ AC-section digest at triage: `a52ef2a4831ca1c4676323fcdfcc655c6fbb0e40162897d341
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| R1 | local npm tarball diff + `npm view` + workflow file reads | 0 | 0.19.1 missing `bump-skill`, 5 files differ; schema pin 4.5.0 vs registry 4.6.0 | opus research step |
+| R1 | local npm tarball diff + `npm view` + workflow file reads | 0 | 0.19.1's bundle 5 files behind main's skills; schema pin 4.5.0 vs registry 4.6.0 | opus research step |
+| AC1 (content) | simulated skills-only merge vs base `9998d749` in a throwaway worktree (`node scripts/version-parity-gate.mjs --content --base 9998d749`) | 1 | `GATE REJECTION — shipped-content-version … Fix: bump packages/pi-agentic-workflow/package.json and add the CHANGELOG.md "Companion npm packages" companion row` | opus review step |
+| AC1 (pins, pre-repair) | `node scripts/version-parity-gate.mjs --pins` at `9998d749` | 1 | `pins @gtrabanco/agentic-workflow-schema at 4.5.0 but the registry published 4.6.0. Fix: bump the pin + the package version in the same PR` | opus review step |
+| AC2 | `node --test scripts/version-parity-gate.test.mjs` (trigger-set matrix: package tree, bun.lock, nested paths trigger; sibling trees don't) | 0 · 21/21 | trigger-set constant pinned closed: `skills/` + `packages/pi-agentic-workflow/` | opus review step |
+| AC3 | `node --test scripts/*.test.mjs` (full root suites, offline) + separate `dependency-pin-gate` job in `root-suite.yml` | 0 · 685/685 | 0 fail across the root suites; degradation path pinned by test (`fetch failure degrades … never a violation`) | opus review step |
+| AC4 | `bun run bundle:skills` + `diff -rq skills ../../skills` + `npm pack` tarball count (post-repair, `cb32398c`) | 0 · staged=84 tarball=84 | staged copy identical to repo `skills/` except the by-design `bump-skill` filter; the 5 stranded files now ship | opus release step |
+| AC5 | `bun scripts/check-changelog-row.mjs pi-agentic-workflow 0.20.0` + `node --test scripts/normative-drift.test.mjs` | 0 · 1 | exactly one 0.20.0 companion row; normative-drift green with the AGENTS.md gate paragraph | opus release step |
+
+## Review
+
+```
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 1 report-note
+- Evidence reproduced: yes (every row re-run on this branch at b8239902)
+- AC integrity: unchanged from triage (digest a52ef2a4831ca1c4 matches)
+```
+
+Report-notes:
+- R1/PE-001 initially credited `bump-skill` as stranded; the bundle filter
+  (`metadata.internal` skills never ship) corrected that in `b8239902`. The
+  drift claim was re-verified against the tarball before the correction — the
+  5-file drift and the pin drift stand.
 
 ## Progress log
 
-2026-10-15 — unit created from issue #292 (`--from-issue`); research + design recorded, roadmap row 75 registered — next: triage
+2026-10-15 — unit created from issue #292 (`--from-issue`); research + design recorded, roadmap row 75 registered → d4f68d88 — next: triage
+2026-10-15 — triage: all 9 catalog steps apply (budget strong); AC digest at triage `a52ef2a4831ca1c4` → d4f68d88 — next: implement P1
+2026-10-15 — P1 gate script (tests-first red-run recorded before implementation: suite failed on the missing module, then 21/21 green) → 17ca2ecc — next: P2
+2026-10-15 — path-protection justification records for the unit's protected-path surfaces → 5a11ead9 — next: P2
+2026-10-15 — P2 offline fixture suite, 21/21 (red-run evidence above) → 05677087; diff-guard PASS 249/2 vs 17ca2ecc — next: P3
+2026-10-15 — P3 root-suite.yml wiring (content step + dependency-pin-gate job), YAML validated → 9998d749; diff-guard PASS 36/1 vs 05677087 — next: P4
+2026-10-15 — P4 drift repair: schema pin 4.6.0, package 0.20.0, bun.lock refreshed (`bun install --frozen-lockfile` exit 0), companion row (check-changelog-row = 1); package suite 432/432 → cb32398c; diff-guard PASS 9/3 vs 9998d749 — next: P5
+2026-10-15 — P5 AGENTS.md Packages names the gate + trigger set + degraded job; normative-drift green → f9fb8959; diff-guard PASS 17/1 vs cb32398c — next: P6
+2026-10-15 — P6 verification: root suites 685/685, package suite 432/432, AC1 negative demonstrated (simulated skills-only merge → exit 1 naming package + CHANGELOG row), live pin-drift FAIL captured pre-repair, bundle+tarball parity 84=84; PE-001 corrected (bump-skill is filtered by design) → b8239902 — next: review + release
+2026-10-15 — review: verdict PASS, 0 material / 1 report-note, evidence reproduced, AC digest unchanged — next: release (PR)
 
 ## Next
 
-Run triage and execute the first triaged step.
+Open the PR (`Closes #292`); after merge, verify the publish workflow ran and npm serves the re-bundled skills.
 
 ## References
 
-- Issue #292 (this unit closes it)
+- Closes #292
+- PR: <url>
+- Branch: feat/75-pi-package-version-gate
+- Commit: b8239902
 - #164 (closed, option 4 never implemented), #180 (open, promoted auto-bump), #281 (prior symptom), #285/#289 (the stranded schema 4.6.0 fix)
-- `scripts/npm-version-gate.mjs` (the publish-side exact-membership gate this complements)
+- `scripts/npm-version-gate.mjs` — the publish-side exact-membership gate this complements
