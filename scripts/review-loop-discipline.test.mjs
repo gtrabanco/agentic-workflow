@@ -248,6 +248,22 @@ assert.match(foldSkill, /replan-in-unit/);
 assert.match(foldSkill, /decision-required/);
 assert.match(foldProcess, /no `folded: yes` flips/);
 assert.match(foldProcess, /REPLAN-ROUTE/);
+
+// 10f/#293 AC2. Freeze-batch recognizes a product-owned row: a fix-now row
+// whose Route cell begins `product owner` states its class in the table
+// explicitly and freezes the batch (the loop repairs source, never authority —
+// POLICY §4), and the receipt's batch-class vocabulary carries it.
+assert.match(foldProcess, /frozen \(product owner present\)/);
+assert.match(foldProcess, /PRODUCT-ROUTE/);
+assert.match(foldProcess, /product owner[\s\S]{0,400}freeze-batch/);
+assert.match(foldSkill, /frozen \(product owner present\)/);
+
+// 10g/#293 A4. triage-issue can conclude a product-owned finding: the verdict
+// vocabulary carries `product-repair` and routes it through the router's
+// `route: product` line, never into the fold cycle.
+const reviewFindingProcess = read("skills/triage-issue/references/REVIEW_FINDING_PROCESS.md");
+assert.match(reviewFindingProcess, /VERDICT: fix-now \| replan-in-unit \| decision-required \| product-repair \| disputed/);
+assert.match(reviewFindingProcess, /product-repair[\s\S]{0,600}route: product/);
 assert.match(foldProcess, /retained/);
 
 // 10f. Four-branch closing block + the literal no-decision→re-review default.
