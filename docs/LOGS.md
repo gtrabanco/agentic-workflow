@@ -2823,3 +2823,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change on unit 73 — REVIEW-FAIL, fold-findings replan freeze. F10 (recordedPhases false-positive matcher) classified as replan-in-unit; F11 (conductor diff-guard wording) and F12 (stale Evidence counts) folded in the same batch to keep the gate green at fold time. Fold-findings batch contained a replan-class row so freeze-batch triggered: nothing folded, route: replan → /unit-lane 73-lane-closeout-handoffs.
 - **Decisions:** F10 (recordedPhases) classified as replan-in-unit rather than fix-now — the fold loop patched individual spellings without fixing the root cause; F11+F12 folded alongside F10 in the same batch.
 - **Next:** /unit-lane 73-lane-closeout-handoffs to run the plan step and append phases for the Progress-log head grammar (F10), the lane wording contradiction (F11), and the Evidence count refresh (F12)
+
+## 2026-10-16T23:59:36Z — feat/73-lane-closeout-handoffs — manual
+- **Commits:** 27 (`22e96166…bc50dec6`)
+- **Files:** 27 files
+- **Summary:** Complete fold-and-review cycle for F4, F5, F6 on unit 73 (PR #297) — fix recordedPhases false-positives (F4), export fence helpers from unit-doc-phases.mjs to eliminate duplication (F5), repair corrupt ledger with duplicate REVIEW-RAN row (F6), and re-verify 655/655 tests pass
+- **Decisions:** F4: anchor recordedPhases match to entry head to prevent mid-prose P<n> mentions from falsely marking phases done; F5: export FENCE_OPEN/FENCE_CLOSE/openFence/closesFence from unit-doc-phases.mjs and import in phase-lint.mjs instead of duplicating; F6: drop duplicate REVIEW-RAN mark that violated review-mark@1 grammar, restore proper 7-column schema
+- **Next:** Resolve remaining 3 findings (F10: recordedPhases regex super-linear regression + false positive/negative; F11: diff guard obligation misalignment in unit-lane SKILL.md; F12: stale Evidence test counts in SPEC.md), then /review-change to get MERGE-READY
