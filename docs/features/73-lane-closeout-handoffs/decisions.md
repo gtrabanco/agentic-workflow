@@ -31,6 +31,7 @@ is the `implement` step's catalog tier (one source: `scripts/catalog.json`).
 ```text
 path-protection-records@1
 kind | paths | phase | date | authority | justification
+justification | scripts/fixtures/unit-route/docs/features/14-empty-unit/SPEC.md | P1 | 2026-10-15 | execute-phase | test fixture for unit-route: must have a minimal Tasks section so firstUnfinishedPhase can parse P1 (the AC1 test and AC3 P1 test both need this fixture)
 justification | scripts/unit-route.mjs,scripts/catalog.json | P1 | 2026-10-15 | execute-phase | issue #291 AC4: triage emits per-step catalog budget_tier, aggregate derived; implement tier flipped to cheap per decision D1
 justification | scripts/unit-route.test.mjs,scripts/catalog.test.mjs | P1 | 2026-10-15 | execute-phase | tests-first for the #291 AC4 tier output and derived-aggregate behavior change
 justification | scripts/unit-route.mjs | P2 | 2026-10-15 | execute-phase | issue #291 AC3: execute route names exactly one phase and the execution tier, never the bare whole-unit command
