@@ -86,6 +86,11 @@ XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verifie
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| AC-2 | `grep -c "^## Prior-decisions contradiction sweep" skills/unit-lane/references/PLAN.md` + `grep -c "<<<<<<<\|>>>>>>>" …` | 1 · 0 | sweep section present; zero conflict markers | claude (sonnet, session) |
+| AC-3 | `bun scripts/check-skill-context.mjs` + `--routes` | 0 · PASS | route budgets: 14 routes PASS; ceilings carry declared growth sources (policy.rules; rows "feature 69 / issue #270", "fix #272 (unit-doc bullet grammar)") | claude (sonnet, session) |
+| AC-4 | `node --test scripts/*.test.mjs` (rendered-facts checks) + `grep -c "^| 69 \|^| 70 " docs/features/ROADMAP.md` | 0 · 2 | suite green incl. CHANGELOG version-table/package-versions; roadmap rows 69 then 70 in order | claude (sonnet, session) |
+| AC-5 | `gh pr diff 280 --name-only \| grep -ci mcp` ×2 (also PR #276) | 0 · 0 | zero `.pi/mcp*` paths in either merged PR's diff | claude (sonnet, session) |
+| AC-6 | `node --test scripts/*.test.mjs` | 0 | tests 663, pass 663, fail 0 | claude (sonnet, session) |
 
 ## Triaged steps
 
@@ -103,6 +108,7 @@ Budget: strong
 2026-10-17 08:52 — research step: per-AC state verified at HEAD 3844c1ae (PLAN.md both sections/no markers, `--routes` 14 PASS, roadmap 69→70 ordered, suite 663/663, no `.pi/mcp*` in PR #280/#276 diffs; budget growth sources declared incl. "feature 69 / issue #270" and "fix #272" rows) — next: design
 2026-10-17 08:56 — design step: ACs adopted from issue #275's draft; gap interview closed with 3 recorded decisions (review depth, receipt home, AC adoption), 2 assumptions; `## Future` = none — next: plan
 2026-10-17 09:00 — plan step: prior-decisions sweep clean (4 compatible rows, 0 contradicts); ledgers embedded (XS/S home) — next: implement
+2026-10-17 09:08 — implement P1: mechanical AC verification at HEAD 70a18b81 (AC-2/3/4/5/6 rows recorded; AC-1 pending the P2 review pass) — next: diff guard, then tests
 
 ## Next
 
