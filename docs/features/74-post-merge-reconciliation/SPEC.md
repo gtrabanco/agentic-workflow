@@ -91,6 +91,7 @@ XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verifie
 | AC-4 | `node --test scripts/*.test.mjs` (rendered-facts checks) + `grep -c "^| 69 \|^| 70 " docs/features/ROADMAP.md` | 0 · 2 | suite green incl. CHANGELOG version-table/package-versions; roadmap rows 69 then 70 in order | claude (sonnet, session) |
 | AC-5 | `gh pr diff 280 --name-only \| grep -ci mcp` ×2 (also PR #276) | 0 · 0 | zero `.pi/mcp*` paths in either merged PR's diff | claude (sonnet, session) |
 | AC-6 | `node --test scripts/*.test.mjs` | 0 | tests 663, pass 663, fail 0 | claude (sonnet, session) |
+| AC-1 | `grep -c "REVIEW-RAN" docs/features/74-post-merge-reconciliation/review-findings.md` | 0 · 1 | union receipt present: 5 isolated axes (code FAIL→RC-1 routed, verify FAIL→V1 folded, security/perf/brand PASS), verdict REVIEW-FAIL with the one open fix-now routed to the fix/272 surface | claude (sonnet, session) + 5 isolated reviewers |
 
 ## Triaged steps
 
@@ -111,6 +112,8 @@ Budget: strong
 2026-10-17 09:08 — implement P1: mechanical AC verification at HEAD 70a18b81 (AC-2/3/4/5/6 rows recorded; AC-1 pending the P2 review pass) → 7f8427d5 — next: tests
 2026-10-17 09:12 — tests step: full gate re-run at 7f8427d5 — 663/663 pass, fail 0; `--routes` PASS 14 routes — next: review (P2 union pass)
 2026-10-17 09:20 — evidence step: AC-2…AC-6 rows present from P1 runs (re-runnable as written); AC-1 row lands with the P2 review receipt — next: review (5 isolated axis reviewers spawned over the union diff)
+2026-10-17 09:45 — review P2: 5 isolated axis reviewers over the union diff — code FAIL (RC-1 med: fenced `## Tasks` hijack, reproduced, routed to fix/272 surface per non-goals), verify FAIL (V1 major: this doc's own validator spans lint-BLOCKED), security/perf/brand PASS — next: P3 fold
+2026-10-17 09:55 — implement P3: fold F-74-2 (validator spans rewritten to the enforced shape; `phase-lint` verdict PASS 6/6 ×3) → 7d075a8a — next: review ledger + docs
 
 ## Next
 
