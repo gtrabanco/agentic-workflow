@@ -2875,3 +2875,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit-lane 74-post-merge-reconciliation (issue #275): post-merge reconciliation of PR #280 (review-conformance, #270) and PR #276 (phase-lint grammar, #272) — one union review receipt, mechanical AC verification, PR #298 opened and merged.
 - **Decisions:** Union diff base chosen as the two PR merge SHAs (not HEAD of main); F-74-1 (fenced `## Tasks` hijack) routed to fix/272 owner per non-goals, not folded in #275; validator spans rewritten to enforced shape (box-5 no standalone-or, box-8 outcome anchors); fenced `## Tasks` section locator bug in unit-doc-phases.mjs fixed (PR #298 merged, F-74-1 folded).
 - **Next:** Merge PR #298 on main (already merged: 30b2cade). Next: /triage-issue on F-74-1 / re-enter the fenced `## Tasks` parser repair as a new fix unit against the fix/272 surface if there is a real gap that hasn't been fixed yet — verify scripts/unit-doc-phases.mjs at HEAD
+
+## 2026-10-17T20:04:20Z — main — manual
+- **Commits:** 0 (HEAD unchanged)
+- **Files:** docs/LOGS.md (append only)
+- **Summary:** Triage of two `needs-triage` issues (#293, #292): verified all reported defects against live code, posted evidence-backed verdicts as GitHub issue comments, removed `needs-triage` labels.
+- **Decisions:** #293 (lane route + close-out seam): Axis A defects confirmed live — no `PRODUCT_ROUTE` in `unit-route.mjs`, fold-findings freeze-batch doesn't recognize product rows, no product repair skill exists, triage-issue has no product verdict, review-change hand-off is not executable. Axis B (close-out) all resolved by PR #297. Verdict: `fix-in-unit`, keep open as tracking issue. #292 (npm versioning gap): schema pin confirmed drift (4.6.0 on registry vs 4.5.0 pinned); no CI gate on `skills/**` changes exists; maps to roadmap row 258. Verdict: `fix-in-unit`, keep open, no immediate action.
+- **Next:** None immediate — both issues triaged with full evidence. Follow up on #293 product-route unit or #292 versioning gate when prioritized.
