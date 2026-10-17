@@ -12,3 +12,10 @@
 | GATE-RAN | HEAD 221a56c6a4ad3d66f2e950869611ce13ecf8fe96 | node --test scripts/*.test.mjs | exit 0 | | |
 | GATE-RAN | HEAD 221a56c6a4ad3d66f2e950869611ce13ecf8fe96 | bun scripts/check-skill-context.mjs --routes | exit 0 | | |
 | GATE-RAN | HEAD 221a56c6a4ad3d66f2e950869611ce13ecf8fe96 | node scripts/version-parity-gate.mjs --content --base main | exit 0 | | |
+| F5 | skills/fold-findings/SKILL.md:198 · reviewer review-change · HEAD 79a2a13b2369914e833872a89e363ce01770dc3a · recheck direct read of the closing-block table (PRODUCT-ROUTE row added, "five outcomes" → updated) and → Next: block (product sub-bullet added, no unit-route.mjs token) | docs/workflow | confirmed | finding-mark | n/a | n/a |
+| F6 | skills/review-implementation/references/CLASSIFY.md:178 · reviewer review-change · HEAD 79a2a13b2369914e833872a89e363ce01770dc3a · recheck direct read of the product row (now mirrors plan row's router-first hand-off with per-kind lane command) | docs/workflow | confirmed | finding-mark | n/a | n/a |
+| F7 | scripts/unit-route.mjs:159 · reviewer review-change · HEAD 79a2a13b2369914e833872a89e363ce01770dc3a · recheck reproducible command output:  import probe of  over the same five spellings against the fold freeze condition in FOLD_PROCESS.md:47 and SKILL.md:132-134 (now matches the router vocabulary) | correctness | confirmed | finding-mark | n/a | n/a |
+| F8 | scripts/workflow-status.mjs:720,734 · reviewer review-change · HEAD 79a2a13b2369914e833872a89e363ce01770dc3a · recheck reproducible command output: sensor suggested commands for both fix and feature units match the router's --fix form | correctness | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 79a2a13b2369914e833872a89e363ce01770dc3a | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 79a2a13b2369914e833872a89e363ce01770dc3a | node --test scripts/*.test.mjs | exit 0 | | |
+| GATE-RAN | HEAD 79a2a13b2369914e833872a89e363ce01770dc3a | bun scripts/check-skill-context.mjs --routes | exit 0 | | |
