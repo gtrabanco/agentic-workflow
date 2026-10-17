@@ -1098,7 +1098,9 @@ test("#224 canonical destination vocabulary: the router publishes one closed rou
   const routes = /const ROUTES = Object\.freeze\(\[([^\]]+)\]\)/.exec(router);
   assert.ok(routes, "the router declares its route table as one closed set");
   const names = routes[1].split(",").map((token) => token.trim().replace(/"/g, "")).filter(Boolean);
-  assert.deepEqual(names, ["replan", "decision", "fold", "execute", "close-out", "historical", "plan-from-issue"], "the route vocabulary is closed");
+  // #293: `product` joins the closed set (an open row whose frozen route is the
+  // product owner — repaired by the lane, never folded).
+  assert.deepEqual(names, ["replan", "decision", "product", "fold", "execute", "close-out", "historical", "plan-from-issue"], "the route vocabulary is closed");
   // The sensor projects the router's class→destination mapping; neither may invent a
   // fourth destination for the same class (#224's three-contradictory-sentences defect).
   // Note: /plan-feature, /plan-fix are retired (feature 61 P8); the lane's command is /unit-lane.
