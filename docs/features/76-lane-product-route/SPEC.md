@@ -143,11 +143,11 @@ Embedded (S/M unit). Claims verified against `main` @ `c6b3201e`:
 
 | id | Claim | Evidence | Status |
 |---|---|---|---|
-| E1 | `routeOfRow` has no product branch; product-owned rows fall to `fold` | `scripts/unit-route.mjs:145-151` read; live repro `node scripts/unit-route.mjs 31-planning-review-materiality` → `route: fold`, rows F9 F10 | open |
-| E2 | FOLD_PROCESS freeze-batch keys only on `replan-in-unit`/`decision-required` | `skills/fold-findings/references/FOLD_PROCESS.md` batch table read | open |
-| E3 | `triage-issue` verdict vocabulary lacks a product outcome | `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md:37` read | open |
-| E4 | `PERSIST_AND_DECIDE.md:141` product bullet is not executable as typed (no router step, no per-kind command) | reference read | open |
-| E5 | Axis B ACs (issue AC3–7) landed with feature 73 | `skills/unit-lane/references/REVIEW.md` receipt wiring; `unit-route.mjs:729-730` per-phase + tier; `catalog.test.mjs:122` tier pin; SKILL.md closing block | open |
+| E1 | `routeOfRow` has no product branch; product-owned rows fall to `fold` | `scripts/unit-route.mjs:145-151` read; live repro `node scripts/unit-route.mjs 31-planning-review-materiality` → `route: fold`, rows F9 F10 | verified |
+| E2 | FOLD_PROCESS freeze-batch keys only on `replan-in-unit`/`decision-required` | `skills/fold-findings/references/FOLD_PROCESS.md` batch table read | verified |
+| E3 | `triage-issue` verdict vocabulary lacks a product outcome | `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md:37` read | verified |
+| E4 | `PERSIST_AND_DECIDE.md:141` product bullet is not executable as typed (no router step, no per-kind command) | reference read | verified |
+| E5 | Axis B ACs (issue AC3–7) landed with feature 73 | `skills/unit-lane/references/REVIEW.md` receipt wiring; `unit-route.mjs:729-730` per-phase + tier; `catalog.test.mjs:122` tier pin; SKILL.md closing block | verified |
 
 Prior-decisions contradiction sweep (plan step): candidate sources checked —
 no `decisions.md` existed before this unit, no frozen NRS artifact exists
@@ -165,9 +165,9 @@ architectural-invariants doc is installed. Hits and relations:
 
 | id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | `pre-execution-review/POLICY.md` §4 | the fold loop repairs source, never authority — a product-owned row must never fold | P2 P3 | product route + freeze-batch row | router + fold-findings | unit-route pins + discipline pin | Evidence row AC1/AC2 | open |
-| O2 | `review-implementation/CLASSIFY.md` owner table | product owner's hand-off is the lane; the router's `next` must name it as typed per unit kind | P2 P3 | route branch command + PERSIST_AND_DECIDE bullet | router + review-change | unit-route pins | Evidence row AC1 | open |
-| O3 | issue #293 AC8 | no existing test weakened; pins added for each changed behavior | P1 P5 | pins-first | tests | root suites | Evidence rows | open |
+| O1 | `pre-execution-review/POLICY.md` §4 | the fold loop repairs source, never authority — a product-owned row must never fold | P2 P3 | product route + freeze-batch row | router + fold-findings | unit-route pins + discipline pin | Evidence row AC1/AC2 | verified |
+| O2 | `review-implementation/CLASSIFY.md` owner table | product owner's hand-off is the lane; the router's `next` must name it as typed per unit kind | P2 P3 | route branch command + PERSIST_AND_DECIDE bullet | router + review-change | unit-route pins | Evidence row AC1 | verified |
+| O3 | issue #293 AC8 | no existing test weakened; pins added for each changed behavior | P1 P5 | pins-first | tests | root suites | Evidence rows | verified |
 
 ## Evidence
 
