@@ -75,6 +75,20 @@ jobs:
       - name: Root suites
         run: node --test scripts/*.test.mjs
 
+      # Version-parity gate, content half (feature 75, issue #292 — the #164
+      # option-4 gate): root `skills/` is the Pi package's shipped content but
+      # lives outside `packages/pi-agentic-workflow/**`, so a skills-only merge
+      # bumps nothing and npm ships stale skills (verified live 2026-10-15:
+      # registry 0.19.1's bundle 5 files behind main's skills/). Offline and
+      # deterministic: a three-dot diff vs origin/main over the closed trigger
+      # set (skills/** + packages/pi-agentic-workflow/**); any hit requires a
+      # package version bump + the CHANGELOG companion row. On main pushes the
+      # diff vs origin/main is empty, so this passes trivially there — the PR is
+      # where it bites. The registry half is the separate dependency-pin-gate
+      # job below (clearly-degraded-when-unreachable, AC3).
+      - name: Pi package version-parity gate (content — offline)
+        run: node scripts/version-parity-gate.mjs --content
+
   # Compatibility guard for @gtrabanco/pi-agentic-workflow (issue #283): the
   # package's own tsc only runs in publish-pi-package.yml — post-merge, and
   # against the pi version the frozen bun.lock pins — so a pi API change could
@@ -115,3 +129,25 @@ jobs:
             rm -rf "$tmp"
             echo "pi leg $leg: tsc --noEmit clean"
           done
+
+  # Version-parity gate, registry half (feature 75, issue #292): fails any PR
+  # where a pinned dependency has published a newer version than the exact pin
+  # (live 2026-10-15: schema 4.6.0 on the registry, 4.5.0 pinned). The only
+  # online half of the gate and deliberately a separate job: when the registry
+  # cannot be reached it degrades to a visible ::warning:: and exits 0 (AC3) —
+  # a network blip must never redden a PR no commit caused. Both jobs of this
+  # gate share scripts/version-parity-gate.mjs; the trigger set is closed:
+  # skills/** + packages/pi-agentic-workflow/** + the pinned dependency versions.
+  dependency-pin-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Dependency-pin gate (registry — degraded when unreachable)
+        run: node scripts/version-parity-gate.mjs --pins

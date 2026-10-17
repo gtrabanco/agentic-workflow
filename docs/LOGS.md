@@ -2882,3 +2882,17 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Triage of two `needs-triage` issues (#293, #292): verified all reported defects against live code, posted evidence-backed verdicts as GitHub issue comments, removed `needs-triage` labels.
 - **Decisions:** #293 (lane route + close-out seam): Axis A defects confirmed live — no `PRODUCT_ROUTE` in `unit-route.mjs`, fold-findings freeze-batch doesn't recognize product rows, no product repair skill exists, triage-issue has no product verdict, review-change hand-off is not executable. Axis B (close-out) all resolved by PR #297. Verdict: `fix-in-unit`, keep open as tracking issue. #292 (npm versioning gap): schema pin confirmed drift (4.6.0 on registry vs 4.5.0 pinned); no CI gate on `skills/**` changes exists; maps to roadmap row 258. Verdict: `fix-in-unit`, keep open, no immediate action.
 - **Next:** None immediate — both issues triaged with full evidence. Follow up on #293 product-route unit or #292 versioning gate when prioritized.
+
+## 2026-10-17T20:43:47Z — feat/75-pi-package-version-gate — manual (audit-pr run)
+- **Commits:** 10 (`d4f68d88…38423e07`)
+- **Files:** 10 files at the branch level — scripts/version-parity-gate.mjs/.test.mjs, .github/workflows/root-suite.yml, AGENTS.md, CHANGELOG.md, docs/features/75-pi-package-version-gate/{SPEC.md,decisions.md,ROADMAP row 75}, packages/pi-agentic-workflow/{package.json,bun.lock}
+- **Summary:** Ran `/audit-pr` on PR #299 (`feat/75-pi-package-version-gate → main`). Verdict: BLOCKED (2 blockers). Blocker 1 — no review-change REVIEW-PASS receipt exists on the PR (zero comments at head `38423e07`; `bun scripts/review-receipt.mjs verify --pr 299` → absent, exit 3). Blocker 2 — `bun scripts/unit-lineage.mjs --unit 75-pi-package-version-gate` prints LINEAGE BLOCKED because the SPEC's `### Obligations` table header cell is `id` instead of the enforced `obligation-id` (LEDGERS.md); rows O1–O6 are all verified, renaming the header clears it. CI green (3/3: root-suite, pi-compat-guard, dependency-pin-gate). Hygiene clean. Fold ledger created: `docs/features/75-pi-package-version-gate/review-findings.md` (uncommitted per audit-pr's read-first guardrail).
+- **Decisions:** (1) The audit's machine checks are authoritative — receipt absence is a blocker regardless of the `REVIEW-VERDICT: PASS` text in the PR body; `review-change` must post the SHA-bound marker. (2) The ledger header mismatch is a one-cell fix (`id` → `obligation-id`) that flips the lineage check to LINEAGE OK.
+- **Next:** fix F-75-1: run `/review-change` to post the REVIEW-PASS receipt at head `38423e0`; fix F-75-2: rename the ledger header cell to `obligation-id`; then re-run `/audit-pr`.
+
+## 2026-10-17T20:44:11Z — feat/75-pi-package-version-gate — manual
+- **Commits:** 10 (`d4f68d88…38423e07`)
+- **Files:** 10 files
+- **Summary:** Feature 75: version-parity gate for @gtrabanco/pi-agentic-workflow (Closes #292)
+- **Decisions:** PR-triggered content gate: root skills/ (the Pi package's shipped content) lives outside its package tree, so skills-only merges never bumped the version or triggered the publish workflow; CI gate fires on skills/** + packages/pi-agentic-workflow/** changes; registry pin drift triggers a separate degraded job
+- **Next:** PR #299 open (merge by human); after merge: verify publish-pi-package.yml ran and npm serves 0.20.0
