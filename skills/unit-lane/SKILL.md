@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -85,8 +85,9 @@ re-derives, reorders, or invents steps — it executes only what the catalog say
 
 ### 3. Execute triaged steps in order
 
-For each step the triage returned, follow its reference file. Execute **one step
-per turn-commit**:
+For each step the triage returned, follow its reference file. Judgment steps
+(research, design, plan, evidence, docs, review) run inline, **one step per
+turn-commit**:
 
 1. Read the step's reference — for example:
    [research](references/RESEARCH.md), [design](references/DESIGN.md),
@@ -99,6 +100,23 @@ per turn-commit**:
 4. Update the Progress log with a dated entry.
 5. Commit with a conventional commit message.
 6. For implement steps, run the diff guard (step 4 below).
+
+Execution steps (implement, tests) **never run inline at the conductor's
+tier** — per-step model routing is reachable only across a turn boundary, so
+execution work hands off one phase per turn:
+
+```
+→ Next: /execute-phase <NN-slug> P<k> (tier: <tier>) — run phase P<k>; the lane resumes after the last phase
+  · no unfinished phase → continue the close-out ladder (step 6)
+```
+
+`<k>` is the first unfinished phase (the unit doc's Progress log records the
+phases done so far; `bun scripts/unit-route.mjs <NN-slug>` prints it) and
+`<tier>` is the `implement` entry of the triage block's `Tiers:` line. Never
+print the bare whole-unit `/execute-phase <NN-slug>` — whole-unit loop mode
+survives only as an explicit operator choice. When the last phase's turn
+closes, `execute-phase` resumes the lane and the remaining judgment steps
+(evidence, review, docs, release) run here.
 
 ### 4. Diff-size guard (after each implement step)
 
@@ -116,12 +134,26 @@ Before every commit:
 - **Progress log**: `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next:
   <what is next>`
 
-### 6. Close the unit
+### 6. Close the unit — the close-out ladder
 
-When all triaged steps are done, run the review pack axis summary, update the
-unit doc's status, resolve every `## Future` row with the user (planned now —
-registered on explicit request only —, kept deferred, or discarded, dated),
-and print the closing block.
+When all triaged steps are done, in order:
+
+1. Run the review step (the in-doc `REVIEW-VERDICT` per
+   [review](references/REVIEW.md)).
+2. Resolve every `## Future` row with the user (planned now — registered on
+   explicit request only —, kept deferred, or discarded, dated).
+3. Update the unit doc's status and the index row (release step: branch
+   hygiene, PR creation, forge reconciliation).
+4. **Receipt stage.** The in-doc verdict is not the machine receipt. Verify
+   the PR's review receipt (`bun scripts/review-receipt.mjs verify --pr <N>`):
+   - **exit 0** (a current `review-change:pass` receipt at the settled head) →
+     the closing `→ Next:` recommends `/audit-pr <PR-url>` as the terminal
+     stage, with the receipt stated as its precondition.
+   - **otherwise** → the closing block is `→ Next: /review-change <NN-slug>`
+     (the receipt's sole owner) and `/audit-pr` is not printed — the gate is
+     never named before its precondition exists.
+
+A turn that ends with an unchecked ladder step is not done.
 
 ## Guardrails
 
@@ -140,16 +172,25 @@ and print the closing block.
 - Findings never authorize scope growth — record them, route to their owner
 - Never commit red (test failure) — fix or replan, never silence tests
 - Never alter a triaged step's order
+- Never run an execution phase inline or print a bare whole-unit
+  `/execute-phase` command — one phase per hand-off, tier attached
+- Never print `/audit-pr` before the PR's review receipt verifies current —
+  the receipt stage precedes the gate, always
 
 ## Relationship to other skills
 
 `unit-lane` absorbed the retired fixed-pipeline skills (design-feature,
-plan-feature, review-spec, review-plan) into catalog steps. The review pack axes
-(`review-implementation`, `review-code`, `review-security`, `review-perf`,
-`review-a11y`, `review-debt`) compose the review step; `triage-issue` feeds
-issues into the lane; `workflow-status` computes the next lane invocation.
-`init-workspace` seeds the unit doc template and catalog conventions into target
-projects.
+plan-feature, review-spec, review-plan) into catalog steps. `execute-phase` is
+the lane's executor: the lane conducts (triage, plan, evidence, review,
+close-out) and hands execution off one phase per turn at the phase's tier;
+its closing block names the next single phase and resumes the lane after the
+last one. The review pack axes (`review-implementation`, `review-code`,
+`review-security`, `review-perf`, `review-a11y`, `review-debt`) compose the
+review step; `/review-change` owns the SHA-bound receipt the close-out ladder
+verifies; `/audit-pr` is the terminal merge gate. `triage-issue` feeds issues
+into the lane; `workflow-status` computes the next lane invocation.
+`init-workspace` seeds the unit doc template and catalog conventions into
+target projects.
 
 ## Portability (agents other than Claude Code)
 
@@ -162,17 +203,20 @@ projects.
 
 ## Done when
 
-- Every triaged step is executed and committed.
+- Every triaged step is executed and committed — execution phases one
+  `/execute-phase <NN-slug> P<k>` turn each, never inline.
 - The unit doc's Evidence rows, Progress log, and References section are current.
-- The diff guard passed for all implement steps.
+- The diff guard passed for all implement steps (or an exception is recorded).
 - The review step is complete (or skipped per catalog).
+- The close-out ladder ran: receipt verified current, or the closing block
+  hands off to `/review-change` before any `/audit-pr` mention.
 - **The closing `→ Next:` block is printed.**
 
 ## Closing recommendation
 
 ```
-→ Next: /unit-lane <NN-slug> — continue to the next triaged step
-  · all steps done → /review-change (review the accumulated diff)
+→ Next: /execute-phase <NN-slug> P<k> (tier: <tier>) — run the next unfinished phase
+  · execution done, receipt current (verify --pr <N> exit 0) → /audit-pr <PR-url> — terminal merge gate; the current review-change:pass receipt is its precondition
+  · execution done, PR open, receipt missing → /review-change <NN-slug> — post the SHA-bound receipt first
   · re-triage needed → /unit-lane <NN-slug> --retriage
-  · finished and merge-ready → /audit-pr (merge gate)
 ```

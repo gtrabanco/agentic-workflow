@@ -320,10 +320,13 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
   // (named precondition, never a module-not-found) are unchanged.
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
-  // The F13 fold added the router edge to that graph (the sensor imports the
-  // router's row semantics); the sandbox mirrors it, so the assertions stay "the
-  // named precondition, never a module-not-found".
+  // router's row semantics); the sandbox mirrors it, so the assertions stay
+  // "the named precondition, never a module-not-found". #291 AC3: the
+  // phase-parser was added on the router's import graph (unit-route → phase-lint
+  // → unit-doc-phases). All three files are mirrored.
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -345,9 +348,13 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   // (named precondition, never a module-not-found) are unchanged.
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
   // The F13 fold added the router edge to that graph (the sensor imports the
-  // router's row semantics); the sandbox mirrors it, so the assertions stay "the
-  // named precondition, never a module-not-found".
+  // router's row semantics); the sandbox mirrors it, so the assertions stay
+  // "the named precondition, never a module-not-found". #291 AC3: the
+  // phase-parser was added on the router's import graph (unit-route → phase-lint
+  // → unit-doc-phases). All three files are mirrored.
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
+  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",

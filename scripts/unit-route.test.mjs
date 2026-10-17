@@ -291,11 +291,302 @@ test("F30: the ledger's annotated closed spellings are not open rows", () => {
   assert.equal(rowLine(result.stdout), "F24", "the annotated `yes` spellings are closed; the annotated `no` is open");
 });
 
-test("F31: the execute route names the frozen `--fix <n>` invocation for a fix unit", () => {
+test("F31/#291: the execute route names the frozen `--fix <n>` invocation, one phase and the tier", () => {
   const result = run(["22-execute-fix"]);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(routeLine(result.stdout), "execute");
-  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22");
+  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22 P2 (tier: cheap)");
+});
+
+test("#291 AC3: the feature execute route names exactly one phase and the execution tier", () => {
+  const result = run(["13-execute-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  // The unit's Progress log records P1; the first unfinished phase is P2.
+  assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+});
+
+test("#291 AC3: a planned unit with an untouched Progress log hands off P1", () => {
+  const result = run(["14-empty-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  assert.equal(nextLine(result.stdout), "/execute-phase 14-empty-unit P1 (tier: cheap)");
+});
+
+test("#291 AC3: the execute route fails closed when no phase is parseable — never a bare whole-unit command", () => {
+  const result = run(["17-phaseless-unit"]);
+  assert.equal(result.status, 1);
+  assert.equal(routeLine(result.stdout), null, "no route block on stdout");
+  assert.ok(result.stderr.includes("no parseable phase"), result.stderr);
+  assert.ok(!/execute-phase/.test(result.stdout), "the bare whole-unit command is never emitted");
+});
+
+test("#291 F1: Progress log `next: P<k>` tail never marks k done — only entry heads count", () => {
+  // F1 reproducer: a Progress entry whose only `P<k>` is in the `next:` tail.
+  // Before the fix, `recordedPhases` matched the `next: P2` and would skip P1.
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f1-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Replace the Progress log so that P1 is ONLY in the `next:` tail.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — design records written → deadbeef00000000000000000000000000000000 — next: P1 implement"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // P1 was NOT recorded (only in `next:` tail), so the first unfinished is P1.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P1 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F4: Progress log entry head with mid-prose P<n> mention does NOT mark that phase done", () => {
+  // F4 reproducer: an entry whose head mentions a later phase in prose
+  // ("- ... diff-guard ... P1 and P2 are separate scoped commits ...").
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f4-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Tasks P1,P2,P3; Progress log: P1 done, then a prose entry mentioning P2.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — reverted the P2 spike; nothing shipped → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // The prose "reverted the P2 spike" must NOT mark P2 done, so the first
+    // unfinished is P2 (P1 was the only recorded phase).
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F4b: indented list-marker continuation line does NOT re-open an entry", () => {
+  // F4b reproducer: an indented list marker after a blank line re-opened the
+  // previous code path. Indented markers are continuation prose.
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f4b-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Tasks P1,P2,P3; Progress log: P1 done, then an indented list-marker
+  // line that mentions P2 in prose.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — note from review\n  - P2 spiked and reverted; nothing shipped"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // The indented list marker must NOT re-open an entry, so P2 is NOT
+    // recorded and the first unfinished is P2.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F7: long Progress-log line uses linear scan (not quadratic split)", () => {
+  // F7 reproducer: a single very long Progress-log line must not trigger
+  // quadratic backtracking from the split(/\s+next:.*$/i) pattern.
+  // The fix replaces it with indexOf(" next:") which is O(n).
+  // This test verifies correctness (no P<n> from the long whitespace run
+  // is accidentally captured).
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f7-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  // Replace the Progress log with a P1-done entry followed by a line of
+  // 50000 spaces (no " next:" at all).  A quadratic split would stall;
+  // a linear scan should return instantly and not capture any phase id.
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n" + " ".repeat(50000) + "x"
+    )
+  );
+  try {
+    const t0 = Date.now();
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    const elapsed = Date.now() - t0;
+    assert.equal(result.status, 0, result.stderr);
+    // The long whitespace line must not capture any phase id.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+    // Must complete in under 500ms (quadratic would take many seconds).
+    assert.ok(elapsed < 500, `F7 linear scan took ${elapsed}ms (expected <500ms)`);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+// ===========================================================================
+// #291 F8: Progress log documents form — phase id in action prose is recorded
+// ===========================================================================
+
+test("#291 F8: `— P<n> — implemented` records the phase (formal shape)", () => {
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f8-formal-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — P2 — implemented and verified → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 1, "every phase is recorded — no more work");
+    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F8: `— P<n> implemented` (no second dash) records the phase", () => {
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f8-simple-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — P2 implemented and verified → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 1, "every phase is recorded — no more work");
+    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F8: `— implement P2: ...` (action word before P) records the phase", () => {
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f8-action-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — implement P2: hunks landed → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 1, "every phase is recorded — no more work");
+    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F8: `— revert P2 spike` does NOT record P2 (not a known action)", () => {
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f8-revert-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — reverted the P2 spike; nothing shipped → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // P2 was NOT recorded (revert is not a known action), so first unfinished is P2.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("#291 F8: `— diff guard after P1: ...` records P1 via action keyword", () => {
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f8-diffguard-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  const spec = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const before = fs.readFileSync(spec, "utf8");
+  fs.writeFileSync(
+    spec,
+    before.replace(
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement",
+      "- 2026-09-01 10:00 — P1 implemented and verified → 0123456789abcdef0123456789abcdef01234567 — next: P2 implement\n- 2026-09-02 10:00 — diff guard after P1: pass → deadbeef00000000000000000000000000000000"
+    )
+  );
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    // P1 recorded via diff guard, P2 is first unfinished.
+    assert.equal(nextLine(result.stdout), "/execute-phase 13-execute-unit P2 (tier: cheap)");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
 });
 
 test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {

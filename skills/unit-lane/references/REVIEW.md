@@ -5,6 +5,18 @@
 Proportional + materiality review. A finding blocks only when a user-visible
 outcome the ACs would miss, or a contract violation.
 
+## Receipt boundary (issue #291 AC1)
+
+The in-doc `REVIEW-VERDICT` is prose evidence, **not** the machine receipt
+`/audit-pr` consumes. The receipt's sole owner is `/review-change`
+(`bun scripts/review-receipt.mjs emit`). At close-out, with the PR open:
+
+- `bun scripts/review-receipt.mjs verify --pr <N>` exit 0 → the closing block
+  recommends `/audit-pr <PR-url>` as the terminal stage.
+- otherwise → the closing block is `→ Next: /review-change <NN-slug>` and
+  `/audit-pr` is never printed first. `n/a: no PR` is not a silent pass — the
+  release step opens the PR before close-out, so the hand-off always fires.
+
 ## Inputs
 
 - The unit's Evidence section (reviewer re-runs it)
@@ -43,3 +55,5 @@ REVIEW-VERDICT: PASS | FAIL
 - Never approve without re-running the evidence
 - Never skip an axis the catalog demands
 - Never reuse a finding from a previous cycle without re-evaluating it
+- Never treat the in-doc verdict as the merge gate's receipt — the close-out
+  ladder verifies `review-receipt.mjs` before any `/audit-pr` mention

@@ -34,7 +34,7 @@
       "applies_when": "unit_type in ['feature', 'fix', 'chore']",
       "skipped_when": "unit_type == 'docs'",
       "requires_gate": false,
-      "budget_tier": "strong"
+      "budget_tier": "cheap"
     },
     "tests": {
       "applies_when": "unit_type in ['feature', 'fix'] && scope != 'trivial' && tests_section != 'n/a'",
