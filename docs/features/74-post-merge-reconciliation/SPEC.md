@@ -114,10 +114,13 @@ Budget: strong
 2026-10-17 09:20 — evidence step: AC-2…AC-6 rows present from P1 runs (re-runnable as written); AC-1 row lands with the P2 review receipt — next: review (5 isolated axis reviewers spawned over the union diff)
 2026-10-17 09:45 — review P2: 5 isolated axis reviewers over the union diff — code FAIL (RC-1 med: fenced `## Tasks` hijack, reproduced, routed to fix/272 surface per non-goals), verify FAIL (V1 major: this doc's own validator spans lint-BLOCKED), security/perf/brand PASS — next: P3 fold
 2026-10-17 09:55 — implement P3: fold F-74-2 (validator spans rewritten to the enforced shape; `phase-lint` verdict PASS 6/6 ×3) → 7d075a8a — next: review ledger + docs
+2026-10-17 10:05 — review step closed: fused receipt at docs/features/74-post-merge-reconciliation/review-findings.md (AC-1 evidence row recorded) → 06fc50af — next: docs
+2026-10-17 10:10 — branch hygiene: lane commits moved from local main to 74-post-merge-reconciliation (main reset to origin/main; no push happened) — next: docs step
+2026-10-17 10:12 — docs step: roadmap row 74 registered (in-progress · #275, ordered after row 73); no CHANGELOG row (no skill/package surface touched; bump-skill n/a); SPEC ## Next re-pointed → next: release
 
 ## Next
 
-Run triage: `bun scripts/unit-route.mjs --triage post-merge-reconciliation`
+Open the PR (release step): push `74-post-merge-reconciliation` and open one PR against `main` with `Closes #275`.
 
 ## References
 
