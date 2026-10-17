@@ -4,6 +4,13 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
+## 2026-10-17T08:35:37Z — feat/73-lane-closeout-handoffs — manual
+- **Commits:** 34 (`22e96166…74990e84`)
+- **Files:** 28 files
+- **Summary:** fold-findings on unit 73 (feat/73-lane-closeout-handoffs): discovered freeze-batch — F10 has replan-in-unit class, router concluded route: replan; six findings (F10–F15) retained for /unit-lane 73-lane-closeout-handoffs
+- **Decisions:** Freeze-batch rule applies: a single replan-in-unit row blocks all folding — no commits, no folded: yes flips, no code changes; the lane's planner command (/unit-lane 73-lane-closeout-handoffs) is the hand-off per fold-findings spec
+- **Next:** /unit-lane 73-lane-closeout-handoffs — the lane re-runs its plan step to append phases for F10 (recordedPhases regression) + F11 (diff-guard doc drift) + F12 (Evidence count drift) + F13 (missing review receipt) + F14 (triaged steps header) + F15 (open obligations); then review gates before /execute-phase
+
 ## 2026-09-16T08:00Z — feat/52-machine-checked-turn-contract — manual (review-spec pass)
 - **Commits:** 1 (`f38f9bb8`) on branch `feat/52-machine-checked-turn-contract` (later merged into main via PR #236, merge commit `251383f5`)
 - **Files:** `docs/features/52-machine-checked-turn-contract/{progress.md,planning-findings.md}`
