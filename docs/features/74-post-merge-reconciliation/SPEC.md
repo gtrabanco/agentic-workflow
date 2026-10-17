@@ -86,10 +86,10 @@ XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verifie
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| AC-2 | `grep -c "^## Prior-decisions contradiction sweep" skills/unit-lane/references/PLAN.md` + `grep -c "<<<<<<<\|>>>>>>>" …` | 1 · 0 | sweep section present; zero conflict markers | claude (sonnet, session) |
+| AC-2 | `grep -c "^## Prior-decisions contradiction sweep" skills/unit-lane/references/PLAN.md` + `grep -c "<<<<<<<\|>>>>>>>" skills/unit-lane/references/PLAN.md` | 1 · 0 | sweep section present; zero conflict markers | claude (sonnet, session) |
 | AC-3 | `bun scripts/check-skill-context.mjs` + `--routes` | 0 · PASS | route budgets: 14 routes PASS; ceilings carry declared growth sources (policy.rules; rows "feature 69 / issue #270", "fix #272 (unit-doc bullet grammar)") | claude (sonnet, session) |
 | AC-4 | `node --test scripts/*.test.mjs` (rendered-facts checks) + `grep -c "^| 69 \|^| 70 " docs/features/ROADMAP.md` | 0 · 2 | suite green incl. CHANGELOG version-table/package-versions; roadmap rows 69 then 70 in order | claude (sonnet, session) |
-| AC-5 | `gh pr diff 280 --name-only \| grep -ci mcp` ×2 (also PR #276) | 0 · 0 | zero `.pi/mcp*` paths in either merged PR's diff | claude (sonnet, session) |
+| AC-5 | `gh pr diff 280 --name-only \| grep -ci mcp || true` ×2 (also PR #276) | 0 · 0 | zero `.pi/mcp*` paths in either merged PR's diff | claude (sonnet, session) |
 | AC-6 | `node --test scripts/*.test.mjs` | 0 | tests 663, pass 663, fail 0 | claude (sonnet, session) |
 | AC-1 | `grep -c "REVIEW-RAN" docs/features/74-post-merge-reconciliation/review-findings.md` | 0 · 1 | union receipt present: 5 isolated axes (code FAIL→RC-1 routed, verify FAIL→V1 folded, security/perf/brand PASS), verdict REVIEW-FAIL with the one open fix-now routed to the fix/272 surface | claude (sonnet, session) + 5 isolated reviewers |
 
@@ -121,7 +121,11 @@ Budget: strong
 
 ## Next
 
-Merge PR #298 (https://github.com/gtrabanco/agentic-workflow/pull/298) — one review receipt exists (REVIEW-FAIL: F-74-1 routed to the fix/272 surface; the combination itself is green). Owner-only merge per the merge-guard convention.
+PR #298 is not merge-ready until the open fix-now findings are resolved:
+- /triage-issue on F-74-1 — no tracked issue exists for the fenced `## Tasks` defect in `scripts/unit-doc-phases.mjs`; F-74-9 is the deferral that needs triage
+- /review-change 74-post-merge-reconciliation — the PR carries no `REVIEW-PASS` marker (F-74-7, `bun scripts/review-receipt.mjs verify --pr 298` → absent, exit 3)
+
+Once both are closed and a passing review exists at the PR head, /audit-pr is the merge gate. Owner-only merge per the merge-guard convention.
 
 ## References
 
