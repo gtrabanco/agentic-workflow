@@ -139,6 +139,7 @@ Report-notes:
 2026-10-15 — P4 drift repair: schema pin 4.6.0, package 0.20.0, bun.lock refreshed (`bun install --frozen-lockfile` exit 0), companion row (check-changelog-row = 1); package suite 432/432 → cb32398c; diff-guard PASS 9/3 vs 9998d749 — next: P5
 2026-10-15 — P5 AGENTS.md Packages names the gate + trigger set + degraded job; normative-drift green → f9fb8959; diff-guard PASS 17/1 vs cb32398c — next: P6
 2026-10-15 — P6 verification: root suites 685/685, package suite 432/432, AC1 negative demonstrated (simulated skills-only merge → exit 1 naming package + CHANGELOG row), live pin-drift FAIL captured pre-repair, bundle+tarball parity 84=84; PE-001 corrected (bump-skill is filtered by design) → b8239902 — next: review + release
+2026-10-15 — release: PR #299 opened against main (`Closes #292`), roadmap row done, references updated → PR: https://github.com/gtrabanco/agentic-workflow/pull/299 — next: audit-pr / human merge
 2026-10-15 — review: verdict PASS, 0 material / 1 report-note, evidence reproduced, AC digest unchanged — next: release (PR)
 
 ## Next
@@ -148,7 +149,7 @@ Open the PR (`Closes #292`); after merge, verify the publish workflow ran and np
 ## References
 
 - Closes #292
-- PR: <url>
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/299
 - Branch: feat/75-pi-package-version-gate
 - Commit: b8239902
 - #164 (closed, option 4 never implemented), #180 (open, promoted auto-bump), #281 (prior symptom), #285/#289 (the stranded schema 4.6.0 fix)
