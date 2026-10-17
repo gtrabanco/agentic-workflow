@@ -44,6 +44,7 @@
    | Condition over the taken batch | Batch class | Fold behavior |
    |---|---|---|
    | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner command the router printed — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
+   | ≥ 1 row with frozen class `fix-now` whose `Route` cell begins `product owner` (owning stage `product`) | `frozen (product owner present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the PRODUCT-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>`: `route: product` and the lane hand-off — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane repairs the half, its `review` step re-judges it, then `/execute-phase` on this unit |
    | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
    | empty queue (zero findings taken) | `none` | receipt only |
 
@@ -82,7 +83,7 @@ present:
 - Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
 - Refuted/open: <F-ids joined ` + `, or `none`>
 - Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
-- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Batch class: <all-repair-in-place | frozen (replan present) | frozen (product owner present) | none>
 - Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
-- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE | PRODUCT-ROUTE>
 ```

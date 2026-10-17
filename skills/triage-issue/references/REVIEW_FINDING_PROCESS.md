@@ -24,6 +24,13 @@ after `/fold-findings` leaves rows unresolved.
      `decision-required`. Ask the user; do not guess or weaken the finish line.
    - A finding disproved by current evidence is `disputed`. Preserve the row
      and show the evidence; do not mark it folded or silently delete it.
+   - A `fix-now` finding whose owning stage is `product` — the finding is
+     against the product half, not the code — is `product-repair` (#293). Run
+     `node scripts/unit-route.mjs <unit>`; its `route: product` line prints the
+     lane hand-off (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
+     for a fix): the lane repairs the half, its review step re-judges it. Never
+     fold it into the current unit — the fold loop repairs source, not
+     authority (`pre-execution-review` POLICY §4).
 
 4. Never implement the new phases in this triage turn. After a replan, ask the
    user to continue manually with `/execute-phase <unit> P<n>` (or the fix
@@ -34,7 +41,7 @@ Return exactly one block per finding:
 ```text
 REVIEW FINDING <F-k> — <short title>
 Checked: <commands and evidence>
-VERDICT: fix-now | replan-in-unit | decision-required | disputed
+VERDICT: fix-now | replan-in-unit | decision-required | product-repair | disputed
 Action taken: <current-unit fold/phase | unit-lane | user decision>
 ```
 

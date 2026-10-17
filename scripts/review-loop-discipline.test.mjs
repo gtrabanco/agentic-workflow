@@ -219,9 +219,9 @@ assert.match(foldSkill, /## REPAIR-RECEIPT/);
 assert.match(foldSkill, /- Repaired: <F-ids with \(VF-<n>\) refs, joined ` \+ `, or `none`>/);
 assert.match(foldSkill, /- Refuted\/open: <F-ids joined ` \+ `, or `none`>/);
 assert.match(foldSkill, /- Gate: <command> .*exit <n> at head <40-hex sha>/);
-assert.match(foldSkill, /- Batch class: <all-repair-in-place \| frozen \(replan present\) \| none>/);
+assert.match(foldSkill, /- Batch class: <all-repair-in-place \| frozen \(replan present\) \| frozen \(product owner present\) \| none>/);
 assert.match(foldSkill, /- Fold diff: <shortstat from a real `git diff` run>/);
-assert.match(foldSkill, /- Branch: <RE-REVIEW-REQUIRED \(delta\) \| RE-REVIEW-OPTIONAL \| RE-REVIEW-SKIPPED \| REPLAN-ROUTE>/);
+assert.match(foldSkill, /- Branch: <RE-REVIEW-REQUIRED \(delta\) \| RE-REVIEW-OPTIONAL \| RE-REVIEW-SKIPPED \| REPLAN-ROUTE \| PRODUCT-ROUTE>/);
 
 // 10b. The receipt is immutable once printed and emitted after the tally as
 // the ABSOLUTE-last output together with the branching block.

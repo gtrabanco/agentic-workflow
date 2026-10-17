@@ -192,14 +192,23 @@ Step notes:
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| AC1 | `node scripts/unit-route.mjs 31-planning-review-materiality` (live, P2 head `e8a4522f`) | exit 0 · fingerprint `9bcdd584…` | `route: product` · `next: /unit-lane 31-planning-review-materiality` | `node --test scripts/unit-route.test.mjs` pins (39 pass) |
+| AC1 | `node --test scripts/unit-route.test.mjs` (P1 pins red-first, green after P2) | exit 0 | tests 39, pass 39, fail 0 | pins in `scripts/unit-route.test.mjs` + fixtures |
+| AC2 | `node --test scripts/review-loop-discipline.test.mjs` (freeze-batch pin for product-owner class) | exit 0 | tests 27, pass 27, fail 0 | pin `assert.match(foldSkill, /frozen \(product owner present\)/)` |
+| AC3–AC5 | P2 additions: `workflow-status-sensor.test.mjs` + `next-recommendations.test.mjs` pins; tier consumption landed with 73 | exit 0 | next-recommendations PASS · sensor pins pass | `scripts/workflow-status-sensor.test.mjs`, `scripts/next-recommendations.test.mjs` |
+| AC8 | validators after P3: `node --test scripts/review-loop-discipline.test.mjs scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs` | exit 0 | PASS next-rec · PASS review-loop-discipline · fail 0 | combined run, no test weakened — pins were added, existing assertions only widened to the new closed vocabulary |
+| — | diff guard (P3, working tree vs HEAD) | PASS | Lines: 47 (+34/-13) · Files: 5 (limit 8) | `bun scripts/diff-guard.mjs --base HEAD --unit 76` |
 
 ## Progress log
 
 `2026-10-17 20:53 — unit doc created from issue #293; roadmap row 76 (defined); triage run + pasted; research/design/plan steps closed (decisions.md + sweep) → (this commit) — next: P1 pins`
+`2026-10-17 20:58 — P1 pins: unit-route product-route cases (route, fix-unit hand-off, co-resident replan priority, plain fix-now still folds), freeze-batch class pin, next-recommendations pins; red-first per AC8 → 8891d84c — next: P2 router`
+`2026-10-17 21:07 — P2 router: PRODUCT_ROUTE vocabulary, routeOfRow product branch before fold fall-through, per-kind lane hand-off command, sensor projection (workflow-status.mjs) + pins; AC1 live repro now prints route: product → e8a4522f — next: P3 consumers`
+`2026-10-17 21:40 — P3 consumers: FOLD_PROCESS freeze-batch row + receipt PRODUCT-ROUTE branch (fold-findings), product-repair verdict routed through the router (triage-issue), executable product hand-off (review-change PERSIST_AND_DECIDE); validators green, diff guard PASS → (this commit) — next: P4 bump-skill bookkeeping`
 
 ## Next
 
-Execute P1 (pins-first tests), then P2.
+Execute P4 (bump-skill pass, context-budget check, package version bump), then P5 (evidence re-run of AC3–AC7, root suites, PR).
 
 ## References
 
