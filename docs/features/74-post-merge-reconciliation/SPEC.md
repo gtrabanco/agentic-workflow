@@ -91,7 +91,8 @@ XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verifie
 | AC-4 | `node --test scripts/*.test.mjs` (rendered-facts checks) + `grep -c "^| 69 \|^| 70 " docs/features/ROADMAP.md` | 0 · 2 | suite green incl. CHANGELOG version-table/package-versions; roadmap rows 69 then 70 in order | claude (sonnet, session) |
 | AC-5 | `gh pr diff 280 --name-only \| grep -ci mcp || true` ×2 (also PR #276) | 0 · 0 | zero `.pi/mcp*` paths in either merged PR's diff | claude (sonnet, session) |
 | AC-6 | `node --test scripts/*.test.mjs` | 0 | tests 663, pass 663, fail 0 | claude (sonnet, session) |
-| AC-1 | `grep -c "REVIEW-RAN" docs/features/74-post-merge-reconciliation/review-findings.md` | 0 · 1 | union receipt present: 5 isolated axes (code FAIL→RC-1 routed, verify FAIL→V1 folded, security/perf/brand PASS), verdict REVIEW-FAIL with the one open fix-now routed to the fix/272 surface | claude (sonnet, session) + 5 isolated reviewers |
+| AC-1 | `grep -c "REVIEW-RAN" docs/features/74-post-merge-reconciliation/review-findings.md` | 0 · 3 | union receipt present (5 isolated axes, verdict REVIEW-FAIL at the time → superseded); cycle-3 delta receipt: 5 axes PASS, REVIEW-PASS | claude (sonnet, session) + 5 isolated reviewers |
+| AC-1 (receipt, F-74-7) | `bun scripts/review-receipt.mjs emit --pr 298 --head "$(git rev-parse HEAD)" --scope-base main` | 0 | SHA-bound `review-change:pass` marker posted and re-read at the branch head; `verify --pr 298` → `current` | review-receipt.mjs emitter (contract=v1) |
 
 ## Triaged steps
 
@@ -120,15 +121,17 @@ Budget: strong
 2026-10-17 10:20 — release step: diff-guard PASS (191/4); branch pushed; PR #298 opened with `Closes #275` + Evidence table; References block written; roadmap row 74 flipped to `done · [#298]` → next: unit close-out
 2026-10-17 11:40 — cycle-2 review: F-74-10 + F-74-11 + F-74-12 folded (hand-off copy, roadmap table continuity, Evidence reproducibility) → c22b507b — next: owner-directed widening
 2026-10-17 12:05 — owner direction: F-74-1 repaired in this unit (not deferred to a new issue) — `locateTasksSection` walks the document with the fence state machine so a fenced `## Tasks` example can no longer hijack the real section; `phase-lint.test.mjs` carries the red-before/green-after reproducer; F-74-9 (the untracked deferral) closes with it — next: review receipt
+2026-10-17 19:50 — review cycle 3 (delta `7eebaa10..ed556b0d`): five isolated axes PASS — code (offsets/fences/behavior preservation; reproducer fails on reverted code), security (fail-closed), verify (664/664; red-before 151/1; `--routes` PASS; `LINEAGE OK`), perf (100 MB doc in 2.53 s), brand (2 low report-only notes: B-74-1 detached ledger rows, R-code-1 comment typo); ledger committed at aa4f877c; F-74-7 closed with the SHA-bound REVIEW-PASS receipt emitted at the branch head right after this commit — next: /audit-pr merge gate
 
 ## Next
 
-PR #298 is not merge-ready until one finding is resolved:
-- /review-change 74-post-merge-reconciliation — the PR carries no `REVIEW-PASS` marker (F-74-7, `bun scripts/review-receipt.mjs verify --pr 298` → absent, exit 3)
+All triaged steps are done and the unit is review-clean:
 
-F-74-1 (the fenced `## Tasks` hijack in `scripts/unit-doc-phases.mjs`) and its deferral F-74-9 are folded in this unit at the owner's direction: the section locator now walks the document with the same fence state machine as the body, and `scripts/phase-lint.test.mjs` carries the red-before/green-after reproducer.
+- Cycle-3 delta review: five isolated axes PASS at `ed556b0d`; the two low findings are report-only notes with re-trigger conditions (see `review-findings.md`, cycle 3).
+- F-74-1 + F-74-9 folded at the owner's direction: fence-aware `## Tasks` locator + red-before/green-after reproducer.
+- F-74-7 closed: SHA-bound `REVIEW-PASS` receipt posted at the branch head (`bun scripts/review-receipt.mjs verify --pr 298` → `current`).
 
-Once a passing review exists at the PR head, /audit-pr is the merge gate. Owner-only merge per the merge-guard convention.
+/audit-pr is the merge gate. Owner-only merge per the merge-guard convention.
 
 ## References
 
