@@ -59,6 +59,17 @@ None — one-time reconciliation; no standing rule introduced.
 - P2 — Run the review pass over the union diff of PR #280 + PR #276 (files, skills, budgets, records the branches share), classify findings, record the receipt against the merge state. (validator: review receipt recorded in `docs/features/74-post-merge-reconciliation/review-findings.md` with a verdict)
 - P3 — Repair any fix-now findings from P2 (if none: record `none` and close). (validator: re-run of the affected validator exits 0)
 
+### Prior-decisions sweep
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| one PR for this unit, based on `main` | "One PR per unit of work, always against `main`" | AGENTS.md (Working rules) | compatible |
+| unit doc + review receipt in English | "Docs language is English-only (interim)" | AGENTS.md (Working rules) | compatible |
+| PLAN.md keeps both sections, format owned by `phase-contract` | phase-contract 1.1.0 owns the two phase grammars and the PLAN format (fix #272) | skills/phase-contract/SKILL.md:4 | compatible |
+| budget ceilings carry declared growth sources | "every ceiling raise names its real growth source in the commit and changelog row" | docs/workflow/SKILL_CONTEXT_BUDGETS.json (policy.rules) | compatible |
+
+Clean — no `contradicts` row; the plan proceeds.
+
 ## Planning evidence
 
 XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verified 2026-10-17: `## Prior-decisions contradiction sweep` present, no markers); route budget table passes `--routes` (14 routes, PASS); roadmap rows 69 then 70 present and ordered; full suite 663/663 pass at HEAD 3844c1ae; PR diffs #280/#276 contain no `.pi/mcp*` path.
@@ -89,6 +100,9 @@ Budget: strong
 ## Progress log
 
 2026-10-17 08:45 — unit doc created from issue #275 (from-issue route) — next: triage
+2026-10-17 08:52 — research step: per-AC state verified at HEAD 3844c1ae (PLAN.md both sections/no markers, `--routes` 14 PASS, roadmap 69→70 ordered, suite 663/663, no `.pi/mcp*` in PR #280/#276 diffs; budget growth sources declared incl. "feature 69 / issue #270" and "fix #272" rows) — next: design
+2026-10-17 08:56 — design step: ACs adopted from issue #275's draft; gap interview closed with 3 recorded decisions (review depth, receipt home, AC adoption), 2 assumptions; `## Future` = none — next: plan
+2026-10-17 09:00 — plan step: prior-decisions sweep clean (4 compatible rows, 0 contradicts); ledgers embedded (XS/S home) — next: implement
 
 ## Next
 
