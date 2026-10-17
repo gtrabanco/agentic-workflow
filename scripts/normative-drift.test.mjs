@@ -1273,11 +1273,13 @@ test("#244 freeze-batch hand-off: the decision-required branch surfaces the user
   // The decision-table freeze-batch cell carries the same branch.
   const rows = markdownTable(skill, "Closing-block decision branch");
   assert.ok(rows, "the closing-block decision table exists");
-  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
-  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  // With the PRODUCT-ROUTE row (feature 76), pick the REPLAN-ROUTE row specifically;
+  // the first "freeze-batch" row is now PRODUCT-ROUTE which has no decision branch.
+  const replanRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch") && cells[0].includes("replan-class"));
+  assert.ok(replanRow, "the freeze-batch replan-class row exists in the decision table");
   assert.ok(
-    freezeRow[freezeRow.length - 1].includes(decisionConsumer),
-    "the freeze-batch consumer cell must surface the decision-required consumer"
+    replanRow[replanRow.length - 1].includes(decisionConsumer),
+    "the replan-class freeze-batch consumer cell must surface the decision-required consumer"
   );
 
   // Both skill files state the branch.
