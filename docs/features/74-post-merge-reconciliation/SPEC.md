@@ -34,7 +34,7 @@ From the issue's draft ACs (each already command-verifiable):
 
 - The MCP migration itself (owned by its own feature/window).
 - Implementing #274 (pi tool surface) or any new capability.
-- Re-opening #270/#272's own scope — this unit only reviews the combination and repairs what the combination breaks.
+- Re-opening #270/#272's own scope — this unit only reviews the combination and repairs what the combination breaks. **Owner-directed exception (2026-10-17):** F-74-1, the fence defect this unit's review found in #272's parser, is repaired here rather than deferred to a new unit, so the combination ships without a fail-open lint.
 - No pi 0.99 semantic work: those decisions live in #201, #269, #274 and the MCP feature.
 
 ## Future
@@ -118,14 +118,17 @@ Budget: strong
 2026-10-17 10:10 — branch hygiene: lane commits moved from local main to 74-post-merge-reconciliation (main reset to origin/main; no push happened) — next: docs step
 2026-10-17 10:12 — docs step: roadmap row 74 registered (in-progress · #275, ordered after row 73); no CHANGELOG row (no skill/package surface touched; bump-skill n/a); SPEC ## Next re-pointed → next: release
 2026-10-17 10:20 — release step: diff-guard PASS (191/4); branch pushed; PR #298 opened with `Closes #275` + Evidence table; References block written; roadmap row 74 flipped to `done · [#298]` → next: unit close-out
+2026-10-17 11:40 — cycle-2 review: F-74-10 + F-74-11 + F-74-12 folded (hand-off copy, roadmap table continuity, Evidence reproducibility) → c22b507b — next: owner-directed widening
+2026-10-17 12:05 — owner direction: F-74-1 repaired in this unit (not deferred to a new issue) — `locateTasksSection` walks the document with the fence state machine so a fenced `## Tasks` example can no longer hijack the real section; `phase-lint.test.mjs` carries the red-before/green-after reproducer; F-74-9 (the untracked deferral) closes with it — next: review receipt
 
 ## Next
 
-PR #298 is not merge-ready until the open fix-now findings are resolved:
-- /triage-issue on F-74-1 — no tracked issue exists for the fenced `## Tasks` defect in `scripts/unit-doc-phases.mjs`; F-74-9 is the deferral that needs triage
+PR #298 is not merge-ready until one finding is resolved:
 - /review-change 74-post-merge-reconciliation — the PR carries no `REVIEW-PASS` marker (F-74-7, `bun scripts/review-receipt.mjs verify --pr 298` → absent, exit 3)
 
-Once both are closed and a passing review exists at the PR head, /audit-pr is the merge gate. Owner-only merge per the merge-guard convention.
+F-74-1 (the fenced `## Tasks` hijack in `scripts/unit-doc-phases.mjs`) and its deferral F-74-9 are folded in this unit at the owner's direction: the section locator now walks the document with the same fence state machine as the body, and `scripts/phase-lint.test.mjs` carries the red-before/green-after reproducer.
+
+Once a passing review exists at the PR head, /audit-pr is the merge gate. Owner-only merge per the merge-guard convention.
 
 ## References
 

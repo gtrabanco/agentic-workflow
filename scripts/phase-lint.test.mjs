@@ -2509,6 +2509,22 @@ test("a fenced P<n> example inside ## Tasks is inert, never a phase", () => {
   assert.doesNotMatch(stdout, /^P2 /m, "the fenced example must not lint as a phase");
 });
 
+// F-74-1: the `## Tasks` heading locator ran a bare regex over the whole
+// document, outside the fence state machine. A `## Tasks` example quoted inside
+// a fenced block therefore hijacked the section: the sample `P9` bullet linted
+// (and a PASS/FAIL was decided on it) while the real `P1` never ran. The section
+// locator now uses the same fence scan as the body.
+test("a fenced ## Tasks example never hijacks the real section (F-74-1)", () => {
+  const file = fixture(
+    "unit-doc-fenced-heading.md",
+    `# 99 — fenced heading\n\n## Objective\n\nExample of the shape:\n\n\`\`\`markdown\n## Tasks\n\n- P9 — fake example bullet\n\`\`\`\n\n## Acceptance criteria\n\n1. Fixture only.\n\n## Tasks\n\n- P1 — real phase the lint must judge. (validator: \`true\` exits with code 0)\n`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.doesNotMatch(stdout, /^P9 /m, "the fenced heading's sample bullet must never lint");
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\)/m, stdout);
+  assert.equal(status, 0, stdout);
+});
+
 // F-2 (independent review of PR #276, report-note folded at the owner's
 // direction): the fail-closed promise covers a malformed `Relevant files:`
 // entry, but a blank line between a bullet and its nested sub-section detached

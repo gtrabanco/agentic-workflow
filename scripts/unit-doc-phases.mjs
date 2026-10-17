@@ -27,6 +27,43 @@ export function closesFence(trimmed, fence) {
   return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
 }
 
+/** A `## ` level-2 heading, used as the section bound. */
+const H2_HEADING = /^## /;
+
+/**
+ * Locate the real `## Tasks` section, ignoring headings that sit inside a
+ * fenced code block.
+ *
+ * @param {string} text — the full unit doc text.
+ * @returns {{ start: number, end: number } | null} offsets of the section body
+ *   (after the heading line, before the next level-2 heading or EOF).
+ */
+export function locateTasksSection(text) {
+  let fence = null;
+  let offset = 0;
+  let bodyStart = null;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    const lineStart = offset;
+    offset += line.length + 1; // the split swallowed one newline
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    if (bodyStart === null) {
+      if (/^## Tasks[ \t]*$/.test(trimmed)) bodyStart = offset;
+      continue;
+    }
+    if (H2_HEADING.test(trimmed)) return { start: bodyStart, end: lineStart };
+  }
+  return bodyStart === null ? null : { start: bodyStart, end: text.length };
+}
+
 /**
  * Parse a unit doc's `## Tasks` section into phases and orphans.
  *
@@ -34,11 +71,15 @@ export function closesFence(trimmed, fence) {
  * @returns {{ phases: Array<{number, title, tasks, taskScan, ticks, layer, kind, validator, relevantFiles, duplicate, body}>, orphans: Array<string> }}
  */
 export function parseUnitDocPhases(text) {
-  const heading = /^## Tasks[ \t]*$/m.exec(text);
-  if (!heading) return { phases: [], orphans: [] };
-  const rest = text.slice(heading.index + heading[0].length);
-  const end = /^## /m.exec(rest);
-  const body = end ? rest.slice(0, end.index) : rest;
+  // Locate `## Tasks` and its body bound with the same fence state machine the
+  // body scan uses: a `## Tasks` example inside a fenced code block is quoted
+  // text, never the real section (F-74-1: locating it with a bare regex let a
+  // fenced example hijack the section and linte a `P9` sample while the real
+  // `P1` went unjudged).
+  const section = locateTasksSection(text);
+  if (!section) return { phases: [], orphans: [] };
+  const { start, end } = section;
+  const body = text.slice(start, end);
 
   const phases = [];
   const orphans = [];

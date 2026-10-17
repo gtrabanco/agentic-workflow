@@ -10,3 +10,12 @@
 
 - `review-change` runs at this session's tier; per portability rules a reviewer may re-run it at a different tier.
 - The union diff base is the merge state of PR #280 and PR #276 onto `main` (both merged before this unit started; verified 2026-10-17).
+
+## Path-protection records
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/phase-lint.test.mjs | P3 | 2026-10-17 | execute-phase | F-74-1's fence-scanner repair needs its regression test beside the sibling fence tests; the owner directed the repair into this PR instead of a separate fix unit
+justification | scripts/unit-doc-phases.mjs | P3 | 2026-10-17 | execute-phase | F-74-1's root cause is the ## Tasks section locator running outside the fence state machine
+```
