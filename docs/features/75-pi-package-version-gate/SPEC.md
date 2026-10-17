@@ -13,7 +13,7 @@ A deterministic, dependency-free gate script (`scripts/version-parity-gate.mjs`)
 
 ## Why
 
-Root `skills/**` is the Pi package's shipped content but lives outside `packages/pi-agentic-workflow/**`, so a skills-only merge bumps nothing: `publish-pi-package.yml` never triggers, `npm-version-gate` is never asked, and npm ships stale skills. Verified live on the branch worktree (2026-10-15): registry 0.19.1 lacks `skills/bump-skill` entirely and differs in 5 skill files (commits `9c232599`, `11f99cea`, `d235446b`, `7b40b1c3`); the schema pin still says 4.5.0 while the registry published 4.6.0 (#289 unreachable for Pi consumers). The failure class was reported as #164 (closed by #180's promotion without implementing the option-4 PR gate) and produced the broken 0.18.5 release (#281). Nothing in CI currently asks "did the shipped content change?".
+Root `skills/**` is the Pi package's shipped content but lives outside `packages/pi-agentic-workflow/**`, so a skills-only merge bumps nothing: `publish-pi-package.yml` never triggers, `npm-version-gate` is never asked, and npm ships stale skills. Registry 0.19.1's bundled skills differ from main in 5 files (`unit-lane/SKILL.md` + 3 references, `execute-phase/SKILL.md` — the gap-interview/Future-tracking and per-phase hand-off/closeout line, commits `7b40b1c3`–`9c232599`); the registry's missing `skills/bump-skill` is by design (`metadata.internal` skills are filtered from the bundle, corrected 2026-10-15). The schema pin still says 4.5.0 while the registry published 4.6.0 (#289 unreachable for Pi consumers). The failure class was reported as #164 (closed by #180's promotion without implementing the option-4 PR gate) and produced the broken 0.18.5 release (#281). Nothing in CI currently asks "did the shipped content change?".
 
 ## User outcome
 
@@ -52,7 +52,7 @@ none
 
 - #180 (open, promoted): auto-bump + stable-tag pipeline — related, not blocking; its trigger set covers shape 1 but not the dependency-pin shape. Does-not-affect this unit's gate.
 - #281 (closed symptom): 0.18.5 published out of sync with source — same release-parity class, prior evidence. Does-not-affect the implementation.
-- Registry 0.19.1 vs main skills drift + schema pin 4.5.0 vs registry 4.6.0 (verified 2026-10-15 on this branch): the live defect this unit repairs in P4; affects AC4 directly.
+- Registry 0.19.1's bundled skills vs main skills drift (5 files) + schema pin 4.5.0 vs registry 4.6.0 (verified 2026-10-15 on this branch): the live defect this unit repairs in P4; affects AC4 directly.
 
 ## Tasks
 
@@ -73,7 +73,7 @@ P6 — Verification: full root suites + Pi package suites green; gate demonstrat
 
 | id | claim | source | status |
 |---|---|---|---|
-| PE-001 | Registry 0.19.1 lacks `skills/bump-skill` and differs in 5 skill files vs main's `skills/` | local tarball diff, 2026-10-15 (`/tmp/parity-check`) | verified |
+| PE-001 | Registry 0.19.1's bundled skills differ from main in 5 files (`unit-lane/SKILL.md` + 3 references, `execute-phase/SKILL.md`); the missing `bump-skill` is by design (`metadata.internal` filtering — corrected 2026-10-15) | local tarball diff + bundle filter, 2026-10-15 | verified |
 | PE-002 | Registry `@gtrabanco/agentic-workflow-schema` latest is 4.6.0; the Pi package pins 4.5.0 | `npm view` outputs, 2026-10-15 | verified |
 | PE-003 | `publish-pi-package.yml` `on.push.paths` covers only `packages/pi-agentic-workflow/**` + the workflow file; root-suite.yml runs on every `pull_request` with full history | `.github/workflows/publish-pi-package.yml`, `.github/workflows/root-suite.yml` | verified |
 | PE-004 | The enforced version bump makes every content merge touch `packages/pi-agentic-workflow/package.json`, so the publish workflow triggers without a `paths` change | D3 reasoning over PE-003 | unknown — ASSUMPTION-UNVERIFIED (owner: release step P6 evidence) |

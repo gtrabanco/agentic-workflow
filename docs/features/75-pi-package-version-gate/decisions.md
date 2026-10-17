@@ -27,9 +27,11 @@ assumptions correctable by the user.
   exact-membership gate (`npm-version-gate.mjs`) already handles re-runs.
 
 - **2026-10-15 D4 — Release content: schema pin 4.5.0 → 4.6.0, package
-  0.19.1 → 0.20.0 (minor).** Why: the stranded skills (unit-lane 1.3.0→1.5.0
-  line, audit-pr 5.5.0/5.6.0, pre-execution-review 2.7.0, `bump-skill`
-  directory) are new backward-compatible capability — minor, not patch; and the
+  0.19.1 → 0.20.0 (minor).** Why: the stranded skills (the `unit-lane`
+  1.3.0→1.5.0 gap-interview/closeout line and `execute-phase` 5.1.0 — 5 files
+  the 0.19.1 tarball lacks; `bump-skill` is filtered from the bundle by design
+  and was never stranded) are new backward-compatible capability — minor, not
+  patch; and the
   pin bump ships #289's lineage fix to Pi consumers. No major (no breaking
   change; the #176 freeze binds skills' own semver, and the package follows
   minor here regardless).

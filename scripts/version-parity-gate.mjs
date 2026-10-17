@@ -15,9 +15,8 @@
  *               #164 missed: root skills/ is the package's content source but
  *               lives outside the package tree, so a skills-only merge bumps
  *               nothing, publish-pi-package.yml never triggers, and npm ships
- *               stale skills (live 2026-10-15: registry 0.19.1 missing
- *               skills/bump-skill + 5 stale files; schema pin 4.5.0 vs
- *               registry 4.6.0).
+ *               stale skills (live 2026-10-15: registry 0.19.1's bundle 5 files
+ *               behind main's skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
  *   --pins      Online. For every exact `dependencies` pin, compares the
  *               registry's latest version against the pin; registry > pin ⇒
