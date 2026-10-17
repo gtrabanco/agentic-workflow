@@ -2856,3 +2856,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr on PR #297 (unit 73 lane-closeout-handoffs): BLOCKED verdict, 4 blockers persisted (receipt absent, lineage blocked by ### heading, obligations open)
 - **Decisions:** audit-pr never re-reviews the diff; the review receipt (REVIEW-PASS marker) is the sole review evidence, so absent receipt = receipt-carried gates voided; LINEAGE BLOCKED because SPEC.md:157 uses ### Triaged steps while the parser only accepts ## Triaged steps; F10/F11/F12 remain unfolded, so /review-change cannot post a receipt until fold-findings clears them; audit-pr:audit-rows is a declared ledger owner (LEDGERS.md:144), so F13/F14/F15 appended to the fold ledger and committed locally (6247b62b, not pushed — audit-pr never pushes)
 - **Next:** fold-findings (F10+F11+F12) → /unit-lane 73-lane-closeout-handoffs --retriage (F14) → /review-change 73-lane-closeout-handoffs (receipt) → /audit-pr
+## 2026-10-17T20:03:47Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Close unit 74 (post-merge-reconciliation): merged PR #298 (Closes #275). Cycle-3 review (5 isolated axes) returned all-PASS, closed F-74-7 (receipt absent) by emitting SHA-bound REVIEW-PASS at head a69c1849, audit-pr merge gate passed, PR merged at 30b2cade.
+- **Decisions:** F-74-1 repaired here (owner direction, not deferred to a new fix unit) — locateTasksSection walks the document with a fence state machine so a fenced ## Tasks example can no longer hijack the real section; F-74-7 closed by the review-receipt emitter (bun scripts/review-receipt.mjs emit --pr 298 --scope-base main, contract=v1).
+- **Next:** Merge is done. PR #298 is merged to main at 30b2cade. Next roadmap unit is next available via /workflow-status or /plan-feature --next.
