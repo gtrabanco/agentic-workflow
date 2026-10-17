@@ -74,13 +74,13 @@ Clean — no `contradicts` row; the plan proceeds.
 
 XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verified 2026-10-17: `## Prior-decisions contradiction sweep` present, no markers); route budget table passes `--routes` (14 routes, PASS); roadmap rows 69 then 70 present and ordered; full suite 663/663 pass at HEAD 3844c1ae; PR diffs #280/#276 contain no `.pi/mcp*` path.
 
-## Obligations
+### Obligations
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O-74-1 | Issue #275 scope item 1 | review receipts cover PR combinations, not only branches | P2 | P2 | review-change pass over union | review-findings.md verdict row | verdict | open |
-| O-74-2 | Issue #275 scope item 2 | PLAN.md format ownership stays with phase-contract | P1 | P1 | `phase-contract` version/grammar unchanged | grep no markers + both sections present | grep output | open |
-| O-74-3 | Issue #275 scope items 3–6 | budgets/records/gates green on merged main | P1 | P1 | scripts as cited in ACs 3–6 | commands exit 0 | command output | open |
+| O-74-1 | Issue #275 scope item 1 | review receipts cover PR combinations, not only branches | P2 | P2 | review-change pass over union | review-findings.md verdict row | verdict | verified |
+| O-74-2 | Issue #275 scope item 2 | PLAN.md format ownership stays with phase-contract | P1 | P1 | `phase-contract` version/grammar unchanged | grep no markers + both sections present | grep output | verified |
+| O-74-3 | Issue #275 scope items 3–6 | budgets/records/gates green on merged main | P1 | P1 | scripts as cited in ACs 3–6 | commands exit 0 | command output | verified |
 
 ## Evidence
 
