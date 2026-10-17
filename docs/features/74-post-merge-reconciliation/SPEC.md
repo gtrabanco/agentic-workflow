@@ -56,8 +56,8 @@ None — one-time reconciliation; no standing rule introduced.
 ## Tasks
 
 - P1 — Verify the mechanical reconciliation items that the merges may already have satisfied (PLAN.md both sections + no markers; route budgets; roadmap rows 69→70; CHANGELOG tables; no `.pi/mcp*` in either PR diff; full suite green) and record per-AC evidence. (validator: `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs --routes` both exit 0)
-- P2 — Run the review pass over the union diff of PR #280 + PR #276 (files, skills, budgets, records the branches share), classify findings, record the receipt against the merge state. (validator: review receipt recorded in `docs/features/74-post-merge-reconciliation/review-findings.md` with a verdict)
-- P3 — Repair any fix-now findings from P2 (if none: record `none` and close). (validator: re-run of the affected validator exits 0)
+- P2 — Run the review pass over the union diff of PR #280 + PR #276 (files, skills, budgets, records the branches share), classify findings, record the receipt against the merge state. (validator: `grep -c "REVIEW-RAN" docs/features/74-post-merge-reconciliation/review-findings.md` exits with code 0 and prints at least 1)
+- P3 — Repair the fix-now findings from P2 that this unit owns (the unit doc's own lint-blocked validator spans); findings owned by another unit's surface are persisted and routed, never repaired here. (validator: `node scripts/phase-lint.mjs docs/features/74-post-merge-reconciliation/SPEC.md` prints `verdict PASS`)
 
 ### Prior-decisions sweep
 
