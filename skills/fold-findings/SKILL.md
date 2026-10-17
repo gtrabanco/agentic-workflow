@@ -102,9 +102,9 @@ no schema field). Six fields, always present:
 - Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
 - Refuted/open: <F-ids joined ` + `, or `none`>
 - Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
-- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Batch class: <all-repair-in-place | frozen (replan present) | frozen (product owner present) | none>
 - Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
-- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE | PRODUCT-ROUTE>
 ```
 
 - The `Gate` line carries the actual exit codes observed at the head the gate
@@ -114,9 +114,9 @@ no schema field). Six fields, always present:
 - The `Fold diff` shortstat comes from a real `git diff` run over the batch's
   commits.
 - The `Batch class` derives from the taken queue's frozen rows only — the fold
-  never reclassifies (`all-repair-in-place`, `frozen (replan present)`, or
-  `none` for an empty queue); the vocabulary comes from
-  `review-implementation`'s closed class set.
+  never reclassifies (`all-repair-in-place`, `frozen (replan present)`,
+  `frozen (product owner present)`, or `none` for an empty queue); the
+  vocabulary comes from `review-implementation`'s closed class set.
 
 **Freeze-batch (replan present).** When the taken queue contains any row whose
 frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
@@ -128,6 +128,17 @@ feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
 and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
 `node scripts/unit-route.mjs <unit>` is the discovery step the fold already
 ran; it is never the recommendation.
+
+**Freeze-batch (product owner present).** When the taken queue contains any row
+whose frozen class is `fix-now` and whose `Route` cell begins `product owner`
+(owning stage `product`), nothing folds either: no `folded: yes` flips, no
+commits. The fold loop repairs source, not authority — patching a product claim
+into agreement in code is exactly the repair POLICY §4 forbids (`#293`). The
+receipt records the `PRODUCT-ROUTE` branch and every retained row id, and the
+loop stops. The consumer is the router's printed conclusion: `route: product`
+and the lane hand-off — `/unit-lane <slug>` for a feature unit or
+`/unit-lane --fix <n>` for a fix unit — the lane repairs the half, its `review`
+step re-judges it, then `/execute-phase` on this unit.
 
 ## Guardrails
 
