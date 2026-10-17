@@ -375,10 +375,19 @@ hoists.
   CLI is still used for the publish step only (Trusted Publishing +
   `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
 - **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
-- **Version bumps are manual and same-PR.** Bump `version:` in the touched
-  package's `package.json` and add a row to the "Companion npm packages"
-  table in `CHANGELOG.md` in the same PR. CI publishes on merge to `main`
-  when the version differs
+- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292).**
+  Bump `version:` in the touched package's `package.json` and add a row to the
+  "Companion npm packages" table in `CHANGELOG.md` in the same PR. The rule is
+  no longer prose-only: `root-suite.yml` runs `scripts/version-parity-gate.mjs`
+  on every PR with two halves — the **content** half (offline, deterministic)
+  fails any change under the trigger set **`skills/**` +
+  `packages/pi-agentic-workflow/**`** that does not bump the Pi package's
+  version + add its CHANGELOG companion row (root `skills/` is the Pi package's
+  shipped content, which is exactly why a skills-only merge used to publish
+  nothing); the **registry** half (a separate job, clearly-degraded-when-
+  unreachable) fails an exact pin whose target has published a newer version —
+  fix: bump the pin + the package version in the same PR. CI publishes on merge
+  to `main` when the version differs
   from the registry (`publish-schema.yml`, `publish-pi-package.yml` — one
   file per package, because npm Trusted Publisher records pin the workflow
   filename; a rename would break the npm-side record until re-registered by
