@@ -45,3 +45,15 @@ assumptions correctable by the user.
   `::warning::`), never a failure.** Why: AC3 names the registry job
   "clearly-degraded-when-unreachable"; failing CI on a network blip would make
   every PR red for reasons no commit caused.
+
+## Path-protection records
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/version-parity-gate.mjs | P1 | 2026-10-15 | execute-phase | AC1/AC2 deliverable: the new gate script itself is the protected-path test-file surface this unit creates and iterates on
+justification | scripts/version-parity-gate.test.mjs | P2 | 2026-10-15 | execute-phase | AC3 deliverable: the offline deterministic suite pinning the gate's matrix is a new test file by design
+justification | .github/workflows/root-suite.yml | P3 | 2026-10-15 | execute-phase | AC1/AC3 wiring: the gate rides the existing PR-triggered root-suite workflow as its publish surface
+justification | packages/pi-agentic-workflow/package.json,packages/pi-agentic-workflow/bun.lock | P4 | 2026-10-15 | execute-phase | AC4: repair the live drift — schema pin 4.5.0→4.6.0 and the package version bump the gate enforces
+justification | CHANGELOG.md | P4 | 2026-10-15 | execute-phase | AC1/AC5: the companion row the gate itself demands for the 0.20.0 bump
+```
