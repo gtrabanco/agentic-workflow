@@ -10,6 +10,9 @@
  * Routes, first match winning:
  *   replan          an open row whose frozen route is the plan owner
  *   decision        an open row that needs a product/architecture decision
+ *   product         an open row whose frozen route is the product owner
+ *                   (#293: repaired by the lane, never folded — the fold loop
+ *                   repairs source, not authority)
  *   fold            an open row that folds into the current unit
  *   execute         a known unit with no open row and open work
  *   close-out       a done unit with no open row (the merge gate is next)
@@ -36,9 +39,12 @@ export const READ_SET_MAX = 12;
 /** Longest echoed cell before the sanitizer truncates it. */
 export const CELL_MAX = 160;
 
-const ROUTES = Object.freeze(["replan", "decision", "fold", "execute", "close-out", "historical", "plan-from-issue"]);
+const ROUTES = Object.freeze(["replan", "decision", "product", "fold", "execute", "close-out", "historical", "plan-from-issue"]);
 const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
 const DECISION_ROUTE = /decision[- ]required|surface (the )?decision|needs a decision/i;
+/** #293: the `Route` cell review-change persists for a product-owned row
+ * (`product owner — …`), plus the spellings CLASSIFY.md's owner table allows. */
+const PRODUCT_ROUTE = /product[- ]owner|product[- ]owned|owned by product/i;
 const KNOWN_UNIT_FILES = ["SPEC.md", "ACCEPTANCE.md", "PLAN.md", "TASKS.md", "progress.md", "review-findings.md"];
 const PATH_RE = /[A-Za-z0-9_.@-]+(?:\/[A-Za-z0-9_.@-]+)+/g;
 const BARE_FILE_RE = /(?:^|[\s(`[{,])((?:SPEC|ACCEPTANCE|PLAN|TASKS|progress|review-findings|planning-evidence)\.md)\b/g;
@@ -148,6 +154,9 @@ export function routeOfRow(row) {
   const route = String(row.route ?? "");
   if (PLAN_ROUTE.test(klass) || PLAN_ROUTE.test(route)) return "replan";
   if (DECISION_ROUTE.test(klass) || DECISION_ROUTE.test(route)) return "decision";
+  // #293: a product-owned row is repaired by the lane, never folded — the fold
+  // loop repairs source, not authority (`pre-execution-review` POLICY §4).
+  if (PRODUCT_ROUTE.test(route)) return "product";
   return "fold";
 }
 
@@ -330,8 +339,10 @@ const USAGE = `usage: node scripts/unit-route.mjs <unit|issue>
 
 Prints the route one delivery unit takes now, from its own ledger. The routes,
 first match winning: replan (an open row whose frozen route is the plan owner),
-decision (an open row that needs a product/architecture decision), fold (any
-other open row), execute (a known unit with no open row that is still open work),
+decision (an open row that needs a product/architecture decision), product (an
+open row whose frozen route is the product owner — repaired by the lane, never
+folded), fold (any other open row), execute (a known unit with no open row that
+is still open work),
 close-out (a done unit with no open row — the merge gate is the next step),
 historical (a known unit with no open row whose status source is gone: the index
 or roadmap row was removed after the merge),
@@ -697,6 +708,13 @@ function main(argv) {
     route = "decision";
     selected = rows.filter((row) => routeOfRow(row) === "decision");
     command = "decision required — stop and surface to the user";
+  } else if (rows.some((row) => routeOfRow(row) === "product")) {
+    // #293 AC1: a product-owned row is lane repair work, not fold work. The
+    // command mirrors the replan route's per-kind lane invocation, executable
+    // as typed (CLASSIFY.md's owner table).
+    route = "product";
+    selected = rows.filter((row) => routeOfRow(row) === "product");
+    command = unit.kind === "fix" ? `/unit-lane --fix ${unit.number}` : `/unit-lane ${unit.slug}`;
   } else if (rows.length > 0) {
     route = "fold";
     selected = rows;
@@ -730,7 +748,7 @@ function main(argv) {
       : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
   }
 
-  const base = route === "replan" || route === "decision" || route === "fold"
+  const base = route === "replan" || route === "decision" || route === "product" || route === "fold"
     ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
     : ["SPEC.md", "progress.md"];
   const readSet = readSetFor(unit.dir, selected, base);

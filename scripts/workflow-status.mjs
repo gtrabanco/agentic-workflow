@@ -725,6 +725,17 @@ function readSuggestions(unit, unitDir) {
     }];
   }
   if (rows.some((row) => routeOfRow(row) === "decision")) return [];
+  const product = rows.filter((row) => routeOfRow(row) === "product");
+  if (product.length > 0) {
+    // #293: the sensor projects the router's classifier — a product-owned row
+    // is lane repair, never fold work (the fold loop repairs source, not
+    // authority).
+    return [{
+      command: `/unit-lane ${unit.id}`,
+      trigger: `an open finding's frozen route is the product owner — product repair (${product.map((row) => sanitize(row.id)).join(", ")})`,
+      source_skill: "unit-lane",
+    }];
+  }
   if (rows.length > 0) {
     return [{ command: "/fold-findings", trigger: "unfolded fix-now finding(s) on the ledger", source_skill: "fold-findings" }];
   }

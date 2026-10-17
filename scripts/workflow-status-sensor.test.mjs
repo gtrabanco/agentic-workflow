@@ -640,6 +640,19 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     source_skill: "fold-findings",
   }]);
 
+  // #293: a product-owned row projects the lane repair, never the fold — the
+  // sensor projects the router's classifier, and the router routes `product`.
+  const product = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger("product owner — repair via lane")}\n` },
+  }).run();
+  assert.equal(product.status, 0, product.stderr);
+  assert.deepEqual(parseEnvelope(product.stdout).next.suggested, [{
+    command: "/unit-lane 90-alpha",
+    trigger: "an open finding's frozen route is the product owner — product repair (F1)",
+    source_skill: "unit-lane",
+  }]);
+
   // Feature 61 P8b: plan-fix absorbed into unit-lane for fix units.
   const fixIndex = [
     "# Active fixes",
