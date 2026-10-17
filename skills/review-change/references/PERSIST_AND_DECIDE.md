@@ -138,11 +138,10 @@ exact command tokens.
         fix); the lane re-runs its plan step on this branch, its review step
         gates, then `/execute-phase <unit>` (yes: list the finding ids; no: omit
         this line)
-      · any finding owned by product? → `node scripts/unit-route.mjs <unit>`
-        prints `route: product` and the lane hand-off:
-        `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>` for a fix;
-        the lane repairs the half, its review step re-judges it, then
-        `/execute-phase <unit>` (yes: list the ids; no: omit this line)
+      · any finding owned by product? → `node scripts/unit-route.mjs <unit>` prints
+        `route: product` + the lane hand-off — `/unit-lane <unit>` for a feature,
+        `/unit-lane --fix <n>` for a fix: the lane repairs the half, its review
+        step re-judges it (yes: list the ids; no: omit this line)
       · independent proposals → present to the user; only the user routes them
         to /triage-issue
      · adversarial recommendation checklist fired AND this run was

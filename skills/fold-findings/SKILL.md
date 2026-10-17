@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -129,16 +129,13 @@ and surface the decision to the user, never a planner. `<unit>` is the bare fold
 `node scripts/unit-route.mjs <unit>` is the discovery step the fold already
 ran; it is never the recommendation.
 
-**Freeze-batch (product owner present).** When the taken queue contains any row
-whose frozen class is `fix-now` and whose `Route` cell begins `product owner`
-(owning stage `product`), nothing folds either: no `folded: yes` flips, no
-commits. The fold loop repairs source, not authority — patching a product claim
-into agreement in code is exactly the repair POLICY §4 forbids (`#293`). The
-receipt records the `PRODUCT-ROUTE` branch and every retained row id, and the
-loop stops. The consumer is the router's printed conclusion: `route: product`
-and the lane hand-off — `/unit-lane <slug>` for a feature unit or
-`/unit-lane --fix <n>` for a fix unit — the lane repairs the half, its `review`
-step re-judges it, then `/execute-phase` on this unit.
+**Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
+cell begins `product owner` (owning stage `product`) freezes the batch too —
+nothing folds, no `folded: yes` flips, no commits: the fold loop repairs source,
+never authority (`pre-execution-review` POLICY §4, `#293`). The receipt records
+the `PRODUCT-ROUTE` branch and the retained row ids; the consumer is the
+router's printed `route: product` lane hand-off. Full condition and hand-off
+table: [`FOLD_PROCESS.md`](references/FOLD_PROCESS.md) §Batch classification.
 
 ## Guardrails
 
