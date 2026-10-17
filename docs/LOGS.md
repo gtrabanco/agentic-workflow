@@ -2830,3 +2830,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Complete fold-and-review cycle for F4, F5, F6 on unit 73 (PR #297) — fix recordedPhases false-positives (F4), export fence helpers from unit-doc-phases.mjs to eliminate duplication (F5), repair corrupt ledger with duplicate REVIEW-RAN row (F6), and re-verify 655/655 tests pass
 - **Decisions:** F4: anchor recordedPhases match to entry head to prevent mid-prose P<n> mentions from falsely marking phases done; F5: export FENCE_OPEN/FENCE_CLOSE/openFence/closesFence from unit-doc-phases.mjs and import in phase-lint.mjs instead of duplicating; F6: drop duplicate REVIEW-RAN mark that violated review-mark@1 grammar, restore proper 7-column schema
 - **Next:** Resolve remaining 3 findings (F10: recordedPhases regex super-linear regression + false positive/negative; F11: diff guard obligation misalignment in unit-lane SKILL.md; F12: stale Evidence test counts in SPEC.md), then /review-change to get MERGE-READY
+
+## 2026-10-16T23:59:44Z — feat/73-lane-closeout-handoffs — manual
+- **Commits:** 28 (22e96166…914c5f4f)
+- **Files:** 27 files
+- **Summary:** Closed unit 73 (issue #291) — the lane-closeout-handoffs unit: per-phase /execute-phase hand-offs, tiered triage Tiers: line from catalog.json, and the close-out receipt ladder. All 6 phases committed, PR #297 open, 654/654 root suite green.
+- **Decisions:** unit-lane 1.5.0 and execute-phase 5.1.0 shipped as minors (majors frozen until #176); golden-fixture weak-model smoke caught the last-phase P<k+1> defect fixed by splitting the closing contract into two end-states; diff-guard file-count breach recorded as exception (red-first tests' fixtures + sandbox mirrors, anti-gaming honored); context ceilings re-based with declared growth sources; unit-lineage's triage currency intentionally omits the Tiers: line (report-note + re-trigger condition)
+- **Next:** POST: /review-change 73-lane-closeout-handoffs — post the SHA-bound review-change:pass receipt on PR #297 (the lane's in-doc verdict is not the machine receipt), then /audit-pr 297 as the terminal merge gate
