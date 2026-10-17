@@ -117,14 +117,18 @@ Budget: strong
 2026-10-17 10:05 — review step closed: fused receipt at docs/features/74-post-merge-reconciliation/review-findings.md (AC-1 evidence row recorded) → 06fc50af — next: docs
 2026-10-17 10:10 — branch hygiene: lane commits moved from local main to 74-post-merge-reconciliation (main reset to origin/main; no push happened) — next: docs step
 2026-10-17 10:12 — docs step: roadmap row 74 registered (in-progress · #275, ordered after row 73); no CHANGELOG row (no skill/package surface touched; bump-skill n/a); SPEC ## Next re-pointed → next: release
+2026-10-17 10:20 — release step: diff-guard PASS (191/4); branch pushed; PR #298 opened with `Closes #275` + Evidence table; References block written; roadmap row 74 flipped to `done · [#298]` → next: unit close-out
 
 ## Next
 
-Open the PR (release step): push `74-post-merge-reconciliation` and open one PR against `main` with `Closes #275`.
+Merge PR #298 (https://github.com/gtrabanco/agentic-workflow/pull/298) — one review receipt exists (REVIEW-FAIL: F-74-1 routed to the fix/272 surface; the combination itself is green). Owner-only merge per the merge-guard convention.
 
 ## References
 
-- Issue [#275](https://github.com/gtrabanco/agentic-workflow/issues/275) (this unit's source)
+- Closes [#275](https://github.com/gtrabanco/agentic-workflow/issues/275)
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/298
+- Branch: `74-post-merge-reconciliation`
+- Commit: 6a7c1999 (head at PR open)
 - Issue [#270](https://github.com/gtrabanco/agentic-workflow/issues/270) / PR [#280](https://github.com/gtrabanco/agentic-workflow/pull/280) (review-conformance, merged)
 - Issue [#272](https://github.com/gtrabanco/agentic-workflow/issues/272) / PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276) (phase-lint unit-doc grammar, merged)
 - PR [#273](https://github.com/gtrabanco/agentic-workflow/pull/273) (pi-tui peerDependencies + 0.99.1 re-basis, merged)
