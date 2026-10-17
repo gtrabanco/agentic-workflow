@@ -24,7 +24,7 @@ Scope: 22 files (PR #280 diff `01f2bd72..f470c85b` + PR #276 diff `63001fd6..c89
 | F-74-4 | docs/workflow/SKILL_CONTEXT_BUDGETS.json (`skills/unit-lane` absent) | verify | low | observation | unit-lane rides the 2800 default with measured 2742 — 58 units (2.1%) headroom after PR #280's PLAN.md growth. **Re-trigger:** the next unit-lane SKILL.md wording touch forces its first per-skill re-basis entry | n/a (observation) |
 | F-74-5 | docs/features/69-review-conformance/SPEC.md (References; shipped in PR #280) | brand | low | proposal | same PR flips ROADMAP row 69 to `done · [#280]` while its References bullet still says row 69 `in-progress` (adjacent staleness already filed as that unit's F33/F38) — one-word docs commit if the owner folds | n/a (proposal) |
 | F-74-6 | CHANGELOG.md (0.18.5 row, PR #276) | brand | low | ignore | "No package code change — the skill tree is pack-time output" sits beside a description of a bundled-behavior change; verified accurate, reads self-contradictory only to a first-time reader | no |
-| F-74-7 | Review receipt — PR #298 carries zero comments/reviews at head `9dfc73237a63cbb277817e1e5c49d61c844c25bb` (audit-pr Step 1, `bun scripts/review-receipt.mjs verify --pr 298` → status `absent`, exit 3) | Review receipt | high | fix-now | route `/review-change` — re-review at the head to post the `REVIEW-PASS` marker; also unblocks the receipt-carried gates **Acceptance coverage** and **Architectural invariants** (no coverage field / no explicit invariant result while the receipt is absent), then re-run `/audit-pr` | no |
+| F-74-7 | Review receipt — PR #298 carries zero comments/reviews at head `9dfc73237a63cbb277817e1e5c49d61c844c25bb` (audit-pr Step 1, `bun scripts/review-receipt.mjs verify --pr 298` → status `absent`, exit 3) | Review receipt | high | fix-now | route `/review-change` — re-review at the head to post the `REVIEW-PASS` marker; also unblocks the receipt-carried gates **Acceptance coverage** and **Architectural invariants** (no coverage field / no explicit invariant result while the receipt is absent), then re-run `/audit-pr`. CLOSED by the cycle-3 delta re-review: five axes PASS, SHA-bound `REVIEW-PASS` receipt emitted at the branch head (`bun scripts/review-receipt.mjs verify --pr 298` → `current`, exit 0) | yes |
 | F-74-8 | docs/features/74-post-merge-reconciliation/SPEC.md:77 (`## Obligations`; the enforced embedded shape is `### Obligations`, and rows O-74-1, O-74-2, O-74-3 all carry status `open`) | Pre-execution lineage | high | fix-now | route `/unit-lane 74-post-merge-reconciliation` — reshape the embedded ledger and close every row `verified`/`n/a: <reason>` until `bun scripts/unit-lineage.mjs --unit 74-post-merge-reconciliation` prints `LINEAGE OK`; then re-run `/audit-pr` | yes |
 | F-74-9 | docs/features/74-post-merge-reconciliation/review-findings.md:21 (F-74-1, `folded: no`) | Deferral | high | fix-now | route `/triage-issue` on F-74-1 — no tracked issue exists (zero issues born since branch divergence `2026-10-17`; no issue matches `unit-doc-phases`/fenced-`## Tasks`; #272 closed and #275 non-goals forbid reopening); file + classify the fix issue, then `/unit-lane --fix <n>` on the owner surface; re-run `/audit-pr`. RESOLVED without a forge issue: the owner directed F-74-1's repair into this PR, so no deferral remains | yes |
 | F-74-10 | docs/features/74-post-merge-reconciliation/SPEC.md:124 (`## Next` instructs "Merge PR #298 … the combination itself is green") | brand | med | fix-now | fold — rewrite `## Next` to the ledger's actual state: the PR carries no `review-change` receipt (F-74-7, `bun scripts/review-receipt.mjs verify --pr 298` → absent, exit 3), F-74-1's deferral is untracked (F-74-9), and F-74-10 + F-74-12 are open docs repairs; hand off the fold, then `/triage-issue` on F-74-1, and instruct no merge before a REVIEW-PASS receipt at the PR head | yes |
@@ -51,6 +51,8 @@ Scope: 22 files (PR #280 diff `01f2bd72..f470c85b` + PR #276 diff `63001fd6..c89
 | REVIEW-RAN | HEAD 7eebaa10b0c7cb583e63d877b7b9150bd3752f81 | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD 7eebaa10b0c7cb583e63d877b7b9150bd3752f81 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| bun scripts/check-skill-context.mjs --routes \| node scripts/phase-lint.mjs docs/features/74-post-merge-reconciliation/SPEC.md \| bun scripts/unit-lineage.mjs --unit 74-post-merge-reconciliation | exit 0 \| exit 0 \| exit 0 \| exit 0 \| exit 0 | n/a | n/a | n/a |
 | GATE-RAN | HEAD 7d075a8a3c96de87e3481353b4f8d539c75f53e6 | node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| bun scripts/check-skill-context.mjs --routes \| node scripts/phase-lint.mjs docs/features/74-post-merge-reconciliation/SPEC.md | exit 0 \| PASS (28 skills) \| PASS (14 routes) \| verdict PASS | n/a | n/a | n/a |
+| REVIEW-RAN | HEAD ed556b0d20a9b9d9b51df51c419a3f7370258a15 (cycle 3, delta 7eebaa10..ed556b0d, 5 isolated axes) | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD ed556b0d20a9b9d9b51df51c419a3f7370258a15 (verify reviewer) | node --test scripts/phase-lint.test.mjs \| node --test scripts/*.test.mjs \| bun scripts/check-skill-context.mjs \| bun scripts/check-skill-context.mjs --routes \| node scripts/phase-lint.mjs docs/features/74-post-merge-reconciliation/SPEC.md \| bun scripts/unit-lineage.mjs --unit 74-post-merge-reconciliation | exit 0 (152/152, F-74-1 reproducer green) \| exit 0 (664/664) \| exit 0 (PASS 28 skills) \| exit 0 (PASS 14 routes) \| exit 0 (verdict PASS) \| exit 0 (LINEAGE OK, obligations 3/3) | n/a | n/a | n/a |
 
 ## Manual checks (not reproducible here)
 
@@ -59,3 +61,24 @@ Scope: 22 files (PR #280 diff `01f2bd72..f470c85b` + PR #276 diff `63001fd6..c89
 - F-74-1's fence-scanner repair (owner unit re-opens it).
 
 **Verdict: REVIEW-FAIL (one open fix-now, F-74-1 — routed to its owner; not repairable inside #275's non-goals).** Everything the combination itself breaks is green; F-74-2 (the one defect the combination's own review target carried) is folded at `7d075a8a`.
+
+## Cycle 3 — delta re-review at HEAD ed556b0d (F-74-1 fold + F-74-10/11/12 folds)
+
+Scope: commits `7eebaa10..ed556b0d` only — the owner-directed F-74-1 repair (`locateTasksSection` walks the document with the fence state machine; `phase-lint.test.mjs` reproducer) and the docs folds. Five isolated context-clean axis reviewers over the delta, each returning its fixed checklist + findings table. Axes run: code, security, verify, perf, brand. Skipped: design, a11y, seo — no UI/web surface (the repo is scripts + markdown).
+
+| Axis | Verdict | Notes |
+|---|---|---|
+| review-code | PASS | offset arithmetic, fence desync (unclosed-at-EOF, tilde/backtick, body fences), end-bound, behavior preservation all verified; the reproducer provably fails on the reverted code |
+| review-security | PASS | pure string scanning (offsets only), linear regexes, no secrets/deps/network; the fix moves the gate fail-closed |
+| review-verify | PASS | suite 664/664; red-before confirmed (reverted code: 151/1, only the F-74-1 test fails); `--routes` PASS 14; phase-lint `verdict PASS`; `LINEAGE OK`; fenced-only fixture → `BLOCKED: no-phases` (fails closed) |
+| review-perf | PASS | 100 MB adversarial doc linted in 2.53 s; `locateTasksSection` ~230 ms at the 40 MB baseline scale (old end-to-end: 1.84 s) |
+| review-brand | PASS | English-only, no AI stamps, claims match reality, roadmap rows 73/74 contiguous; one low report-only note (B-74-1 below) |
+
+Architectural invariants: `n/a: no project invariants declared` (NRS F010; `docs/architecture/ARCHITECTURAL_INVARIANTS.md` absent).
+
+**Verdict (cycle 3): REVIEW-PASS** — no fix-now finding open; both findings are low report-only notes (never persisted, per the review contract):
+
+- **B-74-1** (brand, low): the F-74-11/F-74-12 rows in this file sit after blank lines, so each renders as a detached one-row table — the same class F-74-11 fixed on ROADMAP.md, here in an internal ledger read as source. **Re-trigger:** the next edit to this file's findings table rejoins the rows.
+- **R-code-1** (code, low): comment typo "linte" → "lint" in `scripts/unit-doc-phases.mjs:77`. **Re-trigger:** the next edit to that comment block.
+
+F-74-7 closes with the SHA-bound `REVIEW-PASS` receipt emitted at the persist-commit head.
