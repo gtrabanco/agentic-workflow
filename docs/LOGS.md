@@ -2862,3 +2862,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Close unit 74 (post-merge-reconciliation): merged PR #298 (Closes #275). Cycle-3 review (5 isolated axes) returned all-PASS, closed F-74-7 (receipt absent) by emitting SHA-bound REVIEW-PASS at head a69c1849, audit-pr merge gate passed, PR merged at 30b2cade.
 - **Decisions:** F-74-1 repaired here (owner direction, not deferred to a new fix unit) — locateTasksSection walks the document with a fence state machine so a fenced ## Tasks example can no longer hijack the real section; F-74-7 closed by the review-receipt emitter (bun scripts/review-receipt.mjs emit --pr 298 --scope-base main, contract=v1).
 - **Next:** Merge is done. PR #298 is merged to main at 30b2cade. Next roadmap unit is next available via /workflow-status or /plan-feature --next.
+## 2026-10-17T20:04:21Z — main — manual
+- **Commits:** 1 (`ced05c7c…ced05c7c`)
+- **Files:** docs/LOGS.md
+- **Summary:** audit-pr and fold-findings on PR #298 (unit 74): PR BLOCKED with 3 fix-now blockers (review receipt absent, lineage failed, F-74-1 no home); F-74-8 folded (obligations header ##→### in SPEC + rows O-74-1..3 closed verified), F-74-7+9 BLOCKED requiring separate /review-change and /triage-issue runs
+- **Decisions:** Review receipt absent at HEAD is the primary blocker — audit-pr never re-reviews inline, routes to /review-change; F-74-8 fix was mechanical (header level + status close), gate green 663/663
+- **Next:** /review-change at head 7eebaa10 to post REVIEW-PASS receipt; /triage-issue on F-74-1 to file fix issue; re-run /audit-pr after both
