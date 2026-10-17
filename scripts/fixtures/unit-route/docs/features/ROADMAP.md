@@ -9,5 +9,7 @@
 | 14 | `empty-unit` | planned | — | no ledger · Issue [#140](https://example.invalid/issues/140) |
 | 15 | `done-unit` | done | — | terminal route |
 | 17 | `phaseless-unit` | planned | — | Tasks section parses to nothing |
+| 18 | `product-unit` | in-progress | — | product-owned rows only |
+| 19 | `product-replan-unit` | in-progress | — | replan wins over product |
 | 37 | `phase-lint-script` | idea | — | dogfood target |
 | 40 | `cited-paths` | in-progress | — | cap case |

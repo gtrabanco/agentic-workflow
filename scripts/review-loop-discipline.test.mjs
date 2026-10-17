@@ -219,9 +219,9 @@ assert.match(foldSkill, /## REPAIR-RECEIPT/);
 assert.match(foldSkill, /- Repaired: <F-ids with \(VF-<n>\) refs, joined ` \+ `, or `none`>/);
 assert.match(foldSkill, /- Refuted\/open: <F-ids joined ` \+ `, or `none`>/);
 assert.match(foldSkill, /- Gate: <command> .*exit <n> at head <40-hex sha>/);
-assert.match(foldSkill, /- Batch class: <all-repair-in-place \| frozen \(replan present\) \| none>/);
+assert.match(foldSkill, /- Batch class: <all-repair-in-place \| frozen \(replan present\) \| frozen \(product owner present\) \| none>/);
 assert.match(foldSkill, /- Fold diff: <shortstat from a real `git diff` run>/);
-assert.match(foldSkill, /- Branch: <RE-REVIEW-REQUIRED \(delta\) \| RE-REVIEW-OPTIONAL \| RE-REVIEW-SKIPPED \| REPLAN-ROUTE>/);
+assert.match(foldSkill, /- Branch: <RE-REVIEW-REQUIRED \(delta\) \| RE-REVIEW-OPTIONAL \| RE-REVIEW-SKIPPED \| REPLAN-ROUTE \| PRODUCT-ROUTE>/);
 
 // 10b. The receipt is immutable once printed and emitted after the tally as
 // the ABSOLUTE-last output together with the branching block.
@@ -248,6 +248,22 @@ assert.match(foldSkill, /replan-in-unit/);
 assert.match(foldSkill, /decision-required/);
 assert.match(foldProcess, /no `folded: yes` flips/);
 assert.match(foldProcess, /REPLAN-ROUTE/);
+
+// 10f/#293 AC2. Freeze-batch recognizes a product-owned row: a fix-now row
+// whose Route cell begins `product owner` states its class in the table
+// explicitly and freezes the batch (the loop repairs source, never authority —
+// POLICY §4), and the receipt's batch-class vocabulary carries it.
+assert.match(foldProcess, /frozen \(product owner present\)/);
+assert.match(foldProcess, /PRODUCT-ROUTE/);
+assert.match(foldProcess, /product owner[\s\S]{0,400}freeze-batch/);
+assert.match(foldSkill, /frozen \(product owner present\)/);
+
+// 10g/#293 A4. triage-issue can conclude a product-owned finding: the verdict
+// vocabulary carries `product-repair` and routes it through the router's
+// `route: product` line, never into the fold cycle.
+const reviewFindingProcess = read("skills/triage-issue/references/REVIEW_FINDING_PROCESS.md");
+assert.match(reviewFindingProcess, /VERDICT: fix-now \| replan-in-unit \| decision-required \| product-repair \| disputed/);
+assert.match(reviewFindingProcess, /product-repair[\s\S]{0,600}route: product/);
 assert.match(foldProcess, /retained/);
 
 // 10f. Four-branch closing block + the literal no-decision→re-review default.
@@ -288,11 +304,12 @@ assert.match(foldPolicy, /materializ/);
 // maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
 // conditional replan destination), fix #244 moved it 1.5.0 → 1.5.1
 // (the freeze-batch consumer contract), feature 32 moved it 1.5.1 → 1.6.0
-// (sole-flipper provenance cited to the ledger-ownership map), and the lane
+// (sole-flipper provenance cited to the ledger-ownership map), the lane
 // reference migration moved it 1.6.0 → 1.7.0 (the #244 consumer now names
-// `/unit-lane`, the lane command the router prints), the assertion
-// unchanged in strength.
-assert.match(foldSkill, /version: 1\.7\.0/);
+// `/unit-lane`, the lane command the router prints), and issue #293 moved it
+// 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), the
+// assertion unchanged in strength.
+assert.match(foldSkill, /version: 1\.8\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
