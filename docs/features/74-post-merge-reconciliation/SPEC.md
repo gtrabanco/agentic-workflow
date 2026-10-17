@@ -110,6 +110,7 @@ Budget: strong
 2026-10-17 09:00 — plan step: prior-decisions sweep clean (4 compatible rows, 0 contradicts); ledgers embedded (XS/S home) — next: implement
 2026-10-17 09:08 — implement P1: mechanical AC verification at HEAD 70a18b81 (AC-2/3/4/5/6 rows recorded; AC-1 pending the P2 review pass) → 7f8427d5 — next: tests
 2026-10-17 09:12 — tests step: full gate re-run at 7f8427d5 — 663/663 pass, fail 0; `--routes` PASS 14 routes — next: review (P2 union pass)
+2026-10-17 09:20 — evidence step: AC-2…AC-6 rows present from P1 runs (re-runnable as written); AC-1 row lands with the P2 review receipt — next: review (5 isolated axis reviewers spawned over the union diff)
 
 ## Next
 
