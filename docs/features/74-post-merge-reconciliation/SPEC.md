@@ -1,0 +1,103 @@
+---
+type: feature
+scope: medium
+---
+
+# 74 — post-merge-reconciliation
+
+> One-line: post-merge reconciliation of issues #270 (PR #280) and #272 (PR #276) — one review pass over the union plus repair of whatever the combination breaks.
+
+## Objective
+
+Both branches of the overlap (#270 → PR #280, #272 → PR #276) are merged. Issue #275 owns the combination: one review pass over the **union** diff (branch-level verdicts do not cover it), repair of cross-PR drift (PLAN.md sections, budget ceilings, roadmap/CHANGELOG hygiene, MCP hygiene), and a green full gate on merged `main`.
+
+## Why
+
+The two PRs were reviewed independently. `git merge-tree` (2026-09-29, issue body) predicted a PLAN.md conflict, independently re-based budget ceilings that can exceed both branches' values, and roadmap rows 69/70 racing on the same insertion point. Each merge landed cleanly as a text matter; the issue exists to verify the *combination* rather than assume it.
+
+## User outcome
+
+A lane operator merging both PRs gets: a `review-change` receipt recorded against the merged result, a `unit-lane` PLAN step that carries both #270's prior-decisions sweep and #272's phase-block plan, `check-skill-context --routes` green with ceilings that name their growth source, ordered roadmap/CHANGELOG records, and a green `node --test scripts/*.test.mjs` on `main`.
+
+## Acceptance criteria
+
+From the issue's draft ACs (each already command-verifiable):
+
+1. A `review-change` receipt exists for the merged result covering both PRs' union.
+2. `skills/unit-lane/references/PLAN.md` holds both sections, no conflict markers, format still owned by `phase-contract`.
+3. `bun scripts/check-skill-context.mjs --routes` green over the merged tree; every re-based ceiling names its growth source.
+4. CHANGELOG version-table + package-versions checks green with #273's and #270's rows combined; ROADMAP rows 69 → 70 in order.
+5. No `.pi/mcp*` path appears in either PR's diff.
+6. `node --test scripts/*.test.mjs` green on merged `main`.
+
+## Non-goals
+
+- The MCP migration itself (owned by its own feature/window).
+- Implementing #274 (pi tool surface) or any new capability.
+- Re-opening #270/#272's own scope — this unit only reviews the combination and repairs what the combination breaks.
+- No pi 0.99 semantic work: those decisions live in #201, #269, #274 and the MCP feature.
+
+## Future
+
+none
+
+## Future cost
+
+None — one-time reconciliation; no standing rule introduced.
+
+## Applicable tests
+
+`node --test scripts/*.test.mjs` (full repo suite, AC-06) and `bun scripts/check-skill-context.mjs --routes` (AC-03).
+
+## Known pre-existing issues
+
+- Stray MCP files (`.pi/mcp-adapter.json`, `.pi/mcp.json`) were observed uncommitted in the working tree during #272's execution — does-not-affect this unit (tree verified clean 2026-10-17; they belong to the MCP feature window).
+
+## Tasks
+
+- P1 — Verify the mechanical reconciliation items that the merges may already have satisfied (PLAN.md both sections + no markers; route budgets; roadmap rows 69→70; CHANGELOG tables; no `.pi/mcp*` in either PR diff; full suite green) and record per-AC evidence. (validator: `node --test scripts/*.test.mjs && bun scripts/check-skill-context.mjs --routes` both exit 0)
+- P2 — Run the review pass over the union diff of PR #280 + PR #276 (files, skills, budgets, records the branches share), classify findings, record the receipt against the merge state. (validator: review receipt recorded in `docs/features/74-post-merge-reconciliation/review-findings.md` with a verdict)
+- P3 — Repair any fix-now findings from P2 (if none: record `none` and close). (validator: re-run of the affected validator exits 0)
+
+## Planning evidence
+
+XS/S unit — embedded. Claims: PLAN.md carries both sections on `main` (verified 2026-10-17: `## Prior-decisions contradiction sweep` present, no markers); route budget table passes `--routes` (14 routes, PASS); roadmap rows 69 then 70 present and ordered; full suite 663/663 pass at HEAD 3844c1ae; PR diffs #280/#276 contain no `.pi/mcp*` path.
+
+## Obligations
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O-74-1 | Issue #275 scope item 1 | review receipts cover PR combinations, not only branches | P2 | P2 | review-change pass over union | review-findings.md verdict row | verdict | open |
+| O-74-2 | Issue #275 scope item 2 | PLAN.md format ownership stays with phase-contract | P1 | P1 | `phase-contract` version/grammar unchanged | grep no markers + both sections present | grep output | open |
+| O-74-3 | Issue #275 scope items 3–6 | budgets/records/gates green on merged main | P1 | P1 | scripts as cited in ACs 3–6 | commands exit 0 | command output | open |
+
+## Evidence
+
+| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+
+## Triaged steps
+
+```
+TRIAGE — 74-post-merge-reconciliation (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
+Skipped: none
+Budget: strong
+```
+
+## Progress log
+
+2026-10-17 08:45 — unit doc created from issue #275 (from-issue route) — next: triage
+
+## Next
+
+Run triage: `bun scripts/unit-route.mjs --triage post-merge-reconciliation`
+
+## References
+
+- Issue [#275](https://github.com/gtrabanco/agentic-workflow/issues/275) (this unit's source)
+- Issue [#270](https://github.com/gtrabanco/agentic-workflow/issues/270) / PR [#280](https://github.com/gtrabanco/agentic-workflow/pull/280) (review-conformance, merged)
+- Issue [#272](https://github.com/gtrabanco/agentic-workflow/issues/272) / PR [#276](https://github.com/gtrabanco/agentic-workflow/pull/276) (phase-lint unit-doc grammar, merged)
+- PR [#273](https://github.com/gtrabanco/agentic-workflow/pull/273) (pi-tui peerDependencies + 0.99.1 re-basis, merged)
+- Roadmap rows 69, 70
