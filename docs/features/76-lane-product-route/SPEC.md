@@ -198,17 +198,22 @@ Step notes:
 | AC3–AC5 | P2 additions: `workflow-status-sensor.test.mjs` + `next-recommendations.test.mjs` pins; tier consumption landed with 73 | exit 0 | next-recommendations PASS · sensor pins pass | `scripts/workflow-status-sensor.test.mjs`, `scripts/next-recommendations.test.mjs` |
 | AC8 | validators after P3: `node --test scripts/review-loop-discipline.test.mjs scripts/next-recommendations.test.mjs scripts/normative-drift.test.mjs` | exit 0 | PASS next-rec · PASS review-loop-discipline · fail 0 | combined run, no test weakened — pins were added, existing assertions only widened to the new closed vocabulary |
 | — | diff guard (P3, working tree vs HEAD) | PASS | Lines: 47 (+34/-13) · Files: 5 (limit 8) | `bun scripts/diff-guard.mjs --base HEAD --unit 76` |
+| P4 | `bump-skill` pass: fold-findings 1.8.0, triage-issue 2.11.0, review-change 3.12.0 + CHANGELOG rows + release-log line; pi package 0.20.0 → 0.21.0 + companion row | exit 0 | version-parity content gate: `VERDICT: PASS` (parity holds, companion row present) | `node scripts/version-parity-gate.mjs --content --base main` |
+| P4 | context-budget check after the skill edits | exit 0 | `PASS context manifest: 28 discovered skills`; routes PASS after declared re-bases (fold-findings main 3252; four review-change routes re-based to ceil(measured × 1.10) with growth source `issue #293 (unit 76)`) | `bun scripts/check-skill-context.mjs` + `--routes` |
+| P4 | `node --test scripts/*.test.mjs` (root suites, incl. the version-pin maintenance 1.7.0 → 1.8.0 in `review-loop-discipline.test.mjs` per the pin's own protocol) | exit 0 | tests 690, pass 690, fail 0 | root suites |
+| P4 | `bun run test` (packages/pi-agentic-workflow) | exit 0 | 432 pass, 0 fail | package suite |
 
 ## Progress log
 
 `2026-10-17 20:53 — unit doc created from issue #293; roadmap row 76 (defined); triage run + pasted; research/design/plan steps closed (decisions.md + sweep) → (this commit) — next: P1 pins`
 `2026-10-17 20:58 — P1 pins: unit-route product-route cases (route, fix-unit hand-off, co-resident replan priority, plain fix-now still folds), freeze-batch class pin, next-recommendations pins; red-first per AC8 → 8891d84c — next: P2 router`
 `2026-10-17 21:07 — P2 router: PRODUCT_ROUTE vocabulary, routeOfRow product branch before fold fall-through, per-kind lane hand-off command, sensor projection (workflow-status.mjs) + pins; AC1 live repro now prints route: product → e8a4522f — next: P3 consumers`
-`2026-10-17 21:40 — P3 consumers: FOLD_PROCESS freeze-batch row + receipt PRODUCT-ROUTE branch (fold-findings), product-repair verdict routed through the router (triage-issue), executable product hand-off (review-change PERSIST_AND_DECIDE); validators green, diff guard PASS → (this commit) — next: P4 bump-skill bookkeeping`
+`2026-10-17 21:40 — P3 consumers: FOLD_PROCESS freeze-batch row + receipt PRODUCT-ROUTE branch (fold-findings), product-repair verdict routed through the router (triage-issue), executable product hand-off (review-change PERSIST_AND_DECIDE); validators green, diff guard PASS → 1bfbaea5 — next: P4 bump-skill bookkeeping`
+`2026-10-17 22:05 — P4: bump-skill (fold-findings 1.8.0, triage-issue 2.11.0, review-change 3.12.0; CHANGELOG rows + release log), pi package 0.21.0 + companion row, parity content gate PASS; context budgets: fold-findings re-based to 3252 (declared growth source) after compressing the new SKILL.md paragraph to a FOLD_PROCESS.md pointer, and the four review-change route ceilings re-based to ceil(measured × 1.10) — the A5 bullet is router-first as typed; review-loop-discipline version pin maintained 1.7.0 → 1.8.0 per the pin's documented protocol (strength unchanged); root suites 690/690, package suite 432/432 → (this commit) — next: P5 verification + PR`
 
 ## Next
 
-Execute P4 (bump-skill pass, context-budget check, package version bump), then P5 (evidence re-run of AC3–AC7, root suites, PR).
+Execute P5 (evidence re-run of AC3–AC7, root suites, PR with `Closes #293`).
 
 ## References
 
