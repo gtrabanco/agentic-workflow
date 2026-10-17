@@ -2868,3 +2868,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr and fold-findings on PR #298 (unit 74): PR BLOCKED with 3 fix-now blockers (review receipt absent, lineage failed, F-74-1 no home); F-74-8 folded (obligations header ##→### in SPEC + rows O-74-1..3 closed verified), F-74-7+9 BLOCKED requiring separate /review-change and /triage-issue runs
 - **Decisions:** Review receipt absent at HEAD is the primary blocker — audit-pr never re-reviews inline, routes to /review-change; F-74-8 fix was mechanical (header level + status close), gate green 663/663
 - **Next:** /review-change at head 7eebaa10 to post REVIEW-PASS receipt; /triage-issue on F-74-1 to file fix issue; re-run /audit-pr after both
+
+**2026-10-17T20:04:22Z — main — manual**
+- **Commits:** 15 (ed39d762…30b2cade)
+- **Files:** docs/features/74-post-merge-reconciliation/SPEC.md, decisions.md, review-findings.md, ROADMAP.md, scripts/phase-lint.test.mjs, scripts/unit-doc-phases.mjs
+- **Summary:** Unit-lane 74-post-merge-reconciliation (issue #275): post-merge reconciliation of PR #280 (review-conformance, #270) and PR #276 (phase-lint grammar, #272) — one union review receipt, mechanical AC verification, PR #298 opened and merged.
+- **Decisions:** Union diff base chosen as the two PR merge SHAs (not HEAD of main); F-74-1 (fenced `## Tasks` hijack) routed to fix/272 owner per non-goals, not folded in #275; validator spans rewritten to enforced shape (box-5 no standalone-or, box-8 outcome anchors); fenced `## Tasks` section locator bug in unit-doc-phases.mjs fixed (PR #298 merged, F-74-1 folded).
+- **Next:** Merge PR #298 on main (already merged: 30b2cade). Next: /triage-issue on F-74-1 / re-enter the fenced `## Tasks` parser repair as a new fix unit against the fix/272 surface if there is a real gap that hasn't been fixed yet — verify scripts/unit-doc-phases.mjs at HEAD
