@@ -108,7 +108,8 @@ Budget: strong
 2026-10-17 08:52 — research step: per-AC state verified at HEAD 3844c1ae (PLAN.md both sections/no markers, `--routes` 14 PASS, roadmap 69→70 ordered, suite 663/663, no `.pi/mcp*` in PR #280/#276 diffs; budget growth sources declared incl. "feature 69 / issue #270" and "fix #272" rows) — next: design
 2026-10-17 08:56 — design step: ACs adopted from issue #275's draft; gap interview closed with 3 recorded decisions (review depth, receipt home, AC adoption), 2 assumptions; `## Future` = none — next: plan
 2026-10-17 09:00 — plan step: prior-decisions sweep clean (4 compatible rows, 0 contradicts); ledgers embedded (XS/S home) — next: implement
-2026-10-17 09:08 — implement P1: mechanical AC verification at HEAD 70a18b81 (AC-2/3/4/5/6 rows recorded; AC-1 pending the P2 review pass) — next: diff guard, then tests
+2026-10-17 09:08 — implement P1: mechanical AC verification at HEAD 70a18b81 (AC-2/3/4/5/6 rows recorded; AC-1 pending the P2 review pass) → 7f8427d5 — next: tests
+2026-10-17 09:12 — tests step: full gate re-run at 7f8427d5 — 663/663 pass, fail 0; `--routes` PASS 14 routes — next: review (P2 union pass)
 
 ## Next
 
