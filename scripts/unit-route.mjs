@@ -43,8 +43,10 @@ const ROUTES = Object.freeze(["replan", "decision", "product", "fold", "execute"
 const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
 const DECISION_ROUTE = /decision[- ]required|surface (the )?decision|needs a decision/i;
 /** #293: the `Route` cell review-change persists for a product-owned row
- * (`product owner — …`), plus the spellings CLASSIFY.md's owner table allows. */
-const PRODUCT_ROUTE = /product[- ]owner|product[- ]owned|owned by product/i;
+ * (`product owner — …`), plus the spellings CLASSIFY.md's owner table allows.
+ * Anchored to the cell head so a source row that merely *mentions* the product
+ * owner does not leave the fold (`CLASSIFY.md`'s `source` owner folds locally). */
+const PRODUCT_ROUTE = /^(?:product[- ]owner|product[- ]owned|owned by product)\b/i;
 const KNOWN_UNIT_FILES = ["SPEC.md", "ACCEPTANCE.md", "PLAN.md", "TASKS.md", "progress.md", "review-findings.md"];
 const PATH_RE = /[A-Za-z0-9_.@-]+(?:\/[A-Za-z0-9_.@-]+)+/g;
 const BARE_FILE_RE = /(?:^|[\s(`[{,])((?:SPEC|ACCEPTANCE|PLAN|TASKS|progress|review-findings|planning-evidence)\.md)\b/g;
