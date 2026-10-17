@@ -653,6 +653,21 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     source_skill: "unit-lane",
   }]);
 
+  // #293: a fix-unit product row projects `/unit-lane --fix <n>`, not /unit-lane fix-<n>.
+  // The fix-293 sensor pin (above) covers only the feature case; this is the fix case.
+  const productFix = makeFixture({
+    extraFiles: {
+      "docs/fix/README.md": ["# Active fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|", "| [#88](https://example.invalid/issues/88) | `beta` | in-progress | x |"].join("\n") + "\n",
+      "docs/fix/88-beta/review-findings.md": `${ledger("product owner — repair via lane")}\n`,
+    },
+  }).run();
+  assert.equal(productFix.status, 0, productFix.stderr);
+  assert.deepEqual(parseEnvelope(productFix.stdout).next.suggested, [{
+    command: "/unit-lane --fix 88",
+    trigger: "an open finding's frozen route is the product owner — product repair (F1)",
+    source_skill: "unit-lane",
+  }]);
+
   // Feature 61 P8b: plan-fix absorbed into unit-lane for fix units.
   const fixIndex = [
     "# Active fixes",
@@ -668,7 +683,7 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
     },
   }).run();
   assert.equal(fix.status, 0, fix.stderr);
-  assert.equal(parseEnvelope(fix.stdout).next.suggested[0].command, "/unit-lane fix-91", "a fix unit's planner command is /unit-lane <id>");
+  assert.equal(parseEnvelope(fix.stdout).next.suggested[0].command, "/unit-lane --fix 91", "a fix unit's planner command is /unit-lane --fix <n>");
 
   const none = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] }).run();
   assert.equal(none.status, 0, none.stderr);

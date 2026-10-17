@@ -717,7 +717,9 @@ function readSuggestions(unit, unitDir) {
   const rows = readOpenRows(unitDir);
   const plan = rows.filter((row) => routeOfRow(row) === "replan");
   if (plan.length > 0) {
-    const command = `/unit-lane ${unit.id}`;
+    const command = unit.kind === "fix"
+      ? `/unit-lane --fix ${unit.issue}`
+      : `/unit-lane ${unit.id}`;
     return [{
       command,
       trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
@@ -731,7 +733,9 @@ function readSuggestions(unit, unitDir) {
     // is lane repair, never fold work (the fold loop repairs source, not
     // authority).
     return [{
-      command: `/unit-lane ${unit.id}`,
+      command: unit.kind === "fix"
+        ? `/unit-lane --fix ${unit.issue}`
+        : `/unit-lane ${unit.id}`,
       trigger: `an open finding's frozen route is the product owner — product repair (${product.map((row) => sanitize(row.id)).join(", ")})`,
       source_skill: "unit-lane",
     }];

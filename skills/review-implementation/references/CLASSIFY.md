@@ -175,7 +175,7 @@ finding in its `Route` cell.
 |---|---|---|
 | `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | — |
 | `plan` | run `node scripts/unit-route.mjs <unit>` → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
-| `product` | `/unit-lane <unit>` repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
+| `product` | run `node scripts/unit-route.mjs <unit>` → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
 
 - `fix-now` with a `plan` or `product` owner keeps its severity but is **not**
