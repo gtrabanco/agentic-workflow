@@ -81,6 +81,57 @@ test("AC1: a plain fix-now row routes to the fold", () => {
   assert.equal(readSet(result.stdout).count, 1, "the fold reads its own ledger");
 });
 
+// --- #293 AC1 — the product route (P1 pins, red before the router lands) ---
+
+test("#293 AC1: a product-owned fix-now row routes to the product, never the fold", () => {
+  const result = run(["18-product-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "product", "a `product owner — …` route cell never falls through to fold");
+  assert.equal(nextLine(result.stdout), "/unit-lane 18-product-unit", "the next command is the lane hand-off, executable as typed");
+  assert.equal(rowLine(result.stdout), "F1 F2", "both product spellings (`product owner`, `owned by product`) route");
+});
+
+test("#293 AC1: the product hand-off names the frozen --fix invocation for a fix unit", () => {
+  const result = run(["24-product-fix"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "product");
+  assert.equal(nextLine(result.stdout), "/unit-lane --fix 24");
+});
+
+test("#293 AC1: product loses to a co-resident replan row", () => {
+  const result = run(["19-product-replan-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "replan", "a blocking replan row outranks the actionable product route");
+});
+
+test("#293 AC1: the fold cell spelling never over-matches the product vocabulary", () => {
+  const result = run(["11-fold-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "fold", "`fold into phase` is not product vocabulary");
+});
+
+// --- #293 F9 — anchored `PRODUCT_ROUTE` never over-matches ---
+test("#293 F9: an over-matched cell (‘not product owned — source fix’) still routes to fold", () => {
+  const result = run(["99-overmatch1"], { root: FIXTURE });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "fold", "the word ‘product’ inside a source-fix cell must not route to product");
+  assert.equal(rowLine(result.stdout), "F1");
+});
+
+test("#293 F9: a source cell mentioning the product owner stays in the fold", () => {
+  const result = run(["99-overmatch2"], { root: FIXTURE });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "fold", "‘product owner’ inside a source description must not route to product");
+  assert.equal(rowLine(result.stdout), "F2");
+});
+
+test("#293 F9: a cell that only mentions the product owner stays in the fold", () => {
+  const result = run(["99-overmatch3"], { root: FIXTURE });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "fold", "‘product owner’ in a prose description must not route to product");
+  assert.equal(rowLine(result.stdout), "F3");
+});
+
 test("AC1: a unit with no open row routes to execute", () => {
   for (const unit of ["13-execute-unit", "14-empty-unit"]) {
     const result = run([unit]);

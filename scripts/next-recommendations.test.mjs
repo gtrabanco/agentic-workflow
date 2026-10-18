@@ -58,6 +58,15 @@ test("review and fold hand-offs preserve every finding ID", () => {
   assert.match(fold, /never\s+print `<F2>`, `…`, or a single representative ID/);
 });
 
+test("#293 A5: the product-owned hand-off is executable as typed — router first, lane command per unit kind", () => {
+  const review = readReference("review-change", "PERSIST_AND_DECIDE.md");
+  // The bullet runs the router (which prints `route: product`) before any
+  // lane command, and names both frozen lane invocations per unit kind.
+  assert.match(review, /owned by product[\s\S]{0,400}route: product/);
+  assert.match(review, /route: product[\s\S]{0,400}\`\/unit-lane <unit>\` for a feature/);
+  assert.match(review, /route: product[\s\S]{0,400}\`\/unit-lane --fix <n>\` for a fix/);
+});
+
 test("review-change review-end boundary (fix #191 extension)", () => {
   const reviewSkill = readSkill("review-change");
   const output = readReference("review-change", "OUTPUT_AND_GUARDRAILS.md");

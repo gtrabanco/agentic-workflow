@@ -1098,7 +1098,9 @@ test("#224 canonical destination vocabulary: the router publishes one closed rou
   const routes = /const ROUTES = Object\.freeze\(\[([^\]]+)\]\)/.exec(router);
   assert.ok(routes, "the router declares its route table as one closed set");
   const names = routes[1].split(",").map((token) => token.trim().replace(/"/g, "")).filter(Boolean);
-  assert.deepEqual(names, ["replan", "decision", "fold", "execute", "close-out", "historical", "plan-from-issue"], "the route vocabulary is closed");
+  // #293: `product` joins the closed set (an open row whose frozen route is the
+  // product owner — repaired by the lane, never folded).
+  assert.deepEqual(names, ["replan", "decision", "product", "fold", "execute", "close-out", "historical", "plan-from-issue"], "the route vocabulary is closed");
   // The sensor projects the router's class→destination mapping; neither may invent a
   // fourth destination for the same class (#224's three-contradictory-sentences defect).
   // Note: /plan-feature, /plan-fix are retired (feature 61 P8); the lane's command is /unit-lane.
@@ -1271,11 +1273,13 @@ test("#244 freeze-batch hand-off: the decision-required branch surfaces the user
   // The decision-table freeze-batch cell carries the same branch.
   const rows = markdownTable(skill, "Closing-block decision branch");
   assert.ok(rows, "the closing-block decision table exists");
-  const freezeRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch"));
-  assert.ok(freezeRow, "the freeze-batch row exists in the decision table");
+  // With the PRODUCT-ROUTE row (feature 76), pick the REPLAN-ROUTE row specifically;
+  // the first "freeze-batch" row is now PRODUCT-ROUTE which has no decision branch.
+  const replanRow = rows.find((cells) => cells[0] && cells[0].includes("freeze-batch") && cells[0].includes("replan-class"));
+  assert.ok(replanRow, "the freeze-batch replan-class row exists in the decision table");
   assert.ok(
-    freezeRow[freezeRow.length - 1].includes(decisionConsumer),
-    "the freeze-batch consumer cell must surface the decision-required consumer"
+    replanRow[replanRow.length - 1].includes(decisionConsumer),
+    "the replan-class freeze-batch consumer cell must surface the decision-required consumer"
   );
 
   // Both skill files state the branch.
