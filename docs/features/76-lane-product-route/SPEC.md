@@ -132,7 +132,7 @@ scripts/normative-drift.test.mjs`, plus the root suites
 - P4 — Skill bookkeeping: `bump-skill` pass for every touched skill (version +
   CHANGELOG rows), context-budget check, Pi package version bump + companion
   row (skills/** trigger set).
-  (validator: `bun scripts/check-skill-context.mjs` exit 0; `node --test scripts/version-parity-gate.mjs` content mode exit 0)
+  (validator: `bun scripts/check-skill-context.mjs` exit 0; `node scripts/version-parity-gate.mjs --content --base main` exit 0)
 - P5 — Verification: run every AC's command, fill Evidence rows, run the root
   suites, open the PR with `Closes #293`.
   (validator: `node --test scripts/*.test.mjs` exits 0)
@@ -169,10 +169,6 @@ architectural-invariants doc is installed. Hits and relations:
 | O2 | `review-implementation/CLASSIFY.md` owner table | product owner's hand-off is the lane; the router's `next` must name it as typed per unit kind | P2 P3 | route branch command + PERSIST_AND_DECIDE bullet | router + review-change | unit-route pins | Evidence row AC1 | verified |
 | O3 | issue #293 AC8 | no existing test weakened; pins added for each changed behavior | P1 P5 | pins-first | tests | root suites | Evidence rows | verified |
 
-## Evidence
-
-> Evidence is verified, not claimed — a reviewer re-runs it.
-
 ## Triaged steps
 
 ```text
@@ -189,6 +185,12 @@ Step notes:
 - **plan** — Tasks P1–P5 below; prior-decisions sweep clean (see Planning evidence); ledgers embedded (S/M sizing rule).
 - **implement/tests** — P1 pins first, P2 router, P3 consumers, one phase per commit, diff guard after each implement step.
 - **evidence/review/docs** — Evidence rows per AC; review verdict; `bump-skill` + CHANGELOG + package bump (P4); root suites + PR (P5).
+
+## Evidence
+
+One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
+
+> Evidence is verified, not claimed — a reviewer re-runs it.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
