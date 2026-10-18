@@ -39,10 +39,6 @@ first on purpose).
 Consent for installs/hooks/overwrites is **mandatory**: blank or absent consent
 → re-ask once → halt; no default consent.
 
-- **`<target-dir>`** — required. If blank: re-ask once with the expected
-  format. If still blank, emit
-  `→ Next: init-workspace requires manual input — cannot proceed` and stop.
-  Cwd is used as a fallback only.
 - **Consent for installs, hooks, and overwrites** — required for each action.
   If blank or absent: re-ask once; if still blank/absent, halt with
   `requires manual input`. Never proceed by assuming consent from context.

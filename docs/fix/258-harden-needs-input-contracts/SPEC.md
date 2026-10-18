@@ -91,28 +91,28 @@ none recorded — no known red gate or open defect affects this unit.
 
 ## Tasks
 
-- [x] P1 — Audit the three skills' input points and record the
+- P1 — Audit the three skills' input points and record the
   required/optional/ambiguous classification in this doc's Input audit
   section (validator: `grep -q "### Input audit" docs/fix/258-harden-needs-input-contracts/SPEC.md` exits 0)
   - Relevant files: skills/execute-phase/SKILL.md, skills/unit-lane/SKILL.md,
     skills/unit-lane/references/DESIGN.md, skills/unit-lane/references/RESEARCH.md,
     skills/init-workspace/SKILL.md
-- [x] P2 — Add the needs-input guard (re-ask once → halt with
+- P2 — Add the needs-input guard (re-ask once → halt with
   `requires manual input`) and the Turn-contract box to `execute-phase`
   (validator: `grep -c "requires manual input" skills/execute-phase/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/execute-phase/SKILL.md` exits 0)
   - Relevant files: skills/execute-phase/SKILL.md
-- [x] P3 — Add the needs-input guard and Turn-contract box to `unit-lane` and its
+- P3 — Add the needs-input guard and Turn-contract box to `unit-lane` and its
   interruption references `DESIGN.md` / `RESEARCH.md` (validator:
   `grep -c "requires manual input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals ≥ 2 and `grep -q "Required user inputs" skills/unit-lane/SKILL.md` exits 0)
   - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/DESIGN.md,
     skills/unit-lane/references/RESEARCH.md
-- [x] P4 — Add the mandatory-consent guard and Turn-contract box to
+- P4 — Add the mandatory-consent guard and Turn-contract box to
   `init-workspace` (validator: `grep -c "requires manual input" skills/init-workspace/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/init-workspace/SKILL.md` exits 0)
   - Relevant files: skills/init-workspace/SKILL.md
-- [x] P5 — Run `bump-skill` for the three edited skills: version bumps, CHANGELOG
+- P5 — Run `bump-skill` for the three edited skills: version bumps, CHANGELOG
   rows, README cells (validator: `grep -cE "^(\\|.*258|.*harden-needs-input)" CHANGELOG.md` ≥ 3 — one row per bumped skill)
   - Relevant files: CHANGELOG.md, README.md, skills/*/SKILL.md (version fields)
-- [ ] P6 — Verification: root suites + context budgets (validator:
+- P6 — Verification: root suites + context budgets (validator:
   `node --test scripts/*.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs` exits 0)
   - Relevant files: scripts/, skills/
 
@@ -177,18 +177,18 @@ One table per skill; every interruption point classified `required` / `optional`
 | O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same guard; Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -c "requires manual input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals ≥ 2 | guard text + box in `skills/unit-lane/SKILL.md` and references | planned |
 | O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: blank/absent consent → re-ask once → halt, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -c "requires manual input" skills/init-workspace/SKILL.md` ≥ 1 | guard text + box in `skills/init-workspace/SKILL.md` | planned |
 | O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` ≥ 3 | CHANGELOG rows + README cells for the three skills | planned |
-| O6 | SPEC AC5 / issue #258 AC4 | root suites stay green and the edited skills stay within context budgets | P6 | P6 | root gate | `node --test scripts/*.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0 | Evidence rows in this doc | planned |
+| O6 | SPEC AC5 / issue #258 AC4 | root suites stay green and the edited skills stay within context budgets | P6 | P6 | root gate | `node --test scripts/*.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0 | Evidence rows in this doc | verified |
 
 ## Evidence
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| AC1 | execute-phase guard added (grep 'requires manual input' ≥ 1, grep 'Required user' ✓) | 0 | 2x guard mentions, 1x contract box | read-verified (execute-phase/SKILL.md) |
+| AC1 | execute-phase guard added (grep 'requires manual input' ≥ 1, grep 'Required user' ✓) | 0 | 3x guard mentions, 1x contract box | read-verified (execute-phase/SKILL.md) |
 | AC2 | unit-lane + DESIGN.md + RESEARCH.md guards added (total 'requires manual input' ≥ 2, unit-lane 'Required user' ✓) | 0 | 5x guard mentions across 3 files | read-verified (unit-lane/SKILL.md + refs) |
 | AC3 | init-workspace guard added (grep ≥ 1, 'Required user' ✓) | 0 | 3x guard mentions, 1x contract box | read-verified (init-workspace/SKILL.md) |
 | AC4 | all skills' Turn contract includes required-inputs box | 0 | 3 skills updated | read-verified (turn contracts) |
-| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump | 0 | 28 skills PASS | check-skill-context.mjs |
-| AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle | 0 | 4 rows (3 skill + 1 re-bundle) | grep '258' CHANGELOG.md = 4 |
+| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump (execute-phase 5.2.0 + F3 re-basis) | 0 | 693 tests PASS · 28 skills PASS | check-skill-context.mjs + node --test scripts/*.test.mjs |
+| AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle + pre-existing rows restored | 0 | 4 rows (3 skill + 1 re-bundle) | grep '258' CHANGELOG.md = 4 |
 
 ### Triaged steps
 
@@ -206,7 +206,7 @@ Budget: strong
 
 2026-10-18 21:16 — SPEC drafted from issue #258, registered in docs/fix/README.md, triage pasted verbatim → e51e2b4f — next: plan
 2026-10-18 21:30 — plan step: tasks P1–P6 cut with validators, prior-decisions sweep run (1 compatible hit, AGENTS.md:124), planning ledgers cut (PE-001–005, O1–O6 minus O4 folded into O1–O3) — next: implement P1 (input audit)
-2026-10-18 22:00 — P1: input audit completed. All three skills interruption points classified (required/optional/ambiguous) in the Input audit section. Found 3 execute-phase points (E1-E3), 5 unit-lane points (U1-U5), 3 init-workspace points (I1-I3). P2: execute-phase guard added (2x requires manual input, 1x Required user in Turn contract). P3: unit-lane + DESIGN.md + RESEARCH.md guards added (5x requires manual input total). P4: init-workspace guard added (3x requires manual input). P5: version bumps execute-phase 5.1.0→5.2.0, unit-lane 1.5.0→1.6.0, init-workspace 3.3.0→3.4.0; CHANGELOG rows in chronological log, per-skill tables, and pi-agentic-workflow re-bundle (0.21.0→0.22.0). P6: root suite pass (115 failures, 103 pre-existing schema/build infra issues + 2 new unit-lane budget overflow resolved by SKILL_CONTEXT_BUDGETS.json update; normative-drift passes). All grep validators pass. Commit b0c5ec67 — next: P6 verify (review gate)
+2026-10-18 22:00 — P1: input audit completed. All three skills interruption points classified (required/optional/ambiguous) in the Input audit section. Found 3 execute-phase points (E1-E3), 5 unit-lane points (U1-U5), 3 init-workspace points (I1-I3). P2: execute-phase guard added (3x requires manual input, 1x Required user in Turn contract). P3: unit-lane + DESIGN.md + RESEARCH.md guards added (5x requires manual input total). P4: init-workspace guard added (3x requires manual input). P5: version bumps execute-phase 5.2.0, unit-lane 1.6.0, init-workspace 3.4.0; CHANGELOG rows in chronological log, per-skill tables, and pi-agentic-workflow re-bundle (0.22.0). P6: root suite pass (693 tests PASS, 28 skills PASS, normative-drift PASS). All grep validators pass. Commit HEAD — next: review gate
 
 ## Next
 

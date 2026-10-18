@@ -1,465 +1,473 @@
 {
-  "schemaVersion": 1,
-  "metric": "ceil(UTF-8 bytes / 4); deterministic proxy, not provider billing tokens",
-  "referenceDepth": 1,
-  "defaults": {
-    "mainEstimateMax": 2800,
-    "mainLinesMax": 240,
-    "descriptionEstimateMax": 120,
-    "referenceEstimateMax": 2200,
-    "referenceLinesMax": 280
-  },
-  "skills": {
-    "audit-docs": {
-      "descriptionEstimateMax": 240
+    "schemaVersion": 1,
+    "metric": "ceil(UTF-8 bytes / 4); deterministic proxy, not provider billing tokens",
+    "referenceDepth": 1,
+    "defaults": {
+        "mainEstimateMax": 2800,
+        "mainLinesMax": 240,
+        "descriptionEstimateMax": 120,
+        "referenceEstimateMax": 2200,
+        "referenceLinesMax": 280
     },
-    "fold-findings": {
-      "mainEstimateMax": 3416,
-      "mainSources": {
-        "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class \u2014 the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)"
-      }
+    "skills": {
+        "audit-docs": {
+            "descriptionEstimateMax": 240
+        },
+        "fold-findings": {
+            "mainEstimateMax": 3416,
+            "mainSources": {
+                "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class \u2014 the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)"
+            }
+        },
+        "init-workspace": {
+            "mainEstimateMax": 3195,
+            "mainSources": {
+                "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)"
+            }
+        },
+        "log-session": {
+            "descriptionEstimateMax": 230
+        },
+        "audit-pr": {
+            "mainEstimateMax": 3294,
+            "referenceEstimateMax": 2889,
+            "mainSources": {
+                "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) \u2014 grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
+            },
+            "referenceSources": {
+                "fix 285 (AC3)": "the lane-era lineage gate rewrite (triage-block currency for lane-era units, embedded/separate obligations homes, legacy verify path retained) grew 02_CLOSURE_AND_SCOPE_GATES.md from the measured 2200 (the default reference ceiling) to 2244; ceiling re-based to ceil(2244 x 1.10) = 2469, reason declared (fix/285)",
+                "fix 285 (F4-F7)": "F4-F7 fold: added non-author-controlled discriminator note, empty obligations BLOCKED verdict, and frozen digest anchor text to 02_CLOSURE_AND_SCOPE_GATES.md; estimate grew 2626 \u2192 ceiling re-based to ceil(2626 x 1.10) = 2889",
+                "fix 285 + fix 286 (combined integration)": "the main-into-branch merge folds #286's scope-aware judge into the rewritten 02_CLOSURE_AND_SCOPE_GATES.md \u2014 combined reference measures 2589 est / 158 lines, so the declared 2889 ceiling still bounds it"
+            }
+        },
+        "orchestration-envelope": {
+            "descriptionEstimateMax": 170
+        },
+        "pre-execution-review": {
+            "referenceEstimateMax": 4325,
+            "referenceSources": {
+                "triage 32 F29 fold": "the owner-entry wording correction grew LEDGERS.md from the measured 3930 to 3931; ceiling re-based to ceil(3931 x 1.10) = 4325",
+                "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3930 (re-measured at this re-basis, after the F4 gate-ran edit); ceiling re-based to ceil(3930 x 1.10) = 4323. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3930, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1."
+            }
+        },
+        "product-audit": {
+            "mainEstimateMax": 3192,
+            "mainSources": {
+                "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192"
+            }
+        },
+        "review-implementation": {
+            "referenceEstimateMax": 3004,
+            "referenceSources": {
+                "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939",
+                "triage 32 F8": "the sensor-projection note added to CLASSIFY.md at 3912d9c1 grew it to 2730 est (10918 B / 4); ceiling re-based to ceil(2730 x 1.10) = 3004"
+            }
+        },
+        "review-change": {
+            "mainEstimateMax": 3133,
+            "mainSources": {
+                "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)"
+            },
+            "referenceEstimateMax": 3079,
+            "referenceSources": {
+                "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
+                "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)"
+            }
+        },
+        "execute-phase": {
+            "mainEstimateMax": 3626,
+            "mainLinesMax": 294,
+            "mainSources": {
+                "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222; the golden-fixture-driven two-block closing contract (weak-model smoke caught a last-phase P<k+1> naming a nonexistent phase) then measured 253 lines / 2953 est \u2014 line ceiling ceil(253 x 1.10) = 279",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section grew execute-phase/SKILL.md by 14 lines (F1) + 4 more lines (F3: confirmed phase + file targets); ceiling re-based to ceil(measured x 1.10)."
+            },
+            "referenceEstimateMax": 3232,
+            "referenceSources": {
+                "feature 60 P3": "the path-protection checkpoint step in PREFLIGHT.md grew the reference to 2938 est; ceiling re-based to ceil(2938 x 1.10)"
+            }
+        },
+        "workflow-status": {
+            "mainEstimateMax": 1767,
+            "mainLinesMax": 140,
+            "referenceEstimateMax": 2774,
+            "referenceLinesMax": 280,
+            "mainSources": {
+                "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)",
+                "triage 32 F25/F27": "the P4 budget re-basis at ceil(1606 x 1.10) = 1767 (review finding F19); SKILL.md is 1606 est / 127 lines \u2014 this ceiling was set on a per-skill re-basis; versus main only the version line changed (3.7.0 \u2192 3.8.0), so the size is inherited from the merged tree baseline"
+            },
+            "referenceSources": {
+                "triage 32 F31 fold": "the GATE-RAN mark enumeration added to SENSOR_SIGNALS.md grew the reference from the measured 2512 to 2521 est / 151 lines; ceiling re-based to ceil(2521 x 1.10) = 2774 (also supersedes the F25 byte-identity claim for this file, which no longer holds)",
+                "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)",
+                "triage 32 F25": "the sensor reference ceiling at ceil(2512 x 1.10) = 2764 (review finding F18); SENSOR_SIGNALS.md measured 2512 est / 150 lines before the F31 fold"
+            }
+        },
+        "unit-lane": {
+            "mainEstimateMax": 3329,
+            "mainLinesMax": 270,
+            "mainReason": "fix/258 harden-needs-input: the Needs-input guard section adds required/optional input classification (\u224825 lines); ceiling re-based from 2800/240 to ceil(3026\u00d71.10)=3329/ceil(245\u00d71.10)=270"
+        }
     },
-    "init-workspace": {
-      "mainEstimateMax": 3195,
-      "mainSources": {
-        "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)"
-      }
+    "routes": {
+        "audit-pr:feature": {
+            "skills": [
+                "audit-pr"
+            ],
+            "templates": [],
+            "routeEstimateMax": 10722,
+            "routeLinesMax": 664,
+            "sources": {
+                "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
+                "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
+                "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
+                "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
+                "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route \u2014 measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines"
+            }
+        },
+        "audit-pr:fix": {
+            "skills": [
+                "audit-pr"
+            ],
+            "templates": [],
+            "routeEstimateMax": 10722,
+            "routeLinesMax": 664,
+            "sources": {
+                "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
+                "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
+                "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
+                "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
+                "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route \u2014 measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines"
+            }
+        },
+        "execute-phase:descope": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md",
+                    "DESCOPE.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12484,
+            "routeLinesMax": 964,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:feature": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12498,
+            "routeLinesMax": 915,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:final-pr": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md",
+                    "FORGE_BODY.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12368,
+            "routeLinesMax": 941,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:finding": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12529,
+            "routeLinesMax": 915,
+            "sources": {
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:fix": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12682,
+            "routeLinesMax": 915,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:legacy": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12282,
+            "routeLinesMax": 915,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:small": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 12445,
+            "routeLinesMax": 915,
+            "sources": {
+                "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "fix 258 / #258 harden-needs-input": "the Needs-input guard section (F3: confirmed phase + file targets; F1: 14 line guard) grew execute-phase/SKILL.md; ceiling re-based to ceil(measured x 1.10)"
+            }
+        },
+        "execute-phase:unit-loop": {
+            "skills": [
+                "execute-phase",
+                "phase-contract",
+                "verification-contract"
+            ],
+            "references": {
+                "execute-phase": [
+                    "PRE_EXECUTION_GATE.md",
+                    "EXECUTION_CONTRACT.md",
+                    "FOLDING.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 13655,
+            "routeLinesMax": 984,
+            "sources": {
+                "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
+            }
+        },
+        "review-change:adversarial": {
+            "skills": [
+                "review-change",
+                "review-implementation",
+                "review-debt",
+                "verification-contract"
+            ],
+            "references": {
+                "review-change": [
+                    "REVIEW_PROCESS.md",
+                    "ADVERSARIAL_SETUP.md",
+                    "ADVERSARIAL_SYNTHESIS.md",
+                    "PERSIST_AND_DECIDE.md",
+                    "OUTPUT_AND_GUARDRAILS.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 20378,
+            "routeLinesMax": 1460,
+            "sources": {
+                "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (17701/1277 measured \u2192 19472/1405 declared); the review-change:adversarial route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
+                "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
+                "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (18145 -> 19960 est / 1306 -> 1437 lines); ceiling re-based to ceil(measured x 1.10)",
+                "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+                "fix 286 (scope manifest closeout)": "the receipt closeout / scope-aware judge (fix 286) grew the route's skill files \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
+                "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
+            }
+        },
+        "review-change:default-backend": {
+            "skills": [
+                "review-change",
+                "review-implementation",
+                "review-debt",
+                "verification-contract"
+            ],
+            "references": {
+                "review-change": [
+                    "REVIEW_PROCESS.md",
+                    "ADVERSARIAL_RECOMMENDATION.md",
+                    "PERSIST_AND_DECIDE.md",
+                    "OUTPUT_AND_GUARDRAILS.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 18560,
+            "routeLinesMax": 1341,
+            "sources": {
+                "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured \u2192 17654/1286 declared); the default-backend route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
+                "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
+                "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
+                "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+                "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
+                "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
+            }
+        },
+        "review-change:default-web": {
+            "skills": [
+                "review-change",
+                "review-implementation",
+                "review-debt",
+                "verification-contract"
+            ],
+            "references": {
+                "review-change": [
+                    "REVIEW_PROCESS.md",
+                    "ADVERSARIAL_RECOMMENDATION.md",
+                    "PERSIST_AND_DECIDE.md",
+                    "OUTPUT_AND_GUARDRAILS.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 18560,
+            "routeLinesMax": 1341,
+            "sources": {
+                "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured \u2192 17654/1286 declared); the default-web route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
+                "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
+                "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
+                "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+                "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
+                "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
+            }
+        },
+        "review-change:synthesize": {
+            "skills": [
+                "review-change",
+                "review-implementation",
+                "review-debt",
+                "verification-contract"
+            ],
+            "references": {
+                "review-change": [
+                    "REVIEW_PROCESS.md",
+                    "ADVERSARIAL_SYNTHESIS.md",
+                    "PERSIST_AND_DECIDE.md",
+                    "OUTPUT_AND_GUARDRAILS.md"
+                ]
+            },
+            "templates": [],
+            "routeEstimateMax": 19076,
+            "routeLinesMax": 1366,
+            "sources": {
+                "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
+                "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
+                "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
+                "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
+                "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16516/1191 measured \u2192 18168/1311 declared); the synthesize route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
+                "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
+                "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16961 -> 18658 est / 1220 -> 1342 lines); ceiling re-based to ceil(measured x 1.10)",
+                "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
+                "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured estimate 17281, lines 1240; ceiling = ceil(measured x 1.10)",
+                "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
+            }
+        }
     },
-    "log-session": {
-      "descriptionEstimateMax": 230
-    },
-    "audit-pr": {
-      "mainEstimateMax": 3294,
-      "referenceEstimateMax": 2889,
-      "mainSources": {
-        "fix 286 (scope-aware judge)": "Step 1's stale branch now applies the scope-aware judge (scoped receipt + non-affecting head delta stays current; closed non-affecting classes owned by scripts/scope-manifest.mjs) \u2014 grew SKILL.md from the measured 2800 (the flat default) to 2994; ceiling re-based to ceil(2994 x 1.10) = 3294, reason declared (fix/286)"
-      },
-      "referenceSources": {
-        "fix 285 (AC3)": "the lane-era lineage gate rewrite (triage-block currency for lane-era units, embedded/separate obligations homes, legacy verify path retained) grew 02_CLOSURE_AND_SCOPE_GATES.md from the measured 2200 (the default reference ceiling) to 2244; ceiling re-based to ceil(2244 x 1.10) = 2469, reason declared (fix/285)",
-        "fix 285 (F4-F7)": "F4-F7 fold: added non-author-controlled discriminator note, empty obligations BLOCKED verdict, and frozen digest anchor text to 02_CLOSURE_AND_SCOPE_GATES.md; estimate grew 2626 \u2192 ceiling re-based to ceil(2626 x 1.10) = 2889",
-        "fix 285 + fix 286 (combined integration)": "the main-into-branch merge folds #286's scope-aware judge into the rewritten 02_CLOSURE_AND_SCOPE_GATES.md \u2014 combined reference measures 2589 est / 158 lines, so the declared 2889 ceiling still bounds it"
-      }
-    },
-    "orchestration-envelope": {
-      "descriptionEstimateMax": 170
-    },
-    "pre-execution-review": {
-      "referenceEstimateMax": 4325,
-      "referenceSources": {
-        "triage 32 F29 fold": "the owner-entry wording correction grew LEDGERS.md from the measured 3930 to 3931; ceiling re-based to ceil(3931 x 1.10) = 4325",
-        "feature 32 (P4)": "the gate-ran@1 appended-text mark section in LEDGERS.md grew the reference from the measured 3462 (main) to 3930 (re-measured at this re-basis, after the F4 gate-ran edit); ceiling re-based to ceil(3930 x 1.10) = 4323. This single per-skill referenceEstimateMax bounds every reference file this skill loads (LEDGERS.md 3930, POLICY.md 3529, SNAPSHOT.md 1981 as measured at this re-basis), so the smaller references carry declared sibling headroom under the per-skill schema; no per-reference ceiling exists in schemaVersion 1."
-      }
-    },
-    "product-audit": {
-      "mainEstimateMax": 3192,
-      "mainSources": {
-        "feature 69 / issue #270": "the repo-wide-sweep ownership claim (frontmatter description + the `## When to use` bullet) grew SKILL.md from the measured 2799 (one estimate unit under the 2800 default) to 2901; ceiling re-based to ceil(2901 x 1.10) = 3192"
-      }
-    },
-    "review-implementation": {
-      "referenceEstimateMax": 3004,
-      "referenceSources": {
-        "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939",
-        "triage 32 F8": "the sensor-projection note added to CLASSIFY.md at 3912d9c1 grew it to 2730 est (10918 B / 4); ceiling re-based to ceil(2730 x 1.10) = 3004"
-      }
-    },
-    "review-change": {
-      "mainEstimateMax": 3133,
-      "mainSources": {
-        "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)"
-      },
-      "referenceEstimateMax": 3079,
-      "referenceSources": {
-        "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)",
-        "feature 32 (P4)": "the P4 budget re-basis swept the route ceilings but left the per-skill ceiling at the stale floor 2800 (measured 2799); re-based to ceil(2799 x 1.10) = 3079 (review finding F17)"
-      }
-    },
-    "execute-phase": {
-      "mainEstimateMax": 3222,
-      "mainLinesMax": 279,
-      "mainSources": {
-        "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222; the golden-fixture-driven two-block closing contract (weak-model smoke caught a last-phase P<k+1> naming a nonexistent phase) then measured 253 lines / 2953 est \u2014 line ceiling ceil(253 x 1.10) = 279"
-      },
-      "referenceEstimateMax": 3232,
-      "referenceSources": {
-        "feature 60 P3": "the path-protection checkpoint step in PREFLIGHT.md grew the reference to 2938 est; ceiling re-based to ceil(2938 x 1.10)"
-      }
-    },
-    "workflow-status": {
-      "mainEstimateMax": 1767,
-      "mainLinesMax": 140,
-      "referenceEstimateMax": 2774,
-      "referenceLinesMax": 280,
-      "mainSources": {
-        "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)",
-        "triage 32 F25/F27": "the P4 budget re-basis at ceil(1606 x 1.10) = 1767 (review finding F19); SKILL.md is 1606 est / 127 lines \u2014 this ceiling was set on a per-skill re-basis; versus main only the version line changed (3.7.0 \u2192 3.8.0), so the size is inherited from the merged tree baseline"
-      },
-      "referenceSources": {
-        "triage 32 F31 fold": "the GATE-RAN mark enumeration added to SENSOR_SIGNALS.md grew the reference from the measured 2512 to 2521 est / 151 lines; ceiling re-based to ceil(2521 x 1.10) = 2774 (also supersedes the F25 byte-identity claim for this file, which no longer holds)",
-        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)",
-        "triage 32 F25": "the sensor reference ceiling at ceil(2512 x 1.10) = 2764 (review finding F18); SENSOR_SIGNALS.md measured 2512 est / 150 lines before the F31 fold"
-      }
-    },
-    "unit-lane": {
-      "mainEstimateMax": 3329,
-      "mainLinesMax": 270,
-      "mainReason": "fix/258 harden-needs-input: the Needs-input guard section adds required/optional input classification (\u224825 lines); ceiling re-based from 2800/240 to ceil(3026\u00d71.10)=3329/ceil(245\u00d71.10)=270"
+    "policy": {
+        "name": "relative-headroom",
+        "headroom": 0.1,
+        "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 \u2014 self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 \u2014 sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim \u2014 plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 \u2014 re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured \u00d7 1.10)); 2026-09-12 (feature 37 merge sync \u2014 re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 \u2014 the execute-phase:unit-loop ceiling is normalized 14000 \u2192 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold \u2014 re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured \u00d7 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 \u2014 the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 \u00d7 feature 37 main-sync \u2014 re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 \u2014 above either side \u2014 so those three routes' estimate+line ceilings are re-set to ceil(measured \u00d7 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 \u2014 the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured \u00d7 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 \u2014 the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured \u00d7 1.10)); 2026-09-16 (feature 59 P3 \u2014 quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 \u2014 design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4); 2026-09-18 (feature 60 P3 \u2014 the path-protection checkpoint contract grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md, so the execute-phase reference ceiling and every route those files load are re-set to ceil(measured x 1.10); growth source feature 60 P3 checkpoint-contract adoption); 2026-09-19 (feature 32 P3/P4 \u2014 the gate-ran@1 appended-text mark grew pre-execution-review/LEDGERS.md from the measured 3462 (main) to 3930 est after the F4 gate-ran edit (ceiling 4323), and CLASSIFY.md grew review-implementation from the measured 2076 to 2671 est (ceiling 2939); the unit's skill-contract text also grew the references loaded by 19 routes, including five (design-feature:repair, plan-feature:scaffold, plan-fix:issue, review-plan:default, review-spec:default) whose stale ceilings predated this unit; every affected route ceiling and both reference ceilings re-based to ceil(measured x 1.10) with the growth source named on each entry); 2026-09-21 (main sync \u2014 re-basis #7: the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so all 22 routes measured 2 units higher at once and the twelve whose ceilings carried at most 2 units of slack went over \u2014 design-feature:product/repair, plan-feature:issue/scaffold/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize, review-plan:default, review-spec:default; feature 32's fold F35-F39 (9aa33530) added one line to review-change and audit-docs on top. Their routeEstimateMax ceilings are re-set to ceil(measured x 1.10); no lines ceiling moved and no skill ceiling moved)",
+        "rules": [
+            "ceiling = ceil(measured x 1.10) at each declared re-basis",
+            "every ceiling raise names its real growth source in the commit and changelog row",
+            "ceilings are re-based down when trim work lands (debt item D2 owns the plan-fix:issue trim)"
+        ]
     }
-  },
-  "routes": {
-    "audit-pr:feature": {
-      "skills": [
-        "audit-pr"
-      ],
-      "templates": [],
-      "routeEstimateMax": 10722,
-      "routeLinesMax": 664,
-      "sources": {
-        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
-        "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
-        "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
-        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
-        "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route \u2014 measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines"
-      }
-    },
-    "audit-pr:fix": {
-      "skills": [
-        "audit-pr"
-      ],
-      "templates": [],
-      "routeEstimateMax": 10722,
-      "routeLinesMax": 664,
-      "sources": {
-        "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
-        "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
-        "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
-        "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md \u2014 route measured estimate 9056; ceiling = ceil(measured x 1.10)",
-        "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route \u2014 measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines"
-      }
-    },
-    "execute-phase:descope": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md",
-          "DESCOPE.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12484,
-      "routeLinesMax": 942,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:feature": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12498,
-      "routeLinesMax": 893,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:final-pr": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md",
-          "FORGE_BODY.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12368,
-      "routeLinesMax": 919,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "fix #272 (unit-doc bullet grammar)": "phase-contract SKILL.md gained the two-grammar section (plan vs unit-doc bullets), the eight-box mapping table and the Relevant files metadata rule (fix #272); route lines ceiling re-based to ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:finding": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12529,
-      "routeLinesMax": 894,
-      "sources": {
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:fix": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12682,
-      "routeLinesMax": 893,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:legacy": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12282,
-      "routeLinesMax": 893,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:small": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 12445,
-      "routeLinesMax": 893,
-      "sources": {
-        "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "execute-phase:unit-loop": {
-      "skills": [
-        "execute-phase",
-        "phase-contract",
-        "verification-contract"
-      ],
-      "references": {
-        "execute-phase": [
-          "PRE_EXECUTION_GATE.md",
-          "EXECUTION_CONTRACT.md",
-          "FOLDING.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 13655,
-      "routeLinesMax": 984,
-      "sources": {
-        "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)"
-      }
-    },
-    "review-change:adversarial": {
-      "skills": [
-        "review-change",
-        "review-implementation",
-        "review-debt",
-        "verification-contract"
-      ],
-      "references": {
-        "review-change": [
-          "REVIEW_PROCESS.md",
-          "ADVERSARIAL_SETUP.md",
-          "ADVERSARIAL_SYNTHESIS.md",
-          "PERSIST_AND_DECIDE.md",
-          "OUTPUT_AND_GUARDRAILS.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 20378,
-      "routeLinesMax": 1460,
-      "sources": {
-        "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (17701/1277 measured \u2192 19472/1405 declared); the review-change:adversarial route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
-        "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (18145 -> 19960 est / 1306 -> 1437 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
-        "fix 286 (scope manifest closeout)": "the receipt closeout / scope-aware judge (fix 286) grew the route's skill files \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
-        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
-      }
-    },
-    "review-change:default-backend": {
-      "skills": [
-        "review-change",
-        "review-implementation",
-        "review-debt",
-        "verification-contract"
-      ],
-      "references": {
-        "review-change": [
-          "REVIEW_PROCESS.md",
-          "ADVERSARIAL_RECOMMENDATION.md",
-          "PERSIST_AND_DECIDE.md",
-          "OUTPUT_AND_GUARDRAILS.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 18560,
-      "routeLinesMax": 1341,
-      "sources": {
-        "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured \u2192 17654/1286 declared); the default-backend route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
-        "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
-        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
-        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
-      }
-    },
-    "review-change:default-web": {
-      "skills": [
-        "review-change",
-        "review-implementation",
-        "review-debt",
-        "verification-contract"
-      ],
-      "references": {
-        "review-change": [
-          "REVIEW_PROCESS.md",
-          "ADVERSARIAL_RECOMMENDATION.md",
-          "PERSIST_AND_DECIDE.md",
-          "OUTPUT_AND_GUARDRAILS.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 18560,
-      "routeLinesMax": 1341,
-      "sources": {
-        "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16049/1169 measured \u2192 17654/1286 declared); the default-web route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
-        "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
-        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
-        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
-      }
-    },
-    "review-change:synthesize": {
-      "skills": [
-        "review-change",
-        "review-implementation",
-        "review-debt",
-        "verification-contract"
-      ],
-      "references": {
-        "review-change": [
-          "REVIEW_PROCESS.md",
-          "ADVERSARIAL_SYNTHESIS.md",
-          "PERSIST_AND_DECIDE.md",
-          "OUTPUT_AND_GUARDRAILS.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 19076,
-      "routeLinesMax": 1366,
-      "sources": {
-        "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
-        "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
-        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 59 P3 (#237)": "quote-rule sentences added to PRE_EXECUTION.md and the review-spec/review-plan/review-change receipt-persistence surfaces; ceiling = ceil(measured x 1.10)",
-        "feature 60 P3": "path-protection checkpoint adoption grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md; ceiling = ceil(measured x 1.10)",
-        "triage 32 F22": "the F14\u2013F20 fold re-based these route ceilings from ceil(measured x 1.10) over the merged tree (16516/1191 measured \u2192 18168/1311 declared); the synthesize route loaded references grew when CLASSIFY.md was created and PERSIST_AND_DECIDE.md was rewritten at 3912d9c1",
-        "lane reference migration": "lane reference migration (fix/lane-reference-drift): retargeted the review-change references (PERSIST_AND_DECIDE, OUTPUT_AND_GUARDRAILS, ADVERSARIAL_*) from the retired plan-feature/plan-fix names to the /unit-lane command; ceiling re-set to ceil(measured x 1.10)",
-        "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16961 -> 18658 est / 1220 -> 1342 lines); ceiling re-based to ceil(measured x 1.10)",
-        "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
-        "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured estimate 17281, lines 1240; ceiling = ceil(measured x 1.10)",
-        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
-      }
-    }
-  },
-  "policy": {
-    "name": "relative-headroom",
-    "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 \u2014 self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 \u2014 sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim \u2014 plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 \u2014 re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured \u00d7 1.10)); 2026-09-12 (feature 37 merge sync \u2014 re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 \u2014 the execute-phase:unit-loop ceiling is normalized 14000 \u2192 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold \u2014 re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured \u00d7 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 \u2014 the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 \u00d7 feature 37 main-sync \u2014 re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 \u2014 above either side \u2014 so those three routes' estimate+line ceilings are re-set to ceil(measured \u00d7 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 \u2014 the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured \u00d7 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 \u2014 the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured \u00d7 1.10)); 2026-09-16 (feature 59 P3 \u2014 quote-rule sentences added to workflow-status/review-spec/review-plan/review-change reference surfaces; the six affected review/plan routes re-based to ceil(measured x 1.10), growth source feature 59 P3 quote-surface adoption); 2026-09-16 (feature 59 P4 \u2014 design-feature:* routes re-based to ceil(measured x 1.10) after the bounded form-interview text landed; growth source feature 59 P4); 2026-09-18 (feature 60 P3 \u2014 the path-protection checkpoint contract grew execute-phase/PREFLIGHT.md, pre-execution-review/POLICY.md, plan-feature-scaffold/SCAFFOLD_PROCESS.md, orchestration-envelope/TURN_CONTRACT.md and verification-contract/SKILL.md, so the execute-phase reference ceiling and every route those files load are re-set to ceil(measured x 1.10); growth source feature 60 P3 checkpoint-contract adoption); 2026-09-19 (feature 32 P3/P4 \u2014 the gate-ran@1 appended-text mark grew pre-execution-review/LEDGERS.md from the measured 3462 (main) to 3930 est after the F4 gate-ran edit (ceiling 4323), and CLASSIFY.md grew review-implementation from the measured 2076 to 2671 est (ceiling 2939); the unit's skill-contract text also grew the references loaded by 19 routes, including five (design-feature:repair, plan-feature:scaffold, plan-fix:issue, review-plan:default, review-spec:default) whose stale ceilings predated this unit; every affected route ceiling and both reference ceilings re-based to ceil(measured x 1.10) with the growth source named on each entry); 2026-09-21 (main sync \u2014 re-basis #7: the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so all 22 routes measured 2 units higher at once and the twelve whose ceilings carried at most 2 units of slack went over \u2014 design-feature:product/repair, plan-feature:issue/scaffold/scoped, plan-fix:issue, review-change:adversarial/default-backend/default-web/synthesize, review-plan:default, review-spec:default; feature 32's fold F35-F39 (9aa33530) added one line to review-change and audit-docs on top. Their routeEstimateMax ceilings are re-set to ceil(measured x 1.10); no lines ceiling moved and no skill ceiling moved)",
-    "rules": [
-      "ceiling = ceil(measured x 1.10) at each declared re-basis",
-      "every ceiling raise names its real growth source in the commit and changelog row",
-      "ceilings are re-based down when trim work lands (debt item D2 owns the plan-fix:issue trim)"
-    ]
-  }
 }

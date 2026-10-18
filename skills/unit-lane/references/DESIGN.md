@@ -2,7 +2,7 @@
 
 ## Needs-input guard
 
-**"Decide for me"** and vague scope/acceptance criteria inputs are **required**
+Vague scope and acceptance criteria inputs are **required**
 and must be answered concretely by the user:
 
 - If the user leaves a required gap-slot blank: re-ask once. If still blank,
