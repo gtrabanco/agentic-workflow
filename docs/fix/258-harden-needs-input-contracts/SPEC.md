@@ -210,7 +210,7 @@ Budget: strong
 
 ## Next
 
-Implement P1 — audit the three skills' input points and fill the Input audit section.
+Review: /review-change on the accumulated diff — the mandatory end review before merging
 
 ## References
 
