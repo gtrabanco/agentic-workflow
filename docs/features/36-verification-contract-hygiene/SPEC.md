@@ -174,12 +174,16 @@ Budget: strong
 |---|---|---|---|---|
 | R1 | repo-evidence sweep of the unit's domain (skill, templates, fixture suite, schema source, README, roadmap, issue #183) | exit 0 | 4 claims tabled as PE-001…PE-005; item 3 already shipped by feat 55; no external fetch needed — the issue carries the research provenance | lane conductor (this session) |
 | R1 note | Uncertainties: none material — wording exactness for the two new sentences is a cheap default recorded in `decisions.md`; sources: repo evidence + the issue's bibliography (arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide) | — | — | — |
+| AC1 | `grep` over skill shows determinism rule + property/fuzz sentence; `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present; fuzz/property sentence present | execute-phase P1
 
 ## Progress log
 
 - 2026-10-18 21:30 — unit doc created from template; issue #183 read from the forge; roadmap row 36 `idea → defined` → (this commit) — next: triage
 - 2026-10-18 21:45 — triage pasted verbatim (8 steps, release skipped); research step closed (R1 + PE-001…PE-005); design step closed (`decisions.md`, 3 dated decisions, no gap interview turn needed) — next: plan sweep, then hand off P1
 - 2026-10-18 22:00 — plan step closed: tasks P1–P4 cut with validators (above), prior-decisions sweep clean (0 contradicts), planning ledgers embedded (5 PE rows, 5 O rows) → (this commit) — next: hand off `/execute-phase 36-verification-contract-hygiene P1`
+- 2026-10-18 22:10 — P1 implemented: added validator-determinism rule + property/fuzz sentence to `verification-contract` § Artifact; bumped 1.3.0→1.4.0 (minor); CHANGELOG row added; unit doc Tasks format fixed (missing `- ` prefix on bullets + validator outcome grammar); 6e9cf2da — next: P2 (template mirror)
+- 2026-10-18 22:20 — P2 done: template mirror written (template/docs/fix/_TEMPLATE/SPEC.md § Acceptance); dafc2421 — next: P3 (README bibliography)
+- 2026-10-18 22:30 — P3 done: four issue #183 bibliography entries appended to README § References (4 matches); b1ebff5d — next: P4 (verification gate run)
 
 ## Next
 
