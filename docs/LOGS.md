@@ -2896,3 +2896,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Feature 75: version-parity gate for @gtrabanco/pi-agentic-workflow (Closes #292)
 - **Decisions:** PR-triggered content gate: root skills/ (the Pi package's shipped content) lives outside its package tree, so skills-only merges never bumped the version or triggered the publish workflow; CI gate fires on skills/** + packages/pi-agentic-workflow/** changes; registry pin drift triggers a separate degraded job
 - **Next:** PR #299 open (merge by human); after merge: verify publish-pi-package.yml ran and npm serves 0.20.0
+## 2026-10-18T19:43:14Z — feat/76-lane-product-route — manual
+- **Commits:** 43 (`dec53806…f179a9b9`)
+- **Files:** 32 files
+- **Summary:** Unit 76-lane-product-route: closed out the product route (issue #293) — router gains product branch, consumers wired, then ran the full review-change loop (11 cycles, 30 findings), folded all repairs, posted the receipt, and reached audit-pr readiness on PR #300
+- **Decisions:** F22 pins: three copies of the guard scanner were replaced with one shared findDuplicateKey(lines) so the guard itself is tested, not an inert copy — a regression to the guard would now break the pins. F24 ceiling: re-based fold-findings mainEstimateMax from 3252 to ceil(3105×1.10)=3416 because the review folds grew SKILL.md from 221→225 lines. Diff guard exception: whole-unit delta (847 lines/32 files) exceeds the 400/8 budget, but each implement step passed; the gap is from review-cycle artifacts, not implementation bloat.
+- **Next:** /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/300 — terminal merge gate; the review-change:pass receipt is current at head 1ff61bdd
