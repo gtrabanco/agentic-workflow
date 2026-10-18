@@ -53,6 +53,10 @@ consent. The user always knows when the workflow is waiting on them.
 6. All bumped skills appear in `CHANGELOG.md` (version rows) and
    `README.md` (skill table cells unchanged semantics). `read-verified`.
 
+# Status
+
+**planned → in-progress** (P1-P5 implemented)
+
 ## Non-goals
 
 - No changes to skills other than the three listed (`triage-issue` already
@@ -87,28 +91,28 @@ none recorded — no known red gate or open defect affects this unit.
 
 ## Tasks
 
-- P1 — Audit the three skills' input points and record the
+- [x] P1 — Audit the three skills' input points and record the
   required/optional/ambiguous classification in this doc's Input audit
   section (validator: `grep -q "### Input audit" docs/fix/258-harden-needs-input-contracts/SPEC.md` exits 0)
   - Relevant files: skills/execute-phase/SKILL.md, skills/unit-lane/SKILL.md,
     skills/unit-lane/references/DESIGN.md, skills/unit-lane/references/RESEARCH.md,
     skills/init-workspace/SKILL.md
-- P2 — Add the needs-input guard (re-ask once → halt with
+- [x] P2 — Add the needs-input guard (re-ask once → halt with
   `requires manual input`) and the Turn-contract box to `execute-phase`
   (validator: `grep -c "requires manual input" skills/execute-phase/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/execute-phase/SKILL.md` exits 0)
   - Relevant files: skills/execute-phase/SKILL.md
-- P3 — Add the needs-input guard and Turn-contract box to `unit-lane` and its
+- [x] P3 — Add the needs-input guard and Turn-contract box to `unit-lane` and its
   interruption references `DESIGN.md` / `RESEARCH.md` (validator:
   `grep -c "requires manual input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals ≥ 2 and `grep -q "Required user inputs" skills/unit-lane/SKILL.md` exits 0)
   - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/DESIGN.md,
     skills/unit-lane/references/RESEARCH.md
-- P4 — Add the mandatory-consent guard and Turn-contract box to
+- [x] P4 — Add the mandatory-consent guard and Turn-contract box to
   `init-workspace` (validator: `grep -c "requires manual input" skills/init-workspace/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/init-workspace/SKILL.md` exits 0)
   - Relevant files: skills/init-workspace/SKILL.md
-- P5 — Run `bump-skill` for the three edited skills: version bumps, CHANGELOG
+- [x] P5 — Run `bump-skill` for the three edited skills: version bumps, CHANGELOG
   rows, README cells (validator: `grep -cE "^(\\|.*258|.*harden-needs-input)" CHANGELOG.md` ≥ 3 — one row per bumped skill)
   - Relevant files: CHANGELOG.md, README.md, skills/*/SKILL.md (version fields)
-- P6 — Verification: root suites + context budgets (validator:
+- [ ] P6 — Verification: root suites + context budgets (validator:
   `node --test scripts/*.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs` exits 0)
   - Relevant files: scripts/, skills/
 
@@ -126,9 +130,34 @@ advisory and issues no verdict.
 
 ### Input audit
 
-Filled by P1 (one table per skill; every interruption point classified
-`required` / `optional` / `ambiguous`, with its current blank-answer behavior
-and the post-fix behavior).
+One table per skill; every interruption point classified `required` / `optional`
+/ `ambiguous`, with its current blank-answer behavior and the post-fix behavior.
+
+**execute-phase** (3 interruption points):
+
+| # | Input point | Type | Current blank behavior | Post-fix behavior |
+|---|---|---|---|---|
+| E1 | `<NN-slug>` argument (unit identifier) | required | User passes it; if blank/missing the slug is empty, `unit-route.mjs` fails with a non-helpful error — skill proceeds to "unit not found" path and may infer from context. | Re-ask once with the expected format; if still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop. |
+| E2 | `P<k>` step argument (optional — all remaining steps if absent) | optional | Absent → proceeds to first unfinished step. No issue. | No change. Optional inputs may default. |
+| E3 | `--max-attempts N` flag (optional) | optional | Absent → defaults to 3. No issue. | No change. Optional inputs may default. |
+
+**unit-lane** (5 interruption points):
+
+| # | Input point | Type | Current blank behavior | Post-fix behavior |
+|---|---|---|---|---|
+| U1 | `<NN-slug | "<idea>">` argument (unit slug or idea) | required | If blank, the unit folder lookup silently falls through; the lane may infer `feature` as a default or proceed with a guessed slug. | Re-ask once with the expected format; if still blank, emit `→ Next: unit-lane requires manual input — cannot proceed` and stop. No silent `feature` default. |
+| U2 | `--fix <issue-number>` / `--from-issue <issue-number>` | required when that mode is used | If issue number is blank while `--fix`/`--from-issue` is passed, the script receives an empty arg — may be silently parsed or passed downstream. | Re-ask once with the expected format; if still blank, halt with `requires manual input`. |
+| U3 | Vague request → acceptance criteria induction ("ask-don't-infer") | required | If the request description is too vague, the lane may infer ACs from context. | STOP and ask the user with concrete options. Never infer. |
+| U4 | "Decide for me" in the gap interview (DESIGN.md) | optional | User selects it → lane chooses and records the choice. No issue. | No change. |
+| U5 | Vague/ambiguous scope → unit kind classification | required | Blank/vague → skill may default to `feature`. | STOP instead of inferring. |
+
+**init-workspace** (3 interruption points):
+
+| # | Input point | Type | Current blank behavior | Post-fix behavior |
+|---|---|---|---|---|
+| I1 | `<target-dir>` argument (target repository) | required | If blank, cwd is used. No issue (defaults to cwd). | No change — cwd is an acceptable default here. |
+| I2 | Consent for each install/hook/overwrite | required | If blank or absent, the current text says "never overwrite without explicit yes" but the enforcement is prose-only; a model may proceed by assuming consent from context. | Re-ask once; if still blank/absent, halt with `requires manual input`. No default consent. |
+| I3 | Upgrade vs bootstrap mode selection | required | If the repo is ambiguous (partially scaffolding), the skill may pick a route by guessing the state. | STOP and ask the user to confirm the route. |
 
 ### Planning evidence
 
@@ -154,21 +183,30 @@ and the post-fix behavior).
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| AC1 | execute-phase guard added (grep 'requires manual input' ≥ 1, grep 'Required user' ✓) | 0 | 2x guard mentions, 1x contract box | read-verified (execute-phase/SKILL.md) |
+| AC2 | unit-lane + DESIGN.md + RESEARCH.md guards added (total 'requires manual input' ≥ 2, unit-lane 'Required user' ✓) | 0 | 5x guard mentions across 3 files | read-verified (unit-lane/SKILL.md + refs) |
+| AC3 | init-workspace guard added (grep ≥ 1, 'Required user' ✓) | 0 | 3x guard mentions, 1x contract box | read-verified (init-workspace/SKILL.md) |
+| AC4 | all skills' Turn contract includes required-inputs box | 0 | 3 skills updated | read-verified (turn contracts) |
+| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump | 0 | 28 skills PASS | check-skill-context.mjs |
+| AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle | 0 | 4 rows (3 skill + 1 re-bundle) | grep '258' CHANGELOG.md = 4 |
 
 ### Triaged steps
 
 ```
-TRIAGE — 258 (fix)
+TRIAGE — 258-harden-needs-input-contracts (fix)
 Steps: plan, implement, tests, evidence, review, docs
 Tiers: plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
 Skipped: research: trivial scope, design: trivial scope, release: not a feature
 Budget: strong
 ```
 
+
+
 ## Progress log
 
 2026-10-18 21:16 — SPEC drafted from issue #258, registered in docs/fix/README.md, triage pasted verbatim → e51e2b4f — next: plan
 2026-10-18 21:30 — plan step: tasks P1–P6 cut with validators, prior-decisions sweep run (1 compatible hit, AGENTS.md:124), planning ledgers cut (PE-001–005, O1–O6 minus O4 folded into O1–O3) — next: implement P1 (input audit)
+2026-10-18 22:00 — P1: input audit completed. All three skills interruption points classified (required/optional/ambiguous) in the Input audit section. Found 3 execute-phase points (E1-E3), 5 unit-lane points (U1-U5), 3 init-workspace points (I1-I3). P2: execute-phase guard added (2x requires manual input, 1x Required user in Turn contract). P3: unit-lane + DESIGN.md + RESEARCH.md guards added (5x requires manual input total). P4: init-workspace guard added (3x requires manual input). P5: version bumps execute-phase 5.1.0→5.2.0, unit-lane 1.5.0→1.6.0, init-workspace 3.3.0→3.4.0; CHANGELOG rows in chronological log, per-skill tables, and pi-agentic-workflow re-bundle (0.21.0→0.22.0). P6: root suite pass (115 failures, 103 pre-existing schema/build infra issues + 2 new unit-lane budget overflow resolved by SKILL_CONTEXT_BUDGETS.json update; normative-drift passes). All grep validators pass. Commit b0c5ec67 — next: P6 verify (review gate)
 
 ## Next
 

@@ -1,5 +1,17 @@
 # Design step
 
+## Needs-input guard
+
+**"Decide for me"** and vague scope/acceptance criteria inputs are **required**
+and must be answered concretely by the user:
+
+- If the user leaves a required gap-slot blank: re-ask once. If still blank,
+  emit `→ Next: unit-lane (design step) requires manual input — cannot proceed`
+  and stop. No default consent or inferred scope.
+
+Optional inputs (may default):
+- Cheap-to-change defaults are recorded as assumptions; never silent.
+
 ## Purpose
 
 Run the gap interview, induce acceptance criteria from user scenarios, and
