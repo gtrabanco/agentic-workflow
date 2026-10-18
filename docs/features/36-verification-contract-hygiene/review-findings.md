@@ -66,3 +66,65 @@ fold` over the open rows, so no replan is needed: the fold repairs them, F10/F11
 first, then the contract migration (F14) and the two template mirrors (F15). The
 unit's frozen ACs are unchanged; this directive widens the repair batch, not the
 acceptance set.
+
+## Cycle 2 — 2026-10-18
+
+Cycle 2 ran (review-change) on candidate `HEAD 636341e8fb82bb82b45187daf668cf1874b10337`,
+clean workspace, no PR (pre-PR checkpoint). Applicable passes ran isolated:
+`review-code`, `review-security`, `review-verify`, `review-perf`, `review-brand`;
+skipped with reasons — `review-design`/`review-a11y`/`review-seo` (no UI, no web
+surface). Synthesis, classification (`review-implementation`) and the debt
+transform (`review-debt`) each ran isolated. Delta mode escalated to a full pass
+on **Size** (fold diff `f21593eb..HEAD` = 223 added + 101 deleted = 324 changed
+lines > 200; 17 files > 15). Gate at head: root suites exit 0 (693/693),
+`--routes` exit 0 (14 routes), `check-skill-context` exit 0 (28 skills),
+golden-fixture exit 0 (12/12), version-parity content PASS (0.21.0→0.22.0),
+schema `bun run test` exit 0 (717 pass), pi package `bun run test` exit 0 (432 pass).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F18 | skills/verification-contract/SKILL.md:8-9,22,56; skills/review-change/SKILL.md:62; skills/review-change/references/REVIEW_PROCESS.md:56; skills/pre-execution-review/references/{LEDGERS.md:58,150,POLICY.md:66,152,SNAPSHOT.md:64}; skills/review-implementation/references/CLASSIFY.md:45; skills/workflow-status/references/PRE_EXECUTION.md:27 | code, architecture | high | fix-now | fold into current unit: rename every `ACCEPTANCE.md` era label from "lane-era" to "legacy/pre-lane (pre-feature 61)" across the nine cited files; fix `REVIEW_PROCESS.md:56`'s `(post-feature 61)` parenthetical; keep "lane-era" only for the unit-doc branch. The repo's own vocabulary is `SNAPSHOT.md:34` ("pre-lane artifact"), `docs/fix/285-pre-execution-lineage-gate/SPEC.md:17-18,36` and `docs/LOGS.md:2601` — lane-era units never write `ACCEPTANCE.md`, and `SNAPSHOT.md:64` now contradicts `:34` | no |
+| F19 | skills/pre-execution-review/references/LEDGERS.md:150 + skills/verification-contract/SKILL.md:64-65 | verify, code | high | fix-now | fold into current unit: replace the non-executable `git hash-object --no-index -- <SPEC>:## Acceptance criteria` with a runnable derivation (e.g. `sed -n '/^## Acceptance criteria/,/^## /p' <unit>/SPEC.md \| git hash-object --stdin`) and state the same command in `verification-contract` § Freeze and receipt | no |
+| F20 | skills/verification-contract/SKILL.md:56-73,76-88 | architecture, workflow | high | fix-now | fold into current unit: give the post-61 receipt one owner — either wire `execute-phase` to write it and make the stop/repair block artifact-neutral, or declare the Evidence table the receipt and delete the new block plus the duplicate generic block at `:73`; then record unit 36's receipt or its declared absence | no |
+| F21 | skills/audit-pr/SKILL.md; skills/pre-execution-review/SKILL.md; skills/review-change/SKILL.md; skills/review-implementation/SKILL.md; skills/workflow-status/SKILL.md; CHANGELOG.md | workflow | high | fix-now | fold into current unit: bump each changed skill's `version:` (patch for reference-only wording, minor for a contract change) and add its CHANGELOG row — `review-change` is the indisputable one (its SKILL.md changed); the other four changed references | no |
+| F22 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:160,184,210,233,257,280,304,360,393,426,459 | perf, verify | med | fix-now | fold into current unit: re-measure `--routes` and rewrite each declared base/ceiling to the true `ceil(measured×1.10)`; drop `execute-phase/SKILL.md` + `EXECUTION_CONTRACT.md:127` from the growth-source text (the branch never changed them) | no |
+| F23 | CHANGELOG.md:736 | brand, verify | med | fix-now | fold into current unit: name the per-command caps (`fastCommandTimeoutMs` 10 min / `fullCommandTimeoutMs` 60 min) or point at the schema's per-command `timeoutMs`; move the consumer-migration claim to the rows of the five skills that changed | no |
+| F24 | template/docs/fix/_TEMPLATE/SPEC.md:74-81 + template/docs/features/_TEMPLATE/SPEC.md:23-30 | code, brand | med | fix-now | fold into current unit: drop "the schema package" from both exported templates (AC4 needs only "bounded runtime") and use the same post-F10 determinism sentence in both | no |
+| F25 | docs/features/36-verification-contract-hygiene/SPEC.md:178,180,184 | verify | med | fix-now | regression of F8 → fold into current unit: re-record AC1/AC3 with the actual lines (44/49) and re-label the AC7 version-parity cite as a gate row with its command and exit 0 | no |
+| F26 | docs/features/36-verification-contract-hygiene/review-findings.md:24,70-78 (F9) + scripts/unit-route.mjs:606-608 | workflow | med | fix-now | regression of F9 → fold into current unit: make the F9 claim reproduce — either add a close-out/review route for a fully-executed, ledger-clean `in-progress` unit or record the residual and settle the index/`Next` state. The check is the reviewed head's own ledger (`git show 636341e8:docs/features/36-verification-contract-hygiene/review-findings.md` — every row folded, no open rows) plus `node scripts/unit-route.mjs 36-verification-contract-hygiene` at that head → exit 1; a later open-row ledger routes `fold` for a different reason and does not prove F9 | no |
+| F27 | README.md:664-667 | brand | med | fix-now | fold into current unit: replace the four entries with issue #183's bibliography as printed — full author lists, original `"Writing harnesses"` title | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-14 | skills/verification-contract/SKILL.md:8-9,22,56 + the consumer lines named in F18 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck direct read of the nine labels against `skills/pre-execution-review/references/SNAPSHOT.md:34` ("pre-lane artifact"), `docs/fix/285-pre-execution-lineage-gate/SPEC.md:17-18,36` and `docs/LOGS.md:2601`; the contradiction is `SNAPSHOT.md:64` vs `:34` | architecture | confirmed | finding-mark | n/a | n/a |
+| VF-15 | skills/pre-execution-review/references/LEDGERS.md:150 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck reproducible command output: `git hash-object --no-index -- docs/features/36-verification-contract-hygiene/SPEC.md:##\ Acceptance\ criteria` → `error: unknown option 'no-index'`, exit 129 (`hash-object` also has no `path:section` selector) | verify | confirmed | finding-mark | n/a | n/a |
+| VF-16 | skills/verification-contract/SKILL.md:56-73,76-88 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck `grep -rn "Acceptance receipt\|acceptance-criteria" skills/execute-phase` → no match; `grep -rn "Acceptance receipt\|Blob:" docs/features/36-verification-contract-hygiene/` → no match; unit docs 73/75/76 carry none; `execute-phase/SKILL.md:14-15` names Evidence rows as the receipts | architecture | confirmed | finding-mark | n/a | n/a |
+| VF-17 | the five SKILL.md frontmatter versions + CHANGELOG.md · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck `git show main:skills/<s>/SKILL.md \| grep '^version:'` vs HEAD: audit-pr 5.6.0=5.6.0, pre-execution-review 2.7.0=2.7.0, review-change 3.12.0=3.12.0, review-implementation 1.11.0=1.11.0, workflow-status 3.9.1=3.9.1; only verification-contract 1.3.0→1.4.0 | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-18 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:360,393,426,459 + :210 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck `node scripts/check-skill-context.mjs --routes` at HEAD: review-change:adversarial 18977/1360 (declared 18992/1361), default-backend 17324/1252 (declared 17339/1253), default-web same, synthesize 17793/1274 (declared 17808/1275); `:210` declares `ceil(11052×1.1)=12157` for committed 12158; `git diff --name-only main...HEAD \| grep execute-phase` → empty while 7 sources entries name it | perf | confirmed | finding-mark | n/a | n/a |
+| VF-19 | CHANGELOG.md:736 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck direct read against `packages/agentic-workflow-schema/src/verification-contract.ts:221-224` (per-command caps `fastCommandTimeoutMs`/`fullCommandTimeoutMs`; `fullStageTimeoutMs` is the whole-stage sum) and `CHANGELOG.md:100` | brand | confirmed | finding-mark | n/a | n/a |
+| VF-20 | template/docs/fix/_TEMPLATE/SPEC.md:74-81 + template/docs/features/_TEMPLATE/SPEC.md:23-30 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck direct read: both exported templates name "the schema package"; the fix template uses the pre-F10 long determinism wording while the skill and features template use the dedup wording; unit-doc AC4 requires only "bounded runtime" | code | confirmed | finding-mark | n/a | n/a |
+| VF-21 | docs/features/36-verification-contract-hygiene/SPEC.md:178,180,184 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck `grep -n "Validator determinism"` → 44, `grep -n "Property / fuzz"` → 49 against the rows' "lines 36+"/"line 45"/"line 45"; AC7 credits version-parity to AC2, which is the template mirror | verify | confirmed | finding-mark | n/a | n/a |
+| VF-22 | docs/features/36-verification-contract-hygiene/review-findings.md:24,70-78 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck reproducible command output at the reviewed head with its own (pre-review) ledger: `git show 636341e8:docs/features/36-verification-contract-hygiene/review-findings.md` has every row folded, and `node scripts/unit-route.mjs 36-verification-contract-hygiene` at that head → `UNIT ROUTE — error` / "every phase … is recorded in its Progress log", exit 1; the ledger asserts `route: fold` and "stops refusing the unit" | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-23 | README.md:664-667 · reviewer review-change · HEAD 636341e8fb82bb82b45187daf668cf1874b10337 · recheck direct read against `gh issue view 183` bibliography: author lists truncated to "et al." and `"Writing Fuzzing Harnesses"` replaces the printed `"Writing harnesses"` | brand | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 636341e8fb82bb82b45187daf668cf1874b10337 | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-2 re-verification of cycle-1 folded rows: F2, F4, F5, F7, F10 fixed;
+F1, F3, F6, F11, F14, F15 repaired for their original defect with a residual
+now filed as F22, F27, F25, F23, F18–F20 and F24 respectively; F8 and F9 are
+**regressions** (F25, F26 — the cited check still does not reproduce). Report
+notes, never persisted: S11 (determinism examples illustrative), S12 (roadmap
+numbering leaks into the installable skill), S13 (fold widened scope without a
+dated `## Amendments` row), S14 (`execute-phase:unit-loop` ceiling has double the
+declared headroom; pre-existing on `main`, untouched). Refuted: the
+security pass's "Manès et al. TSE'19 should read 2021" — issue #183's own
+bibliography prints "IEEE Transactions on Software Engineering, 2019,
+doi:10.1109/TSE.2019.2946563", so the committed year follows the issue's
+authority. Every finding has a destination; this review creates no backlog.
