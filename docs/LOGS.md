@@ -2934,3 +2934,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Turn contract #173 migration target shrank to machine-checked subset; prunable ceremony must not delete non-negotiables (external verifier, Engram, document verifier, evidence); Serena is now required substrate (reversing #219's non-goal); LSP verified to generate false positives on non-TS files in this repo — document verifier must be deterministic script, not LSP.
 - **Next:** triage issues #295, #294, #284; consider bumping #173 status from postponed
 ENTRA
+
+## 2026-10-18T20:39:53Z — feat/76-lane-product-route — manual
+- **Commits:** 48 (`dec53806…9d9ab416`)
+- **Files:** 33 files
+- **Summary:** Audit of issue #173 (single-owner turn contract) — verified it remains valid after the fix it was blocked on (#260) landed; deep-dived #260's subagent-first topology, LSP/document-verifier distinction, and existing edit CLI (features 61/65) — confirmed the verify gap is the separate writer/verifier contract; cross-checked all 53 feature folders against ROADMAP.md rows (all aligned); identified 3 open issues (#295, #294, #284) lacking triage disposition.
+- **Decisions:** Turn contract #173 migration target shrank to machine-checked subset; prunable ceremony must not delete non-negotiables (external verifier, Engram, document verifier, evidence); Serena is now required substrate (reversing #219's non-goal); LSP verified to generate false positives on non-TS files in this repo — document verifier must be deterministic script, not LSP.
+- **Next:** triage issues #295, #294, #284; consider bumping #173 status from postponed
