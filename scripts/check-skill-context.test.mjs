@@ -495,15 +495,30 @@ runFixtureRoute(
 // is an object value inside `routes`). A copy of an entire route block
 // means the route key appears twice at the same level.
 {
-  // Verify the guard fires on a duplicated route block by temporarily
-  // creating a copy of the manifest with an extra route block.
-  // We do this by reading the manifest, adding a duplicate, and running
-  // the guard against it.
-  const duped = JSON.parse(JSON.stringify(manifest));
-  const orig = duped.routes["review-change:adversarial"];
-  duped.routes["review-change:adversarial-copy"] = orig;
-  // Serialize back and run the raw-text guard against it
-  const dupedRaw = JSON.stringify(duped, null, 2);
+  // Create a text-level duplicate by inserting a second `review-change:adversarial`
+  // key at the same indentation. JSON.stringify cannot produce duplicate keys,
+  // so we work at the raw-text level.
+  const manifestRaw = fs.readFileSync(manifestPath, "utf8");
+  const lines = manifestRaw.split(String.fromCharCode(10));
+  let insertIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes('"review-change:adversarial": {')) {
+      insertIdx = i;
+      break;
+    }
+  }
+  // Find where this route block ends (matching brace depth from start)
+  let depth = 0;
+  let endIdx = insertIdx;
+  for (let i = insertIdx; i < lines.length; i++) {
+    depth += (lines[i].match(/{/g) || []).length;
+    depth -= (lines[i].match(/}/g) || []).length;
+    if (depth === 0) { endIdx = i; break; }
+  }
+  // Insert a copy of the block right after it
+  const dupLines = [...lines];
+  dupLines.splice(endIdx + 1, 0, ...lines.slice(insertIdx, endIdx + 1));
+  const dupedRaw = dupLines.join(String.fromCharCode(10));
   const dupedLines = dupedRaw.split(String.fromCharCode(10));
   const dupObjStack = [];
   let dupFired = false;
@@ -538,7 +553,7 @@ runFixtureRoute(
       }
       if (dupObjStack.length > 0) {
         const kv = line.match(/^\s*"([^"]+)"\s*:\s*(.+?)[,\s]*$/);
-        if (kv && line.match(/^\s*/)[0].length > dupObjStack[dupObjStack.length - 1].indent) {
+        if (kv && dupObjStack.length > 0 && line.match(/^\s*/)[0].length > dupObjStack[dupObjStack.length - 1].indent) {
           const cur = dupObjStack[dupObjStack.length - 1];
           if (cur.keys.has(kv[1])) {
             dupFired = true;
@@ -561,19 +576,34 @@ runFixtureRoute(
   assert.ok(dupFired, "F22: guard detects duplicated object-valued key (whole route block)");
 }
 
-// Non-empty array-valued duplicate: a duplicated `values` key where the
+// Non-empty array-valued duplicate: a duplicated `skills` key where the
 // value is a non-empty array. The key is an array value, not a scalar.
 {
-  const duped2 = JSON.parse(JSON.stringify(manifest));
-  const rev = duped2.routes["review-change:adversarial"];
-  // Add a second `values` key inside the route (array value)
-  const origValues = rev.values || [];
-  rev.values = ["a", "b"];
-  // We simulate the JSON duplication by writing a raw-string with duplicate
-  // array-valued keys. The guard processes the raw file, so we test via
-  // an injected duplicate inside the route object.
-  const dupedRaw2 = JSON.stringify(duped2, null, 2)
-    .replace(/"values": \["a", "b"\]/, '"values": ["a", "b"],\n      "values": ["c"]');
+  // Read the manifest as raw text and duplicate an existing array-valued key.
+  // "skills" is an array-valued key inside each route object.
+  const manifestRaw2 = fs.readFileSync(manifestPath, "utf8");
+  const lines2 = manifestRaw2.split(String.fromCharCode(10));
+  // Find a route's "skills" key and duplicate it at text level
+  let skillsIdx = -1;
+  for (let i = 0; i < lines2.length; i++) {
+    if (lines2[i].includes('"skills": [')) {
+      skillsIdx = i;
+      break;
+    }
+  }
+  // Find matching array end
+  let depth = 0;
+  let skillsEnd = skillsIdx;
+  for (let i = skillsIdx; i < lines2.length; i++) {
+    depth += (lines2[i].match(/\[/g) || []).length;
+    depth -= (lines2[i].match(/\]/g) || []).length;
+    if (depth === 0) { skillsEnd = i; break; }
+  }
+  // Insert a copy of the skills array entry (just the key line) right after the array closes
+  const dupLines2 = [...lines2];
+  // Insert a duplicate skills key right after the original skills array block
+  dupLines2.splice(skillsEnd + 1, 0, lines2[skillsIdx]);
+  const dupedRaw2 = dupLines2.join(String.fromCharCode(10));
   const dupedLines2 = dupedRaw2.split(String.fromCharCode(10));
   const dup2Stack = [];
   let dup2Fired = false;
@@ -635,9 +665,22 @@ runFixtureRoute(
 // This case was already verified by F19's fix; assert it stays green
 // by confirming the guard rejects the duplicated scalar.
 {
-  const duped3 = JSON.parse(JSON.stringify(manifest));
-  duped3.routes["review-change:adversarial"].routeLinesMax = 9999;
-  const dupedRaw3 = JSON.stringify(duped3, null, 2);
+  // Read manifest as raw text and duplicate an existing scalar-valued key.
+  // Find a line with a scalar value key inside the routes object (e.g., routeLinesMax)
+  const manifestRaw3 = fs.readFileSync(manifestPath, "utf8");
+  const lines3 = manifestRaw3.split(String.fromCharCode(10));
+  let scalarIdx = -1;
+  for (let i = 0; i < lines3.length; i++) {
+    // Find routeLinesMax inside review-change:adversarial route
+    if (lines3[i].includes('"routeLinesMax":') && i > 320 && i < 350) {
+      scalarIdx = i;
+      break;
+    }
+  }
+  // Insert a duplicate scalar line right after the original
+  const dupLines3 = [...lines3];
+  dupLines3.splice(scalarIdx + 1, 0, lines3[scalarIdx].replace(/9999/, '8888'));
+  const dupedRaw3 = dupLines3.join(String.fromCharCode(10));
   const dupedLines3 = dupedRaw3.split(String.fromCharCode(10));
   const dup3Stack = [];
   let dup3Fired = false;
