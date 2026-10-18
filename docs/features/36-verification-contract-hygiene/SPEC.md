@@ -193,10 +193,17 @@ Budget: strong
 - 2026-10-18 22:30 — P3 done: four issue #183 bibliography entries appended to README § References (4 matches); b1ebff5d — next: P4 (verification gate run)
 - 2026-10-18 22:40 — P4 done: golden-fixture exits 0 (AC6); check-skill-context exits 0, 28 skills (AC7); schema package 717 pass 0 fail (AC7); all Evidence rows filled; 58fa262a — next: /review-change
 - 2026-10-18 22:50 — P1–P4 complete; unit doc Evidence/Progress final; pushed feat/36-verification-contract-hygiene (8480d739) — next: /review-change on the accumulated diff
+- 2026-10-18 23:40 — review cycle 1 ran (5 passes + synthesis/classification/debt); F1–F11, F14, F15 folded per owner scope directive (e28ff213); ledger SHA corrected to squashed head (f03fc673) — next: lane resume at settled head
+- 2026-10-18 23:55 — lane resumed at settled head f03fc673: gate re-verified green (root suites exit 0; `--routes` PASS 14 routes; version-parity PASS 0.21.0→0.22.0; golden-fixture exit 0); `--triage` re-run confirms step list unchanged; branch pushed at f03fc673; Future rows: none; receipt stage: no PR (release skipped) → receipt missing → hand off to /review-change (this commit) — next: /review-change 36-verification-contract-hygiene
 
 ## Next
 
-All P1–P4 complete. Next: /review-change on the accumulated diff.
+P1–P4 complete; review cycle 1 ran and F1–F11 + F14 + F15 folded (e28ff213);
+gate re-verified green at the settled head f03fc673 (root suites, --routes,
+version-parity, golden-fixture — all exit 0). No PR yet (release skipped by
+greenlight triage: small scope), so no review receipt exists at head. Next:
+/review-change on the settled head to re-verify the folds and post the
+SHA-bound receipt.
 
 ## References
 
