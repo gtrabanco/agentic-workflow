@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -102,9 +102,9 @@ no schema field). Six fields, always present:
 - Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
 - Refuted/open: <F-ids joined ` + `, or `none`>
 - Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
-- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Batch class: <all-repair-in-place | frozen (replan present) | frozen (product owner present) | none>
 - Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
-- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE | PRODUCT-ROUTE>
 ```
 
 - The `Gate` line carries the actual exit codes observed at the head the gate
@@ -114,9 +114,9 @@ no schema field). Six fields, always present:
 - The `Fold diff` shortstat comes from a real `git diff` run over the batch's
   commits.
 - The `Batch class` derives from the taken queue's frozen rows only — the fold
-  never reclassifies (`all-repair-in-place`, `frozen (replan present)`, or
-  `none` for an empty queue); the vocabulary comes from
-  `review-implementation`'s closed class set.
+  never reclassifies (`all-repair-in-place`, `frozen (replan present)`,
+  `frozen (product owner present)`, or `none` for an empty queue); the
+  vocabulary comes from `review-implementation`'s closed class set.
 
 **Freeze-batch (replan present).** When the taken queue contains any row whose
 frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
@@ -128,6 +128,16 @@ feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
 and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
 `node scripts/unit-route.mjs <unit>` is the discovery step the fold already
 ran; it is never the recommendation.
+
+**Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
+cell begins `product owner`, `product-owned` or `owned by product` (head-anchored,
+identical to `scripts/unit-route.mjs`'s `PRODUCT_ROUTE` regex,
+per `#293`) freezes the batch too —
+nothing folds, no `folded: yes` flips, no commits: the fold loop repairs source,
+never authority (`pre-execution-review` POLICY §4, `#293`). The receipt records
+the `PRODUCT-ROUTE` branch and the retained row ids; the consumer is the
+router's printed `route: product` lane hand-off. Full condition and hand-off
+table: [`FOLD_PROCESS.md`](references/FOLD_PROCESS.md) §Batch classification.
 
 ## Guardrails
 
@@ -175,6 +185,7 @@ or touched outside the queue.
   · any BLOCKED (<F1> + <F2> + …) → supply the listed missing inputs, then re-run /fold-findings
   · any REPLAN (<F1> + <F2> + …) → /unit-lane <slug> or /unit-lane --fix <n> — the lane re-runs its plan step, appends the phases to the unit's SPEC; its review step gates before /execute-phase on this unit
   · any DECISION (<F1> + <F2> + …) → stop and surface the decision to the user — a `route: decision` conclusion names no planner, so the unit waits on the user before any plan or code change
+  · any PRODUCT (<F1> + <F2> + …) → /unit-lane <slug> or /unit-lane --fix <n> — the lane repairs the half, its review step re-judges it
 ```
 
 Every `· ` sub-bullet is exactly one physical line — never hard-wrapped across
@@ -187,12 +198,13 @@ carry `<slug>` or `<n>` into a live hand-off.
 
 ## Closing-block decision branch (choose one, at emission)
 
-The closing block picks exactly one of four outcomes. The **no-decision →
+The closing block picks exactly one of five outcomes. The **no-decision →
 re-review default** holds whenever the turn carries no recorded prior consumer
 decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
+| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
