@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.3.0
+version: 1.4.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -32,6 +32,20 @@ and re-opens its review loop. Grep the unit's own files and outputs; a
 diff-based validator enumerates the unit's paths or excludes the
 workflow-mutated surfaces explicitly (docs/LOGS.md, the unit's own docs
 directory, harness/toolstate).
+
+**Validator determinism.** A frozen validator must be deterministic — dependencies
+on network, wall-clock time, randomness, or unordered concurrency must be pinned
+(fixed version, frozen fixture, recorded input) or the row must be
+`read-verified:`/`manual:` instead of a command. A planner who wants a command
+row that reaches the network or reads the clock must either pin the
+non-deterministic dependency (e.g. a recorded fixture, a fixed dependency
+version, a seeded PRNG) or downgrade the row to `read-verified:`/`manual:`.
+
+**Property / fuzz validators.** A planner may emit a property or fuzz validator as
+a bounded `commands` row — deterministic, bounded runtime — with the timeout
+budget inherited from the schema package's `fastCommandTimeoutMs` / `fullStageTimeoutMs`
+time limits (feature 26). No new validator kind in `VerificationPlan v1` is needed:
+property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
 

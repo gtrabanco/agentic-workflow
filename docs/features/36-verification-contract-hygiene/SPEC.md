@@ -141,22 +141,22 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 
 ## Tasks
 
-P1 — Add the validator-determinism rule and the property/fuzz `commands`-row
-sentence to `skills/verification-contract/SKILL.md` § Artifact (beside
-`Validator stability`); run `bump-skill` for the version bump + CHANGELOG row
-(validator: `bun scripts/check-skill-context.mjs` exits 0)
-  Relevant files: skills/verification-contract/SKILL.md, CHANGELOG.md, README.md
-P2 — Mirror the two rules in the template substrate validator wording
-(`template/docs/fix/_TEMPLATE/SPEC.md` `## Acceptance`)
-(validator: `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` shows the mirror)
-  Relevant files: template/docs/fix/_TEMPLATE/SPEC.md
-P3 — Append the four issue-#183 bibliography entries to README `## References`,
-deduped against existing entries (validator: `grep -c "arxiv.org/abs/2505.06177\|arxiv.org/abs/2605.21824\|10.1109/TSE.2019.2946563\|appsec.guide/docs/fuzzing" README.md` ≥ 4)
-  Relevant files: README.md
-P4 — Verification: run the root suites, the golden-fixture suite, the context
-budgets, and the schema package tests; fill the Evidence rows
-(validator: `node --test scripts/*.test.mjs` exits 0)
-  Relevant files: docs/features/36-verification-contract-hygiene/SPEC.md
+- P1 — Add the validator-determinism rule and the property/fuzz `commands`-row
+  sentence to `skills/verification-contract/SKILL.md` § Artifact (beside
+  `Validator stability`); run `bump-skill` for the version bump + CHANGELOG row
+  (validator: `bun scripts/check-skill-context.mjs` exits 0)
+    - Relevant files: skills/verification-contract/SKILL.md, CHANGELOG.md, README.md
+- P2 — Mirror the two rules in the template substrate validator wording
+  (`template/docs/fix/_TEMPLATE/SPEC.md` `## Acceptance`)
+  (validator: `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` exits 0)
+    - Relevant files: template/docs/fix/_TEMPLATE/SPEC.md
+- P3 — Append the four issue-#183 bibliography entries to README `## References`,
+  deduped against existing entries (validator: `grep -c "arxiv.org/abs/2505.06177\|arxiv.org/abs/2605.21824\|10.1109/TSE.2019.2946563\|appsec.guide/docs/fuzzing" README.md` exits 0 and `grep -c` output ≥ 4)
+    - Relevant files: README.md
+- P4 — Verification: run the root suites, the golden-fixture suite, the context
+  budgets, and the schema package tests; fill the Evidence rows
+  (validator: `node --test scripts/*.test.mjs` exits 0)
+    - Relevant files: docs/features/36-verification-contract-hygiene/SPEC.md
 
 ## Evidence
 
