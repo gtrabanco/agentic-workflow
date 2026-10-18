@@ -212,6 +212,9 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC6 | `skills/unit-lane/SKILL.md` closing block: `/audit-pr <PR-url>` is the first ordered alternative with the receipt precondition — an ordered stage, not a third-level bullet | — | lines 218–221 read | direct read + `next-recommendations.test.mjs` conductor pin |
 | AC7 | `grep -c execute-phase skills/unit-lane/SKILL.md` | exit 0 | 7 (hand-off names a phase: `/execute-phase <NN-slug> P<k>`) | live grep |
 | AC8 | no existing test weakened; pins added in P1 for each changed behavior (router route, freeze-batch class, triage verdict, executable hand-off); the one maintained pin (`version: 1.7.0` → `1.8.0`) follows the pin's own documented bump protocol, strength unchanged | exit 0 | root suites 690/690 | `node --test scripts/*.test.mjs` |
+| — | cycle 11 close-out: F22–F28 flips completed (repairs verified at their fold commits; F24 re-based to ceil(3105 × 1.10) = 3416) | exit 0 | root suites 693/693 · parity PASS · provenance CHECK PASS | `76545bb4`, `bbe461aa` |
+| — | cycle 11 review: F29 (F22 pins exercised a copied scanner, not the guard) folded — one shared `findDuplicateKey` serves guard + pins, pins assert fired key | exit 0 | test file 741 → 557 lines; suites 693/693; package 432/432 | `5922bb4e` |
+| — | receipt stage: `bun scripts/review-receipt.mjs emit --pr 300 … --scope-base main` then `verify --pr 300` | exit 0 | `status: current` at head `1ef08df5` | `bun scripts/review-receipt.mjs verify --pr 300` |
 
 ## Progress log
 
@@ -222,6 +225,8 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 `2026-10-17 22:05 — P4: bump-skill (fold-findings 1.8.0, triage-issue 2.11.0, review-change 3.12.0, review-implementation 1.11.0; CHANGELOG rows + release log), pi package 0.21.0 + companion row, parity content gate PASS; context budgets: fold-findings re-based to 3252 (declared growth source) after compressing the new SKILL.md paragraph to a FOLD_PROCESS.md pointer, and the four review-change route ceilings re-based to ceil(measured × 1.10) — the A5 bullet is router-first as typed; review-loop-discipline version pin maintained 1.7.0 → 1.8.0 per the pin's documented protocol (strength unchanged); root suites 690/690, package suite 432/432 → 22b3e5eb — next: P5 verification + PR`
 `2026-10-17 22:20 — P5: every AC re-run and evidenced (AC1 product route live; AC3–AC7 Axis B verified as landed-with-73; AC8 pins-first honored); root suites 690/690; PR opened with Closes #293 → [PR #300](https://github.com/gtrabanco/agentic-workflow/pull/300) — next: review-change on the accumulated diff, then /audit-pr`
 `2026-10-17 22:25 — PR #300 opened; roadmap row 76 → done · #300; branch pushed (6 commits, base main) → ba169edc + this commit — next: /review-change (review gate), then /audit-pr #300`
+`2026-10-18 (cycles 1–10) — review-change loop: 28 findings persisted and folded (F1–F28), ledger marks + provenance kept current — see review-findings.md`
+`2026-10-18 (cycle 11 close-out) — fold completion verified: F22–F28 repairs confirmed landed, flips carried on their original rows, F24 re-based to ceil(3105 × 1.10) = 3416 → 76545bb4 + bbe461aa; review found F29 (pins exercised a copied scanner) → folded with one shared findDuplicateKey → d30919ac + 5922bb4e + 1ef08df5; receipt emitted and verified current — next: /audit-pr #300`
 
 ## Next
 
