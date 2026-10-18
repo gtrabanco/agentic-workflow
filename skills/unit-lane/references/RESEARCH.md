@@ -1,5 +1,13 @@
 # Research step
 
+## Needs-input guard
+
+**Unit objective and scope** from the SPEC are **required**:
+
+- If the unit's objective or scope is blank/missing: re-ask once. If still
+  blank, emit `→ Next: unit-lane (research step) requires manual input — cannot
+  proceed` and stop. No inferred unit scope.
+
 ## Purpose
 
 Establish what is known and what is uncertain about the unit's domain before

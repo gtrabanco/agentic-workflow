@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.3.0
+version: 3.4.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -21,6 +21,9 @@ raw placeholders.
 ## Turn contract — verify before ending the turn
 
 ```
+✓ Required user inputs were answered concretely (not defaulted). Any blank
+  required input was re-asked once; if still blank the skill emits
+  `→ Next: init-workspace requires manual input — cannot proceed` and stops.
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
@@ -30,6 +33,21 @@ raw placeholders.
 About to end the turn with any box unchecked? The turn is NOT done — complete
 the missing box first (weak models drop end-of-document duties; this list is
 first on purpose).
+
+## Needs-input guard
+
+Consent for installs/hooks/overwrites is **mandatory**: blank or absent consent
+→ re-ask once → halt; no default consent.
+
+- **`<target-dir>`** — required. If blank: re-ask once with the expected
+  format. If still blank, emit
+  `→ Next: init-workspace requires manual input — cannot proceed` and stop.
+  Cwd is used as a fallback only.
+- **Consent for installs, hooks, and overwrites** — required for each action.
+  If blank or absent: re-ask once; if still blank/absent, halt with
+  `requires manual input`. Never proceed by assuming consent from context.
+- **Upgrade vs bootstrap mode** — if the repo state is ambiguous (partially
+  scaffolding), STOP and ask the user to confirm the route. Do not guess.
 
 ## When to use
 

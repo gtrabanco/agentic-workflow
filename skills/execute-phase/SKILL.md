@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 5.1.0
+version: 5.2.0
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -34,6 +34,9 @@ Tick every box before ending the turn; an unchecked box means the turn is not
 done:
 
 ```
+✓ Required user inputs were answered concretely (not defaulted). Any blank
+  required input was re-asked once; if still blank the skill emits
+  `→ Next: execute-phase requires manual input — cannot proceed` and stops.
 ✓ Triage verified — unit doc Evidence section header matches
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
@@ -61,7 +64,18 @@ unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1�
 `## Evidence`, and `## Progress` sections. If absent, the unit is not ready —
 stop and suggest `unit-lane` triage first.
 
-## Process
+## Needs-input guard
+
+The following inputs are **required** and must be answered concretely by the
+user (not inferred or defaulted):
+
+- **`<NN-slug>`** — the unit identifier. If blank or missing: re-ask once with
+  the expected format (`<NN>-<slug>`). If still blank, emit
+  `→ Next: execute-phase requires manual input — cannot proceed` and stop.
+
+Optional inputs (may default):
+- **`P<k>`** — step argument. Absent → first unfinished step.
+- **`--max-attempts N`** — absent → 3.
 
 ### 1. Verify triage currency
 

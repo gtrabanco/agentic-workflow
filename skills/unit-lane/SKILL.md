@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -21,6 +21,9 @@ Tick every box before ending the turn; an unchecked box means the turn is not
 done:
 
 ```
+✓ Required user inputs were answered concretely (not defaulted). Any blank
+  required input was re-asked once; if still blank the skill emits
+  `→ Next: unit-lane requires manual input — cannot proceed` and stops.
 ✓ Triage ran (bun scripts/unit-route.mjs --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template
@@ -43,6 +46,26 @@ done:
 Both `--fix <n>` and `--from-issue <n>` are the exact forms
 `scripts/unit-route.mjs` prints for a tracked issue with no unit folder
 (`route: plan-from-issue`) — never invent a different spelling.
+
+## Needs-input guard
+
+The following inputs are **required** and must be answered concretely by the
+user (not inferred or defaulted):
+
+- **`<NN-slug | "<idea>">`** — unit slug or raw idea. If blank: re-ask once
+  with the expected format. If still blank, emit
+  `→ Next: unit-lane requires manual input — cannot proceed` and stop. Unit kind
+  has **no silent `feature` default** — vague requests STOP instead of
+  inferring.
+- **`--fix <issue-number>` / `--from-issue <issue-number>`** — required when
+  that mode is used. If the issue number is blank, re-ask once; if still blank,
+  halt with `requires manual input`.
+- **Unit kind / scope classification** — when the request is vague, STOP and
+  ask the user with concrete options. Never infer unit kind from an empty
+  prompt (no silent `feature` default).
+
+Optional inputs (may default):
+- **`--retriage`** — flag; absent → use existing triage.
 
 ## Step 0 — Discover the project
 
