@@ -191,6 +191,7 @@ Budget: strong
 - 2026-10-18 22:20 — P2 done: template mirror written (template/docs/fix/_TEMPLATE/SPEC.md § Acceptance); dafc2421 — next: P3 (README bibliography)
 - 2026-10-18 22:30 — P3 done: four issue #183 bibliography entries appended to README § References (4 matches); b1ebff5d — next: P4 (verification gate run)
 - 2026-10-18 22:40 — P4 done: golden-fixture exits 0 (AC6); check-skill-context exits 0, 28 skills (AC7); schema package 717 pass 0 fail (AC7); all Evidence rows filled; 58fa262a — next: /review-change
+- 2026-10-18 22:50 — P1–P4 complete; unit doc Evidence/Progress final; pushed feat/36-verification-contract-hygiene (8480d739) — next: /review-change on the accumulated diff
 
 ## Next
 
