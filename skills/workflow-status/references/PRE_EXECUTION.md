@@ -24,7 +24,8 @@ For every unit whose resolved status is `defined`, `planned` or `in-progress`:
    name the dimension that stopped being true, which is what the sensor labels
    `stale`. A snapshot digest is a canonical
    SHA-256 over the snapshot object, so `git hash-object` is never a substitute: it
-   stays correct only for the frozen `ACCEPTANCE.md` manifest blob.
+   stays correct only for the frozen acceptance artifact: `ACCEPTANCE.md` (lane-era) or the
+   unit doc's `## Acceptance criteria` section (post-feature 61).
 3. The verdict, the reviewed `unit`, the stage, and the author fields
    (`reviewer` and `authorId` — the receipt's `Reviewer:` / `Author:` lines — and
    `authorExclusion`).

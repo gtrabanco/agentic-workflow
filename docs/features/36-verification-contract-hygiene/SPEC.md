@@ -133,11 +133,12 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | issue #183 item 1 | a frozen validator is deterministic — non-deterministic dependencies pinned or the row `read-verified:`/`manual:` | P1 P2 | determinism rule + template mirror | verification-contract skill | grep + `bun scripts/check-skill-context.mjs` | Evidence row AC1/AC2 | planned |
-| O2 | issue #183 item 2 | property/fuzz validators ride the `commands` class with `fast`/`full` bounds — no new validator kind | P1 P2 | fuzz/property sentences | verification-contract skill | grep | Evidence row AC3/AC4 | planned |
-| O3 | issue #183 non-goal | no schema-package change (`VerificationPlan v1` kinds unchanged) | P1 P2 | absent-by-design | n/a | schema `bun run test` exits 0 | Evidence row AC7 | planned |
-| O4 | issue #183 bibliography | README `## References` gains the four entries at ship time, deduped | P3 | README append | docs | grep | Evidence row AC5 | planned |
-| O5 | issue #183 item 3 / roadmap row 55 | the run-log Result grammar stays enforced, untouched | P4 | re-verify only | golden-fixture suite | `node --test scripts/golden-fixture.test.mjs` exits 0 | Evidence row AC6 | planned |
+| O1 | issue #183 item 1 | a frozen validator is deterministic — non-deterministic dependencies pinned or the row `read-verified:`/`manual:` | P1 P2 | determinism rule + template mirror | verification-contract skill | grep + `bun scripts/check-skill-context.mjs` | Evidence row AC1/AC2 | verified |
+| O2 | issue #183 item 2 | property/fuzz validators ride the `commands` class with `fast`/`full` bounds — no new validator kind | P1 P2 | fuzz/property sentences | verification-contract skill | grep | Evidence row AC3/AC4 | verified |
+| O3 | issue #183 non-goal | no schema-package change (`VerificationPlan v1` kinds unchanged) | P1 P2 | absent-by-design | n/a | schema `bun run test` exits 0 | Evidence row AC7 | verified |
+| O4 | issue #183 bibliography | README `## References` gains the four entries at ship time, deduped | P3 | README append | docs | grep | Evidence row AC5 | verified |
+| O5 | issue #183 item 3 / roadmap row 55 | the run-log Result grammar stays enforced, untouched | P4 | re-verify only | golden-fixture suite | `node --test scripts/golden-fixture.test.mjs` exits 0 | Evidence row AC6 | verified |
+| O6 | issue #183 item 1 (budget re-basis) | route ceilings re-based when wording growth pushes them over — declared re-basis names growth source | P4 | context-budget re-basis | scripts/SKILL_CONTEXT_BUDGETS.json | `node scripts/check-skill-context.mjs --routes` exits 0 | Evidence row AC7 | verified |
 
 ## Tasks
 
@@ -174,13 +175,13 @@ Budget: strong
 |---|---|---|---|---|
 | R1 | repo-evidence sweep of the unit's domain (skill, templates, fixture suite, schema source, README, roadmap, issue #183) | exit 0 | 4 claims tabled as PE-001…PE-005; item 3 already shipped by feat 55; no external fetch needed — the issue carries the research provenance | lane conductor (this session) |
 | R1 note | Uncertainties: none material — wording exactness for the two new sentences is a cheap default recorded in `decisions.md`; sources: repo evidence + the issue's bibliography (arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide) | — | — | — |
-| AC1 | `grep` over skill shows determinism rule + property/fuzz sentence; `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present; fuzz/property sentence present | execute-phase P1
+| AC1 | `grep -n "Validator determinism" skills/verification-contract/SKILL.md` && `grep -n "Property / fuzz" skills/verification-contract/SKILL.md` && `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present (lines 36+); fuzz/property sentence present (line 45) | execute-phase P1
 | AC2 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 74: Validator determinism; line 80: deterministic, bounded | execute-phase P2
-| AC3 | `grep` over skill shows property/fuzz as commands-row | verified | bounded commands row with fastCommandTimeoutMs/fullStageTimeoutMs | execute-phase P1
-| AC4 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` finds property/fuzz sentence | verified | line 80: deterministic, bounded — within timeout budgets | execute-phase P2
+| AC3 | `grep -n "Property / fuzz validators" skills/verification-contract/SKILL.md` exits 0 | exit 0 | line 45: bounded commands row | execute-phase P1
+| AC4 | `grep -n "Property / fuzz validators" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 79: **Property / fuzz validators.** bounded runtime within schema timeout budgets | execute-phase P2
 | AC5 | `grep -c` for four issue #183 references in README.md | 4 | arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide | execute-phase P3
 | AC6 | `node --test scripts/golden-fixture.test.mjs` exits 0 | exit 0 | 12 tests, 12 pass | execute-phase P4
-| AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass; schema: 717/717 pass; context: 28 skills PASS | execute-phase P4
+| AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context.test: 1 pass 0 fail (AC1); --routes PASS route budgets: 14 (AC1); version-parity: content parity holds (AC2) | execute-phase P4
 
 ## Progress log
 
@@ -195,8 +196,7 @@ Budget: strong
 
 ## Next
 
-Plan-step contradiction sweep, then hand off execution:
-`/execute-phase 36-verification-contract-hygiene P1`.
+All P1–P4 complete. Next: /review-change on the accumulated diff.
 
 ## References
 

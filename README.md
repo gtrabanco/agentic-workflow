@@ -660,8 +660,8 @@ tables; a missing extra is never a gap.
 
 ## References
 
-- Jin & Chen (2026). *Overcorrection in LLM-based artifact review.* arXiv:2603.00539. <https://arxiv.org/abs/2603.00539> — the study on which feature 31's planning materiality floor (`low` = report-note, material = `medium`+) 
-- Görz et al. (2026). *The Silent Degradation Class: Non-determinism in Frozen Validators.* FSE '26 / arXiv:2505.06177. <https://arxiv.org/abs/2505.06177> — the validator-determinism rule grounding: a validator depending on network, wall-clock time, randomness, or unordered concurrency re-fails a frozen criterion with zero changes.
-- Sheng et al. (2026). *QuartetFuzz: Fuzzing for Property Test Oracles.* arXiv:2605.21824. <https://arxiv.org/abs/2605.21824> — property/fuzz as a bounded validator class for deterministic, repeatable checks.
-- Manès et al. (2019). *Property-based Testing for Software Quality.* TSE'19. doi:10.1109/TSE.2019.2946563 — the case study grounding property/fuzz validators as a production-quality verification strategy.
-- appsec.guide. *Writing Fuzzing Harnesses.* <https://appsec.guide/docs/fuzzing/writing-harnesses> — practical guidance for writing bounded property/fuzz harnesses compatible with the commands validator class.
+- Jin & Chen (2026). *Are LLMs Reliable Code Reviewers? Systematic Overcorrection in Requirement Conformance Judgement.* arXiv:2603.00539. <https://arxiv.org/abs/2603.00539> — the study on which feature 31's planning materiality floor (`low` = report-note, material = `medium`+) is built.
+- Görz et al. (2025). *An Empirical Study of Fuzz Harness Degradation.* FSE '26 / arXiv:2505.06177. <https://arxiv.org/abs/2505.06177> — the validator-determinism rule grounding: a validator depending on network, wall-clock time, randomness, or unordered concurrency re-fails a frozen criterion with zero changes.
+- Sheng et al. (2026). *Quality-Assured Fuzz Harness Generation via the Four Principles Framework.* arXiv:2605.21824. <https://arxiv.org/abs/2605.21824> — property/fuzz as a bounded validator class for deterministic, repeatable checks.
+- Manès et al. (2019). *The Art, Science, and Engineering of Fuzzing: A Survey.* TSE'19. doi:10.1109/TSE.2019.2946563 — the case study grounding property/fuzz validators as a production-quality verification strategy.
+- appsec.guide. *Writing Fuzzing Harnesses.* <https://appsec.guide/docs/fuzzing/techniques/writing-harnesses/> — practical guidance for writing bounded property/fuzz harnesses compatible with the commands validator class.
