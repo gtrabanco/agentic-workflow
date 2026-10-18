@@ -380,8 +380,7 @@
         "feature 69 / issue #270": "feature 69 / issue #270: the review-charter section grew skills/review-change/SKILL.md from 2327 to 2737 estimate (+26 lines), so this route's measured load grew (16492 -> 18142 est / 1198 -> 1318 lines); ceiling re-based to ceil(measured x 1.10)",
         "unit 65 P8 (AC20/AC21)": "unit 65 P8 (AC20/AC21): the Step 0 retrieval-aid discovery bullet grew SKILL.md, shifting this route's measured load; ceiling re-based to ceil(measured x 1.10), reason declared (allowlisted discovery wording)",
         "fix 286 (scope manifest closeout)": "the receipt closeout records the affecting-path scope manifest (--scope-base; SKILL.md box + PERSIST_AND_DECIDE.md step 12) \u2014 route measured at this re-basis; ceiling = ceil(measured x 1.10)",
-        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis.",
-
+        "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed \u2014 router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis."
       }
     },
     "review-change:default-web": {
