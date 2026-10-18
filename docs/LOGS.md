@@ -2933,17 +2933,21 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Audit of issue #173 (single-owner turn contract) — verified it remains valid after the fix it was blocked on (#260) landed; deep-dived #260's subagent-first topology, LSP/document-verifier distinction, and existing edit CLI (features 61/65) — confirmed the verify gap is the separate writer/verifier contract; cross-checked all 53 feature folders against ROADMAP.md rows (all aligned); identified 3 open issues (#295, #294, #284) lacking triage disposition.
 - **Decisions:** Turn contract #173 migration target shrank to machine-checked subset; prunable ceremony must not delete non-negotiables (external verifier, Engram, document verifier, evidence); Serena is now required substrate (reversing #219's non-goal); LSP verified to generate false positives on non-TS files in this repo — document verifier must be deterministic script, not LSP.
 - **Next:** triage issues #295, #294, #284; consider bumping #173 status from postponed
-ENTRA
 
-## 2026-10-18T20:39:53Z — feat/76-lane-product-route — manual
-- **Commits:** 48 (`dec53806…9d9ab416`)
-- **Files:** 33 files
-- **Summary:** Audit of issue #173 (single-owner turn contract) — verified it remains valid after the fix it was blocked on (#260) landed; deep-dived #260's subagent-first topology, LSP/document-verifier distinction, and existing edit CLI (features 61/65) — confirmed the verify gap is the separate writer/verifier contract; cross-checked all 53 feature folders against ROADMAP.md rows (all aligned); identified 3 open issues (#295, #294, #284) lacking triage disposition.
-- **Decisions:** Turn contract #173 migration target shrank to machine-checked subset; prunable ceremony must not delete non-negotiables (external verifier, Engram, document verifier, evidence); Serena is now required substrate (reversing #219's non-goal); LSP verified to generate false positives on non-TS files in this repo — document verifier must be deterministic script, not LSP.
-- **Next:** triage issues #295, #294, #284; consider bumping #173 status from postponed
 ## 2026-10-18T20:41:31Z — feat/76-lane-product-route — manual
 - **Commits:** 50 (`dec53806…2ad16621`)
 - **Files:** 33 files
 - **Summary:** Unit 76 (lane-product-route, issue #293): resumed the in-flight lane from the unit-doc (dec53806), drove P1-P5 to completion — added PRODUCT_ROUTE to unit-route.mjs router, wired fold-findings freeze-batch (frozen product-owner present), triage-issue product-repair verdict, review-change executable product hand-off, opened PR #300 (Closes #293), all root suites green (690/690), bump-skill pass for 4 skills + pi package 0.21.0
 - **Decisions:** fold-findings SKILL.md ceiling re-based to 3252 with declared growth source (issue #293) after compressing the new paragraph to a FOLD_PROCESS.md pointer; four review-change route ceilings re-based to ceil(measured×1.10) because the A5 bullet grew 3→4 lines — re-basis with declared source is the sanctioned path (SKILL_CONTEXT_BUDGETS.json); review-loop-discipline.version pin 1.7.0→1.8.0 maintained per its own documented protocol (strength unchanged); roadmap row 76 → done · #300
 - **Next:** /review-change on the accumulated diff, then /audit-pr #300 for the merge gate; post-merge: /unit-lane 31-planning-review-materiality to resolve the product-owned F9/F10
+## 2026-10-18T20:42:50Z — feat/76-lane-product-route — manual
+- **Commits:** 51 (`dec53806…154b247e`)
+- **Files:** 33 files
+- **Summary:** fold-findings F17 + F18 on the already-merged PR #300: F17 restored VF-16, REVIEW-RAN and four GATE-RAN marks that the cycle-6 persist commit 70311f30 deleted (LEDGERS.md requires marks append); F18 fixed a duplicate JSON key in SKILL_CONTEXT_BUDGETS.json (adversarial :352 and default-backend :385 mis-attributed route names). Ledger-provenance check and all gates green (693/693, 28 skills, 14 routes, 0.21.0 parity, 432 package tests). Both folds committed + annotated; ledger clean, unit routes to close-out.
+- **Decisions:** F17: must restore from d2686a15 (cycle 5) rather than re-derive — LEDGERS.md says marks append, so the prior cycle's marks are the source of truth; F18: one-entry-per-block rule, each block must name its own route
+- **Next:** PR #300 is merged and fully green. Rebase or merge. Next unit: /unit-lane 31-planning-review-materiality
+## 2026-10-18T20:43:50Z — feat/76-lane-product-route — manual
+- **Commits:** 51 (`dec53806…154b247e`)
+- **Files:** 33 files
+- **Summary:** Session log: wrote session log entries capturing prior sessions' work (unit 76 product route, audit #173). No new feature work — the actual implementation, review cycles, and folds were done in prior sessions and are captured by the appended log entries.
+- **Next:** The session log has entries for prior work. This session's only action was logging. Next: resume with feature work or continue the unit 76 review fold if /review-change finds new findings.
