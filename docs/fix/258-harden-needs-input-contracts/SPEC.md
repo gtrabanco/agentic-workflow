@@ -88,42 +88,67 @@ none recorded — no known red gate or open defect affects this unit.
 ## Tasks
 
 - P1 — Audit the three skills' input points and record the
-  required/optional/ambiguous classification in this SPEC (Relevant files:
-  skills/execute-phase/SKILL.md, skills/unit-lane/SKILL.md,
-  skills/init-workspace/SKILL.md). Validator: classification table present
-  in this doc's Input audit section.
+  required/optional/ambiguous classification in this doc's Input audit
+  section (validator: `grep -q "### Input audit" docs/fix/258-harden-needs-input-contracts/SPEC.md` exits 0)
+  - Relevant files: skills/execute-phase/SKILL.md, skills/unit-lane/SKILL.md,
+    skills/unit-lane/references/DESIGN.md, skills/unit-lane/references/RESEARCH.md,
+    skills/init-workspace/SKILL.md
 - P2 — Add the needs-input guard (re-ask once → halt with
-  `requires manual input`) + Turn-contract box to `execute-phase`.
-  Validator: AC1 read-check passes.
-- P3 — Add the needs-input guard + Turn-contract box to `unit-lane` and its
-  interruption references (`DESIGN.md`, `RESEARCH.md`). Validator: AC2
-  read-check passes.
-- P4 — Add the mandatory-consent guard + Turn-contract box to
-  `init-workspace`. Validator: AC3 read-check passes.
-- P5 — Run `bump-skill` for the three edited skills (version bumps +
-  CHANGELOG rows + README cells). Validator: AC6 read-check passes.
-- P6 — Verification: `node --test scripts/*.test.mjs` exit 0;
-  `bun scripts/check-skill-context.mjs` exit 0. Validator: AC5 command
-  evidence rows in this doc.
+  `requires manual input`) and the Turn-contract box to `execute-phase`
+  (validator: `grep -c "requires manual input" skills/execute-phase/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/execute-phase/SKILL.md` exits 0)
+  - Relevant files: skills/execute-phase/SKILL.md
+- P3 — Add the needs-input guard and Turn-contract box to `unit-lane` and its
+  interruption references `DESIGN.md` / `RESEARCH.md` (validator:
+  `grep -c "requires manual input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals ≥ 2 and `grep -q "Required user inputs" skills/unit-lane/SKILL.md` exits 0)
+  - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/DESIGN.md,
+    skills/unit-lane/references/RESEARCH.md
+- P4 — Add the mandatory-consent guard and Turn-contract box to
+  `init-workspace` (validator: `grep -c "requires manual input" skills/init-workspace/SKILL.md` ≥ 1 and `grep -q "Required user inputs" skills/init-workspace/SKILL.md` exits 0)
+  - Relevant files: skills/init-workspace/SKILL.md
+- P5 — Run `bump-skill` for the three edited skills: version bumps, CHANGELOG
+  rows, README cells (validator: `grep -cE "^(\\|.*258|.*harden-needs-input)" CHANGELOG.md` ≥ 3 — one row per bumped skill)
+  - Relevant files: CHANGELOG.md, README.md, skills/*/SKILL.md (version fields)
+- P6 — Verification: root suites + context budgets (validator:
+  `node --test scripts/*.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs` exits 0)
+  - Relevant files: scripts/, skills/
+
+### Prior-decisions sweep
+
+Keyword sweep over the candidate sources (`docs/fix/258-harden-needs-input-contracts/decisions.md` —
+not yet created; `docs/features/19-architectural-invariants/{decisions,architecture-notes}.md`;
+`docs/workflow/REPOSITORY_STATE.md`; `AGENTS.md`) against the plan's claims.
+No candidate matched the claims except the label rule below; the sweep is
+advisory and issues no verdict.
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| tasks are labeled `P1…P6` | phases are labeled `P1, P2, …`, never `S1`/`Step N`, in any PLAN/TASKS/SPEC artifact | AGENTS.md:124 | `compatible` |
+
+### Input audit
+
+Filled by P1 (one table per skill; every interruption point classified
+`required` / `optional` / `ambiguous`, with its current blank-answer behavior
+and the post-fix behavior).
 
 ### Planning evidence
 
-| # | Claim | Type | Source | Confidence | Impact if wrong |
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
 |---|---|---|---|---|---|
-| 1 | `plan-feature-scaffold` and `plan-fix` no longer exist; feature 61 absorbed them into `unit-lane` | Code | `ls skills/` (no such dirs); fix index row #258; issue title "(3 surviving skills)" | High | Scope widens to 5 skills — re-triage |
-| 2 | Only `execute-phase`, `unit-lane`, `init-workspace` have user-interruption points among interactive skills | Code | grep over `skills/*/SKILL.md`; issue table | Medium | Extra skill needs the guard — fold as finding |
-| 3 | `triage-issue` already refuses to proceed without a classification | Doc | issue body §"Current gaps"; `skills/triage-issue/` | High | Add it to scope — re-triage |
-| 4 | Golden fixture does not exercise interactive paths; root suites are the regression gate | Doc | issue body step 4 ("sanity check, not a regression test") | High | AC5 shape wrong — re-triage |
+| PE-001 | file-read | `plan-feature-scaffold` and `plan-fix` no longer exist as skills — feature 61 absorbed them into `unit-lane`, so the issue's five-skill table reduces to three | `ls skills/` (no such directories); `docs/fix/README.md` row #258; issue #258 title | verified 2026-10-18 | O1, O2, O3 |
+| PE-002 | file-read | among surviving skills, only `execute-phase`, `unit-lane` (+ its `DESIGN.md`/`RESEARCH.md` references) and `init-workspace` carry user-interruption points; `triage-issue` already refuses to proceed without a classification | `grep -rln "ask the user" skills/*/SKILL.md`; `skills/triage-issue/SKILL.md` | verified 2026-10-18 | O1, O2, O3 |
+| PE-003 | issue-text | the fix follows the same defect-class pattern as the `review-change` commit `29b52c63` cited by the issue — **unverified: that commit is not a valid object in this repository** (`git cat-file -t 29b52c63` fails); the pattern is taken from the issue's narrative only | issue #258 §Problem; local `git cat-file` | ASSUMPTION-UNVERIFIED 2026-10-18 | O1, O2, O3 |
+| PE-004 | file-read | the golden fixture does not exercise interactive input paths, so the root suites are the regression gate for this prose-only change | issue #258 §Proposed approach step 4; `docs/workflow/GOLDEN_FIXTURE.md` | verified 2026-10-18 | O6 |
+| PE-005 | file-read | the three edited `SKILL.md` files are under enforced context budgets — added guard text must stay within them, checked by `scripts/check-skill-context.mjs` | `scripts/check-skill-context.mjs`; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | verified 2026-10-18 | O6 |
 
 ### Obligations
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O-258-1 | issue #258 AC1 | execute-phase never proceeds on blank required phase/target input | P2 | P2 | execute-phase body | read-check of guard text | guard clause + contract box in SKILL.md | open |
-| O-258-2 | issue #258 AC1 | unit-lane never defaults unit kind or infers scope from a blank/vague answer | P3 | P3 | unit-lane body + DESIGN/RESEARCH refs | read-check of guard text | guard clause + contract box in SKILL.md + refs | open |
-| O-258-3 | issue #258 AC3 | init-workspace never proceeds without explicit consent | P4 | P4 | init-workspace body | read-check of guard text | guard clause + contract box in SKILL.md | open |
-| O-258-4 | issue #258 AC2 | each skill's Turn contract carries the required-inputs box | P2-P4 | P2, P3, P4 | Turn contract sections | read-check | three `✓ Required user inputs…` boxes | open |
-| O-258-5 | repo workflow rules | edited skills stay within context budgets; suites stay green | P6 | P6 | root gate | `node --test scripts/*.test.mjs` + `bun scripts/check-skill-context.mjs` | Evidence rows | open |
+| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never proceeds past a blank required phase/target answer: re-ask once, then halt with `requires manual input`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -c "requires manual input" skills/execute-phase/SKILL.md` ≥ 1 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | planned |
+| O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same guard; Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -c "requires manual input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals ≥ 2 | guard text + box in `skills/unit-lane/SKILL.md` and references | planned |
+| O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: blank/absent consent → re-ask once → halt, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -c "requires manual input" skills/init-workspace/SKILL.md` ≥ 1 | guard text + box in `skills/init-workspace/SKILL.md` | planned |
+| O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` ≥ 3 | CHANGELOG rows + README cells for the three skills | planned |
+| O6 | SPEC AC5 / issue #258 AC4 | root suites stay green and the edited skills stay within context budgets | P6 | P6 | root gate | `node --test scripts/*.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0 | Evidence rows in this doc | planned |
 
 ## Evidence
 
@@ -142,11 +167,12 @@ Budget: strong
 
 ## Progress log
 
-2026-10-18 21:16 — SPEC drafted from issue #258, registered in docs/fix/README.md — next: triage
+2026-10-18 21:16 — SPEC drafted from issue #258, registered in docs/fix/README.md, triage pasted verbatim → e51e2b4f — next: plan
+2026-10-18 21:30 — plan step: tasks P1–P6 cut with validators, prior-decisions sweep run (1 compatible hit, AGENTS.md:124), planning ledgers cut (PE-001–005, O1–O6 minus O4 folded into O1–O3) — next: implement P1 (input audit)
 
 ## Next
 
-Run `bun scripts/unit-route.mjs --triage 258` and paste the block verbatim.
+Implement P1 — audit the three skills' input points and fill the Input audit section.
 
 ## References
 
