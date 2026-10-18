@@ -228,6 +228,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 `2026-10-17 22:25 — PR #300 opened; roadmap row 76 → done · #300; branch pushed (6 commits, base main) → ba169edc + this commit — next: /review-change (review gate), then /audit-pr #300`
 `2026-10-18 (cycles 1–10) — review-change loop: 28 findings persisted and folded (F1–F28), ledger marks + provenance kept current — see review-findings.md`
 `2026-10-18 (cycle 11 close-out) — fold completion verified: F22–F28 repairs confirmed landed, flips carried on their original rows, F24 re-based to ceil(3105 × 1.10) = 3416 → 76545bb4 + bbe461aa; review found F29 (pins exercised a copied scanner) → folded with one shared findDuplicateKey → d30919ac + 5922bb4e + 1ef08df5; receipt emitted and verified current — next: /audit-pr #300`
+`2026-10-18 (audit blocker F30) — audit-pr #300 blocked on `LINEAGE BLOCKED — no obligation ledger found`: the `### Obligations` header read `id` instead of the contracted `obligation-id`; renamed one cell → `bun scripts/unit-lineage.mjs --unit 76-lane-product-route` prints `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (3)`, triage block byte-identical, root suites 693/693 → dcf956f8; F30 folded → next: /review-change at the new head, then /audit-pr #300`
 
 ## Next
 
