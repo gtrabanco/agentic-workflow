@@ -419,4 +419,38 @@ runFixtureRoute(
   }
 }
 
-console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, and route-reference failures rejected");
+
+
+// F18 regression: the manifest must never declare a duplicate key in any
+// sources object. JSON.parse silently keeps the last duplicate, so this test
+// reads the raw text and tracks per-object key sets.
+{
+  const raw = fs.readFileSync(manifestPath, "utf8");
+  const rLines = raw.split(String.fromCharCode(10));
+  const objStack = [];
+  for (let i = 0; i < rLines.length; i++) {
+    const line = rLines[i];
+    const objOpen = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
+    if (objOpen) objStack.push({ indent: line.match(/^\s*/)[0].length, keys: new Map() });
+    if (objStack.length > 0) {
+      const kv = line.match(/^\s*"([^"]+)"\s*:\s*"([^"]*)"[,\s]*$/);
+      if (kv) {
+        const cur = objStack[objStack.length - 1];
+        if (line.match(/^\s*/)[0].length > cur.indent) {
+          if (cur.keys.has(kv[1])) {
+            throw new Error(
+              `duplicate key "${kv[1]}" in object "${cur.keys.get(kv[1])}" at lines ${cur.keys.get(kv[1])}, ${i + 1}`
+            );
+          }
+          cur.keys.set(kv[1], i + 1);
+        }
+      }
+    }
+    const objClose = line.match(/^\s*\}/);
+    if (objClose && objStack.length > 0 && objStack[objStack.length - 1].indent <= line.match(/^\s*/)[0].length) {
+      objStack.pop();
+    }
+  }
+}
+
+console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, and duplicate-key failures rejected");
