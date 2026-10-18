@@ -422,32 +422,42 @@ runFixtureRoute(
 
 
 // F18 regression: the manifest must never declare a duplicate key in any
-// sources object. JSON.parse silently keeps the last duplicate, so this test
-// reads the raw text and tracks per-object key sets.
+// sources or route object. JSON.parse silently keeps the last duplicate, so
+// this test scans the raw text for every key occurrence (string, scalar,
+// array or object values) and fails on collision.
 {
   const raw = fs.readFileSync(manifestPath, "utf8");
   const rLines = raw.split(String.fromCharCode(10));
-  const objStack = [];
+  const objStack = []; // { indent, name, keys: Map<key, firstLineNumber> }
   for (let i = 0; i < rLines.length; i++) {
     const line = rLines[i];
-    const objOpen = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
-    if (objOpen) objStack.push({ indent: line.match(/^\s*/)[0].length, keys: new Map() });
+    const openBrace = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
+    if (openBrace && !line.match(/^\s*"[^"]+"\s*:\s*\{\s*\}/)) {
+      objStack.push({ indent: line.match(/^\s*/)[0].length, name: openBrace[1], keys: new Map() });
+      continue;
+    }
+    const openArray = line.match(/^\s*"([^"]+)"\s*:\s*\[/);
+    if (openArray && !line.match(/^\s*"[^"]+"\s*:\s*\[\s*\]/)) {
+      objStack.push({ indent: line.match(/^\s*/)[0].length, name: openArray[1], keys: new Map() });
+      continue;
+    }
     if (objStack.length > 0) {
-      const kv = line.match(/^\s*"([^"]+)"\s*:\s*"([^"]*)"[,\s]*$/);
-      if (kv) {
+      const kv = line.match(/^\s*"([^"]+)"\s*:\s*(.+?)[,\s]*$/);
+      if (kv && line.match(/^\s*/)[0].length > objStack[objStack.length - 1].indent) {
         const cur = objStack[objStack.length - 1];
-        if (line.match(/^\s*/)[0].length > cur.indent) {
-          if (cur.keys.has(kv[1])) {
-            throw new Error(
-              `duplicate key "${kv[1]}" in object "${cur.keys.get(kv[1])}" at lines ${cur.keys.get(kv[1])}, ${i + 1}`
-            );
-          }
-          cur.keys.set(kv[1], i + 1);
+        if (cur.keys.has(kv[1])) {
+          throw new Error(
+            `duplicate key "${kv[1]}" in "${cur.name}" at lines ${cur.keys.get(kv[1])}, ${i + 1}`
+          );
         }
+        cur.keys.set(kv[1], i + 1);
       }
     }
-    const objClose = line.match(/^\s*\}/);
-    if (objClose && objStack.length > 0 && objStack[objStack.length - 1].indent <= line.match(/^\s*/)[0].length) {
+    const closeBrace = line.match(/^\s*\}\s*,?\s*$/);
+    const closeArray = line.match(/^\s*\]\s*,?\s*$/);
+    if (closeBrace && objStack.length > 0 && line.match(/^\s*/)[0].length <= objStack[objStack.length - 1].indent) {
+      objStack.pop();
+    } else if (closeArray && objStack.length > 0 && line.match(/^\s*/)[0].length <= objStack[objStack.length - 1].indent) {
       objStack.pop();
     }
   }

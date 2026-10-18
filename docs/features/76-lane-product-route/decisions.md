@@ -14,6 +14,8 @@ the issue (#293) states the scope, the ACs, and the non-goals.
 | 2026-10-17 | Issue AC3–AC7 (Axis B) are verification-only in this unit | Feature 73 (PR #297) already implemented them; re-implementing violates DRY and the issue's own triage (2026-10-17) recorded Axis B resolved | Re-landing Axis B — rejected: duplicate work on a merged surface |
 | 2026-10-18 | F19 fold (cycle 7): patch `scripts/check-skill-context.test.mjs` with a raw-text duplicate-key assertion (F18's required guard) | The context-budget manifest is a machine-read artifact read only through `JSON.parse` (silent last-wins); without a raw-text scan the suite cannot catch key collisions. The guarded file is a script-owned test, not a UI/infra surface. | No alternative — `JSON.parse` alone cannot surface duplicates |
 
+```text
 path-protection-records@1
+kind | paths | phase | date | authority | justification
 justification | scripts/check-skill-context.test.mjs | P4 | 2026-10-18 | execute-phase | F19 fold: adding a raw-text duplicate-key assertion to the context-budget suite (F18's part c); the manifest is read only through `JSON.parse` which silently keeps the last duplicate
-
+```
