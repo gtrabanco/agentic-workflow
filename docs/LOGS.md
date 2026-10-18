@@ -2946,8 +2946,3 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fold-findings F17 + F18 on the already-merged PR #300: F17 restored VF-16, REVIEW-RAN and four GATE-RAN marks that the cycle-6 persist commit 70311f30 deleted (LEDGERS.md requires marks append); F18 fixed a duplicate JSON key in SKILL_CONTEXT_BUDGETS.json (adversarial :352 and default-backend :385 mis-attributed route names). Ledger-provenance check and all gates green (693/693, 28 skills, 14 routes, 0.21.0 parity, 432 package tests). Both folds committed + annotated; ledger clean, unit routes to close-out.
 - **Decisions:** F17: must restore from d2686a15 (cycle 5) rather than re-derive — LEDGERS.md says marks append, so the prior cycle's marks are the source of truth; F18: one-entry-per-block rule, each block must name its own route
 - **Next:** PR #300 is merged and fully green. Rebase or merge. Next unit: /unit-lane 31-planning-review-materiality
-## 2026-10-18T20:43:50Z — feat/76-lane-product-route — manual
-- **Commits:** 51 (`dec53806…154b247e`)
-- **Files:** 33 files
-- **Summary:** Session log: wrote session log entries capturing prior sessions' work (unit 76 product route, audit #173). No new feature work — the actual implementation, review cycles, and folds were done in prior sessions and are captured by the appended log entries.
-- **Next:** The session log has entries for prior work. This session's only action was logging. Next: resume with feature work or continue the unit 76 review fold if /review-change finds new findings.
