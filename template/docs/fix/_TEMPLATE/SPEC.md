@@ -71,6 +71,15 @@ deferred`; `n/a` requires evidence, and no current-unit obligation may be
 Objective, verifiable conditions for "done". Each criterion is a runnable
 command where possible, or labelled `read-verified` — never unlabelled prose.
 
+**Validator determinism.** A frozen validator must be deterministic — dependencies
+on network, wall-clock time, randomness, or unordered concurrency must be pinned
+(fixed version, frozen fixture, recorded input) or the row must be `read-verified:`/`manual:`
+instead of a command.
+
+**Property / fuzz validators.** A validator may be a property or fuzz test with
+bounded runtime — deterministic, bounded — within the timeout budgets published
+by the schema package.
+
 ### Spec-lint (mechanical — presence checks only)
 
 Run by the lane's triage step (fix mode) before committing the draft;
