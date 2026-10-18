@@ -66,20 +66,23 @@ stop and suggest `unit-lane` triage first.
 
 ## Needs-input guard
 
+The guard refusal line used by every bullet below is:
+
+  `→ Next: execute-phase requires manual input — cannot proceed`
+
 The following inputs are **required** and must be answered concretely by the
 user (not inferred or defaulted):
 
 - **`<NN-slug>`** — the unit identifier. If blank or missing: re-ask once with
-  the expected format (`<NN>-<slug>`). If still blank, emit
-  `→ Next: execute-phase requires manual input — cannot proceed` and stop.
-- **`confirmed phase`** — a valid `P<k>` phase id from the unit doc's `Tasks`.
-  If blank: re-ask once; if still blank, halt with `requires manual input`.
-- **`confirmed file targets`** — the target paths or scope the phase operates on.
-  If blank: re-ask once; if still blank, halt with `requires manual input`.
+  the expected format (`<NN-slug>`, e.g. `131-execute-phase`). If still blank,
+  emit the guard refusal line above and stop.
 
 Optional inputs (may default):
-- **`P<k>`** — step argument. Absent → first unfinished step.
+- **`P<k>`** — step argument. Absent → the body resolves to the first
+  unfinished step from the unit doc's `Tasks`. No halt.
 - **`--max-attempts N`** — absent → 3.
+- **`--force`** — flag; accepted by the body but cannot override any gate
+  (`:104`). No halt.
 
 ## Process
 

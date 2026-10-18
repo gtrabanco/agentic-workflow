@@ -36,12 +36,16 @@ first on purpose).
 
 ## Needs-input guard
 
+The guard refusal line used by the required bullet below is:
+
+  `→ Next: init-workspace requires manual input — cannot proceed`
+
 Consent for installs/hooks/overwrites is **mandatory**: blank or absent consent
-→ re-ask once → halt; no default consent.
+→ re-ask once → emit the guard refusal line and stop; no default consent.
 
 - **Consent for installs, hooks, and overwrites** — required for each action.
-  If blank or absent: re-ask once; if still blank/absent, halt with
-  `requires manual input`. Never proceed by assuming consent from context.
+  If blank or absent: re-ask once; if still blank/absent, emit the guard
+  refusal line and stop. Never proceed by assuming consent from context.
 - **Upgrade vs bootstrap mode** — if the repo state is ambiguous (partially
   scaffolding), STOP and ask the user to confirm the route. Do not guess.
 
