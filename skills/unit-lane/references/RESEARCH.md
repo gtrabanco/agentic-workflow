@@ -2,11 +2,12 @@
 
 ## Needs-input guard
 
-**Unit objective and scope** from the SPEC are **required**:
-
-- If the unit's objective or scope is blank/missing: re-ask once. If still
-  blank, emit `→ Next: unit-lane (research step) requires manual input — cannot
-  proceed` and stop. No inferred unit scope.
+**Unit objective and scope** from the SPEC are a required **input to this step**
+(the lane reads them from the SPEC, which the design step and unit-lane
+`§1` write). If the unit's objective or scope is blank/missing: halt with
+`→ Next: unit-lane (research step) requires manual input — cannot proceed`,
+handing back to the lane's design step to complete the objective/why/outcome
+before research can proceed. No inferred unit scope.
 
 ## Purpose
 

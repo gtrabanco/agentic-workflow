@@ -49,20 +49,23 @@ Both `--fix <n>` and `--from-issue <n>` are the exact forms
 
 ## Needs-input guard
 
+The guard refusal line used by every required bullet below is:
+
+  `→ Next: unit-lane requires manual input — cannot proceed`
+
 The following inputs are **required** and must be answered concretely by the
 user (not inferred or defaulted):
 
 - **`<NN-slug | "<idea>">`** — unit slug or raw idea. If blank: re-ask once
-  with the expected format. If still blank, emit
-  `→ Next: unit-lane requires manual input — cannot proceed` and stop. Unit kind
-  has **no silent `feature` default** — vague requests STOP instead of
-  inferring.
+  with the expected format. If still blank, emit the guard refusal line above
+  and stop.
 - **`--fix <issue-number>` / `--from-issue <issue-number>`** — required when
   that mode is used. If the issue number is blank, re-ask once; if still blank,
-  halt with `requires manual input`.
+  emit the guard refusal line and stop.
 - **Unit kind / scope classification** — when the request is vague, STOP and
   ask the user with concrete options. Never infer unit kind from an empty
-  prompt (no silent `feature` default).
+  prompt (no silent `feature` default). If the user needs help deciding,
+  record the choice in the unit doc's `decisions.md`.
 
 Optional inputs (may default):
 - **`--retriage`** — flag; absent → use existing triage.
