@@ -130,9 +130,9 @@ and surface the decision to the user, never a planner. `<unit>` is the bare fold
 ran; it is never the recommendation.
 
 **Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
-cell matches the product vocabulary (`product owner`, `product-owned`, `owned by
-product`; the same three spellings `scripts/unit-route.mjs`'s `PRODUCT_ROUTE`
-regex tests, per `#293`) freezes the batch too —
+cell begins `product owner`, `product-owned` or `owned by product` (head-anchored,
+identical to `scripts/unit-route.mjs`'s `PRODUCT_ROUTE` regex,
+per `#293`) freezes the batch too —
 nothing folds, no `folded: yes` flips, no commits: the fold loop repairs source,
 never authority (`pre-execution-review` POLICY §4, `#293`). The receipt records
 the `PRODUCT-ROUTE` branch and the retained row ids; the consumer is the
@@ -204,7 +204,7 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 product-owner row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
+| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |

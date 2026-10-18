@@ -266,6 +266,20 @@ assert.match(reviewFindingProcess, /VERDICT: fix-now \| replan-in-unit \| decisi
 assert.match(reviewFindingProcess, /product-repair[\s\S]{0,600}route: product/);
 assert.match(foldProcess, /retained/);
 
+// 10k/#293 F15. The freeze-batch predicate's vocabulary is tied to the shipped
+// regex: the three accepted spellings route `product`, the other three don't.
+// The pin tests both sides of the cell head anchor (matches → freeze, mentions → fold).
+const PRODUCT_ROUTE_SOURCE = read("scripts/unit-route.mjs");
+// The line in the file is literally: const PRODUCT_ROUTE = /^(?:product[- ]owner|product[- ]owned|owned by product)\b/i;
+// In the file, \b is two chars: backslash-b. In a string regex, match a literal backslash with \\.
+assert.match(PRODUCT_ROUTE_SOURCE, /const PRODUCT_ROUTE = \/\^\(\?:product\[- \]owner\|product\[- \]owned\|owned by product\)\\b\/i;/);
+// The three spellings the fold doc lists must all route `product` in the classifier.
+assert.match(foldProcess, /product owner[\s\S]{0,400}product-owned[\s\S]{0,400}owned by product/);
+// The three over-match cells must NOT route `product` — they are the reason the
+// head anchor exists (F9). The unit-route test pins these, so this pin only
+// asserts the freeze-batch table uses the same predicate.
+assert.match(foldProcess, /head-anchored/);
+
 // 10f. Four-branch closing block + the literal no-decision→re-review default.
 assert.match(foldSkill, /RE-REVIEW-REQUIRED \(delta\)/);
 assert.match(foldSkill, /RE-REVIEW-OPTIONAL/);
