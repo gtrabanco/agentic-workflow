@@ -163,7 +163,7 @@ architectural-invariants doc is installed. Hits and relations:
 
 ### Obligations
 
-| id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
 | O1 | `pre-execution-review/POLICY.md` §4 | the fold loop repairs source, never authority — a product-owned row must never fold | P2 P3 | product route + freeze-batch row | router + fold-findings | unit-route pins + discipline pin | Evidence row AC1/AC2 | verified |
 | O2 | `review-implementation/CLASSIFY.md` owner table | product owner's hand-off is the lane; the router's `next` must name it as typed per unit kind | P2 P3 | route branch command + PERSIST_AND_DECIDE bullet | router + review-change | unit-route pins | Evidence row AC1 | verified |
