@@ -5,9 +5,11 @@ version: 1.4.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal contract: one compact frozen ACCEPTANCE.md per delivery unit, its
-  validation ladder, anti-weakening rules, and blob-bound execution receipt.
-  Consumed by planners, execute-phase, and review-change.
+  Internal contract: the acceptance artifact per delivery unit — lane-era units
+  (pre-feature 61) carry a separate frozen `ACCEPTANCE.md`; post-feature 61 units
+  use the unit doc's `## Acceptance criteria` section as the canonical acceptance
+  source — its validation ladder, anti-weakening rules, and blob-bound execution
+  receipt. Consumed by planners, execute-phase, and review-change.
 ---
 
 # Verification Contract (internal)
@@ -17,12 +19,18 @@ strengthen coverage but cannot move it; review checks the same bytes.
 
 ## Artifact
 
-Every new feature/fix carries `ACCEPTANCE.md` beside its SPEC. Copy the matching
-repository template. Required parts: `Status: frozen`; one stable ID per SPEC
-criterion; `Required outcome`; named `Validator`; literal quality floor; project
-commands. Prefer commands, otherwise use `read-verified: <evidence>` or
-`manual: <exact observation>`. Unlabelled prose is invalid. A planned test may
-name its future project runner; it cannot substitute a narrower runner later.
+Lane-era units (pre-feature 61): every new feature/fix carries a frozen
+`ACCEPTANCE.md` beside its SPEC. Copy the matching repository template. Required
+parts: `Status: frozen`; one stable ID per SPEC criterion; `Required outcome`;
+named `Validator`; literal quality floor; project commands. Prefer commands,
+otherwise use `read-verified: <evidence>` or `manual: <exact observation>`.
+Unlabelled prose is invalid. A planned test may name its future project runner;
+it cannot substitute a narrower runner later.
+
+Post-feature 61 units: the unit doc's `## Acceptance criteria` section is the
+canonical acceptance source. Criteria are numbered, each induced from a concrete
+user scenario, and command-verified where possible (label `read-verified` for
+prose-only checks). Unlabelled prose is invalid.
 
 **Validator stability.** A validator must never gate on a surface other workflow
 actors mutate — the branch diff as a whole, the session log, progress entries,
@@ -33,24 +41,33 @@ diff-based validator enumerates the unit's paths or excludes the
 workflow-mutated surfaces explicitly (docs/LOGS.md, the unit's own docs
 directory, harness/toolstate).
 
-**Validator determinism.** A frozen validator must be deterministic — dependencies
-on network, wall-clock time, randomness, or unordered concurrency must be pinned
-(fixed version, frozen fixture, recorded input) or the row must be
-`read-verified:`/`manual:` instead of a command. A planner who wants a command
-row that reaches the network or reads the clock must either pin the
-non-deterministic dependency (e.g. a recorded fixture, a fixed dependency
-version, a seeded PRNG) or downgrade the row to `read-verified:`/`manual:`.
+**Validator determinism.** A frozen validator must be deterministic — pin network,
+clock, randomness, and unordered-concurrency dependencies (fixed version,
+frozen fixture, recorded input) or downgrade the row to `read-verified:`/
+`manual:`.
 
 **Property / fuzz validators.** A planner may emit a property or fuzz validator as
-a bounded `commands` row — deterministic, bounded runtime — with the timeout
-budget inherited from the schema package's `fastCommandTimeoutMs` / `fullStageTimeoutMs`
-time limits (feature 26). No new validator kind in `VerificationPlan v1` is needed:
-property/fuzz rides the existing `commands` class.
+a bounded `commands` row — deterministic, bounded runtime — within the timeout
+budgets published by the schema package. No new validator kind in `VerificationPlan
+v1` is needed: property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
 
-At first execution run `git hash-object <unit>/ACCEPTANCE.md` and append to the
-unit progress file:
+Lane-era units (ACCEPTANCE.md present): at first execution run
+`git hash-object <unit>/ACCEPTANCE.md` and append to the unit progress file:
+
+```text
+## Acceptance receipt v1
+- Manifest: <unit>/ACCEPTANCE.md · Blob: <sha> · Status: frozen · Verified: <date>
+```
+
+Post-feature 61 units (unit doc acceptance): hash the unit doc's acceptance
+section text and append to the unit progress file:
+
+```text
+## Acceptance receipt v1
+- Manifest: <unit>/<unit>-doc:acceptance-criteria · Blob: <sha> · Status: frozen · Verified: <date>
+```
 
 ```text
 ## Acceptance receipt v1

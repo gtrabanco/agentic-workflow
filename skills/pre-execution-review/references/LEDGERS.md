@@ -55,7 +55,7 @@ task | implementation-owner | validator | required-evidence | status
 | `authority-source` | the SPEC/acceptance/criterion or ledger row that *requires* it — never the implementation |
 | `phase` / `task` | exactly one phase and one task; a row needing two phases means the phase cut is wrong |
 | `implementation-owner` | the skill/role that performs it (usually `execute-phase`) |
-| `validator` | the command or check that proves it, copied from `ACCEPTANCE.md` or the phase's done-when |
+| `validator` | the command or check that proves it, copied from the acceptance artifact (`ACCEPTANCE.md` for lane-era units; unit doc's `## Acceptance criteria` for post-feature 61) or the phase's done-when |
 | `required-evidence` | what must be recorded where (test name, receipt line, ledger row) |
 | `status` | `planned \| in-progress \| verified \| n/a \| deferred` |
 
@@ -147,7 +147,7 @@ progress | docs/features/<NN>-<slug>/SPEC.md · docs/fix/<issue>-<topic>/SPEC.md
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | unit-lane:known-entries + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
 decisions | docs/features/<NN>-<slug>/decisions.md · docs/fix/<issue>-<topic>/decisions.md | unit-lane:decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none | none | bun test scripts/ledger-ownership.test.mjs
 roadmap | docs/features/ROADMAP.md · docs/fix/README.md | unit-lane:row-registration + execute-phase:status-and-pr-link + audit-docs:low-risk-row-repair | none | none | bun test scripts/bounded-delivery-loops.test.mjs
-acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | unit-lane:acceptance-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md
+acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | unit-lane:acceptance-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md (lane-era) · git hash-object --no-index -- docs/features/<NN>-<slug>/SPEC.md:## Acceptance criteria (unit doc era, post-feature 61)
 # no-script-writer: SPEC.md · PLAN.md · TASKS.md · CHECKLIST.md · testing.md · architecture-notes.md · planning-evidence.md · planning-obligations.md · delegated-evidence.md
 ```
 

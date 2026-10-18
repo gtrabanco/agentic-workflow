@@ -42,7 +42,7 @@ A finding **blocks** only when the reviewer cites which single-owner source
 fails — blocking is a table lookup over cited sources, never a severity
 opinion. The four citation categories are:
 
-1. **ACCEPTANCE criterion** unverified or failed.
+1. **ACCEPTANCE criterion** (lane-era `ACCEPTANCE.md` or post-feature 61 unit doc `## Acceptance criteria`) unverified or failed.
 2. **Obligation row** in the unit's ledger is not `verified` or `n-a`.
 3. **Gate is red** at the reviewed head (the project gate exited non-zero at
    the exact head under review).

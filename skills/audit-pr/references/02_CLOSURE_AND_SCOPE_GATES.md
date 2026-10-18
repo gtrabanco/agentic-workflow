@@ -96,7 +96,8 @@ verdict:
    that route). The check keys the lane-era/legacy split on evidence, not on an
    author-controlled artifact (fix/285; the lane-era pipeline structurally never
    writes `progress.md` or `ACCEPTANCE.md`, so demanding them made the gate
-   unsatisfiable for every lane-era unit — issue #285):
+   unsatisfiable for every lane-era unit; the post-feature 61 unit doc's `## Acceptance
+   criteria` is the canonical acceptance source — issue #285):
    - **Legacy path** — opened only when the unit's `progress.md` carries a
      `## Pre-execution review receipt v1 — plan` whose digest **re-derives**
      (`scripts/pre-execution-snapshot.mjs verify --stage plan` exits 0 over the
@@ -108,7 +109,8 @@ verdict:
      `structural.reasonCode`/`changedPaths` name the drifted dimension), and —
      for a feature unit — its named `— spec` parent re-derives the same way.
      The acceptance manifest binds when present (fix/285): a unit that carries
-     `ACCEPTANCE.md` still binds it in the snapshot. Bound artifacts
+     `ACCEPTANCE.md` still binds it in the snapshot; post-feature 61 units bind
+     the unit doc's `## Acceptance criteria` section instead. Bound artifacts
      are frozen: new implementation-phase files are allowed, edits to a bound
      artifact are not. A receipt that does not re-derive — stale, missing,
      wrong-stage **or impossible-timeline** — is never a pass: the check falls
@@ -154,5 +156,6 @@ verdict:
 A legacy unit with no ledgers is not exempt: the missing ledgers must be constructed
 and reviewed through the adoption route (the pre-execution gate in `execute-phase`'s
 preflight) before MERGE-READY. The audit never coerces old evidence into the new
-format, never edits `ACCEPTANCE.md`, and never accepts a hand-written table that the
+format, never edits `ACCEPTANCE.md` (lane-era) or the unit doc's acceptance
+section (post-feature 61), and never accepts a hand-written table that the
 plan snapshot does not bind.
