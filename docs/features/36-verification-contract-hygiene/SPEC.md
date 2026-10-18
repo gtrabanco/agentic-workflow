@@ -175,6 +175,12 @@ Budget: strong
 | R1 | repo-evidence sweep of the unit's domain (skill, templates, fixture suite, schema source, README, roadmap, issue #183) | exit 0 | 4 claims tabled as PE-001…PE-005; item 3 already shipped by feat 55; no external fetch needed — the issue carries the research provenance | lane conductor (this session) |
 | R1 note | Uncertainties: none material — wording exactness for the two new sentences is a cheap default recorded in `decisions.md`; sources: repo evidence + the issue's bibliography (arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide) | — | — | — |
 | AC1 | `grep` over skill shows determinism rule + property/fuzz sentence; `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present; fuzz/property sentence present | execute-phase P1
+| AC2 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 74: Validator determinism; line 80: deterministic, bounded | execute-phase P2
+| AC3 | `grep` over skill shows property/fuzz as commands-row | verified | bounded commands row with fastCommandTimeoutMs/fullStageTimeoutMs | execute-phase P1
+| AC4 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` finds property/fuzz sentence | verified | line 80: deterministic, bounded — within timeout budgets | execute-phase P2
+| AC5 | `grep -c` for four issue #183 references in README.md | 4 | arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide | execute-phase P3
+| AC6 | `node --test scripts/golden-fixture.test.mjs` exits 0 | exit 0 | 12 tests, 12 pass | execute-phase P4
+| AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass; schema: 717/717 pass; context: 28 skills PASS | execute-phase P4
 
 ## Progress log
 
@@ -184,6 +190,7 @@ Budget: strong
 - 2026-10-18 22:10 — P1 implemented: added validator-determinism rule + property/fuzz sentence to `verification-contract` § Artifact; bumped 1.3.0→1.4.0 (minor); CHANGELOG row added; unit doc Tasks format fixed (missing `- ` prefix on bullets + validator outcome grammar); 6e9cf2da — next: P2 (template mirror)
 - 2026-10-18 22:20 — P2 done: template mirror written (template/docs/fix/_TEMPLATE/SPEC.md § Acceptance); dafc2421 — next: P3 (README bibliography)
 - 2026-10-18 22:30 — P3 done: four issue #183 bibliography entries appended to README § References (4 matches); b1ebff5d — next: P4 (verification gate run)
+- 2026-10-18 22:40 — P4 done: golden-fixture exits 0 (AC6); check-skill-context exits 0, 28 skills (AC7); schema package 717 pass 0 fail (AC7); all Evidence rows filled; 58fa262a — next: /review-change
 
 ## Next
 
