@@ -212,7 +212,7 @@ Budget: strong
 - 2026-10-18 22:00 — P4 — mandatory-consent guard + Turn-contract box added to init-workspace → 30718a67 — next: P5
 - 2026-10-18 22:00 — P5 — bump-skill run: execute-phase 5.2.0, unit-lane 1.6.0, init-workspace 3.4.0; CHANGELOG rows + README cells; pi-agentic-workflow re-bundle 0.22.0 → 30718a67 — next: P6
 - 2026-10-18 22:00 — P6 — verification: root suites exit 0 and context budgets exit 0 at the fold (route ceilings re-based per F1; SPEC grammar repaired per F8) → ec10e7d6 — next: close-out ladder (review folded F1–F8; PR + receipt stage remain)
-- 2026-10-18 23:09 — close-out — unit-doc machine surfaces repaired for the route gate: P5 `Relevant files` glob normalized, P5 validator outcome anchored (`matches 4`), Progress log re-cut into phase-led entries so the router records P1–P6 done → <this commit> — next: PR with `Closes #258`, then receipt stage
+- 2026-10-18 23:09 — close-out — unit-doc machine surfaces repaired for the route gate: P5 `Relevant files` glob normalized, P5 validator outcome anchored (`matches 4`), Progress log re-cut into phase-led entries so the router records P1–P6 done → 0ca5edc3 — next: PR #302 open with `Closes #258`; receipt stage pending
 
 ## Next
 
