@@ -2926,3 +2926,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr #300: fixed lineage blocker (obligations header id → obligation-id, commit dcf956f8 + fold f179a9b9, PR #300 pushed), then filed issue #301 to track the gap where docs-only zero-code repairs still void the scoped REVIEW-PASS
 - **Decisions:** Renamed one obligations-header cell to clear LINEAGE BLOCKED (not aesthetic — the parser only recognizes obligation-id, per LEDGERS.md + pinned tests); declined re-review since the only failing gate was a one-cell rename with zero code impact; tracked the gap as issue #301 (repair-receipt never reaches audit-pr's receipt gate, so RE-REVIEW-SKIPPED is dead for merge-bound PRs) — coverage verified: #170 only prose, #286 only scope judge, #227 different problem, no roadmap row covers this intersection
 - **Next:** /audit-pr 300 re-run (still blocks on stale receipt since the repair rotated scope digest — a fresh /review-change at f179a9b9 clears it) OR wait for issue #301 to land
+
+## 2026-10-18T20:39:53Z — feat/76-lane-product-route — manual
+- **Commits:** 48 (`dec53806…9d9ab416`)
+- **Files:** 33 files
+- **Summary:** Audit of issue #173 (single-owner turn contract) — verified it remains valid after the fix it was blocked on (#260) landed; deep-dived #260's subagent-first topology, LSP/document-verifier distinction, and existing edit CLI (features 61/65) — confirmed the verify gap is the separate writer/verifier contract; cross-checked all 53 feature folders against ROADMAP.md rows (all aligned); identified 3 open issues (#295, #294, #284) lacking triage disposition.
+- **Decisions:** Turn contract #173 migration target shrank to machine-checked subset; prunable ceremony must not delete non-negotiables (external verifier, Engram, document verifier, evidence); Serena is now required substrate (reversing #219's non-goal); LSP verified to generate false positives on non-TS files in this repo — document verifier must be deterministic script, not LSP.
+- **Next:** triage issues #295, #294, #284; consider bumping #173 status from postponed
+ENTRA
