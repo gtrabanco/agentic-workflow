@@ -14,9 +14,9 @@
       "descriptionEstimateMax": 240
     },
     "fold-findings": {
-      "mainEstimateMax": 3252,
+      "mainEstimateMax": 3416,
       "mainSources": {
-        "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class \u2014 the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; ceiling re-based to ceil(measured x 1.10), reason declared (issue #293)"
+        "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class \u2014 the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)"
       }
     },
     "init-workspace": {
