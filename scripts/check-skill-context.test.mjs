@@ -421,30 +421,28 @@ runFixtureRoute(
 
 
 
-// F18 regression: the manifest must never declare a duplicate key in any
+// F18/F22 regression: the manifest must never declare a duplicate key in any
 // sources or route object. JSON.parse silently keeps the last duplicate, so
-// this test scans the raw text for every key occurrence (string, scalar,
-// array or object values) and fails on collision.  Key points before
-// descending — object, non-empty-array, or scalar value — so a duplicated
-// route block, a duplicated sources object, and a duplicated non-empty
-// values array all surface.
-{
-  const raw = fs.readFileSync(manifestPath, "utf8");
-  const rLines = raw.split(String.fromCharCode(10));
+// findDuplicateKey scans the raw text for every key occurrence — string,
+// scalar, array or object values — and reports the first collision. Keys are
+// recorded BEFORE descending (object, non-empty-array, or scalar value), so a
+// duplicated route block, a duplicated sources object, and a duplicated
+// non-empty values array all surface. The guard block below runs it on the
+// real manifest; the F22 pins run the SAME function on synthetic manifests —
+// a re-implemented copy would let the guard regress while the pins stay green
+// (F29).
+function findDuplicateKey(lines) {
   const objStack = []; // { indent, name, keys: Map<key, firstLineNumber> }
-  for (let i = 0; i < rLines.length; i++) {
-    const line = rLines[i];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const openBrace = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
     if (openBrace && !line.match(/^\s*"[^"]+"\s*:\s*\{\s*\}/)) {
-      // Record the key in the parent frame BEFORE descending (F22: the
-      // original `continue` before this point caused object-valued keys
-      // to never enter the parent's keys map).
+      // Record the key in the parent frame BEFORE descending (F22: a
+      // `continue` before this point made object-valued keys invisible).
       if (objStack.length > 0) {
         const cur = objStack[objStack.length - 1];
         if (cur.keys.has(openBrace[1])) {
-          throw new Error(
-            `duplicate key "${openBrace[1]}" in "${cur.name}" at lines ${cur.keys.get(openBrace[1])}, ${i + 1}`
-          );
+          return { key: openBrace[1], container: cur.name, firstLine: cur.keys.get(openBrace[1]), dupLine: i + 1 };
         }
         cur.keys.set(openBrace[1], i + 1);
       }
@@ -453,15 +451,13 @@ runFixtureRoute(
     }
     const openArray = line.match(/^\s*"([^"]+)"\s*:\s*\[/);
     if (openArray && !line.match(/^\s*"[^"]+"\s*:\s*\[\s*\]/)) {
-      // Same: record before descending (array-valued key).  The array
+      // Same: record before descending (array-valued key). The array
       // elements inside the new frame are separate keys of the array
       // value, not of the parent.
       if (objStack.length > 0) {
         const cur = objStack[objStack.length - 1];
         if (cur.keys.has(openArray[1])) {
-          throw new Error(
-            `duplicate key "${openArray[1]}" in "${cur.name}" at lines ${cur.keys.get(openArray[1])}, ${i + 1}`
-          );
+          return { key: openArray[1], container: cur.name, firstLine: cur.keys.get(openArray[1]), dupLine: i + 1 };
         }
         cur.keys.set(openArray[1], i + 1);
       }
@@ -473,9 +469,7 @@ runFixtureRoute(
       if (kv && line.match(/^\s*/)[0].length > objStack[objStack.length - 1].indent) {
         const cur = objStack[objStack.length - 1];
         if (cur.keys.has(kv[1])) {
-          throw new Error(
-            `duplicate key "${kv[1]}" in "${cur.name}" at lines ${cur.keys.get(kv[1])}, ${i + 1}`
-          );
+          return { key: kv[1], container: cur.name, firstLine: cur.keys.get(kv[1]), dupLine: i + 1 };
         }
         cur.keys.set(kv[1], i + 1);
       }
@@ -488,254 +482,75 @@ runFixtureRoute(
       objStack.pop();
     }
   }
+  return null;
 }
 
-// --- F22 pins: the guard must detect duplicates for every value type ---
-// Object-valued duplicate: duplicating a whole route block (the route key
-// is an object value inside `routes`). A copy of an entire route block
-// means the route key appears twice at the same level.
+// Guard: the shipped manifest itself must scan clean.
 {
-  // Create a text-level duplicate by inserting a second `review-change:adversarial`
-  // key at the same indentation. JSON.stringify cannot produce duplicate keys,
-  // so we work at the raw-text level.
-  const manifestRaw = fs.readFileSync(manifestPath, "utf8");
-  const lines = manifestRaw.split(String.fromCharCode(10));
-  let insertIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes('"review-change:adversarial": {')) {
-      insertIdx = i;
-      break;
-    }
-  }
-  // Find where this route block ends (matching brace depth from start)
+  const dup = findDuplicateKey(fs.readFileSync(manifestPath, "utf8").split(String.fromCharCode(10)));
+  assert.ok(
+    !dup,
+    `manifest declares duplicate key "${dup?.key}" in "${dup?.container}" at lines ${dup?.firstLine}, ${dup?.dupLine}`
+  );
+}
+
+// --- F22/F29 pins: the guard must detect duplicates for every value type ---
+// Each pin duplicates a region of the real manifest's raw text (JSON.stringify
+// cannot produce duplicate keys) and runs the guard's own scanner over it,
+// asserting the fired key name — not merely that something fired.
+
+// Raw-text helper: a copy of lines[start..end] inserted right after the block.
+function withDuplicatedRegion(source, start, end) {
+  const out = [...source];
+  out.splice(end + 1, 0, ...source.slice(start, end + 1));
+  return out;
+}
+
+// Index of the first line containing `needle`.
+function lineIndexOf(source, needle) {
+  const idx = source.findIndex((l) => l.includes(needle));
+  assert.ok(idx !== -1, `fixture line not found: ${needle}`);
+  return idx;
+}
+
+// End index of the {…} or […] block that opens on startIdx (depth counting).
+function blockEndIndex(source, startIdx, openCh, closeCh) {
   let depth = 0;
-  let endIdx = insertIdx;
-  for (let i = insertIdx; i < lines.length; i++) {
-    depth += (lines[i].match(/{/g) || []).length;
-    depth -= (lines[i].match(/}/g) || []).length;
-    if (depth === 0) { endIdx = i; break; }
+  for (let i = startIdx; i < source.length; i++) {
+    depth += (source[i].match(new RegExp("\\" + openCh, "g")) || []).length;
+    depth -= (source[i].match(new RegExp("\\" + closeCh, "g")) || []).length;
+    if (depth === 0) return i;
   }
-  // Insert a copy of the block right after it
-  const dupLines = [...lines];
-  dupLines.splice(endIdx + 1, 0, ...lines.slice(insertIdx, endIdx + 1));
-  const dupedRaw = dupLines.join(String.fromCharCode(10));
-  const dupedLines = dupedRaw.split(String.fromCharCode(10));
-  const dupObjStack = [];
-  let dupFired = false;
-  try {
-    for (let i = 0; i < dupedLines.length; i++) {
-      const line = dupedLines[i];
-      const openBrace = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
-      if (openBrace && !line.match(/^\s*"[^"]+"\s*:\s*\{\s*\}/)) {
-        if (dupObjStack.length > 0) {
-          const cur = dupObjStack[dupObjStack.length - 1];
-          if (cur.keys.has(openBrace[1])) {
-            dupFired = true;
-            break;
-          }
-          cur.keys.set(openBrace[1], i + 1);
-        }
-        dupObjStack.push({ indent: line.match(/^\s*/)[0].length, name: openBrace[1], keys: new Map() });
-        continue;
-      }
-      const openArray = line.match(/^\s*"([^"]+)"\s*:\s*\[/);
-      if (openArray && !line.match(/^\s*"[^"]+"\s*:\s*\[\s*\]/)) {
-        if (dupObjStack.length > 0) {
-          const cur = dupObjStack[dupObjStack.length - 1];
-          if (cur.keys.has(openArray[1])) {
-            dupFired = true;
-            break;
-          }
-          cur.keys.set(openArray[1], i + 1);
-        }
-        dupObjStack.push({ indent: line.match(/^\s*/)[0].length, name: openArray[1], keys: new Map() });
-        continue;
-      }
-      if (dupObjStack.length > 0) {
-        const kv = line.match(/^\s*"([^"]+)"\s*:\s*(.+?)[,\s]*$/);
-        if (kv && dupObjStack.length > 0 && line.match(/^\s*/)[0].length > dupObjStack[dupObjStack.length - 1].indent) {
-          const cur = dupObjStack[dupObjStack.length - 1];
-          if (cur.keys.has(kv[1])) {
-            dupFired = true;
-            break;
-          }
-          cur.keys.set(kv[1], i + 1);
-        }
-      }
-      const closeBrace = line.match(/^\s*\}\s*,?\s*$/);
-      const closeArray = line.match(/^\s*\]\s*,?\s*$/);
-      if (closeBrace && dupObjStack.length > 0 && line.match(/^\s*/)[0].length <= dupObjStack[dupObjStack.length - 1].indent) {
-        dupObjStack.pop();
-      } else if (closeArray && dupObjStack.length > 0 && line.match(/^\s*/)[0].length <= dupObjStack[dupObjStack.length - 1].indent) {
-        dupObjStack.pop();
-      }
-    }
-  } catch (_e) {
-    dupFired = true;
-  }
-  assert.ok(dupFired, "F22: guard detects duplicated object-valued key (whole route block)");
+  return startIdx;
 }
 
-// Non-empty array-valued duplicate: a duplicated `skills` key where the
-// value is a non-empty array. The key is an array value, not a scalar.
+// Object-valued duplicate: a whole route block copied at the same level.
 {
-  // Read the manifest as raw text and duplicate an existing array-valued key.
-  // "skills" is an array-valued key inside each route object.
-  const manifestRaw2 = fs.readFileSync(manifestPath, "utf8");
-  const lines2 = manifestRaw2.split(String.fromCharCode(10));
-  // Find a route's "skills" key and duplicate it at text level
-  let skillsIdx = -1;
-  for (let i = 0; i < lines2.length; i++) {
-    if (lines2[i].includes('"skills": [')) {
-      skillsIdx = i;
-      break;
-    }
-  }
-  // Find matching array end
-  let depth = 0;
-  let skillsEnd = skillsIdx;
-  for (let i = skillsIdx; i < lines2.length; i++) {
-    depth += (lines2[i].match(/\[/g) || []).length;
-    depth -= (lines2[i].match(/\]/g) || []).length;
-    if (depth === 0) { skillsEnd = i; break; }
-  }
-  // Insert a copy of the skills array entry (just the key line) right after the array closes
-  const dupLines2 = [...lines2];
-  // Insert a duplicate skills key right after the original skills array block
-  dupLines2.splice(skillsEnd + 1, 0, lines2[skillsIdx]);
-  const dupedRaw2 = dupLines2.join(String.fromCharCode(10));
-  const dupedLines2 = dupedRaw2.split(String.fromCharCode(10));
-  const dup2Stack = [];
-  let dup2Fired = false;
-  try {
-    for (let i = 0; i < dupedLines2.length; i++) {
-      const line = dupedLines2[i];
-      const openBrace = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
-      if (openBrace && !line.match(/^\s*"[^"]+"\s*:\s*\{\s*\}/)) {
-        if (dup2Stack.length > 0) {
-          const cur = dup2Stack[dup2Stack.length - 1];
-          if (cur.keys.has(openBrace[1])) {
-            dup2Fired = true;
-            break;
-          }
-          cur.keys.set(openBrace[1], i + 1);
-        }
-        dup2Stack.push({ indent: line.match(/^\s*/)[0].length, name: openBrace[1], keys: new Map() });
-        continue;
-      }
-      const openArray = line.match(/^\s*"([^"]+)"\s*:\s*\[/);
-      if (openArray && !line.match(/^\s*"[^"]+"\s*:\s*\[\s*\]/)) {
-        if (dup2Stack.length > 0) {
-          const cur = dup2Stack[dup2Stack.length - 1];
-          if (cur.keys.has(openArray[1])) {
-            dup2Fired = true;
-            break;
-          }
-          cur.keys.set(openArray[1], i + 1);
-        }
-        dup2Stack.push({ indent: line.match(/^\s*/)[0].length, name: openArray[1], keys: new Map() });
-        continue;
-      }
-      if (dup2Stack.length > 0) {
-        const kv = line.match(/^\s*"([^"]+)"\s*:\s*(.+?)[,\s]*$/);
-        if (kv && line.match(/^\s*/)[0].length > dup2Stack[dup2Stack.length - 1].indent) {
-          const cur = dup2Stack[dup2Stack.length - 1];
-          if (cur.keys.has(kv[1])) {
-            dup2Fired = true;
-            break;
-          }
-          cur.keys.set(kv[1], i + 1);
-        }
-      }
-      const closeBrace = line.match(/^\s*\}\s*,?\s*$/);
-      const closeArray = line.match(/^\s*\]\s*,?\s*$/);
-      if (closeBrace && dup2Stack.length > 0 && line.match(/^\s*/)[0].length <= dup2Stack[dup2Stack.length - 1].indent) {
-        dup2Stack.pop();
-      } else if (closeArray && dup2Stack.length > 0 && line.match(/^\s*/)[0].length <= dup2Stack[dup2Stack.length - 1].indent) {
-        dup2Stack.pop();
-      }
-    }
-  } catch (_e) {
-    dup2Fired = true;
-  }
-  assert.ok(dup2Fired, "F22: guard detects duplicated non-empty array-valued key");
+  const source = fs.readFileSync(manifestPath, "utf8").split(String.fromCharCode(10));
+  const start = lineIndexOf(source, '"review-change:adversarial": {');
+  const end = blockEndIndex(source, start, "{", "}");
+  const dup = findDuplicateKey(withDuplicatedRegion(source, start, end));
+  assert.ok(dup, "F22: guard detects a duplicated object-valued key (whole route block)");
+  assert.equal(dup.key, "review-change:adversarial");
 }
 
-// Scalar-valued duplicate: a duplicated `routeLinesMax` key.
-// This case was already verified by F19's fix; assert it stays green
-// by confirming the guard rejects the duplicated scalar.
+// Non-empty array-valued duplicate: a route's `skills` array copied.
 {
-  // Read manifest as raw text and duplicate an existing scalar-valued key.
-  // Find a line with a scalar value key inside the routes object (e.g., routeLinesMax)
-  const manifestRaw3 = fs.readFileSync(manifestPath, "utf8");
-  const lines3 = manifestRaw3.split(String.fromCharCode(10));
-  let scalarIdx = -1;
-  for (let i = 0; i < lines3.length; i++) {
-    // Find routeLinesMax inside review-change:adversarial route
-    if (lines3[i].includes('"routeLinesMax":') && i > 320 && i < 350) {
-      scalarIdx = i;
-      break;
-    }
-  }
-  // Insert a duplicate scalar line right after the original
-  const dupLines3 = [...lines3];
-  dupLines3.splice(scalarIdx + 1, 0, lines3[scalarIdx].replace(/9999/, '8888'));
-  const dupedRaw3 = dupLines3.join(String.fromCharCode(10));
-  const dupedLines3 = dupedRaw3.split(String.fromCharCode(10));
-  const dup3Stack = [];
-  let dup3Fired = false;
-  try {
-    for (let i = 0; i < dupedLines3.length; i++) {
-      const line = dupedLines3[i];
-      const openBrace = line.match(/^\s*"([^"]+)"\s*:\s*\{/);
-      if (openBrace && !line.match(/^\s*"[^"]+"\s*:\s*\{\s*\}/)) {
-        if (dup3Stack.length > 0) {
-          const cur = dup3Stack[dup3Stack.length - 1];
-          if (cur.keys.has(openBrace[1])) {
-            dup3Fired = true;
-            break;
-          }
-          cur.keys.set(openBrace[1], i + 1);
-        }
-        dup3Stack.push({ indent: line.match(/^\s*/)[0].length, name: openBrace[1], keys: new Map() });
-        continue;
-      }
-      const openArray = line.match(/^\s*"([^"]+)"\s*:\s*\[/);
-      if (openArray && !line.match(/^\s*"[^"]+"\s*:\s*\[\s*\]/)) {
-        if (dup3Stack.length > 0) {
-          const cur = dup3Stack[dup3Stack.length - 1];
-          if (cur.keys.has(openArray[1])) {
-            dup3Fired = true;
-            break;
-          }
-          cur.keys.set(openArray[1], i + 1);
-        }
-        dup3Stack.push({ indent: line.match(/^\s*/)[0].length, name: openArray[1], keys: new Map() });
-        continue;
-      }
-      if (dup3Stack.length > 0) {
-        const kv = line.match(/^\s*"([^"]+)"\s*:\s*(.+?)[,\s]*$/);
-        if (kv && line.match(/^\s*/)[0].length > dup3Stack[dup3Stack.length - 1].indent) {
-          const cur = dup3Stack[dup3Stack.length - 1];
-          if (cur.keys.has(kv[1])) {
-            dup3Fired = true;
-            break;
-          }
-          cur.keys.set(kv[1], i + 1);
-        }
-      }
-      const closeBrace = line.match(/^\s*\}\s*,?\s*$/);
-      const closeArray = line.match(/^\s*\]\s*,?\s*$/);
-      if (closeBrace && dup3Stack.length > 0 && line.match(/^\s*/)[0].length <= dup3Stack[dup3Stack.length - 1].indent) {
-        dup3Stack.pop();
-      } else if (closeArray && dup3Stack.length > 0 && line.match(/^\s*/)[0].length <= dup3Stack[dup3Stack.length - 1].indent) {
-        dup3Stack.pop();
-      }
-    }
-  } catch (_e) {
-    dup3Fired = true;
-  }
-  assert.ok(dup3Fired, "F22: guard detects duplicated scalar-valued key");
+  const source = fs.readFileSync(manifestPath, "utf8").split(String.fromCharCode(10));
+  const start = lineIndexOf(source, '"skills": [');
+  const end = blockEndIndex(source, start, "[", "]");
+  const dup = findDuplicateKey(withDuplicatedRegion(source, start, end));
+  assert.ok(dup, "F22: guard detects a duplicated non-empty array-valued key");
+  assert.equal(dup.key, "skills");
+}
+
+// Scalar-valued duplicate: a route ceiling key duplicated.
+{
+  const source = fs.readFileSync(manifestPath, "utf8").split(String.fromCharCode(10));
+  const idx = lineIndexOf(source, '"routeLinesMax":');
+  const dup = findDuplicateKey(withDuplicatedRegion(source, idx, idx));
+  assert.ok(dup, "F22: guard detects a duplicated scalar-valued key");
+  assert.equal(dup.key, "routeLinesMax");
 }
 
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, and duplicate-key failures rejected");
