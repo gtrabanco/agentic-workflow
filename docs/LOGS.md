@@ -2908,3 +2908,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 76-lane-product-route (issue #293): closed the product route from fold-findings cycle 10 (F22-F28) through fold-findings cycle 11 (F29-F30), review-change verdict on PR #300 (MERGE-READY, 0 disputed, 0 blocked), and all repairs committed
 - **Decisions:** (1) Loop cap 10 — guard missing record-before-descend for object/array-valued keys; (2) F29 revealed F22 test copy broken (JSON.stringify cannot produce duplicates) — extracted shared scanner, F22 tests exercise guard at raw-text level; (3) F30: obligations header cell "id" → contracted "obligation-id" cleared LINEAGE BLOCKED; (4) F25: emitted-branch rule test-pinned by review-loop-discipline lines 256-258; (5) F26: 13 unbalanced backticks balanced to 14; (6) F27/F28: SPEC structure drift + wrong validator form
 - **Next:** Rebase on main or merge PR #300; next unit: /unit-lane 31-planning-review-materiality
+## 2026-10-18T19:45:18Z — feat/76-lane-product-route — manual
+- **Commits:** 45 (`dec53806…3613463e`)
+- **Files:** 33 files
+- **Summary:** review-change cycle 7–8 on PR #300: F18 fold was incomplete (duplicate JSON key survived fold 205fe75, no collision guard added), folded F18 + F19, fixed the JSON manifest and added the duplicate-key assertion to check-skill-context.test.mjs, received audit-pr readiness
+- **Next:** /audit-pr 300 — merge gate
