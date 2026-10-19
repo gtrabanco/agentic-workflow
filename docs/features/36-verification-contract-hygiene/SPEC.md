@@ -244,6 +244,8 @@ Budget: strong
 | P9 | `grep -c "Philipp Görz|Ze Sheng|V. J. M. Manès" README.md` | 3 | 3 author lists restored from issue #183 (Görz 4, Sheng 6, Manès 7); no `et al.` remain | execute-phase P9
 | P10 | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` | 0 / 0 | 0 repo-specific nouns in either template; determinism + property/fuzz bound preserved | execute-phase P10
 | P11 | `node scripts/check-skill-context.mjs --routes` | 0 | 14 routes PASS (10990 est total under declared ceilings); all `feature 60 P3` entries now name skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic | execute-phase P11
+| AC6 | `node --test scripts/golden-fixture.test.mjs` | 0 | 12/12 pass — closed Result grammar (`exact <n>/<n> · invented none|<k> · shape ok|<fail-code>`, cutoff 2026-09-18) enforced; untouched by this unit | execute-phase P12
+| AC7 | `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs --content` + schema `bun run test` | 0 / 0 / 0 / 0 | root: 695 pass 0 fail; routes: 14 PASS; version-parity: 0.21.0→0.22.0 PASS; schema: 717 pass 0 fail; golden-fixture: 12/12 pass | execute-phase P12
 
 ## Progress log
 
@@ -265,15 +267,13 @@ Budget: strong
 - 2026-10-19 P9 done: full issue-#183 author lists restored in README § References (3 grep matches; no `et al.`); 5eae8492 — next: P10
 - 2026-10-19 P10 done: template determinism/property-fuzz sentences restated without repo-specific nouns (0 grep matches for "schema package" / "existing commands class"); 8a7664cc — next: P11
 - 2026-10-19 P11 done: re-based all `feature 60 P3` budget growth entries — named skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic; 9ee7511d — next: P12
+- 2026-10-19 P12 done: full gate run — root suites 695/695 pass, golden-fixture 12/12, route budgets 14 PASS, version-parity PASS, schema 717/717 pass; drift fix (audit-pr 5.6.2 CHANGELOG row); all Evidence rows recorded; 50f359da — next: /review-change
 
 ## Next
 
-P1–P4 complete; review cycle 1 ran and F1–F11 + F14 + F15 folded (e28ff213);
-gate re-verified green at the settled head f03fc673 (root suites, --routes,
-version-parity, golden-fixture — all exit 0). No PR yet (release skipped by
-greenlight triage: small scope), so no review receipt exists at head. Next:
-/review-change on the settled head to re-verify the folds and post the
-SHA-bound receipt.
+P1–P12 complete; all replan rows (F28–F39) folded and verified green. Full gate: root 695 pass 0 fail, golden-fixture 12/12, routes 14 PASS, version-parity PASS, schema 717 pass. Drift fix: audit-pr 5.6.2 CHANGELOG row. No PR yet (release skipped by greenlight triage). Next: /review-change 36-verification-contract-hygiene
+  · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
+  · merge gate after REVIEW-PASS → /audit-pr — the merge gate
 
 ## References
 
