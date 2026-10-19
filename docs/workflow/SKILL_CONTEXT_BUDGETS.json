@@ -43,7 +43,11 @@
       }
     },
     "orchestration-envelope": {
-      "descriptionEstimateMax": 170
+      "descriptionEstimateMax": 170,
+      "referenceEstimateMax": 2573,
+      "referenceSources": {
+        "fix 258 / #258 harden-needs-input": "the open-questions@1 grammar (the needs-input halt: header/fields/fail-block/route, produced by scripts/needs-input.mjs) grew TURN_CONTRACT.md from the measured 2200 (the default reference ceiling) to 2339 est; ceiling re-based to ceil(2339 x 1.10) = 2573. This per-skill referenceEstimateMax bounds every reference file this skill loads; no per-reference ceiling exists in schemaVersion 1."
+      }
     },
     "pre-execution-review": {
       "referenceEstimateMax": 4325,
