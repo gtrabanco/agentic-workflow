@@ -402,3 +402,94 @@ CHANGELOG row" — `grep -nF '\`review-debt\` | 1.1.0'` returns exactly one row
 claimed byte-identical pair does not exist; "the `sed` acceptance derivation
 returns nothing" — it yields a stable blob (`3b26da67…`). Every finding has a
 destination; this review creates no backlog.
+
+## Cycle 6
+
+Cycle 6 review ran 2026-10-19 (review-change) on the exact candidate
+`HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a`, clean workspace, no PR yet
+(pre-PR checkpoint). Route: default review — the delta review the cycle-5
+receipt asked for escalated to a full pass on the **Size** trigger
+(`git diff --numstat 5fa211e4..HEAD` → 148 added + 67 deleted = 215 changed
+lines > 200; 6 changed files ≤ 15). Applicable passes ran isolated:
+`review-code`, `review-security`, `review-verify`, `review-brand`,
+`review-perf`; skipped with reasons — `review-design`/`review-a11y`/
+`review-seo` (no UI, no web surface: the repo ships markdown skills, a docs
+scaffold and node scripts). Synthesis, classification (`review-implementation`)
+and the debt transform (`review-debt`) each ran isolated. Gate at head: root
+696 pass / 0 fail exit 0, `check-skill-context` 28 skills exit 0, `--routes` 14
+routes exit 0, golden-fixture 12/12 exit 0, version-parity content PASS
+(0.21.0→0.22.0) exit 0, schema 717 pass exit 0, pi 432 pass exit 0,
+`ledger-provenance --check` PASS (59 rows). Cycle count: 6 (5 `REVIEW-RAN`
+marks + 1) — the two-cycle cap was already exceeded by the earlier cycles;
+this invocation is the user's explicit escape, never a reviewer election.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F65 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:164,188,214,237,261,284,308,397,430,463 | perf, brand | med | fix-now | regression of F60 → fold into current unit: the seven `execute-phase:*` `unit 36 / feature 36` notes swap the measured pair's nouns — "route measured 11083 lines; ceiling = ceil(11083 x 1.10) = 12192 lines, ceil(869 x 1.10) = 956 est" (`:164`) asserts a 12192-**line** route whose real line ceiling is the declared 956 and labels the est ceiling "lines", contradicting the sibling `feature 60 P3` note in the same object and the tool's `est lines` order; three `review-change:*` notes carry non-reproducible pairs the same way (`:397,430` "measured 1252 lines" vs the tool's 1234, ceiling 1378 vs the shipped 1358; `:463` 1274 vs 1256, 1402 vs 1382). Restate every note as `<est> est / <lines> lines` and ceil each quantity in place; the declared ceilings themselves are correct | no |
+| F66 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:330 | perf, verify | med | fix-now | regression of F60 → fold into current unit: the `execute-phase:unit-loop` `feature 60 P3` note states three numbers the tool refutes — "grew to 1460 est / 116 lines" (tool 1456/116), "pre-re-basis route measured 11634 est / 824 lines" (tool 10433/824; 11634 est cannot pair with 824 lines) and "ceiling re-based to ceil(11634 x 1.10) = 12798 est" while the route declares 13655/984 with no note explaining the delta; restate the measured pair and either re-basis to 11477/907 or record where 13655/984 comes from | no |
+| F67 | docs/features/36-verification-contract-hygiene/SPEC.md:239,241 | verify | med | fix-now | regression of F61 → fold into current unit: AC2 and AC4 both cite "line 80" of `template/docs/fix/_TEMPLATE/SPEC.md`, but line 80 is "No new validator kind is needed: property/fuzz uses the existing `commands`"; `grep -n "determin"` gives 74 (determinism rule) and 79 (deterministic, bounded runtime) — the fold relabelled 81→80 and then merged 79–80 in the same batch, so both cells now point past the cited text | no |
+| F68 | docs/features/36-verification-contract-hygiene/SPEC.md:251 | verify | med | fix-now | regression of F59 → fold into current unit: the P11 Evidence row records "summing its rows gives 175329 est / 12941 lines"; at the reviewed head the 14 `--routes` rows sum to 175333 est / 12941 lines (the fold batch's own audit-pr reference edit moved the total), so the recorded sum reproduces at no commit after the fold | no |
+| F69 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 | code, brand | med | fix-now | regression of F56 → fold into current unit: the remedy was converted from the imperative "Restore the bound artifact or obtain explicit user approval …; then write a fresh receipt" into the verbless fragment "Restoring the bound artifact or obtaining …; then writing a fresh receipt." — the terminator the previous fold owed now exists, but the sentence has no predicate and instructs nothing, diverging from the imperative siblings and from the canonical copy at `skills/verification-contract/SKILL.md:67-68` | no |
+| F70 | scripts/unit-route.mjs:751,770 | code | med | fix-now | regression of F41 → fold into current unit: F41 asked to delete the dead `if (status === "done")` predicate; it survives at `:770` inside the `else` of the `else if (status === "done")` chain that already returned `close-out` at `:724`, so the "all phases done AND status done" guard never runs and close-out never consults phase completeness (fixture `13-execute-unit` with roadmap `done` and only P1 recorded → `route: close-out` / `next: /audit-pr`, exit 0, identical on `main`); the unfinished set is also named `donePhases` (`:751`) although `size === 0` means "no unfinished phase". Delete the dead branch, keep the live `:724` path, rename the set | no |
+| F71 | skills/verification-contract/SKILL.md:113-116 | code, brand | med | fix-now | fold into current unit: obligation O9 claims the post-61 receipt has exactly one declared owner, but `## Done when` still reads "Frozen manifest + current blob receipt + named validators + literal quality floor" while § Freeze and receipt (`:56-70`) declares the unit doc's `## Evidence` table the execution receipt — two owners for one completion contract in the skill P7 rewrote; restate `## Done when` on the unit-doc Evidence receipt, with the legacy `ACCEPTANCE.md` path binding-if-present | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-60 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:164 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck `node scripts/check-skill-context.mjs --routes` → `execute-phase:descope … 11083 869`; the note's "ceil(869 x 1.10) = 956 est" labels a lines ceiling "est", and the file declares `routeLinesMax: 956` | perf | confirmed | finding-mark | n/a | n/a |
+| VF-61 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:330 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck `check-skill-context.mjs` → `verification-contract 1456 116`; `--routes` → `execute-phase:unit-loop 10433 824`; declared `routeEstimateMax: 13655`, `routeLinesMax: 984` | perf | confirmed | finding-mark | n/a | n/a |
+| VF-62 | docs/features/36-verification-contract-hygiene/SPEC.md:239,241 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` → 74, 79; `sed -n '80p'` → "No new validator kind is needed: property/fuzz uses the existing `commands`" | verify | confirmed | finding-mark | n/a | n/a |
+| VF-63 | docs/features/36-verification-contract-hygiene/SPEC.md:251 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck summed `--routes` rows → 175333 est / 12941 lines at HEAD; the row records 175329 | verify | confirmed | finding-mark | n/a | n/a |
+| VF-64 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck `sed -n '119,121p'` → "Restoring the bound artifact or obtaining explicit user approval for a / SPEC amendment and replacement manifest; then writing a fresh receipt." (no predicate), sibling `- **Lane-era path**` intact at `:121` | code | confirmed | finding-mark | n/a | n/a |
+| VF-65 | scripts/unit-route.mjs:751,770 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck `grep -n 'status === "done"'` → 724, 770 (the second inside the first's `else`); fixture copy at `/tmp/rv36/fx` with roadmap row 13 `done` and Progress log recording P1 only → `route: close-out` / `next: /audit-pr`, exit 0 — identical with `main`'s router | code | confirmed | finding-mark | n/a | n/a |
+| VF-66 | skills/verification-contract/SKILL.md:113-116 · reviewer review-change · HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a · recheck direct read: `## Done when` = "Frozen manifest + current blob receipt + named validators + literal quality floor" vs § Freeze and receipt `:56-70` "The unit doc's `## Evidence` table is the execution receipt" | code | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD d3caeb86a52475c2f4bc086bb8a6827f6aa97e0a | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-6 re-verification of the 59 folded rows: the delta touched six files, so
+every row citing one was re-checked at its cited line and the rest are byte-
+identical to the cycle-5 verification. Fixed at the cited locations —
+F1/F2/F6/F7/F9/F10/F11/F14/F15/F18/F19/F20/F21/F23/F24/F27/F28/F29/F30/F31/
+F32/F33/F34/F36/F37/F39/F42/F43/F44/F45/F46/F47/F48/F49/F50/F51/F52/F53/F54,
+F56 (terminator now present → F69), F57 (pipes escaped in the P5/P9/AC6 cells),
+F58 (the false `open-rows: 0` parenthetical is gone and the quoted refusal
+reproduces), F62 (the F46 route cell now carries one hash), F63 (row names
+`verification-contract` 1.4.2 and `ACCEPTANCE.md`), F64 (all five rows say "era
+label added"). **Regressions**: F59 → F68, F60 → F65 + F66, F61 → F67,
+F41 → F70, F56 → F69. Report notes, never persisted (`low`, report-only):
+`SPEC.md:279` still says "every ledger row F1–F54" while the ledger carries 59
+rows through F64 ("the fold queue is empty" itself is true;
+`grep -c 'folded: no'` → 0); `template/docs/features/_TEMPLATE/SPEC.md:27-29`
+keeps the duplicated "bounded … bounded runtime" the same fold removed from the
+fix template; `CHANGELOG.md:566` reads "to fix malformed bullet repair";
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json:70,92` claim an "era label migration
+from \"lane-era\"" for `02_CLOSURE_AND_SCOPE_GATES.md` although `main` carried
+no era label on that mandate (the F64 false-history class, outside F64's cited
+files); `scripts/unit-route.mjs` still parses the unit doc three times per
+execute route and copies its command builder twice — the existing debt item with
+TRIGGER "a 4th copy of the builder, or build time crossing the gate budget"
+(measured: duplicate parse ≈0.13 ms of a 121.9 ms CLI); the three new
+`unit-route.test.mjs` cases cost +8.4 % on that file (5498 → 5962 ms, ≈140 ms per
+node spawn) — debt item with TRIGGER "the file crossing 7 s or a 4th
+fixture-per-case spawn"; `scripts/normative-drift.test.mjs`'s `internal` flag is
+still not reset by any later heading (latent);
+`skills/pre-execution-review/references/LEDGERS.md:150` still joins two commands
+with a bare `then`. Refuted: "the Evidence table rows carry 4 cells under the
+5-column header" — an escaped-aware split yields the header's 5 cells on every
+row; "the P9 author-list cell carries unescaped pipes" — `od -c` shows `\|`, so
+the row renders 5 cells; "the fold batch also ships the post-61 acceptance-source
+sentences in `02_CLOSURE_AND_SCOPE_GATES.md`" — `git diff 5fa211e4..HEAD --stat`
+for that file is 2 insertions / 2 deletions, one terminator hunk; "a `done` unit
+with unrecorded phases routing to `close-out` is a branch regression" — `main`'s
+router returns the same route at `:724`; "the 1.4.0 CHANGELOG row omits the
+downgrade escape" — the row states "must be pinned or the row is
+`read-verified:`/`manual:`"; "the legacy/lane-era labels are swapped in the five
+rows" — every cited row labels the `ACCEPTANCE.md` mandate "legacy (pre-feature
+61)", which is the repository's own vocabulary. Every finding has a destination;
+this review creates no backlog.
