@@ -798,12 +798,52 @@ the defect that table exists to prevent.
 
 **Effect on this unit.** AC1–AC3's `re-ask once` and AC1's exact string are
 superseded, so unit 258 cannot absorb this by folding: its ACs must be re-cut.
-Recommended split — 258 keeps the half already decided (execution never
-interviews; halt routes back; F33/F34's direction), and the interview machinery
-(provenance → research → options → conversation ledger → user decision) becomes
-its own unit, whose ACs are the four tiers above. F40 gains: with no interactive
-ask, the halt's block is the *only* thing the operator sees.
+
+### Scope decision — widen upward, not narrow (2026-10-19, human-owner)
+
+The owner's ruling: «en vez de recortar AC1-AC3 … hay que ampliar el scope de
+este fix para arreglarlo y que funcione como se pretende». Accepted, and the
+decisive reason is testability: today deleting an entire `Needs-input guard`
+leaves the whole gate green (verified by mutation in this cycle), so a prose
+contract cannot be regressed against. Widening **into a deterministic producer**
+is what turns the contract into something a test can hold.
+
+The widened shape — five pieces, mirroring the external method the owner cited
+(the G_Programming write-up linked from issue #260, and the SDD orchestrator
+contract embedded in the installed `gentle-ai` binary):
+
+1. **State, one owner.** The unit's `decisions.md` carries the conversation:
+   append-only `open-question` (question, why it blocks, search receipt, options)
+   and `decision` (authority `human-owner`, date, chosen, discarded). One file
+   owns the truth — no parallel copy in a ledger or in chat.
+2. **Dispatcher.** A deterministic script (`scripts/needs-input.mjs`, or a
+   `unit-route.mjs` subcommand) reads the unit doc + `decisions.md` and prints
+   the machine block: the open questions, the search receipt, the route back,
+   the typed continuation. It fails closed on a malformed artifact — the same
+   writer/verifier split as `phase-lint.mjs`.
+3. **Versioned block + gate.** `block:open-questions@1` plus its row in
+   AGENTS.md's `normative-surfaces@1`; `scripts/normative-drift.test.mjs` fails
+   closed on it. The block is grammar, not prose.
+4. **The three skills shrink to "run it, paste it, stop".** `execute-phase`,
+   `unit-lane` and `init-workspace` each lose their hand-written guard section
+   and keep a 3–5 line pointer. This is the answer to the 285-line complaint:
+   the contract moves to code, the body stops growing.
+5. **Interactive vs auto.** Attended: the block is the pause point and the run
+   waits for a user decision — never assumes approval. Unattended: an open
+   question is a hard fail carrying the same block. The tier (T0/T1/T2 of
+   #260) does not change this; it changes who may approve.
+
+What we do **not** copy from the external method: its CLI, its model-per-role
+table, its review-lens taxonomy — already recorded as rejected in #260's
+external cross-reference comment.
+
+Route: this is a **replan upward** (new phases), not a fold.
+`node scripts/unit-route.mjs 258-harden-needs-input-contracts` → `route: replan`;
+`/unit-lane --fix 258` re-runs its plan step, appends the phases and the re-cut
+ACs, the user confirms, then `execute-phase` runs them. F35–F40 fold as before;
+F33/F34 are absorbed by pieces 1–4 instead of being patched sentence by
+sentence.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| SUP-AC1 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` (AC1–AC3) | spec-drift | high | DISPUTED | human-owner 2026-10-19: the `re-ask once` step is superseded by the two-tier halt (repo provenance → research → emit the questions). 258's ACs must be re-cut by the plan owner with a dated `## Amendments` row quoting both owner decisions; do not fold a guard against the old AC text | n/a |
+| SUP-AC1 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` (AC1–AC3) | spec-drift | high | DISPUTED | human-owner 2026-10-19: ACs are **widened**, not narrowed — the `re-ask once` step is replaced by (repo provenance with a search receipt → bounded research with a durable artifact → emit the open questions and stop). The plan owner re-cuts AC1–AC3 upward on this branch and appends the phases for the five pieces above, with a dated `## Amendments` row quoting both owner decisions; do not fold a guard against the old AC text | n/a |
