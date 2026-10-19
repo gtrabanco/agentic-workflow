@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.6.1
+version: 2.0.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -21,9 +21,10 @@ Tick every box before ending the turn; an unchecked box means the turn is not
 done:
 
 ```
-✓ Required user inputs were answered concretely (not defaulted). Any blank
-  required input was re-asked once; if still blank the skill emits
-  `→ Next: unit-lane requires manual input — cannot proceed` and stops.
+✓ Required user inputs were answered concretely (not defaulted). Nothing here
+  is inferred: a gap re-enters provenance → research, and a gap surviving both
+  runs `node scripts/needs-input.mjs <unit-dir>` and stops with the
+  `open-questions@1` block routed back to the owning stage.
 ✓ Triage ran (bun scripts/unit-route.mjs --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template
@@ -47,34 +48,25 @@ Both `--fix <n>` and `--from-issue <n>` are the exact forms
 `scripts/unit-route.mjs` prints for a tracked issue with no unit folder
 (`route: plan-from-issue`) — never invent a different spelling.
 
-## Needs-input guard
+## Inputs — never inferred, never defaulted
 
-The guard refusal line used by every required bullet below is:
+The unit identifier, a mode's issue number, the unit kind, and the
+objective/why/user-outcome the SPEC carries are **never inferred**: no silent
+`feature` default, no acceptance criterion invented from a vague request. A gap
+is resolved in one fixed order — **(0) provenance** (search the repo's own docs
+and append an `open-question` row to the unit's `decisions.md` recording where)
+→ **(1) research** (2–3 concrete options with trade-offs; asking for more
+research is a legitimate answer) → **(2) halt**: run `node
+scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+stop. The block routes each question back to the stage that owns the fact —
+`design` for scope/architecture, `unit-lane` for plan-owned facts. Grammar and
+exit codes: `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open
+questions.
 
-  `→ Next: unit-lane requires manual input — cannot proceed`
-
-The following inputs are **required** and must be answered concretely by the
-user (not inferred or defaulted):
-
-- **`<NN-slug | "<idea>">`** — unit slug or raw idea. Required only when
-  `--fix` or `--from-issue` is not used (those supply the unit). If blank:
-  re-ask once with the expected format. If still blank, emit the guard refusal
-  line above and stop.
-- **`--fix <issue-number>` / `--from-issue <issue-number>`** — required when
-  that mode is used. If the issue number is blank, re-ask once; if still blank,
-  emit the guard refusal line and stop.
-- **Unit kind / scope classification** — when the request is vague, STOP and
-  ask the user with concrete options. Never infer unit kind from an empty
-  prompt (no silent `feature` default). If the user needs help deciding,
-  record the choice in the unit doc's `decisions.md`. If still blank/ambiguous,
-  emit the guard refusal line above and stop.
-- **Objective, why, user outcome** — from the SPEC. If blank or missing,
-  the lane needs them to proceed; re-ask once with the expected format
-  (`objective`, `why`, `user outcome`). If still blank, emit the guard
-  refusal line above and stop.
-
-Optional inputs (may default):
-- **`--retriage`** — flag; absent → use existing triage.
+The conversation lives in the unit folder's `decisions.md` (append-only
+`open-questions@1`; its two entry types are published in the template agent
+guide's question protocol). A resumed session re-reads the pending rows and
+continues from the first one still open — never re-asks them.
 
 ## Step 0 — Discover the project
 

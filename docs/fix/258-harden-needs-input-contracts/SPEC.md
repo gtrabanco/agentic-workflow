@@ -11,9 +11,12 @@
 
 Three surviving skills that interrupt the user for input (`execute-phase`,
 `unit-lane`, `init-workspace`) continue past a blank required answer by
-inferring defaults. Each gains an explicit needs-input contract: required
-input halts (re-ask once, then stop), optional input may default, ambiguous
-input must be clarified. Same defect class as `review-change`'s `29b52c63`
+inferring defaults. Each gains an explicit needs-input contract (re-cut
+2026-10-19, see Amendments): a required-input gap runs the three-tier
+resolution — repo provenance with a recorded search receipt → bounded research
+returning 2–3 options → emit the dispatcher's `open-questions@1` block and
+stop. Optional input may default; ambiguous input is a question for the owning
+stage, never for the user. Same defect class as `review-change`'s `29b52c63`
 fix.
 
 ## Why
@@ -244,15 +247,15 @@ One table per skill; every interruption point classified `required` / `optional`
 
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
-| E1 | `<NN-slug>` argument (unit identifier) | required | User passes it; if blank/missing the slug is empty, `unit-route.mjs` fails with a non-helpful error — skill proceeds to "unit not found" path and may infer from context. | Re-ask once with the expected format; if still blank, emit `→ Next: execute-phase requires manual input — cannot proceed` and stop. |
-| E2 | `P<k>` step argument (optional — all remaining steps if absent) | optional | Absent → proceeds to first unfinished step. No issue. | No change. Optional inputs may default. |
+| E1 | `<NN-slug>` argument (unit identifier) | required (artifact, not a question) | User passes it; if blank/missing the slug is empty, `unit-route.mjs` fails with a non-helpful error — skill proceeds to "unit not found" path and may infer from context. | Never inferred and never re-asked: the three-tier dispatch runs, then `scripts/needs-input.mjs` prints the `open-questions@1` block and the run stops, routed to `/unit-lane --retriage`. |
+| E2 | `P<k>` step argument | optional — absent runs **all remaining steps** (the declared default, not an interview) | Absent → proceeds to first unfinished step. No issue. | No change: the phase stays optional-with-declared-default. `Confirmed phase` is withdrawn — the required-input framing was the defect (owner decision F33-D). |
 | E3 | `--max-attempts N` flag (optional) | optional | Absent → defaults to 3. No issue. | No change. Optional inputs may default. |
 
 **Amended 2026-10-19 (owner decisions F33-D/F34-D — the no-interview contract):**
-E2 (`P<k>`) stays **optional with the declared default** (first unfinished
-step; never an interview), and file targets are **not a user input at all** —
-owned by the unit doc's nested `Relevant files` metadata plus the
-path-protection checkpoint — so the `Confirmed file targets` requirement is
+E2 (`P<k>`) is **optional with the declared default** (a bare `<NN-slug>` runs
+all remaining steps; never an interview), and file targets are **not a user
+input at all** — owned by the unit doc's nested `Relevant files:` metadata plus
+the path-protection checkpoint — so the `Confirmed file targets` requirement is
 withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 (see Amendments).
 
@@ -260,21 +263,21 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
-| U1 | `<NN-slug | "<idea>">` argument (unit slug or idea) | required | If blank, the unit folder lookup silently falls through; the lane may infer `feature` as a default or proceed with a guessed slug. | Re-ask once with the expected format; if still blank, emit `→ Next: unit-lane requires manual input — cannot proceed` and stop. No silent `feature` default. |
-| U2 | `--fix <issue-number>` / `--from-issue <issue-number>` | required when that mode is used | If issue number is blank while `--fix`/`--from-issue` is passed, the script receives an empty arg — may be silently parsed or passed downstream. | Re-ask once with the expected format; if still blank, halt with `requires manual input`. |
-| U3 | Vague request → acceptance criteria induction ("ask-don't-infer") | required | If the request description is too vague, the lane may infer ACs from context. | STOP and ask the user with concrete options. Never infer. |
+| U1 | `<NN-slug | "<idea>">` argument (unit slug or idea) | required | If blank, the unit folder lookup silently falls through; the lane may infer `feature` as a default or proceed with a guessed slug. | Three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops, routed to `design`. No silent `feature` default, no re-ask. |
+| U2 | `--fix <issue-number>` / `--from-issue <issue-number>` | required when that mode is used | If issue number is blank while `--fix`/`--from-issue` is passed, the script receives an empty arg — may be silently parsed or passed downstream. | Three-tier dispatch, then the `open-questions@1` block and stop, routed to `design`. No re-ask. |
+| U3 | Vague request → acceptance criteria induction ("ask-don't-infer") | required | If the request description is too vague, the lane may infer ACs from context. | Never infer: 2–3 concrete options from the research tier, then the `open-questions@1` block and stop for a user decision. |
 | U4 | "Decide for me" in the gap interview (DESIGN.md) | optional | User selects it → lane chooses and records the choice. No issue. | No change. |
-| U5 | Vague/ambiguous scope → unit kind classification | required | Blank/vague → skill may default to `feature`. | STOP instead of inferring. |
+| U5 | Vague/ambiguous scope → unit kind classification | required | Blank/vague → skill may default to `feature`. | Never infer: route the classification question to `design` through the `open-questions@1` block. |
 
-| U6 | Objective, why, user outcome (from the SPEC) | required | Blank/missing → Process §1 fills them from the invocation (or the issue) by inference, bypassing the guard. | Guard: re-ask once. If still blank, emit `→ Next: unit-lane requires manual input — cannot proceed` and stop. Process §1 fills from the invocation when present; the guard covers the blank case.
+| U6 | Objective, why, user outcome (from the SPEC) | required | Blank/missing → Process §1 fills them from the invocation (or the issue) by inference, bypassing the guard. | Process §1 fills them from the invocation (or the issue) when present. A blank one is a plan-owned fact, so it routes to `unit-lane` through the `open-questions@1` block — a doc defect repaired by the lane, never a question the user cannot answer (F14). |
 
 **init-workspace** (3 interruption points):
 
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
-| I1 | `<target-dir>` argument (target repository) | required | If blank, cwd is used. No issue (defaults to cwd). | No change — cwd is an acceptable default here. |
-| I2 | Consent for each install/hook/overwrite | required | If blank or absent, the current text says "never overwrite without explicit yes" but the enforcement is prose-only; a model may proceed by assuming consent from context. | Re-ask once; if still blank/absent, halt with `requires manual input`. No default consent. |
-| I3 | Upgrade vs bootstrap mode selection | required | If the repo is ambiguous (partially scaffolding), the skill may pick a route by guessing the state. | STOP and ask the user to confirm the route. |
+| I1 | `[target-dir]` argument (target repository) | optional | If blank, cwd is used. No issue. | No change — cwd is the declared, recorded default; never a question (F7). |
+| I2 | Consent for each install/hook/overwrite | required | If blank or absent, the current text says "never overwrite without explicit yes" but the enforcement is prose-only; a model may proceed by assuming consent from context. | Consent is never defaulted: three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops with the questions carried in it. No re-ask. |
+| I3 | Upgrade vs bootstrap mode selection | required | If the repo is ambiguous (partially scaffolding), the skill may pick a route by guessing the state. | Never guess: the route question goes to `design` through the `open-questions@1` block. |
 
 ### Planning evidence
 
@@ -294,9 +297,9 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never proceeds past a blank required phase/target answer: re-ask once, then halt with `requires manual input`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
-| O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same guard; Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 4 | guard text + box in `skills/unit-lane/SKILL.md` and references | verified |
-| O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: blank/absent consent → re-ask once → halt, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -cE "requires [a-z ]*input" skills/init-workspace/SKILL.md` matches 2 | guard text + box in `skills/init-workspace/SKILL.md` | verified |
+| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never interviews: a blank required input runs the three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops routed to `/unit-lane --retriage`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
+| O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same three-tier guard (a doc defect routes to the lane, not to the user); Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 4 | guard text + box in `skills/unit-lane/SKILL.md` and references | verified |
+| O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: a consent gap runs the three-tier dispatch then the `open-questions@1` block and stops, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -cE "requires [a-z ]*input" skills/init-workspace/SKILL.md` matches 2 | guard text + box in `skills/init-workspace/SKILL.md` | verified |
 | O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` matches 7 | CHANGELOG rows + README cells for the three skills | verified |
 | O6 | SPEC AC5 / issue #258 AC4 | root suites stay green and the edited skills stay within context budgets | P6 | P6 | root gate | `node --test scripts/*.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0 | Evidence rows in this doc | verified |
 | O7 | SPEC AC7 (amended) | the decisions.md ledger contract is published and composes with decisions.md's existing table uses | P7 | P7 | template agent guide + lane docs | `grep -q "open-question" template/AGENTS.md docs/workflow/LANE_FLOW.md` exits 0 for both files | ledger contract prose in both files | verified |
@@ -318,6 +321,12 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 | AC7 | `decisions.md` ledger contract published in the template agent guide (append-only `open-question`/`decision` grammar, `open-questions@1` preview) and in the lane docs (`docs/workflow/LANE_FLOW.md` §Needs-input — resolution tiers, dispatcher, interactive vs unattended) — composes with the existing uses (`Decide for me` rows, `path-protection-records@1`, planning ledgers) | 0 | `open-question` present in both files; `node --test scripts/doc-discipline.test.mjs` exit 0 | read-verified (template/AGENTS.md, docs/workflow/LANE_FLOW.md) |
 | AC8 | `node --test scripts/needs-input.test.mjs` — the dispatcher reads the unit doc + `decisions.md` and prints `open-questions@1`; fail-closed matrix covers missing/malformed header, entry, receipt, options, route, authority, duplicate id | 0 | 22 tests · 22 pass · 0 fail (red run first: 22 failures against the absent script) | node --test scripts/needs-input.test.mjs |
 | AC8 | `node --test scripts/*.test.mjs` at the dispatcher commit — no regression across the root suites | 0 | 715 tests · 715 pass · 0 fail | node --test scripts/*.test.mjs |
+| AC1 | execute-phase never interviews: `## Needs-input guard` gone (0), `re-ask once`/`Confirmed phase`/`Confirmed file targets` absent repo-wide, `## Inputs — artifacts, never questions` present | 0 | 0 guard sections · 0 stale strings; three-tier dispatch names `scripts/needs-input.mjs` | read-verified (skills/execute-phase/SKILL.md) |
+| AC2 | unit-lane + DESIGN.md + RESEARCH.md state the same contract: no silent `feature` default, ACs never inferred, DESIGN's blank gap re-enters the dispatch, RESEARCH routes a blank objective to the lane as a doc defect | 0 | 0 hand-written guard sections · `open-questions@1` named in all three | read-verified (skills/unit-lane/SKILL.md + references) |
+| AC3 | init-workspace: consent mandatory and never defaulted through the same dispatch; `[target-dir]` optional-with-recorded-default | 0 | 0 hand-written guard sections | read-verified (skills/init-workspace/SKILL.md) |
+| AC4 | all three Turn contracts carry the `Required user inputs were answered concretely (not defaulted)` box, reworded to the dispatcher halt | 0 | 3/3 boxes present | read-verified (turn contracts) |
+| AC6 | CHANGELOG rows for execute-phase 6.0.0 · unit-lane 2.0.0 · init-workspace 4.0.0 · orchestration-envelope 2.3.0 · pi package 0.23.0, plus README + SKILLS.md cells | 0 | `node scripts/version-parity-gate.mjs --content --base main` → VERDICT: PASS | version-parity-gate + check-changelog-row |
+| AC10 | `bun scripts/check-skill-context.mjs` (28 skills) and `--routes` (14 routes) pass with every ceiling re-based to the declared formula; root suites green | 0 | 715 tests · 715 pass · 0 fail · PASS context budgets · PASS route budgets | bun scripts/check-skill-context.mjs · node --test scripts/*.test.mjs |
 | AC9 | `open-questions@1` published in its owning reference (`skills/orchestration-envelope/references/TURN_CONTRACT.md` §Open questions — header/fields/fail-block/route/exit codes, `produced-by` the dispatcher) and declared in AGENTS.md `normative-surfaces@1` (`open-questions-block` row, machine `continuation-refusal-type`) | 0 | 18 tests · 18 pass · 0 fail; TURN_CONTRACT ceiling re-based 2200 → 2573 = ceil(2339 × 1.10) with the growth source named | node --test scripts/normative-drift.test.mjs · bun scripts/check-skill-context.mjs |
 
 ### Triaged steps
@@ -346,7 +355,7 @@ Budget: strong
 - 2026-10-19 (plan re-cut) — replan upward per the two human-owner decisions recorded in review-findings.md (cycles 9–10): AC1–AC3 re-cut to the three-tier needs-input contract, `## Amendments` added quoting both decisions, Input audit E2/E3 re-classified (no-interview contract), phases P7–P11 appended for the five pieces (decisions ledger contract, needs-input dispatcher, open-questions@1 normative surface, three-skill shrink + F33–F40 folds, verification), planning ledgers extended (PE-006–009, O7–O11), prior-decisions sweep extended (5 new rows, all compatible) → 3d8241c5 — next: user confirms the re-cut plan → `/execute-phase fix/258-harden-needs-input-contracts P7`
 - 2026-10-19 (P7) — published the `decisions.md` ledger contract (AC7): `template/AGENTS.md` now carries the append-only `open-questions@1` grammar with the two typed entries and the five rules (only a user decision closes a question, resume re-reads, append-only, composes with the existing blocks, halt-not-ask); `docs/workflow/LANE_FLOW.md` gained §Needs-input — the three-tier order, the dispatcher invocation, interactive vs unattended, plus a cheat-sheet row. Validator `grep -q "open-question" template/AGENTS.md docs/workflow/LANE_FLOW.md` exits 0 for both · `node --test scripts/doc-discipline.test.mjs` exit 0 → 026bcd50 — next: P8 (the dispatcher `scripts/needs-input.mjs` + its suite)
 - 2026-10-19 (P8) — built the needs-input dispatcher (AC8): `scripts/needs-input.mjs` reads `SPEC.md` + `decisions.md`, folds the ledger (only a `decision` closes an `open-question`, a later row re-opens the loop) and prints the `open-questions@1` block with questions, blocks, search receipts, options, the route back and the typed `no-decision-available` continuation; fails closed with a named reason on a missing unit doc or a malformed ledger/dedup/authority defect, exit 2 on usage error. Tests-first: 22 cases red against the absent script, then 22/22 green · root suites 715/715 · `bun scripts/check-skill-context.mjs` PASS → cfd99fa0 — next: P9 (declare `open-questions@1` in TURN_CONTRACT.md + the AGENTS.md normative-surfaces row)
-- 2026-10-19 (P9) — declared the `open-questions@1` normative surface (AC9): the grammar block (header, fields, fail-block reason vocabulary, route, exit codes, `produced-by`) published in `TURN_CONTRACT.md` §Open questions, the `open-questions-block` row added to AGENTS.md's `normative-surfaces@1` with machine `continuation-refusal-type`; TURN_CONTRACT's reference ceiling re-based 2200 → 2573 = ceil(2339 × 1.10) with the fix-258 growth source named. `node --test scripts/normative-drift.test.mjs` 18/18 · root suites 715/715 · context budgets + `--routes` PASS → next: P10 (shrink the three skills to the pointer, fold F33–F40)
+- 2026-10-19 (P10) — shrank the three skills to the dispatch pointer (AC1–AC3, AC10): removed all three hand-written `## Needs-input guard` sections (`grep -c "^## Needs-input guard"` = 0/0/0) and replaced them with inline contracts — execute-phase `## Inputs — artifacts, never questions`, unit-lane `## Inputs — never inferred, never defaulted`, init-workspace `## Consent — mandatory, never defaulted`; folded F33-F40 (F33/F34 absorbed: `Confirmed phase`/`Confirmed file targets` gone, a bare `<NN-slug>` documented as all-remaining-steps; F35 CHANGELOG rows are now additive and claim only the real removals; F36/F37 manifest narration re-emitted with the measured values and the duplicate `2026-09-22`/`2026-09-18` `policy.declared` clauses dropped for one accurate clause; F38 validators re-run at this head; F39 `--force` stated truthfully; F40 the elided refusal string retired with the section); Input audit E1–E3/U1–U6/I1–I3 re-classified to the no-interview contract; ceilings re-based **down** to the declared formula (execute-phase 3807/315 → 3717/303, unit-lane 3464/280 → 3424/271, init-workspace 3447/251 → 3463/249); versions bumped execute-phase 6.0.0, unit-lane 2.0.0, init-workspace 4.0.0, orchestration-envelope 2.3.0, pi package 0.23.0 with CHANGELOG + README/SKILLS cells → **diff-guard EXCEPTION recorded**: this phase is one atomic SPEC step (its validator spans all three skills at once, so splitting it would break the `count = 0` gate mid-way) and measures 258 lines (+123/−135) across 12 files against the 8-file limit — an honest shrink, not padding; lines are within the 400 budget → next: P11 (full verification of the widened unit)
 
 ## Next
 
