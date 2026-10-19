@@ -6,7 +6,7 @@
 (the lane reads them from the SPEC, which the design step and unit-lane
 `§1` write). If the unit's objective or scope is blank/missing: halt with
 `→ Next: unit-lane (research step) requires manual input — cannot proceed`,
-handing back to the lane's design step to complete the objective/why/outcome
+handing back to `unit-lane` to complete the objective/why/outcome
 before research can proceed. No inferred unit scope.
 
 ## Purpose

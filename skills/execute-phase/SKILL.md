@@ -76,13 +76,17 @@ user (not inferred or defaulted):
 - **`<NN-slug>`** — the unit identifier. If blank or missing: re-ask once with
   the expected format (`<NN-slug>`, e.g. `131-execute-phase`). If still blank,
   emit the guard refusal line above and stop.
+- **Confirmed phase** — a valid `P<k>` step id from the unit doc's `Tasks`.
+  If blank: re-ask once; if still blank, halt with `requires manual input`.
+- **Confirmed file targets** — the target paths or scope the phase operates on.
+  If blank: re-ask once; if still blank, halt with `requires manual input`.
 
 Optional inputs (may default):
 - **`P<k>`** — step argument. Absent → the body resolves to the first
   unfinished step from the unit doc's `Tasks`. No halt.
 - **`--max-attempts N`** — absent → 3.
-- **`--force`** — flag; accepted by the body but cannot override any gate
-  (`:104`). No halt.
+- **`--force`** — flag; accepted by the body but cannot override any gate.
+  No halt.
 
 ## Process
 
