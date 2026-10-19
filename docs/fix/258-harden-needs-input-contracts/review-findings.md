@@ -741,3 +741,69 @@ interactive ask, the refusal line is the *only* thing the halt prints.
   thinking level, recorded on the triage block's `Tiers:` line, so
   `execute-phase` stops carrying both modes as prose. **Trigger:** the
   model-configuration feature's unit is planned; P-B is one of its rows.
+
+### User decision — the halt carries the questions, and "research more" is an answer (2026-10-19, human-owner)
+
+Second owner decision, recorded during cycle 10. It supersedes the `re-ask once`
+step AC1–AC3 currently promise, and it is the contract the `Needs-input guard`
+should have shipped.
+
+**Three-tier resolution, in order — never skipped:**
+
+0. **Provenance first.** The step searches the repository's own docs before
+   declaring a gap (unit doc, agent guide, documentation map, `decisions.md`,
+   prior units of the same area) and records *where* it looked. A "not found"
+   without that search receipt is a defect, not a gap.
+1. **Research second.** If the gap is external (API behaviour, a library's
+   version, a convention), the step performs the research — `web_search`,
+   `web_fetch`, source read — and returns 2–3 concrete options with their
+   trade-offs and a recommendation. The user may accept one or supply their own.
+2. **Emit the questions; do not ask one blank.** If the gap survives both, the
+   step **stops and fails** with the open questions written out, each carrying:
+   why it blocks, what was searched and found, the options (if any), and the
+   route back to the stage that owns the fact — `design` for scope/architecture
+   questions, `unit-lane` for plan-owned facts. Execution never interviews; it
+   halts with the questions and hands them back.
+
+**A request for more research, new suggestions, or a discussion before deciding
+is a legitimate answer.** It is not a blank, not a refusal, and never a licence
+to infer: it re-enters tier 0/1 with the new question and the loop continues
+until the user concludes. Only a user decision (or an explicit withdrawal of the
+item) closes an open question.
+
+**The conversation is recorded, not remembered.** The unit's `decisions.md`
+becomes the ledger of that conversation, append-only and two-typed:
+`open-question` (question, why it blocks, search receipt, options) and
+`decision` (authority `human-owner`, date, what was chosen, what was discarded).
+A resumed session therefore re-reads the pending questions instead of re-asking
+them, and a dismissed option stays dismissed.
+
+**Machine shape (so this is checkable, not prose):**
+
+- The halt is a hand-off, not a sentence. `TURN_CONTRACT.md`'s `hand-off-fields@1`
+already declares `next.recommended` / `next.alternatives` / `next.continuation`;
+the halt uses them — `recommended` = `/unit-lane --retriage <unit>` (or the
+`design` step), `alternatives` = more research / new options / discuss,
+`continuation` = the typed refusal.
+- `CONTINUATION_REFUSALS` (`packages/agentic-workflow-schema/src/continuation.ts`)
+already carries `no-decision-available`, emitted when `decisionAvailable === false`
+— today's closest code. A distinct `insufficient-input` code would be a schema
+SPEC change plus the mirrored package change (types + `envelope.schema.json` +
+version bump, same PR, AGENTS.md rule), so it is the owner's call, not a fold's.
+- The emitted questions block needs a versioned grammar (`block:open-questions@1`)
+plus its row in AGENTS.md's `normative-surfaces@1`, because
+`scripts/normative-drift.test.mjs` fails closed on any surface that orders what
+an agent may do next but carries no fixed grammar. An unversioned block would be
+the defect that table exists to prevent.
+
+**Effect on this unit.** AC1–AC3's `re-ask once` and AC1's exact string are
+superseded, so unit 258 cannot absorb this by folding: its ACs must be re-cut.
+Recommended split — 258 keeps the half already decided (execution never
+interviews; halt routes back; F33/F34's direction), and the interview machinery
+(provenance → research → options → conversation ledger → user decision) becomes
+its own unit, whose ACs are the four tiers above. F40 gains: with no interactive
+ask, the halt's block is the *only* thing the operator sees.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| SUP-AC1 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` (AC1–AC3) | spec-drift | high | DISPUTED | human-owner 2026-10-19: the `re-ask once` step is superseded by the two-tier halt (repo provenance → research → emit the questions). 258's ACs must be re-cut by the plan owner with a dated `## Amendments` row quoting both owner decisions; do not fold a guard against the old AC text | n/a |
