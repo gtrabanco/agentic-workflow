@@ -31,7 +31,7 @@
    2. Review the **fold diff only** (`git diff <pre-batch HEAD>..<batch HEAD>`
       over the commits this turn's batch produced);
    3. Require the **gate green at the reviewed head** and the sibling
-      acceptance-manifest `ACCEPTANCE.md` blob recomputed to an **exact match**
+      acceptance-manifest (step-2 artifact) blob recomputed to an **exact match**
       — the step-2 structural precondition, unchanged and still mandatory.
    4. Append the normal `review-mark@1` `REVIEW-RAN` mark — delta cycles count
       toward the two-cycle cap from the unchanged source (marks + forge

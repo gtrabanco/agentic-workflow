@@ -771,12 +771,24 @@ function runDriftChecks(model) {
 function versionCells(text, name) {
   const skillHead = "#### `" + name + "`";
   const pkgHead = "#### [`@gtrabanco/" + name + "`]";
+  const internalHead = "### Internal";
+  const internalRow = new RegExp("^\\|\\s*`" + name + "`\\s*\\|\\s*(\\d+\\.\\d+\\.\\d+)\\s*\\|");
   const out = [];
   let section = false;
+  let internal = false;
   for (const line of text.split("\n")) {
     if (line.startsWith("#### ")) {
       section = line.startsWith(skillHead) || line.startsWith(pkgHead);
       continue;
+    }
+    // Internal skills (user-invocable: false) have no `#### \`<skill>\`` section —
+    // their rows live in the shared `### Internal` table with the name in the first
+    // column (fix: unit 36 F49). Without this scan the version-tables claim silently
+    // skips every internal skill.
+    if (line.startsWith("### ")) internal = line.startsWith(internalHead);
+    if (internal) {
+      const iv = internalRow.exec(line);
+      if (iv) out.push(iv[1]);
     }
     if (!section) continue;
     const v = /^\|\s*(\d+\.\d+\.\d+)\s*\|/.exec(line);
