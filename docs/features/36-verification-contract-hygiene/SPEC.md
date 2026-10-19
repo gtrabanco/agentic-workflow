@@ -243,6 +243,7 @@ Budget: strong
 | P8 | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` + `bun scripts/check-skill-context.mjs` | exit 0 / exit 0 | audit-pr 5.6.1→5.6.2; all `→ Next: /unit-lane` bullets terminate before sibling bullets; 28 skills PASS | execute-phase P8
 | P9 | `grep -c "Philipp Görz|Ze Sheng|V. J. M. Manès" README.md` | 3 | 3 author lists restored from issue #183 (Görz 4, Sheng 6, Manès 7); no `et al.` remain | execute-phase P9
 | P10 | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` | 0 / 0 | 0 repo-specific nouns in either template; determinism + property/fuzz bound preserved | execute-phase P10
+| P11 | `node scripts/check-skill-context.mjs --routes` | 0 | 14 routes PASS (10990 est total under declared ceilings); all `feature 60 P3` entries now name skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic | execute-phase P11
 
 ## Progress log
 
@@ -263,6 +264,7 @@ Budget: strong
 - 2026-10-19 P8 done: closure-gate `→ Next: /unit-lane <unit>` bullet terminated before `- Lane-era path` sibling (F35); audit-pr 5.6.1→5.6.2; check-skill-context 28 skills PASS; 701cd08a — next: P9
 - 2026-10-19 P9 done: full issue-#183 author lists restored in README § References (3 grep matches; no `et al.`); 5eae8492 — next: P10
 - 2026-10-19 P10 done: template determinism/property-fuzz sentences restated without repo-specific nouns (0 grep matches for "schema package" / "existing commands class"); 8a7664cc — next: P11
+- 2026-10-19 P11 done: re-based all `feature 60 P3` budget growth entries — named skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic; 9ee7511d — next: P12
 
 ## Next
 
