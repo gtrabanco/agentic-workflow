@@ -103,7 +103,7 @@ none recorded — no known red gate or open defect affects this unit.
   - Relevant files: skills/execute-phase/SKILL.md
 - P3 — Add the needs-input guard and Turn-contract box to `unit-lane` plus its
   interruption references `DESIGN.md` and `RESEARCH.md` (validator:
-  `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 5 and `grep -q "Required user inputs" skills/unit-lane/SKILL.md` exits 0)
+  `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 4 and `grep -q "Required user inputs" skills/unit-lane/SKILL.md` exits 0)
   - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/DESIGN.md,
     skills/unit-lane/references/RESEARCH.md
 - P4 — Add the mandatory-consent guard and Turn-contract box to
@@ -141,7 +141,7 @@ One table per skill; every interruption point classified `required` / `optional`
 | E2 | `P<k>` step argument (optional — all remaining steps if absent) | optional | Absent → proceeds to first unfinished step. No issue. | No change. Optional inputs may default. |
 | E3 | `--max-attempts N` flag (optional) | optional | Absent → defaults to 3. No issue. | No change. Optional inputs may default. |
 
-**unit-lane** (5 interruption points):
+**unit-lane** (6 interruption points):
 
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
@@ -150,6 +150,8 @@ One table per skill; every interruption point classified `required` / `optional`
 | U3 | Vague request → acceptance criteria induction ("ask-don't-infer") | required | If the request description is too vague, the lane may infer ACs from context. | STOP and ask the user with concrete options. Never infer. |
 | U4 | "Decide for me" in the gap interview (DESIGN.md) | optional | User selects it → lane chooses and records the choice. No issue. | No change. |
 | U5 | Vague/ambiguous scope → unit kind classification | required | Blank/vague → skill may default to `feature`. | STOP instead of inferring. |
+
+| U6 | Objective, why, user outcome (from the SPEC) | required | Blank/missing → Process §1 fills them from the invocation (or the issue) by inference, bypassing the guard. | Guard: re-ask once. If still blank, emit `→ Next: unit-lane requires manual input — cannot proceed` and stop. Process §1 fills from the invocation when present; the guard covers the blank case.
 
 **init-workspace** (3 interruption points):
 
@@ -173,10 +175,10 @@ One table per skill; every interruption point classified `required` / `optional`
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never proceeds past a blank required phase/target answer: re-ask once, then halt with `requires manual input`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
+| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never proceeds past a blank required phase/target answer: re-ask once, then halt with `requires manual input`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 3 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
 | O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same guard; Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 4 | guard text + box in `skills/unit-lane/SKILL.md` and references | verified |
 | O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: blank/absent consent → re-ask once → halt, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -cE "requires [a-z ]*input" skills/init-workspace/SKILL.md` matches 2 | guard text + box in `skills/init-workspace/SKILL.md` | verified |
-| O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` matches 4 | CHANGELOG rows + README cells for the three skills | verified |
+| O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` matches 7 | CHANGELOG rows + README cells for the three skills | verified |
 | O6 | SPEC AC5 / issue #258 AC4 | root suites stay green and the edited skills stay within context budgets | P6 | P6 | root gate | `node --test scripts/*.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0 | Evidence rows in this doc | verified |
 
 ## Evidence
@@ -186,9 +188,9 @@ One table per skill; every interruption point classified `required` / `optional`
 | AC1 | execute-phase guard added (`grep -cE "requires [a-z ]*input" …` matches 4, `grep -q "Required user inputs"` exits 0) | 0 | 4 guard mentions, 1 contract box | read-verified (execute-phase/SKILL.md) |
 | AC2 | unit-lane + DESIGN.md + RESEARCH.md guards added (regex totals 4, unit-lane `Required user inputs` exits 0) | 0 | 4 guard mentions across 3 files | read-verified (unit-lane/SKILL.md + refs) |
 | AC3 | init-workspace guard added (regex matches 2, `Required user inputs` exits 0) | 0 | 2 guard mentions, 1 contract box | read-verified (init-workspace/SKILL.md) |
-| AC4 | all skills' Turn contract includes required-inputs box | 0 | 3 skills updated | read-verified (turn contracts) |
-| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump (execute-phase 5.2.0 + F3 re-basis) | 0 | 693 tests PASS · 28 skills PASS | check-skill-context.mjs + node --test scripts/*.test.mjs |
-| AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle + pre-existing rows restored | 0 | 4 rows (3 skill + 1 re-bundle) | grep '258' CHANGELOG.md = 4 |
+| AC4 | all skills' Turn contract includes required-inputs box (`grep -q "Required user inputs were answered" skills/execute-phase/SKILL.md skills/unit-lane/SKILL.md skills/init-workspace/SKILL.md` exits 0) | 0 | 3 skills updated | read-verified (turn contracts) |
+| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump (execute-phase 5.2.1 + F3 re-basis) | 0 | 693 tests PASS · 28 skills PASS | check-skill-context.mjs + node --test scripts/*.test.mjs |
+| AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle + pre-existing rows restored | 0 | 7 rows (3 skill + 2 pi + 2 other) | grep -cE '258' CHANGELOG.md = 7 |
 
 ### Triaged steps
 
