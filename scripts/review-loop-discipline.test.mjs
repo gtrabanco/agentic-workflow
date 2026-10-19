@@ -340,10 +340,11 @@ assert.match(reviewProcess, /RE-REVIEW-REQUIRED \(delta\)/);
 assert.match(reviewProcess, /re-verify every `folded: yes` row at the `file:line` cited/i);
 assert.match(reviewProcess, /review the fold diff|fold diff only/);
 
-// 11b. The gate-green + exact ACACCEPTANCE.md blob precondition (the existing
-// step-2 structural precondition is unchanged and still mandatory).
+// 11b. The gate-green + exact step-2 acceptance-artifact blob precondition (the
+// existing step-2 structural precondition is unchanged and still mandatory; the
+// manifest is the unit-doc acceptance source post-feature 61, unit 36 F42).
 assert.match(reviewProcess, /gate green at the reviewed head/);
-assert.match(reviewProcess, /`ACCEPTANCE\.md` blob/);
+assert.match(reviewProcess, /acceptance-manifest \(step-2 artifact\) blob/);
 assert.match(reviewProcess, /exact match/);
 
 // 11c. Escalation triggers with the state-the-trigger-and-numbers requirement:
