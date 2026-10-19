@@ -589,6 +589,24 @@ function recordedPhases(doc) {
 }
 
 /**
+ * The unfinished phases of a unit: the set of `P<n>` numbers from the unit
+ * doc's `## Tasks` section that the `## Progress log` does not record. Returns
+ * an empty set when the doc is absent or has no Tasks section (caller must
+ * handle — untouched work routes to P1). Returns all parsed phases when done
+ * is empty.
+ */
+function unfinishedPhases(unitDir) {
+  const doc = readProject(`${unitDir}/SPEC.md`);
+  if (doc === null || sectionBody(doc, "Tasks") === null) return new Set();
+  const { phases } = parseUnitDocPhases(doc);
+  if (phases.length === 0) {
+    fail(1, `no parseable phase in ${unitDir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
+  }
+  const done = recordedPhases(doc);
+  return new Set(phases.map((phase) => phase.number).filter((number) => !done.has(number)));
+}
+
+/**
  * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
  * doc's `## Tasks` section that the `## Progress log` does not record. A unit
  * with no doc (or no Tasks section) is untouched work — P1. A Tasks section
@@ -596,14 +614,9 @@ function recordedPhases(doc) {
  * whole-unit command (#291 AC3).
  */
 function firstUnfinishedPhase(unit) {
-  const doc = readProject(`${unit.dir}/SPEC.md`);
-  if (doc === null || sectionBody(doc, "Tasks") === null) return 1;
-  const { phases } = parseUnitDocPhases(doc);
-  if (phases.length === 0) {
-    fail(1, `no parseable phase in ${unit.dir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
-  }
-  const done = recordedPhases(doc);
-  const unfinished = phases.map((phase) => phase.number).filter((number) => !done.has(number));
+  const donePhases = unfinishedPhases(unit.dir);
+  if (donePhases.size === 0) return 1;
+  const unfinished = [...donePhases].sort((a, b) => a - b);
   if (unfinished.length === 0) {
     fail(1, `every phase of ${unit.dir}/SPEC.md is recorded in its Progress log — re-triage the unit or settle its index status`);
   }
@@ -741,19 +754,21 @@ function main(argv) {
     // #291 AC3/AC4: the hand-off names exactly one phase and the execution
     // tier — never the bare whole-unit command. Whole-unit mode survives only
     // as an explicit operator choice (`execute-phase`'s own §7).
-    // If all phases are done but status is not "done" (in-progress with a
-    // pushed branch), route to close-out — the merge gate is the next step (F26).
-    const doc = readProject(`${unit.dir}/SPEC.md`);
-    if (doc !== null && sectionBody(doc, "Tasks") !== null) {
-      const { phases } = parseUnitDocPhases(doc);
-      const donePhases = recordedPhases(doc);
-      if (phases.length > 0) {
-        const unfinished = phases.map((p) => p.number).filter((n) => !donePhases.has(n));
-        if (unfinished.length === 0) {
-          route = "close-out";
-          selected = [];
-          command = "/audit-pr";
-        }
+    // If all phases are done AND status is "done", route to close-out —
+    // the merge gate is the next step (F26).  A unit whose status is not
+    // "done" (e.g. "defined", "in-progress") with all phases recorded is
+    // an ambiguous boundary: not finished (can't audit), no unfinished
+    // phases (can't execute) — fail closed (F31, P6).
+    const donePhases = unfinishedPhases(unit.dir);
+    if (donePhases.size === 0) {
+      if (status === "done") {
+        route = "close-out";
+        selected = [];
+        command = "/audit-pr";
+      } else {
+        // In-progress unit with all phases done but status not "done" —
+        // refuse; the operator must settle the index/roadmap status first.
+        fail(1, `unit ${unit.dir} has all phases recorded but status is '${sanitize(status)}' (not 'done') — settle the index or roadmap status before routing to close-out`);
       }
     }
     if (route === "execute") {
