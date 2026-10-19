@@ -112,5 +112,4 @@ semantics are verified against authoritative documentation **before a test encod
 
 ## Done when
 
-Frozen manifest + current blob receipt + named validators + literal quality
-floor; executor and reviewer evaluate identical bytes.
+Execution receipt (unit doc `## Evidence` table for post-feature 61 units; legacy `ACCEPTANCE.md` manifest binding-if-present) + named validators + literal quality floor; executor and reviewer evaluate identical evidence.

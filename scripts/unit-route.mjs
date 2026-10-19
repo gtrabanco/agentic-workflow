@@ -756,8 +756,8 @@ function main(argv) {
     // an ambiguous boundary: not finished (can't audit), no unfinished
     // phases (can't execute) — fail closed. F40: no doc / no `## Tasks`
     // is untouched work — route to P1.
-    const donePhases = unfinishedPhases(unit.dir);
-    if (donePhases === null) {
+    const unfinished = unfinishedPhases(unit.dir);
+    if (unfinished === null) {
       // No doc or no `## Tasks` section — untouched work, P1.
       route = "execute";
       selected = [];
@@ -766,7 +766,7 @@ function main(argv) {
       command = unit.kind === "fix"
         ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
         : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
-    } else if (donePhases.size === 0) {
+    } else if (unfinished.size === 0) {
       if (status === "done") {
         route = "close-out";
         selected = [];
