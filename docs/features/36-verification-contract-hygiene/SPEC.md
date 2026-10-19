@@ -216,8 +216,6 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 
 ## Evidence
 
-## Triaged steps
-
 ```
 TRIAGE — 36-verification-contract-hygiene (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs
