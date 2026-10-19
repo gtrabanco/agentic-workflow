@@ -142,7 +142,7 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 | O6 | issue #183 item 1 (budget re-basis) | route ceilings re-based when wording growth pushes them over — declared re-basis names growth source | P4 | context-budget re-basis | scripts/SKILL_CONTEXT_BUDGETS.json | `node scripts/check-skill-context.mjs --routes` exits 0 | Evidence row AC7 | verified |
 | O7 | cycle-3 F29 + F30 (VF-25, VF-26) | machine surfaces parse: the `ledger-ownership@1` acceptance-manifest row carries 6 cells; `versionCells()` reads all three patch rows | P5 | ledger row + CHANGELOG rows rewrite | lane fold | `node --test scripts/ledger-ownership.test.mjs && node --test scripts/normative-drift.test.mjs` exits 0 | Evidence row P5 | verified |
 | O8 | cycle-3 F31 (VF-27) | the router never returns `close-out` for a unit whose index status is not `done`/`absent` — a `defined` unit with all phases recorded refuses with exit 1 | P6 | close-out guard status gate + shared derive helper | scripts/unit-route.mjs | `node --test scripts/unit-route.test.mjs` exits 0 (new fixture case) | Evidence row P6 | verified |
-| O9 | cycle-3 F34 + F39 (VF-30, VF-35) | the post-61 receipt has exactly one declared owner and no phantom artifact is described; the legacy ACCEPTANCE.md mandate reads binding-if-present | P7 | receipt owner + era-label restatement | skills/verification-contract/SKILL.md | `bun scripts/check-skill-context.mjs` exits 0 | Evidence row P7 | planned |
+| O9 | cycle-3 F34 + F39 (VF-30, VF-35) | the post-61 receipt has exactly one declared owner and no phantom artifact is described; the legacy ACCEPTANCE.md mandate reads binding-if-present | P7 | receipt owner + era-label restatement | skills/verification-contract/SKILL.md | `bun scripts/check-skill-context.mjs` exits 0 | Evidence row P7 | verified |
 | O10 | cycle-3 F35 (VF-31) | the audit-pr closure-gate bullet is well-formed — the remedy sentence is terminated, not run into the sibling bullet | P8 | bullet repair + audit-pr bump | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` exits 0 | Evidence row P8 | planned |
 | O11 | cycle-3 F36 (VF-32) | README § References carries the issue's full author lists, not "et al." truncations | P9 | bibliography author lists | README.md | `grep -c "Philipp Görz\|Ze Sheng\|V. J. M. Manès" README.md` = 3 | Evidence row P9 | planned |
 | O12 | cycle-3 F37 (VF-33) | exported templates carry no repo-specific nouns (AGENTS.md stack-agnostic rule) | P10 | template sentence restatement | template/docs/*/_TEMPLATE/SPEC.md | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` = 0 | Evidence row P10 | planned |
@@ -241,6 +241,7 @@ Budget: strong
 | P6 | `node --test scripts/unit-route.test.mjs` (44 tests) | exit 0 | 44 pass 0 fail — F31/P6: `defined` all-phases unit refuses exit 1; `done` all-phases routes close-out; F8 tests pass with roadmap status set to `done`; shared `unfinishedPhases` helper | execute-phase P6
 | P7 | `bun scripts/check-skill-context.mjs` + direct read of SKILL.md § Artifact + § Freeze and receipt | exit 0 | 28 skills PASS; evidence table declared as receipt (no phantom `## Acceptance receipt v1`); legacy era label rephrased as binding-if-present; version bumped 1.4.0→1.4.1 + CHANGELOG row | execute-phase P7
 | P8 | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` + `bun scripts/check-skill-context.mjs` | exit 0 / exit 0 | audit-pr 5.6.1→5.6.2; all `→ Next: /unit-lane` bullets terminate before sibling bullets; 28 skills PASS | execute-phase P8
+| P9 | `grep -c "Philipp Görz|Ze Sheng|V. J. M. Manès" README.md` | 3 | 3 author lists restored from issue #183 (Görz 4, Sheng 6, Manès 7); no `et al.` remain | execute-phase P9
 
 ## Progress log
 
@@ -259,6 +260,7 @@ Budget: strong
 - 2026-10-19 P6 done: close-out guard gates on `status === "done"` (F31 — a `defined` unit with all phases now refuses exit 1); shared `unfinishedPhases(unitDir)` helper extracted from inline `firstUnfinishedPhase` derivation; F8 tests updated to set roadmap status to `done`; unit-route 44/44 pass; f85567cd — next: P7
 - 2026-10-19 P7 done: post-61 receipt owner declared (Evidence table); phantom `## Acceptance receipt v1` block deleted; legacy era label rephrased binding-if-present (no template instruction); verification-contract 1.4.0→1.4.1 + CHANGELOG row; check-skill-context 28 skills PASS; ea4ce056 — next: P8
 - 2026-10-19 P8 done: closure-gate `→ Next: /unit-lane <unit>` bullet terminated before `- Lane-era path` sibling (F35); audit-pr 5.6.1→5.6.2; check-skill-context 28 skills PASS; 701cd08a — next: P9
+- 2026-10-19 P9 done: full issue-#183 author lists restored in README § References (3 grep matches; no `et al.`); 5eae8492 — next: P10
 
 ## Next
 
