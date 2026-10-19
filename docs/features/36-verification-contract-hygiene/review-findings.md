@@ -322,3 +322,83 @@ moved onto the delivered behaviour change and the branch adds a stricter
 `defined`-status refusal test; "the branch breaks the gate" — root 695/0,
 golden 12/12, routes 14 PASS, skills 28 PASS, parity PASS, schema 717/0, pi
 432/0. Every finding has a destination; this review creates no backlog.
+
+## Cycle 5 — 2026-10-19
+
+Cycle 5 ran (review-change) on candidate `HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da`,
+clean workspace, no PR (pre-PR checkpoint). **Cycle 5 is past the two-cycle cap**
+and ran because the user invoked it explicitly; the residue routes through this
+section's rows, not a sixth cycle. Delta mode against cycle 4's reviewed head
+`77280bea` escalated to a **full pass on Size**: fold diff `77280bea..HEAD` = 245
+added + 96 deleted = 341 changed lines (> 200) across 11 files (≤ 15). Applicable
+passes ran isolated: `review-code`, `review-security`, `review-verify`,
+`review-perf`, `review-brand`; skipped with reasons — `review-design`/
+`review-a11y`/`review-seo` (no UI, no web surface: the repo ships markdown
+skills, a docs scaffold, and node scripts). Synthesis, classification
+(`review-implementation`) and the debt transform (`review-debt`) each ran
+isolated. Gate at head: root 696 pass / 0 fail exit 0, `check-skill-context` 28
+skills exit 0, `--routes` 14 routes exit 0, golden-fixture 12/12 exit 0,
+version-parity content PASS (0.21.0→0.22.0) exit 0, schema 717 pass exit 0, pi
+432 pass exit 0, `ledger-provenance --check` PASS (50 rows).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F56 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 | code, brand | high | fix-now | regression of F50 → fold into current unit: finish the repair — the appended remedy sentence still ends "then write a fresh receipt" with no terminator and runs into the `- **Lane-era path**` sibling bullet — or drop the appended clause and keep the canonical remedy at `:159`; then correct the two claims that say it shipped (`CHANGELOG.md:566`, `SPEC.md:248`) | no |
+| F57 | docs/features/36-verification-contract-hygiene/SPEC.md:245,249,252 | verify, workflow | med | fix-now | regression of F43 → fold into current unit: escape the literal pipes in the P5 `\| version \| date \| type \| what \|`, P9 `"Philipp Görz\|Ze Sheng\|V. J. M. Manès"` and AC6 `none\|<k> · shape ok\|<fail-code>` cells so each row renders the header's 5 cells instead of 9/6/6 | no |
+| F58 | docs/features/36-verification-contract-hygiene/SPEC.md:279 | workflow | med | fix-now | regression of F52 → fold into current unit: delete the "(`node scripts/unit-route.mjs 36-verification-contract-hygiene` prints `open-rows: 0`)" parenthetical — the command prints no route block and exits 1 with the close-out refusal the same paragraph then describes — and quote the router's actual output | no |
+| F59 | docs/features/36-verification-contract-hygiene/SPEC.md:251 | verify | med | fix-now | regression of F54 → fold into current unit: record the sum the tool actually prints — 175373 est / 12941 lines at this row's head `9ee7511d`, 175329 at the reviewed head — instead of 175343, which matches no head | no |
+| F60 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:160,162,185,210,234,258,281,328,355,362,388,395,421,428,454 | perf, verify | high | fix-now | regression of F48 → fold into current unit: re-derive every `unit 36 / feature 36` and rewritten `feature 60 P3` entry from `check-skill-context.mjs --routes`' own output — the `887 est / 887 lines` and `842 est / 842 lines` pairs cannot exist (est ≈ 12.5× lines), execute-phase claims 11189/887 vs the tool's 11083/869, review-change 17324/1252 and 18878 vs 17221/1234 and 18874, audit-pr 9810/606 vs 9848/607 (so no source row predicts the shipped 10833 ceiling), and "grew to 1460 est" vs the file's 1456 — then set each ceiling to `ceil(measured × 1.10)` of the real pair | no |
+| F61 | docs/features/36-verification-contract-hygiene/SPEC.md:239,241 | verify | med | fix-now | fold into current unit (cycle 4's debt item D1/F55 trigger fired — the audit re-derived AC4): AC2 cites "line 81: deterministic, bounded" where the committed line is 80, and AC4 quotes "within schema timeout budgets" where line 80 reads "within the project's timeout budgets" | no |
+| F62 | docs/features/36-verification-contract-hygiene/review-findings.md:249 | verify | med | fix-now | regression of F46 → fold into current unit: F46's route cell now cites `af67eb9e54cfd95eef7b12406a6905d7e1abbd23` as both the "non-existent" hash and "the real commit"; restore the real pair or state the defect once | no |
+| F63 | CHANGELOG.md:100 | brand | med | fix-now | fold into current unit: the 0.22.0 companion row must name what this PR ships (`verification-contract` 1.4.2, not 1.4.0) and spell the artifact `ACCEPTANCE.md` | no |
+| F64 | CHANGELOG.md:211,476,567,740,741 | brand | high | fix-now | fold into current unit: the five rows say the era label was "corrected from \"lane-era\" to \"legacy (pre-feature 61)\"", but `git show main:` carries no such label at any cited line — the branch introduced it (`e28ff213`) and renamed it (`af67eb9e`) inside this PR; state the shipped change (the label is added as "legacy (pre-feature 61)") instead of a correction of history | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-51 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `sed -n '119,121p'` → "…then write a fresh receipt" (no period) immediately above `- **Lane-era path**`; `git show main:…` shows the branch-introduced clause | code | confirmed | finding-mark | n/a | n/a |
+| VF-52 | docs/features/36-verification-contract-hygiene/SPEC.md:245,249,252 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck a cell count honouring `\|` → P5 = 9, P9 = 6, AC6 = 6 cells against the 5-column header at `:235` | verify | confirmed | finding-mark | n/a | n/a |
+| VF-53 | docs/features/36-verification-contract-hygiene/SPEC.md:279 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `node scripts/unit-route.mjs 36-verification-contract-hygiene` → empty stdout, stderr "UNIT ROUTE — error … status is 'in-progress' (not 'done')", exit 1 | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-54 | docs/features/36-verification-contract-hygiene/SPEC.md:251 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `node scripts/check-skill-context.mjs --routes` at HEAD → summed est 175329 / 12941 lines; the same command in a worktree at `9ee7511d` → 175373 / 12941; the row records 175343 | verify | confirmed | finding-mark | n/a | n/a |
+| VF-55 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:160,162,185,210,234,258,281,328,355,362,388,395,421,428,454 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `--routes` → descope 11083/869, feature 10433/824, final-pr 10946/848, audit-pr 9848/607, review-change:adversarial 18874/1342, default-backend 17221/1234, synthesize 17690/1256; `check-skill-context.mjs` → verification-contract 1456/116; the entries declare 11189/887, 10539/842, 11052/866, 9810/606, 18878/1342, 17324/1252, 17793/1274, "1460 est", and the impossible `887 est / 887 lines` | perf | confirmed | finding-mark | n/a | n/a |
+| VF-56 | docs/features/36-verification-contract-hygiene/SPEC.md:239,241 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` → 74 and 80 (no 81); line 80 reads "bounded runtime — deterministic, bounded — within the project's timeout budgets" | verify | confirmed | finding-mark | n/a | n/a |
+| VF-57 | docs/features/36-verification-contract-hygiene/review-findings.md:249 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `sed -n '249p'` → both backticked hashes read `af67eb9e54cfd95eef7b12406a6905d7e1abbd23`, so "a non-existent 40-hex … where the real commit is …" states nothing | verify | confirmed | finding-mark | n/a | n/a |
+| VF-58 | CHANGELOG.md:100 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `grep -m1 '^version:' skills/verification-contract/SKILL.md` → `1.4.2` while the row says "`verification-contract` 1.4.0" and writes "acceptance.md" | brand | confirmed | finding-mark | n/a | n/a |
+| VF-59 | CHANGELOG.md:211,476,567,740,741 · reviewer review-change · HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da · recheck `git show main:<each cited file> \| grep -n 'lane-era'` → no era label on any cited ACCEPTANCE.md line (SNAPSHOT.md/02_CLOSURE use "lane-era" for the pipeline/unit, not for the artifact); `git log -S'lane-era'` → `e28ff213` and `af67eb9e`, both in this branch | brand | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 5fa211e4c9f684b6701161442e67139c6f0e75da | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-5 re-verification of the 54 folded rows: fixed at the cited locations —
+F1/F2/F6/F7/F9/F10/F11/F14/F15/F18/F19/F20/F21/F23/F24/F27/F28/F31/F32/F33/
+F34/F35(partially: the parenthesis is closed, the sentence still lacks its
+terminator → F56)/F36/F37/F39/F40/F41/F42/F44/F45/F46(moved marks to the cycle-4
+section; the row's own text became self-contradictory → F62)/F47/F49/F51/F53.
+**Regressions**: F43 → F57, F48 → F60, F50 → F56, F52 → F58, F54 → F59.
+Report notes, never persisted (`low`, report-only): the AC4/P6 Evidence rows
+record point-in-time counts (44 unit-route tests, 695 root tests) that later
+commits raised to 45/696 — accepted as historical records, the head's counts are
+in `## Next`; the cycle-4 `GATE-RAN` marks carry `HEAD 320bf180 (fold batch
+F40–F54, tree)` where `gate-ran@1` asks for 40-hex (repo-wide precedent is
+8-hex, so this is the baseline, not a branch defect); `scripts/unit-route.mjs`
+reads and parses the unit doc twice (+11–19 ms on a 72–141 KB doc) and copies its
+5-line command builder in three branches — debt item with TRIGGER "a 4th copy of
+the builder, or build time crossing the gate budget" (cycle 4 left it a note, the
+code is unchanged since); `template/docs/fix/_TEMPLATE/SPEC.md:80` reads
+"bounded runtime — deterministic, bounded —" (duplicated modifier);
+`LEDGERS.md:150`'s unit-doc recipe joins two commands with a bare `then`;
+`review-loop-discipline.test.mjs:342-345` pins the new wording but nothing
+asserts the post-61 `## Acceptance criteria` source; `normative-drift.test.mjs`'s
+`internal` flag is not reset by a `####` heading (latent — no such heading exists
+under `### Internal` today); eight commit subjects carry a space in the scope
+(`docs(unit 36)`). Refuted: "the branch duplicated the `review-debt` 1.1.0
+CHANGELOG row" — `grep -nF '\`review-debt\` | 1.1.0'` returns exactly one row
+(`:895`, added by this branch; `main` has none) and `:896` is 1.0.1, so the
+claimed byte-identical pair does not exist; "the `sed` acceptance derivation
+returns nothing" — it yields a stable blob (`3b26da67…`). Every finding has a
+destination; this review creates no backlog.
