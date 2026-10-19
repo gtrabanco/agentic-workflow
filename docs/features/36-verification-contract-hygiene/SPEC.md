@@ -237,6 +237,7 @@ Budget: strong
 | AC5 | `grep -c` for four issue #183 references in README.md | 4 | arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide | execute-phase P3
 | AC7 | root suites: `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs`; schema: `bun run test` in `packages/agentic-workflow-schema` | exit 0 / exit 0 / exit 0 / exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context: 1 pass 0 fail (--routes PASS); version-parity: content parity holds (AC1) | execute-phase P4
 | AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context.test: 1 pass 0 fail (AC1); --routes PASS route budgets: 14 (AC1); version-parity: content parity holds (AC2) | execute-phase P4
+| P5 | ledger-ownership: `node --test scripts/ledger-ownership.test.mjs` + normative-drift: `node --test scripts/normative-drift.test.mjs` | exit 0 / exit 0 | ledger-ownership: 11/11 pass; normative-drift: 18/18 pass (VF-25/F29: acceptance-manifest validator cell parses as 6 cells; VF-26/F30: patch rows use `| version | date | type | what |` shape) | execute-phase P5
 
 ## Progress log
 
@@ -251,6 +252,7 @@ Budget: strong
 - 2026-10-18 23:40 — review cycle 1 ran (5 passes + synthesis/classification/debt); F1–F11, F14, F15 folded per owner scope directive (e28ff213); ledger SHA corrected to squashed head (f03fc673) — next: lane resume at settled head
 - 2026-10-18 23:55 — lane resumed at settled head f03fc673: gate re-verified green (root suites exit 0; `--routes` PASS 14 routes; version-parity PASS 0.21.0→0.22.0; golden-fixture exit 0); `--triage` re-run confirms step list unchanged; branch pushed at f03fc673; Future rows: none; receipt stage: no PR (release skipped) → receipt missing → hand off to /review-change (this commit) — next: /review-change 36-verification-contract-hygiene
 - 2026-10-19 (replan) — review cycle 3 returned F28–F39, all fix-now routed fold-into-unit; F33 is frozen `replan-in-unit`, so the fold queue froze (REPLAN-ROUTE) and the router printed `route: replan` → the lane's plan step re-ran: tasks P5–P12 cut for the 12 rows (O7–O14 planned, PE-006 added), sweep clean (0 contradicts) → (this commit) — next: hand off `/execute-phase 36-verification-contract-hygiene P5`
+- 2026-10-19 P5 done: VF-25/F29 repaired — acceptance-manifest `ledger-ownership@1` validator cell rewritten to use `then` instead of escaped `\|` (parses as 6 cells); VF-26/F30 repaired — patch rows 5.6.1, 3.12.1, 3.9.2 rewritten to `| version | date | type | what |` shape without name prefixes; ledger-ownership 11/11 pass, normative-drift 18/18 pass; e7b1c1eb — next: P6
 
 ## Next
 
