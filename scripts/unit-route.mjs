@@ -590,14 +590,14 @@ function recordedPhases(doc) {
 
 /**
  * The unfinished phases of a unit: the set of `P<n>` numbers from the unit
- * doc's `## Tasks` section that the `## Progress log` does not record. Returns
- * an empty set when the doc is absent or has no Tasks section (caller must
- * handle — untouched work routes to P1). Returns all parsed phases when done
+ * doc's `## Tasks` section that the `## Progress log` does not record.
+ * Returns `null` when the doc is absent or has no `## Tasks` section
+ * (untouched work — caller routes to P1). Returns all parsed phases when done
  * is empty.
  */
 function unfinishedPhases(unitDir) {
   const doc = readProject(`${unitDir}/SPEC.md`);
-  if (doc === null || sectionBody(doc, "Tasks") === null) return new Set();
+  if (doc === null || sectionBody(doc, "Tasks") === null) return null;
   const { phases } = parseUnitDocPhases(doc);
   if (phases.length === 0) {
     fail(1, `no parseable phase in ${unitDir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
@@ -608,18 +608,14 @@ function unfinishedPhases(unitDir) {
 
 /**
  * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
- * doc's `## Tasks` section that the `## Progress log` does not record. A unit
- * with no doc (or no Tasks section) is untouched work — P1. A Tasks section
- * that parses to no phase fails closed: the route never emits a bare
- * whole-unit command (#291 AC3).
+ * doc's `## Tasks` section that the `## Progress log` does not record. A Tasks
+ * section that parses to no phase fails closed: the route never emits a bare
+ * whole-unit command (#291 AC3). The caller handles the no-doc case (returns `null`).
  */
 function firstUnfinishedPhase(unit) {
   const donePhases = unfinishedPhases(unit.dir);
-  if (donePhases.size === 0) return 1;
+  if (donePhases === null) return 1;
   const unfinished = [...donePhases].sort((a, b) => a - b);
-  if (unfinished.length === 0) {
-    fail(1, `every phase of ${unit.dir}/SPEC.md is recorded in its Progress log — re-triage the unit or settle its index status`);
-  }
   return Math.min(...unfinished);
 }
 
@@ -754,13 +750,23 @@ function main(argv) {
     // #291 AC3/AC4: the hand-off names exactly one phase and the execution
     // tier — never the bare whole-unit command. Whole-unit mode survives only
     // as an explicit operator choice (`execute-phase`'s own §7).
-    // If all phases are done AND status is "done", route to close-out —
-    // the merge gate is the next step (F26).  A unit whose status is not
+    // F26: if all phases are done AND status is "done", route to close-out —
+    // the merge gate is the next step. F31/P6: a unit whose status is not
     // "done" (e.g. "defined", "in-progress") with all phases recorded is
     // an ambiguous boundary: not finished (can't audit), no unfinished
-    // phases (can't execute) — fail closed (F31, P6).
+    // phases (can't execute) — fail closed. F40: no doc / no `## Tasks`
+    // is untouched work — route to P1.
     const donePhases = unfinishedPhases(unit.dir);
-    if (donePhases.size === 0) {
+    if (donePhases === null) {
+      // No doc or no `## Tasks` section — untouched work, P1.
+      route = "execute";
+      selected = [];
+      const phase = firstUnfinishedPhase(unit);
+      const tier = executionTier();
+      command = unit.kind === "fix"
+        ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+        : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    } else if (donePhases.size === 0) {
       if (status === "done") {
         route = "close-out";
         selected = [];
@@ -770,8 +776,8 @@ function main(argv) {
         // refuse; the operator must settle the index/roadmap status first.
         fail(1, `unit ${unit.dir} has all phases recorded but status is '${sanitize(status)}' (not 'done') — settle the index or roadmap status before routing to close-out`);
       }
-    }
-    if (route === "execute") {
+    } else {
+      // Incomplete phases — proceed to execute.
       const phase = firstUnfinishedPhase(unit);
       const tier = executionTier();
       command = unit.kind === "fix"

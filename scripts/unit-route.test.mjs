@@ -30,6 +30,7 @@ const run = (args, { root = FIXTURE, cwd = repoRoot } = {}) => spawnSync(
 );
 
 const routeLine = (stdout) => /^route: (\S+)$/m.exec(stdout)?.[1] ?? null;
+const routeNext = (stdout) => { const m = /^next: (.+)$/m.exec(stdout); return m ? m[1] : null; };
 const rowLine = (stdout) => /^rows: (.*)$/m.exec(stdout)?.[1] ?? null;
 const readSet = (stdout) => {
   const block = /read-set \((\d+)\):\n([\s\S]*?)\nfingerprint: /.exec(stdout);
@@ -385,7 +386,34 @@ test("F31/P6: a `defined` unit with all phases recorded refuses with exit 1 — 
     );
     assert.equal(result.status, 1, "exit 1 — not close-out");
     assert.equal(routeLine(result.stdout), null, "no route on stdout");
-    assert.ok(result.stderr.includes("all phases"), "the refusal cites the all-phases-recorded condition");
+    assert.ok(result.stderr.includes("all phases recorded"), "the refusal cites the all-phases-recorded condition");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+test("F40/P6: a unit doc with no `## Tasks` section routes to P1 (untouched work)", () => {
+  // The discriminated helper returns `null` for no-doc/no-Tasks (untouched work),
+  // and the guard routes that to P1 instead of failing.
+  const tmpDir = os.tmpdir();
+  const fixture = path.join(tmpDir, `unit-route-f40-${Date.now()}`);
+  fs.cpSync(FIXTURE, fixture, { recursive: true });
+  // Remove the `## Tasks` section so the doc has no Tasks section.
+  const specPath = path.join(fixture, "docs/features/13-execute-unit/SPEC.md");
+  const spec = fs.readFileSync(specPath, "utf8");
+  const taskSection = /## Tasks\n[\s\S]*?(?=\n## |$)/.exec(spec);
+  if (taskSection) {
+    fs.writeFileSync(specPath, spec.slice(0, taskSection.index) + spec.slice(taskSection.index + taskSection[0].length));
+  }
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [SCRIPT, "13-execute-unit"],
+      { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
+    );
+    assert.equal(result.status, 0, "exit 0 — untouched work routes to P1");
+    assert.ok(routeLine(result.stdout).includes("execute"), "route: execute");
+    assert.ok(routeNext(result.stdout).includes("P1"), "next: P1");
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
