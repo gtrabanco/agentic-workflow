@@ -56,9 +56,10 @@ The guard refusal line used by every required bullet below is:
 The following inputs are **required** and must be answered concretely by the
 user (not inferred or defaulted):
 
-- **`<NN-slug | "<idea>">`** — unit slug or raw idea. If blank: re-ask once
-  with the expected format. If still blank, emit the guard refusal line above
-  and stop.
+- **`<NN-slug | "<idea>">`** — unit slug or raw idea. Required only when
+  `--fix` or `--from-issue` is not used (those supply the unit). If blank:
+  re-ask once with the expected format. If still blank, emit the guard refusal
+  line above and stop.
 - **`--fix <issue-number>` / `--from-issue <issue-number>`** — required when
   that mode is used. If the issue number is blank, re-ask once; if still blank,
   emit the guard refusal line and stop.
