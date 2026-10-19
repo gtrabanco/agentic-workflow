@@ -108,14 +108,21 @@ none
 
 `node --test scripts/*.test.mjs` (root suites, incl.
 `scripts/golden-fixture.test.mjs`), `bun scripts/check-skill-context.mjs`,
-schema package `bun run test`. No new test: the non-goals forbid tooling and
-the change is wording-only; the existing suites are the regression gate.
+schema package `bun run test`. The review cycles added regression tests: the
+router's no-doc/`## Tasks`-absent path now routes to P1 and the `defined`
+all-phases boundary refuses (both in `scripts/unit-route.test.mjs`, F40/F41),
+and `scripts/normative-drift.test.mjs` recomputes internal-skill CHANGELOG
+versions (F49).
 
 ## Known pre-existing issues
 
 - none observed at unit-doc creation (2026-10-18): root suites status not
   sampled before this unit's own gate run; the AC7 run doubles as the first
   sample and any red gate found there is recorded here, never excused.
+- review cycles 1–4 observed two pre-existing (main-carried) issues and
+  repaired them in-unit: `review-debt` 1.1.0 shipped without a CHANGELOG row
+  (fixed with F49) and `versionCells()` never read the `### Internal` table
+  (fixed with F49).
 
 ### Planning evidence
 
@@ -233,7 +240,7 @@ Budget: strong
 | AC3 | `grep -n "Property / fuzz validators" skills/verification-contract/SKILL.md` exits 0 | exit 0 | line 49: bounded commands row | execute-phase P1
 | AC4 | `grep -n "Property / fuzz validators" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 79: **Property / fuzz validators.** bounded runtime within schema timeout budgets | execute-phase P2
 | AC5 | `grep -c` for four issue #183 references in README.md | 4 | arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide | execute-phase P3
-| AC7 | root suites: `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs`; schema: `bun run test` in `packages/agentic-workflow-schema` | exit 0 / exit 0 / exit 0 / exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context: 1 pass 0 fail (--routes PASS); version-parity: content parity holds (AC1) | execute-phase P4
+| AC7 | root suites: `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs --content --base main`; schema: `bun run test` in `packages/agentic-workflow-schema` | exit 0 / exit 0 / exit 0 / exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context: 1 pass 0 fail (--routes PASS); version-parity: content parity holds (AC1) | execute-phase P4
 | AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context.test: 1 pass 0 fail (AC1); --routes PASS route budgets: 14 (AC1); version-parity: content parity holds (AC2) | execute-phase P4
 | P5 | ledger-ownership: `node --test scripts/ledger-ownership.test.mjs` + normative-drift: `node --test scripts/normative-drift.test.mjs` | exit 0 / exit 0 | ledger-ownership: 11/11 pass; normative-drift: 18/18 pass (VF-25/F29: acceptance-manifest validator cell parses as 6 cells; VF-26/F30: patch rows use `| version | date | type | what |` shape) | execute-phase P5
 | P6 | `node --test scripts/unit-route.test.mjs` (44 tests) | exit 0 | 44 pass 0 fail — F31/P6: `defined` all-phases unit refuses exit 1; `done` all-phases routes close-out; F8 tests pass with roadmap status set to `done`; shared `unfinishedPhases` helper | execute-phase P6
@@ -241,7 +248,7 @@ Budget: strong
 | P8 | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` + `bun scripts/check-skill-context.mjs` | exit 0 / exit 0 | audit-pr 5.6.1→5.6.2; all `→ Next: /unit-lane` bullets terminate before sibling bullets; 28 skills PASS | execute-phase P8
 | P9 | `grep -c "Philipp Görz|Ze Sheng|V. J. M. Manès" README.md` | 3 | 3 author lists restored from issue #183 (Görz 4, Sheng 6, Manès 7); no `et al.` remain | execute-phase P9
 | P10 | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` | 0 / 0 | 0 repo-specific nouns in either template; determinism + property/fuzz bound preserved | execute-phase P10
-| P11 | `node scripts/check-skill-context.mjs --routes` | 0 | 14 routes PASS (10990 est total under declared ceilings); all `feature 60 P3` entries now name skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic | execute-phase P11
+| P11 | `node scripts/check-skill-context.mjs --routes` | exit 0 | 14 routes PASS (the tool prints no total; summing its rows gives 175343 est / 12941 lines); all `feature 60 P3` entries now name skills/verification-contract/SKILL.md as growth source with honest pre-re-basis measurements and correct ceil arithmetic | execute-phase P11
 | AC6 | `node --test scripts/golden-fixture.test.mjs` | 0 | 12/12 pass — closed Result grammar (`exact <n>/<n> · invented none|<k> · shape ok|<fail-code>`, cutoff 2026-09-18) enforced; untouched by this unit | execute-phase P12
 | AC7 | `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs --content` + schema `bun run test` | 0 / 0 / 0 / 0 | root: 695 pass 0 fail; routes: 14 PASS; version-parity: 0.21.0→0.22.0 PASS; schema: 717 pass 0 fail; golden-fixture: 12/12 pass | execute-phase P12
 

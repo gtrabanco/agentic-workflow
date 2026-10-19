@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.4.1
+version: 1.4.2
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -47,8 +47,8 @@ frozen fixture, recorded input) or downgrade the row to `read-verified:`/
 `manual:`.
 
 **Property / fuzz validators.** A planner may emit a property or fuzz validator as
-a bounded `commands` row — deterministic, bounded runtime — within the timeout
-budgets published by the schema package. No new validator kind in `VerificationPlan
+a bounded `commands` row — deterministic, bounded runtime within the project's
+per-command timeout budgets. No new validator kind in `VerificationPlan
 v1` is needed: property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
