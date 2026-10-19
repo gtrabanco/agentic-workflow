@@ -242,6 +242,7 @@ Budget: strong
 | P7 | `bun scripts/check-skill-context.mjs` + direct read of SKILL.md § Artifact + § Freeze and receipt | exit 0 | 28 skills PASS; evidence table declared as receipt (no phantom `## Acceptance receipt v1`); legacy era label rephrased as binding-if-present; version bumped 1.4.0→1.4.1 + CHANGELOG row | execute-phase P7
 | P8 | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` + `bun scripts/check-skill-context.mjs` | exit 0 / exit 0 | audit-pr 5.6.1→5.6.2; all `→ Next: /unit-lane` bullets terminate before sibling bullets; 28 skills PASS | execute-phase P8
 | P9 | `grep -c "Philipp Görz|Ze Sheng|V. J. M. Manès" README.md` | 3 | 3 author lists restored from issue #183 (Görz 4, Sheng 6, Manès 7); no `et al.` remain | execute-phase P9
+| P10 | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` | 0 / 0 | 0 repo-specific nouns in either template; determinism + property/fuzz bound preserved | execute-phase P10
 
 ## Progress log
 
@@ -261,6 +262,7 @@ Budget: strong
 - 2026-10-19 P7 done: post-61 receipt owner declared (Evidence table); phantom `## Acceptance receipt v1` block deleted; legacy era label rephrased binding-if-present (no template instruction); verification-contract 1.4.0→1.4.1 + CHANGELOG row; check-skill-context 28 skills PASS; ea4ce056 — next: P8
 - 2026-10-19 P8 done: closure-gate `→ Next: /unit-lane <unit>` bullet terminated before `- Lane-era path` sibling (F35); audit-pr 5.6.1→5.6.2; check-skill-context 28 skills PASS; 701cd08a — next: P9
 - 2026-10-19 P9 done: full issue-#183 author lists restored in README § References (3 grep matches; no `et al.`); 5eae8492 — next: P10
+- 2026-10-19 P10 done: template determinism/property-fuzz sentences restated without repo-specific nouns (0 grep matches for "schema package" / "existing commands class"); 8a7664cc — next: P11
 
 ## Next
 
