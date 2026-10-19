@@ -121,15 +121,16 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10791,
-      "routeLinesMax": 667,
+      "routeEstimateMax": 10833,
+      "routeLinesMax": 668,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
         "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
         "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md — route measured estimate 9056; ceiling = ceil(measured x 1.10)",
         "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route — measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines",
-        "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across audit-pr/SKILL.md and 02_CLOSURE_AND_SCOPE_GATES.md; route measured 9810 est / 606 lines; ceiling = ceil(9810 x 1.10) = 10791 est and ceil(606 x 1.10) = 667 lines"
+        "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across audit-pr/SKILL.md and 02_CLOSURE_AND_SCOPE_GATES.md; route measured 9810 est / 606 lines; ceiling = ceil(9810 x 1.10) = 10791 est and ceil(606 x 1.10) = 667 lines",
+        "feature 36 fold: F21 reference wording bump (02_CLOSURE_AND_SCOPE_GATES.md) + audit-pr 5.6.0→5.6.1 frontmatter": "audit-pr reference wording corrected (F21 fold) — 02_CLOSURE_AND_SCOPE_GATES.md era label migration from \"lane-era\" to \"legacy (pre-feature 61)\"; bump audit-pr 5.6.0→5.6.1; ceiling re-based at ceil(measured×1.10)"
       }
     },
     "audit-pr:fix": {
@@ -137,15 +138,16 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10791,
-      "routeLinesMax": 667,
+      "routeEstimateMax": 10833,
+      "routeLinesMax": 668,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
         "fix 285 (F4-F7 fold)": "non-author-controlled discriminator note, empty obligations BLOCKED verdict, frozen digest anchor text added to 02_CLOSURE_AND_SCOPE_GATES.md; route measured estimate 9575, lines 597; ceiling = ceil(measured x 1.10)",
         "fix 286 (scope manifest closeout)": "the scope-aware judge + scope-base closeout (fix 286) grew audit-pr SKILL.md — route measured estimate 9056; ceiling = ceil(measured x 1.10)",
         "fix 285 + fix 286 (combined integration)": "the main-into-branch merge combines the lane-era lineage gate with the scope-aware judge in one route — measured 9747 est / 603 lines; ceiling re-based to ceil(9747 x 1.10) = 10722 est and ceil(603 x 1.10) = 664 lines",
-        "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across audit-pr/SKILL.md and 02_CLOSURE_AND_SCOPE_GATES.md; route measured 9810 est / 606 lines; ceiling = ceil(9810 x 1.10) = 10791 est and ceil(606 x 1.10) = 667 lines"
+        "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across audit-pr/SKILL.md and 02_CLOSURE_AND_SCOPE_GATES.md; route measured 9810 est / 606 lines; ceiling = ceil(9810 x 1.10) = 10791 est and ceil(606 x 1.10) = 667 lines",
+        "feature 36 fold: F21 reference wording bump (02_CLOSURE_AND_SCOPE_GATES.md) + audit-pr 5.6.0→5.6.1 frontmatter": "audit-pr reference wording corrected (F21 fold) — 02_CLOSURE_AND_SCOPE_GATES.md era label migration from \"lane-era\" to \"legacy (pre-feature 61)\"; bump audit-pr 5.6.0→5.6.1; ceiling re-based at ceil(measured×1.10)"
       }
     },
     "execute-phase:descope": {

@@ -527,8 +527,8 @@ test("#291 F8: `— P<n> — implemented` records the phase (formal shape)", () 
       [SCRIPT, "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
-    assert.equal(result.status, 1, "every phase is recorded — no more work");
-    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+    assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
+    assert.ok(result.stdout.includes("close-out"), "all phases done, routes to /audit-pr");
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
@@ -553,8 +553,8 @@ test("#291 F8: `— P<n> implemented` (no second dash) records the phase", () =>
       [SCRIPT, "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
-    assert.equal(result.status, 1, "every phase is recorded — no more work");
-    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+    assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
+    assert.ok(result.stdout.includes("close-out"), "all phases done, routes to /audit-pr");
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
@@ -579,8 +579,8 @@ test("#291 F8: `— implement P2: ...` (action word before P) records the phase"
       [SCRIPT, "13-execute-unit"],
       { cwd: repoRoot, encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: fixture } },
     );
-    assert.equal(result.status, 1, "every phase is recorded — no more work");
-    assert.ok(result.stdout.includes("every phase") || result.stderr.includes("every phase"), "all phases done");
+    assert.equal(result.status, 0, "every phase is recorded — routes to close-out");
+    assert.ok(result.stdout.includes("close-out"), "all phases done, routes to /audit-pr");
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }
