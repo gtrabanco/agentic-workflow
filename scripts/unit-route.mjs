@@ -741,13 +741,28 @@ function main(argv) {
     // #291 AC3/AC4: the hand-off names exactly one phase and the execution
     // tier — never the bare whole-unit command. Whole-unit mode survives only
     // as an explicit operator choice (`execute-phase`'s own §7).
-    const phase = firstUnfinishedPhase(unit);
-    const tier = executionTier();
-    // The frozen fix invocation is `--fix <n>` (`execute-phase`'s own hint), so the
-    // machine signal names it instead of the feature-shaped command (F31).
-    command = unit.kind === "fix"
-      ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
-      : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    // If all phases are done but status is not "done" (in-progress with a
+    // pushed branch), route to close-out — the merge gate is the next step (F26).
+    const doc = readProject(`${unit.dir}/SPEC.md`);
+    if (doc !== null && sectionBody(doc, "Tasks") !== null) {
+      const phases = parseUnitDocPhases(doc);
+      const donePhases = recordedPhases(doc);
+      if (phases.length > 0) {
+        const unfinished = phases.map((p) => p.number).filter((n) => !donePhases.has(n));
+        if (unfinished.length === 0) {
+          route = "close-out";
+          selected = [];
+          command = "/audit-pr";
+        }
+      }
+    }
+    if (route === "execute") {
+      const phase = firstUnfinishedPhase(unit);
+      const tier = executionTier();
+      command = unit.kind === "fix"
+        ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+        : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    }
   }
 
   const base = route === "replan" || route === "decision" || route === "product" || route === "fold"
