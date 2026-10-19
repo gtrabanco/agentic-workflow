@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 5.2.0
+version: 5.2.1
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -76,10 +76,6 @@ user (not inferred or defaulted):
 - **`<NN-slug>`** — the unit identifier. If blank or missing: re-ask once with
   the expected format (`<NN-slug>`, e.g. `131-execute-phase`). If still blank,
   emit the guard refusal line above and stop.
-- **Confirmed phase** — a valid `P<k>` step id from the unit doc's `Tasks`.
-  If blank: re-ask once; if still blank, halt with `requires manual input`.
-- **Confirmed file targets** — the target paths or scope the phase operates on.
-  If blank: re-ask once; if still blank, halt with `requires manual input`.
 
 Optional inputs (may default):
 - **`P<k>`** — step argument. Absent → the body resolves to the first
