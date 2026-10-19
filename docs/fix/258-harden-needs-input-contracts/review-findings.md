@@ -684,3 +684,60 @@ LOOP CAP REACHED — 258-harden-needs-input-contracts
 - Cycles: 10 review→fold cycles' marks on this ledger (the cap bit at cycle 4); this review ran on the user's explicit instruction
 - Route: the fold batch F33 + F34 + F35 + F36 + F37 + F38 + F39 + F40 requires the user's explicit instruction (/fold-findings), otherwise /triage-issue --prioritize-now 258-harden-needs-input-contracts F33 F34 F35 F36 F37 F38 F39 F40 (or the programmatic outer driver)
 ```
+
+### User decision — `execute-phase` never interviews (2026-10-19, human-owner)
+
+Recorded verbatim from the owner's reply to cycle 10: «execute-phase no debería
+preguntar nada, eso solo debería ocurrir en fase de diseño o planificación» —
+y «un execute-phase sin fase ya estaba decidido que debería hacer: implementar
+todas las fases del tirón».
+
+Three decisions, each settling a row:
+
+1. **Execution never interviews.** `execute-phase` has no `ask_user` surface. Its
+   inputs are artifacts it reads (the unit doc's `Tasks`, the triage block, the
+   route's tier), not questions. A blank or unresolvable input stops with the
+   refusal line and routes back to the stage that owns the fact
+   (`/unit-lane --retriage`) — the ask belongs to design/planning, never to
+   execution. This is what F33/F34 kept re-opening: the guard asked the *user*
+   for facts the *plan* owns.
+2. **Bare `<NN-slug>` = all remaining steps**, as `SKILL.md:24-27` already
+   documents ("`<NN-slug>` (no step) — all remaining steps, one commit each").
+   The phase is therefore **not** a required input; the required-input framing
+   introduced by the F29 fold is the defect.
+3. **Phase-per-turn is a tier/config choice, not a default.** One phase per turn
+   exists for weak models and low thinking levels; whole-unit runs are valid for
+   strong ones (owner's example: qwen3.6 → phase by phase, deepseek v4.1 → whole
+   unit). `unit-lane` is to resolve that from the model/thinking configuration
+   when the model-configuration feature lands, writing it on the triage block's
+   `Tiers:` line. Until then the prose default is the one `:24-27` documents.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F33-D | `skills/execute-phase/SKILL.md:73-84` | code | med | DISPUTED | human-owner 2026-10-19: the required-input framing is the defect, not the resolution. Next fold: delete `Confirmed phase` from the required list and the "this resolution is confirmed, not defaulted" dodge, keep `:24-27`'s "all remaining steps"; delete the `re-ask once` step for `execute-phase` (rename the section's halt to "stop and route back to `/unit-lane`") | n/a |
+| F34-D | `skills/execute-phase/SKILL.md:85-90` | code | high | DISPUTED | human-owner 2026-10-19: file targets are not an input at all — the unit doc's nested `Tasks → Relevant files:` metadata plus the path-protection checkpoint own the read set. Next fold: delete the bullet from the required list, delete its `re-ask once`, and write the dated `## Amendments` row amending AC1/AC2 + Input audit E2/E3 to the no-interview contract (the owner's decision IS the approval the anti-gaming rule requires; the row must quote it) | n/a |
+
+**Not settled by the decision** (the remaining six fix-now rows stand as reported):
+F35 the CHANGELOG removal claim, F36/F37 the manifest narration and the duplicate
+`policy.declared` clause, F38 the P5/Progress-log counts, F39 the `--force` claim,
+F40 the elided refusal line. F40 becomes more relevant, not less: with no
+interactive ask, the refusal line is the *only* thing the halt prints.
+
+### Proposals from the decision (user triage only, D3 — no issue created)
+
+- **P-A · skill bodies carry no templates; templates are code.**
+  `skills/execute-phase/SKILL.md` is 285 lines (`## Process` 106, `## Turn
+  contract` 51, `## Needs-input guard` 30, eight fenced blocks); every
+  `execute-phase:*` route loads ~10.5k est / 844 lines. The ceiling has been
+  re-based four times inside this one PR (3222/279 → 3612/304 → 3807/315) —
+  re-basing is the symptom, not the fix. Direction: the repeated blocks
+  (turn-contract fence, gate-rejection blocks, paste/ledger templates) move to a
+  code surface that prints them on demand (`scripts/*.mjs --template <id>`), the
+  same move `review-receipt.mjs` / `unit-route.mjs` already made. Measurable
+  target: `execute-phase` body ≤ 180 lines and a route ceiling that stops
+  moving. **Trigger:** the next `execute-phase` guard or Process edit.
+- **P-B · `unit-lane` becomes the programmatic driver.** Per-model execution
+  mode (whole-unit loop vs phase-per-turn) resolved from the model tier and
+  thinking level, recorded on the triage block's `Tiers:` line, so
+  `execute-phase` stops carrying both modes as prose. **Trigger:** the
+  model-configuration feature's unit is planned; P-B is one of its rows.
