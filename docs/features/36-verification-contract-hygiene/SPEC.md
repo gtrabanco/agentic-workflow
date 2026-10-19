@@ -175,12 +175,12 @@ Budget: strong
 |---|---|---|---|---|
 | R1 | repo-evidence sweep of the unit's domain (skill, templates, fixture suite, schema source, README, roadmap, issue #183) | exit 0 | 4 claims tabled as PE-001…PE-005; item 3 already shipped by feat 55; no external fetch needed — the issue carries the research provenance | lane conductor (this session) |
 | R1 note | Uncertainties: none material — wording exactness for the two new sentences is a cheap default recorded in `decisions.md`; sources: repo evidence + the issue's bibliography (arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide) | — | — | — |
-| AC1 | `grep -n "Validator determinism" skills/verification-contract/SKILL.md` && `grep -n "Property / fuzz" skills/verification-contract/SKILL.md` && `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present (lines 36+); fuzz/property sentence present (line 45) | execute-phase P1
-| AC2 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 74: Validator determinism; line 80: deterministic, bounded | execute-phase P2
-| AC3 | `grep -n "Property / fuzz validators" skills/verification-contract/SKILL.md` exits 0 | exit 0 | line 45: bounded commands row | execute-phase P1
+| AC1 | `grep -n "Validator determinism" skills/verification-contract/SKILL.md` && `grep -n "Property / fuzz" skills/verification-contract/SKILL.md` && `bun scripts/check-skill-context.mjs` exits 0 | exit 0 | determinism rule present (line 44); fuzz/property sentence present (line 49) | execute-phase P1
+| AC2 | `grep -n "determin" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 74: Validator determinism; line 81: deterministic, bounded | execute-phase P2
+| AC3 | `grep -n "Property / fuzz validators" skills/verification-contract/SKILL.md` exits 0 | exit 0 | line 49: bounded commands row | execute-phase P1
 | AC4 | `grep -n "Property / fuzz validators" template/docs/fix/_TEMPLATE/SPEC.md` exits 0 | exit 0 | line 79: **Property / fuzz validators.** bounded runtime within schema timeout budgets | execute-phase P2
 | AC5 | `grep -c` for four issue #183 references in README.md | 4 | arXiv:2505.06177, arXiv:2605.21824, TSE'19, appsec.guide | execute-phase P3
-| AC6 | `node --test scripts/golden-fixture.test.mjs` exits 0 | exit 0 | 12 tests, 12 pass | execute-phase P4
+| AC7 | root suites: `node --test scripts/*.test.mjs` + `node scripts/check-skill-context.mjs --routes` + `node scripts/version-parity-gate.mjs`; schema: `bun run test` in `packages/agentic-workflow-schema` | exit 0 / exit 0 / exit 0 / exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context: 1 pass 0 fail (--routes PASS); version-parity: content parity holds (AC1) | execute-phase P4
 | AC7 | root suites + schema test + context budgets | exit 0 | golden-fixture: 12/12 pass (AC6); schema: 717 pass 0 fail; check-skill-context.test: 1 pass 0 fail (AC1); --routes PASS route budgets: 14 (AC1); version-parity: content parity holds (AC2) | execute-phase P4
 
 ## Progress log
