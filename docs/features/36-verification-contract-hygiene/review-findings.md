@@ -228,3 +228,98 @@ first tested after the start line). "The new era labels contradict SNAPSHOT.md" 
 the delivered behaviour change, not deleted.
 
 Every finding has a destination; this review creates no backlog.
+
+## Cycle 4 — 2026-10-19
+
+Cycle 4 ran (review-change) on candidate `HEAD 77280bea15562850040e35f8f257bd02af0cc6c1`,
+clean workspace, no PR (pre-PR checkpoint). **Cycle 4 is past the two-cycle cap**
+and ran because the user invoked it explicitly; the residue routes to
+`/triage-issue --prioritize-now` rather than a fifth review→fold cycle.
+Delta mode against cycle 3's reviewed head `d85eeb40` escalated to a **full pass
+on Size**: fold diff `d85eeb40..HEAD` = 393 added + 115 deleted = 508 changed
+lines (> 200) across 14 files. Applicable passes ran isolated: `review-code`,
+`review-security`, `review-verify`, `review-perf`, `review-brand`; skipped with
+reasons — `review-design`/`review-a11y`/`review-seo` (no UI, no web surface: the
+repo ships markdown skills, a docs scaffold, and node scripts). Synthesis,
+classification (`review-implementation`) and the debt transform (`review-debt`)
+each ran isolated. Gate at head: root 695 pass / 0 fail exit 0,
+`check-skill-context` 28 skills exit 0, `--routes` 14 routes exit 0,
+golden-fixture 12/12 exit 0, version-parity content PASS (0.21.0→0.22.0) exit 0,
+schema 717 pass exit 0, pi 432 pass exit 0, normative-drift 18/18,
+ledger-ownership 11/11, unit-route 44/44.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F40 | scripts/unit-route.mjs:598-604,762-773 | code, security | high | fix-now | regression of F31 → fold into current unit: `unfinishedPhases` returns ONE empty set for "doc absent / no `## Tasks` — untouched work routes to P1" (its own docstring) and "all phases recorded"; the new close-out guard reads it as proof of the latter and refuses with that unverified claim. Reproducer: a unit doc whose `## Tasks` heading is absent → `UNIT ROUTE — error … has all phases recorded but status is 'in-progress'` at head where `main` routed `route: execute` / `/execute-phase <unit> P1`. Return a discriminated result (`absent \| empty \| unfinished`) and consume it at both call sites | no |
+| F41 | scripts/unit-route.mjs:621,764 | code | med | fix-now | fold into current unit: two dead predicates from the same P6 repair — `firstUnfinishedPhase`'s `if (unfinished.length === 0) fail(...)` is the negation of the `donePhases.size === 0` guard two lines above it, and `if (status === "done")` is nested inside the `else` of `else if (status === "done")` so it can never run. Delete both; F40's single-helper rewrite makes them redundant anyway | no |
+| F42 | skills/review-change/references/REVIEW_PROCESS.md:34-35 | code, architecture, verify | med | fix-now | fold into current unit: delta-mode step 3 still makes "the sibling acceptance-manifest `ACCEPTANCE.md` blob recomputed to an **exact match** … unchanged and still mandatory" a precondition for every unit, while step 2 in the same file was migrated to the unit-doc acceptance source at `:56`; the text is branch-added (`e28ff213`). Unsatisfiable for every post-feature-61 unit — rewrite it onto "the step-2 acceptance artifact", the F34/F39 class in a sibling line | no |
+| F43 | docs/features/36-verification-contract-hygiene/SPEC.md:217-219,240,244,247 | verify, workflow | med | fix-now | fold into current unit: the `## Evidence` heading is empty and its table is nested under `## Triaged steps`, and three rows carry unescaped `\|` so they split into 10/7/7 cells — the `Exit / digest` cells of P5, P9 and AC6 hold table fragments and author names instead of exit codes | no |
+| F44 | docs/features/36-verification-contract-hygiene/SPEC.md:146-150 | verify, workflow | high | fix-now | regression of F32 → fold into current unit: obligations O10–O14 still read `planned` although every evidence target exists, and O14's `required-evidence: Evidence row P12` resolves to no row at all (`grep -nE "^\| P12 \|" SPEC.md` → no match) | no |
+| F45 | docs/features/36-verification-contract-hygiene/review-findings.md (tail) | verify, workflow | high | fix-now | regression of F28 → fold into current unit: no `GATE-RAN` mark exists at the reviewed head (newest are at `d85eeb40`) although P12's Task and Progress entry claim fresh marks were appended and O14 requires them; all seven gate commands do exit 0 at `77280bea` | no |
+| F46 | docs/features/36-verification-contract-hygiene/review-findings.md:27-29,96-98 | verify, code | med | fix-now | fold into current unit: F18–F27 appear in two tables, so `node scripts/ledger-provenance.mjs <ledger> --check` exits 1 with "10 row(s) the 7-column schema refused were read by nothing"; and the fold cell cites a non-existent 40-hex `af67eb9ef6a66b20c804f22087349220b86b3f8d` where the real commit is `af67eb9e54cfd95eef7b12406a6905d7e1abbd23` | no |
+| F47 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:162,186,212,235,259 | perf, code | med | fix-now | regression of F38 → fold into current unit: the seven `execute-phase:*` `unit 36 / feature 36` growth entries still name `execute-phase/SKILL.md:13-14,22` and `execute-phase/references/EXECUTION_CONTRACT.md:127`, and `git diff --name-only main...HEAD \| grep execute-phase` is empty; P11 repaired the `feature 60 P3` entries and left these | no |
+| F48 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:212,348,355 + skills/verification-contract/SKILL.md | perf, brand | med | fix-now | regression of F22 + F38 → fold into current unit: `ceil(1360 x 1.10) = 1496` is stated but equals 1497, and 1360 is the already-ceiled feature-60 value rather than the measured 1355; `ceil(11052 x 1.10) = 12157` where the true value is 12158; and the entries state the skill "grew to 1459 est" where it measures 1460 est / 116 lines | no |
+| F49 | CHANGELOG.md:742 + scripts/normative-drift.test.mjs:771-785,703 | workflow, brand, verify | high | fix-now | fold into current unit: `verification-contract` frontmatter is 1.4.1 but its newest CHANGELOG row is 1.4.0 and no 1.4.1 row exists, although P7's Evidence row claims "version bumped 1.4.0→1.4.1 + CHANGELOG row". The reason a green gate missed it: `versionCells()` only collects rows under a `#### \`<skill>\`` heading, and no such heading exists for `verification-contract` (its rows live in the shared `### Internal` table with the name in the first column), so `newestVersionCell` returns null and the `version-tables` claim at `rendered-facts@1` is skipped for every internal skill. Add the 1.4.1 row and make the claim read that table shape | no |
+| F50 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 | code, brand, verify | med | fix-now | regression of F35 → fold into current unit: the P8 fold replaced the `)` closing the parenthetical opened at `:99` with `.` (so it stays unclosed) and left the remedy sentence running into the sibling `- **Lane-era path**` bullet; `CHANGELOG.md:566` then ships an audit-pr 5.6.2 row claiming the bullet was terminated | no |
+| F51 | skills/verification-contract/SKILL.md:51 | architecture, brand | med | fix-now | fold into current unit: branch-added repo-specific noun in an installable skill — "within the timeout budgets published by the schema package" — the exact phrase F37 removed from both exported templates in this same batch; AGENTS.md's stack-agnostic rule forbids it in skills and shared docs | no |
+| F52 | docs/features/36-verification-contract-hygiene/SPEC.md:272-274 | workflow | high | fix-now | regression of F33 → fold into current unit: `## Next` claims "all replan rows (F28–F39) folded and verified green" and routes to `/review-change`, while all twelve rows still read `folded: no` and `node scripts/unit-route.mjs 36-verification-contract-hygiene` prints `open-rows: 12` / `route: replan` / `next: /unit-lane 36-verification-contract-hygiene` | no |
+| F53 | docs/features/36-verification-contract-hygiene/SPEC.md:107-118 | verify, workflow | med | fix-now | fold into current unit: `## Applicable tests` still says "No new test: … the change is wording-only" and `### Known pre-existing issues` still says "none observed", while the branch changes `scripts/unit-route.mjs` and adds a `defined`-status test case to its suite | no |
+| F54 | docs/features/36-verification-contract-hygiene/SPEC.md:238,246 | verify | med | fix-now | regression of F25 → fold into current unit: two Evidence rows do not reproduce — the P4 AC7 row cites `node scripts/version-parity-gate.mjs` without `--content` (real exit 2, usage printed; recorded `exit 0`), and the P11 row records a bare `0` plus an invented "14 routes PASS (10990 est total under declared ceilings)" where the tool prints no total and the real total is 175373 est / 12941 lines | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-36 | scripts/unit-route.mjs:598-604,762-773 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck reproducible command output: a fixture copy of `scripts/fixtures/unit-route` with `## Tasks` renamed in `docs/features/13-execute-unit/SPEC.md` → head `UNIT ROUTE — error` / "has all phases recorded but status is 'in-progress' (not 'done')", while `main`'s router over the same tree prints `route: execute` / `next: /execute-phase 13-execute-unit P1 (tier: cheap)` exit 0 | code | confirmed | finding-mark | n/a | n/a |
+| VF-37 | scripts/unit-route.mjs:621,764 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck direct read of `:616-623` (`if (donePhases.size === 0) return 1;` then `const unfinished = [...donePhases]…; if (unfinished.length === 0) fail(...)`) and `:737,748,764` (`} else if (status === "done") … } else { … if (status === "done")`) — both predicates are unreachable by construction | code | confirmed | finding-mark | n/a | n/a |
+| VF-38 | skills/review-change/references/REVIEW_PROCESS.md:34-35 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `git blame -L 33,37` → the two lines are `e28ff213e` (branch); `git show main:skills/review-change/references/REVIEW_PROCESS.md \| grep -c ACCEPTANCE.md` → 0; the same file's step 2 at `:56` reads "legacy (pre-feature 61) `ACCEPTANCE.md` or the unit doc's …" | architecture | confirmed | finding-mark | n/a | n/a |
+| VF-39 | docs/features/36-verification-contract-hygiene/SPEC.md:217-219,240,244,247 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `grep -n '^## '` → `217:## Evidence` immediately followed by `219:## Triaged steps`; a markdown-cell count honoring `\|` gives P5 → 10 cells, P9 → 7, AC6 → 7 against the 5-column header at `:229` | verify | confirmed | finding-mark | n/a | n/a |
+| VF-40 | docs/features/36-verification-contract-hygiene/SPEC.md:146-150 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `awk 'NR>=146 && NR<=150 {split($0,a,"\|"); print a[length(a)-1]}'` → `planned` for all five rows; `grep -nE '^\| P12 \|' SPEC.md` → no match while O14's `required-evidence` cell reads `Evidence row P12` | verify | confirmed | finding-mark | n/a | n/a |
+| VF-41 | docs/features/36-verification-contract-hygiene/review-findings.md (tail) · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `grep -oE 'GATE-RAN \| HEAD [0-9a-f]{40}' <ledger> \| sort \| uniq -c` → 7 at `636341e8`, 7 at `d85eeb40`, 5 at `f21593eb`, zero at `77280bea`; all seven gate commands exit 0 at that head | verify | confirmed | finding-mark | n/a | n/a |
+| VF-42 | docs/features/36-verification-contract-hygiene/review-findings.md:27-29,96-98 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `node scripts/ledger-provenance.mjs <ledger> --check` → exit 1, "CHECK FAIL: 10 row(s) the 7-column schema refused were read by nothing: F18…F27", one "duplicate id in the file — only the last row is read" per id; `git cat-file -t af67eb9ef6a66b20c804f22087349220b86b3f8d` → fatal, `git rev-parse af67eb9e` → `af67eb9e54cf…` | code | confirmed | finding-mark | n/a | n/a |
+| VF-43 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:162,186,212,235,259 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `git diff --name-only main...HEAD \| grep execute-phase` → empty, while a JSON walk over `routes/*/sources` prints `unit 36 / feature 36` naming `execute-phase/SKILL.md:13-14,22` and `execute-phase/references/EXECUTION_CONTRACT.md:127` for execute-phase:descope, :feature, :final-pr, :finding, :fix, :legacy, :small | perf | confirmed | finding-mark | n/a | n/a |
+| VF-44 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:212,348,355 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `node -e 'console.log(Math.ceil(1360*1.1), Math.ceil(11052*1.1))'` → `1497 12158` against the declared `1496` / `12157`; `node scripts/check-skill-context.mjs` prints `verification-contract 1460 116` against the entries' "grew to 1459 est" | perf | confirmed | finding-mark | n/a | n/a |
+| VF-45 | CHANGELOG.md:742 + scripts/normative-drift.test.mjs:771-785,703 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `grep -m1 '^version:' skills/verification-contract/SKILL.md` → `1.4.1`; `grep -n '^#### `verification-contract`' CHANGELOG.md` → no match, so `versionCells(text,"verification-contract")` returns `[]` and `newestVersionCell` returns null while `:703` skips the comparison; the newest row is `1.4.0` at `:742` | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-46 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `git show 701cd08a -- <that file>` → the hunk replaces `\`→ Next: /unit-lane <unit>\`); restore` with `\`→ Next: /unit-lane <unit>\`. Restore`, so the `(` opened at `:99` is never closed; `sed -n '119,121p'` shows the sentence ending `write a fresh receipt` immediately above `- **Lane-era path**` | code | confirmed | finding-mark | n/a | n/a |
+| VF-47 | skills/verification-contract/SKILL.md:51 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `git show main:skills/verification-contract/SKILL.md \| grep -c "schema package"` → 0; head `grep -n "schema package"` → `51`; both templates now read "within the project's timeout budgets" (F37) | brand | confirmed | finding-mark | n/a | n/a |
+| VF-48 | docs/features/36-verification-contract-hygiene/SPEC.md:272-274 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `node scripts/unit-route.mjs 36-verification-contract-hygiene` → `status: in-progress` / `open-rows: 12` / `route: replan` / `next: /unit-lane 36-verification-contract-hygiene`; `grep -oE '^\| F(2[89]\|3[0-9]) \|.*' <ledger>` folded cell → `no` for all twelve | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-49 | docs/features/36-verification-contract-hygiene/SPEC.md:107-118 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `git diff --stat main...HEAD -- scripts/unit-route.mjs scripts/unit-route.test.mjs` → both modified (36+/21- and 100+/0-), while `:110` reads "No new test" and `:114` "none observed" | verify | confirmed | finding-mark | n/a | n/a |
+| VF-50 | docs/features/36-verification-contract-hygiene/SPEC.md:238,246 · reviewer review-change · HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 · recheck `node scripts/version-parity-gate.mjs` → exit 2, usage printed (recorded `exit 0`); `node scripts/check-skill-context.mjs --routes` prints no total (the row's "10990 est total" is invented) and an awk sum over its output gives 175373 est / 12941 lines | verify | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 77280bea15562850040e35f8f257bd02af0cc6c1 | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-4 re-verification of cycle-3 folded rows: F29, F30, F31, F33, F34, F36,
+F37, F39 fixed; F28, F32, F35, F38 are **regressions** (F45, F44, F50, F47/F48)
+and F31's own repair introduced F40/F41. Report notes, never persisted (`low`,
+report-only): F55 (the AC4 row quotes the template as "within schema timeout
+budgets at line 79" where committed line 80 reads "within the project's timeout
+budgets" — debt item D1, trigger: the next edit to that sentence or the next
+audit that re-derives AC4); the `verification-contract` "legacy" label means
+"has `ACCEPTANCE.md`" at `:22` and "has no manifest mention" at `:76`; both
+templates carry the same determinism sentence but the fix template's property/
+fuzz line reads "bounded runtime — deterministic, bounded" (redundant) where the
+features template names the row class; the second P6/F31 test passes on `main`
+too, so it is a guard and not the reproducer P6's Evidence row implies; the
+`pi-agentic-workflow` 0.22.0 companion row names only `verification-contract`
+1.4.0 while that package version also ships 1.4.1, audit-pr 5.6.2, review-change
+3.12.1 and workflow-status 3.9.2; commit subjects alternate `docs(36)` /
+`docs(unit 36)` and one reads `fix(36): bump F21 — five unchanged skills`, which
+calls the renamed skills "unchanged"; the execute hand-off now reads and parses
+the unit doc twice per invocation (guard + `firstUnfinishedPhase`, ~92 ms vs
+83 ms on a 65 KB doc). Refuted: "the issue-#183 bibliography is wrong" — all
+four entries match `gh issue view 183` field by field and the live arXiv,
+Crossref and appsec.guide records; "path traversal or shell injection in the new
+helper" — `unit.dir` comes only from an enumerated `readdirSync`, no
+`child_process` import exists, and `sanitize()` flattens C0/C1/format
+characters; "the exported templates still carry repo-specific nouns" — both grep
+0; "the P10 Evidence row is column-shifted" — its pipes are escaped and it
+renders 5 cells; "the three `#291 F8` tests were weakened" — their assertion
+moved onto the delivered behaviour change and the branch adds a stricter
+`defined`-status refusal test; "the branch breaks the gate" — root 695/0,
+golden 12/12, routes 14 PASS, skills 28 PASS, parity PASS, schema 717/0, pi
+432/0. Every finding has a destination; this review creates no backlog.
