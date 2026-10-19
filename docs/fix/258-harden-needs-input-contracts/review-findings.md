@@ -240,3 +240,146 @@ LOOP CAP REACHED — 258-harden-needs-input-contracts
 - Route: /triage-issue --prioritize-now 258-harden-needs-input-contracts F16 F17 F18 F19 (or the programmatic outer driver)
 ```
 
+
+---
+
+Cycle 7 — **adversarial, N=2 isolated reviewers** — ran 2026-10-19
+(`review-change --adversarial 2`, fresh context, reviewed head
+`18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b`, PR #302). Cycle 7 = six completed
+`REVIEW-RAN` marks + 1 (two of them share `939f6013`), and it starts on the
+user's explicit instruction — the review→fold cap already bit at cycle 4 and a
+further cycle never starts by reviewer election.
+
+**Escalation (delta → full pass), trigger and numbers stated.** The preceding
+fold batch (`939f6013`, `git diff 221b3ab4..939f6013`) changed
+`skills/unit-lane/references/RESEARCH.md`, outside the union of the folded
+rows' cited files (F16–F19 cite SPEC.md, SKILL_CONTEXT_BUDGETS.json,
+execute-phase/SKILL.md, unit-lane/SKILL.md) — **width trigger fired**. Size
+stayed under both limits (5 files, 35+/28− = 63 changed lines). The review
+therefore covers `git diff main...HEAD` (11 files).
+
+**Workspace state (a precondition, never a finding).** `git status --porcelain`
+empty · `git status -sb` in sync with `origin/fix/258-harden-needs-input-contracts`
+· PR #302 OPEN at the reviewed head · no `ACCEPTANCE.md` for this unit (legacy
+SPEC-blob fallback).
+
+**Frozen acceptance + SPEC drift.** AC1–AC6 each map to evidence in the unit
+doc and every one of the 11 changed files maps to a criterion (none is
+`none`-mapped). The SPEC's declared validators reproduce at the head: AC1 4,
+AC2 4 (2+1+1), AC3 2, AC4 3 boxes, AC6 4. Two criteria hold only textually:
+AC1's required fields exist but contradict the optional list beside them
+(F20), and the SPEC's declared manual halt verification has no receipt (F25).
+
+**Every `folded: yes` row re-verified at its cited location — 19 rows, 3 do not
+hold.** F1 `--routes` PASS (14 routes) and every re-based `execute-phase:*`
+entry names the fix-258 growth source · F2 the Evidence rows reproduce (AC1 4,
+AC2 4, AC3 2, AC6 4; `693 tests PASS` reproduced) · F3 **regression** (F17
+restored the AC1 fields without reconciling the optional list → F20) · F4 the
+three pre-existing CHANGELOG rows are byte-identical to `main` (no removed line
+in the diff) · F5 `## Process` is back at `:91` with steps `### 1.`–`### 8.`
+nested under it · F6 "Decide for me" is gone from `DESIGN.md`'s required list ·
+F7 the `<target-dir>` guard bullet is gone and Step 0 keeps
+`[target-dir], default cwd` · F8 `node scripts/phase-lint.mjs <SPEC>` → `verdict
+PASS (6/6)` · F9 **regression** (→ F20) · F10 the re-indent churn is gone
+(`git diff --numstat` 59/43 equals `git diff -w --numstat`) · F11/F18
+**regression** (→ F26) · F12 one home for "no silent `feature` default"
+(`:68` only) · F13 **regression** (→ F22, F23) · F14 repaired (the blank
+objective hands back to the doc that writes it) · F15 every obligation row is
+`verified` · F16 the counters reproduce (4/4) · F17 the AC1 fields are named at
+`:79-83` — the repair holds and is what re-opened F20 · F19 the slug/idea
+bullet is scoped to the non-`--fix`/`--from-issue` modes.
+
+A candidate F24 (`skills/init-workspace/SKILL.md:49-50` guarding the
+upgrade-vs-bootstrap route) was **refuted** before persistence — Step 0
+`:61-70` offers the route as a user choice in both marker branches, so the
+guard subtracts no route; it is reported with its counter-evidence and never
+becomes a row, which is why F24 has no ledger entry.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F20 | `skills/execute-phase/SKILL.md:79-86` | code | high | fix-now | fold into current phase (source: split the bullet so a lane hand-off's phase is required and a bare `<NN-slug>` run is the documented explicit default, or state the phase as resolved-with-confirmation — then re-check the budget under F26); **regression of F9** | no |
+| F21 | `skills/execute-phase/SKILL.md:81-83` | security | high | fix-now | fold into current phase (source: give "Confirmed file targets" an answer shape and a consumer in Process §3's path-protection step, or drop it from the required list and from the Input audit); 1/2 reviewers | no |
+| F22 | `skills/execute-phase/SKILL.md:80,82` | code | med | fix-now | fold into current phase (source: make the two bullets reference the section's refusal line at `:71`, never paraphrase it — `:69` promises the line for every bullet); 2/2 reviewers; **regression of F13** | no |
+| F23 | `skills/unit-lane/SKILL.md:66-69` | code | med | fix-now | fold into current phase (source: emit the guard refusal line in the unit-kind/scope bullet like its two siblings — `:51-52` promises it for every required bullet); **regression of F13** | no |
+| F25 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:84-86` (+ Evidence `:186-191`, Progress log `:215`) | spec-drift | med | fix-now | fold into current phase (source: record the executed halt run per skill, or narrow "verified manually per skill" to what the read-verified receipts prove — the two must agree) | no |
+| F26 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:79-83,106-111` | code | med | fix-now | fold into current phase (source: re-base execute-phase 3614/304 → ceil(3361/280 × 1.10) = 3698/308 and unit-lane 3329/270 → ceil(3069/249 × 1.10) = 3376/274, correcting the stale `3026/245` citation in the same edit); **regression of F18** | no |
+| F27 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:470` (`policy.declared`) | workflow | med | fix-now | fold into current phase (source: append the 2026-10-19 `fix 258` re-basis clause naming every re-based skill entry and `execute-phase:*` route ceiling with its growth source — carried note L2, named by F1's remediation and never done) | no |
+| F28 | `skills/unit-lane/references/RESEARCH.md:5-10` | security | med | fix-now | fold into current phase (source: make the halt land on a step that asks the user, or add objective/why/outcome to the lane's required list with the same refusal — `unit-lane:56-69` does not require them and `:96-97` fills them by inference) | no |
+| VF-20 | `skills/execute-phase/SKILL.md:79-86` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck direct read: `:79-80` required halt-on-blank vs `:84-86` "Absent → resolves to the first unfinished step … No halt", with the default implemented at `:5`, `:24-27` and `:99-101` | code | confirmed | finding-mark | n/a | n/a |
+| VF-21 | `skills/execute-phase/SKILL.md:81-83` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck reproducible command output: `grep -rni "file targets" skills/ scripts/` → 1 hit (the bullet itself); Process §2/§3 read no target set | security | confirmed | finding-mark | n/a | n/a |
+| VF-22 | `skills/execute-phase/SKILL.md:80,82` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck reproducible command output: `grep -nE "requires [a-z ]*input" skills/execute-phase/SKILL.md` → full lines at `:39`,`:71`, bare fragments at `:80`,`:82` | code | confirmed | finding-mark | n/a | n/a |
+| VF-23 | `skills/unit-lane/SKILL.md:66-69` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck reproducible command output: the only `requires … input` matches in `SKILL.md` are `:26` (box) and `:54` (declared line); bullets `:59-62` and `:63-65` reference it, `:66-69` does not | code | confirmed | finding-mark | n/a | n/a |
+| VF-25 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:84-86` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck missing-documentation: `grep -niE "halt"` over the unit doc, its Evidence rows `:186-191` and Progress log `:215` → no executed halt run recorded | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-26 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:79-83,106-111` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck reproducible command output: `bun scripts/check-skill-context.mjs` → execute-phase 3361/280, unit-lane 3069/249, init-workspace 3133/228; `ceil(measured × 1.1)` = 3698/308, 3376/274, 3447/251 against declared 3614/304, 3329/270, 3447/251 (init-workspace refuted: exactly at floor) | code | confirmed | finding-mark | n/a | n/a |
+| VF-27 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:470` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck reproducible command output: `policy.declared` is byte-identical to `main` (`cmp` → IDENTICAL), `grep -c "258"` = 0 on both sides, while the file's diff is 59+/43− | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-28 | `skills/unit-lane/references/RESEARCH.md:5-10` · reviewer review-change · HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b · recheck direct read of the halt ("handing back to `unit-lane`") against the destination's guard `SKILL.md:56-69` (no objective/why/outcome) and Process §1 `:96-97` ("Fill … from the invocation (or the issue)") | security | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | node --test scripts/*.test.mjs | exit 0 | | |
+| GATE-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | bun scripts/check-skill-context.mjs | exit 0 | | |
+| GATE-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | bun scripts/check-skill-context.mjs --routes | exit 0 | | |
+| GATE-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | node scripts/phase-lint.mjs docs/fix/258-harden-needs-input-contracts/SPEC.md | exit 0 | | |
+| GATE-RAN | HEAD 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b | node scripts/version-parity-gate.mjs --content --base main | exit 0 | | |
+
+**Gate flake observed (pre-existing, not this branch's).** The first root-suite
+run at this head exited 1 with 19 failures, all downstream of
+`scripts/catalog.test.mjs:205,219` rewriting the real `scripts/catalog.json` in
+place while the runner executes test files in parallel; two later runs were
+`693 pass · 0 fail · exit 0`. A pristine `origin/main` worktree fails the same
+way under the same contention, so the race is pre-existing — recorded as note
+N-8 below, never a `workflow` finding against this unit.
+
+Report-only notes (low / ignore · never persisted as rows, never blocking —
+from the isolated `review-debt` pass, each carrying its re-trigger):
+
+- **N-1** (`review-debt` D-a · code · low): `docs/workflow/SKILL_CONTEXT_BUDGETS.json:106-111` — the `unit-lane` entry did not exist on `main` and `main`'s defaults (2800/240) already bounded it (≈2741 est / 221 lines); creating an explicit 3329/270 ceiling raises a ceiling the unit's SPEC never declares. **Trigger:** the F26/F27 fold (re-derive the entry from measurement in that batch).
+- **N-2** (D-b · brand · low): `CHANGELOG.md:100,288,691,701` calls the added line a "Turn-contract `Required user inputs` box" though it is one `✓` bullet inside an existing fence. **Trigger:** the next `bump-skill` run over those rows.
+- **N-3** (D-c · workflow · low): `SPEC.md:56` `# Status` still reads "review folded F1–F8" while F9–F28 exist. **Trigger:** the close-out that rewrites `# Status` for the merged state.
+- **N-4** (D-d · verify · low): `skills/execute-phase/SKILL.md:88-89,:111` documents `--force` but no Process step reads it. **Trigger:** the first report citing `--force` behaviour, or the next non-additive edit to the Process step.
+- **N-5** (D-e · security · low): `skills/unit-lane/SKILL.md:66-69` and `references/DESIGN.md:53-55` both say "the unit doc's `decisions.md`" without naming which tree. **Trigger:** the first lane run that writes decisions.
+- **N-6** (D-f · verify · low): the AC1/AC2 validators `grep -cE "requires [a-z ]*input"` count the bare fragment identically to the full line, so they cannot tell a correct halt from F22/F23's. **Trigger:** the next validator change, or a fourth match that is not a full `→ Next:` line.
+- **N-7** (carried L3 · workflow · low): `node scripts/ledger-provenance.mjs <ledger> --check` still exits non-zero on F1–F15 (their fold commits stopped being ancestors when the branch's fold commits were rewritten); not a merge gate.
+- **N-8** (code · low, pre-existing): `scripts/catalog.test.mjs:205,219` rewrites the real `scripts/catalog.json` in place while test files run in parallel, so the root suite is flaky under load (1 red / 2 green here; the same race reproduces on `origin/main`). **Trigger:** the next red root-suite run cited against a unit that never touched `scripts/`, or CI showing the same 13 lane-era/unit-route failures.
+- Carried unchanged, non-blocking: D-258-04 (`DESIGN.md` coined compound), D-258-05 (`--retriage` four homes), D-258-06 (`unit-lane (design step)` hand-off token), D-258-07 (Turn-contract `→ Next:` box), D-258-09 (`implement(258):` commit label).
+
+Fold-time obligations the debt pass attached to the open rows (check them in the
+fold batch, not later): **D-g** F20's repair must re-state AC1/obligation O1 if
+the required field list changes · **D-h** F21's repair must update the Input
+audit's `required` set beside the skill body · **D-i** F22 and F23 are one
+class — read `DESIGN.md`, `RESEARCH.md` and `init-workspace` for the same
+fragment shape in the same batch · **D-k** removing F25's sentence leaves the
+guard unverified by construction (the suites never exercise interactive input) ·
+**D-l** the manifest still carries no measurement basis, so the next re-basis is
+hand-derived again · **D-m** nothing reads `policy.declared`, so a future
+exemption it declares is decorative · **D-n** F28 folded as wording only keeps
+the hand-back consumer-less.
+
+Refuted candidates (reported with counter-evidence, never persisted):
+the init-workspace route guard (F24 candidate — Step 0 `:61-70` offers the route
+as a user choice in both marker branches, so the guard subtracts nothing) ·
+`init-workspace`'s ceiling sitting below the floor (it is exactly at its floor:
+3447/251 = ceil(3133/228 × 1.10)) · "no AC1–AC3 Evidence row records a halt"
+(the rows exist and cite the counters; what is missing is an *executed* run —
+that half is F25) · `unit-lane` bullet 2 omitting the refusal line (it references
+it at `:64-65`; only bullet 3 does not → F23) · a bare `requires manual input`
+fragment in `unit-lane` (none exists) · "the guard leaves who may answer
+undefined" (the preamble at `:73-74` says "by the user (not inferred or
+defaulted)"; the surviving half is the consumer-less field → F21) · the
+`--force` bullet's self-reference being broken (it points at no line since the
+F17 fold; the surviving half is the dead flag → N-4).
+
+```text
+CONVERGENCE-ANOMALY — fix-258 source
+- Finding ids: new: F21, F23, F25, F27, F28 / repeated: F9 (F20), F13 (F22, F23), F18 (F26)
+- Snapshots: 939f6013a8eb0d342a5d57ea4c7dc6d3821c85ec -> 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b (fold batch F16–F19)
+- Missed: cycle 4 verified each fold in isolation — that F17's AC1 fields exist without re-reading the optional list beside them (F20), that F13's line is stated once without checking every bullet that must emit it (F22/F23), and that the re-based ceilings equal ceil(measured × 1.10) from a measurement taken before the fold's own edits landed (F26)
+- Owning stage: source (F20–F23, F28 are this unit's own guard prose; F26/F27 the manifest) and plan (F25 is the unit doc's Applicable-tests/Evidence pair)
+- Why the prior review failed: the guard was repaired bullet-by-bullet across three folds, each checked against the text it replaced instead of the whole section against its ACs; a required/optional list is a pairwise contract, so a one-sided check passes while the pair contradicts
+- Route to owner: source rows -> the fold batch F20 + F21 + F22 + F23 + F26 + F27 + F28; unit-doc row F25 -> the same batch
+```
+
+```text
+LOOP CAP REACHED — 258-harden-needs-input-contracts
+- Finding ids: F20, F21, F22, F23, F25, F26, F27, F28
+- Cycles: 2 review→fold cycles completed (F1–F8, F9–F15) plus the F16–F19 batch; 7 REVIEW-RAN marks
+- Route: /triage-issue --prioritize-now 258-harden-needs-input-contracts F20 F21 F22 F23 F25 F26 F27 F28 (or the programmatic outer driver), unless the user explicitly instructs another fold
+```
