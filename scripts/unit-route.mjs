@@ -745,7 +745,7 @@ function main(argv) {
     // pushed branch), route to close-out — the merge gate is the next step (F26).
     const doc = readProject(`${unit.dir}/SPEC.md`);
     if (doc !== null && sectionBody(doc, "Tasks") !== null) {
-      const phases = parseUnitDocPhases(doc);
+      const { phases } = parseUnitDocPhases(doc);
       const donePhases = recordedPhases(doc);
       if (phases.length > 0) {
         const unfinished = phases.map((p) => p.number).filter((n) => !donePhases.has(n));
