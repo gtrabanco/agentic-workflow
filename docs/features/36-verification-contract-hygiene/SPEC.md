@@ -128,6 +128,7 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 | PE-003 | Issue #183 item 3 (run-log machine-comparable result field) is shipped by feature 55 | `scripts/golden-fixture.test.mjs` `RESULT_GRAMMAR` + `RESULT_GRAMMAR_CUTOFF = 2026-09-18`; roadmap row 55 records "absorbs #183's fixture metric row" | verified |
 | PE-004 | The schema package publishes the `fast`/`full` timeout budgets the fuzz/property sentence references | `packages/agentic-workflow-schema/src/verification-contract.ts:221-224` (`fastCommandTimeoutMs`…`fullStageTimeoutMs`) | verified |
 | PE-005 | README already has a `## References` section with one unrelated entry | `README.md:661` (Jin & Chen, arXiv:2603.00539) — no overlap with the four new entries | verified |
+| PE-006 | Replan batch (2026-10-19): the 12 open rows' claims are recheck-verified evidence, not assumptions | cycle-3 ledger VF-24…VF-35 at head `d85eeb4040df9e28e2426de371b7a958f566a01c`; root suite 684/693 with the two failing files 29/29 at `main` `9bd272e9` | verified |
 
 ### Obligations
 
@@ -139,6 +140,14 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 | O4 | issue #183 bibliography | README `## References` gains the four entries at ship time, deduped | P3 | README append | docs | grep | Evidence row AC5 | verified |
 | O5 | issue #183 item 3 / roadmap row 55 | the run-log Result grammar stays enforced, untouched | P4 | re-verify only | golden-fixture suite | `node --test scripts/golden-fixture.test.mjs` exits 0 | Evidence row AC6 | verified |
 | O6 | issue #183 item 1 (budget re-basis) | route ceilings re-based when wording growth pushes them over — declared re-basis names growth source | P4 | context-budget re-basis | scripts/SKILL_CONTEXT_BUDGETS.json | `node scripts/check-skill-context.mjs --routes` exits 0 | Evidence row AC7 | verified |
+| O7 | cycle-3 F29 + F30 (VF-25, VF-26) | machine surfaces parse: the `ledger-ownership@1` acceptance-manifest row carries 6 cells; `versionCells()` reads all three patch rows | P5 | ledger row + CHANGELOG rows rewrite | lane fold | `node --test scripts/ledger-ownership.test.mjs && node --test scripts/normative-drift.test.mjs` exits 0 | Evidence row P5 | planned |
+| O8 | cycle-3 F31 (VF-27) | the router never returns `close-out` for a unit whose index status is not `done`/`absent` — a `defined` unit with all phases recorded refuses with exit 1 | P6 | close-out guard status gate + shared derive helper | scripts/unit-route.mjs | `node --test scripts/unit-route.test.mjs` exits 0 (new fixture case) | Evidence row P6 | planned |
+| O9 | cycle-3 F34 + F39 (VF-30, VF-35) | the post-61 receipt has exactly one declared owner and no phantom artifact is described; the legacy ACCEPTANCE.md mandate reads binding-if-present | P7 | receipt owner + era-label restatement | skills/verification-contract/SKILL.md | `bun scripts/check-skill-context.mjs` exits 0 | Evidence row P7 | planned |
+| O10 | cycle-3 F35 (VF-31) | the audit-pr closure-gate bullet is well-formed — the remedy sentence is terminated, not run into the sibling bullet | P8 | bullet repair + audit-pr bump | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md | `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` exits 0 | Evidence row P8 | planned |
+| O11 | cycle-3 F36 (VF-32) | README § References carries the issue's full author lists, not "et al." truncations | P9 | bibliography author lists | README.md | `grep -c "Philipp Görz\|Ze Sheng\|V. J. M. Manès" README.md` = 3 | Evidence row P9 | planned |
+| O12 | cycle-3 F37 (VF-33) | exported templates carry no repo-specific nouns (AGENTS.md stack-agnostic rule) | P10 | template sentence restatement | template/docs/*/_TEMPLATE/SPEC.md | `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` = 0 | Evidence row P10 | planned |
+| O13 | cycle-3 F38 (VF-34) | budget growth sources name files the branch actually changed, with honest pre-re-basis measurements | P11 | budget growth-source re-basis | docs/workflow/SKILL_CONTEXT_BUDGETS.json | `node scripts/check-skill-context.mjs --routes` exits 0 | Evidence row P11 | planned |
+| O14 | cycle-3 F28 + F32 + F33 (VF-24, VF-28, VF-29) | the gate is green with fresh GATE-RAN marks at the repaired head; Evidence rows carry real exits; `## Next` states the true gate state | P12 | full gate run + unit doc re-record | lane fold | `node --test scripts/*.test.mjs` exits 0 | Evidence row P12 | planned |
 
 ## Tasks
 
@@ -158,6 +167,52 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
   budgets, and the schema package tests; fill the Evidence rows
   (validator: `node --test scripts/*.test.mjs` exits 0)
     - Relevant files: docs/features/36-verification-contract-hygiene/SPEC.md
+- P5 — Replan batch (F29 + F30): repair the two broken machine surfaces —
+  rewrite the `acceptance-manifest` `ledger-ownership@1` row so its validator
+  cell parses as 6 cells (one command form; the era split moves to prose) and
+  rewrite the three patch rows (audit-pr 5.6.1, review-change 3.12.1,
+  workflow-status 3.9.2) in the section's own
+  `| <version> | <date> | <type> | <what> |` shape, dropping the name-prefixed
+  copies (validator: `node --test scripts/ledger-ownership.test.mjs && node --test scripts/normative-drift.test.mjs` exits 0)
+    - Relevant files: skills/pre-execution-review/references/LEDGERS.md, CHANGELOG.md
+- P6 — Replan batch (F31): test-first — add a unit-route fixture case where a
+  `defined` unit has all phases recorded and expect refusal (exit 1), then gate
+  the close-out branch on the in-progress status and derive the unfinished list
+  from one helper shared with `firstUnfinishedPhase` (validator: `node --test scripts/unit-route.test.mjs` exits 0)
+    - Relevant files: scripts/unit-route.mjs, scripts/unit-route.test.mjs
+- P7 — Replan batch (F34 + F39): give the post-61 receipt one owner in
+  `verification-contract` § Freeze and receipt — declare the unit doc's Evidence
+  table the receipt, delete the phantom `## Acceptance receipt v1` unit-doc
+  block, and restate the line-22 legacy mandate as binding-if-present (no
+  template instruction); run `bump-skill` (patch)
+  (validator: `bun scripts/check-skill-context.mjs` exits 0)
+    - Relevant files: skills/verification-contract/SKILL.md, CHANGELOG.md, README.md
+- P8 — Replan batch (F35): place the mid-bullet remedy sentence deliberately in
+  `audit-pr`'s closure-gate block — terminate the `→ Next: /unit-lane <unit>`
+  bullet before the sibling `- Lane-era path` bullet, keeping the :159 duplicate
+  canonical; run `bump-skill` for audit-pr (reference-only patch)
+  (validator: `grep -n "Next: /unit-lane" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` exits 0 on a bullet that terminates before the next bullet)
+    - Relevant files: skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, CHANGELOG.md, README.md
+- P9 — Replan batch (F36): restore the full issue-#183 author lists in README
+  § References from `gh issue view 183`
+  (validator: `grep -c "Philipp Görz\|Ze Sheng\|V. J. M. Manès" README.md` exits 0 and prints 3)
+    - Relevant files: README.md
+- P10 — Replan batch (F37): restate the two template determinism/property-fuzz
+  sentences without repo-specific nouns ("schema package", "commands class")
+  while keeping the stated bound
+  (validator: `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` exits 0 and prints 0)
+    - Relevant files: template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md
+- P11 — Replan batch (F38): re-basis the six budget growth entries — name
+  `skills/verification-contract/SKILL.md` as the growth source, state the
+  pre-re-basis measurement, and fix the `ceil(… × 1.10)` arithmetic text
+  (validator: `node scripts/check-skill-context.mjs --routes` exits 0)
+    - Relevant files: docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P12 — Replan batch (F28 + F32 + F33): verification — run all seven gate
+  commands at the repaired head, append fresh GATE-RAN marks to the ledger,
+  re-record the unit doc's Evidence rows (one AC6 + one AC7 row with the real
+  exits) and rewrite `## Next` with the true gate state
+  (validator: `node --test scripts/*.test.mjs` exits 0)
+    - Relevant files: docs/features/36-verification-contract-hygiene/SPEC.md, docs/features/36-verification-contract-hygiene/review-findings.md
 
 ## Evidence
 
@@ -195,6 +250,7 @@ Budget: strong
 - 2026-10-18 22:50 — P1–P4 complete; unit doc Evidence/Progress final; pushed feat/36-verification-contract-hygiene (8480d739) — next: /review-change on the accumulated diff
 - 2026-10-18 23:40 — review cycle 1 ran (5 passes + synthesis/classification/debt); F1–F11, F14, F15 folded per owner scope directive (e28ff213); ledger SHA corrected to squashed head (f03fc673) — next: lane resume at settled head
 - 2026-10-18 23:55 — lane resumed at settled head f03fc673: gate re-verified green (root suites exit 0; `--routes` PASS 14 routes; version-parity PASS 0.21.0→0.22.0; golden-fixture exit 0); `--triage` re-run confirms step list unchanged; branch pushed at f03fc673; Future rows: none; receipt stage: no PR (release skipped) → receipt missing → hand off to /review-change (this commit) — next: /review-change 36-verification-contract-hygiene
+- 2026-10-19 (replan) — review cycle 3 returned F28–F39, all fix-now routed fold-into-unit; F33 is frozen `replan-in-unit`, so the fold queue froze (REPLAN-ROUTE) and the router printed `route: replan` → the lane's plan step re-ran: tasks P5–P12 cut for the 12 rows (O7–O14 planned, PE-006 added), sweep clean (0 contradicts) → (this commit) — next: hand off `/execute-phase 36-verification-contract-hygiene P5`
 
 ## Next
 

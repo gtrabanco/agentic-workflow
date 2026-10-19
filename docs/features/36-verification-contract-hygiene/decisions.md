@@ -23,3 +23,16 @@ Candidate sources swept: this unit's `decisions.md`, feat 19/26 decision files,
 
 No `contradicts` row — the plan proceeds without a `NEEDS-DECISION`.
 
+### Prior-decisions contradiction sweep (replan, 2026-10-19)
+
+Swept for the fold phases P5–P12 against the same candidate sources plus the
+cycle-3 routes:
+
+| claim | prior decision | source path | relation |
+|---|---|---|---|
+| the router must refuse close-out for a unit whose index status is not `done`/`absent` (F31) | the hand-off names exactly one phase and the execution tier — never a bare close-out for an unsettled unit (#291 AC3/AC4) | `scripts/unit-route.mjs:742-745` comment + `main` router behavior | compatible |
+| the unit doc's Evidence table is the acceptance receipt's declared owner (F34) | `execute-phase` names the unit doc's Evidence rows the receipts; ACCEPTANCE.md is gone | `skills/execute-phase/SKILL.md:13-15` | compatible |
+| exported templates state the validator bound without repo-specific nouns (F37) | stack/architecture agnostic — no product, stack, or runtime references in shared docs | `AGENTS.md` (Working rules) | compatible |
+
+No `contradicts` row — the replan proceeds without a `NEEDS-DECISION`.
+
