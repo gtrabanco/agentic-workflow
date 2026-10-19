@@ -77,8 +77,9 @@ frozen fixture, recorded input) or downgrade the row to `read-verified:`/
 `manual:`.
 
 **Property / fuzz validators.** A validator may be a property or fuzz test with
-bounded runtime — deterministic, bounded — within the timeout budgets published
-by the schema package. No new validator kind is needed: property/fuzz rides the existing commands class.
+bounded runtime — deterministic, bounded — within the project's timeout budgets.
+No new validator kind is needed: property/fuzz uses the existing `commands`
+row class.
 
 ### Spec-lint (mechanical — presence checks only)
 

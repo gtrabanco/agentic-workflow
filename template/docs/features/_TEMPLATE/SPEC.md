@@ -25,9 +25,10 @@ clock, randomness, and unordered-concurrency dependencies (fixed version,
 frozen fixture, recorded input) or downgrade the row to `read-verified:`/
 `manual:`.
 
-**Property / fuzz validators.** A planner may emit a property or fuzz validator as
-a bounded `commands` row — deterministic, bounded runtime — within the timeout
-budgets published by the schema package. No new validator kind is needed: property/fuzz rides the existing commands class.
+**Property / fuzz validators.** A planner may emit a property or fuzz validator
+as a bounded `commands` row — deterministic, bounded runtime — within the
+project's timeout budgets. No new validator kind is needed: property/fuzz uses
+the existing `commands` row class.
 
 ## Non-goals
 
