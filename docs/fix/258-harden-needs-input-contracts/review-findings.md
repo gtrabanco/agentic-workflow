@@ -125,3 +125,112 @@ ledger, so this is cycle 3 by count and it needed the user's explicit instructio
 to start; the fold this report routes to is the **second** review→fold cycle, so
 the cap bites at the re-review after it.
 
+---
+
+Cycle 4 — **delta mode, escalated to a full pass** — ran 2026-10-19
+(`review-change`, fresh context, reviewed head
+`5b08197a95209249c833bf1dfe5c820d572ebf9c`, PR #302). Cycle 4 = three completed
+`REVIEW-RAN` marks + 1. The user's invocation names the reason: the fold batch
+changed a non-Markdown file (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`) and
+carries no prior consumer skip decision, so `fold-findings`' branch table gives
+`RE-REVIEW-REQUIRED (delta)` (also forced by the folded row F9's `high`
+severity).
+
+**Escalation to a full pass (both triggers fired, numbers stated).** Width: the
+fold diff `git diff 2824b7c2..5b08197a` changes 934 lines in
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, far more than 50 lines from the only
+cited range in that file (`:22-27`; the re-emit also rewrote the `\u2014`/`\u2192`
+escapes of pre-existing entries) and touches `review-findings.md`, outside the
+union of the folded rows' cited files. Size: 511 added + 498 deleted = 1009
+changed lines > 200 across 7 files (≤ 15). The review therefore covers
+`git diff main...HEAD` (11 files), not just the fold diff.
+
+**Workspace state (a precondition, never a finding).** `git status --porcelain`
+empty · `git status -sb` in sync with
+`origin/fix/258-harden-needs-input-contracts` · PR #302 OPEN at the reviewed
+head · no `ACCEPTANCE.md` for this unit (legacy SPEC-blob fallback).
+
+**Every `folded: yes` row re-verified at its cited location — 15 rows, 4 do not
+hold.** F1 routes PASS (14 routes) with each re-based `execute-phase:*` entry
+naming the fix-258 growth source (residual: `policy.declared` gained no fix-258
+clause — note L2) · F2 **regression** (Evidence counts false → F16) · F3
+**regression** (AC1 fields gone again → F17) · F4 the three pre-existing
+CHANGELOG rows are byte-identical to `main` (`git diff main...HEAD -- CHANGELOG.md`
+has no removed row) · F5 `## Process` back at `:87`, steps nested under it · F6
+"Decide for me" gone from `DESIGN.md`'s required list · F7 the `<target-dir>`
+guard bullet is gone and Step 0 keeps `[target-dir], default cwd` · F8
+`phase-lint` PASS (6/6) and `unit-route` parses the six phases · F9 repaired (the
+contradiction is gone) but its resolution created F17 · F10 the re-indent
+collapsed (`git diff -w --numstat` 57/43 vs the 466/454 whitespace churn) · F11
+**regression** (the re-basis it added is already below the declared floor → F18)
+· F12 one home for "no silent `feature` default" (`grep -n "no silent"` → `:67`
+only) · F13 the refusal line is stated once per guard section and referenced ·
+F14 repaired (the blank objective now hands back to the design step that writes
+it) · F15 statuses inside the closed vocabulary.
+
+**Passes run (isolated, one context each):** code, verify, perf, security,
+brand, plus the inline API-ergonomics pass. **Skipped:** design, a11y, seo — the
+change ships no UI, page or web surface (skill prose + one JSON manifest).
+
+**Gates re-derived at the reviewed head.** `node --test scripts/*.test.mjs` →
+`693 tests · 693 pass · 0 fail`, exit 0 · `bun scripts/check-skill-context.mjs`
+→ `PASS context budgets: 28 skills`, exit 0 · `bun scripts/check-skill-context.mjs
+--routes` → `PASS route budgets: 14 routes`, exit 0 · `node scripts/phase-lint.mjs
+docs/fix/258-harden-needs-input-contracts/SPEC.md` → `verdict PASS (6/6)`, exit 0
+· `node scripts/version-parity-gate.mjs --content --base main` → `VERDICT: PASS`,
+exit 0 · `bun run test` in `packages/pi-agentic-workflow` → `432 pass · 0 fail`.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F16 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:186-187` (+ obligations `:176-177`) — the Evidence rows and O1/O2 record `grep -cE "requires [a-z ]*input"` matches 4 (AC1/O1) and totals 5 (AC2/O2), exit `0`, status `verified`; at the reviewed head the command returns 2 for `skills/execute-phase/SKILL.md` and 2+1+1 = 4 across `skills/unit-lane/SKILL.md` + `references/DESIGN.md` + `references/RESEARCH.md`, so both declared validators fail while the rows still read green (the F13 consolidation deleted the two fragments the counter counted) · fold 5b08197a95209249c833bf1dfe5c820d572ebf9c | spec-drift | high | fix-now | fold into current phase (source: re-run both declared validators at the reviewed head and record the true counts, or restore what F13 removed — reconcile Evidence AC1/AC2 and O1/O2 together, never by editing the numbers alone); **regression of F2** | no |
+| F17 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` — AC1 requires the `execute-phase` body to name "confirmed phase, confirmed file targets"; the body (`skills/execute-phase/SKILL.md:67-86`) lists only `<NN-slug>` as required (`grep -n "confirmed phase"` and `grep -n "file target"` both exit 1), while Evidence AC1 at `:186` reads read-verified — the F9 fold resolved the F3 contradiction by deleting the AC1-mandated fields instead of the conflicting default, so F3's defect is back · same fold sha | spec-drift | high | fix-now | fold into current phase (source: state the resolved phase and target confirmation in the guard so AC1 holds — the operator's `<NN-slug>` confirmation names the phase and file targets the body resolves — or amend AC1 with explicit user approval); **regression of F3** | no |
+| F18 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:22-28` (init-workspace), `:79-90` (execute-phase), `:106-110` (unit-lane) — the three skill entries this unit wrote sit below the manifest's own declared floor at the reviewed head: init-workspace measures 3133 est / 228 lines → floor 3447 / 251 vs ceiling 3401 / 247; execute-phase measures 3285 / 276 → line floor 304 vs ceiling 294; unit-lane measures 3048 / 248 → floor 3353 / 273 vs ceiling 3329 / 270, and its `mainReason` cites measured 3026 / 245; the execute-phase entry and four route `sources` also cite "F3: confirmed phase + file targets", content the F9 fold removed · same fold sha | code | med | fix-now | fold into current phase (source: re-base the three ceilings to ceil(measured × 1.10) at the reviewed head and replace the reverted F3 citation with what the guard actually ships); **regression of F11** | no |
+| F19 | `skills/unit-lane/SKILL.md:59-64` — the guard lists `<NN-slug>` / `<idea>` as an unconditional required input with the halt line, while the same skill documents `--fix <issue-number>` and `--from-issue <issue-number>` as complete entry forms that carry no slug (`argument-hint` `:5`, `## When to use` `:38-44`, Process §1's invocation table `:88-91`): `/unit-lane --fix 258` is a documented invocation the guard would re-ask for a slug and then halt | code | med | fix-now | fold into current phase (source: scope the slug/idea bullet to the slug/idea mode — "required unless `--fix`/`--from-issue` supplies the unit" — mirroring Process §1's table) | no |
+| VF-16 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:186-187` · reviewer review-change · HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c · recheck reproducible command output (`grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` → 2; the same over `skills/unit-lane/SKILL.md` + `references/DESIGN.md` + `references/RESEARCH.md` → 2/1/1 = 4, against the rows' 4/5) | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-17 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` · reviewer review-change · HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c · recheck direct read: `grep -n "confirmed phase"` and `grep -n "file target"` over `skills/execute-phase/SKILL.md` both exit 1, while `:76-78` names only `<NN-slug>` as required | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-18 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:22-28` · reviewer review-change · HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c · recheck reproducible command output (`bun scripts/check-skill-context.mjs` → init-workspace 3133/228, execute-phase 3285/276, unit-lane 3048/248; exact-rational floor ceil(measured × 11/10) → 3447/251, 3614/304, 3353/273 against the entries' 3401/247, 3626/294, 3329/270) | code | confirmed | finding-mark | n/a | n/a |
+| VF-19 | `skills/unit-lane/SKILL.md:59-64` · reviewer review-change · HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c · recheck direct read of `:5` (argument-hint alternatives), `:38-44` (When to use), and Process §1's invocation table `:88-91` against the guard's required list | code | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | node --test scripts/*.test.mjs | exit 0 | | |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | bun scripts/check-skill-context.mjs | exit 0 | | |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | bun scripts/check-skill-context.mjs --routes | exit 0 | | |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | node scripts/phase-lint.mjs docs/fix/258-harden-needs-input-contracts/SPEC.md | exit 0 | | |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | node scripts/version-parity-gate.mjs --content --base main | exit 0 | | |
+| GATE-RAN | HEAD 5b08197a95209249c833bf1dfe5c820d572ebf9c | bun run test (packages/pi-agentic-workflow) | exit 0 | | |
+
+Report-only notes (low / ignore · never persisted as rows, never blocking):
+
+- **L1** (code · low): `skills/execute-phase/SKILL.md:85` points the `--force` bullet at `:104`, but the no-bypass sentence now sits at `:107` — the guard insert shifted the file under its own self-reference. **Trigger:** the next edit to the guard or to §3's pre-step gates.
+- **L2** (code · low): `docs/workflow/SKILL_CONTEXT_BUDGETS.json:468` — `policy.declared` gained no `2026-10-18 (fix 258 …)` clause although F1's remediation named it; every route `sources` does carry the growth source, so the policy rules hold. **Trigger:** the next re-basis pass or a `policy.declared` audit.
+- **L3** (workflow · low): `node scripts/ledger-provenance.mjs --check` exits 1 on this ledger — F1–F15 cite fold commits (`5d38a148…`, unchanged) that stopped being ancestors of HEAD when the branch's fold commits were rewritten (`ec10e7d6` / `5b08197a`); the same check exits 1 on feature 30's ledger, so it is not currently a merge gate. **Trigger:** the provenance check becomes a gate, or the ledger is next edited for a fold.
+- **L4** (code · low): the F10 re-emit rewrote the `\u2014`/`\u2192` escapes of ~20 pre-existing manifest entries to literal characters (semantics unchanged, `--json`/route gates green). **Trigger:** an ASCII-escape convention for the manifest, or the next generator pass.
+- Carried from cycle 3, unchanged and non-blocking: D-258-01 (`mainReason` scalar vs `mainSources`), D-258-04, D-258-05, D-258-06, D-258-07, D-258-09. D-258-02 (`--force` missing from the optional list) and D-258-08 (CHANGELOG naming a box that does not exist) are resolved by this fold.
+
+Refuted candidates (reported with counter-evidence, never persisted): the
+unit-lane guard re-introduces F12's duplicate (only `:67` carries "no silent",
+one home) · the F9 fold makes a bare `<NN-slug>` run silently (Process §2 still
+resolves the first unfinished step, which F9's own remediation sanctioned — the
+defect is the acceptance drift F17, not silent execution) · the manifest re-emit
+dropped semantic content (`node -e` parse + both budget gates PASS; the diff is
+the three re-based entries plus the escape normalization) · RESEARCH.md's guard
+is unsatisfiable (it now hands back to the design step that writes the objective)
+· the fold owes a `REPAIR-RECEIPT` row in this ledger (the receipt is append-only
+output history, explicitly "no ledger row" in `fold-findings`).
+
+```text
+CONVERGENCE-ANOMALY — fix-258 source
+- Finding ids: new: F16, F17, F18, F19 / repeated: F2, F3, F11 (F16/F17/F18 are their regressions at the same file+axis)
+- Snapshots: 2824b7c2 -> 5b08197a95209249c833bf1dfe5c820d572ebf9c (fold batch F9–F15)
+- Missed: cycle 3 verified the F2 receipts and the F3 fields against the text it had just written, then the same batch's F13 consolidation deleted the counter fragments and the F9 restructure deleted the AC1 fields — each fold was checked in isolation from the fold that followed it, and the manifest re-basis was computed before the final two character-level edits to the same three skills
+- Owning stage: source (F16–F19 are this unit's own receipts, guard prose and manifest)
+- Why the prior review failed: it re-verified folded rows against the *pre-fold* measurement and never re-ran the unit's own declared validators after its own batch landed, so a self-invalidating batch passed
+- Route to owner: source rows -> `/fold-findings` with F16 + F17 + F18 + F19
+```
+
+```text
+LOOP CAP REACHED — 258-harden-needs-input-contracts
+- Finding ids: F16, F17, F18, F19
+- Cycles: 2 (REVIEW-RAN marks + forge receipts)
+- Route: /triage-issue --prioritize-now 258-harden-needs-input-contracts F16 F17 F18 F19 (or the programmatic outer driver)
+```
+
