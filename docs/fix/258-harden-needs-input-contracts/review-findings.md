@@ -383,3 +383,149 @@ LOOP CAP REACHED — 258-harden-needs-input-contracts
 - Cycles: 2 review→fold cycles completed (F1–F8, F9–F15) plus the F16–F19 batch; 7 REVIEW-RAN marks
 - Route: /triage-issue --prioritize-now 258-harden-needs-input-contracts F20 F21 F22 F23 F25 F26 F27 F28 (or the programmatic outer driver), unless the user explicitly instructs another fold
 ```
+
+---
+
+Cycle 8 — **full pass, delta escalated** — ran 2026-10-19 (`review-change`, fresh
+context, reviewed head `40d4f6f58960aa69b1d563c3c20eebc8303a35cf`, PR #302).
+Cycle 8 = seven completed `REVIEW-RAN` marks + 1, and it starts on the user's
+explicit instruction (`/review-change fix/258-harden-needs-input-contracts`); the
+review→fold cap already bit at cycle 4 and a further cycle never starts by
+reviewer election.
+
+**Escalation (delta → full pass), trigger and numbers stated.** The preceding
+fold batch (`40d4f6f5`, `git diff fdd6f352..40d4f6f5`) changes `CHANGELOG.md`,
+`packages/pi-agentic-workflow/package.json` and this ledger — all outside the
+union of the folded rows' cited files (F20–F28 cite SPEC.md,
+SKILL_CONTEXT_BUDGETS.json, execute-phase/SKILL.md, unit-lane/SKILL.md,
+RESEARCH.md) — so the **width trigger fired**. Size stayed under both limits
+(7 files, 29+/25− = 54 changed lines, ≤ 15 files). The review therefore covers
+`git diff main...HEAD` (11 files).
+
+**Workspace state (a precondition, never a finding).** `git status --porcelain`
+empty · `git status -sb` in sync with
+`origin/fix/258-harden-needs-input-contracts` · PR #302 OPEN at the reviewed
+head · no `ACCEPTANCE.md` for this unit (legacy SPEC.md fallback; the unit doc
+carries no manifest receipt, and none is claimed).
+
+**Frozen acceptance + SPEC drift coverage (per criterion).**
+
+| criterion | evidence at the reviewed head | verdict |
+|---|---|---|
+| AC1 | `grep -n "confirmed phase\|file target" skills/execute-phase/SKILL.md` → exit 1; the required list names `<NN-slug>` only | **unmet** (→ F29) |
+| AC2 | `grep -cE "requires [a-z ]*input"` → 2/1/1 over unit-lane/SKILL.md + DESIGN.md + RESEARCH.md; "no silent `feature` default" at `:68`; DESIGN.md requires vague scope/ACs | met |
+| AC3 | `skills/init-workspace/SKILL.md:37-50` — mandatory consent, re-ask once, refusal line, no default consent | met |
+| AC4 | `grep -c "Required user inputs"` → 1 per skill, three boxes | met |
+| AC5 | `node --test scripts/*.test.mjs` → 693 pass / 0 fail, exit 0; `bun scripts/check-skill-context.mjs` → PASS 28 skills, `--routes` → PASS 14 routes, both exit 0 | met |
+| AC6 | three skill version rows + the pi re-bundle row (`grep -n "258" CHANGELOG.md` → 7 rows); README carries no per-skill version cell, and AC6 declares the cells "unchanged semantics" | met |
+
+Every changed file maps to a criterion (`none`-mapped hunks: only the manifest's
+escape normalization in entries this unit never touched — note P-2).
+
+**Every `folded: yes` row re-verified at its cited location — 28 rows, 6 do not
+hold.** F1 `--routes` PASS (14 routes) and every re-based `execute-phase:*`
+entry names the fix-258 growth source · F2 **regression** (the AC1/AC6 receipt
+counts do not reproduce → F30) · F3 **regression** (the AC1 fields are gone →
+F29) · F4 the three pre-existing CHANGELOG rows are byte-identical to `main`
+(`5.1.0`, `1.5.0`, `3.3.0` compared row by row) · F5 `## Process` is back and
+steps `### 1.`–`### 8.` nest under it · F6 "Decide for me" is absent from
+`DESIGN.md`'s required list and present only as a gap-interview option · F7 the
+`<target-dir>` guard bullet is gone and Step 0 keeps `[target-dir], default cwd`
+· F8 `node scripts/phase-lint.mjs <SPEC>` → `verdict PASS (6/6)` and
+`node scripts/unit-route.mjs <unit>` → `route: close-out` · F9 the required/
+optional `P<k>` contradiction is gone (its resolution is F29's cause) · F10
+`git diff -w --numstat` equals `git diff --numstat` (59/43) — no indentation
+churn · F11/F18/F26 the three per-skill ceilings equal `ceil(measured × 1.10)`
+at this head (execute-phase 3612/304 = ceil(3283/276), unit-lane 3464/280 =
+ceil(3149/254), init-workspace 3447/251 = ceil(3133/228)) · F12 one home for
+"no silent `feature` default" (`:68` only) · F13/F22/F23 the refusal line is
+stated once per guard section, referenced by the bullets that halt, and the
+unit-kind/scope bullet emits it · F14 `RESEARCH.md` hands a blank objective back
+to the step that writes it · F15 every obligation row is `verified` · F16
+**regression** (the declared counters are false → F30) · F17 **regression** (the
+AC1 fields are gone → F29) · F18 **regression** (the manifest still cites
+"F17: restore confirmed phase + file targets required bullets" → F32) · F19 the
+slug/idea bullet is scoped to the non-`--fix`/`--from-issue` modes · F20 the
+`P<k>` contradiction is gone · F21 the unconsumed target bullet is gone · F25
+`## Applicable tests` is narrowed to the read-verified ACs · F27 **regression**
+(the declared re-basis clause is dated 2026-09-22, names two of the nine re-based
+entries, misattributes a `unit-lane` bullet to `execute-phase` and cites content
+the same fold removed → F32) · F28 the required triple is now stated in
+`unit-lane`'s guard (its classification gap is F31).
+
+**Passes run (isolated, one context each):** code, verify, security, perf,
+brand, plus the inline API-ergonomics pass. **Skipped:** design, a11y, seo — the
+change ships no UI, page or web surface (skill prose + one JSON manifest).
+Per-axis outcomes: code FAIL, verify FAIL, security FAIL, brand FAIL, perf PASS
+(minors only), API-ergonomics PASS (notes only). Two axis candidates were
+refuted at the verify step and are listed below.
+
+**Gates re-derived at the reviewed head.** `node --test scripts/*.test.mjs` →
+`693 tests · 693 pass · 0 fail`, exit 0 · `bun scripts/check-skill-context.mjs`
+→ `PASS context budgets: 28 skills`, exit 0 · `bun scripts/check-skill-context.mjs
+--routes` → `PASS route budgets: 14 routes`, exit 0 · `node scripts/phase-lint.mjs
+docs/fix/258-harden-needs-input-contracts/SPEC.md` → `verdict PASS (6/6)`, exit 0
+· `node scripts/version-parity-gate.mjs --content --base main` → `VERDICT: PASS`,
+exit 0 · `bun run test` in `packages/pi-agentic-workflow` → `432 pass · 0 fail`,
+exit 0.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F29 | `skills/execute-phase/SKILL.md:67-86` — the `Needs-input guard` names only `<NN-slug>` as required; `confirmed phase` and `confirmed file targets` (AC1 `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40`, obligation O1 `:177`, Evidence `:186` "read-verified") appear nowhere in the body (`grep -n "confirmed phase\|file target"` exits 1). The 40d4f6f5 fold cleared F20/F21 by deleting the AC-mandated content, leaving the criterion failed with no user-approved amendment (`verification-contract` anti-gaming: narrowing a validator needs explicit user approval + a dated `## Amendments` row); **regression of F3/F17/F20** | spec-drift | med | fix-now | fold into current phase (source: state the resolved phase — and the target confirmation with a consumer in Process §2/§3 — in the guard so AC1 holds while `P<k>` keeps its documented default and Input-audit E2 stays true, or obtain explicit user approval for a dated SPEC `## Amendments` row amending AC1/O1/Input audit to the shipped field set; re-check the budget after the edit) | no |
+| F30 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:102,106,177,179,186,189,190,191,201` — the declared validators do not reproduce at the reviewed head: Tasks P2, AC1 Evidence and O1 declare `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` = 4, actual **2**; Tasks P3 declares "totals 5" while O2/AC2 declare 4, actual **4** (2+1+1); AC6 Evidence and O5 declare `grep -cE "258" CHANGELOG.md` = 4, actual **7**; AC5's Evidence cites "execute-phase 5.2.0" while HEAD ships **5.2.1**; AC4's Evidence row carries no command at all; **regression of F2/F16** | spec-drift | med | fix-now | fold into current phase (re-run every declared validator at the folded head and rewrite Tasks/Obligations/Evidence together — never the numbers alone; replace the self-reference counters with an assertion that only passes when the full refusal line is present, D-258-03) | no |
+| F31 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:138-151` — the Input audit (P1's deliverable) classifies U1–U5 only; `unit-lane`'s guard now also requires "Objective, why, user outcome" (`skills/unit-lane/SKILL.md:71-74`) with no U-row, while Process §1 `:101-102` still instructs the lane to fill those three "from the invocation (or the issue)" — the fold-time obligation D-h, one class over | spec-drift | med | fix-now | fold into current phase (add the triple as a classified row — required, blank → re-ask once → refusal — and state §1's fill path as the non-blank case that hands the blank case to the guard) | no |
+| F32 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:470` (`policy.declared`), `:79-84` (`execute-phase` `mainSources`), `:106-113` (`unit-lane`), `:22-28` (`init-workspace`), routes `execute-phase:{descope,final-pr,feature,finding,fix,legacy,small}` — the fix-258 re-basis audit trail is wrong and partial: dated **2026-09-22** while the work is 2026-10-18/19; names only "the two skills" although `init-workspace` (3195→3447 + new `mainLinesMax` 251) and seven `execute-phase:*` `routeLinesMax` ceilings were re-based in the same diff; attributes the `objective, why, user outcome` bullet to `execute-phase` (it is `unit-lane`'s); the `execute-phase` `mainSources` and five route `sources` still cite "F17: restore confirmed phase + file targets required bullets", content the same fold removed; the `unit-lane` entry narrates the never-shipped `3026/245 → 3329/270`; the re-based route line ceilings sit 4–5 above `ceil(measured × 1.10)` (972/967, 949/944, 922/918) because they were measured before the fold's own deletions; **regression of F18/F27** | workflow | med | fix-now | fold into current phase (restate every touched entry as the shipped growth — file + section + line delta — date the declared clause 2026-10-18, name all three skill entries and every re-based route ceiling, drop the internal F-ids and pre-fold intermediates, and recompute the three route line ceilings from the post-fold measurement) | no |
+| VF-29 | `skills/execute-phase/SKILL.md:67-86` · reviewer review-change · HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf · recheck direct read + reproducible command output: `grep -n "confirmed phase\|file target" skills/execute-phase/SKILL.md` exits 1; the required list at `:73-78` names `<NN-slug>` only; `CHANGELOG.md:289` records the deletion of both bullets | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-30 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:102,106,177,179,186,189,190,191,201` · reviewer review-change · HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf · recheck reproducible command output: `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` → 2; over `unit-lane/SKILL.md references/DESIGN.md references/RESEARCH.md` → 2/1/1 = 4; `grep -cE "258" CHANGELOG.md` → 7; `grep -n "^version:" skills/execute-phase/SKILL.md` → 5.2.1; `grep -c "Required user inputs"` → 1 per skill with no command in the AC4 Evidence row | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-31 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:138-151` · reviewer review-change · HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf · recheck direct read: the Input audit carries U1–U5 only and no objective/why/outcome row; `skills/unit-lane/SKILL.md:71-74` requires the triple, `:101-102` fills it from the invocation/issue | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-32 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json:470` · reviewer review-change · HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf · recheck reproducible command output: `git log -1 --format=%cI 40d4f6f5` → 2026-10-19; `bun scripts/check-skill-context.mjs --routes` → descope 11058/879, feature/finding/fix/legacy/small 10408/834, final-pr 10921/858 against declared 972/922/949; `policy.declared` names only execute-phase 3612/304 and unit-lane 3464/280 while `init-workspace` carries an unmentioned 3447/251 | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | node --test scripts/*.test.mjs | exit 0 | | |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | bun scripts/check-skill-context.mjs | exit 0 | | |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | bun scripts/check-skill-context.mjs --routes | exit 0 | | |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | node scripts/phase-lint.mjs docs/fix/258-harden-needs-input-contracts/SPEC.md | exit 0 | | |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | node scripts/version-parity-gate.mjs --content --base main | exit 0 | | |
+| GATE-RAN | HEAD 40d4f6f58960aa69b1d563c3c20eebc8303a35cf | bun run test (packages/pi-agentic-workflow) | exit 0 | | |
+
+Report-only notes (low / ignore · never persisted as rows, never blocking):
+
+- **P-1** (workflow · low): `SPEC.md:58` `# Status` still reads "review folded F1–F8" while this ledger carries F1–F32. **Trigger:** the close-out that rewrites `# Status` for the merged state (carried N-3).
+- **P-2** (code · low): the manifest diff also rewrote 23 `\u2014`/`\u2192` escapes into literal characters in entries this unit never touched (semantically identical JSON, a consequence of the F10 re-emit remediation). **Trigger:** the next manifest re-emit, or a byte-level diff review of `SKILL_CONTEXT_BUDGETS.json`.
+- **P-3** (brand · low): `skills/init-workspace/SKILL.md:38` says "the required bullet below" (singular) while two required bullets follow; the "Upgrade vs bootstrap mode" bullet (`:48-50`) does not emit the declared refusal line, and the consent re-ask (`:44-47`) names no question text, unlike the retrieval-index consent question at `:130`.
+- **P-4** (brand · low): `skills/unit-lane/SKILL.md:59-62` and `:72` promise a re-ask "with the expected format" without naming one; the `execute-phase` sibling names `(<NN-slug>, e.g. 131-execute-phase)`.
+- **Debt item D-258-34** (perf · low, new): `skills/unit-lane/references/DESIGN.md` (+12) and `RESEARCH.md` (+9) are loaded by no declared route, so their growth is bounded only by the flat `referenceEstimateMax: 2200` default. **Trigger:** a route declaring the `unit-lane` references, the references crossing 2200/280, or the next `unit-lane` ceiling re-basis.
+- Carried unchanged and non-blocking: D-258-04 (`DESIGN.md` coined compound), D-258-05 (`--retriage` four homes), D-258-06 (`unit-lane (design step)` hand-off token), D-258-07 (Turn-contract `→ Next:` box), D-258-09 (`implement(258):` label), N-2 (CHANGELOG calls a bullet a "box"), N-4 (`--force` has no reader), N-7 (ledger provenance, 23 rows), N-8 (`catalog.test.mjs` parallel-write flake).
+
+Refuted candidates (reported with counter-evidence, never persisted): the
+cycle marks are bound to "heads that do not exist" (all four cited heads —
+`0814ea3d`, `5b08197a`, `939f6013`, `18cbf5e3` — are ancestors of HEAD, and each
+`REVIEW-RAN` mark records the head its own cycle reviewed, which is the
+append-only history the ledger is for) · `init-workspace`'s target-dir and
+`BOOTSTRAP_WRITE.md` consent gap (the cwd default is the unit's own approved
+Input-audit classification I1 and F7 removed the contradicting bullet; items
+5/7 of the write route are the interview-gated scaffold or create-if-absent, and
+item 12's label seeding is capability-gated and skippable — none is an installed
+hook, which is AC3's scope, and all are pre-existing) · `RESEARCH.md`'s halt
+"bouncing" off Process §1 (the guard covers the blank case and §1 covers the
+present case; the surviving half is F31's classification gap) · `policy.declared`
+has no fix-258 clause (it does, at `:470`; what fails is its accuracy → F32) ·
+AC6's README claim (AC6 itself declares the README cells "unchanged semantics",
+and README carries no per-skill version cell, so no change is owed) · the
+`.engram/`/toolstate dirty tree (none: `git status --porcelain` is empty).
+
+```text
+CONVERGENCE-ANOMALY — fix-258 source
+- Finding ids: new: F31, F32 / repeated: F2, F3, F16, F17, F18, F27 (F29/F30/F32 are their regressions at the same file+axis)
+- Snapshots: 18cbf5e37a356b5b0ad8921e1acb8000b6e1e66b -> 40d4f6f58960aa69b1d563c3c20eebc8303a35cf (fold batch F20–F28)
+- Missed: cycle 7 required the AC1 contradiction be resolved without re-reading AC1 itself, so the fold that cleared F20/F21 deleted the AC-mandated fields; the fold's own declared validators and manifests were never re-run after its last edits, so F16's counters drifted 4→2 and the re-basis audit trail recorded pre-fold numbers
+- Owning stage: plan (F29, F30, F31 are the unit doc's AC/Evidence/Input-audit surfaces) and source (F32 is the manifest's declared audit trail)
+- Why the prior review failed: every cycle since 3 re-verified each folded row at its own `file:line` but never re-ran the unit doc's declared validators or re-read the acceptance criterion the fold had just edited against
+- Route to owner: plan rows -> the fold batch F29 + F30 + F31; source row -> the same batch (F32's numbers depend on F29–F31 landing first)
+```
+
+```text
+LOOP CAP REACHED — 258-harden-needs-input-contracts
+- Finding ids: F29, F30, F31, F32
+- Cycles: 8 review→fold cycles' marks on this ledger (the cap bit at cycle 4); this review ran on the user's explicit instruction
+- Route: the fold batch F29 + F30 + F31 + F32 requires the user's explicit instruction (/fold-findings), otherwise /triage-issue --prioritize-now 258-harden-needs-input-contracts F29 F30 F31 F32 (or the programmatic outer driver)
+```
