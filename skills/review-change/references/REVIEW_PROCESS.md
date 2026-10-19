@@ -53,7 +53,7 @@
    - **Size** — added+deleted changed lines **> 200**, or changed files
      **> 15** (`git diff --numstat`).
 2. **Frozen acceptance + SPEC drift check (structural).** Locate the acceptance
-   artifact — lane-era `ACCEPTANCE.md` (post-feature 61) or the unit doc's
+   artifact — legacy (pre-feature 61) `ACCEPTANCE.md` or the unit doc's
    `## Acceptance criteria` section (post-feature 61) — recompute its blob,
    and require an exact match with the execution receipt before assessing the
    candidate. Missing/mismatch is a `workflow` fix-now finding and no passing
