@@ -116,7 +116,8 @@ verdict:
      wrong-stage **or impossible-timeline** — is never a pass: the check falls
      through to the lane-era path, so a planted or stale `progress.md` cannot
      buy a weaker gate (and a unit doc with no lane-era surface left is then
-     **BLOCKED**, `→ Next: /unit-lane <unit>`).
+     **BLOCKED**, `→ Next: /unit-lane <unit>`); restore the bound artifact or obtain explicit user approval for a
+     SPEC amendment and replacement manifest; then write a fresh receipt
    - **Lane-era path** (feature 61's single-doc contract) — the unit doc's
      Evidence section carries the `## Triaged steps` block whose `Steps:` /
      `Skipped:` / `Budget:` lines re-derive identically from the doc's own
@@ -156,6 +157,6 @@ verdict:
 A legacy unit with no ledgers is not exempt: the missing ledgers must be constructed
 and reviewed through the adoption route (the pre-execution gate in `execute-phase`'s
 preflight) before MERGE-READY. The audit never coerces old evidence into the new
-format, never edits `ACCEPTANCE.md` (lane-era) or the unit doc's acceptance
+format, never edits `ACCEPTANCE.md` (legacy (pre-feature 61)) or the unit doc's acceptance
 section (post-feature 61), and never accepts a hand-written table that the
 plan snapshot does not bind.

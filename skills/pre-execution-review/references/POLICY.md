@@ -63,7 +63,7 @@ in the unit's unbound `progress.md`:
 ## Wording-only determination v1 — <spec|plan>
 - Determination: <opaque id>
 - Artifact revision: <the rotated artifactRevisionId>
-- Acceptance fingerprint: <the acceptance artifact (ACCEPTANCE.md for lane-era, unit doc ## Acceptance criteria for post-feature 61) blob the batch left unmoved>
+- Acceptance fingerprint: <the acceptance artifact (ACCEPTANCE.md for legacy (pre-feature 61), unit doc ## Acceptance criteria for post-feature 61) blob the batch left unmoved>
 - Intent and authority unchanged: yes
 ```
 
@@ -149,7 +149,7 @@ One rule, same shape for every consumer:
 
 - **Construct, never coerce.** Add what the unit is missing — the planning-evidence
   and obligation ledgers, built from the artifacts as they stand today — and leave
-  `ACCEPTANCE.md` (lane-era), the unit doc's `## Acceptance criteria` (post-feature
+  `ACCEPTANCE.md` (legacy (pre-feature 61)), the unit doc's `## Acceptance criteria` (post-feature
   61), `PLAN.md`, `TASKS.md`, the phase commits and any older receipt
   byte-identical. Rewriting an old verdict, its digest, or its date is forgery.
 - **Re-review, then resume.** The adopted unit re-runs the lane's `review` step like any other and

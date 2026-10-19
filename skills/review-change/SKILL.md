@@ -59,7 +59,7 @@ or edits code. A `REVIEW-FAIL`/`NEEDS-DECISION` turn closes when the report
 block is printed (report step 13).
 
 Consume the internal [verification contract](<../verification-contract/SKILL.md>);
-the reviewer checks the same frozen acceptance artifact (lane-era `ACCEPTANCE.md`
+the reviewer checks the same frozen acceptance artifact (legacy (pre-feature 61) `ACCEPTANCE.md`
 or post-feature-61 unit doc `## Acceptance criteria`) as the executor before
 mapping candidate evidence.
 

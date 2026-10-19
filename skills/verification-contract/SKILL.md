@@ -5,8 +5,8 @@ version: 1.4.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal contract: the acceptance artifact per delivery unit — lane-era units
-  (pre-feature 61) carry a separate frozen `ACCEPTANCE.md`; post-feature 61 units
+  Internal contract: the acceptance artifact per delivery unit — legacy (pre-feature 61) units
+  carry a separate frozen `ACCEPTANCE.md`; post-feature 61 units
   use the unit doc's `## Acceptance criteria` section as the canonical acceptance
   source — its validation ladder, anti-weakening rules, and blob-bound execution
   receipt. Consumed by planners, execute-phase, and review-change.
@@ -19,7 +19,7 @@ strengthen coverage but cannot move it; review checks the same bytes.
 
 ## Artifact
 
-Lane-era units (pre-feature 61): every new feature/fix carries a frozen
+Legacy (pre-feature 61) units: every new feature/fix carries a frozen
 `ACCEPTANCE.md` beside its SPEC. Copy the matching repository template. Required
 parts: `Status: frozen`; one stable ID per SPEC criterion; `Required outcome`;
 named `Validator`; literal quality floor; project commands. Prefer commands,
@@ -27,7 +27,7 @@ otherwise use `read-verified: <evidence>` or `manual: <exact observation>`.
 Unlabelled prose is invalid. A planned test may name its future project runner;
 it cannot substitute a narrower runner later.
 
-Post-feature 61 units: the unit doc's `## Acceptance criteria` section is the
+Lane-era units (post-feature 61): the unit doc's `## Acceptance criteria` section is the
 canonical acceptance source. Criteria are numbered, each induced from a concrete
 user scenario, and command-verified where possible (label `read-verified` for
 prose-only checks). Unlabelled prose is invalid.
@@ -53,7 +53,7 @@ v1` is needed: property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
 
-Lane-era units (ACCEPTANCE.md present): at first execution run
+Legacy (pre-feature 61) units (ACCEPTANCE.md present): at first execution run
 `git hash-object <unit>/ACCEPTANCE.md` and append to the unit progress file:
 
 ```text
@@ -67,11 +67,6 @@ section text and append to the unit progress file:
 ```text
 ## Acceptance receipt v1
 - Manifest: <unit>/<unit>-doc:acceptance-criteria · Blob: <sha> · Status: frozen · Verified: <date>
-```
-
-```text
-## Acceptance receipt v1
-- Manifest: <path> · Blob: <sha> · Status: frozen · Verified: <date>
 ```
 
 Before every phase and final review, recompute it. Exact match continues;
