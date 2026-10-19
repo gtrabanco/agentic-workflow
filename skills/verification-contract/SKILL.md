@@ -1,15 +1,15 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.4.0
+version: 1.4.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal contract: the acceptance artifact per delivery unit — legacy (pre-feature 61) units
-  carry a separate frozen `ACCEPTANCE.md`; post-feature 61 units
-  use the unit doc's `## Acceptance criteria` section as the canonical acceptance
-  source — its validation ladder, anti-weakening rules, and blob-bound execution
-  receipt. Consumed by planners, execute-phase, and review-change.
+  Internal contract: the acceptance artifact per delivery unit — legacy (pre-
+  feature 61) units may carry a frozen `ACCEPTANCE.md` (binding if present);
+  post-feature 61 units use the unit doc's `## Acceptance criteria` section as
+  the canonical acceptance source; the unit doc's `## Evidence` table serves as
+  the execution receipt. Consumed by planners, execute-phase, and review-change.
 ---
 
 # Verification Contract (internal)
@@ -19,13 +19,13 @@ strengthen coverage but cannot move it; review checks the same bytes.
 
 ## Artifact
 
-Legacy (pre-feature 61) units: every new feature/fix carries a frozen
-`ACCEPTANCE.md` beside its SPEC. Copy the matching repository template. Required
-parts: `Status: frozen`; one stable ID per SPEC criterion; `Required outcome`;
-named `Validator`; literal quality floor; project commands. Prefer commands,
-otherwise use `read-verified: <evidence>` or `manual: <exact observation>`.
-Unlabelled prose is invalid. A planned test may name its future project runner;
-it cannot substitute a narrower runner later.
+Legacy (pre-feature 61) units (ACCEPTANCE.md present — binding if present):
+the frozen `ACCEPTANCE.md` beside the SPEC; required parts: `Status: frozen`;
+one stable ID per SPEC criterion; `Required outcome`; named `Validator`; literal
+quality floor; project commands. Prefer commands, otherwise use
+`read-verified: <evidence>` or `manual: <exact observation>`. Unlabelled prose
+is invalid. A planned test may name its future project runner; it cannot
+substitute a narrower runner later.
 
 Lane-era units (post-feature 61): the unit doc's `## Acceptance criteria` section is the
 canonical acceptance source. Criteria are numbered, each induced from a concrete
@@ -53,37 +53,24 @@ v1` is needed: property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
 
-Legacy (pre-feature 61) units (ACCEPTANCE.md present): at first execution run
-`git hash-object <unit>/ACCEPTANCE.md` and append to the unit progress file:
-
-```text
-## Acceptance receipt v1
-- Manifest: <unit>/ACCEPTANCE.md · Blob: <sha> · Status: frozen · Verified: <date>
-```
-
-Post-feature 61 units (unit doc acceptance): hash the unit doc's acceptance
-section text and append to the unit progress file:
-
-```text
-## Acceptance receipt v1
-- Manifest: <unit>/<unit>-doc:acceptance-criteria · Blob: <sha> · Status: frozen · Verified: <date>
-```
-
-Before every phase and final review, recompute it. Exact match continues;
-missing/mismatched evidence stops before edits:
+The unit doc's `## Evidence` table is the execution receipt: each Evidence row
+records a validator command, its exit code or blob digest, output excerpt, and
+who verified it. A frozen criterion's receipt is the Evidence row for that
+criterion — exact match continues; missing/mismatched evidence stops before
+edits:
 
 ```text
 ACCEPTANCE GATE — <unit> BLOCKED
-Expected blob: <sha|missing> · Actual: <sha|missing>
-Reason: the frozen finish line is missing or changed.
+Expected Evidence row for AC<N>: present with blob <sha> · Actual: missing/changed
+Reason: the frozen finish line evidence is missing or changed.
 
 → Next: restore the frozen manifest, or obtain explicit user approval for a
-  SPEC amendment and replacement manifest; then write a fresh receipt
+  SPEC amendment and replacement manifest; then record a fresh Evidence row
   · never edit tests, commands, or acceptance to make the current candidate pass
 ```
 
 A legitimate change requires, in order: explicit user approval; dated SPEC
-`## Amendments` row; replacement manifest; committed fresh receipt. The
+`## Amendments` row; replacement manifest; committed fresh Evidence row. The
 executor never self-authorizes it.
 
 Legacy unit with no manifest mention: fingerprint committed `SPEC.md` and record
