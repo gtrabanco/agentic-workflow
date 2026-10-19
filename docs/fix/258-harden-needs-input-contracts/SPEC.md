@@ -81,9 +81,9 @@ obligation.
 
 Root suites (`node --test scripts/*.test.mjs`) plus
 `bun scripts/check-skill-context.mjs` (the three edited `SKILL.md` files
-must stay within their enforced line/token budgets). Halt behavior itself is
-verified manually per skill (read-verified ACs 1–3) — interactive paths are
-not exercised by the suites.
+must stay within their enforced line/token budgets). Interactive input
+halt behavior is read-verified per skill (ACs 1–3 confirm the guard prose
+is present) — interactive paths are not exercised by the suites.
 
 ## Known pre-existing issues
 

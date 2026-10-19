@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.6.0
+version: 1.6.1
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -66,7 +66,12 @@ user (not inferred or defaulted):
 - **Unit kind / scope classification** — when the request is vague, STOP and
   ask the user with concrete options. Never infer unit kind from an empty
   prompt (no silent `feature` default). If the user needs help deciding,
-  record the choice in the unit doc's `decisions.md`.
+  record the choice in the unit doc's `decisions.md`. If still blank/ambiguous,
+  emit the guard refusal line above and stop.
+- **Objective, why, user outcome** — from the SPEC. If blank or missing,
+  the lane needs them to proceed; re-ask once with the expected format
+  (`objective`, `why`, `user outcome`). If still blank, emit the guard
+  refusal line above and stop.
 
 Optional inputs (may default):
 - **`--retriage`** — flag; absent → use existing triage.
