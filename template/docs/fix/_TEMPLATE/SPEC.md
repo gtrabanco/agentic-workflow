@@ -76,8 +76,7 @@ clock, randomness, and unordered-concurrency dependencies (fixed version,
 frozen fixture, recorded input) or downgrade the row to `read-verified:`/
 `manual:`.
 
-**Property / fuzz validators.** A validator may be a property or fuzz test with
-bounded runtime — deterministic, bounded — within the project's timeout budgets.
+**Property / fuzz validators.** A validator may be a property or fuzz test with deterministic, bounded runtime within the project's timeout budgets.
 No new validator kind is needed: property/fuzz uses the existing `commands`
 row class.
 
