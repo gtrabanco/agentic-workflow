@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.4.0
+version: 4.0.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -21,9 +21,10 @@ raw placeholders.
 ## Turn contract — verify before ending the turn
 
 ```
-✓ Required user inputs were answered concretely (not defaulted). Any blank
-  required input was re-asked once; if still blank the skill emits
-  `→ Next: init-workspace requires manual input — cannot proceed` and stops.
+✓ Required user inputs were answered concretely (not defaulted). Consent for
+  every install, hook, and overwrite is explicit; a consent gap runs
+  `node scripts/needs-input.mjs <unit-dir>` and stops with the
+  `open-questions@1` block carrying the questions.
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
@@ -34,27 +35,24 @@ About to end the turn with any box unchecked? The turn is NOT done — complete
 the missing box first (weak models drop end-of-document duties; this list is
 first on purpose).
 
-## Needs-input guard
-
-The guard refusal line used by the required bullet below is:
-
-  `→ Next: init-workspace requires manual input — cannot proceed`
-
-Consent for installs/hooks/overwrites is **mandatory**: blank or absent consent
-→ re-ask once → emit the guard refusal line and stop; no default consent.
-
-- **Consent for installs, hooks, and overwrites** — required for each action.
-  If blank or absent: re-ask once; if still blank/absent, emit the guard
-  refusal line and stop. Never proceed by assuming consent from context.
-- **Upgrade vs bootstrap mode** — if the repo state is ambiguous (partially
-  scaffolding), STOP and ask the user to confirm the route. Do not guess.
-
 ## When to use
 
 - Setting up a repo to use these skills and you want the documentation substrate
   (`AGENTS.md` + `docs/` map + templates) adapted to the project, not just copied.
 - Prefer this over a static `npx degit gtrabanco/agentic-workflow/template` when you
   want the gate commands, architecture, and doc domains filled in by interview.
+
+## Consent — mandatory, never defaulted
+
+Installing a tool, wiring a hook, or overwriting an existing file each need an
+explicit yes; context never supplies one, and an ambiguous repository state
+(partially scaffolding) is not a route to guess. A consent gap is an open
+question: **(0) provenance** (search the repo's own docs and record where) →
+**(1) research** (concrete options) → **(2) halt**: run `node
+scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+stop with the questions carried in it. Grammar and exit codes:
+`orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
+`[target-dir]` is optional — absent means the current directory, recorded.
 
 ## Step 0 — Discover the project (always first)
 
