@@ -116,7 +116,7 @@ verdict:
      wrong-stage **or impossible-timeline** — is never a pass: the check falls
      through to the lane-era path, so a planted or stale `progress.md` cannot
      buy a weaker gate (and a unit doc with no lane-era surface left is then
-     **BLOCKED**, `→ Next: /unit-lane <unit>`); restore the bound artifact or obtain explicit user approval for a
+     **BLOCKED**, `→ Next: /unit-lane <unit>`. Restore the bound artifact or obtain explicit user approval for a
      SPEC amendment and replacement manifest; then write a fresh receipt
    - **Lane-era path** (feature 61's single-doc contract) — the unit doc's
      Evidence section carries the `## Triaged steps` block whose `Steps:` /
