@@ -76,10 +76,20 @@ user (not inferred or defaulted):
 - **`<NN-slug>`** — the unit identifier. If blank or missing: re-ask once with
   the expected format (`<NN-slug>`, e.g. `131-execute-phase`). If still blank,
   emit the guard refusal line above and stop.
+- **Confirmed phase** — the phase to execute. Explicit: `P<k>` (e.g. `P2`).
+  The body resolves to the first unfinished step when absent from the
+  invocation; this resolution is confirmed, not defaulted. If a user asks for
+  execution without naming a phase and the context doesn't supply one, re-ask
+  once. If still blank: emit the guard refusal line (which carries
+  `requires manual input`) and stop.
+- **Confirmed file targets** — the files the step processes. The body resolves
+  them from the unit doc's manifest and the selected phase's Relevant files
+  (`docs/features/<NN-slug>/SPEC.md`, `## Relevant files`); the guard checks
+  that the manifest exists and carries the required sections. If blank (no
+  manifest): re-ask once. If still blank, emit the guard refusal line (which
+  carries `requires manual input`) and stop.
 
 Optional inputs (may default):
-- **`P<k>`** — step argument. Absent → the body resolves to the first
-  unfinished step from the unit doc's `Tasks`. No halt.
 - **`--max-attempts N`** — absent → 3.
 - **`--force`** — flag; accepted by the body but cannot override any gate.
   No halt.
