@@ -16,6 +16,7 @@ import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { parseLedger } from "./needs-input.mjs";
 
 const DISPATCHER = fileURLToPath(new URL("./needs-input.mjs", import.meta.url));
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "needs-input-corpus-"));
@@ -91,7 +92,7 @@ test("open question, no decision → block on stdout, exit 0", () => {
 });
 
 test("a decided question is not pending", () => {
-  const D1 = "D1 | 2026-10-19 | decision | Q1 | human-owner | fix — the issue tracks a defect | feature: the blast radius is one script";
+  const D1 = "D1 | 2026-10-19 | decision | Q1 | human-owner | recorded in the review turn's chat paste | fix — the issue tracks a defect | feature: the blast radius is one script";
   const result = run(unit({ spec: SPEC, ledger: ledger(OPEN_Q1, D1) }));
 
   assert.equal(result.status, 0, result.stderr);
@@ -102,7 +103,7 @@ test("a decided question is not pending", () => {
 });
 
 test("a later open-question row re-opens the loop", () => {
-  const D1 = "D1 | 2026-10-19 | decision | Q1 | human-owner | fix | feature";
+  const D1 = "D1 | 2026-10-19 | decision | Q1 | human-owner | chat paste | fix | feature";
   const Q2 = "Q2 | 2026-10-19 | open-question | Which script owns the guard? | P3 cannot start | "
     + "`rg -l \"needs-input\" scripts/` → no hit | scripts/needs-input.mjs (one owner) | "
     + "extend unit-route.mjs (no new script) | design";
@@ -241,7 +242,7 @@ test("malformed ledger: unknown route → fails closed", () => {
 test("malformed ledger: decision addressed to an unknown question → fails closed", () => {
   const result = run(unit({
     spec: SPEC,
-    ledger: ledger("D1 | 2026-10-19 | decision | Q7 | human-owner | fix | feature"),
+    ledger: ledger("D1 | 2026-10-19 | decision | Q7 | human-owner | chat paste | fix | feature"),
   }));
 
   assert.notEqual(result.status, 0);
@@ -251,7 +252,7 @@ test("malformed ledger: decision addressed to an unknown question → fails clos
 test("malformed ledger: decision without human-owner authority → fails closed", () => {
   const result = run(unit({
     spec: SPEC,
-    ledger: ledger(OPEN_Q1, "D1 | 2026-10-19 | decision | Q1 | execute-phase | fix | feature"),
+    ledger: ledger(OPEN_Q1, "D1 | 2026-10-19 | decision | Q1 | execute-phase | chat paste | fix | feature"),
   }));
 
   assert.notEqual(result.status, 0);
@@ -286,6 +287,41 @@ test("an escaped pipe stays inside its cell instead of shifting the columns", ()
   assert.match(result.stdout, /^    - two-tables \(fits the page\)$/m);
   assert.match(result.stdout, /^    - one-table \(breaks the page\)$/m);
   assert.match(result.stdout, /^Route back: unit-lane$/m);
+});
+
+test("a decision row maps its fields to the published per-type layout", () => {
+  const parsed = parseLedger(ledger(
+    OPEN_Q1,
+    "D1 | 2026-10-19 | decision | Q1 | human-owner | recorded in the chat paste | Postgres chosen | SQLite discarded",
+  ));
+
+  assert.equal(parsed.ok, true, JSON.stringify(parsed));
+  const decision = parsed.entries.find((entry) => entry.type === "decision");
+  assert.equal(decision.closes, "Q1");
+  assert.equal(decision.authority, "human-owner");
+  assert.equal(decision.receipt, "recorded in the chat paste");
+  assert.equal(decision.chosen, "Postgres chosen");
+  assert.equal(decision.discarded, "SQLite discarded");
+});
+
+test("malformed ledger: decision without a receipt → fails closed", () => {
+  const result = run(unit({
+    spec: SPEC,
+    ledger: ledger(OPEN_Q1, "D1 | 2026-10-19 | decision | Q1 | human-owner | none | fix | feature"),
+  }));
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stdout, /^Reason: missing-search-receipt$/m);
+});
+
+test("malformed ledger: decision with too few cells → fails closed", () => {
+  const result = run(unit({
+    spec: SPEC,
+    ledger: ledger(OPEN_Q1, "D1 | 2026-10-19 | decision | Q1 | human-owner | fix | feature"),
+  }));
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stdout, /^Reason: malformed-entry$/m);
 });
 
 test("fenced examples inside decisions.md are quoted text, never entries", () => {

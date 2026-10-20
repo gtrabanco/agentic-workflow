@@ -152,27 +152,50 @@ export function parseLedger(text) {
     }
 
     const { cells, escapeLost } = splitRow(trimmed);
+    if (escapeLost) return { ok: false, reason: "malformed-entry", where };
+    const type = cells[2];
+    if (type === "decision") {
+      // A `decision` row reads the shared columns per type — the layout the
+      // template agent guide publishes: `question` carries the id it closes,
+      // `blocks` the authority, `search-receipt` where the human's answer is
+      // recorded, `options` what was chosen, and everything from `route` on
+      // what was discarded (a stray separator cannot lose the tail).
+      if (cells.length < 8) return { ok: false, reason: "malformed-entry", where };
+      const entry = {
+        id: cells[0],
+        date: cells[1],
+        type,
+        question: cells[3],
+        blocks: cells[4],
+        searchReceipt: cells[5],
+        options: "",
+        route: "",
+        closes: cells[3],
+        authority: cells[4],
+        receipt: cells[5],
+        chosen: cells[6],
+        discarded: cells.slice(7).join(OPTIONS_JOIN),
+      };
+      const row = classifyRow(entry, where);
+      if (!row.ok) return row;
+      entries.push(row.entry);
+      continue;
+    }
     if (cells.length < MIN_CELLS) {
       return { ok: false, reason: "malformed-entry", where };
     }
-    // The two entry types carry different columns: an `open-question` keeps its
-    // search receipt at index 5, a `decision` puts the authority there instead
-    // and has no receipt to give. Only `options` may span several separators, so
-    // a row that splits wider re-joins them there instead of losing an option;
-    // cell content keeps its escaped pipes otherwise.
-    if (escapeLost) return { ok: false, reason: "malformed-entry", where };
-    const type = cells[2];
+    // An `open-question` keeps its search receipt at index 5. Only `options`
+    // may span several separators, so a row that splits wider re-joins them
+    // there instead of losing an option; cell content keeps its escaped pipes.
     const tailIndex = cells.length - 1;
-    const isDecision = type === "decision";
-    const optionsFrom = isDecision ? 5 : 6;
     const entry = {
       id: cells[0],
       date: cells[1],
       type,
       question: cells[3],
       blocks: cells[4],
-      searchReceipt: isDecision ? cells[4] : cells[5],
-      options: cells.slice(optionsFrom, tailIndex).join(OPTIONS_JOIN),
+      searchReceipt: cells[5],
+      options: cells.slice(6, tailIndex).join(OPTIONS_JOIN),
       route: cells[tailIndex],
     };
     const row = classifyRow(entry, where);
@@ -202,18 +225,14 @@ function classifyRow(entry, where) {
     return { ok: true, entry: { ...entry, type: "open-question", options } };
   }
   if (entry.type === "decision") {
-    if (entry.searchReceipt !== AUTHORITY) return { ok: false, reason: "invalid-authority", where };
-    if (entry.blocks === "" || entry.options === "") return { ok: false, reason: "malformed-entry", where };
-    return {
-      ok: true,
-      entry: {
-        ...entry,
-        type: "decision",
-        closes: entry.question,
-        chosen: entry.blocks,
-        discarded: entry.options,
-      },
-    };
+    if (entry.authority !== AUTHORITY) return { ok: false, reason: "invalid-authority", where };
+    if (entry.receipt === "" || /^none$/i.test(entry.receipt)) {
+      return { ok: false, reason: "missing-search-receipt", where };
+    }
+    if (entry.closes === "" || entry.chosen === "" || entry.discarded === "") {
+      return { ok: false, reason: "malformed-entry", where };
+    }
+    return { ok: true, entry: { ...entry, type: "decision" } };
   }
   return { ok: false, reason: "malformed-entry", where };
 }
