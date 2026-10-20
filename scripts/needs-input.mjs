@@ -69,9 +69,10 @@ const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 /**
  * Split a ledger row into its cells on unescaped `|` only.
  *
- * A backslash escapes the next character so a cell can carry a literal pipe
- * (a regex, a table cell) without becoming a separator. Escaping is removed
- * from the value; a trailing lone backslash is reported instead of silently
+ * A backslash before a pipe yields a literal pipe (a regex, a table cell)
+ * with the escape removed; a backslash before any other character passes
+ * through verbatim, so a receipt quoting `\d+` or `\s` never shifts its
+ * columns. A trailing lone backslash is reported instead of silently
  * swallowed, so a malformed row never shifts its columns unnoticed.
  *
  * @param {string} line
@@ -84,8 +85,11 @@ export function splitRow(line) {
   let escaping = false;
   for (const char of line) {
     if (escaping) {
-      if (char !== "|") escapeLost = true;
-      cell += char;
+      if (char === "|") {
+        cell += char; // `\|` → literal pipe, escape removed
+      } else {
+        cell += `\\${char}`; // any other escape passes through verbatim
+      }
       escaping = false;
       continue;
     }

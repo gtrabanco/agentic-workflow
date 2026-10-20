@@ -324,6 +324,26 @@ test("malformed ledger: decision with too few cells → fails closed", () => {
   assert.match(result.stdout, /^Reason: malformed-entry$/m);
 });
 
+test("a non-pipe escape passes through verbatim instead of failing the row", () => {
+  const receipt = "Q1 | 2026-10-19 | open-question | Which retry pattern? | blocks AC2 | "
+    + "grep '\\d+' scripts/x.mjs found nothing | - \\w+ (simple) | - [0-9]+ (explicit) | unit-lane";
+  const result = run(unit({ spec: SPEC, ledger: ledger(receipt) }));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stdout.includes("grep '\\d+' scripts/x.mjs found nothing"), result.stdout);
+  assert.ok(result.stdout.includes("- \\w+ (simple)"), result.stdout);
+});
+
+test("a trailing lone backslash still fails closed instead of being swallowed", () => {
+  const result = run(unit({
+    spec: SPEC,
+    ledger: ledger("Q1 | 2026-10-19 | open-question | x | y | receipt cites scripts/x.mjs | a | design\\"),
+  }));
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stdout, /^Reason: malformed-entry$/m);
+});
+
 test("fenced examples inside decisions.md are quoted text, never entries", () => {
   const quoted = `${HEADER}\n\`\`\`text\nQ9 | 2026-10-19 | open-question | fenced example | x | y | a | design\n\`\`\`\n${OPEN_Q1}\n`;
   const result = run(unit({ spec: SPEC, ledger: quoted }));
