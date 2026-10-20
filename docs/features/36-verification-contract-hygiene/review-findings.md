@@ -694,3 +694,147 @@ route ceilings re-verified clean. Debt transform: no new debt-shaped findings
 CLI; fixture-spawn pattern with TRIGGER "the file crossing 7 s or a 4th
 fixture-per-case spawn") are unchanged by this delta. Every finding has a
 destination; this review creates no backlog.
+
+## Cycle 9
+
+Cycle 9 review ran 2026-10-20 (review-change) on the exact candidate
+`HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd`, clean workspace, in sync with
+origin, no PR (pre-PR checkpoint; `gh pr view --json state` → no pull requests
+for the branch). Route: default review — the delta the cycle-8 fold receipt
+requires (`RE-REVIEW-REQUIRED (delta)` after the F76–F77 batch) escalated to a
+**full pass on Width**: the fold batch `0746f275..6128e903` is 25 added + 9
+deleted = 34 changed lines (≤ 200) across 2 files (≤ 15) — no Size trigger —
+but `review-findings.md`'s changed line at :632 sits 87 lines beyond the
+nearest batch-cited line (F76 cites :538-545; the F77 cites at SPEC.md:20-24
+were hit only within 50 lines), so one changed line is more than 50 lines from
+every cited line → Width fired, full pass. Applicable passes ran isolated
+(subagents): `review-code`, `review-security`, `review-verify`, `review-brand`,
+`review-perf`; skipped with reasons — `review-design`/`review-a11y`/
+`review-seo` (no UI, no web surface: the repo ships markdown skills, a docs
+scaffold and node scripts). Synthesis (single reviewer), classification
+(`review-implementation`) and the debt transform (`review-debt`) each ran
+isolated. Acceptance: post-feature-61 unit — `sed -n '/^## Acceptance
+criteria/,/^## /p' SPEC.md | git hash-object --stdin` →
+`3b26da67bd597771ffe006e515ec47b0d5fc1b19`, exact match (unchanged; no SPEC
+amendment). Gate at head, run by the isolated verify pass: root suites 696
+pass / 0 fail exit 0, `check-skill-context` 28 skills exit 0, `--routes` 14
+routes exit 0 (route rows sum 175609 est / 12929 lines — the P11 Evidence row
+reproduces), golden-fixture 12/12 exit 0, version-parity content PASS exit 0,
+schema 717 pass exit 0, pi 432 pass exit 0 — 7/7 fresh marks below; the review
+also ran `ledger-provenance --check` itself → exit 0, recorded as finding F80
+because its PASS validates zero rows on this ledger. Mutation-proof spot-checks
+by the verify pass: reverting `scripts/unit-route.mjs` to `main` fails the
+root suite (1 fail), mutating the F30/F49 CHANGELOG row shape fails
+`normative-drift` (3 fails), both restored to a clean tree. Cycle count: 9 (8
+counted `REVIEW-RAN` marks + 1) — far past the two-cycle cap; this invocation
+is the user's explicit escape, never a reviewer election.
+
+CONVERGENCE-ANOMALY — 36-verification-contract-hygiene spec
+- Finding ids: F78 + F79 + F80 + F81 + F82 + F83 + F84 + F85 + F86
+- Snapshots: acceptance blob `3b26da67bd597771ffe006e515ec47b0d5fc1b19` →
+  `3b26da67bd597771ffe006e515ec47b0d5fc1b19` (unchanged; no SPEC amendment)
+- Missed: no cycle ever ran an ancestry sweep over every folded cell and mark —
+  F65–F71's dangling `3b60d5b7` survived cycles 6–8; `ledger-provenance
+  --check` was trusted as provenance evidence in five report lines, one VF row
+  and SPEC's progress log although it validates zero rows on this ledger
+  (folded cells carry `yes · fold <sha>`, which the tool reads as not-folded
+  at `:254`, and its citation set at `:263` never includes folded-cell tokens
+  at all); F76's fold re-pointed only the four cells its row named; comment and
+  CHANGELOG restatements were never re-derived against the shipped bytes
+- Owning stage: source (ledger-provenance hygiene + evidence-restatement
+  accuracy)
+- Why the prior repair failed: the F75/F76 remedies were prose naming specific
+  cells and marks — never the class — with no mechanical ancestor/vacuity
+  guard; the cycle-8 fold then repeated the pattern (F81's persist-commit cells)
+- Route to owner: `/fold-findings` (source-rooted; all rows fold into the
+  current unit)
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F78 | docs/features/36-verification-contract-hygiene/review-findings.md:428-434 | workflow | med | fix-now | fold into current unit: the F65–F71 folded cells cite `fold 3b60d5b75e36a033b28d9872be57b919c79ef56c` — `git merge-base --is-ancestor 3b60d5b7… HEAD` → exit 1 (object exists; amend-orphan sharing parent `77894bbf` with ancestor `46eb430a`, the cycle-6 fold's final commit). F76's remedy re-pointed only F72–F75's four cells; a full sweep of all 72 folded cells finds these seven as the only dangling citations. Remedy: re-point the seven cells to `46eb430a`; never amend a commit the ledger names | no |
+| F79 | docs/features/36-verification-contract-hygiene/review-findings.md:496 + :656-657 | workflow | med | fix-now | regression of F75 → fold into current unit: the cycle-6 tail `REVIEW-RAN` at :496 still cites `846f3d7c3a9422677c4c52ae939c9c934d0a6d2d` (`is-ancestor` → exit 1; reflog-only sibling of `46eb430a`, same parent `77894bbf`); F75's fold re-pointed only the seven `GATE-RAN` siblings (at the post-fold head `20834486` the :496 row still cites `846f3d7c`), so the cycle-8 re-verification claim at :656-657 ("the cycle-6 tail marks now cite `46eb430a`, a true ancestor") is false for :496. Remedy: re-point or re-issue the mark at the exact reviewed head and correct the :656-657 claim | no |
+| F80 | docs/features/36-verification-contract-hygiene/review-findings.md:342,422,521,586,610,637 + SPEC.md:292 + scripts/ledger-provenance.mjs:254,263 (tool not in the branch diff) | verify | high | fix-now | fold into current unit: `node scripts/ledger-provenance.mjs docs/features/36-verification-contract-hygiene/review-findings.md --check` → `rows 72 {"open":72}` + `CHECK PASS` exit 0 — every row parses `open` because folds write `yes · fold <sha>` into the folded cell and the tool tests `folded !== "yes"` (`:254`), while its citation set is file+route cells only (`:263`), so folded-cell tokens are doubly unchecked; `--json` shows fold/flip null for all 72. Cited claims: five report PASS lines (:342, :422, :521, :586, :610), VF-71's false mechanism "because the tool verifies existence, not ancestry" (:637), SPEC's progress log "ledger-provenance PASS" (:292). Contrast: unit-26's ledger (plain `yes` cells) → `proven-cited:107`. The tool's own header declares silent-pass the exact class P20/F106 exists to prevent. Remedy: parse `yes · fold <sha>`, verify folded-cell tokens (resolve + ancestry + id/message tie), pin annotated-ledger validation in `ledger-provenance.test.mjs`, and reword the claims to what the tool actually checks | no |
+| F81 | docs/features/36-verification-contract-hygiene/review-findings.md:632-633 | workflow | med | fix-now | fold into current unit: the F76/F77 folded cells cite `fold 0746f275` — the cycle-8 persist commit where both rows read `folded: no` (`git show 0746f275:<ledger>`) — while the flip/fold commit is `6128e903`; every other row names its fix commit. Remedy: re-point both cells to `6128e903` in a follow-up commit (write the cell after the fix commit exists; never amend a cited commit) | no |
+| F82 | scripts/unit-route.mjs:753-754 | code | med | fix-now | fold into current unit: the branch-added comment (introduced by `f85567cd`; absent on `main`) reads "F26: if all phases are done AND status is `done`, route to close-out", but the `status === "done"` branch at :733 returns close-out before any phase check — live repro: fixture `13-execute-unit` (Progress records P1 only) with roadmap row 13 set to `done` → `route: close-out` / `next: /audit-pr`, exit 0, P2 unrecorded. The behavior itself is main-parity (cycle-7's refutation stands); the comment documenting an unenforced rule is the defect. Remedy: state what the code does (close-out keys on status only) | no |
+| F83 | skills/unit-lane/SKILL.md:110-115 + skills/unit-lane/references/IMPLEMENT.md:25 | code | med | fix-now | fold into current unit: P6/F31 shipped the router's fail-closed refusal (live: `node scripts/unit-route.mjs 36-verification-contract-hygiene` → `UNIT ROUTE — error … settle the index or roadmap status`, exit 1) but neither documented call site names it — both files (untouched by the diff) still present the router as printing the first unfinished phase / the ladder continuing straight to close-out, and `grep -rn "settle the index" skills/unit-lane skills/execute-phase` → empty. Counter-evidence verified (lowers impact, not existence): ladder step 6 never invokes the router, execute-phase uses the separate `--triage` path (unaffected), the error self-documents its remedy, and this unit's `## Next` calls the refusal correct. Remedy: name the refusal state and its remedy at both call sites | no |
+| F84 | CHANGELOG.md:742 | brand | med | fix-now | fold into current unit: the 1.4.2 row's quote 'within the project's per-command timeout budgets' matches `skills/verification-contract/SKILL.md:51` exactly, but its clause "the same repair F37 applied to both exported templates" overstates — neither template carries "per-command" (`grep -rn "per-command"` over skill + both templates → skill:51 only; fix template:79 reads "within the project's timeout budgets"), and AC4 accepted the template variant. Remedy: quote what the templates read or drop the parity clause | no |
+| F85 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:470 vs 14× "1456 est / 116 lines" (first :120) | brand | med | fix-now | fold into current unit: one measurement event recorded two ways — `policy.declared` (dated 2026-09-18, feature 60 P3) says "skills/verification-contract/SKILL.md measured 1459 est" while 14 occurrences of the `feature 60 P3` note say "grew to 1456 est / 116 lines" for the same file/event; `node scripts/check-skill-context.mjs` at head measures `verification-contract 1479 115` (a third, current value), and SPEC O13 marks the growth-source measurements verified/honest. Remedy: re-derive the event's value (or date each point-in-time explicitly) and write it identically in both places | no |
+| F86 | CHANGELOG.md:100 | brand | med | fix-now | regression of F63 → fold into current unit: the 0.22.0 companion row names only `verification-contract` 1.4.2 while this PR ships six bumped skills (audit-pr 5.6.2, pre-execution-review 2.7.1, review-change 3.12.1, review-implementation 1.11.1, workflow-status 3.9.2 — five frontmatter bumps in this diff); sibling companion rows (0.21.0, 0.20.0) enumerate every shipped skill, and the row is dated 2026-10-18 while the named 1.4.1/1.4.2 rows are dated 2026-10-19. F63's literal version fix landed (1.4.2; `ACCEPTANCE.md` spelled); its instruction "name what this PR ships" remains incompletely satisfied — counter-evidence: the content-parity gate passes (presence-only). Remedy: list all six versions and fix the date | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-73 | docs/features/36-verification-contract-hygiene/review-findings.md:428-434 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck `git merge-base --is-ancestor 3b60d5b75e36a033b28d9872be57b919c79ef56c HEAD` → exit 1; `git log -1 --format='%h %p %s' 3b60d5b7…` → parent 77894bbf, same as ancestor 46eb430a; full sweep of all 72 folded cells: 65 name ancestors, only F65–F71 dangle | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-74 | docs/features/36-verification-contract-hygiene/review-findings.md:496 + :656-657 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck `git merge-base --is-ancestor 846f3d7c3a9422677c4c52ae939c9c934d0a6d2d HEAD` → exit 1; `git show 20834486:<ledger>` → :496 cites 846f3d7c after F75's fold while :497-503 cite 46eb430a; direct read of :656-657 asserts the whole tail now cites 46eb430a | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-75 | docs/features/36-verification-contract-hygiene/review-findings.md:342,422,521,586,610,637 + SPEC.md:292 + scripts/ledger-provenance.mjs:254,263 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck `node scripts/ledger-provenance.mjs <ledger> --check` → `rows 72 {"open":72}` + CHECK PASS exit 0; `--json` → every row status open, fold null, flip null; `grep -c '^| F.*| yes · fold' <ledger>` → 72; `:254` tests `folded !== "yes"`, `:263` reads citations from file+route cells only; same tool on unit-26's ledger → `proven-cited:107` | verify | confirmed | finding-mark | n/a | n/a |
+| VF-76 | docs/features/36-verification-contract-hygiene/review-findings.md:632-633 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck `git show 0746f275:<ledger>` → F76/F77 folded cells `no`; `git show 6128e903:<ledger>` → `yes · fold 0746f275`; 0746f275 subject "docs(36): persist cycle-8 review findings (F76-F77)" (the record-open commit); the flip is introduced in 6128e903 | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-77 | scripts/unit-route.mjs:753-754 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck direct read of :753-754 vs the :733 chain; live repro on a tmp copy of fixture 13-execute-unit with roadmap row 13 → `done`: `route: close-out` / `next: /audit-pr` exit 0 while Progress records only P1; `git show main:scripts/unit-route.mjs | grep -c 'all phases are done AND'` → 0; `git log -S'all phases are done AND'` → f85567cd (branch) | code | confirmed | finding-mark | n/a | n/a |
+| VF-78 | skills/unit-lane/SKILL.md:110-115 + references/IMPLEMENT.md:25 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck direct read of both call sites; live `node scripts/unit-route.mjs 36-verification-contract-hygiene` → `UNIT ROUTE — error` / "settle the index or roadmap status", exit 1; `grep -rn "settle the index\|settle the roadmap" skills/unit-lane skills/execute-phase` → empty; unit-lane step 6 read (no router call); `git diff main...HEAD --stat -- skills/unit-lane skills/execute-phase` → empty | code | confirmed | finding-mark | n/a | n/a |
+| VF-79 | CHANGELOG.md:742 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck direct read: row quote equals skills/verification-contract/SKILL.md:51 verbatim; `grep -rn "per-command" skills/verification-contract/SKILL.md template/docs/*/_TEMPLATE/SPEC.md` → skill:51 only; template fix:79 reads "within the project's timeout budgets" | brand | confirmed | finding-mark | n/a | n/a |
+| VF-80 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:470 vs 14× "1456 est / 116 lines" (first :120) · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck context extract around :470 → "2026-09-18 (feature 60 P3 … growth source: skills/verification-contract/SKILL.md measured 1459 est)"; `grep -c "1456 est / 116 lines"` → 14; `node scripts/check-skill-context.mjs` → `verification-contract 1479 115` exit 0 | brand | confirmed | finding-mark | n/a | n/a |
+| VF-81 | CHANGELOG.md:100 · reviewer review-change · HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd · recheck full row read → names only `verification-contract` 1.4.2, dated 2026-10-18; five frontmatter version bumps in this diff (audit-pr 5.6.2, pre-execution-review 2.7.1, review-change 3.12.1, review-implementation 1.11.1, workflow-status 3.9.2); sibling rows 0.21.0/0.20.0 enumerate multiple skills; rows 1.4.1/1.4.2 dated 2026-10-19 | brand | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 6128e9039b91fcf0e17e4c0c78f79262662b22bd | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-9 re-verification of every `folded: yes` row at its cited location:
+files byte-identical since the cycle-8 verified head (`20834486..HEAD` touches
+only SPEC.md and this ledger) inherit that verification; F76 fixed (cells cite
+ancestor `20834486`, whose subject names F72–F75); F77 fixed (the Objective no
+longer claims "changes only"; `## Amendments` present); F74 fixed (SPEC:251
+region byte-identical; the P11 sum reproduces at 175609 est / 12929 lines over
+the 14 `--routes` rows); F75 → regression (F79); the ancestry sweep adds F78
+(seven cells) and the F81 cell-provenance defect (ancestor, but the wrong
+commit). Rows citing untouched files are byte-identical to the cycle-8
+verification.
+
+DISPUTED (never a row): none. Refuted (verified false, reported with
+counter-evidence, never persisted): the perf pass's three budget-note candidates
+— "the `fix 285 (AC3)`/`pre-execution-review`/`review-implementation`/
+`workflow-status` notes do not reproduce their declared ceilings" — each cited
+note is a superseded event entry with a later same-map note reproducing the
+field exactly (`= 2889` at :39, `= 4325` at :49, `= 3004` at :63, `= 2774` at
+:98; :36's `= 3294` matches `mainEstimateMax`), and the pass's own checklist
+found 0 arithmetic failures with all 14 route ceilings equal to the current
+`--routes` pairs; "audit-pr's `ceil(9747 x 1.10) = 10722` note contradicts the
+declared 10835" — superseded in place by :118's `unit 36 / feature 36` note
+(9850 → 10835 / 668) and :119; ":330 states ceil(11634 x 1.10) = 12798" —
+:330 currently reads `10456 → 11502`, matching the declared `11502/906`, and
+`11634|12798` survives only in :470's dated `declared` changelog (the perf pass
+quoted the folded F66 row's historical text as current bytes). The verify
+pass's ":632 cites non-ancestor `f3fab05c`" — that token is F76's route prose;
+the folded cell cites `0746f275`, an ancestor (its defect is F81, cited
+separately). The code pass's unit-lane "dead-ends" framing — ladder step 6
+never invokes the router, `--triage` is unaffected, and the refusal message
+self-documents its remedy; the residual docs edge persists as F83.
+
+Report notes, never persisted (`low`, report-note = debt notes with triggers):
+SPEC.md:46's Amendments figure "(+1803/−538)" reproduces only at `0746f275`
+(head: +1819/−538 three-dot; F77's row cites +1699) — TRIGGER: the next
+amendment changing the branch total, or any self-inclusive count cited as
+frozen evidence (re-derive at the folded head or drop volatile counts);
+`scripts/unit-route.test.mjs:33` `routeNext` duplicates `nextLine` (`:55`, one
+use at `:416`; branch-added, absent on main) — TRIGGER: a third `next:`-parser
+helper, or the two helpers diverging; regression of F64's two residual false
+statements (CHANGELOG:741 claims the label "(legacy (pre-feature 61))" landed in
+CLASSIFY.md — that file has zero occurrences, its line 45 reads "(legacy
+`ACCEPTANCE.md` or post-feature 61 …)"; CHANGELOG:476 says the label landed in
+review-change's frontmatter `description:` — untouched, only the version line
+and body :59-62 changed) — TRIGGER: the next era-label changelog row, or a
+`review-implementation`/`review-change` description edit. Carried debt
+unchanged by this delta: unit-route's duplicate unit-doc parses ≈0.13 ms of a
+~122 ms CLI (TRIGGER: a 4th builder copy or build time crossing the gate
+budget) and the fixture-spawn pattern (TRIGGER: the file crossing 7 s or a 4th
+fixture-per-case spawn — 14 total spawns at head, the three cycle 6 recorded).
+
+Debt transform (every row evaluated): 3 low rows transformed to debt notes with
+triggers (the Amendments figure, `routeNext` duplication, the F64 residuals);
+9 fix-now rows n/a as debt — current-unit correctness/honesty work paid by this
+cycle's fold, never deferred; 2 pre-existing items carried with unfired
+triggers. No current-unit debt was mislabeled non-blocking. Every finding has
+a destination; this review creates no backlog.
