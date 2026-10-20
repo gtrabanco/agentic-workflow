@@ -276,7 +276,7 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
 | I1 | `[target-dir]` argument (target repository) | optional | If blank, cwd is used. No issue. | No change — cwd is the declared, recorded default; never a question (F7). |
-| I2 | Consent for each install/hook/overwrite | required | If blank or absent, the current text says "never overwrite without explicit yes" but the enforcement is prose-only; a model may proceed by assuming consent from context. | Consent is never defaulted: three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops with the questions carried in it. No re-ask. |
+| I2 | Consent for each install/hook/overwrite | required | If blank or absent, the current text says "never overwrite without explicit yes" but the enforcement is prose-only; a model may proceed by assuming consent from context. | Consent is never defaulted: three-tier dispatch, then `scripts/needs-input.mjs` against a scratch unit folder (a consent gap usually precedes any unit — the run creates `SPEC.md` + `decisions.md` in a `mktemp` directory, deleted after the paste) prints `open-questions@1` and the run stops with the questions carried in it. No re-ask. |
 | I3 | Upgrade vs bootstrap mode selection | required | If the repo is ambiguous (partially scaffolding), the skill may pick a route by guessing the state. | Never guess: the route question goes to `design` through the `open-questions@1` block. |
 
 ### Planning evidence

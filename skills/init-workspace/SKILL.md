@@ -50,7 +50,10 @@ explicit yes; context never supplies one, and an ambiguous repository state
 question: **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (concrete options) → **(2) halt**: run `node
 scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
-stop with the questions carried in it. Grammar and exit codes:
+stop with the questions carried in it. The dispatcher needs a unit folder, and
+consent gaps usually precede any unit — so the run first writes a scratch one
+(`SPEC.md` + `decisions.md` in a `mktemp` directory, deleted after the paste)
+and runs the dispatcher against that. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 `[target-dir]` is optional — absent means the current directory, recorded.
 
