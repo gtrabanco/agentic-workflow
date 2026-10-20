@@ -171,7 +171,7 @@ place:
 open-questions@1
 id | date | type | question | blocks | search-receipt | options | route
 example Q1 | 2026-10-19 | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: file:line, grep, unit folder, prior units> | <2–3 options, each with its trade-off; `none` when the answer is free-form> | <design | unit-lane>
-example D1 | 2026-10-19 | decision | Q1 | human-owner | <what was chosen> | <what was discarded and why>
+example D1 | 2026-10-19 | decision | Q1 | human-owner | <where the human's answer is recorded: chat paste, issue comment> | <what was chosen> | <what was discarded and why>
 ```
 
 The `open-question` row records the question **and the evidence behind it**:
@@ -179,8 +179,12 @@ the tier-0 provenance search receipt (`<path:line>` hits, the greps run, the
 prior units of the same area — a "not found" without it is a defect), the
 options researched when the gap was external, and the `route` back to the stage
 that owns the fact (`design` for scope/architecture, `unit-lane` for plan-owned
-facts). The `decision` row records the authority (`human-owner`), the date, what
-was chosen, and what was discarded — a dismissed option stays dismissed.
+facts). The `decision` row reads the same columns per type: `question` carries
+the id it closes, `blocks` the authority (`human-owner`), `search-receipt`
+where the human's answer is recorded — a chat paste, an issue comment;
+validated non-`none`, so a decision without a receipt fails closed — `options`
+what was chosen, and `route` what was discarded. A dismissed option stays
+dismissed.
 
 Rules the ledger enforces:
 
