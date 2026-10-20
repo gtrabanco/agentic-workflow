@@ -30,9 +30,11 @@ table reduces to the three surviving skills above.
 
 ## User outcome
 
-When a required answer is blank, the skill visibly stops with a
-`requires manual input` hand-off instead of inventing scope, targets or
-consent. The user always knows when the workflow is waiting on them.
+When a required answer is blank, the skill visibly stops with the
+`open-questions@1` block the needs-input dispatcher prints — the questions,
+their search receipts, their options and the route back to the owning stage —
+instead of inventing scope, targets or consent. The user always knows when the
+workflow is waiting on them.
 
 ## Acceptance criteria
 
@@ -114,6 +116,9 @@ Consequences applied to this SPEC:
   re-classified below. File targets are owned by the unit doc's nested
   `Relevant files` metadata plus the path-protection checkpoint, not by a
   user question.
+- `## User outcome` is re-cut with the ACs: the halt is the dispatcher's
+  `open-questions@1` block; the retired `requires manual input` string names
+  nothing the skills ship.
 - Five pieces are cut as phases P7–P11 below. F33/F34 are absorbed by the
   pieces instead of being patched sentence by sentence; F35–F40 fold as
   before, inside P10's rewrite of the surfaces they cite.
@@ -247,7 +252,7 @@ One table per skill; every interruption point classified `required` / `optional`
 
 | # | Input point | Type | Current blank behavior | Post-fix behavior |
 |---|---|---|---|---|
-| E1 | `<NN-slug>` argument (unit identifier) | required (artifact, not a question) | User passes it; if blank/missing the slug is empty, `unit-route.mjs` fails with a non-helpful error — skill proceeds to "unit not found" path and may infer from context. | Never inferred and never re-asked: the three-tier dispatch runs, then `scripts/needs-input.mjs` prints the `open-questions@1` block and the run stops, routed to `/unit-lane --retriage`. |
+| E1 | `<NN-slug>` argument (unit identifier) | required (artifact, not a question) | User passes it; if blank/missing the slug is empty, `unit-route.mjs` fails with a non-helpful error — skill proceeds to "unit not found" path and may infer from context. | Never inferred and never re-asked: the three-tier dispatch runs, then `scripts/needs-input.mjs` prints the `open-questions@1` block and the run stops, routed back to the owning stage (`unit-lane`). |
 | E2 | `P<k>` step argument | optional — absent runs **all remaining steps** (the declared default, not an interview) | Absent → proceeds to first unfinished step. No issue. | No change: the phase stays optional-with-declared-default. `Confirmed phase` is withdrawn — the required-input framing was the defect (owner decision F33-D). |
 | E3 | `--max-attempts N` flag (optional) | optional | Absent → defaults to 3. No issue. | No change. Optional inputs may default. |
 
@@ -297,7 +302,7 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never interviews: a blank required input runs the three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops routed to `/unit-lane --retriage`; Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
+| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never interviews: a blank required input runs the three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops routed back to the owning stage (`unit-lane`); Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
 | O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same three-tier guard (a doc defect routes to the lane, not to the user); Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -cE "requires [a-z ]*input" skills/unit-lane/SKILL.md skills/unit-lane/references/DESIGN.md skills/unit-lane/references/RESEARCH.md` totals 4 | guard text + box in `skills/unit-lane/SKILL.md` and references | verified |
 | O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: a consent gap runs the three-tier dispatch then the `open-questions@1` block and stops, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -cE "requires [a-z ]*input" skills/init-workspace/SKILL.md` matches 2 | guard text + box in `skills/init-workspace/SKILL.md` | verified |
 | O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` matches 7 | CHANGELOG rows + README cells for the three skills | verified |
