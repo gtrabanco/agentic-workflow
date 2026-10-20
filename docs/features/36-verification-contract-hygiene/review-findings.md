@@ -501,3 +501,92 @@ this review creates no backlog.
 | GATE-RAN | HEAD 846f3d7c3a9422677c4c52ae939c9c934d0a6d2d | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
 | GATE-RAN | HEAD 846f3d7c3a9422677c4c52ae939c9c934d0a6d2d | (packages/agentic-workflow-schema) bun run test | exit 0 |
 | GATE-RAN | HEAD 846f3d7c3a9422677c4c52ae939c9c934d0a6d2d | (packages/pi-agentic-workflow) bun run test | exit 0 |
+## Cycle 7
+
+Cycle 7 review ran 2026-10-20 (review-change) on the exact candidate
+`HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d`, clean workspace, in sync with
+origin, no PR (pre-PR checkpoint; `gh pr list --head …` → empty). The fold batch
+`d3caeb86..46eb430a` escalated delta mode to a **full pass on Size**:
+213 changed lines (> 200) across 6 files (≤ 15). Applicable passes: `review-verify`
+ran isolated (subagent); `review-code`, `review-security`, `review-brand`,
+`review-perf` ran via the documented inline fallback after the platform refused
+to spawn subagents (403 on every Explore-tier spawn) — each reduced to its
+findings table before the next; skipped with reasons — `review-design`/
+`review-a11y`/`review-seo` (no UI, no web surface). Synthesis, classification
+(`review-implementation`) and the debt transform (`review-debt`) ran inline
+(same fallback). Gate at head, run by this review: root suites exit 0,
+`check-skill-context` 28 skills exit 0, `--routes` 14 routes exit 0,
+golden-fixture 12/12 exit 0, version-parity content PASS (0.21.0→0.22.0) exit 0,
+schema exit 0, pi exit 0 — 7/7 fresh marks below. `ledger-provenance --check`
+PASS (66 rows). Cycle count: 7 (6 `REVIEW-RAN` marks + 1) — far past the
+two-cycle cap; this invocation is the user's explicit escape, never a reviewer
+election.
+
+CONVERGENCE-ANOMALY — 36-verification-contract-hygiene spec
+- Finding ids: repeated F70, F68, F60+F65 / new F72, F73, F74, F75
+- Snapshots: acceptance blob `3b26da67bd597771ffe006e515ec47b0d5fc1b19` →
+  `3b26da67bd597771ffe006e515ec47b0d5fc1b19` (unchanged; no SPEC amendment)
+- Missed: the cycle-6 fold's own Evidence — its receipt claims ("unit-route dead
+  code", reproducible route sums) are not carried by the folded bytes
+- Owning stage: source (fold-execution hygiene, not plan/product)
+- Why the prior repair failed: the fold amended its commit after running the
+  gate and recorded claims its diff does not implement (rename-only where a
+  deletion was owed; stale measured pairs left in notes whose ceilings were
+  re-based from fresh measurements)
+- Route to owner: `/fold-findings` (source-rooted; all four rows fold into the
+  current unit)
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F72 | scripts/unit-route.mjs:733,766-771 | code | med | fix-now | regression of F70 → fold into current unit: the fold receipt claims "unit-route dead code" repaired, but only the `donePhases`→`unfinished` rename landed (diff is 3+/3-); the dead `if (status === "done")` true-branch survives inside the `else` of the chain whose `else if (status === "done")` at `:733` already returned close-out, so it is unreachable by construction. Delete the dead branch (keep the fail-closed `else`), or re-state the fold receipt to match the landed bytes | no |
+| F73 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:162,164,187,188,212,214,357,364,397,430,463 (+ same-text repeats at 236,237,260,261,283,284,307,308,330) | perf, verify | med | fix-now | regression of F60 + F65 → fold into current unit: the fold re-based every route ceiling from the fresh measured pair but left the pre-fold pair in the notes' `ceil()` text, so the arithmetic is false at 10 of 14 routes — `:164` "ceil(11083 x 1.10) = 12217 est" (real 12192; the declared 12217 = ceil(11106×1.10), the tool's actual descope pair 11106/868) and "ceil(869 x 1.10) = 956 lines" contradicts the declared `routeLinesMax: 955`; `:188` "ceil(10433 x 1.10) = 11502" (real 11477; declared 11502 = ceil(10456×1.10)), "ceil(824 x 1.10) = 906" (real 907); `:214` "ceil(10946 x 1.10) = 12066" (real 12041); `:364` "ceil(1342 x 1.10) = 1476" (real 1477) and "ceil(17221 x 1.10) = 18969" at `:397,430` (real 18944 = ceil(17244×1.10)); `:463` "ceil(17690 x 1.10) = 19485" (real 19459 = ceil(17713×1.10)); `:357` states "pre-re-basis route measured 18874" then computes "ceil(18897 x 1.10)" in the same sentence. Re-record each note with the pair the re-basis actually measured (descope 11106/868, feature-class 10456/823, final-pr 10969/847, adversarial 18897/1341, default 17244/1233, synthesize 17713/1255, audit-pr 9850/607 — audit-pr's notes are already correct) so every `ceil(measured x 1.10)` reproduces the declared ceiling | no |
+| F74 | docs/features/36-verification-contract-hygiene/SPEC.md:251 | verify | med | fix-now | regression of F68 → fold into current unit: the P11 Evidence row records "summing its rows gives 175333 est / 12941 lines"; at the reviewed head the 14 `--routes` rows sum to 175609 est / 12929 lines (the fold batch's own edits moved the measurements), and the row's closing claim "correct ceil arithmetic" is false per F73. Re-record the sum at the repaired head | no |
+| F75 | docs/features/36-verification-contract-hygiene/review-findings.md (cycle-6 tail marks) | workflow | med | fix-now | fold into current unit: the cycle-6 fold ran its gate at `846f3d7c3a9422677c4c52ae939c9c934d0a6d2d`, then amended the commit into `46eb430a` — the tail `REVIEW-RAN`/`GATE-RAN` marks cite a commit that is not an ancestor of HEAD (`git merge-base --is-ancestor` fails), reachable only via reflog, and whose tree differs from HEAD (`8f28b519` vs `395e3d8f`); the delta is unit-doc prose + ledger only, so the receipts substantively hold, but the provenance points at dangling bytes. Remedy: fresh marks at the exact reviewed head (this review's own marks below satisfy it for cycle 7) and stop amending a commit after marking it | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-67 | scripts/unit-route.mjs:733,766-771 · reviewer review-change · HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d · recheck `grep -n 'status === "done"' scripts/unit-route.mjs` → 733 and 770 (the second inside the first's `else`); direct read of `:712-775` shows the `else if (status === "done")` chain branch returns close-out before the execute block, so the inner true-branch is unreachable; `git diff d3caeb86..46eb430a -- scripts/unit-route.mjs` shows rename only (3+/3-) | code | confirmed | finding-mark | n/a | n/a |
+| VF-68 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:164 · reviewer review-change · HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d · recheck `node -e 'console.log(Math.ceil(11083*1.1), Math.ceil(869*1.1), Math.ceil(11106*1.1), Math.ceil(868*1.1))'` → 12192 956 12217 955 against the note's "12217 est / 956 lines" and the declared 12217/955; `node scripts/check-skill-context.mjs --routes` → descope 11106/868; same method at :188/:214/:364/:397/:430/:463 | perf | confirmed | finding-mark | n/a | n/a |
+| VF-69 | docs/features/36-verification-contract-hygiene/SPEC.md:251 · reviewer review-change · HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d · recheck `node scripts/check-skill-context.mjs --routes \| awk '{s+=$(NF-1); l+=$NF} END{print s, l}'` over the 14 route rows → 175609 est / 12929 lines against the recorded 175333/12941 | verify | confirmed | finding-mark | n/a | n/a |
+| VF-70 | docs/features/36-verification-contract-hygiene/review-findings.md (cycle-6 tail marks) · reviewer review-change · HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d · recheck `git log -1 --format='%H %P %s' 846f3d7c` → "fix(36): fold F65-F71 …" parented on 77894bbf (same as 46eb430a, pre-amend); `git merge-base --is-ancestor 846f3d7c 46eb430a` → exit 1; `git rev-parse 846f3d7c^{tree} 46eb430a^{tree}` → 8f28b519 / 395e3d8f; `git diff 846f3d7c 46eb430a --stat` → SPEC.md + review-findings.md only | workflow | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 46eb430a365cf0c8556b1ec430a7eefc9cacef6d | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-7 re-verification of the folded rows citing the six delta files: F65/F66
+repaired for their noun defect but the pair/ceil defect persists → F73; F67
+fixed (AC2/AC4 now cite template lines 74/79, both reproduce); F68 → regression
+F74; F69 fixed for its cited defect (the sentence terminates and now carries a
+predicate; the residual participial opener "Restoring … obtaining …, then
+write" is a report-note, not a row); F70 → regression F72 (rename only); F71
+fixed (`## Done when` now names the unit-doc Evidence receipt, one owner,
+consistent with § Freeze and receipt). Rows citing untouched files are
+byte-identical to the cycle-6 verification.
+
+Report notes, never persisted (`low`, report-only): `02_CLOSURE_AND_SCOPE_GATES.md:119-120`
+still opens the remedy with participles ("Restoring the bound artifact or
+obtaining explicit user approval …, then write a fresh receipt") where the
+canonical copy (`skills/verification-contract/SKILL.md:67-68`) uses imperatives
+("Restore … obtain …"); `SPEC.md` AC7 row records the P12-era "root: 695 pass"
+while the Progress log's fold-cycle-6 entry records 696 — accepted point-in-time
+records, the head's own counts are the GATE-RAN marks above;
+`scripts/unit-route.mjs:616` still names its local set `donePhases` inside
+`firstUnfinishedPhase` (the F70 misnomer, outside the cited lines); the 8
+`docs(unit 36)` space-in-scope commit subjects and the two file-scoped subjects
+(`fix(CHANGELOG)`, `fix(README)`) remain the cycle-6 note. Refuted: "the
+declared route ceilings are wrong" — every declared ceiling equals
+`ceil(current measured × 1.10)` of the tool's real pair (checked all 14 routes);
+"the gate is not green at the reviewed head" — 7/7 commands exit 0 at
+`46eb430a`; "the ledger fails provenance" — `--check` PASS (66 rows). Debt
+transform: no new debt-shaped findings — the pre-existing debt items (unit-route
+duplicate parses ≈0.13 ms, builder copies ×2 with TRIGGER "a 4th copy or build
+time crossing the gate budget"; unit-route.test.mjs fixture spawns with TRIGGER
+"file crossing 7 s or a 4th fixture-per-case spawn") are unchanged by this
+delta (rename only). Every finding has a destination; this review creates no
+backlog.
