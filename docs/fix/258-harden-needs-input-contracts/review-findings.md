@@ -847,3 +847,158 @@ sentence.
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | SUP-AC1 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:36-40` (AC1–AC3) | spec-drift | high | DISPUTED | human-owner 2026-10-19: ACs are **widened**, not narrowed — the `re-ask once` step is replaced by (repo provenance with a search receipt → bounded research with a durable artifact → emit the open questions and stop). The plan owner re-cuts AC1–AC3 upward on this branch and appends the phases for the five pieces above, with a dated `## Amendments` row quoting both owner decisions; do not fold a guard against the old AC text | n/a |
+
+---
+
+Cycle 11 — **full pass (delta escalated)** — ran 2026-10-19 (`review-change`, fresh
+per-axis contexts, reviewed head `22b8756c043602a5479504b1cb6ba66293955f28`, PR
+#302). Cycle 11 = ten completed `REVIEW-RAN` marks + 1, and it runs on the user's
+explicit instruction (the SPEC's `## Next` names it the mandatory end review of
+the widened unit); the review→fold cap bit at cycle 4 and this cycle never starts
+by reviewer election.
+
+**Escalation (delta → full pass), trigger and numbers stated.** The delta since
+cycle 10's reviewed head (`343bb7d4..22b8756c`, 11 commits: the owner-decision
+recordings, the upward replan, P7–P11) adds `scripts/needs-input.mjs` (+ its
+suite), the `open-questions@1` grammar in
+`skills/orchestration-envelope/references/TURN_CONTRACT.md`, the ledger contract
+in `template/AGENTS.md`, `docs/workflow/LANE_FLOW.md`, the `AGENTS.md`
+normative-surfaces row, `packages/pi-agentic-workflow/package.json`,
+`docs/workflow/SKILLS.md`, `README.md`, `CHANGELOG.md`, `docs/fix/README.md` —
+all outside the union of the folded rows' cited files, so the **width trigger
+fired**. Size: 20 files, 2220+/54− — both size limits exceeded as well. The
+review therefore covers `git diff main...HEAD` (20 files).
+
+**Workspace state (a precondition, never a finding).** `git status --porcelain`
+empty · `git status -sb` in sync with
+`origin/fix/258-harden-needs-input-contracts` · PR #302 OPEN at the reviewed
+head · no `ACCEPTANCE.md` for this unit (legacy SPEC fallback; none is claimed).
+
+**Frozen acceptance + SPEC drift coverage (per criterion).**
+
+| criterion | evidence at the reviewed head | verdict |
+|---|---|---|
+| AC1 | `grep -c "^## Needs-input guard" skills/execute-phase/SKILL.md` → 0; `## Inputs — artifacts, never questions` carries the three-tier order and names `scripts/needs-input.mjs`; no interview, `re-ask once`/`Confirmed phase`/`Confirmed file targets` absent repo-wide (grep exit 1) | met |
+| AC2 | unit-lane `## Inputs — never inferred, never defaulted` + DESIGN.md/RESEARCH.md guards state the same contract; "no silent `feature` default" stated once; ACs never inferred | met |
+| AC3 | init-workspace `## Consent — mandatory, never defaulted` + the Turn-contract box; `[target-dir]` optional-with-recorded-default | met (the halt's spelled dispatcher invocation cannot execute in this skill's context → F45) |
+| AC4 | `grep -c "Required user inputs were answered"` → 1 per skill, three boxes reworded to the dispatcher halt | met |
+| AC5 | `node --test scripts/*.test.mjs` → 715 pass / 0 fail, exit 0; `bun scripts/check-skill-context.mjs` → PASS 28 skills; `--routes` → PASS 14 routes | met |
+| AC6 | versions execute-phase 6.0.0 · unit-lane 2.0.0 · init-workspace 4.0.0 · orchestration-envelope 2.3.0 · pi 0.23.0; `version-parity-gate --content --base main` VERDICT PASS (declared *counts* stale → F48) | met |
+| AC7 | `open-question` ledger contract present in `template/AGENTS.md` and `docs/workflow/LANE_FLOW.md` (grep both exit 0) | met |
+| AC8 | `scripts/needs-input.mjs` + 22-test suite green; fail-closed matrix covers header/entry/receipt/options/route/authority/duplicate/unknown | met (defects inside the deliverable: F41, F42, F43, F44) |
+| AC9 | `open-questions@1` published in TURN_CONTRACT.md §Open questions + `open-questions-block` row in AGENTS.md; `node --test scripts/normative-drift.test.mjs` → 18/18, exit 0 | met |
+| AC10 | ceilings re-based down (3717/303, 3424/271, 3463/249) and both budget gates PASS; all suites green | met |
+
+Every changed file maps to a criterion; `none`-mapped hunks are the close-out
+bookkeeping rows (`docs/fix/README.md`, `SKILLS.md` cell) — carried P-1/N-3.
+
+**Every `folded: yes` row re-verified at its cited location — 32 folded rows.
+** F1–F28 and F30–F32 hold at this head (gates re-derived; manifest narration
+now carries the shipped 3379/3112/3148 → 3717/303, 3424/271, 3463/249 and the
+stale `2026-09-22` clause is gone; the three pre-existing CHANGELOG rows remain
+byte-identical to `main`; `## Process` restored; phase-lint PASS 11/11). F29
+superseded by owner decision F33-D with the dated `## Amendments` row quoting it
+(the anti-gaming approval exists). F33/F34 **absorbed** by P10's shrink: the
+required list no longer carries phase or file targets, a bare `<NN-slug>` is the
+documented all-remaining-steps default, file targets are the `Relevant files:`
+metadata plus the path-protection checkpoint. F35 **repaired** (the 6.0.0 row
+documents the real deletion and the body no longer contains the bullets). F36
+**repaired**. F37 **repaired**. F38 **not repaired** (P5 still declares 4,
+actual 12; the `5×` Progress-log claim stands — carried into F48). F39
+**repaired** (`--force` stated truthfully per `PREFLIGHT.md:38-41`). F40
+**retired** with the section it elided (the pointer sections paste the block
+verbatim). F33–F40's ledger rows still read `folded: no` with no fold sha and no
+VF marks although P10's Progress log claims the fold — that gap is F49.
+
+**Passes run (isolated, one context each):** code, security, verify, perf,
+brand, plus the inline API-ergonomics pass; one `review-implementation`
+classifier and one `review-debt` transform. **Skipped:** design, a11y, seo — the
+change ships no UI, page or web surface (skill prose, one runtime script, docs).
+Per-axis outcomes: code FAIL, security FAIL, verify PASS (low only), perf FAIL,
+brand FAIL, API-ergonomics PASS (notes only).
+
+**Gates re-derived at the reviewed head.** `node --test scripts/*.test.mjs` →
+715 pass · 0 fail, exit 0 · `node --test scripts/needs-input.test.mjs` → 22/22,
+exit 0 · `node --test scripts/normative-drift.test.mjs` → 18/18, exit 0 ·
+`bun scripts/check-skill-context.mjs` → PASS 28 skills, exit 0 · `--routes` →
+PASS 14 routes, exit 0 · `node scripts/phase-lint.mjs <unit doc>` → verdict
+PASS (11/11), exit 0 · `node scripts/version-parity-gate.mjs --content --base
+main` → VERDICT PASS, exit 0 · `bun run test` (packages/pi-agentic-workflow) →
+432 pass · 0 fail, exit 0.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F41 | `scripts/needs-input.mjs:158-176,205-216` — decision rows: the comment says a `decision` "puts the authority there [search-receipt, index 5]" but the code reads `cells[4]` (the header's `blocks` column); consequentially `chosen` is set to the authority literal (`"human-owner"`) and `discarded` to the chosen text — off by one for every decision row; `template/AGENTS.md:172-174` publishes one 8-column header beside a 7-cell decision example so both layouts parse with different field assignments, and no test asserts `chosen`/`discarded` (latent today — the renderer never prints decisions, but `compute()` exports the mis-mapped entry) | code | med | fix-now | fold into current phase (source: align the decision layout with the published header — authority from the search-receipt cell or a published per-type layout in `template/AGENTS.md`; fix the :158-166 comment; add chosen/discarded assertions to the suite) | no |
+| F42 | `scripts/needs-input.mjs:97-103` — any escaped non-pipe character (e.g. `\d` inside a search-receipt grep) fails the whole ledger as `malformed-entry`, while the docstring (:14-15) only promises reporting a trailing lone backslash and the stricter rule is published nowhere (`TURN_CONTRACT.md`, `template/AGENTS.md`); a legitimate receipt `grep '\d+' scripts/x.mjs found nothing` is rejected exit 1 | code | med | fix-now | fold into current phase (source: pass non-pipe escapes through verbatim and flag only the trailing lone backslash, or state the stricter rule in the docstring, TURN_CONTRACT.md and the template ledger contract; test beyond `\|`) | no |
+| F43 | `scripts/needs-input.mjs:205` — decision authority is a self-attested literal: an agent-writable `decisions.md` row carrying `human-owner` closes its own open question and the dispatcher exits 0 `Decision: none`, bypassing the halt the mechanism exists to enforce; `decision` rows require no receipt/provenance (unlike `open-question` rows) and the suite only proves the literal is checked | security | med | fix-now | fold into current phase (source: require a decision receipt cell — where the human's answer is recorded: chat paste, issue comment — validated non-`none`, mirroring `missing-search-receipt`, or document the trust boundary in the template ledger contract and TURN_CONTRACT.md) | no |
+| F44 | `scripts/needs-input.mjs:294-317,366` — `--json` output is unbounded: `CELL_MAX` truncation applies only to `render()`; a 20,000-char cell yields a 40,422-byte JSON row vs 1,003 bytes in text mode (measured), and the JSON path is the driver path the skills paste into context — the exact resource the repo's context budgets guard | perf | med | fix-now | fold into current phase (source: apply the `CELL_MAX` bound (or a JSON-side cap) to `open_questions[]` fields before the `--json` write) | no |
+| F45 | `skills/init-workspace/SKILL.md:24-27,49-53` — the consent halt instructs `node scripts/needs-input.mjs <unit-dir>`, but init-workspace operates on a target project before any unit folder exists (`SPEC.md` never created there), so the dispatcher fails closed with `missing-unit-doc` (`scripts/needs-input.mjs:61,268`): as spelled, the halt mechanism cannot execute for this skill; SPEC Input-audit I2 repeats the same instruction | brand | med | fix-now | fold into current phase (source: state where the ledger comes from for a consent gap — an ad-hoc/scratch ledger path or a unit folder the gap first creates — or disclose the prerequisite beside the instruction; amend I2 with it) | no |
+| F46 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:34` — §User outcome still promises the retired hand-off "stops with a `requires manual input` hand-off"; the `## Amendments` row (:109-111) supersedes that exact string and the skills carry 0 hits of it — the section was never re-cut with the amended ACs | brand | med | fix-now | fold into current phase (source: amend §User outcome in the existing `## Amendments` row to the shipped halt — the `open-questions@1` block / "the run stops") | no |
+| F47 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:250,300` — E1's post-fix behavior and O1 route the halt to `/unit-lane --retriage`, off the closed route vocabulary the dispatcher enforces (`ROUTES = design | unit-lane`, `TURN_CONTRACT.md` `route:` line): a ledger row carrying the command form fails `unknown-route` | brand | med | fix-now | fold into current phase (source: reword to "routed back to the owning stage (`unit-lane`)" in both cells) | no |
+| F48 | `docs/fix/258-harden-needs-input-contracts/SPEC.md` (Tasks P2–P5 validators, Obligations O1–O3/O5 validator cells, Evidence rows AC1/AC2/AC3/AC6) — the declared validators do not reproduce at the reviewed head: `requires [a-z ]*input` declared 4/4(totals)/2, actual **0/0/0** (P10's shrink removed the prose they pinned) while O1–O3 stay `verified`; P5 declared "matches 4", actual **12**; O5 declared 7, actual **12**; Evidence rows still claim "4 guard mentions"/"totals 4"/"matches 2"/"7 rows" and the P11 log claims "every Evidence row re-run at this head"; F38 (open) is unrepaired and subsumed here; **regression of F30** | spec-drift | med | fix-now | replan (plan: re-run every declared validator at the final head and rewrite Tasks/Obligations/Evidence together — never the numbers alone; retire the superseded P2–P4 validators in favor of the P10-era surfaces they were replaced by; `node scripts/unit-route.mjs 258-harden-needs-input-contracts` prints the planner command) | no |
+| F49 | `docs/fix/258-harden-needs-input-contracts/review-findings.md` F33–F40 rows — P10's Progress log (SPEC.md:344) claims "folded F33-F40" but the batch commit `33abc98d` never touched this ledger: all eight rows still read `folded: no`, none carries a fold sha, and no VF marks record the fold — the ledger records a fold that never landed in it, so the next cycle cannot re-verify the batch | workflow | med | fix-now | fold into current phase (source: complete the ledger for the 33abc98d batch — flip F33–F40 with their fold sha and the VF rows evidencing each repair, or correct the Progress-log claim to what the ledger actually records) | no |
+| VF-45 | `scripts/needs-input.mjs:158-176,205-216` · reviewer review-change · HEAD 22b8756c043602a5479504b1cb6ba66293955f28 · recheck failing reproducer against unchanged code: synthetic ledger `D1 \| 2026-10-19 \| decision \| Q1 \| human-owner \| chosen-text \| discarded-text` → `compute()` yields `chosen: "human-owner"`, `discarded: "chosen-text"`, `route: "discarded-text"`; comment at :166-167 says authority sits at the search-receipt index; template example (`template/AGENTS.md:174`) has 7 cells under an 8-column header | code | confirmed | finding-mark | n/a | n/a |
+| VF-46 | `scripts/needs-input.mjs:97-103` · reviewer review-change · HEAD 22b8756c… · recheck failing reproducer: ledger whose search receipt is `grep '\d+' scripts/x.mjs found nothing` → `NEEDS-INPUT FAIL … Reason: malformed-entry Where: decisions.md:3`, exit 1; docstring :14-15 promises only trailing-lone-backslash reporting | code | confirmed | finding-mark | n/a | n/a |
+| VF-47 | `scripts/needs-input.mjs:205` · reviewer review-change · HEAD 22b8756c… · recheck direct read: `entry.searchReceipt !== AUTHORITY` where `searchReceipt = cells[4]`; a row with the `human-owner` token passes and closes its question (exit 0, `Decision: none`); the suite's authority case only proves the literal check (`needs-input.test.mjs:254`) | security | confirmed | finding-mark | n/a | n/a |
+| VF-48 | `scripts/needs-input.mjs:294-317,366` · reviewer review-change · HEAD 22b8756c… · recheck measured: 20,000-char receipt/options cell → text stdout 1,003 bytes (`CELL_MAX` truncation), `--json` stdout 40,422 bytes with the 20,008-char field echoed raw | perf | confirmed | finding-mark | n/a | n/a |
+| VF-49 | `skills/init-workspace/SKILL.md:24-27,49-53` · reviewer review-change · HEAD 22b8756c… · recheck direct read: the consent halt names `node scripts/needs-input.mjs <unit-dir>`; the script requires `<unit-dir>/SPEC.md` (`UNIT_DOC`, `missing-unit-doc` at :61,268) and init-workspace runs before any unit folder exists in the target project | brand | confirmed | finding-mark | n/a | n/a |
+| VF-50 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:34` · reviewer review-change · HEAD 22b8756c… · recheck direct read: §User outcome carries "stops with a `requires manual input` hand-off"; `grep -rn "requires manual input" skills/` → 0 hits; the `## Amendments` row supersedes the string | brand | confirmed | finding-mark | n/a | n/a |
+| VF-51 | `docs/fix/258-harden-needs-input-contracts/SPEC.md:250,300` · reviewer review-change · HEAD 22b8756c… · recheck direct read: E1/O1 route to `/unit-lane --retriage`; `scripts/needs-input.mjs` `ROUTES = Object.freeze(["design", "unit-lane"])` rejects any other value with `unknown-route` | brand | confirmed | finding-mark | n/a | n/a |
+| VF-52 | `docs/fix/258-harden-needs-input-contracts/SPEC.md` (P2–P5, O1–O3, O5, Evidence AC1/AC2/AC3/AC6) · reviewer review-change · HEAD 22b8756c… · recheck reproducible command output: `grep -cE "requires [a-z ]*input"` → execute-phase 0, unit-lane trio 0/0/0, init-workspace 0 (declared 4/totals 4/2); `grep -cE "^(\|.*258\|.*harden-needs-input)" CHANGELOG.md` → 12 (declared 4); `grep -cE "258" CHANGELOG.md` → 12 (O5 declared 7); Evidence rows claim "4 guard mentions"/"totals 4"/"matches 2"/"7 rows" | spec-drift | confirmed | finding-mark | n/a | n/a |
+| VF-53 | `docs/fix/258-harden-needs-input-contracts/review-findings.md` F33–F40 rows · reviewer review-change · HEAD 22b8756c… · recheck reproducible command output: `git show 33abc98d --stat` lists 12 files, this ledger not among them; `grep -n "^\| F3[3-9]\|^\| F40" …` → all eight rows end `\| no \|` with no fold sha and no cycle-11 VF rows before this one | workflow | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | node --test scripts/*.test.mjs | exit 0 (715/715) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | node --test scripts/needs-input.test.mjs | exit 0 (22/22) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | node --test scripts/normative-drift.test.mjs | exit 0 (18/18) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | bun scripts/check-skill-context.mjs | exit 0 (28 skills) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | bun scripts/check-skill-context.mjs --routes | exit 0 (14 routes) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | node scripts/phase-lint.mjs docs/fix/258-harden-needs-input-contracts/SPEC.md | exit 0 (verdict PASS 11/11) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | node scripts/version-parity-gate.mjs --content --base main | exit 0 (VERDICT PASS) | | |
+| GATE-RAN | HEAD 22b8756c043602a5479504b1cb6ba66293955f28 | bun run test (packages/pi-agentic-workflow) | exit 0 (432/432) | | |
+
+Report-only notes (low / ignore · never persisted as rows, never blocking):
+
+- **L-11-1** (code · low): `scripts/needs-input.mjs:113` — a ledger not starting with the header reports `Where: decisions.md:1` even when blank lines precede the offending line. **Trigger:** the F42 fold touching `parseLedger`.
+- **L-11-2** (code · low): `scripts/needs-input.mjs:121-142` — `decision` rows never validate their last cell against any vocabulary (folds into F41's layout fix). **Trigger:** F41's fold.
+- **L-11-3** (code · low): `scripts/needs-input.test.mjs:44-48` — `run()` returns `null` on `ENOENT` and every caller dereferences `result.status`; dead defensive branch. **Trigger:** the next test-file edit.
+- **L-11-4** (security · low): `scripts/needs-input.mjs:264-273` — `EACCES`/`EISDIR` on the two file reads escape as a raw stack trace instead of the fail-closed block. **Trigger:** the F43 fold touching `compute()`.
+- **L-11-5** (security · low): `TURN_CONTRACT.md:92,99` — the block asserts `produced-by` but no skill requires command+exit-code evidence beside a pasted block. **Trigger:** the next edit to any paste contract.
+- **L-11-6** (perf · low): `needs-input.mjs:243-244` — the options span is joined then re-split per row; carry the pre-split array. **Trigger:** the F44 fold touching `classifyRow`.
+- **L-11-7** (brand · low): `skills/execute-phase/SKILL.md:76` and `CHANGELOG.md:290` — "PREFLIGHT.md records the override" misattributes the recording (the run records it in the unit doc's Progress log; PREFLIGHT.md states the rule). **Trigger:** the next `--force` wording edit.
+- **L-11-8** (verify · low): SPEC `## Next` still carries the stale "awaiting confirmation → execute P7" block beside the final `/review-change` hand-off. **Trigger:** the F48 replan re-cut.
+- Debt items added by the transform: **D-258-35** (F42 — the stricter escape rule kept; trigger: a legitimate receipt rejected in the wild or the next ledger-format doc pass), **D-258-36** (F43 — self-attested authority; trigger: any consumer trusting `human-owner` rows for authorization), **D-258-37** (F44 — unbounded `--json`; trigger: a machine consumer hitting payload limits).
+- Carried unchanged, non-blocking: D-258-04/05/06/07/09, D-258-34, N-2, N-4 (materialized as the repaired F39), N-7, N-8, P-2, P-4, L-10-1..L-10-6.
+
+Refuted candidates (reported with counter-evidence, never persisted): the
+template/skills referencing repo-root `scripts/needs-input.mjs` in target
+projects (the `unit-route.mjs`/`diff-guard.mjs` precedent already ships the same
+pattern — pre-existing distribution model, not this change's defect) · F35's
+CHANGELOG rows "still documenting the opposite of the release" (the 6.0.0 row
+documents the real deletion and the body no longer contains the bullets; the
+5.2.1/0.22.1 rows describe their own fold batch — repair confirmed) · F36/F37
+"still wrong" (the narration now carries the shipped 3379/3112/3148 →
+3717/303, 3424/271, 3463/249, matching the fields and the gate; the stale
+`2026-09-22` clause is gone) · F39 "still false" (`--force` now states the real
+scope: skips the *stop* on the dependency and phase-lint gates, no bypass on
+path-protection) · F40 "the fragment persists" (the whole guard section was
+retired; the pointer sections paste the block verbatim) · the `--json` failure
+object's `block: "needs-input@1"` id mismatch (it matches the published
+`fail-block: NEEDS-INPUT FAIL — needs-input@1` grammar).
+
+```text
+CONVERGENCE-ANOMALY — fix-258 source
+- Finding ids: new: F41, F42, F43, F44, F45, F46, F47, F49 / repeated: F30 (F48), F38 (subsumed by F48, unrepaired)
+- Snapshots: 343bb7d4301ca113b983c8c5739e4b17d69df5bc -> 22b8756c043602a5479504b1cb6ba66293955f28 (replan + phases P7–P11)
+- Missed: the widened unit shipped a new deterministic producer (needs-input.mjs) whose own contract surface (decision-row layout, escape rule, authority attestation, JSON bound) was never reviewed against its published grammar, the init-workspace halt was never dry-run against the dispatcher it names, and the unit doc's declared validators were never re-run after the P10 shrink deleted the prose they pinned
+- Owning stage: source (F41–F45 are the dispatcher + skill prose) and plan (F46–F48 the unit doc's surfaces; F49 the ledger itself)
+- Why the prior review failed: cycle 10 gated the widened *plan* but the widened *implementation* landed after it with no review pass over the new script's contract, and the fold bookkeeping for F33–F40 was claimed in a Progress log without ever being written to the ledger
+- Route to owner: source rows -> the fold batch F41 + F42 + F43 + F44 + F45; plan rows -> the replan (F48) with F46 + F47 folded alongside; ledger row F49 -> the same fold batch
+```
+
+```text
+LOOP CAP REACHED — 258-harden-needs-input-contracts
+- Finding ids: F41, F42, F43, F44, F45, F46, F47, F48, F49
+- Cycles: 11 review→fold cycles' marks on this ledger (the cap bit at cycle 4); this review ran on the user's explicit instruction
+- Route: the fold batch F41 + F42 + F43 + F44 + F45 + F46 + F47 + F49 (and F48's replan re-cut) requires the user's explicit instruction (/fold-findings), otherwise /triage-issue --prioritize-now 258-harden-needs-input-contracts F41 F42 F43 F44 F45 F46 F47 F48 F49 (or the programmatic outer driver)
+```
