@@ -141,6 +141,24 @@ test("--json emits the same computation as JSON", () => {
   assert.equal(parsed.decision, "open");
 });
 
+test("--json bounds the echoed cells like the text block does", () => {
+  const big = "x".repeat(20000);
+  const result = run(
+    unit({
+      spec: SPEC,
+      ledger: ledger(`Q1 | 2026-10-19 | open-question | q${big} | b${big} | r${big} | - opt ${big} | - opt2 | design`),
+    }),
+    "--json",
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  const parsed = JSON.parse(result.stdout);
+  const question = parsed.open_questions[0];
+  for (const value of [question.question, question.blocks, question.search_receipt, ...question.options]) {
+    assert.ok(value.length <= 400, `unbounded field: ${value.length} chars`);
+  }
+});
+
 test("no decisions.md → exit 0, nothing pending (the ledger is optional)", () => {
   const result = run(unit({ spec: SPEC }));
 
