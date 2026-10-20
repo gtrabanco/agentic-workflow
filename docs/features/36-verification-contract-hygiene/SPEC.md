@@ -11,9 +11,14 @@ scope: small
 ## Objective
 
 Land issue #183's anti-flakiness validator rule and its property/fuzz validator
-recognition as wording/template changes only — `skills/verification-contract/SKILL.md`
-plus the template substrate validator mirror, a `bump-skill` version bump, and the
-README `## References` entries the issue owes. Issue item 3 (the golden-fixture
+recognition as wording/template changes — `skills/verification-contract/SKILL.md`
+plus the template substrate validator mirror, a `bump-skill` version bump, and
+the README `## References` entries the issue owes — and the full set of
+pre-execution-review cycle repairs (era-label migration `ACCEPTANCE.md`→unit-doc,
+acceptance-source migration, CHANGELOG version parity, context-budget re-basis,
+unit-route guard fix, normative-drift + ledger-ownership test repairs, audit-pr/
+execute-phase hand-off termination, and the review-pack skill version bumps) that
+the planning ledgers exposed during execution. Issue item 3 (the golden-fixture
 run-log machine-comparable result field) is already shipped by feature 55 and is
 verified, not re-implemented.
 
@@ -29,6 +34,17 @@ schema package's `decideWorkflowAction`, but the contract never says a planner
 may emit one as a `commands` row, so plans work around the contract. Issue
 #183 groups both as one evidence-backed batch; its third item (run-log result
 field) was absorbed by feature 55 (roadmap row 55, PR #240).
+
+## Amendments
+
+**2026-10-20** — Original scope ("wording/template changes only") expanded
+across seven replan batches during execution: the pre-execution-review cycle
+repairs (era-label migration `ACCEPTANCE.md`→unit-doc, acceptance-source
+migration, CHANGELOG version parity, context-budget re-basis, unit-route guard
+fix, normative-drift + ledger-ownership test repairs, audit-pr/execute-phase
+hand-off termination, and the review-pack skill version bumps), bringing the
+total from 5 files to 27 files (+1803/−538). The original Objective is kept
+but the expanded scope is now recorded; no acceptance criteria changed.
 
 ## User outcome
 
