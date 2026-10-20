@@ -767,15 +767,9 @@ function main(argv) {
         ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
         : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
     } else if (unfinished.size === 0) {
-      if (status === "done") {
-        route = "close-out";
-        selected = [];
-        command = "/audit-pr";
-      } else {
-        // In-progress unit with all phases done but status not "done" —
-        // refuse; the operator must settle the index/roadmap status first.
-        fail(1, `unit ${unit.dir} has all phases recorded but status is '${sanitize(status)}' (not 'done') — settle the index or roadmap status before routing to close-out`);
-      }
+      // All phases done but status not "done" (checked above at line :733) —
+      // refuse; the operator must settle the index/roadmap status first.
+      fail(1, `unit ${unit.dir} has all phases recorded but status is '${sanitize(status)}' (not 'done') — settle the index or roadmap status before routing to close-out`);
     } else {
       // Incomplete phases — proceed to execute.
       const phase = firstUnfinishedPhase(unit);
