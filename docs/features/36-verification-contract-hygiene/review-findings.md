@@ -590,3 +590,107 @@ time crossing the gate budget"; unit-route.test.mjs fixture spawns with TRIGGER
 "file crossing 7 s or a 4th fixture-per-case spawn") are unchanged by this
 delta (rename only). Every finding has a destination; this review creates no
 backlog.
+
+## Cycle 8
+
+Cycle 8 review ran 2026-10-20 (review-change) on the exact candidate
+`HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7`, clean workspace, in sync with
+origin, no PR (pre-PR checkpoint; `gh pr list --head …` → empty). The fold
+batch `a6a5e942..20834486` escalated delta mode to a **full pass on Size**:
+978 changed lines (> 200) across 4 files (≤ 15). Applicable passes ran
+isolated (subagents): `review-code`, `review-security`, `review-verify`,
+`review-brand`, `review-perf`; skipped with reasons — `review-design`/
+`review-a11y`/`review-seo` (no UI, no web surface: the repo ships markdown
+skills, a docs scaffold and node scripts). Synthesis, classification
+(`review-implementation`) and the debt transform (`review-debt`) each ran
+isolated (subagents). Gate at head, run by the isolated verify pass: root
+suites 696 pass / 0 fail exit 0, `check-skill-context` 28 skills exit 0,
+`--routes` 14 routes exit 0, golden-fixture 12/12 exit 0, version-parity
+content PASS (0.21.0→0.22.0) exit 0, schema 717 pass exit 0, pi 432 pass
+exit 0 — 7/7 fresh marks below. `ledger-provenance --check` PASS (70 rows).
+Cycle count: 8 (7 `REVIEW-RAN` marks + 1) — far past the two-cycle cap; this
+invocation is the user's explicit escape, never a reviewer election.
+
+CONVERGENCE-ANOMALY — 36-verification-contract-hygiene spec
+- Finding ids: F76 (regression of F75), F77 (new)
+- Snapshots: acceptance blob `3b26da67bd597771ffe006e515ec47b0d5fc1b19` →
+  `3b26da67bd597771ffe006e515ec47b0d5fc1b19` (unchanged; F77 proposes the
+  first SPEC amendment)
+- Missed: cycles 3–7 ran full passes without re-reading the SPEC Objective
+  against the grown diff (its "wording/template changes only" scope claim has
+  been false since the 2026-10-19 replan batch); the fold batches kept
+  amending commits after writing provenance into them (F75 → F76)
+- Owning stage: source (fold-execution hygiene + unit-doc coherence)
+- Why the prior repair failed: F75's remedy was prose ("stop amending a
+  commit after marking it") with no mechanical guard, and the fold repeated
+  the pattern the same day; the Objective was never re-checked
+- Route to owner: `/fold-findings` (source-rooted; both rows fold into the
+  current unit)
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F76 | docs/features/36-verification-contract-hygiene/review-findings.md:538-545 (cycle-7 section, F72–F75 folded cells) | workflow | med | fix-now | regression of F75 → fold into current unit: the F72–F75 fold wrote its ledger rows citing `fold f3fab05c`, then amended that commit into `20834486` (tree delta = the 4 ledger row flips only), so the provenance cells name a commit that is not an ancestor of HEAD and is reachable only via reflog — the exact defect F75's remedy ("stop amending a commit after marking it") forbids, now repeated. Remedy: re-point the four folded cells to the real final fold commit and never amend a commit the ledger names; `ledger-provenance --check` does not catch this (it checks existence, not ancestry) — do not weaken it to try | no |
+| F77 | docs/features/36-verification-contract-hygiene/SPEC.md:20-24 | workflow, spec-drift | med | fix-now | fold into current unit: the Objective still scopes the unit as "wording/template changes only — skills/verification-contract/SKILL.md plus the template substrate validator mirror, a `bump-skill` version bump, and the README `## References` entries", while the shipped branch diff rewrites `scripts/unit-route.mjs`, `scripts/normative-drift.test.mjs`, five review-pack skills and re-bases the context budgets (27 files, +1699/−538) — the Objective contradicts the unit's own Tasks/Evidence (P5–P12), and no dated `## Amendments` row records the replan expansion. Amend the Objective or add a dated `## Amendments` row naming the P5–P12 replan batches | no |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| VF-71 | docs/features/36-verification-contract-hygiene/review-findings.md:538-545 · reviewer review-change · HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 · recheck `git merge-base --is-ancestor f3fab05c 20834486` → exit 1; `git log -1 --format='%h %s' f3fab05c` → "f3fab05c fix(36): fold F72-F75 …" (same subject as 20834486, pre-amend); `git diff --stat f3fab05c 20834486` → review-findings.md only, 4 insertions / 4 deletions (the row flips themselves); `node scripts/ledger-provenance.mjs <ledger> --check` → PASS (70 rows) because the tool verifies existence, not ancestry | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-72 | docs/features/36-verification-contract-hygiene/SPEC.md:20-24 · reviewer review-change · HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 · recheck direct read: Objective reads "…as wording/template changes only — `skills/verification-contract/SKILL.md` plus the template substrate validator mirror, a `bump-skill` version bump, and the README `## References` entries…"; `git diff main...HEAD --stat` → 27 files, 1699 insertions / 538 deletions including scripts/unit-route.mjs, scripts/normative-drift.test.mjs, five skills and the budget JSON; `grep -n "## Amendments" docs/features/36-verification-contract-hygiene/SPEC.md` → no match | workflow, spec-drift | confirmed | finding-mark | n/a | n/a |
+
+| REVIEW-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | TMPDIR set to a writable tmpfs node --test scripts/*.test.mjs | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | node scripts/check-skill-context.mjs | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | node scripts/check-skill-context.mjs --routes | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | node scripts/golden-fixture.test.mjs | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | node scripts/version-parity-gate.mjs --content --base main | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | (packages/agentic-workflow-schema) bun run test | exit 0 |
+| GATE-RAN | HEAD 20834486f644c5a22471a6e0d408f82b0b22d1a7 | (packages/pi-agentic-workflow) bun run test | exit 0 |
+
+Cycle-8 re-verification of the folded rows citing the four delta files:
+F72 fixed (the dead `if (status === "done")` true-branch is deleted;
+`grep -n 'status === "done"' scripts/unit-route.mjs` → the single reachable
+occurrence at `:733`); F73 fixed (every `ceil(N x 1.10) = M` claim in
+SKILL_CONTEXT_BUDGETS.json reproduces — 0 false over the whole file — and all
+14 declared ceilings equal `ceil(measured × 1.10)` of `--routes`' real pairs);
+F74 fixed (the P11 row's sum reproduces: the 14 route rows sum to exactly
+175609 est / 12929 lines at this head); F75's remedy landed (the cycle-6 tail
+marks now cite `46eb430a`, a true ancestor) but the fold commit itself was
+amended after the rows cited it → F76. Rows citing untouched files are
+byte-identical to the cycle-7 verification.
+
+DISPUTED (never a row): the brand pass re-reported the participial opener at
+`skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:119-120` ("Restoring
+… or obtaining …, then write a fresh receipt.") — F69's cited defect (verbless
+fragment, no predicate) is fixed, the residual was explicitly adjudicated a
+report-note in cycle 7; the adjudication is upheld. Refuted (verified false,
+reported with counter-evidence, never persisted): "the P11 est sum drifted
+(175623 vs 175609)" — the reviewer's awk swallowed the trailing `PASS route
+budgets: 14 routes` line (the stray 14 inflates the sum); hand-summing the 14
+route rows gives exactly 175609, matching the SPEC row. "the
+unit-route.test.mjs 7 s debt TRIGGER fired (7070 ms)" — that run shared the
+CPU with three concurrent passes; clean sequential re-runs give 6326 / 5575 /
+5605 ms (45 pass / 0 fail each), and the fixture-per-case spawn count (11 on
+`main` → 14 at head) is exactly the three cases cycle 6 already recorded — no
+4th spawn exists.
+
+Report notes, never persisted (`low`, report-only): `scripts/unit-route.mjs:771-775`
+re-assigns `route`/`selected` already set by the enclosing branch and
+`firstUnfinishedPhase` re-reads/re-parses the unit doc the caller just parsed
+(existing duplicate-parse debt); `:781`'s comment cites "(checked above at
+line :733)" — a line-number reference that will rot; the new fail-closed
+message at `:772` interpolates `unit.dir` without `sanitize()` (stderr echo
+only; no `child_process` in the script, no injection surface);
+`scripts/unit-route.test.mjs:385-418`'s F40 case would silently exercise the
+normal P2 route if the fixture's `## Tasks` regex ever stopped matching (an
+`assert.ok(taskSection)` guard would fail loud);
+`scripts/normative-drift.test.mjs:774-790`'s `internal` flag is still not
+reset by a later heading (known latent, unchanged); nested parenthetical era
+labels read poorly (`POLICY.md:66`, `PRE_EXECUTION.md:27`);
+`CHANGELOG.md`'s audit-pr 5.6.2 row phrase "malformed bullet repair" dangles;
+`node scripts/unit-route.mjs` is ~30% slower than `main`'s interleaved
+(≈97–112 ms vs ≈83 ms) but within the stated ~122 ms baseline; all 14 declared
+route ceilings re-verified clean. Debt transform: no new debt-shaped findings
+— the pre-existing debt items (duplicate unit-doc parses ≈0.13 ms of a ~122 ms
+CLI; fixture-spawn pattern with TRIGGER "the file crossing 7 s or a 4th
+fixture-per-case spawn") are unchanged by this delta. Every finding has a
+destination; this review creates no backlog.
