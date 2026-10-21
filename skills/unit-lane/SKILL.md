@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 2.1.0
+version: 2.2.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -25,6 +25,12 @@ done:
   is inferred: a gap re-enters provenance → research, and a gap surviving both
   runs `node scripts/needs-input.mjs <unit-dir>` and stops with the
   `open-questions@1` block routed back to the owning stage.
+✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
+  its source — `path:line`, a doc, or an owner answer in the unit folder's
+  `sources.md`. A claim with none is a question, never a default.
+✓ Every question asked is recorded with its resolution (owner answer, "Decide
+  for me" + reason, or the explicit `none — no questions` line) in
+  `decisions.md`; no question the user already answered is asked twice.
 ✓ Triage ran (bun scripts/unit-route.mjs --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template

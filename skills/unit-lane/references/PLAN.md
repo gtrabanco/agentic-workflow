@@ -2,27 +2,43 @@
 
 ## Purpose
 
-Cut tasks from acceptance criteria. Each task names its validator. Smallest
-first. No future-phase work.
+Run **investigate → orient → ask → decide** over the plan itself: cite every
+task, sweep every claim against what the repository already decided, ask only
+what no source answers, and record the answers. Each task names its validator;
+smallest first; no future-phase work.
 
 ## Inputs
 
-- The unit's Acceptance criteria (filled by the design step)
-- The unit's non-goals
+- The unit doc: acceptance criteria, non-goals, and the design step's four panes
+  (`sources.md`, `decisions.md`)
+- The unit's Impact section — the surface the executor must sweep
 
----
+## Stage 1 — investigate
 
-The plan step is split into two stages: **Orient** (prior-decisions-sweep,
-reading only the design stage's output) and **Ask** (task-cutting, which
-may need user decisions on task scope). Each stage writes its output to
-the unit folder's `decisions.md` and the next stage reads only that output
-— no stage validates itself against the raw context.
+Open with the same provenance search the design step ran, aimed at the plan's own
+claims ("does a validator for this exist?", "is this module already covered?",
+"did a prior unit decide this?"). Journal each claim as a row of the unit
+folder's `sources.md`, with the id prefix `CLAIM-`:
 
-## Orient (prior-decisions-sweep)
+| id | claim | source | certainty |
+|---|---|---|---|
+| CLAIM-001 | <the plan claim, one line> | `<path:line>`, prior `decisions.md:line`, or `owner answer <Q-id>` | confirmed / inferred / unknown |
 
-Sweep the plan's claims against what the repository has **already decided in
-writing**. This stage reads only the design stage's output (the ASK-* rows
-in `decisions.md`) — it does NOT re-read the SPEC's original text.
+Two claims never need a search: the unit's own acceptance criteria (the design
+step cited them) and its non-goals. Everything else does — a plan claim with no
+source and no owner answer is the defect this stage exists to catch.
+
+## Stage 2 — orient
+
+Re-run the provenance tier over the plan's claims, then sweep every one of them
+against what the repository has **already decided in writing** — a plan must not
+contradict a prior decision in architecture, engineering, product, or any other
+domain. A claim the provenance search explains is settled at tier 0: point the
+row at `path:line` and move on. **Record where you looked** for every row the
+search did not settle — the greps meant for it and the prior units of the same
+area. In the same pass, check that the acceptance criteria are the plan's
+*input*, not a claim it re-decides: a task that would change an AC belongs to the
+design step, not here.
 
 **Candidate sources** — deterministic keyword/FTS matching, no new index and no
 new tooling: `docs/features/<NN>-<slug>/decisions.md`,
@@ -31,40 +47,52 @@ the Normalized Repository State (`discover-repository-state` /
 `resolve-repository-state`), `AGENTS.md`, and a unit SPEC's `## Design status`
 (legacy marker, units ≤ 60).
 
-**Fixed evidence shape** — one row per candidate hit, the decision quoted from
-its source:
-
-| claim | prior decision | source path | relation |
-|---|---|---|---|
-| <the plan claim> | <the recorded decision> | <path:line> | `contradicts` \| `compatible` |
-
-The cell value is exactly one of two values: `contradicts` or `compatible` —
-a row relation, not a stage verdict.
-
 **Advisory only — no new authority.** `contradicts` routes to
-`resolve-repository-state` only when the hit is against a frozen NRS fact
-(its only candidate source that carries a `<contradiction-id>` row after a
-`discover-repository-state` step); hits against
-`decisions.md` / `AGENTS.md` / architectural invariants / `## Design status`
-surface a `NEEDS-DECISION` for the user, per the existing rules. A plan with **no
-candidate match is clean and proceeds** — a miss never blocks it, a missed
-candidate can never void a plan, and the sweep issues no stage verdict and grants no
-gate of its own.
+`resolve-repository-state` only when the hit is against a frozen NRS fact (its
+only candidate source that carries a `<contradiction-id>` row after a
+`discover-repository-state` step); hits against `decisions.md` / `AGENTS.md` /
+architectural invariants / `## Design status` surface a `NEEDS-DECISION` for the
+user, per the existing rules. A plan with **no candidate match is clean and
+proceeds** — a miss never blocks it, a missed candidate can never void a plan,
+and the sweep issues no stage verdict and grants no gate of its own.
 
-For each candidate hit, append a row to `decisions.md`:
+Pass only if: ✓ the provenance search ran and where you looked is recorded ✓ every `CLAIM-*` row was swept ✓ every `contradicts` hit is either
+resolved from a frozen NRS fact or backlogged for the ask stage ✓ no task
+re-decides an acceptance criterion.
 
+## Stage 3 — ask
+
+Only `contradicts` hits and `unknown` claims that no source settles reach this
+stage — a plan asks after the repository has spoken, never before. Batch them
+into **one** form-turn (≤6 slots) using the design step's mechanics: recommended
+option with its why, one alternative, "Decide for me", "Explain the options".
+
+The questions are the same `open-questions@1` block the dispatcher reads — append
+the block to the unit folder's `decisions.md` (route `unit-lane`: these are
+plan-owned facts), never a table of your own:
+
+```text
+open-questions@1
+id | date | type | question | blocks | search-receipt | options | route
+Q2 | <YYYY-MM-DD> | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: path:line, greps, prior units> | <option A — trade-off> \| <option B — trade-off> \| Decide for me \| Explain the options | unit-lane
 ```
-| id | claim | prior decision | source path | relation |
-|---|---|---|---|---|
-| OR-PLAN-001 | <the plan claim> | <the recorded decision> | <path:line> | contradicts / compatible |
+
+A plan with an empty backlog writes the explicit `none` line instead — never a
+blank.
+
+## Stage 4 — decide
+
+Record every answer as a `decision` row of the same block (newest last), and a
+`Decide for me` choice with its reason — then cut the tasks:
+
+```text
+D2 | <YYYY-MM-DD> | decision | Q2 | human-owner | <where the answer is recorded> | <what was chosen> | <what was discarded and why>
 ```
 
-## Ask (task-cutting)
+## Fixed output contract
 
-Cut tasks from acceptance criteria. Each task names its validator. Smallest
-first. No future-phase work.
-
-Fixed output contract — fill the unit doc's **Tasks** section:
+<!-- tasks:start -->
+Fill the unit doc's **Tasks** section:
 
 ```
 P1 — <task description> (validator: <backticked command> <expected outcome>)
@@ -82,10 +110,27 @@ backticked command **and** an expected outcome, e.g. `exits 0`), and the nested
 `Relevant files:` line is **metadata, never a task** — it is that phase's read
 set, written from the planner's own discovery, and a file that is missing from
 it is never out of scope for the executor.
+<!-- tasks:end -->
 
-If the Orient stage found any `contradicts` hits that need user decisions,
-batch them into a single form-turn (≤6 slots) following the design step's
-gap-interview mechanics.
+<!-- sources:start -->
+`sources.md` — every `CLAIM-*` row with a source or an owner answer. A claim row
+whose source is empty, `—`, or `n/a` is a **defect**: find the source in the
+provenance tier or convert the claim into a question.
+<!-- sources:end -->
+
+<!-- questions:start -->
+The unit folder's `decisions.md` — the `open-questions@1` block the ask stage
+appended, plus the `decision` rows the decide stage appended, one per question
+closed. The step also refreshes `BRIEF.md`, the reviewer brief that restates
+them, so a reviewer never has to re-derive the step's questions:
+
+| Asked | Resolution |
+|---|---|
+| <question id + the decision being asked> | <what was chosen, by whom (owner answer / Decide for me), and why> |
+
+When the sweep and the provenance tier left an empty backlog, write exactly
+``none — no questions: every claim was settled by provenance or research``.
+<!-- questions:end -->
 
 ## Planning ledgers (same step)
 
@@ -112,22 +157,27 @@ name those files instead.
 
 ## Checklist (pass only if)
 
-- [ ] The orient stage ran: all plan claims swept against candidate sources, hits recorded as OR-PLAN-* rows
-- [ ] Every AC maps to at least one task
+- [ ] The provenance search ran first and its receipt is recorded for every plan claim
+- [ ] Every claim (CLAIM-001, …) cites its source or an owner answer in `sources.md`, including every acceptance criterion it rests on — none is blank, `—`, or `n/a`
+- [ ] Every claim was swept against the candidate sources; each `contradicts` hit is resolved or asked
+- [ ] Every question asked was recorded in `decisions.md` with its resolution (or the questions pane says `none`)
+- [ ] Every AC maps to at least one task, and no task re-decides an AC
 - [ ] Tasks are ordered smallest first
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
 - [ ] Final task is verification (proves the whole unit works)
 - [ ] No task reaches into a future-phase concern (docs, release, migrations)
 - [ ] Phases labeled P1, P2, … (never S1, Step 1)
-- [ ] Every plan claim touching architecture, engineering or product intent was
-      swept against the candidate sources above
-- [ ] Each candidate hit is one fixed-shape row, with the prior decision cited
-      at `path:line` and one of the two relations
 - [ ] Both planning ledgers are cut (planning evidence + obligations), in the
       sizing rule's home, with stable ids
 
 ## Forbidden
 
+- Never infer a plan claim: one the repository does not answer and no owner
+  settled is a question, never a default
+- Do not cut a task before the claim it rests on cites a source or an owner answer
+- Do not invent a question table of your own: the ask stage writes the
+  `open-questions@1` block the dispatcher reads
+- Do not decide at the ask stage, and do not re-ask an answered question
 - Do not bundle across phase boundaries — one phase = one commit
 - Do not plan work beyond the unit's acceptance criteria
 - Do not include docs/release tasks here — those are separate catalog steps
@@ -135,4 +185,3 @@ name those files instead.
 - Do not turn the sweep into a gate, stage verdict or blocking check — it routes,
   it never blocks a miss, and it adds no authority
 - Do not record a `prior decision` that no source `path:line` cites
-- Do not validate your own output against the raw context
