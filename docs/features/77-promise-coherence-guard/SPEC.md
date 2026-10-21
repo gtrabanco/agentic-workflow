@@ -234,9 +234,9 @@ What the change touches beyond its own files, cut at plan time:
 | AC4 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | exact arithmetic: `ceil(3330 x 1.10) = 3664` refused as 3663 | P3 |
 | AC5 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | 15-line section against a `3–5 line` promise refused | P4 |
 | AC6 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | undisclosed `<unit-dir>` prerequisite refused; F54 pinned in `needs-input.test.mjs` | P5 |
-| AC7 | `bun scripts/promise-coherence.mjs` | exit 0 | `verdict PASS` · `claims: 30 checked · 50 skipped` | P6 |
+| AC7 | `bun scripts/promise-coherence.mjs` | exit 0 | `verdict PASS` · `claims: 34 checked · 70 skipped` | P6 |
 | AC8 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | the fold/implement scope test passes with the guard in both checklists | P6 |
-| AC9 | `node --test scripts/*.test.mjs` | exit 0 | 766 pass, 0 fail | P7 |
+| AC9 | `node --test scripts/*.test.mjs` | exit 0 | 775 pass, 0 fail | P7 |
 | AC9 | `bun scripts/check-skill-context.mjs` | exit 0 | PASS context budgets: 28 skills | P6 |
 | AC9 | `bun scripts/check-skill-context.mjs --routes` | exit 0 | PASS route budgets: 14 routes | P6 |
 | AC9 | `bun scripts/phase-lint.mjs docs/features/77-promise-coherence-guard/SPEC.md` | exit 0 | 7/7 phases PASS | P7 |
@@ -266,6 +266,8 @@ What the change touches beyond its own files, cut at plan time:
 2026-10-21 20:30 — rebase — the branch rebased onto `origin/main` (6e4d4e65), so the unit-36 fold it predated is now the base. Conflict resolution restored three files the merge truncated (`verification-contract/SKILL.md`, `pre-execution-review/SKILL.md`, `LEDGERS.md` 242 lines) and re-applied P6 on top; 16 route ceilings re-based, `policy.declared` re-basis #8 → 3f189d0f — next: repair
 
 2026-10-21 21:00 — repair — the rebase had also dropped `b440e8ee`'s D1 disclosure, three guard tests and the `manifest-measure.json` fixture; all restored. Evidence re-run at this head: root 766/766, schema 721/721, runner 216/216, AC2 7, guard suite 24, guard `30 checked · 50 skipped`, budgets + routes PASS, phase-lint 7/7 → HEAD — next: PR re-review
+
+2026-10-21 22:30 — rebase 2 — rebased onto `origin/main` 161713ea (fix #303 / PR #310). `unit-lane` merges to 2.3.0, carrying both #303's investigate→orient→ask stages and this unit's fold/implement scope plus the guard in the resume checklist; `CHANGELOG` keeps main's 0.24.3/0.24.4 rows alongside this unit's 0.25.0/0.26.0, and the 0.26.0 row restates `unit-lane` 2.3.0. Evidence re-run at this head: root 775/775, schema 721/721, runner 216/216, pi 432/432, guard suite 24, guard `34 checked · 70 skipped`, budgets + routes PASS, phase-lint 7/7 → HEAD — next: push and PR re-review
 
 ## Next
 
