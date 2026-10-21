@@ -8,7 +8,7 @@
 `evidence-grounding` cease to be standalone user-invocable commands. Their
 functionality is absorbed into the lane's catalog steps (`design`, `plan`,
 `review`) and triage-driven step selection. Every NEW unit produces one
-`SPEC.md` with 13 sections (Objective, Why, User outcome, Acceptance criteria,
+`SPEC.md` with 14 sections (Objective, Why, User outcome, Impact, Acceptance criteria,
 Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
 Evidence, Progress log, Next, References) instead of separate SPEC/PLAN/TASKS/
 ACCEPTANCE files.
@@ -18,7 +18,7 @@ the review pack (`review-change`, `review-implementation`).
 
 **Schema changes.** `@gtrabanco/agentic-workflow-schema` 4.4.0 replaces
 `SPEC_PRODUCT_REQUIRED_HEADINGS` (two-half SPEC headings) with
-`UNIT_DOC_REQUIRED_SECTIONS` (13-section unit doc). The `pre-execution-verdict`
+`UNIT_DOC_REQUIRED_SECTIONS` (the 13 required sections; `## Impact` rides beside them). The `pre-execution-verdict`
 vocabulary (`PRE_EXECUTION_VERDICTS`, `VERDICTS_BY_STAGE`) stays exported —
 still used by the lane's review step for the sensor's blockers. The transition
 table drops `review-spec` and `review-plan` rows.
@@ -33,7 +33,7 @@ table drops `review-spec` and `review-plan` rows.
 - **Docs to update?** Run `init-workspace` in upgrade mode — it will propose
   the updated AGENTS.md conventions (unit document, catalog, guards, evidence)
   and the new workflow docs.
-- **New units?** Use the single-file format (`SPEC.md` with 13 sections) under
+- **New units?** Use the single-file format (`SPEC.md` with 14 sections) under
   `docs/features/<NN>-<slug>/` or `docs/fix/<N>-<topic>/`.
 - **Old skills referenced in docs?** Replace:
   - `/design-feature` → lane catalog step (no direct command; triage decides)

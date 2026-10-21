@@ -10,7 +10,7 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
 ```
 
 1. **idea** — a feature request, issue, or raw concept. No unit folder yet.
-2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` (13 sections) or
+2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` (14 sections) or
    `docs/fix/<issue>-<slug>/SPEC.md`. Created by `unit-lane` from the template.
 3. **triage** — `unit-route.mjs --triage <NN>` reads the unit doc's observable
    facts (type, scope, tests) and returns a deterministic ordered step list.
@@ -165,9 +165,10 @@ planned and recording the result in the Evidence table. It does not merely claim
 - **Materiality** — evidence is only recorded for ACs that the step actually
   covers. An `n/a` step is recorded as `n/a: <reason>`.
 
-## Where every artifact lives — the 13-section unit doc
+## Where every artifact lives — the 14-section unit doc
 
-The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 13 sections:
+The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 14 sections (the
+13 `UNIT_DOC_REQUIRED_SECTIONS` plus `## Impact`):
 
 | # | Section | Purpose |
 |---|---------|---------|

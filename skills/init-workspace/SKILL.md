@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 4.0.1
+version: 4.0.2
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -152,7 +152,7 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 The adaptive lane (feature 61) replaces the fixed pipeline with a single-unit-
 document model. Every NEW unit produces one `SPEC.md` under
-`docs/features/<NN>-<slug>/` with 13 sections: Objective, Why, User outcome,
+`docs/features/<NN>-<slug>/` with 14 sections: Objective, Why, User outcome, Impact,
 Acceptance criteria, Non-goals, Future cost, Applicable tests, Known pre-existing
 issues, Tasks, Evidence, Progress log, Next, References.
 
