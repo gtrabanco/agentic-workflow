@@ -362,13 +362,110 @@ test("`--check --annotate` speaks in the conditional (C2)", (t) => {
   assert.equal(out.stdout, run(root, "--check", "--annotate").stdout, "and the ledger is unchanged by it");
 });
 
-test("unit 26's fold ledger names a verified commit on every folded row", () => {
+test("unit 26's fold ledger is read, not silently passed", () => {
+  // Feature 36's F80: `--check` used to exit 0 on this ledger while classifying
+  // every row `open` (the annotated cells and their tokens were never read), so a
+  // green recount here proved nothing. The recount now reads every row; the red it
+  // reports is the ledger's own historical residue — F63/F64/F108 write
+  // `· folded P<n> <sha>`, a shape that predates the annotator's `· fold <sha>` —
+  // and must name exactly those rows rather than a blanket pass or a blanket fail.
   const rel = "docs/features/26-staged-verification-contracts/review-findings.md";
   const result = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
-  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /CHECK PASS/);
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /CHECK FAIL/);
+  assert.match(result.stdout, /F63/, "the legacy `folded P<n> <sha>` shape is named, not guessed green");
+  assert.match(result.stdout, /F64/);
+  assert.match(result.stdout, /F108/);
+  const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
+  assert.equal(json.filter((e) => e.status === "open").length, 0, "no folded row is bucketed open");
 });
 
 console.log(
   "PASS ledger provenance: atomic, message-only, range, forge-only, unprovable and fabricated-sha rows all classified",
 );
+
+test("an annotated ledger's citations are read and validated, not silently passed (F80)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-annotated-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const abs = (rel) => path.join(root, rel);
+  const ledger = abs(LEDGER);
+  const ledgerText = () => fs.readFileSync(ledger, "utf8");
+  const tick = (id) =>
+    fs.writeFileSync(
+      ledger,
+      ledgerText()
+        .split("\n")
+        .map((line) => (line.startsWith(`| ${id} |`) ? line.replace(/\| no \|$/, "| yes |") : line))
+        .join("\n"),
+    );
+  const annotate = (id, token) =>
+    fs.writeFileSync(
+      ledger,
+      ledgerText()
+        .split("\n")
+        .map((line) => (line.startsWith(`| ${id} |`) ? line.replace(/\| yes \|$/, `| yes · ${token} |`) : line))
+        .join("\n"),
+    );
+  const commit = (message) => {
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "HEAD");
+  };
+
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  fs.mkdirSync(abs("src"), { recursive: true });
+  fs.mkdirSync(path.dirname(ledger), { recursive: true });
+  fs.writeFileSync(abs("src/index.ts"), "export const a = 1;\n");
+  fs.writeFileSync(
+    ledger,
+    HEADER +
+      row("F1", "src/index.ts:1", "fold into current unit", "no") +
+      row("F2", "src/index.ts:1", "fold into current unit", "no") +
+      row("F3", "src/index.ts:1", "fold into current unit", "no"),
+  );
+  commit("planning artifacts");
+
+  // F1 — the branch's real shape (F78): fix commit, then a tick commit that writes
+  // `yes · fold <fix>` naming it from history. The citation is honest by construction.
+  fs.writeFileSync(abs("src/index.ts"), "export const a = 2;\n");
+  const foldCommit = commit("fix(x): fold F1 — correct the field");
+  tick("F1");
+  annotate("F1", `fold ${foldCommit}`);
+  commit("docs(x): tick F1");
+  const amended = fs.readFileSync(abs("src/index.ts"), "utf8");
+
+  // F2 — ticked and annotated with a commit that never names the row: it is a fold
+  // of some other finding, so it touches no surface this row cites.
+  fs.writeFileSync(abs("src/other.ts"), "export const b = 1;\n");
+  const unrelated = commit("fix(x): F9 surface-touch repair of another unit's finding");
+  tick("F2");
+  annotate("F2", `fold ${unrelated}`);
+  commit("docs(x): tick F2");
+
+  // F3 — ticked with no citation at all.
+  tick("F3");
+  commit("docs(x): tick F3");
+
+  // F80's defect: the annotated cells put every row back into the `open` bucket, so
+  // `--check` validated nothing and exited 0 over citations it had never read.
+  const json = JSON.parse(run(root, "--json").stdout);
+  const f1 = json.find((e) => e.id === "F1");
+  const f2 = json.find((e) => e.id === "F2");
+  const f3 = json.find((e) => e.id === "F3");
+  const tracked = ["proven-cited", "recovered", "recovered-by-message"];
+  assert.ok(tracked.includes(f1.status), `an annotated fold is read, not bucketed as open (got ${f1.status})`);
+  assert.equal(f1.fold, foldCommit.slice(0, 7), "the row's own marker proves the fold it names");
+  assert.equal(f2.status, "cited-unverified", `a citation its row cannot claim is reported (got ${f2.status})`);
+  assert.deepEqual(f2.cited, [unrelated.slice(0, 7)], "the unclaimable token is named");
+  assert.notEqual(f3.status, "open", "a ticked row with no marker is never bucketed as open");
+
+  const check = run(root, "--check");
+  assert.equal(check.status, 1, "a citation the row cannot claim cannot pass the check");
+  assert.match(check.stdout, /CHECK FAIL/);
+  assert.match(check.stdout, /F2/, "the unclaimable citation is named");
+  assert.match(check.stdout, /F3/, "the citation-less tick is named");
+  assert.doesNotMatch(check.stdout, /F1/, "the honest marker is never flagged");
+});

@@ -12,7 +12,8 @@
  *     it owns the change);
  *  3. a row that already cites a commit keeps that citation only when the token
  *     resolves to a real commit reachable from HEAD and can be tied to the row's
- *     subject or surface — an unverifiable citation is reported, never trusted;
+ *     subject or surface — an unverifiable citation (dangling, or naming a commit
+ *     that never folded the row) is reported, never trusted;
  *  4. everything else is UNPROVEN and re-opens: asserted provenance is worse than
  *     none, because it silently passes the recount that F106 exists to satisfy.
  *
@@ -133,7 +134,7 @@ function parseRows(text) {
     if (rows.has(match[1])) {
       rejected.push({ id: match[1], reason: "duplicate id in the file — only the last row is read" });
     }
-    rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6] });
+    rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6], cell: cells[6] });
   }
   return { rows, rejected, counted };
 }
@@ -173,6 +174,17 @@ const messageOf = (sha) => {
 };
 /** Commits name the ids they fold in the subject OR the body (`P15` close-outs). */
 const namesId = (sha, id) => idsInSubject(messageOf(sha)).has(id);
+/**
+ * Ids the commit's own SUBJECT claims, on the fold subjects this repo writes
+ * (`fix(36): fold F72-F75 — …`, `chore(x): fold F9 — …`). A body-only mention
+ * (`subject names it in its message`) is a report reference, not a fold claim:
+ * tying a citation to one of those let a commit that merely discussed a finding
+ * pass the recount for it (F80).
+ */
+const foldSubjectIds = (sha) => {
+  const subject = git("log", "-1", "--format=%s", sha);
+  return /\bfold\b/i.test(subject) ? idsInSubject(subject) : new Set();
+};
 
 const filesCache = new Map();
 function filesOf(sha) {
@@ -203,6 +215,21 @@ if (counted !== current.size + rejected.length) {
   process.exitCode = 1;
 }
 
+/**
+ * The marker the annotator writes into a folded cell: `yes · fold <sha>`, or
+ * `· ticked <sha>` on a row that scores 1. Reading it is what makes the recount
+ * see an annotated ledger: every fold writes that shape, so a parser that only
+ * accepts a bare `yes` buckets the whole ledger `open` and validates nothing
+ * (F80 — the silent pass this tool exists to prevent).
+ */
+const FOLD_MARK_RE = /·\s*(fold|ticked)\s+([0-9a-f]{7,40})\b/g;
+const foldMarker = (cell) => {
+  const marks = [...(cell ?? "").matchAll(FOLD_MARK_RE)].map((m) => m[2]);
+  return marks.length ? marks.at(-1) : null;
+};
+/** A folded cell either reads exactly `yes` or carries the annotator's marker. */
+const isFolded = (cell) => typeof cell === "string" && (/^\s*yes\b/.test(cell) || foldMarker(cell) !== null);
+
 // --- 1. flip + introduction detection: walk every historical version ---------
 const flips = new Map();
 const introduced = new Map();
@@ -217,8 +244,8 @@ for (const sha of git("log", "--reverse", "--format=%H", "--", rel).split("\n").
     const before = previous.get(id);
     // F60: `route` and `recordedYes` were written here and read nowhere — the annotate
     // path re-derives the cell from the line itself. Only the flip sha is ever consulted.
-    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha });
-    if (!before && row.folded === "yes") flips.set(id, { sha });
+    if (before && !isFolded(before.folded) && isFolded(row.folded)) flips.set(id, { sha });
+    if (!before && isFolded(row.folded)) flips.set(id, { sha });
   }
   previous = snapshot;
 }
@@ -242,7 +269,7 @@ for (const record of git("log", "--reverse", `--format=%x00%H%x1f%B`, since).spl
     namedById.get(id).push({
       sha,
       // A commit that records the row open proves nothing on its own.
-      recordsOnly: introduced.get(id)?.sha === sha && introduced.get(id).folded !== "yes",
+      recordsOnly: introduced.get(id)?.sha === sha && !isFolded(introduced.get(id).folded),
     });
   }
 }
@@ -251,7 +278,7 @@ for (const record of git("log", "--reverse", `--format=%x00%H%x1f%B`, since).spl
 const report = [];
 for (const [id, row] of current) {
   const entry = { id, folded: row.folded, status: null, fold: null, flip: null, evidence: null };
-  if (row.folded !== "yes") {
+  if (!isFolded(row.folded)) {
     entry.status = "open";
     report.push(entry);
     continue;
@@ -259,6 +286,9 @@ for (const [id, row] of current) {
   const flip = flips.get(id);
   if (flip) entry.flip = short(flip.sha);
   const nonLedger = citedPaths(row).filter((path) => path !== rel);
+
+  const marker = foldMarker(row.cell);
+  const marked = marker === null ? null : git("rev-parse", "--verify", "--quiet", `${marker}^{commit}`).trim();
 
   const cited = verifiedTokens(`${row.file} ${row.route}`);
   // A token counts as provenance only when the commit it names actually CLAIMS the
@@ -269,13 +299,42 @@ for (const [id, row] of current) {
   const recordsTheRow = introduced.get(id);
   const tieable = cited.filter((sha) => {
     if (sha === flip?.sha) return true;
-    if (recordsTheRow?.sha === sha && recordsTheRow.folded !== "yes") return false;
-    return namesId(sha, id);
+    if (recordsTheRow?.sha === sha && !isFolded(recordsTheRow.folded)) return false;
+    return foldSubjectIds(sha).has(id);
   });
   if (tieable.length) {
     entry.status = "proven-cited";
     entry.fold = short(tieable.includes(flip?.sha) ? flip.sha : tieable.at(-1));
     entry.evidence = "row cites a commit that resolves and matches its message or surface";
+    report.push(entry);
+    continue;
+  }
+  // The annotator's own marker is the citation the ledger path writes, so it is held
+  // to the same bar: the commit must resolve AND be reachable from HEAD. A token that
+  // names an amended-away commit is the dangling-pointer class F75/F78 record, and
+  // trusting it (or ignoring it) is the silent pass this recount must never make.
+  if (marked && isAncestor(marked, "HEAD") && foldSubjectIds(marked).has(id)) {
+    entry.status = "proven-cited";
+    entry.fold = short(marked);
+    entry.evidence = `the row's own marker names ${short(marked)}, whose subject folds ${id}`;
+    report.push(entry);
+    continue;
+  }
+  if (marked && isAncestor(marked, "HEAD")) {
+    entry.status = "cited-unverified";
+    entry.cited = [short(marked)];
+    entry.fold = short(marked);
+    entry.evidence = `${short(marked)} resolves and is reachable, but its subject does not claim ${id} — the marker cites a commit that folded something else`;
+    report.push(entry);
+    continue;
+  }
+  if (marker !== null) {
+    entry.status = "dangling";
+    entry.cited = [marker];
+    entry.fold = short(marker);
+    entry.evidence = marked
+      ? `${short(marker)} resolves but is not an ancestor of HEAD — the fold it attested was amended away; re-point the marker`
+      : `${short(marker)} resolves to no commit — the marker cites bytes that do not exist`;
     report.push(entry);
     continue;
   }
@@ -390,9 +449,15 @@ if (annotate) {
 
 if (checkOnly) {
   const unparsed = report.filter((e) => e.status === "unparsed");
-  const unticked = needsWork.filter((e) => e.status !== "unparsed");
+  const dangling = report.filter((e) => e.status === "dangling");
+  const unticked = needsWork.filter((e) => e.status !== "unparsed" && e.status !== "dangling");
   if (needsWork.length) {
     const parts = [];
+    if (dangling.length) {
+      parts.push(
+        `${dangling.length} folded row(s) cite a commit outside HEAD's history: ${dangling.map((e) => `${e.id} (${e.cited.join("")})`).join(", ")}`,
+      );
+    }
     if (unticked.length) {
       parts.push(`${unticked.length} folded row(s) lack a verified commit token: ${unticked.map((e) => e.id).join(", ")}`);
     }
