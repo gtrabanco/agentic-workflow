@@ -65,6 +65,7 @@ function headings(text) {
 const OWNER_FILE = "packages/agentic-workflow-schema/src/pre-execution.ts";
 const SDK_FILE = "packages/agentic-workflow/src/edit/schema.mjs";
 const PRODUCER_FILE = "packages/agentic-workflow/src/edit/UnitDoc.mjs";
+const ROUTER_FILE = "scripts/unit-route.mjs";
 
 const owner = () => listAfter(read(OWNER_FILE), "UNIT_DOC_REQUIRED_SECTIONS = Object.freeze(", OWNER_FILE);
 
@@ -92,6 +93,14 @@ test("#305 the SDK's duplicate list equals the owner, in order", () => {
   assert.deepEqual(sdk, owner(), `${SDK_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
 });
 
+test("#305 the router's duplicate list equals the owner, in order", () => {
+  // The triage step refuses a "mandatory" section list of its own; when it lagged
+  // the owner it answered TRIAGE on unit docs the selector rejects (blocker 3 of
+  // the external verify).
+  const router = listAfter(read(ROUTER_FILE), "const UNIT_DOC_SECTIONS = ", ROUTER_FILE);
+  assert.deepEqual(router, owner(), `${ROUTER_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
+});
+
 test("#305 the producer's skeleton carries every required section in order", () => {
   const producer = read(PRODUCER_FILE);
   const start = producer.indexOf("const CANONICAL_SKELETON = `");
@@ -106,6 +115,24 @@ test("#305 the producer's skeleton carries every required section in order", () 
     assert.notEqual(at, -1, `the producer's skeleton is missing ## ${section}: its output would fail the selector`);
     assert.ok(at > cursor, `the producer emits ## ${section} out of contract order`);
     cursor = at;
+  }
+});
+
+test("#305 every router fixture is a unit doc the contract accepts", () => {
+  // A fixture that omits a required section proves nothing about triage: the run
+  // fails on the shape before it classifies. `94-missing-section` is the one
+  // deliberate exception — it exists to prove the MISSING path.
+  const fixtureRoot = path.join(ROOT, "scripts/fixtures/catalog/docs");
+  const required = owner();
+  for (const folder of ["features", "fix"]) {
+    const base = path.join(fixtureRoot, folder);
+    for (const unit of fs.readdirSync(base).filter((name) => fs.statSync(path.join(base, name)).isDirectory())) {
+      if (unit.startsWith("94-")) continue;
+      const found = headings(fs.readFileSync(path.join(base, unit, "SPEC.md"), "utf8"));
+      for (const section of required) {
+        assert.ok(found.includes(section), `scripts/fixtures/catalog/docs/${folder}/${unit}/SPEC.md is missing ## ${section}`);
+      }
+    }
   }
 });
 

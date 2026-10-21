@@ -357,9 +357,9 @@ Exit 2 on error (unknown type, invalid scope, missing sections, ambiguous unit).
 | `progress_logEntry(doc, { ts, what, ref, next })` | `progress-log@1` | receipt |
 | `validate(text)` | `unit-doc-schema@1` | `{ ok, violations[] }` |
 
-`UNIT_DOC_SECTIONS` (13): `Objective, Why, User outcome, Acceptance criteria,
-Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
-Evidence, Progress log, Next, References`.
+`UNIT_DOC_SECTIONS` (14): `Objective, Why, User outcome, Acceptance criteria,
+Impact, Non-goals, Future cost, Applicable tests, Known pre-existing issues,
+Tasks, Evidence, Progress log, Next, References`.
 
 `EVIDENCE_COLUMNS`: `AC, What was run, Exit / digest, Output (≤2 lines), Verified-by`.
 

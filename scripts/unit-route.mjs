@@ -375,8 +375,11 @@ script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 // facts; the model never re-derives the step list, it consumes this block.
 // ---------------------------------------------------------------------------
 
+// Mirrors UNIT_DOC_REQUIRED_SECTIONS (schema package, 14 since issue #305 where
+// `## Impact` stopped being a tolerated extra); `scripts/unit-doc-contract.test.mjs`
+// pins the copies, this one included.
 const UNIT_DOC_SECTIONS = [
-  "Objective", "Why", "User outcome", "Acceptance criteria", "Non-goals",
+  "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
   "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
   "Evidence", "Progress log", "Next", "References",
 ];

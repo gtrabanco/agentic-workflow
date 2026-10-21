@@ -20,6 +20,10 @@ The docs map points to every living skill without dead links.
 
 1. All links in docs/workflow/README.md resolve without 404.
 
+## Impact
+
+Nothing outside this fixture.
+
 ## Non-goals
 
 No content changes to skill descriptions.
