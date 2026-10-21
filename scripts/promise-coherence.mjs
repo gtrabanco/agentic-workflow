@@ -550,25 +550,33 @@ function manifestClaims(doc, claims) {
       claims.push(claim);
     }
 
-    // measure: the entry's last `measured … est / … lines` claim is the basis
-    // its ceiling rests on, so it must equal the head measurement.
-    // Only a claim that says *at the head* is checkable: an earlier basis is
-    // history, and `check-skill-context.mjs` already refuses a ceiling the head
-    // measurement exceeds.
-    const measures = [...joined.matchAll(MEASURE)]
-      .filter((match) => match[2] !== undefined)
-      .filter((match) => /at (?:the|this) (?:reviewed |final |shipped )?head/i.test(joined.slice(match.index, match.index + 200)));
-    if (measures.length > 0) {
-      const last = measures[measures.length - 1];
+    // measure: a `measured … est / … lines` claim is the basis a ceiling rests
+    // on. Only one that says *at the head* is checkable — and then it must equal
+    // the current measurement (`check-skill-context.mjs` owns the metric). Every
+    // other basis is history, never a silent one: each prints a `skip:` line
+    // naming the basis and the date it carries, so a stale narration is visible
+    // without this pass pretending to re-derive the past (owner decision D1,
+    // 2026-10-21: disclosure over strictness).
+    for (const match of [...joined.matchAll(MEASURE)]) {
+      if (match[2] === undefined) continue;
+      const atHead = /at (?:the|this) (?:reviewed |final |shipped )?head/i.test(joined.slice(match.index, match.index + 200));
+      const date = /\b(\d{4}-\d{2}-\d{2})\b/.exec(joined.slice(Math.max(0, match.index - 120), match.index + 200));
+      const claim = blankResult("measure", doc.file, line, `measured ${match[1]} est / ${match[2]} lines (${skill})`);
+      if (!atHead) {
+        claim.skip = `historical basis${date ? ` dated ${date[1]}` : ""} — re-checked only when the narration claims it for the head`;
+        claims.push(claim);
+        continue;
+      }
       const row = measured === null ? null : measured.get(skill);
-      const claim = blankResult("measure", doc.file, line, `measured ${last[1]} est / ${last[2]} lines (${skill})`);
       claim.observed = row === undefined || row === null
         ? "measurement unavailable"
         : `${row.mainEstimate} est / ${row.mainLines} lines`;
       if (row === undefined || row === null) {
         claim.skip = "the context-budget checker could not be read";
-      } else if (row.mainEstimate === Number(last[1]) && row.mainLines === Number(last[2])) {
+        claims.push(claim);
+      } else if (row.mainEstimate === Number(match[1]) && row.mainLines === Number(match[2])) {
         claim.outcome = "pass";
+        claims.push(claim);
       } else {
         claim.outcome = "fail";
         claim.reason = "measure-mismatch";
@@ -781,7 +789,9 @@ export function coherence(paths) {
     lines.push(`skip: closed units are append-only evidence — not scanned (${inFlightUnitDocs().length} in-flight documents checked)`);
   }
   for (const claim of skipped) {
-    lines.push(`skip: ${claim.file}:${claim.line} ${claim.kind} — ${claim.skip}`);
+    // The claim text rides every skip line: a disclosed gap that does not name
+    // what was not checked is disclosure in form only.
+    lines.push(`skip: ${claim.file}:${claim.line} ${claim.kind} ${claim.claim} — ${claim.skip}`);
   }
   // Fail closed on a document nothing was extracted from: "no claim found" is
   // never a pass, or a document could opt out of the pass by having no grammar.

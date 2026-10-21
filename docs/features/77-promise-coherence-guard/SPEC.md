@@ -66,11 +66,13 @@ push — with the failing claim, its `file:line`, and the output that refutes it
    count failures (declared 4, observed 0; declared 4, observed 7; declared 4,
    observed 12) are rejected fixtures. Verified by
    `node --test scripts/promise-coherence.test.mjs` (exit 0).
-4. **A budgets narration reproduces.** `ceil(<A> x 1.10) = <B>` is re-computed,
-   the declared ceiling it re-bases must equal `<B>`, a `measured … est … lines`
-   claim must equal the current measurement, every backticked path must exist,
-   and a phrase claimed removed must be absent from the surface that names it.
-   Verified by the same suite (exit 0).
+4. **A budgets narration reproduces.** `ceil(<A> x 1.10) = <B>` is re-computed
+   in exact decimal arithmetic, every declared estimate ceiling must be a value
+   its own entry derives, every backticked path must exist, and a phrase claimed
+   removed must be absent from the surface that names it. A `measured … est …
+   lines` claim is checked only when it says *at the head* — an earlier basis is
+   history, and `check-skill-context.mjs` already refuses a ceiling the head
+   measurement exceeds. Verified by the same suite (exit 0).
 5. **An acceptance claim reproduces.** A count claim (`matches <N>`, `exactly
    <N>`) and a section-length claim (`<N>–<M> line <section>`) are recounted, and
    an `## Impact` that names a path or a phrase is resolved. Verified by the same
@@ -144,6 +146,12 @@ What the change touches beyond its own files, cut at plan time:
 
 ## Future
 
+- **Golden-fixture runner configuration.** The fixture's model must be
+  configurable in the project config (unlimited-tier model preferred), and the
+  run must be automatable toward reviews with a closed three-mode policy:
+  unlimited (`-1`/`Infinity`), off (`0`), or N attempts per PR. Config schema +
+  runner + corpus of its own — planned as its own unit, owner decision D-77-4
+  (2026-10-21, `planned`).
 - **`## Impact` as a checked closure.** A later unit could assert that every path
   an `## Impact` names appears in some phase's `Relevant files:` — cut here
   because it needs the read-set consumers, not just the guard (owner, 2026-10-21,
@@ -175,8 +183,19 @@ What the change touches beyond its own files, cut at plan time:
   units, not closed ones) and `affects` the guard's design: it is the reason the
   corpus is replayed as fixtures instead of scanned repo-wide.
 - `docs/workflow/SKILL_CONTEXT_BUDGETS.json` narrates `init-workspace` as
-  `measured 3330 est / 229 lines` while the head measures 3219/229 — `affects`
-  this unit: it is the first live instance the guard catches (fixed in P3).
+  `measured 3330 est / 229 lines` while the head measures 3219/229, and
+  `workflow-status` as `2512 est / 150 lines` against 1639/132 — `does not
+  affect` this unit's gate: both are historical bases (neither says "at the
+  head"), and the guard checks a basis only when a narration claims it for the
+  head. They are stale narrations, not false promises, and re-basing them is a
+  budget change this unit does not make.
+- `docs/fix/179-declared-ledger-delta-receipts/SPEC.md:189-195` names
+  `docs/features/_TEMPLATE/LEDGERS.md`, `docs/fix/_TEMPLATE/LEDGERS.md` and
+  `references/02_CLOSURE_AND_SCOPE_GATES.md`, all of which no longer exist. The
+  guard reports it when that doc is passed explicitly; the default set skips it
+  because the unit was never started (a plan's path list may name a tree the unit
+  creates). **Handed to the owner** — it is a `triage-issue` disposition, not a
+  change this unit may make to another unit's doc.
 - The 36 archived two-half SPECs carry a legacy `## Impact` section with a
   different meaning — `does not affect` this unit; the selector never accepted
   those documents and they are not rewritten.
@@ -209,22 +228,49 @@ What the change touches beyond its own files, cut at plan time:
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
 | AC1 | `cd packages/agentic-workflow-schema && bun run test` | exit 0 | 721 pass, 0 fail | P1 |
-| AC2 | `node --test scripts/unit-doc-contract.test.mjs` | exit 0 | 5 pass, 0 fail | P1 |
-| AC3 | `node --test scripts/promise-coherence.test.mjs` | pending | pending | P2 |
-| AC4 | `node --test scripts/promise-coherence.test.mjs` | pending | pending | P3 |
-| AC5 | `node --test scripts/promise-coherence.test.mjs` | pending | pending | P4 |
-| AC6 | `node --test scripts/promise-coherence.test.mjs` | pending | pending | P5 |
-| AC7 | `bun scripts/promise-coherence.mjs` | pending | pending | P2-P5 |
-| AC8 | `node --test scripts/promise-coherence.test.mjs` | pending | pending | P6 |
-| AC9 | `node --test scripts/*.test.mjs` | pending | pending | P7 |
+| AC1 | `cd packages/agentic-workflow && bun run test` | exit 0 | 216 pass, 0 fail (producer emits 14 sections) | P1 |
+| AC2 | `node --test scripts/unit-doc-contract.test.mjs` | exit 0 | 7 pass, 0 fail | P1 |
+| AC3 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | 24 pass, 0 fail — F16/F50, F38/F48 fixtures rejected | P2 |
+| AC4 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | exact arithmetic: `ceil(3330 x 1.10) = 3664` refused as 3663 | P3 |
+| AC5 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | 15-line section against a `3–5 line` promise refused | P4 |
+| AC6 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | undisclosed `<unit-dir>` prerequisite refused; F54 pinned in `needs-input.test.mjs` | P5 |
+| AC7 | `bun scripts/promise-coherence.mjs` | exit 0 | `verdict PASS` · `claims: 30 checked · 50 skipped` | P6 |
+| AC8 | `node --test scripts/promise-coherence.test.mjs` | exit 0 | the fold/implement scope test passes with the guard in both checklists | P6 |
+| AC9 | `node --test scripts/*.test.mjs` | exit 0 | 766 pass, 0 fail | P7 |
+| AC9 | `bun scripts/check-skill-context.mjs` | exit 0 | PASS context budgets: 28 skills | P6 |
+| AC9 | `bun scripts/check-skill-context.mjs --routes` | exit 0 | PASS route budgets: 14 routes | P6 |
+| AC9 | `bun scripts/phase-lint.mjs docs/features/77-promise-coherence-guard/SPEC.md` | exit 0 | 7/7 phases PASS | P7 |
+| AC9 | golden fixture, `execute-phase` 6.1.0 + `FOLDING.md` (owner-authorized single run, `nan/qwen3.6` spawn override) | `exact 4/4 · invented none · shape ok` | run-log row 2026-10-21; child model identity flagged to the owner (D-77-4) | P7 |
 
 ## Progress log
 
 2026-10-21 14:00 — open — unit doc written, owner decision D-77-1 recorded (`## Impact` becomes required), path-protection plan declared pre-freeze → none — next: P1
 
+2026-10-21 16:40 — P1 — `## Impact` required: schema constant, runner duplicate, producer skeleton, four fixtures and the README example migrate; five prose surfaces re-ordered; parity test added → 1ec88964 — next: P2
+
+2026-10-21 18:20 — P2 — the guard's unit-doc validator pass + the frozen corpus (F16/F38/F48/F50), with the live 258 reproducer as a case → 59d07458 — next: P3
+
+2026-10-21 18:20 — P3 — budget-narration pass: exact decimal arithmetic, derived-ceiling membership, named surfaces and removal claims; three live manifest defects repaired (3004 off-by-one, a re-basis stating no value, the `--json` measurement output) → 59d07458 — next: P4
+
+2026-10-21 18:20 — P4 — acceptance-line and `## Impact` pass: count recount, anchored section-length recount, unanchored length fails closed, F56 contradiction → 59d07458 — next: P5
+
+2026-10-21 18:20 — P5 — Turn-contract box pass with `PREREQUISITES` declared by the dispatcher; F53's fixture refused, the three shipped skills pass → 59d07458 — next: P6
+
+2026-10-21 19:10 — P6 — grammar sentences published in their owners, fold/implement scope swept positive with the guard in both checklists, five skills and the pi package bumped, 17 route ceilings re-based → da95ff5b — next: P7
+
+2026-10-21 21:05 — delivery round — owner decisions D-77-4 recorded: D1 disclosure shipped (74e729b0), D2 accepted as a pin, D4a the golden fixture ran once (PASS, model identity flagged), D4b the fixture-runner config is a planned future unit, D5 single PR → HEAD — next: PR
+
+2026-10-21 19:40 — P7 — verification sweep at the head: root suite 755/755, budgets PASS, routes PASS, phase-lint PASS, guard PASS, both package suites green, differential against main shows only the requested growth → HEAD — next: owner review of the diff
+
+
+2026-10-21 20:30 — rebase — the branch rebased onto `origin/main` (6e4d4e65), so the unit-36 fold it predated is now the base. Conflict resolution restored three files the merge truncated (`verification-contract/SKILL.md`, `pre-execution-review/SKILL.md`, `LEDGERS.md` 242 lines) and re-applied P6 on top; 16 route ceilings re-based, `policy.declared` re-basis #8 → 3f189d0f — next: repair
+
+2026-10-21 21:00 — repair — the rebase had also dropped `b440e8ee`'s D1 disclosure, three guard tests and the `manifest-measure.json` fixture; all restored. Evidence re-run at this head: root 766/766, schema 721/721, runner 216/216, AC2 7, guard suite 24, guard `30 checked · 50 skipped`, budgets + routes PASS, phase-lint 7/7 → HEAD — next: PR re-review
+
 ## Next
 
-P2 — build the guard's unit-doc validator pass, red-first.
+Owner review of PR #309 (`https://github.com/gtrabanco/agentic-workflow/pull/309`); the
+external verifier decides, and no self-approval follows from a green suite.
 
 ## References
 
