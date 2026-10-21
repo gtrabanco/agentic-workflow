@@ -36,3 +36,13 @@ cycle-3 routes:
 
 No `contradicts` row — the replan proceeds without a `NEEDS-DECISION`.
 
+
+## Path-protection escape records
+
+Append-only rows the Tier 1 checkpoint gate verifies (the `path-protection-records@1` grammar in the turn contract). Recorded at the cycle-9 fold (F80): the unit's plan predates the policy, so its declaration block is absent and `freeze-after` resolves to `n/a` — the gate then always requires `approval`, whose second half the owner supplies.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/ledger-provenance.test.mjs | P12 | 2026-10-20 | execute-phase | F80 (cycle-9 fold, the queue's only `high` row) adds the regression case that first demonstrates `--check` passing an annotated ledger whose citations it never reads: `folded` cells carry `yes · fold <sha>`, so every row parses `open` and the tool validates nothing; the test appends to the file, touches no existing expectation, and pins that an ancestor-checked token is read and that a dangling/foreign citation fails the check. Guardrail 3 of `fold-findings` requires the red test first for a behavioral finding.
+```
