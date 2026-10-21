@@ -362,6 +362,7 @@ test("`--check --annotate` speaks in the conditional (C2)", (t) => {
   assert.equal(out.stdout, run(root, "--check", "--annotate").stdout, "and the ledger is unchanged by it");
 });
 
+
 test("unit 26's fold ledger is read, not silently passed", () => {
   // Feature 36's F80: `--check` used to exit 0 on this ledger while classifying
   // every row `open` (the annotated cells and their tokens were never read), so a
@@ -383,6 +384,26 @@ test("unit 26's fold ledger is read, not silently passed", () => {
 console.log(
   "PASS ledger provenance: atomic, message-only, range, forge-only, unprovable and fabricated-sha rows all classified",
 );
+
+test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", () => {
+  // The recount's own gate on the ledger this fix ships in. Cycle 9 inherited F21–F54
+  // folded before the annotator wrote `· fold <sha>` into the cell (they cite the
+  // commit in the route cell instead, the shape that predates the marker), and the
+  // ledger must say so row by row rather than claim a blanket PASS. The four cycle-9
+  // rows this batch folded are proven, which is the path under test; a future fold
+  // that re-points or annotates the residue is free to make this green.
+  const rel = "docs/features/36-verification-contract-hygiene/review-findings.md";
+  const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
+  const open = json.filter((e) => e.status === "open");
+  assert.equal(open.length, 0, `a folded row is never bucketed open: ${open.map((e) => e.id).join(", ")}`);
+  for (const id of ["F78", "F79", "F80", "F81", "F82", "F83", "F84", "F85", "F86"]) {
+    assert.equal(json.find((e) => e.id === id).status, "proven-cited", `${id}'s own marker must prove it`);
+  }
+  const check = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
+  const citations = json.filter((e) => e.status === "cited-unverified").map((e) => e.id);
+  assert.equal(check.status, citations.length === 0 ? 0 : 1, "the check mirrors the residue it can see");
+  if (citations.length) assert.match(check.stdout, /lack a verified commit token/);
+});
 
 test("an annotated ledger's citations are read and validated, not silently passed (F80)", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-annotated-"));
