@@ -183,10 +183,28 @@ none
   "server answers" alone cannot be the health signal. (Engram 3.3.x added
   readable autosync phases; whether this machine is enrolled is verified at
   research.)
-- Session-attribution ambiguity (`engram doctor`: 135 active runtime session
-  candidates for this project, 2026-09-28 — #262 comment) — **affects** AC5:
-  omitted-session writes fail closed here, so the prescribed response is load-
-  bearing on this very machine.
+- Session-attribution ambiguity (`engram doctor`: still warns
+  `ambiguous_active_runtime_sessions` today — 1 finding re-verified 2026-10-21,
+  after the 135-candidate count of 2026-09-28) — **affects** AC5: omitted-session
+  writes fail closed here, so the prescribed response is load-bearing on this
+  very machine.
+
+### Research uncertainties (stated, not guessed — 2026-10-21)
+
+- **Probe transport unknown:** whether the 2026-09-24 `mem_search` timeout
+  path is the `:7437` HTTP server or the stdio `engram mcp` process pi spawns
+  was not reproduced today (`curl :7437/health` → 200). The health design must
+  cover both transports or say which one it covers — open, routed to design.
+- **Exit code is not a health signal:** `engram doctor` exits 0 while
+  `engram doctor --json` reports `status: "error"` (errors 1, blocked 1,
+  warnings 3). Whether the probe reads the JSON summary, the sync status, or
+  both is a design decision — open, routed to design.
+- **Cloud enrolment of this project unverified:** `engram sync --status`
+  reports local chunk export only (15 local / 8 remote, 0 pending import);
+  cloud requires an explicit `--project`, and `doctor` shows several
+  `foreign_sync_target` rows with unacked mutations. Whether
+  `agentic-workflow` itself is enrolled was not checked — partial gap, does
+  not block design (AC2 reads staleness either way).
 
 ## Tasks
 
@@ -226,17 +244,28 @@ output (≤2 lines), verified-by.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
+| R1 | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` | exit 0, 2 hits | both are path-ignore mentions (`REVIEW_PROCESS.md:95`, `audit-pr/SKILL.md:128`); no protocol/provisioning/health text exists | research step, 2026-10-21 |
+| R2 | `engram --version`; `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` | exit 0 | `engram 3.4.0`; `mcpServers.engram` → `/home/agent/.local/bin/engram mcp --tools=agent`; `npm:gentle-engram@latest` | research step, 2026-10-21 |
+| R3 | `curl -m4 :7437/health`; `engram doctor`; `engram doctor --json`; `engram sync --status` | curl 0 (HTTP 200); doctor exit 0; JSON `status: error` | server answers today; doctor green-by-exit but 1 error + 1 blocked + 3 warnings; update notice 3.4.0 → 3.5.2 | research step, 2026-10-21 |
+| R4 | `engram doctor` finding categories (grep of check ids) | exit 0 | `sync_target_closed_space` error; `ambiguous_active_runtime_sessions`, `unowned_session_project`, `session_project_directory_mismatch` warnings; 9 `foreign_sync_target` rows with unacked mutations | research step, 2026-10-21 |
+| R5 | `engram --help`, `engram setup --help`, `engram sync --help`; `grep -n consent skills/init-workspace/SKILL.md skills/init-workspace/references/SERENA.md` | exit 0 | `engram setup <agent> [--protocol=slim\|full]` exists; sync is local-by-default, cloud needs explicit `--project`; init-workspace consent rule + SERENA.md:84 "exactly what was written" is the parity shape | research step, 2026-10-21 |
+| R6 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` | exit 0 | 9 steps, full catalog, budget strong (block pasted under Triaged steps) | research step, 2026-10-21 |
 
 ## Progress log
 
 - 2026-10-21 22:20 — unit doc created from issue #262 (`--from-issue 262`),
-  roadmap row 66; triage pasted verbatim (9 steps, full catalog) → next:
+  roadmap row 66; triage pasted verbatim (9 steps, full catalog) → a981a9e1 — next:
   research step
+- 2026-10-21 22:34 — research step: 6 evidence rows (repo footprint, installed
+  tooling, bounded probes, doctor categories, provisioning surfaces, triage),
+  3 uncertainties recorded, no design decision taken → evidence: R1–R6 rows —
+  next: design step
+  (provenance search → sources.md → gap interview)
 
 ## Next
 
-Research step (first triaged step): inspect sources for the unit's domain,
-state uncertainties, write the R-rows under Evidence → then design.
+Design step: Stage 1 provenance search → `sources.md` claim journal → orient →
+gap interview (`open-questions@1` in `decisions.md`).
 
 ## References
 
