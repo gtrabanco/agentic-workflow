@@ -31,8 +31,8 @@
    2. Review the **fold diff only** (`git diff <pre-batch HEAD>..<batch HEAD>`
       over the commits this turn's batch produced);
    3. Require the **gate green at the reviewed head** and the sibling
-      `ACCEPTANCE.md` blob recomputed to an **exact match** — the step-2
-      structural precondition, unchanged and still mandatory;
+      acceptance-manifest (step-2 artifact) blob recomputed to an **exact match**
+      — the step-2 structural precondition, unchanged and still mandatory.
    4. Append the normal `review-mark@1` `REVIEW-RAN` mark — delta cycles count
       toward the two-cycle cap from the unchanged source (marks + forge
       receipts), never a fresh reset;
@@ -52,13 +52,14 @@
      read from `git diff --unified=0` hunk headers);
    - **Size** — added+deleted changed lines **> 200**, or changed files
      **> 15** (`git diff --numstat`).
-2. **Frozen acceptance + SPEC drift check (structural).** Locate sibling
-   `ACCEPTANCE.md`, recompute its blob, and require an exact match with the
-   execution receipt before assessing the candidate. Missing/mismatch is a
-   `workflow` fix-now finding and no passing receipt may be posted. Legacy units
-   use the verification contract's committed SPEC-blob fallback. Then build a
-   **per-criterion coverage table** from the manifest — one row per acceptance
-   criterion, no free-form comparison:
+2. **Frozen acceptance + SPEC drift check (structural).** Locate the acceptance
+   artifact — legacy (pre-feature 61) `ACCEPTANCE.md` or the unit doc's
+   `## Acceptance criteria` section (post-feature 61) — recompute its blob,
+   and require an exact match with the execution receipt before assessing the
+   candidate. Missing/mismatch is a `workflow` fix-now finding and no passing
+   receipt may be posted. Legacy units use the verification contract's
+   committed SPEC-blob fallback. Then build a **per-criterion coverage table**
+   from the manifest — one row per acceptance criterion, no free-form comparison:
 
    ```
    | criterion | evidence (file:line or command run) | met | unmet | untouched |

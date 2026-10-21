@@ -71,6 +71,15 @@ deferred`; `n/a` requires evidence, and no current-unit obligation may be
 Objective, verifiable conditions for "done". Each criterion is a runnable
 command where possible, or labelled `read-verified` — never unlabelled prose.
 
+**Validator determinism.** A frozen validator must be deterministic — pin network,
+clock, randomness, and unordered-concurrency dependencies (fixed version,
+frozen fixture, recorded input) or downgrade the row to `read-verified:`/
+`manual:`.
+
+**Property / fuzz validators.** A validator may be a property or fuzz test with deterministic, bounded runtime within the project's timeout budgets.
+No new validator kind is needed: property/fuzz uses the existing `commands`
+row class.
+
 ### Spec-lint (mechanical — presence checks only)
 
 Run by the lane's triage step (fix mode) before committing the draft;

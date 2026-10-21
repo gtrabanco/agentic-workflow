@@ -20,6 +20,16 @@ Numbered list. Each AC is induced from a concrete user scenario ("I do X and obs
 Make each AC command-verified where possible. If the request is too vague to state an AC,
 STOP and ask the user with concrete options — never invent one.
 
+**Validator determinism.** A frozen validator must be deterministic — pin network,
+clock, randomness, and unordered-concurrency dependencies (fixed version,
+frozen fixture, recorded input) or downgrade the row to `read-verified:`/
+`manual:`.
+
+**Property / fuzz validators.** A planner may emit a property or fuzz validator
+as a bounded `commands` row — deterministic, bounded runtime — within the
+project's timeout budgets. No new validator kind is needed: property/fuzz uses
+the existing `commands` row class.
+
 ## Non-goals
 
 What this unit is NOT. Findings discovered during implementation never expand scope.

@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.12.0
+version: 3.12.1
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -59,7 +59,8 @@ or edits code. A `REVIEW-FAIL`/`NEEDS-DECISION` turn closes when the report
 block is printed (report step 13).
 
 Consume the internal [verification contract](<../verification-contract/SKILL.md>);
-the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before
+the reviewer checks the same frozen acceptance artifact (legacy (pre-feature 61) `ACCEPTANCE.md`
+or post-feature-61 unit doc `## Acceptance criteria`) as the executor before
 mapping candidate evidence.
 
 ## When to use

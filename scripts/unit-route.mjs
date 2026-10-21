@@ -105,7 +105,11 @@ function cellsOf(line) {
  * the cell's leading token, never on the whole cell (F30: the annotated spellings
  * made merged units read as open, which routed them to the fold and the planner).
  */
-const NOT_OPEN = new Set(["yes", "—", "-", "n/a", ""]);
+// `ignore` is the classifier's DISPOSITION (`review-implementation`'s `ignore`
+// class): the row is decided, never routed. Its `folded` cell stays `no`, which
+// is exactly why it must be named here — unit 74's F-74-6 kept a merged,
+// fully-ticked unit on `route: fold` (same class as the padded MARK header row).
+const NOT_OPEN = new Set(["yes", "—", "-", "n/a", "", "ignore"]);
 export const isOpen = (folded) => {
   const value = String(folded ?? "").trim().toLowerCase();
   if (value === "") return false;
@@ -123,7 +127,10 @@ export const isOpen = (folded) => {
  */
 export const isMarkRow = (id) => {
   const value = String(id ?? "").trim();
-  return /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value) || /^GATE-RAN$/i.test(value);
+  // `MARK` is the id cell of a padded ledger HEADER row (`ledger-ownership@1` fixes
+  // that shape). Without it the header parses as an open finding and routes a
+  // fully-ticked unit back to `/fold-findings`.
+  return /^MARK$/i.test(value) || /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value) || /^GATE-RAN$/i.test(value);
 };
 
 const isSeparator = (id) => /^[-:\s]*$/.test(String(id ?? ""));
@@ -589,24 +596,33 @@ function recordedPhases(doc) {
 }
 
 /**
- * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
- * doc's `## Tasks` section that the `## Progress log` does not record. A unit
- * with no doc (or no Tasks section) is untouched work — P1. A Tasks section
- * that parses to no phase fails closed: the route never emits a bare
- * whole-unit command (#291 AC3).
+ * The unfinished phases of a unit: the set of `P<n>` numbers from the unit
+ * doc's `## Tasks` section that the `## Progress log` does not record.
+ * Returns `null` when the doc is absent or has no `## Tasks` section
+ * (untouched work — caller routes to P1). Returns all parsed phases when done
+ * is empty.
  */
-function firstUnfinishedPhase(unit) {
-  const doc = readProject(`${unit.dir}/SPEC.md`);
-  if (doc === null || sectionBody(doc, "Tasks") === null) return 1;
+function unfinishedPhases(unitDir) {
+  const doc = readProject(`${unitDir}/SPEC.md`);
+  if (doc === null || sectionBody(doc, "Tasks") === null) return null;
   const { phases } = parseUnitDocPhases(doc);
   if (phases.length === 0) {
-    fail(1, `no parseable phase in ${unit.dir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
+    fail(1, `no parseable phase in ${unitDir}/SPEC.md — the Tasks section carries no \`P<n> —\` bullet (re-run the lane's plan step)`);
   }
   const done = recordedPhases(doc);
-  const unfinished = phases.map((phase) => phase.number).filter((number) => !done.has(number));
-  if (unfinished.length === 0) {
-    fail(1, `every phase of ${unit.dir}/SPEC.md is recorded in its Progress log — re-triage the unit or settle its index status`);
-  }
+  return new Set(phases.map((phase) => phase.number).filter((number) => !done.has(number)));
+}
+
+/**
+ * The first unfinished phase of a unit: the lowest `P<n> —` bullet in the unit
+ * doc's `## Tasks` section that the `## Progress log` does not record. A Tasks
+ * section that parses to no phase fails closed: the route never emits a bare
+ * whole-unit command (#291 AC3). The caller handles the no-doc case (returns `null`).
+ */
+function firstUnfinishedPhase(unit) {
+  const donePhases = unfinishedPhases(unit.dir);
+  if (donePhases === null) return 1;
+  const unfinished = [...donePhases].sort((a, b) => a - b);
   return Math.min(...unfinished);
 }
 
@@ -741,13 +757,34 @@ function main(argv) {
     // #291 AC3/AC4: the hand-off names exactly one phase and the execution
     // tier — never the bare whole-unit command. Whole-unit mode survives only
     // as an explicit operator choice (`execute-phase`'s own §7).
-    const phase = firstUnfinishedPhase(unit);
-    const tier = executionTier();
-    // The frozen fix invocation is `--fix <n>` (`execute-phase`'s own hint), so the
-    // machine signal names it instead of the feature-shaped command (F31).
-    command = unit.kind === "fix"
-      ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
-      : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    // Close-out keys on the status alone (the branch above): a `done` unit
+    // routes to the merge gate whether or not its Progress log records every
+    // phase. F31/P6: a unit whose status is NOT "done" (e.g. "defined",
+    // "in-progress") with all phases recorded is an ambiguous boundary — not
+    // finished (can't audit), no unfinished phases (can't execute) — fail
+    // closed. F40: no doc / no `## Tasks` is untouched work — route to P1.
+    const unfinished = unfinishedPhases(unit.dir);
+    if (unfinished === null) {
+      // No doc or no `## Tasks` section — untouched work, P1.
+      route = "execute";
+      selected = [];
+      const phase = firstUnfinishedPhase(unit);
+      const tier = executionTier();
+      command = unit.kind === "fix"
+        ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+        : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    } else if (unfinished.size === 0) {
+      // All phases done but status not "done" (checked above at line :733) —
+      // refuse; the operator must settle the index/roadmap status first.
+      fail(1, `unit ${unit.dir} has all phases recorded but status is '${sanitize(status)}' (not 'done') — settle the index or roadmap status before routing to close-out`);
+    } else {
+      // Incomplete phases — proceed to execute.
+      const phase = firstUnfinishedPhase(unit);
+      const tier = executionTier();
+      command = unit.kind === "fix"
+        ? `/execute-phase --fix ${unit.number} P${phase} (tier: ${tier})`
+        : `/execute-phase ${unit.slug} P${phase} (tier: ${tier})`;
+    }
   }
 
   const base = route === "replan" || route === "decision" || route === "product" || route === "fold"

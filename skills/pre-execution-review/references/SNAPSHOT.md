@@ -61,7 +61,8 @@ Rules the builder enforces and no caller may improvise around:
   `Depends on:` line plus the closure roadmap rows); the unit's artifacts and the
   authorities above stay bound.
 - **A snapshot digest is not a git blob id.** `git hash-object` stays the convention
-  for the frozen `ACCEPTANCE.md` manifest receipt only; comparing it to a snapshot
+  for the frozen `ACCEPTANCE.md` manifest receipt only (legacy pre-feature 61) or the post-feature
+  61 unit doc acceptance section; comparing it to a snapshot
   digest proves nothing and a sensor that does so is wrong, not cheap.
 
 ### Re-verifying a receipt (consumers)

@@ -135,7 +135,10 @@ execution work hands off one phase per turn:
 ```
 
 `<k>` is the first unfinished phase (the unit doc's Progress log records the
-phases done so far; `bun scripts/unit-route.mjs <NN-slug>` prints it) and
+phases done so far; `bun scripts/unit-route.mjs <NN-slug>` prints it — when every
+phase is recorded but the index still reads `in-progress`, the router refuses with
+`UNIT ROUTE — error … settle the index or roadmap status` and exits 1: settle the
+status, then continue the ladder) and
 `<tier>` is the `implement` entry of the triage block's `Tiers:` line. Never
 print the bare whole-unit `/execute-phase <NN-slug>` — whole-unit loop mode
 survives only as an explicit operator choice. When the last phase's turn

@@ -12,7 +12,8 @@
  *     it owns the change);
  *  3. a row that already cites a commit keeps that citation only when the token
  *     resolves to a real commit reachable from HEAD and can be tied to the row's
- *     subject or surface — an unverifiable citation is reported, never trusted;
+ *     subject or surface — an unverifiable citation (dangling, or naming a commit
+ *     that never folded the row) is reported, never trusted;
  *  4. everything else is UNPROVEN and re-opens: asserted provenance is worse than
  *     none, because it silently passes the recount that F106 exists to satisfy.
  *
@@ -27,7 +28,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { basename, relative, resolve } from "node:path";
+import { basename, isAbsolute, relative, resolve } from "node:path";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
 /**
@@ -126,14 +127,27 @@ function parseRows(text) {
     if (!match) continue;
     counted += 1;
     const cells = line.split(CELL_RE).slice(1, -1).map((cell) => cell.trim());
+    // A ledger keys more than one table by `| F<n> |`: the findings table, and prose
+    // summaries such as `| Row | Repaired in | What the fold had to get right |`.
+    // Unit 27's ten `unparsed` rows were that second table — counted as arity-broken
+    // findings and then shadowed by the real row's duplicate. The row schema is what
+    // defines a finding, so a line that does not carry it is a reference to one, and
+    // the first line that DOES carry it is the finding (first-read-wins).
     if (cells.length !== 7) {
+      // A reference line, not a silently-skipped one: it is REPORTED, so the parser's
+      // completeness invariant (`counted === read + refused`) keeps holding and an id
+      // that never carries the schema anywhere stays visible. A ledger keys more than
+      // one table by `| F<n> |` — the findings table and prose summaries such as
+      // `| Row | Repaired in | What the fold had to get right |`; unit 27's ten
+      // "unparsed rows" were that summary, not broken findings.
       rejected.push({ id: match[1], reason: `${cells.length} cells instead of the 7-column schema` });
       continue;
     }
     if (rows.has(match[1])) {
       rejected.push({ id: match[1], reason: "duplicate id in the file — only the last row is read" });
+      continue;
     }
-    rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6] });
+    rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6], cell: cells[6] });
   }
   return { rows, rejected, counted };
 }
@@ -173,6 +187,31 @@ const messageOf = (sha) => {
 };
 /** Commits name the ids they fold in the subject OR the body (`P15` close-outs). */
 const namesId = (sha, id) => idsInSubject(messageOf(sha)).has(id);
+/**
+ * Ids the commit's own SUBJECT claims, on the fold subjects this repo writes
+ * (`fix(36): fold F72-F75 — …`, `chore(x): fold F9 — …`). A body-only mention
+ * (`subject names it in its message`) is a report reference, not a fold claim:
+ * tying a citation to one of those let a commit that merely discussed a finding
+ * pass the recount for it (F80).
+ */
+const subjectCache = new Map();
+const foldSubjectIds = (sha) => {
+  // PERF (cycle 10): one `git log -1` process per tied citation cost 15x the old
+  // recount (509 child processes on an 81-row ledger). The walk already caches every
+  // commit message, so the subject is its first line — memoised, zero processes.
+  //
+  // The subject claims a row when it NAMES it: the branch's fold commits are written
+  // `fix(36): bump F21 — …`, `fix(36): F22 — …`, `fix(unit-route): gate close-out…
+  // (F31, F6)` as often as `… fold F43+…`. Requiring the literal word `fold` here read
+  // 31 genuinely-folded rows as never folded; what must not count is the commit that
+  // only RECORDED the row open, which the caller excludes by its introduction commit.
+  if (subjectCache.has(sha)) return subjectCache.get(sha);
+  const message = messageCache.has(sha) ? messageCache.get(sha) : git("log", "-1", "--format=%B", sha);
+  messageCache.set(sha, message);
+  const subject = message.split("\n")[0] ?? "";
+  subjectCache.set(sha, idsInSubject(subject));
+  return subjectCache.get(sha);
+};
 
 const filesCache = new Map();
 function filesOf(sha) {
@@ -192,6 +231,17 @@ function verifiedTokens(text) {
 }
 
 const rel = repoRelative(ledger);
+// SEC (cycle 10): `--annotate` rewrote whatever path argv named — no containment,
+// no extension check — and `repoRelative` merely falls back to the absolute path
+// outside the checkout. A ledger is a repository document; refuse anything else
+// before a single byte is read, so `--check` (read-only) cannot be turned into a
+// fleet-wide rewrite by a typo either.
+if (!rel || rel.startsWith("..") || isAbsolute(rel) || !rel.endsWith(".md")) {
+  process.stderr.write(
+    `REFUSED: ${ledger} is not a Markdown ledger inside the checkout (${topRoot || "unknown root"}) — this tool never writes outside the repository\n`,
+  );
+  process.exit(2);
+}
 const parsed = parseRows(readFileSync(ledger, "utf8"));
 const { rows: current, rejected, counted } = parsed;
 // The parser's own completeness clause: a counted line that neither parsed nor was
@@ -202,6 +252,21 @@ if (counted !== current.size + rejected.length) {
   );
   process.exitCode = 1;
 }
+
+/**
+ * The marker the annotator writes into a folded cell: `yes · fold <sha>`, or
+ * `· ticked <sha>` on a row that scores 1. Reading it is what makes the recount
+ * see an annotated ledger: every fold writes that shape, so a parser that only
+ * accepts a bare `yes` buckets the whole ledger `open` and validates nothing
+ * (F80 — the silent pass this tool exists to prevent).
+ */
+const FOLD_MARK_RE = /·\s*(fold|ticked)\s+([0-9a-f]{7,40})\b/g;
+const foldMarker = (cell) => {
+  const marks = [...(cell ?? "").matchAll(FOLD_MARK_RE)].map((m) => m[2]);
+  return marks.length ? marks.at(-1) : null;
+};
+/** A folded cell either reads exactly `yes` or carries the annotator's marker. */
+const isFolded = (cell) => typeof cell === "string" && (/^\s*yes\b/.test(cell) || foldMarker(cell) !== null);
 
 // --- 1. flip + introduction detection: walk every historical version ---------
 const flips = new Map();
@@ -217,8 +282,8 @@ for (const sha of git("log", "--reverse", "--format=%H", "--", rel).split("\n").
     const before = previous.get(id);
     // F60: `route` and `recordedYes` were written here and read nowhere — the annotate
     // path re-derives the cell from the line itself. Only the flip sha is ever consulted.
-    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha });
-    if (!before && row.folded === "yes") flips.set(id, { sha });
+    if (before && !isFolded(before.folded) && isFolded(row.folded)) flips.set(id, { sha });
+    if (!before && isFolded(row.folded)) flips.set(id, { sha });
   }
   previous = snapshot;
 }
@@ -242,7 +307,7 @@ for (const record of git("log", "--reverse", `--format=%x00%H%x1f%B`, since).spl
     namedById.get(id).push({
       sha,
       // A commit that records the row open proves nothing on its own.
-      recordsOnly: introduced.get(id)?.sha === sha && introduced.get(id).folded !== "yes",
+      recordsOnly: introduced.get(id)?.sha === sha && !isFolded(introduced.get(id).folded),
     });
   }
 }
@@ -251,7 +316,7 @@ for (const record of git("log", "--reverse", `--format=%x00%H%x1f%B`, since).spl
 const report = [];
 for (const [id, row] of current) {
   const entry = { id, folded: row.folded, status: null, fold: null, flip: null, evidence: null };
-  if (row.folded !== "yes") {
+  if (!isFolded(row.folded)) {
     entry.status = "open";
     report.push(entry);
     continue;
@@ -259,6 +324,14 @@ for (const [id, row] of current) {
   const flip = flips.get(id);
   if (flip) entry.flip = short(flip.sha);
   const nonLedger = citedPaths(row).filter((path) => path !== rel);
+
+  // The citations a row can carry live in BOTH cells the annotator writes: the folded
+  // cell's marker and the route-cell marker it emits beside the row's prose. Reading
+  // only the folded cell made every row annotated in the route cell unrecoverable —
+  // and every row the annotator had re-opened cite a phantom `undefined <sha>` in the
+  // route cell that nothing resolved.
+  const marker = foldMarker(row.cell) ?? foldMarker(row.route);
+  const marked = marker === null ? null : git("rev-parse", "--verify", "--quiet", `${marker}^{commit}`).trim();
 
   const cited = verifiedTokens(`${row.file} ${row.route}`);
   // A token counts as provenance only when the commit it names actually CLAIMS the
@@ -269,13 +342,42 @@ for (const [id, row] of current) {
   const recordsTheRow = introduced.get(id);
   const tieable = cited.filter((sha) => {
     if (sha === flip?.sha) return true;
-    if (recordsTheRow?.sha === sha && recordsTheRow.folded !== "yes") return false;
-    return namesId(sha, id);
+    if (recordsTheRow?.sha === sha && !isFolded(recordsTheRow.folded)) return false;
+    return foldSubjectIds(sha).has(id);
   });
   if (tieable.length) {
     entry.status = "proven-cited";
     entry.fold = short(tieable.includes(flip?.sha) ? flip.sha : tieable.at(-1));
     entry.evidence = "row cites a commit that resolves and matches its message or surface";
+    report.push(entry);
+    continue;
+  }
+  // The annotator's own marker is the citation the ledger path writes, so it is held
+  // to the same bar: the commit must resolve AND be reachable from HEAD. A token that
+  // names an amended-away commit is the dangling-pointer class F75/F78 record, and
+  // trusting it (or ignoring it) is the silent pass this recount must never make.
+  if (marked && isAncestor(marked, "HEAD") && foldSubjectIds(marked).has(id)) {
+    entry.status = "proven-cited";
+    entry.fold = short(marked);
+    entry.evidence = `the row's own marker names ${short(marked)}, whose subject folds ${id}`;
+    report.push(entry);
+    continue;
+  }
+  if (marked && isAncestor(marked, "HEAD")) {
+    entry.status = "cited-unverified";
+    entry.cited = [short(marked)];
+    entry.fold = short(marked);
+    entry.evidence = `${short(marked)} resolves and is reachable, but its subject does not claim ${id} — the marker cites a commit that folded something else`;
+    report.push(entry);
+    continue;
+  }
+  if (marker !== null) {
+    entry.status = "dangling";
+    entry.cited = [marker];
+    entry.fold = short(marker);
+    entry.evidence = marked
+      ? `${short(marker)} resolves but is not an ancestor of HEAD — the fold it attested was amended away; re-point the marker`
+      : `${short(marker)} resolves to no commit — the marker cites bytes that do not exist`;
     report.push(entry);
     continue;
   }
@@ -325,13 +427,24 @@ for (const [id, row] of current) {
 }
 
 // --- 4. report and optional mutation ----------------------------------------
-// A line the schema refused is reported as its own `unparsed` entry: it is neither
-// proven nor open, and it must reach the `--check` refusal and the detail loop.
+// A line the schema refused is reported as its own entry: it is neither proven nor
+// open, and it must reach the detail loop. When the same id also carries a schema row
+// the line is a NAME REFERENCE (a prose summary table keyed by finding id) — reported
+// as `reference`, never as work waiting on anyone.
 for (const drop of rejected) {
-  report.push({ id: drop.id, folded: null, status: "unparsed", fold: null, flip: null, evidence: drop.reason });
+  report.push({
+    id: drop.id,
+    folded: null,
+    status: current.has(drop.id) ? "reference" : "unparsed",
+    fold: null,
+    flip: null,
+    evidence: drop.reason,
+  });
 }
 const buckets = report.reduce((acc, e) => ({ ...acc, [e.status]: (acc[e.status] ?? 0) + 1 }), {});
-const needsWork = report.filter((e) => e.status !== "proven-cited" && e.status !== "open");
+const needsWork = report.filter(
+  (e) => !["proven-cited", "recovered", "recovered-by-message", "open", "reference"].includes(e.status),
+);
 
 if (asJson) process.stdout.write(JSON.stringify(report, null, 2) + "\n");
 if (!asJson) {
@@ -346,17 +459,39 @@ if (!asJson) {
 if (annotate) {
   const byId = new Map(report.map((e) => [e.id, e]));
   const original = readFileSync(ledger, "utf8").split("\n");
-  const out = original.map((line) => {
-    const match = ROW_RE.exec(line);
-    if (!match) return line;
+  const out = original.map((rawLine) => {
+    const match = ROW_RE.exec(rawLine);
+    if (!match) return rawLine;
     const entry = byId.get(match[1]);
+    // A1 (cycle 10): the REOPENED note this path writes puts the row back to
+    // `folded: no`, so the recount buckets it `open` and every later run skipped the
+    // line it had just written — the note survived as a stale claim, and a row that
+    // is now provable could never recover because its own note blocked the rewrite.
+    // The note is the annotator's alone: strip it first, then re-derive from the walk.
+    let line = rawLine;
+    // The note is re-derived only for a row the walk is about to re-open, where its
+    // evidence string is the same bytes it wrote last time. For a row that is still
+    // `open` or now `proven-cited`, the note is the last thing that happened to it and
+    // stripping it would make the next run re-strip and the run after re-write.
+    const stale = /\s*·\s*REOPENED — provenance unproven:[^|]*(?=\s*\|)/.exec(line);
+    const reopening = entry && !["open", "proven-cited", "unparsed"].includes(entry.status) && !entry.token;
+    if (stale && reopening) {
+      // remove exactly the note and the padding it owns — never the row's own text
+      line = line.slice(0, stale.index) + line.slice(stale.index + stale[0].length);
+      line = line.replace(/\s*\|\s*$/, " |");
+    }
     // An `unparsed` row is not annotatable: writing a token into a line the schema
     // refused would be the tool inventing the arity it just refused.
     if (!entry || entry.status === "open" || entry.status === "proven-cited" || entry.status === "unparsed") return line;
     const cells = line.split(CELL_RE);
     if (cells.length !== 9) return line;
     const route = cells[6].trim();
-    if (entry.fold) {
+    // A1: `cited-unverified` / `dangling` reach here without the token the append
+    // path interpolates, so the annotator wrote the literal `· undefined <sha>` —
+    // a token outside the contract's closed vocabulary (`ledger-ownership@1`), and
+    // one the re-entry guard then matched against itself, so the row never re-opened.
+    // Only a real fold claim appends; everything else re-opens with evidence.
+    if (entry.fold && entry.token) {
       // F59: `\s` inside a template literal collapses to the character `s`, so the old
       // guard pattern (`·s*folds…`) could never match the marker this branch writes.
       // The escapes are doubled: a re-entry check that never re-matches is no check.
@@ -368,9 +503,8 @@ if (annotate) {
       // F58: the note must name only what the walk observes — the row and its missing
       // evidence. It used to hardcode `P20`, a phase no plan of the annotated unit
       // contains: a mechanical token inventing a fact. No phase, no fabricated number.
-      cells[6] = /REOPENED/.test(route)
-        ? ` ${route} `
-        : ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
+      if (/ · REOPENED — provenance unproven: /.test(route)) return line;
+      cells[6] = ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
     }
     if (cells.join("|").split(CELL_RE).length !== 9) return line; // never break the 7-column schema
     return cells.join("|");
@@ -389,18 +523,29 @@ if (annotate) {
 }
 
 if (checkOnly) {
-  const unparsed = report.filter((e) => e.status === "unparsed");
-  const unticked = needsWork.filter((e) => e.status !== "unparsed");
   if (needsWork.length) {
-    const parts = [];
-    if (unticked.length) {
-      parts.push(`${unticked.length} folded row(s) lack a verified commit token: ${unticked.map((e) => e.id).join(", ")}`);
+    // A2: three defects with three remedies were collapsed into one
+    // "lack a verified commit token" line, so a reader could not tell a re-point
+    // from a re-annotation from an arity repair. One line per cause.
+    const byStatus = new Map();
+    for (const entry of needsWork) {
+      if (!byStatus.has(entry.status)) byStatus.set(entry.status, []);
+      byStatus.get(entry.status).push(entry);
     }
-    if (unparsed.length) {
-      parts.push(`${unparsed.length} row(s) the 7-column schema refused were read by nothing: ${unparsed.map((e) => e.id).join(", ")}`);
+    const REPAIR = {
+      dangling: "cite a commit outside HEAD's history — re-point the marker at the commit that folded the row",
+      "cited-unverified": "cite a reachable commit whose subject does not claim the row — cite the commit that folded it",
+      unproven: "are ticked with no commit behind them — cite the fold or re-open them",
+      unparsed: "the 7-column schema refused (arity) — repair the columns; no tool may invent them",
+    };
+    const paused = [...byStatus].filter(([status]) => !status.startsWith("recovered"));
+    if (paused.length) {
+      process.stdout.write(`CHECK FAIL: ${needsWork.length} row(s) need a repair, by cause:\n`);
+      for (const [status, entries] of paused) {
+        process.stdout.write(`  ${entries.length} ${status}: ${entries.map((e) => e.id).join(", ")} — ${REPAIR[status] ?? "repair the citation"}\n`);
+      }
+      process.exit(1);
     }
-    process.stdout.write(`CHECK FAIL: ${parts.join("; ")}\n`);
-    process.exit(1);
   }
   process.stdout.write("CHECK PASS: every folded row names a verified commit\n");
 }
