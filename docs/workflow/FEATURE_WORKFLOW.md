@@ -3,7 +3,7 @@
 The lane replaces the old fixed pipeline (`design-feature` → `review-spec` →
 `plan-feature` → `review-plan` → `execute-phase` → `review-change` →
 `audit-pr`). Every unit is now **one `SPEC.md`** under
-`docs/features/<NN>-<slug>/` containing a closed 13-section list, and the steps
+`docs/features/<NN>-<slug>/` containing a closed 14-section list, and the steps
 a unit needs are decided by a triage pass against a catalog of closed steps
 (research, design, plan, implement, tests, evidence, review, docs, release).
 
@@ -119,7 +119,7 @@ If a phase produces a 200-line diff against a 50-line budget:
 ## Worked example
 
 ```
-# New feature unit: docs/features/62-some-feature/SPEC.md (complete, 13 sections)
+# New feature unit: docs/features/62-some-feature/SPEC.md (complete, 14 sections)
 node scripts/unit-route.mjs --triage 62
   → Steps: design, implement, tests, evidence, review
   → Skipped: research (not a new domain), plan (not code unit), docs (not docs unit), release (small scope)

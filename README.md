@@ -404,7 +404,7 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 ### Build a feature
 
 ```
-# New unit: docs/features/NN-<slug>/SPEC.md (13 sections)
+# New unit: docs/features/NN-<slug>/SPEC.md (14 sections)
 /execute-phase NN                  → lane executes triage-decided steps (design, implement, tests, evidence, review...)
                                    → a finished unit always opens its PR + flips to done (built, not merged)
 /fold-findings → re-run /review-change  # manual review→fold; unresolved findings go to triage/replan

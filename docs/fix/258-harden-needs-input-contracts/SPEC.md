@@ -250,6 +250,30 @@ none recorded — no known red gate or open defect affects this unit.
   phase-lint on this unit doc (validator: `node --test scripts/*.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs` exits 0 and `node scripts/phase-lint.mjs docs/fix/258-harden-needs-input-contracts/SPEC.md` prints `verdict PASS`)
   - Relevant files: scripts/, skills/, docs/fix/258-harden-needs-input-contracts/SPEC.md
 
+
+### 2026-10-20 — the fold's scope rule and the unit doc's `## Impact` section (owner directive, review cycle 12 follow-up)
+
+The owner ruled during cycle 12's review that the repeated regressions (F50,
+F53, F57 — each fold repairing its cited line while a sibling surface kept
+asserting the old truth) are a workflow defect, not an executor slip, and that
+the rule must say what to DO, in positive terms:
+
+1. **The fix covers the change and everything that depends on it** — callers of
+   what a piece receives, consumers of what it delivers, and a check before
+   removing anything still in use. A surviving mention of what changed (a
+   comment, a prose claim, a declared validator, a manifest narration) is part
+   of the same fold. `skills/fold-findings/SKILL.md` 1.9.0 carries this rule in
+   place of the minimum-scope guardrail ("do not widen beyond a finding's
+   file/line/axis").
+2. **The unit doc gains `## Impact`** — what consumes the unit's deliverables,
+   what the unit consumes, what stops being true when the change lands, and
+   what to ask before touching something live — cut at plan time, swept by the
+   executor, never rediscovered at review. Added to both unit-doc templates
+   (`docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`); the
+   section-count prose across the workflow docs and skills reads 14 (the 13
+   `UNIT_DOC_REQUIRED_SECTIONS` plus `## Impact`; the schema's selector
+   tolerates the extra section, so no package change).
+
 ### Prior-decisions sweep
 
 Keyword sweep over the candidate sources (`docs/fix/258-harden-needs-input-contracts/decisions.md` —
@@ -391,6 +415,7 @@ Budget: strong
 - 2026-10-19 (P11) — verified the widened unit (AC5, AC9, AC10, AC6): root suites 715/715, `bun scripts/check-skill-context.mjs` PASS 28 skills, `--routes` PASS 14 routes, `node --test scripts/normative-drift.test.mjs` 18/18, `node scripts/phase-lint.mjs <unit doc>` verdict PASS with fingerprint 80fc2b86 (11/11 phases), `node scripts/version-parity-gate.mjs --content --base main` VERDICT PASS (0.21.0 → 0.23.0) — O7–O11 closed `verified`, every Evidence row re-run at this head → next: `/review-change` on the changed HEAD (mandatory end review)
 - 2026-10-19 (fold F38–F49) — every declared validator re-run and re-cut at the fold head (cycle 12 found O1 still carrying its pre-shrink count validator and Evidence AC5 a stale count; both re-cut 2026-10-20, see the next line): P2–P4's count validators recorded as superseded by P10's shrink (0 `requires …input` mentions ship by design) with the shipped surfaces pinned instead (`Inputs — artifacts, never questions`, `Inputs — never inferred, never defaulted`, `Consent — mandatory, never defaulted`, each exit 0); P5/O5 re-declared at the final head (12 CHANGELOG rows); Evidence AC1–AC3/AC6 re-run with the true values; the P3 Progress line corrected to the declared 4×. All exit 0 at this head → next: `/review-change` (delta) on the fold head
 - 2026-10-20 (fold F50–F57) — cycle 12's repair batch, every declared validator re-run at this head: O1 re-cut to the shipped surface (`grep -q "Inputs — artifacts, never questions"` exit 0), Evidence AC5 counts corrected to the fresh 727 (root suite, exit 0); the manifest narration clauses re-emitted with the shipped growth source and one dated `policy.declared` clause; init-workspace's Turn-contract box now names the scratch unit its §Consent requires; the dispatcher reads its own span of a multi-block `decisions.md` (`path-protection-records@1`, planning ledgers and `Decide for me` records are skipped, 34/34 suite green); AC1/P10 re-cut to the shipped section shape and Non-goals/Future cost/Regression scope scope the dispatcher in. All declared validators exit 0 at this head → next: `/review-change` (delta) on the fold head
+- 2026-10-20 (impact-surface merge) — owner directive folded into this unit: `fold-findings` 1.9.0 scope rule (change + dependents, survivors swept in-batch), `## Impact` in both unit-doc templates, the 13→14 section-count prose synced across 9 surfaces (init-workspace 4.0.2), pi package 0.24.0 → next: `/review-change` (delta) over the whole post-cycle-12 batch
 
 ## Next
 

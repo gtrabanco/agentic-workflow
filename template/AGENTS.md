@@ -207,7 +207,7 @@ Rules the ledger enforces:
 
 **Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/` with
-13 mandatory sections (Objective, Why, User outcome, Acceptance criteria,
+14 sections (Objective, Why, User outcome, Impact, Acceptance criteria,
 Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
 Evidence, Progress log, Next, References). The unit's path is decided by a triage
 pass against a closed catalog (research, design, plan, implement, tests,
