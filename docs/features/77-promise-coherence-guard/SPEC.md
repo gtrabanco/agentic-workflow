@@ -106,7 +106,8 @@ What the change touches beyond its own files, cut at plan time:
   and the review stages. They now refuse a 13-section document; a lane-era unit
   doc missing `## Impact` fails with `selector-heading-missing`.
 - **The runner crate's duplicate list:** `packages/agentic-workflow/src/edit/schema.mjs`
-  says 13 in its own words and `src/edit/UnitDoc.mjs` writes the skeleton. Both
+  says 13 in its own words and `packages/agentic-workflow/src/edit/UnitDoc.mjs`
+  writes the skeleton. Both
   follow, or the producer ships documents its validator rejects.
 - **Producers:** the two unit-doc templates, the `UnitDoc` skeleton, and every
   fixture document that stands in for a unit doc in the root suite

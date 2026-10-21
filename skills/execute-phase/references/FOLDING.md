@@ -15,7 +15,12 @@ when every step below ran — fixing the code and stopping is the classic way
 findings end up "solved" locally but absent from the merged PR:
 
 ```
-✓ Fixes implemented (scope: only the routed findings — nothing extra)
+✓ Fixes implemented — the batch is the routed findings **plus everything that
+  depends on them**: callers of what changes, consumers of what it delivers, and
+  every mention that stops being true (a comment, a prose claim, a declared
+  validator, a manifest narration). Nothing beyond that
+✓ `bun scripts/promise-coherence.mjs` RUN → `verdict PASS` (the repaired claims
+  reproduce at the head; a skipped line is read, never assumed)
 ✓ Gate RUN and green (exit codes pasted)
 ✓ Never edit an existing test's expectation to match behaviour — a setup
   repair keeps assertions at least as strong and never touches expectations
