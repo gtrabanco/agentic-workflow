@@ -267,6 +267,16 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 - 2026-10-21 22:24 — triage ran and is pasted verbatim under
   `## Triaged steps` (9 steps, none skipped, budget strong) → evidence in this
   doc — next: research step.
+- 2026-10-21 22:30 — research step: one web pass (pi package registry + pi
+  docs + Serena docs + the pi-serena tarball); R3–R5 recorded under Evidence,
+  U1–U3 uncertainties recorded under Known pre-existing issues → `81fc1e7d` —
+  next: design step.
+- 2026-10-21 22:40 — design stages 1–3: `sources.md` (INV-001…INV-019), orient
+  tiers + cost verdicts, and the batched `open-questions@1` block (Q1–Q4) in
+  `decisions.md`; `node scripts/needs-input.mjs docs/features/67-serena-provisioning`
+  exits 0 with 4 pending questions → evidence: needs-input block — next: the
+  owner answers Q1–Q4 (gap interview), then design stage 4 (decide) and the
+  plan step.
 
 ## Next
 
