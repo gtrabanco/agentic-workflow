@@ -1,0 +1,283 @@
+#!/usr/bin/env node
+
+/**
+ * promise-coherence.test.mjs — the guard's suite, and the frozen-failure corpus.
+ *
+ * Every case here is a defect class the review loop found and no gate caught
+ * during unit 258's 12 review→fold cycles (issue #305). The fixtures under
+ * `fixtures/promise-coherence/` carry the finding ids, so a future change that
+ * makes one of them pass has to argue with the finding, not with the test.
+ *
+ * The last case runs the guard over the repository itself: the frozen classes
+ * are rejected *and* the head is coherent. A guard that only fails is a guard
+ * nobody keeps green.
+ */
+
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import path from "node:path";
+import process from "node:process";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { CLAIM_KINDS, REASON_CODES, coherence } from "./promise-coherence.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const FIXTURES = "scripts/fixtures/promise-coherence";
+const fixture = (name) => `${FIXTURES}/${name}`;
+
+/** The failures of one run, by kind, for a readable assertion. */
+const failuresOf = (result) => result.claims.filter((claim) => claim.outcome === "fail");
+const claimsMatching = (result, pattern) => result.claims.filter((claim) => pattern.test(claim.claim));
+
+test("the claim-kind and reason vocabularies are closed and exported", () => {
+  assert.deepEqual([...CLAIM_KINDS], [
+    "validator",
+    "formula",
+    "measure",
+    "surface",
+    "removed-phrase",
+    "section-length",
+    "prerequisite",
+    "contradiction",
+  ]);
+  assert.deepEqual([...REASON_CODES], [
+    "validator-mismatch",
+    "formula-mismatch",
+    "measure-mismatch",
+    "surface-missing",
+    "phrase-present",
+    "claim-mismatch",
+    "undisclosed-prerequisite",
+    "contradicts-plan",
+    "unparseable-claim",
+    "no-claims",
+    "missing-document",
+  ]);
+});
+
+// ---------------------------------------------------------------------------
+// #305 · F16 / F38 / F48 / F50 — a declared count that does not reproduce
+// ---------------------------------------------------------------------------
+
+test("#305 F16/F50: an Obligation row declaring `matches 4` while the command prints 0 fails closed", () => {
+  const result = coherence([fixture("unit-doc-count.md")]);
+  assert.equal(result.verdict, "BLOCKED: validator-mismatch");
+
+  const obligation = result.claims.find((claim) => claim.kind === "validator" && claim.claim.includes("requires [a-z ]*input"));
+  assert.ok(obligation, "the Obligation row's validator is read");
+  assert.equal(obligation.outcome, "fail");
+  assert.match(obligation.observed, /^0 \(exit 1\)$/);
+  assert.equal(obligation.file, fixture("unit-doc-count.md"));
+  assert.equal(obligation.line, 19, "the finding names the row's own line");
+  assert.match(result.lines.join("\n"), /^Promise-coherence: validator scripts\/fixtures\/promise-coherence\/unit-doc-count\.md:19$/m);
+});
+
+test("#305 F38/F48: a task validator declaring `matches 4` against 7, and an Evidence row declaring 12 against 7", () => {
+  const result = coherence([fixture("unit-doc-count.md")]);
+  const task = claimsMatching(result, /changelog-sample\.md matches 4/)[0];
+  const evidence = claimsMatching(result, /changelog-sample\.md matches 12/)[0];
+  assert.equal(task.observed, "7", "the task's declared count is recounted");
+  assert.equal(evidence.observed, "7", "the Evidence row's declared count is recounted");
+  assert.equal(failuresOf(result).length, 3, "three declared counts, three failures — one per row");
+});
+
+test("#305 a claim the head does reproduce is reported as checked, never as a failure", () => {
+  const result = coherence([fixture("unit-doc-count.md")]);
+  const passing = result.claims.find((claim) => claim.kind === "validator" && claim.claim.includes("matches 7") && claim.outcome === "pass");
+  assert.ok(passing, "the row whose command returns 7 passes");
+  assert.match(result.lines.join("\n"), /^claims: 6 checked · 0 skipped$/m);
+});
+
+test("#305 `exits <N>` is compared against the command's exit code, not its output", () => {
+  const result = coherence([fixture("unit-doc-count.md")]);
+  const exitClaim = result.claims.find((claim) => claim.claim.includes("Required user inputs"));
+  assert.equal(exitClaim.outcome, "pass");
+  assert.equal(exitClaim.observed, "exit 0");
+});
+
+// ---------------------------------------------------------------------------
+// #305 · the live reproducer — still on main today
+// ---------------------------------------------------------------------------
+
+test("#305 the closed unit 258 doc still declares `matches 12` for a command that returns 17", () => {
+  // F16/F38/F50 were folded, then the folds moved the counts again. This is the
+  // case that proves the class is live and not archaeology: the guard reads it
+  // on demand, even though the default set skips closed units.
+  const result = coherence(["docs/fix/258-harden-needs-input-contracts/SPEC.md"]);
+  assert.equal(result.verdict, "BLOCKED: validator-mismatch");
+  const declared = claimsMatching(result, /matches 12/);
+  assert.ok(declared.length >= 1, "the doc's own `matches 12` claims are read");
+  for (const claim of declared) {
+    assert.equal(claim.outcome, "fail");
+    assert.notEqual(claim.observed, "12", "the declared count does not reproduce at the head");
+  }
+});
+
+// ---------------------------------------------------------------------------
+// #305 · F55 — an acceptance promise about a shape the bytes contradict
+// ---------------------------------------------------------------------------
+
+test("#305 F55: a `3–5 line` promise against the shipped section's real length fails closed", () => {
+  const result = coherence([fixture("unit-doc-length.md")]);
+  assert.match(result.verdict, /^BLOCKED: (?:claim-mismatch|unparseable-claim)$/);
+  const anchored = result.claims.find((claim) => claim.kind === "section-length" && claim.outcome === "fail" && claim.reason === "claim-mismatch");
+  assert.ok(anchored, "the anchored length claim is recounted");
+  assert.match(anchored.observed, /^\d+ lines$/);
+  assert.ok(Number.parseInt(anchored.observed, 10) > 5, "the shipped section is longer than the promise");
+});
+
+test("#305 F55: a length promise naming no file and no section is uncheckable, so it fails closed", () => {
+  const result = coherence([fixture("unit-doc-length.md")]);
+  const unanchored = result.claims.find((claim) => claim.kind === "section-length" && claim.reason === "unparseable-claim");
+  assert.ok(unanchored, "the unanchored length promise is refused instead of skipped");
+  assert.match(unanchored.observed, /names no file and ## section/);
+});
+
+// ---------------------------------------------------------------------------
+// #305 · F56 — a boundary that denies what the plan ships
+// ---------------------------------------------------------------------------
+
+test("#305 F56: Non-goals denying a new script while the tasks name one fails closed", () => {
+  const result = coherence([fixture("unit-doc-contradiction.md")]);
+  assert.equal(result.verdict, "BLOCKED: contradicts-plan");
+  const contradiction = failuresOf(result).find((claim) => claim.kind === "contradiction");
+  assert.equal(contradiction.line, 10);
+  assert.match(contradiction.observed, /scripts\/needs-input\.mjs/);
+});
+
+test("#305 F56: the same Non-goals bullet naming the script itself is a stated boundary, not a contradiction", () => {
+  // The rule is contradiction, not prohibition: a boundary that names the
+  // exception it carves is exactly what the fold teaches authors to write.
+  const directory = mkdtempSync(join(tmpdir(), "promise-coherence-"));
+  try {
+    const scoped = readFileSync(path.join(ROOT, fixture("unit-doc-contradiction.md")), "utf8")
+      .replace(
+        "- No new runtime script or machine gate for interactive input.",
+        "- No new runtime script besides `scripts/needs-input.mjs`, the dispatcher AC8 requires.",
+      );
+    const file = join(directory, "unit-doc-contradiction-scoped.md");
+    writeFileSync(file, scoped);
+    const result = coherence([file]);
+    assert.equal(result.claims.filter((claim) => claim.kind === "contradiction").length, 0);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// #305 · F18 / F26 / F27 — a budget narration the bytes no longer support
+// ---------------------------------------------------------------------------
+
+test("#305 F18: a narration naming a surface the branch deleted fails closed", () => {
+  const result = coherence([fixture("manifest-f18.json")]);
+  const missing = failuresOf(result).find((claim) => claim.kind === "surface");
+  assert.equal(missing.claim, "docs/features/_TEMPLATE/LEDGERS.md");
+  assert.equal(missing.observed, "absent");
+  assert.equal(missing.reason, "surface-missing");
+});
+
+test("#305 F18: a narration claiming a phrase is gone while the surface still carries it fails closed", () => {
+  const result = coherence([fixture("manifest-f18.json")]);
+  const present = failuresOf(result).find((claim) => claim.kind === "removed-phrase");
+  assert.equal(present.claim, "three-tier");
+  assert.equal(present.reason, "phrase-present");
+  assert.match(present.observed, /present in skills\/init-workspace\//);
+});
+
+test("#305 F26: `ceil(<A> x 1.10) = <B>` is recomputed exactly, never in floating point", () => {
+  const result = coherence([fixture("manifest-f18.json")]);
+  const formula = failuresOf(result).find((claim) => claim.kind === "formula" && claim.claim.includes("3664"));
+  assert.ok(formula, "ceil(3330 x 1.10) = 3664 is refused because 3330 x 1.10 is exactly 3663");
+  assert.equal(formula.observed, "3663");
+  // The same arithmetic is what makes the shipped manifest's 3663 correct: a
+  // float implementation answers 3664 here and would fail the real entry.
+  const head = coherence(["docs/workflow/SKILL_CONTEXT_BUDGETS.json"]);
+  assert.equal(head.verdict, "PASS", head.lines.join("\n"));
+});
+
+// ---------------------------------------------------------------------------
+// #305 · F45 / F53 — a box instructing an invocation the skill cannot satisfy
+// ---------------------------------------------------------------------------
+
+test("#305 F45/F53: a Turn-contract box running the dispatcher without the artifact it requires fails closed", () => {
+  const result = coherence([fixture("skills/undisclosed/SKILL.md")]);
+  assert.equal(result.verdict, "BLOCKED: undisclosed-prerequisite");
+  const claim = failuresOf(result)[0];
+  assert.equal(claim.kind, "prerequisite");
+  assert.match(claim.claim, /needs-input\.mjs <unit-dir> needs SPEC\.md/);
+  assert.match(claim.observed, /never names SPEC\.md/);
+});
+
+test("#305 F53: the shipped skills that run the dispatcher from their box disclose the artifact", () => {
+  // execute-phase and unit-lane name the invocation in the box; init-workspace
+  // delegates to its §Consent and states the scratch folder in prose, so it
+  // carries no invocation claim — asserted, so the day it gains one the
+  // disclosure is checked too.
+  for (const skill of ["execute-phase", "unit-lane"]) {
+    const result = coherence([`skills/${skill}/SKILL.md`]);
+    const prerequisite = result.claims.filter((claim) => claim.kind === "prerequisite");
+    assert.ok(prerequisite.length > 0, `${skill} invokes the dispatcher from its box`);
+    assert.equal(prerequisite.filter((claim) => claim.outcome === "fail").length, 0, `${skill}: ${result.lines.join("\n")}`);
+  }
+  const delegated = coherence(["skills/init-workspace/SKILL.md"]);
+  assert.equal(delegated.claims.filter((claim) => claim.kind === "prerequisite").length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// #305 · the block contract
+// ---------------------------------------------------------------------------
+
+test("#305 the block is byte-stable across runs", () => {
+  const first = coherence([fixture("unit-doc-count.md"), fixture("manifest-f18.json")]);
+  const second = coherence([fixture("unit-doc-count.md"), fixture("manifest-f18.json")]);
+  assert.deepEqual(first.lines, second.lines);
+  assert.equal(first.exitCode, second.exitCode);
+});
+
+test("#305 an unreadable path is a failure, never a silent skip", () => {
+  const result = coherence([`${FIXTURES}/does-not-exist.md`]);
+  assert.equal(result.verdict, "BLOCKED: missing-document");
+  assert.equal(result.exitCode, 1);
+});
+
+test("#305 a document with no extractable claim at all fails closed", () => {
+  const result = coherence([fixture("no-claims.md")]);
+  assert.equal(result.verdict, "BLOCKED: no-claims");
+  assert.equal(result.exitCode, 1);
+});
+
+test("#305 an out-of-scope command is printed as a skip line and counted, never silently passed", () => {
+  const result = coherence([fixture("unit-doc-skip.md")]);
+  const skips = result.lines.filter((line) => line.startsWith("skip: "));
+  assert.ok(skips.length >= 2, result.lines.join("\n"));
+  assert.ok(skips.some((line) => line.includes("command outside the reader allowlist")));
+  assert.ok(skips.some((line) => line.includes("no declared outcome")));
+  assert.match(result.lines.join("\n"), /^claims: 1 checked · 3 skipped$/m);
+});
+
+test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
+  const failing = spawnSync(process.execPath, [path.join(ROOT, "scripts/promise-coherence.mjs"), fixture("unit-doc-count.md")], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  assert.equal(failing.status, 1);
+  assert.match(failing.stdout, /^Promise-coherence: validator /m);
+  assert.match(failing.stdout, /^verdict BLOCKED: validator-mismatch$/m);
+
+  const head = spawnSync(process.execPath, [path.join(ROOT, "scripts/promise-coherence.mjs")], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(head.status, 0, head.stdout);
+  assert.match(head.stdout, /^verdict PASS$/m);
+});
+
+test("#305 the repository's own head is coherent, and the default set is disclosed", () => {
+  const result = coherence([]);
+  assert.equal(result.verdict, "PASS", result.lines.filter((line) => line.startsWith("Promise-coherence:")).join("\n"));
+  const disclosure = result.lines.find((line) => line.startsWith("skip: closed units"));
+  assert.ok(disclosure, "the default set states what it does not scan");
+  assert.match(disclosure, /in-flight documents checked/);
+  const manifest = result.claims.filter((claim) => claim.kind === "formula" && claim.outcome === "pass");
+  assert.ok(manifest.length >= 10, `the manifest's re-bases are recounted: ${manifest.length}`);
+});
