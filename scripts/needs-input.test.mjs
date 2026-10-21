@@ -370,3 +370,110 @@ test("fenced examples inside decisions.md are quoted text, never entries", () =>
   assert.match(result.stdout, /^Open questions: 1$/m);
   assert.ok(!result.stdout.includes("Q9"), result.stdout);
 });
+
+test("the published side-by-side blocks in decisions.md never fail the ledger", () => {
+  // The template agent guide publishes `decisions.md` as one file holding
+  // several typed blocks side by side; the dispatcher reads its own and must
+  // leave the rest untouched instead of failing closed on them.
+  const composed = [
+    `${HEADER.replace(/\n$/, "")}`,
+    OPEN_Q1,
+    "",
+    "path-protection-records@1",
+    "kind | paths | phase | date | authority | justification",
+    "justification | skills/execute-phase/SKILL.md | P10 | 2026-10-19 | execute-phase | the fold repairs the cited guard",
+    "approval | skills/execute-phase/SKILL.md | P10 | 2026-10-19 | human-owner | owner order recorded in the review turn",
+    "",
+    "### Decide for me",
+    "",
+    "| date | decision | reason |",
+    "|---|---|---|",
+    "| 2026-10-19 | unit-lane | the defect is plan-owned |",
+    "",
+  ].join("\n");
+  const result = run(unit({ spec: SPEC, ledger: composed }));
+
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(result.stdout, /^Open questions: 1$/m);
+  assert.ok(!result.stdout.includes("path-protection-records@1"), result.stdout);
+  assert.ok(!result.stdout.includes("Decide for me"), result.stdout);
+});
+
+test("a decision appended after a published side-by-side block still closes its question", () => {
+  const D1 = "D1 | 2026-10-19 | decision | Q1 | human-owner | recorded in the review turn's chat paste | fix — one script | feature: three skills";
+  const composed = [
+    HEADER.replace(/\n$/, ""),
+    OPEN_Q1,
+    "",
+    "path-protection-records@1",
+    "kind | paths | phase | date | authority | justification",
+    "justification | scripts/needs-input.mjs | P10 | 2026-10-19 | execute-phase | the fold repairs the parser",
+    "",
+    D1,
+    "",
+  ].join("\n");
+  const result = run(unit({ spec: SPEC, ledger: composed }));
+
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(result.stdout, /^Open questions: 0$/m);
+  assert.match(result.stdout, /^Decision: none$/m);
+});
+
+test("a ledger that starts with its own block is read even when other blocks precede it", () => {
+  const composed = [
+    "path-protection-records@1",
+    "kind | paths | phase | date | authority | justification",
+    "justification | skills/init-workspace/SKILL.md | P10 | 2026-10-19 | execute-phase | the consent halt is re-cut",
+    "",
+    HEADER.replace(/\n$/, ""),
+    OPEN_Q1,
+    "",
+  ].join("\n");
+  const result = run(unit({ spec: SPEC, ledger: composed }));
+
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(result.stdout, /^Open questions: 1$/m);
+});
+
+test("a line that belongs to no published block still fails closed", () => {
+  const composed = ledger(OPEN_Q1, "a stray prose line that names no block");
+  const result = run(unit({ spec: SPEC, ledger: composed }));
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stdout, /^Reason: malformed-entry$/m);
+});
+
+test("a skill that runs before any unit exists states where the dispatcher gets one", () => {
+  // F53: the Turn-contract box is the checklist an agent ticks before ending a
+  // turn. A skill that runs BEFORE a unit folder exists (init-workspace) can only
+  // satisfy it if the box says where the dispatcher's unit comes from; a skill
+  // that always runs inside one (execute-phase, unit-lane) needs no scratch step.
+  const skills = fileURLToPath(new URL("../skills", import.meta.url));
+  const RUNS_BEFORE_A_UNIT = new Set(["init-workspace"]);
+  for (const name of RUNS_BEFORE_A_UNIT) {
+    const text = fs.readFileSync(path.join(skills, name, "SKILL.md"), "utf8");
+    const box = text.split("## Turn contract")[1];
+    assert.ok(box !== undefined, `${name}: no Turn contract`);
+    // The box is a fenced checklist whose bullets wrap; the halt bullet is the
+    // one carrying the dispatcher or its block, continuation lines included.
+    const lines = box.split("\n## ")[0].split("\n");
+    const start = lines.findIndex((line) => line.includes("needs-input.mjs") || line.includes("open-questions@1"));
+    assert.ok(start > -1, `${name}: the box never names the halt`);
+    const bullet = [lines[start]];
+    for (const line of lines.slice(start + 1)) {
+      if (/^\u2713/.test(line.trim()) || line.trim() === "```") break;
+      bullet.push(line);
+    }
+    assert.match(bullet.join(" "), /scratch/i, `${name}: the box runs the dispatcher without saying where a scratch unit comes from`);
+  }
+});
+
+test("the disabled guard: a box that omits the scratch unit is caught", () => {
+  // Proves the guard above is load-bearing: the pre-fold box text fails it.
+  const legacyBox = "✓ Required user inputs were answered concretely (not defaulted). Consent for\n"
+    + "  every install, hook, and overwrite is explicit; a consent gap runs\n"
+    + "  `node scripts/needs-input.mjs <unit-dir>` and stops with the\n"
+    + "  `open-questions@1` block carrying the questions.";
+  assert.ok(legacyBox.includes("needs-input.mjs"));
+  assert.equal(/scratch/i.test(legacyBox), false);
+});

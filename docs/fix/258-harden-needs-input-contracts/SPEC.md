@@ -39,11 +39,11 @@ workflow is waiting on them.
 ## Acceptance criteria
 
 1. `execute-phase` runs **no interview**: its body replaces the hand-written
-   `Needs-input guard` with a 3–5 line pointer to the shared needs-input
-   contract — a required-input gap runs the three-tier resolution (repo
-   provenance with a recorded search receipt → bounded research returning
-   2–3 options → emit the dispatcher's `open-questions` block and stop). No
-   `re-ask once`; the executor never questions the user. `read-verified`.
+   `Needs-input guard` with one `## Inputs` section — the three-tier ladder
+   (repo provenance with a recorded search receipt → bounded research
+   returning 2–3 options → the dispatcher's `open-questions` block and stop)
+   plus the pointer to `scripts/needs-input.mjs`. No `re-ask once`; the
+   executor never questions the user. `read-verified`.
 2. `unit-lane` body (including its `references/DESIGN.md` and
    `references/RESEARCH.md` interruption points) applies the same contract:
    a blank/vague required input re-enters tier 0/1 with the new question; a
@@ -123,6 +123,23 @@ Consequences applied to this SPEC:
   pieces instead of being patched sentence by sentence; F35–F40 fold as
   before, inside P10's rewrite of the surfaces they cite.
 
+### 2026-10-20 — the widened unit's own scope sections re-cut (review cycle 12: F55, F56)
+
+The widening above re-cut AC1–AC3 but left three sections describing the
+pre-widening shape, and left a length descriptor nobody shipped. Re-cut here,
+no acceptance criterion changed:
+
+- **AC1 and P10 no longer promise a "3–5 line pointer".** The shipped shape is
+  one named-policy section per skill (`## Inputs — artifacts, never questions`,
+  `## Inputs — never inferred, never defaulted`, `## Consent — mandatory,
+  never defaulted`), each carrying the three-tier ladder and the dispatcher
+  pointer. Measured at this head: 19 / 20 / 15 lines.
+- **Non-goals, Future cost and Regression scope admit the dispatcher.** The
+  shipped `scripts/needs-input.mjs` (+ its suite) is the unit's runtime piece,
+  so the sections now scope it in — while keeping the original intent: the
+  gate never asks, never infers, never writes, and the resume decision stays
+  human.
+
 # Status
 
 **replanned** (P1–P6 done and folded F1–F32; 2026-10-19 human-owner decision widened AC1–AC3 upward — phases P7–P11 appended, route: replan, PR #302 stays open)
@@ -131,8 +148,10 @@ Consequences applied to this SPEC:
 
 - No changes to skills other than the three listed (`triage-issue` already
   refuses to proceed without a classification).
-- No new runtime script or machine gate for interactive input — this is a
-  skill-body contract, enforced by the executing agent.
+- No machine gate that *asks* — the dispatcher never interviews, never infers
+  and never writes: `scripts/needs-input.mjs` only reads the unit doc and the
+  ledger and prints the block a run stops on. Whether the run resumes stays a
+  human decision.
 - No recovery of the absorbed `plan-feature-scaffold` / `plan-fix` skills.
 - No golden-fixture interactive-path test — the fixture does not exercise
   interactive input; the existing deterministic suites are the regression
@@ -144,8 +163,10 @@ none
 
 ## Future cost
 
-none — the guard clauses are prose contracts; no standing script
-obligation.
+one standing obligation: the dispatcher and its suite ship with the repo, so
+any later change to the `decisions.md` grammar or the `open-questions@1`
+block has to land with its suite (`scripts/needs-input.test.mjs`) and the
+grammar's own reference in the same PR.
 
 ## Applicable tests
 
@@ -209,10 +230,13 @@ none recorded — no known red gate or open defect affects this unit.
   `node --test scripts/normative-drift.test.mjs` exits 0)
   - Relevant files: skills/orchestration-envelope/references/TURN_CONTRACT.md, AGENTS.md
 - P10 — Shrink the three skills to the pointer covering AC1, AC2, AC3 and
-  AC10: replace each inline `Needs-input guard` section with a 3–5 line
-  pointer (run the dispatcher, paste the block, stop; attended waits,
-  unattended hard-fails); delete `re-ask once`, `Confirmed phase` and
-  `Confirmed file targets` per owner decisions F33-D and F34-D;
+  AC10: replace each inline `Needs-input guard` section with one named-policy
+  section (`## Inputs — artifacts, never questions`, `## Inputs — never
+  inferred, never defaulted`, `## Consent — mandatory, never defaulted`)
+  carrying the three-tier ladder and the dispatcher pointer (run it, paste the
+  block, stop; attended waits, unattended hard-fails); delete `re-ask once`,
+  `Confirmed phase` and `Confirmed file targets` per owner decisions F33-D
+  and F34-D;
   re-classify Input audit E2 and E3; re-base the SKILL_CONTEXT_BUDGETS
   ceilings; fold rows F33 through F40; bump the skills and their CHANGELOG
   and README rows (validator:
@@ -302,7 +326,7 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never interviews: a blank required input runs the three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops routed back to the owning stage (`unit-lane`); Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -cE "requires [a-z ]*input" skills/execute-phase/SKILL.md` matches 4 | guard text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
+| O1 | SPEC AC1 / issue #258 AC1 | `execute-phase` never interviews: a blank required input runs the three-tier dispatch, then `scripts/needs-input.mjs` prints `open-questions@1` and the run stops routed back to the owning stage (`unit-lane`); Turn contract gains the required-inputs box | P2 | P2 | `execute-phase` body | `grep -q "Inputs — artifacts, never questions" skills/execute-phase/SKILL.md` exits 0 (the P2-era count validator is superseded by the P10 shrink — 0 `requires …input` mentions ship by design) | pointer text + `✓ Required user inputs…` box in `skills/execute-phase/SKILL.md` | verified |
 | O2 | SPEC AC2 / issue #258 AC1 | `unit-lane` never defaults unit kind or infers scope from a blank/vague answer; `DESIGN.md`/`RESEARCH.md` interruption points state the same three-tier guard (a doc defect routes to the lane, not to the user); Turn contract gains the box | P3 | P3 | `unit-lane` body + references | `grep -q "Inputs — never inferred, never defaulted" skills/unit-lane/SKILL.md` exits 0 (the P3-era count validator is superseded by the P10 shrink — 0 `requires …input` mentions ship by design) | pointer text + box in `skills/unit-lane/SKILL.md` and references | verified |
 | O3 | SPEC AC3 / issue #258 AC3 | `init-workspace` never proceeds without explicit consent: a consent gap runs the three-tier dispatch then the `open-questions@1` block and stops, no default consent; Turn contract gains the box | P4 | P4 | `init-workspace` body | `grep -q "Consent — mandatory, never defaulted" skills/init-workspace/SKILL.md` exits 0 (the P4-era count validator is superseded by the P10 shrink) | pointer text + box in `skills/init-workspace/SKILL.md` | verified |
 | O5 | SPEC AC6 / issue #258 AC5 | the three bumped skills appear in `CHANGELOG.md` and `README.md` | P5 | P5 | `bump-skill` | `grep -cE "258" CHANGELOG.md` matches 12 at the final head | CHANGELOG rows + README cells for the three skills | verified |
@@ -321,7 +345,7 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 | AC2 | unit-lane + DESIGN.md + RESEARCH.md guards added at P3 and re-cut to the pointer at P10 — the P3 count validator is superseded: 0 mentions ship by design | 0 | `grep -q "Inputs — never inferred, never defaulted" skills/unit-lane/SKILL.md` exits 0 · contract boxes in all three | re-run at the final head (read-verified) |
 | AC3 | init-workspace guard added at P4 and re-cut at P10 — the P4 count validator is superseded: 0 mentions ship by design | 0 | `grep -q "Consent — mandatory, never defaulted" skills/init-workspace/SKILL.md` exits 0 · 1 contract box | re-run at the final head (read-verified) |
 | AC4 | all skills' Turn contract includes required-inputs box (`grep -q "Required user inputs were answered" skills/execute-phase/SKILL.md skills/unit-lane/SKILL.md skills/init-workspace/SKILL.md` exits 0) | 0 | 3 skills updated | read-verified (turn contracts) |
-| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump (execute-phase 5.2.1 + F3 re-basis) | 0 | 693 tests PASS · 28 skills PASS | check-skill-context.mjs + node --test scripts/*.test.mjs |
+| AC5 | root suites: grep validators all pass; context budgets pass after unit-lane ceiling bump (execute-phase 5.2.1 + F3 re-basis) | 0 | 727 tests PASS · 28 skills PASS | check-skill-context.mjs + node --test scripts/*.test.mjs |
 | AC6 | CHANGELOG rows for 3 bumped skills + pi-agentic-workflow re-bundle + pre-existing rows restored | 0 | 12 rows at the final head (fold rows + the three widened-skill majors + orchestration-envelope + pi re-bundles) | grep -cE '258' CHANGELOG.md = 12 |
 | AC7 | `decisions.md` ledger contract published in the template agent guide (append-only `open-question`/`decision` grammar, `open-questions@1` preview) and in the lane docs (`docs/workflow/LANE_FLOW.md` §Needs-input — resolution tiers, dispatcher, interactive vs unattended) — composes with the existing uses (`Decide for me` rows, `path-protection-records@1`, planning ledgers) | 0 | `open-question` present in both files; `node --test scripts/doc-discipline.test.mjs` exit 0 | read-verified (template/AGENTS.md, docs/workflow/LANE_FLOW.md) |
 | AC8 | `node --test scripts/needs-input.test.mjs` — the dispatcher reads the unit doc + `decisions.md` and prints `open-questions@1`; fail-closed matrix covers missing/malformed header, entry, receipt, options, route, authority, duplicate id | 0 | 22 tests · 22 pass · 0 fail (red run first: 22 failures against the absent script) | node --test scripts/needs-input.test.mjs |
@@ -332,7 +356,7 @@ withdrawn. `re-ask once` is superseded repo-wide by the three-tier dispatch
 | AC4 | all three Turn contracts carry the `Required user inputs were answered concretely (not defaulted)` box, reworded to the dispatcher halt | 0 | 3/3 boxes present | read-verified (turn contracts) |
 | AC6 | CHANGELOG rows for execute-phase 6.0.0 · unit-lane 2.0.0 · init-workspace 4.0.0 · orchestration-envelope 2.3.0 · pi package 0.23.0, plus README + SKILLS.md cells | 0 | `node scripts/version-parity-gate.mjs --content --base main` → VERDICT: PASS | version-parity-gate + check-changelog-row |
 | AC10 | `bun scripts/check-skill-context.mjs` (28 skills) and `--routes` (14 routes) pass with every ceiling re-based to the declared formula; root suites green | 0 | 715 tests · 715 pass · 0 fail · PASS context budgets · PASS route budgets | bun scripts/check-skill-context.mjs · node --test scripts/*.test.mjs |
-| AC5 | `node --test scripts/*.test.mjs` at the P11 head — the whole root suite, including the golden fixture's deterministic half, the drift gate, the version-parity gate and the new dispatcher suite | 0 | 715 tests · 715 pass · 0 fail | node --test scripts/*.test.mjs |
+| AC5 | `node --test scripts/*.test.mjs` at the P11 head — the whole root suite, including the golden fixture's deterministic half, the drift gate, the version-parity gate and the new dispatcher suite | 0 | 727 tests · 727 pass · 0 fail | node --test scripts/*.test.mjs |
 | AC9 | `node --test scripts/normative-drift.test.mjs` and `node scripts/phase-lint.mjs <unit doc>` at the P11 head | 0 | 18/18 drift pass · `verdict PASS` (11/11 phases, fingerprint 80fc2b86) | node --test scripts/normative-drift.test.mjs · node scripts/phase-lint.mjs |
 | AC6 | `node scripts/version-parity-gate.mjs --content --base main` — the trigger set changed and the companion row is present | 0 | content parity holds: version 0.21.0 → 0.23.0, companion row present · VERDICT: PASS | version-parity-gate.mjs |
 | AC9 | `open-questions@1` published in its owning reference (`skills/orchestration-envelope/references/TURN_CONTRACT.md` §Open questions — header/fields/fail-block/route/exit codes, `produced-by` the dispatcher) and declared in AGENTS.md `normative-surfaces@1` (`open-questions-block` row, machine `continuation-refusal-type`) | 0 | 18 tests · 18 pass · 0 fail; TURN_CONTRACT ceiling re-based 2200 → 2573 = ceil(2339 × 1.10) with the growth source named | node --test scripts/normative-drift.test.mjs · bun scripts/check-skill-context.mjs |
@@ -365,7 +389,8 @@ Budget: strong
 - 2026-10-19 (P8) — built the needs-input dispatcher (AC8): `scripts/needs-input.mjs` reads `SPEC.md` + `decisions.md`, folds the ledger (only a `decision` closes an `open-question`, a later row re-opens the loop) and prints the `open-questions@1` block with questions, blocks, search receipts, options, the route back and the typed `no-decision-available` continuation; fails closed with a named reason on a missing unit doc or a malformed ledger/dedup/authority defect, exit 2 on usage error. Tests-first: 22 cases red against the absent script, then 22/22 green · root suites 715/715 · `bun scripts/check-skill-context.mjs` PASS → cfd99fa0 — next: P9 (declare `open-questions@1` in TURN_CONTRACT.md + the AGENTS.md normative-surfaces row)
 - 2026-10-19 (P10) — shrank the three skills to the dispatch pointer (AC1–AC3, AC10): removed all three hand-written `## Needs-input guard` sections (`grep -c "^## Needs-input guard"` = 0/0/0) and replaced them with inline contracts — execute-phase `## Inputs — artifacts, never questions`, unit-lane `## Inputs — never inferred, never defaulted`, init-workspace `## Consent — mandatory, never defaulted`; folded F33-F40 (F33/F34 absorbed: `Confirmed phase`/`Confirmed file targets` gone, a bare `<NN-slug>` documented as all-remaining-steps; F35 CHANGELOG rows are now additive and claim only the real removals; F36/F37 manifest narration re-emitted with the measured values and the duplicate `2026-09-22`/`2026-09-18` `policy.declared` clauses dropped for one accurate clause; F38 validators re-run at this head; F39 `--force` stated truthfully; F40 the elided refusal string retired with the section); Input audit E1–E3/U1–U6/I1–I3 re-classified to the no-interview contract; ceilings re-based **down** to the declared formula (execute-phase 3807/315 → 3717/303, unit-lane 3464/280 → 3424/271, init-workspace 3447/251 → 3463/249); versions bumped execute-phase 6.0.0, unit-lane 2.0.0, init-workspace 4.0.0, orchestration-envelope 2.3.0, pi package 0.23.0 with CHANGELOG + README/SKILLS cells → **diff-guard EXCEPTION recorded**: this phase is one atomic SPEC step (its validator spans all three skills at once, so splitting it would break the `count = 0` gate mid-way) and measures 258 lines (+123/−135) across 12 files against the 8-file limit — an honest shrink, not padding; lines are within the 400 budget → next: P11 (full verification of the widened unit)
 - 2026-10-19 (P11) — verified the widened unit (AC5, AC9, AC10, AC6): root suites 715/715, `bun scripts/check-skill-context.mjs` PASS 28 skills, `--routes` PASS 14 routes, `node --test scripts/normative-drift.test.mjs` 18/18, `node scripts/phase-lint.mjs <unit doc>` verdict PASS with fingerprint 80fc2b86 (11/11 phases), `node scripts/version-parity-gate.mjs --content --base main` VERDICT PASS (0.21.0 → 0.23.0) — O7–O11 closed `verified`, every Evidence row re-run at this head → next: `/review-change` on the changed HEAD (mandatory end review)
-- 2026-10-19 (fold F38–F49) — every declared validator re-run and re-cut at the fold head: P2–P4's count validators recorded as superseded by P10's shrink (0 `requires …input` mentions ship by design) with the shipped surfaces pinned instead (`Inputs — artifacts, never questions`, `Inputs — never inferred, never defaulted`, `Consent — mandatory, never defaulted`, each exit 0); P5/O5 re-declared at the final head (12 CHANGELOG rows); Evidence AC1–AC3/AC6 re-run with the true values; the P3 Progress line corrected to the declared 4×. All exit 0 at this head → next: `/review-change` (delta) on the fold head
+- 2026-10-19 (fold F38–F49) — every declared validator re-run and re-cut at the fold head (cycle 12 found O1 still carrying its pre-shrink count validator and Evidence AC5 a stale count; both re-cut 2026-10-20, see the next line): P2–P4's count validators recorded as superseded by P10's shrink (0 `requires …input` mentions ship by design) with the shipped surfaces pinned instead (`Inputs — artifacts, never questions`, `Inputs — never inferred, never defaulted`, `Consent — mandatory, never defaulted`, each exit 0); P5/O5 re-declared at the final head (12 CHANGELOG rows); Evidence AC1–AC3/AC6 re-run with the true values; the P3 Progress line corrected to the declared 4×. All exit 0 at this head → next: `/review-change` (delta) on the fold head
+- 2026-10-20 (fold F50–F57) — cycle 12's repair batch, every declared validator re-run at this head: O1 re-cut to the shipped surface (`grep -q "Inputs — artifacts, never questions"` exit 0), Evidence AC5 counts corrected to the fresh 727 (root suite, exit 0); the manifest narration clauses re-emitted with the shipped growth source and one dated `policy.declared` clause; init-workspace's Turn-contract box now names the scratch unit its §Consent requires; the dispatcher reads its own span of a multi-block `decisions.md` (`path-protection-records@1`, planning ledgers and `Decide for me` records are skipped, 34/34 suite green); AC1/P10 re-cut to the shipped section shape and Non-goals/Future cost/Regression scope scope the dispatcher in. All declared validators exit 0 at this head → next: `/review-change` (delta) on the fold head
 
 ## Next
 
@@ -409,4 +434,7 @@ none
 - All existing skill wording and behavior outside the guard clauses —
   verified by `node --test scripts/*.test.mjs` (root suites, including the
   golden fixture's deterministic half) and `bun scripts/check-skill-context.mjs`.
-- `n/a` beyond that: the guards are additive prose; no runtime behavior changes.
+- The dispatcher's own surface — the `open-questions@1` block, the fail-closed
+  reasons and the exit codes — is behavioral and covered by
+  `scripts/needs-input.test.mjs`; the three skills keep only their pointer
+  text, which the context-budget gate bounds.
