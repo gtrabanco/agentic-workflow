@@ -224,6 +224,14 @@ const runContextBudgetChecks = (selected) => {
 };
 
 const reportContextBudgets = (result) => {
+  // Machine output for the consumers that must reproduce a declared measurement
+  // (`scripts/promise-coherence.mjs` re-runs a budget narration's figures instead
+  // of carrying a second copy of the metric). Same rows, same failures, one owner.
+  if (jsonOutput) {
+    console.log(JSON.stringify({ failures: result.failures, skills: result.rows }, null, 2));
+    if (result.failures.length > 0) process.exit(1);
+    process.exit(0);
+  }
   console.log("skill              main-est  lines  refs  desc-est");
   for (const row of result.rows) {
     console.log(
