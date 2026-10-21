@@ -10,32 +10,19 @@ first. No future-phase work.
 - The unit's Acceptance criteria (filled by the design step)
 - The unit's non-goals
 
-## Fixed output contract
+---
 
-Fill the unit doc's **Tasks** section:
+The plan step is split into two stages: **Orient** (prior-decisions-sweep,
+reading only the design stage's output) and **Ask** (task-cutting, which
+may need user decisions on task scope). Each stage writes its output to
+the unit folder's `decisions.md` and the next stage reads only that output
+— no stage validates itself against the raw context.
 
-```
-P1 — <task description> (validator: <backticked command> <expected outcome>)
-  - Relevant files: <path, path…>
-P2 — <task description> (validator: <backticked command> <expected outcome>)
-…
-Pn — last task is verification when the unit has behavior
-```
+## Orient (prior-decisions-sweep)
 
-Both phase grammars are accepted (owner: `phase-contract`): these bullets, or
-full plan-style `## P<n> —` blocks when the unit doc already carries them —
-`phase-lint` parses either and answers `no-phases` only when it finds neither.
-A bullet's `(validator: …)` span is its machine-checkable done-when (a
-backticked command **and** an expected outcome, e.g. `exits 0`), and the nested
-`Relevant files:` line is **metadata, never a task** — it is that phase's read
-set, written from the planner's own discovery, and a file that is missing from
-it is never out of scope for the executor.
-
-## Prior-decisions contradiction sweep
-
-Before the plan is accepted, sweep its claims against what the repository has
-**already decided in writing** — a plan must not contradict a prior decision in
-architecture, engineering, product, or any other domain.
+Sweep the plan's claims against what the repository has **already decided in
+writing**. This stage reads only the design stage's output (the ASK-* rows
+in `decisions.md`) — it does NOT re-read the SPEC's original text.
 
 **Candidate sources** — deterministic keyword/FTS matching, no new index and no
 new tooling: `docs/features/<NN>-<slug>/decisions.md`,
@@ -64,6 +51,42 @@ candidate match is clean and proceeds** — a miss never blocks it, a missed
 candidate can never void a plan, and the sweep issues no stage verdict and grants no
 gate of its own.
 
+For each candidate hit, append a row to `decisions.md`:
+
+```
+| id | claim | prior decision | source path | relation |
+|---|---|---|---|---|
+| OR-PLAN-001 | <the plan claim> | <the recorded decision> | <path:line> | contradicts / compatible |
+```
+
+## Ask (task-cutting)
+
+Cut tasks from acceptance criteria. Each task names its validator. Smallest
+first. No future-phase work.
+
+Fixed output contract — fill the unit doc's **Tasks** section:
+
+```
+P1 — <task description> (validator: <backticked command> <expected outcome>)
+  - Relevant files: <path, path…>
+P2 — <task description> (validator: <backticked command> <expected outcome>)
+…
+Pn — last task is verification when the unit has behavior
+```
+
+Both phase grammars are accepted (owner: `phase-contract`): these bullets, or
+full plan-style `## P<n> —` blocks when the unit doc already carries them —
+`phase-lint` parses either and answers `no-phases` only when it finds neither.
+A bullet's `(validator: …)` span is its machine-checkable done-when (a
+backticked command **and** an expected outcome, e.g. `exits 0`), and the nested
+`Relevant files:` line is **metadata, never a task** — it is that phase's read
+set, written from the planner's own discovery, and a file that is missing from
+it is never out of scope for the executor.
+
+If the Orient stage found any `contradicts` hits that need user decisions,
+batch them into a single form-turn (≤6 slots) following the design step's
+gap-interview mechanics.
+
 ## Planning ledgers (same step)
 
 Cut both planning ledgers in the same pass — the plan snapshot binds them, and
@@ -89,6 +112,7 @@ name those files instead.
 
 ## Checklist (pass only if)
 
+- [ ] The orient stage ran: all plan claims swept against candidate sources, hits recorded as OR-PLAN-* rows
 - [ ] Every AC maps to at least one task
 - [ ] Tasks are ordered smallest first
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
@@ -111,3 +135,4 @@ name those files instead.
 - Do not turn the sweep into a gate, stage verdict or blocking check — it routes,
   it never blocks a miss, and it adds no authority
 - Do not record a `prior decision` that no source `path:line` cites
+- Do not validate your own output against the raw context
