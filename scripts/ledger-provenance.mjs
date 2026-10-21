@@ -28,7 +28,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { basename, relative, resolve } from "node:path";
+import { basename, isAbsolute, relative, resolve } from "node:path";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
 /**
@@ -181,9 +181,18 @@ const namesId = (sha, id) => idsInSubject(messageOf(sha)).has(id);
  * tying a citation to one of those let a commit that merely discussed a finding
  * pass the recount for it (F80).
  */
+const subjectCache = new Map();
 const foldSubjectIds = (sha) => {
-  const subject = git("log", "-1", "--format=%s", sha);
-  return /\bfold\b/i.test(subject) ? idsInSubject(subject) : new Set();
+  // PERF (cycle 10): one `git log -1` process per tied citation cost 15x the old
+  // recount (509 child processes on an 81-row ledger). The walk already caches every
+  // commit message, so the subject is its first line — memoised, zero processes.
+  if (subjectCache.has(sha)) return subjectCache.get(sha);
+  const message = messageCache.has(sha) ? messageCache.get(sha) : git("log", "-1", "--format=%B", sha);
+  messageCache.set(sha, message);
+  const subject = message.split("\n")[0] ?? "";
+  const ids = /\bfold\b/i.test(subject) ? idsInSubject(subject) : new Set();
+  subjectCache.set(sha, ids);
+  return ids;
 };
 
 const filesCache = new Map();
@@ -204,6 +213,17 @@ function verifiedTokens(text) {
 }
 
 const rel = repoRelative(ledger);
+// SEC (cycle 10): `--annotate` rewrote whatever path argv named — no containment,
+// no extension check — and `repoRelative` merely falls back to the absolute path
+// outside the checkout. A ledger is a repository document; refuse anything else
+// before a single byte is read, so `--check` (read-only) cannot be turned into a
+// fleet-wide rewrite by a typo either.
+if (!rel || rel.startsWith("..") || isAbsolute(rel) || !rel.endsWith(".md")) {
+  process.stderr.write(
+    `REFUSED: ${ledger} is not a Markdown ledger inside the checkout (${topRoot || "unknown root"}) — this tool never writes outside the repository\n`,
+  );
+  process.exit(2);
+}
 const parsed = parseRows(readFileSync(ledger, "utf8"));
 const { rows: current, rejected, counted } = parsed;
 // The parser's own completeness clause: a counted line that neither parsed nor was
@@ -415,7 +435,12 @@ if (annotate) {
     const cells = line.split(CELL_RE);
     if (cells.length !== 9) return line;
     const route = cells[6].trim();
-    if (entry.fold) {
+    // A1: `cited-unverified` / `dangling` reach here without the token the append
+    // path interpolates, so the annotator wrote the literal `· undefined <sha>` —
+    // a token outside the contract's closed vocabulary (`ledger-ownership@1`), and
+    // one the re-entry guard then matched against itself, so the row never re-opened.
+    // Only a real fold claim appends; everything else re-opens with evidence.
+    if (entry.fold && entry.token) {
       // F59: `\s` inside a template literal collapses to the character `s`, so the old
       // guard pattern (`·s*folds…`) could never match the marker this branch writes.
       // The escapes are doubled: a re-entry check that never re-matches is no check.
@@ -427,9 +452,8 @@ if (annotate) {
       // F58: the note must name only what the walk observes — the row and its missing
       // evidence. It used to hardcode `P20`, a phase no plan of the annotated unit
       // contains: a mechanical token inventing a fact. No phase, no fabricated number.
-      cells[6] = /REOPENED/.test(route)
-        ? ` ${route} `
-        : ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
+      if (/ · REOPENED — provenance unproven: /.test(route)) return line;
+      cells[6] = ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
     }
     if (cells.join("|").split(CELL_RE).length !== 9) return line; // never break the 7-column schema
     return cells.join("|");
@@ -448,24 +472,29 @@ if (annotate) {
 }
 
 if (checkOnly) {
-  const unparsed = report.filter((e) => e.status === "unparsed");
-  const dangling = report.filter((e) => e.status === "dangling");
-  const unticked = needsWork.filter((e) => e.status !== "unparsed" && e.status !== "dangling");
   if (needsWork.length) {
-    const parts = [];
-    if (dangling.length) {
-      parts.push(
-        `${dangling.length} folded row(s) cite a commit outside HEAD's history: ${dangling.map((e) => `${e.id} (${e.cited.join("")})`).join(", ")}`,
-      );
+    // A2: three defects with three remedies were collapsed into one
+    // "lack a verified commit token" line, so a reader could not tell a re-point
+    // from a re-annotation from an arity repair. One line per cause.
+    const byStatus = new Map();
+    for (const entry of needsWork) {
+      if (!byStatus.has(entry.status)) byStatus.set(entry.status, []);
+      byStatus.get(entry.status).push(entry);
     }
-    if (unticked.length) {
-      parts.push(`${unticked.length} folded row(s) lack a verified commit token: ${unticked.map((e) => e.id).join(", ")}`);
+    const REPAIR = {
+      dangling: "cite a commit outside HEAD's history — re-point the marker at the commit that folded the row",
+      "cited-unverified": "cite a reachable commit whose subject does not claim the row — cite the commit that folded it",
+      unproven: "are ticked with no commit behind them — cite the fold or re-open them",
+      unparsed: "the 7-column schema refused (arity) — repair the columns; no tool may invent them",
+    };
+    const paused = [...byStatus].filter(([status]) => !status.startsWith("recovered"));
+    if (paused.length) {
+      process.stdout.write(`CHECK FAIL: ${needsWork.length} row(s) need a repair, by cause:\n`);
+      for (const [status, entries] of paused) {
+        process.stdout.write(`  ${entries.length} ${status}: ${entries.map((e) => e.id).join(", ")} — ${REPAIR[status] ?? "repair the citation"}\n`);
+      }
+      process.exit(1);
     }
-    if (unparsed.length) {
-      parts.push(`${unparsed.length} row(s) the 7-column schema refused were read by nothing: ${unparsed.map((e) => e.id).join(", ")}`);
-    }
-    process.stdout.write(`CHECK FAIL: ${parts.join("; ")}\n`);
-    process.exit(1);
   }
   process.stdout.write("CHECK PASS: every folded row names a verified commit\n");
 }

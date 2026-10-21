@@ -105,7 +105,11 @@ function cellsOf(line) {
  * the cell's leading token, never on the whole cell (F30: the annotated spellings
  * made merged units read as open, which routed them to the fold and the planner).
  */
-const NOT_OPEN = new Set(["yes", "—", "-", "n/a", ""]);
+// `ignore` is the classifier's DISPOSITION (`review-implementation`'s `ignore`
+// class): the row is decided, never routed. Its `folded` cell stays `no`, which
+// is exactly why it must be named here — unit 74's F-74-6 kept a merged,
+// fully-ticked unit on `route: fold` (same class as the padded MARK header row).
+const NOT_OPEN = new Set(["yes", "—", "-", "n/a", "", "ignore"]);
 export const isOpen = (folded) => {
   const value = String(folded ?? "").trim().toLowerCase();
   if (value === "") return false;
@@ -123,7 +127,10 @@ export const isOpen = (folded) => {
  */
 export const isMarkRow = (id) => {
   const value = String(id ?? "").trim();
-  return /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value) || /^GATE-RAN$/i.test(value);
+  // `MARK` is the id cell of a padded ledger HEADER row (`ledger-ownership@1` fixes
+  // that shape). Without it the header parses as an open finding and routes a
+  // fully-ticked unit back to `/fold-findings`.
+  return /^MARK$/i.test(value) || /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value) || /^GATE-RAN$/i.test(value);
 };
 
 const isSeparator = (id) => /^[-:\s]*$/.test(String(id ?? ""));
