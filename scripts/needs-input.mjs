@@ -29,8 +29,10 @@
  * `malformed-entry`, `missing-search-receipt`, `missing-options`,
  * `unknown-route`, `unknown-question`, `invalid-authority`, `duplicate-id`.
  *
- * Read-only, dependency-free, and fence-aware: a fenced example inside
- * `decisions.md` is quoted text, never an entry.
+ * Read-only, dependency-free, and block-aware: a fenced example inside
+ * `decisions.md` is quoted text, never an entry, and so is every other
+ * published block the file holds side by side — this grammar owns its own
+ * span, from its `open-questions@1` marker to the next published block.
  */
 
 import fs from "node:fs";
@@ -47,6 +49,16 @@ export const OPTIONS_SEPARATOR = /\s+\|\s+/;
 export const MIN_CELLS = 7;
 /** Joiner for cells that re-join into the `options` column. */
 const OPTIONS_JOIN = " | ";
+/**
+ * Markers of the other typed blocks the template agent guide publishes in the
+ * same `decisions.md` (path-protection records, planning ledgers, the
+ * `Decide for me` records). This grammar stops at any of them, fenced or not;
+ * an entry row closes the sibling span again, so a block never swallows the
+ * ledger line that follows it.
+ */
+export const SIBLING_BLOCK_MARKERS = Object.freeze([
+  /^([a-z][a-z0-9-]*@\d+|#{1,6} .+)$/i,
+]);
 /** The ledger header line, verbatim. */
 export const LEDGER_HEADER = "open-questions@1";
 /** Column header the ledger carries under its contract id. */
@@ -110,7 +122,24 @@ export function splitRow(line) {
 }
 
 /**
- * Parse `decisions.md` into typed entries, ignoring fenced examples.
+ * Whether a line opens one of this grammar's entry rows: an id cell, a date
+ * cell and a `type` cell of `open-question` or `decision`.
+ *
+ * @param {string} line
+ */
+function looksLikeEntry(line) {
+  const { cells } = splitRow(line);
+  return cells.length >= 3 && /^\d{4}-\d{2}-\d{2}$/.test(cells[1])
+    && (cells[2] === "open-question" || cells[2] === "decision");
+}
+
+/**
+ * Parse `decisions.md` into typed entries.
+ *
+ * The file owns several typed blocks side by side. This grammar reads its own
+ * span — the `open-questions@1` marker, its column row, its entries — and
+ * skips every other block wholesale: fenced examples, the other published
+ * typed blocks, and headings, each running until the next block marker.
  *
  * @param {string} text
  * @returns {{ ok: true, entries: Array<Record<string, unknown>> }
@@ -120,6 +149,7 @@ export function parseLedger(text) {
   let fence = null;
   let seenHeader = false;
   let seenColumns = false;
+  let skippingSibling = false;
   let lineNo = 0;
   const entries = [];
 
@@ -135,16 +165,33 @@ export function parseLedger(text) {
     }
     const opened = FENCE_OPEN.exec(trimmed);
     if (opened) {
+      skippingSibling = false;
       fence = { char: opened[1][0], length: opened[1].length };
       continue;
     }
     if (trimmed === "") continue;
 
-    if (!seenHeader) {
-      if (trimmed !== LEDGER_HEADER) return { ok: false, reason: "malformed-ledger-header", where: `${LEDGER}:1` };
-      seenHeader = true;
+    // A sibling block owns its span: skip it until the next block marker, so a
+    // published `path-protection-records@1`, planning table or `Decide for me`
+    // record can never be mistaken for one of this grammar's entries.
+    if (trimmed === LEDGER_HEADER) {
+      skippingSibling = false;
+      if (!seenHeader) {
+        seenHeader = true;
+        continue;
+      }
+      if (seenColumns) return { ok: false, reason: "duplicate-id", where };
       continue;
     }
+    if (SIBLING_BLOCK_MARKERS.some((marker) => marker.test(trimmed))) {
+      skippingSibling = true;
+      continue;
+    }
+    // An entry row ends a sibling span: only the published block shapes are
+    // skipped, never the ledger line a previous block happens to precede.
+    if (skippingSibling && !looksLikeEntry(trimmed)) continue;
+    skippingSibling = false;
+    if (!seenHeader) return { ok: false, reason: "malformed-ledger-header", where: `${LEDGER}:1` };
     if (!seenColumns) {
       const { cells } = splitRow(trimmed);
       const normalized = cells.map((cell) => cell.toLowerCase().replace(/[\s-]+/g, "-"));

@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 4.0.0
+version: 4.0.1
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -22,9 +22,9 @@ raw placeholders.
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Consent for
-  every install, hook, and overwrite is explicit; a consent gap runs
-  `node scripts/needs-input.mjs <unit-dir>` and stops with the
-  `open-questions@1` block carrying the questions.
+  every install, hook, and overwrite is explicit; a consent gap runs the
+  three-tier dispatch and stops with the dispatcher's `open-questions@1` block
+  — against a scratch unit folder when no unit exists yet (§Consent).
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
