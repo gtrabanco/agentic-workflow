@@ -250,6 +250,8 @@ output (≤2 lines), verified-by.
 | R4 | `engram doctor` finding categories (grep of check ids) | exit 0 | `sync_target_closed_space` error; `ambiguous_active_runtime_sessions`, `unowned_session_project`, `session_project_directory_mismatch` warnings; 9 `foreign_sync_target` rows with unacked mutations | research step, 2026-10-21 |
 | R5 | `engram --help`, `engram setup --help`, `engram sync --help`; `grep -n consent skills/init-workspace/SKILL.md skills/init-workspace/references/SERENA.md` | exit 0 | `engram setup <agent> [--protocol=slim\|full]` exists; sync is local-by-default, cloud needs explicit `--project`; init-workspace consent rule + SERENA.md:84 "exactly what was written" is the parity shape | research step, 2026-10-21 |
 | R6 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` | exit 0 | 9 steps, full catalog, budget strong (block pasted under Triaged steps) | research step, 2026-10-21 |
+| R7 | design provenance search + claim journal (`sources.md`, 22 `INV-*` rows) | exit 0 | greps recorded per row (repo footprint, pi `registerMcpServer` docs, #219 body, prior units); 19 confirmed / 2 inferred / 1 unknown | design step, 2026-10-21 |
+| R8 | `node scripts/needs-input.mjs docs/features/66-engram-memory-substrate` | exit 0 | 3 open questions (Q1–Q3), route `design`, continuation `no-decision-available` | design step, 2026-10-21 |
 
 ## Progress log
 
@@ -261,11 +263,15 @@ output (≤2 lines), verified-by.
   3 uncertainties recorded, no design decision taken → evidence: R1–R6 rows —
   next: design step
   (provenance search → sources.md → gap interview)
+- 2026-10-21 22:48 — design stages 1–3: 22-claim `sources.md` journal (tier 0
+  first), 4 dated assumptions, `open-questions@1` with Q1–Q3 pasted by
+  needs-input (R7, R8) + `BRIEF.md` → evidence: R7–R8 — next: gap interview
+  with the owner (stage 4 decide on the answers)
 
 ## Next
 
-Design step: Stage 1 provenance search → `sources.md` claim journal → orient →
-gap interview (`open-questions@1` in `decisions.md`).
+Gap interview (design stage 3): owner answers Q1–Q3 (`decisions.md`), then
+stage 4 records `decision` rows and finalizes the acceptance criteria.
 
 ## References
 
