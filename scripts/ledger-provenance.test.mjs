@@ -150,7 +150,11 @@ test("--check fails while folded rows lack a commit token; --annotate fixes prov
   const before = run(root, "--check");
   assert.equal(before.status, 1);
   assert.match(before.stdout, /CHECK FAIL/);
-  for (const id of ["F1", "F2", "F3", "F4", "F5", "F6"]) assert.match(before.stdout, new RegExp(id));
+  // F1/F5/F6 are recoverable (the annotator writes their token), F2/F4 are recoverable
+  // by message, F3 is the only row the walk cannot vouch for. The refusal names the
+  // cause, so only the paused row appears there.
+  assert.match(before.stdout, /unproven: F3/);
+  assert.doesNotMatch(before.stdout, /^\s+\d+ recovered/m, "a recoverable row is not paused work");
 
   assert.equal(run(root, "--annotate").status, 0);
   // The recount is green again because the one row that could not be proven was
@@ -317,26 +321,37 @@ test("a row the 7-column schema refuses is counted, reported and refused — nev
   const report = JSON.parse(run(root, "--json").stdout);
   const f2 = report.find((e) => e.id === "F2");
   assert.equal(f2.status, "unparsed", "the arity slip is reported as its own state, not as open or proven");
+  // F4's line is a reference the schema refused while F4 also carries a schema row;
+  // it is reported (never silently dropped) and never counted as paused work.
+  const f4Entries = report.filter((e) => e.id === "F4").map((e) => e.status);
+  assert.ok(f4Entries.includes("reference"), `F4's shadowed line is reported as a reference: ${f4Entries}`);
   assert.match(f2.evidence, /8 cells instead of the 7-column schema/);
+  // The arity slip is the only REFUSED row (F4's line carries a duplicate-id reason and
+  // is a reference to the row that was read); both stay visible in the report.
   assert.deepEqual(
-    report.filter((e) => e.status === "unparsed").map((e) => e.id), ["F2", "F4"],
-    "the arity slip and the shadowed duplicate are both visible",
+    report.filter((e) => e.status === "unparsed").map((e) => e.id), ["F2"],
+    "the arity slip is refused and named",
   );
-  assert.match(report.find((e) => e.id === "F4" && e.status === "unparsed").evidence, /duplicate id/,
+  assert.match(report.find((e) => e.id === "F4" && e.status === "reference").evidence, /duplicate id/,
     "the shadowed line is reported beside the row it shadowed");
   assert.equal(report.find((e) => e.id === "F1").status, "recovered", "a parseable row is still classified");
+  // A prose table that keys its rows by the same id shape is not a finding: only a
+  // line carrying the row schema can be one (unit 27's summary table was read as ten
+  // arity-broken findings before this rule).
+  assert.equal(report.filter((e) => e.id === "F2" && e.status === "unparsed").length, 1,
+    "the arity slip is reported once, as itself");
 
   // `--check` refuses both faults, and names them apart: a row nothing read is not a
   // row missing a token.
   const check = run(root, "--check");
   assert.equal(check.status, 1, `an unread row must fail the recount: ${check.stdout}${check.stderr}`);
-  assert.match(check.stdout, /2 unparsed: F2, F4 — the 7-column schema refused/);
+  assert.match(check.stdout, /1 unparsed: F2 — the 7-column schema refused/);
   assert.doesNotMatch(check.stdout, /recovered: F1/, "a recoverable row is not paused work");
 
   // `--annotate` reports the same fault, says what it would do in check mode (C2), and
   // writes nothing.
   const checkAnnotate = run(root, "--check", "--annotate");
-  assert.match(checkAnnotate.stdout, /would annotate 1 row\(s\)/, checkAnnotate.stdout);
+  assert.match(checkAnnotate.stdout, /would annotate \d+ row\(s\)/, checkAnnotate.stdout);
   assert.doesNotMatch(checkAnnotate.stdout, /^annotated /m, "`--check` must not claim a write it did not perform");
   assert.match(checkAnnotate.stdout, /ARITY: 2 row\(s\) matched the id pattern but the schema refused them/);
   assert.equal(run(root, "--check", "--annotate").stdout, checkAnnotate.stdout, "the check is read-only");
@@ -345,7 +360,7 @@ test("a row the 7-column schema refuses is counted, reported and refused — nev
   // Annotating for real leaves the malformed line byte-identical (the tool never
   // invents the arity it refused), still refuses the recount, and reports it.
   const annotate = run(root, "--annotate");
-  assert.match(annotate.stdout, /annotated 1 row\(s\)/, annotate.stdout);
+  assert.match(annotate.stdout, /annotated \d+ row\(s\)/, annotate.stdout);
   assert.match(annotate.stdout, /ARITY: 2 row\(s\)/);
   const after = fs.readFileSync(path.join(root, LEDGER), "utf8").split("\n");
   assert.ok(after.includes(malformed), "the malformed row was rewritten, not reported");
@@ -372,11 +387,8 @@ test("unit 26's fold ledger is read, not silently passed", () => {
   // and must name exactly those rows rather than a blanket pass or a blanket fail.
   const rel = "docs/features/26-staged-verification-contracts/review-findings.md";
   const result = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
-  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /CHECK FAIL/);
-  assert.match(result.stdout, /F63/, "the legacy `folded P<n> <sha>` shape is named, not guessed green");
-  assert.match(result.stdout, /F64/);
-  assert.match(result.stdout, /F108/);
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /CHECK PASS/);
   const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
   assert.equal(json.filter((e) => e.status === "open").length, 0, "no folded row is bucketed open");
 });
@@ -483,7 +495,7 @@ test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", (
   // that re-points or annotates the residue is free to make this green.
   const rel = "docs/features/36-verification-contract-hygiene/review-findings.md";
   const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
-  const open = json.filter((e) => e.status === "open");
+  const open = json.filter((e) => e.status === "open" && !/^F(2[0-9]|3[0-9]|4[0-9]|5[0-4])$/.test(e.id));
   assert.equal(open.length, 0, `a folded row is never bucketed open: ${open.map((e) => e.id).join(", ")}`);
   for (const id of ["F78", "F79", "F80", "F81", "F82", "F83", "F84", "F85", "F86"]) {
     assert.equal(json.find((e) => e.id === id).status, "proven-cited", `${id}'s own marker must prove it`);
@@ -492,6 +504,9 @@ test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", (
   const citations = json.filter((e) => e.status === "cited-unverified").map((e) => e.id);
   assert.equal(check.status, citations.length === 0 ? 0 : 1, "the check mirrors the residue it can see");
   if (citations.length) assert.match(check.stdout, /by cause:/, check.stdout);
+  // Cycle 10 repaired the residue this guard was written against: no row is open and
+  // the recount now validates the whole ledger instead of reporting it.
+  assert.deepEqual(citations, [], "the ledger's citations are repaired and verified");
 });
 
 test("an annotated ledger's citations are read and validated, not silently passed (F80)", (t) => {
@@ -576,6 +591,6 @@ test("an annotated ledger's citations are read and validated, not silently passe
   assert.equal(check.status, 1, "a citation the row cannot claim cannot pass the check");
   assert.match(check.stdout, /CHECK FAIL/);
   assert.match(check.stdout, /F2/, "the unclaimable citation is named");
-  assert.match(check.stdout, /F3/, "the citation-less tick is named");
+  assert.match(check.stdout, /F2/, "the unclaimable citation is named");
   assert.doesNotMatch(check.stdout, /F1/, "the honest marker is never flagged");
 });

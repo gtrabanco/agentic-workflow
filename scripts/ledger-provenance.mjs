@@ -127,12 +127,25 @@ function parseRows(text) {
     if (!match) continue;
     counted += 1;
     const cells = line.split(CELL_RE).slice(1, -1).map((cell) => cell.trim());
+    // A ledger keys more than one table by `| F<n> |`: the findings table, and prose
+    // summaries such as `| Row | Repaired in | What the fold had to get right |`.
+    // Unit 27's ten `unparsed` rows were that second table — counted as arity-broken
+    // findings and then shadowed by the real row's duplicate. The row schema is what
+    // defines a finding, so a line that does not carry it is a reference to one, and
+    // the first line that DOES carry it is the finding (first-read-wins).
     if (cells.length !== 7) {
+      // A reference line, not a silently-skipped one: it is REPORTED, so the parser's
+      // completeness invariant (`counted === read + refused`) keeps holding and an id
+      // that never carries the schema anywhere stays visible. A ledger keys more than
+      // one table by `| F<n> |` — the findings table and prose summaries such as
+      // `| Row | Repaired in | What the fold had to get right |`; unit 27's ten
+      // "unparsed rows" were that summary, not broken findings.
       rejected.push({ id: match[1], reason: `${cells.length} cells instead of the 7-column schema` });
       continue;
     }
     if (rows.has(match[1])) {
       rejected.push({ id: match[1], reason: "duplicate id in the file — only the last row is read" });
+      continue;
     }
     rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6], cell: cells[6] });
   }
@@ -186,13 +199,18 @@ const foldSubjectIds = (sha) => {
   // PERF (cycle 10): one `git log -1` process per tied citation cost 15x the old
   // recount (509 child processes on an 81-row ledger). The walk already caches every
   // commit message, so the subject is its first line — memoised, zero processes.
+  //
+  // The subject claims a row when it NAMES it: the branch's fold commits are written
+  // `fix(36): bump F21 — …`, `fix(36): F22 — …`, `fix(unit-route): gate close-out…
+  // (F31, F6)` as often as `… fold F43+…`. Requiring the literal word `fold` here read
+  // 31 genuinely-folded rows as never folded; what must not count is the commit that
+  // only RECORDED the row open, which the caller excludes by its introduction commit.
   if (subjectCache.has(sha)) return subjectCache.get(sha);
   const message = messageCache.has(sha) ? messageCache.get(sha) : git("log", "-1", "--format=%B", sha);
   messageCache.set(sha, message);
   const subject = message.split("\n")[0] ?? "";
-  const ids = /\bfold\b/i.test(subject) ? idsInSubject(subject) : new Set();
-  subjectCache.set(sha, ids);
-  return ids;
+  subjectCache.set(sha, idsInSubject(subject));
+  return subjectCache.get(sha);
 };
 
 const filesCache = new Map();
@@ -307,7 +325,12 @@ for (const [id, row] of current) {
   if (flip) entry.flip = short(flip.sha);
   const nonLedger = citedPaths(row).filter((path) => path !== rel);
 
-  const marker = foldMarker(row.cell);
+  // The citations a row can carry live in BOTH cells the annotator writes: the folded
+  // cell's marker and the route-cell marker it emits beside the row's prose. Reading
+  // only the folded cell made every row annotated in the route cell unrecoverable —
+  // and every row the annotator had re-opened cite a phantom `undefined <sha>` in the
+  // route cell that nothing resolved.
+  const marker = foldMarker(row.cell) ?? foldMarker(row.route);
   const marked = marker === null ? null : git("rev-parse", "--verify", "--quiet", `${marker}^{commit}`).trim();
 
   const cited = verifiedTokens(`${row.file} ${row.route}`);
@@ -404,13 +427,24 @@ for (const [id, row] of current) {
 }
 
 // --- 4. report and optional mutation ----------------------------------------
-// A line the schema refused is reported as its own `unparsed` entry: it is neither
-// proven nor open, and it must reach the `--check` refusal and the detail loop.
+// A line the schema refused is reported as its own entry: it is neither proven nor
+// open, and it must reach the detail loop. When the same id also carries a schema row
+// the line is a NAME REFERENCE (a prose summary table keyed by finding id) — reported
+// as `reference`, never as work waiting on anyone.
 for (const drop of rejected) {
-  report.push({ id: drop.id, folded: null, status: "unparsed", fold: null, flip: null, evidence: drop.reason });
+  report.push({
+    id: drop.id,
+    folded: null,
+    status: current.has(drop.id) ? "reference" : "unparsed",
+    fold: null,
+    flip: null,
+    evidence: drop.reason,
+  });
 }
 const buckets = report.reduce((acc, e) => ({ ...acc, [e.status]: (acc[e.status] ?? 0) + 1 }), {});
-const needsWork = report.filter((e) => e.status !== "proven-cited" && e.status !== "open");
+const needsWork = report.filter(
+  (e) => !["proven-cited", "recovered", "recovered-by-message", "open", "reference"].includes(e.status),
+);
 
 if (asJson) process.stdout.write(JSON.stringify(report, null, 2) + "\n");
 if (!asJson) {
@@ -425,10 +459,27 @@ if (!asJson) {
 if (annotate) {
   const byId = new Map(report.map((e) => [e.id, e]));
   const original = readFileSync(ledger, "utf8").split("\n");
-  const out = original.map((line) => {
-    const match = ROW_RE.exec(line);
-    if (!match) return line;
+  const out = original.map((rawLine) => {
+    const match = ROW_RE.exec(rawLine);
+    if (!match) return rawLine;
     const entry = byId.get(match[1]);
+    // A1 (cycle 10): the REOPENED note this path writes puts the row back to
+    // `folded: no`, so the recount buckets it `open` and every later run skipped the
+    // line it had just written — the note survived as a stale claim, and a row that
+    // is now provable could never recover because its own note blocked the rewrite.
+    // The note is the annotator's alone: strip it first, then re-derive from the walk.
+    let line = rawLine;
+    // The note is re-derived only for a row the walk is about to re-open, where its
+    // evidence string is the same bytes it wrote last time. For a row that is still
+    // `open` or now `proven-cited`, the note is the last thing that happened to it and
+    // stripping it would make the next run re-strip and the run after re-write.
+    const stale = /\s*·\s*REOPENED — provenance unproven:[^|]*(?=\s*\|)/.exec(line);
+    const reopening = entry && !["open", "proven-cited", "unparsed"].includes(entry.status) && !entry.token;
+    if (stale && reopening) {
+      // remove exactly the note and the padding it owns — never the row's own text
+      line = line.slice(0, stale.index) + line.slice(stale.index + stale[0].length);
+      line = line.replace(/\s*\|\s*$/, " |");
+    }
     // An `unparsed` row is not annotatable: writing a token into a line the schema
     // refused would be the tool inventing the arity it just refused.
     if (!entry || entry.status === "open" || entry.status === "proven-cited" || entry.status === "unparsed") return line;
