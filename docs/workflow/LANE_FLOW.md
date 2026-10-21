@@ -10,7 +10,7 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
 ```
 
 1. **idea** — a feature request, issue, or raw concept. No unit folder yet.
-2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` (13 sections) or
+2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` (14 sections) or
    `docs/fix/<issue>-<slug>/SPEC.md`. Created by `unit-lane` from the template.
 3. **triage** — `unit-route.mjs --triage <NN>` reads the unit doc's observable
    facts (type, scope, tests) and returns a deterministic ordered step list.
@@ -70,6 +70,49 @@ per-phase hand-offs.
 Paste this block **verbatim** into the unit doc's Evidence section header. It is
 the authority — the model never re-derives, reorders, or invents steps.
 
+## Needs-input — the open-question ledger
+
+A step that cannot proceed because a fact is missing asks **the plan, not the
+user**. The conversation lives in the unit folder's `decisions.md` as an
+append-only, two-typed ledger (`open-questions@1`, the grammar the template's
+agent guide publishes):
+
+- `open-question` — the question, why it blocks, the **search receipt** (where
+  the repository was searched: `path:line` hits, greps, the unit folder, prior
+  units of the same area), the researched options with their trade-offs, and the
+  `route` back to the stage that owns the fact (`design` for
+  scope/architecture, `unit-lane` for plan-owned facts).
+- `decision` — authority `human-owner`, the date, what was chosen, what was
+  discarded and why.
+
+The resolution order is fixed and never skipped: **(0) provenance** — search the
+repository's own docs first and record where; **(1) research** — an external gap
+is researched and returned as 2–3 concrete options with trade-offs and a
+recommendation; **(2) emit and stop** — the step stops with the open questions
+written out. A request for more research, a new option, or a discussion is a
+legitimate answer that appends a new `open-question` row and re-enters tier 0/1;
+only a user decision closes a question.
+
+Consume it with the deterministic dispatcher:
+
+```
+node scripts/needs-input.mjs <unit-dir> [--json]
+```
+
+It reads the unit doc plus `decisions.md` and prints the versioned
+`open-questions@1` block (questions, search receipts, options, the route back,
+and the typed continuation — the schema's existing `no-decision-available`,
+because no decision is available by definition). Exit 0 means a well-formed
+artifact and a block on stdout; a missing or malformed `decisions.md` exits
+non-zero and prints a `NEEDS-INPUT FAIL` line, so a broken ledger never reads as
+"nothing pending". The owning grammar lives in
+[`skills/orchestration-envelope/references/TURN_CONTRACT.md`](../../skills/orchestration-envelope/references/TURN_CONTRACT.md).
+
+**Interactive vs unattended.** Interactive, the block is the pause point: the run
+waits for a user decision and never assumes one. Unattended, an open question is
+a hard fail carrying the same block — the run stops with a `needs-input` terminal
+state instead of proceeding on a guess.
+
 ## The guard story — diff-size, scope, and path-protection
 
 Three guards enforce unit boundaries:
@@ -122,9 +165,10 @@ planned and recording the result in the Evidence table. It does not merely claim
 - **Materiality** — evidence is only recorded for ACs that the step actually
   covers. An `n/a` step is recorded as `n/a: <reason>`.
 
-## Where every artifact lives — the 13-section unit doc
+## Where every artifact lives — the 14-section unit doc
 
-The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 13 sections:
+The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 14 sections (the
+13 `UNIT_DOC_REQUIRED_SECTIONS` plus `## Impact`):
 
 | # | Section | Purpose |
 |---|---------|---------|
@@ -184,6 +228,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `advance` | Pi-native conductor: sensor → decide → invoke loop (feature 62) |
 | `workflow-status` | Read the sensor envelope |
 | `bun scripts/unit-route.mjs --triage <NN> [--json]` | Triage a unit |
+| `node scripts/needs-input.mjs <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
 | `bun scripts/diff-guard.mjs --base <ref>` | Diff-size guard check |
 | `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
 | `agentic-workflow unit-doc setSection` | Replace a section (SDK) |

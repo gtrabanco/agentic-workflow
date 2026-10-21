@@ -1,5 +1,16 @@
 # Design step
 
+## Needs-input guard
+
+A blank or vague scope or acceptance-criteria input is a gap, not a licence to
+infer. The order is fixed: search the repository's own docs first and append an
+`open-question` row to the unit folder's `decisions.md` recording where; research
+an external gap into 2–3 concrete options. A gap surviving both runs
+`node scripts/needs-input.mjs <unit-dir>`, pastes the `open-questions@1` block
+and stops — route `design` for scope/architecture questions. "Decide for me" is
+a legitimate answer: the lane chooses and records the choice with its reason.
+Cheap-to-change defaults are recorded as assumptions, never silent.
+
 ## Purpose
 
 Run the gap interview, induce acceptance criteria from user scenarios, and

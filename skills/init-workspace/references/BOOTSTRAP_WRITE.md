@@ -22,7 +22,7 @@
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
 7. **Propagate the unit doc template.** Ensure
-   `docs/features/_TEMPLATE/SPEC.md` exists with all 13 mandatory sections.
+   `docs/features/_TEMPLATE/SPEC.md` exists with all 14 sections sections.
    This is the template used when creating new unit documents.
 8. **Provision the Serena project config.** Load
    [SERENA](SERENA.md), ask consent, then: (a) append the `.gitignore`

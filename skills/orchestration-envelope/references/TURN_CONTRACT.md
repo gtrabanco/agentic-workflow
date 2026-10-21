@@ -85,6 +85,50 @@ next | suggested
 next | continuation
 ```
 
+## Open questions (the needs-input halt)
+
+An input a step cannot resolve is never inferred: the step stops and hands the
+questions back. The block below is that hand-off — printed by
+`scripts/needs-input.mjs`, never hand-authored — so a weaker model copies it
+instead of paraphrasing the questions away. Interactive, the block is the pause
+point and the run waits for a user decision; unattended, it is a hard fail
+carrying the same block.
+
+```text
+open-questions@1
+# produced-by: scripts/needs-input.mjs <unit-dir> [--json]
+# input:       <unit-dir>/SPEC.md + <unit-dir>/decisions.md (the ledger's own grammar is
+#              published by the template agent guide, template/AGENTS.md)
+# machine:     continuation-refusal-type (schema-export:CONTINUATION_REFUSALS)
+# exit:        0 well-formed artifact (pending questions or none) | 1 fail-closed | 2 usage error
+header:      open-questions@1
+fields:      Unit: <unit-folder-name>
+             Open questions: <count>
+             - <question-id> · <route> · <the question>
+               Blocks: <why nothing proceeds without it>
+               Searched: <where the repository was searched: path:line, greps, prior units>
+               Options:
+                 - <one researched option with its trade-off>
+             Pending: none                    (only when the count is 0)
+             Route back: <design | unit-lane> · … | none
+             Continuation: no-decision-available | none
+             Decision: open | none
+fail-block:  NEEDS-INPUT FAIL — needs-input@1
+             Unit: <unit-folder-name>
+             Reason: <missing-unit-doc | malformed-ledger-header | malformed-entry |
+                      missing-search-receipt | missing-options | unknown-route |
+                      unknown-question | invalid-authority | duplicate-id>
+             Where: <path[:line]>
+             Continuation: no-decision-available
+route:       design | unit-lane
+```
+
+`route` is the stage that owns the fact and therefore receives it back —
+`design` for scope/architecture questions, `unit-lane` for plan-owned facts.
+Execution never interviews: it halts with the questions. `Continuation` reuses
+the schema's existing `no-decision-available` (`decisionAvailable === false`),
+so the halt needs no new envelope field.
+
 ## Path-protection checkpoint (feature 60)
 
 The Tier 1 path gate is versioned so the checkpoint invocation, the closed

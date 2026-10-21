@@ -2,7 +2,7 @@
 
 > Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. This is the same closed 13-section unit
+> entry in `docs/fix/README.md`. This is the same closed 14-section unit
 > doc `scripts/unit-route.mjs --triage` reads for a feature; the fix
 > template keeps four extra sections (`Issue`, `Branch`, `Depends on`,
 > `Regression scope`) on top. Legacy fix templates with separate
@@ -31,6 +31,14 @@ From the user's perspective: what they can do or observe after this fix ships.
 
 Numbered list. Each AC is a runnable command where possible, or labelled
 `read-verified` — never unlabelled prose.
+
+## Impact
+
+What the fix touches beyond its own lines: the callers of what changes, the
+consumers of what it delivers, the mentions that stop being true when it lands
+(comments, docs, declared validators, narrations), and what to ask before
+touching something live on the other side. Cut at plan time; the fix sweeps
+this surface, it is not rediscovered at review.
 
 ## Non-goals
 
