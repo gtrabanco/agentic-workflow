@@ -22,8 +22,10 @@ At each execution boundary, print exactly one phase hand-off and end the turn:
 ```
 
 `<k>` = first unfinished phase (lowest `P<n>` bullet the Progress log does not
-record; `bun scripts/unit-route.mjs <NN-slug>` prints it). `<tier>` = the
-`implement` entry of the triage block's `Tiers:` line. Never the bare
+record; `bun scripts/unit-route.mjs <NN-slug>` prints it — if every phase is
+recorded while the index still reads `in-progress`, the router refuses with
+`UNIT ROUTE — error … settle the index or roadmap status` and exits 1). `<tier>` =
+the `implement` entry of the triage block's `Tiers:` line. Never the bare
 whole-unit command.
 
 When the last phase's turn closes, `execute-phase` resumes the lane. Verify
