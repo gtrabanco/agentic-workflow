@@ -198,6 +198,29 @@ test("#305 F26: `ceil(<A> x 1.10) = <B>` is recomputed exactly, never in floatin
   assert.equal(head.verdict, "PASS", head.lines.join("\n"));
 });
 
+test("#305 D1: a historical measurement basis is a disclosed skip line naming the basis, never silence", () => {
+  const result = coherence([fixture("manifest-measure.json")]);
+  const skips = result.lines.filter((line) => line.startsWith("skip: ") && line.includes("measured 3112 est / 246 lines"));
+  assert.equal(skips.length, 1, result.lines.join("\n"));
+  assert.match(skips[0], /historical basis dated \d{4}-\d{2}-\d{2}/);
+  assert.match(skips[0], /re-checked only when the narration claims it for the head/);
+  assert.ok(!result.claims.some((claim) => claim.claim.includes("measured 3112") && claim.outcome === "fail"),
+    "history is never judged against the head");
+});
+
+test("#305 a `measured … at the head` claim is re-measured against the skill's own bytes", () => {
+  // The F18/F26 class in its most direct form: the narration states the size the
+  // ceiling rests on, for the head. `check-skill-context.mjs` owns the metric —
+  // the guard reads its numbers and never carries a second copy of the formula.
+  const result = coherence([fixture("manifest-measure.json")]);
+  assert.equal(result.verdict, "BLOCKED: measure-mismatch");
+  const claim = failuresOf(result)[0];
+  assert.equal(claim.kind, "measure");
+  assert.match(claim.claim, /measured 9999 est \/ 9999 lines/);
+  assert.match(claim.observed, /^\d+ est \/ \d+ lines$/);
+  assert.ok(!claim.observed.includes("9999"));
+});
+
 // ---------------------------------------------------------------------------
 // #305 · F45 / F53 — a box instructing an invocation the skill cannot satisfy
 // ---------------------------------------------------------------------------
@@ -280,4 +303,27 @@ test("#305 the repository's own head is coherent, and the default set is disclos
   assert.match(disclosure, /in-flight documents checked/);
   const manifest = result.claims.filter((claim) => claim.kind === "formula" && claim.outcome === "pass");
   assert.ok(manifest.length >= 10, `the manifest's re-bases are recounted: ${manifest.length}`);
+});
+
+// ---------------------------------------------------------------------------
+// #305 · AC8 — the fold/fix scope is stated in the positive, everywhere
+// ---------------------------------------------------------------------------
+
+test("#305 the fold and implement steps state the batch as the change plus its dependents", () => {
+  // `fold-findings` 1.9.0 owns the phrasing; the executor and the lane state the
+  // same rule in the positive. The old "only the routed findings — nothing extra"
+  // wording is what the 12-cycle loop kept re-discovering.
+  const sources = {
+    "skills/fold-findings/SKILL.md": /covers the change and everything that depends on it/i,
+    "skills/execute-phase/references/FOLDING.md": /plus everything that\s+depends on them/i,
+    "skills/unit-lane/references/IMPLEMENT.md": /plus everything that depends on it/i,
+  };
+  for (const [file, pattern] of Object.entries(sources)) {
+    const text = readFileSync(path.join(ROOT, file), "utf8");
+    assert.match(text, pattern, `${file} states the batch scope in the positive`);
+    assert.ok(!/scope: only the routed findings/.test(text), `${file} no longer narrows the batch to the findings alone`);
+  }
+  for (const file of ["skills/execute-phase/references/FOLDING.md", "skills/unit-lane/references/IMPLEMENT.md"]) {
+    assert.match(readFileSync(path.join(ROOT, file), "utf8"), /bun scripts\/promise-coherence\.mjs/, `${file} runs the guard`);
+  }
 });

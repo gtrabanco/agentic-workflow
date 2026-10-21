@@ -72,3 +72,28 @@ justification | scripts/pre-execution-timeline.test.mjs | P1 | 2026-10-21 | exec
 justification | scripts/pre-execution-wording-only-manifest.test.mjs | P1 | 2026-10-21 | execute-phase | same fixture migration as pre-execution-sensor.test.mjs
 justification | scripts/lane-era-lineage.test.mjs | P1 | 2026-10-21 | execute-phase | same fixture migration as pre-execution-sensor.test.mjs
 ```
+
+## D-77-4 — delivery-round owner decisions (2026-10-21)
+
+- **D1 stale measurement bases → disclosure.** A `measured … est / … lines` basis
+  that does not claim *at the head* prints a `skip:` line naming the basis and its
+  date; history is never judged against the head. Owner rejected both strict
+  re-basing (treats history as a lie) and silence.
+- **D2 Turn-contract box check → accepted limitation.** The check pins
+  *disclosure* (the skill names the artifact its invocation needs); it cannot pin
+  *executability* without running the dispatcher from a document, which the guard
+  forbids by design. Recorded in the SPEC and the guard docstring as
+  "pin, not catch".
+- **D4a golden fixture → run once with `nan/qwen3.6`** (owner authorization
+  recorded here; the run is the required smoke test after touching executor-path
+  wording). Result recorded in `scripts/fixtures/golden-fixture/RUN_LOG_NOTES.md`.
+- **D4b golden-fixture runner configuration → new unit, not this one.** Owner
+  requirement: the fixture's model configurable (unlimited tier preferred), and an
+  auto-run policy toward reviews with three modes — unlimited (`-1`/`Infinity`),
+  off (`0`), or N attempts per PR. This is a config schema + runner feature with
+  its own corpus; smuggled into this PR it would widen the diff the verifier is
+  judging. Recorded below as a Future row.
+- **D3 `docs/fix/179` dead pointers → `triage-issue`** (owner decision, not this
+  unit's edit).
+- **D5 delivery → single PR** from this branch, `Closes #305`, remaining gaps in
+  Known pre-existing issues.
