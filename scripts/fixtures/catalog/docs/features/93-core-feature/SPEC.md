@@ -24,6 +24,10 @@ Users can log in with email/password and receive a JWT valid for 24 hours.
 3. Expired JWTs are rejected with a 401 response.
 4. The JWT payload contains `sub` (user id), `iat`, and `exp`.
 
+## Impact
+
+Nothing outside this fixture.
+
 ## Non-goals
 
 No OAuth providers. No refresh token rotation.
