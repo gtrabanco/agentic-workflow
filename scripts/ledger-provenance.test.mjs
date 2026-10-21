@@ -330,8 +330,8 @@ test("a row the 7-column schema refuses is counted, reported and refused — nev
   // row missing a token.
   const check = run(root, "--check");
   assert.equal(check.status, 1, `an unread row must fail the recount: ${check.stdout}${check.stderr}`);
-  assert.match(check.stdout, /1 folded row\(s\) lack a verified commit token: F1/);
-  assert.match(check.stdout, /2 row\(s\) the 7-column schema refused were read by nothing: F2, F4/);
+  assert.match(check.stdout, /2 unparsed: F2, F4 — the 7-column schema refused/);
+  assert.doesNotMatch(check.stdout, /recovered: F1/, "a recoverable row is not paused work");
 
   // `--annotate` reports the same fault, says what it would do in check mode (C2), and
   // writes nothing.
@@ -381,6 +381,95 @@ test("unit 26's fold ledger is read, not silently passed", () => {
   assert.equal(json.filter((e) => e.status === "open").length, 0, "no folded row is bucketed open");
 });
 
+test("--annotate never writes a token the contract does not declare (A1)", (t) => {
+  // The annotator's vocabulary is closed by `ledger-ownership@1`: `· fold <sha>`,
+  // `· ticked <sha>`, `· REOPENED`. A state that reached the append without a token
+  // interpolated the literal string `undefined` into the ledger — a phantom no writer
+  // can produce, and one the re-entry guard then matched against itself.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-token-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const abs = (rel) => path.join(root, rel);
+  const ledger = abs(LEDGER);
+  const read = () => fs.readFileSync(ledger, "utf8");
+  const tick = (id, token) =>
+    fs.writeFileSync(ledger, read().split("\n").map((l) => (l.startsWith(`| ${id} |`) ? l.replace(/\| no \|$/, `| yes${token ? ` · ${token}` : ""} |`) : l)).join("\n"));
+  const commit = (message) => {
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "HEAD");
+  };
+
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  fs.mkdirSync(abs("src"), { recursive: true });
+  fs.mkdirSync(path.dirname(ledger), { recursive: true });
+  fs.writeFileSync(abs("src/index.ts"), "export const a = 1;\n");
+  fs.writeFileSync(
+    ledger,
+    HEADER +
+      row("F1", "src/index.ts:1", "fold into current unit", "no") +
+      row("F2", "src/index.ts:1", "fold into current unit", "no") +
+      row("F3", "src/index.ts:1", "fold into current unit", "no"),
+  );
+  commit("planning artifacts");
+
+  // F1 — a marker whose commit never claims this row.
+  fs.writeFileSync(abs("src/other.ts"), "export const b = 1;\n");
+  const claimedElsewhere = commit("fix(x): fold F9 — another unit's finding");
+  tick("F1", `fold ${claimedElsewhere}`);
+  commit("docs(x): tick F1");
+
+  // F2 — a marker naming a TREE id: ancestry of a tree is trivially true.
+  const tree = git(root, "rev-parse", "HEAD^{tree}");
+  tick("F2", `fold ${tree}`);
+  commit("docs(x): tick F2");
+
+  // F3 — ticked, no marker, nothing behind it.
+  tick("F3");
+  commit("docs(x): tick F3");
+
+  const out = run(root, "--annotate");
+  const text = read();
+  assert.doesNotMatch(text, /undefined/, `the annotator interpolated a missing token:\n${out.stdout}`);
+  for (const line of text.split("\n").filter((l) => /^\| F\d+ \|/.test(l))) {
+    for (const marker of line.matchAll(/·\s*([A-Za-z]+)/g)) {
+      assert.ok(["fold", "ticked", "REOPENED"].includes(marker[1]), `token outside the declared vocabulary: ${marker[1]}`);
+    }
+  }
+  const f1 = text.split("\n").find((l) => l.startsWith("| F1 |"));
+  assert.match(f1, /REOPENED — provenance unproven/, `an unverifiable citation must re-open with evidence: ${f1}`);
+  assert.match(f1, /\| no \|$/, "the unverifiable row must not stay ticked");
+  const f2 = text.split("\n").find((l) => l.startsWith("| F2 |"));
+  assert.match(f2, /REOPENED — provenance unproven/, `a tree id is not an ancestry proof: ${f2}`);
+  const once = read();
+  assert.match(run(root, "--annotate").stdout, /nothing to annotate/);
+  assert.equal(read(), once, "annotating twice changed the ledger");
+});
+
+test("a target outside the checkout is refused before it is read (SEC)", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-outside-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const outside = path.join(root, "notes.txt");
+  const body = HEADER + row("F1", "src/index.ts:1", "fold into current unit", "yes");
+  fs.writeFileSync(outside, body);
+  const result = spawnSync(process.execPath, [script, outside, "--annotate"], { cwd: repoRoot, encoding: "utf8" });
+  assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
+  assert.match(result.stderr, /REFUSED/);
+  assert.equal(fs.readFileSync(outside, "utf8"), body, "the tool wrote outside the checkout");
+});
+
+test("--check names each refusal cause separately (A2)", (t) => {
+  const { root } = makeFixture(t);
+  const out = run(root, "--check");
+  assert.equal(out.status, 1);
+  assert.match(out.stdout, /by cause:/, out.stdout);
+  assert.match(out.stdout, /1 unproven: F3 — are ticked with no commit behind them/, out.stdout);
+  assert.doesNotMatch(out.stdout, /outside HEAD's history/, "no dangling row exists in this fixture");
+  assert.doesNotMatch(out.stdout, /recovered: /, "a recoverable row is not paused work");
+});
+
 console.log(
   "PASS ledger provenance: atomic, message-only, range, forge-only, unprovable and fabricated-sha rows all classified",
 );
@@ -402,7 +491,7 @@ test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", (
   const check = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
   const citations = json.filter((e) => e.status === "cited-unverified").map((e) => e.id);
   assert.equal(check.status, citations.length === 0 ? 0 : 1, "the check mirrors the residue it can see");
-  if (citations.length) assert.match(check.stdout, /lack a verified commit token/);
+  if (citations.length) assert.match(check.stdout, /by cause:/, check.stdout);
 });
 
 test("an annotated ledger's citations are read and validated, not silently passed (F80)", (t) => {
