@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.4.2
+version: 1.4.3
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -16,6 +16,16 @@ description: >
 
 Single owner of the delivery finish line. Planning freezes it; executors may
 strengthen coverage but cannot move it; review checks the same bytes.
+
+## Executable claims
+
+An acceptance criterion or Evidence row that states a count, an exit code or a
+length is a promise, not a description: `scripts/promise-coherence.mjs` re-runs
+it. Write the outcome a command must produce (`` `cmd` matches <N> ``,
+`` `cmd` exits <N> ``) or, for a shape promise, name the file and the
+`## Section` the count is about (`` … a 3–5 line `## Inputs` in
+`skills/<name>/SKILL.md` ``) — a length with no named surface cannot be recounted
+and fails closed.
 
 ## Artifact
 

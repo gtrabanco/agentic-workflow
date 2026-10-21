@@ -43,6 +43,12 @@ its work landed in the unit doc before continuing:
 - [ ] Each executor turn recorded its Evidence row and dated Progress entry
 - [ ] Diff guard run at the lane's resume (see step 4 in SKILL.md)
 - [ ] `git status --porcelain` is empty when the lane resumes
+- [ ] Each phase swept the change **plus everything that depends on it** —
+      callers of what changed, consumers of what it delivers, and every mention
+      that stops being true; a surviving mention is part of the same phase, not
+      a finding for the next review
+- [ ] `bun scripts/promise-coherence.mjs` RUN at the lane's resume → `verdict
+      PASS` (the unit doc's declared validators reproduce at the head)
 
 ## Allowed
 

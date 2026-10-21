@@ -29,7 +29,7 @@ const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"
 
 const git = (cwd, env, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", env }).trim();
 
-/** A unit doc the `spec-product-v1` selector accepts (13-section, feature 61). */
+/** A unit doc the `spec-product-v1` selector accepts (14-section, feature 61 + #305). */
 const specText = (objective = "Ship the thing.") => `# Toy unit
 
 ## Objective
@@ -47,6 +47,10 @@ Users can do X.
 ## Acceptance criteria
 
 - [x] S1 is done.
+
+## Impact
+
+Nothing outside this fixture.
 
 ## Non-goals
 

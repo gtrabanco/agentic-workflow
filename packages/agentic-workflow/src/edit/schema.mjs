@@ -10,12 +10,13 @@
  * package as owner.
  */
 
-// ── Unit doc: 13 closed sections (ordered) ───────────────────────────────
+// ── Unit doc: 14 closed sections (ordered, #305) ───────────────────────
 export const UNIT_DOC_SECTIONS = [
   "Objective",
   "Why",
   "User outcome",
   "Acceptance criteria",
+  "Impact",
   "Non-goals",
   "Future cost",
   "Applicable tests",

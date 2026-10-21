@@ -69,6 +69,22 @@ export const LEDGER_COLUMNS = [
 export const ROUTES = Object.freeze(["design", "unit-lane"]);
 /** The only authority that may close an open question. */
 export const AUTHORITY = "human-owner";
+/**
+ * What this script needs on disk before a run can succeed, declared so the
+ * promise-coherence guard can check that every surface instructing the
+ * invocation also names the artefact it requires (fix #258 F45/F53: a
+ * Turn-contract box ran `<unit-dir>` against a target that has no unit folder,
+ * reproducing `missing-unit-doc`). Declared here, never inferred by a reader.
+ */
+export const PREREQUISITES = Object.freeze([
+  Object.freeze({
+    script: "needs-input.mjs",
+    placeholder: "<unit-dir>",
+    artefacts: Object.freeze(["SPEC.md"]),
+    reason: "missing-unit-doc",
+  }),
+]);
+
 /** Ledger paths this script reads, in order, relative to the unit folder. */
 const UNIT_DOC = "SPEC.md";
 const LEDGER = "decisions.md";

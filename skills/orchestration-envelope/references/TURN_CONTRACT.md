@@ -16,6 +16,14 @@
 ✓ 11. No reconstruction from memory — missing reference → STOP.
 ```
 
+**A box that runs a command discloses what the command needs.** When a box
+invokes a script with a placeholder (`node scripts/x.mjs <unit-dir>`), the same
+skill's text must name the artifact that placeholder requires — the script
+declares it (`PREREQUISITES` in `scripts/needs-input.mjs`) and
+`scripts/promise-coherence.mjs` checks the disclosure. A box that instructs a
+run the skill never equips reproduces the failure it was written to prevent
+(fix #258 F45/F53: `missing-unit-doc`).
+
 **Single owner:** orchestration-envelope/references/TURN_CONTRACT.md. All skills load this + skill-specific additions only. Duplication forbidden. Missing reference = STOP.
 
 **Push policy supplement:** Box 4 covers the end-of-unit push. Some consumers (e.g. `execute-phase/references/PREFLIGHT.md`) define additional push rules for mid-phase commits when a PR is already open — those per-consumer supplements extend this contract and must be loaded alongside it by the consumer skill.

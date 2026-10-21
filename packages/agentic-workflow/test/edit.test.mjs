@@ -41,21 +41,23 @@ after(() => {
 // ── UnitDoc tests ────────────────────────────────────────────────────────
 
 describe("UnitDoc", () => {
-  it("create produces 13 sections in order", () => {
+  it("create produces 14 sections in order", () => {
     const receipt = create(unitDir, "61-test-slug");
     strictEqual(receipt.ok, true);
     strictEqual(receipt.service, "unitDoc");
     strictEqual(receipt.op, "create");
 
     const content = readFileSync(specPath, "utf8");
+    // #305: `## Impact` is required, between Acceptance criteria and Non-goals,
+    // so the producer emits what the selector accepts.
     const sections = [
-      "Objective", "Why", "User outcome", "Acceptance criteria",
+      "Objective", "Why", "User outcome", "Acceptance criteria", "Impact",
       "Non-goals", "Future cost", "Applicable tests",
       "Known pre-existing issues", "Tasks", "Evidence",
       "Progress log", "Next", "References",
     ];
 
-    // All 13 sections must exist in order
+    // All 14 sections must exist in order
     let lastIdx = -1;
     for (const section of sections) {
       const idx = content.indexOf(`## ${section}`);

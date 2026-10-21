@@ -223,7 +223,7 @@ Embedded (S unit). Claims verified against `main` @ `9bd272e9` on 2026-10-18:
 - P10 — Replan batch (F37): restate the two template determinism/property-fuzz
   sentences without repo-specific nouns ("schema package", "commands class")
   while keeping the stated bound
-  (validator: `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md` exits 0 and prints 0)
+  (validator: `grep -c "schema package\|existing commands class" template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md | grep -c ":0$"` exits 0 and prints 2)
     - Relevant files: template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md
 - P11 — Replan batch (F38): re-basis the six budget growth entries — name
   `skills/verification-contract/SKILL.md` as the growth source, state the
