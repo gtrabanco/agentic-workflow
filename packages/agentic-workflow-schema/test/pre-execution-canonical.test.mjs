@@ -79,8 +79,10 @@ test("missing, duplicate, and out-of-order required headings fail with one named
   assert.equal(duplicated.ok, false);
   assert.deepEqual([...duplicated.errors], [{ code: "selector-heading-duplicate", heading: "Objective" }]);
 
+  // #305: a complete 14-section document, References first — the ordering rule
+  // is only reachable once presence is satisfied.
   const swapped = selectSpecProduct(
-    "# Toy\n\n## References\n\nx\n\n## Objective\n\nb\n\n## Why\n\ns\n\n## User outcome\n\nd\n\n## Acceptance criteria\n\n`approved`\n\n## Non-goals\n\np\n\n## Future cost\n\nnone\n\n## Applicable tests\n\nnone\n\n## Known pre-existing issues\n\nnone\n\n## Tasks\n\nnone\n\n## Evidence\n\nnone\n\n## Progress log\n\nnone\n\n## Next\n\nnone\n",
+    "# Toy\n\n## References\n\nx\n\n## Objective\n\nb\n\n## Why\n\ns\n\n## User outcome\n\nd\n\n## Acceptance criteria\n\n`approved`\n\n## Impact\n\nthe caller\n\n## Non-goals\n\np\n\n## Future cost\n\nnone\n\n## Applicable tests\n\nnone\n\n## Known pre-existing issues\n\nnone\n\n## Tasks\n\nnone\n\n## Evidence\n\nnone\n\n## Progress log\n\nnone\n\n## Next\n\nnone\n",
   );
   assert.equal(swapped.ok, false);
   assert.deepEqual([...swapped.errors], [{ code: "selector-heading-order", heading: "Objective" }]);
@@ -551,4 +553,59 @@ test("the published limits are the same object the fixture discloses", () => {
     receiptBytes: 64 * 1024,
     diagnostics: 50,
   }, "a limit rename must fail here, not silently widen a consumer's expectation");
+});
+
+// ---------------------------------------------------------------------------
+// #305 — `## Impact` is a required section (14, not 13)
+//
+// It shipped as a tolerated extra (fix #258) while five published surfaces
+// already promised 14 sections including it: `template/AGENTS.md`,
+// `docs/workflow/MIGRATION.md`, `docs/workflow/LANE_FLOW.md`,
+// `skills/init-workspace/SKILL.md` and both unit-doc templates. A required
+// heading is the only place the machine can agree with them; the *content*
+// check lives in `scripts/promise-coherence.mjs`.
+// ---------------------------------------------------------------------------
+
+test("#305 the required section list carries Impact between Acceptance criteria and Non-goals", () => {
+  assert.deepEqual([...UNIT_DOC_REQUIRED_SECTIONS], [
+    "Objective",
+    "Why",
+    "User outcome",
+    "Acceptance criteria",
+    "Impact",
+    "Non-goals",
+    "Future cost",
+    "Applicable tests",
+    "Known pre-existing issues",
+    "Tasks",
+    "Evidence",
+    "Progress log",
+    "Next",
+    "References",
+  ]);
+});
+
+test("#305 the selector rejects a unit document without ## Impact", () => {
+  const result = selectSpecProduct(toySpec({ Impact: undefined }));
+  assert.equal(result.ok, false);
+  assert.deepEqual([...result.errors], [{ code: "selector-heading-missing", heading: "Impact" }]);
+});
+
+test("#305 the selector rejects ## Impact out of the required order", () => {
+  // Same headings, Impact moved after Non-goals: presence alone is not the contract.
+  const moved = toySpec()
+    .replace("## Impact\n\nWhat it touches.\n", "")
+    .replace("## Future cost\n", "## Impact\n\nWhat it touches.\n\n## Future cost\n");
+  const result = selectSpecProduct(moved);
+  assert.equal(result.ok, false);
+  assert.deepEqual([...result.errors], [{ code: "selector-heading-order", heading: "Impact" }]);
+});
+
+test("#305 the selector still tolerates untracked extras beside the 14 required sections", () => {
+  // `## Future`, `## Issue`, `## Branch` are not in the contract: tolerated, never
+  // required, and their bytes stay inside the projection.
+  const withExtras = toySpec({ "Non-goals": "## Non-goals\n\n- Not S2.\n\n## Future\n\nDeferred idea.\n" });
+  const clean = selectSpecProduct(withExtras);
+  assert.equal(clean.ok, true, JSON.stringify(clean.errors ?? null));
+  assert.ok(clean.content.includes("## Future"), "an untracked section rides inside the projection");
 });

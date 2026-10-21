@@ -467,6 +467,7 @@ const spec = [
   "## Why", "", "The customer needs it.", "",
   "## User outcome", "", "Users can do X.", "",
   "## Acceptance criteria", "", "- [x] S1 done.", "",
+  "## Impact", "", "`selectSpecProduct` and the snapshot builder read it.", "",
   "## Non-goals", "", "- Not S2.", "",
   "## Future cost", "", "None known.", "",
   "## Applicable tests", "", "- Unit tests.", "",

@@ -213,15 +213,21 @@ function parseStamp(value: unknown): number | null {
   return Number.isNaN(ms) ? null : ms;
 }
 
-/** The unit document's closed 13-section list (feature 61 P8). The two-half
- * SPEC was retired: plan-feature, plan-fix, review-spec, review-plan, and
- * design-feature are absorbed into the lane. The lane uses a single unit
- * document with these sections; the selector reads them in order. */
+/** The unit document's closed required-section list (#305: 14 sections). The
+two-half SPEC was retired by feature 61: plan-feature, plan-fix, review-spec,
+review-plan, and design-feature are absorbed into the lane, which uses a single
+unit document with these sections; the selector reads them in order. `Impact`
+is required since #305 — it shipped as a tolerated extra while every published
+surface (both templates, `template/AGENTS.md`, `MIGRATION.md`, `LANE_FLOW.md`,
+`init-workspace`) already promised 14 sections including it, so the machine was
+looser than the product. Its *content* is checked by
+`scripts/promise-coherence.mjs`, not here: this list enforces shape only. */
 export const UNIT_DOC_REQUIRED_SECTIONS = Object.freeze([
   "Objective",
   "Why",
   "User outcome",
   "Acceptance criteria",
+  "Impact",
   "Non-goals",
   "Future cost",
   "Applicable tests",
@@ -469,12 +475,13 @@ function selectionError(code: SpecProductSelectorError["code"], heading: string)
  * Cut the Product projection out of a SPEC document.
  *
  * The selection is byte-exact and total: the level-1 title and the required
- * level-2 sections (Goal, Branch, Size, Dependencies, Product half, Design
- * status), ending at the first boundary heading after References, with trailing
- * blank lines removed and exactly one final newline. Everything the selector does
- * NOT take — Amendments, the Engineering half, later appendices — stays outside
- * Product authority, so a Plan-phase write can never rotate a Product digest and
- * silently erase a recorded review (the property AC2 and S6 test).
+ * level-2 sections (`UNIT_DOC_REQUIRED_SECTIONS`, in that order), ending at the
+ * first boundary heading after `References`, with trailing blank lines removed
+ * and exactly one final newline. Everything the selector does NOT take — the
+ * tolerated extras (`## Future`, `## Issue`, `## Branch`, `## Regression scope`),
+ * later appendices — stays outside Product authority, so a Plan-phase write can
+ * never rotate a Product digest and silently erase a recorded review (the
+ * property AC2 and S6 test).
  *
  * Determinism rules that make the digest trustworthy:
  *   - line endings normalize to LF first, so a CRLF checkout and an LF editor
