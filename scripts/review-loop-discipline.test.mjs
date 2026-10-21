@@ -320,10 +320,11 @@ assert.match(foldPolicy, /materializ/);
 // (the freeze-batch consumer contract), feature 32 moved it 1.5.1 → 1.6.0
 // (sole-flipper provenance cited to the ledger-ownership map), the lane
 // reference migration moved it 1.6.0 → 1.7.0 (the #244 consumer now names
-// `/unit-lane`, the lane command the router prints), and issue #293 moved it
-// 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), the
-// assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.8\.0/);
+// `/unit-lane`, the lane command the router prints), issue #293 moved it
+// 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), and fix
+// #258 moved it 1.8.0 → 1.9.0 (the fold's scope rule: change + dependents,
+// survivors swept in the same batch), the assertion unchanged in strength.
+assert.match(foldSkill, /version: 1\.9\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);

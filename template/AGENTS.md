@@ -161,9 +161,53 @@ road I'd like…") go to the unit doc's `## Future` — never implemented withou
 new explicit request. Installing a missing tool always requires explicit
 consent.
 
+**Open-question ledger (the unit folder's `decisions.md`).** The unit's
+`decisions.md` is the single append-only ledger of that conversation — the one
+file that owns it, never a parallel copy in a chat, a PR comment, or another
+ledger. It carries exactly two typed entries, newest last, never edited in
+place:
+
+```text
+open-questions@1
+id | date | type | question | blocks | search-receipt | options | route
+example Q1 | 2026-10-19 | open-question | <the decision being asked> | <why nothing proceeds without it> | <where the repository was searched: file:line, grep, unit folder, prior units> | <2–3 options, each with its trade-off; `none` when the answer is free-form> | <design | unit-lane>
+example D1 | 2026-10-19 | decision | Q1 | human-owner | <where the human's answer is recorded: chat paste, issue comment> | <what was chosen> | <what was discarded and why>
+```
+
+The `open-question` row records the question **and the evidence behind it**:
+the tier-0 provenance search receipt (`<path:line>` hits, the greps run, the
+prior units of the same area — a "not found" without it is a defect), the
+options researched when the gap was external, and the `route` back to the stage
+that owns the fact (`design` for scope/architecture, `unit-lane` for plan-owned
+facts). The `decision` row reads the same columns per type: `question` carries
+the id it closes, `blocks` the authority (`human-owner`), `search-receipt`
+where the human's answer is recorded — a chat paste, an issue comment;
+validated non-`none`, so a decision without a receipt fails closed — `options`
+what was chosen, and `route` what was discarded. A dismissed option stays
+dismissed.
+
+Rules the ledger enforces:
+
+- **Only a user decision closes an open question.** More research, a new
+  option, or a discussion before deciding is a legitimate answer: it appends a
+  new `open-question` row and the loop continues. It is never a licence to
+  infer.
+- **A resumed session re-reads, never re-asks.** The pending `open-question`
+  rows are the questions; do not ask them again — read them and continue from
+  the first one still open.
+- **Append-only.** A superseded entry gets a new row that names it; nothing is
+  rewritten or deleted, so the chain stays auditable.
+- **Composes with the existing uses, never forks them.** The same file also
+  carries the `Decide for me` records, the path-protection
+  `path-protection-records@1` block, and the planning ledgers — one file, one
+  owner, several typed blocks side by side.
+- **Halt, do not ask.** The consumed block is printed by the deterministic
+  dispatcher (`scripts/needs-input.mjs`), so a malformed ledger fails closed
+  instead of silently dropping a question.
+
 **Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/` with
-13 mandatory sections (Objective, Why, User outcome, Acceptance criteria,
+14 sections (Objective, Why, User outcome, Impact, Acceptance criteria,
 Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
 Evidence, Progress log, Next, References). The unit's path is decided by a triage
 pass against a closed catalog (research, design, plan, implement, tests,

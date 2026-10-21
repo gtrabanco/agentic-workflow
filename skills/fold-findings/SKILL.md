@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.8.0
+version: 1.9.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -144,8 +144,16 @@ table: [`FOLD_PROCESS.md`](references/FOLD_PROCESS.md) §Batch classification.
 Scope is the ledger (or explicit ID subset); unlisted discoveries are proposals
 for user triage. Batch only when one root-cause correction, validator set and
 rollback boundary own the rows: one commit/push, individual ticks/lines. Split
-otherwise. Do not widen beyond a finding's file/line/axis unless its root cause
-requires it; explain that in the commit. Artifact language follows user
+otherwise.
+
+**The fix covers the change and everything that depends on it.** When what a
+piece receives changes, find its callers; when what it delivers changes, find
+its consumers; when something is removed, check what still uses it and ask
+before breaking it. A surviving mention of what changed — a comment, a prose
+claim, a declared validator, a manifest narration, a sibling surface stating
+the same thing — is part of this same fold, never a finding for the next
+cycle. The fold ends when nothing still asserts what is no longer true; state
+in the commit which surfaces the correction swept. Artifact language follows user
 instruction > project docs language > English; conversation language never decides.
 
 ## Portability (agents other than Claude Code)

@@ -20,6 +20,15 @@ Numbered list. Each AC is induced from a concrete user scenario ("I do X and obs
 Make each AC command-verified where possible. If the request is too vague to state an AC,
 STOP and ask the user with concrete options — never invent one.
 
+## Impact
+
+What the change touches beyond its own files: what consumes this unit's
+deliverables, what this unit consumes from others, what stops being true when
+the change lands (comments, docs, declared validators, narrations naming the
+old shape), and what must be asked before touching something live on the other
+side. Cut at plan time — the executor sweeps this surface, it is not
+rediscovered at review.
+
 ## Non-goals
 
 What this unit is NOT. Findings discovered during implementation never expand scope.

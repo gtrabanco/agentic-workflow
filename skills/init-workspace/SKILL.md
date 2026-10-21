@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 3.3.0
+version: 4.0.2
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -21,6 +21,10 @@ raw placeholders.
 ## Turn contract — verify before ending the turn
 
 ```
+✓ Required user inputs were answered concretely (not defaulted). Consent for
+  every install, hook, and overwrite is explicit; a consent gap runs the
+  three-tier dispatch and stops with the dispatcher's `open-questions@1` block
+  — against a scratch unit folder when no unit exists yet (§Consent).
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
@@ -37,6 +41,21 @@ first on purpose).
   (`AGENTS.md` + `docs/` map + templates) adapted to the project, not just copied.
 - Prefer this over a static `npx degit gtrabanco/agentic-workflow/template` when you
   want the gate commands, architecture, and doc domains filled in by interview.
+
+## Consent — mandatory, never defaulted
+
+Installing a tool, wiring a hook, or overwriting an existing file each need an
+explicit yes; context never supplies one, and an ambiguous repository state
+(partially scaffolding) is not a route to guess. A consent gap is an open
+question: **(0) provenance** (search the repo's own docs and record where) →
+**(1) research** (concrete options) → **(2) halt**: run `node
+scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+stop with the questions carried in it. The dispatcher needs a unit folder, and
+consent gaps usually precede any unit — so the run first writes a scratch one
+(`SPEC.md` + `decisions.md` in a `mktemp` directory, deleted after the paste)
+and runs the dispatcher against that. Grammar and exit codes:
+`orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
+`[target-dir]` is optional — absent means the current directory, recorded.
 
 ## Step 0 — Discover the project (always first)
 
@@ -133,7 +152,7 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 The adaptive lane (feature 61) replaces the fixed pipeline with a single-unit-
 document model. Every NEW unit produces one `SPEC.md` under
-`docs/features/<NN>-<slug>/` with 13 sections: Objective, Why, User outcome,
+`docs/features/<NN>-<slug>/` with 14 sections: Objective, Why, User outcome, Impact,
 Acceptance criteria, Non-goals, Future cost, Applicable tests, Known pre-existing
 issues, Tasks, Evidence, Progress log, Next, References.
 

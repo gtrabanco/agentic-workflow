@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 1.5.0
+version: 2.0.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -21,6 +21,10 @@ Tick every box before ending the turn; an unchecked box means the turn is not
 done:
 
 ```
+✓ Required user inputs were answered concretely (not defaulted). Nothing here
+  is inferred: a gap re-enters provenance → research, and a gap surviving both
+  runs `node scripts/needs-input.mjs <unit-dir>` and stops with the
+  `open-questions@1` block routed back to the owning stage.
 ✓ Triage ran (bun scripts/unit-route.mjs --triage <slug>) and its block pasted
   verbatim into the unit doc's Evidence section as the authoritative step list
 ✓ Unit doc exists at docs/features/<NN>-<slug>/SPEC.md (created from template
@@ -43,6 +47,26 @@ done:
 Both `--fix <n>` and `--from-issue <n>` are the exact forms
 `scripts/unit-route.mjs` prints for a tracked issue with no unit folder
 (`route: plan-from-issue`) — never invent a different spelling.
+
+## Inputs — never inferred, never defaulted
+
+The unit identifier, a mode's issue number, the unit kind, and the
+objective/why/user-outcome the SPEC carries are **never inferred**: no silent
+`feature` default, no acceptance criterion invented from a vague request. A gap
+is resolved in one fixed order — **(0) provenance** (search the repo's own docs
+and append an `open-question` row to the unit's `decisions.md` recording where)
+→ **(1) research** (2–3 concrete options with trade-offs; asking for more
+research is a legitimate answer) → **(2) halt**: run `node
+scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
+stop. The block routes each question back to the stage that owns the fact —
+`design` for scope/architecture, `unit-lane` for plan-owned facts. Grammar and
+exit codes: `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open
+questions.
+
+The conversation lives in the unit folder's `decisions.md` (append-only
+`open-questions@1`; its two entry types are published in the template agent
+guide's question protocol). A resumed session re-reads the pending rows and
+continues from the first one still open — never re-asks them.
 
 ## Step 0 — Discover the project
 
