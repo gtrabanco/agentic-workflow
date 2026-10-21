@@ -750,12 +750,12 @@ function main(argv) {
     // #291 AC3/AC4: the hand-off names exactly one phase and the execution
     // tier — never the bare whole-unit command. Whole-unit mode survives only
     // as an explicit operator choice (`execute-phase`'s own §7).
-    // F26: if all phases are done AND status is "done", route to close-out —
-    // the merge gate is the next step. F31/P6: a unit whose status is not
-    // "done" (e.g. "defined", "in-progress") with all phases recorded is
-    // an ambiguous boundary: not finished (can't audit), no unfinished
-    // phases (can't execute) — fail closed. F40: no doc / no `## Tasks`
-    // is untouched work — route to P1.
+    // Close-out keys on the status alone (the branch above): a `done` unit
+    // routes to the merge gate whether or not its Progress log records every
+    // phase. F31/P6: a unit whose status is NOT "done" (e.g. "defined",
+    // "in-progress") with all phases recorded is an ambiguous boundary — not
+    // finished (can't audit), no unfinished phases (can't execute) — fail
+    // closed. F40: no doc / no `## Tasks` is untouched work — route to P1.
     const unfinished = unfinishedPhases(unit.dir);
     if (unfinished === null) {
       // No doc or no `## Tasks` section — untouched work, P1.
