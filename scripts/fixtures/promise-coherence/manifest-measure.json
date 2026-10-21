@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "referenceDepth": 1,
+  "defaults": {
+    "mainEstimateMax": 2800,
+    "mainLinesMax": 240,
+    "descriptionEstimateMax": 120,
+    "referenceEstimateMax": 2200,
+    "referenceLinesMax": 280
+  },
+  "skills": {
+    "unit-lane": {
+      "mainEstimateMax": 3424,
+      "mainSources": {
+        "a basis from a past fold": "at the 2026-10-20 fold head the entry measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424"
+      }
+    },
+    "init-workspace": {
+      "mainEstimateMax": 3663,
+      "mainLinesMax": 252,
+      "mainSources": {
+        "the re-basis that skipped a re-measure": "the guard shrank the body; measured 9999 est / 9999 lines at the head, so the ceiling above was never re-derived"
+      }
+    }
+  }
+}

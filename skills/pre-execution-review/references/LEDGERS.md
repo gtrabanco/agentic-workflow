@@ -55,7 +55,7 @@ task | implementation-owner | validator | required-evidence | status
 | `authority-source` | the SPEC/acceptance/criterion or ledger row that *requires* it — never the implementation |
 | `phase` / `task` | exactly one phase and one task; a row needing two phases means the phase cut is wrong |
 | `implementation-owner` | the skill/role that performs it (usually `execute-phase`) |
-| `validator` | the command or check that proves it, copied from the acceptance artifact (`ACCEPTANCE.md` for legacy (pre-feature 61) units; `sed -n '/^## Acceptance criteria/,/^## /p' <unit>/SPEC.md \| git hash-object --stdin` for post-feature 61) or the phase's done-when |
+| `validator` | the command or check that proves it, copied from the acceptance artifact (`ACCEPTANCE.md` for legacy (pre-feature 61) units; `sed -n '/^## Acceptance criteria/,/^## /p' <unit>/SPEC.md \| git hash-object --stdin` for post-feature 61) or the phase's done-when. When it is a backticked reader command, state the outcome it must produce — `` … matches <N> `` or `` … exits <N> `` — because `scripts/promise-coherence.mjs` re-runs it at the head and `verified` is only truthful while it reproduces. A validator with no stated outcome is a claim nobody can check |
 | `required-evidence` | what must be recorded where (test name, receipt line, ledger row) |
 | `status` | `planned \| in-progress \| verified \| n/a \| deferred` |
 
@@ -66,7 +66,9 @@ Status lifecycle and its hard edges:
   follow-up issue.
 - `verified` requires the named validator to have run and its evidence to be
   recorded where `required-evidence` says. An assertion of intent is not a
-  status change.
+  status change. A count or exit code in the validator cell is re-run by
+  `scripts/promise-coherence.mjs`; when the command stops producing it, the row
+  is stale even while it still reads `verified`.
 - `n/a` needs evidence in the row (a `path:line`, ledger row, or cited contract)
   and may never contradict the SPEC's scope section. `n/a` without evidence is
   an open obligation.

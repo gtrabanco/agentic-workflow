@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "referenceDepth": 1,
+  "defaults": {
+    "mainEstimateMax": 2800,
+    "mainLinesMax": 240,
+    "descriptionEstimateMax": 120,
+    "referenceEstimateMax": 2200,
+    "referenceLinesMax": 280
+  },
+  "skills": {
+    "execute-phase": {
+      "mainEstimateMax": 3717,
+      "mainLinesMax": 303,
+      "mainSources": {
+        "fix 258 / #258 harden-needs-input": "the needs-input contract moved to code: the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and `re-ask once`/`Confirmed phase`/`Confirmed file targets` are gone (F33-D/F34-D) — measured 3379 est / 275 lines; ceiling re-based to ceil(3379 x 1.10) = 3717 / ceil(275 x 1.10) = 303 (down from 3807/315, the body shrank)",
+        "the deleted manifest re-basis": "the fold re-based the entry against `docs/features/_TEMPLATE/LEDGERS.md`, the ledger template this same branch deletes; ceiling re-based to ceil(3200 x 1.10) = 3520"
+      }
+    },
+    "init-workspace": {
+      "mainEstimateMax": 3663,
+      "mainSources": {
+        "the fold that removed the guard": "the hand-written guard is gone: `three-tier` no longer appears anywhere in the skill; ceiling re-based to ceil(3330 x 1.10) = 3663"
+      }
+    },
+    "fixture-formula": {
+      "mainEstimateMax": 3663,
+      "mainSources": {
+        "the mis-added re-basis": "measured 3330 est / 275 lines; ceiling re-based to ceil(3330 x 1.10) = 3664"
+      }
+    }
+  }
+}

@@ -167,8 +167,8 @@ planned and recording the result in the Evidence table. It does not merely claim
 
 ## Where every artifact lives — the 14-section unit doc
 
-The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 14 sections (the
-13 `UNIT_DOC_REQUIRED_SECTIONS` plus `## Impact`):
+The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 14 required
+sections — `UNIT_DOC_REQUIRED_SECTIONS` is the whole list, `## Impact` included:
 
 | # | Section | Purpose |
 |---|---------|---------|
@@ -176,16 +176,17 @@ The unit doc at `docs/features/<NN>-<slug>/SPEC.md` has exactly 14 sections (the
 | 2 | Why | The problem or gap |
 | 3 | User outcome | From the user's perspective |
 | 4 | Acceptance criteria | Numbered, scenario-induced list |
-| 5 | Non-goals | What this unit is NOT |
+| 5 | Impact | What the change touches beyond its own files: consumers, dependents, and every mention that stops being true when it lands |
+| 6 | Non-goals | What this unit is NOT |
 | — | Future (extra) | User-deferred ideas, verbatim; never implemented. Reviewed at close, on session resume, and when work returns to the area |
-| 6 | Future cost | Obligations on future work |
-| 7 | Applicable tests | Triage-decided; `n/a` when no tests |
-| 8 | Known pre-existing issues | Each marked `affects` / `does-not-affect` |
-| 9 | Tasks | P1…Pn with stable IDs |
-| 10 | Evidence | AC → command → exit/digest → output → verified-by |
-| 11 | Progress log | Dated `YYYY-MM-DD HH:MM` entries |
-| 12 | Next | Single next action |
-| 13 | References | Issues, roadmap rows, related material |
+| 7 | Future cost | Obligations on future work |
+| 8 | Applicable tests | Triage-decided; `n/a` when no tests |
+| 9 | Known pre-existing issues | Each marked `affects` / `does-not-affect` |
+| 10 | Tasks | P1…Pn with stable IDs |
+| 11 | Evidence | AC → command → exit/digest → output → verified-by |
+| 12 | Progress log | Dated `YYYY-MM-DD HH:MM` entries |
+| 13 | Next | Single next action |
+| 14 | References | Issues, roadmap rows, related material |
 
 The Evidence table uses the five columns: `AC`, `What was run`, `Exit / digest`,
 `Output (≤2 lines)`, `Verified-by`. The Progress log entry regex:
@@ -356,9 +357,9 @@ Exit 2 on error (unknown type, invalid scope, missing sections, ambiguous unit).
 | `progress_logEntry(doc, { ts, what, ref, next })` | `progress-log@1` | receipt |
 | `validate(text)` | `unit-doc-schema@1` | `{ ok, violations[] }` |
 
-`UNIT_DOC_SECTIONS` (13): `Objective, Why, User outcome, Acceptance criteria,
-Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
-Evidence, Progress log, Next, References`.
+`UNIT_DOC_SECTIONS` (14): `Objective, Why, User outcome, Acceptance criteria,
+Impact, Non-goals, Future cost, Applicable tests, Known pre-existing issues,
+Tasks, Evidence, Progress log, Next, References`.
 
 `EVIDENCE_COLUMNS`: `AC, What was run, Exit / digest, Output (≤2 lines), Verified-by`.
 

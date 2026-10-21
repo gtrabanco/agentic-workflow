@@ -20,6 +20,10 @@ Something happens.
 
 1. Something happens correctly.
 
+## Impact
+
+Nothing outside this fixture.
+
 ## Non-goals
 
 No changes to unrelated areas.

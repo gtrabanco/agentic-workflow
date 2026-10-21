@@ -20,6 +20,10 @@ The logo renders in the new brand black on all surfaces.
 
 1. The logo SVG path fills with `#0d0d0d` in the rendered page.
 
+## Impact
+
+Nothing outside this fixture.
+
 ## Non-goals
 
 No other brand color changes.
