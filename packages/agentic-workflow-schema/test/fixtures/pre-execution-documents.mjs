@@ -30,19 +30,16 @@ export const POLICY_VERSION = "2026-08-30";
  * missing heading); any other override replaces its body verbatim.
  */
 export function toySpec(overrides = {}) {
-  /* Feature 61: migrated from the retired two-half SPEC vocabulary to the
-  * unit document's 13-section list (AC15); the selector validates against
-  * UNIT_DOC_REQUIRED_SECTIONS. */
-
   // Feature 61: migrated from the retired two-half SPEC vocabulary to the
-  // unit document's 13-section list (AC15); the selector validates against
-  // UNIT_DOC_REQUIRED_SECTIONS.
+  // unit document's section list (AC15); the selector validates against
+  // UNIT_DOC_REQUIRED_SECTIONS. #305: `## Impact` is one of those sections.
   const parts = {
     title: "# Toy feature",
     Objective: "## Objective\n\nShip the thing.\n",
     Why: "## Why\n\nBecause the customer needs it.\n",
     "User outcome": "## User outcome\n\nUsers can do X.\n",
     "Acceptance criteria": "## Acceptance criteria\n\n- [x] S1 is done.\n",
+    Impact: "## Impact\n\nWhat it touches.\n",
     "Non-goals": "## Non-goals\n\n- Not S2.\n",
     "Future cost": "## Future cost\n\nNone known.\n",
     "Applicable tests": "## Applicable tests\n\n- Unit tests.\n",

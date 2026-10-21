@@ -86,6 +86,10 @@ Users observe the toy working.
 2. The toy does not regress (command-verified).
 3. The toy's fix is auditable (lineage-verified).
 
+## Impact
+
+Nothing outside this fixture.
+
 ## Non-goals
 
 - Not the other toy.

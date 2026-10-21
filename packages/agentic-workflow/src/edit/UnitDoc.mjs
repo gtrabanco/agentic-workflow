@@ -2,9 +2,9 @@
  * UnitDoc — create and edit single-unit SPEC documents.
  *
  * The unit doc is a single Markdown file (docs/features/<NN>-<slug>/SPEC.md)
- * containing exactly 13 closed sections in a fixed order.  All edits go
- * through typed operations that validate post-state against the file schema
- * before writing.
+ * containing exactly 14 closed sections in a fixed order (#305 added
+ * `## Impact`).  All edits go through typed operations that validate
+ * post-state against the file schema before writing.
  */
 
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdtempSync, rename } from "node:fs";
@@ -39,6 +39,15 @@ From the user's perspective: what they can do or observe after this unit ships.
 Numbered list. Each AC is induced from a concrete user scenario ("I do X and observe Y").
 Make each AC command-verified where possible. If the request is too vague to state an AC,
 STOP and ask the user with concrete options — never invent one.
+
+## Impact
+
+What the change touches beyond its own files: what consumes this unit's
+deliverables, what this unit consumes from others, what stops being true when
+the change lands (comments, docs, declared validators, narrations naming the
+old shape), and what must be asked before touching something live on the other
+side. Cut at plan time — the executor sweeps this surface, it is not
+rediscovered at review.
 
 ## Non-goals
 
@@ -126,7 +135,7 @@ function makeReceipt(service, op, path, schema, before, after, ok) {
 // ── Public API ───────────────────────────────────────────────────────────
 
 /**
- * create(dir, slug) — write the unit doc with all 13 sections from the
+ * create(dir, slug) — write the unit doc with all 14 sections from the
  * canonical skeleton.  dir is the parent directory (e.g. docs/features);
  * slug is the kebab-case name.  The file lands at docs/features/<slug>/SPEC.md.
  *
