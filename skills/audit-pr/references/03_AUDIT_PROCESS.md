@@ -29,8 +29,9 @@
    - **BLOCKED** — one or more gates fail; output the ranked blocker list.
 6. **Persist blockers to the fold ledger (BLOCKED verdict only).** Every blocker
    on a **BLOCKED** verdict is, by definition, fix-now — merge is gated on it.
-   Append each to the unit's fix-now fold ledger `review-findings.md` (same
-   location and fixed schema
+   Append each to the unit's fix-now fold ledger — its `## Findings` section for
+   a migrated unit (issue #308), `review-findings.md` for a legacy one; probe the
+   doc first and write to exactly one carrier (same fixed schema
    `| id | file:line | axis | severity | class | route | folded |` as
    `review-change`'s persist step) — the **same ledger**, not a separate one
    (D4: the fold cycle consumes one list). **Merged unit → no write** — check
