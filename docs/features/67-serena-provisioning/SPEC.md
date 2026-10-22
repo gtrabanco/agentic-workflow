@@ -553,7 +553,7 @@ cut; the lane resumes after P6.
   `init-workspace` 4.0.3 → **4.1.0** with its CHANGELOG row, and the Pi package
   0.27.0 → **0.28.0** with its re-bundle row (the `skills/**` trigger set).
   Gates: root suite 796/0, `normative-drift` 18/0, context budgets PASS 28,
-  `version-parity --content` PASS → `PENDING-SHA` — next: P5.
+  `version-parity --content` PASS → `7178243e` — next: P5.
 - 2026-10-21 — **diff-guard exception, P4** (file-count only, the feature-65
   pattern): 251 lines (**within** the 400 budget) but **10 files > 8** — and the
   phase's own `Relevant files:` list names 7 of them. The rest are structural,
