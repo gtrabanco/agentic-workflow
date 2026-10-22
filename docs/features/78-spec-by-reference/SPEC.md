@@ -129,10 +129,12 @@ What the change touches beyond its own files:
   `fold-findings`, `review-change` (`PERSIST_AND_DECIDE.md` ledger carrier),
   `triage-issue`, `audit-pr`, `workflow-status`, plus `LEDGERS.md`'s
   `review-mark@1` / `finding-mark@1` / `gate-ran@1` blocks.
-- **The schema package (pending Q1):** `UNIT_DOC_REQUIRED_SECTIONS`
+- **The schema package (Q1 = A, `decisions.md` D1 — shipped here):**
+  `UNIT_DOC_REQUIRED_SECTIONS`
   (`packages/agentic-workflow-schema/src/pre-execution.ts:225`) is mirrored by
   three surfaces and pinned by `scripts/unit-doc-contract.test.mjs`; a
-  required-list or selector change is a mirrored package change in the same PR.
+  required-list or selector change is a mirrored package change in the same PR
+  (version bump in P6, both shapes accepted so closed units keep validating).
 - **What stops being true when it lands:** `review-findings.md` is the carrier
   for migrated units; Evidence rows are the receipt; `REVIEW-RAN` / `GATE-RAN`
   / `VF` are marks rather than log lines; a unit doc without `## Specs` /
@@ -150,8 +152,8 @@ From issue #308 §Non-goals:
 - No migration of closed/historical unit docs.
 - No schema-package break: `UNIT_DOC_REQUIRED_SECTIONS` tolerates the new
   sections; the required-list change, if wanted, is a separate mirrored package
-  change. *(Tension recorded as Q1 — the triage gate requires all 14 sections
-  today, so how far the machine moves is the owner's call.)*
+  change. *(Resolved by `decisions.md` D1: the non-goal is amended — the
+  mirrored package change ships in this unit, both shapes accepted.)*
 - Findings discovered during implementation never expand scope.
 
 ## Future
@@ -159,9 +161,9 @@ From issue #308 §Non-goals:
 - `open`, 2026-10-21 — "No change to the review machinery here
   (review-on-slices / review_due is a follow-up unit once slices exist)."
   (#308 §Non-goals)
-- `open`, 2026-10-21 — "the required-list change, if wanted, is a separate
-  mirrored package change." (#308 §Non-goals; Q1 decides whether this unit
-  absorbs it)
+- `discarded 2026-10-21` — "the required-list change, if wanted, is a separate
+  mirrored package change." (#308 §Non-goals; absorbed into this unit by the
+  owner's `decisions.md` D1 — the mirrored change ships with the re-cut)
 
 ## Future cost
 
@@ -213,49 +215,71 @@ scripts/knowledge-honesty-contract.test.mjs`, plus the root suites
 
 ## Tasks
 
-- P1 — Red-first pins and fixtures: commit the fixture corpus (the golden
-  fixture's spec-by-reference copy plus a converted copy of `fix/258`'s
-  documents) and the red-first cases for the new grammar in the linter, router
-  and drift-gate suites.
-  (validator: `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs scripts/normative-drift.test.mjs` exits 0 — the new cases are red until P2/P3 land)
-  Relevant files: scripts/fixtures/spec-by-reference, scripts/phase-lint.test.mjs, scripts/unit-route.test.mjs, scripts/normative-drift.test.mjs
-- P2 — Templates re-cut: both `docs/features/_TEMPLATE/SPEC.md` and
-  `docs/fix/_TEMPLATE/SPEC.md` gain `## Specs` /
-  `## Tasks` (`S#` links) / `## Log`, keep `## Impact`, fold the Evidence table
-  into Log lines; the four pinned section-contract surfaces are re-pointed to
-  the agreed shape (Q1) in the same change.
+- P1 — Fixtures and red-first pins first: commit
+  `scripts/fixtures/spec-by-reference/` (the golden fixture's spec-by-reference
+  copy plus a converted copy of `fix/258`'s documents — the AC5 corpus and the
+  AC7 review input) and the new-grammar cases in the linter, router,
+  drift-gate and unit-doc-contract suites, red until P2–P5 deliver them; then
+  hand the converted corpus to the owner — no repository workflow doc moves
+  before AC7's acceptance row exists (O2).
+  (validator: `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs scripts/normative-drift.test.mjs` exits 1 at this phase — the new cases fail by design — and exits 0 after P4)
+  Relevant files: scripts/fixtures/spec-by-reference, scripts/phase-lint.test.mjs, scripts/unit-route.test.mjs, scripts/normative-drift.test.mjs, scripts/golden-fixture.test.mjs
+- P2 — Section contract (both shapes, `D1`): the required-section set learns
+  two accepted shapes — the current 14 (closed units, never migrated) and the
+  re-cut set (`## Specs` / `## Log` in place of `## Evidence` /
+  `## Progress log`) — and the three mirrors
+  (`packages/agentic-workflow/src/edit/schema.mjs`,
+  `packages/agentic-workflow/src/edit/UnitDoc.mjs`,
+  `scripts/unit-route.mjs`) follow with `scripts/unit-doc-contract.test.mjs`
+  re-pinned to both. Entry gate: AC7 owner acceptance recorded (O2); the
+  package version bump rides P6.
+  (validator: `node --test scripts/unit-doc-contract.test.mjs` exits 0 with both-shape cases)
+  Relevant files: packages/agentic-workflow-schema/src/pre-execution.ts, packages/agentic-workflow/src/edit/schema.mjs, packages/agentic-workflow/src/edit/UnitDoc.mjs, scripts/unit-route.mjs, scripts/unit-doc-contract.test.mjs
+- P3 — Templates re-cut: both `docs/features/_TEMPLATE/SPEC.md` and
+  `docs/fix/_TEMPLATE/SPEC.md` gain `## Specs` (numbered `S#` quoting the
+  owner's strings verbatim), `## Tasks` (each task linked to its `S#`) and the
+  append-only `## Log` (`L1` = original request verbatim, corrections verbatim,
+  evidence and gate runs as lines), keep `## Impact` and the planning-ledger
+  headers, and fold the Evidence table into Log lines.
   (validator: `node --test scripts/unit-doc-contract.test.mjs scripts/pre-execution-quality.test.mjs scripts/lane-era-lineage.test.mjs` exits 0)
-  Relevant files: docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, scripts/unit-doc-contract.test.mjs, packages/agentic-workflow-schema/src/pre-execution.ts
-- P3 — Machine dual-grammar: `unit-doc-phases.mjs` + `phase-lint.mjs` accept
-  `S#`-linked task bullets and the new sections alongside the current grammar;
-  `unit-route.mjs` reads both shapes (triage section check, phase/done
-  derivation); `normative-surfaces@1` gains the new grammar rows; schema
-  mirrors follow if Q1 requires it (version bump, same PR).
-  (validator: `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs scripts/normative-drift.test.mjs scripts/unit-doc-contract.test.mjs` exits 0 on both-shape fixtures)
+  Relevant files: docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md
+- P4 — Machine dual-grammar: `scripts/unit-doc-phases.mjs` +
+  `scripts/phase-lint.mjs` accept `S#`-linked task bullets and the new
+  sections beside the current grammar; `scripts/unit-route.mjs` reads both
+  shapes (triage section check, done-phases derived from `## Log`, `S#` task
+  links); `normative-surfaces@1` gains the new grammar rows with their machine
+  vocabularies.
+  (validator: `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs scripts/normative-drift.test.mjs` exits 0 — P1's red cases go green here)
   Relevant files: scripts/unit-doc-phases.mjs, scripts/phase-lint.mjs, scripts/unit-route.mjs, AGENTS.md
-- P4 — Ledger collapse: the open-findings short table + `## Log` lines (fold
-  sha, what was verified, `REVIEW-RAN`/`GATE-RAN`/`VF` as log lines with exit
-  codes) replace `review-findings.md` for migrated units; every reader is
-  rewired to probe the unit doc first and fall back to the legacy file.
+- P5 — Ledger collapse: `## Findings` (`id`, `S#`/`file:line`, `axis`,
+  `severity`, `class`, `route`) carries the OPEN rows and `## Log` carries the
+  folded history (fold sha + what was verified) plus `REVIEW-RAN` /
+  `GATE-RAN` / `VF` lines with exit codes; `review-findings.md` retires for
+  migrated units; every reader probes the unit doc first and falls back to the
+  legacy file (`unit-route`, `workflow-status`, `ledger-provenance`,
+  `LEDGERS.md`, `fold-findings`, `review-change`, `triage-issue`, `audit-pr`).
   (validator: `node --test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/review-loop-discipline.test.mjs scripts/workflow-status-sensor.test.mjs` exits 0)
   Relevant files: skills/pre-execution-review/references/LEDGERS.md, scripts/workflow-status.mjs, scripts/ledger-provenance.mjs, skills/fold-findings/SKILL.md, skills/review-change/references/PERSIST_AND_DECIDE.md
-- P5 — Positive prescription and migration rules: the plan step states what to
-  do (cut each `S#` verbatim, link tasks, keep the log) as a positive
-  checklist; the migration rule (open units at next touch, closed never) lands
-  in the lane/executor references; `AGENTS.md`/`PLAN.md` `S#`-vs-`P#` wording
-  amended; `bump-skill` pass + CHANGELOG rows + package version bumps.
-  (validator: `node --test scripts/knowledge-honesty-contract.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exit 0; `node scripts/version-parity-gate.mjs --content --base main` exit 0)
+- P6 — Wording, migration rule and bookkeeping: the plan step states the
+  positive checklist (cut each `S#` from the request verbatim, link the tasks,
+  keep the log) and the migration rule (open units at next touch, closed
+  never); `AGENTS.md` / `PLAN.md` keep `S#` (requirement ids) and `P#` (phase
+  labels) as two vocabularies (PE-011); `bump-skill` pass + CHANGELOG rows +
+  schema/Pi package version bumps with the companion row.
+  (validator: `node --test scripts/knowledge-honesty-contract.test.mjs` exits 0; `bun scripts/check-skill-context.mjs` exits 0; `node scripts/version-parity-gate.mjs --content --base main` exits 0)
   Relevant files: skills/unit-lane/references/PLAN.md, skills/unit-lane/SKILL.md, AGENTS.md, CHANGELOG.md
-- P6 — Verification: run every AC's command, fill the Evidence rows, run the
-  root suites and both package suites, present the converted fixture corpus to
-  the owner (AC7), open the PR with `Closes #308`.
-  (validator: `node --test scripts/*.test.mjs` exits 0; `bun run test` exits 0 in both packages)
+- P7 — Verification: run every AC's command, fill the Evidence rows, run the
+  root suites and both package suites, record AC7's owner acceptance, open the
+  PR with `Closes #308`.
+  (validator: `node --test scripts/*.test.mjs` exits 0; `bun run test` exits 0 in `packages/agentic-workflow-schema` and `packages/pi-agentic-workflow`)
+  Relevant files: docs/features/78-spec-by-reference/SPEC.md, .github
 
 ### Planning evidence
 
 M/L unit — the ledger is frozen as `planning-evidence.md` in this folder (plan
-step, sizing rule `skills/unit-lane/references/PLAN.md:153-160`); this section
-names it and does not duplicate its rows.
+step, sizing rule `skills/unit-lane/references/PLAN.md:153-160`), which also
+holds the prior-decisions contradiction sweep; this section names it and does
+not duplicate its rows.
 
 ### Obligations
 
@@ -279,17 +303,21 @@ Step notes:
   direction in `#307`, URL only, ≤3 sources). Uncertainties: none outside the
   three design questions.
 - **design** — ACs induced from `#308` §Scope 1–5 (ask-don't-infer: the issue
-  states each scope item); gap interview open — Q1 section-set strategy, Q2
-  unit sizing, Q3 open-findings carrier, batched in `decisions.md`.
-- **plan** — Tasks P1–P6 below; planning ledgers freeze as
-  `planning-evidence.md` / `planning-obligations.md` (M/L sizing rule);
-  prior-decisions contradiction sweep runs with the plan step.
-- **implement/tests** — P1 pins + fixtures red-first, P2 templates, P3 machine
-  dual-grammar, P4 ledger collapse, P5 wording + bookkeeping; one phase per
-  hand-off at the `implement` tier (`cheap`), diff guard after each.
+  states each scope item); gap interview batched as Q1–Q3 and closed by the
+  owner: `D1` full re-cut + mirrored package change (both shapes), `D2` one
+  unit at `scope: large`, `D3` open findings in their own `## Findings`
+  section — resolutions and the five dated assumptions in `decisions.md`.
+- **plan** — Tasks P1–P7 below; planning ledgers cut in the M/L home
+  (`planning-evidence.md` with the prior-decisions sweep,
+  `planning-obligations.md` O1–O10, one phase each); plan backlog empty
+  (`none — no questions: every claim was settled by provenance or research`).
+- **implement/tests** — P1 fixtures + red-first pins (owner review gate O2),
+  P2 section contract, P3 templates, P4 dual grammar, P5 ledger collapse,
+  P6 wording + bookkeeping; one phase per hand-off at the `implement` tier
+  (`cheap`), diff guard after each.
 - **evidence/review/docs** — Evidence row per AC, owner acceptance of the
-  converted fixture corpus (AC7), review verdict, `bump-skill` + CHANGELOG +
-  package bumps (P5), PR with `Closes #308` (P6), release step at close-out.
+  converted fixture corpus (AC7/O2), review verdict, `bump-skill` + CHANGELOG +
+  package bumps (P6), PR with `Closes #308` (P7), release step at close-out.
 
 ## Evidence
 
@@ -303,19 +331,24 @@ output (≤2 lines), verified-by.
 | R1 | research: `grep -rln "review-findings" scripts skills docs template .github packages` + per-file reads | exit 0 | 6 scripts, 8 skills/references, 6 test suites read the ledger | this session, 2026-10-21 |
 | R2 | research: `sed -n 649,651p scripts/unit-route.mjs` + `packages/agentic-workflow-schema/src/pre-execution.ts:225-241,529-556` | exit 0 | triage fails closed on a missing section; selector requires all 14 in order | this session, 2026-10-21 |
 | — | `bun scripts/unit-route.mjs --triage 78-spec-by-reference` (block pasted verbatim under `## Triaged steps`) | exit 0 | 9 steps, 0 skipped, budget strong | this session, 2026-10-21 |
-| — | `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` | exit 0 | P1–P6 `PASS (6/6)` · verdict PASS | this session, 2026-10-21 |
+| — | `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` (design-time run, pre-plan re-cut) | exit 0 | P1–P6 `PASS (6/6)` · verdict PASS | this session, 2026-10-21 |
 | — | `node scripts/promise-coherence.mjs` (head after the unit doc's Impact paths were made absolute) | exit 0 | `verdict PASS` · claims 35 checked / 77 skipped | #305 guard, this session |
 | — | `node scripts/needs-input.mjs docs/features/78-spec-by-reference` | exit 0 | `Open questions: 3` · route `design` · continuation `no-decision-available` | dispatcher, this session |
 | — | `node --test scripts/*.test.mjs` (root suites, after the schema build) | exit 0 | tests 775, pass 775, fail 0 | this session, 2026-10-21 |
+| — | `node scripts/needs-input.mjs docs/features/78-spec-by-reference` (after `D1`–`D3`) | exit 0 | `Open questions: 0` · `Pending: none` | dispatcher, 2026-10-21 |
+| — | `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` (P1–P7 cut) | exit 0 | `P1`–`P7` `PASS (6/6)` · verdict PASS | this session, 2026-10-21 |
 
 ## Progress log
 
 `2026-10-21 22:40 — unit doc created from issue #308 (--from-issue); roadmap row 78 registered; research + design provenance recorded in sources.md (19 claims); three open questions appended to decisions.md; triage block pasted; phase-lint PASS (6/6 ×6), promise-coherence PASS, root suites 775/775 → 15ab46a1 — next: batched gap interview (Q1–Q3), then the plan step`
+`2026-10-21 23:25 — owner answered Q1–Q3 (`D1` full re-cut + mirrored package change, `D2` one unit scope large, `D3` `## Findings` section); plan step cut: 12 CLAIM rows in sources.md, planning-evidence.md (PE-001–PE-013 + contradiction sweep), planning-obligations.md (O1–O10), BRIEF.md questions pane; tasks re-cut to P1–P7; roadmap row 78 `defined` → `planned` (own-status gate) → (this commit) — next: /execute-phase 78-spec-by-reference P1 (tier: cheap)`
 
 ## Next
 
-Answer the three open questions in `decisions.md` (Q1 section-set strategy, Q2
-unit sizing, Q3 open-findings carrier), then the plan step cuts the phases.
+All design questions are closed (`D1`–`D3`) and the plan is cut. Execution
+hands off one phase per turn.
+
+→ Next: /execute-phase 78-spec-by-reference P1 (tier: cheap) — run phase P1 (fixtures + red-first pins); the lane resumes after it, and P2 needs the AC7 owner review of the converted corpus
 
 ## References
 
