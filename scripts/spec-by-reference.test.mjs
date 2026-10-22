@@ -144,14 +144,14 @@ test("#308 the converted corpus lints PASS phase by phase", () => {
     assert.match(line, /PASS \(6\/6\)/, `P${number} must lint clean: ${line}`);
   }
   assert.match(stdout, /^verdict PASS$/m);
-  assert.match(stdout, /^fingerprint [0-9a-f]{64}$/m);
+  assert.match(stdout, /^fingerprint: [0-9a-f]{64}$/m);
 });
 
 test("#308 a task linking no S# is refused, in the migrated grammar", () => {
   const { status, stdout } = lint(path.join(TREE, "docs/features/23-migrated-broken/SPEC.md"));
   assert.notEqual(status, 0);
   assert.match(stdout, /^verdict BLOCKED/m);
-  assert.match(stdout, /P3 .*box-\d+: .*(S#|requirement)/m, `the unlinked phase is named: ${stdout}`);
+  assert.match(stdout, /^task-link-missing: P3 links no requirement/m, `the unlinked phase is named: ${stdout}`);
 });
 
 test("#308 a task linking a missing S# is refused", () => {
@@ -198,11 +198,13 @@ test("#308 a migrated unit records done phases from ## Log and routes to the nex
   assert.match(stdout, /^next: \/execute-phase 21-migrated-shape P2 \(tier: /m, stdout);
 });
 
-test("#308 a migrated unit whose log records every phase still answers a route", () => {
-  const { status, stdout, stderr } = route(["22-migrated-done"]);
-  assert.equal(status, 0, stderr);
-  assert.match(stdout, /^route: execute$/m, stdout);
-  assert.match(stdout, /^unit: 22-migrated-done$/m, stdout);
+test("#308 a migrated unit whose log records every phase refuses a bare execute route", () => {
+  // The router's documented boundary, unchanged by the migration: an in-progress
+  // unit with every phase recorded is neither executable nor auditable, so it
+  // fails closed and names the status the operator must settle.
+  const { status, stderr } = route(["22-migrated-done"]);
+  assert.equal(status, 1);
+  assert.match(stderr, /all phases recorded but status is 'in-progress'/);
 });
 
 test("#308 the legacy unit routes and triages exactly as before the migration", () => {
