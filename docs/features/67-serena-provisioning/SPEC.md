@@ -425,7 +425,7 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   now unions the committed range with `git status --porcelain`, pinned by a new
   case in `scripts/version-parity-gate.test.mjs` (red first: it returned `[]`).
   Gates: package suite 435/0, root suite `node --test scripts/*.test.mjs` 776/0,
-  `--content` PASS → commit `PENDING-SHA` — next: P2.
+  `--content` PASS → commit `406ce8a7` — next: P2.
 - 2026-10-21 — **diff-guard exception, P1** (established pattern): BREACH at
   541 lines > 400 / 13 files > 8 measured from the unit base `81fc1e7d`, which
   counts the four planning-ledger commits the plan step itself landed
