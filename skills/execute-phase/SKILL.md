@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 6.1.0
+version: 6.2.0
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -44,6 +44,8 @@ done:
 ✓ Evidence rows updated (command → exit/digest → output → verified-by)
 ✓ Progress log updated with a dated `YYYY-MM-DD HH:MM` entry that names the
   phase id (what, commit, next)
+✓ Memory boundary ran — the phase's outcome saved under `unit/<NN-slug>/doc`,
+  or the mirror marked pending when the layer is degraded
 ✓ Diff guard passed (on implement steps) — see `diff-guard` in PREFLIGHT.md
 ✓ → Next: block printed as the absolute last output
 ```
@@ -136,7 +138,15 @@ names before implementation), then green. UI/adapter glue may test after.
    output (≤2 lines) | verified-by |`. Append to the Evidence section.
 3. **Progress log**: append a dated entry —
    `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next: <what is next>`.
-4. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
+4. **Memory boundary** — this step is a phase transition. Follow
+   [the memory protocol](../unit-lane/references/MEMORY.md): before the first
+   memory read of the session run `agentic-workflow memory probe` once and
+   record its verdict in Evidence; after the step, save the phase id, what it
+   changed, its Evidence outcome and any discovery under
+   `topic_key: "unit/<NN-slug>/doc"` with an explicit `project` and
+   `session_id`. A `degraded` verdict is recorded and the mirror marked pending
+   — it never blocks the step.
+5. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
    <step-summary>"` — run it, paste the SHA.
 
 ### 6. Red gate (repair loop)

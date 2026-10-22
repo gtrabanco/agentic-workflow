@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 2.3.0
+version: 2.4.0
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -39,6 +39,8 @@ done:
   on BREACH: re-triage or record exception, never shrink the diff
 ✓ Unit doc's Evidence rows updated (command → exit/digest → output → verified-by)
   and Progress log updated (dated entry) before every commit
+✓ Memory boundaries ran — probe verdict once, saves at unit start / each phase
+  transition / close under `unit/<NN-slug>/doc`, degradation recorded as pending
 ✓ → Next: block printed as the absolute last output
 ```
 
@@ -166,6 +168,19 @@ Before every commit:
   output (≤2 lines) | verified-by |`
 - **Progress log**: `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next:
   <what is next>`
+
+### 5b. Memory boundaries
+
+Engram is the required memory substrate; a down layer never blocks a unit —
+follow [the memory protocol](references/MEMORY.md).
+
+- **Probe once**, before the first memory read: `agentic-workflow memory probe`
+  → paste the verdict into Evidence; `degraded` is recorded and said once.
+- **Save at unit start, each phase transition, and close** under
+  `topic_key: "unit/<NN-slug>/doc"` with explicit `project` and `session_id`.
+- **Recall** `mem_context` → scoped search → one explicit `all_projects: true`
+  retry → `mem_get_observation` → the unit doc wins. A miss is keyword-bound,
+  never proof nothing was saved; an unavailable mirror is marked pending.
 
 ### 6. Close the unit — the close-out ladder
 
