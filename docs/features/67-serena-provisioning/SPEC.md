@@ -596,7 +596,7 @@ cut; the lane resumes after P6.
   (`pi config` / the `packages` resource filter). Bumps the Pi package
   0.28.0 → **0.29.0** with its CHANGELOG row. Gates: package suite 452/0 under
   bun **and** node, root suite 796/0, `version-parity --content` PASS
-  → `PENDING-SHA` — next: P6.
+  → `f0da06d6` — next: P6.
 - 2026-10-21 — **diff-guard exception, P5**: BREACH at 693 lines > 400 / 10 files
   > 8 from P5's base `7178243e`. The overage is the phase's shape, not scope
   creep: the red-first suite is ~330 lines of the 693 (17 cases — latch-once,
