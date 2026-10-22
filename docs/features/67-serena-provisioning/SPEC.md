@@ -361,6 +361,8 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | R4 | pi docs `docs/packages.md` §"Create a package"/§"Declare dependencies", `docs/mcp.md` §"Configure servers", `docs/extensions.md:195-206` (local: `/home/agent/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/docs/`) | read | a `dependencies` entry is **installed but not activated**; only the parent package's `pi.extensions` load; MCP servers come from `mcp.json` or `pi.registerMcpServer` — no manifest key ships MCP | unit-lane research step |
 | R5 | `github.com/oraios/serena` README §Quick Start + `docs/02-usage/{010_installation,020_running,030_clients,050_configuration}.md` (fetched 2026-10-21) | read | canonical install `uv tool install -p 3.13 serena-agent`, run `serena start-mcp-server`; `uvx --from serena …` **not found** in Serena docs; `trusted_project_path_patterns` is a **global** `serena_config.yml` key, new configs default `[]` | unit-lane research step |
 | AC1 | `cd packages/pi-agentic-workflow && bun run test` (P1) | 0 · 435 pass / 0 fail | `AC1: @bacnh85/pi-serena is an exact pin in dependencies` · `AC1: the manifest loads the dependency's extension entry` · `AC1: the shipped entry points still load this package's own extension` | execute-phase (main agent) |
+| AC1 | `node scripts/serena-activation-check.mjs` (P2) | 0 | `ACTIVATION: ok` · `dependency: @bacnh85/pi-serena@0.10.0 (installed from the packed artifact)` · `serena_* tools registered: 20 (required 5 present)` | execute-phase (main agent) |
+| AC1 | same check against a manifest carrying only the package's own extension entry (negative control, P2) | 1 | `ACTIVATION: failed — tools-not-registered` · `registered: (none)` — the check is not vacuous | execute-phase (main agent) |
 | AC2 | `node --test scripts/version-parity-gate.test.mjs` (P1, uncommitted-tree fail-open) | 0 · 22 pass / 0 fail | `changedFilesSince unions the uncommitted tree into the committed range` — red before the fix (returned `[]`), green after | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
 
@@ -454,3 +456,25 @@ cut; the lane resumes after P6.
 - `packages/pi-agentic-workflow/package.json`, `README.md` — the pi path's
   current surface.
 - Row 51 / issue #218 — the consumer of the LSP evidence tier (out of scope).
+- 2026-10-21 — execute P2 base ref `d8e35ca1`. **Gate 1 (path-protection)
+  passed at entry** (`PATH-GUARD pass — justified`, checked 8): the P1
+  `justification` record was re-attached from P1 to P2, because the guard scopes
+  records by phase and the P2 range is what carries the gate repair.
+- 2026-10-21 — implement P2 (prove the wiring loads):
+  `scripts/serena-activation-check.mjs` copies the package into a scratch tree,
+  builds `dist/` there and stages the skill bundle with the package's own
+  bundler, `npm pack`s the copy, `npm install --omit=dev`s the artifact, runs
+  `pi install <dir>` against a temp `PI_CODING_AGENT_DIR`, and boots a real Pi
+  session (SDK, `SessionManager.inMemory()`) to read the extension runner's
+  registered tools. Result: **`ACTIVATION: ok`** — `@bacnh85/pi-serena@0.10.0`
+  installed from the packed artifact, **20 `serena_*` tools registered**
+  (required 5 present). Negative control (manifest reduced to the package's own
+  entry, restored afterwards) prints `ACTIVATION: failed — tools-not-registered
+  … registered: (none)`, so the check cannot pass vacuously. Three
+  environment facts it had to encode: `tsc` is the package's devDependency (not
+  on PATH), the staged copy needs a tsconfig whose `typeRoots`/`paths` point
+  back at the installed toolchain and **no `baseUrl`** (npm rewrites
+  host-provided bare specifiers into relative paths that pi's module mapping
+  cannot resolve), and `pi install` must see the same `PI_CODING_AGENT_DIR` as
+  `pi list`/the session. Gates: root suite 776/0, package suite 435/0,
+  `diff-guard` 209 lines / 8 files ≤ 400/8 → PASS — next: P3.
