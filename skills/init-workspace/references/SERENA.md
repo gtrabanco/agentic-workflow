@@ -93,6 +93,12 @@ check names the offending entry. Removing a failing entry (per the startup
 rule below) is the correct remediation — never leave a dead entry in the file.
 **Never claim LSP evidence for a run whose server never started.**
 
+The report's `health:` line carries one entry per listed server. When the check
+cannot run at all — no tool, no installer, or a refused consent, including a
+refused **trust** append (§Trust) — it says so once, on that line, with the
+reason, instead of reporting a pass: an absent check is a residual, never a
+silent pass.
+
 ### Startup rule (critical)
 
 > **A server that fails to start must not stay listed.** One failing entry
@@ -121,13 +127,93 @@ deterministic script's job regardless — LSP serves navigation and diagnostics,
 not our document grammar. `node`+`npm` are required for json/yaml; `libicu` is
 required for marksman.
 
-## Tool install is a different step
+## Provisioning the tool — one consented question
 
-This file owns the **project config**, not the tool. If Serena is not installed,
-offer the install (ask-first; `uv`/`uvx` preferred, `pipx` fallback) or record
-it as a residual. The install half is tracked by #219.
+This file owns the **project config** *and* the tool that reads it. The install
+half (`#219`) lands here as one step, never a second interview.
+
+**Order inside the step (fixed):**
+
+1. **Detect what can be performed** — `uv --version` first, then `pipx
+   --version`. Never offer a route the machine cannot run.
+2. **Ask ONCE**, with the whole set in the question: the tool install, the MCP
+   registration for **the detected platform only**, and the global trust append
+   when the project root is not covered. One yes covers the set the question
+   names; a narrower yes narrows the set.
+3. **On yes** — install, register, append trust, then report exactly what
+   happened (§Report).
+4. **On no** — install nothing, register nothing, write nothing. Record the
+   absence as a residual with its reason and finish; the run still completes.
+
+**Install routes, in the order tried:**
+
+| Route | Command | When |
+|---|---|---|
+| preferred | `uv tool install -p 3.13 serena-agent`, then `serena init` | `uv` is on PATH |
+| fallback | `pipx install serena-agent`, then `serena init` | `uv` absent, `pipx` present — **MCP path only** |
+
+`serena init` creates the global `serena_config.yml` when absent and never
+rewrites an existing one. `serena -V` prints `Serena <version>`: that is the
+health reader, and the only proof the tool runs.
+
+### MCP registration — the detected platform, its own shape
+
+Register **one** server named `serena`, in the config file of the platform
+Step 0 detected. Never write a cross-platform blob, and never write a second
+platform's file "to be safe". A per-workspace file (`.vscode/mcp.json`,
+`.cursor/mcp.json`) needs the same consent as the rest; a global one
+(`~/.codex/config.toml`, the JetBrains `mcp.json`) is append-only — the one
+entry, never another line.
+
+| Detected | Where | Entry |
+|---|---|---|
+| Claude Code | `claude mcp add serena -- serena start-mcp-server --context claude-code --project "$(pwd)"` (user scope: `--scope user`, `--project-from-cwd`) | command `serena` |
+| Copilot / VS Code | `.vscode/mcp.json` → `servers.serena` | `{"type":"stdio","command":"serena","args":["start-mcp-server","--context=vscode","--project","${workspaceFolder}"]}` |
+| Cursor | `.cursor/mcp.json` → `mcpServers.serena` | `{"command":"serena","args":["start-mcp-server","--context=ide"]}` |
+| JetBrains Copilot | the global `mcp.json` Copilot opens | `{"type":"stdio","command":"serena","args":["start-mcp-server","--context=jb-copilot-plugin"]}` |
+| Codex | `~/.codex/config.toml` → `[mcp_servers.serena]` | `command = "serena"`, `args = ["start-mcp-server","--project-from-cwd","--context=codex"]` |
+
+### Trust — the fresh clone (global config, consent-gated)
+
+`trusted_project_path_patterns` lives in the user's **global** `serena_config.yml`,
+not the project's `.serena/project.yml`, and a fresh config defaults it to `[]`.
+A project root no pattern covers starts no language server, so the health check
+fails with nothing in the project to blame.
+
+- **Detect** — read the global config, test this project root against the
+  patterns.
+- **Offer the append inside the same consented question.** This file is shared by
+  every project on the machine, so it is never written implicitly.
+- **On yes** — append **one pattern naming this project root**. Never rewrite,
+  reorder or reformat any other line; an append is the only permitted edit.
+- **On no** — record the untrusted state as the health-check residual. It is a
+  residual, not an error, and it never blocks the run.
+
+### Report — exactly what happened
+
+Close the step with this fixed block. "Installed" is never assumed and never
+reported from the intent to install:
+
+```text
+SERENA PROVISIONING
+tool:      <installed | already present | refused | no installer | failed: <reason>>
+version:   <serena -V output, or n/a>
+mcp:       <registered <platform> -> <path> | already present | refused | failed: <reason>>
+trust:     <appended <pattern> | already covered | refused - untrusted | n/a>
+config:    <written .serena/project.yml | already present | skipped: <reason>>
+health:    <one line per listed server, see below>
+residual:  <none | the reason this run is degraded>
+```
 
 ## Degraded path
 
-Serena unavailable → warn once, continue, and record the absence in the unit's
-evidence. **Never block a run on it.**
+Serena unavailable — no tool, no installer (`uv`, `pipx`), or a refused consent —
+→ warn once, continue, and record the absence with its reason in the unit's
+evidence. **Never block a run on it**, and never let a degraded run read as a
+healthy one: the report says which line is missing and why.
+
+LSP evidence itself stays confined to **TypeScript/JavaScript**: a diagnostic
+from any other listed server is navigation aid, never verification evidence, and
+no claim may cite it. Document verification (schema rules, required sections,
+column counts) stays a **deterministic script's** job regardless — LSP serves
+navigation, not our document grammar.

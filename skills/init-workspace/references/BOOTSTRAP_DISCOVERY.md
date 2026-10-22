@@ -69,3 +69,9 @@
      website itself.
    - **Naming conventions**, **MCP servers**, and **Serena language servers** (see
      [SERENA](SERENA.md) for the mapping), if any.
+   - **Serena footprint** — the platform whose MCP config is the one to register
+     (Claude Code, Cursor, VS Code/Copilot, Codex, JetBrains), the installers
+     actually present (`uv --version`, `pipx --version`), and whether the global
+     `serena_config.yml` already covers this project root under
+     `trusted_project_path_patterns`. The write step offers **one** consent
+     question from these three facts; it never asks a second time.

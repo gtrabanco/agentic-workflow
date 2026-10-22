@@ -367,6 +367,12 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC2 | `node --test scripts/pin-watch.test.mjs` (P3) | 0 · 20 pass / 0 fail | `drift: a published version above the pin is a finding naming both versions` · `dedupe: an already-open issue is reused, never opened twice` · `the workflow runs on a weekly schedule and by hand` · `the workflow may write issues and runs the filing path` | execute-phase (main agent) |
 | AC2 | same suite against a workflow stripped of `schedule`, `issues: write` and `--file-issues` (negative control, P3) | 1 · 2 fail | `the schedule carries no cron expression` · `without issues: write the job cannot open the tracking issue` — the AC's two FAIL conditions are machine-checked | execute-phase (main agent) |
 | AC2 | `node scripts/pin-watch.mjs --check` (P3, live registry) | 1 | `exact pins checked: 4` · `drift: @gtrabanco/pi-agentic-workflow · @gtrabanco/agentic-workflow-schema 4.6.0 → 4.7.0` · `drift: @gtrabanco/agentic-workflow · typebox 1.3.7 → 1.4.3` · `VERDICT: DRIFT` | execute-phase (main agent) |
+| AC3 | `grep -c "uv tool install -p 3.13 serena-agent" skills/init-workspace/references/SERENA.md` (P4, O4) | 0 · 1 | `uv tool install -p 3.13 serena-agent`, then `serena init` | MCP path only: `pipx install serena-agent` — and the consent sentence: **"Ask ONCE**, with the whole set in the question: the tool install, the MCP registration for **the detected platform only**, and the global trust append" · **"On no** — install nothing, register nothing, write nothing." | execute-phase (main agent) |
+| AC4 | `grep -c "Degraded path" skills/init-workspace/references/SERENA.md` (P4, O5) | 0 · 1 | `Serena unavailable — no tool, no installer (uv, pipx), or a refused consent → warn once, continue, and record the absence with its reason` · `Never block a run on it` | execute-phase (main agent) |
+| AC5 | `grep -c "trusted_project_path_patterns" skills/init-workspace/references/SERENA.md` (P4, O6) | 0 · 1 | `On yes — append **one pattern naming this project root**. Never rewrite, reorder or reformat any other line` · `On no — record the untrusted state as the health-check residual` | execute-phase (main agent) |
+| AC7 | `grep -c "Language server status" skills/init-workspace/references/SERENA.md` (P4, O7) | 0 · 2 | `verifying Language server status: initialized for every language in language_servers` · `an absent check is a residual, never a silent pass` | execute-phase (main agent) |
+| AC8 | `grep -c "deterministic script" skills/init-workspace/references/SERENA.md` (P4, O8) | 0 · 2 | `LSP evidence itself stays confined to TypeScript/JavaScript: a diagnostic from any other listed server is navigation aid, never verification evidence` · `Document verification … stays a deterministic script's job` | execute-phase (main agent) |
+| AC10 | `node --test scripts/normative-drift.test.mjs` + `bun scripts/check-skill-context.mjs` (P4, O13) | 0 · 18 pass / 0 fail · PASS context budgets: 28 skills | `init-workspace` 4.1.0 frontmatter = its CHANGELOG row; reference ceiling re-based to 2759 with the reason declared in `referenceSources` | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
 
 ## Progress log
@@ -522,3 +528,41 @@ cut; the lane resumes after P6.
   workflow file — so splitting would leave one commit red, which is forbidden.
   Shrinking is forbidden (no comment, blank line, doc or test removed to fit the
   number). Real count reported; exception recorded; the phase stands.
+- 2026-10-21 — execute P4 base ref `692a5a12`. **Gates at entry:** path-protection
+  `PATH-GUARD pass — clean` (checked 1); phase-lint 6/6 PASS.
+- 2026-10-21 — implement P4 (`init-workspace` install and trust): `SERENA.md`
+  stops deferring the tool half ("The install half is tracked by #219" is gone)
+  and owns it — one consent question covering the install routes
+  (`uv tool install -p 3.13 serena-agent` + `serena init`; `pipx install
+  serena-agent` **MCP path only**, because pi-serena discovers Serena through
+  `uv tool dir`/`SERENA_PYTHON` and an ephemeral `uvx` env would never be
+  found), the **detected platform's** MCP registration from a five-row table
+  (Claude Code `claude mcp add …`, `.vscode/mcp.json`, `.cursor/mcp.json`,
+  JetBrains `mcp.json`, `~/.codex/config.toml` — each shape verified against
+  Serena's own `030_clients.md`, not invented), and the consent-gated append to
+  the global `trusted_project_path_patterns` (append-only: one pattern naming
+  this root, no other line ever rewritten). Adds the fixed `SERENA PROVISIONING`
+  report and the rule that an absent health check is a residual, never a silent
+  pass. Wired through `BOOTSTRAP_DISCOVERY.md` (the three detection facts the
+  question is built from), `BOOTSTRAP_WRITE.md` step 8, `UPGRADE.md` step 8
+  (additive-only preserved), `SKILL.md` (guardrail, turn-contract box, `Done
+  when`) and the root `README.md` blurb. `SKILL_CONTEXT_BUDGETS.json` re-bases
+  `init-workspace`'s `referenceEstimateMax` to 2759 with the reason declared in
+  `referenceSources` — measured 2590 est / 217 lines; `SKILL.md` stays inside its
+  existing ceiling (3384/237 vs 3663/252, no re-base needed). Bumps:
+  `init-workspace` 4.0.3 → **4.1.0** with its CHANGELOG row, and the Pi package
+  0.27.0 → **0.28.0** with its re-bundle row (the `skills/**` trigger set).
+  Gates: root suite 796/0, `normative-drift` 18/0, context budgets PASS 28,
+  `version-parity --content` PASS → `PENDING-SHA` — next: P5.
+- 2026-10-21 — **diff-guard exception, P4** (file-count only, the feature-65
+  pattern): 251 lines (**within** the 400 budget) but **10 files > 8** — and the
+  phase's own `Relevant files:` list names 7 of them. The rest are structural,
+  not scope creep: `packages/pi-agentic-workflow/package.json` + `CHANGELOG.md`
+  are the version-parity trigger set the `skills/**` change *requires* in the
+  same PR, `docs/workflow/SKILL_CONTEXT_BUDGETS.json` carries the declared
+  reference re-base, and the unit doc is the evidence/progress record. One
+  coherent contract (Serena provisioning = one consent question) spanning the
+  skill, its four references and the surfaces that publish it; splitting it
+  would ship a skill whose reference and SKILL.md disagree. No honest reduction;
+  shrinking is forbidden. Real count reported; exception recorded; the phase
+  stands.

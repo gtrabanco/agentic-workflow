@@ -24,13 +24,16 @@
 7. **Propagate the unit doc template.** Ensure
    `docs/features/_TEMPLATE/SPEC.md` exists with all 14 sections sections.
    This is the template used when creating new unit documents.
-8. **Provision the Serena project config.** Load
-   [SERENA](SERENA.md), ask consent, then: (a) append the `.gitignore`
-   block additively (skip when already present); (b) write `.serena/project.yml`
-   with the `language_servers` list for every detected language (never overwrite
-   an existing file — report it); (c) run the health check from SERENA.md and
-   record the result. If Serena is not installed, offer install or record as a
-   residual.
+8. **Provision Serena — one consented question, then write.** Load
+   [SERENA](SERENA.md) and ask its single consent question; one yes covers the
+   tool install, the detected platform's MCP registration and the global trust
+   append, and a refusal installs, registers and writes **nothing**. On yes:
+   (a) append the `.gitignore` block additively (skip when already present);
+   (b) write `.serena/project.yml` with the `language_servers` list for every
+   detected language (never overwrite an existing file — report it); (c) run the
+   health check and render the fixed provisioning report. When no installer is
+   available, offer only what the machine can perform and record the residual
+   with its reason — the run completes either way.
 9. **Install accepted agent safety hooks.** Keep the canonical policy and
    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
