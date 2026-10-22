@@ -116,11 +116,15 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > `/product-audit`. A terminal verdict still names what to do with it (merge,
 > re-audit, triage). This is part of "Done when" for every skill.
 
-> **Phases are `P1, P2, …` ("phases"), never "Steps"/`S1`.** Any skill that
-> produces or references a plan labels implementation steps `P1, P2, …` and calls
-> them *phases* (a Spanish or other-language UI may say "fases"/"pasos", but the
-> committed artifacts and the labels stay `P1, P2, …`). The label is the executor's
-> argument (`execute-phase NN P2`), so it must be stable and uniform — never emit
+> **Phases are `P1, P2, …` ("phases"); `S#` are requirement ids.** Two
+> vocabularies, kept apart: a unit doc's `## Specs` numbers its requirements `S#`
+> (issue #308), and `## Tasks` labels its implementation steps `P1, P2, …` — so a
+> skill that produces or references a plan labels steps `P1, P2, …` and calls them
+> *phases* (a Spanish or other-language UI may say "fases"/"pasos", but the
+> committed artifacts and the labels stay `P1, P2, …`), never `S1`/`Step 1`. A
+> requirement is never a phase and a phase is never a requirement: the `S#` is what
+> a task links and a finding cites, the `P#` is the executor's argument. The label
+> must be stable and uniform — never emit
 > `S1`/`S2`/"Step N" into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap.
 
 > **Checklists over heuristics; fixed output formats.** Skills are executed by
