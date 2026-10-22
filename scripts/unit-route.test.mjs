@@ -789,3 +789,57 @@ test("F32/OB-17: an archived unit (no status source, no open row) answers `histo
   assert.equal(routeLine(feature.stdout), "historical");
   assert.equal(rowLine(feature.stdout), "none");
 });
+
+// ---------------------------------------------------------------------------
+// #308 — both document shapes route
+//
+// A migrated unit doc carries `## Specs` / `## Findings` / `## Log` instead of
+// `## Evidence` / `## Progress log` / `review-findings.md`. The router reads both:
+// the triage section check accepts either set, done phases come from `## Log`
+// (`P<n>` progress lines) when the doc has no `## Progress log`, and OPEN rows
+// come from `## Findings` when the doc has no side ledger. The legacy fixtures
+// above are the proof the second shape changed nothing.
+// ---------------------------------------------------------------------------
+const SPEC_REF_FIXTURE = path.join(repoRoot, "scripts", "fixtures", "spec-by-reference", "tree");
+const routeSpecRef = (args) => spawnSync(process.execPath, [SCRIPT, ...args], {
+  cwd: repoRoot,
+  encoding: "utf8",
+  env: { ...process.env, UNIT_ROUTE_REPO: SPEC_REF_FIXTURE },
+});
+
+test("#308 a migrated unit triages from the re-cut section set", () => {
+  const result = routeSpecRef(["--triage", "21-migrated-shape"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^TRIAGE — 21-migrated-shape \(feature\)$/m);
+  assert.match(result.stdout, /^Steps: research, design, plan, implement, tests, evidence, review, docs$/m, result.stdout);
+});
+
+test("#308 triage still refuses a doc missing a shared section, in either shape", () => {
+  const result = routeSpecRef(["--triage", "90-missing-shared"]);
+  assert.notEqual(result.status, 0, "a migrated doc that drops ## Impact is still a missing mandatory section");
+  assert.match(result.stderr, /missing mandatory sections:.*Impact/);
+});
+
+test("#308 done phases come from ## Log when the doc carries no ## Progress log", () => {
+  const result = routeSpecRef(["21-migrated-shape"]);
+  assert.equal(result.status, 0, result.stderr);
+  // `P1` is logged and `P2` is not: a legacy doc with an empty `## Progress log`
+  // answers `P1`, so `P2` is only reachable by reading `## Log`.
+  assert.match(result.stdout, /^next: \/execute-phase 21-migrated-shape P2 \(tier: /m, result.stdout);
+});
+
+test("#308 OPEN rows come from ## Findings when the doc carries no review-findings.md", () => {
+  const result = routeSpecRef(["24-migrated-open"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(rowLine(result.stdout), "F7");
+  assert.match(routeLine(result.stdout), /^(fold|replan|decision|product)$/);
+  assert.match(result.stdout, /^read-set/m);
+});
+
+test("#308 the legacy shape is untouched: no ## Log, no ## Findings, same routes", () => {
+  const result = routeSpecRef(["20-legacy-shape"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^next: \/execute-phase 20-legacy-shape P2 \(tier: /m, result.stdout);
+  const triage = routeSpecRef(["--triage", "20-legacy-shape"]);
+  assert.equal(triage.status, 0, triage.stderr);
+});

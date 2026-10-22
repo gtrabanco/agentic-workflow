@@ -430,3 +430,52 @@ test("AC4: a one-byte mutation in a temp copy is detected, names the mutated fix
     "the committed snapshot must be byte-identical after the tamper run",
   );
 });
+
+// --- #308: the migration corpus's golden-fixture member ----------------------
+//
+// The spec-by-reference corpus re-cuts this fixture's toy unit into the migrated
+// shape (`scripts/fixtures/spec-by-reference/golden-fixture/SPEC.md`), and the
+// deterministic half of this suite is what proves the conversion is a shape
+// change and nothing else: the original toy tree keeps passing AC1/AC2 untouched
+// (asserted above), and the converted copy lints PASS on its own grammar. The
+// corpus path is derived, never copied, so the two cannot drift.
+
+const SPEC_REF_GOLDEN = path.join(REPO, "scripts", "fixtures", "spec-by-reference", "golden-fixture");
+
+test("#308 the converted golden-fixture unit lints PASS on the migrated grammar", () => {
+  const doc = path.join(SPEC_REF_GOLDEN, "SPEC.md");
+  assert.ok(fs.existsSync(doc), `the corpus member exists: ${showPath(doc)}`);
+  const { status, stdout } = runPhaseLint(doc);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^verdict PASS$/m);
+  for (const phase of ["P1", "P2"]) {
+    assert.match(stdout, new RegExp(`^${phase} Phase-lint: PASS \\(6\\/6\\)`, "m"));
+  }
+});
+
+test("#308 the conversion kept the toy unit's own requirements", () => {
+  const source = fs.readFileSync(path.join(FIXTURE_DIR, "toy-spec.md"), "utf8");
+  const converted = fs.readFileSync(path.join(SPEC_REF_GOLDEN, "SPEC.md"), "utf8");
+  // Every quoted requirement in the converted doc's `## Specs` section is a
+  // sentence of the toy spec, so a conversion cannot invent scope (the AC7
+  // owner-review input's own check). The one-line summary blockquote above the
+  // first section is the doc's description, never a requirement.
+  const specs = converted.slice(converted.indexOf("\n## Specs"), converted.indexOf("\n## Impact"));
+  const quotes = [...specs.matchAll(/^> (.+)$/gm)].map((m) => m[1].trim());
+  assert.ok(quotes.length >= 3, `the converted doc quotes its requirements: ${quotes.length}`);
+  const flat = source.replace(/\s+/g, " ");
+  for (const quote of quotes) {
+    assert.ok(flat.includes(quote.replace(/\s+/g, " ")), `the conversion invented a requirement: ${quote}`);
+  }
+});
+
+test("#308 the original toy tree is untouched by the conversion", () => {
+  // The conversion is additive: no file under the golden fixture's own directory
+  // carries the re-cut sections, so AC1/AC2 keep asserting the legacy toy plan.
+  for (const name of fs.readdirSync(FIXTURE_DIR)) {
+    const full = path.join(FIXTURE_DIR, name);
+    if (!fs.statSync(full).isFile() || !name.endsWith(".md")) continue;
+    const text = fs.readFileSync(full, "utf8");
+    assert.doesNotMatch(text, /^## Specs$/m, `${showPath(full)} must keep its pre-migration shape`);
+  }
+});
