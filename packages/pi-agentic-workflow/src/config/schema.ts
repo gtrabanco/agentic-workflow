@@ -1,5 +1,5 @@
 import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES, PROFILE_FALLBACK_APPLY_TO, PROFILE_FALLBACK_RESUME, } from "./types.js";
-import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, } from "./types.js";
+import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, MemoryConfigFile, } from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
@@ -24,6 +24,7 @@ const ROOT_KEYS = new Set([
   "profiles",
   "profileOrder",
   "profileFallback",
+  "memory",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -348,7 +349,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback, memory)`,
       });
     }
   }
@@ -417,6 +418,11 @@ function validateConfig(value: unknown): ParseResult {
     }
   }
 
+  if (value.memory !== undefined) {
+    const memory = checkMemory(value.memory, "$.memory", issues);
+    if (memory) config.memory = memory;
+  }
+
   if (value.profiles !== undefined) {
     if (!isRecord(value.profiles)) {
       issues.push({ path: "$.profiles", message: "must be an object mapping profile names to profile definitions" });
@@ -452,6 +458,30 @@ function validateConfig(value: unknown): ParseResult {
  * the loader can treat "nothing declared" like "nothing present" without a
  * second read.
  */
+/** Strict validator for the `memory` consent block (feature 66, AC3). */
+function checkMemory(value: unknown, path: string, issues: ConfigIssue[]): MemoryConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let unknown = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "engram") {
+      unknown = true;
+      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown memory key "${key}" (allowed: engram)` });
+    }
+  }
+  const out: MemoryConfigFile = {};
+  if (value.engram !== undefined) {
+    if (typeof value.engram !== "boolean") {
+      issues.push({ path: `${path}.engram`, message: `must be a boolean, got ${describe(value.engram)}` });
+    } else {
+      out.engram = value.engram;
+    }
+  }
+  return unknown ? undefined : out;
+}
+
 export function parseConfigFile(text: string): ParseResult {
   if (text.trim() === "") return { ok: true, config: {} };
 
