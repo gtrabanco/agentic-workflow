@@ -47,10 +47,10 @@ miss knows the miss is keyword-bound, not proof that nothing was saved.
 
 ## Acceptance criteria
 
-> Draft at unit creation, induced from issue #262's mechanics (body + the
-> 2026-09-28, 2026-10-15 and 2026-10-21 owner comments). The design step
-> confirms or revises each row after its provenance search and gap interview,
-> and pins the command verifier per AC at plan time.
+> Induced from issue #262's owner comments (body + 2026-09-28 / 2026-10-15 /
+> 2026-10-21) and confirmed by the design step's gap interview — decisions
+> `D1`–`D3` in `decisions.md`, claims cited in `sources.md`. The plan step pins
+> the command verifier per AC.
 
 1. **Save protocol at unit boundaries, keyed by unit id.** At unit start, each
    phase transition, and unit close, the lane instructs persisting the unit's
@@ -58,17 +58,23 @@ miss knows the miss is keyword-bound, not proof that nothing was saved.
    discoveries/gotchas under a stable per-unit topic
    (`unit/<NN-slug>/…`), so a later session recalls them without re-reading
    the docs. (source: #262 Mechanics 1; #262 comment 2026-10-21 item 1)
-2. **Health check fail-soft at the claim.** A bounded connectivity probe runs
-   before the first memory read of a session; on timeout it says so once,
-   continues, and records the absence in Evidence — never blocking a unit —
-   and the probe reads sync/autosync staleness as a health signal, so a
-   responding server that has not synced is not reported green. (source: #262
-   Mechanics 2; #262 comment 2026-09-28 item 2; #262 comment 2026-10-15
-   "REPLACES")
-3. **Provisioning parity with #219.** The pi package ships/extends the Engram
-   MCP registration and `init-workspace` offers it for non-pi hosts; both ask
-   first per `init-workspace`'s consent rules and report exactly what was
-   written. (source: #262 Mechanics 3)
+2. **Health check fail-soft at the claim.** A deterministic probe (runner-crate
+   subcommand, decision D1) with a bounded timeout runs before the first memory
+   read of a session and emits a JSON verdict — including an explicit `DEGRADED`
+   result when the engram binary or transport is absent. On timeout it says so
+   once, continues, and the verdict/absence is recorded in Evidence — never
+   blocking a unit — and the verdict reads sync/autosync staleness as a health
+   signal, so a responding server that has not synced is not reported green.
+   (source: #262 Mechanics 2; #262 comment 2026-09-28 item 2; #262 comment
+   2026-10-15 "REPLACES"; decision D1)
+3. **Provisioning parity with #219.** The pi package registers Engram through
+   its own consent surface (extension `pi.registerMcpServer`, only when the
+   engram binary is present) and asks the user to install Engram — the
+   documented route is `pi install npm:gentle-engram@latest`, **never**
+   `engram setup pi` (it keeps the old version until re-executed) — and
+   `init-workspace` offers the same ask-first provisioning for non-pi hosts.
+   Both report exactly what was written. (source: #262 Mechanics 3; issue #219
+   §Mechanics; decision D3)
 4. **Recall discipline, Engram 3.3.x contract.** The written discipline is:
    `mem_context` first (explicitly scoped), then a scoped search with an
    **explicit** `project`; on a project-scoped miss retry once with
@@ -82,11 +88,12 @@ miss knows the miss is keyword-bound, not proof that nothing was saved.
    escape hatch — so the fail-closed multi-candidate case loses no memories
    silently. (source: #262 comment 2026-09-28 item 3; #262 comment 2026-10-15
    "`mem_session_summary` accepts explicit `project` fallback")
-6. **Canonical split `log-session` ↔ `mem_session_summary` is decided and
-   recorded.** The docs state which artifact each writer owns (team journal in
-   git vs local decision/gotcha recall keyed by unit id), so the double-write
-   is a recorded decision, not an accident. (source: #262 comment 2026-09-28
-   item 4)
+6. **Canonical split decided and recorded** (decision D2): `docs/LOGS.md` is
+   the git-traveling human/team journal owned by `log-session`;
+   `mem_session_summary` is local decision/gotcha recall keyed by unit id.
+   Both writers' texts state their own half, so the double-write is a recorded
+   decision, not an accident. (source: #262 comment 2026-09-28 item 4;
+   decision D2)
 7. **Keyword-bound recall is disclosed.** The docs state that Engram's recall
    is keyword-bound (FTS5, no vectors), so a miss is not evidence that
    knowledge was never saved; hybrid FTS5+vector stays an Engram-side
@@ -145,7 +152,11 @@ What this unit touches beyond its own files:
 
 ## Future
 
-none
+- 2026-10-21 — owner idea, verbatim from the Q3 answer and explicitly **not**
+  part of that answer's decision: "create and install a local script to update
+  engram and weekly check through code when using a command if possible when
+  using unit-lane or audit-pr". Status: `open` — needs its own discussion and
+  decision before anything is implemented.
 
 ## Future cost
 
@@ -267,11 +278,15 @@ output (≤2 lines), verified-by.
   first), 4 dated assumptions, `open-questions@1` with Q1–Q3 pasted by
   needs-input (R7, R8) + `BRIEF.md` → evidence: R7–R8 — next: gap interview
   with the owner (stage 4 decide on the answers)
+- 2026-10-21 23:05 — design stage 4: owner answered Q1–Q3 (ask
+  21eda815-41e3-47a8-8ff2-bf010c986f87); `D1`–`D3` appended, ACs 2/3/6
+  finalized to the decisions, Future row added, needs-input exits 0 with
+  `Open questions: 0` → evidence: decisions.md D1–D3 — next: plan step
 
 ## Next
 
-Gap interview (design stage 3): owner answers Q1–Q3 (`decisions.md`), then
-stage 4 records `decision` rows and finalizes the acceptance criteria.
+Plan step (design complete: D1–D3 recorded, 0 open questions, ACs
+finalized): phases `P1…Pn` with validators + the planning ledgers.
 
 ## References
 
