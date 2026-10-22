@@ -180,3 +180,85 @@ export function createProfileStateStore({
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Serena readiness state (feature 67, D5 / AC9)
+// ---------------------------------------------------------------------------
+
+/**
+ * What the operator was last told about one project's Serena config, keyed by
+ * the project root. The record is the nudge's whole memory: the state kind it
+ * announced and the init-workspace revision that was current when it did.
+ */
+export interface SerenaReadinessRecord {
+  /** The readiness kind announced (`missing`, `stale`, `outdated`, `ready`). */
+  state: string;
+  /** The bundled `init-workspace` revision in force at that moment. */
+  revision: string;
+  /** ISO-8601 timestamp of the announcement. */
+  at: string;
+}
+
+export interface SerenaReadinessStore {
+  /** The record for `projectKey`, or undefined when this project was never seen. */
+  record(projectKey: string): SerenaReadinessRecord | undefined;
+  /** Persist the record for `projectKey`. Returns false when the write failed. */
+  latch(projectKey: string, record: SerenaReadinessRecord): boolean;
+}
+
+export interface SerenaReadinessStoreOptions {
+  path: string;
+  readFile?: (path: string) => string | null;
+  writeFile?: (path: string, text: string) => void;
+}
+
+/**
+ * The nudge's latch, in the package's own global state file beside the
+ * first-run hint and the profile demotion — never inside the project, and never
+ * inside any configuration. Read-merge-write throughout, so no other key in
+ * that file is disturbed; every failure is soft (a latch that cannot be
+ * persisted re-shows the nudge next session, which is a nuisance, not a fault).
+ */
+export function createSerenaReadinessStore({
+  path,
+  readFile = readOrNull,
+  writeFile = writeThrough,
+}: SerenaReadinessStoreOptions): SerenaReadinessStore {
+  const readState = (): Record<string, unknown> => {
+    const text = readFile(path);
+    if (text === null || text.trim() === "") return {};
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed === "object" && parsed !== null) return parsed as Record<string, unknown>;
+    } catch {
+      // Corrupt state: treat as empty, so the nudge is shown rather than lost.
+    }
+    return {};
+  };
+
+  return {
+    record(projectKey: string) {
+      const raw = readState().serenaReadiness;
+      if (typeof raw !== "object" || raw === null) return undefined;
+      const entry = (raw as Record<string, unknown>)[projectKey];
+      if (typeof entry !== "object" || entry === null) return undefined;
+      const { state, revision, at } = entry as Record<string, unknown>;
+      if (typeof state !== "string" || typeof revision !== "string" || typeof at !== "string") return undefined;
+      return { state, revision, at };
+    },
+    latch(projectKey: string, record: SerenaReadinessRecord) {
+      const state = readState();
+      const existing = state.serenaReadiness;
+      const perProject =
+        typeof existing === "object" && existing !== null ? (existing as Record<string, unknown>) : {};
+      perProject[projectKey] = record;
+      state.serenaReadiness = perProject;
+      try {
+        writeFile(path, `${JSON.stringify(state, null, 2)}\n`);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  };
+}
