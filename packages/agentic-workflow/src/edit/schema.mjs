@@ -10,7 +10,7 @@
  * package as owner.
  */
 
-// ── Unit doc: 14 closed sections (ordered, #305) ───────────────────────
+// ── Unit doc: 14 closed sections (ordered, #305) — the legacy shape ─────
 export const UNIT_DOC_SECTIONS = [
   "Objective",
   "Why",
@@ -27,6 +27,49 @@ export const UNIT_DOC_SECTIONS = [
   "Next",
   "References",
 ];
+
+// ── Unit doc: the re-cut shape (spec-by-reference, #308) ────────────────
+// `## Specs` numbers the owner's requirements verbatim, `## Findings` holds the
+// OPEN rows `review-findings.md` used to carry, and `## Log` appends every
+// request, correction, evidence run, gate run and folded finding. Three headings
+// differ from the legacy list; the rest is shared, so a migrated doc and a closed
+// one are read by the same code.
+export const UNIT_DOC_SPEC_REF_SECTIONS = [
+  "Specs",
+  "Impact",
+  "Non-goals",
+  "Future cost",
+  "Applicable tests",
+  "Known pre-existing issues",
+  "Tasks",
+  "Findings",
+  "Log",
+  "Next",
+  "References",
+];
+
+// One shape table, resolved by the headings a document actually carries. Kept in
+// parity with `UNIT_DOC_SECTION_SHAPES` in
+// packages/agentic-workflow-schema/src/pre-execution.ts by
+// `scripts/unit-doc-contract.test.mjs`; the duplicate is deliberate — this
+// package ships without a dependency on the schema package.
+export const UNIT_DOC_SECTION_SHAPES = Object.freeze({
+  legacy: UNIT_DOC_SECTIONS,
+  "spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS,
+});
+
+/** The accepted shape a set of headings satisfies, or `null` when it satisfies neither. */
+export function resolveUnitDocShape(headings) {
+  for (const [name, sections] of Object.entries(UNIT_DOC_SECTION_SHAPES)) {
+    if (sections.every((section) => headings.includes(section))) return name;
+  }
+  return null;
+}
+
+/** The section list of a resolved shape, defaulting to the legacy list. */
+export function unitDocSectionsFor(shape) {
+  return shape === null ? UNIT_DOC_SECTIONS : UNIT_DOC_SECTION_SHAPES[shape];
+}
 
 // ── Unit doc: evidence-table@1 columns ───────────────────────────────────
 export const EVIDENCE_COLUMNS = [
