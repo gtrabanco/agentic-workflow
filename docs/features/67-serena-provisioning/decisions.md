@@ -45,3 +45,4 @@ D5 | 2026-10-21 | decision | Q5 | human-owner | ask form d387d8bb-ed40-43c8-9410
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/version-parity-gate.test.mjs, scripts/version-parity-gate.mjs | P2 | 2026-10-21 | execute-phase | validating P1's bump exposed a fail-open in `--content`: it diffed `main...HEAD` only, so uncommitted `skills/**`+`packages/pi-agentic-workflow/**` edits reported "nothing to enforce"; the fix unions `git status --porcelain` and is pinned red-first in the gate's own suite
+justification | scripts/pin-watch.mjs, scripts/pin-watch.test.mjs | P3 | 2026-10-21 | execute-phase | P3 authors the AC2 watcher and its offline suite together (the suite pins drift, clean, degraded and dedupe over an injected fetcher); the first red run surfaced an ordering slip in one key-set assertion, corrected in the suite itself with no assertion loosened

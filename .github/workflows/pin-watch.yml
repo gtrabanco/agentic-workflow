@@ -1,0 +1,63 @@
+name: Pin watch
+
+# The early warning in front of the PR-time pin gate (feature 67 P3, AC2, issue
+# #219 decision D1's addendum; obligation O3).
+#
+# Every exact `dependencies` pin in this repository must match the registry: a
+# pin is deliberate (AGENTS.md → Packages — a fresh install has to reproduce the
+# lockfile byte-for-byte), and a pin that has fallen behind is invisible until
+# someone opens a PR, because `version-parity-gate.mjs --pins` only runs there.
+# So this job asks the registry on a schedule and, when a pin is behind, files
+# ONE tracking issue naming the package, the pinned version and the published
+# version — reusing the issue already open for that dependency instead of filing
+# a second one.
+#
+# It never bumps anything. Dependency upgrades stay deliberate human
+# `fix(deps)` PRs on a cadence; a bot that edits pins would turn them into side
+# effects of a cron, which is exactly what the rule forbids (PE-005).
+#
+# Exit semantics of `scripts/pin-watch.mjs --file-issues`:
+#   0 — no drift, or every drifted dependency already has its open issue
+#       (a weekly job that re-files a known drift must stay green, or the alert
+#       becomes the noise it was meant to avoid)
+#   0 — the registry was unreachable: degraded, never failed (a network blip
+#       must not redden a run no commit caused — the same rule `--pins` follows)
+#   1 — a NEW issue was opened, which is what makes the red run worth reading
+#
+# Run it by hand any time: gh workflow run pin-watch.yml
+
+on:
+  schedule:
+    # Mondays 06:17 UTC. Off the top of the hour on purpose: GitHub's scheduler
+    # queues the :00 stampede first, and a delayed run reads as a broken one.
+    - cron: "17 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write # the only write this workflow performs: the tracking issue
+
+concurrency:
+  group: pin-watch
+  cancel-in-progress: false
+
+jobs:
+  pin-watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+
+      # The watch reads each package's manifest directly and spawns `npm view`
+      # for the registry and `gh` for the issues — no install step, because it
+      # imports nothing outside node builtins (and the pin gate's own evaluator).
+      - name: Watch every exact dependency pin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/pin-watch.mjs --file-issues

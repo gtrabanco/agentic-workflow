@@ -364,6 +364,9 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC1 | `node scripts/serena-activation-check.mjs` (P2) | 0 | `ACTIVATION: ok` · `dependency: @bacnh85/pi-serena@0.10.0 (installed from the packed artifact)` · `serena_* tools registered: 20 (required 5 present)` | execute-phase (main agent) |
 | AC1 | same check against a manifest carrying only the package's own extension entry (negative control, P2) | 1 | `ACTIVATION: failed — tools-not-registered` · `registered: (none)` — the check is not vacuous | execute-phase (main agent) |
 | AC2 | `node --test scripts/version-parity-gate.test.mjs` (P1, uncommitted-tree fail-open) | 0 · 22 pass / 0 fail | `changedFilesSince unions the uncommitted tree into the committed range` — red before the fix (returned `[]`), green after | execute-phase (main agent) |
+| AC2 | `node --test scripts/pin-watch.test.mjs` (P3) | 0 · 20 pass / 0 fail | `drift: a published version above the pin is a finding naming both versions` · `dedupe: an already-open issue is reused, never opened twice` · `the workflow runs on a weekly schedule and by hand` · `the workflow may write issues and runs the filing path` | execute-phase (main agent) |
+| AC2 | same suite against a workflow stripped of `schedule`, `issues: write` and `--file-issues` (negative control, P3) | 1 · 2 fail | `the schedule carries no cron expression` · `without issues: write the job cannot open the tracking issue` — the AC's two FAIL conditions are machine-checked | execute-phase (main agent) |
+| AC2 | `node scripts/pin-watch.mjs --check` (P3, live registry) | 1 | `exact pins checked: 4` · `drift: @gtrabanco/pi-agentic-workflow · @gtrabanco/agentic-workflow-schema 4.6.0 → 4.7.0` · `drift: @gtrabanco/agentic-workflow · typebox 1.3.7 → 1.4.3` · `VERDICT: DRIFT` | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
 
 ## Progress log
@@ -478,3 +481,44 @@ cut; the lane resumes after P6.
   cannot resolve), and `pi install` must see the same `PI_CODING_AGENT_DIR` as
   `pi list`/the session. Gates: root suite 776/0, package suite 435/0,
   `diff-guard` 209 lines / 8 files ≤ 400/8 → PASS → `5b7b7389` — next: P3.
+- 2026-10-21 — execute P3 base ref `308202ae`. **Gates at entry:** path-protection
+  `PATH-GUARD pass — clean` (checked 1); phase-lint 6/6 PASS; triage block diffs
+  clean. Authoring `scripts/pin-watch.test.mjs` then editing it tripped the Tier 2
+  preventive guard (`test-file` class) — a P3 `justification` record was added to
+  `decisions.md` rather than lowering the policy.
+- 2026-10-21 — implement P3 (pin watch): `scripts/pin-watch.mjs` reuses the PR
+  gate's own `evaluatePins` (never a second implementation of the rule), loops
+  every package that declares exact pins (`packages/pi-agentic-workflow` +
+  `packages/agentic-workflow`, PE-012/A4), and adds the dedupe layer the gate
+  does not need: `issueFor` renders one issue naming the package and both
+  versions, `planIssues` reuses an open issue carrying the same
+  `<package>/<dependency>` marker — including when the published version moved
+  again, since the operator is already tracking that dependency. `--check` exits
+  1 on drift, 0 clean, **0 with a warning when the registry is unreachable**
+  (a network blip must not redden a scheduled run no commit caused — the rule the
+  PR gate's `--pins` half already follows). `--file-issues` exits 1 only when it
+  opened a *new* issue, so a weekly job that re-files a known drift stays green.
+  `.github/workflows/pin-watch.yml` runs it Mondays 06:17 UTC (off the :00
+  stampede) plus `workflow_dispatch`, with `issues: write` as the only write.
+  Offline suite `scripts/pin-watch.test.mjs` (20 cases, injected fetcher and
+  injected open-issue list, no network) also pins the *shipped wiring* — AC2's
+  "FAIL if the schedule or the issue-creation path is missing" is machine-checked;
+  the negative control (workflow stripped of all three) fails 2 cases.
+  **Live finding, out of scope and not widened:** the watch reports two real
+  pre-existing drifts — schema `4.6.0 → 4.7.0` and typebox `1.3.7 → 1.4.3`. The
+  CHANGELOG's 0.26.0 row already schedules the schema/runner pin move for a
+  separate `fix(deps)` PR; per AGENTS.md → Packages that upgrade stays a
+  deliberate human PR, so this unit neither bumps it nor files an issue for it.
+  Gates: root suite 796/0, `pin-watch` suite 20/0, package suite unaffected
+  → `PENDING-SHA` — next: P4.
+- 2026-10-21 — **diff-guard exception, P3**: BREACH at 702 lines > 400 (files 4
+  ≤ 8) measured from P3's base `308202ae`. The overage is the AC2 surface itself
+  — the watcher (285), its offline suite (353, twenty cases covering drift, clean,
+  degraded, dedupe and the shipped workflow wiring) and the scheduled workflow
+  (63) — and every line is doc comment, assertion or YAML comment. An honest
+  split was considered: the natural cut is module+tests in one commit and the
+  workflow in another, but the phase's own validator is
+  `node --test scripts/pin-watch.test.mjs`, whose new wiring cases read the
+  workflow file — so splitting would leave one commit red, which is forbidden.
+  Shrinking is forbidden (no comment, blank line, doc or test removed to fit the
+  number). Real count reported; exception recorded; the phase stands.
