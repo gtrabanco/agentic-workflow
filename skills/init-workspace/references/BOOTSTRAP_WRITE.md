@@ -34,7 +34,13 @@
    health check and render the fixed provisioning report. When no installer is
    available, offer only what the machine can perform and record the residual
    with its reason — the run completes either way.
-9. **Install accepted agent safety hooks.** Keep the canonical policy and
+9. **Offer Engram provisioning.** Load [ENGRAM](ENGRAM.md), detect the binary
+   and ask consent: register the `engram` MCP server (absolute path, exact
+   `mcp --tools=agent` argv) when the host has one, leave an existing
+   declaration untouched, and report exactly what was written. An absent binary
+   becomes a residual with the documented install route — never a failed run.
+   Skip this step when the pi package provisions the host itself.
+10. **Install accepted agent safety hooks.** Keep the canonical policy and
    fullauto wrapper at `.agentic-workflow/hooks/`. Seed the shipped
    path-protection policy at `.agentic-workflow/path-policy.json` and its doc
    page at `.agentic-workflow/path-protection.md`, beside the hooks — the
@@ -47,10 +53,10 @@
    an unknown payload, or an existing customized hook file becomes a residual,
    never a silent overwrite. Direct merges remain blocked; do not create a
    `.automerge` exception.
-10. **Offer the workflow skills.** Propose installing them:
+11. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-11. **State that reviews are self-contained; offer optional extras.** The
+12. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -60,7 +66,7 @@
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-12. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+13. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -73,7 +79,7 @@
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-13. **Report.** List what was created, which placeholders still need human input,
+14. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step:
    `discover-repository-state` → `/unit-lane` (or `workflow-status`) → catalog
