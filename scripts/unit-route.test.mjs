@@ -811,7 +811,7 @@ test("#308 a migrated unit triages from the re-cut section set", () => {
   const result = routeSpecRef(["--triage", "21-migrated-shape"]);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /^TRIAGE — 21-migrated-shape \(feature\)$/m);
-  assert.match(result.stdout, /^Steps: research, design, plan, implement, tests, evidence, review, docs$/m, result.stdout);
+  assert.match(result.stdout, /^Steps: research, design, plan, implement, evidence, review, docs$/m, result.stdout);
 });
 
 test("#308 triage still refuses a doc missing a shared section, in either shape", () => {
