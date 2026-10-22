@@ -1,0 +1,317 @@
+/**
+ * Bounded memory-substrate health probe (feature 66, P1 — AC2).
+ *
+ * Answers one question before a session's first memory read: is the Engram
+ * memory layer healthy enough to trust, and if not, exactly which layer is
+ * degraded? Five checks, one verdict:
+ *
+ *   http-health        GET :7437/health — the HTTP server pi talks to.
+ *   mcp-runner         one `initialize` round-trip to a spawned
+ *                      `engram mcp --tools=agent` — the stdio transport.
+ *   binary-version     `engram --version` — the CLI both transports ride on.
+ *   sync-staleness     `engram sync --status` — pending import work.
+ *   session-ambiguity  `engram doctor --json --check` on the two findings
+ *                      that make a session id unreliable or a sync target
+ *                      unreachable.
+ *
+ * Two design rules ride on measured failure modes, not guesses:
+ *
+ * - **Exit code is not a health signal.** `engram doctor` exits 0 while its
+ *   JSON says `status: "error"`, so every check parses the answer it gets and
+ *   never trusts a zero exit.
+ * - **A responding server that has not synced is not `ok`** (AC2's staleness
+ *   signal), which is why `sync-staleness` is a check and not a footnote.
+ *
+ * The probe never issues an MCP *tool* call — only `initialize` — so running
+ * it can never mutate the memory layer. Every call is bounded: 4 s for the
+ * HTTP/runner/version calls, 10 s for the two staleness/session CLI calls, and
+ * a 30 s ceiling over the whole probe. A bound hit fails that check and the
+ * verdict becomes `degraded` — never a hang, never a blocked unit (D1).
+ *
+ * `runProbe` takes its side effects by injection (`fetchImpl`, `runImpl`,
+ * `timeoutMs`) — the crate's existing shape
+ * (`src/doc/embeddings.mjs`'s `fetchImpl ?? fetch`) — so the suite drives
+ * every degraded path with fakes and millisecond bounds: no network, no PATH,
+ * no real engram process.
+ */
+
+import { spawn } from "node:child_process";
+
+export const PROBE_SCHEMA = "memory-probe@1";
+
+/** Per-check timeout bounds (ms), and the ceiling over the whole probe. */
+export const PROBE_TIMEOUTS = Object.freeze({
+  httpHealth: 4_000,
+  mcpRunner: 4_000,
+  binaryVersion: 4_000,
+  syncStaleness: 10_000,
+  sessionAmbiguity: 10_000,
+  total: 30_000,
+});
+
+const HEALTH_URL = "http://127.0.0.1:7437/health";
+const ENGRAM_BIN = "engram";
+const RUNNER_ARGS = ["mcp", "--tools=agent"];
+const INITIALIZE = {
+  jsonrpc: "2.0",
+  id: 1,
+  method: "initialize",
+  params: {
+    protocolVersion: "2024-11-05",
+    capabilities: {},
+    clientInfo: { name: "agentic-workflow-memory-probe", version: "1" },
+  },
+};
+
+const CHECK_IDS = Object.freeze([
+  "http-health",
+  "mcp-runner",
+  "binary-version",
+  "sync-staleness",
+  "session-ambiguity",
+]);
+
+function pass(id, detail) {
+  return { id, status: "ok", detail };
+}
+
+function fail(id, reason, detail) {
+  return { id, status: "failed", reason, detail };
+}
+
+/**
+ * Run one child process under a bound. Resolves to
+ * `{code, stdout, stderr, timedOut, spawnError}` — it never rejects, because
+ * every failure mode here is an answer, not an exception.
+ *
+ * `stdin` is written and the stream closed immediately: the MCP runner would
+ * otherwise wait forever for its client, which is the hang this probe exists
+ * to avoid.
+ */
+function runBounded(command, args, { timeoutMs, stdin = null } = {}) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let child;
+    const done = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(result);
+    };
+    const timer = setTimeout(() => {
+      if (child) {
+        try {
+          child.kill("SIGKILL");
+        } catch {
+          // the process already exited — the settle below is what matters
+        }
+      }
+      done({ code: null, stdout: "", stderr: "", timedOut: true, spawnError: null });
+    }, timeoutMs);
+
+    try {
+      child = spawn(command, args, { stdio: ["pipe", "pipe", "pipe"] });
+    } catch (error) {
+      done({ code: null, stdout: "", stderr: "", timedOut: false, spawnError: error });
+      return;
+    }
+
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk) => (stdout += chunk));
+    child.stderr?.on("data", (chunk) => (stderr += chunk));
+    child.on("error", (error) => done({ code: null, stdout, stderr, timedOut: false, spawnError: error }));
+    child.on("close", (code) => done({ code, stdout, stderr, timedOut: false, spawnError: null }));
+
+    if (child.stdin) {
+      child.stdin.on("error", () => {
+        // the runner died before reading — reported by close/error
+      });
+      child.stdin.end(stdin ?? "");
+    }
+  });
+}
+
+/** First JSON object found in a text stream (doctor/mcp may pad with noise). */
+function firstJsonObject(text) {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          return JSON.parse(text.slice(start, i + 1));
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** `engram sync --status` reports pending work as a fixed text block. */
+export function parseSyncStatus(text) {
+  const match = text.match(/Pending import:\s*(\d+)/i);
+  if (!match) return { parsed: false, pending: null };
+  return { parsed: true, pending: Number(match[1]) };
+}
+
+async function checkHttpHealth(fetchImpl, timeoutMs) {
+  const id = "http-health";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchImpl(HEALTH_URL, { signal: controller.signal });
+    if (!response.ok) return fail(id, "http-status", `HTTP ${response.status}`);
+    let body = null;
+    try {
+      body = JSON.parse(await response.text());
+    } catch {
+      return fail(id, "http-unparseable", "health body is not JSON");
+    }
+    if (body?.status !== "ok") return fail(id, "http-unhealthy", `status ${body?.status ?? "missing"}`);
+    return pass(id, `engram ${body?.version ?? "unknown"} answering`);
+  } catch (error) {
+    if (error?.name === "AbortError") return fail(id, "timeout", `no HTTP answer within ${timeoutMs} ms`);
+    return fail(id, "http-unreachable", error?.message ?? String(error));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function checkMcpRunner(runImpl, timeoutMs) {
+  const id = "mcp-runner";
+  const result = await runImpl(ENGRAM_BIN, RUNNER_ARGS, {
+    timeoutMs,
+    stdin: JSON.stringify(INITIALIZE) + "\n",
+  });
+  if (result.spawnError) return fail(id, "runner-missing", result.spawnError.message);
+  if (result.timedOut) return fail(id, "timeout", `no initialize answer within ${timeoutMs} ms`);
+  const reply = firstJsonObject(result.stdout ?? "");
+  if (!reply) return fail(id, "runner-silent", `exit ${result.code}, no JSON-RPC reply`);
+  if (reply.error) return fail(id, "runner-error", reply.error.message ?? "JSON-RPC error");
+  const info = reply.result?.serverInfo;
+  if (!info?.name) return fail(id, "runner-silent", "initialize reply carries no serverInfo");
+  return pass(id, `${info.name} ${info.version ?? "unknown"} initialized`);
+}
+
+async function checkBinaryVersion(runImpl, timeoutMs) {
+  const id = "binary-version";
+  const result = await runImpl(ENGRAM_BIN, ["--version"], { timeoutMs });
+  if (result.spawnError) return fail(id, "binary-missing", result.spawnError.message);
+  if (result.timedOut) return fail(id, "timeout", `no version answer within ${timeoutMs} ms`);
+  const match = (result.stdout ?? "").match(/\d+\.\d+\.\d+\S*/);
+  if (!match) return fail(id, "binary-unreadable", `exit ${result.code}, no version string`);
+  if (result.code !== 0) return fail(id, "binary-unreadable", `exit ${result.code}`);
+  return pass(id, `engram ${match[0]}`);
+}
+
+async function checkSyncStaleness(runImpl, timeoutMs) {
+  const id = "sync-staleness";
+  const result = await runImpl(ENGRAM_BIN, ["sync", "--status"], { timeoutMs });
+  if (result.spawnError) return fail(id, "binary-missing", result.spawnError.message);
+  if (result.timedOut) return fail(id, "timeout", `no sync answer within ${timeoutMs} ms`);
+  // A non-zero exit here is usually "ambiguous project" — the status is
+  // unreadable, which is a degradation, not a pass.
+  if (result.code !== 0) {
+    const detail = (result.stderr ?? "").trim().split("\n").pop() || `exit ${result.code}`;
+    return fail(id, "sync-unreadable", detail);
+  }
+  const parsed = parseSyncStatus(`${result.stdout ?? ""}\n${result.stderr ?? ""}`);
+  if (!parsed.parsed) return fail(id, "sync-unreadable", "no pending-import line in the status block");
+  if (parsed.pending > 0) return fail(id, "sync-pending", `${parsed.pending} pending import(s)`);
+  return pass(id, "no pending import work");
+}
+
+async function checkSessionAmbiguity(runImpl, timeoutMs) {
+  const id = "session-ambiguity";
+  const checks = ["ambiguous_active_runtime_sessions", "sync_target_closed_space"];
+  for (const checkId of checks) {
+    const result = await runImpl(ENGRAM_BIN, ["doctor", "--json", "--check", checkId], { timeoutMs });
+    if (result.spawnError) return fail(id, "binary-missing", result.spawnError.message);
+    if (result.timedOut) return fail(id, "timeout", `${checkId}: no answer within ${timeoutMs} ms`);
+    const report = firstJsonObject(result.stdout ?? "");
+    if (!report) return fail(id, "doctor-unreadable", `${checkId}: no JSON report`);
+    const entry = (report.checks ?? []).find((c) => c.check_id === checkId) ?? report.checks?.[0];
+    if (!entry) return fail(id, "doctor-unreadable", `${checkId}: report carries no check`);
+    if (entry.result !== "ok") {
+      return fail(id, `doctor-${entry.result}`, `${checkId}: ${entry.message ?? entry.result}`);
+    }
+  }
+  return pass(id, "no session or sync-target findings");
+}
+
+const CHECKS = [
+  { id: "http-health", timeout: PROBE_TIMEOUTS.httpHealth, run: (deps, ms) => checkHttpHealth(deps.fetchImpl, ms) },
+  { id: "mcp-runner", timeout: PROBE_TIMEOUTS.mcpRunner, run: (deps, ms) => checkMcpRunner(deps.runImpl, ms) },
+  { id: "binary-version", timeout: PROBE_TIMEOUTS.binaryVersion, run: (deps, ms) => checkBinaryVersion(deps.runImpl, ms) },
+  { id: "sync-staleness", timeout: PROBE_TIMEOUTS.syncStaleness, run: (deps, ms) => checkSyncStaleness(deps.runImpl, ms) },
+  { id: "session-ambiguity", timeout: PROBE_TIMEOUTS.sessionAmbiguity, run: (deps, ms) => checkSessionAmbiguity(deps.runImpl, ms) },
+];
+
+/**
+ * Run the five checks and return the verdict:
+ *
+ *   {schema, verdict: "ok" | "degraded", checks: [{id, status, reason?, detail}],
+ *    degraded: [check ids], ceilingHit: boolean}
+ *
+ * `ok` only when every check passes. A whole-probe ceiling hit stops the run
+ * and marks every check that never ran as `failed`/`timeout` — the verdict is
+ * `degraded` either way, so a slow machine can never masquerade as healthy.
+ *
+ * `timeoutMs` overrides every per-check bound (tests use milliseconds);
+ * `totalTimeoutMs` overrides the ceiling.
+ */
+export async function runProbe({ fetchImpl, runImpl, timeoutMs, totalTimeoutMs } = {}) {
+  const deps = {
+    fetchImpl: fetchImpl ?? ((url, init) => fetch(url, init)),
+    runImpl: runImpl ?? ((command, args, opts) => runBounded(command, args, opts)),
+  };
+  const perCheck = timeoutMs ?? null;
+  const ceiling = totalTimeoutMs ?? PROBE_TIMEOUTS.total;
+  const startedAt = Date.now();
+  const remaining = () => ceiling - (Date.now() - startedAt);
+
+  const results = [];
+  for (const check of CHECKS) {
+    const budget = perCheck ?? check.timeout;
+    const left = remaining();
+    if (left <= 0) {
+      results.push(fail(check.id, "timeout", "probe ceiling reached before this check ran"));
+      continue;
+    }
+    const bound = Math.min(budget, left);
+    let entry;
+    try {
+      entry = await check.run(deps, bound);
+    } catch (error) {
+      entry = fail(check.id, "probe-error", error?.message ?? String(error));
+    }
+    results.push(entry);
+  }
+
+  const degraded = results.filter((r) => r.status !== "ok").map((r) => r.id);
+  return {
+    schema: PROBE_SCHEMA,
+    verdict: degraded.length === 0 ? "ok" : "degraded",
+    checks: results,
+    degraded,
+    ceilingHit: results.some((r) => r.reason === "timeout" && r.detail.includes("ceiling")),
+  };
+}
+
+export { CHECK_IDS, HEALTH_URL, RUNNER_ARGS, ENGRAM_BIN };
