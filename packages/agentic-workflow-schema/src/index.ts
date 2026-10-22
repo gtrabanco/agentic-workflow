@@ -3794,8 +3794,13 @@ export {
   PRE_EXECUTION_UNIT_KINDS,
   PRE_EXECUTION_VERDICTS,
   UNIT_DOC_REQUIRED_SECTIONS,
+  UNIT_DOC_SECTION_SHAPES,
+  UNIT_DOC_SPEC_REF_SECTIONS,
   isImpossibleReceiptTimeline,
+  resolveUnitDocShape,
+  unitDocSectionsFor,
 } from "./pre-execution.js";
+export type { UnitDocShape } from "./pre-execution.js";
 
 export { VERDICTS_BY_STAGE } from "./pre-execution-contract.js";
 
