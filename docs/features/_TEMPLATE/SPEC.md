@@ -16,6 +16,19 @@ change diffable: a correction moves one line, everything else stays put.
 **S2 — <short title>.**
 > <the request's words, verbatim and unedited>
 
+The grammar the machine reads (`spec-requirement@1`): one `**S# — title.**` line
+per requirement, followed by a `>` blockquote carrying the requester's words. A
+correction is its own line with its own id (`S1a`) — never a rewrite of the line
+it corrects.
+
+```text
+spec-requirement@1
+kind | shape | what it orders
+requirement | **S<n>[a-z]? — <title>.** | one requirement; the id is what a task links and a finding cites
+quote | > <the requester's words, verbatim> | the requirement's own text, unedited apart from a marked elision
+correction | **S<n><letter> — <title>.** | an appended amendment to requirement S<n>; never an edit of it
+```
+
 ## Impact
 
 What the change touches beyond its own files: what consumes this unit's
@@ -68,6 +81,17 @@ absent from the list is never out of scope for the executor.
   (Implements: S1)
   Relevant files: <path>
 
+The link grammar (`task-spec-link@1`): every task bullet names the requirements
+it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
+with no link, a link to an undeclared id, and a base requirement no bullet
+implements.
+
+```text
+task-spec-link@1
+kind | shape | what it orders
+link | (Implements: S<n>, S<m>, …) | the requirements this task delivers; metadata, never task text
+```
+
 ### Planning evidence
 
 One row per Engineering claim (the closed column order and vocabularies are owned
@@ -90,6 +114,21 @@ and this section names it — never both. Before the unit ships, every row is
 OPEN rows only: a row a review persisted as fix-now work and no fold has closed
 yet. A folded row leaves this table and becomes a `## Log` line. Rows are
 appended by `review-change` and `triage-issue`; no other writer touches them.
+
+The carrier grammar (`findings-table@1`): the OPEN rows only, appended by
+`review-change` and `triage-issue`. A folded row leaves the table and becomes a
+`## Log` line, so this table never grows a history column.
+
+```text
+findings-table@1
+column | shape | what it holds
+id | F<n> | the stable finding id a fold and a log line cite
+target | S<n> · <file>:<line> | the requirement or the location the finding names
+axis | <axis> | the review axis that found it
+severity | high \| med \| low | the ledger severity (the canonical scale)
+class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+route | <route> | where the row goes — the router's own route vocabulary
+```
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
