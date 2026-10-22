@@ -634,4 +634,4 @@ cut; the lane resumes after P6.
   gate must never be dismissed as "probably the environment" without proof, and
   the proof here is both directions: red before the install, green after, with
   the failure naming a missing module rather than a failing assertion.
-  → `PENDING-SHA` — next: the lane resumes (review release docs).
+  → `6cef364c` — next: the lane resumes (review, release, docs).
