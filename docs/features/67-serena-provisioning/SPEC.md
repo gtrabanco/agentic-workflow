@@ -55,48 +55,71 @@ the tool, and the project config was the only half anyone owned.
 ## Acceptance criteria
 
 Induced from issue #219 (its two delivery paths + the 2026-09-24 scope
-adjustment). Design step finalises wording and cites each AC in `sources.md`.
+adjustment) and closed by the owner's answers in `decisions.md` (D1–D5,
+2026-10-21). Each row names what induced it; `sources.md` carries the claim's
+source.
 
-1. **pi path present by default.** `packages/pi-agentic-workflow/package.json`
-   declares `@bacnh85/pi-serena` as a dependency (exact pin, per the package's
-   pinned-dependency rule in `AGENTS.md` → Packages), a test pins that
-   declaration so it cannot be dropped silently, and the package README
-   documents what the dependency gives the user. FAIL if the dependency or its
-   pin test is absent.
-2. **Consented tool install (non-pi path).** In a bare repository where
-   `uv`/`uvx` is detected, `init-workspace` asks **one** consented question
-   offering the Serena install + MCP registration; on yes it installs
-   (`uvx` preferred, `pipx` fallback) and registers the MCP server for the
-   detected platform, then reports exactly what was installed and registered;
-   on refusal it installs/registers nothing and records the absence as a
-   residual, still exiting cleanly. FAIL if anything is installed, written or
-   registered without that yes.
-3. **Fallback and absence never block.** With neither `uv`/`uvx` nor `pipx`
-   available, the step offers nothing it cannot perform and records the
-   residual with the reason; `init-workspace` completes either way.
-4. **The fresh clone can start a server (trust).** The provisioning flow
-   detects that the project is not covered by Serena's
-   `trusted_project_path_patterns`, asks consent before touching the user's
-   global Serena configuration, and either trusts the project or records the
-   untrusted state as the reason the health check failed — never a silent
-   no-server run. FAIL if the global config is written without consent.
-5. **Fail-closed at the claim.** The provisioning report records the health
-   check result per listed language server (`Language server status:
-   initialized`), names the offending entry when one fails, and drops a
-   failing entry per the startup rule (`SERENA.md:96-110`). A run never claims
-   LSP evidence it did not verify; a degraded run warns once and records the
-   absence in the unit's Evidence. FAIL on a silent pass.
-6. **LSP is confined to what it can do.** Diagnostics/evidence claims are
-   confined to TypeScript/JavaScript — this Serena has no markdown/yaml/json
-   server and `.yml` diagnostics came back as TypeScript false positives
-   (verified 2026-09-24, issue #219 item 4). Document verification stays a
-   deterministic script's job (`SERENA.md:118-121`).
-7. **The suites stay green and the package ships its bump.** Root suite
-   `node --test scripts/*.test.mjs` and `bun run test` in
-   `packages/pi-agentic-workflow` both exit 0, and the touched-surface version
-   parity gate passes (pi package version bump + CHANGELOG companion row in
-   the same PR — `AGENTS.md` → Packages, feature 75 / #292). FAIL on a red
-   gate or a missing bump/row.
+1. **pi path present by default** *(D1)*. `packages/pi-agentic-workflow/package.json`
+   exact-pins `@bacnh85/pi-serena` in `dependencies` **and** declares
+   `./node_modules/@bacnh85/pi-serena/extensions/index.ts` as a second
+   `pi.extensions` entry; installing the packed tarball into a scratch pi
+   install registers the `serena_*` tools (verified before merge); a test pins
+   both the exact version and the manifest entry; the package README documents
+   what ships and pi's own off switch (`pi config` / the `packages` resource
+   filter). FAIL if any of the four is absent, or if the scratch install does
+   not register the tools.
+2. **Pins are watched** *(D1 addendum)*. A scheduled GitHub action checks the
+   package's exact `dependencies` pins against the registry and opens (or
+   reuses) an issue naming the package, the pinned version and the published
+   version whenever a newer one exists; it reports "no drift" and exits 0 when
+   there is none. The check is pinned by a test over an injected version list
+   (no network in the suite). FAIL if the schedule or the issue-creation path
+   is missing.
+3. **Consented tool install (non-pi path)** *(issue #219 Mechanics + A1/A2)*.
+   In a bare repository where `uv` is detected, `init-workspace` asks **one**
+   consented question offering the Serena install plus MCP registration; on yes
+   it runs `uv tool install -p 3.13 serena-agent && serena init` (`pipx` only
+   as the MCP-path fallback) and registers the MCP server for the **detected**
+   platform, then reports exactly what it installed and registered; on refusal
+   it installs/registers nothing and records the absence as a residual, still
+   exiting cleanly. FAIL if anything is installed, written or registered
+   without that yes.
+4. **Fallback and absence never block** *(issue #219 Mechanics)*. With neither
+   `uv`/`uvx` nor `pipx` available, the step offers only what it can perform
+   and records the residual with the reason; `init-workspace` completes either
+   way.
+5. **Trust is consented and scoped** *(D4)*. The step detects that the project
+   root is not covered by the global `trusted_project_path_patterns` and
+   offers the append inside the same consented Serena question; a refusal
+   records the untrusted state as the health-check residual. The global
+   `serena_config.yml` is never written without a yes, and no other line of it
+   is ever rewritten. FAIL on an implicit global write.
+6. **One config writer** *(D2)*. `init-workspace` remains the only writer of
+   `.serena/project.yml`; the pi package never writes or repairs it — it
+   reports a missing/wrong config fail-closed at the claim, and the package
+   README names `/init-workspace` as the required first run. FAIL if the pi
+   package gains any write path into `.serena/`.
+7. **Fail-closed at the claim** *(issue #219 scope adjustment item 2)*. The
+   provisioning report records the health check per listed language server
+   (`Language server status: initialized`), names the offending entry when one
+   fails, and drops a failing entry per the startup rule (`SERENA.md:96-110`).
+   A degraded run warns once and records the absence; never a silent pass.
+8. **LSP evidence confined to TypeScript/JavaScript** *(issue #219 scope
+   adjustment item 4)*: diagnostics/evidence claims stay TS/JS-only, and
+   document verification remains a deterministic script's job
+   (`SERENA.md:118-121`).
+9. **Code-level readiness nudge** *(D5)*. In the pi package, a latched
+   once-per-state check on session start / first workflow-command dispatch
+   notices a missing or stale `.serena/project.yml` (or a changed recorded
+   init-workspace revision) and emits **exactly one** notification suggesting
+   `/init-workspace`; it writes nothing, is soft on failure, and its latch
+   survives a restart (same latch contract as the package's first-run hint,
+   `test/first-run-hint.test.mjs`). FAIL on a repeat notification or any write.
+10. **Suites green, bump shipped** *(AGENTS.md → Packages)*. Root suite
+    `node --test scripts/*.test.mjs` and `bun run test` in
+    `packages/pi-agentic-workflow` both exit 0, and the touched-surface version
+    parity gate passes (Pi package version bump + CHANGELOG companion row in
+    the same PR). FAIL on a red gate or a missing bump/row.
 
 **Already satisfied, verification-only** (config half, PRs #263/#264 — re-run
 as evidence rows, never re-implemented): `.serena/project.yml` written for the
@@ -112,13 +135,15 @@ startup rule documented as the single owner contract in `SERENA.md`.
   `recommendedModels` / `onSettle` — the shape an "opt-in" has today).
 - **Touches:** `packages/pi-agentic-workflow/` (package.json, bun.lock, README,
   src, test), `skills/init-workspace/` (SKILL.md + `references/SERENA.md`,
-  `BOOTSTRAP_DISCOVERY.md`, `BOOTSTRAP_WRITE.md`, `UPGRADE.md`), root
+  `BOOTSTRAP_DISCOVERY.md`, `BOOTSTRAP_WRITE.md`, `UPGRADE.md`), a **new**
+  scheduled workflow under `.github/workflows/` (pin watch → issue), root
   `README.md`, `CHANGELOG.md`, `docs/features/ROADMAP.md` (row 67 status).
 - **Stops being true:** `SERENA.md:124-128` "The install half is tracked by
   #219" (the residual sentence is replaced by the step itself);
-  `init-workspace`'s `Done when` (`SKILL.md:218-221`) grows the install offer;
-  the root README's `init-workspace` blurb (`README.md:80`) if the offer
-  changes its description.
+  `init-workspace`'s `Done when` (`SKILL.md:218-221`) grows the install offer
+  and the trust offer; the root README's `init-workspace` blurb (`README.md:80`)
+  if the offer changes its description; the pi package README gains the
+  "what ships + how to switch it off" paragraph.
 - **Must be asked before touching the other side:** Serena's **global**
   configuration (`trusted_project_path_patterns` lives in the user's global
   `serena_config.yml`, not the project's `.serena/project.yml` — see the
@@ -147,6 +172,18 @@ startup rule documented as the single owner contract in `SERENA.md`.
 
 none
 
+## Assumptions (also mirrored in `decisions.md` → `## Assumptions`)
+
+- **A1 · 2026-10-21** — the install command is the verified one:
+  `uv tool install -p 3.13 serena-agent && serena init` (INV-005/INV-006), not
+  the issue's "uvx preferred" wording; pi-serena discovers Serena only through
+  `uv tool dir` or `SERENA_PYTHON`, so an ephemeral `uvx` env would never be
+  found.
+- **A2 · 2026-10-21** — MCP registration targets the **detected** platform only,
+  offered inside the same consented question.
+- **A3 · 2026-10-21** — the pi path needs no MCP registration: pi-serena is a
+  Pi extension that "avoids configuring Pi as an MCP client".
+
 ## Future cost
 
 - **Required substrate with a degraded path.** Every skill that may report
@@ -174,12 +211,13 @@ the `tests` triage step runs is fixed by the triage block below.
   **does-not-affect** this unit's scope: `.serena/project.yml` provisioning,
   the additive `.gitignore` block and the health-check/startup-rule contract
   are verified here as evidence rows, never rebuilt.
-- **Fixed `markdown` + `json` entries (#264, CHANGELOG 3.2.0) vs AC6's
+- **Fixed `markdown` + `json` entries (#264, CHANGELOG 3.2.0) vs AC8's
   "confine LSP evidence to TypeScript/JavaScript" (issue #219 item 4)** —
-  **affects** AC5/AC6: `SERENA.md:34-40` mandates `markdown`+`json` as fixed
+  **affects** AC7/AC8: `SERENA.md:34-40` mandates `markdown`+`json` as fixed
   entries while the scope adjustment says diagnostics claims stay TS/JS-only.
   The design step resolves this ask-don't-infer (listing a server for
-  navigation vs claiming it as evidence), never by inference.
+  navigation vs claiming it as evidence), never by inference. Resolution:
+  listing stays (navigation), evidence claims stay TS/JS — restated in AC8.
 - **Trust is provisioned nowhere** — **affects** AC4: no `grep` hit for
   `trusted_project_path_patterns` outside Serena's own config comments.
 - **Serena's own tooling residue in this repository** (`markdown`: marksman
@@ -277,6 +315,15 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   exits 0 with 4 pending questions → evidence: needs-input block — next: the
   owner answers Q1–Q4 (gap interview), then design stage 4 (decide) and the
   plan step.
+- 2026-10-21 23:05 — gap interview round 1 (ask form `81f1be20`): Q4 decided
+  **A** (D4); Q1–Q3 re-explained, Q2's feasibility question opened as Q5 →
+  `6fb0c88d` — next: round 2.
+- 2026-10-21 23:20 — design stage 4 (decide): D1 (activation = dependency +
+  `node_modules` extension entry, exact pin + scheduled pin-watch action), D2
+  (init-workspace is the only config writer), D3 (no settings toggle), D5
+  (code-level readiness nudge); AC1–AC10 finalised, `BRIEF.md` written,
+  `needs-input` exits 0 with **Pending: none** → evidence: needs-input block —
+  next: plan step.
 
 ## Next
 
