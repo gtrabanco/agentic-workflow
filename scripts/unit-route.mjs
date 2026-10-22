@@ -371,14 +371,33 @@ script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 // facts; the model never re-derives the step list, it consumes this block.
 // ---------------------------------------------------------------------------
 
-// Mirrors UNIT_DOC_REQUIRED_SECTIONS (schema package, 14 since issue #305 where
-// `## Impact` stopped being a tolerated extra); `scripts/unit-doc-contract.test.mjs`
-// pins the copies, this one included.
-const UNIT_DOC_SECTIONS = [
-  "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
-  "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
-  "Evidence", "Progress log", "Next", "References",
-];
+// Mirrors UNIT_DOC_SECTION_SHAPES (schema package, #305 for the legacy list and
+// #308 for the re-cut one); `scripts/unit-doc-contract.test.mjs` pins the copies,
+// this one included. A unit doc satisfies ONE shape: the legacy 14 sections, or
+// the re-cut set whose `## Specs` / `## Findings` / `## Log` replace
+// `## Evidence` / `## Progress log`. Both are accepted, so an unmigrated unit
+// never breaks and a migrated one never needs the legacy sections back.
+const UNIT_DOC_SECTION_SHAPES = Object.freeze({
+  legacy: [
+    "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
+    "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
+    "Evidence", "Progress log", "Next", "References",
+  ],
+  "spec-by-reference": [
+    "Specs", "Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Findings", "Log", "Next", "References",
+  ],
+});
+/** The legacy list, kept as the default a document satisfying neither shape is judged against. */
+const UNIT_DOC_SECTIONS = UNIT_DOC_SECTION_SHAPES.legacy;
+
+/** The accepted shape a document's headings satisfy, or `null` when they satisfy neither. */
+function resolveSectionShape(doc) {
+  for (const [name, sections] of Object.entries(UNIT_DOC_SECTION_SHAPES)) {
+    if (sections.every((section) => sectionBody(doc, section) !== null)) return name;
+  }
+  return null;
+}
 const UNIT_TYPES = ["feature", "fix", "docs", "chore"];
 const UNIT_SCOPES = ["trivial", "xs", "small", "standard", "medium", "large", "xlarge"];
 
@@ -642,7 +661,11 @@ function runTriage(token, { json = false } = {}) {
   } catch {
     triageFail(2, `unit doc not found: ${unitDir}/SPEC.md`);
   }
-  const missing = UNIT_DOC_SECTIONS.filter((name) => sectionBody(doc, name) === null);
+  // Missing sections are reported against the shape the doc asserts; a doc
+  // satisfying neither is judged against the legacy list (#308).
+  const shape = resolveSectionShape(doc);
+  const required = shape === null ? UNIT_DOC_SECTIONS : UNIT_DOC_SECTION_SHAPES[shape];
+  const missing = required.filter((name) => sectionBody(doc, name) === null);
   if (missing.length > 0) {
     triageFail(2, `missing mandatory sections: ${missing.join(", ")}`);
   }

@@ -68,6 +68,8 @@ const PRODUCER_FILE = "packages/agentic-workflow/src/edit/UnitDoc.mjs";
 const ROUTER_FILE = "scripts/unit-route.mjs";
 
 const owner = () => listAfter(read(OWNER_FILE), "UNIT_DOC_REQUIRED_SECTIONS = Object.freeze(", OWNER_FILE);
+/** The re-cut list the owner publishes beside the legacy one (#308). */
+const ownerSpecRef = () => listAfter(read(OWNER_FILE), "UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze(", OWNER_FILE);
 
 test("#305 the owner constant is the 14-section contract, Impact between AC and Non-goals", () => {
   assert.deepEqual(owner(), [
@@ -93,12 +95,16 @@ test("#305 the SDK's duplicate list equals the owner, in order", () => {
   assert.deepEqual(sdk, owner(), `${SDK_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
 });
 
-test("#305 the router's duplicate list equals the owner, in order", () => {
+test("#305/#308 the router's duplicate lists equal the owner's, in order", () => {
   // The triage step refuses a "mandatory" section list of its own; when it lagged
   // the owner it answered TRIAGE on unit docs the selector rejects (blocker 3 of
-  // the external verify).
-  const router = listAfter(read(ROUTER_FILE), "const UNIT_DOC_SECTIONS = ", ROUTER_FILE);
-  assert.deepEqual(router, owner(), `${ROUTER_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
+  // the external verify). Since #308 the owner publishes two accepted shapes, so
+  // the router's copy is pinned to both — the legacy list and the re-cut one.
+  const router = read(ROUTER_FILE);
+  assert.deepEqual(listAfter(router, "  legacy: [", ROUTER_FILE), owner(),
+    `${ROUTER_FILE} duplicates the legacy list: it must be byte-equal to ${OWNER_FILE}`);
+  assert.deepEqual(listAfter(router, '  "spec-by-reference": [', ROUTER_FILE), ownerSpecRef(),
+    `${ROUTER_FILE} duplicates the re-cut list: it must be byte-equal to ${OWNER_FILE}`);
 });
 
 test("#305 the producer's skeleton carries every required section in order", () => {
@@ -178,10 +184,21 @@ const SPEC_REF_SECTIONS = Object.freeze([
 
 test("#308 the owner constant publishes both accepted shapes", () => {
   const source = read(OWNER_FILE);
-  assert.match(source, /UNIT_DOC_SECTION_SHAPES|UNIT_DOC_REQUIRED_SECTIONS_BY_SHAPE/,
+  assert.match(source, /UNIT_DOC_SECTION_SHAPES = Object\.freeze\(\{/,
     `${OWNER_FILE} must publish the shape table beside the current list — one list cannot accept two shapes`);
-  const shapes = listAfter(source, "UNIT_DOC_SECTION_SHAPES = Object.freeze({", OWNER_FILE);
-  assert.ok(shapes.length === 0 || shapes.length > 0, "the shapes are read below");
+  assert.match(source, /legacy: UNIT_DOC_REQUIRED_SECTIONS/, "the legacy shape is the current list, never a copy of it");
+  assert.match(source, /"spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS/, "the re-cut shape is its own published list");
+  // The two shapes differ in exactly the headings #308 names. `## Specs` replaces
+  // the `Objective` / `Why` / `User outcome` / `Acceptance criteria` prose
+  // quartet — a requirement that quotes the requester is all four at once — and
+  // `## Findings` / `## Log` replace `## Evidence` / `## Progress log`; every
+  // other heading is shared. Anything beyond this pair of sets is drift.
+  const legacy = owner();
+  const reCut = ownerSpecRef();
+  const added = reCut.filter((section) => !legacy.includes(section)).sort();
+  const removed = legacy.filter((section) => !reCut.includes(section)).sort();
+  assert.deepEqual(added, ["Findings", "Log", "Specs"]);
+  assert.deepEqual(removed, ["Acceptance criteria", "Evidence", "Objective", "Progress log", "User outcome", "Why"]);
 });
 
 test("#308 the re-cut shape keeps every section the two shapes share", () => {
@@ -204,10 +221,15 @@ test("#308 both templates carry the re-cut shape's section set", () => {
   }
 });
 
-test("#308 the router and the SDK read the shape table, not a second copy of either list", () => {
-  for (const file of [ROUTER_FILE, SDK_FILE]) {
+test("#308 every reader resolves a shape instead of duplicating one list", () => {
+  for (const file of [ROUTER_FILE, SDK_FILE, PRODUCER_FILE]) {
     const source = read(file);
-    assert.match(source, /UNIT_DOC_SECTION_SHAPES|SECTION_SHAPES|AcceptedShapes|sectionShapes/,
-      `${file} must resolve a shape instead of duplicating one list`);
+    // The producer imports the SDK's table instead of keeping a copy of its own,
+    // which is the same single-source rule the other two follow.
+    const declares = /export const UNIT_DOC_SECTION_SHAPES|const UNIT_DOC_SECTION_SHAPES = Object\.freeze/.test(source);
+    const imports = /UNIT_DOC_SECTION_SHAPES/.test(source);
+    assert.ok(declares || imports, `${file} must read the shape table instead of duplicating one list`);
+    assert.match(source, /resolveUnitDocShape|resolveSectionShape/,
+      `${file} must derive the shape from the headings a document carries`);
   }
 });
