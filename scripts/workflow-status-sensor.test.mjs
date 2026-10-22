@@ -1326,3 +1326,97 @@ test("32/P1: the sensor's feature 31 review-loop-cycle projection survives the N
     "review_loop_cycles has spec and plan keys"
   );
 });
+
+// ---------------------------------------------------------------------------
+// #308 — the collapsed carrier: a migrated unit's doc *is* the ledger
+//
+// A migrated unit doc carries its OPEN rows in `## Findings` and its folded
+// history, review marks and gate runs as `## Log` lines. The sensor must project
+// that doc exactly as it projected `review-findings.md` for a legacy unit: same
+// fix-now rows, same suggestions, same review-mark currency — one carrier change,
+// no behaviour change.
+// ---------------------------------------------------------------------------
+
+/** A migrated unit doc with a `## Findings` table and a `## Log`. */
+function migratedSpec({ findings = [], log = [], status = "in-progress" } = {}) {
+  return [
+    "---", "type: feature", "scope: standard", "---", "",
+    "# 90 — alpha", "",
+    "## Specs", "", "**S1 — the request.**", "> Do the thing.", "",
+    "## Impact", "", "nothing outside.", "",
+    "## Non-goals", "", "none.", "",
+    "## Future cost", "", "none.", "",
+    "## Applicable tests", "", "n/a — no tests step for this unit", "",
+    "## Known pre-existing issues", "", "none", "",
+    "## Tasks", "", "- P1 — do the thing (validator: `true` exits 0)", "  (Implements: S1)", "",
+    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    ...findings,
+    "", "## Log", "", "- **L1** — 2026-10-01, the request, verbatim: Do the thing.",
+    ...log,
+    "", "## Next", "", "P1.", "", "## References", "", "none", "",
+  ].join("\n");
+}
+
+test("#308 a migrated unit's OPEN ## Findings rows project as fix-now, exactly like the ledger", () => {
+  const spec = migratedSpec({
+    findings: [
+      "| F1 | S1 · scripts/a.mjs:1 | code | med | fix-now | fold into phase |",
+      "| F2 | S1 · scripts/b.mjs:2 | code | high | fix-now | replan-in-unit: plan owner |",
+    ],
+  });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": spec },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.findings.fix_now.map((item) => item.id), ["F1", "F2"],
+    `both OPEN rows project from ## Findings: ${JSON.stringify(envelope.findings.fix_now)}`);
+  assert.equal(envelope.findings.fix_now[0].file, "S1 · scripts/a.mjs:1", "the S#/file:line cell is the row's location");
+  assert.deepEqual(envelope.next.suggested, [{
+    command: "/unit-lane 90-alpha",
+    trigger: "an open finding's frozen route is the plan owner — replan-in-unit (F2)",
+    source_skill: "unit-lane",
+  }], "the plan-owned row wins the route table, read out of the doc");
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("#308 a migrated unit's ## Log lines carry the folded history and the marks", () => {
+  const spec = migratedSpec({
+    log: [
+      "- **F1** — 2026-10-02, folded · `0123456` · the row's surface was repaired and re-verified.",
+      `- **G1** — 2026-10-02, \`node --test scripts/*.test.mjs\` · exit 0.`,
+    ],
+  });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": spec },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.findings.fix_now, [], "a folded row is a log line, never an open row");
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /gate/i, `a G log line is read, not skipped: ${observations}`);
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("#308 a migrated unit's review mark comes from ## Log, and its absence is named", () => {
+  const sha = "a".repeat(40);
+  const withMark = migratedSpec({ log: [`- **D1** — 2026-10-02, owner: the review ran at HEAD ${sha}.`] });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": withMark },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(validateEnvelope(parseEnvelope(result.stdout)).ok, true,
+    "a migrated doc with no separate ledger still emits a valid envelope");
+
+  const bare = migratedSpec();
+  const bareResult = makeFixture({
+    roadmapRows: ["| 91 | `beta` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/91-beta/SPEC.md": bare },
+  }).run();
+  assert.equal(bareResult.status, 0, bareResult.stderr);
+  assert.equal(parseEnvelope(bareResult.stdout).open_rows, undefined, "the envelope carries no invented review state");
+});
