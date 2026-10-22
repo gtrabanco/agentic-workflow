@@ -477,4 +477,4 @@ cut; the lane resumes after P6.
   host-provided bare specifiers into relative paths that pi's module mapping
   cannot resolve), and `pi install` must see the same `PI_CODING_AGENT_DIR` as
   `pi list`/the session. Gates: root suite 776/0, package suite 435/0,
-  `diff-guard` 209 lines / 8 files ≤ 400/8 → PASS — next: P3.
+  `diff-guard` 209 lines / 8 files ≤ 400/8 → PASS → `5b7b7389` — next: P3.
