@@ -231,9 +231,39 @@ What this unit touches beyond its own files:
 ## Tasks
 
 - P1 — Runner-crate memory probe: new `memory probe` command printing a bounded
-JSON verdict (`ok` | `degraded`) over connectivity, engram binary
-presence/version, sync/autosync staleness and session ambiguity — DEGRADED,
-never a hang, when the binary, transport, runner is absent
+JSON verdict (`ok` | `degraded`) over five named checks — `http-health`,
+`mcp-runner`, `binary-version`, `sync-staleness`, `session-ambiguity` — with
+the probe transport, the timeout bounds, the injection seam and the fixtures
+pinned in this task. **Transport** (closes the research uncertainty: both
+transports plus the CLI are covered, no MCP tool call is ever issued, so the
+probe never mutates the memory layer): HTTP `GET
+http://127.0.0.1:7437/health` for the server (research R3, re-measured
+2026-10-22 — HTTP 200 in 0.045 s); one MCP `initialize` round-trip against a
+spawned `engram mcp --tools=agent` for the stdio runner (argv per R2
+`~/.pi/agent/mcp.json` — 0.158 s, serverInfo `engram 3.4.0`); the CLI sources
+`engram --version` (0.019 s), `engram sync --status` (0.203 s), `engram doctor
+--json --check ambiguous_active_runtime_sessions` (0.286 s), `engram doctor
+--json --check sync_target_closed_space` (0.450 s) — never the full
+`engram doctor --json` sweep (12.2 s at the repo root, 23.2 s from /tmp,
+2026-10-22). **Timeout bounds**: 4 s per HTTP/runner/version call, 10 s per
+staleness/session CLI call, 30 s whole-probe ceiling; a bound hit fails that
+check, sets the verdict `degraded`, never a hang, never a blocked unit. The
+verdict is `ok` only when all five checks pass: healthy HTTP, runner
+`initialize` answered, binary present, no pending sync work, no non-`ok` sync
+target finding, no session-ambiguity finding (AC2 staleness signal).
+**Injection seam**: `runProbe({ fetchImpl, runImpl, timeoutMs })` — the
+crate's own injectable-dependency shape
+(`packages/agentic-workflow/src/doc/embeddings.mjs:70`, `fetchImpl ?? fetch`);
+the bin wires the real fetch/child-process defaults, tests inject fakes plus
+millisecond `timeoutMs`, so every test runs with no network, no PATH, no real
+engram process. **Fixtures** (obligations O1/O2, all in
+`packages/agentic-workflow/test/memory-probe.test.mjs`): `fixture-timeout`
+(accepts the connection, never answers, injected 20 ms bound, `degraded` on
+`http-health`), `fixture-missing-binary` (`runImpl` ENOENT for `engram`,
+`degraded` on `binary-version`), `fixture-missing-runner` (spawn failure,
+connection refused, `degraded` on `mcp-runner`/`http-health`), `fixture-stale`
+(pending sync work, verdict `degraded` on `sync-staleness`), `fixture-healthy`
+(all five checks pass, verdict `ok`).
 (validator: `bun run test` exits 0 in packages/agentic-workflow)
   - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/memory/probe.mjs, packages/agentic-workflow/test/memory-probe.test.mjs, packages/agentic-workflow/package.json
 - P2 — Canonical memory protocol: write
@@ -315,6 +345,8 @@ output (≤2 lines), verified-by.
 | R9 | `node scripts/needs-input.mjs docs/features/66-engram-memory-substrate` (plan sweep) | exit 0 | `Open questions: 0` / `Decision: none` — empty ask backlog recorded verbatim in `decisions.md` §Plan sweep | plan step, 2026-10-21 |
 | R10 | `bun scripts/phase-lint.mjs docs/features/66-engram-memory-substrate/SPEC.md` | exit 0 | `verdict PASS`, fingerprint `e0b6fb80b6bcfab23c0f7ba3c4dc8165e53b6947bb6367fcba332a61a5173efc` (6/6 per phase) | plan step, 2026-10-21 |
 | R11 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` (re-run at plan completion) | exit 0 | identical 9-step block — the triage remains current after the plan edits | plan step, 2026-10-21 |
+| R12 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` (owner-forced `--retriage`) | exit 0 | identical 9-step block, tiers unchanged — the block above stays authoritative | unit-lane retriage, 2026-10-22 |
+| R13 | `curl -m4 :7437/health`; `engram --version`; MCP `initialize` via `engram mcp --tools=agent`; `engram sync --status`; `engram doctor --json --check ambiguous_active_runtime_sessions`; `engram doctor --json --check sync_target_closed_space`; full `engram doctor --json` (repo root + /tmp) | exit 0, timings 0.045 / 0.019 / 0.158 / 0.203 / 0.286 / 0.450 s (full sweep 12.2 s / 23.2 s) | HTTP 200; `engram 3.4.0` in both CLI and serverInfo; sync 15 local / 8 remote / 0 pending; doctor scoped checks sub-second, full sweep slow | plan re-cut (owner `--retriage`), 2026-10-22 |
 
 ## Progress log
 
@@ -345,11 +377,20 @@ output (≤2 lines), verified-by.
   21eda815-41e3-47a8-8ff2-bf010c986f87); `D1`–`D3` appended, ACs 2/3/6
   finalized to the decisions, Future row added, needs-input exits 0 with
   `Open questions: 0` → evidence: decisions.md D1–D3 — next: plan step
+- 2026-10-22 13:20 — owner `--retriage`: triage re-run identical (R12); plan
+  re-cut of P1 at owner instruction — probe transport (HTTP `:7437` health +
+  stdio `engram mcp` initialize + CLI sources), timeout bounds (4 s / 10 s /
+  30 s ceiling), injection seam (`runProbe({ fetchImpl, runImpl, timeoutMs })`,
+  the `embeddings.mjs:70` shape) and the O1/O2 fixtures named in the task,
+  every timing re-measured on this machine (R13); decisions.md records the
+  re-cut and the out-of-scope dead pre-write-mapper link → evidence: R12–R13 —
+  next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap)
 
 ## Next
 
-Plan step complete (P1–P6 cut, phase-lint PASS, ledgers frozen at
-`planned`): execution hands off one phase per turn.
+Plan step complete (P1–P6 cut, P1 re-cut 2026-10-22 with transport, timeout
+bounds, injection seam and fixtures named — phase-lint re-verified, ledgers
+frozen at `planned`): execution hands off one phase per turn.
 
 ```text
 → Next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap) — run phase P1; the lane resumes after the last phase
