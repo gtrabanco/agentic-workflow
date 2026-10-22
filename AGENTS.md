@@ -330,6 +330,10 @@ turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRA
 turn-contract-receipt | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:turn-contract-receipt@1 | n/a | no
 open-questions-block | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:open-questions@1 | continuation-refusal-type | no
 path-protection-contract | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:path-protection@1 | path-protection-reason | no
+spec-requirement-ids | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:spec-requirement@1 | n/a | no
+task-spec-links | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:task-spec-link@1 | n/a | no
+log-kind-vocabulary | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:log-kind@1 | n/a | no
+findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:findings-table@1 | n/a | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 ```
 
