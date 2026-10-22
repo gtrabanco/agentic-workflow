@@ -323,8 +323,10 @@ assert.match(foldPolicy, /materializ/);
 // `/unit-lane`, the lane command the router prints), issue #293 moved it
 // 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), and fix
 // #258 moved it 1.8.0 → 1.9.0 (the fold's scope rule: change + dependents,
-// survivors swept in the same batch), the assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.9\.0/);
+// survivors swept in the same batch), and issue #308 moved it 1.9.0 → 1.9.1
+// (the fold ledger read probes the unit doc's carrier first, never both); the
+// assertion is re-pointed, never weakened.
+assert.match(foldSkill, /version: 1\.9\.1/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
