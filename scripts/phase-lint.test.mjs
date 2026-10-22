@@ -2600,7 +2600,9 @@ test("#308 a phase linking no requirement is blocked", () => {
   );
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^P1 box-\d+: .*S#/m, stdout);
+  // A requirement link is a document rule, not one of the eight per-phase boxes:
+  // it is reported under its own id, which names the defect.
+  assert.match(stdout, /^task-link-missing: P1 links no requirement/m, stdout);
   assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
 });
 
@@ -2611,7 +2613,7 @@ test("#308 a phase linking a requirement the doc never declares is blocked, nami
   );
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^P1 box-\d+: .*S7/m, stdout);
+  assert.match(stdout, /^task-link-dangling: P1 implements S7/m, stdout);
 });
 
 test("#308 a requirement with no verbatim quote is blocked", () => {

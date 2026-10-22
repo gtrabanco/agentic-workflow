@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, loggedPhases, parseLog, sectionText } from "./unit-doc-phases.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -153,6 +153,31 @@ export function openRows(ledgerText) {
     if (/^id$/i.test(id) || isSeparator(id) || !isOpen(folded)) continue;
     if (isMarkRow(id)) continue; // a mark row carries no destination of its own
     rows.push({ id, file, axis, severity, klass, route, folded });
+  }
+  return rows;
+}
+
+/**
+ * The OPEN rows of a migrated unit doc's `## Findings` section (#308). A folded
+ * row leaves that table for a `## Log` line, so every row it carries is open by
+ * definition and has no `folded` cell — the shape is normalized to the legacy
+ * ledger's record so `routeOfRow` and the read set work on either carrier.
+ *
+ * @param {string} doc — the full unit doc text.
+ * @returns {Array<{id, file, axis, severity, klass, route, folded}>}
+ */
+export function findingsRows(doc) {
+  const body = sectionText(doc, "Findings");
+  if (body === null) return [];
+  const rows = [];
+  for (const line of body.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 6) continue;
+    const [id, target, axis, severity, klass] = cells;
+    const route = cells.slice(5).join(" | ");
+    if (/^id$/i.test(id) || isSeparator(id) || isMarkRow(id)) continue;
+    rows.push({ id, file: target, axis, severity, klass, route, folded: "no" });
   }
   return rows;
 }
@@ -534,8 +559,11 @@ function executionTier() {
  * token the head itself records is the one (and only one) that counts.
  */
 export function recordedPhases(doc) {
+  // #308: a migrated unit doc records its phases in `## Log` (`P<n>` progress
+  // lines) instead of a `## Progress log`; the two shapes are read by one
+  // function so the router's phase answer never depends on which one a unit has.
+  const done = new Set(loggedPhases(doc));
   const body = sectionBody(doc, "Progress log");
-  const done = new Set();
   if (body === null) return done;
   let entryStarted = false;
   let entryEnded = false;
@@ -734,7 +762,11 @@ function main(argv) {
   const unit = matches[0];
   const ledgerPath = `${unit.dir}/review-findings.md`;
   const ledger = readProject(ledgerPath) ?? "";
-  const rows = openRows(ledger);
+  // #308: a migrated unit doc carries its OPEN rows in `## Findings`; the side
+  // ledger is the legacy carrier. The doc is probed first, and a doc with the
+  // section owns the answer — a unit never reads both carriers.
+  const doc = readProject(`${unit.dir}/SPEC.md`) ?? "";
+  const rows = sectionText(doc, "Findings") !== null ? findingsRows(doc) : openRows(ledger);
   const status = (unit.kind === "fix" ? fixIndexStatus(unit.number) : roadmapStatus(unit.number)) ?? "absent";
 
   let route;
