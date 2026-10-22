@@ -142,16 +142,25 @@ test("#305 every router fixture is a unit doc the contract accepts", () => {
   }
 });
 
+// #308: both templates publish the re-cut shape, so the pin follows the shape the
+// template declares. The legacy shape keeps its own proof — a legacy unit doc is
+// still a valid unit doc (the corpus's `20-legacy-shape` fixture and every closed
+// unit in the tree), and the selector accepts it (the schema package's tests).
 for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
-  test(`#305 ${template} carries every required section in contract order`, () => {
+  test(`#305/#308 ${template} carries the re-cut shape's sections in contract order`, () => {
     const found = headings(read(template));
-    const required = owner();
+    const required = ownerSpecRef();
     let cursor = -1;
     for (const section of required) {
       const at = found.indexOf(section);
       assert.notEqual(at, -1, `${template} is missing ## ${section}`);
       assert.ok(at > cursor, `${template} places ## ${section} out of contract order`);
       cursor = at;
+    }
+    // A template that kept a legacy-only section would publish a half-migrated
+    // document — the producer refuses that shape, so the template must not show it.
+    for (const legacyOnly of owner().filter((section) => !required.includes(section))) {
+      assert.ok(!found.includes(legacyOnly), `${template} still carries the legacy-only ## ${legacyOnly}`);
     }
   });
 }
