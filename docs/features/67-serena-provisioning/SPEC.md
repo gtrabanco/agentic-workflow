@@ -510,7 +510,7 @@ cut; the lane resumes after P6.
   separate `fix(deps)` PR; per AGENTS.md → Packages that upgrade stays a
   deliberate human PR, so this unit neither bumps it nor files an issue for it.
   Gates: root suite 796/0, `pin-watch` suite 20/0, package suite unaffected
-  → `PENDING-SHA` — next: P4.
+  → `692a5a12` — next: P4.
 - 2026-10-21 — **diff-guard exception, P3**: BREACH at 702 lines > 400 (files 4
   ≤ 8) measured from P3's base `308202ae`. The overage is the AC2 surface itself
   — the watcher (285), its offline suite (353, twenty cases covering drift, clean,
