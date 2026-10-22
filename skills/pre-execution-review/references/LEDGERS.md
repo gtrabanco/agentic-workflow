@@ -8,12 +8,24 @@ Plan snapshot binds them, and `execute-phase` may not invent a substitute.
 |---|---|---|---|
 | Planning evidence | `### Planning evidence` inside the unit doc (XS/S) · separate file (M/L) | `unit-lane:planning-evidence` | `execute-phase`, `fold-findings`, `audit-pr` |
 | Obligations | `### Obligations` inside the unit doc (XS/S) · separate file (M/L) | `unit-lane:obligations` | `execute-phase`, `fold-findings`, `audit-pr` |
-| Findings | `review-findings.md` (one per unit, both stages) | reviewers append; only the stage's author resolves | `execute-phase` on re-review, `audit-pr` |
+| Findings | the unit doc's `## Findings` (a migrated unit, issue #308) · `review-findings.md` (a legacy unit) | reviewers append; only the stage's author resolves | `execute-phase` on re-review, `audit-pr` |
 
 XS/S embeds both tables in the SPEC to stay within the size's artifact budget;
 the Plan snapshot then binds them through the whole-SPEC row (kind `spec`), and
 the `planning-evidence` / `obligations` snapshot rows are `absent`, not forged.
 M/L freeze the separate files and bind them with their own rows. Never both.
+
+**One findings carrier per unit, one read path.** A unit opened after the
+`spec-by-reference` re-cut (issue #308) carries its OPEN rows in the unit doc's
+`## Findings` table and its folded history, review marks (`REVIEW-RAN`), finding
+marks (`VF-<n>`) and gate runs (`GATE-RAN`) as `## Log` lines whose kind token is
+the `log-kind@1` vocabulary. That unit has **no `review-findings.md`**. A legacy
+unit keeps the side ledger it was written with and is never rewritten to migrate
+it. Readers probe the doc first and fall back to the file; a unit with the
+section never reads both, so a stale side file can never outvote the doc. The
+carrier change retires nothing the review machinery produces: each mark a legacy
+ledger row carried is a log line here, with the same identifier, the same head
+SHA and the same exit code — no new receipt enters without one retiring.
 
 ### 1. Planning evidence
 
