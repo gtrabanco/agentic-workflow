@@ -345,6 +345,9 @@ output (≤2 lines), verified-by.
 |  |  |  |  |  |
 |  |  |  |  |  |
 |  |  |  |  |  |
+|  |  |  |  |  |
+|  |  |  |  |  |
+|  |  |  |  |  |
 |---|---|---|---|---|
 | R1 | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` | exit 0, 2 hits | both are path-ignore mentions (`REVIEW_PROCESS.md:95`, `audit-pr/SKILL.md:128`); no protocol/provisioning/health text exists | research step, 2026-10-21 |
 | R2 | `engram --version`; `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` | exit 0 | `engram 3.4.0`; `mcpServers.engram` → `/home/agent/.local/bin/engram mcp --tools=agent`; `npm:gentle-engram@latest` | research step, 2026-10-21 |
@@ -401,6 +404,7 @@ output (≤2 lines), verified-by.
 2026-10-22 16:05 — P1 (runner-crate memory probe) implemented: src/memory/probe.mjs with runProbe({fetchImpl, runImpl, timeoutMs}) over the five named checks, the `memory probe` bin subcommand (human block + --json, always exit 0), 17 tests covering the five planned fixtures plus parse/ceiling/read-only contracts, README section, crate 0.3.0→0.4.0 + CHANGELOG rows. Measured end-to-end on this machine (1.4 s, correctly degraded on the known sync_target_closed_space findings) → 58abf268 — next: /execute-phase 66-engram-memory-substrate P2 (tier: cheap)
 2026-10-22 16:40 — P2 (canonical memory protocol): skills/unit-lane/references/MEMORY.md is the protocol home (probe, three save boundaries under unit/<NN-slug>/doc, fixed recall order with one all_projects retry, keyword-bound ceiling, session attribution, D2 split, degradation), wired thin into unit-lane (turn box + §5b) and execute-phase (turn box + Post-step item); budgets re-based with declared reasons, unit-lane 2.4.0 / execute-phase 6.2.0 + CHANGELOG rows → commit below — next: /execute-phase 66-engram-memory-substrate P3 (tier: cheap)
 2026-10-22 17:00 — P3 (log-session states its half): §The canonical split — this skill's half records D2 (docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall, no mirroring) with the pointer to the lane memory reference; log-session 2.3.0 + CHANGELOG row; budgets measured 2374 est / 193 lines, inside the defaults so no re-base → commit below — next: /execute-phase 66-engram-memory-substrate P4 (tier: cheap)
+2026-10-22 17:35 — P4 (pi package provisioning): src/extension/engram.ts is the Pi-free provisioning core (consent → binary → host support → operator declaration → register, reporting exactly what was written), memory.engram consent key added to the strict config schema/types/defaults/merge, wired on session_start; 11 tests; README section; schema pin 4.6.0→4.7.0 + lockfile, pi 0.27.0 + CHANGELOG companion row. Pins and content parity gates PASS, clearing the SPEC's known pin drift → commit below — next: /execute-phase 66-engram-memory-substrate P5 (tier: cheap)
 ## Next
 
 Plan step complete (P1–P6 cut, P1 re-cut 2026-10-22 with transport, timeout

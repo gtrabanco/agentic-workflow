@@ -16,6 +16,8 @@ import type { InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../routing/state.js";
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
+import { provisionEngram, readDeclaredServerNames, resolveEngramBinary } from "./engram.js";
+import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
@@ -200,6 +202,20 @@ function resolveExistingPrefix(target: string): string {
   }
 }
 
+/**
+ * Pi's MCP registrar, read structurally rather than imported: the package's
+ * peer floor is a range, and a host older than `registerMcpServer` must degrade
+ * (the provisioning module reports `unsupported-host`) instead of throwing at
+ * load.
+ */
+function mcpRegistrar(pi: ExtensionAPI): ((name: string, config: EngramServerConfig) => void) | null {
+  const candidate = (pi as unknown as { registerMcpServer?: unknown }).registerMcpServer;
+  if (typeof candidate !== "function") return null;
+  return (name, config) => {
+    (candidate as (this: ExtensionAPI, n: string, c: EngramServerConfig) => void).call(pi, name, config);
+  };
+}
+
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
@@ -245,12 +261,33 @@ export default function extension(pi: ExtensionAPI): void {
       }),
   });
 
-  // The readiness nudge's first chance (AC9): a session that opens here hears
-  // it, and the gate latches so the command path never repeats it. Soft by
-  // construction — the gate swallows a broken read and a failed latch.
+  // One `session_start` listener carries both first chances, in this order.
+  //
+  // The readiness nudge (AC9) hears the session here, and the gate latches so
+  // the command path never repeats it — soft by construction, because the gate
+  // swallows a broken read and a failed latch.
+  //
+  // Memory substrate (feature 66, AC3) comes second: ask-first,
+  // registrable-not-persisted. Registration runs on the session rather than at
+  // load so an older Pi host is reported instead of throwing, and so the
+  // operator reads back exactly what was written. Nothing is provisioned
+  // without the `memory.engram` opt-in.
   pi.on("session_start", (_event, ctx) => {
     const message = serenaReadiness.check(ctx.cwd);
     if (message) ctx.ui.notify(message, "warning");
+
+    const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() });
+    const report = provisionEngram({
+      consented: loaded.config.memory?.engram === true,
+      binaryPath: resolveEngramBinary(),
+      declaredNames: readDeclaredServerNames(join(agentDir, "mcp.json")),
+      register: mcpRegistrar(pi),
+    });
+    // The opt-out stays silent; every other outcome is stated once, in the
+    // module's own words (it already says what was written, or why not).
+    if (report.status !== "not-consented") {
+      ctx.ui.notify(report.message, report.status === "registered" ? "info" : "warning");
+    }
   });
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
