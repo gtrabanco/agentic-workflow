@@ -16,7 +16,8 @@ project-config half already landed (PRs #263/#264):
   (`uv tool install … serena-agent`), MCP registration for the detected
   platform, and the consented global-trust append.
 - **pi-side readiness** — a latched, code-only nudge suggests
-  `/init-workspace` when the project config is missing/stale; it never writes.
+  `/init-workspace` when the project config is missing/stale; it never writes
+  to the project or to any configuration.
 
 ## Asked → Resolution
 
@@ -44,3 +45,14 @@ project-config half already landed (PRs #263/#264):
 - No second writer of `.serena/project.yml` inside the pi package (D2).
 - No new config key in the pi package's closed schema (D3).
 - No schema/envelope surface, no triage-catalog change.
+
+## Plan stage (2026-10-21)
+
+none — no questions: every claim was settled by provenance or research
+
+Twelve `CLAIM-*` rows (`sources.md`) were swept against the candidate sources
+(`AGENTS.md`, prior `decisions.md`, the four GitHub workflows, the roadmap);
+zero `contradicts` hits, so no `open-question` row was appended for the plan.
+The cut is six phases (P1…P6) with thirteen obligations (O1…O13, all `planned`)
+and twelve planning-evidence rows, in `planning-evidence.md` and
+`planning-obligations.md`.
