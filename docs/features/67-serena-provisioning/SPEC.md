@@ -373,6 +373,10 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC7 | `grep -c "Language server status" skills/init-workspace/references/SERENA.md` (P4, O7) | 0 · 2 | `verifying Language server status: initialized for every language in language_servers` · `an absent check is a residual, never a silent pass` | execute-phase (main agent) |
 | AC8 | `grep -c "deterministic script" skills/init-workspace/references/SERENA.md` (P4, O8) | 0 · 2 | `LSP evidence itself stays confined to TypeScript/JavaScript: a diagnostic from any other listed server is navigation aid, never verification evidence` · `Document verification … stays a deterministic script's job` | execute-phase (main agent) |
 | AC10 | `node --test scripts/normative-drift.test.mjs` + `bun scripts/check-skill-context.mjs` (P4, O13) | 0 · 18 pass / 0 fail · PASS context budgets: 28 skills | `init-workspace` 4.1.0 frontmatter = its CHANGELOG row; reference ceiling re-based to 2759 with the reason declared in `referenceSources` | execute-phase (main agent) |
+| AC9 | `cd packages/pi-agentic-workflow && bun run test` (P5, O10) | 0 · 452 pass / 0 fail (17 new) | `AC9: a missing config is announced once, then latched` · `AC9: the latch is recorded in the package's own global state file` · `AC9: a changed init-workspace revision is announced once` · `AC9: an unpersistable latch is soft — one message per session, never an error` · `AC9: the first command dispatch announces the nudge, the second does not` | execute-phase (main agent) |
+| AC6 | `grep -rn "writeFile" packages/pi-agentic-workflow/src/routing/serena-readiness.ts` (P5, O9) | 1 · no output | the module has no write path at all; `.serena` appears only as a read (`readFileSync`), and `AC6: checking leaves the project byte-identical` pins it | execute-phase (main agent) |
+| AC1 | `packages/pi-agentic-workflow/README.md` §"Serena (ships by default)" (P5) | read | documents the two declarations that ship, the required one-time `/init-workspace`, the nudge, and pi's own off switch (`pi config` / the `packages` resource filter) | execute-phase (main agent) |
+| AC10 | `cd packages/pi-agentic-workflow && bun run test:node` + `node --test scripts/*.test.mjs` (P5) | 0 · 452 pass / 0 fail · root suite 796/0 | the node fallback and the root suite both green at the head after the code change | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
 
 ## Progress log
@@ -566,3 +570,44 @@ cut; the lane resumes after P6.
   would ship a skill whose reference and SKILL.md disagree. No honest reduction;
   shrinking is forbidden. Real count reported; exception recorded; the phase
   stands.
+- 2026-10-21 — execute P5 base ref `7178243e`. **Gates at entry:** path-protection
+  `PATH-GUARD pass — clean`; phase-lint 6/6 PASS.
+- 2026-10-21 — implement P5 (code-level readiness nudge), red-first:
+  `test/serena-readiness.test.mjs` ran red (`Cannot find module
+  ../dist/routing/serena-readiness.js`) before the module existed. Then
+  `src/routing/serena-readiness.ts` (tolerant `language_servers` reader →
+  `missing` | `stale` | `outdated` | `ready` → one message naming
+  `/init-workspace`; **no write path at all**), the latch as a third key
+  (`serenaReadiness`, keyed by project root) in the existing global state file
+  beside the first-run hint (`read-merge-write`, soft on every failure), and the
+  two entry points sharing one gate: `session_start` in the adapter and the first
+  workflow-command dispatch in `factory.ts`. **Two defects the suite caught and
+  the fix addressed, not the assertion:** (a) the gate delegated the latch
+  decision to the pure evaluator, which ignores the recorded state — so a missing
+  config was announced on every session; the gate now compares state *kinds*
+  (`missing`/`stale`/`outdated` vs the recorded one) and still latches `ready` so
+  a later upgrade has a baseline; (b) the dispatch-path case needed the real
+  config merge, not a hand-written stub, because the router reads fields the stub
+  omitted. `test/alias-coverage.test.mjs`'s lifecycle-event list gained
+  `session_start` — the shipped event surface legitimately grew with AC9, and the
+  expectation now says why. Also closes AC1's fourth leg, which P1 left open: the
+  package README gains §"Serena (ships by default)" documenting what ships,
+  the required one-time `/init-workspace`, the nudge, and pi's own off switch
+  (`pi config` / the `packages` resource filter). Bumps the Pi package
+  0.28.0 → **0.29.0** with its CHANGELOG row. Gates: package suite 452/0 under
+  bun **and** node, root suite 796/0, `version-parity --content` PASS
+  → `PENDING-SHA` — next: P6.
+- 2026-10-21 — **diff-guard exception, P5**: BREACH at 693 lines > 400 / 10 files
+  > 8 from P5's base `7178243e`. The overage is the phase's shape, not scope
+  creep: the red-first suite is ~330 lines of the 693 (17 cases — latch-once,
+  restart, degrade-after-ready, changed revision, soft failure, the dispatch
+  path, and the no-project-mutation contract AC6 requires), the module is ~200
+  with the doc comments this repo requires, and the remaining files are the
+  version-parity trigger set the `packages/pi-agentic-workflow/**` change
+  *requires* in the same PR (`package.json` + `CHANGELOG.md`) plus the README
+  that closes AC1 and the unit doc. An honest split was considered and rejected:
+  the module, its store and its two wiring points are one contract (a nudge that
+  fires at session start but not at dispatch is a bug, and pinning only one entry
+  point would ship exactly that), and splitting the README into a separate step
+  would not reduce a count measured from the phase base. Shrinking by deleting
+  tests or comments is forbidden. Real count reported; the phase stands.

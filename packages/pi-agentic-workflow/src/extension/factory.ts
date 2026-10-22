@@ -56,6 +56,12 @@ export interface ExtensionDeps<M extends ModelRef = ModelRef> {
   loadConfig?: (ctx: InvocationContext<M>) => LoadedConfig;
   /** P4: profile demotion state store (optional — defaults to file-backed). */
   profileState?: import("../routing/state.js").ProfileStateStore;
+  /**
+   * Feature 67 D5/AC9: the Serena readiness nudge. Consulted at the first
+   * workflow-command dispatch, so a session that never starts through
+   * `session_start` still hears it once.
+   */
+  serenaReadiness?: import("../routing/serena-readiness.js").SerenaReadinessGate;
 }
 
 export interface ExtensionHandle<M extends ModelRef = ModelRef> {
@@ -104,11 +110,19 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   const profileState = deps.profileState ?? createProfileStateStore({ path: stateFilePath(agentDir) });
   const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands, profileState });
 
+  // Said once per state, not once per command: the gate latches in memory for
+  // this session and in the package's state file for later ones.
+  const reportSerenaReadiness = (ctx: InvocationContext<M>): void => {
+    const message = deps.serenaReadiness?.check(ctx.cwd);
+    if (message) ctx.notify(message, "warning");
+  };
+
   for (const command of catalogue.commands) {
     registrar.registerCommand(command.name, {
       ...(command.description ? { description: command.description } : {}),
       handler: async (args, ctx) => {
         reportCatalogueIssues(ctx);
+        reportSerenaReadiness(ctx);
         await router.dispatch(command, args, ctx);
       },
     });
@@ -118,6 +132,7 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
   // and the same two config files, never a separate route surface (OB-5, AC6).
   const settingsHandler = async (_args: string, ctx: InvocationContext<M>): Promise<void> => {
     reportCatalogueIssues(ctx);
+    reportSerenaReadiness(ctx);
     // Bound for the console: two verbs and the session they act on, so it cannot
     // reach for `settle` or `dispatch` by accident.
     const routing = {
