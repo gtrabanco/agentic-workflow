@@ -347,6 +347,9 @@ output (≤2 lines), verified-by.
 | AC2 | `bun run build` + `bun run test` in `packages/agentic-workflow-schema` | exit 0 | `tsc` clean · `721 pass · 0 fail` | this session, 2026-10-21 |
 | AC8 | `bun run test` in `packages/pi-agentic-workflow` | exit 0 | `432 pass · 0 fail` (after `bun install --frozen-lockfile`) | this session, 2026-10-21 |
 | — | `bun scripts/diff-guard.mjs --base e54a5387 --unit 78-spec-by-reference` | exit 0 | `DIFF-GUARD PASS` · Lines 396 (+361/−35) · Files 6 (limit 8) | this session, 2026-10-21 |
+| AC1 | `node --test scripts/unit-doc-contract.test.mjs scripts/pre-execution-quality.test.mjs scripts/lane-era-lineage.test.mjs` — both templates re-cut | exit 0 | `31 tests · 31 pass · 0 fail` | this session, 2026-10-21 |
+| AC1 | producer `validate()` on both re-cut templates | exit 0 | `{"ok":true,"violations":[]}` for `docs/features/_TEMPLATE/SPEC.md` and `docs/fix/_TEMPLATE/SPEC.md` | this session, 2026-10-21 |
+| — | `bun scripts/diff-guard.mjs --base 3226d239 --unit 78-spec-by-reference` | exit 0 | `DIFF-GUARD PASS` · Lines 199 (+130/−69) · Files 3 (limit 8) | this session, 2026-10-21 |
 
 ## Progress log
 
@@ -354,14 +357,15 @@ output (≤2 lines), verified-by.
 `2026-10-21 23:25 — owner answered Q1–Q3 (`D1` full re-cut + mirrored package change, `D2` one unit scope large, `D3` `## Findings` section); plan step cut: 12 CLAIM rows in sources.md, planning-evidence.md (PE-001–PE-013 + contradiction sweep), planning-obligations.md (O1–O10), BRIEF.md questions pane; tasks re-cut to P1–P7; roadmap row 78 `defined` → `planned` (own-status gate) → (this commit) — next: /execute-phase 78-spec-by-reference P1 (tier: cheap)`
 `2026-10-21 23:58 — P1 — committed the migration corpus (`scripts/fixtures/spec-by-reference/`: the converted fix/258 documents beside their verbatim `REQUEST.md`, the golden-fixture conversion copy, a `UNIT_ROUTE_REPO` tree with legacy + migrated + broken + missing-shared units) and the red-first pins in four suites (`spec-by-reference.test.mjs` new; phase-lint, unit-route, normative-drift, unit-doc-contract, golden-fixture extended): 20 `#308` cases fail by design and no pre-existing test broke (811 tests, 791 pass); path-protection declaration + justification rows recorded in `decisions.md`; diff-guard PASS 314 lines / 6 files → 1ce956b4 — next: owner review of the converted corpus (AC7/O2), then P2 (section contract, both shapes)`
 `2026-10-21 — D4 — owner accepted the converted corpus as the spec-by-reference format (AC7/O2 closed); P2's entry gate is met. The acceptance is a `D` line here, not a `decisions.md` `decision` row: that grammar's `question` cell must name a declared `Q#`, and this gate closes none — `node scripts/needs-input.mjs` fails closed on the mismatch → next: P2`
-`2026-10-21 — P2 — the section contract learns both shapes (O1, D1): `UNIT_DOC_SPEC_REF_SECTIONS` + `UNIT_DOC_SECTION_SHAPES` + `resolveUnitDocShape`/`unitDocSectionsFor` published by the schema package, mirrored in the SDK's `schema.mjs` (no import — AC21), read by the producer's `validate`/`setSection` (half-migrated docs refused) and by the router's triage section check; the producer gained `createSpecByReference` with its own re-cut skeleton. The two shapes differ in exactly six headings (`Specs` replaces `Objective`/`Why`/`User outcome`/`Acceptance criteria`; `Findings`/`Log` replace `Evidence`/`Progress log`). Schema 721/721 and Pi 432/432 green; diff-guard PASS 396 lines / 6 files → next: P3 (templates re-cut)`
+`2026-10-21 — P2 — the section contract learns both shapes (O1, D1): `UNIT_DOC_SPEC_REF_SECTIONS` + `UNIT_DOC_SECTION_SHAPES` + `resolveUnitDocShape`/`unitDocSectionsFor` published by the schema package, mirrored in the SDK's `schema.mjs` (no import — AC21), read by the producer's `validate`/`setSection` (half-migrated docs refused) and by the router's triage section check; the producer gained `createSpecByReference` with its own re-cut skeleton. The two shapes differ in exactly six headings (`Specs` replaces `Objective`/`Why`/`User outcome`/`Acceptance criteria`; `Findings`/`Log` replace `Evidence`/`Progress log`). Schema 721/721 and Pi 432/432 green; diff-guard PASS 396 lines / 6 files → 3226d239 — next: P3 (templates re-cut)`
+`2026-10-21 — P3 — both templates re-cut to the accepted shape (O3): `## Specs` with the `S#` quote markers and the append-only-correction rule, `## Tasks` with `(Implements: S#)`, `## Findings` for OPEN rows, and `## Log` publishing the `log-kind@1` closed vocabulary (L/E/G/F/D/P); `## Evidence` and `## Progress log` are gone, every other section kept. Both validate clean through the producer; the `#305` template pins now follow the shape each template declares, with a new case refusing a legacy-only section in a re-cut template. diff-guard PASS 199 lines / 3 files → next: P4 (dual grammar in the linter, router and drift gate)`
 
 ## Next
 
 P1 and P2 are committed: the corpus and its red-first pins, and the section
 contract that accepts both shapes. P3 re-cuts the templates.
 
-→ Next: /execute-phase 78-spec-by-reference P3 (tier: cheap) — re-cut both unit-doc templates to the accepted shape
+→ Next: /execute-phase 78-spec-by-reference P4 (tier: cheap) — the linter and router read the re-cut grammar, and the drift gate declares it
   · whole-unit operator run complete → /review-change (mandatory end review)
   · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr — the merge gate
