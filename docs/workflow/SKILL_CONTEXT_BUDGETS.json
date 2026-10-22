@@ -89,7 +89,8 @@
       "mainLinesMax": 303,
       "mainSources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222; the golden-fixture-driven two-block closing contract (weak-model smoke caught a last-phase P<k+1> naming a nonexistent phase) then measured 253 lines / 2953 est \u2014 line ceiling ceil(253 x 1.10) = 279",
-        "fix 258 / #258 harden-needs-input": "the needs-input contract moved to code: the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and `re-ask once`/`Confirmed phase`/`Confirmed file targets` are gone (F33-D/F34-D) \u2014 measured 3379 est / 275 lines; ceiling re-based to ceil(3379 x 1.10) = 3717 / ceil(275 x 1.10) = 303 (down from 3807/315, the body shrank)"
+        "fix 258 / #258 harden-needs-input": "the needs-input contract moved to code: the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and `re-ask once`/`Confirmed phase`/`Confirmed file targets` are gone (F33-D/F34-D) \u2014 measured 3379 est / 275 lines; ceiling re-based to ceil(3379 x 1.10) = 3717 / ceil(275 x 1.10) = 303 (down from 3807/315, the body shrank)",
+        "feature 66 P2 (memory boundary)": "the executor's phase-transition memory boundary: one turn-contract box plus a Post-step item pointing at skills/unit-lane/references/MEMORY.md (never restated); measured 3548 est / 285 lines against the existing 3717 / 303 ceilings, so no re-base was needed"
       },
       "referenceEstimateMax": 3232,
       "referenceSources": {
@@ -112,11 +113,12 @@
       }
     },
     "unit-lane": {
-      "mainEstimateMax": 3424,
+      "mainEstimateMax": 3842,
       "mainLinesMax": 271,
       "mainSources": {
         "fix/258 harden-needs-input": "the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and the no-silent-feature-default rule has one home \u2014 measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424 / ceil(246 x 1.10) = 271 (down from 3464/280, the body shrank)",
-        "fix #303 (investigate \u2192 orient \u2192 ask \u2192 decide)": "the design and plan steps are restated positively (investigate search + `sources.md` citation ledger, orient tiers 0/1/2, ask, decide) and each fixed output contract gains the questions pane; measured DESIGN.md 2529 est / 196 lines and PLAN.md 2377 est / 187 lines, so the skill-level reference ceilings are re-based to ceil(2529 x 1.10) = 2782 and ceil(196 x 1.10) = 216 (the tighter of the two files' lines that still bounds both); the main-entry ceilings (3424 / 271) are unchanged and the two new turn-contract boxes fit inside them (measured 3277 est / 255 lines)"
+        "fix #303 (investigate \u2192 orient \u2192 ask \u2192 decide)": "the design and plan steps are restated positively (investigate search + `sources.md` citation ledger, orient tiers 0/1/2, ask, decide) and each fixed output contract gains the questions pane; measured DESIGN.md 2529 est / 196 lines and PLAN.md 2377 est / 187 lines, so the skill-level reference ceilings are re-based to ceil(2529 x 1.10) = 2782 and ceil(196 x 1.10) = 216 (the tighter of the two files' lines that still bounds both); the main-entry ceilings (3424 / 271) are unchanged and the two new turn-contract boxes fit inside them (measured 3277 est / 255 lines)",
+        "feature 66 P2 (memory protocol)": "the Engram memory protocol lands as skills/unit-lane/references/MEMORY.md with a thin instruction in SKILL.md \u2014 one turn-contract box, the \u00a75b boundary step and the reference link; measured 3492 est / 270 lines, so the estimate ceiling re-bases to ceil(3492 x 1.10) = 3842 while the line ceiling stays 271 (the prose was tightened to fit it: an earlier cut measured 278 lines and was reduced rather than re-based)"
       },
       "referenceEstimateMax": 2782,
       "referenceLinesMax": 216
@@ -174,8 +176,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12830,
-      "routeLinesMax": 996,
+      "routeEstimateMax": 13016,
+      "routeLinesMax": 1007,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -201,8 +203,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -228,8 +230,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12679,
-      "routeLinesMax": 973,
+      "routeEstimateMax": 12865,
+      "routeLinesMax": 984,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -255,8 +257,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -280,8 +282,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -306,8 +308,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -331,8 +333,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -357,8 +359,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12115,
-      "routeLinesMax": 947,
+      "routeEstimateMax": 12301,
+      "routeLinesMax": 958,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
