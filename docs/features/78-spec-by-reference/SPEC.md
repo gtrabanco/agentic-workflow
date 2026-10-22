@@ -357,6 +357,21 @@ output (≤2 lines), verified-by.
 | AC4 | `node --test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/review-loop-discipline.test.mjs scripts/workflow-status-sensor.test.mjs` | exit 0 | `101 tests · 101 pass · 0 fail` (3 new sensor cases read `## Findings` + `## Log`) | this session, 2026-10-21 |
 | AC8 | `node --test scripts/*.test.mjs` at the P5 head | exit 0 | `814 tests · 814 pass · 0 fail` | this session, 2026-10-21 |
 | — | `bun scripts/diff-guard.mjs --base 67d4e5bc --unit 78-spec-by-reference` — one honest split (carrier / prose) | exit 0 | carrier half 181 lines / 2 files · prose half 90 lines / 7 files | this session, 2026-10-21 |
+| AC1 | `node --test scripts/unit-doc-contract.test.mjs scripts/pre-execution-quality.test.mjs` | exit 0 | `12 tests · 12 pass · 0 fail` | this session, 2026-10-21 |
+| AC2 | `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs` | exit 0 | `208 tests · 208 pass · 0 fail` — both shapes in the fixtures | this session, 2026-10-21 |
+| AC3 | `node --test scripts/normative-drift.test.mjs` | exit 0 | `20 tests · 20 pass · 0 fail` — four new surfaces declared | this session, 2026-10-21 |
+| AC4 | `node --test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/review-loop-discipline.test.mjs scripts/workflow-status-sensor.test.mjs` | exit 0 | `101 tests · 101 pass · 0 fail` | this session, 2026-10-21 |
+| AC5 | `node --test scripts/golden-fixture.test.mjs scripts/spec-by-reference.test.mjs` · `git diff --name-only main -- docs/` | exit 0 | `31 tests · 31 pass · 0 fail` · no `docs/features/<done>-*` or `docs/fix/<closed>-*` in the change | this session, 2026-10-21 |
+| AC6 | `node --test scripts/knowledge-honesty-contract.test.mjs` | exit 0 | `9 tests · 9 pass · 0 fail` | this session, 2026-10-21 |
+| AC8 | `node --test scripts/*.test.mjs` | exit 0 | `814 tests · 814 pass · 0 fail` | this session, 2026-10-21 |
+| AC8 | `bun run test` in `packages/agentic-workflow-schema` (after `bun run build`) | exit 0 | `721 tests · 721 pass · 0 fail` | this session, 2026-10-21 |
+| AC8 | `bun run test` in `packages/pi-agentic-workflow` | exit 0 | `432 tests · 432 pass · 0 fail` | this session, 2026-10-21 |
+| — | `bun scripts/check-skill-context.mjs` and `--routes` | exit 0 | `PASS context budgets: 28 skills` · `PASS route budgets: 14 routes` | this session, 2026-10-21 |
+| — | `node scripts/version-parity-gate.mjs --content --base main` | exit 0 | `content parity holds: version 0.26.0 → 0.27.0, companion row present` · `VERDICT: PASS` | this session, 2026-10-21 |
+| — | `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` | exit 0 | `verdict PASS` · P1–P7 `PASS (6/6)` | this session, 2026-10-21 |
+| — | `node scripts/promise-coherence.mjs` | exit 0 | `verdict PASS` · `claims: 35 checked` | this session, 2026-10-21 |
+| — | `node scripts/needs-input.mjs docs/features/78-spec-by-reference` | exit 0 | `Open questions: 0` · `Pending: none` | this session, 2026-10-21 |
+| — | PR opened with `Closes #308` | exit 0 | https://github.com/gtrabanco/agentic-workflow/pull/311 | this session, 2026-10-21 |
 
 ## Progress log
 
@@ -368,14 +383,15 @@ output (≤2 lines), verified-by.
 `2026-10-21 — P3 — both templates re-cut to the accepted shape (O3): `## Specs` with the `S#` quote markers and the append-only-correction rule, `## Tasks` with `(Implements: S#)`, `## Findings` for OPEN rows, and `## Log` publishing the `log-kind@1` closed vocabulary (L/E/G/F/D/P); `## Evidence` and `## Progress log` are gone, every other section kept. Both validate clean through the producer; the `#305` template pins now follow the shape each template declares, with a new case refusing a legacy-only section in a re-cut template. diff-guard PASS 199 lines / 3 files → 28215d3c — next: P4 (dual grammar in the linter, router and drift gate)`
 `2026-10-21 — P4 — machine dual-grammar (O4, O5): `scripts/unit-doc-phases.mjs` gained `parseSpecs`/`parseLog`/`loggedPhases`/`sectionText` and the `(Implements: …)` link on every parsed bullet; `phase-lint` reports four document rules under their own ids (`task-link-missing`, `task-link-dangling`, `spec-unlinked`, `spec-quote-missing`, `log-kind`, `spec-section-missing`); the router derives done phases from `## Log` and OPEN rows from `## Findings`; the templates publish `spec-requirement@1`/`task-spec-link@1`/`log-kind@1`/`findings-table@1` and `AGENTS.md` declares the four surfaces. Committed as two atomic halves (grammar `fdb4393b`, declaration `67d4e5bc`) after one honest split — 9 files/378 lines over the file limit as one commit, each half within it. Root suites 811/811, both package suites green → next: P5 (ledger collapse)`
 `2026-10-21 — P5 — ledger collapse (O6): a migrated unit's `## Findings` section is the OPEN-row carrier and its `## Log` lines carry the folded history, review marks and gate runs; `workflow-status` probes the doc first (`findingsCarrier`) and projects the same rows and suggestions from either carrier, and reports each `G`/`F`/`D` log line as a bounded observation; the router reads `## Findings` when the section exists. The prose half (`LEDGERS.md`, `fold-findings`, `review-change`'s persist step, `triage-issue`, `audit-pr`, `workflow-status`) states probe-first and the fallback, with the route ceilings re-based and their growth source named. Committed as two atomic halves (carrier `b0842449`, prose `bcc2bf6b`). Root suites 814/814, budgets PASS 28 skills / 14 routes; a disk-inode exhaustion in /tmp (not a code failure) was diagnosed and cleared mid-phase → next: P6 (wording, migration rule and bookkeeping)`
+`2026-10-21 — P6 — wording, migration rule and bookkeeping (O8, O9): the plan step's checklist states spec-by-reference positively (cut each `S#` from the request verbatim, link every task, open `## Log` with `L1`, keep `## Findings` OPEN-only) and `AGENTS.md` keeps `S#` (requirement ids) and `P#` (phase labels) apart; the template agent guide documents both accepted shapes and the carrier rule. Bookkeeping: seven skills bumped (unit-lane 2.4.0 minor, six patches), CHANGELOG rows for each plus `pre-execution-review` 2.8.1 in the internal table, Pi package 0.27.0 with its companion row, README's three carrier restatements corrected. Committed in three atomic halves (`df9d029a` wording, `717190b3` bumps, `ddd33e3b` release). The drift gate caught a real defect mid-phase — a CHANGELOG row restating `pre-execution-review` at 2.8.0 while its frontmatter said 2.8.1 — fixed by adding the missing internal row. Root 814/814, budgets PASS, version-parity PASS → next: P7 (verification + PR)`
+`2026-10-21 — P7 — verification (O10): every AC's declared validator re-run at this head — AC1 12/12, AC2 208/208, AC3 20/20, AC4 101/101, AC5 31/31 with no closed unit doc in the diff, AC6 9/9, AC8 814/814 (root) + 721/721 (schema) + 432/432 (pi); context and route budgets PASS, version-parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0 open questions. PR #311 opened with `Closes #308` → f7f3b0e — next: /review-change on the changed HEAD`
 
 ## Next
 
 P1 and P2 are committed: the corpus and its red-first pins, and the section
 contract that accepts both shapes. P3 re-cuts the templates.
 
-→ Next: /execute-phase 78-spec-by-reference P6 (tier: cheap) — the positive prescription, the migration rule and the bookkeeping
-  · whole-unit operator run complete → /review-change (mandatory end review)
+→ Next: /review-change on the changed HEAD — the mandatory end review of PR #311
   · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
   · merge gate after REVIEW-PASS → /audit-pr — the merge gate
 
