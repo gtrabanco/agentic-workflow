@@ -112,9 +112,12 @@ source.
    once-per-state check on session start / first workflow-command dispatch
    notices a missing or stale `.serena/project.yml` (or a changed recorded
    init-workspace revision) and emits **exactly one** notification suggesting
-   `/init-workspace`; it writes nothing, is soft on failure, and its latch
+   `/init-workspace`; it writes nothing to the project and nothing to any
+   configuration (its only write is its own global state latch,
+   read-merge-write like the existing hint), is soft on failure, and its latch
    survives a restart (same latch contract as the package's first-run hint,
-   `test/first-run-hint.test.mjs`). FAIL on a repeat notification or any write.
+   `test/first-run-hint.test.mjs`). FAIL on a repeat notification or on any
+   write outside its own state file.
 10. **Suites green, bump shipped** *(AGENTS.md → Packages)*. Root suite
     `node --test scripts/*.test.mjs` and `bun run test` in
     `packages/pi-agentic-workflow` both exit 0, and the touched-surface version
@@ -134,10 +137,13 @@ startup rule documented as the single owner contract in `SERENA.md`.
   (`packages/pi-agentic-workflow/README.md:148-160`, `pathProtection` /
   `recommendedModels` / `onSettle` — the shape an "opt-in" has today).
 - **Touches:** `packages/pi-agentic-workflow/` (package.json, bun.lock, README,
-  src, test), `skills/init-workspace/` (SKILL.md + `references/SERENA.md`,
-  `BOOTSTRAP_DISCOVERY.md`, `BOOTSTRAP_WRITE.md`, `UPGRADE.md`), a **new**
-  scheduled workflow under `.github/workflows/` (pin watch → issue), root
-  `README.md`, `CHANGELOG.md`, `docs/features/ROADMAP.md` (row 67 status).
+  src, test), `skills/init-workspace/` (SKILL.md +
+  `skills/init-workspace/references/SERENA.md`,
+  `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`,
+  `skills/init-workspace/references/BOOTSTRAP_WRITE.md`,
+  `skills/init-workspace/references/UPGRADE.md`), a **new** scheduled workflow
+  under `.github/workflows/` (pin watch → issue), root `README.md`,
+  `CHANGELOG.md`, `docs/features/ROADMAP.md` (row 67 status).
 - **Stops being true:** `SERENA.md:124-128` "The install half is tracked by
   #219" (the residual sentence is replaced by the step itself);
   `init-workspace`'s `Done when` (`SKILL.md:218-221`) grows the install offer
@@ -243,18 +249,66 @@ the `tests` triage step runs is fixed by the triage block below.
 
 ## Tasks
 
-`n/a — the plan step fills this section (lane §3); triage decides the steps,
-the model never re-derives them. See ## Triaged steps below.`
+Cut by the plan step (2026-10-21), smallest first, one phase per commit; every
+AC maps to at least one phase. Final phase is verification.
+
+- P1 — Pin the activation wiring: exact-pin `@bacnh85/pi-serena` in the pi
+  package's `dependencies`, add `./node_modules/@bacnh85/pi-serena/extensions/index.ts`
+  as its second `pi.extensions` entry, bump the package version with its
+  CHANGELOG companion row, and pin both declarations with a new test (AC1,
+  AC10). (validator: `cd packages/pi-agentic-workflow && bun run test` exits 0
+  with the exact-spec and manifest-entry cases green)
+  - Relevant files: packages/pi-agentic-workflow/package.json, packages/pi-agentic-workflow/bun.lock, packages/pi-agentic-workflow/test/serena-activation.test.mjs, CHANGELOG.md
+- P2 — Prove the wiring loads: add `scripts/serena-activation-check.mjs`,
+  which packs the package into a temp directory, installs that artifact with
+  `pi install ./local/path` under a temporary agent dir, and asserts pi
+  resolves the dependency's extension entry and reports its `serena_*` tools
+  (AC1). (validator: `node scripts/serena-activation-check.mjs` exits 0 with
+  `ACTIVATION: ok` on stdout)
+  - Relevant files: scripts/serena-activation-check.mjs
+- P3 — Pin watch: add `scripts/pin-watch.mjs`, reusing `evaluatePins` with an
+  injectable fetcher (a drift fails the run with its report, a clean run exits
+  0, an unreachable registry degrades to exit 0 with a warning), pin it with an
+  offline test, and add the scheduled `pin-watch.yml` workflow — a weekly cron
+  plus `workflow_dispatch` — that opens an issue when a drift is found and
+  reuses the one already open (AC2). (validator:
+  `node --test scripts/pin-watch.test.mjs` exits 0 with the drift, clean,
+  degraded and dedupe cases green)
+  - Relevant files: scripts/pin-watch.mjs, scripts/pin-watch.test.mjs, .github/workflows/pin-watch.yml
+- P4 — `init-workspace` install and trust: extend `references/SERENA.md` with
+  the consented tool-install contract (`uv tool install -p 3.13 serena-agent`
+  plus `serena init`, `pipx` only on the MCP path, `serena -V` as the health
+  reader), the detected-platform MCP registration, and the consented global
+  trust append; wire it through `BOOTSTRAP_DISCOVERY.md`, `BOOTSTRAP_WRITE.md`,
+  `UPGRADE.md` and `SKILL.md`, then bump `init-workspace` (AC3, AC4, AC5, AC7,
+  AC8). (validator: `grep -c "uv tool install -p 3.13 serena-agent"
+  skills/init-workspace/references/SERENA.md` exits 0 with a count of at least 1)
+  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/SERENA.md, skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, skills/init-workspace/references/UPGRADE.md, README.md, CHANGELOG.md
+- P5 — Code-level readiness nudge:
+  `packages/pi-agentic-workflow/src/routing/serena-readiness.ts` carries a
+  project-keyed latch in the existing state store, runs at session start and at
+  the first workflow-command dispatch, and notifies once when
+  `.serena/project.yml` is missing, when it is stale, and when the recorded
+  init-workspace revision changed; pins latch-once, soft failure, and that the
+  project stays untouched (AC6, AC9). (validator: `cd
+  packages/pi-agentic-workflow && bun run test` exits 0 with the latch-once,
+  soft-failure and no-project-mutation cases green)
+  - Relevant files: packages/pi-agentic-workflow/src/routing/serena-readiness.ts, packages/pi-agentic-workflow/src/routing/state.ts, packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/test/serena-readiness.test.mjs
+- P6 — Verification: run the whole root suite with the unit's additions in
+  place, so every earlier validator still reproduces at the head (AC10).
+  (validator: `node --test scripts/*.test.mjs` exits 0)
+  - Relevant files: scripts/
 
 ### Planning evidence
 
-`n/a — embedded here for XS/S units; this M unit's ledger lives in
-`planning-evidence.md` once the plan step writes it.`
+M-sized: the ledger lives in [`planning-evidence.md`](planning-evidence.md)
+(12 rows, PE-001…PE-012, cut with this plan).
 
 ### Obligations
 
-`n/a — the obligations ledger lives in `planning-obligations.md` once the plan
-step writes it.`
+M-sized: the ledger lives in
+[`planning-obligations.md`](planning-obligations.md) (13 rows, O1…O13, all
+`planned` at cut time).
 
 ## Triaged steps
 
@@ -324,11 +378,18 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   (code-level readiness nudge); AC1–AC10 finalised, `BRIEF.md` written,
   `needs-input` exits 0 with **Pending: none** → evidence: needs-input block —
   next: plan step.
+- 2026-10-21 23:55 — plan step: 12 `CLAIM-*` rows swept (0 `contradicts`), six
+  phases P1–P6 cut with per-phase validators, ledgers frozen in
+  `planning-evidence.md` (PE-001…PE-012) and `planning-obligations.md`
+  (O1…O13, all `planned`); roadmap row 67 `idea → planned`; `phase-lint`
+  6/6 PASS → evidence: `phase-lint` fingerprint
+  `6897a7af29f95d8070efd8989e7166e48af4ca9415d8dce588178418ca553bd5` — next:
+  `/execute-phase 67-serena-provisioning P1`.
 
 ## Next
 
-`/unit-lane 67-serena-provisioning` continues at the first unfinished triaged
-step (research → design → plan).
+`/execute-phase 67-serena-provisioning P1` (tier: cheap) — first phase of the
+cut; the lane resumes after P6.
 
 ## References
 
