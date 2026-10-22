@@ -337,18 +337,26 @@ output (≤2 lines), verified-by.
 | — | `node --test scripts/*.test.mjs` (root suites, after the schema build) | exit 0 | tests 775, pass 775, fail 0 | this session, 2026-10-21 |
 | — | `node scripts/needs-input.mjs docs/features/78-spec-by-reference` (after `D1`–`D3`) | exit 0 | `Open questions: 0` · `Pending: none` | dispatcher, 2026-10-21 |
 | — | `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` (P1–P7 cut) | exit 0 | `P1`–`P7` `PASS (6/6)` · verdict PASS | this session, 2026-10-21 |
+| AC5 | `node --test scripts/spec-by-reference.test.mjs` — the committed corpus (10 fixture docs under `scripts/fixtures/spec-by-reference/`) read by the new suite | exit 1 | `16 tests · 9 pass · 7 fail` — the 7 are the migrated-grammar/router cases P2/P4 deliver, red by design | this session, 2026-10-21 |
+| AC5 | `node --test scripts/*.test.mjs` — P1's red-first pins | exit 1 | `811 tests · 791 pass · 20 fail`, every failure a `#308` case; no pre-existing test broke | this session, 2026-10-21 |
+| AC5 | `node --test scripts/golden-fixture.test.mjs` — the converted golden-fixture copy beside the untouched toy tree | exit 0 | `15 tests · 15 pass · 0 fail` (3 new: converted copy lints, conversion invents no requirement, toy tree untouched) | this session, 2026-10-21 |
+| — | `bun scripts/diff-guard.mjs --base 60cd668f --unit 78-spec-by-reference` | exit 0 | `DIFF-GUARD PASS` · Lines 314 (+314/−0) · Files 6 (limit 8) | this session, 2026-10-21 |
 
 ## Progress log
 
 `2026-10-21 22:40 — unit doc created from issue #308 (--from-issue); roadmap row 78 registered; research + design provenance recorded in sources.md (19 claims); three open questions appended to decisions.md; triage block pasted; phase-lint PASS (6/6 ×6), promise-coherence PASS, root suites 775/775 → 15ab46a1 — next: batched gap interview (Q1–Q3), then the plan step`
 `2026-10-21 23:25 — owner answered Q1–Q3 (`D1` full re-cut + mirrored package change, `D2` one unit scope large, `D3` `## Findings` section); plan step cut: 12 CLAIM rows in sources.md, planning-evidence.md (PE-001–PE-013 + contradiction sweep), planning-obligations.md (O1–O10), BRIEF.md questions pane; tasks re-cut to P1–P7; roadmap row 78 `defined` → `planned` (own-status gate) → (this commit) — next: /execute-phase 78-spec-by-reference P1 (tier: cheap)`
+`2026-10-21 23:58 — P1 — committed the migration corpus (`scripts/fixtures/spec-by-reference/`: the converted fix/258 documents beside their verbatim `REQUEST.md`, the golden-fixture conversion copy, a `UNIT_ROUTE_REPO` tree with legacy + migrated + broken + missing-shared units) and the red-first pins in four suites (`spec-by-reference.test.mjs` new; phase-lint, unit-route, normative-drift, unit-doc-contract, golden-fixture extended): 20 `#308` cases fail by design and no pre-existing test broke (811 tests, 791 pass); path-protection declaration + justification rows recorded in `decisions.md`; diff-guard PASS 314 lines / 6 files → next: owner review of the converted corpus (AC7/O2), then P2 (section contract, both shapes)`
 
 ## Next
 
-All design questions are closed (`D1`–`D3`) and the plan is cut. Execution
-hands off one phase per turn.
+P1 is committed: the corpus is in place and the new grammar's cases are red by
+design. P2's entry gate is the AC7 owner review of that corpus — no repository
+workflow doc moves before it.
 
-→ Next: /execute-phase 78-spec-by-reference P1 (tier: cheap) — run phase P1 (fixtures + red-first pins); the lane resumes after it, and P2 needs the AC7 owner review of the converted corpus
+→ Next: owner review of `scripts/fixtures/spec-by-reference/` — AC7/O2: the converted corpus is the review input, and P2 cannot start until the acceptance row exists in `decisions.md`
+  · acceptance recorded → /execute-phase 78-spec-by-reference P2 (tier: cheap) — the section contract learns both shapes
+  · correction requested → the owner's words are appended to `## Log` as `L2` and only the affected `S#` is rewritten
 
 ## References
 

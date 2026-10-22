@@ -36,3 +36,26 @@ Cheap defaults taken instead of asking, dated and correctable:
   `scripts/fixtures/spec-by-reference/`, beside
   `scripts/fixtures/golden-fixture/` (same read-only, committed-fixture
   convention).
+
+## Path protection
+
+The unit's plan declares the protected set it authors (issue #308 §Scope 1–5:
+the corpus, its four suites and the golden-fixture copy). Every row below is an
+appended escape per the `path-protection-records@1` grammar in
+`skills/orchestration-envelope/references/TURN_CONTRACT.md`; no assertion is
+weakened — each suite gains new cases and loses none.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/spec-by-reference.test.mjs | P1 | 2026-10-21 | execute-phase | #308 §Scope 4 deliverable: the new corpus suite is this unit's migration gate (the AC5 corpus, the dual-grammar pins and the converted docs' red-first cases); it is created by P1 and iterated by it, and no assertion is weakened
+justification | scripts/fixtures/spec-by-reference/** | P1 | 2026-10-21 | execute-phase | #308 §Scope 4 + AC5: the committed corpus (the converted fix/258 documents beside their verbatim request, the golden-fixture conversion copy, the route fixture tree) is the fixture surface the unit exists to create and the AC7 owner-review input
+justification | scripts/phase-lint.test.mjs | P4 | 2026-10-21 | execute-phase | #308 §Scope 2 + AC2: the migrated grammar's linter cases (S# link resolution, the closed log-kind vocabulary, the verbatim quote rule) belong in the linter's own corpus; the suite gains cases and loses none
+justification | scripts/unit-route.test.mjs | P4 | 2026-10-21 | execute-phase | #308 §Scope 2 + AC2: both-shape routing cases (triage sections, done phases from ## Log, the legacy doc unchanged) belong in the router's own suite; the suite gains cases and loses none
+justification | scripts/normative-drift.test.mjs | P4 | 2026-10-21 | execute-phase | #308 §Scope 2 + AC3: the new grammar blocks' declaration rows (spec block, log-kind vocabulary, findings carrier) are pinned where the inventory grammar is read; the suite gains cases and loses none
+justification | scripts/golden-fixture.test.mjs | P1 | 2026-10-21 | execute-phase | #308 §Scope 4 + AC5: the golden fixture's own automation asserts the converted copy beside the toy tree it was derived from; the suite gains cases and loses none
+justification | scripts/ledger-ownership.test.mjs,scripts/ledger-provenance.test.mjs | P5 | 2026-10-21 | execute-phase | #308 §Scope 3 + AC4: the findings carrier moves into the unit doc, so the ownership map's ledger column and the provenance reader gain a unit-doc carrier case beside the legacy file case; both suites gain cases and lose none
+justification | scripts/workflow-status-sensor.test.mjs | P5 | 2026-10-21 | execute-phase | #308 §Scope 3 + AC4: the sensor must project a migrated unit's ## Findings rows and its log-line marks, which is asserted in its own fixture suite; the suite gains cases and loses none
+justification | scripts/review-loop-discipline.test.mjs | P5 | 2026-10-21 | execute-phase | #308 §Scope 3 + AC4: the review→fold loop reads the collapsed carrier, so the skill-text pins that assert the carrier are re-pointed with a second branch for a migrated unit; no pin is weakened
+justification | packages/pi-agentic-workflow/test/** | P6 | 2026-10-21 | execute-phase | AGENTS.md §Packages + `test/skill-parity.test.mjs`: a bumped skill ships inside the Pi package, whose parity and alias suites read the staged skills tree; those suites gain the new revision, never a looser assertion
+```

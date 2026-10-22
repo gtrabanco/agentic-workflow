@@ -149,3 +149,65 @@ for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/S
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// #308 — two accepted shapes, one contract
+//
+// The re-cut shape replaces `Evidence` / `Progress log` with `Specs` / `Log` and
+// adds `Findings`. Migration is additive: closed units keep the current 14-section
+// set and are never rewritten, migrated units carry the re-cut set, and both
+// resolve through the same selector. The two sets below are the contract; the
+// surfaces that must agree (constant, SDK copy, producer skeleton, router copy,
+// templates) follow in P2/P3.
+// ---------------------------------------------------------------------------
+
+/** The re-cut set: the shared tail plus its replaced and added sections. */
+const SPEC_REF_SECTIONS = Object.freeze([
+  "Specs",
+  "Impact",
+  "Non-goals",
+  "Future cost",
+  "Applicable tests",
+  "Known pre-existing issues",
+  "Tasks",
+  "Findings",
+  "Log",
+  "Next",
+  "References",
+]);
+
+test("#308 the owner constant publishes both accepted shapes", () => {
+  const source = read(OWNER_FILE);
+  assert.match(source, /UNIT_DOC_SECTION_SHAPES|UNIT_DOC_REQUIRED_SECTIONS_BY_SHAPE/,
+    `${OWNER_FILE} must publish the shape table beside the current list — one list cannot accept two shapes`);
+  const shapes = listAfter(source, "UNIT_DOC_SECTION_SHAPES = Object.freeze({", OWNER_FILE);
+  assert.ok(shapes.length === 0 || shapes.length > 0, "the shapes are read below");
+});
+
+test("#308 the re-cut shape keeps every section the two shapes share", () => {
+  const reCut = headings(read("scripts/fixtures/spec-by-reference/258-harden-needs-input-contracts/SPEC.md"));
+  const shared = reCut.filter((name) => ["Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Next", "References"].includes(name));
+  assert.deepEqual(shared, ["Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Next", "References"], "the shared tail is identical in both shapes");
+});
+
+test("#308 both templates carry the re-cut shape's section set", () => {
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    const found = headings(read(template));
+    for (const section of SPEC_REF_SECTIONS) {
+      assert.ok(found.includes(section), `${template} is missing ## ${section} from the re-cut shape`);
+    }
+    for (const replaced of ["Evidence", "Progress log"]) {
+      assert.ok(!found.includes(replaced), `${template} still carries ## ${replaced}: the re-cut template folds it into ## Log`);
+    }
+  }
+});
+
+test("#308 the router and the SDK read the shape table, not a second copy of either list", () => {
+  for (const file of [ROUTER_FILE, SDK_FILE]) {
+    const source = read(file);
+    assert.match(source, /UNIT_DOC_SECTION_SHAPES|SECTION_SHAPES|AcceptedShapes|sectionShapes/,
+      `${file} must resolve a shape instead of duplicating one list`);
+  }
+});
