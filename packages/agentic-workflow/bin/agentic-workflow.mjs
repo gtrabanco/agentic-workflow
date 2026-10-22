@@ -9,11 +9,16 @@
  *   agentic-workflow budgets <op> [args...]
  *   agentic-workflow manifest <op> [args...]
  *   agentic-workflow doc (--sync | --query <term> | --status | --rebuild) [--json-only]
+ *   agentic-workflow memory probe [--json]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
  *
  * Refusals exit 2 with "EDIT REFUSAL — <reason>" before writing anything.
+ *
+ * `memory probe` is a sensor, not an editor: it writes nothing and always
+ * exits 0. Its `degraded` verdict is an answer to report, never a failure
+ * that blocks the caller (feature 66, AC2).
  */
 
 import { readFileSync } from "node:fs";
@@ -27,6 +32,7 @@ import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { runDocOp } from "../src/doc/retrieval.mjs";
+import { runProbe } from "../src/memory/probe.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -66,7 +72,7 @@ function refuse(reason) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory> ...");
   process.exit(1);
 }
 
@@ -111,6 +117,28 @@ switch (command) {
       }
       console.log(`doc ${envelope.command}: ${envelope.results.length} result(s)`);
     }
+    break;
+  }
+
+  // ── memory — bounded memory-substrate health probe (unit 66, P1) ────
+  case "memory": {
+    const op = rawArgs[0];
+    if (op !== "probe") refuse(`memory requires the \`probe\` operation, got "${op ?? ""}"`);
+    const report = await runProbe();
+    if (parsed.json) {
+      process.stdout.write(JSON.stringify(report) + "\n");
+    } else {
+      console.log(`MEMORY PROBE — ${report.verdict}`);
+      for (const check of report.checks) {
+        const mark = check.status === "ok" ? "ok" : `failed:${check.reason}`;
+        console.log(`  ${check.id} · ${mark} · ${check.detail}`);
+      }
+      if (report.degraded.length > 0) {
+        console.log(`Degraded: ${report.degraded.join(", ")} — record this in Evidence, keep working`);
+      }
+    }
+    // A sensor that exits non-zero for a healthy machine's degraded layer
+    // would block the very units it exists to protect (AC2 non-goal).
     break;
   }
 
