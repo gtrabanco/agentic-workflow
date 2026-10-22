@@ -12,6 +12,13 @@ re-derives them. Kept in sync with `decisions.md` (the ledger) and
 | Q2 — Canonical split between `docs/LOGS.md` (log-session) and `mem_session_summary`? | **D2 (2026-10-21, owner):** LOGS = git-traveling team journal (log-session), Engram = local decision/gotcha recall keyed by unit id; mirroring and document-only discarded |
 | Q3 — How does the pi path provision Engram's MCP registration? | **D3 (2026-10-21, owner):** package registers via consent-gated `registerMcpServer` and asks to install; documented route `pi install npm:gentle-engram@latest`, never `engram setup pi` (stale version until re-run). The update-script/weekly-check idea is deferred to `## Future`, not part of the answer |
 
+## Plan stage (2026-10-21)
+
+none — no questions: every claim was settled by provenance or research
+
+15 `CLAIM-*` rows in `sources.md`, ledgers in `planning-evidence.md` /
+`planning-obligations.md`, phases `P1…P6` in the SPEC (phase-lint PASS).
+
 ## Claim status
 
 - 22 `INV-*` claims journaled in `sources.md`; 19 `confirmed` (tier 0,

@@ -199,6 +199,17 @@ What this unit touches beyond its own files:
   after the 135-candidate count of 2026-09-28) — **affects** AC5: omitted-session
   writes fail closed here, so the prescribed response is load-bearing on this
   very machine.
+- Stale exact pin on the pi package: pins `@gtrabanco/agentic-workflow-schema`
+  4.6.0 while the registry published 4.7.0 (reproduced 2026-10-21:
+  `node scripts/version-parity-gate.mjs --pins --package packages/pi-agentic-workflow`
+  → `GATE REJECTION — dependency-pin-drift`) — **affects** this unit: the CI
+  pins half fails on any PR under the trigger set, so P4 bumps pin + package
+  version together; the owner's broader `fix(deps)` note (`docs/LOGS.md:3183`)
+  covers the same schema pin and is absorbed here for that half.
+- The pi package's `@gtrabanco/agentic-workflow` pin (0.2.0) cannot move to the
+  workspace crate version until the crate publishes (`bun --frozen-lockfile`
+  cannot resolve an unpublished version — `docs/LOGS.md:3183`) — **does-not-affect**
+  this unit: 0.2.0 still equals the registry, so the pins half does not flag it.
 
 ### Research uncertainties (stated, not guessed — 2026-10-21)
 
@@ -219,18 +230,56 @@ What this unit touches beyond its own files:
 
 ## Tasks
 
-Filled by the plan step (phases `P1…Pn`, each with its validator). The
-research/design steps run before this section exists as executable work.
+- P1 — Runner-crate memory probe: new `memory probe` command printing a bounded
+JSON verdict (`ok` | `degraded`) over connectivity, engram binary
+presence/version, sync/autosync staleness and session ambiguity — DEGRADED,
+never a hang, when the binary, transport, runner is absent
+(validator: `bun run test` exits 0 in packages/agentic-workflow)
+  - Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/memory/probe.mjs, packages/agentic-workflow/test/memory-probe.test.mjs, packages/agentic-workflow/package.json
+- P2 — Canonical memory protocol: write
+`skills/unit-lane/references/MEMORY.md` (boundary save payload keyed
+`unit/<NN-slug>/doc` at unit start, each phase, close, recall discipline with explicit
+`project` + one `all_projects: true` retry, keyword-bound ceiling, explicit
+`session_id` / `mem_session_end` only confirmed-stale, degradation recorded
+never silent, probe verdict pasted into Evidence) and wire the unit-lane +
+execute-phase boundary instructions, budgets re-base, skill version bumps
+(validator: `bun scripts/check-skill-context.mjs` exits 0)
+  - Relevant files: skills/unit-lane/SKILL.md, skills/unit-lane/references/MEMORY.md, skills/execute-phase/SKILL.md, skills/execute-phase/references/*, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P3 — log-session states its half of the canonical split (D2: `docs/LOGS.md` =
+git-traveling team journal, `mem_session_summary` = unit-keyed local recall)
+with the pointer to the protocol; budgets re-base + version bump
+(validator: `bun scripts/check-skill-context.mjs` exits 0)
+  - Relevant files: skills/log-session/SKILL.md, skills/unit-lane/references/MEMORY.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P4 — pi package provisioning: consent-gated `pi.registerMcpServer` registration
+(only when the engram binary is present) reporting exactly what was written,
+ask-to-install flow documented as `pi install npm:gentle-engram@latest` only
+(never `engram setup pi`), schema pin 4.6.0 → 4.7.0 + lockfile, pi version +
+CHANGELOG companion row, package tests
+(validator: `bun run test` exits 0 in packages/pi-agentic-workflow)
+  - Relevant files: packages/pi-agentic-workflow/src/extension/*, packages/pi-agentic-workflow/src/settings/*, packages/pi-agentic-workflow/README.md, packages/pi-agentic-workflow/package.json, packages/pi-agentic-workflow/bun.lock, packages/pi-agentic-workflow/test/*, CHANGELOG.md
+- P5 — init-workspace non-pi provisioning parity: `references/ENGRAM.md`
+(detect, ask consent, install guidance, report exactly what was written, skip
+on refusal) wired through the skill + bootstrap write; budgets re-base +
+version bump
+(validator: `bun scripts/check-skill-context.mjs` exits 0)
+  - Relevant files: skills/init-workspace/SKILL.md, skills/init-workspace/references/ENGRAM.md, skills/init-workspace/references/BOOTSTRAP_WRITE.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
+- P6 — Verification: whole gate green at head — root suite, skill budgets +
+routes, both touched package suites, phase-lint, promise-coherence,
+version-parity content + pins, mechanical golden-fixture half (weak-model half
+run if the session can spawn it, otherwise disclosed to the owner, never
+claimed); Evidence rows for every AC
+(validator: `node --test scripts/*.test.mjs` exits 0)
+  - Relevant files: scripts/, docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/agentic-workflow/package.json, packages/pi-agentic-workflow/package.json
 
 ### Planning evidence
 
-Ledger lives in the unit folder's `planning-evidence.md` (M-scope unit; filled
-by the plan step).
+M-scope home: [`planning-evidence.md`](planning-evidence.md) — 12 rows
+(`PE-001`…`PE-012`), bound by the plan snapshot.
 
 ### Obligations
 
-Ledger lives in the unit folder's `planning-obligations.md` (M-scope unit;
-filled by the plan step).
+M-scope home: [`planning-obligations.md`](planning-obligations.md) — 15 rows
+(`O1`…`O15`), one phase and one task each, all `planned` at cut time.
 
 ## Evidence
 
@@ -263,6 +312,9 @@ output (≤2 lines), verified-by.
 | R6 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` | exit 0 | 9 steps, full catalog, budget strong (block pasted under Triaged steps) | research step, 2026-10-21 |
 | R7 | design provenance search + claim journal (`sources.md`, 22 `INV-*` rows) | exit 0 | greps recorded per row (repo footprint, pi `registerMcpServer` docs, #219 body, prior units); 19 confirmed / 2 inferred / 1 unknown | design step, 2026-10-21 |
 | R8 | `node scripts/needs-input.mjs docs/features/66-engram-memory-substrate` | exit 0 | 3 open questions (Q1–Q3), route `design`, continuation `no-decision-available` | design step, 2026-10-21 |
+| R9 | `node scripts/needs-input.mjs docs/features/66-engram-memory-substrate` (plan sweep) | exit 0 | `Open questions: 0` / `Decision: none` — empty ask backlog recorded verbatim in `decisions.md` §Plan sweep | plan step, 2026-10-21 |
+| R10 | `bun scripts/phase-lint.mjs docs/features/66-engram-memory-substrate/SPEC.md` | exit 0 | `verdict PASS`, fingerprint `e0b6fb80b6bcfab23c0f7ba3c4dc8165e53b6947bb6367fcba332a61a5173efc` (6/6 per phase) | plan step, 2026-10-21 |
+| R11 | `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` (re-run at plan completion) | exit 0 | identical 9-step block — the triage remains current after the plan edits | plan step, 2026-10-21 |
 
 ## Progress log
 
@@ -278,6 +330,17 @@ output (≤2 lines), verified-by.
   first), 4 dated assumptions, `open-questions@1` with Q1–Q3 pasted by
   needs-input (R7, R8) + `BRIEF.md` → evidence: R7–R8 — next: gap interview
   with the owner (stage 4 decide on the answers)
+- 2026-10-21 23:40 — plan step: 15 `CLAIM-*` rows swept against the candidate
+  sources (1 contradicts candidate resolved at tier 0, recorded), empty ask
+  backlog recorded verbatim (R9), phases `P1…P6` cut with validators,
+  phase-lint PASS (R10, fingerprint `e0b6fb80…`), ledgers frozen in
+  `planning-evidence.md` (12 rows) + `planning-obligations.md` (15 rows),
+  roadmap row 66 → `planned`, triage re-run identical (R11); AC digest at plan
+  `703a8b9441531593e92eeec6b082612210ef8a5f`; skill-text phase done-whens are
+  the budgets gate (content pins live in the obligation greps); gate green at
+  plan head — root suite 775/775, promise-coherence PASS (35 checked / 85
+  skipped), budgets + routes PASS → evidence: R9–R11 —
+  next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap)
 - 2026-10-21 23:05 — design stage 4: owner answered Q1–Q3 (ask
   21eda815-41e3-47a8-8ff2-bf010c986f87); `D1`–`D3` appended, ACs 2/3/6
   finalized to the decisions, Future row added, needs-input exits 0 with
@@ -285,8 +348,12 @@ output (≤2 lines), verified-by.
 
 ## Next
 
-Plan step (design complete: D1–D3 recorded, 0 open questions, ACs
-finalized): phases `P1…Pn` with validators + the planning ledgers.
+Plan step complete (P1–P6 cut, phase-lint PASS, ledgers frozen at
+`planned`): execution hands off one phase per turn.
+
+```text
+→ Next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap) — run phase P1; the lane resumes after the last phase
+```
 
 ## References
 
