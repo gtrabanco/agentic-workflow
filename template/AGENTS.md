@@ -207,10 +207,20 @@ Rules the ledger enforces:
   instead of silently dropping a question.
 
 **Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
-or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/` with
-14 sections (Objective, Why, User outcome, Acceptance criteria, Impact,
-Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
-Evidence, Progress log, Next, References). The unit's path is decided by a triage
+or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/`, in one
+of two accepted shapes. The **`spec-by-reference` shape** (issue #308, the
+template's shape) has 11 sections: `Specs` (numbered `S#`, each quoting the
+requester's own words verbatim; a correction appends under its own id like
+`S1a`), Impact, Non-goals, Future cost, Applicable tests, Known pre-existing
+issues, `Tasks` (each bullet linked to the `S#` it delivers), `Findings` (OPEN
+rows only), `Log` (append-only: `L1` is the request verbatim, and later lines
+carry one of the `L`/`E`/`G`/`F`/`D`/`P` kinds), Next, References. The
+**legacy shape** has 14 sections (Objective, Why, User outcome, Acceptance
+criteria, Impact, Non-goals, Future cost, Applicable tests, Known pre-existing
+issues, Tasks, Evidence, Progress log, Next, References) and a unit written in it
+is never rewritten to migrate. `## Specs` replaces the four prose sections
+because a requirement that quotes the requester is its objective, why, outcome
+and acceptance criterion at once. The unit's path is decided by a triage
 pass against a closed catalog (research, design, plan, implement, tests,
 evidence, review, docs, release). The lane conductor (`/unit-lane`) orchestrates;
 `execute-phase` runs each step as an atomic gate/commit. A diff-size guard
@@ -328,10 +338,13 @@ per step is what preserves the cheap-execution guarantee. With `/loop`, this is
 already how the batch shape re-invokes per step; without it, re-invoke
 `execute-phase` by hand for each step in a fresh conversation.
 
-**Review findings** persist to `docs/features/<NN>-<slug>/review-findings.md`
-(fixed schema `| id | file:line | axis | severity | class | route | folded |`,
-`folded` starting `no`); `execute-phase`'s fold cycle ticks each folded row
-`folded: yes`.
+**Review findings** persist to the unit's findings carrier: the unit doc's
+`## Findings` section for a unit written in the `spec-by-reference` shape
+(OPEN rows only — a folded row leaves the table and becomes a `## Log` line),
+or `docs/features/<NN>-<slug>/review-findings.md` for a legacy unit (fixed
+schema `| id | file:line | axis | severity | class | route | folded |`,
+`folded` starting `no`). Probe the doc first and write to exactly one carrier;
+never both.
 
 ## Fix workflow
 
@@ -346,8 +359,9 @@ Every NEW fix produces one `SPEC.md` under `docs/fix/<N>-<topic>/` (from
 5. **Review** — independent review pass
 6. **PR** — open with `Closes #N`; the fix's tracked issue auto-closes
 
-**Review findings** persist to `docs/fix/<N>-<topic>/review-findings.md` (same
-schema as feature units).
+**Review findings** persist to the same carrier rule as feature units — the unit
+doc's `## Findings` for a `spec-by-reference` unit, `review-findings.md` for a
+legacy one.
 
 After merge: remove the entry from `docs/fix/README.md`.
 
