@@ -30,3 +30,28 @@ was asked.
 | INV-020 | Unit scope is `medium` (roadmap row labels the issue M), which is what puts `release` in the triage | `docs/features/ROADMAP.md:76`; `bun scripts/unit-route.mjs --triage 66-engram-memory-substrate` (R6) | confirmed |
 | INV-021 | The 14-section unit-doc contract and evidence/progress rules bind this doc (section order, `Triaged steps` paste, Evidence rows before commit) | `packages/agentic-workflow-schema/src/pre-execution.ts:225`; `skills/unit-lane/SKILL.md` §Turn contract | confirmed |
 | INV-022 | Installed tooling parity check: Serena is registered the same machine-global way (`npm:@bacnh85/pi-serena` in settings) and #219 is the sibling still OPEN — provisioning shapes should stay parallel | `~/.pi/agent/settings.json:24`; `gh issue view 219` (state OPEN, 2026-10-21) | confirmed |
+
+## Plan claims (CLAIM-*)
+
+Stage 1 of the plan step: each claim below was searched before it was written;
+`contradicts` sweep ran over the candidate sources (`docs/features/*/decisions.md`,
+`docs/fix/*/decisions.md`, `AGENTS.md`, architectural invariants, NRS — no NRS
+unit exists for this repo).
+
+| id | claim | source | certainty |
+|---|---|---|---|
+| CLAIM-001 | The runner crate owns a router bin and a package test harness, so the probe is a new `memory` command with package tests | `packages/agentic-workflow/package.json:13` (`bin`), `:20` (`test: bun test test/`); `packages/agentic-workflow/bin/agentic-workflow.mjs` (command switch) | confirmed |
+| CLAIM-002 | In-repo skills already invoke crate services by path, so the probe has an invocation precedent | `skills/execute-phase/references/PREFLIGHT.md:200` (`bun packages/agentic-workflow/bin/path-guard.mjs …`); `docs/workflow/LANE_FLOW.md:234-239` (`agentic-workflow <service> <op>` SDK table) | confirmed |
+| CLAIM-003 | A host without the crate or the engram binary must record DEGRADED, never fail — the probe's absent-runner case is itself a verdict | SPEC AC2 + `decisions.md` D1 (owner); `docs/LOGS.md:2451` (degraded path is warn + record) | confirmed |
+| CLAIM-004 | `init-workspace` has a consented-reference-step pattern to mirror for Engram (reference doc + wired step + report-exactly) | `skills/init-workspace/references/BOOTSTRAP_WRITE.md:28-31` (consented `[SERENA](SERENA.md)` step); `skills/init-workspace/references/SERENA.md:84` | confirmed |
+| CLAIM-005 | The pi package's extension and settings modules are the surfaces a consent-gated registration and its toggle belong to | `ls packages/pi-agentic-workflow/src/extension` (index/factory), `src/settings/store.ts`; `packages/pi-agentic-workflow/README.md:131` (settings console writes keys on save) | confirmed |
+| CLAIM-006 | pi extensions can register an MCP server for the session with `pi.registerMcpServer(name, config)` | pi docs `docs/extensions.md:197` (installed copy, pi 1.x) | confirmed |
+| CLAIM-007 | The documented install route is `pi install npm:gentle-engram@latest`; `engram setup pi` is explicitly discarded (stale version until re-run) | `decisions.md` D3 (owner answer Q3, 2026-10-21) | confirmed |
+| CLAIM-008 | Editing skill text requires a budgets re-base: ceilings live in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` and are enforced by `bun scripts/check-skill-context.mjs` | `docs/workflow/SKILL_CONTEXT_BUDGETS.json`; `AGENTS.md` Verification § | confirmed |
+| CLAIM-009 | Every touched `SKILL.md` needs `version:` + a CHANGELOG row (`bun scripts/bump-skill.mjs`-owned), and skills/`pi` changes need the pi package version + its CHANGELOG companion row in the same PR | `AGENTS.md` "Version every change" + "Version bumps are manual and same-PR (feature 75, #292)"; `scripts/version-parity-gate.mjs` | confirmed |
+| CLAIM-010 | The pi package's exact schema pin is stale against the registry (`4.6.0` pinned, `4.7.0` published) — the registry half of the parity gate already fails on this repo, so this unit's PR must bump pin + package version together | `node scripts/version-parity-gate.mjs --pins --package packages/pi-agentic-workflow` → `GATE REJECTION — dependency-pin-drift` (2026-10-21); `npm view` outputs (schema 4.7.0, pi 0.26.0, agentic-workflow 0.2.0) | confirmed |
+| CLAIM-011 | Prior-decision sweep: feature 61's non-goal ("No Engram memory hard dependency … optional") is contradicted by the required-substrate decision — resolved at tier 0 by the owner decision, reconciled in the docs step, not asked | `docs/features/61-adaptive-unit-lane/SPEC.md:153`; `docs/LOGS.md:2451`; sweep receipt: `grep -rn -i "engram" docs/features/*/SPEC.md` + `docs/fix/*/decisions.md` (no other hit decides memory policy) | confirmed |
+| CLAIM-012 | Carrying surfaces for the protocol text are unit-lane, execute-phase and log-session (provisioning in init-workspace) — a cheap, plan-owned list | `decisions.md` Assumption A2 (2026-10-21, dated, correctable) | inferred |
+| CLAIM-013 | The gate for this unit is the root suite + budgets + both touched package suites + phase-lint; the diff guard runs after each implement step | `AGENTS.md` Verification §; `skills/unit-lane/SKILL.md` §Turn contract (diff-guard box) | confirmed |
+| CLAIM-014 | The template scaffold carries no `scripts/` tree, so target projects cannot run a repo-local probe — reinforcing CLAIM-003's DEGRADED clause as the portable path | `find template -maxdepth 2 -type d` (2026-10-21: docs/.github/.claude/.agentic-workflow only) | confirmed |
+| CLAIM-015 | The crate itself needs a version bump for the new command (its published version is 0.2.0, workspace is 0.3.0 → next minor after this change) | `packages/agentic-workflow/package.json` (`0.3.0`); `npm view @gtrabanco/agentic-workflow version` → `0.2.0`; `AGENTS.md` Packages § (bump the touched package, same PR) | confirmed |

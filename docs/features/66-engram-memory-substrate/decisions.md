@@ -33,3 +33,25 @@ Cheap-to-change defaults, dated and correctable — never silent:
 - **2026-10-21 · A4** — scope stays `medium` (roadmap row 66 labels the issue
   M), which is what puts `release` in the triage; changing it means
   re-triage.
+
+## Plan sweep (2026-10-21)
+
+none — no questions: every claim was settled by provenance or research
+
+The candidate-source sweep (`docs/features/*/decisions.md`,
+`docs/fix/*/decisions.md`, `AGENTS.md`, architectural invariants, NRS — no NRS
+unit exists) produced one `contradicts` candidate: feature 61's non-goal vs the
+required-substrate decision, resolved at tier 0 from the owner decision
+(`docs/LOGS.md:2451`, `docs/features/61-adaptive-unit-lane/SPEC.md:153`) and
+reconciled by the docs step (CLAIM-011) — never re-asked.
+
+## Plan surfaces (2026-10-21)
+
+- **A5 (dated assumption, refines A2)** — the canonical protocol text lives in
+  ONE file, `skills/unit-lane/references/MEMORY.md` (the lane is the boundary
+  owner), with `execute-phase` and `log-session` carrying the thin instruction +
+  pointer, exactly as `execute-phase` consumes
+  `skills/pre-execution-review/references/LEDGERS.md` today. Provisioning keeps
+  its own surface: `skills/init-workspace/references/ENGRAM.md`. Chosen over a
+  new internal contract skill to avoid a new skill's manifest/budget/table
+  surfaces at zero contract loss.
