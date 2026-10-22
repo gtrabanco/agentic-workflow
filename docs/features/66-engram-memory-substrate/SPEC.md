@@ -349,6 +349,10 @@ output (≤2 lines), verified-by.
 |  |  |  |  |  |
 |  |  |  |  |  |
 |  |  |  |  |  |
+|  |  |  |  |  |
+|  |  |  |  |  |
+|  |  |  |  |  |
+|  |  |  |  |  |
 |---|---|---|---|---|
 | R1 | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` | exit 0, 2 hits | both are path-ignore mentions (`REVIEW_PROCESS.md:95`, `audit-pr/SKILL.md:128`); no protocol/provisioning/health text exists | research step, 2026-10-21 |
 | R2 | `engram --version`; `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` | exit 0 | `engram 3.4.0`; `mcpServers.engram` → `/home/agent/.local/bin/engram mcp --tools=agent`; `npm:gentle-engram@latest` | research step, 2026-10-21 |
@@ -407,6 +411,7 @@ output (≤2 lines), verified-by.
 2026-10-22 17:00 — P3 (log-session states its half): §The canonical split — this skill's half records D2 (docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall, no mirroring) with the pointer to the lane memory reference; log-session 2.3.0 + CHANGELOG row; budgets measured 2374 est / 193 lines, inside the defaults so no re-base → commit below — next: /execute-phase 66-engram-memory-substrate P4 (tier: cheap)
 2026-10-22 17:35 — P4 (pi package provisioning): src/extension/engram.ts is the Pi-free provisioning core (consent → binary → host support → operator declaration → register, reporting exactly what was written), memory.engram consent key added to the strict config schema/types/defaults/merge, wired on session_start; 11 tests; README section; schema pin 4.6.0→4.7.0 + lockfile, pi 0.27.0 + CHANGELOG companion row. Pins and content parity gates PASS, clearing the SPEC's known pin drift → commit below — next: /execute-phase 66-engram-memory-substrate P5 (tier: cheap)
 2026-10-22 17:55 — P5 (init-workspace non-pi provisioning parity): references/ENGRAM.md owns detect → ask → register-or-instruct → report with the binding rules (absolute path, exact mcp --tools=agent argv, never overwrite a declared server, absent binary is a residual, install route pi install npm:gentle-engram@latest never the CLI setup subcommand); wired as bootstrap write step 9, allowlist grown to six paths, guardrail added; init-workspace 4.1.0 + CHANGELOG row; budgets measured 3411 est / 240 lines inside 3663/252, ENGRAM.md 1151 est / 108 lines → commit below — next: /execute-phase 66-engram-memory-substrate P6 (tier: cheap)
+2026-10-22 18:20 — P6 (verification): whole gate green at head — root suite 775/775, budgets + routes PASS, phase-lint PASS (fingerprint unchanged), agentic-workflow 233/233, pi package 443/443, promise-coherence PASS, version parity content + pins PASS, mechanical golden-fixture half green and one live weak-model probe (nan/qwen3.6) answered 5/5 on the memory boundary with a row appended to GOLDEN_FIXTURE.md → commit below — next: /review-change on the changed HEAD (mandatory end review)
 ## Next
 
 Plan step complete (P1–P6 cut, P1 re-cut 2026-10-22 with transport, timeout
