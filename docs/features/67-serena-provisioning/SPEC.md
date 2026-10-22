@@ -377,6 +377,10 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC6 | `grep -rn "writeFile" packages/pi-agentic-workflow/src/routing/serena-readiness.ts` (P5, O9) | 1 · no output | the module has no write path at all; `.serena` appears only as a read (`readFileSync`), and `AC6: checking leaves the project byte-identical` pins it | execute-phase (main agent) |
 | AC1 | `packages/pi-agentic-workflow/README.md` §"Serena (ships by default)" (P5) | read | documents the two declarations that ship, the required one-time `/init-workspace`, the nudge, and pi's own off switch (`pi config` / the `packages` resource filter) | execute-phase (main agent) |
 | AC10 | `cd packages/pi-agentic-workflow && bun run test:node` + `node --test scripts/*.test.mjs` (P5) | 0 · 452 pass / 0 fail · root suite 796/0 | the node fallback and the root suite both green at the head after the code change | execute-phase (main agent) |
+| AC10 | `node --test scripts/*.test.mjs` (P6, whole-unit verification at the head) | 0 · 796 pass / 0 fail | every earlier phase's validator reproduces: `pin-watch` 20/0, `version-parity-gate` 22/0, `normative-drift` 18/0, `unit-doc-contract` 7/0 | execute-phase (main agent) |
+| AC10 | `cd packages/pi-agentic-workflow && bun run test` and `bun run test:node` (P6) | 0 · 452 pass / 0 fail each | the bun gate and the node fallback agree at the head; `cd packages/agentic-workflow && bun run test` / `test:node` give 216/0 and 217/0 (the 5 CI-order failures were a missing `bun install` in `packages/agentic-workflow`, not a defect — reproduced green after install) | execute-phase (main agent) |
+| AC1 | `node scripts/serena-activation-check.mjs` (P6, re-run at the head) | 0 | `ACTIVATION: ok` · `serena_* tools registered: 20 (required 5 present)` | execute-phase (main agent) |
+| AC10 | `bun scripts/check-skill-context.mjs` + `node scripts/version-parity-gate.mjs --content --base main` (P6) | 0 · PASS | `PASS context budgets: 28 skills` · `content parity holds: version 0.26.0 → 0.29.0, companion row present` | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
 
 ## Progress log
@@ -611,3 +615,23 @@ cut; the lane resumes after P6.
   point would ship exactly that), and splitting the README into a separate step
   would not reduce a count measured from the phase base. Shrinking by deleting
   tests or comments is forbidden. Real count reported; the phase stands.
+- 2026-10-21 — execute P6 base ref `f0da06d6`. **Gates at entry:** path-protection
+  `PATH-GUARD pass — clean` (checked 0 — the phase is verification, no source edit).
+- 2026-10-21 — **verification phase, run at the head** (`f0da06d6`):
+  root suite `node --test scripts/*.test.mjs` **796/0**; Pi package suite
+  `bun run test` **452/0** and `test:node` **452/0**; crate suite
+  `packages/agentic-workflow` **216/0** (bun) and **217/0** (node);
+  `scripts/serena-activation-check.mjs` → `ACTIVATION: ok`, 20 `serena_*` tools
+  from the packed artifact; `scripts/pin-watch.mjs --check` → exit 1 with the two
+  real drifts recorded at P3; `check-skill-context` **PASS 28 skills**;
+  `version-parity-gate --content --base main` **PASS** (0.26.0 → 0.29.0);
+  phase-lint **PASS**; the triage block still diffs clean against
+  `unit-route.mjs --triage`. Every earlier validator reproduces.
+  **One environment finding, not a defect:** the crate suite first reported 5
+  failures with `Cannot find package 'typebox'` — `packages/agentic-workflow` had
+  no `node_modules` in this checkout. `bun install --frozen-lockfile` (the step
+  `root-suite.yml` runs before the crate) makes it 216/0. Recorded because a red
+  gate must never be dismissed as "probably the environment" without proof, and
+  the proof here is both directions: red before the install, green after, with
+  the failure naming a missing module rather than a failing assertion.
+  → `PENDING-SHA` — next: the lane resumes (review release docs).
