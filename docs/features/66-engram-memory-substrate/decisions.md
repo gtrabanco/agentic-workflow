@@ -55,3 +55,44 @@ reconciled by the docs step (CLAIM-011) — never re-asked.
   its own surface: `skills/init-workspace/references/ENGRAM.md`. Chosen over a
   new internal contract skill to avoid a new skill's manifest/budget/table
   surfaces at zero contract loss.
+
+## Plan re-cut (2026-10-22)
+
+Owner instruction this session: `66-engram-memory-substrate --retriage` —
+re-cut P1 with the probe transport, the timeout, the injection seam and the
+fixtures named. Triage re-run identical (Evidence R12); every fact below was
+re-proven by measurement on this machine the same day (Evidence R13), never
+defaulted:
+
+- **Transport coverage: both transports plus the CLI** — HTTP
+  `GET http://127.0.0.1:7437/health` (the SPEC Why failure mode: TCP accepted,
+  HTTP unanswered), one MCP `initialize` round-trip against pi's own argv
+  `engram mcp --tools=agent` (R2), and the CLI sources `engram --version`,
+  `engram sync --status`, the two check-scoped `engram doctor --json --check`
+  calls. This closes the research uncertainty "cover both transports or say
+  which one it covers" — both are covered, and the probe issues no MCP tool
+  call, so it can never mutate the memory layer. The full `engram doctor
+  --json` sweep is excluded by name (12.2 s repo root, 23.2 s from /tmp).
+- **Timeout**: 4 s per HTTP/runner/version call, 10 s per staleness/session
+  CLI call, 30 s whole-probe ceiling — bounds chosen over healthy measurements
+  of 0.019–0.450 s, with a bound hit failing that check instead of hanging.
+- **Injection seam**: `runProbe({ fetchImpl, runImpl, timeoutMs })`, the crate's
+  existing injectable-dependency shape (`packages/agentic-workflow/src/doc/embeddings.mjs:70`),
+  so the fixtures inject fakes and millisecond bounds without network, PATH or
+  a real engram process.
+- **Fixtures**: the O1/O2 set named verbatim in P1 — `fixture-timeout`,
+  `fixture-missing-binary`, `fixture-missing-runner`, `fixture-stale`,
+  `fixture-healthy` (the last keeps `ok` reachable, no always-degraded suite).
+
+Out-of-scope finding, recorded and routed — never folded into this unit:
+`execute-phase`'s pre-write-mapper gate still links
+`skills/implementation-discovery/SKILL.md`, a skill deleted by feature 61 P8
+(2026-09-22) — dead links at `skills/execute-phase/SKILL.md:113` and
+`skills/execute-phase/references/PREFLIGHT.md:117-119` (budgets/routes/root
+gate do not catch it; verified green 2026-10-22). Re-pointing it needs an owner
+choice of the surviving contract — feature 61's SPEC P8 says the seven evidence
+questions "fold into triage/research" while `docs/workflow/FEATURE_WORKFLOW.md:145`
+says the evidence step — plus the `skills/**` version/CHANGELOG/budgets/pi-
+package-version ceremony. That is its own fix unit, never a rider on this PR.
+It blocks no AC of this unit; the owner decides in this session's reply whether
+it opens as a separate fix issue.
