@@ -224,9 +224,14 @@ export function renderPrompt(action, state) {
       return {
         prompt:
           `${head}\n\nStep: run \`/review-change ${unit}\` — the context-clean end review ` +
-          `for PR #${state.prNumber}: run the applicable axes, persist findings in the ` +
-          `unit's \`review-findings.md\`, and on pass emit the SHA-bound ` +
-          `\`review-change:pass\` receipt on PR #${state.prNumber}.`,
+          `for PR #${state.prNumber}: run the applicable axes and persist findings in the ` +
+          `unit's \`review-findings.md\`. **Order is strict (the loop machine-checks it):** ` +
+          `commit AND push every artifact your review produces first (findings ledger, ` +
+          `review-debt, everything — one or more commits is fine), then emit the ` +
+          `SHA-bound \`review-change:pass\` receipt LAST with ` +
+          `\`--head \"$(git rev-parse HEAD)\"\` at that final head. **Never commit, push or ` +
+          `write anything after the receipt** — a later commit voids it and the loop ` +
+          `will re-run the review.`,
       };
     case "fold":
       return {
@@ -450,7 +455,11 @@ function makeAct() {
     }
     // The receipt chain is forge-bound: a step that commits must land on the
     // remote or `review-receipt verify --pr` can never see a current head.
-    if (COMMITS.has(action.type === "phase" ? "phase" : action.step)) {
+    // `review` joins the push set without joining the commit set: its own
+    // artifacts must already be pushed before its receipt was emitted, and a
+    // no-op push cannot void a receipt.
+    const pushedLabel = action.type === "phase" ? "phase" : action.step;
+    if (COMMITS.has(pushedLabel) || pushedLabel === "review") {
       const pushed = spawnSync("git", ["push"], { cwd: TARGET, encoding: "utf8" });
       if ((pushed.status ?? 1) !== 0) {
         throw new Error(`push after ${label} failed: ${(pushed.stderr ?? "").trim().split("\n")[0] || `exit ${pushed.status}`}`);
