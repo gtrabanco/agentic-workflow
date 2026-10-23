@@ -333,27 +333,16 @@ One row per acceptance criterion: what was run, exit status/digest, observed
 output (≤2 lines), verified-by.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
-|  |  |  |  |  |
 |---|---|---|---|---|
+| AC1 | `grep -c "unit/<NN-slug>/doc" skills/unit-lane/references/MEMORY.md`; read §2's boundary table | exit 0 · 5 key hits | three boundary rows: unit start (after triage) / each phase transition / unit close, each carrying goal, numbered ACs, Evidence outcome, discoveries | review-fold cycle 1, 2026-10-23 (main agent, re-run at head) |
+| AC2 | `bun run test` in packages/agentic-workflow; `node packages/agentic-workflow/bin/agentic-workflow.mjs memory probe --json` (measured end-to-end on this machine) | exit 0 · 236 pass / 0 fail · probe 0.8 s | verdict `degraded`, `session-ambiguity: sync_target_closed_space: 20 finding(s) detected.` — the sync signal AC2 asks for, restored by F3; the run shares one clock (F8), answers in ≤ the slowest bound, and never hangs | review-fold cycle 1, 2026-10-23 |
+| AC3 | `bun run test` in packages/pi-agentic-workflow; `grep -rn "engram setup pi" packages/pi-agentic-workflow/src packages/pi-agentic-workflow/README.md`; `skills/init-workspace/references/ENGRAM.md` + `grep -c ENGRAM skills/init-workspace/SKILL.md` | exit 0 · 451 pass / 0 fail · 0 hits for the forbidden route | consent-gated registration, `already-declared` on either `mcp.json` scope (F6), `config-invalid` when consent cannot be read (F5), the console preserves `memory` (F4); `init-workspace` carries the same ask-first flow and reports exactly what was written | review-fold cycle 1, 2026-10-23 |
+| AC4 | `grep -n "mem_context\|all_projects\|mem_current_project" skills/unit-lane/references/MEMORY.md` §3 | exit 0 · 5 matched lines, order 1→5 | `mem_context` scoped → `mem_search` with explicit `project` → **one** explicit `all_projects: true` retry → `mem_get_observation` → the unit doc wins; `mem_current_project` + `available_projects` when cwd is ambiguous | review-fold cycle 1, 2026-10-23 |
+| AC5 | `grep -n "session attribution\|mem_session_end\|project fallback" skills/unit-lane/references/MEMORY.md` §5 | exit 0 · 4 hits | attribution is explicit on every write and names its **carrier per surface** — `session_id` where the write tool declares it, an open session plus explicit `project` on a provider that binds the runtime session itself; `mem_session_end` only on confirmed-stale ids; the `project` fallback stays the escape hatch (folded as F7) | review-fold cycle 1, 2026-10-23 |
+| AC6 | `grep -n "mem_session_summary" skills/log-session/SKILL.md`; `grep -n "canonical split" skills/unit-lane/references/MEMORY.md` §6 | exit 0 · 1 hit each | `docs/LOGS.md` = the git-traveling team journal; `mem_session_summary` / `unit/<NN-slug>/doc` = local unit-keyed recall; neither mirrors the other — recorded in both writers' texts | review-fold cycle 1, 2026-10-23 |
+| AC7 | `grep -n "keyword-bound\|FTS5" skills/unit-lane/references/MEMORY.md` §4 | exit 0 · 3 hits | the ceiling is disclosed where recall is documented (a miss is not evidence of absence; save searchable words); hybrid FTS5+vector stays Engram's own direction (#192) | review-fold cycle 1, 2026-10-23 |
+| AC8 | `grep -n "pending" skills/unit-lane/references/MEMORY.md` §7 | exit 0 · 3 hits in §7 (4 across the file) | five degradation obligations stated: local progress preserved, mirror marked pending explicitly, unrelated safe work continues, sync resumes at the next boundary, both sides read back with irreconcilable versions surfaced | review-fold cycle 1, 2026-10-23 |
+| AC9 | `node --test scripts/*.test.mjs`; `bun scripts/check-skill-context.mjs`; `bun scripts/check-skill-context.mjs --routes`; `bun scripts/phase-lint.mjs docs/features/66-engram-memory-substrate/SPEC.md`; both touched package suites; `node scripts/promise-coherence.mjs`; `node scripts/version-parity-gate.mjs --content --base main` and `--pins` | all exit 0 | 775/775 · budgets PASS 28 skills · routes PASS 14 · phase-lint PASS fingerprint `e0b6fb80…` (unchanged) · crate 236/0 · pi 451/0 · coherence PASS (35 claims) · parity content + pins PASS; `unit-lane` 2.4.1, `execute-phase` 6.2.1, `log-session` 2.3.0, `init-workspace` 4.1.0 each with a CHANGELOG row | review-fold cycle 1, 2026-10-23 |
 | R1 | `grep -rn -i "engram" skills/ packages/*/src packages/*/README.md` | exit 0, 2 hits | both are path-ignore mentions (`REVIEW_PROCESS.md:95`, `audit-pr/SKILL.md:128`); no protocol/provisioning/health text exists | research step, 2026-10-21 |
 | R2 | `engram --version`; `cat ~/.pi/agent/mcp.json`; `grep -n engram ~/.pi/agent/settings.json` | exit 0 | `engram 3.4.0`; `mcpServers.engram` → `/home/agent/.local/bin/engram mcp --tools=agent`; `npm:gentle-engram@latest` | research step, 2026-10-21 |
 | R3 | `curl -m4 :7437/health`; `engram doctor`; `engram doctor --json`; `engram sync --status` | curl 0 (HTTP 200); doctor exit 0; JSON `status: error` | server answers today; doctor green-by-exit but 1 error + 1 blocked + 3 warnings; update notice 3.4.0 → 3.5.2 | research step, 2026-10-21 |
@@ -406,20 +395,43 @@ output (≤2 lines), verified-by.
   re-cut and the out-of-scope dead pre-write-mapper link → evidence: R12–R13 —
   next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap)
 
-2026-10-22 16:05 — P1 (runner-crate memory probe) implemented: src/memory/probe.mjs with runProbe({fetchImpl, runImpl, timeoutMs}) over the five named checks, the `memory probe` bin subcommand (human block + --json, always exit 0), 17 tests covering the five planned fixtures plus parse/ceiling/read-only contracts, README section, crate 0.3.0→0.4.0 + CHANGELOG rows. Measured end-to-end on this machine (1.4 s, correctly degraded on the known sync_target_closed_space findings) → 58abf268 — next: /execute-phase 66-engram-memory-substrate P2 (tier: cheap)
-2026-10-22 16:40 — P2 (canonical memory protocol): skills/unit-lane/references/MEMORY.md is the protocol home (probe, three save boundaries under unit/<NN-slug>/doc, fixed recall order with one all_projects retry, keyword-bound ceiling, session attribution, D2 split, degradation), wired thin into unit-lane (turn box + §5b) and execute-phase (turn box + Post-step item); budgets re-based with declared reasons, unit-lane 2.4.0 / execute-phase 6.2.0 + CHANGELOG rows → commit below — next: /execute-phase 66-engram-memory-substrate P3 (tier: cheap)
-2026-10-22 17:00 — P3 (log-session states its half): §The canonical split — this skill's half records D2 (docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall, no mirroring) with the pointer to the lane memory reference; log-session 2.3.0 + CHANGELOG row; budgets measured 2374 est / 193 lines, inside the defaults so no re-base → commit below — next: /execute-phase 66-engram-memory-substrate P4 (tier: cheap)
-2026-10-22 17:35 — P4 (pi package provisioning): src/extension/engram.ts is the Pi-free provisioning core (consent → binary → host support → operator declaration → register, reporting exactly what was written), memory.engram consent key added to the strict config schema/types/defaults/merge, wired on session_start; 11 tests; README section; schema pin 4.6.0→4.7.0 + lockfile, pi 0.27.0 + CHANGELOG companion row. Pins and content parity gates PASS, clearing the SPEC's known pin drift → commit below — next: /execute-phase 66-engram-memory-substrate P5 (tier: cheap)
-2026-10-22 17:55 — P5 (init-workspace non-pi provisioning parity): references/ENGRAM.md owns detect → ask → register-or-instruct → report with the binding rules (absolute path, exact mcp --tools=agent argv, never overwrite a declared server, absent binary is a residual, install route pi install npm:gentle-engram@latest never the CLI setup subcommand); wired as bootstrap write step 9, allowlist grown to six paths, guardrail added; init-workspace 4.1.0 + CHANGELOG row; budgets measured 3411 est / 240 lines inside 3663/252, ENGRAM.md 1151 est / 108 lines → commit below — next: /execute-phase 66-engram-memory-substrate P6 (tier: cheap)
-2026-10-22 18:20 — P6 (verification): whole gate green at head — root suite 775/775, budgets + routes PASS, phase-lint PASS (fingerprint unchanged), agentic-workflow 233/233, pi package 443/443, promise-coherence PASS, version parity content + pins PASS, mechanical golden-fixture half green and one live weak-model probe (nan/qwen3.6) answered 5/5 on the memory boundary with a row appended to GOLDEN_FIXTURE.md → commit below — next: /review-change on the changed HEAD (mandatory end review)
+- 2026-10-22 16:05 — P1 (runner-crate memory probe) implemented: src/memory/probe.mjs with runProbe({fetchImpl, runImpl, timeoutMs}) over the five named checks, the `memory probe` bin subcommand (human block + --json, always exit 0), 17 tests covering the five planned fixtures plus parse/ceiling/read-only contracts, README section, crate 0.3.0→0.4.0 + CHANGELOG rows. Measured end-to-end on this machine (1.4 s, correctly degraded on the known sync_target_closed_space findings) → 58abf268 — next: /execute-phase 66-engram-memory-substrate P2 (tier: cheap)
+- 2026-10-22 16:40 — P2 (canonical memory protocol): skills/unit-lane/references/MEMORY.md is the protocol home (probe, three save boundaries under unit/<NN-slug>/doc, fixed recall order with one all_projects retry, keyword-bound ceiling, session attribution, D2 split, degradation), wired thin into unit-lane (turn box + §5b) and execute-phase (turn box + Post-step item); budgets re-based with declared reasons, unit-lane 2.4.0 / execute-phase 6.2.0 + CHANGELOG rows → commit below — next: /execute-phase 66-engram-memory-substrate P3 (tier: cheap)
+- 2026-10-22 17:00 — P3 (log-session states its half): §The canonical split — this skill's half records D2 (docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall, no mirroring) with the pointer to the lane memory reference; log-session 2.3.0 + CHANGELOG row; budgets measured 2374 est / 193 lines, inside the defaults so no re-base → commit below — next: /execute-phase 66-engram-memory-substrate P4 (tier: cheap)
+- 2026-10-22 17:35 — P4 (pi package provisioning): src/extension/engram.ts is the Pi-free provisioning core (consent → binary → host support → operator declaration → register, reporting exactly what was written), memory.engram consent key added to the strict config schema/types/defaults/merge, wired on session_start; 11 tests; README section; schema pin 4.6.0→4.7.0 + lockfile, pi 0.27.0 + CHANGELOG companion row. Pins and content parity gates PASS, clearing the SPEC's known pin drift → commit below — next: /execute-phase 66-engram-memory-substrate P5 (tier: cheap)
+- 2026-10-22 17:55 — P5 (init-workspace non-pi provisioning parity): references/ENGRAM.md owns detect → ask → register-or-instruct → report with the binding rules (absolute path, exact mcp --tools=agent argv, never overwrite a declared server, absent binary is a residual, install route pi install npm:gentle-engram@latest never the CLI setup subcommand); wired as bootstrap write step 9, allowlist grown to six paths, guardrail added; init-workspace 4.1.0 + CHANGELOG row; budgets measured 3411 est / 240 lines inside 3663/252, ENGRAM.md 1151 est / 108 lines → commit below — next: /execute-phase 66-engram-memory-substrate P6 (tier: cheap)
+- 2026-10-22 18:20 — P6 (verification): whole gate green at head — root suite 775/775, budgets + routes PASS, phase-lint PASS (fingerprint unchanged), agentic-workflow 233/233, pi package 443/443, promise-coherence PASS, version parity content + pins PASS, mechanical golden-fixture half green and one live weak-model probe (nan/qwen3.6) answered 5/5 on the memory boundary with a row appended to GOLDEN_FIXTURE.md → commit below — next: /review-change on the changed HEAD (mandatory end review)
+- 2026-10-23 16:10 — review-fold cycle 1 (mandatory end review at `a2fa6cf0` → REVIEW-FAIL, ten fix-now rows): 
+  F3+F8 in the crate probe (both scoped doctor ids asked and every non-ok finding reported; the five checks 
+  share one clock so the run costs the slowest bound, not the 32 s sum) → 9a44572a; F4 in the settings console 
+  (`clean()` copies every key the parser accepted — `memory`, and pre-existing `pathProtection`/`advance`, no 
+  longer vanish on save; three stale `scripts/mutation-check.mjs` needles re-pointed and each mutant re-killed) 
+  → 91d373a7; F5+F6 in the pi adapter (consent that cannot be read is a stated `config-invalid`, and the 
+  anti-shadow guard consults every `mcp.json` Pi reads) → e6431235; F7 in the memory protocol (session 
+  attribution names the carrier per write surface; `unit-lane` 2.4.1, `execute-phase` 6.2.1) → d47110da; 
+  F9+F10 in the docs map, the template agent guide and feature 61's reconciled non-goal → 3305fe0d. 
+  This entry and the AC1–AC9 receipt rows above are the F1+F2 fold. Gates green at each batch head; 
+  residual named, not folded: roadmap row 66 still reads `planned`, so `node scripts/unit-route.mjs 
+  66-engram-memory-substrate` correctly fails closed at the close-out boundary until the release step's 
+  `status-and-pr-link` write (owner: `execute-phase`, not this fold) settles it.
+
 ## Next
 
-Plan step complete (P1–P6 cut, P1 re-cut 2026-10-22 with transport, timeout
-bounds, injection seam and fixtures named — phase-lint re-verified, ledgers
-frozen at `planned`): execution hands off one phase per turn.
+P1–P6 ran and the cycle-1 review at `a2fa6cf0` returned REVIEW-FAIL with ten
+fix-now rows; all ten are folded at the heads named in the Progress log (F1 and
+F2 are this document: the AC1–AC9 receipt rows and the Progress entries re-cut
+to the `- YYYY-MM-DD HH:MM — P<n> …` shape the router reads). The unit now needs
+the re-review of the fold diff, then the merge gate.
+
+One owner-side write is still outstanding and is deliberately not folded here:
+roadmap row 66 still reads `planned` although `execute-phase` P1's mandated
+`planned → in-progress` write never landed, so `node scripts/unit-route.mjs
+66-engram-memory-substrate` fails closed at the close-out boundary by design.
+That row's `status-and-pr-link` column-set is owned by `execute-phase`
+(`ledger-ownership@1`), not by a fold.
 
 ```text
-→ Next: /execute-phase 66-engram-memory-substrate P1 (tier: cheap) — run phase P1; the lane resumes after the last phase
+→ Next: /review-change — delta re-review of the fold diff at the settled head, then /audit-pr
 ```
 
 ## References
