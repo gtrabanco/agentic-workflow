@@ -152,8 +152,19 @@ M-sized: the ledger lives in
 
 ## Triaged steps
 
-n/a — this unit is built directly under D3 (owner: no lane ceremony); the
-`tests`-first discipline and the root suite are still its gates.
+```text
+TRIAGE — 78-unit-cycle (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
+Skipped: release: small scope
+Budget: strong
+```
+
+Cut by the router once the doc was complete (the block above is
+`bun scripts/unit-route.mjs --triage 78-unit-cycle` verbatim). The D3 directive
+built this unit without the lane's step sequence — `research` and `plan` were
+then executed by the loop itself against this very unit, `implement`/`tests`
+ran as the red-first pair, and `release` is skipped by scope (`small`).
 
 ## Evidence
 
