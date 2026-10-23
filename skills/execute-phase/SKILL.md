@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 6.2.0
+version: 6.2.1
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -140,12 +140,11 @@ names before implementation), then green. UI/adapter glue may test after.
    `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next: <what is next>`.
 4. **Memory boundary** — this step is a phase transition. Follow
    [the memory protocol](../unit-lane/references/MEMORY.md): before the first
-   memory read of the session run `agentic-workflow memory probe` once and
-   record its verdict in Evidence; after the step, save the phase id, what it
-   changed, its Evidence outcome and any discovery under
-   `topic_key: "unit/<NN-slug>/doc"` with an explicit `project` and
-   `session_id`. A `degraded` verdict is recorded and the mirror marked pending
-   — it never blocks the step.
+   memory read run `agentic-workflow memory probe` once and record its verdict
+   in Evidence; after the step, save the phase id, what it changed, its Evidence
+   outcome and any discovery under `topic_key: "unit/<NN-slug>/doc"`, an explicit
+   `project` and explicit session attribution (§5). A `degraded` verdict is
+   recorded and the mirror marked pending — it never blocks the step.
 5. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
    <step-summary>"` — run it, paste the SHA.
 

@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 2.4.0
+version: 2.4.1
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -177,7 +177,8 @@ follow [the memory protocol](references/MEMORY.md).
 - **Probe once**, before the first memory read: `agentic-workflow memory probe`
   → paste the verdict into Evidence; `degraded` is recorded and said once.
 - **Save at unit start, each phase transition, and close** under
-  `topic_key: "unit/<NN-slug>/doc"` with explicit `project` and `session_id`.
+  `topic_key: "unit/<NN-slug>/doc"`, with explicit `project` and explicit
+  session attribution (§5 names what carries it on each write surface).
 - **Recall** `mem_context` → scoped search → one explicit `all_projects: true`
   retry → `mem_get_observation` → the unit doc wins. A miss is keyword-bound,
   never proof nothing was saved; an unavailable mirror is marked pending.
