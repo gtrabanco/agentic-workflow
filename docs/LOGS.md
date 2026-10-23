@@ -3241,3 +3241,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 13 files
 - **Summary:** unit 78 (unit-cycle): context-clean end review (F6-F8 found, fold, delta-review clean, audit-pr merge-ready)
 - **Next:** /audit-pr — merge gate for PR #314 (unit 78 delivery cycle as code)
+
+## 2026-10-23T21:53:44Z — feat/78-unit-cycle — manual
+- **Commits:** 35 (`7f62c408…e1e1f662`)
+- **Files:** 13 files
+- **Summary:** Assigned the `unit-lane` plan step for 78-unit-cycle and verified it is already delivered: `c64ca4d3` cut P1–Pn with a backticked validator plus a `Relevant files` read set each, froze both M-sized planning ledgers (`planning-evidence.md` PE-001…PE-008, `planning-obligations.md` O1…O15), left 13 `CLAIM-*` rows in `sources.md` each citing `path:line`, `decisions.md` at D1–D3 with the explicit `none` open-questions line, and roadmap row 78 at `done · [#314]`. All thirteen plan-checklist items pass against the on-disk artifacts, so nothing was rewritten and this session made no commit.
+- **Decisions:** 1) No artifact re-cut — the step's forbidden list bars rewriting a delivered plan and every input it would re-derive is already present and current, so re-running investigate/orient/ask/decide would churn delivered records rather than plan work. 2) Roadmap row 78 left at `done · [#314]`; resetting it would contradict the forge (PR #314 OPEN at `69a7d78c`, `mergedAt` null, `mergeStateStatus` CLEAN). 3) Left untouched and reported instead: the checkout was mid-interactive-rebase onto `b5e9434b` with a `docs/LOGS.md` conflict, several concurrent sessions are committing to this same branch, and my first log commit (`b4a5fc6b`) was discarded by another session's history rewrite — repo-graph surgery and their work are outside this step's scope.
+- **Next:** PR [#314](https://github.com/gtrabanco/agentic-workflow/pull/314) is OPEN at `69a7d78c`, `mergedAt` null — remaining gates are the receipt/audit path the coded loop drives itself (`node scripts/unit-cycle.mjs 78-unit-cycle`), then the owner's merge; remember no commit may land after the final receipt or it goes stale.
