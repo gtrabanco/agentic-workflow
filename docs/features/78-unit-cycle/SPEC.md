@@ -275,7 +275,7 @@ R-rows from the research step (one web pass over primary sources).
 - 2026-10-23 — **docs step**: changelog row added (unit 78: delivery cycle as
   code, PR #314), README.md unit 78 reference confirmed current, roadmap row 78
   `done · [#314]` confirmed — no template or doc-map drift — all surfaces
-  accounted for → docs step complete.
+  accounted for → docs step complete (commit `f41f766b`).
 
 ## Next
 
