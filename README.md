@@ -397,6 +397,18 @@ strict JSON Schemas, parsing, compatibility diagnostics, and
 WorkflowSnapshot v1. See **[programmatic orchestration](docs/workflow/ORCHESTRATION.md)**
 for the protocol and driver example.
 
+**The delivery cycle itself is code** (unit 78): `node scripts/unit-cycle.mjs
+<NN|slug>` runs one unit's whole cycle programmatically — design if
+undesigned, plan if unplanned, each phase as its own `pi -p` session, tests,
+evidence, docs, release, the context-clean review until its receipt is current,
+folds within `--max-cycles` (default 2), and `audit-pr` — re-sensing the repo
+after every act and stopping only for manual input or a closed terminal state
+(exit 0 `done` · 2 `needs-input` with the verbatim `open-questions@1` block ·
+3 `budget-exhausted` · 4 `no-progress` · 5 `failed`). Its control decisions are
+pure functions proven offline by `scripts/unit-cycle.test.mjs`; skills stay
+the step contracts the loop invokes, never the loop itself. `--dry-run` prints
+the sensed state and the next action without spawning anything.
+
 ## How to use them
 
 Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
