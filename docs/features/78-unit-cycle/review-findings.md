@@ -5,6 +5,7 @@
 |---|---|---|---|---|---|---|
 | REVIEW-RAN | HEAD 5a1597c581494c5e7a91bdd8b95de5d55cb76861 | n/a | n/a | review-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 4e63f5ceaa3afc005356c35a5044c8c2d9f02154 | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD afe6ccd78eddb046ceba60636fb58e3cc13ee322 | n/a | n/a | review-mark | n/a | n/a |
 | F1 | unit-cycle.mjs | security | high | fix-now | fold | yes |
 | VF-F1 | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | security | high | verifier | sha-bound: 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | n/a |
 | F2 | unit-cycle.test.mjs | verify | high | fix-now | fold | yes |
@@ -37,3 +38,5 @@
 |---|---|---|---|
 | GATE-RAN | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | node --test scripts/unit-cycle.test.mjs | exit 0 |
 | GATE-RAN | HEAD 4e63f5ceaa3afc005356c35a5044c8c2d9f02154 | node --test scripts/*.test.mjs | exit 0 · 811 pass / 0 fail |
+| GATE-RAN | HEAD afe6ccd78eddb046ceba60636fb58e3cc13ee322 | node --test scripts/unit-cycle.test.mjs | exit 0 · 36 pass / 0 fail |
+| GATE-RAN | HEAD afe6ccd78eddb046ceba60636fb58e3cc13ee322 | node --test scripts/*.test.mjs | exit 0 · 811 pass / 0 fail |
