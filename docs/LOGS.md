@@ -3229,3 +3229,15 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Ran unit-lane's plan step for unit 78 `unit-cycle` on branch `feat/78-unit-cycle`: investigate (13 CLAIM-* rows in sources.md, each cited to a repo source — feature 22's `loop-review-fold`, feature 61's absorption, the four sensing primitives, unit-route's exports); orient (swept against prior decisions — zero contradictions, zero conflicts); ask/decide (no open questions → explicit `none` line in decisions.md open-questions@1 block); Tasks cut as P1–Pn with backticked validators and per-phase read sets; M-sized ledger home frozen as planning-evidence.md (PE-001–PE-008) and planning-obligations.md (O1–O15). A concurrent correction commit (`ee013c6c`) refreshed the ledgers' test counts to the current head (36/36 unit-cycle, 832/832 root suite) so the `verified` rows reproduce at the head.
 - **Decisions:** (1) No prior decision conflicts with #78's loop-as-code design: feature 22 defined `loop-review-fold`, feature 61's absorption left prose, and #78 restores code — a clean continuation. (2) Ledger home is the M-sized separate files, never both (the SPEC already references them). (3) Obligations written `verified` (not `planned`) — the counts reproduce at the head and the Evidence table in the SPEC proves the validators ran. (4) The `promise-coherence` guard extracts no claims from table cells, but narrative counts must still reproduce at the head to keep `verified` truthful.
 - **Next:** Nothing is left from the plan step. PR #314 (feat/78-unit-cycle) is OPEN at the forge — MERGEABLE, mergedAt null. The plan artifacts bind the lane; the remaining unit work is the pre-existing `dependency-pin-gate` bump (schema pin 4.6.0 vs registry 4.7.0) in a fix(deps) PR, then /audit-pr 314 and the human merge.
+## 2026-10-23T21:51Z — feat/78-unit-cycle — manual
+- **Commits:** 70 (`81fc1e7d…66db3763`)
+- **Files:** 45 files
+- **Summary:** Unit 78 (unit-cycle) research step plus unit 67 (serena-provisioning) full implementation and audit — both units delivered
+- **Decisions:** 1) Unit 78 research: primary sources are repo-internal (feature 22/61 specs, sensing primitives, turn contract) — no external web needed; 2) Unit 67 Serena provisioning: 43 commits across P1–P6, evidence, review, fold cycles, audit-pr #313 merge-ready; 3) Pin-watch script added for CI pin drift detection
+- **Next:** Merge PR #314 (unit 78, merge-ready) and PR #313 (unit 67, merge-ready); then bump schema/typebox pins in a fix(deps) PR to close the pre-existing dependency-pin-gate failure
+
+## 2026-10-23T21:53:23Z — feat/78-unit-cycle — manual
+- **Commits:** 34 (`7f62c408…fab39189`)
+- **Files:** 13 files
+- **Summary:** unit 78 (unit-cycle): context-clean end review (F6-F8 found, fold, delta-review clean, audit-pr merge-ready)
+- **Next:** /audit-pr — merge gate for PR #314 (unit 78 delivery cycle as code)
