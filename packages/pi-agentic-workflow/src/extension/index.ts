@@ -14,7 +14,8 @@ import type { CommandRegistrar } from "./factory.js";
 import { readGitStatusBounded } from "./receipt-guard.js";
 import type { InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
-import { createHintStore, stateFilePath } from "../routing/state.js";
+import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../routing/state.js";
+import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
@@ -202,6 +203,14 @@ function resolveExistingPrefix(target: string): string {
 export default function extension(pi: ExtensionAPI): void {
   const agentDir = getAgentDir();
   const hint = createHintStore({ path: stateFilePath(agentDir) });
+  // One gate for both entry points (AC9): session start says it first, and a
+  // session that begins by running a command says it there instead. The
+  // revision is the bundled init-workspace's own, so an upgrade that ships a
+  // newer provisioning contract can tell the operator the project predates it.
+  const serenaReadiness = createSerenaReadinessGate({
+    store: createSerenaReadinessStore({ path: stateFilePath(agentDir) }),
+    revision: readInitWorkspaceRevision(skillsDir),
+  });
   // Said once per session: an override that was ignored (or a malformed file)
   // is reported the first time the guard runs, never on every tool call.
   let reportedDegradations = false;
@@ -219,6 +228,7 @@ export default function extension(pi: ExtensionAPI): void {
     skillsDir,
     agentDir,
     hint,
+    serenaReadiness,
     loadConfig: (ctx) => loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() }),
     // The console edits the same files the dispatcher reads (SPEC S4, AC10).
     settings: ({ ctx, catalogue: routed, routing }) =>
@@ -235,6 +245,13 @@ export default function extension(pi: ExtensionAPI): void {
       }),
   });
 
+  // The readiness nudge's first chance (AC9): a session that opens here hears
+  // it, and the gate latches so the command path never repeats it. Soft by
+  // construction — the gate swallows a broken read and a failed latch.
+  pi.on("session_start", (_event, ctx) => {
+    const message = serenaReadiness.check(ctx.cwd);
+    if (message) ctx.ui.notify(message, "warning");
+  });
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
   pi.on("thinking_level_select", (event) => router.noteThinkingLevelSelect(event.level));
   // The inline-receipt path is impossible: a `gh pr comment` carrying a
