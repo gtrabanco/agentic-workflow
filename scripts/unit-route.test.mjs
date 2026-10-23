@@ -13,6 +13,9 @@
 
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+// The router's own classifiers, imported so the collapsed carrier's column vocabularies are
+// pinned against the code the CLI runs, not against a paraphrase of it.
+import { findingsRows, routeOfRow } from "./unit-route.mjs";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -834,6 +837,38 @@ test("#308 OPEN rows come from ## Findings when the doc carries no review-findin
   assert.equal(rowLine(result.stdout), "F7");
   assert.match(routeLine(result.stdout), /^(fold|replan|decision|product)$/);
   assert.match(result.stdout, /^read-set/m);
+});
+
+test("#308 the collapsed carrier's `class` vocabulary routes the owner, not prose that mentions one", () => {
+  // `findings-table@1` puts the REPAIRING OWNER in `class`; the legacy ledger puts the
+  // DISPOSITION there. A `plan`-owned row is the planner's work and a `product`-owned
+  // row the lane's — routing either to the fold sends the fold loop to repair
+  // authority it cannot touch (#293's rule, re-based onto the new column).
+  const doc = (klass, route) => [
+    "## Findings", "",
+    "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    `| F1 | S1 | code | med | ${klass} | ${route} |`,
+    "", "## Log", "",
+  ].join("\n");
+  const cases = [
+    ["plan", "fold into P1", "replan"],
+    ["product", "re-read by the lane", "product"],
+    ["source", "fold into P1", "fold"],
+    ["environment", "repair the harness", "fold"],
+    ["runtime", "fold into P1", "fold"],
+    ["fix-now", "replan-in-unit: the plan owner re-cuts S1", "replan"],
+    ["fix-now", "product owner — the lane decides", "product"],
+    ["fix-now", "fold: repair the parse", "fold"],
+  ];
+  for (const [klass, route, expected] of cases) {
+    const [row] = findingsRows(doc(klass, route));
+    assert.equal(routeOfRow(row), expected, `class="${klass}" route="${route}" must route ${expected}`);
+  }
+  // A row that only mentions an owner in its prose keeps the fold — the owner match is
+  // a whole-cell read, never a substring scan (#293 F9's over-match class).
+  const [mention] = findingsRows(doc("source", "fold: the plan owner is NOT needed here"));
+  assert.equal(routeOfRow(mention), "fold", "prose naming the plan owner must not steal a source row from the fold");
 });
 
 test("#308 the legacy shape is untouched: no ## Log, no ## Findings, same routes", () => {

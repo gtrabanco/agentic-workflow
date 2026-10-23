@@ -1329,7 +1329,7 @@ test("#308 the closed log-kind vocabulary is published by the block, never resta
   const block = versionedBlock(read("docs/features/_TEMPLATE/SPEC.md"), "log-kind@1");
   assert.ok(block, "the unit-doc template publishes the log-kind@1 block");
   const kinds = block.rows.map((row) => row.kind).filter(Boolean);
-  assert.deepEqual(kinds, ["L", "E", "G", "F", "D", "P"], `the log kind vocabulary is closed: ${kinds.join(", ")}`);
+  assert.deepEqual(kinds, ["L", "E", "G", "F", "D", "P", "R", "V"], `the log kind vocabulary is closed: ${kinds.join(", ")}`);
   // The linter and the corpus suite read the same list; a second copy in code
   // would let one drift from the other (the #305 defect class).
   const order = read("scripts/unit-doc-phases.mjs");
