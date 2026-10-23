@@ -20,6 +20,12 @@
  * Usage: bun scripts/ledger-provenance.mjs docs/features/<unit>/review-findings.md
  *        [--json] [--check] [--annotate]
  *
+ * The target is the LEGACY findings carrier, and this tool says so: it recounts
+ * `folded: yes` rows, and a migrated unit (#308) has none — its OPEN rows live in
+ * `## Findings` and a folded row leaves that table for a `## Log` line. The recount
+ * refuses a unit doc instead of reading a `## Findings` table as an all-open ledger
+ * and reporting CHECK PASS over nothing (#308 review, F16).
+ *
  *   --check     exit 1 unless every `folded: yes` row carries a verified commit
  *               token (the mechanical recount P20's done-when demands)
  *   --annotate  rewrite the ledger: append ` · fold <sha>` to every row whose fold
@@ -242,7 +248,24 @@ if (!rel || rel.startsWith("..") || isAbsolute(rel) || !rel.endsWith(".md")) {
   );
   process.exit(2);
 }
-const parsed = parseRows(readFileSync(ledger, "utf8"));
+const ledgerText = readFileSync(ledger, "utf8");
+// #308 §Scope 3 — the collapsed carrier. A migrated unit's folded findings are
+// `## Log` lines (`- **F1** — … folded F12 · `abc1234` · what was verified`) and its
+// OPEN rows are the `## Findings` table, which has no `folded` column: every row in it
+// is open by definition. The recount reads whichever carrier the target is, so a
+// migrated unit's fold receipts are provable at the same standard as a legacy ledger's.
+const isUnitDoc = basename(ledger) === "SPEC.md" && /^## (Findings|Log)\s*$/m.test(ledgerText);
+if (isUnitDoc) {
+  if (annotate) {
+    process.stderr.write(
+    `REFUSED: ${rel} is the collapsed carrier — its ## Log is append-only, so no tool annotates it. A fold line names its own commit when fold-findings writes it; re-run the fold, or use the legacy ledger's --annotate.\n`,
+    );
+    process.exit(2);
+  }
+  runDocRecount({ rel, text: ledgerText, asJson, checkOnly });
+  process.exit(process.exitCode ?? 0);
+}
+const parsed = parseRows(ledgerText);
 const { rows: current, rejected, counted } = parsed;
 // The parser's own completeness clause: a counted line that neither parsed nor was
 // reported is the silent drop C1 names, so the tool refuses it in itself.
@@ -267,6 +290,90 @@ const foldMarker = (cell) => {
 };
 /** A folded cell either reads exactly `yes` or carries the annotator's marker. */
 const isFolded = (cell) => typeof cell === "string" && (/^\s*yes\b/.test(cell) || foldMarker(cell) !== null);
+
+/**
+ * The collapsed carrier's recount. Each `## Log` folded-finding line must name a
+ * commit that resolves, is reachable from HEAD, and claims the finding ids the line
+ * folds — the same three proofs the legacy ledger's `· fold <sha>` marker carries.
+ * A `## Findings` row is OPEN by definition and pays no proof: it is the work, not
+ * the receipt. `--check` exits 1 unless every folded line is proven.
+ */
+function runDocRecount({ rel: docRel, text, asJson: json, checkOnly: check }) {
+  const logBounds = sectionBounds(text, "Log");
+  const findingsBounds = sectionBounds(text, "Findings");
+  const logBody = logBounds === null ? "" : text.slice(logBounds[0], logBounds[1]);
+  const findingsBody = findingsBounds === null ? "" : text.slice(findingsBounds[0], findingsBounds[1]);
+
+  const report = [];
+  let openRows = 0;
+  for (const line of findingsBody.split("\n")) {
+    const cells = line.split(CELL_RE).slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 6 || !/^F\d+$/.test(cells[0] ?? "")) continue;
+    openRows += 1;
+    report.push({ id: cells[0], status: "open", carrier: "findings", fold: null, evidence: cells[5] ?? "" });
+  }
+
+  const folded = [...logBody.matchAll(/^\s*[-*+]\s+\*\*F(\d+)\*\*\s*[—-]\s*(.*)$/gm)];
+  for (const [, , body] of folded) {
+    const cited = verifiedTokens(body);
+    const claimed = [...body.matchAll(/\bF\d+\b/g)].map((m) => m[0]);
+    const lineId = `F${claimed.length ? claimed[0].slice(1) : "?"}`;
+    if (cited.length === 0) {
+      report.push({
+        id: lineId,
+        status: "unproven",
+        carrier: "log",
+        fold: null,
+        evidence: "a folded-finding log line with no commit token — name the fold commit it attests",
+      });
+      continue;
+    }
+    const sha = cited.at(-1);
+    const claims = claimed.filter((id) => foldSubjectIds(sha).has(id));
+    if (claims.length === 0) {
+      report.push({
+        id: lineId,
+        status: "cited-unverified",
+        carrier: "log",
+        fold: short(sha),
+        evidence: `${short(sha)} resolves and is reachable, but its subject claims none of ${claimed.join(", ") || "any finding id"} — the line names a commit that folded something else`,
+      });
+      continue;
+    }
+    report.push({
+      id: claims.join("+"),
+      status: "proven-cited",
+      carrier: "log",
+      fold: short(sha),
+      evidence: `${short(sha)} names ${claims.join(", ")} in its subject`,
+    });
+  }
+
+  const buckets = report.reduce((acc, e) => ({ ...acc, [e.status]: (acc[e.status] ?? 0) + 1 }), {});
+  const needsWork = report.filter((e) => e.status !== "proven-cited" && e.status !== "open");
+  if (json) process.stdout.write(JSON.stringify({ carrier: "unit-doc", rows: report }, null, 2) + "\n");
+  else {
+    process.stdout.write(`unit-doc ${docRel} open ${openRows} folded ${folded.length}  ${JSON.stringify(buckets)}\n`);
+    for (const e of needsWork) process.stdout.write(`${e.id}\t${e.status}\tfold=${e.fold ?? "-"}\t${e.evidence ?? ""}\n`);
+  }
+  if (check) {
+    if (needsWork.length) {
+      process.stdout.write(`CHECK FAIL: ${needsWork.length} folded line(s) lack a verified commit\n`);
+      process.exitCode = 1;
+    } else {
+      process.stdout.write("CHECK PASS: every folded line names a verified commit\n");
+    }
+  }
+}
+
+/** The `[from, to)` range of one level-2 section, heading included, or null. */
+function sectionBounds(text, name) {
+  const start = text.search(new RegExp(`^## ${name}[ \\t]*$`, "m"));
+  if (start === -1) return null;
+  const after = text.indexOf("\n", start) + 1;
+  const next = text.slice(after).search(/^## /m);
+  return [start, next === -1 ? text.length : after + next];
+}
 
 // --- 1. flip + introduction detection: walk every historical version ---------
 const flips = new Map();
