@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 4.0.3
+version: 4.1.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -26,7 +26,8 @@ raw placeholders.
   three-tier dispatch and stops with the dispatcher's `open-questions@1` block
   — against a scratch unit folder when no unit exists yet (§Consent).
 ✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
-✓ Nothing was installed or overwritten without an explicit yes
+✓ Nothing was installed, registered (MCP) or overwritten — including the global
+  Serena config — without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -122,12 +123,16 @@ loads exactly upgrade and skips bootstrap plus portability.
   on its own. **The urgency label seeding is additive-only the same way:**
   create a missing `urgent`/`fix-next` label, never touch one that already
   exists (name, color, or description a project already customized).
-- **Serena convention.** `.serena/project.yml` is committed; `project.local.yml`
-  and `cache` stay local. Never write `.serena/` config without consent. LSP
-  never verifies documents — false positives happen when a file type's server
-  is not listed (markdown/yaml/json are never auto-detected), and a listed
-  server that fails to start must be removed (one failure disables every
-  server in the project). Document verification is a script's job.
+- **Serena convention — tool and config, one consent question.** `.serena/project.yml`
+  is committed; `project.local.yml` and `cache` stay local. Never write
+  `.serena/` config, install the tool, register an MCP server or touch the
+  global `serena_config.yml` (`trusted_project_path_patterns`) without an
+  explicit yes — [SERENA](references/SERENA.md) owns the single question and
+  the fixed provisioning report. LSP never verifies documents — false positives
+  happen when a file type's server is not listed (markdown/yaml/json are never
+  auto-detected), a listed server that fails to start must be removed (one
+  failure disables every server in the project), and LSP evidence stays
+  TypeScript/JavaScript-only. Document verification is a script's job.
 - **Retrieval index scaffold and git hooks are consent-gated (AC22).** The
   index surface — the committed `.agentic-workflow/index.json` config plus the
   three freshness hooks (`post-merge`, `post-checkout`, `post-rewrite`, all
@@ -217,8 +222,11 @@ OpenCode adapter does not load this fallback.
   listed as a residual when its hook API/dependency was unavailable.
   The adaptive lane conventions (unit document, triage, catalog steps, guards,
   evidence, commit formats) are written into AGENTS.md.
-- The Serena project config is provisioned (or reported as a residual with the
-  reason, and the health check ran).
+- Serena is provisioned and reported: the one consent question was asked, the
+  project config written (or skipped with its reason), the tool installed and its
+  MCP server registered for the detected platform — or each refused/absent item
+  recorded as a residual with its reason — and the fixed provisioning report
+  states the health check per listed server. The run completes either way.
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```

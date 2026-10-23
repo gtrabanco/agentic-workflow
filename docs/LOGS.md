@@ -3215,3 +3215,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr against PR #314 (feat/78-unit-cycle)
 - **Decisions:** dependency-pin-gate failure is pre-existing (schema pin 4.6.0 vs registry 4.7.0); closure block absent in SPEC is a design-debt warning only
 - **Next:** bump schema pin to 4.7.0 in a fix(deps) PR, then re-run /audit-pr 314
+
+## 2026-10-23T21:41:01Z — detached — manual
+- **Commits:** 66 (`81fc1e7d…b5e9434b`)
+- **Files:** 45 files
+- **Summary:** Unit 67 plan step (investigate, orient, ask, decide) — 12 CLAIM-* rows swept (0 contradictions), 6 phases P1-P6 cut with per-phase validators, planning ledgers frozen (PE-001..PE-012, O1..O13), roadmap row 67 idea→planned; all gates pass (phase-lint 6/6, needs-input pending=0, promise-coherence PASS, root-suite 775/775 after rebuilding schema dist)
+- **Decisions:** pi activation = dependency + node_modules extension entry (A): exact-pin, scratch-install verified, plus a scheduled pin-watch action that opens an issue on drift; init-workspace is the only .serena/project.yml writer (B); no settings toggle (A): required substrate; global trust consented append (A); code-level readiness nudge (A): latched once-per-state, soft failure, no project writes
+- **Next:** /execute-phase 67-serena-provisioning P1 (tier: cheap) — first phase of the cut; the lane resumes after P6
+## 2026-10-23T21:45:44Z — feat/78-unit-cycle — manual
+- **Commits:** 24 (`7f62c408…c5a0c9f1`)
+- **Files:** 13 files
+- **Summary:** Unit 78 (unit-cycle) research step plus unit 67 (serena-provisioning) full implementation and audit — both units delivered
+- **Decisions:** 1) Unit 78 research: primary sources are repo-internal (feature 22/61 specs, sensing primitives, turn contract) — no external web needed; 2) Unit 67 Serena provisioning: 43 commits across P1–P6, evidence, review, fold cycles, audit-pr #313 merge-ready; 3) Pin-watch script added for CI pin drift detection
+- **Next:** Merge PR #314 (unit 78, merge-ready) and PR #313 (unit 67, merge-ready); then bump schema/typebox pins in a fix(deps) PR to close the pre-existing dependency-pin-gate failure
