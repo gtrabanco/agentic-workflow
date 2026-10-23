@@ -15,9 +15,9 @@
 | VF-F4 | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | security | med | verifier | sha-bound: 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | n/a |
 | F5 | unit-cycle.test.mjs | verify | med | fix-now | fold | yes |
 | VF-F5 | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | verify | med | verifier | sha-bound: 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | n/a |
-| F6 | unit-cycle.mjs:42 | code | med | fix-now | fold | no |
-| F7 | unit-cycle.mjs:273 | code | med | fix-now | fold | no |
-| F8 | unit-cycle.mjs:674 | security | med | fix-now | fold | no |
+| F6 | unit-cycle.mjs:42 | code | med | fix-now | fold | yes |
+| F7 | unit-cycle.mjs:273 | code | med | fix-now | fold | yes |
+| F8 | unit-cycle.mjs:674 | security | med | fix-now | fold | yes |
 
 <!-- gate-ran@1 -->
 | id | file:line | cmds | exit |
