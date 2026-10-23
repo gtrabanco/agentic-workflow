@@ -195,7 +195,7 @@ const isDir = (relative) => {
 };
 
 /** Unit folders under `docs/features` and `docs/fix`, sorted for determinism. */
-function unitFolders() {
+export function unitFolders() {
   const folders = [];
   for (const [kind, dir] of [["feature", "docs/features"], ["fix", "docs/fix"]]) {
     let entries = [];
@@ -214,10 +214,6 @@ function unitFolders() {
   return folders.sort((left, right) => left.dir.localeCompare(right.dir));
 }
 
-/**
- * Resolve the CLI token to exactly one unit folder, or report unknown/ambiguous.
- * A pure number matches on the folder prefix; anything else on slug/suffix.
- */
 export function resolveUnit(token) {
   const folders = unitFolders();
   const clean = token.replace(/^docs\/(?:features|fix)\//, "").replace(/\/+$/, "");

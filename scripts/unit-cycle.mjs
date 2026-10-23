@@ -42,6 +42,7 @@ import {
   routeOfRow,
   sectionBody,
   recordedPhases,
+  unitFolders,
 } from "./unit-route.mjs";
 import { AUDIT_MARKER_RE } from "./audit-pr-gate.mjs";
 
@@ -262,7 +263,7 @@ export function renderPrompt(action, state) {
 /* ----------------------------------------------------------------- sense */
 
 function sh(cmd, args, cwd = TARGET) {
-  const r = spawnSync(cmd, args, { encoding: "utf8", cwd });
+  const r = spawnSync(cmd, args, { encoding: "utf8", cwd, timeout: 30_000 });
   return { status: r.status ?? 1, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
 }
 
@@ -271,23 +272,21 @@ const SCOPE_MAP = { XS: "xs", S: "small", M: "medium", L: "large", XL: "xlarge" 
 /** Resolve a unit token against TARGET (never against this script's checkout). */
 function resolveTargetUnit(token) {
   const clean = token.replace(/^docs\/(?:features|fix)\//, "").replace(/\/+$/, "");
-  const folders = [];
+  const entries = [];
   for (const [kind, dir] of [["feature", "docs/features"], ["fix", "docs/fix"]]) {
-    let names = [];
     try {
-      names = fs.readdirSync(path.join(TARGET, dir));
-    } catch {
-      names = [];
-    }
-    for (const name of names) {
-      if (name.startsWith("_") || !/^\d+-(.+)$/.test(name)) continue;
-      if (!fs.statSync(path.join(TARGET, dir, name)).isDirectory()) continue;
-      folders.push({ kind, number: name.split("-", 1)[0], slug: name, dir: `${dir}/${name}` });
-    }
+      const dirents = fs.readdirSync(path.join(TARGET, dir), { withFileTypes: true });
+      for (const e of dirents) {
+        if (!e.isDirectory() || e.name.startsWith("_")) continue;
+        const m = /^(\d+)-(.+)$/.exec(e.name);
+        if (!m) continue;
+        entries.push({ kind, number: m[1], slug: e.name, dir: `${dir}/${e.name}` });
+      }
+    } catch {}
   }
   const matches = /^\d+$/.test(clean)
-    ? folders.filter((folder) => folder.number === clean)
-    : folders.filter((folder) => folder.slug === clean || folder.dir.endsWith(`/${clean}`));
+    ? entries.filter((folder) => folder.number === clean)
+    : entries.filter((folder) => folder.slug === clean || folder.dir.endsWith(`/${clean}`));
   return { matches, clean };
 }
 
@@ -443,9 +442,9 @@ function runRootSuite() {
   const schemaDist = path.join(TARGET, "packages/agentic-workflow-schema/dist/index.js");
   if (!fs.existsSync(schemaDist)) {
     const pkg = path.join(TARGET, "packages/agentic-workflow-schema");
-    const built = spawnSync("bun", ["run", "build"], { cwd: pkg, encoding: "utf8" });
+    const built = spawnSync("bun", ["run", "build"], { cwd: pkg, encoding: "utf8", timeout: 30_000 });
     if ((built.status ?? 1) !== 0) {
-      const fallback = spawnSync("npm", ["run", "build"], { cwd: pkg, encoding: "utf8" });
+      const fallback = spawnSync("npm", ["run", "build"], { cwd: pkg, encoding: "utf8", timeout: 30_000 });
       if ((fallback.status ?? 1) !== 0) {
         throw new Error(
           `schema build failed (bun exit ${built.status}: ${(built.stderr ?? "").trim().split("\n")[0] || "no output"}; npm exit ${fallback.status})`,
@@ -458,7 +457,7 @@ function runRootSuite() {
     .filter((name) => name.endsWith(".test.mjs"))
     .sort()
     .map((name) => path.join("scripts", name));
-  const r = spawnSync(process.execPath, ["--test", ...files], { cwd: TARGET, encoding: "utf8" });
+  const r = spawnSync(process.execPath, ["--test", ...files], { cwd: TARGET, encoding: "utf8", timeout: 30_000 });
   if ((r.status ?? 1) !== 0) {
     const tail = `${r.stdout ?? ""}${r.stderr ?? ""}`.split("\n").slice(-12).join("\n");
     throw new Error(`root suite red (exit ${r.status}):\n${tail}`);
@@ -478,6 +477,7 @@ function makeAct() {
     const r = spawnSync("pi", ["-p", "--approve", "--name", `unit-cycle:${state.unit}:${label}`, prompt], {
       cwd: TARGET,
       stdio: "inherit",
+      timeout: 30_000,
     });
     if ((r.status ?? 1) !== 0) {
       throw new Error(`pi session exited ${r.status ?? `on signal ${r.signal}`} for ${label}`);
@@ -489,7 +489,7 @@ function makeAct() {
     // no-op push cannot void a receipt.
     const pushedLabel = action.type === "phase" ? "phase" : action.step;
     if (COMMITS.has(pushedLabel) || pushedLabel === "review") {
-      const pushed = spawnSync("git", ["push"], { cwd: TARGET, encoding: "utf8" });
+      const pushed = spawnSync("git", ["push"], { cwd: TARGET, encoding: "utf8", timeout: 30_000 });
       if ((pushed.status ?? 1) !== 0) {
         throw new Error(`push after ${label} failed: ${(pushed.stderr ?? "").trim().split("\n")[0] || `exit ${pushed.status}`}`);
       }
@@ -658,6 +658,7 @@ function main(argv) {
         const block = spawnSync(process.execPath, ["scripts/needs-input.mjs", unitDir], {
           cwd: TARGET,
           stdio: "inherit",
+          timeout: 30_000,
         });
         if ((block.status ?? 1) !== 0) {
           process.stdout.write("  (no open-questions ledger for this unit — the stop came from the audit verdict)\n");
