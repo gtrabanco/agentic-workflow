@@ -1,0 +1,24 @@
+# Obligations — 78-unit-cycle
+
+Normative behaviour, compatibility invariants, and required failure states.
+
+<!-- obligations:start -->
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | AC1: `decide()` state machine is offline-testable | Deterministic state transitions (needs-input before any act, catalog order, fold budget, audit-blocked) | tests | unit-cycle.test.mjs | execute-phase | `` node --test scripts/unit-cycle.test.mjs `` exits 0 · 34 pass / 0 fail | Test case output: decide transitions (needs-input before any act, catalog order, fold budget, audit-blocked), prompt grammar, sensing helpers and runner's terminal states all green | verified |
+| O2 | AC1: prompt builder and sensing helpers are pure/injectable | Pure function exports without side effects | tests | unit-cycle.test.mjs | execute-phase | `` node --test scripts/unit-cycle.test.mjs `` exits 0 | Test covers prompt grammar and sensing helpers | verified |
+| O3 | AC1: runner is offline-testable | Runner's terminal states exercised by test cases | tests | unit-cycle.test.mjs | execute-phase | `` node --test scripts/unit-cycle.test.mjs `` exits 0 | Runner cases green; act-throws → `failed` with step named | verified |
+| O4 | AC2: whole cycle is one command | `node scripts/unit-cycle.mjs <unit>` drives full delivery pipeline | tests | unit-cycle.test.mjs | execute-phase | `` node --test scripts/*.test.mjs `` exits 0 · 809 pass / 0 fail | Loop's suite joins root suite without disturbing existing gates | verified |
+| O5 | AC2: operator invokes once, walks away | No re-invoke needed per step | evidence | live run 5 | execute-phase | `` node scripts/unit-cycle.mjs 67-serena-provisioning --repo <worktree> `` exits 0 `done` | Full cycle: `tests → review → fold → review → audit` → exit 0, merge-ready marker posted | verified |
+| O6 | AC3: terminal state 0 `done` | `audit-pr:merge-ready` marker posted → exit 0 | tests+evidence | unit-cycle.test.mjs + live run | execute-phase | `` node --test scripts/unit-cycle.test.mjs `` case for `done`; live run 5 exit 0 | One case per terminal outcome in suite; live run 5: `done` (0, merge-ready marker at `9b2816af`) | verified |
+| O7 | AC3: terminal state 2 `needs-input` | Prints verbatim `open-questions@1` block → exit 2 | tests+evidence | unit-cycle.test.mjs + live run | execute-phase | Live run 3: exit 2 `needs-input — audit-blocked` | Audit-blocked at run 3; needs-input case in suite | verified |
+| O8 | AC3: terminal state 5 `failed` | Dirty tree / red gate / failed step → exit 5 | tests+evidence | unit-cycle.test.mjs + live run | execute-phase | Dry run with dirty tree: exit 5 `failed (dirty-tree)`; runs 1-2 exit 5 | `failed` case in suite; dry-run dirty-tree exit 5; live runs 1-2 exit 5 | verified |
+| O9 | AC3: terminal state 3 `budget-exhausted` and 4 `no-progress` | Fold budget exceeded / no-progress key unchanged → exit 3/4 | tests | unit-cycle.test.mjs | execute-phase | Test cases pinned offline for budget-exhausted/no-progress | `budget-exhausted`/`no-progress` cases in suite (pinned offline) | verified |
+| O10 | AC4: `--max-cycles N` default 2, env `UNIT_CYCLE_MAX_CYCLES` | Fold budget configurable and enforced in code | tests | unit-cycle.test.mjs | execute-phase | Test case for fold budget counter | Fold budget case in suite: counted per fold act, stops with exit 3 | verified |
+| O11 | AC4: no-progress detection (head+findings unchanged) | Act that leaves same HEAD+findings stops immediately | tests | unit-cycle.test.mjs | execute-phase | Test case for no-progress key | No-progress case in suite: head+findings key check | verified |
+| O12 | AC5: `--dry-run` no side effects | Senses and prints next action, spawns nothing | tests+evidence | unit-cycle.test.mjs + dry-run test | execute-phase | `` node scripts/unit-cycle.mjs 67-serena-provisioning --dry-run `` before commit — zero acts spawned | Dry-run output: sensed state and next action; spawn count = 0 | verified |
+| O13 | Non-goal: no skill-wording change | `unit-lane`/`execute-phase` SKILL.md files untouched in this unit | evidence | PR #314 diff | execute-phase | PR #314 contains no SKILL.md changes | No skills/ directory changes in PR diff | verified |
+| O14 | Non-goal: no new schema/envelope surface | `packages/agentic-workflow-schema/` unchanged | evidence | PR #314 diff | execute-phase | PR #314 contains no schema package changes | `envelope.schema.json` and types unchanged | verified |
+| O15 | Non-goal: no auto-merge | `audit-pr` merge-ready comment is terminal signal only | evidence | PR #314 diff + code review | execute-phase | PR merge stays operator/CI-owned | No merge automation in unit-cycle.mjs | verified |
+
+<!-- obligations:end -->
