@@ -140,6 +140,8 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC2/AC3 | live run 3 — `node scripts/unit-cycle.mjs 67-serena-provisioning --repo /home/agent/projects/agentic-workflow-cycle67` | 2 | acts `tests → review → audit`; review's write-then-report order held (receipt **current** at `16420012`, `verify --pr 313` exit 0); terminal `needs-input — audit-blocked` naming the single CI blocker | main agent |
 | AC2 | live run 1 (fresh worktree) | 5 | `tests: root suite red` — surfaced the gitignored `schema/dist` missing in a fresh checkout (not an assertion); the `tests` step now builds it when absent | main agent |
 | AC3 | live run 2 | 5 | `review-no-receipt` — review sessions had emitted the receipt before their last commit; the act prompt pinned `write-then-report` (persist+push → receipt last), run 3 converged | main agent |
+| AC2 | **full live cycle, run 5** — `node scripts/unit-cycle.mjs 67-serena-provisioning --repo <67-worktree>` | **0 · done** | acts `tests → review → fold → review → audit`; the fold repaired the review's F6–F9 (missing `timeout` in `serena-activation-check.mjs`) at `f42200c5`; receipt current at `9b2816af`; audit posted `audit-pr:merge-ready sha=9b2816af` and every gate passed | main agent |
+| AC3 | the same run's terminal + exit codes exercised end to end | 0 · 2 · 5 | `done` (0, merge-ready marker posted) · `needs-input` (2, audit-blocked at run 3) · `failed` (5, tests-red and review-no-receipt at runs 1–2) — three of the five terminators observed live, `budget-exhausted`/`no-progress` pinned offline | main agent |
 | AC2 | audit verdict from the live run | BLOCKED | full gate table: receipt current · hygiene · lineage · phases · scope · docs · traceability · mergeability · invariants all pass · **1 blocker: `dependency-pin-gate` (pre-existing pin drift — human-owned `fix(deps)` decision)** | main agent |
 
 ## Progress log
@@ -170,20 +172,25 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   exit 2 `needs-input — audit-blocked` (human-owned pin decision, not a fold
   finding) → evidence: rows above — next: the pin decision, then re-run;
   `/review-change 78-unit-cycle` for PR #314's own receipt.
+- 2026-10-23 18:05 — **the run 5 full cycle: `done` (exit 0)**. After the
+  owner's in-PR pin decision (D6 in unit 67) the loop drove
+  `tests → review → fold → review → audit` on PR #313: the review found F6–F9
+  (spawnSync calls without a `timeout`), the fold repaired them at `f42200c5`,
+  the second review posted a current receipt at `9b2816af`, and the audit
+  posted `audit-pr:merge-ready sha=9b2816af` with every gate green → evidence:
+  rows above — next: the same loop on this unit (PR #314).
 
 ## Next
 
-Human decision first (audit-blocked on PR #313: bump the two drifted pins —
-`fix(deps)` branch vs in-PR), then re-run
-`node scripts/unit-cycle.mjs 67-serena-provisioning --repo <67-worktree>`.
-For this PR: `/review-change 78-unit-cycle` (receipt for #314), then
-`/audit-pr`.
+Unit 67 is **merge-ready** (PR #313, marker at `9b2816af`) — the owner merges.
+This unit's own close-out: `node scripts/unit-cycle.mjs 78-unit-cycle` from
+this checkout drives its review receipt and audit for PR #314.
 
 ## References
 
 - PR: https://github.com/gtrabanco/agentic-workflow/pull/314
 - Branch: `feat/78-unit-cycle`
-- Commit: `4b71e7d3` (release bookkeeping follows on the same branch)
+- Commit: `8f0e3a1b` and later (release/bookkeeping commits follow on the same branch)
 - Owner directives, session 2026-10-23 (loop-as-code; root script; both units
   in-session without lane ceremony).
 - `docs/features/22-bounded-delivery-loops/SPEC.md` — the original machine-loop
