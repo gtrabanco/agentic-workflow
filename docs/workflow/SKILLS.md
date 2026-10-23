@@ -52,7 +52,7 @@ limits.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `init-workspace` | Fetch and adapt the scaffold; seed repository contracts; explicitly offer the detected Claude/Cursor/Copilot/OpenCode safety adapter without clobbering hooks | `discover-repository-state` |
+| `init-workspace` | Fetch and adapt the scaffold; seed repository contracts; explicitly offer the detected Claude/Cursor/Copilot/OpenCode safety adapter without clobbering hooks; offer **Engram provisioning** for non-pi hosts the same ask-first way and report exactly what was written (`references/ENGRAM.md`) | `discover-repository-state` |
 | `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `unit-lane` / `resolve-repository-state` |
 | `resolve-repository-state` | Sole writer that resolves an explicit fact contradiction and publishes the next frozen snapshot | the interrupted workflow step |
 
@@ -70,7 +70,14 @@ the retired fixed pipeline (`design-feature` → `review-spec` → `plan-feature
 `docs/fix/<issue>-<topic>/` for a fix (`/unit-lane --fix <n>`).
 
 `execute-phase` executes a unit that is already triaged (`implement`/`tests`/
-`evidence` steps); docs-only units run entirely inside `unit-lane`. The
+`evidence` steps); docs-only units run entirely inside `unit-lane`. Every step
+boundary is also a memory boundary: `unit-lane`'s `references/MEMORY.md` is the
+single home of the Engram protocol — the bounded probe
+(`agentic-workflow memory probe`) before a session's first read, the saves at
+unit start / each phase transition / close under `unit/<NN-slug>/doc`, the fixed
+recall order, and the rule that a degraded layer is recorded and never blocks.
+The `execute-phase` and `log-session` texts carry a pointer, never a restatement.
+The
 `pre-execution-review` internal pack survives only as the owner of the
 planning-ledger shapes and ownership that `execute-phase` and `review-change`
 consume — the standalone `SPEC-REVIEW-PASS` / `PLAN-REVIEW-PASS` gates are
@@ -132,7 +139,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `log-session` | Append a structured entry to `docs/LOGS.md` — summary, files, decisions + *why*, next step — so a cold reader (or the next session) resumes without re-reading git. Manual + rich; `model: sonnet` (cheap). Complemented by free, opt-in `template/.claude/` hooks that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start | `/clear` (session captured) or the resume command in the entry's **Next** line |
+| `log-session` | Append a structured entry to `docs/LOGS.md` — summary, files, decisions + *why*, next step — so a cold reader (or the next session) resumes without re-reading git. This is the **git-traveling team journal** half of the recorded split (feature 66 D2): Engram's `mem_session_summary` and the lane's `unit/<NN-slug>/doc` topic are local decision/gotcha recall keyed by unit id, and neither mirrors the other. Manual + rich; `model: sonnet` (cheap). Complemented by free, opt-in `template/.claude/` hooks that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start | `/clear` (session captured) or the resume command in the entry's **Next** line |
 | `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine, what is startable now and in which build order, open PRs + audit state, pending fixes and findings awaiting triage, the mandatory review proven from its durable `REVIEW-RAN` mark and never from a ledger that merely exists — and emits it as one fixed JSON machine envelope. The piece an external driver calls between steps. Never edits anything | the driver's next invocation (it never hands off to another skill itself) |
 
 ## Repo maintenance (specific to the agentic-workflow repo)
