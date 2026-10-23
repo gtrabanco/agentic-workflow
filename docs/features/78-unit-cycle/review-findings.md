@@ -20,3 +20,13 @@
 |---|---|---|---|
 | GATE-RAN | HEAD 5a1597c581494c5e7a91bdd8b95de5d55cb76861 | node --test scripts/unit-cycle.test.mjs | exit 0 |
 | GATE-RAN | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | node --test scripts/unit-cycle.test.mjs | exit 0 |
+
+<!-- debt-transform@1 -->
+| id | finding | trigger | fix |
+|---|---|---|---|
+| D1 | F3: resolveTargetUnit() duplicates unitFolders() (code duplication) | Future change to unit folder scanning in one but not the other | Export unitFolders from unit-route.mjs; have unit-cycle.mjs import and use it |
+
+<!-- gate-ran@1 -->
+| id | file:line | cmds | exit |
+|---|---|---|---|
+| GATE-RAN | HEAD 58d8ef581c13e97d4b9e777802a73dd2a6a8b1f6 | node --test scripts/unit-cycle.test.mjs | exit 0 |
