@@ -10,8 +10,11 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
 ```
 
 1. **idea** — a feature request, issue, or raw concept. No unit folder yet.
-2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` (14 sections) or
-   `docs/fix/<issue>-<slug>/SPEC.md`. Created by `unit-lane` from the template.
+2. **unit doc** — `docs/features/<NN>-<slug>/SPEC.md` or
+   `docs/fix/<issue>-<slug>/SPEC.md`, created by `unit-lane` from the template, in
+   either accepted shape (#308): the 14-section set, or the re-cut set whose
+   `## Specs` / `## Findings` / `## Log` replace the four prose sections and the two
+   receipt sections. `scripts/unit-route.mjs` resolves which one a doc carries.
 3. **triage** — `unit-route.mjs --triage <NN>` reads the unit doc's observable
    facts (type, scope, tests) and returns a deterministic ordered step list.
 4. **catalog steps** — the triaged steps run in order (research → design →
@@ -182,11 +185,16 @@ sections — `UNIT_DOC_REQUIRED_SECTIONS` is the whole list, `## Impact` include
 | 7 | Future cost | Obligations on future work |
 | 8 | Applicable tests | Triage-decided; `n/a` when no tests |
 | 9 | Known pre-existing issues | Each marked `affects` / `does-not-affect` |
-| 10 | Tasks | P1…Pn with stable IDs |
-| 11 | Evidence | AC → command → exit/digest → output → verified-by |
-| 12 | Progress log | Dated `YYYY-MM-DD HH:MM` entries |
+| 10 | Tasks | P1…Pn with stable IDs (a re-cut doc links each phase to its `S#`) |
+| 11 | Evidence | AC → command → exit/digest → output → verified-by — **legacy shape**: a re-cut doc carries these as `## Log` `E` lines |
+| 12 | Progress log | Dated `YYYY-MM-DD HH:MM` entries — **legacy shape**: a re-cut doc carries them as `## Log` `P` lines |
 | 13 | Next | Single next action |
 | 14 | References | Issues, roadmap rows, related material |
+
+A **re-cut** doc (#308) keeps rows 5–10 and 13–14 and replaces the rest: `## Specs`
+(numbered `S#` quoting the requester verbatim) for rows 1–4, and `## Findings` +
+`## Log` for rows 11–12. Both shapes are read by the same linter, router and
+executor; `scripts/unit-route.mjs` resolves the shape from the headings present.
 
 The Evidence table uses the five columns: `AC`, `What was run`, `Exit / digest`,
 `Output (≤2 lines)`, `Verified-by`. The Progress log entry regex:
