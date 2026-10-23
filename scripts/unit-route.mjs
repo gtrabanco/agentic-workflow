@@ -218,7 +218,7 @@ function unitFolders() {
  * Resolve the CLI token to exactly one unit folder, or report unknown/ambiguous.
  * A pure number matches on the folder prefix; anything else on slug/suffix.
  */
-function resolveUnit(token) {
+export function resolveUnit(token) {
   const folders = unitFolders();
   const clean = token.replace(/^docs\/(?:features|fix)\//, "").replace(/\/+$/, "");
   const matches = /^\d+$/.test(clean)
@@ -414,7 +414,7 @@ function frontmatterOf(text) {
   return out;
 }
 
-function sectionBody(text, name) {
+export function sectionBody(text, name) {
   const re = new RegExp(`^## ${name}\\s*$`, "m");
   const m = re.exec(text);
   if (!m) return null;
@@ -518,7 +518,7 @@ function executionTier() {
  * head, the `next: P<k>` suffix is stripped before matching — the `P<n>`
  * token the head itself records is the one (and only one) that counts.
  */
-function recordedPhases(doc) {
+export function recordedPhases(doc) {
   const body = sectionBody(doc, "Progress log");
   const done = new Set();
   if (body === null) return done;
