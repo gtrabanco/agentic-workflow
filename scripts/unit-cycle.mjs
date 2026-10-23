@@ -403,6 +403,22 @@ export function sense(token) {
 /* ------------------------------------------------------------------- act */
 
 function runRootSuite() {
+  // The schema's dist/ is a gitignored build output (fresh checkouts lack it);
+  // build it when missing so the root suite runs against built artifacts, the
+  // same order `root-suite.yml` uses before the crate suite.
+  const schemaDist = path.join(TARGET, "packages/agentic-workflow-schema/dist/index.js");
+  if (!fs.existsSync(schemaDist)) {
+    const pkg = path.join(TARGET, "packages/agentic-workflow-schema");
+    const built = spawnSync("bun", ["run", "build"], { cwd: pkg, encoding: "utf8" });
+    if ((built.status ?? 1) !== 0) {
+      const fallback = spawnSync("npm", ["run", "build"], { cwd: pkg, encoding: "utf8" });
+      if ((fallback.status ?? 1) !== 0) {
+        throw new Error(
+          `schema build failed (bun exit ${built.status}: ${(built.stderr ?? "").trim().split("\n")[0] || "no output"}; npm exit ${fallback.status})`,
+        );
+      }
+    }
+  }
   const files = fs
     .readdirSync(path.join(TARGET, "scripts"))
     .filter((name) => name.endsWith(".test.mjs"))
