@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.11.1
+version: 2.11.2
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT

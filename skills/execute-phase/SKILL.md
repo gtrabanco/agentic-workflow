@@ -81,9 +81,13 @@ path-protection checkpoint.
 ## Step 0 — Discover the project
 
 Per the agent guide's **Workflow conventions** + **documentation map**, read the
-unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1…Pn),
-`## Evidence`, and `## Progress` sections. If absent, the unit is not ready —
-stop and suggest `unit-lane` triage first.
+unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1…Pn)
+**and the receipt sections of the shape it is written in** (#308 accepts both):
+the legacy shape carries `## Evidence` + `## Progress log`, a re-cut unit doc carries
+`## Specs`, `## Findings` + `## Log` (its evidence and gate runs are `E`/`G` log
+lines, its progress is `P` lines). If neither pair is present, the unit is not ready —
+stop and suggest `unit-lane` triage first. `scripts/unit-route.mjs` resolves the
+shape; never judge a re-cut unit by the legacy headings and stop it.
 
 ## Process
 
