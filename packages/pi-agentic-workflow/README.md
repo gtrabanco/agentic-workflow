@@ -146,6 +146,47 @@ set of routes, and you can define as many as you like under `profiles`:
   The built-in `nan` profile is shown but not editable — create a profile to
   override it.
 
+## Serena (ships by default)
+
+Installing this package also gives you **Serena's language-server tools** —
+`serena_find_symbol`, `serena_find_referencing_symbols`,
+`serena_get_symbols_overview`, `serena_find_declaration`, diagnostics and the
+rest. Two declarations make that work, and they ship together: the exact-pinned
+`@bacnh85/pi-serena` dependency, and a second `pi.extensions` entry pointing at
+that dependency's own extension. Pi installs a package's dependencies but
+activates only the package's own `pi.extensions` entries, so the pin alone would
+install a toolset nothing ever loaded.
+
+**You must run `/init-workspace` once per project.** This package never writes or
+repairs `.serena/project.yml` — `init-workspace` is its only writer, so there is
+one implementation of that contract and no drift. A project whose config is
+missing, lists no `language_servers`, or was provisioned by an older bundled
+`init-workspace` gets **one** notification per session state pointing at
+`/init-workspace`; the latch lives in this package's state file, so a restart does
+not re-nag.
+
+Serena itself is a local tool: install the machine half with `uv tool install -p
+3.13 serena-agent` (or `/init-workspace`, which offers it). Nothing is uploaded
+and no key is configured.
+
+**Switching it off.** pi owns package resources, so the off switch is pi's, not a
+key of ours: `pi config` opens the resource picker (tab switches scope) and lets
+you disable the package's resources, and the same filter is expressible in
+settings under `packages`:
+
+```json
+{
+  "packages": [
+    { "source": "npm:@gtrabanco/pi-agentic-workflow", "extensions": ["./dist/extension/index.js"] }
+  ]
+}
+```
+
+That keeps the workflow's own extension and commands and drops the Serena
+extension entry, so the `serena_*` tools are never registered. There is no
+settings key inside this package for it: the entry is declared in the manifest,
+and a config key cannot gate a manifest-declared extension.
+
 ## Path protection (optional)
 
 The Tier 2 preventive guard blocks a `write` / `edit` tool call to an existing

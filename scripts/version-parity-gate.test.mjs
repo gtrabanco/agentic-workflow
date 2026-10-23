@@ -12,9 +12,13 @@
  */
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 import {
+  changedFilesSince,
   evaluateContent,
   evaluatePins,
   isExactSemver,
@@ -24,6 +28,22 @@ import {
 } from "./version-parity-gate.mjs";
 
 const PKG = "@gtrabanco/pi-agentic-workflow";
+const REPO_ROOT = path.dirname(fileURLToPath(import.meta.url));
+
+/** `git status --porcelain` entries of this repository — the dirty-tree fixture. */
+function gitPorcelain() {
+  const r = spawnSync("git", ["status", "--porcelain=v1", "--untracked-files=all"], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+  });
+  return r.stdout.split("\n").filter(Boolean);
+}
+
+/** The committed range alone, read independently of the module under test. */
+function gitCommittedSince(ref) {
+  const r = spawnSync("git", ["diff", "--name-only", `${ref}...HEAD`], { cwd: REPO_ROOT, encoding: "utf8" });
+  return r.stdout.split("\n").filter(Boolean);
+}
 
 // ---------------------------------------------------------------------------
 // semver comparator
@@ -150,6 +170,29 @@ test("content: similarly-named paths outside the trigger set do not trigger", ()
     true,
   );
   assert.equal(content(["docs/features/75-x/SPEC.md"], BASE_VERSION, 0).ok, true);
+});
+
+// The CLI half must see the work in progress, not only the work already
+// committed: `git diff <base>...HEAD` is blind to an uncommitted tree, so a PR
+// whose skills/package edits are still unstaged read as "no triggered change"
+// and the gate passed exactly where it exists to enforce the bump.
+test("changedFilesSince unions the uncommitted tree into the committed range", () => {
+  const head = changedFilesSince("HEAD");
+  const main = changedFilesSince("main");
+  // The committed range against the current commit is empty by definition, so
+  // anything `HEAD` names is working-tree work — the list a `...HEAD`-only diff
+  // could never return.
+  const dirty = gitPorcelain().map((entry) => entry.slice(3));
+  assert.deepEqual(
+    [...head].sort(),
+    dirty.sort(),
+    "changedFilesSince(HEAD) must equal the dirty tree, not an empty list",
+  );
+  assert.deepEqual(
+    [...main].sort(),
+    [...new Set([...gitCommittedSince("main"), ...dirty])].sort(),
+    "the committed range and the working tree are unioned, never one instead of the other",
+  );
 });
 
 // ---------------------------------------------------------------------------
