@@ -3247,3 +3247,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fold-findings: repaired F6+F7+F8
 - **Decisions:** Delegated resolveTargetUnit to resolveUnit()
 - **Next:** /review-change
+
+## 2026-10-23T21:41:01Z — detached — manual
+- **Commits:** 66 (`81fc1e7d…b5e9434b`)
+- **Files:** 45 files
+- **Summary:** Unit 67 plan step (investigate, orient, ask, decide) — 12 CLAIM-* rows swept (0 contradictions), 6 phases P1-P6 cut with per-phase validators, planning ledgers frozen (PE-001..PE-012, O1..O13), roadmap row 67 idea→planned; all gates pass (phase-lint 6/6, needs-input pending=0, promise-coherence PASS, root-suite 775/775 after rebuilding schema dist)
+- **Decisions:** pi activation = dependency + node_modules extension entry (A): exact-pin, scratch-install verified, plus a scheduled pin-watch action that opens an issue on drift; init-workspace is the only .serena/project.yml writer (B); no settings toggle (A): required substrate; global trust consented append (A); code-level readiness nudge (A): latched once-per-state, soft failure, no project writes
+- **Next:** /execute-phase 67-serena-provisioning P1 (tier: cheap) — first phase of the cut; the lane resumes after P6
