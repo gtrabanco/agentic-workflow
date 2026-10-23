@@ -319,8 +319,16 @@ export function sense(token) {
   const phases = docExists ? parseUnitDocPhases(doc).phases.map((phase) => phase.number) : [];
 
   const ni = needsInputCompute(path.join(TARGET, unitDir));
+  // A decisions ledger with no `open-questions@1` block is a unit that never
+  // asked a question — absence is not corruption. Only a present-but-malformed
+  // ledger fails the run (needs-input itself fails closed on both).
+  const decisionsPath = path.join(TARGET, unitDir, "decisions.md");
+  const decisions = fs.existsSync(decisionsPath) ? fs.readFileSync(decisionsPath, "utf8") : "";
+  const hasQuestionLedger = /^open-questions@1\s*$/m.test(decisions);
   const pendingInput = ni.ok ? ni.open_questions.length : 0;
-  const ledgerError = ni.ok || ni.reason === "missing-unit-doc" ? null : ni.reason;
+  const ledgerError = ni.ok || ni.reason === "missing-unit-doc" || (!hasQuestionLedger && ni.reason === "malformed-ledger-header")
+    ? null
+    : ni.reason;
 
   let triageSteps = null;
   let triageError = false;
