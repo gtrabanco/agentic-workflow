@@ -745,12 +745,13 @@ or the unit's own record (N1 is the one omission, routed above).
 
 ## Next
 
-`/review-change 67-serena-provisioning` — the receipt's sole owner: run the
-end review and emit the SHA-bound `review-change:pass` receipt on
-[PR #313](https://github.com/gtrabanco/agentic-workflow/pull/313) at the
-settled head. The receipt stage ran at release and `bun scripts/review-receipt.mjs
-verify --pr 313` exits 3 (`missing-review-receipt`), so `/audit-pr` stays
-unprinted until it exits 0.
+Receipt **current** at `16420012` (`bun scripts/review-receipt.mjs verify
+--pr 313` → exit 0, driven by unit 78's coded loop) and `/audit-pr` has run:
+**BLOCKED on one blocker** — the CI `dependency-pin-gate` fails on the
+pre-existing pin drift (schema `4.6.0 → 4.7.0`, typebox `1.3.7 → 1.4.3`,
+recorded out-of-scope at P3). Clear that blocker (owner decision: a
+`fix(deps)` bump or in-PR), push the new head, then re-run `/audit-pr` for
+the merge-ready comment.
 
 ## References
 
