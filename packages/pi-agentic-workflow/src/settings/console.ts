@@ -726,33 +726,78 @@ function describeRouting(file: ConfigFile): string {
 }
 
 /**
+ * The canonical write order for a config file. `dirty()` compares the cleaned
+ * draft against the cleaned file as JSON text, so the order is part of the
+ * contract: the same keys written in a different order would read as an edit.
+ * Keys outside this list are appended in the draft's own order, so a key the
+ * console never prompts for still survives the save (F4).
+ */
+const KEY_ORDER = [
+  "default",
+  "commands",
+  "onUnavailableRoute",
+  "onSettle",
+  "pathProtection",
+  "advance",
+  "recommendedModels",
+  "memory",
+  "profiles",
+  "profileOrder",
+  "profileFallback",
+];
+
+/**
  * Keep everything the file held or the operator set; drop only what says nothing
  * (an empty route). Eliding by VALUE — treating an explicit `inherit` or `stop` as
  * absent because a shipped default happens to agree — silently discards the only
  * two moves that matter at project scope: switching a command off under a global
  * route, and re-arming fail-closed over a global `inherit` (F4).
+ *
+ * The copy is driven by the draft's OWN keys, not by a list of the keys this
+ * console edits. Enumerating them silently deleted every valid key the console
+ * never prompts for — `memory` (the Engram consent switch, feature 66 AC3),
+ * `pathProtection` and `advance` — so an opt-in written by hand vanished on the
+ * next save with no message and no error (F4/VF-4). A key the parser accepted is
+ * never a key this function may drop.
  */
 function clean(draft: ConfigFile): ConfigFile {
-  const file: ConfigFile = {};
-  if (draft.default && Object.keys(draft.default).length > 0) file.default = { ...draft.default };
-  const commands: Record<string, RouteFile> = {};
-  for (const [name, route] of Object.entries(draft.commands ?? {})) {
-    if (Object.keys(route).length > 0) commands[name] = { ...route };
+  const kept: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(draft)) {
+    if (value === undefined) continue;
+    if (key === "commands") {
+      const commands: Record<string, RouteFile> = {};
+      for (const [name, route] of Object.entries((value ?? {}) as Record<string, RouteFile>)) {
+        if (route && Object.keys(route).length > 0) commands[name] = { ...route };
+      }
+      if (Object.keys(commands).length > 0) kept.commands = commands;
+      continue;
+    }
+    if (key === "profiles") {
+      const profiles: Record<string, ProfileFile> = {};
+      for (const [name, profile] of Object.entries((value ?? {}) as Record<string, ProfileFile>)) {
+        if (profile && Object.keys(profile).length > 0) profiles[name] = structuredClone(profile);
+      }
+      if (Object.keys(profiles).length > 0) kept.profiles = profiles;
+      continue;
+    }
+    if (Array.isArray(value)) {
+      // `profileOrder` is the only list at this level: an empty order says
+      // nothing, so it is elided exactly as the empty route was.
+      if (value.length > 0) kept[key] = [...value];
+      continue;
+    }
+    if (typeof value === "object" && value !== null && Object.keys(value).length === 0) continue;
+    kept[key] = typeof value === "object" && value !== null ? structuredClone(value) : value;
   }
-  if (Object.keys(commands).length > 0) file.commands = commands;
-  if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;
-  if (draft.onSettle) file.onSettle = draft.onSettle;
-  if (draft.recommendedModels !== undefined) file.recommendedModels = draft.recommendedModels;
-  if (draft.profiles && Object.keys(draft.profiles).length > 0) {
-    file.profiles = structuredClone(draft.profiles);
+
+  const file: Record<string, unknown> = {};
+  for (const key of KEY_ORDER) {
+    if (key in kept) file[key] = kept[key];
   }
-  if (draft.profileOrder && draft.profileOrder.length > 0) {
-    file.profileOrder = [...draft.profileOrder];
+  for (const key of Object.keys(kept)) {
+    if (!(key in file)) file[key] = kept[key];
   }
-  if (draft.profileFallback && Object.keys(draft.profileFallback).length > 0) {
-    file.profileFallback = { ...draft.profileFallback };
-  }
-  return file;
+  return file as ConfigFile;
 }
 
 function parseFile(text: string, scope: "global" | "project"): { file: ConfigFile; problems: ConfigProblem[] } {
