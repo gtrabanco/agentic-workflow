@@ -401,6 +401,61 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC10 | `cd packages/pi-agentic-workflow && bun run test` (evidence step, re-run) | 0 · 452 pass / 0 fail | package suite green at the head | unit-lane (evidence step) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` + `bun scripts/check-skill-context.mjs` + triage-block diff (evidence step) | 0 · PASS · PASS · clean | `content parity holds: version 0.26.0 → 0.29.0, companion row present` · `PASS context budgets: 28 skills` · `TRIAGE BLOCK CLEAN` | unit-lane (evidence step) |
 
+## Review
+
+Step run 2026-10-23 (tier: strong) against head `528b4054`, working tree clean.
+
+### Review pack axes (step: review)
+
+| Axis | Run? | How / why not |
+|---|---|---|
+| `review-verify` (run the gate, confirm real behavior) | yes | every Evidence row re-run at the head — exit codes listed in the verdict block below |
+| `review-code` (correctness, consistency, duplication, simplification) | yes | all 31 changed files swept against Impact's `Touches` list; nudge module has no write path (`grep -rn "writeFile" …serena-readiness.ts` → exit 1); both test edits are additive — alias-coverage's expectation gained `session_start` (stricter, not weakened), version-parity-gate gained the dirty-tree case |
+| `review-security` | yes | `pin-watch`'s only write is `gh issue create` behind the workflow's lone `issues: write`; no token/secret read anywhere; the global `serena_config.yml` append stays consent-gated (AC5 grep) |
+| `review-perf` | n/a | no hot path: the nudge is latched once-per-state at session start / first dispatch, soft on failure |
+| `review-a11y` / `review-design` / `review-seo` | n/a | no UI, no route, no public web surface |
+| `review-brand` | n/a | no end-user-facing copy — skills and READMEs are agent/operator-facing |
+| `review-debt` | n/a | no fix-now debt item; the two live pin drifts are pre-existing and routed to a deliberate `fix(deps)` PR (P3 record) |
+
+### Review verdict (step: review, cycle 1)
+
+```text
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 3 report-notes
+- Evidence reproduced: yes — every row re-run at head 528b4054: needs-input
+  `Pending: none`; triage block clean; root suite 796/0; package suite 452/0
+  (bun); `ACTIVATION: ok` (20 serena_* tools); pin-watch suite 20/0;
+  version-parity PASS (0.26.0 → 0.29.0); context budgets PASS 28; P4 greps
+  1/1/1/2/2; `writeFile` grep exit 1; config-half greps green; phase-lint 6/6
+  (fingerprint 6897a7af…, matches plan time); promise-coherence `verdict PASS`
+- AC integrity: `## Acceptance criteria` sha256
+  `5cdc1fde77c7651c50ac5ce05393a54d2c9c662bba66c5565bdce2ce1abb172b`
+  identical from the plan commit `41cc53ce` (where the AC1–AC10 wording froze)
+  through the working tree — no AC changed once implementation began. No hash
+  was recorded at triage itself; the triage-time section predates the
+  design/plan wording finalisation the template prescribes (2191518b… at
+  `81fc1e7d`, db46c957… at design close `52bc7e0f`), so the plan commit is the
+  comparison anchor and it holds unaltered
+```
+
+Report-notes (informational — none blocks):
+
+- **N1 → docs step**: Impact's `Touches` list omits
+  `scripts/version-parity-gate.mjs` and its test — P1's fail-open fix,
+  recorded in the Progress log but never added to the Impact surface list.
+- **N2**: the P5 diff-guard exception's `693 lines / 10 files` is a
+  point-in-time measurement; the same base re-measured at the current head
+  reads `828 / 10`, the delta being the P6, evidence and progress-doc commits
+  that land after P5. No number was wrong when recorded, and nothing was
+  removed to fit the budget.
+- **N3**: `node scripts/pin-watch.mjs --check` still exits 1 on the two
+  pre-existing drifts (schema `4.6.0 → 4.7.0`, typebox `1.3.7 → 1.4.3`) —
+  expected, out of scope, already routed to a deliberate `fix(deps)` PR at P3.
+
+Scope sweep confirmed: 20 commits, all conventional subjects, no commit on
+`main`, no `.es.md` sibling, clean tree, every changed file declared in Impact
+or the unit's own record (N1 is the one omission, routed above).
+
 ## Progress log
 
 `YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
@@ -650,13 +705,23 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   `pin-watch` 20/0, version-parity PASS (0.26.0 → 0.29.0), context budgets PASS
   28, triage block still diffs clean → evidence in this doc — next: review step
   (`REVIEW-VERDICT` per `references/REVIEW.md`).
+- 2026-10-23 14:47 — review step: every evidence row re-run at head
+  `528b4054` (needs-input `Pending: none`, triage clean, root 796/0, package
+  452/0, `ACTIVATION: ok` 20 tools, pin-watch 20/0, version-parity PASS,
+  budgets PASS 28, P4 greps 1/1/1/2/2, `writeFile` exit 1, phase-lint 6/6 at
+  the plan fingerprint, promise-coherence PASS); AC-section sha256
+  `5cdc1fde…` unchanged from the plan commit `41cc53ce` to the tree; axes
+  table + verdict written — **REVIEW-VERDICT: PASS** (0 material, 3
+  report-notes; N1 routed to the docs step) → evidence: `## Review` above —
+  next: docs step.
 
 ## Next
 
-`/unit-lane 67-serena-provisioning` — resume the lane for the **review** step
-(tier: strong): re-run the evidence rows, compare the AC section hash with the
-triage-time one, and write the in-doc `REVIEW-VERDICT`; docs and release
-(release settles roadmap row 67's status) follow, then the receipt stage.
+`/unit-lane 67-serena-provisioning` — resume the lane for the **docs** step
+(tier: cheap): fold report-note N1 into Impact's `Touches` list and refresh
+the skill/README/CHANGELOG surfaces this unit owns; then the release step
+(branch hygiene, PR, roadmap row 67 status, obligation rows O1–O13 — their
+validators all reproduce) and the receipt stage.
 
 ## References
 
