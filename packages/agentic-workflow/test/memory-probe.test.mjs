@@ -6,7 +6,8 @@
  *   fixture-healthy         all five checks pass → verdict `ok` (keeps `ok`
  *                           reachable, so the suite is not always-degraded)
  *   fixture-timeout         the transport accepts the connection and never
- *                           answers → `degraded` on `http-health`
+ *                           answers → `degraded` on `http-health`, and on every
+ *                           check when the whole probe is black-holed
  *   fixture-missing-binary  `runImpl` reports ENOENT → `degraded` on
  *                           `binary-version`
  *   fixture-missing-runner  spawn failure + refused connection → `degraded`
@@ -43,6 +44,16 @@ const timeoutFetch = async (_url, init) =>
 const refusedFetch = async () => {
   throw new Error("connect ECONNREFUSED 127.0.0.1:7437");
 };
+
+/**
+ * A `runImpl` that accepts the call and answers only when its own bound runs
+ * out — the CLI shape of `fixture-timeout`, used wherever the whole probe must
+ * be black-holed rather than one transport.
+ */
+const blackholeRun = (_command, _args, opts = {}) =>
+  new Promise((resolve) => {
+    setTimeout(() => resolve({ code: null, stdout: "", stderr: "", timedOut: true, spawnError: null }), opts.timeoutMs ?? 0);
+  });
 
 const INIT_OK = JSON.stringify({
   jsonrpc: "2.0",
@@ -147,16 +158,37 @@ describe("memory probe — fixture-timeout (bounded, never hangs)", () => {
     strictEqual(report.verdict, "degraded");
   });
 
-  it("a whole-probe ceiling marks every unrun check as failed", async () => {
+  it("a whole-probe ceiling marks every check that cannot answer as failed", async () => {
+    // Every transport is black-holed and the ceiling is shorter than any bound,
+    // so no check can answer in time: the ceiling is what stops the run, and it
+    // is named as such rather than dressed up as five independent timeouts.
     const report = await runProbe({
       fetchImpl: timeoutFetch,
-      runImpl: healthyRun,
+      runImpl: blackholeRun,
       timeoutMs: 30,
       totalTimeoutMs: 1,
     });
     strictEqual(report.verdict, "degraded");
     strictEqual(report.ceilingHit, true);
     ok(report.checks.every((c) => c.status === "failed"));
+  });
+
+  it("the checks share the clock: the run costs the slowest bound, not the sum (F8)", async () => {
+    // Five checks at a 20 ms bound cost ~20 ms together and ~120 ms in series
+    // (the session check asks two ids). Sharing the clock is what keeps a dead
+    // memory layer from stalling a session's first memory read for the ceiling.
+    const started = Date.now();
+    const report = await runProbe({
+      fetchImpl: timeoutFetch,
+      runImpl: blackholeRun,
+      timeoutMs: 20,
+      totalTimeoutMs: 5_000,
+    });
+    const elapsed = Date.now() - started;
+    strictEqual(report.verdict, "degraded");
+    strictEqual(report.checks.length, 5);
+    ok(report.checks.every((c) => c.status === "failed"), JSON.stringify(report.checks));
+    ok(elapsed < 100, `the bounds were summed, not shared: ${elapsed} ms`);
   });
 });
 
@@ -304,6 +336,59 @@ describe("memory probe — session-ambiguity (AC5's machine signal)", () => {
     };
     const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, timeoutMs: 20 });
     strictEqual(byId(report)["session-ambiguity"].reason, "doctor-error");
+  });
+
+  it("every non-ok doctor finding is reported, not only the first one", async () => {
+    // F3 / VF-3. This machine answers `ambiguous_active_runtime_sessions` as a
+    // warning permanently (the SPEC's own known-issue), so a probe that returns
+    // on the first non-ok finding never asks `sync_target_closed_space` again —
+    // the sync/export signal AC2 asks for was silenced on every real run here.
+    const asked = [];
+    const run = async (command, args) => {
+      const joined = args.join(" ");
+      if (joined.startsWith("doctor --json --check")) {
+        const checkId = args[args.length - 1];
+        asked.push(checkId);
+        const result = checkId === "sync_target_closed_space" ? "error" : "warning";
+        const doctor = {
+          status: result,
+          checks: [{ check_id: checkId, result, message: `${checkId} says ${result}` }],
+        };
+        return { code: 0, stdout: JSON.stringify(doctor), stderr: "", timedOut: false, spawnError: null };
+      }
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, timeoutMs: 20 });
+    const session = byId(report)["session-ambiguity"];
+    deepStrictEqual(asked, ["ambiguous_active_runtime_sessions", "sync_target_closed_space"]);
+    strictEqual(session.status, "failed");
+    ok(session.detail.includes("ambiguous_active_runtime_sessions"), session.detail);
+    ok(session.detail.includes("sync_target_closed_space"), session.detail);
+    ok(session.detail.includes("sync_target_closed_space says error"), session.detail);
+    // The worst finding leads the reason, so a consumer that reads only
+    // `reason` still sees the error and not the warning.
+    strictEqual(session.reason, "doctor-error");
+    strictEqual(report.verdict, "degraded");
+  });
+
+  it("a structural doctor failure leads a finding", async () => {
+    // A check that could not be answered at all says more about the layer than
+    // any finding does, so it names the reason while both answers are listed.
+    const run = async (command, args) => {
+      const joined = args.join(" ");
+      if (joined === "doctor --json --check ambiguous_active_runtime_sessions") {
+        return { code: 0, stdout: "not json\n", stderr: "", timedOut: false, spawnError: null };
+      }
+      if (joined === "doctor --json --check sync_target_closed_space") {
+        const doctor = { status: "error", checks: [{ check_id: "sync_target_closed_space", result: "error", message: "20 finding(s) detected." }] };
+        return { code: 0, stdout: JSON.stringify(doctor), stderr: "", timedOut: false, spawnError: null };
+      }
+      return healthyRun(command, args);
+    };
+    const report = await runProbe({ fetchImpl: healthyFetch, runImpl: run, timeoutMs: 20 });
+    const session = byId(report)["session-ambiguity"];
+    strictEqual(session.reason, "doctor-unreadable");
+    ok(session.detail.includes("sync_target_closed_space: 20 finding(s) detected."), session.detail);
   });
 
   it("an unparseable doctor report is unreadable, not healthy", async () => {

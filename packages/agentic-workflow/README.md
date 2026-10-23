@@ -43,10 +43,12 @@ verdict `degraded` and names the failing checks:
 | `mcp-runner` | one JSON-RPC `initialize` to `engram mcp --tools=agent` | 4 s |
 | `binary-version` | `engram --version` | 4 s |
 | `sync-staleness` | `engram sync --status`, `Pending import` must be 0 | 10 s |
-| `session-ambiguity` | `engram doctor --json --check` on `ambiguous_active_runtime_sessions` + `sync_target_closed_space` | 10 s |
+| `session-ambiguity` | `engram doctor --json --check` on `ambiguous_active_runtime_sessions` + `sync_target_closed_space`, every non-`ok` answer reported | 10 s |
 
-Whole-probe ceiling: 30 s. A bound hit fails that check and degrades the
-verdict — never a hang.
+The checks are independent, so they run together: the probe costs the slowest
+bound (10 s), never the sum of five (32 s). Whole-probe ceiling: 30 s, which is
+the backstop for a dependency that ignored its own bound. A bound hit fails that
+check and degrades the verdict — never a hang.
 
 Three rules are load-bearing and measured, not assumed:
 
@@ -56,11 +58,16 @@ Three rules are load-bearing and measured, not assumed:
 - **A responding server that has not synced is not `ok`.** That is why
   `sync-staleness` is a check, and why an unreadable status (e.g. `ambiguous
   project` outside a repo) is a degradation rather than a pass.
+- **One answer never hides another.** The session check asks both scoped
+  `--check` ids and reports every non-`ok` finding. Stopping at the first would
+  silence the sync-target signal permanently on a machine whose session
+  attribution is ambiguous — which is the state this unit's own SPEC records.
 - **`degraded` is reportable, not fatal.** The caller records the verdict in
   the unit's Evidence and keeps working.
 
 The full `engram doctor --json` sweep is deliberately excluded: it costs 12–23 s
 at this repository and the two scoped `--check` calls answer the same question
-in under half a second each. `runProbe({ fetchImpl, runImpl, timeoutMs })`
-takes its side effects by injection, so the suite drives every degraded path
-with fakes and millisecond bounds — no network, no PATH, no real engram process.
+in under half a second each. `runProbe({ fetchImpl, runImpl, timeoutMs,
+totalTimeoutMs })` takes its side effects by injection, so the suite drives
+every degraded path with fakes and millisecond bounds — no network, no PATH, no
+real engram process.

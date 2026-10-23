@@ -96,3 +96,19 @@ says the evidence step — plus the `skills/**` version/CHANGELOG/budgets/pi-
 package-version ceremony. That is its own fix unit, never a rider on this PR.
 It blocks no AC of this unit; the owner decides in this session's reply whether
 it opens as a separate fix issue.
+
+## Review-fold escape records (2026-10-23)
+
+Rows the path-protection policy requires for the files the cycle-1 fold edits.
+Append-only; each names the finding whose `finding-mark@1` reproducer it lets
+the fold materialize as a regression check.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | packages/agentic-workflow/test/memory-probe.test.mjs | P1 | 2026-10-23 | execute-phase | F3 fold (VF-3): adds the dual-non-ok doctor case that first demonstrates the short-circuit — the probe issued only `--check ambiguous_active_runtime_sessions` on this machine, so `sync_target_closed_space`'s error and its 20-finding detail never reached the verdict, permanently silenced by AC2's known-issue state. Pure addition: no existing expectation, fixture or assertion is touched, and the case is strictly stronger than the two single-finding tests beside it.
+justification | packages/agentic-workflow/test/memory-probe.test.mjs | P6 | 2026-10-23 | execute-phase | F8 fold (VF-8): replaces the ceiling fixture's setup so every transport is black-holed instead of HTTP alone, and adds the wall-time case that pins the concurrent bounds. The two assertions (`ceilingHit true`, `every check failed`) are untouched and now hold for the honest worst case: under serial bounds the healthy fakes answered while HTTP stalled, so the old setup pinned an implementation detail of the serial loop rather than the ceiling contract.
+justification | packages/pi-agentic-workflow/test/engram-provision.test.mjs | P4 | 2026-10-23 | execute-phase | F5+F6 fold (VF-5, VF-6): adds the invalid-config and project-scope-declaration cases at the seam the adapter uses (`declaredMcpServerPaths` + `provisionEngram`), plus the shipped-entry `session_start` case in shipped-adapter.test.mjs. Both reproduce real silences: an opted-in operator with a broken config file got the `not-consented` message and no problem list, and a `<cwd>/.pi/mcp.json` declaration of `engram` was invisible to the guard that claims never to shadow it. No existing expectation is edited.
+justification | packages/pi-agentic-workflow/test/shipped-adapter.test.mjs | P4 | 2026-10-23 | execute-phase | F5+F6 fold (VF-5, VF-6): drives the `session_start` listener of the shipped entry — the surface only the adapter reaches — with a temp agentDir/cwd pair, a project `mcp.json` that declares `engram`, and a present-but-invalid config. The double gains `registerMcpServer`/`getMcpServers` so the registration the invariant forbids becomes an observable failure instead of an untested branch. Existing assertions unchanged.
+justification | packages/pi-agentic-workflow/test/settings-console.test.mjs | P4 | 2026-10-23 | execute-phase | F4 fold (VF-4): adds the save round-trip that opens a file carrying `memory`, `pathProtection` and `advance`, saves, and asserts all three survive — the eight-key allowlist in `clean()` dropped them silently, so an opt-in written by hand disappeared on the next save. Pure addition; the existing "keep the rest of the file" cases stay as they were.
+```
