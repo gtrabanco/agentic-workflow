@@ -1401,22 +1401,55 @@ test("#308 a migrated unit's ## Log lines carry the folded history and the marks
   assert.equal(validateEnvelope(envelope).ok, true);
 });
 
-test("#308 a migrated unit's review mark comes from ## Log, and its absence is named", () => {
-  const sha = "a".repeat(40);
-  const withMark = migratedSpec({ log: [`- **D1** — 2026-10-02, owner: the review ran at HEAD ${sha}.`] });
-  const result = makeFixture({
+test("#308 a migrated unit's review mark gates `review_pending` from its own `## Log` line", () => {
+  // The case is the gate, not the envelope's shape: a unit whose `## Log` carries
+  // an `R` mark for the current head must read as reviewed, and the same unit must
+  // read as review-pending once a non-carrier section moves after the mark — the
+  // mark's own write is what the carrier sits in, so it must not age itself (F38's
+  // rule, re-based onto the collapsed carrier; #308 review F5/F15/F18).
+  const fixture = makeFixture({
     roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
-    extraFiles: { "docs/features/90-alpha/SPEC.md": withMark },
-  }).run();
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(validateEnvelope(parseEnvelope(result.stdout)).ok, true,
-    "a migrated doc with no separate ledger still emits a valid envelope");
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const specRel = "docs/features/90-alpha/SPEC.md";
+  const markLine = `- **R1** — 2026-10-23, review at HEAD ${head} · verdict REVIEW-PASS · cycle 1 · gate exit 0.`;
+  const featureOf = (stdout) => parseEnvelope(stdout).detail.features.find((entry) => entry.id === "90-alpha");
 
-  const bare = migratedSpec();
-  const bareResult = makeFixture({
+  fixture.write(specRel, migratedSpec({ log: [markLine] }));
+  const marked = fixture.run();
+  assert.equal(marked.status, 0, marked.stderr);
+  assert.equal(validateEnvelope(parseEnvelope(marked.stdout)).ok, true, "the envelope stays schema-valid");
+  assert.equal(featureOf(marked.stdout).review_pending, false,
+    `an R mark at the current head is a current review: ${JSON.stringify(featureOf(marked.stdout))}`);
+
+  // The fold's own write (a `## Findings` row, a `## Log` line) leaves it current…
+  fixture.write(specRel, migratedSpec({
+    findings: ["| F1 | S1 · scripts/a.mjs:1 | code | high | fix-now | fold: repair it |"],
+    log: [markLine, "- **F1** — 2026-10-23, folded · `abcdef1` · re-verified at the head."],
+  }));
+  const folded = fixture.run();
+  assert.equal(folded.status, 0, folded.stderr);
+  assert.equal(featureOf(folded.stdout).review_pending, false,
+    "the carrier sections are the mark's own bytes: writing them does not age the mark");
+
+  // …but a change outside them does, the same way it ages a legacy `REVIEW-RAN` row.
+  fixture.write(specRel, migratedSpec({
+    log: [markLine],
+  }).replace("**S1 — the request.**", "**S1 — the amended request.**"));
+  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["commit", "-q", "-m", "amend the requirement after the review"], { cwd: fixture.dir });
+  const aged = fixture.run();
+  assert.equal(aged.status, 0, aged.stderr);
+  assert.equal(featureOf(aged.stdout).review_pending, true,
+    "a later edit to a bound input outside the carrier sections voids the mark");
+
+  const bareFixture = makeFixture({
     roadmapRows: ["| 91 | `beta` | in-progress | — | a unit |"],
-    extraFiles: { "docs/features/91-beta/SPEC.md": bare },
-  }).run();
-  assert.equal(bareResult.status, 0, bareResult.stderr);
-  assert.equal(parseEnvelope(bareResult.stdout).open_rows, undefined, "the envelope carries no invented review state");
+    extraFiles: { "docs/features/91-beta/SPEC.md": migratedSpec() },
+  });
+  const bare = bareFixture.run();
+  assert.equal(bare.status, 0, bare.stderr);
+  const bareUnit = parseEnvelope(bare.stdout).detail.features.find((entry) => entry.id === "91-beta");
+  assert.equal(bareUnit.review_pending, true, "a migrated unit with no `R` mark stays review-pending");
 });
