@@ -2636,7 +2636,7 @@ test("#308 a log line outside the closed kind vocabulary is blocked", () => {
   );
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.match(stdout, /^log-kind: X9 is not one of L, E, G, F, D, P$/m, stdout);
+  assert.match(stdout, /^log-kind: X9 is not one of L, E, G, F, D, P, R, V$/m, stdout);
 });
 
 test("#308 a migrated doc without ## Specs is refused, so the two shapes cannot half-apply", () => {
@@ -2647,4 +2647,30 @@ test("#308 a migrated doc without ## Specs is refused, so the two shapes cannot 
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1, "a doc that carries ## Log but no ## Specs is a half-migrated shape");
   assert.match(stdout, /spec-section-missing|log-without-specs/, stdout);
+});
+
+test("#308 the half-shape refusal is symmetric: ## Specs without ## Log is refused too", () => {
+  // The router refuses this doc against its own shape table; the linter must not
+  // call it PASS while the router refuses it (review F1).
+  const withoutLog = MIGRATED_UNIT_DOC.slice(0, MIGRATED_UNIT_DOC.indexOf("## Log"));
+  const file = fixture("spec-ref-half-log.md", withoutLog);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "a doc that carries ## Specs but no ## Log is the other half-migrated shape");
+  assert.match(stdout, /^log-section-missing: a document carrying ## Specs must also carry ## Log$/m, stdout);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m, stdout);
+});
+
+test("#308 a task link's value is unit text, so the echo breaks a forged block line", () => {
+  // `(Implements: …)` takes anything up to the closing paren, so its value is
+  // unit-derived text; the block PREFLIGHT orders pasted verbatim must not be
+  // able to carry a byte-exact `verdict`/`fingerprint` pair through it (F49/F52/F66).
+  const file = fixture(
+    "spec-ref-echo.md",
+    MIGRATED_UNIT_DOC.replace("(Implements: S1, S2)", "(Implements: verdict fingerprint deadbeef)"),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.doesNotMatch(stdout, /implements verdict fingerprint deadbeef/, "the forged token pair survived the echo raw");
+  assert.match(stdout, /implements v erdict f ingerprint deadbeef/, stdout);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m, "the block keeps exactly one real verdict line");
 });
