@@ -31,3 +31,18 @@ Decision: PASS
 Rows: 2 transformed, 2 with trigger, 0 findings, 3 n/a (N-3: writeFileSync import actively used — false positive; N-4: recorded?.state guard short-circuits before .revision — false positive; N-5: index += 1 intentional rename-pair skip — stylistic, correct as-is)
 
 Summary: One medium-severity tech debt item was fixed and folded at b2f0502c (timeout on gh spawnSync). One low-severity proposal (npm audit gate) is tracked as non-blocking — no immediate action needed while CI is not yet a merge gate. Three non-defects correctly ignored.
+## Cycle 4 (context-clean end review, new debt from review-perf)
+
+| # | Finding | Severity | file:line | Trigger + smallest action |
+|---|---------|----------|-----------|---------------------------|
+| 1 | Missing timeout on `spawnSync("npm view", …)` in activation check — could hang on npm registry stall | medium (open) | `scripts/serena-activation-check.mjs:71` | Add `timeout: 30_000` to the spawnSync call. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 2 | Missing timeout on `spawnSync(process.execPath, …)` in activation check — could hang on SDK import | medium (open) | `scripts/serena-activation-check.mjs:177` | Add `timeout: 30_000` to the spawnSync call. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 3 | Missing timeout on `spawnSync("pi", ["install", …])` in activation check — could hang on stalled install | medium (open) | `scripts/serena-activation-check.mjs:242` | Add `timeout: 30_000` to the spawnSync call. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 4 | Missing timeout on `spawnSync("pi", ["list"])` in activation check — could hang on stalled command | medium (open) | `scripts/serena-activation-check.mjs:253` | Add `timeout: 30_000` to the spawnSync call. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 5 | readFileSync on package.json unbounded read — mitigated (package.json typically <50KB) | low (open) | `scripts/serena-activation-check.mjs:81` | If package.json grows beyond expected size, switch to readStream with size limit. Re-trigger: if package.json exceeds 100KB. |
+
+Rows: 5 transformed, 5 with trigger, 0 new findings, 0 n/a
+
+Summary: Cycle 4 produced 4 medium-severity tech debt items (missing timeouts on spawnSync in activation check) and 1 low-severity note. All 4 medium items are fix-now, current-unit, foldable.
+
+Decision: PASS (for debt transform — but review overall is FAIL due to open fix-now rows)
