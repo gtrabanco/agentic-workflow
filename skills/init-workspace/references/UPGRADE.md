@@ -92,13 +92,15 @@ lacks**. Nine ordered steps:
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
 
-8. **Provision the Serena project config, additively only (Refs #219).** Load
-   [SERENA](SERENA.md). Append the `.gitignore` block only if the target
-   does not already contain it. Write `.serena/project.yml` only if it is
-   absent — never touch an existing one. Report what was skipped and why.
-   Run the health check and record the result. If Serena is not installed,
-   offer install or record as a residual. This step is additive-only; it
-   never rewrites or deletes, consistent with upgrade mode's rule.
+8. **Provision Serena, additively only (Refs #219).** Load
+   [SERENA](SERENA.md) and ask its single consent question — the tool install,
+   the detected platform's MCP registration and the global trust append all ride
+   on that one yes, and a refusal writes nothing. Then append the `.gitignore`
+   block only if the target lacks it, and write `.serena/project.yml` only if it
+   is absent — never touch an existing one. Report what was skipped and why, run
+   the health check, and render the fixed provisioning report. This step is
+   additive-only; it never rewrites or deletes, consistent with upgrade mode's
+   rule.
 9. **Report + hand off.** Summarize blocks added, filled, and skipped
    (residuals), the legacy `CLAUDE.md` outcome (folded items and removed, or kept
    with the reason), the urgency labels seeded (or already present), then print the
