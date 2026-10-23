@@ -3255,3 +3255,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Evidence step for 78-unit-cycle: re-ran all acceptance commands (unit-cycle.test.mjs 36/36 pass, root suite 811/811 pass, --dry-run verified), updated Evidence rows and Progress log, committed f425a38b
 - **Decisions:** git reset to clean up branch merge conflicts in LOGS.md
 - **Next:** Review step: /review-change 78-unit-cycle or /audit-pr for PR #314
+## 2026-10-23T21:54:20Z — feat/78-unit-cycle — manual
+- **Commits:** 37 (`7f62c408…69e23634`)
+- **Files:** 13 files
+- **Summary:** Unit 78 research step plus unit 67 Serena provisioning full implementation and audit
+- **Decisions:** Unit 78 research repo-internal; Unit 67 43 commits across P1-P6; Pin-watch script added
+- **Next:** Merge PRs 313+314; bump schema/typebox pins
