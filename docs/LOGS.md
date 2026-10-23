@@ -3261,3 +3261,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 78 research step plus unit 67 Serena provisioning full implementation and audit
 - **Decisions:** Unit 78 research repo-internal; Unit 67 43 commits across P1-P6; Pin-watch script added
 - **Next:** Merge PRs 313+314; bump schema/typebox pins
+
+## 2026-10-23T21:58:00Z — feat/78-unit-cycle — correction to the 21:50 plan-step entry
+- **Commits:** 2 (`c64ca4d3`, `b4917967`)
+- **Files:** 6 (SPEC.md, decisions.md, sources.md, planning-evidence.md, planning-obligations.md, LOGS.md)
+- **Summary:** The 21:50 plan-step entry names `ee013c6c` as the commit that refreshed the unit's planning-ledger counts. A concurrent history rewrite dropped that commit — `git merge-base --is-ancestor ee013c6c HEAD` fails — so the correction was re-applied and re-committed as `b4917967`. The counts are the same and still reproduce at this head: `node --test scripts/unit-cycle.test.mjs` 36 pass / 0 fail, `node --test scripts/*.test.mjs` 832 pass / 0 fail.
+- **Decisions:** The 21:50 entry was left untouched rather than edited: a past entry is a historical record, so the dangling sha is corrected by this follow-up row instead of rewriting the delivered record. Recorded because several sessions are rebasing and committing to `feat/78-unit-cycle` simultaneously, and a dropped commit that a ledger cites silently makes `verified` rows unprovable — the counts must be re-measured at the head after any concurrent rewrite, not carried forward from the earlier run.
+- **Next:** Nothing outstanding from this step. PR [#314](https://github.com/gtrabanco/agentic-workflow/pull/314) is OPEN at the forge — re-check `gh pr view 314 --json state,mergedAt` before writing any status, because the branch head moves under concurrent sessions and a receipt bound to an older head goes stale.
