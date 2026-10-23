@@ -635,20 +635,96 @@ const boundPathsFor = (unitDir, stage) => [
   ...REVIEW_CONTEXT_PATHS,
 ];
 
-/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
-function readReviewMark(unitDir, stage) {
+/**
+ * The head a review mark names, from whichever carrier owns it (#308 §Scope 3).
+ * A migrated unit writes the `review-mark@1` row into its own `## Log` as an `R`
+ * line; a legacy unit keeps it in `review-findings.md`. The doc is probed first and
+ * the side file is the fallback — never both, which is what makes the collapse real.
+ * The mark's row shape stays owned by `LEDGERS.md` §review-mark@1; this reads it.
+ */
+function reviewMark(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  // The migrated marker is `## Findings`, the same predicate `findingsCarrier` uses:
+  // a unit with the section never reads the side file, so one carrier answers for
+  // the rows, the marks and the fold history alike.
+  if (doc !== null && /^## Findings\s*$/m.test(doc)) {
+    const log = sectionRange(doc, "Log");
+    if (log === null) return null;
+    const marks = [...log[1].matchAll(/^\s*[-*+ ]\s+\*\*R(\d+)\*\*\s*[—-]\s*(.*)$/gm)];
+    if (marks.length === 0) return { sha: null, carrier: "doc" };
+    const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1][2])?.[1] ?? null;
+    return { sha, carrier: "doc" };
+  }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return null;
   const mark = ledger.split("\n").find((line) => line.startsWith("| REVIEW-RAN"));
   if (!mark) return null;
-  const sha = /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null;
+  return { sha: /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null, carrier: "ledger" };
+}
+
+/** The `[from, to)` range of one level-2 section, its heading included, or null. */
+function sectionBounds(text, name) {
+  const start = text.search(new RegExp(`^## ${name}[ \\t]*$`, "m"));
+  if (start === -1) return null;
+  const after = text.indexOf("\n", start) + 1;
+  const next = text.slice(after).search(/^## /m);
+  return [start, next === -1 ? text.length : after + next];
+}
+
+/** One level-2 section's body (after its heading line), or null when it is absent. */
+function sectionRange(text, name) {
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  return [bounds[0], text.slice(after, bounds[1])];
+}
+
+/**
+ * The unit doc with the two collapsed-carrier sections (`## Findings`, `## Log`)
+ * cut out — the bytes a review mark is NOT allowed to have changed. A migrated
+ * unit writes its marks and its OPEN rows into the bound `SPEC.md` itself, so a
+ * check over the whole document aged every mark the moment it was committed (F38's
+ * class, in the new carrier): the mark's own write must not void the mark.
+ */
+function docOutsideCarrierSections(text) {
+  let body = text;
+  for (const name of ["Log", "Findings"]) {
+    const bounds = sectionBounds(body, name);
+    if (bounds === null) continue;
+    body = `${body.slice(0, bounds[0])}${body.slice(bounds[1])}`;
+  }
+  // `git show` output arrives trimmed, the working-tree read does not: the final
+  // newline is a transport artifact, never a bound-input edit, so both sides are
+  // compared with their trailing whitespace normalized.
+  return body.replace(/\s+$/, "");
+}
+
+/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
+function readReviewMark(unitDir, stage) {
+  const found = reviewMark(unitDir);
+  if (found === null) return null;
+  const { sha, carrier } = found;
   if (!sha) return { sha: null, current: false };
   const ancestor = run("git", ["merge-base", "--is-ancestor", sha, "HEAD"]).ok;
   // Currency is over the BOUND inputs, never the unit directory: the ledger the mark
   // lives in is not bound, and the commit that carries the mark touches it — scoping
   // the check to the unit dir aged every mark on arrival, so no unit could ever
   // report a current review.
-  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...boundPathsFor(unitDir, stage));
+  const bound = boundPathsFor(unitDir, stage);
+  if (carrier === "doc") {
+    // The doc is bound, and the mark write lands in it: the mark stays current only
+    // while every other bound input is untouched AND the document changed outside
+    // its own carrier sections in no way.
+    const others = bound.filter((file) => file !== `${unitDir}/SPEC.md`);
+    const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...others);
+    if (later === null) return { sha, current: false };
+    if (later !== "") return { sha, current: false };
+    const before = git("show", `${sha}:${unitDir}/SPEC.md`);
+    const head = readProject(path.join(unitDir, "SPEC.md"));
+    if (before === null || head === null) return { sha, current: false };
+    return { sha, current: ancestor && docOutsideCarrierSections(before) === docOutsideCarrierSections(head) };
+  }
+  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...bound);
   return { sha, current: ancestor && (later ?? "") === "" };
 }
 
@@ -702,7 +778,9 @@ function rowsFromFindingsSection(doc) {
     if (/^id$/i.test(id) || isMarkRow(id) || /^[-:\s]*$/.test(id)) continue;
     // The re-cut table has no `folded` column — a folded row leaves it for a log
     // line — so every row here is open and the shape is normalized to the ledger's.
-    rows.push({ id, file, axis, severity, klass, route: cells.slice(5).join(" | "), folded: "no" });
+    // `carrier: "doc"` is the marker `routeOfRow` needs to read the collapsed
+    // carrier's closed column vocabularies; it is dropped before the envelope.
+    rows.push({ id, file, axis, severity, klass, route: cells.slice(5).join(" | "), folded: "no", carrier: "doc" });
   }
   return rows;
 }
@@ -743,10 +821,10 @@ function readLogMarks(unit, unitDir) {
   const after = doc.indexOf("\n", start) + 1;
   const next = doc.slice(after).search(/^## /m);
   const body = next === -1 ? doc.slice(after) : doc.slice(after, after + next);
-  const labels = { G: "gate run", F: "folded finding", D: "owner decision" };
+  const labels = { G: "gate run", F: "folded finding", D: "owner decision", R: "review run", V: "finding verification" };
   const marks = [];
   for (const line of body.split("\n")) {
-    const entry = /^[-*+]\s+\*\*([A-Z])(\d+)\*\*\s*[—-]\s*(.*)$/.exec(line.trim());
+    const entry = /^[-*+]\s+\*\*([A-Z]+)(\d+)\*\*\s*[—-]\s*(.*)$/.exec(line.trim());
     if (!entry || !labels[entry[1]]) continue;
     marks.push(`${unitDir}: ${labels[entry[1]]} ${entry[1]}${entry[2]} — ${bounded(entry[3])}`);
   }
@@ -766,7 +844,8 @@ function readOpenRows(unitDir) {
 
 function readFixNow(unitDir, observations = []) {
   const items = [];
-  for (const { id, file, axis, severity, klass, route } of readOpenRows(unitDir)) {
+  const carrier = findingsCarrier(unitDir);
+  for (const { id, file, axis, severity, klass, route } of carrier.rows) {
     const normalized = SEVERITY_VOCABULARY.get(String(severity).toLowerCase()) ?? null;
     if (!normalized) {
       // Named, never silent: the row is dropped from the envelope, and the ledger's
@@ -775,7 +854,10 @@ function readFixNow(unitDir, observations = []) {
       continue;
     }
     const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
-    items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier });
+    // `carrier` is read here only to label the compact memo, and `buildProjections`
+    // drops it before the envelope is emitted: the schema's finding item names no
+    // such key, so a new field would fail the sensor's own self-check.
+    items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier, carrier: carrier.carrier });
   }
   return items;
 }
@@ -1237,15 +1319,21 @@ function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable
  * In compact mode a finding's `route` is the multi-paragraph evidence memo the
  * reviewer wrote, and it is what makes the envelope tens of kilobytes: the
  * finding's identity (`id`, `file`, `axis`, `severity`, `class`, `suggested_tier`)
- * is the actionable half, and the memo is re-read from the unit's
- * `review-findings.md` ledger when the fold actually runs. The fingerprint keeps
+ * is the actionable half, and the memo points at the unit's findings carrier —
+ * the unit doc's `## Findings` for a migrated unit, `review-findings.md` for a
+ * legacy one — which is re-read when the fold actually runs. The fingerprint keeps
  * the original length visible so a consumer can tell a stub from a real row and
  * knows where the bytes live. Never applied to the full envelope, whose route
  * text stays byte-identical.
  */
-function compactRoute(route) {
+function compactRoute(route, carrier = "ledger") {
   if (typeof route !== "string" || route.length < 80) return route;
-  return `...(${route.length} char evidence, see the unit review-findings.md)`;
+  // The memo names the carrier the row was actually read from: `## Findings` in the
+  // unit doc for a migrated unit, `review-findings.md` for a legacy one. The legacy
+  // wording is byte-identical to the one the compact suite pins, so a migrated row
+  // is the only case whose memo changes (#308 review, F13).
+  const where = carrier === "doc" ? "the unit SPEC.md ## Findings" : "the unit review-findings.md";
+  return `...(${route.length} char evidence, see ${where})`;
 }
 
 function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent, merged, compact }) {
@@ -1282,9 +1370,8 @@ function buildProjections({ units, forge, readiness, phases, marks, fixNow, obse
   // guard's divergence note — and they total about a kilobyte, so "trimming" them
   // would trade a real signal for no size win. The compact win is `features` and the
   // findings' route memos, which are ten times larger and pure history.
-  const visibleFixNow = compact
-    ? fixNow.map((finding) => ({ ...finding, route: compactRoute(finding.route) }))
-    : fixNow;
+  const visibleFixNow = fixNow.map(({ carrier, ...finding }) =>
+    (compact ? { ...finding, route: compactRoute(finding.route, carrier) } : finding));
   return { features, fixes, fixNow: visibleFixNow, observations, urgent };
 }
 

@@ -31,9 +31,9 @@ export const UNIT_DOC_SECTIONS = [
 // ── Unit doc: the re-cut shape (spec-by-reference, #308) ────────────────
 // `## Specs` numbers the owner's requirements verbatim, `## Findings` holds the
 // OPEN rows `review-findings.md` used to carry, and `## Log` appends every
-// request, correction, evidence run, gate run and folded finding. Three headings
-// differ from the legacy list; the rest is shared, so a migrated doc and a closed
-// one are read by the same code.
+// request, correction, evidence run, gate run and folded finding. The re-cut adds
+// three headings and drops the six they replace; the rest is shared, so a migrated
+// doc and a closed one are read by the same code.
 export const UNIT_DOC_SPEC_REF_SECTIONS = [
   "Specs",
   "Impact",

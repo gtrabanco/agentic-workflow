@@ -594,3 +594,86 @@ test("an annotated ledger's citations are read and validated, not silently passe
   assert.match(check.stdout, /F2/, "the unclaimable citation is named");
   assert.doesNotMatch(check.stdout, /F1/, "the honest marker is never flagged");
 });
+
+// ---------------------------------------------------------------------------
+// #308 §Scope 3 — the collapsed carrier (a migrated unit doc)
+//
+// A migrated unit has no `folded` column: its OPEN rows live in `## Findings` and a
+// folded row leaves that table for a `## Log` line naming its own commit. The recount
+// reads that carrier at the same proof standard, and refuses to annotate an
+// append-only section. P5's path-protection receipt promised these cases.
+// ---------------------------------------------------------------------------
+
+const UNIT_DOC = "docs/features/9-x/SPEC.md";
+const docRun = (cwd, ...flags) => spawnSync(process.execPath, [script, UNIT_DOC, ...flags], { cwd, encoding: "utf8" });
+
+function makeDocFixture(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-doc-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  fs.mkdirSync(path.join(root, "docs/features/9-x"), { recursive: true });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/index.ts"), "export const a = 1;\n");
+  git(root, "add", "-A", "--", ".");
+  git(root, "commit", "-qm", "planning artifacts");
+  let folded = 0;
+  /**
+   * A fold commit: every call changes a surface first (git refuses an empty commit,
+   * and a fold that touched nothing is not a fold), then commits with `message`.
+   */
+  const fold = (message) => {
+    fs.writeFileSync(path.join(root, `src/fold-${++folded}.ts`), "export const folded = true;\n");
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "--short", "HEAD");
+  };
+  const writeDoc = (lines) =>
+    fs.writeFileSync(
+      path.join(root, UNIT_DOC),
+      ["# 9 — doc", "", "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+       "|---|---|---|---|---|---|", "| F9 | S1 · src/index.ts:1 | code | med | source | fold: fix it |", "",
+       "## Log", "", "- **L1** — 2026-10-23, the request, verbatim", ...lines, ""].join("\n"),
+    );
+  return { root, fold, writeDoc };
+}
+
+test("#308 a folded line naming a commit that claims its id is proven", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): fold F7 — correct the parse");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${sha}\` · the parse was re-verified at the head.`]);
+  const report = JSON.parse(docRun(root, "--json").stdout).rows;
+  const proven = report.find((row) => row.id === "F7");
+  assert.equal(proven.status, "proven-cited", JSON.stringify(proven));
+  assert.equal(proven.carrier, "log");
+  // The OPEN row of `## Findings` is work, not a receipt: it owes no proof.
+  assert.equal(report.find((row) => row.id === "F9").status, "open");
+  assert.equal(docRun(root, "--check").status, 0, docRun(root, "--check").stdout + docRun(root, "--check").stderr);
+});
+
+test("#308 a folded line with no commit, or a commit that claims nothing, fails the recount", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): unrelated repair");
+  writeDoc([
+    "- **F1** — 2026-10-23, folded F7 · a commit was named nowhere in this line",
+    `- **F2** — 2026-10-23, folded F8 · \`${sha}\` · claims no finding id`,
+  ]);
+  const statuses = JSON.parse(docRun(root, "--json").stdout).rows.map((row) => row.status);
+  assert.ok(statuses.includes("unproven"), `a line with no commit token is named: ${statuses.join(",")}`);
+  assert.ok(statuses.includes("cited-unverified"), `a commit that claims no id is named: ${statuses.join(",")}`);
+  const check = docRun(root, "--check");
+  assert.equal(check.status, 1, "an unproven folded line fails the merge-gate recount");
+  assert.match(check.stdout, /CHECK FAIL/);
+});
+
+test("#308 --annotate refuses the append-only carrier instead of rewriting it", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): fold F7 — the repair");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${sha}\` · verified`]);
+  const bytes = fs.readFileSync(path.join(root, UNIT_DOC), "utf8");
+  const run = docRun(root, "--annotate");
+  assert.equal(run.status, 2, `a doc target is refused, not rewritten: ${run.stdout}${run.stderr}`);
+  assert.match(run.stderr, /append-only/);
+  assert.equal(fs.readFileSync(path.join(root, UNIT_DOC), "utf8"), bytes, "the refusal wrote nothing");
+});

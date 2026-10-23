@@ -703,3 +703,29 @@ assert.doesNotMatch(ledgersMd, /flag `triage-issue` gives it/);
 // IS-1: the sole flipper now cites the map's annotator
 assert.match(ledgersMd, /`fold-findings` flips only the `folded:` flag per the map/);
 
+test("#308 one truth class owns both carriers, and the template cites that row", () => {
+  // The template asserts its own writer set; the machine backing is the map's
+  // `review-findings` row, which stays the single row for the class in either
+  // carrier. A new truth class is forbidden by the seven-class contract (AC16), so
+  // the pin is: the row is unchanged, LEDGERS states the mark grammar each carrier
+  // writes, and the template names the class it belongs to (#308 review, F24/F23/F8).
+  const ledgers = read(MAP_REL);
+  const rows = parseBlock(ledgers, { columns: MAP_COLUMNS, label: "repository" }).rows;
+  const findings = rows.filter((row) => row["truth-class"] === "review-findings");
+  assert.equal(findings.length, 1, "the collapsed carrier gains no second `review-findings` row");
+  for (const token of ["review-change:finding-rows", "review-change:review-mark", "triage-issue:triage-rows", "fold-findings:folded-flag"]) {
+    assert.ok(findings[0].owner.includes(token), `the row's owner set lost ${token}`);
+  }
+  // The paragraph that states one mark in two grammars must name each migrated kind.
+  const twoGrammars = /One mark, two grammars([\s\S]{0,900}?)\. A migrated/m.exec(ledgers);
+  assert.ok(twoGrammars, "LEDGERS.md states no `one mark, two grammars` mapping for the collapsed carrier");
+  const mapping = twoGrammars[1];
+  for (const kind of ["`R` line", "`G` line", "`V` line", "`F` line"]) {
+    assert.ok(mapping.includes(kind), `LEDGERS.md's carrier mapping omits the ${kind} grammar`);
+  }
+  assert.ok(/findings-table@1/.test(mapping), "the carrier mapping omits the six-column migrated row");
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    assert.match(read(template), /`review-findings` truth\s+class of the ownership map/,
+      `${template}: ## Findings cites no machine row`);
+  }
+});

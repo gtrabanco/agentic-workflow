@@ -244,8 +244,10 @@ export const UNIT_DOC_REQUIRED_SECTIONS = Object.freeze([
  * migrated unit doc carries. `## Specs` numbers the owner's requirements
  * verbatim and `## Log` appends every request, correction, evidence run, gate
  * run and folded finding; `## Findings` carries the OPEN rows that used to live
- * in `review-findings.md`. Everything else is shared with the legacy list, so the
- * two shapes differ in exactly three headings.
+ * in `review-findings.md`. Everything else is shared with the legacy list: the
+ * re-cut adds three headings (`Specs`, `Findings`, `Log`) and drops the six they
+ * replace — `Objective`, `Why`, `User outcome` and `Acceptance criteria` into
+ * `Specs`, `Evidence` and `Progress log` into `Findings` and `Log`.
  */
 export const UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze([
   "Specs",

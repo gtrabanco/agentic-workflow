@@ -268,6 +268,39 @@ test("compact: emits a schema-valid envelope and is smaller than the full one", 
   );
 });
 
+test("#308 compact: a migrated unit's memo names `SPEC.md ## Findings`, not the retired file", () => {
+  // The rows of a migrated unit live in the unit doc; a memo that still points at
+  // `review-findings.md` sends the fold to a file the unit does not have (#308 F13).
+  const spec = [
+    "---", "type: feature", "scope: standard", "---", "",
+    "# 95 — migrated", "",
+    "## Specs", "", "**S1 — the request.**", "> Do the thing.", "",
+    "## Impact", "", "nothing.", "",
+    "## Non-goals", "", "none.", "",
+    "## Future cost", "", "none.", "",
+    "## Applicable tests", "", "n/a", "",
+    "## Known pre-existing issues", "", "none", "",
+    "## Tasks", "", "- P1 — do the thing (validator: `true` exits 0)", "  (Implements: S1)", "",
+    "## Findings", "",
+    "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    `| F1 | S1 · scripts/a.mjs:1 | code | high | fix-now | ${LONG_MEMO} |`,
+    "", "## Log", "", "- **L1** — 2026-10-01, the request, verbatim: Do the thing.",
+    "", "## Next", "", "P1.", "", "## References", "", "none", "",
+  ].join("\n");
+  const { run } = makeFixture({
+    roadmapRows: ["| 95 | `migrated` | planned | — | a unit |"],
+    extraFiles: { "docs/features/95-migrated/SPEC.md": spec },
+  });
+
+  const finding = envelopeOf(run(["--compact"])).findings.fix_now.find((item) => item.id === "F1");
+  assert.ok(finding, "the migrated unit's OPEN row projects from ## Findings");
+  assert.equal(finding.route, `...(${LONG_MEMO.length} char evidence, see the unit SPEC.md ## Findings)`,
+    `the memo names the carrier the row came from: ${finding.route}`);
+  const full = envelopeOf(run()).findings.fix_now.find((item) => item.id === "F1");
+  assert.equal(full.route, LONG_MEMO, "the full envelope keeps the memo byte-identical in either carrier");
+});
+
 // ---------------------------------------------------------------------------
 // AC6 — the flag composes with the existing ones
 // ---------------------------------------------------------------------------
