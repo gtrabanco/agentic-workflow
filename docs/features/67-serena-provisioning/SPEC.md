@@ -745,11 +745,12 @@ or the unit's own record (N1 is the one omission, routed above).
 
 ## Next
 
-`/unit-lane 67-serena-provisioning` — resume the lane for the **docs** step
-(tier: cheap): fold report-note N1 into Impact's `Touches` list and refresh
-the skill/README/CHANGELOG surfaces this unit owns; then the release step
-(branch hygiene, PR, roadmap row 67 status, obligation rows O1–O13 — their
-validators all reproduce) and the receipt stage.
+`/review-change 67-serena-provisioning` — the receipt's sole owner: run the
+end review and emit the SHA-bound `review-change:pass` receipt on
+[PR #313](https://github.com/gtrabanco/agentic-workflow/pull/313) at the
+settled head. The receipt stage ran at release and `bun scripts/review-receipt.mjs
+verify --pr 313` exits 3 (`missing-review-receipt`), so `/audit-pr` stays
+unprinted until it exits 0.
 
 ## References
 
