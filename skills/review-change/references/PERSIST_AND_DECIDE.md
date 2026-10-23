@@ -6,17 +6,32 @@ exact command tokens.
 
 11. **Persist fix-now findings to the fold ledger.** A migrated unit (issue #308)
    carries the ledger in its own `SPEC.md`: OPEN rows in `## Findings`, and the
-   `REVIEW-RAN` / `GATE-RAN` / `VF-` marks as `## Log` lines with their exit codes
-   and head SHA. A legacy unit keeps the side file beside its other docs
+   review, gate and finding-verification marks as `## Log` lines (the `R`, `G` and
+   `V` kinds of the published `log-kind@1` vocabulary) carrying their exit codes and
+   head SHA. A legacy unit keeps the side file beside its other docs
    (`docs/features/<NN>-<slug>/review-findings.md` for a feature,
    `docs/fix/<n>-<topic>/review-findings.md` for a fix). Probe the doc first and
    write to exactly one carrier — a unit with the `## Findings` section never
-   gains a side file. Fixed schema:
-
+   gains a side file. Each carrier has **its own** fixed schema; a row is never
+   written in the other's grammar:
 
    ```
    | id | file:line | axis | severity | class | route | folded |
    ```
+
+   is the legacy schema, and only a legacy unit is written with it. A migrated unit
+   writes `findings-table@1` — six columns, no `folded` cell, and `class` holding
+   the owner that repairs the row (`product`/`plan`/`source`/`environment`/`runtime`)
+   while `route` holds the disposition (`fold`/`replan-in-unit`/`decision-required`/
+   `product owner — …`) — the grammar the unit doc itself publishes:
+
+   ```
+   | id | S# / file:line | axis | severity | class | route |
+   ```
+
+   `folded: no → yes` is therefore a **legacy-only** flip: in a migrated carrier a
+   closing fold deletes the row and appends its `## Log` `F` line, and `ledger-ownership@1`
+   / `fold-findings:folded-flag` stays the sole writer of whichever close it is.
 
    **Merged unit → no write** (a PR exists and its state is `MERGED` — check
    `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
@@ -26,11 +41,12 @@ exact command tokens.
    `CLASSIFY.md`):
    append a row
    (create the file with the header row when missing), carrying the
-   verbatim `Sev` value into `severity`; `folded` always starts `no` — that
+   verbatim `Sev` value into `severity`; a legacy row's `folded` always starts `no`
+   (a migrated row has no such cell — every row in `## Findings` is open) — that
    row comes from a **confirmed** candidate only and carries its
-   `finding-mark@1` signature on a **separate `VF-` row** (reviewer, head SHA,
-   recheck + reproducer), as modeled in `LEDGERS.md` (§finding-mark@1) and the
-   fixture.
+   `finding-mark@1` signature as a **separate `VF-` row** in a legacy carrier, or as
+   a `## Log` `V` line in a migrated one (reviewer, head SHA, recheck + reproducer),
+   as modeled in `LEDGERS.md` (§finding-mark@1) and the fixture.
    `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
    the `folded: no → yes` flip.
    A `low` finding is **never persisted to the fold ledger** — report-only

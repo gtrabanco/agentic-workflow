@@ -53,19 +53,26 @@ Per Workflow conventions, read:
    in its own `SPEC.md` under `## Findings`, with folded history and marks as
    `## Log` lines; a legacy unit keeps `review-findings.md` under
    `docs/features/<NN>-<slug>/` or `docs/fix/<n>-<topic>/`. Probe the doc first and
-   fall back to the file — a unit with the section never reads both; schema is
-   owned by `review-change`/`audit-pr`:
+   fall back to the file — a unit with the section never reads both. Each carrier
+   has **its own** schema, owned by `review-change`/`audit-pr` and stated for both
+   shapes in `pre-execution-review/references/LEDGERS.md`:
 
-   ```
-   | id | file:line | axis | severity | class | route | folded |
-   ```
+   - legacy (7 cols): `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`
+     — closing a row flips `folded: no → yes`, and this skill is that flip's sole writer
+   - migrated (6 cols, `findings-table@1`): `\| id \| S# / file:line \| axis \| severity \|
+     class \| route \|` — every row it holds is OPEN; closing one **deletes the row** and
+     appends a `## Log` `F` line naming the fold commit. There is no `folded` column to
+     flip, and `class` here is the repairing owner (`product`/`plan`/`source`/
+     `environment`/`runtime`), not a disposition.
 
-   After `VERDICT: BLOCKED`, append missing rows (`class: fix-now`, `folded: no`,
-   next free `Fn`, dedupe `file:line`+axis), commit as
-   `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold;
-   never report “no findings”.
-2. Queue `folded: no` rows; explicit IDs restrict it and leave other rows
-   untouched. Group by root cause, verifier and rollback boundary.
+   Never write one carrier's row into the other's grammar. After `VERDICT: BLOCKED`,
+   append missing rows in the carrier's own schema (next free `Fn`, dedupe
+   `file:line`+axis; legacy `class: fix-now`, `folded: no`), commit as
+   `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold; never
+   report “no findings”.
+2. Queue the carrier's open rows — a legacy `folded: no` row, a migrated row of
+   `## Findings` (all of them are open); explicit IDs restrict the queue and leave
+   other rows untouched. Group by root cause, verifier and rollback boundary.
 3. The project's verification gate and forge CLI (use the declared forge).
 4. Whether the branch has an open PR; this decides immediate push after commit.
 
