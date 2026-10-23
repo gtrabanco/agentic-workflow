@@ -124,8 +124,10 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > committed artifacts and the labels stay `P1, P2, …`), never `S1`/`Step 1`. A
 > requirement is never a phase and a phase is never a requirement: the `S#` is what
 > a task links and a finding cites, the `P#` is the executor's argument. The label
-> must be stable and uniform — never emit
-> `S1`/`S2`/"Step N" into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap.
+> must be stable and uniform: a **phase label** is never written as `S1`/`S2`/"Step N"
+> into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap — the `S#` that belongs
+> in a SPEC is a `## Specs` requirement id, never a step in `## Tasks` (which is also
+> where a task links the `S#` it delivers).
 
 > **Checklists over heuristics; fixed output formats.** Skills are executed by
 > models of any strength, not only frontier ones — write instructions a weaker
