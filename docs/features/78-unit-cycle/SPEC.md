@@ -131,6 +131,23 @@ n/a — this unit is built directly under D3 (owner: no lane ceremony); the
 
 One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
 
+### Research rows
+
+R-rows from the research step (one web pass over primary sources).
+
+| ID | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
+|---|---|---|---|---|
+| R1 | `docs/features/22-bounded-delivery-loops/SPEC.md` — read full feature 22 contract (loop-review-fold: budget D6, no-progress, terminal states, entity closures) | read | original machine-loop spec: `execute-phase` unit-loop mode, `loop-review-fold` with budget 2 cycles, no-progress = same HEAD+findings, closed terminals (DONE/BLOCKED/NEEDS-DECISION/NO-PROGRESS/BUDGET-EXHAUSTED) | main agent |
+| R2 | `docs/features/61-adaptive-unit-lane/SPEC.md` — read feature 61 absorption (triage catalog, single-unit doc, fixed pipeline removed) | read | fixed pipeline (design-feature → review-spec → … → audit-pr) replaced by triage-driven lane; machine-loop contract lost in absorption — only prose remained | main agent |
+| R3 | `scripts/needs-input.mjs` — read full module (open-questions@1 grammar, ledger parser, continuation type, PREREQUISITES, ROUTES, BLOCK_ID) | read | deterministic needs-input dispatcher: reads decisions.md ledger, produces fixed `open-questions@1` block (exit 0 well-formed / 1 fail-closed / 2 usage), never asks/infers/writes | main agent |
+| R4 | `scripts/review-receipt.mjs` — read full module (REVIEW_MARKER_RE, render/verify/emit commands, sanitizeValue, scope manifest import) | read | SHA-bound review receipt machine: `<!-- review-change:pass sha=<40hex> contract=v1 scope=<64hex> -->`, verify exit 0=current/3=absent/4=stale/1=error | main agent |
+| R5 | `scripts/audit-pr-gate.mjs` — read full module (GATE_NAMES 13 gates, AUDIT_MARKER_RE, auditVerdict, mergeReadyBody) | read | merge gate with 13 named gates (10 original + 3 hygiene), `<!-- audit-pr:merge-ready sha=<40hex> -->` marker, receipt-gate-first ordering | main agent |
+| R6 | `scripts/unit-doc-phases.mjs` — read full module (fence state machine, locateTasksSection, parseUnitDocPhases, H2_HEADING bound) | read | phase parser: `P<n> —` bullets under `## Tasks`, fence-aware, returns phases with numbers/titles/tasks/validators, separate from 1000+ line linter | main agent |
+| R7 | `scripts/unit-route.mjs` — grep/scan additive exports (resolveUnit, sectionBody, recordedPhases, openRows, routeOfRow, triage) | read | router exports: resolveUnit (slug→folder), sectionBody (heading→text), recordedPhases (progress→done set), openRows (ledger→findings), routeOfRow (finding→action), triage (catalog→ordered steps) | main agent |
+| R8 | `skills/unit-lane/references/RESEARCH.md` — read research step contract (needs-input guard, fixed output, checklist, forbidden) | read | research step: one web pass, R<n> rows in Evidence, uncertainties → open questions, `research step` Progress head, max 3 sources per design question | main agent |
+| R9 | `skills/orchestration-envelope/references/TURN_CONTRACT.md` — read open-questions@1 block grammar (fields, fail-block, route, continuation, hand-off-transitions, path-protection) | read | turn contract: open-questions@1 block grammar (7 columns, continuation=no-decision-available, route=design|unit-lane, fail-closed reason codes), path-protection@1 checkpoint | main agent |
+| R10 | `scripts/unit-cycle.mjs` — read full module (decide state machine, renderPrompt, sense, runCycle, main CLI) | read | delivery cycle as code: 470+ lines, decide() state machine (10+ guards), sense() reads git/SPEC/PR/receipt/phase, runCycle() loop with no-progress key, terminal exit codes 0/1/2/3/4/5 | main agent |
+
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
 | AC1 | `node --test scripts/unit-cycle.test.mjs` | 0 · 34 pass / 0 fail | decide transitions (needs-input before any act, catalog order, fold budget, audit-blocked), prompt grammar, sensing helpers and the runner's terminal states all green | main agent |
@@ -147,6 +164,13 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 ## Progress log
 
 `YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+
+- 2026-10-23 00:00 — research step: one web pass over 10 primary sources (feature 22/61 SPECs, sensing primitives: needs-input, review-receipt, audit-pr-gate, unit-doc-phases, unit-route, unit-cycle, turn contract, research step contract); findings R1–R10 recorded → next: design step
+
+- 2026-10-23 — unit folder created (D3, no ceremony): owner directive turns
+  the delivery cycle into code; D1–D3 recorded in `decisions.md`, red-first
+  suite authored before the module → next: implement
+  `scripts/unit-cycle.mjs` until the suite is green.
 
 - 2026-10-23 — unit folder created (D3, no ceremony): owner directive turns
   the delivery cycle into code; D1–D3 recorded in `decisions.md`, red-first
