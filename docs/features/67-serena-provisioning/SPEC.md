@@ -246,6 +246,15 @@ the `tests` triage step runs is fixed by the triage block below.
   Serena's docs do not state that an untrusted project never starts a language
   server (R5) — **affects** AC4's exact claim: verify the behaviour in this
   environment before wording the AC as "no server ever starts".
+- **U4 — `execute-phase` names no insert anchor for a Progress log entry
+  (found 2026-10-23)** — **does-not-affect** this unit's ACs: "append a dated
+  entry" was read as end-of-file, so P2–P6's 2026-10-21 entries landed *after*
+  `## References` and `unit-route.mjs` routed `next: P2` with all six phases
+  complete. Repaired here (entries moved into `## Progress log`; the P6 head
+  gained its documented `tests P6` phase token, same facts); the recurrence
+  guard — pin "insert before `## Next`" in `execute-phase`'s wording, or a
+  doc-structure test — belongs to that skill's owner, and scope growth this
+  unit does not take.
 
 ## Tasks
 
@@ -382,6 +391,15 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC1 | `node scripts/serena-activation-check.mjs` (P6, re-run at the head) | 0 | `ACTIVATION: ok` · `serena_* tools registered: 20 (required 5 present)` | execute-phase (main agent) |
 | AC10 | `bun scripts/check-skill-context.mjs` + `node scripts/version-parity-gate.mjs --content --base main` (P6) | 0 · PASS | `PASS context budgets: 28 skills` · `content parity holds: version 0.26.0 → 0.29.0, companion row present` | execute-phase (main agent) |
 | AC10 | `node scripts/version-parity-gate.mjs --content --base main` (P1) | 0 | `changed files: 13, triggered: 3` · `content parity holds: version 0.26.0 → 0.27.0, companion row present` | execute-phase (main agent) |
+| AC6 | config half re-run (verification-only, PRs #263/#264): `grep -n language_servers .serena/project.yml` + `grep -n serena .gitignore` | 0 | `.serena/project.yml:41 language_servers:` → `typescript, bash, markdown, yaml, json` · `.gitignore:19-23` `**/.serena/` + `!.serena/` + `!.serena/project.yml` — additive carve-out, project config still versioned | unit-lane (evidence step) |
+| AC7 | config half re-run (verification-only): `grep -n "Language server status: initialized" skills/init-workspace/references/SERENA.md` + `sed -n '98,107p' …SERENA.md` | 0 | `SERENA.md:90 … verifying Language server status: initialized for every language` · startup rule: a failing entry is removed from `language_servers` and recorded as a residual | unit-lane (evidence step) |
+| AC3/AC4/AC5/AC7/AC8 | the five P4 greps re-run at the head (`uv tool install -p 3.13 serena-agent`, `Degraded path`, `trusted_project_path_patterns`, `Language server status`, `deterministic script` over `SERENA.md`) | 0 · 1 / 1 / 1 / 2 / 2 | identical counts to the P4 rows — the skill text is unchanged at the head | unit-lane (evidence step) |
+| AC1 | `node scripts/serena-activation-check.mjs` (evidence step, re-run at head `34e41621`) | 0 | `ACTIVATION: ok` · `serena_* tools registered: 20 (required 5 present)` | unit-lane (evidence step) |
+| AC2 | `node --test scripts/pin-watch.test.mjs` (evidence step, re-run) | 0 · 20 pass / 0 fail | drift, clean, degraded and dedupe cases green, with the shipped workflow wiring pinned | unit-lane (evidence step) |
+| AC6 | `grep -rn "writeFile" packages/pi-agentic-workflow/src/routing/serena-readiness.ts` (evidence step, re-run) | 1 · no output | no write path in the nudge module; `.serena` appears only as a read | unit-lane (evidence step) |
+| AC10 | `node --test scripts/*.test.mjs` (evidence step, re-run at head `34e41621`) | 0 · 796 pass / 0 fail | root suite green at the head with the repaired unit doc | unit-lane (evidence step) |
+| AC10 | `cd packages/pi-agentic-workflow && bun run test` (evidence step, re-run) | 0 · 452 pass / 0 fail | package suite green at the head | unit-lane (evidence step) |
+| AC10 | `node scripts/version-parity-gate.mjs --content --base main` + `bun scripts/check-skill-context.mjs` + triage-block diff (evidence step) | 0 · PASS · PASS · clean | `content parity holds: version 0.26.0 → 0.29.0, companion row present` · `PASS context budgets: 28 skills` · `TRIAGE BLOCK CLEAN` | unit-lane (evidence step) |
 
 ## Progress log
 
@@ -457,22 +475,6 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   no gaming — no comment, blank line, doc or test was removed to shrink it.
   Exception recorded; the phase stands.
 
-## Next
-
-`/execute-phase 67-serena-provisioning P1` (tier: cheap) — first phase of the
-cut; the lane resumes after P6.
-
-## References
-
-- Issue [#219](https://github.com/gtrabanco/agentic-workflow/issues/219) — the
-  request, its 2026-09-24 scope adjustment (refs #260).
-- `docs/features/ROADMAP.md:77` — row 67 `serena-provisioning` (M).
-- `skills/init-workspace/references/SERENA.md` — the landed project-config
-  contract (owner); `skills/init-workspace/SKILL.md:92-95,125-127,218-221`.
-- PRs #263 / #264 / #261 — config half and `.gitignore` correction.
-- `packages/pi-agentic-workflow/package.json`, `README.md` — the pi path's
-  current surface.
-- Row 51 / issue #218 — the consumer of the LSP evidence tier (out of scope).
 - 2026-10-21 — execute P2 base ref `d8e35ca1`. **Gate 1 (path-protection)
   passed at entry** (`PATH-GUARD pass — justified`, checked 8): the P1
   `justification` record was re-attached from P1 to P2, because the guard scopes
@@ -617,7 +619,7 @@ cut; the lane resumes after P6.
   tests or comments is forbidden. Real count reported; the phase stands.
 - 2026-10-21 — execute P6 base ref `f0da06d6`. **Gates at entry:** path-protection
   `PATH-GUARD pass — clean` (checked 0 — the phase is verification, no source edit).
-- 2026-10-21 — **verification phase, run at the head** (`f0da06d6`):
+- 2026-10-21 — tests P6 — **verification phase, run at the head** (`f0da06d6`):
   root suite `node --test scripts/*.test.mjs` **796/0**; Pi package suite
   `bun run test` **452/0** and `test:node` **452/0**; crate suite
   `packages/agentic-workflow` **216/0** (bun) and **217/0** (node);
@@ -635,3 +637,35 @@ cut; the lane resumes after P6.
   the proof here is both directions: red before the install, green after, with
   the failure naming a missing module rather than a failing assertion.
   → `6cef364c` — next: the lane resumes (review, release, docs).
+
+
+- 2026-10-23 14:24 — evidence step: **repaired the Progress log itself first**
+  — the P2–P6 entries (2026-10-21) had been appended *after* `## References`,
+  so `unit-route.mjs` routed `next: P2` with six phases complete; the entries
+  are now inside `## Progress log`, the P6 head carries its documented
+  `tests P6` phase token (facts unchanged), and the anchor gap is recorded as
+  **U4** above. Evidence rows added for the config-half verification-only items
+  and for a full re-run at the head `34e41621`: root suite **796/0**, package
+  suite **452/0**, activation check `ACTIVATION: ok` (20 `serena_*` tools),
+  `pin-watch` 20/0, version-parity PASS (0.26.0 → 0.29.0), context budgets PASS
+  28, triage block still diffs clean → evidence in this doc — next: review step
+  (`REVIEW-VERDICT` per `references/REVIEW.md`).
+
+## Next
+
+`/unit-lane 67-serena-provisioning` — resume the lane for the **review** step
+(tier: strong): re-run the evidence rows, compare the AC section hash with the
+triage-time one, and write the in-doc `REVIEW-VERDICT`; docs and release
+(release settles roadmap row 67's status) follow, then the receipt stage.
+
+## References
+
+- Issue [#219](https://github.com/gtrabanco/agentic-workflow/issues/219) — the
+  request, its 2026-09-24 scope adjustment (refs #260).
+- `docs/features/ROADMAP.md:77` — row 67 `serena-provisioning` (M).
+- `skills/init-workspace/references/SERENA.md` — the landed project-config
+  contract (owner); `skills/init-workspace/SKILL.md:92-95,125-127,218-221`.
+- PRs #263 / #264 / #261 — config half and `.gitignore` correction.
+- `packages/pi-agentic-workflow/package.json`, `README.md` — the pi path's
+  current surface.
+- Row 51 / issue #218 — the consumer of the LSP evidence tier (out of scope).
