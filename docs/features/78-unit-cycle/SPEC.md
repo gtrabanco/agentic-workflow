@@ -272,6 +272,10 @@ R-rows from the research step (one web pass over primary sources).
 - 2026-10-23 — Pn — verification: PR #314 opened against `main`, Evidence rows
   written per AC, roadmap row 78 `done · [#314]`, and the loop then drove its
   own unit (`research → plan` cut P1…Pn from the live-run defects).
+- 2026-10-23 — **docs step**: changelog row added (unit 78: delivery cycle as
+  code, PR #314), README.md unit 78 reference confirmed current, roadmap row 78
+  `done · [#314]` confirmed — no template or doc-map drift — all surfaces
+  accounted for → docs step complete.
 
 ## Next
 
