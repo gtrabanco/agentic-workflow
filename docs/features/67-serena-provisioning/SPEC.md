@@ -142,7 +142,12 @@ startup rule documented as the single owner contract in `SERENA.md`.
   `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`,
   `skills/init-workspace/references/BOOTSTRAP_WRITE.md`,
   `skills/init-workspace/references/UPGRADE.md`), a **new** scheduled workflow
-  under `.github/workflows/` (pin watch → issue), root `README.md`,
+  under `.github/workflows/` (pin watch → issue) with its runner
+  `scripts/pin-watch.mjs` + `scripts/pin-watch.test.mjs`,
+  `scripts/serena-activation-check.mjs` (P2's packed-artifact validator), the
+  P1 fail-open fix in `scripts/version-parity-gate.mjs` + its test (the gate
+  AC10 relies on), `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (P4's declared
+  reference re-base), root `README.md`,
   `CHANGELOG.md`, `docs/features/ROADMAP.md` (row 67 status).
 - **Stops being true:** `SERENA.md:124-128` "The install half is tracked by
   #219" (the residual sentence is replaced by the step itself);
@@ -219,7 +224,7 @@ the `tests` triage step runs is fixed by the triage block below.
   are verified here as evidence rows, never rebuilt.
 - **Fixed `markdown` + `json` entries (#264, CHANGELOG 3.2.0) vs AC8's
   "confine LSP evidence to TypeScript/JavaScript" (issue #219 item 4)** —
-  **affects** AC7/AC8: `SERENA.md:34-40` mandates `markdown`+`json` as fixed
+  **affects** AC7/AC8: `SERENA.md:46-51` mandates `markdown`+`json` as fixed
   entries while the scope adjustment says diagnostics claims stay TS/JS-only.
   The design step resolves this ask-don't-infer (listing a server for
   navigation vs claiming it as evidence), never by inference. Resolution:
@@ -714,6 +719,19 @@ or the unit's own record (N1 is the one omission, routed above).
   table + verdict written — **REVIEW-VERDICT: PASS** (0 material, 3
   report-notes; N1 routed to the docs step) → evidence: `## Review` above —
   next: docs step.
+- 2026-10-23 15:42 — docs step: folded review report-note N1 into Impact's
+  `Touches`, which now names every touched surface (pin-watch runner + test,
+  `serena-activation-check.mjs`, the `version-parity-gate` fail-open fix +
+  test, `SKILL_CONTEXT_BUDGETS.json` re-base) — the review's scope sweep had
+  under-counted the omissions at one; repaired the drifted Known-issues
+  citation `SERENA.md:34-40` → `:46-51`. **AC8's `SERENA.md:118-121` pointer
+  drifted too (the text now sits at 125-128) but the AC section stays
+  byte-identical** — editing it after the review would falsify the recorded
+  AC-integrity hash, and the requirement itself was verified by grep; recorded
+  here instead of in the frozen section. CHANGELOG rows (0.27/0.28/0.29 +
+  init-workspace 4.1.0) and both READMEs verified current; no template or
+  documentation-map change is demanded (no new artifacts) → evidence: this
+  entry — next: release step.
 
 ## Next
 
