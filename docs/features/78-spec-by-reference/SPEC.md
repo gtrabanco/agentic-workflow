@@ -185,6 +185,8 @@ scripts/unit-doc-contract.test.mjs`, `node --test
 scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs`,
 `node --test scripts/review-loop-discipline.test.mjs`, `node --test
 scripts/workflow-status-sensor.test.mjs`, `node --test
+scripts/spec-by-reference.test.mjs` (the migration corpus itself — AC5's declared gate, listed so a later
+delete of the migration gate is caught by what cites it), `node --test
 scripts/golden-fixture.test.mjs`, `node --test
 scripts/knowledge-honesty-contract.test.mjs`, plus the root suites
 (`node --test scripts/*.test.mjs`).
@@ -379,6 +381,12 @@ output (≤2 lines), verified-by.
 | — | review step: three independent axis reviewers over `git diff main...HEAD` (code correctness · scope & acceptance · contract & consistency); every row re-verified against source before recording | 3 × FAIL | 7 material · 15 report-notes · block in `## Review verdict` | this session, 2026-10-23 |
 | — | `bun scripts/diff-guard.mjs --base main --unit 78` (whole-unit measurement; no implement step this turn) | exit 1 | `BREACH · Lines: 3528 > 400 · Files: 52 > 8` — **exception recorded** (D2: one `scope: large` unit; every implement phase guarded at its own base) | this session, 2026-10-23 |
 
+| — | review fold (cycle 1): `node --test scripts/*.test.mjs` at the fold head | exit 0 | `824 tests · 824 pass · 0 fail` — the 10 cases this fold added; none deleted or loosened | this session, 2026-10-23 |
+| AC1 | `node --test scripts/unit-doc-contract.test.mjs scripts/pre-execution-quality.test.mjs` + `bun scripts/phase-lint.mjs` on both templates | exit 0 | `13 tests · 13 pass` · both templates `verdict PASS` (F21: the shipped examples broke their own `(Implements: …)` rule) | this session, 2026-10-23 |
+| AC2 | `node --test scripts/phase-lint.test.mjs scripts/unit-route.test.mjs` | exit 0 | `160/160` · `51/51` — symmetric half-shape refusal (F1), sanitized echo (F14), owner-vocabulary routing (F6) | this session, 2026-10-23 |
+| AC4 | `node --test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs scripts/review-loop-discipline.test.mjs scripts/workflow-status-sensor.test.mjs scripts/workflow-status-compact.test.mjs` | exit 0 | `114 tests · 114 pass` — the mark gate asserted both ways; the doc-carrier recount and both memo carriers pinned | this session, 2026-10-23 |
+| AC8 | `node --test scripts/*.test.mjs` · `bun run build` + `bun run test` (schema 4.8.0) · `bun run test` (pi package) | exit 0 | `824/824` · `721/721` · `432/432` | this session, 2026-10-23 |
+| — | `bun scripts/check-skill-context.mjs` (+ `--routes`) · `node scripts/version-parity-gate.mjs --content --base main` · `node scripts/unit-lineage.mjs --unit 78-spec-by-reference` · `node scripts/needs-input.mjs docs/features/78-spec-by-reference` · `node scripts/promise-coherence.mjs` | exit 0 (each) | budgets PASS 28/14 · parity PASS · `LINEAGE OK — obligations closed (10)` · open questions 0 · promise PASS | this session, 2026-10-23 |
 ## Progress log
 
 `2026-10-21 22:40 — unit doc created from issue #308 (--from-issue); roadmap row 78 registered; research + design provenance recorded in sources.md (19 claims); three open questions appended to decisions.md; triage block pasted; phase-lint PASS (6/6 ×6), promise-coherence PASS, root suites 775/775 → 15ab46a1 — next: batched gap interview (Q1–Q3), then the plan step`
@@ -392,18 +400,21 @@ output (≤2 lines), verified-by.
 `2026-10-21 — P6 — wording, migration rule and bookkeeping (O8, O9): the plan step's checklist states spec-by-reference positively (cut each `S#` from the request verbatim, link every task, open `## Log` with `L1`, keep `## Findings` OPEN-only) and `AGENTS.md` keeps `S#` (requirement ids) and `P#` (phase labels) apart; the template agent guide documents both accepted shapes and the carrier rule. Bookkeeping: seven skills bumped (unit-lane 2.4.0 minor, six patches), CHANGELOG rows for each plus `pre-execution-review` 2.8.1 in the internal table, Pi package 0.27.0 with its companion row, README's three carrier restatements corrected. Committed in three atomic halves (`df9d029a` wording, `717190b3` bumps, `ddd33e3b` release). The drift gate caught a real defect mid-phase — a CHANGELOG row restating `pre-execution-review` at 2.8.0 while its frontmatter said 2.8.1 — fixed by adding the missing internal row. Root 814/814, budgets PASS, version-parity PASS → next: P7 (verification + PR)`
 `2026-10-21 — P7 — verification (O10): every AC's declared validator re-run at this head — AC1 12/12, AC2 208/208, AC3 20/20, AC4 101/101, AC5 31/31 with no closed unit doc in the diff, AC6 9/9, AC8 814/814 (root) + 721/721 (schema) + 432/432 (pi); context and route budgets PASS, version-parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0 open questions. PR #311 opened with `Closes #308` → f7f3b0e — next: /review-change on the changed HEAD`
 `2026-10-23 17:20 — review step — three independent axis reviewers over `git diff main...HEAD` plus a full gate re-run at this head: `REVIEW-VERDICT: FAIL` (7 material, 15 report-notes, every material row re-verified against source before recording — block written to `## Review verdict`); evidence reproduced (root 814/814, schema 721/721, pi 432/432, budgets/parity/phase-lint/promise-coherence/needs-input all exit 0) and AC integrity unchanged (`## Acceptance criteria` sha256 `d8ea4523b3e6873e`); whole-unit `diff-guard --base main` measured 3528 lines / 52 files → **EXCEPTION recorded** per D2 (one `scope: large` unit, every implement phase guarded at its own base — never a shrunk diff); the stale `## Next` pane re-cut here; the Progress-log entries deliberately keep this doc's paragraph form (re-cutting them to list items mid-review would make the router refuse on the in-progress status and break review-change/fold-findings discovery — N15) → next: /review-change 78-spec-by-reference (persist the findings and own the receipt); ladder steps 2–4 wait behind the repair`
-
+`2026-10-23 20:05 — review fold (cycle 1) — /fold-findings over the persisted ledger: 23 rows folded in five atomic batches (F1+F14 · F6+F21+F22 · F5+F8+F13+F15+F16+F18+F23+F24 · F2+F3+F4 · F11+F12+F19+F7+F9+F10+F25+F26), three rows left open as DISPUTED with their evidence (F17, F20, F24-as-written); nothing reclassified, no test weakened or deleted. Gates re-run at the fold head: root 824/824, schema 721/721 after the 4.8.0 bump (F9 — the dual-shape selector had shipped as four entries in the 4.7.0 row, invisible to the parity gate whose trigger set is `skills/**` + `packages/pi-agentic-workflow/**`), pi 432/432, budgets PASS 28 skills / 14 routes with every re-based ceiling naming its growth source, `LINEAGE OK` (O1–O10 verified), needs-input 0 open questions (AC7/O2's carrier now exists as `Q4`/`D4`), promise-coherence PASS. Disclosed correction to the review itself: N8 was refuted last turn and should not have been — both shipped templates failed their own `(Implements: …)` rule (`spec-unlinked: S2`, exit 1); it is folded here as F21's root cause, not left as a refuted candidate → next: /review-change 78-spec-by-reference (delta re-review)
 ## Next
 
-Review step closed at this head with `REVIEW-VERDICT: FAIL` — 7 material, 15
-report-notes (block in `## Review verdict` below). PR
-[#311](https://github.com/gtrabanco/agentic-workflow/pull/311) stays open and
-roadmap row 78 stays `in-progress`; ladder steps 2–4 (Future sweep, status and
-index settle, receipt stage) wait behind the repair cycle.
+Cycle 1's review→fold pass closed 23 of the 26 persisted rows (batch shas
+`09950d83` · `8802d89a` · `d885f693` · `b5c7248b` · this commit); three rows stay
+open as DISPUTED with the evidence recorded in `review-findings.md` (F17, F20, and
+F24's as-written shape claim). PR [#311](https://github.com/gtrabanco/agentic-workflow/pull/311)
+stays open and roadmap row 78 stays `in-progress`; the close-out ladder (Future
+sweep, status and index settle, receipt stage) resumes only behind a clean re-review.
 
-→ Next: /review-change 78-spec-by-reference — run the pack at this head and persist the review step's findings (the receipt's sole owner)
-  · rows persisted → /fold-findings — repair the fix-now rows with a green gate, then a delta /review-change
-  · re-triage needed → /unit-lane 78-spec-by-reference --retriage
+→ Next: /review-change 78-spec-by-reference — delta re-review at the new head (fold
+  branch `RE-REVIEW-REQUIRED (delta)`: behavioral surfaces moved and three rows are `high`)
+  · open rows to settle with the user → F17 + F20 + F24 (disputed, not folded)
+  · two-cycle cap: cycle 2 of 2 — a third cycle needs an explicit user instruction
+
 
 ## Review verdict
 
