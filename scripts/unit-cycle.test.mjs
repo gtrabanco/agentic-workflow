@@ -313,6 +313,19 @@ test("runCycle: folds consume the budget; exhausted stops at X", async () => {
   assert.equal(result.outcome, OUTCOME.BUDGET);
 });
 
+/** A task list the repo's own parser rejects must stop naming the fix. */
+test("decide: a Tasks section whose phase bullets do not parse stops with the grammar named", () => {
+  const action = decide(at({ tasksMalformed: 6 }));
+  assert.equal(action.type, "stop");
+  assert.equal(action.reason, OUTCOME.FAILED);
+  assert.match(action.detail, /tasks-grammar/);
+});
+
+test("decide: a unit whose triage says n/a demands no catalog step", () => {
+  const bare = at({ triageSteps: [], researchDone: false, designed: true, phasesDeclared: [1], phasesDone: [] });
+  assert.deepEqual(decide(bare), { type: "phase", n: 1 });
+});
+
 test("runCycle: an executor failure stops failed with the step named", async () => {
   const result = await runCycle({
     sense: queued([at({ designed: false })]),

@@ -110,27 +110,27 @@ suite `node --test scripts/*.test.mjs` (the loop joins it), plus
 ## Tasks
 
 <!-- tasks:start -->
-P1 — write the offline test suite: `decide()` state-machine cases, prompt
+- P1 — write the offline test suite: `decide()` state-machine cases, prompt
 builder, sensing helpers, runner terminal states (red-first: suite before
 module) (validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0)
   - Relevant files: scripts/unit-cycle.test.mjs
-P2 — implement `scripts/unit-cycle.mjs`: the coded delivery loop with
+- P2 — implement `scripts/unit-cycle.mjs`: the coded delivery loop with
 `decide()`, `sense()`, `runCycle()`, `main` CLI (blue-first: make tests green)
 (validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0 · 34 pass)
   - Relevant files: scripts/unit-cycle.mjs, scripts/unit-cycle.test.mjs
-P3 — verify against the whole root suite: the loop's suite joins without
+- P3 — verify against the whole root suite: the loop's suite joins without
 disturbing existing gates (validator: `` node --test scripts/*.test.mjs ``
 exits 0)
   - Relevant files: scripts/*.test.mjs
-P4 — live-run validation: drive unit 67 from a worktree to confirm the full
+- P4 — live-run validation: drive unit 67 from a worktree to confirm the full
 cycle (tests → review → fold → review → audit → done) (validator: `` node
 scripts/unit-cycle.mjs 67-serena-provisioning --repo <worktree> `` exits 0)
   - Relevant files: scripts/unit-cycle.mjs
-P5 — verify the `--dry-run` flag: senses and prints state/next action, spawns
+- P5 — verify the `--dry-run` flag: senses and prints state/next action, spawns
 nothing (validator: `` node scripts/unit-cycle.mjs 67-serena-provisioning
 --dry-run `` before commit — tree dirty · zero acts spawned)
   - Relevant files: scripts/unit-cycle.mjs
-Pn — verification: push, open PR, confirm the whole delivery cycle is one
+- Pn — verification: push, open PR, confirm the whole delivery cycle is one
 command with all five terminal states (validator: PR #314 opened against main;
 Evidence rows written; roadmap row 78 `in-progress → done · [#314]`)
   - Relevant files: docs/features/78-unit-cycle/SPEC.md, docs/features/78-unit-cycle/decisions.md, docs/features/ROADMAP.md
@@ -231,6 +231,28 @@ R-rows from the research step (one web pass over primary sources).
   the second review posted a current receipt at `9b2816af`, and the audit
   posted `audit-pr:merge-ready sha=9b2816af` with every gate green → evidence:
   rows above — next: the same loop on this unit (PR #314).
+
+- 2026-10-23 — P1 — the offline suite: `scripts/unit-cycle.test.mjs` authored
+  red-first (the module it imports did not exist) and grown to 36 cases as the
+  loop's own live runs exposed three defects worth pinning (tests-red on a
+  fresh checkout, review-no-receipt ordering, unparseable task bullets) →
+  `node --test scripts/unit-cycle.test.mjs` exits 0 · 36 pass / 0 fail.
+- 2026-10-23 — P2 — the module: `scripts/unit-cycle.mjs` (`decide`, `sense`,
+  `renderPrompt`, `runCycle`, `main`) plus the additive `unit-route` exports,
+  green against the suite before any live run → `7f62c408`, `4b71e7d3`.
+- 2026-10-23 — P3 — the whole root suite: `node --test scripts/*.test.mjs`
+  exits 0 · 830 pass / 0 fail on this branch; the loop's suite joins without
+  disturbing a gate.
+- 2026-10-23 — P4 — live-run validation on unit 67: `node
+  scripts/unit-cycle.mjs 67-serena-provisioning --repo <67-worktree>` exits 0
+  with acts `tests → review → fold → review → audit` and terminal `done`
+  (merge-ready marker at `9b2816af`).
+- 2026-10-23 — P5 — `--dry-run` verification: senses branch, receipt, phase
+  progress and open questions, prints the next action, and spawns zero acts
+  (tree-dirty and clean states both observed).
+- 2026-10-23 — Pn — verification: PR #314 opened against `main`, Evidence rows
+  written per AC, roadmap row 78 `done · [#314]`, and the loop then drove its
+  own unit (`research → plan` cut P1…Pn from the live-run defects).
 
 ## Next
 
