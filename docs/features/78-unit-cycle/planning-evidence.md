@@ -5,7 +5,7 @@ Evidence for each Engineering claim in the SPEC's Engineering half.
 <!-- sources:start -->
 | id | claim | status | source |
 |---|---|---|---|
-| PE-001 | The control core (`decide()`, prompt builder, doc-sensing helpers, runner) is offline-testable pure code | verified | `scripts/unit-cycle.test.mjs` — 34 pass / 0 fail; `node --test scripts/*.test.mjs` — 809 pass / 0 fail |
+| PE-001 | The control core (`decide()`, prompt builder, doc-sensing helpers, runner) is offline-testable pure code | verified | `scripts/unit-cycle.test.mjs` — 36 pass / 0 fail; `node --test scripts/*.test.mjs` — 832 pass / 0 fail |
 | PE-002 | The whole cycle is one command: `node scripts/unit-cycle.mjs <unit>` drives design→plan→phases→tests→evidence→docs→release→review→fold→audit to `done` | verified | live run 5 on unit 67: `tests → review → fold → review → audit` → exit 0 `done` (PR #313, marker at `9b2816af`) |
 | PE-003 | Terminal states are a closed set with distinct exit codes: 0 `done` · 2 `needs-input` · 3 `budget-exhausted` · 4 `no-progress` · 5 `failed` · 1 usage | verified | live runs observed: exit 0 `done`, exit 2 `needs-input` (run 3), exit 5 `failed` (runs 1-2); `budget-exhausted`/`no-progress` pinned offline in tests |
 | PE-004 | The fold budget is configurable and enforced: `--max-cycles N` (default 2, env `UNIT_CYCLE_MAX_CYCLES`), counted per fold act, stops with exit 3 | verified | `scripts/unit-cycle.test.mjs` case for fold budget; spec claims enforcement in code |
