@@ -46,3 +46,19 @@ Rows: 5 transformed, 5 with trigger, 0 new findings, 0 n/a
 Summary: Cycle 4 produced 4 medium-severity tech debt items (missing timeouts on spawnSync in activation check) and 1 low-severity note. All 4 medium items are fix-now, current-unit, foldable.
 
 Decision: PASS (for debt transform — but review overall is FAIL due to open fix-now rows)
+
+## Cycle 5 (context-clean end review, clean)
+
+| # | Finding | Severity | file:line | Trigger + smallest action |
+|---|---------|----------|-----------|---------------------------|
+| 1 | Missing timeout on `spawnSync("npm view", …)` — RESOLVED at f42200c5 (cycle 4 fix folded) | medium (resolved) | `scripts/serena-activation-check.mjs:71` | **RESOLVED** at f42200c5: `timeout: 30_000` added. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 2 | Missing timeout on `spawnSync(process.execPath, …)` — RESOLVED at f42200c5 (cycle 4 fix folded) | medium (resolved) | `scripts/serena-activation-check.mjs:177` | **RESOLVED** at f42200c5. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 3 | Missing timeout on `spawnSync("pi", ["install", …])` — RESOLVED at f42200c5 (cycle 4 fix folded) | medium (resolved) | `scripts/serena-activation-check.mjs:242` | **RESOLVED** at f42200c5. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 4 | Missing timeout on `spawnSync("pi", ["list"])` — RESOLVED at f42200c5 (cycle 4 fix folded) | medium (resolved) | `scripts/serena-activation-check.mjs:253` | **RESOLVED** at f42200c5. Re-trigger: if future audit surfaces missing timeout elsewhere. |
+| 5 | readFileSync on package.json unbounded read — mitigated (package.json typically <50KB) | low (open) | `scripts/serena-activation-check.mjs:81` | If package.json grows beyond expected size, switch to readStream with size limit. Re-trigger: if package.json exceeds 100KB. |
+
+Rows: 5 transformed, 5 with trigger, 0 new findings, 0 n/a
+
+Summary: Cycle 5 — no new debt. The 4 medium-severity items from cycle 4 are resolved and folded at f42200c5. One low-severity note remains (package.json read size). All four review axes (code, security, verify, perf) returned PASS.
+
+Decision: PASS
