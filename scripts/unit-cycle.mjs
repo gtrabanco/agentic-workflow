@@ -40,7 +40,6 @@ import { compute as needsInputCompute } from "./needs-input.mjs";
 import {
   openRows,
   routeOfRow,
-  resolveUnit,
   sectionBody,
   recordedPhases,
 } from "./unit-route.mjs";
@@ -258,6 +257,29 @@ function sh(cmd, args, cwd = TARGET) {
 
 const SCOPE_MAP = { XS: "xs", S: "small", M: "medium", L: "large", XL: "xlarge" };
 
+/** Resolve a unit token against TARGET (never against this script's checkout). */
+function resolveTargetUnit(token) {
+  const clean = token.replace(/^docs\/(?:features|fix)\//, "").replace(/\/+$/, "");
+  const folders = [];
+  for (const [kind, dir] of [["feature", "docs/features"], ["fix", "docs/fix"]]) {
+    let names = [];
+    try {
+      names = fs.readdirSync(path.join(TARGET, dir));
+    } catch {
+      names = [];
+    }
+    for (const name of names) {
+      if (name.startsWith("_") || !/^\d+-(.+)$/.test(name)) continue;
+      if (!fs.statSync(path.join(TARGET, dir, name)).isDirectory()) continue;
+      folders.push({ kind, number: name.split("-", 1)[0], slug: name, dir: `${dir}/${name}` });
+    }
+  }
+  const matches = /^\d+$/.test(clean)
+    ? folders.filter((folder) => folder.number === clean)
+    : folders.filter((folder) => folder.slug === clean || folder.dir.endsWith(`/${clean}`));
+  return { matches, clean };
+}
+
 function roadmapRow(nn, cwd = TARGET) {
   const text = fs.readFileSync(path.join(cwd, "docs/features/ROADMAP.md"), "utf8");
   const line = text.split("\n").find((row) => row.startsWith(`| ${nn} |`));
@@ -271,7 +293,7 @@ function roadmapRow(nn, cwd = TARGET) {
 
 /** Read every fact the state machine needs. Throws only on usage errors. */
 export function sense(token) {
-  const { matches, clean } = resolveUnit(token);
+  const { matches, clean } = resolveTargetUnit(token);
   let unitDir = matches[0]?.dir ?? null;
   let row = null;
   if (!unitDir && /^\d+$/.test(clean)) row = roadmapRow(clean);
@@ -403,7 +425,7 @@ function makeAct() {
       return;
     }
     const { prompt } = renderPrompt(action, state);
-    const r = spawnSync("pi", ["-p", "--name", `unit-cycle:${state.unit}:${label}`, prompt], {
+    const r = spawnSync("pi", ["-p", "--approve", "--name", `unit-cycle:${state.unit}:${label}`, prompt], {
       cwd: TARGET,
       stdio: "inherit",
     });
