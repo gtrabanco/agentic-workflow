@@ -33,8 +33,6 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
-
 import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 import { compute as needsInputCompute } from "./needs-input.mjs";
 import {
@@ -42,8 +40,9 @@ import {
   routeOfRow,
   sectionBody,
   recordedPhases,
-  unitFolders,
+  resolveUnit,
 } from "./unit-route.mjs";
+import { fileURLToPath } from "node:url";
 import { AUDIT_MARKER_RE } from "./audit-pr-gate.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -271,6 +270,12 @@ const SCOPE_MAP = { XS: "xs", S: "small", M: "medium", L: "large", XL: "xlarge" 
 
 /** Resolve a unit token against TARGET (never against this script's checkout). */
 function resolveTargetUnit(token) {
+  // When TARGET matches the default PROJECT, delegate to resolveUnit (unit-route).
+  // When TARGET differs (e.g. --repo), fall back to a local scan under TARGET.
+  const projectDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  if (TARGET === projectDir) {
+    return resolveUnit(token);
+  }
   const clean = token.replace(/^docs\/(?:features|fix)\//, "").replace(/\/+$/, "");
   const entries = [];
   for (const [kind, dir] of [["feature", "docs/features"], ["fix", "docs/fix"]]) {
@@ -671,7 +676,7 @@ function main(argv) {
         process.stderr.write(`${error.message}\n`);
         return 1;
       }
-      process.stderr.write(`unit-cycle failed: ${error?.stack ?? error}\n`);
+      process.stderr.write(`unit-cycle failed: ${error?.message ?? error}\n`);
       return 1;
     });
 }
