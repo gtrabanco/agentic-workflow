@@ -372,6 +372,12 @@ output (≤2 lines), verified-by.
 | — | `node scripts/promise-coherence.mjs` | exit 0 | `verdict PASS` · `claims: 35 checked` | this session, 2026-10-21 |
 | — | `node scripts/needs-input.mjs docs/features/78-spec-by-reference` | exit 0 | `Open questions: 0` · `Pending: none` | this session, 2026-10-21 |
 | — | PR opened with `Closes #308` | exit 0 | https://github.com/gtrabanco/agentic-workflow/pull/311 | this session, 2026-10-21 |
+| — | review step: every gate re-run at the review head — `node --test scripts/*.test.mjs` | exit 0 | `814 tests · 814 pass · 0 fail` | this session, 2026-10-23 |
+| — | review step: `bun run build` + `bun run test` in `packages/agentic-workflow-schema`; `bun run test` in `packages/pi-agentic-workflow` | exit 0 | `721 pass · 0 fail` · `432 pass · 0 fail` | this session, 2026-10-23 |
+| — | review step: `bun scripts/check-skill-context.mjs` (+ `--routes`) · `node scripts/version-parity-gate.mjs --content --base main` · `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` · `node scripts/promise-coherence.mjs` · `node scripts/needs-input.mjs docs/features/78-spec-by-reference` | exit 0 (each) | budgets PASS 28/14 · parity PASS · phase-lint PASS (7/7) · promise PASS 35 checked · open questions 0 | this session, 2026-10-23 |
+| — | review step: AC integrity — `## Acceptance criteria` sha256 at `15ab46a1` (triage-time commit) vs this head | unchanged | `d8ea4523b3e6873e` · 53 lines, byte-identical | this session, 2026-10-23 |
+| — | review step: three independent axis reviewers over `git diff main...HEAD` (code correctness · scope & acceptance · contract & consistency); every row re-verified against source before recording | 3 × FAIL | 7 material · 15 report-notes · block in `## Review verdict` | this session, 2026-10-23 |
+| — | `bun scripts/diff-guard.mjs --base main --unit 78` (whole-unit measurement; no implement step this turn) | exit 1 | `BREACH · Lines: 3528 > 400 · Files: 52 > 8` — **exception recorded** (D2: one `scope: large` unit; every implement phase guarded at its own base) | this session, 2026-10-23 |
 
 ## Progress log
 
@@ -385,15 +391,75 @@ output (≤2 lines), verified-by.
 `2026-10-21 — P5 — ledger collapse (O6): a migrated unit's `## Findings` section is the OPEN-row carrier and its `## Log` lines carry the folded history, review marks and gate runs; `workflow-status` probes the doc first (`findingsCarrier`) and projects the same rows and suggestions from either carrier, and reports each `G`/`F`/`D` log line as a bounded observation; the router reads `## Findings` when the section exists. The prose half (`LEDGERS.md`, `fold-findings`, `review-change`'s persist step, `triage-issue`, `audit-pr`, `workflow-status`) states probe-first and the fallback, with the route ceilings re-based and their growth source named. Committed as two atomic halves (carrier `b0842449`, prose `bcc2bf6b`). Root suites 814/814, budgets PASS 28 skills / 14 routes; a disk-inode exhaustion in /tmp (not a code failure) was diagnosed and cleared mid-phase → next: P6 (wording, migration rule and bookkeeping)`
 `2026-10-21 — P6 — wording, migration rule and bookkeeping (O8, O9): the plan step's checklist states spec-by-reference positively (cut each `S#` from the request verbatim, link every task, open `## Log` with `L1`, keep `## Findings` OPEN-only) and `AGENTS.md` keeps `S#` (requirement ids) and `P#` (phase labels) apart; the template agent guide documents both accepted shapes and the carrier rule. Bookkeeping: seven skills bumped (unit-lane 2.4.0 minor, six patches), CHANGELOG rows for each plus `pre-execution-review` 2.8.1 in the internal table, Pi package 0.27.0 with its companion row, README's three carrier restatements corrected. Committed in three atomic halves (`df9d029a` wording, `717190b3` bumps, `ddd33e3b` release). The drift gate caught a real defect mid-phase — a CHANGELOG row restating `pre-execution-review` at 2.8.0 while its frontmatter said 2.8.1 — fixed by adding the missing internal row. Root 814/814, budgets PASS, version-parity PASS → next: P7 (verification + PR)`
 `2026-10-21 — P7 — verification (O10): every AC's declared validator re-run at this head — AC1 12/12, AC2 208/208, AC3 20/20, AC4 101/101, AC5 31/31 with no closed unit doc in the diff, AC6 9/9, AC8 814/814 (root) + 721/721 (schema) + 432/432 (pi); context and route budgets PASS, version-parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0 open questions. PR #311 opened with `Closes #308` → f7f3b0e — next: /review-change on the changed HEAD`
+`2026-10-23 17:20 — review step — three independent axis reviewers over `git diff main...HEAD` plus a full gate re-run at this head: `REVIEW-VERDICT: FAIL` (7 material, 15 report-notes, every material row re-verified against source before recording — block written to `## Review verdict`); evidence reproduced (root 814/814, schema 721/721, pi 432/432, budgets/parity/phase-lint/promise-coherence/needs-input all exit 0) and AC integrity unchanged (`## Acceptance criteria` sha256 `d8ea4523b3e6873e`); whole-unit `diff-guard --base main` measured 3528 lines / 52 files → **EXCEPTION recorded** per D2 (one `scope: large` unit, every implement phase guarded at its own base — never a shrunk diff); the stale `## Next` pane re-cut here; the Progress-log entries deliberately keep this doc's paragraph form (re-cutting them to list items mid-review would make the router refuse on the in-progress status and break review-change/fold-findings discovery — N15) → next: /review-change 78-spec-by-reference (persist the findings and own the receipt); ladder steps 2–4 wait behind the repair`
 
 ## Next
 
-P1 and P2 are committed: the corpus and its red-first pins, and the section
-contract that accepts both shapes. P3 re-cuts the templates.
+Review step closed at this head with `REVIEW-VERDICT: FAIL` — 7 material, 15
+report-notes (block in `## Review verdict` below). PR
+[#311](https://github.com/gtrabanco/agentic-workflow/pull/311) stays open and
+roadmap row 78 stays `in-progress`; ladder steps 2–4 (Future sweep, status and
+index settle, receipt stage) wait behind the repair cycle.
 
-→ Next: /review-change on the changed HEAD — the mandatory end review of PR #311
-  · findings (REVIEW-FAIL) → /fold-findings repairs them; a fresh /review-change follows the fold
-  · merge gate after REVIEW-PASS → /audit-pr — the merge gate
+→ Next: /review-change 78-spec-by-reference — run the pack at this head and persist the review step's findings (the receipt's sole owner)
+  · rows persisted → /fold-findings — repair the fix-now rows with a green gate, then a delta /review-change
+  · re-triage needed → /unit-lane 78-spec-by-reference --retriage
+
+## Review verdict
+
+```text
+REVIEW-VERDICT: FAIL
+- Findings: 7 material, 15 report-notes
+- Evidence reproduced: yes — every gate re-run at this head (root 814/814,
+  schema 721/721, pi 432/432; budgets, version-parity, phase-lint,
+  promise-coherence exit 0; needs-input 0 open questions)
+- AC integrity: unchanged from triage — `## Acceptance criteria` sha256
+  `d8ea4523b3e6873e`, byte-identical between `15ab46a1` and this head
+```
+
+The review step ran three independent axis reviewers over `git diff main...HEAD`
+(code correctness, scope & acceptance, contract & consistency); every material
+row below was re-verified against the source before it was recorded. Material
+findings block — the unit is not merge-ready. Report-notes are informational
+and block nothing.
+
+### Material
+
+| id | file:line | axis | severity | class | finding |
+|---|---|---|---|---|---|
+| M1 | `docs/features/_TEMPLATE/SPEC.md:123-131` vs `skills/fold-findings/SKILL.md:29,60-67` + `skills/review-change/references/PERSIST_AND_DECIDE.md:14-18` | ledger grammar | high | material | `findings-table@1` publishes 6 columns (no `folded`; `class` = product/plan/source/environment/runtime), but both writers this PR touched still mandate the 7-column legacy schema with `class: fix-now` and flip `folded: no → yes`; `findingsRows` hardcodes `folded: "no"` and folds a 7th cell into `route` (`scripts/unit-route.mjs:177`), so a migrated row can never be closed and the fold queue can re-offer it |
+| M2 | `scripts/workflow-status.mjs:639-654,1270` + `skills/pre-execution-review/references/LEDGERS.md:18-31,177-182` + `docs/features/_TEMPLATE/SPEC.md:146-153` | marks carrier | high | material | AC4's "`REVIEW-RAN`/`GATE-RAN`/`VF` become `## Log` lines" is half true: `GATE-RAN` → `G` ships, but `readReviewMark` still opens only `review-findings.md`, `log-kind@1` has no `REVIEW-RAN`/`VF` token, `LOG_LINE` cannot parse one, and `LEDGERS.md` states both the new prose and the old `review-mark@1` mandate; `review_pending` therefore stays `true` for a migrated unit with a current `## Log` mark, and the sensor test titled "review mark comes from ## Log" (`scripts/workflow-status-sensor.test.mjs:1404`) never asserts the gate — false pass |
+| M3 | `skills/triage-issue/references/FOLD_LEDGER.md:4`, `ISSUE_PROCESS.md:25`, `REVIEW_FINDING_PROCESS.md:6-8` vs `skills/triage-issue/SKILL.md:52` | probe-first contract | high | material | the SKILL says probe the doc first, never both, while its loaded references still order appending to `review-findings.md`; on a migrated unit that write lands in a side file every reader ignores |
+| M4 | `packages/agentic-workflow-schema/package.json:3` + `CHANGELOG.md` | package contract | medium | material | schema `src` gains `UNIT_DOC_SPEC_REF_SECTIONS`, `UNIT_DOC_SECTION_SHAPES`, `resolveUnitDocShape`, `unitDocSectionsFor` but the version stays `4.7.0` with no companion row — violates `AGENTS.md` §Packages (same-PR bump), P6's own task and O9's authority; `publish-schema.yml` skips an already-published version, so the dual-shape selector never reaches npm |
+| M5 | `docs/features/78-spec-by-reference/planning-obligations.md:11-20` | delivery evidence | medium | material | all ten obligation rows are still `planned`, so `node scripts/unit-lineage.mjs --unit 78-spec-by-reference` exits 1 (`LINEAGE BLOCKED — open obligation rows: O1…O10`) and audit-pr's merge gate is red at this head, although the Progress log records P7 verification complete |
+| M6 | `docs/workflow/MIGRATION.md:11-13,38`, `docs/workflow/LANE_FLOW.md:13,362` vs `template/AGENTS.md:209-219` | cross-doc drift | medium | material | the workflow docs still present the single 14-section format (… `Evidence`, `Progress log` …) as *the* unit doc, contradicting the two-shape contract this PR ships in the template agent guide — a new-unit reader is misdirected |
+| M7 | `skills/execute-phase/SKILL.md:81-85` + `skills/verification-contract/SKILL.md:66,125` + `skills/execute-phase/references/FOLDING.md:60,73` + `EXECUTION_CONTRACT.md:20,55-61` + `skills/unit-lane/references/EVIDENCE.md:15` + `skills/unit-lane/SKILL.md:40-41` | executor readiness | high | material | the executor/lane prose named in `## Impact` was never updated for the shape this PR makes the default: `execute-phase` stops when a doc lacks `## Evidence`/`## Progress` (every unit created from the re-cut template), `verification-contract` still names `## Evidence` the execution receipt, and the fold/executor references plus the lane's own turn contract still order Evidence rows and `GATE-RAN` marks — none of those files is in the diff |
+
+### Report-notes (non-blocking)
+
+| id | file:line | note |
+|---|---|---|
+| N1 | `skills/unit-lane/references/PLAN.md` | P6 promised the plan step also states the migration rule (open units at next touch, closed never); the rule exists only in `docs/features/ROADMAP.md:88` and `template/AGENTS.md:220` — 0 matches in `PLAN.md` |
+| N2 | `scripts/phase-lint.mjs:775-782` | the comment claims the re-cut shape is all-or-nothing, but only Log-without-Specs is checked: a Specs-without-Log doc lints PASS while `unit-route --triage` refuses it |
+| N3 | `scripts/unit-route.mjs:567-570` | `recordedPhases` unions `## Log` and `## Progress log` ungated on the resolved shape, so a legacy doc with a stray `## Log` gets a different refusal than the linter gives it |
+| N4 | `scripts/unit-doc-phases.mjs:154,19` + `docs/features/_TEMPLATE/SPEC.md:82` | `IMPLEMENTS_LINK` consumes any non-bullet line mentioning `(Implements: …)`, while the templates write `Relevant files:` without the `- ` marker the parser requires — `relevantFiles` parses `null` and the read set silently lands in `body`/`validator` |
+| N5 | `scripts/unit-doc-phases.mjs:205-206` | `LOG_KINDS` is a second copy of `log-kind@1` with no parity test — the #305 second-copy class its own comment says to avoid |
+| N6 | `docs/features/78-spec-by-reference/decisions.md:57,59` | path-protection rows claim `ledger-ownership`/`ledger-provenance`/`review-loop` suites "gain cases"; those files are unchanged in `git diff main...HEAD` — overstated planning receipts |
+| N7 | `scripts/ledger-provenance.mjs:20` | P5 names it a probe-first reader, but the script is untouched and still accepts only a `review-findings.md` path |
+| N8 | `docs/features/_TEMPLATE/SPEC.md:12`, `docs/fix/_TEMPLATE/SPEC.md` | `phase-lint` on either template exits 1 (`spec-unlinked: S2`); no suite lints the templates, so AC1's validators do not see it |
+| N9 | `docs/features/78-spec-by-reference/planning-obligations.md:12` | O2's required evidence names a `decisions.md` decision row; the acceptance actually lives in the Evidence row and the Progress-log `D4` line, with the machine reason disclosed (a `D4` row without a declared `Q#` makes `needs-input` exit 1) |
+| N10 | `docs/features/78-spec-by-reference/SPEC.md:70,248` vs `scripts/unit-route.mjs` | AC2's "`S#`-linked task bullets" router sub-claim is unexercised: `unit-route` never reads `implements` (only `phase-lint` does); both-shape routing itself is verified |
+| N11 | `skills/workflow-status/references/ENVELOPE_FIELDS.md:107-109` | the `--compact` memo still says "see the unit `review-findings.md`" although `route` now comes from `## Findings` for migrated units |
+| N12 | `template/AGENTS.md:227` | right after declaring two shapes, the guide states "Evidence rows document what was run… the progress log uses dated entries" unscoped, as if universal |
+| N13 | `skills/workflow-status/SKILL.md:71-72` | claims the sensor reads each unit's `TASKS.md` + `progress.md`; lane-era and migrated units have neither (partly pre-existing) |
+| N14 | `AGENTS.md:127-128` | the block this PR edited both licenses `S#` in `## Specs` and keeps the overbroad "never emit `S1`/`S2` … into a SPEC" — the ban should be scoped to phase labels |
+| N15 | `scripts/unit-route.mjs:581` + `packages/agentic-workflow/src/edit/schema.mjs:85` | done-phase recording needs list-item Progress-log entries, but this unit's entries are paragraph lines (7 other live units likewise) while the SDK's `PROGRESS_ENTRY_REGEX` requires no marker — `unit-route 78` reports `next: /execute-phase … P1` although P1–P7 are recorded; pre-existing class, deliberately left alone here (re-cutting now would make the router refuse on the in-progress status and break the review/fold discovery step) |
+
+Ladder position: steps 2–4 (Future sweep, status/index settle, receipt stage)
+are not run — a FAIL verdict stops the close-out at step 1. Repair route:
+`/review-change 78-spec-by-reference` persists these rows (its own pack
+re-evaluates each one first), `/fold-findings` repairs them, and a delta
+re-review re-runs this verdict.
 
 ## References
 
