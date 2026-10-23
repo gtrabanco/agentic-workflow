@@ -68,7 +68,7 @@ function stop(code, message, detail = []) {
 
 /** Run a command in `cwd`, returning trimmed stdout; a non-zero exit aborts the check. */
 function run(bin, args, { cwd = REPO_ROOT, label = `${bin} ${args.join(" ")}` } = {}) {
-  const result = spawnSync(bin, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const result = spawnSync(bin, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 });
   if (result.error || result.status !== 0) {
     const problem = result.error ? result.error.message : (result.stderr || result.stdout || "").trim();
     stop("cannot-run", `${label} failed (exit ${result.status ?? "spawn-error"})`, problem.split("\n").slice(-8));
@@ -178,6 +178,7 @@ function registeredTools(cwd, agentDir) {
     cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
     env: { ...process.env, PI_CODING_AGENT_DIR: agentDir },
   });
   if (result.status !== 0) {
@@ -243,6 +244,7 @@ async function main() {
     cwd: scratch,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
     env: piEnv,
   });
   if (install.status !== 0) {
@@ -254,6 +256,7 @@ async function main() {
     cwd: scratch,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
     env: piEnv,
   });
   if (listed.status !== 0 || !(listed.stdout ?? "").includes(unpacked)) {
