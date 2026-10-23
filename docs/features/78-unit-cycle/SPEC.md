@@ -109,9 +109,37 @@ suite `node --test scripts/*.test.mjs` (the loop joins it), plus
 
 ## Tasks
 
+<!-- tasks:start -->
+P1 — write the offline test suite: `decide()` state-machine cases, prompt
+builder, sensing helpers, runner terminal states (red-first: suite before
+module) (validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0)
+  - Relevant files: scripts/unit-cycle.test.mjs
+P2 — implement `scripts/unit-cycle.mjs`: the coded delivery loop with
+`decide()`, `sense()`, `runCycle()`, `main` CLI (blue-first: make tests green)
+(validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0 · 34 pass)
+  - Relevant files: scripts/unit-cycle.mjs, scripts/unit-cycle.test.mjs
+P3 — verify against the whole root suite: the loop's suite joins without
+disturbing existing gates (validator: `` node --test scripts/*.test.mjs ``
+exits 0)
+  - Relevant files: scripts/*.test.mjs
+P4 — live-run validation: drive unit 67 from a worktree to confirm the full
+cycle (tests → review → fold → review → audit → done) (validator: `` node
+scripts/unit-cycle.mjs 67-serena-provisioning --repo <worktree> `` exits 0)
+  - Relevant files: scripts/unit-cycle.mjs
+P5 — verify the `--dry-run` flag: senses and prints state/next action, spawns
+nothing (validator: `` node scripts/unit-cycle.mjs 67-serena-provisioning
+--dry-run `` before commit — tree dirty · zero acts spawned)
+  - Relevant files: scripts/unit-cycle.mjs
+Pn — verification: push, open PR, confirm the whole delivery cycle is one
+command with all five terminal states (validator: PR #314 opened against main;
+Evidence rows written; roadmap row 78 `in-progress → done · [#314]`)
+  - Relevant files: docs/features/78-unit-cycle/SPEC.md, docs/features/78-unit-cycle/decisions.md, docs/features/ROADMAP.md
+<!-- tasks:end -->
+
 Build executed in-session per the owner's no-ceremony directive (D3): tests
-red-first, then the module, then the live run. Phases are not cut — no
-`execute-phase` hand-offs are planned for this unit.
+red-first, then the module, then the live run. No `execute-phase` hand-offs
+were planned — the phases above are the execution order within the same
+session, not discrete hand-off steps.
 
 ### Planning evidence
 

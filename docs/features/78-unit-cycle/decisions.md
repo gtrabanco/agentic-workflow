@@ -21,6 +21,10 @@ Conversation record for the coded delivery loop. Append-only.
   lane ceremony** (no triage/design/plan phases, no `execute-phase` hand-offs);
   tests-first and the root suite remain the gates.
 
+## Open questions
+
+none — no questions: every claim was settled by provenance or research
+
 ## Path-protection records (P1)
 
 ```text
