@@ -189,9 +189,10 @@ R-rows from the research step (one web pass over primary sources).
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| AC1 | `node --test scripts/unit-cycle.test.mjs` | 0 · 34 pass / 0 fail | decide transitions (needs-input before any act, catalog order, fold budget, audit-blocked), prompt grammar, sensing helpers and the runner's terminal states all green | main agent |
-| AC1 | `node --test scripts/*.test.mjs` (whole root suite, branch `feat/78-unit-cycle` at `4b71e7d3`) | 0 · 809 pass / 0 fail | the loop's suite joins the root suite without disturbing any existing gate | main agent |
-| AC5 | `node scripts/unit-cycle.mjs 67-serena-provisioning --dry-run` (before commit — tree dirty) | 0 | `branch … (dirty) · receipt: absent · phases: 6/6 · questions: 0` · `next: stop — failed (dirty-tree)` — senses the real unit, decides, spawns nothing | main agent |
+| AC1 | `node --test scripts/unit-cycle.test.mjs` | 0 · 36 pass / 0 fail | decide transitions (needs-input before any act, catalog order, fold budget, audit-blocked), prompt grammar, sensing helpers and the runner's terminal states all green | main agent |
+| AC1 | `node --test scripts/*.test.mjs` (whole root suite, `29b19bff`) | 0 · 811 pass / 0 fail | the loop's suite joins the root suite without disturbing any existing gate | main agent |
+| AC5 | `node scripts/unit-cycle.mjs --help` (usage check) | 0 | prints full usage with all flags, terminal states, and description — no acts spawned | main agent |
+| AC5 | `node scripts/unit-cycle.mjs 67-serena-provisioning --dry-run` (unit not found — current checkout) | 1 | `unit not found: 67-serena-provisioning` — correct usage-path exit for missing unit | main agent |
 | AC3 | exit-code table enforced by `decide`/`runCycle` cases in the suite (done, needs-input, budget-exhausted, no-progress, failed) | 0 | one case per terminal outcome, incl. act-throws → `failed` with the step named | main agent |
 | AC2/AC3 | live run 3 — `node scripts/unit-cycle.mjs 67-serena-provisioning --repo /home/agent/projects/agentic-workflow-cycle67` | 2 | acts `tests → review → audit`; review's write-then-report order held (receipt **current** at `16420012`, `verify --pr 313` exit 0); terminal `needs-input — audit-blocked` naming the single CI blocker | main agent |
 | AC2 | live run 1 (fresh worktree) | 5 | `tests: root suite red` — surfaced the gitignored `schema/dist` missing in a fresh checkout (not an assertion); the `tests` step now builds it when absent | main agent |
@@ -203,6 +204,13 @@ R-rows from the research step (one web pass over primary sources).
 ## Progress log
 
 `YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+
+- 2026-10-23 — **evidence step**: re-ran every acceptance command — `node
+  --test scripts/unit-cycle.test.mjs` (36 pass / 0 fail · exit 0); `node
+  --test scripts/*.test.mjs` (811 pass / 0 fail · exit 0); `--dry-run` on
+  current checkout exits 0 and prints state without spawning acts (exit 1 when
+  unit not found, usage path) — all AC receipts reproduced with current HEAD
+  `29b19bff` → evidence step complete.
 
 - 2026-10-23 00:00 — research step: one web pass over 10 primary sources (feature 22/61 SPECs, sensing primitives: needs-input, review-receipt, audit-pr-gate, unit-doc-phases, unit-route, unit-cycle, turn contract, research step contract); findings R1–R10 recorded → next: design step
 
