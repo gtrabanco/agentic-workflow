@@ -78,7 +78,7 @@ nested `Relevant files: <path, path…>` line naming that task's read set:
 absent from the list is never out of scope for the executor.
 
 - P1 — <task> (validator: `<command>` exits 0)
-  (Implements: S1)
+  (Implements: S1, S2)
   Relevant files: <path>
 
 The link grammar (`task-spec-link@1`): every task bullet names the requirements
@@ -112,8 +112,11 @@ and this section names it — never both. Before the unit ships, every row is
 ## Findings
 
 OPEN rows only: a row a review persisted as fix-now work and no fold has closed
-yet. A folded row leaves this table and becomes a `## Log` line. Rows are
-appended by `review-change` and `triage-issue`; no other writer touches them.
+yet. A folded row leaves this table and becomes a `## Log` line. Rows are appended
+by `review-change` and `triage-issue` — the writers the `review-findings` truth
+class of the ownership map (`skills/pre-execution-review/references/LEDGERS.md`)
+declares; this section is that ledger's collapsed carrier, never a second ledger,
+and no other writer touches it.
 
 The carrier grammar (`findings-table@1`): the OPEN rows only, appended by
 `review-change` and `triage-issue`. A folded row leaves the table and becomes a
@@ -127,7 +130,7 @@ target | S<n> · <file>:<line> | the requirement or the location the finding nam
 axis | <axis> | the review axis that found it
 severity | high \| med \| low | the ledger severity (the canonical scale)
 class | product \| plan \| source \| environment \| runtime | the owner that repairs it
-route | <route> | where the row goes — the router's own route vocabulary
+route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`scripts/unit-route.mjs`), and `class` names the owner that repairs it
 ```
 
 | id | S# / file:line | axis | severity | class | route |
@@ -138,7 +141,10 @@ route | <route> | where the row goes — the router's own route vocabulary
 Append-only. `L1` is the request verbatim; every later line carries one kind
 token from the closed set in `log-kind@1` below — a request or correction
 (a verbatim quote), an evidence run, a gate run, a folded finding, an owner
-decision, a phase's progress. A correction never edits an earlier line: it
+decision, a phase's progress, a review run, a finding's verification. The
+review mark and the finding signatures that used to be rows in
+`review-findings.md` are `R` and `V` lines here (#308 §Scope 3), so a migrated
+unit's whole receipt history is one section. A correction never edits an earlier line: it
 appends. Evidence and gate lines carry the command and its exit code, so a
 reviewer re-runs a line instead of trusting a table.
 
@@ -151,6 +157,8 @@ G | G<n> | a gate run — the command and its exit code
 F | F<n> | a folded finding — the fold commit and what was verified
 D | D<n> | an owner decision — the authority and what was decided
 P | P<n> | a phase's progress — what was done and the commit
+R | R<n> | a review run — `HEAD <sha>`, the verdict, the cycle and the gate exit
+V | V<n> | a finding's verification — the row it signs, the recheck and its result
 ```
 
 - **L1** — <YYYY-MM-DD>, the request, verbatim:

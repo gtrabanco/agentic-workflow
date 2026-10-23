@@ -203,7 +203,7 @@ export function parseUnitDocPhases(text) {
  * definition, never a second copy in code (`scripts/phase-lint.test.mjs` pins the
  * template to this exact list).
  */
-export const LOG_KINDS = Object.freeze(["L", "E", "G", "F", "D", "P"]);
+export const LOG_KINDS = Object.freeze(["L", "E", "G", "F", "D", "P", "R", "V"]);
 
 /** A requirement heading in `## Specs`: `**S1 — title.**` / `**S2a — title.**`. */
 const SPEC_REQUIREMENT = /^\*\*(S\d+[a-z]?)\s*—\s*(.*)$/;
