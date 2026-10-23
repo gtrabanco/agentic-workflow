@@ -3228,3 +3228,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 78 (unit-cycle) research step plus unit 67 (serena-provisioning) full implementation and audit — both units delivered
 - **Decisions:** 1) Unit 78 research: primary sources are repo-internal (feature 22/61 specs, sensing primitives, turn contract) — no external web needed; 2) Unit 67 Serena provisioning: 43 commits across P1–P6, evidence, review, fold cycles, audit-pr #313 merge-ready; 3) Pin-watch script added for CI pin drift detection
 - **Next:** Merge PR #314 (unit 78, merge-ready) and PR #313 (unit 67, merge-ready); then bump schema/typebox pins in a fix(deps) PR to close the pre-existing dependency-pin-gate failure
+## 2026-10-23T21:46:54Z — feat/78-unit-cycle — manual
+- **Commits:** 69 (`81fc1e7d…69a7d78c`)
+- **Files:** 45 files
+- **Summary:** P3–P6 of feature 67 (pin-watch, init-workspace Serena provisioning, Serena readiness nudge) — closed the cut
+- **Decisions:** P5's readiness gate must compare state kinds against the latch, not merely check for a record, or a missing config is announced every session; P5 AC1's fourth leg (README documenting Serena's ship + pi off-switch) was closed alongside the code
+- **Next:** review-change on the current HEAD, then audit-pr / fold as the cycle demands
