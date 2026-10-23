@@ -116,7 +116,7 @@ module) (validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0)
   - Relevant files: scripts/unit-cycle.test.mjs
 - P2 — implement `scripts/unit-cycle.mjs`: the coded delivery loop with
 `decide()`, `sense()`, `runCycle()`, `main` CLI (blue-first: make tests green)
-(validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0 · 34 pass)
+(validator: `` node --test scripts/unit-cycle.test.mjs `` exits 0 · 36 pass)
   - Relevant files: scripts/unit-cycle.mjs, scripts/unit-cycle.test.mjs
 - P3 — verify against the whole root suite: the loop's suite joins without
 disturbing existing gates (validator: `` node --test scripts/*.test.mjs ``
