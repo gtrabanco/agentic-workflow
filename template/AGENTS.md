@@ -40,6 +40,7 @@ your domains.
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
+| Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
 | Generated developer docs | *(deprecated — generate-docs skill removed)* |
@@ -372,6 +373,18 @@ and Progress log sections plus the session log already are the persistent
 memory. Compact only mid-step, for unpersisted state you can't afford to
 lose, and prefer committing WIP + updating the unit's Progress log instead.
 Details: `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost*.
+
+**The two memory surfaces are a recorded split, not a duplication.**
+`docs/LOGS.md` (this section) is the journal that **travels with git** — written
+for people, read by anyone who clones the repo. Engram holds the **local,
+unit-keyed recall**: the lane saves each unit's goal, numbered acceptance
+criteria, Evidence outcomes and discoveries under `unit/<NN-slug>/doc` at its
+boundaries, so a fresh session recalls them without re-reading the docs.
+Neither mirrors the other. Engram is required substrate but never a hard
+dependency: the probe verdict, or a missed save, is recorded in the unit doc and
+work continues. Two ceilings to respect — its recall is **keyword-bound** (a
+miss is not evidence that nothing was saved), and the committed docs stay
+authoritative over any memory record.
 
 ---
 
