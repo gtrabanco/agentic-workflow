@@ -732,6 +732,16 @@ or the unit's own record (N1 is the one omission, routed above).
   init-workspace 4.1.0) and both READMEs verified current; no template or
   documentation-map change is demanded (no new artifacts) → evidence: this
   entry — next: release step.
+- 2026-10-23 15:44 — release step: Future sweep = **none** (the section says
+  `none` — nothing to resolve); obligation rows **O1–O13 → `verified`** (every
+  validator re-ran this session, promise-coherence `verdict PASS` at the head);
+  branch pushed, **PR [#313](https://github.com/gtrabanco/agentic-workflow/pull/313)**
+  opened against `main` with the Evidence section as its verification record
+  (`Closes #219`); roadmap row 67 `planned → done · [#313]` — the
+  `planned → in-progress` transition that `execute-phase` never performed is
+  settled here in one step, recorded rather than replayed; References carries
+  Closes/PR/Branch/Commit → evidence: PR #313 — next: receipt stage
+  (`bun scripts/review-receipt.mjs verify --pr 313`).
 
 ## Next
 
@@ -743,6 +753,11 @@ validators all reproduce) and the receipt stage.
 
 ## References
 
+- Closes [#219](https://github.com/gtrabanco/agentic-workflow/issues/219)
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/313
+- Branch: `feat/219-serena-mcp-provisioning`
+- Commit: `61bb65b0` (head when the PR opened; the release commit follows on
+  the same branch)
 - Issue [#219](https://github.com/gtrabanco/agentic-workflow/issues/219) — the
   request, its 2026-09-24 scope adjustment (refs #260).
 - `docs/features/ROADMAP.md:77` — row 67 `serena-provisioning` (M).
