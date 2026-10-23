@@ -4,8 +4,12 @@ Use this route only for `/triage-issue --prioritize-now <unit> F<k> [F<j> …]`
 after `/fold-findings` leaves rows unresolved.
 
 1. Read the target unit's SPEC, frozen acceptance, current PR HEAD, the full
-   `review-findings.md`, and the evidence for every named row. Confirm that
-   each row is still `folded: no`; never triage a row already folded.
+   findings carrier — the unit doc's `## Findings` for a migrated unit (#308),
+   `review-findings.md` for a legacy one, probed in that order and never both —
+   and the evidence for every named row. Confirm the row is still open in its own
+   carrier: `folded: no` in a legacy ledger, still present in `## Findings` for a
+   migrated unit (a folded row has left that table for a `## Log` `F` line); never
+   triage a row already folded.
 2. Reproduce or verify every finding against the current code. Keep the
    finding's original ID, severity, class, and route in the report. Do not
    turn a review finding into a generic issue just to make it disappear.

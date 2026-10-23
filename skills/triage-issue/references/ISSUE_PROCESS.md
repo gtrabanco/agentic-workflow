@@ -22,8 +22,9 @@
      issue on that unit's own branch, never as a new standalone unit. Pick
      exactly one of these sub-routes:
      - *repairable as-is* → **fold into the unit's** current/next phase, or
-       append a provenance-marked row to the unit's `review-findings.md` (see
-       *Ledger-append mechanism* below).
+       append a provenance-marked row to the unit's findings carrier — `SPEC.md
+       ## Findings` for a migrated unit (#308), `review-findings.md` for a legacy
+       one, never both (see *Ledger-append mechanism* below).
      - *changes the unit's shape* → **incremental replan** on the same unit:
        name the exact command — `/unit-lane <slug>` (the lane re-reads the
        SPEC, re-triages, and re-runs its `design`/`plan` catalog steps) — or a
