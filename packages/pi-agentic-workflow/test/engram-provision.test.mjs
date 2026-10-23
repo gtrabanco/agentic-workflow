@@ -11,12 +11,16 @@
  *
  * Nothing here touches the network, a real PATH or a Pi session: the binary
  * lookup and the registrar are injected, which is what makes every branch
- * reachable.
+ * reachable. The suite imports the compiled `dist/` like every other pi-package
+ * test: `src/extension/engram.js` is not a file that exists (the source is
+ * `.ts`), so bun resolved it through its own TS handling while `node --test` —
+ * the package's declared `test:node` fallback — could not. Setup path only: no
+ * assertion was touched, and both runners now execute the same suite.
  */
 
 import { describe, it } from "node:test";
 import { strictEqual, deepStrictEqual, ok } from "node:assert";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -24,10 +28,12 @@ import {
   ENGRAM_ARGS,
   ENGRAM_INSTALL_ROUTE,
   ENGRAM_SERVER_NAME,
+  declaredMcpServerPaths,
   provisionEngram,
   readDeclaredServerNames,
+  readDeclaredServerNamesFrom,
   resolveEngramBinary,
-} from "../src/extension/engram.js";
+} from "../dist/extension/engram.js";
 
 const BINARY = "/home/agent/.local/bin/engram";
 
@@ -153,5 +159,80 @@ describe("engram provisioning — the discarded install route never ships (O11)"
     const source = readFileSync(resolve(here, "../src/extension/engram.ts"), "utf8");
     ok(source.includes(ENGRAM_INSTALL_ROUTE));
     ok(!/engram\s+setup\s+pi/.test(source), "the stale-version setup subcommand must not be printed as the route");
+  });
+});
+
+describe("engram provisioning — the declaration check reads every file Pi reads (F6)", () => {
+  it("names both scopes, and the project scope only while the project is trusted", () => {
+    deepStrictEqual(
+      declaredMcpServerPaths({ agentDir: "/fixture/agent", cwd: "/fixture/repo", projectTrusted: true }),
+      [join("/fixture/agent", "mcp.json"), join("/fixture/repo", ".pi", "mcp.json")],
+    );
+    deepStrictEqual(declaredMcpServerPaths({ agentDir: "/fixture/agent", cwd: "/fixture/repo", projectTrusted: false }), [
+      join("/fixture/agent", "mcp.json"),
+    ]);
+  });
+
+  it("a project-declared engram is already declared — the guard that read only the user file missed it", () => {
+    const dir = mkdtempSync(join(tmpdir(), "engram-scopes-"));
+    try {
+      const agentDir = join(dir, "agent");
+      const cwd = join(dir, "repo");
+      mkdirSync(join(cwd, ".pi"), { recursive: true });
+      mkdirSync(agentDir, { recursive: true });
+      writeFileSync(join(agentDir, "mcp.json"), JSON.stringify({ mcpServers: { jira: { command: "jira" } } }));
+      writeFileSync(join(cwd, ".pi", "mcp.json"), JSON.stringify({ mcpServers: { engram: { command: "/somewhere/engram" } } }));
+
+      const paths = declaredMcpServerPaths({ agentDir, cwd, projectTrusted: true });
+      const declared = readDeclaredServerNamesFrom(paths);
+      ok(declared.includes(ENGRAM_SERVER_NAME), `the project file's declaration is visible: ${declared.join(",")}`);
+
+      const { calls, register } = recorder();
+      const report = provisionEngram({ consented: true, binaryPath: BINARY, declaredNames: declared, register });
+      strictEqual(report.status, "already-declared");
+      strictEqual(calls.length, 0, "nothing is registered over a declaration Pi would honour instead");
+
+      // Untrusted project: the project file is not read at all, exactly as the
+      // loader treats it — and the user file alone still yields no shadowing.
+      const untrusted = readDeclaredServerNamesFrom(
+        declaredMcpServerPaths({ agentDir, cwd, projectTrusted: false }),
+      );
+      deepStrictEqual(untrusted, ["jira"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("engram provisioning — an unreadable config is not a refusal the operator made (F5)", () => {
+  it("reports config-invalid instead of reading a broken file as no-consent", () => {
+    // `loadConfig` fails closed: a present-but-invalid file hands back the
+    // shipped default, whose `memory.engram` is false. Falling through to the
+    // consent branch told an opted-in operator to opt in — and `dispatch.ts`
+    // refuses the same file rather than defaulting it.
+    const { calls, register } = recorder();
+    const report = provisionEngram({
+      consented: false,
+      configInvalid: true,
+      binaryPath: BINARY,
+      declaredNames: [],
+      register,
+    });
+    strictEqual(report.status, "config-invalid");
+    strictEqual(calls.length, 0, "consent that cannot be read is never treated as granted…");
+    ok(/invalid/u.test(report.message), report.message);
+    ok(/nothing was written/u.test(report.message), "…and the refusal says nothing was written");
+    ok(!/set "memory"/u.test(report.message), "it does not tell an opted-in operator to opt in");
+  });
+
+  it("a broken config outranks consent, the binary and the host", () => {
+    const report = provisionEngram({
+      consented: true,
+      configInvalid: true,
+      binaryPath: null,
+      declaredNames: [ENGRAM_SERVER_NAME],
+      register: null,
+    });
+    strictEqual(report.status, "config-invalid");
   });
 });

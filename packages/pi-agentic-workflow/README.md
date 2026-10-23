@@ -226,15 +226,17 @@ session, and it does so **only when you say so**:
 ```
 
 Registration goes through Pi's own `registerMcpServer`, which is
-**session-scoped and not persisted** — Pi re-registers on every load, so nothing
-outlives the session and nothing is written to your `mcp.json` behind your back.
-Four rules decide the outcome, and the package reports it verbatim:
+**session-scoped and not persisted** — the package registers on every session
+start, so nothing outlives the session and nothing is written to your `mcp.json`
+behind your back. Five rules decide the outcome, and the package reports it
+verbatim:
 
 | Situation | What happens |
 |---|---|
-| no `memory.engram` opt-in | nothing is registered and nothing is said (the opt-out stays quiet) |
+| no `memory.engram` opt-in (the shipped default is `false`) | nothing is registered and nothing is said (the opt-out stays quiet) |
+| no readable opt-in — the file exists but does not validate | nothing is registered; you are told the config is invalid, because unreadable consent is never read as a refusal you made |
 | no `engram` binary on `PATH` | nothing is registered; you are told the install route |
-| you already declared `engram` in `mcp.json` | nothing is registered — your declaration takes precedence |
+| you already declared `engram` in a `mcp.json` Pi reads — your user file, or `<cwd>/.pi/mcp.json` in a trusted project | nothing is registered — your declaration takes precedence |
 | binary present, opted in | the server is registered and the notification states exactly what was written |
 
 Install Engram with:

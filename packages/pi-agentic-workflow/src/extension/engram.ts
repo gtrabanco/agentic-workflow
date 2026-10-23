@@ -6,13 +6,14 @@
  * machine-global `mcp.json` behind the operator's back:
  *
  *  - `pi.registerMcpServer(name, config)` is session-scoped and NOT persisted
- *    (Pi's contract), so the package registers on every load and nothing
+ *    (Pi's contract), so the package registers on every session start and nothing
  *    outlives the session unless the operator asks for it.
  *  - Registration happens only when the `engram` binary actually resolves — a
  *    registered-but-broken server would surface as an extension error on every
  *    session, which is a worse default than not registering.
- *  - A server the operator already declared in `mcp.json` wins (Pi gives it
- *    precedence), so the package reports that and does not shadow it.
+ *  - A server the operator already declared in an `mcp.json` Pi reads — the
+ *    user file or, for a trusted project, `<cwd>/.pi/mcp.json` — wins (Pi gives
+ *    it precedence), so the package reports that and does not shadow it.
  *  - The operator's `memory.engram` config key is the consent switch: absent or
  *    `false` registers nothing. This module never provisions without it.
  *
@@ -33,6 +34,9 @@
 import { accessSync, constants, readFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
 
+/** The directory a project keeps its own agent config in — Pi's `.pi/`. */
+const PROJECT_DIR = ".pi";
+
 /** The name the server is registered under, and what `mcp.json` would declare. */
 export const ENGRAM_SERVER_NAME = "engram";
 
@@ -45,6 +49,7 @@ export const ENGRAM_INSTALL_ROUTE = "pi install npm:gentle-engram@latest";
 export type EngramStatus =
   | "registered"
   | "not-consented"
+  | "config-invalid"
   | "binary-missing"
   | "already-declared"
   | "unsupported-host";
@@ -57,9 +62,17 @@ export interface EngramServerConfig {
 export interface EngramProvisionInput {
   /** The operator's consent: `config.memory.engram`. Absent means no. */
   consented: boolean;
+  /** True when the package's config file exists but does not parse or validate.
+   *  Consent is then UNKNOWN, not refused: `loadConfig` fails closed to the
+   *  shipped default, so reading `consented` off that default would tell an
+   *  opted-in operator to opt in — `config/load.ts` calls a present-but-invalid
+   *  file a problem, never a silent default, and `dispatch.ts` refuses on the
+   *  same flag. Checked before consent. */
+  configInvalid?: boolean;
   /** Absolute path of the resolved `engram` binary, or null when not found. */
   binaryPath: string | null;
-  /** Server names the operator already declared (a `mcp.json` name wins). */
+  /** Server names the operator already declared (a `mcp.json` name wins), read
+   *  from every scope Pi itself reads — see `declaredMcpServerPaths`. */
   declaredNames: readonly string[];
   /** Pi's registrar, injected so this module never imports Pi. `null` when the
    *  host's ExtensionAPI predates `registerMcpServer` — the package's peer floor
@@ -98,6 +111,42 @@ export function readDeclaredServerNames(path: string): string[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * The union of the names declared across the `mcp.json` files Pi reads. One
+ * file's declaration is not evidence about the other's.
+ */
+export function readDeclaredServerNamesFrom(paths: readonly string[]): string[] {
+  const names = new Set<string>();
+  for (const path of paths) {
+    for (const name of readDeclaredServerNames(path)) names.add(name);
+  }
+  return [...names];
+}
+
+/**
+ * The `mcp.json` files Pi reads for one session: the user-level file, and — for
+ * a trusted project only — `<cwd>/.pi/mcp.json`, whose entry replaces a
+ * same-named user entry (Pi's `mcp.md`: project configuration is read only after
+ * trust is granted, and "a project entry replaces a user-level entry with the
+ * same name"). The anti-shadow guard has to consult the same surface the host
+ * applies: reading only the user file let a project declaration slip past it, so
+ * the package registered anyway and then reported precedence over a file it had
+ * never opened.
+ */
+export function declaredMcpServerPaths({
+  agentDir,
+  cwd,
+  projectTrusted,
+}: {
+  agentDir: string;
+  cwd: string;
+  projectTrusted: boolean;
+}): string[] {
+  const paths = [join(agentDir, "mcp.json")];
+  if (projectTrusted) paths.push(join(cwd, PROJECT_DIR, "mcp.json"));
+  return paths;
 }
 
 /**
@@ -143,13 +192,24 @@ function isExecutable(path: string): boolean {
 
 /**
  * Decide and perform the registration, in the order that makes the outcome
- * truthful: consent first (never provision unasked), then the binary (never
+ * truthful: a config that cannot be read first (its consent is unknown, never
+ * refused), then consent (never provision unasked), then the binary (never
  * register a server that cannot start), then the operator's own declaration
  * (never shadow it). Returns the report; it never throws and never mutates
  * anything beyond the injected `register` call.
  */
 export function provisionEngram(input: EngramProvisionInput): EngramReport {
-  const { consented, binaryPath, declaredNames, register } = input;
+  const { consented, configInvalid, binaryPath, declaredNames, register } = input;
+
+  if (configInvalid === true) {
+    return {
+      status: "config-invalid",
+      message:
+        `pi-agentic-workflow: Engram not registered — the package's config file is invalid, so ` +
+        `its consent could not be read and nothing was written (fix the reported problems and ` +
+        `the next session reads the switch again).`,
+    };
+  }
 
   if (!consented) {
     return {
@@ -183,7 +243,7 @@ export function provisionEngram(input: EngramProvisionInput): EngramReport {
       status: "already-declared",
       message:
         `pi-agentic-workflow: Engram not registered — "${ENGRAM_SERVER_NAME}" is already ` +
-        `declared in mcp.json, which takes precedence (nothing was written).`,
+        `declared in an mcp.json Pi reads, which takes precedence (nothing was written).`,
     };
   }
 
