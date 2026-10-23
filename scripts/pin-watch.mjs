@@ -202,7 +202,7 @@ function openIssues(repo) {
   const result = spawnSync(
     "gh",
     ["issue", "list", "--repo", repo, "--state", "open", "--limit", "200", "--json", "number,title"],
-    { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 },
   );
   if (result.error || result.status !== 0) {
     throw new Error((result.stderr || result.error?.message || "gh issue list failed").trim().split("\n")[0]);
@@ -220,6 +220,7 @@ function createIssue(repo, issue) {
     cwd: REPO_ROOT,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
   });
   if (result.error || result.status !== 0) {
     throw new Error((result.stderr || result.error?.message || "gh issue create failed").trim().split("\n")[0]);
