@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 2.4.0
+version: 2.4.1
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -37,8 +37,9 @@ done:
   if new, with all mandatory sections filled or n/a)
 ✓ Guard ran (bun scripts/diff-guard.mjs --base <ref>) after each implement step;
   on BREACH: re-triage or record exception, never shrink the diff
-✓ Unit doc's Evidence rows updated (command → exit/digest → output → verified-by)
-  and Progress log updated (dated entry) before every commit
+✓ The unit's evidence carrier updated (Evidence rows, or `## Log` `E` lines for a
+  re-cut unit — command → exit/digest → output → verified-by) and its progress
+  recorded (dated Progress entry, or a `## Log` `P` line) before every commit
 ✓ → Next: block printed as the absolute last output
 ```
 
