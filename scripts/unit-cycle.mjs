@@ -44,9 +44,12 @@ import {
   sectionBody,
   recordedPhases,
 } from "./unit-route.mjs";
+import { AUDIT_MARKER_RE } from "./audit-pr-gate.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
+/** The checkout the loop drives (`--repo`); defaults to this script's repo. */
+let TARGET = REPO;
 
 export const OUTCOME = Object.freeze({
   DONE: "done",
@@ -248,14 +251,14 @@ export function renderPrompt(action, state) {
 
 /* ----------------------------------------------------------------- sense */
 
-function sh(cmd, args, cwd = REPO) {
+function sh(cmd, args, cwd = TARGET) {
   const r = spawnSync(cmd, args, { encoding: "utf8", cwd });
   return { status: r.status ?? 1, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
 }
 
 const SCOPE_MAP = { XS: "xs", S: "small", M: "medium", L: "large", XL: "xlarge" };
 
-function roadmapRow(nn, cwd = REPO) {
+function roadmapRow(nn, cwd = TARGET) {
   const text = fs.readFileSync(path.join(cwd, "docs/features/ROADMAP.md"), "utf8");
   const line = text.split("\n").find((row) => row.startsWith(`| ${nn} |`));
   if (!line) return null;
@@ -279,7 +282,7 @@ export function sense(token) {
     throw error;
   }
 
-  const specPath = path.join(REPO, unitDir, "SPEC.md");
+  const specPath = path.join(TARGET, unitDir, "SPEC.md");
   const docExists = fs.existsSync(specPath);
   const doc = docExists ? fs.readFileSync(specPath, "utf8") : "";
   const progress = sectionBody(doc, "Progress log") ?? "";
@@ -288,7 +291,7 @@ export function sense(token) {
   const ac = sectionBody(doc, "Acceptance criteria") ?? "";
   const phases = docExists ? parseUnitDocPhases(doc).phases.map((phase) => phase.number) : [];
 
-  const ni = needsInputCompute(path.join(REPO, unitDir));
+  const ni = needsInputCompute(path.join(TARGET, unitDir));
   const pendingInput = ni.ok ? ni.open_questions.length : 0;
   const ledgerError = ni.ok || ni.reason === "missing-unit-doc" ? null : ni.reason;
 
@@ -321,7 +324,7 @@ export function sense(token) {
     receipt = r.status === 0 ? "current" : r.status === 4 ? "stale" : "absent";
   }
 
-  const findingsPath = path.join(REPO, unitDir, "review-findings.md");
+  const findingsPath = path.join(TARGET, unitDir, "review-findings.md");
   const openFindings = fs.existsSync(findingsPath)
     ? openRows(fs.readFileSync(findingsPath, "utf8"))
         .filter((finding) => routeOfRow(finding) === "fold")
@@ -331,17 +334,20 @@ export function sense(token) {
   let mergeReady = null;
   let auditGateError = null;
   if (prNumber && receipt === "current") {
-    const r = sh(process.execPath, [
-      "scripts/audit-pr-gate.mjs",
-      "evaluate",
-      "--pr",
-      String(prNumber),
-      "--head",
-      head,
-    ]);
-    if (r.status === 0) mergeReady = true;
-    else if (r.status === 2) mergeReady = false;
-    else auditGateError = `audit-pr-gate exited ${r.status}: ${r.stderr.trim().split("\n")[0] || "unreadable report"}`;
+    // The audit pass is the `audit-pr:merge-ready` marker at the settled head.
+    // (A bare `evaluate` without the skill's gate set fails closed by design,
+    // so the marker — emitted only after every gate passed — is the signal.)
+    const r = sh("gh", ["pr", "view", String(prNumber), "--json", "comments"]);
+    if (r.status !== 0) {
+      auditGateError = `gh pr view exited ${r.status}: ${r.stderr.trim().split("\n")[0] || "unreadable comments"}`;
+    } else {
+      try {
+        const comments = JSON.parse(r.stdout).comments ?? [];
+        mergeReady = comments.some((comment) => AUDIT_MARKER_RE.exec(comment.body ?? "")?.[1] === head);
+      } catch (error) {
+        auditGateError = `unreadable comments payload: ${error?.message ?? error}`;
+      }
+    }
   }
 
   return {
@@ -376,11 +382,11 @@ export function sense(token) {
 
 function runRootSuite() {
   const files = fs
-    .readdirSync(path.join(REPO, "scripts"))
+    .readdirSync(path.join(TARGET, "scripts"))
     .filter((name) => name.endsWith(".test.mjs"))
     .sort()
     .map((name) => path.join("scripts", name));
-  const r = spawnSync(process.execPath, ["--test", ...files], { cwd: REPO, encoding: "utf8" });
+  const r = spawnSync(process.execPath, ["--test", ...files], { cwd: TARGET, encoding: "utf8" });
   if ((r.status ?? 1) !== 0) {
     const tail = `${r.stdout ?? ""}${r.stderr ?? ""}`.split("\n").slice(-12).join("\n");
     throw new Error(`root suite red (exit ${r.status}):\n${tail}`);
@@ -398,11 +404,19 @@ function makeAct() {
     }
     const { prompt } = renderPrompt(action, state);
     const r = spawnSync("pi", ["-p", "--name", `unit-cycle:${state.unit}:${label}`, prompt], {
-      cwd: REPO,
+      cwd: TARGET,
       stdio: "inherit",
     });
     if ((r.status ?? 1) !== 0) {
       throw new Error(`pi session exited ${r.status ?? `on signal ${r.signal}`} for ${label}`);
+    }
+    // The receipt chain is forge-bound: a step that commits must land on the
+    // remote or `review-receipt verify --pr` can never see a current head.
+    if (COMMITS.has(action.type === "phase" ? "phase" : action.step)) {
+      const pushed = spawnSync("git", ["push"], { cwd: TARGET, encoding: "utf8" });
+      if ((pushed.status ?? 1) !== 0) {
+        throw new Error(`push after ${label} failed: ${(pushed.stderr ?? "").trim().split("\n")[0] || `exit ${pushed.status}`}`);
+      }
     }
   };
 }
@@ -472,7 +486,7 @@ const EXIT_CODES = {
   [OUTCOME.FAILED]: 5,
 };
 
-const USAGE = `usage: node scripts/unit-cycle.mjs <NN|slug|path> [--max-cycles N] [--max-actions N] [--dry-run] [--json]
+const USAGE = `usage: node scripts/unit-cycle.mjs <NN|slug|path> [--repo <checkout>] [--max-cycles N] [--max-actions N] [--dry-run] [--json]
 
 Runs a unit's whole delivery cycle as code: design → plan → phases → tests →
 evidence → docs → release → review receipt → fold ≤ X → audit-pr, stopping on
@@ -494,6 +508,14 @@ function main(argv) {
     }
     if (arg === "--dry-run") dryRun = true;
     else if (arg === "--json") json = true;
+    else if (arg === "--repo") {
+      const value = args[++i];
+      if (!value || !fs.existsSync(path.join(path.resolve(value), "scripts"))) {
+        process.stderr.write(`--repo needs a checkout that contains scripts/\n`);
+        return 1;
+      }
+      TARGET = path.resolve(value);
+    }
     else if (arg === "--max-cycles" || arg === "--max-actions") {
       const value = Number(args[++i]);
       if (!Number.isInteger(value) || value < 0) {
@@ -555,7 +577,7 @@ function main(argv) {
       }
       if (result.outcome === OUTCOME.NEEDS_INPUT) {
         const block = spawnSync(process.execPath, ["scripts/needs-input.mjs", unitDir], {
-          cwd: REPO,
+          cwd: TARGET,
           stdio: "inherit",
         });
         if ((block.status ?? 1) !== 0) process.stderr.write(`needs-input exited ${block.status}\n`);

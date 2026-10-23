@@ -133,7 +133,11 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|
-| AC1 | (pending first red run) | — | — | — |
+| AC1 | `node --test scripts/unit-cycle.test.mjs` | 0 · 34 pass / 0 fail | decide transitions (needs-input before any act, catalog order, fold budget, audit-blocked), prompt grammar, sensing helpers and the runner's terminal states all green | main agent |
+| AC1 | `node --test scripts/*.test.mjs` (whole root suite, branch `feat/78-unit-cycle` at `4b71e7d3`) | 0 · 809 pass / 0 fail | the loop's suite joins the root suite without disturbing any existing gate | main agent |
+| AC5 | `node scripts/unit-cycle.mjs 67-serena-provisioning --dry-run` (before commit — tree dirty) | 0 | `branch … (dirty) · receipt: absent · phases: 6/6 · questions: 0` · `next: stop — failed (dirty-tree)` — senses the real unit, decides, spawns nothing | main agent |
+| AC3 | exit-code table enforced by `decide`/`runCycle` cases in the suite (done, needs-input, budget-exhausted, no-progress, failed) | 0 | one case per terminal outcome, incl. act-throws → `failed` with the step named | main agent |
+| AC2/AC4 | live full-cycle run against unit 67 (pending this session) | — | — | — |
 
 ## Progress log
 
@@ -144,13 +148,26 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   suite authored against the not-yet-written module → next: implement
   `scripts/unit-cycle.mjs` until the suite is green.
 
+- 2026-10-23 16:29 — release-lite: red-first suite authored before the
+  module, implementation until green (34/34), whole root suite **809/0** on
+  this branch, tree clean; branch pushed and **PR
+  [#314](https://github.com/gtrabanco/agentic-workflow/pull/314)** opened
+  against `main`; Evidence rows written, roadmap row 78 `in-progress → done ·
+  [#314]` → evidence: rows above — next: `--repo` flag, then the live
+  full-cycle run against unit 67 from a worktree.
+
 ## Next
 
-`node --test scripts/unit-cycle.test.mjs` → green, then the root suite and the
-live `--dry-run` against unit 67.
+Live proof: `node scripts/unit-cycle.mjs 67-serena-provisioning --repo
+<67-worktree>` — the loop's own first full cycle (tests → review receipt →
+audit) on unit 67/PR #313, then `/review-change 78-unit-cycle` for this PR's
+receipt.
 
 ## References
 
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/314
+- Branch: `feat/78-unit-cycle`
+- Commit: `4b71e7d3` (release bookkeeping follows on the same branch)
 - Owner directives, session 2026-10-23 (loop-as-code; root script; both units
   in-session without lane ceremony).
 - `docs/features/22-bounded-delivery-loops/SPEC.md` — the original machine-loop
