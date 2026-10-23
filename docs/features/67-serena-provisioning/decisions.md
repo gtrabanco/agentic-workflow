@@ -39,6 +39,8 @@ D2 | 2026-10-21 | decision | Q2 | human-owner | ask form d387d8bb-ed40-43c8-9410
 D3 | 2026-10-21 | decision | Q3 | human-owner | ask form d387d8bb-ed40-43c8-9410-3e34a1d8f77b (2026-10-21) | A — **no settings toggle**: Serena is required substrate, degradation stays warn-once-and-record, and pi's own off switch (`pi config`, the settings `packages` resource filter) is documented in the package README | B — a boolean opt-out key in the closed config schema: with D1's manifest-declared extension a config key cannot gate loading, so the key would switch only our hint — discarded as a switch that does not switch its name
 D5 | 2026-10-21 | decision | Q5 | human-owner | ask form d387d8bb-ed40-43c8-9410-3e34a1d8f77b (2026-10-21) | A — the **code-level readiness nudge**: latched, once-per-state check on session start / first workflow-command dispatch over `.serena/project.yml` (present, `language_servers` covers the detected stack) and the recorded init-workspace revision; one notification suggesting `/init-workspace`; writes nothing, soft on failure | B — no nudge (a pi user who never read the README stays degraded) and C — revision-change only (misses a never-provisioned fresh clone): both discarded
 
+- **D6 · 2026-10-23 · decision · human-owner** — the pre-existing exact-pin drift (`@gtrabanco/agentic-workflow-schema` 4.6.0→4.7.0, `typebox` 1.3.7→1.4.3) is fixed **in PR #313** rather than in a separate `fix(deps)` PR: the audit's CI blocker is otherwise unclearable for this unit, and the owner chose the in-PR bump. P3's out-of-scope note is superseded by this record; pins, both package versions and their CHANGELOG companion rows move together in one commit.
+
 ## Path-protection records (P1–P6)
 
 ```text
