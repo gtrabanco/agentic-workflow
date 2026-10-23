@@ -772,11 +772,18 @@ function specByReferenceFindings(text, phases) {
   const log = parseLog(text);
   const sections = { specs: sectionText(text, "Specs"), log: sectionText(text, "Log"), findings: sectionText(text, "Findings") };
 
-  // The re-cut shape is all-or-nothing: a document that carries `## Log` or
-  // `## Specs` must carry both, or its receipt is split across two grammars and
-  // every reader would have to guess which one holds the truth.
+  // The re-cut shape is all-or-nothing in BOTH directions: a document that
+  // carries either `## Log` or `## Specs` must carry the other, or its receipt is
+  // split across two grammars and every reader would have to guess which one
+  // holds the truth. The router already refuses a half-migrated doc against its
+  // own shape table, so a one-direction check let the linter and the router
+  // disagree about the same document (#308 review, F1).
   if (sections.log !== null && sections.specs === null) {
     findings.push({ id: "spec-section-missing", reason: "a document carrying ## Log must also carry ## Specs" });
+    return findings;
+  }
+  if (sections.specs !== null && sections.log === null) {
+    findings.push({ id: "log-section-missing", reason: "a document carrying ## Specs must also carry ## Log" });
     return findings;
   }
   if (specs.present === false) return findings;
@@ -806,7 +813,10 @@ function specByReferenceFindings(text, phases) {
     }
     for (const id of ids) {
       if (!declared.has(id)) {
-        findings.push({ id: "task-link-dangling", reason: `P${phase.number} implements ${id}, which ## Specs does not declare` });
+        // The link's value is unit text with no charset bound (`IMPLEMENTS_LINK`
+        // takes anything up to the closing paren), so the echo is sanitized like
+        // every other unit-derived token the block prints (F49/F52/F66).
+        findings.push({ id: "task-link-dangling", reason: `P${phase.number} implements ${sanitizeEcho(id, 60)}, which ## Specs does not declare` });
         continue;
       }
       implemented.add(id);
