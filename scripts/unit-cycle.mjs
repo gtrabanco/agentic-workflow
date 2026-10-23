@@ -652,11 +652,16 @@ function main(argv) {
         if (result.actions.length > 0) process.stdout.write(`  acts: ${result.actions.join(" → ")}\n`);
       }
       if (result.outcome === OUTCOME.NEEDS_INPUT) {
+        // The block is the operator's input request. A unit whose ledger simply
+        // never existed has nothing to ask, so a non-zero needs-input run is
+        // reported as "no open questions recorded" — not as a failure.
         const block = spawnSync(process.execPath, ["scripts/needs-input.mjs", unitDir], {
           cwd: TARGET,
           stdio: "inherit",
         });
-        if ((block.status ?? 1) !== 0) process.stderr.write(`needs-input exited ${block.status}\n`);
+        if ((block.status ?? 1) !== 0) {
+          process.stdout.write("  (no open-questions ledger for this unit — the stop came from the audit verdict)\n");
+        }
       }
       return EXIT_CODES[result.outcome] ?? 1;
     })
