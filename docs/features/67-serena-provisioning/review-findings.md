@@ -57,3 +57,51 @@ No medium/high fix-now findings. No rows persisted.
 - pre-execution: clean
 - head: b56836512a02e1489cde3c4e1aeca01a125ffc84
 - mark: 2026-10-23 pre-execution-clean-3
+## Review Cycle 4 (context-clean end review)
+
+### Fold ledger append (new fix-now findings)
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F6 | `scripts/serena-activation-check.mjs:71` | review-perf | med | fix-now | source/fold into phase | no |
+| F7 | `scripts/serena-activation-check.mjs:177` | review-perf | med | fix-now | source/fold into phase | no |
+| F8 | `scripts/serena-activation-check.mjs:242` | review-perf | med | fix-now | source/fold into phase | no |
+| F9 | `scripts/serena-activation-check.mjs:253` | review-perf | med | fix-now | source/fold into phase | no |
+| VF-2 | `scripts/serena-activation-check.mjs:71` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("npm view", …) lacks timeout: 30_000 — call can block indefinitely on network stall | review-perf | med | confirmed | n/a | no |
+| VF-3 | `scripts/serena-activation-check.mjs:177` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync(process.execPath, …) lacks timeout — process boot hangs indefinitely | review-perf | med | confirmed | n/a | no |
+| VF-4 | `scripts/serena-activation-check.mjs:242` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("pi", ["install", …]) lacks timeout — stalled install blocks forever | review-perf | med | confirmed | n/a | no |
+| VF-5 | `scripts/serena-activation-check.mjs:253` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("pi", ["list"]) lacks timeout — stalled command blocks indefinitely | review-perf | med | confirmed | n/a | no |
+
+### Cycle 4 findings summary
+
+All applicable axes reviewed at HEAD 871ca132:
+- **review-code**: PASS — 8 notes, all prior ignore findings confirmed at cited locations (N-3: writeFileSync in writeThrough closure; N-4: optional chain guard; N-5: index+=1 intentional skip). No new code defects.
+- **review-security**: PASS — all spawnSync use array args (no shell injection), timeouts on network-facing spawns, no secrets, least-privilege token, soft degradation. No security findings.
+- **review-verify**: PASS — 77/77 tests pass (serena-readiness: 17, serena-activation: 3, pin-watch: 20, version-parity-gate: 22, alias-coverage: 15). All new code paths tested.
+- **review-perf**: FAIL — 4 medium fix-now findings: missing timeout option on spawnSync calls in serena-activation-check.mjs at lines 71, 177, 242, 253. 1 low report note (readFileSync on package.json — typically <50KB, mitigated).
+
+### Fold ledger rows persisted (medium severity fix-now)
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F6 | `scripts/serena-activation-check.mjs:71` | review-perf | med | fix-now | source/fold into phase | no |
+| F7 | `scripts/serena-activation-check.mjs:177` | review-perf | med | fix-now | source/fold into phase | no |
+| F8 | `scripts/serena-activation-check.mjs:242` | review-perf | med | fix-now | source/fold into phase | no |
+| F9 | `scripts/serena-activation-check.mjs:253` | review-perf | med | fix-now | source/fold into phase | no |
+| VF-2 | `scripts/serena-activation-check.mjs:71` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("npm view", …) lacks timeout | review-perf | confirmed | finding-mark | n/a | no |
+| VF-3 | `scripts/serena-activation-check.mjs:177` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync(process.execPath, …) lacks timeout | review-perf | confirmed | finding-mark | n/a | no |
+| VF-4 | `scripts/serena-activation-check.mjs:242` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("pi", ["install", …]) lacks timeout | review-perf | confirmed | finding-mark | n/a | no |
+| VF-5 | `scripts/serena-activation-check.mjs:253` · reviewer review-change · HEAD 871ca132ce952cd39c13e2f90d54611d9e2f643f · recheck spawnSync("pi", ["list"]) lacks timeout | review-perf | confirmed | finding-mark | n/a | no |
+
+## REVIEW-RAN
+- head: 871ca132ce952cd39c13e2f90d54611d9e2f643f
+- axes: review-code, review-security, review-verify, review-perf
+- classifier: review-implementation
+- debt: review-debt
+- decision: REVIEW-FAIL (4 medium fix-now findings: F6 + F7 + F8 + F9)
+- mark: 2026-10-23 review-cycle-4
+
+## GATE-RAN
+- pre-execution: clean
+- head: 871ca132ce952cd39c13e2f90d54611d9e2f643f
+- mark: 2026-10-23 pre-execution-clean-4
