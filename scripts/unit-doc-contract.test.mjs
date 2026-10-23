@@ -25,6 +25,7 @@
  */
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -227,6 +228,23 @@ test("#308 both templates carry the re-cut shape's section set", () => {
     for (const replaced of ["Evidence", "Progress log"]) {
       assert.ok(!found.includes(replaced), `${template} still carries ## ${replaced}: the re-cut template folds it into ## Log`);
     }
+  }
+});
+
+test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
+  // AC1's validators read the templates' section list; nothing ran the shipped
+  // linter over them, so a template whose own example violated its own rule
+  // passed AC1 while a unit created from it failed `phase-lint` (#308 review, N8).
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    let stdout = "";
+    let failed = null;
+    try {
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+    } catch (error) {
+      failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    assert.equal(failed, null, failed ?? "");
+    assert.match(stdout, /^verdict PASS$/m, `${template} did not lint PASS under the grammar it publishes`);
   }
 });
 

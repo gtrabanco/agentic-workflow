@@ -177,20 +177,58 @@ export function findingsRows(doc) {
     const [id, target, axis, severity, klass] = cells;
     const route = cells.slice(5).join(" | ");
     if (/^id$/i.test(id) || isSeparator(id) || isMarkRow(id)) continue;
-    rows.push({ id, file: target, axis, severity, klass, route, folded: "no" });
+    // `carrier: "doc"` selects the collapsed carrier's column grammar in
+    // `routeOfRow`; the legacy `openRows` rows carry no marker and keep prose matching.
+    rows.push({ id, file: target, axis, severity, klass, route, folded: "no", carrier: "doc" });
   }
   return rows;
 }
+
+/**
+ * The collapsed carrier's `class` column is a *different* vocabulary from the
+ * legacy ledger's: `findings-table@1` (`docs/features/_TEMPLATE/SPEC.md`) publishes
+ * `class` as the owner that repairs the row — `product | plan | source | environment
+ * | runtime` — while `review-findings.md` puts the disposition there
+ * (`fix-now | replan-in-unit | decision-required`). Two vocabularies, one column:
+ * read as a whole cell, so a row whose route prose merely *mentions* an owner keeps
+ * its own route (#293's over-match rule, applied to the other column).
+ */
+const OWNER_CLASS = new Map([
+  ["plan", "replan"],
+  ["product", "product"],
+]);
+/**
+ * The `## Findings` carrier's `route` cell is the ROUTER'S vocabulary, so a
+ * disposition is read from the head of the cell — the same anchoring #293 gave the
+ * product owner because a source row that merely discusses the plan owner is still
+ * a source row. The legacy ledger keeps its loose scan: its route cell is free
+ * prose, and its unit fixtures pin that a mention anywhere routes the row.
+ */
+const DOC_PLAN_ROUTE = /^(?:replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner)\b/i;
+const DOC_DECISION_ROUTE = /^(?:decision[- ]required|surface (the )?decision|needs a decision)\b/i;
 
 /** Classify one open row into the route it demands, or `null` for none. */
 export function routeOfRow(row) {
   const klass = String(row.klass ?? "");
   const route = String(row.route ?? "");
+  if (row.carrier === "doc") {
+    // Both collapsed-carrier columns are closed vocabularies: `class` names the
+    // owner that repairs the row, `route` names where the row goes.
+    if (DOC_PLAN_ROUTE.test(route)) return "replan";
+    if (DOC_DECISION_ROUTE.test(route)) return "decision";
+    if (PRODUCT_ROUTE.test(route)) return "product";
+    return OWNER_CLASS.get(klass.trim().toLowerCase()) ?? "fold";
+  }
   if (PLAN_ROUTE.test(klass) || PLAN_ROUTE.test(route)) return "replan";
   if (DECISION_ROUTE.test(klass) || DECISION_ROUTE.test(route)) return "decision";
   // #293: a product-owned row is repaired by the lane, never folded — the fold
   // loop repairs source, not authority (`pre-execution-review` POLICY §4).
   if (PRODUCT_ROUTE.test(route)) return "product";
+  // The migrated carrier names the repairing owner in `class`: `plan` and `product`
+  // own the same routes their legacy dispositions do; `source`, `environment` and
+  // `runtime` are the fold's, which is the default below.
+  const owner = OWNER_CLASS.get(klass.trim().toLowerCase());
+  if (owner) return owner;
   return "fold";
 }
 

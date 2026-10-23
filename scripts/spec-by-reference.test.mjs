@@ -260,3 +260,30 @@ test("#308 the converted corpus is a unit doc both shapes accept", () => {
     "a correction id always extends a base requirement it names",
   );
 });
+
+test("#308 the code's log-kind list is the published block, never a copy that drifts", () => {
+  // `scripts/unit-doc-phases.mjs` reads the closed vocabulary from `LOG_KINDS`;
+  // `scripts/normative-drift.test.mjs` pins the template block to its own literal
+  // list. Nothing compared the two, so a kind added on one side and not the other
+  // — the second-copy class #305 gates everywhere else — passed both suites
+  // (#308 review, F22).
+  return import("./unit-doc-phases.mjs").then(({ LOG_KINDS }) => {
+    for (const template of [
+      "docs/features/_TEMPLATE/SPEC.md",
+      "docs/fix/_TEMPLATE/SPEC.md",
+    ]) {
+      const block = /```text\nlog-kind@1\n([^\n]+)\n([\s\S]*?)```/.exec(read(path.join(repoRoot, template)));
+      assert.ok(block, `${template} publishes no log-kind@1 block`);
+      const kinds = block[2]
+        .trim()
+        .split("\n")
+        .map((row) => row.split("|")[0].trim())
+        .filter(Boolean);
+      assert.deepEqual(
+        [...LOG_KINDS],
+        kinds,
+        `${template}: the closed log-kind vocabulary must equal the reader's LOG_KINDS (${kinds.join(", ")})`,
+      );
+    }
+  });
+});
