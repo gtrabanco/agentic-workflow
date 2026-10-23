@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.9.2
+version: 3.9.3
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>] [--compact]"
@@ -69,7 +69,9 @@ bytes on a mature repo); the exact keep/drop set is in
 Per the agent guide's **Workflow conventions** + **documentation map**. The
 script reads what THIS skill needs (`docs/features/ROADMAP.md`, the fix index
 `docs/fix/README.md`, every in-flight feature folder's `TASKS.md` +
-`progress.md` + `review-findings.md`, and `docs/workflow/REPOSITORY_STATE.md`);
+`progress.md` and its findings carrier — `SPEC.md` `## Findings` + `## Log` for a
+migrated unit (issue #308), `review-findings.md` for a legacy one — and
+`docs/workflow/REPOSITORY_STATE.md`);
 read them yourself only to interpret a field the script emitted.
 
 ## Progressive loading — fixed sensor route

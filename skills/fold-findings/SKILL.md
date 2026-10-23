@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.9.0
+version: 1.9.1
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -49,8 +49,12 @@ postpone/wontfix/promote/documented-tradeoff rows; those belong to `/triage-issu
 
 Per Workflow conventions, read:
 
-1. The unit's `review-findings.md` under `docs/features/<NN>-<slug>/` or
-   `docs/fix/<n>-<topic>/`; schema is owned by `review-change`/`audit-pr`:
+1. The unit's findings carrier: a migrated unit (issue #308) keeps its OPEN rows
+   in its own `SPEC.md` under `## Findings`, with folded history and marks as
+   `## Log` lines; a legacy unit keeps `review-findings.md` under
+   `docs/features/<NN>-<slug>/` or `docs/fix/<n>-<topic>/`. Probe the doc first and
+   fall back to the file — a unit with the section never reads both; schema is
+   owned by `review-change`/`audit-pr`:
 
    ```
    | id | file:line | axis | severity | class | route | folded |

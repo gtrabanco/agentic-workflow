@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, loggedPhases, parseLog, sectionText } from "./unit-doc-phases.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -153,6 +153,31 @@ export function openRows(ledgerText) {
     if (/^id$/i.test(id) || isSeparator(id) || !isOpen(folded)) continue;
     if (isMarkRow(id)) continue; // a mark row carries no destination of its own
     rows.push({ id, file, axis, severity, klass, route, folded });
+  }
+  return rows;
+}
+
+/**
+ * The OPEN rows of a migrated unit doc's `## Findings` section (#308). A folded
+ * row leaves that table for a `## Log` line, so every row it carries is open by
+ * definition and has no `folded` cell — the shape is normalized to the legacy
+ * ledger's record so `routeOfRow` and the read set work on either carrier.
+ *
+ * @param {string} doc — the full unit doc text.
+ * @returns {Array<{id, file, axis, severity, klass, route, folded}>}
+ */
+export function findingsRows(doc) {
+  const body = sectionText(doc, "Findings");
+  if (body === null) return [];
+  const rows = [];
+  for (const line of body.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 6) continue;
+    const [id, target, axis, severity, klass] = cells;
+    const route = cells.slice(5).join(" | ");
+    if (/^id$/i.test(id) || isSeparator(id) || isMarkRow(id)) continue;
+    rows.push({ id, file: target, axis, severity, klass, route, folded: "no" });
   }
   return rows;
 }
@@ -375,14 +400,33 @@ script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 // facts; the model never re-derives the step list, it consumes this block.
 // ---------------------------------------------------------------------------
 
-// Mirrors UNIT_DOC_REQUIRED_SECTIONS (schema package, 14 since issue #305 where
-// `## Impact` stopped being a tolerated extra); `scripts/unit-doc-contract.test.mjs`
-// pins the copies, this one included.
-const UNIT_DOC_SECTIONS = [
-  "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
-  "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
-  "Evidence", "Progress log", "Next", "References",
-];
+// Mirrors UNIT_DOC_SECTION_SHAPES (schema package, #305 for the legacy list and
+// #308 for the re-cut one); `scripts/unit-doc-contract.test.mjs` pins the copies,
+// this one included. A unit doc satisfies ONE shape: the legacy 14 sections, or
+// the re-cut set whose `## Specs` / `## Findings` / `## Log` replace
+// `## Evidence` / `## Progress log`. Both are accepted, so an unmigrated unit
+// never breaks and a migrated one never needs the legacy sections back.
+const UNIT_DOC_SECTION_SHAPES = Object.freeze({
+  legacy: [
+    "Objective", "Why", "User outcome", "Acceptance criteria", "Impact", "Non-goals",
+    "Future cost", "Applicable tests", "Known pre-existing issues", "Tasks",
+    "Evidence", "Progress log", "Next", "References",
+  ],
+  "spec-by-reference": [
+    "Specs", "Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Findings", "Log", "Next", "References",
+  ],
+});
+/** The legacy list, kept as the default a document satisfying neither shape is judged against. */
+const UNIT_DOC_SECTIONS = UNIT_DOC_SECTION_SHAPES.legacy;
+
+/** The accepted shape a document's headings satisfy, or `null` when they satisfy neither. */
+function resolveSectionShape(doc) {
+  for (const [name, sections] of Object.entries(UNIT_DOC_SECTION_SHAPES)) {
+    if (sections.every((section) => sectionBody(doc, section) !== null)) return name;
+  }
+  return null;
+}
 const UNIT_TYPES = ["feature", "fix", "docs", "chore"];
 const UNIT_SCOPES = ["trivial", "xs", "small", "standard", "medium", "large", "xlarge"];
 
@@ -519,8 +563,11 @@ function executionTier() {
  * token the head itself records is the one (and only one) that counts.
  */
 function recordedPhases(doc) {
+  // #308: a migrated unit doc records its phases in `## Log` (`P<n>` progress
+  // lines) instead of a `## Progress log`; the two shapes are read by one
+  // function so the router's phase answer never depends on which one a unit has.
+  const done = new Set(loggedPhases(doc));
   const body = sectionBody(doc, "Progress log");
-  const done = new Set();
   if (body === null) return done;
   let entryStarted = false;
   let entryEnded = false;
@@ -646,7 +693,11 @@ function runTriage(token, { json = false } = {}) {
   } catch {
     triageFail(2, `unit doc not found: ${unitDir}/SPEC.md`);
   }
-  const missing = UNIT_DOC_SECTIONS.filter((name) => sectionBody(doc, name) === null);
+  // Missing sections are reported against the shape the doc asserts; a doc
+  // satisfying neither is judged against the legacy list (#308).
+  const shape = resolveSectionShape(doc);
+  const required = shape === null ? UNIT_DOC_SECTIONS : UNIT_DOC_SECTION_SHAPES[shape];
+  const missing = required.filter((name) => sectionBody(doc, name) === null);
   if (missing.length > 0) {
     triageFail(2, `missing mandatory sections: ${missing.join(", ")}`);
   }
@@ -715,7 +766,11 @@ function main(argv) {
   const unit = matches[0];
   const ledgerPath = `${unit.dir}/review-findings.md`;
   const ledger = readProject(ledgerPath) ?? "";
-  const rows = openRows(ledger);
+  // #308: a migrated unit doc carries its OPEN rows in `## Findings`; the side
+  // ledger is the legacy carrier. The doc is probed first, and a doc with the
+  // section owns the answer — a unit never reads both carriers.
+  const doc = readProject(`${unit.dir}/SPEC.md`) ?? "";
+  const rows = sectionText(doc, "Findings") !== null ? findingsRows(doc) : openRows(ledger);
   const status = (unit.kind === "fix" ? fixIndexStatus(unit.number) : roadmapStatus(unit.number)) ?? "absent";
 
   let route;

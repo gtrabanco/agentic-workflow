@@ -4,10 +4,14 @@ When the unit's review receipt is missing or stale, the re-entry command is the
 **emitted** `next.continuation` (`rendering` for display) — quote it, never author
 exact command tokens.
 
-11. **Persist fix-now findings to the fold ledger.** The unit's **fix-now fold
-   ledger** is `review-findings.md`, located beside its other docs
+11. **Persist fix-now findings to the fold ledger.** A migrated unit (issue #308)
+   carries the ledger in its own `SPEC.md`: OPEN rows in `## Findings`, and the
+   `REVIEW-RAN` / `GATE-RAN` / `VF-` marks as `## Log` lines with their exit codes
+   and head SHA. A legacy unit keeps the side file beside its other docs
    (`docs/features/<NN>-<slug>/review-findings.md` for a feature,
-   `docs/fix/<n>-<topic>/review-findings.md` for a fix), fixed schema:
+   `docs/fix/<n>-<topic>/review-findings.md` for a fix). Probe the doc first and
+   write to exactly one carrier — a unit with the `## Findings` section never
+   gains a side file. Fixed schema:
 
 
    ```

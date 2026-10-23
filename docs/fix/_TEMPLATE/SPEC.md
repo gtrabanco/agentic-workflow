@@ -2,11 +2,12 @@
 
 > Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. This is the same closed 14-section unit
-> doc `scripts/unit-route.mjs --triage` reads for a feature; the fix
-> template keeps four extra sections (`Issue`, `Branch`, `Depends on`,
-> `Regression scope`) on top. Legacy fix templates with separate
-> PLAN/ACCEPTANCE files are not migrated (see Non-goals).
+> entry in `docs/fix/README.md`. This is the same closed unit doc
+> `scripts/unit-route.mjs --triage` reads for a feature, in the re-cut
+> `spec-by-reference` shape; the fix template keeps four extra sections
+> (`Issue`, `Branch`, `Depends on`, `Regression scope`) on top. A unit opened
+> before the re-cut keeps the legacy 14-section shape — both are accepted, and a
+> legacy doc is never rewritten to migrate it.
 
 ## Issue
 
@@ -14,23 +15,31 @@
 via `Closes #<n>` in the body (or the forge's equivalent auto-close
 convention).
 
-## Objective
+## Specs
 
-What this fix repairs and why it cannot wait for a regular feature cycle (2-4 lines).
+Requirements, each numbered `S#` and quoting the requester's own words verbatim
+between the quote markers. Cut one requirement per distinct ask, in the order the
+issue states them. **A later correction is appended under its own id**
+(`S1a`, `S2a`, …) and never rewrites the id it corrects.
 
-## Why
+**S1 — <short title in your own words>.**
+> <the issue's words, verbatim and unedited>
 
-The defect's root cause: what broke, where, and why. Reference the commit,
-feature, or decision where the defect was introduced if known.
+**S2 — <short title>.**
+> <the issue's words, verbatim and unedited>
 
-## User outcome
+The grammar the machine reads (`spec-requirement@1`): one `**S# — title.**` line
+per requirement, followed by a `>` blockquote carrying the requester's words. A
+correction is its own line with its own id (`S1a`) — never a rewrite of the line
+it corrects.
 
-From the user's perspective: what they can do or observe after this fix ships.
-
-## Acceptance criteria
-
-Numbered list. Each AC is a runnable command where possible, or labelled
-`read-verified` — never unlabelled prose.
+```text
+spec-requirement@1
+kind | shape | what it orders
+requirement | **S<n>[a-z]? — <title>.** | one requirement; the id is what a task links and a finding cites
+quote | > <the requester's words, verbatim> | the requirement's own text, unedited apart from a marked elision
+correction | **S<n><letter> — <title>.** | an appended amendment to requirement S<n>; never an edit of it
+```
 
 ## Impact
 
@@ -73,9 +82,26 @@ A red gate is never excused by an unrecorded issue.
 
 P1…Pn with stable IDs, one line each, smallest first. Final task is verification
 when the unit has behavior. Each task carries its validator — a backticked
-command plus its expected outcome — and may carry a nested
-`Relevant files: <path, path…>` line: **metadata, never a task** (owner:
+command plus its expected outcome (for example
+``(validator: `node --test scripts/x.test.mjs` exits 0)``) — an
+`(Implements: S1, S2)` line naming the requirements it delivers, and may carry a
+nested `Relevant files: <path, path…>` line: **metadata, never a task** (owner:
 `skills/phase-contract/SKILL.md`).
+
+- P1 — <task> (validator: `<command>` exits 0)
+  (Implements: S1)
+  Relevant files: <path>
+
+The link grammar (`task-spec-link@1`): every task bullet names the requirements
+it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
+with no link, a link to an undeclared id, and a base requirement no bullet
+implements.
+
+```text
+task-spec-link@1
+kind | shape | what it orders
+link | (Implements: S<n>, S<m>, …) | the requirements this task delivers; metadata, never task text
+```
 
 ### Planning evidence
 
@@ -94,20 +120,56 @@ units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
 and this section names it — never both. Before the unit ships, every row is
 `verified` (or an evidenced `n/a`).
 
-## Evidence
+## Findings
 
-One row per acceptance criterion: what was run, exit status/digest, observed output
-(≤2 lines), verified-by.
+OPEN rows only: a row a review persisted as fix-now work and no fold has closed
+yet. A folded row leaves this table and becomes a `## Log` line. Rows are
+appended by `review-change` and `triage-issue`; no other writer touches them.
 
-> Evidence is verified, not claimed — a reviewer re-runs it.
+The carrier grammar (`findings-table@1`): the OPEN rows only, appended by
+`review-change` and `triage-issue`. A folded row leaves the table and becomes a
+`## Log` line, so this table never grows a history column.
 
-| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
-|---|---|---|---|---|
+```text
+findings-table@1
+column | shape | what it holds
+id | F<n> | the stable finding id a fold and a log line cite
+target | S<n> · <file>:<line> | the requirement or the location the finding names
+axis | <axis> | the review axis that found it
+severity | high \| med \| low | the ledger severity (the canonical scale)
+class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+route | <route> | where the row goes — the router's own route vocabulary
+```
 
-## Progress log
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
 
-One entry per step taken. Format exactly:
-`YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+## Log
+
+Append-only. `L1` is the issue text verbatim; every later line carries one kind
+token from the closed set in `log-kind@1` below — a request or correction
+(a verbatim quote), an evidence run, a gate run, a folded finding, an owner
+decision, a phase's progress. A correction never edits an earlier line: it
+appends. Evidence and gate lines carry the command and its exit code, so a
+reviewer re-runs a line instead of trusting a table.
+
+```text
+log-kind@1
+kind | token | what the line records
+L | L<n> | the request or a correction, quoting the requester verbatim
+E | E<n> | an evidence run — the command, its exit code and its output
+G | G<n> | a gate run — the command and its exit code
+F | F<n> | a folded finding — the fold commit and what was verified
+D | D<n> | an owner decision — the authority and what was decided
+P | P<n> | a phase's progress — what was done and the commit
+```
+
+- **L1** — <YYYY-MM-DD>, the issue, verbatim:
+  ```
+  <the issue as it was written>
+  ```
+- **E1** — <YYYY-MM-DD>, `<command>` · exit 0 · <output, ≤2 lines>.
+- **P1** — <YYYY-MM-DD HH:MM>, <what was done> · <commit sha>.
 
 ## Next
 

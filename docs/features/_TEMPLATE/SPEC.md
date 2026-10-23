@@ -2,23 +2,32 @@
 
 > One-line: what this unit doc is. Copy to docs/features/NN-<slug>/.
 
-## Objective
+## Specs
 
-What this unit delivers and why it exists now (2-4 lines).
+Requirements, each numbered `S#` and quoting the requester's own words verbatim
+between the quote markers. Cut one requirement per distinct ask, in the order the
+request states them. **A later correction is appended under its own id**
+(`S1a`, `S2a`, …) and never rewrites the id it corrects — that is what makes the
+change diffable: a correction moves one line, everything else stays put.
 
-## Why
+**S1 — <short title in your own words>.**
+> <the request's words, verbatim and unedited>
 
-The problem or gap this unit addresses; what already exists, what is missing.
+**S2 — <short title>.**
+> <the request's words, verbatim and unedited>
 
-## User outcome
+The grammar the machine reads (`spec-requirement@1`): one `**S# — title.**` line
+per requirement, followed by a `>` blockquote carrying the requester's words. A
+correction is its own line with its own id (`S1a`) — never a rewrite of the line
+it corrects.
 
-From the user's perspective: what they can do or observe after this unit ships.
-
-## Acceptance criteria
-
-Numbered list. Each AC is induced from a concrete user scenario ("I do X and observe Y").
-Make each AC command-verified where possible. If the request is too vague to state an AC,
-STOP and ask the user with concrete options — never invent one.
+```text
+spec-requirement@1
+kind | shape | what it orders
+requirement | **S<n>[a-z]? — <title>.** | one requirement; the id is what a task links and a finding cites
+quote | > <the requester's words, verbatim> | the requirement's own text, unedited apart from a marked elision
+correction | **S<n><letter> — <title>.** | an appended amendment to requirement S<n>; never an edit of it
+```
 
 ## Impact
 
@@ -48,8 +57,8 @@ Standing obligations this unit imposes on future work. Each row: the rule + who 
 
 ## Applicable tests
 
-The tests this unit will run (triage-decided). Write exactly `n/a — no tests step for this unit`
-when there is none.
+The tests this unit will run (triage-decided). Write exactly
+`n/a — no tests step for this unit` when there is none.
 
 ## Known pre-existing issues
 
@@ -58,8 +67,30 @@ A red gate is never excused by an unrecorded issue.
 
 ## Tasks
 
-P1…Pn with stable IDs, one line each, smallest first. Final task is verification when the unit has behavior. Each task carries its validator — a backticked command plus its expected outcome (for example
-`(validator: \`node --test scripts/x.test.mjs\` exits 0)`) — and may carry a nested `Relevant files: <path, path…>` line naming that task's read set: **metadata, never a task**. `phase-lint` accepts these bullets and full `## P<n> —` blocks alike (owner: `skills/phase-contract/SKILL.md`), and a file absent from the list is never out of scope for the executor.
+P1…Pn with stable IDs, one line each, smallest first. Final task is verification
+when the unit has behavior. Each task carries its validator — a backticked
+command plus its expected outcome (for example
+``(validator: `node --test scripts/x.test.mjs` exits 0)``) — an
+`(Implements: S1, S2)` line naming the requirements it delivers, and may carry a
+nested `Relevant files: <path, path…>` line naming that task's read set:
+**metadata, never a task**. `phase-lint` accepts these bullets and full
+`## P<n> —` blocks alike (owner: `skills/phase-contract/SKILL.md`), and a file
+absent from the list is never out of scope for the executor.
+
+- P1 — <task> (validator: `<command>` exits 0)
+  (Implements: S1)
+  Relevant files: <path>
+
+The link grammar (`task-spec-link@1`): every task bullet names the requirements
+it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
+with no link, a link to an undeclared id, and a base requirement no bullet
+implements.
+
+```text
+task-spec-link@1
+kind | shape | what it orders
+link | (Implements: S<n>, S<m>, …) | the requirements this task delivers; metadata, never task text
+```
 
 ### Planning evidence
 
@@ -78,19 +109,56 @@ units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
 and this section names it — never both. Before the unit ships, every row is
 `verified` (or an evidenced `n/a`).
 
-## Evidence
+## Findings
 
-One row per acceptance criterion: what was run, exit status/digest, observed output (≤2 lines), verified-by.
+OPEN rows only: a row a review persisted as fix-now work and no fold has closed
+yet. A folded row leaves this table and becomes a `## Log` line. Rows are
+appended by `review-change` and `triage-issue`; no other writer touches them.
 
-> Evidence is verified, not claimed — a reviewer re-runs it.
+The carrier grammar (`findings-table@1`): the OPEN rows only, appended by
+`review-change` and `triage-issue`. A folded row leaves the table and becomes a
+`## Log` line, so this table never grows a history column.
 
-| AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
-|---|---|---|---|---|
+```text
+findings-table@1
+column | shape | what it holds
+id | F<n> | the stable finding id a fold and a log line cite
+target | S<n> · <file>:<line> | the requirement or the location the finding names
+axis | <axis> | the review axis that found it
+severity | high \| med \| low | the ledger severity (the canonical scale)
+class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+route | <route> | where the row goes — the router's own route vocabulary
+```
 
-## Progress log
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
 
-One entry per step taken. Format exactly:
-`YYYY-MM-DD HH:MM — <what was done> → <commit sha or evidence> — next: <what is next>`
+## Log
+
+Append-only. `L1` is the request verbatim; every later line carries one kind
+token from the closed set in `log-kind@1` below — a request or correction
+(a verbatim quote), an evidence run, a gate run, a folded finding, an owner
+decision, a phase's progress. A correction never edits an earlier line: it
+appends. Evidence and gate lines carry the command and its exit code, so a
+reviewer re-runs a line instead of trusting a table.
+
+```text
+log-kind@1
+kind | token | what the line records
+L | L<n> | the request or a correction, quoting the requester verbatim
+E | E<n> | an evidence run — the command, its exit code and its output
+G | G<n> | a gate run — the command and its exit code
+F | F<n> | a folded finding — the fold commit and what was verified
+D | D<n> | an owner decision — the authority and what was decided
+P | P<n> | a phase's progress — what was done and the commit
+```
+
+- **L1** — <YYYY-MM-DD>, the request, verbatim:
+  ```
+  <the request as it was made>
+  ```
+- **E1** — <YYYY-MM-DD>, `<command>` · exit 0 · <output, ≤2 lines>.
+- **P1** — <YYYY-MM-DD HH:MM>, <what was done> · <commit sha>.
 
 ## Next
 

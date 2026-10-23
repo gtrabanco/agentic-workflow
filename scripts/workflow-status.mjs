@@ -666,11 +666,50 @@ const SEVERITY_VOCABULARY = new Map([
   ["high", "high"], ["med", "med"], ["low", "low"],
 ]);
 
-/** The open rows of a unit's fix-now ledger, in file order — the router's own
- *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
-function readOpenRows(unitDir) {
+/**
+ * The unit's findings *carrier* — issue #308. A migrated unit doc holds its OPEN
+ * rows in `## Findings` and its marks as `## Log` lines, so the doc is probed
+ * first and the side ledger is the legacy carrier. A unit never reads both: the
+ * doc wins when it has the section, which is what makes the collapse real rather
+ * than a second place to look.
+ *
+ * @returns {{ rows: Array<object>, carrier: "doc" | "ledger" | "none", text: string }}
+ */
+function findingsCarrier(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  if (doc !== null && /^## Findings\s*$/m.test(doc)) {
+    return { rows: rowsFromFindingsSection(doc), carrier: "doc", text: doc };
+  }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
-  if (!ledger) return [];
+  if (!ledger) return { rows: [], carrier: "none", text: "" };
+  return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger };
+}
+
+/** The `## Findings` table's rows: OPEN by definition, and shaped like a ledger row. */
+function rowsFromFindingsSection(doc) {
+  // The section body runs from after its heading to the next level-2 heading —
+  // never past it, so a later `## Log` table can never leak a row in.
+  const start = doc.search(/^## Findings\s*$/m);
+  const after = doc.indexOf("\n", start) + 1;
+  const next = doc.slice(after).search(/^## /m);
+  const body = next === -1 ? doc.slice(after) : doc.slice(after, after + next);
+  const rows = [];
+  for (const line of body.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const cells = cellsOf(line).slice(1, -1);
+    if (cells.length < 6) continue;
+    const [id, file, axis, severity, klass] = cells;
+    if (/^id$/i.test(id) || isMarkRow(id) || /^[-:\s]*$/.test(id)) continue;
+    // The re-cut table has no `folded` column — a folded row leaves it for a log
+    // line — so every row here is open and the shape is normalized to the ledger's.
+    rows.push({ id, file, axis, severity, klass, route: cells.slice(5).join(" | "), folded: "no" });
+  }
+  return rows;
+}
+
+/** The open rows of a legacy `review-findings.md`, in file order — the router's own
+ *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
+function rowsFromLedger(ledger) {
   const rows = [];
   for (const line of ledger.split("\n")) {
     if (!line.startsWith("|")) continue;
@@ -687,6 +726,42 @@ function readOpenRows(unitDir) {
     rows.push({ id, file, axis, severity, klass, route });
   }
   return rows;
+}
+
+/**
+ * The `## Log` lines a migrated unit doc carries that a reviewer reads as marks —
+ * gate runs (`G`), folds (`F`) and owner decisions (`D`). A legacy unit has no
+ * `## Log`, so this is empty for it; a migrated one reports each line's own words,
+ * never a restatement (the ledger's closed kind vocabulary is the owner of what a
+ * kind means, `log-kind@1`).
+ */
+function readLogMarks(unit, unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  if (doc === null) return [];
+  const start = doc.search(/^## Log\s*$/m);
+  if (start === -1) return [];
+  const after = doc.indexOf("\n", start) + 1;
+  const next = doc.slice(after).search(/^## /m);
+  const body = next === -1 ? doc.slice(after) : doc.slice(after, after + next);
+  const labels = { G: "gate run", F: "folded finding", D: "owner decision" };
+  const marks = [];
+  for (const line of body.split("\n")) {
+    const entry = /^[-*+]\s+\*\*([A-Z])(\d+)\*\*\s*[—-]\s*(.*)$/.exec(line.trim());
+    if (!entry || !labels[entry[1]]) continue;
+    marks.push(`${unitDir}: ${labels[entry[1]]} ${entry[1]}${entry[2]} — ${bounded(entry[3])}`);
+  }
+  return marks;
+}
+
+/** A log line's words, bounded for the envelope. */
+function bounded(text) {
+  const flat = String(text).replace(/\s+/g, " ").trim();
+  return flat.length <= 120 ? flat : `${flat.slice(0, 119)}…`;
+}
+
+/** The open rows a unit carries, from whichever carrier owns them (#308). */
+function readOpenRows(unitDir) {
+  return findingsCarrier(unitDir).rows;
 }
 
 function readFixNow(unitDir, observations = []) {
@@ -1312,6 +1387,10 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
     const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
     const mark = markEligible ? readReviewMark(dir, "lane") : null;
     if (mark) marks.set(unit.id, mark);
+    // #308: a migrated unit records its gate runs, folds and review marks as
+    // `## Log` lines. They are reported the same way a legacy ledger's marks are,
+    // so the carrier change is visible in the envelope instead of silent.
+    observations.push(...readLogMarks(unit, dir));
     fixNow.push(...readFixNow(dir, observations));
     nextSuggested.push(...readSuggestions(unit, dir));
   }

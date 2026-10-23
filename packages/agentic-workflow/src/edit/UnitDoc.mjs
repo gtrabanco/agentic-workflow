@@ -2,9 +2,12 @@
  * UnitDoc — create and edit single-unit SPEC documents.
  *
  * The unit doc is a single Markdown file (docs/features/<NN>-<slug>/SPEC.md)
- * containing exactly 14 closed sections in a fixed order (#305 added
- * `## Impact`).  All edits go through typed operations that validate
- * post-state against the file schema before writing.
+ * containing one of two accepted closed section sets in a fixed order (#305
+ * added `## Impact`; #308 added the `spec-by-reference` shape).  All edits go
+ * through typed operations that validate post-state against the file schema
+ * before writing, and validation resolves the shape from the headings the
+ * document carries — a legacy doc and a migrated one are both valid, never one
+ * of them silently upgraded.
  */
 
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdtempSync, rename } from "node:fs";
@@ -13,11 +16,19 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import {
   UNIT_DOC_SECTIONS,
+  UNIT_DOC_SPEC_REF_SECTIONS,
+  UNIT_DOC_SECTION_SHAPES,
   EVIDENCE_COLUMNS,
   PROGRESS_ENTRY_REGEX,
+  resolveUnitDocShape,
+  unitDocSectionsFor,
 } from "./schema.mjs";
 
-// ── Canonical skeleton matching docs/features/_TEMPLATE/SPEC.md ──────────
+// ── Canonical skeletons matching docs/{features,fix}/_TEMPLATE/SPEC.md ────
+// The legacy shape is emitted by `create`; the re-cut shape by
+// `createSpecByReference`. Neither is derived from the other: a skeleton is a
+// published template, and generating it from the other shape would make the two
+// drift silently (the #305 defect class).
 const CANONICAL_SKELETON = `# NN — <unit-slug>
 
 > One-line: what this unit doc is. Copy to docs/features/NN-<slug>/.
@@ -103,6 +114,113 @@ The single next action.
 Issues, roadmap rows, related material. The PR closes absorbed issues via \`Closes #N\`. \`none\` if empty.
 `;
 
+// The re-cut skeleton (issue #308). Section bodies state what to write, in
+// positive terms: each `S#` quotes the request verbatim, each task links the
+// requirement it implements, and the log is appended to, never rewritten.
+const CANONICAL_SPEC_REF_SKELETON = `# NN — <unit-slug>
+
+> One-line: what this unit doc is. Copy to docs/features/NN-<slug>/.
+
+## Specs
+
+Requirements, each numbered \`S#\` and quoting the requester's own words
+verbatim between the quote markers. Cut one requirement per distinct ask, in the
+order the request states them; a later correction is appended under its own id
+(\`S1a\`, \`S2a\`, …) and never rewrites the id it corrects.
+
+**S1 — <short title in your own words>.**
+> <the request's words, verbatim and unedited>
+
+## Impact
+
+What the change touches beyond its own files: what consumes this unit's
+deliverables, what this unit consumes from others, what stops being true when
+the change lands (comments, docs, declared validators, narrations naming the
+old shape), and what must be asked before touching something live on the other
+side. Cut at plan time — the executor sweeps this surface, it is not
+rediscovered at review.
+
+## Non-goals
+
+What this unit is NOT. Findings discovered during implementation never expand scope.
+
+## Future
+
+Ideas the user deferred ("down the road I'd like…"), captured verbatim with a
+date and a status: \`open\`, \`planned\`, or \`discarded <YYYY-MM-DD>\`. This unit
+never implements, specs, or tasks a row here. Write \`none\` when nothing was
+deferred. Reviewed at unit close, on session resume, and whenever later work
+returns to the same area — each open row is then offered as
+plan-now / keep-deferred / discard.
+
+## Future cost
+
+Standing obligations this unit imposes on future work. Each row: the rule + who it binds.
+
+## Applicable tests
+
+The tests this unit will run (triage-decided). Write exactly \`n/a — no tests step for this unit\`
+when there is none.
+
+## Known pre-existing issues
+
+Each: <issue/observation> + explicit \`affects\` or \`does-not-affect\` this unit.
+A red gate is never excused by an unrecorded issue.
+
+## Tasks
+
+P1…Pn with stable IDs, one line each, smallest first. Final task is verification when the unit has behavior. Each task carries its validator — a backticked command plus its expected outcome — and an \`(Implements: S1, S2)\` line naming the requirements it delivers, plus an optional nested \`Relevant files: <path, path…>\` line naming that task's read set (metadata, never a task).
+
+- P1 — <task> (validator: \`node --test scripts/x.test.mjs\` exits 0)
+  (Implements: S1)
+  Relevant files: <path>
+
+### Planning evidence
+
+One row per Engineering claim (the closed column order and vocabularies are owned
+by \`skills/pre-execution-review/references/LEDGERS.md\`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's \`planning-evidence.md\` and
+this section names it instead — never both.
+
+### Obligations
+
+One row per normative behaviour, compatibility invariant, affected use case, and
+required failure state (shape owned by
+\`skills/pre-execution-review/references/LEDGERS.md\`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's \`planning-obligations.md\`
+and this section names it — never both. Before the unit ships, every row is
+\`verified\` (or an evidenced \`n/a\`).
+
+## Findings
+
+OPEN rows only: a row a review persisted as fix-now work and no fold has closed.
+A folded row leaves this table and becomes a \`## Log\` line. Rows are appended by
+\`review-change\` and \`triage-issue\`.
+
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
+
+## Log
+
+Append-only. \`L1\` is the request verbatim; every later line carries one kind
+token — \`L<n>\` request or correction (a verbatim quote), \`E<n>\` evidence run,
+\`G<n>\` gate run, \`F<n>\` folded finding, \`D<n>\` owner decision, \`P<n>\` phase
+progress. A correction never edits an earlier line: it appends.
+
+- **L1** — <YYYY-MM-DD>, the request, verbatim:
+  \`\`\`
+  <the request as it was made>
+  \`\`\`
+
+## Next
+
+The single next action.
+
+## References
+
+Issues, roadmap rows, related material. The PR closes absorbed issues via \`Closes #N\`. \`none\` if empty.
+`;
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function sha256(text) {
@@ -177,8 +295,11 @@ export function create(dir, slug) {
  * Returns a receipt.  Throws on unknown section.
  */
 export function setSection(doc, name, body) {
-  if (!UNIT_DOC_SECTIONS.includes(name)) {
-    throw new Error(`Unknown section "${name}"; allowed: ${UNIT_DOC_SECTIONS.join(", ")}`);
+  // Both accepted shapes are addressable: a migrated document sets its own
+  // sections and a legacy one keeps its own (#308).
+  const addressable = [...new Set([...UNIT_DOC_SECTIONS, ...UNIT_DOC_SPEC_REF_SECTIONS])];
+  if (!addressable.includes(name)) {
+    throw new Error(`Unknown section "${name}"; allowed: ${addressable.join(", ")}`);
   }
   const content = readFileSync(doc, "utf8");
   const beforeHash = sha256(content);
@@ -197,6 +318,37 @@ export function setSection(doc, name, body) {
     "setSection",
     doc,
     "unit-doc-section@1",
+    shaPrefix(beforeHash),
+    shaPrefix(afterHash),
+    ok,
+  );
+}
+
+/**
+ * createSpecByReference(dir, slug) — write the unit doc in the re-cut
+ * (`spec-by-reference`) shape from its own canonical skeleton (#308). Same
+ * contract as `create`: dir is the unit directory, the file lands at
+ * dir/SPEC.md, and the receipt reports whether the written content validates.
+ *
+ * Returns { ok: true, receipt } on success.
+ */
+export function createSpecByReference(dir, slug) {
+  if (!existsSync(dir)) {
+    throw new Error(`Directory does not exist: ${dir}`);
+  }
+  const target = join(dir, "SPEC.md");
+  const content = CANONICAL_SPEC_REF_SKELETON;
+  const beforeHash = existsSync(target) ? sha256(readFileSync(target, "utf8")) : "empty";
+  atomicWrite(target, content);
+  const afterHash = sha256(readFileSync(target, "utf8"));
+
+  const validation = validate(readFileSync(target, "utf8"));
+  const ok = validation.ok && validation.violations.length === 0;
+  return makeReceipt(
+    "unitDoc",
+    "create",
+    target,
+    "unit-doc-template@1",
     shaPrefix(beforeHash),
     shaPrefix(afterHash),
     ok,
@@ -317,8 +469,14 @@ export function validate(text) {
     if (m) foundHeadings.push(m[1]);
   }
 
+  // Which accepted shape the document asserts (#308). A document satisfying
+  // neither is reported against the legacy list, which is the shape every unit
+  // predating the re-cut carries.
+  const shape = resolveUnitDocShape(foundHeadings);
+  const required = unitDocSectionsFor(shape);
+
   // Check for missing sections
-  for (const section of UNIT_DOC_SECTIONS) {
+  for (const section of required) {
     if (!foundHeadings.includes(section)) {
       violations.push(`Missing section: ${section}`);
     }
@@ -334,13 +492,25 @@ export function validate(text) {
   }
 
   // Check for misordered sections (only the ones that exist)
-  const filtered = UNIT_DOC_SECTIONS.filter((s) => foundHeadings.includes(s));
   let expectedIdx = 0;
   for (const found of foundHeadings) {
-    if (found === UNIT_DOC_SECTIONS[expectedIdx]) {
+    if (found === required[expectedIdx]) {
       expectedIdx++;
-    } else if (UNIT_DOC_SECTIONS.includes(found)) {
-      violations.push(`Misordered section: ${found} (expected after ${UNIT_DOC_SECTIONS[expectedIdx - 1]} or before ${UNIT_DOC_SECTIONS[expectedIdx]})`);
+    } else if (required.includes(found)) {
+      violations.push(`Misordered section: ${found} (expected after ${required[expectedIdx - 1]} or before ${required[expectedIdx]})`);
+    }
+  }
+
+  // A half-migrated document carries a section from the other shape: its
+  // Evidence rows and its Log would both claim to be the receipt, so it is
+  // refused rather than read two ways (the #308 §Scope 4 migration rule).
+  if (shape !== null) {
+    const foreign = Object.entries(UNIT_DOC_SECTION_SHAPES)
+      .filter(([name]) => name !== shape)
+      .flatMap(([, sections]) => sections)
+      .filter((section) => !required.includes(section) && foundHeadings.includes(section));
+    for (const section of new Set(foreign)) {
+      violations.push(`Half-migrated section: ${section} belongs to the other accepted shape`);
     }
   }
 

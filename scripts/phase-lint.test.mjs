@@ -2551,3 +2551,100 @@ test("a Relevant files sub-section with no bullet before it fails closed (F-2)",
   assert.match(stdout, /^relevant-files: sub-section is not attached to a bullet phase$/m);
   assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
 });
+
+// ---------------------------------------------------------------------------
+// #308 — the spec-by-reference grammar (migrated unit docs)
+//
+// A migrated unit doc replaces `## Evidence` / `## Progress log` with
+// `## Specs` / `## Findings` / `## Log`: requirements are numbered `S#` quoting
+// the owner, every phase links the `S#` it implements, and the log's lines carry
+// one of the closed kind tokens. The grammar is additive — the legacy shape keeps
+// linting exactly as before (every case above this block is that proof) — and the
+// four defects below are the ones the re-cut makes possible.
+// ---------------------------------------------------------------------------
+
+const MIGRATED_UNIT_DOC = `# 71 — migrated example
+
+## Specs
+
+**S1 — the request.**
+> Add a \`count\` command that prints how many records are stored.
+
+**S2 — the empty case.**
+> Running it with no records prints \`0\` and exits 0.
+
+## Tasks
+
+- P1 — Implement \`count\` (validator: \`node --test scripts/count.test.mjs\` exits 0)
+  (Implements: S1, S2)
+  Relevant files: scripts/count.mjs
+
+## Log
+
+- **L1** — 2026-10-01, the request, verbatim (\`S1\`): Add a \`count\` command.
+- **P1** — 2026-10-01, \`count\` implemented · \`0123456\`.
+`;
+
+test("#308 a migrated unit doc lints PASS and keeps the unit-doc fingerprint", () => {
+  const file = fixture("spec-ref-valid.md", MIGRATED_UNIT_DOC);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\) · fingerprint P1:unit-doc:1:implement-count$/m);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("#308 a phase linking no requirement is blocked", () => {
+  const file = fixture(
+    "spec-ref-unlinked.md",
+    MIGRATED_UNIT_DOC.replace("  (Implements: S1, S2)\n", ""),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  // A requirement link is a document rule, not one of the eight per-phase boxes:
+  // it is reported under its own id, which names the defect.
+  assert.match(stdout, /^task-link-missing: P1 links no requirement/m, stdout);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
+test("#308 a phase linking a requirement the doc never declares is blocked, naming the missing id", () => {
+  const file = fixture(
+    "spec-ref-dangling.md",
+    MIGRATED_UNIT_DOC.replace("(Implements: S1, S2)", "(Implements: S1, S7)"),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^task-link-dangling: P1 implements S7/m, stdout);
+});
+
+test("#308 a requirement with no verbatim quote is blocked", () => {
+  const file = fixture(
+    "spec-ref-unquoted.md",
+    MIGRATED_UNIT_DOC.replace(
+      "**S2 — the empty case.**\n> Running it with no records prints `0` and exits 0.",
+      "**S2 — the empty case.**\nIt prints `0`, summarized rather than quoted.",
+    ),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^spec-quote-missing: S2$/m, stdout);
+});
+
+test("#308 a log line outside the closed kind vocabulary is blocked", () => {
+  const file = fixture(
+    "spec-ref-log-kind.md",
+    MIGRATED_UNIT_DOC.replace("- **P1** — 2026-10-01", "- **X9** — 2026-10-01"),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^log-kind: X9 is not one of L, E, G, F, D, P$/m, stdout);
+});
+
+test("#308 a migrated doc without ## Specs is refused, so the two shapes cannot half-apply", () => {
+  const file = fixture(
+    "spec-ref-half.md",
+    MIGRATED_UNIT_DOC.replace("## Specs", "## Notes"),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "a doc that carries ## Log but no ## Specs is a half-migrated shape");
+  assert.match(stdout, /spec-section-missing|log-without-specs/, stdout);
+});

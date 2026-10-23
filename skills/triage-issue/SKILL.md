@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.11.0
+version: 2.11.1
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -47,9 +47,10 @@ first on purpose).
   from a persisted `product-audit` report instead of existing issues (see
   *Audit-finding mode* below). Batching works the same way.
 - **Review findings** — `triage-issue --prioritize-now <unit> F<k> [F<j> …]`
-  triages unresolved rows from the current feature/fix unit's
-  `review-findings.md`. This route is for findings that `fold-findings` could
-  not close. `--prioritize-now` means attempt to resolve every named finding
+  triages unresolved rows from the current feature/fix unit's findings carrier:
+  its `## Findings` section in `SPEC.md` for a migrated unit (issue #308), or
+  `review-findings.md` for a legacy one — probe the doc first, never both. This
+  route is for findings that `fold-findings` could not close. `--prioritize-now` means attempt to resolve every named finding
   immediately; it does not permit a downgrade, postponement, or silent drop.
 
 
