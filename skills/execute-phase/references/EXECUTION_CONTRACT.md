@@ -52,8 +52,10 @@ Something forbidden looks necessary → stop, record it in `decisions.md` or
 
 ## Step completion gate
 
-The step completion gate verifies that Evidence rows are complete for the
-step's acceptance criteria, the unit doc is committed clean, and the diff guard
+The step completion gate verifies that the step's acceptance criteria have
+complete evidence in the unit's own carrier — the `## Evidence` table rows for a
+legacy-shape unit, `## Log` `E` lines (command, exit, ≤2 lines of output) for a
+re-cut one (#308) — that the unit doc is committed clean, and that the diff guard
 (if applicable) passed. The mark's shape, ownership, and reuse rule are
 declared in `LEDGERS.md` (§gate-ran@1).
 
@@ -76,7 +78,8 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
 ✓ Verification gate green — type-check + tests + build actually RUN (paste exit
   status), never assumed
 ✓ Every task of this step checked off in the unit doc's `Tasks` section, each
-  mapped to an Evidence row (code path or test name)
+  mapped to an Evidence row (legacy shape) or an `E` log line (re-cut shape) —
+  code path or test name
 ✓ Tests updated/added for every behavior this step changed
 ✓ Tests-first red run recorded (core/domain + orchestration steps, n/a for
   test-after UI/adapter steps) — the failing first run's command, exit status,
@@ -88,10 +91,12 @@ GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>
   consumers)
 ✓ Architecture doc respected (dependency directions, layer boundaries)
 ✓ Architectural invariants preserved or backed by an explicit recorded decision
-✓ Evidence rows complete for the step's ACs — unit doc committed clean
-  (one dated `YYYY-MM-DD HH:MM` Progress entry, all Evidence rows current)
-✓ Docs COMMITTED with the step — the unit doc carries all required sections
-  (Tasks, Evidence, Progress, References); no orphan files remain
+✓ The step's ACs have complete evidence in the unit's carrier — unit doc committed
+  clean (one dated `YYYY-MM-DD HH:MM` Progress entry or `P` log line, all evidence
+  current)
+✓ Docs COMMITTED with the step — the unit doc carries all required sections of its
+  own shape (Tasks + Evidence + Progress + References for legacy; Specs + Tasks +
+  Findings + Log + References for re-cut); no orphan files remain
 ```
 
 A step that cannot tick every box is **not done**: fix within the step's
@@ -123,8 +128,9 @@ planned work, and inference never prove implementation. A present ledger whose
 status is `draft`, `contradicted`, or `resolved` stops implementation and routes
 to discovery or resolution first. If no ledger exists, inspect the repository
 directly and record `n/a: no normalized repository state`; NRS is optional.
-Unit doc evidence rows (Evidence, Progress) are the single source of truth
-for step completion — no separate ACCEPTANCE.md, progress.md, or TASKS.md.
+Unit doc evidence is the single source of truth for step completion — the
+`## Evidence`/`## Progress log` sections of a legacy-shape doc, the `## Log` lines of
+a re-cut one (#308) — never a separate ACCEPTANCE.md, progress.md, or TASKS.md.
 
 ## Architectural invariants
 

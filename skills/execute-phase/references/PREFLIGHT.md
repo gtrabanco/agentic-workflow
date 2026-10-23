@@ -125,7 +125,10 @@ block text, no-forgery and legacy detail:
 Consume `skills/verification-contract/SKILL.md`. For a current-format unit,
 the Evidence section in the unit doc **is** the acceptance manifest — each
 acceptance criterion has a corresponding Evidence row with command, exit/digest,
-and output. No sibling file; the unit doc's Evidence section header carries the
+and output. A re-cut unit (#308) has no Evidence section by design: its acceptance
+manifest is `## Specs`, and each criterion's receipt is a `## Log` `E` line; the
+gate below reads that carrier instead, and never stops a migrated unit for lacking
+a section its own template retired. No sibling file; the unit doc's Evidence section header carries the
 last-reviewed sha. The unit doc's triage block (pasted verbatim from
 `scripts/unit-route.mjs --triage`) is the step authority: `execute-phase` runs
 only what the triage block demands.
@@ -136,8 +139,9 @@ only what the triage block demands.
 - Missing/mismatched Evidence (unit doc has been edited since last execution)
   → print the verification contract's fixed `EVIDENCE GATE` block and stop.
   `--force` never bypasses a changed acceptance state.
-- Unit with no Evidence section → the unit doc template was incomplete;
-  create the section before proceeding.
+- Unit with no Evidence section and no `## Log` → the unit doc template was
+  incomplete; create the section its shape requires before proceeding. A doc with
+  `## Log` is the re-cut shape: its `E`/`G` lines are the rows, never a gap.
 
 Run this check before each step in whole-unit mode. The executor may add tests
 but may not narrow acceptance criteria, weaken assertions, or edit the Acceptance
