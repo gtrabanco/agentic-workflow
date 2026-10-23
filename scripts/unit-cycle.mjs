@@ -112,6 +112,12 @@ export function decide(state) {
   if (state.ledgerError) return fail("ledger-error");
   if (state.docExists === false) return step("design");
   if (state.triageError) return fail("triage-error");
+  if (state.tasksMalformed) {
+    return fail(
+      `tasks-grammar — ${state.tasksMalformed} \`P<n>\` line(s) in the Tasks section do not parse; ` +
+        `each phase is a list item (\`- P1 — …\`) with a validator, so \`parseUnitDocPhases\` can read it`,
+    );
+  }
   if (wants("research") && !state.researchDone) return step("research");
   if (wants("design") && !state.designed) return step("design");
 
@@ -317,6 +323,13 @@ export function sense(token) {
   const references = sectionBody(doc, "References") ?? "";
   const ac = sectionBody(doc, "Acceptance criteria") ?? "";
   const phases = docExists ? parseUnitDocPhases(doc).phases.map((phase) => phase.number) : [];
+  // A `P<n>` line the repo's parser cannot read (not a list item) is a
+  // document defect, not "plan not done yet": name it instead of re-running
+  // the plan step forever.
+  const tasksBody = sectionBody(doc, "Tasks") ?? "";
+  const tasksMalformed = tasksBody
+    .split("\n")
+    .filter((line) => /^\s*\**P\d+\b/.test(line) && !/^ {0,3}[-*+]\s/.test(line)).length;
 
   const ni = needsInputCompute(path.join(TARGET, unitDir));
   // A decisions ledger with no `open-questions@1` block is a unit that never
@@ -333,7 +346,14 @@ export function sense(token) {
   let triageSteps = null;
   let triageError = false;
   let tiers = null;
-  if (docExists) {
+  // The unit doc's own `## Triaged steps` block is authoritative (the lane
+  // pastes it verbatim); a doc that records `n/a` demands no catalog step at
+  // all, so the loop never invents a design/plan step the unit never had.
+  const triagedBody = docExists ? (sectionBody(doc, "Triaged steps") ?? "") : "";
+  const declaredSteps = /^Steps:\s*(.+)$/m.exec(triagedBody);
+  const noneDemanded = /\bn\/a\b/u.test(triagedBody) && declaredSteps === null;
+  if (noneDemanded) triageSteps = [];
+  else if (docExists) {
     const r = sh(process.execPath, ["scripts/unit-route.mjs", "--triage", unitDir, "--json"]);
     if (r.status === 0) {
       try {
@@ -399,6 +419,7 @@ export function sense(token) {
     testsOk: null,
     triageSteps,
     triageError,
+    tasksMalformed,
     tiers,
     branch,
     dirty,
