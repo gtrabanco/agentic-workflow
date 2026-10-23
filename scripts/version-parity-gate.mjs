@@ -197,10 +197,37 @@ function resolveBase(explicit) {
   return failUsage("no --base given and neither origin/main nor main resolves");
 }
 
-/** Changed files on this side of the merge base (three-dot diff). */
+/**
+ * Every path this branch touches: the committed range against `base` **unioned
+ * with the working tree**, because a PR's jobs run against a checkout whose
+ * content is what the merge would ship. A three-dot diff alone is blind to an
+ * uncommitted edit, so a change staged but not yet committed read as "nothing
+ * under the trigger set" and the gate passed where it exists to fail.
+ */
 export function changedFilesSince(base) {
-  const out = git(["diff", "--name-only", `${base}...HEAD`], { allowFailure: true });
-  return out ? out.split("\n").filter(Boolean) : [];
+  const committed = git(["diff", "--name-only", `${base}...HEAD`], { allowFailure: true }) ?? "";
+  const dirty = git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], { allowFailure: true }) ?? "";
+  const files = new Set(committed.split("\n").filter(Boolean));
+  for (const path of porcelainPaths(dirty)) files.add(path);
+  return [...files];
+}
+
+/** The target paths of a porcelain v1 `-z` status listing (renames keep both sides). */
+function porcelainPaths(raw) {
+  const paths = [];
+  const entries = raw.split("\0");
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (entry.length < 4) continue;
+    const status = entry.slice(0, 2);
+    const normalized = entry.replace(/^(.{2}) /u, "$1");
+    paths.push(normalized.slice(2));
+    if (status.includes("R") || status.includes("C")) {
+      const original = entries[(index += 1)];
+      if (original) paths.push(original);
+    }
+  }
+  return paths;
 }
 
 function packageVersionAt(ref, packageJsonPath) {

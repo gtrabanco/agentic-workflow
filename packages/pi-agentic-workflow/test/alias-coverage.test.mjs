@@ -271,10 +271,12 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
     assert.deepEqual(names, expected);
     assert.ok(registered.has(SETTINGS_COMMAND), "the settings command comes from the entry too");
     assert.ok(registered.has(SETTINGS_COMMAND_ALIAS), "the /aw-settings alias is registered from the entry too");
+    // `session_start` is the Serena readiness nudge's first chance (feature 67
+    // AC9); the gate latches, so the command path never repeats it.
     assert.deepEqual(
       surfaceCalls.filter(([call]) => call === "on").map(([, type]) => type).sort(),
-      ["agent_settled", "model_select", "thinking_level_select", "tool_call"],
-"the entry subscribes to the lifecycle events routing and the receipt/hygiene guards depend on",
+      ["agent_settled", "model_select", "session_start", "thinking_level_select", "tool_call"],
+"the entry subscribes to the lifecycle events routing, the receipt/hygiene guards and the Serena nudge depend on",
     );
 
     // Running a real alias through the real entry must reach Pi's dispatcher.
