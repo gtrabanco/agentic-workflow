@@ -137,7 +137,10 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
 | AC1 | `node --test scripts/*.test.mjs` (whole root suite, branch `feat/78-unit-cycle` at `4b71e7d3`) | 0 · 809 pass / 0 fail | the loop's suite joins the root suite without disturbing any existing gate | main agent |
 | AC5 | `node scripts/unit-cycle.mjs 67-serena-provisioning --dry-run` (before commit — tree dirty) | 0 | `branch … (dirty) · receipt: absent · phases: 6/6 · questions: 0` · `next: stop — failed (dirty-tree)` — senses the real unit, decides, spawns nothing | main agent |
 | AC3 | exit-code table enforced by `decide`/`runCycle` cases in the suite (done, needs-input, budget-exhausted, no-progress, failed) | 0 | one case per terminal outcome, incl. act-throws → `failed` with the step named | main agent |
-| AC2/AC4 | live full-cycle run against unit 67 (pending this session) | — | — | — |
+| AC2/AC3 | live run 3 — `node scripts/unit-cycle.mjs 67-serena-provisioning --repo /home/agent/projects/agentic-workflow-cycle67` | 2 | acts `tests → review → audit`; review's write-then-report order held (receipt **current** at `16420012`, `verify --pr 313` exit 0); terminal `needs-input — audit-blocked` naming the single CI blocker | main agent |
+| AC2 | live run 1 (fresh worktree) | 5 | `tests: root suite red` — surfaced the gitignored `schema/dist` missing in a fresh checkout (not an assertion); the `tests` step now builds it when absent | main agent |
+| AC3 | live run 2 | 5 | `review-no-receipt` — review sessions had emitted the receipt before their last commit; the act prompt pinned `write-then-report` (persist+push → receipt last), run 3 converged | main agent |
+| AC2 | audit verdict from the live run | BLOCKED | full gate table: receipt current · hygiene · lineage · phases · scope · docs · traceability · mergeability · invariants all pass · **1 blocker: `dependency-pin-gate` (pre-existing pin drift — human-owned `fix(deps)` decision)** | main agent |
 
 ## Progress log
 
@@ -156,12 +159,25 @@ One row per acceptance criterion: what was run, exit status/digest, observed out
   [#314]` → evidence: rows above — next: `--repo` flag, then the live
   full-cycle run against unit 67 from a worktree.
 
+- 2026-10-23 17:16 — **live proof, three runs against unit 67's worktree**:
+  run 1 stopped `failed` at the tests gate on a fresh worktree (missing
+  gitignored `schema/dist` → the `tests` step now builds it); run 2 stopped
+  `failed` at `review-no-receipt` (review sessions emitted their receipt
+  before their final commit — the act prompt now pins write-then-report and
+  the push set); run 3 walked `tests → review → audit` to the designed
+  terminal: receipt **current** at `16420012` (verify exit 0), audit's full
+  gate table green except the pre-existing `dependency-pin-gate` CI drift →
+  exit 2 `needs-input — audit-blocked` (human-owned pin decision, not a fold
+  finding) → evidence: rows above — next: the pin decision, then re-run;
+  `/review-change 78-unit-cycle` for PR #314's own receipt.
+
 ## Next
 
-Live proof: `node scripts/unit-cycle.mjs 67-serena-provisioning --repo
-<67-worktree>` — the loop's own first full cycle (tests → review receipt →
-audit) on unit 67/PR #313, then `/review-change 78-unit-cycle` for this PR's
-receipt.
+Human decision first (audit-blocked on PR #313: bump the two drifted pins —
+`fix(deps)` branch vs in-PR), then re-run
+`node scripts/unit-cycle.mjs 67-serena-provisioning --repo <67-worktree>`.
+For this PR: `/review-change 78-unit-cycle` (receipt for #314), then
+`/audit-pr`.
 
 ## References
 
