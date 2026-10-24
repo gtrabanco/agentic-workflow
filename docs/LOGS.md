@@ -3268,3 +3268,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** The 21:50 plan-step entry names `ee013c6c` as the commit that refreshed the unit's planning-ledger counts. A concurrent history rewrite dropped that commit — `git merge-base --is-ancestor ee013c6c HEAD` fails — so the correction was re-applied and re-committed as `b4917967`. The counts are the same and still reproduce at this head: `node --test scripts/unit-cycle.test.mjs` 36 pass / 0 fail, `node --test scripts/*.test.mjs` 832 pass / 0 fail.
 - **Decisions:** The 21:50 entry was left untouched rather than edited: a past entry is a historical record, so the dangling sha is corrected by this follow-up row instead of rewriting the delivered record. Recorded because several sessions are rebasing and committing to `feat/78-unit-cycle` simultaneously, and a dropped commit that a ledger cites silently makes `verified` rows unprovable — the counts must be re-measured at the head after any concurrent rewrite, not carried forward from the earlier run.
 - **Next:** Nothing outstanding from this step. PR [#314](https://github.com/gtrabanco/agentic-workflow/pull/314) is OPEN at the forge — re-check `gh pr view 314 --json state,mergedAt` before writing any status, because the branch head moves under concurrent sessions and a receipt bound to an older head goes stale.
+## 2026-10-24T09:35:06Z — feat/262-engram-substrate — manual
+- **Commits:** 23 (`d93cccca…3d082c3a`)
+- **Files:** 42 files
+- **Summary:** Cycle-2 delta review of feature 66 (Engram memory substrate): full review after fold-diff escalation (13 files outside cited union / 23 files, +767/-137); all 10 cycle-1 fold rows verified clean; code/security/verify/perf axes all PASS; whole gate green (775/775 root, 236/0 crate, 451/0 pi); SHA-bound review-receipt posted at PR #312 (current); cycle-2 REVIEW-PASS; receipt re-emitted after ledger commit moves HEAD.
+- **Decisions:** (1) Fold-diff width+size escalation; (2) All 10 folds verified: F1-F10 repaired at cited locations; (3) review-receipt re-emitted after ledger-mark commit; (4) Roadmap row 66 reads 'planned' — deliberate owner-side write at execute-phase release step.
+- **Next:** /audit-pr 312 — merge gate for PR #312 (unit 66, REVIEW-PASS, receipt current, merge state CLEAN)
+
+## 2026-10-24T09:34:22Z — feat/262-engram-substrate — manual
+- **Commits:** 23 (`d93cccca…3d082c3a`)
+- **Files:** 42 files
+- **Summary:** Rebased feat/262-engram-substrate onto origin/main (83 commits ahead) — merged Serena nudge and Engram provisioning into a single session_start listener, bumped pi package 0.30→0.31 and init-workspace 4.1→4.2, resolved 9 conflicted files
+- **Decisions:** merged duplicate session_start listeners into one (Serena nudge then Engram provisioning — a split listener broke alias-coverage test); versions ordered above main so CI parity passes; rerere enabled locally for CHANGELOG repetition; amended historical commit to fix the duplicated listener from the start
+- **Next:** merge PR #312 — root-suite PASS, pi-compat-guard PASS, dependency-pin-gate PASS, mergeStateStatus CLEAN, mergeable MERGEABLE
