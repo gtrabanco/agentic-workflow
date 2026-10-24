@@ -93,6 +93,9 @@ export interface ConfigFile {
   /** When true (default), the built-in provider profiles are included in the
    *  resolution chain (feature 63, AC1). */
   recommendedModels?: boolean;
+  /** Feature 66 (AC3/D3): the memory-substrate consent surface — Engram's MCP
+   *  registration is ask-first, so nothing is provisioned unless this says so. */
+  memory?: MemoryConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -113,6 +116,18 @@ export type UnavailableRoutePolicy = "stop" | "inherit";
 export type SettlePolicy = "keep" | "restore";
 
 /** One rejected field inside one config file, addressed by a JSON-path-ish string. */
+/** What an operator WRITES under `memory` (feature 66). */
+export interface MemoryConfigFile {
+  /** Opt in to the package registering the Engram MCP server when its binary
+   *  resolves. Absent or `false` registers nothing. */
+  engram?: boolean;
+}
+
+/** What the extension READS: every `memory` knob resolved (feature 66). */
+export interface MemoryConfig {
+  engram: boolean;
+}
+
 export interface ConfigIssue {
   path: string;
   message: string;
@@ -142,6 +157,8 @@ export interface EffectiveConfig {
   profileOrder: string[];
   /** The effective profile-fallback demotion policy (feature 63). */
   profileFallback: ProfileFallbackConfig;
+  /** Feature 66: the memory-substrate consent surface. */
+  memory: MemoryConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

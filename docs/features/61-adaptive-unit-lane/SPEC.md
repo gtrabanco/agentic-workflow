@@ -152,6 +152,16 @@ docs, release), with guards that bite when a unit outgrows the light path.
   file).
 - No Engram memory hard dependency — Engram mirroring of the unit doc is
   optional and can be added by a separate integration.
+  *(Partly superseded 2026-10-23 by feature 66 / issue #262, on the owner
+  decision of 2026-09-24 recorded in issue #260: Engram became the workflow's
+  **required** cross-session memory substrate — saves at unit boundaries, a
+  bounded health probe, ask-first provisioning parity. The half of this sentence
+  that survives is the one the owner kept: required substrate is **never a hard
+  failure dependency** — a degraded or absent memory layer is reported once and
+  recorded in Evidence, and the unit keeps working. The protocol is
+  `skills/unit-lane/references/MEMORY.md`; the committed docs stay authoritative.
+  This unit's own `## Non-goals` is left as the historical record of what it
+  declined to build.)*
 - No model self-selection or dynamic cost optimization at triage time.
 - No changes to the schema package's `Envelope v2` structure.
 

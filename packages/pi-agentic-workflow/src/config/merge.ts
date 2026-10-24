@@ -152,6 +152,11 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     ),
     // Feature 63 — model profiles.
     recommendedModels: pick(true, projectFile.recommendedModels, globalFile.recommendedModels),
+    // Feature 66 — the consent switch resolves like any other boolean knob:
+    // project wins, then global, then the shipped "no".
+    memory: {
+      engram: pick(false, projectFile.memory?.engram, globalFile.memory?.engram) === true,
+    },
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),

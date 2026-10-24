@@ -51,6 +51,9 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     profiles: {},
     profileOrder: [],
     profileFallback: { applyTo: "flow", resume: "continue", retryAfterSeconds: 86400 },
+    // Feature 66 — the memory substrate is ask-first: nothing is provisioned
+    // until the operator opts in.
+    memory: { engram: false },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });

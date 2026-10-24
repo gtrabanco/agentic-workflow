@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,7 +31,7 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 /** A Pi-shaped API that records the handlers instead of registering them. */
 function piDouble(options = {}) {
-  const calls = { setModel: [], setThinkingLevel: [], sendUserMessage: [], notify: [] };
+  const calls = { setModel: [], setThinkingLevel: [], sendUserMessage: [], notify: [], registerMcpServer: [] };
   // Stateful like a session: `setThinkingLevel` moves the level the router reads
   // back, so settle's "only write when it differs" guard is exercised too.
   const state = { thinking: options.thinking ?? "medium" };
@@ -56,6 +56,12 @@ function piDouble(options = {}) {
       state.thinking = level;
     },
     on: (type, handler) => handlers.set(type, handler),
+    // Engram provisioning reaches both structurally (the peer floor is a range),
+    // so the double can say what the host could see. `mcpServers` is the
+    // operator's own list; an empty one makes the `mcp.json` files the only
+    // declaration surface, which is exactly the F6 case.
+    registerMcpServer: (name, config) => calls.registerMcpServer.push([name, config]),
+    getMcpServers: () => (options.mcpServers ?? []).map((name) => ({ name })),
   };
   // Pi applies an operator's choice to the session and *then* emits the event, so
   // the doubles below do the same: mutate, then notify. Otherwise the router's
@@ -482,6 +488,89 @@ test("AC7 through the adapter: dirty-worktree warning still fires on abort", asy
     assert.deepEqual(entry.calls.setModel.length, 1, "only the route's switch, no restore on abort");
     assert.ok(entry.calls.notify.some(([msg]) => msg.includes("dirty")),
       "the dirty-worktree warning fires on abort");
+  } finally {
+    entry.cleanup();
+  }
+});
+
+/**
+ * The Engram provisioning the `session_start` listener performs, driven through
+ * the shipped entry: the two silences the end review found (F5, F6) live in the
+ * adapter's inputs, not in the pure module, so only this harness can see them.
+ */
+function withFakeEngramOnPath(body) {
+  const bin = mkdtempSync(join(tmpdir(), "paw-engram-bin-"));
+  const stub = join(bin, "engram");
+  writeFileSync(stub, "#!/bin/sh\necho 'engram 0.0.0'\n");
+  chmodSync(stub, 0o755);
+  const previous = process.env.PATH;
+  process.env.PATH = `${bin}:${previous}`;
+  try {
+    return body();
+  } finally {
+    process.env.PATH = previous;
+    rmSync(bin, { recursive: true, force: true });
+  }
+}
+
+test("F6 through the adapter: a project-scope mcp.json declaration is never shadowed", async () => {
+  // Pi reads `<cwd>/.pi/mcp.json` for a trusted project and a project entry
+  // replaces the same-named user entry. The guard read only the user file, so
+  // this declaration was invisible: the package registered anyway and then
+  // reported precedence over a file it had never opened.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    mkdirSync(join(entry.cwd, ".pi"), { recursive: true });
+    writeFileSync(join(entry.cwd, ".pi", "mcp.json"), JSON.stringify({ mcpServers: { engram: { command: "/elsewhere/engram" } } }));
+    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    assert.deepEqual(entry.calls.registerMcpServer, [], "the operator's own declaration wins");
+    assert.ok(
+      entry.calls.notify.some(([message]) => /already declared/i.test(message)),
+      `the refusal names what it refused to shadow: ${JSON.stringify(entry.calls.notify)}`,
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("F5 through the adapter: an invalid config is a stated problem, never a silent opt-out", async () => {
+  // The file exists and says `engram: true`, but a sibling key is invalid, so
+  // `loadConfig` fails closed to the shipped default. Reading consent off that
+  // default told the operator who opted in to opt in, while the dispatcher kept
+  // reporting the same file as invalid.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    writeFileSync(join(entry.agentDir, "pi-agentic-workflow.json"), '{"memory":{"engram":"yes"},"default":{"thinking":"nope"}}');
+    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    assert.deepEqual(entry.calls.registerMcpServer, [], "consent that cannot be read registers nothing");
+    assert.ok(
+      entry.calls.notify.some(([message]) => /config file is invalid/i.test(message)),
+      `the operator is told the file is broken, not that they never asked: ${JSON.stringify(entry.calls.notify)}`,
+    );
+    assert.ok(
+      !entry.calls.notify.some(([message]) => /to opt in/i.test(message)),
+      "the opt-in instruction is not printed at someone who already opted in",
+    );
+  } finally {
+    entry.cleanup();
+  }
+});
+
+test("F6 through the adapter: an opted-in session with nothing declared does register", async () => {
+  // The guard's two fixes must not disable the feature: with consent readable
+  // and no declaration in either scope, the registration still happens and is
+  // reported exactly.
+  const entry = await shippedEntry({ globalConfig: { memory: { engram: true } } });
+  try {
+    withFakeEngramOnPath(() => entry.handlers.get("session_start")({}, entry.context()));
+    assert.equal(entry.calls.registerMcpServer.length, 1, "consent is honoured");
+    const [name, config] = entry.calls.registerMcpServer[0];
+    assert.equal(name, "engram");
+    assert.deepEqual(config.args, ["mcp", "--tools=agent"]);
+    assert.ok(
+      entry.calls.notify.some(([message]) => message.includes("registered MCP server")),
+      JSON.stringify(entry.calls.notify),
+    );
   } finally {
     entry.cleanup();
   }
