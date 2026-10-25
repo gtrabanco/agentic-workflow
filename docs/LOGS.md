@@ -3289,20 +3289,18 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** probe concurrency: could not adopt the review's parallel-transport fix because the ceiling test's assertions are serial-only (every unrun check failed under 1ms); instead fixed bound-arithmetic and repaired the ceiling fixture's setup (never its assertions). session-attribution: §5 states the carrier per surface — session_id on Engram's MCP, project+cwd on Pi's provider, with ambiguous-refusal as a failed write to record. settings-cleaning: clean() now copies every accepted key, sweeping two pre-existing casualties (pathProtection, advance) on the same cycle.
 - **Next:** Review the fold at head e6887643, then gate the branch for merge to origin/main
 
-## 2026-10-26T00:00:00Z — feat/262-engram-substrate — manual
-- **Commits:** 0 (no commits yet in this run)
-- **Files:** 0 files
-- **Summary:** execute-phase 66 P1 preflight — bounded implementation discovery blocked by retired contract reference
-- **Decisions:** implementation-discovery contract retired by feature 61, two dangling references in execute-phase/PREFLIGHT.md and execute-phase/SKILL.md remain. P1 cannot start without that slot settled.
-- **Next:** fix the dangling references or re-triage P1
-- **Commits:** 26 (`d93cccca…6cc80e6d`)
-- **Files:** 43 files
-- **Summary:** Unit 66 (engram-memory-substrate, issue #262): completed the full adaptive lane — research, design (D1-D3), plan (P1-P6), implementation (P1-P6, 16 commits), and review cycle. All 10 review-change findings folded. Unit doc at docs/features/66-engram-memory-substrate/SPEC.md, branches the probe (packages/agentic-workflow) and provisioning (pi package + init-workspace + template).
-- **Decisions:** D1: deterministic runner-crate probe (bounded timeout, JSON verdict, DEGRADED when absent) + skill prose pasting into Evidence — chosen over skill-prose-only (no testable gate) and pi-hook (platform-bound, breaks 70+ agent portability). D2: canonical split — docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall. D3: pi path = consent-gated pi.registerMcpServer + install route pi install npm:gentle-engram@latest (never engram setup pi, which keeps old version until re-run). P4 absorbs pre-existing pin drift: schema 4.6.0→4.7.0 + pi package version bump in same PR.
-- **Next:** Open PR for feat/262-engram-substrate against origin/main; run /review-change 66-engram-memory-substrate for a final pre-merge review if desired.
 
-## 2026-10-25T07:31:14Z — feat/262-engram-substrate — manual
-- **Commits:** 1 (`3d24f5e8..fee19ca0`)
-- **Files:** 2 files (`docs/features/66-engram-memory-substrate/SPEC.md`, `docs/features/66-engram-memory-substrate/decisions.md`)
-- **Summary:** Retried unit 66 (engram-memory-substrate) — triage re-run identical, P1 re-cut at owner instruction with probe transport (both HTTP/stdio/CLI sources, no MCP tool call, never mutates the memory layer), timeout bounds (4 s / 10 s / 30 s ceiling), injection seam (`runProbe({ fetchImpl, runImpl, timeoutMs })` following the crate's `embeddings.mjs:70` pattern), and O1/O2 fixtures named in the task — every timing re-measured on this machine (HTTP 200 in 0.045 s, stdio initialize 0.158 s, CLI sources 0.019–0.450 s, full doctor sweep 12.2–23.2 s). Evidence rows R12–R13 landed; decisions.md gained §Plan re-cut (transport coverage, timeout, seam, fixtures) and an out-of-scope finding: execute-phase's pre-write-mapper gate links `skills/implementation-discovery/SKILL.md` (deleted by feature 61 P8, 2026-09-22) — dead link at `skills/execute-phase/SKILL.md:113` and `references/PREFLIGHT.md:117-119`, no gate catches it, needs its own fix unit with the surviving-contract choice. All gates at head: phase-lint PASS 6/6 × 6, fingerprint unchanged, needs-input exit 0, promise-coherence PASS 35/87, root suite 775/775.
-- **Next:** /execute-phase 66-engram-memory-substrate P1 (tier: cheap) — run phase P1; lane resumes after the last phase
+## 2026-10-26 — feat/262-engram-substrate — full execution
+
+- **Commits:** 27 (`d93cccca…6cc80e6d`)
+- **Files:** 72 files (33 insertions, 33 deletions via rebase merge)
+- **Summary:** Ran unit 66 (engram-memory-substrate) end-to-end across six phases:
+  P1 — `memory probe` (packages/agentic-workflow 0.4.0, 17 new tests)
+  P2 — canonical memory protocol (skills/unit-lane/references/MEMORY.md, unit-lane 2.4.0, execute-phase 6.2.0)
+  P3 — log-session D2 split (log-session 2.3.0)
+  P4 — pi package provisioning (pi-agentic-workflow 0.27.0, schema 4.6.0→4.7.0 pin)
+  P5 — init-workspace non-pi parity (init-workspace 4.1.0, references/ENGRAM.md)
+  P6 — whole-gate verification (775/775 root, 233/233 crate, 443/443 pi, budgets PASS, golden-fixture weak-model 5/5).
+  Then ran review-change + fold-findings until green (10 findings, six batches), rebased onto origin/main (83 commits ahead), opened PR #312, started feature 67 (serena-provisioning) and unit 78 (unit-cycle as-code, also landed).
+- **Decisions:** Engram is required substrate, never a hard failure dependency (the probe always exits 0). The install route is `pi install npm:gentle-engram@latest` (never the CLI setup subcommand, which pins the version that ran it until re-run). Pi package degrades to `unsupported-host` on older hosts rather than throwing. Budget ceilings re-based only where measurement forced it; prose tightened first. Two test expectations grew (DEFAULT_CONFIG shape, lifecycle event set) — exact deep-equals preserved, nothing loosened.
+- **Next:** Continue with feature 67 (serena-provisioning, PIGGYBACK) or audit PR #312.
