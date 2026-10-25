@@ -213,6 +213,47 @@ notification. `requirements` is keyed by phase state (`pre-freeze`, `post-freeze
 matching `path-protection-records@1` `justification` row in the unit's
 `decisions.md`.
 
+## Memory substrate — Engram (optional, ask-first)
+
+The workflow's units save and recall their decisions through Engram, the memory
+layer its skills document. This package can register Engram's MCP server for the
+session, and it does so **only when you say so**:
+
+```json
+{
+  "memory": { "engram": true }
+}
+```
+
+Registration goes through Pi's own `registerMcpServer`, which is
+**session-scoped and not persisted** — the package registers on every session
+start, so nothing outlives the session and nothing is written to your `mcp.json`
+behind your back. Five rules decide the outcome, and the package reports it
+verbatim:
+
+| Situation | What happens |
+|---|---|
+| no `memory.engram` opt-in (the shipped default is `false`) | nothing is registered and nothing is said (the opt-out stays quiet) |
+| no readable opt-in — the file exists but does not validate | nothing is registered; you are told the config is invalid, because unreadable consent is never read as a refusal you made |
+| no `engram` binary on `PATH` | nothing is registered; you are told the install route |
+| you already declared `engram` in a `mcp.json` Pi reads — your user file, or `<cwd>/.pi/mcp.json` in a trusted project | nothing is registered — your declaration takes precedence |
+| binary present, opted in | the server is registered and the notification states exactly what was written |
+
+Install Engram with:
+
+```sh
+pi install npm:gentle-engram@latest
+```
+
+That is the only documented route on purpose: the CLI's own setup subcommand
+pins whatever version ran it and keeps serving that version until it is run
+again, so an updated binary can sit unused behind a stale registration.
+
+An older Pi host whose `ExtensionAPI` has no `registerMcpServer` is reported
+instead of failing the session. The workflow-side protocol — when units save,
+the recall order, the degraded path — lives in `unit-lane`'s memory reference,
+not here.
+
 ## When a configured model is unavailable
 
 Default: the command **refuses to start** and tells you why — the model is not in

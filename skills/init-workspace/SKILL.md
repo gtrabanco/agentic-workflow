@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 4.1.0
+version: 4.2.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -78,7 +78,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Progressive loading — bootstrap or upgrade, never both
 
-The reference allowlist is exactly the five linked paths below. Never invent or
+The reference allowlist is exactly the six linked paths below. Never invent or
 read another `references/` path. Step 0 selects exactly one route:
 
 **Hard rule for an existing Claude Code, Cursor, Copilot, or OpenCode
@@ -95,6 +95,10 @@ or portability unless the runtime platform has no named adapter at all.
   only. Its additive-only rule is absolute; do not replay bootstrap.
   The upgrade route loads [SERENA language servers](references/SERENA.md)
   for the additive provisioning step.
+- Provisioning Engram on a host with no pi package: read
+  [Engram provisioning](references/ENGRAM.md) — detect, ask, register or
+  instruct, report. Loaded by the bootstrap write route only (the pi package
+  provisions itself, feature 66).
 - No named adapter exists for the detected runtime platform: add
   [portability](references/PORTABILITY.md) only for that fallback. Claude Code,
   Cursor, Copilot, and OpenCode are named supported adapters; a missing adapter
@@ -133,6 +137,13 @@ loads exactly upgrade and skips bootstrap plus portability.
   auto-detected), a listed server that fails to start must be removed (one
   failure disables every server in the project), and LSP evidence stays
   TypeScript/JavaScript-only. Document verification is a script's job.
+- **Engram provisioning is ask-first, never assumed (feature 66).** Detect the
+  `engram` binary, ask before writing any host MCP config, write the absolute
+  path with the exact `mcp --tools=agent` argv, and report exactly what was
+  written. An existing `engram` declaration is never overwritten, and an absent
+  binary is a recorded residual — the documented install route is
+  `pi install npm:gentle-engram@latest`, never the CLI's own setup subcommand,
+  which keeps serving whatever version ran it until it is re-run.
 - **Retrieval index scaffold and git hooks are consent-gated (AC22).** The
   index surface — the committed `.agentic-workflow/index.json` config plus the
   three freshness hooks (`post-merge`, `post-checkout`, `post-rewrite`, all

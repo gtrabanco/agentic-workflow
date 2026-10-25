@@ -20,6 +20,9 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // Feature 63 — model profiles: recommended built-in profiles, empty
   // named profiles, empty order (default-only), and default demotion policy.
   recommendedModels: true,
+  // Feature 66 — the memory substrate is ask-first: nothing is provisioned
+  // until the operator opts in.
+  memory: { engram: false },
   profiles: {},
   profileOrder: [],
   profileFallback: { ...DEFAULT_PROFILE_FALLBACK },
