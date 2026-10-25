@@ -3288,3 +3288,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Folded all 10 review-change findings on feature 66 (engram-memory-substrate) in six atomic batches and a final golden-fixture run. The review initially returned REVIEW-FAIL with 10 high/medium defects (probe logic, settings console key leakage, consent read before validation, MCP shadow guard, memory protocol attribution, docs gaps, unit doc receipt). Each root cause was identified, fixed with red-first reproducers, committed, and verified against gates. Final gate: 775/775 root + 236/0 crate + 451/0 pi + context budgets PASS. One residual named — roadmap row 66 still reads planned because the release step's status-and-pr-link write is outstanding — belongs to execute-phase, not a fold.
 - **Decisions:** probe concurrency: could not adopt the review's parallel-transport fix because the ceiling test's assertions are serial-only (every unrun check failed under 1ms); instead fixed bound-arithmetic and repaired the ceiling fixture's setup (never its assertions). session-attribution: §5 states the carrier per surface — session_id on Engram's MCP, project+cwd on Pi's provider, with ambiguous-refusal as a failed write to record. settings-cleaning: clean() now copies every accepted key, sweeping two pre-existing casualties (pathProtection, advance) on the same cycle.
 - **Next:** Review the fold at head e6887643, then gate the branch for merge to origin/main
+
+## 2026-10-26T00:00:00Z — feat/262-engram-substrate — manual
+- **Commits:** 0 (no commits yet in this run)
+- **Files:** 0 files
+- **Summary:** execute-phase 66 P1 preflight — bounded implementation discovery blocked by retired contract reference
+- **Decisions:** implementation-discovery contract retired by feature 61, two dangling references in execute-phase/PREFLIGHT.md and execute-phase/SKILL.md remain. P1 cannot start without that slot settled.
+- **Next:** fix the dangling references or re-triage P1
