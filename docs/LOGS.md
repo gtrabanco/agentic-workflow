@@ -3295,3 +3295,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** execute-phase 66 P1 preflight — bounded implementation discovery blocked by retired contract reference
 - **Decisions:** implementation-discovery contract retired by feature 61, two dangling references in execute-phase/PREFLIGHT.md and execute-phase/SKILL.md remain. P1 cannot start without that slot settled.
 - **Next:** fix the dangling references or re-triage P1
+- **Commits:** 26 (`d93cccca…6cc80e6d`)
+- **Files:** 43 files
+- **Summary:** Unit 66 (engram-memory-substrate, issue #262): completed the full adaptive lane — research, design (D1-D3), plan (P1-P6), implementation (P1-P6, 16 commits), and review cycle. All 10 review-change findings folded. Unit doc at docs/features/66-engram-memory-substrate/SPEC.md, branches the probe (packages/agentic-workflow) and provisioning (pi package + init-workspace + template).
+- **Decisions:** D1: deterministic runner-crate probe (bounded timeout, JSON verdict, DEGRADED when absent) + skill prose pasting into Evidence — chosen over skill-prose-only (no testable gate) and pi-hook (platform-bound, breaks 70+ agent portability). D2: canonical split — docs/LOGS.md = git-traveling team journal, mem_session_summary = unit-keyed local recall. D3: pi path = consent-gated pi.registerMcpServer + install route pi install npm:gentle-engram@latest (never engram setup pi, which keeps old version until re-run). P4 absorbs pre-existing pin drift: schema 4.6.0→4.7.0 + pi package version bump in same PR.
+- **Next:** Open PR for feat/262-engram-substrate against origin/main; run /review-change 66-engram-memory-substrate for a final pre-merge review if desired.
