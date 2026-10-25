@@ -110,3 +110,50 @@ been.** Both shipped templates exited 1 on `spec-unlinked: S2` — they broke th
 `(Implements: …)` rule they publish — and the review's refutation line quoted a run that
 had not been made. The defect is folded as F21's root cause (both templates link both
 example requirements; `unit-doc-contract.test.mjs` now lints them for real).
+
+## Cycle 2 — delta re-review, escalated to a full pass (2026-10-25)
+
+Delta mode per the fold receipt's `RE-REVIEW-REQUIRED (delta)` branch; both
+escalation triggers fired (width: changed files outside the folded rows' cited
+union — CHANGELOG, workflow docs, package tests, 9 suites, 10+ skill references;
+size: ~830 added+deleted lines / 48 files vs the 200 / 15 limits), so the delta
+pass ran as a full review over `git diff main...HEAD` at the reviewed head
+`ac543b6d0238e9c0820035ee2bfe0bf2623de3a4`. All 23 `folded: yes` rows re-verified
+**fixed** at their cited locations; F17/F20/F24 re-judged and confirmed settled
+per the owner's recorded resolutions (Q4/D4, Q5/D5 — `promise-coherence` PASS 36
+claims, both templates lint PASS, the citation pin landed and is tested).
+Four applicable axes ran isolated (`review-code`, `review-security` PASS,
+`review-verify`, `review-perf`); design/a11y/brand/seo skipped — no UI surface.
+`review-verify` reproduced the whole gate at this head (root 824/824, schema
+721/721, pi 432/432, every declared AC validator exit 0) and caught the parity
+rejection below. Cycle: 2 (one prior `REVIEW-RAN` mark + one forge receipt) —
+the two-cycle cap is reached; see the report's LOOP CAP block.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F27 | packages/pi-agentic-workflow/package.json:3 | workflow | high | fix-now | fold: the version-parity gate is red at this head — `node scripts/version-parity-gate.mjs --content --base main` exits 1 (`GATE REJECTION — shipped-content-version`): the package pins 0.31.0 and `main` also pins 0.31.0 (consumed by feature 66, `270b4be8`, after this branch registered 0.31.0 in `a8bf7abd`) while the branch changes 22 files under `skills/**` — merging as-is publishes nothing to npm, and the CHANGELOG 0.31.0 row's "registered above the base" claim is false against current `main`; bump to 0.32.0 + add the CHANGELOG Companion-npm-packages row in the same commit | no |
+| F28 | scripts/workflow-status.mjs:666 | code | med | fix-now | fold: `sectionBounds` is duplicated byte-identically (`scripts/ledger-provenance.mjs:370`) and both copies are fence-unaware while the shared reader `sectionText` (`scripts/unit-doc-phases.mjs:296`) is fence-aware — a fenced line starting `## ` at column 0 inside `## Log`/`## Findings` (the template's own L1 verbatim-request form invites it) truncates the section for the two fence-blind readers but not the third; read both through the shared reader (or move `sectionBounds` beside it) and pin the fenced-heading case | no |
+| F29 | scripts/workflow-status.mjs:762 | code | med | fix-now | fold: `rowsFromFindingsSection` re-implements the exported `findingsRows` (`scripts/unit-route.mjs:168-187`) — the same `findings-table@1` row grammar (cell slicing, ≥6-cell guard, header/separator/mark-row guards, `carrier:"doc"` normalization) in two copies that can drift while the shared parsers sit one import away in `unit-doc-phases.mjs`; import/extract the shared reader and pin parity — fold F6's `bounded()` control-char gap (`scripts/workflow-status.mjs:835`) opportunistically in the same batch | no |
+| VF-27 | packages/pi-agentic-workflow/package.json:3 · reviewer review-change · HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 · recheck reproducer: `node scripts/version-parity-gate.mjs --content --base main` → exit 1, `GATE REJECTION — shipped-content-version` (version `0.31.0 → 0.31.0`, 22 files triggered); `git show main:packages/pi-agentic-workflow/package.json` → `0.31.0`, last changed by `270b4be8` (feature 66) | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-28 | scripts/workflow-status.mjs:666 · reviewer review-change · HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 · recheck direct read of all three sites + reproducer: a doc whose `## Log` carries a fenced block with a column-0 `## ` heading line → shared `sectionText` returns the full section (the `P1` mark visible) while the copied `sectionBounds` body truncates to the first fence line and loses the mark | code | confirmed | finding-mark | n/a | n/a |
+| VF-29 | scripts/workflow-status.mjs:762 · reviewer review-change · HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 · recheck direct read of `rowsFromFindingsSection` beside `findingsRows` (`scripts/unit-route.mjs:168-187`): same grammar, no shared import, no parity pin | code | confirmed | finding-mark | n/a | n/a |
+
+### Marks
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| REVIEW-RAN | HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 · cycle 2 (delta, escalated full pass) · verdict REVIEW-FAIL | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 | node --test scripts/*.test.mjs | exit 0 | 824 tests · 824 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 | bun run build + bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 | bun run test (packages/pi-agentic-workflow) | exit 0 | 432 tests · 432 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD ac543b6d0238e9c0820035ee2bfe0bf2623de3a4 | node scripts/version-parity-gate.mjs --content --base main | exit 1 | GATE REJECTION — shipped-content-version (F27) | n/a | n/a |
+
+### Cycle 2 outcomes
+
+Three new fix-now rows (F27+F28+F29), all source-owned — no Product- or
+Plan-rooted finding, so the fold route stays valid; none is a regression of a
+cycle-1 row (all 23 re-verified fixed). Proposals (user-routed, D3):
+`createSpecByReference` exported and unwired (no CLI verb, no test import —
+recorded by the owner's dispute resolution) and a perf-benchmark pin for the new
+append-only-Log parsers (trigger: a parser lands on a hot path or a real Log
+exceeds ~1 MB).
