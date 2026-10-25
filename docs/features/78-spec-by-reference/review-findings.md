@@ -156,6 +156,32 @@ Axis: `workflow` for the two prose defects, `verify` for the coverage gap.
 | VF-31 | skills/triage-issue/references/FOLD_LEDGER.md:20-21 + skills/triage-issue/SKILL.md §Progressive loading · reviewer triage-issue 2.11.2 · HEAD af53daae44f006c80c7ff99cbca8925170a01822 · recheck direct read of the load condition beside the review-finding verdict set in `REVIEW_FINDING_PROCESS.md` §3, plus `grep -n 'flip\|folded: yes' REVIEW_FINDING_PROCESS.md` → no match; observed outcome: three flips written by this skill, in a commit separate from the fixes | workflow | confirmed | finding-mark | n/a | n/a |
 | VF-32 | scripts/review-loop-discipline.test.mjs:400-408 · reviewer triage-issue 2.11.2 · HEAD af53daae44f006c80c7ff99cbca8925170a01822 · recheck direct read of the IS-1 pin block: it names `foldSkill`, `persist`, `folding` only; `grep -n 'triage-issue' scripts/review-loop-discipline.test.mjs` returns only `--prioritize-now` routing matches, no contract-coherence case | verify | confirmed | finding-mark | n/a | n/a |
 
+### Cycle 3b — scope and `--prioritize-now` decisions (owner, 2026-10-25)
+
+Persisted by `triage-issue:triage-rows` from an explicit **owner decision** in
+this session's turn (provenance marker `owner decision 2026-10-25` — not a
+triage verdict and not an issue number). Both rows are defects this PR
+introduced or left exposed, so both are **in-scope** and therefore `fix-now`
+by the current-unit contract, regardless of axis: an in-scope defect is never
+postponed because it looks cheap or expensive.
+
+The owner's two rulings, recorded here because the rows encode them:
+
+- **Disposition follows scope, never axis or tier.** An in-scope defect is
+  `fix-now` always; size only chooses between the fold route and a replan, and
+  axis/severity only set execution order and the gate that must run.
+- **`--prioritize-now` is an escape, never a default.** It is admissible only
+  for an in-scope finding whose expected diff is small (≤2 files, no normative
+  surface, no published contract) — the axis never gates it — and no skill may
+  emit it automatically as the LOOP CAP default.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F33 | skills/review-implementation/references/CLASSIFY.md:82 | workflow | high | fix-now | fold: "a finding belongs to the **current unit** when it maps to the governing SPEC, a phase, a documented invariant, …" is a prose test with no mechanical contrast — nothing compares a row's `file:line` against what the unit actually declared, so the owner's rule ("in-scope is always fix-now; the only question is where") has no evidence to stand on, and `F27` (a release-contract bump) entered as in-unit without any scope check; make `review-implementation` emit an explicit `scope: in-unit \| new-unit` per row with cited evidence (the row's `file:line` against the unit's `## Impact` set and the files the unit touched) and make `triage-issue` **consume** that field instead of re-deriving it — owner decision 2026-10-25 | no |
+| F34 | skills/review-change/references/REVIEW_PROCESS.md:173 | workflow | high | fix-now | fold: the two-cycle cap's fixed block routes the residue to `/triage-issue --prioritize-now` **by default** (`:173`) and the prose repeats "the residue routes to `triage-issue --prioritize-now`" (`:177-178`), so the cap — the moment with the least evidence about the findings — emits the escape as the standard path, which is how `F30`/`F31` happened; the cap must stop and hand the decision back (named findings + each one's expected-diff size), with `--prioritize-now` listed only as the owner's forced option for a small in-scope finding, never as the recommended route — owner decision 2026-10-25 | no |
+| VF-33 | skills/review-implementation/references/CLASSIFY.md:82-86 vs skills/review-implementation/SKILL.md:64-70 · reviewer triage-issue 2.11.2 · HEAD af53daae44f006c80c7ff99cbca8925170a01822 · recheck direct read: the current-unit test names SPEC/phase/invariant/correctness but no evidence comparison; neither `SKILL.md` Step 2 nor `CLASSIFY.md` emits a scope field; `grep -rn 'scope: in-unit\|scope: new-unit' skills/` → no match | workflow | confirmed | finding-mark | n/a | n/a |
+| VF-34 | skills/review-change/references/REVIEW_PROCESS.md:170-178 · reviewer triage-issue 2.11.2 · HEAD af53daae44f006c80c7ff99cbca8925170a01822 · recheck direct read of the LOOP CAP block and the following paragraph: both name `--prioritize-now` as the route; reproduced in this cycle — the review emitted that block and the next turn took the escape | workflow | confirmed | finding-mark | n/a | n/a |
+
 ### Marks
 
 | id | file:line | axis | severity | class | route | folded |
