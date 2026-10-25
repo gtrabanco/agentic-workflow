@@ -96,6 +96,22 @@ reviewer-created issue creation are **forbidden** (AC 10). A previously approved
 trade-off is **cited as existing evidence**, never reinvented by review.
 `disputed` remains a later fold/user outcome, not a reviewer shortcut.
 
+### Scope is evidence, not impression (F33)
+
+Every classified row carries a `scope: in-unit | new-unit` cell, contrasted
+with what the unit declared:
+
+| Answer | Test |
+|---|---|
+| **in-unit** | path in the unit's `## Impact` set, in files its commits touch, or a surface it created/moved/claimed unchanged |
+| **new-unit** | path outside that set **and** the defect already exists at the base commit |
+| **undecidable** | the set is missing or the path is ambiguous — state the gap; never guess `new-unit` to escape |
+
+**Scope decides disposition, never size:** an in-unit defect is `fix-now`
+whatever its axis (`security`/`package` included); size only chooses fold vs
+`replan-in-unit`. "The unit did it" outranks "the path looks foreign".
+`triage-issue` consumes the cell, never re-derives it.
+
 ### Step 3 — Independent future capabilities → proposals, never issues
 
 Only a **truly independent future capability** — work the current unit does not
