@@ -40,8 +40,8 @@ export const MUTANTS = [
   { file: "src/extension/index.ts", from: "isProjectTrusted: () => ctx.isProjectTrusted(),", to: "isProjectTrusted: () => true,", suite: "shipped-adapter", rule: "N-1 trust comes from Pi" },
   { file: "src/extension/index.ts", from: "    cwd: ctx.cwd,", to: "    cwd: process.cwd(),", suite: "shipped-adapter", rule: "N-1 the project file comes from Pi's cwd" },
   { file: "src/settings/console.ts", from: "...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),", to: "...(false ? [prompts.undoInFlight] : []),", suite: "settings-console", rule: "N-2 the latch is releasable from the console" },
-  { file: "src/settings/console.ts", from: "if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;", to: 'if (draft.onUnavailableRoute && draft.onUnavailableRoute !== "stop") file.onUnavailableRoute = draft.onUnavailableRoute;', suite: "settings-console", rule: "F4 an explicit stop is saved" },
-  { file: "src/settings/console.ts", from: "if (Object.keys(route).length > 0) commands[name] = { ...route };", to: 'if (route.model !== "inherit") commands[name] = { ...route };', suite: "settings-console", rule: "F4 an explicit inherit is saved" },
+  { file: "src/settings/console.ts", from: "    if (value === undefined) continue;", to: '    if (value === undefined || value === "stop") continue;', suite: "settings-console", rule: "F4 an explicit stop is saved (clean() copies by key, never by value)" },
+  { file: "src/settings/console.ts", from: "if (route && Object.keys(route).length > 0) commands[name] = { ...route };", to: 'if (route && route.model !== "inherit") commands[name] = { ...route };', suite: "settings-console", rule: "F4 an explicit inherit is saved" },
   // Four of the six rules pass 2 parked as "the suite cannot see them"
   // (known-issues.md). Two were already pinned by tests pass 2 itself added (F12,
   // F13 — mutant killed on the pre-fold HEAD); two were real gaps and are pinned by
@@ -63,7 +63,7 @@ export const MUTANTS = [
   // an aborted turn releases the latch before exiting — if it's above, the
   // latch stays held and every later dispatch is refused (AC7).
   { file: "src/routing/dispatch.ts", from: "pending = undefined;\n      // `aborted`: pi 1.1.0 added `agent_settled.aborted` to distinguish a\n      // cancelled run from a finished one. An aborted turn is cleared without\n      // restoring the snapshot — an interrupted run must not silently swap the\n      // session model underneath the operator, matching the backing-off stance\n      // for an operator mid-turn change (AC7, pi 1.1.0 scope extension).\n      if (aborted) return;", to: "// `aborted`: pi 1.1.0 added `agent_settled.aborted` to distinguish a\n      // cancelled run from a finished one. An aborted turn is cleared without\n      // restoring the snapshot — an interrupted run must not silently swap the\n      // session model underneath the operator, matching the backing-off stance\n      // for an operator mid-turn change (AC7, pi 1.1.0 scope extension).\n      if (aborted) return;\n      pending = undefined;", suite: "restore-after-settle", rule: "F22 abort must not clear the latch before returning" },
-  { file: "src/settings/console.ts", from: "if (draft.onSettle) file.onSettle = draft.onSettle;", to: 'if (draft.onSettle && draft.onSettle !== "keep") file.onSettle = draft.onSettle;', suite: "settings-console", rule: "F4 an explicit keep onSettle is saved" },
+  { file: "src/settings/console.ts", from: "    if (value === undefined) continue;", to: '    if (value === undefined || value === "keep") continue;', suite: "settings-console", rule: "F4 an explicit keep onSettle is saved (clean() copies by key, never by value)" },
 ];
 
 /**

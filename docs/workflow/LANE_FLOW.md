@@ -21,6 +21,13 @@ idea → unit doc → triage → catalog steps → evidence → review → merge
    `/execute-phase <NN> P<k> (tier: <tier>)` — one phase per turn, tier from
    the triage block's `Tiers:` line — and the lane resumes after the last
    phase.
+   Every one of those boundaries is also a **memory boundary**: the lane's
+   `references/MEMORY.md` protocol probes the substrate once per session
+   (`agentic-workflow memory probe`), then saves the unit's goal, numbered
+   acceptance criteria, Evidence outcomes and discoveries under
+   `unit/<NN-slug>/doc` at unit start, at each phase transition and at close.
+   Required substrate, never a hard dependency — a `degraded` verdict is said
+   once, recorded in Evidence, and the unit keeps working.
 5. **evidence** — every acceptance criterion is verified with run output.
    Evidence rows go in the unit doc's Evidence table.
 6. **review** — the review pack composes axes (code, security, perf, …);
@@ -231,6 +238,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `bun scripts/unit-route.mjs --triage <NN> [--json]` | Triage a unit |
 | `node scripts/needs-input.mjs <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
 | `bun scripts/diff-guard.mjs --base <ref>` | Diff-size guard check |
+| `agentic-workflow memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
 | `agentic-workflow unit-doc create` | Create a unit doc (SDK) |
 | `agentic-workflow unit-doc setSection` | Replace a section (SDK) |
 | `agentic-workflow unit-doc evidence_addRow` | Append evidence row (SDK) |

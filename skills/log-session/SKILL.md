@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 2.2.1
+version: 2.3.0
 argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -123,6 +123,22 @@ the HEAD sha and start time at session open.
    exit `0` clean, `2` the named leftovers are still dirty, `1` refused. Do not
    open a PR just for a log entry, and never `git add -A` here — a concurrent
    conversation's work must not be swept into a log commit.
+
+## The canonical split — this skill's half (feature 66, D2)
+
+Two writers exist on purpose; neither mirrors the other:
+
+- **`docs/LOGS.md` (this skill)** is the **human/team journal** — what a session
+  set out to do, what it decided, where to resume. It travels with git, so a
+  teammate or a fresh clone reads it with no local state.
+- **Engram (`mem_session_summary`, and the lane's `unit/<NN-slug>/doc` topic)**
+  is **local decision and gotcha recall keyed by unit id**, written by
+  `unit-lane` and `execute-phase` at unit boundaries. It stays on the machine.
+
+Engram never mirrors this log, and this log never mirrors Engram: team memory
+travels with git, agent recall stays local. Write the journal half here; the
+protocol half (boundaries, recall order, degradation) lives in the lane's
+memory reference, `../unit-lane/references/MEMORY.md`.
 
 ## Guardrails
 

@@ -1525,3 +1525,34 @@ test("AC11: selecting the default profile does not create a profiles.default ent
   assert.equal(saved.profiles, undefined, "no spurious profiles.default entry");
   assert.deepEqual(saved.default, { model: "w/1", thinking: "high" });
 });
+
+test("F4: saving keeps the keys the console never prompts for — memory, pathProtection, advance", async () => {
+  // The consent switch the Engram substrate ships behind (feature 66, AC3) lives
+  // in this file. `clean()` enumerated the keys it copied, so any key outside
+  // that list — `memory`, and the pre-existing `pathProtection` / `advance` —
+  // was parsed into the draft and then dropped on write: an operator who opted
+  // in by hand lost the opt-in the next time they saved a route.
+  const existing = {
+    default: { model: "openai/gpt-5.2", thinking: "low" },
+    memory: { engram: true },
+    pathProtection: { protectedGlobs: ["scripts/**"] },
+    advance: { iterationsCap: 3, runLogPath: ".agentic-workflow/tmp/advance.jsonl" },
+  };
+  const { outcome, written } = await run(
+    { [paths.global]: JSON.stringify(existing) },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.save],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.memory, { engram: true }, "the Engram opt-in survives a save");
+  assert.deepEqual(saved.pathProtection, { protectedGlobs: ["scripts/**"] }, "the tighten-only override survives");
+  assert.deepEqual(saved.advance, existing.advance, "the conductor knobs survive");
+  assert.deepEqual(saved.default, { model: "openai/gpt-5.2", thinking: "low" }, "and the untouched route is still written");
+});
