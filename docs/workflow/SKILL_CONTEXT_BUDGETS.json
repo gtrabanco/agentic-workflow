@@ -398,8 +398,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 21356,
-      "routeLinesMax": 1511,
+      "routeEstimateMax": 21823,
+      "routeLinesMax": 1545,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -414,7 +414,8 @@
         "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed — router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis.",
         "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across verification-contract/SKILL.md (description, artifact, freeze/receipt), review-change/SKILL.md:62, review-change/references/REVIEW_PROCESS.md:34,56, pre-execution-review/references/LEDGERS.md:58,150, POLICY.md:66,152, audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:98,111,157, workflow-status/references/PRE_EXECUTION.md:27, review-implementation/references/CLASSIFY.md:45, pre-execution-review/references/SNAPSHOT.md:64; route measured 1341; ceiling = ceil(1341 x 1.10) = 1476 lines, ceil(18897 x 1.10) = 20787 est",
         "unit 78 / feature #308 (findings-carrier collapse)": "P5 moved the fix-now ledger into the unit doc's ## Findings section with the marks as ## Log lines, so PERSIST_AND_DECIDE.md step 11 states both carriers and the probe-first rule; route measured 19095 est / 1355 lines; ceiling = ceil(measured x 1.10) = 21005 est and 1491 lines",
-        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared."
+        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
+        "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate": "re-based in this PR"
       }
     },
     "review-change:default-backend": {
@@ -433,8 +434,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 19538,
-      "routeLinesMax": 1392,
+      "routeEstimateMax": 20005,
+      "routeLinesMax": 1426,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -449,7 +450,8 @@
         "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed — router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis.",
         "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across verification-contract/SKILL.md (description, artifact, freeze/receipt), review-change/SKILL.md:62, review-change/references/REVIEW_PROCESS.md:34,56, pre-execution-review/references/LEDGERS.md:58,150, POLICY.md:66,152, audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:98,111,157, workflow-status/references/PRE_EXECUTION.md:27, review-implementation/references/CLASSIFY.md:45, pre-execution-review/references/SNAPSHOT.md:64; route measured 1233; ceiling = ceil(1233 x 1.10) = 1357 lines, ceil(17244 x 1.10) = 18969 est",
         "unit 78 / feature #308 (findings-carrier collapse)": "P5 moved the fix-now ledger into the unit doc's ## Findings section with the marks as ## Log lines, so PERSIST_AND_DECIDE.md step 11 states both carriers and the probe-first rule; route measured 17442 est / 1247 lines; ceiling = ceil(measured x 1.10) = 19187 est and 1372 lines",
-        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared."
+        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
+        "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR"
       }
     },
     "review-change:default-web": {
@@ -468,8 +470,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 19538,
-      "routeLinesMax": 1392,
+      "routeEstimateMax": 20005,
+      "routeLinesMax": 1426,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -484,7 +486,8 @@
         "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed — router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis.",
         "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across verification-contract/SKILL.md (description, artifact, freeze/receipt), review-change/SKILL.md:62, review-change/references/REVIEW_PROCESS.md:34,56, pre-execution-review/references/LEDGERS.md:58,150, POLICY.md:66,152, audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:98,111,157, workflow-status/references/PRE_EXECUTION.md:27, review-implementation/references/CLASSIFY.md:45, pre-execution-review/references/SNAPSHOT.md:64; route measured 1233; ceiling = ceil(1233 x 1.10) = 1357 lines, ceil(17244 x 1.10) = 18969 est",
         "unit 78 / feature #308 (findings-carrier collapse)": "P5 moved the fix-now ledger into the unit doc's ## Findings section with the marks as ## Log lines, so PERSIST_AND_DECIDE.md step 11 states both carriers and the probe-first rule; route measured 17442 est / 1247 lines; ceiling = ceil(measured x 1.10) = 19187 est and 1372 lines",
-        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared."
+        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
+        "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR"
       }
     },
     "review-change:synthesize": {
@@ -503,8 +506,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20053,
-      "routeLinesMax": 1416,
+      "routeEstimateMax": 20521,
+      "routeLinesMax": 1450,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -519,7 +522,8 @@
         "issue #293 (unit 76)": "issue #293 (unit 76): the product-owned close-out bullet in PERSIST_AND_DECIDE.md becomes executable as typed — router first (`node scripts/unit-route.mjs <unit>` prints `route: product`), then the per-unit-kind lane hand-off (`/unit-lane <unit>` feature, `/unit-lane --fix <n>` fix); the bullet grew from 3 to 4 lines. Ceiling re-based to ceil(measured x 1.10) over measured estimate/lines at this re-basis.",
         "unit 36 / feature 36": "feature 36 fold: F14 migration of ACCEPTANCE.md mandate across verification-contract/SKILL.md (description, artifact, freeze/receipt), review-change/SKILL.md:62, review-change/references/REVIEW_PROCESS.md:34,56, pre-execution-review/references/LEDGERS.md:58,150, POLICY.md:66,152, audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:98,111,157, workflow-status/references/PRE_EXECUTION.md:27, review-implementation/references/CLASSIFY.md:45, pre-execution-review/references/SNAPSHOT.md:64; route measured 1255; ceiling = ceil(1255 x 1.10) = 1381 lines, ceil(17713 x 1.10) = 19485 est",
         "unit 78 / feature #308 (findings-carrier collapse)": "P5 moved the fix-now ledger into the unit doc's ## Findings section with the marks as ## Log lines, so PERSIST_AND_DECIDE.md step 11 states both carriers and the probe-first rule; route measured 17911 est / 1269 lines; ceiling = ceil(measured x 1.10) = 19703 est and 1396 lines",
-        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared."
+        "issue #308 (unit 78 review fold)": "issue #308 (unit 78 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
+        "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR"
       }
     }
   },

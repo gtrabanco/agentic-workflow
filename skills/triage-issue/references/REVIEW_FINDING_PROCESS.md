@@ -17,7 +17,12 @@ after `/fold-findings` leaves rows unresolved.
 
    - A complete correction that fits the current unit and is reviewable now
      remains on the current unit. Route it to `/fold-findings` or an explicit
-     `/execute-phase <unit> P<n>`.
+     `/execute-phase <unit> P<n>` — **never implement it in this turn**. The
+     fold owns the fix, the gate and the `folded:` flip: writing the flip here
+     would make this skill the second owner of a state
+     `ledger-ownership@1` assigns solely to `fold-findings:folded-flag`
+     (`LEDGERS.md`), so a row this skill appends starts `folded: no` and stays
+     that way until the fold closes it.
    - A correction too large for the current fold is `replan-in-unit`. Run
      `node scripts/unit-route.mjs <unit>`; its `route: replan` line prints the
      planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
