@@ -201,3 +201,63 @@ cycle-1 row (all 23 re-verified fixed). Proposals (user-routed, D3):
 recorded by the owner's dispute resolution) and a perf-benchmark pin for the new
 append-only-Log parsers (trigger: a parser lands on a hot path or a real Log
 exceeds ~1 MB).
+
+### Cycle 4 — review-change cycle 3: delta escalated to a full pass (2026-10-25)
+
+Run on the user's explicit instruction (the two-cycle cap was reached at cycle 2;
+this is the owner's escape, not a reviewer election). Delta mode per the
+post-fold re-review default; **escalated to a full pass — size trigger fired**:
+the last fold batch (`d7b8ea14`, F30–F34) changed 15 files / ~368 added+deleted
+lines against the 200-line limit (width trigger did not: 15 files, not >15, and
+every changed file is inside the batch's cited union). Reviewed head
+`d7b8ea14ada630c434fcca1adba70190227f6259` (= PR #311 head). All 31 `folded: yes`
+rows re-verified **fixed** at their cited locations (F17/F20 stay DISPUTED per the
+owner's recorded resolutions; F24's prose half fixed). Four applicable axes ran
+isolated (`review-code` FAIL, `review-security` FAIL, `review-verify` PASS,
+`review-perf` PASS); design/a11y/brand/seo skipped — no UI surface. Every AC's
+declared validator re-run at this head (AC1 13/13, AC2 211/211, AC3 20/20, AC4
+105/105, AC5 32/32 + no closed unit doc in the diff, AC6 9/9, parity
+0.31.0→0.33.0 PASS, budgets 28 skills/14 routes, LINEAGE OK, needs-input 0,
+promise-coherence PASS 36 claims); no test deleted or loosened. Cycle: 3 (two
+prior `REVIEW-RAN` marks + forge receipts) — a cycle ≥ 2 with new fix-now rows,
+so the report carries the `CONVERGENCE-ANOMALY` block and the cap hands the
+decision back.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F35 | docs/features/78-spec-by-reference/SPEC.md:414-514 | code | med | fix-now | fold: the cycle-2 review-verdict block is duplicated byte-identically — the material table (M1–M7), report-notes (N1–N15) and the "Ladder position…" paragraph appear in both `## Next` (:414-462) and `## Review verdict` (:466-514); only the fenced `REVIEW-VERDICT: FAIL` header differs (`grep -c '^| M1 '` → 2) — keep `## Review verdict` canonical and reduce `## Next` to the verdict block plus a one-line pointer, so the pane F26's fold re-cut cannot be read twice | no |
+| F36 | docs/features/78-spec-by-reference/review-findings.md:134 | verify | med | fix-now | fold: `node scripts/ledger-provenance.mjs --check docs/features/78-spec-by-reference/review-findings.md` exits 1 at this head — F27 `cited-unverified`: the row's prose cites two reachable context commits (`270b4be8`, `a8bf7abd`) and the demotion rule (`status = cited.length ? "cited-unverified" : …`, `scripts/ledger-provenance.mjs:508`) demotes an otherwise score-3-proven fold (`bc4d37ba` names F27 and changes the cited surface, but the marker was never appended); annotate the row (the tool's own repair route) or re-cut the context citations, and pin the marker-vs-prose-citation precedence case in `ledger-provenance.test.mjs` | no |
+| F37 | scripts/workflow-status.mjs:656 | security | med | fix-now | fold: the doc-carrier review-mark regex `/\s*[-*+ ]\s+\*\*R(\d+)\*\*…/gm` (new in this delta) lost the `^` anchor — `\s*` matches across newlines, so a prose bullet `- see **R2** — note` matches, and because the section body `sectionRange` returns includes fenced lines, a forged `**R2** — HEAD <40-hex>` inside a ``` fence inside `## Log` is taken as the latest mark with its sha extracted (reproduced in /tmp): review-freshness self-deception; re-anchor to `^\s*` with `/m` and add prose-mention + fenced-forgery corpus cases to `workflow-status-sensor.test.mjs` | no |
+| F38 | scripts/workflow-status.mjs:805-808,815-835 | security | med | fix-now | fold: `bounded()` only collapses `\s+` and `readFixNow` pushes identity cells verbatim — Log mark bodies (`readLogMarks` → observations at `:1450`) and fixNow `id`/`file`/`axis`/`class`/`route` cells from unit-doc table rows reach the envelope with no `sanitize()` (grep: only call sites `:852,:866`) — the same control/C1/bidi/zero-width echo class F14 closed in `phase-lint`, and the gap F29's fold route explicitly promised to close "in the same batch"; route both echo paths through `sanitize()` (or share its flatten class in `bounded()`), keep the 120-char bound, and pin a control-char corpus case | no |
+| F39 | scripts/workflow-status.mjs:788-792 | code | med | fix-now | fold: `readLogMarks` still extracts `## Log` fence-blind (`search(/^## Log/m)` + `search(/^## /m)`) — the exact F28 defect class left in a third reader after the fold moved the other two onto the shared fence-aware `sectionBounds`; a fenced column-0 `## ` heading inside `## Log` truncates the marks this reader sees while the shared reader returns the full section; read it through `sectionBounds(doc, "Log")` (already imported at `:41`) and pin the fenced-heading case | no |
+| VF-35 | docs/features/78-spec-by-reference/SPEC.md:414-462 vs :466-514 · reviewer review-change 3.13.0 · HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · recheck direct read + `grep -c '^| M1 '` → 2; `diff` of the two ranges shows only the fenced header differs | code | confirmed | finding-mark | n/a | n/a |
+| VF-36 | docs/features/78-spec-by-reference/review-findings.md:134 · reviewer review-change 3.13.0 · HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · recheck reproducer: `node scripts/ledger-provenance.mjs --check docs/features/78-spec-by-reference/review-findings.md` → exit 1, `1 cited-unverified: F27`; direct read of the demotion rule at `scripts/ledger-provenance.mjs:508` and `bc4d37ba`'s subject (`fix(78): close F27 parity gate…`) | verify | confirmed | finding-mark | n/a | n/a |
+| VF-37 | scripts/workflow-status.mjs:656 · reviewer review-change 3.13.0 · HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · recheck direct read + reproducer: `/^\s*/`-less regex matches `- see **R1** — note` mid-Log; `sectionRange` builds on fence-aware `sectionBounds` for headings but returns the full body including fenced lines, so a fenced `**R2** — HEAD …` line is captured | security | confirmed | finding-mark | n/a | n/a |
+| VF-38 | scripts/workflow-status.mjs:805-808 · reviewer review-change 3.13.0 · HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · recheck direct read: `bounded()` = `.replace(/\s+/g," ").trim()` only; `sanitize` imported at `:38` with call sites `:852,:866` only; `readFixNow` `:815-835` pushes carrier cells verbatim; F29's ledger row names the bounded() gap as an in-batch promise | security | confirmed | finding-mark | n/a | n/a |
+| VF-39 | scripts/workflow-status.mjs:788-792 · reviewer review-change 3.13.0 · HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · recheck direct read: inline `doc.search(/^## Log\s*$/m)` + `doc.slice(after).search(/^## /m)` — no `openFence`/`closesFence`; `sectionBounds` imported at `:41` and used at `:670,:686` but not here | code | confirmed | finding-mark | n/a | n/a |
+
+### Marks
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| REVIEW-RAN | HEAD d7b8ea14ada630c434fcca1adba70190227f6259 · cycle 3 (delta, escalated full pass — size trigger ~368 added+deleted > 200) · verdict REVIEW-FAIL | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD d7b8ea14ada630c434fcca1adba70190227f6259 | node --test scripts/*.test.mjs | exit 0 | 824 tests · 824 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD d7b8ea14ada630c434fcca1adba70190227f6259 | bun run build + bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD d7b8ea14ada630c434fcca1adba70190227f6259 | bun run test (packages/pi-agentic-workflow) | exit 0 | 432 tests · 432 pass · 0 fail | n/a | n/a |
+
+### Cycle 4 outcomes
+
+Five new fix-now rows (F35+F36+F37+F38+F39), all `scope: in-unit` (the unit's own
+doc and ledger, plus `scripts/workflow-status.mjs` / `unit-doc-phases.mjs` both in
+the unit's `## Impact` set) and all source-owned — no Product- or Plan-rooted
+finding, so the fold route stays valid. None is a `regression of <id>`: all 31
+prior folded rows re-verified fixed at their cited locations; F38 is adjacent to
+F29's promised in-batch extra but at different cited lines, so it enters as its
+own row. Report-only notes (low, never persisted): a byte-identical duplicate
+"dispute resolutions (owner)" Progress-log entry (SPEC.md:405-406); a dead
+import `sectionText` (workflow-status.mjs:41); the shared `sectionBounds`/
+`sectionText` heading test on `trimmed` lines admits an indented `## Log`/
+`## Findings` the column-0 regexes refused (unit-doc-phases.mjs:296-352 — debt
+note, trigger: a doc with an indented `## Log` line). Proposals unchanged from
+cycle 2 (user-routed, D3): `createSpecByReference` exported and unwired; a
+perf-benchmark pin for the append-only-Log parsers.
