@@ -319,3 +319,39 @@ export function sectionText(text, name) {
   }
   return start === null ? null : text.slice(start);
 }
+
+/** The `[from, to)` range of one level-2 section, its heading included, or null.
+ * Fence-aware: fenced blocks inside the section body are skipped so a line
+ * like `## Status` inside a code block does not truncate the section. The
+ * old fence-unaware copy (`/^## /m`) is the defect class #308 F28.
+ */
+export function sectionBounds(text, name) {
+  let fence = null;
+  let start = null;
+  const heading = new RegExp(
+    `^## ${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \t]*$`,
+  );
+  for (let offset = 0; offset < text.length; offset++) {
+    const eol = text.indexOf("\n", offset);
+    const lineEnd = eol === -1 ? text.length : eol;
+    const trimmed = text.slice(offset, lineEnd).trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      offset = lineEnd;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      offset = lineEnd;
+      continue;
+    }
+    if (start === null) {
+      if (heading.test(trimmed)) start = offset;
+      offset = lineEnd;
+      continue;
+    }
+    if (H2_HEADING.test(trimmed)) return [start, offset];
+  }
+  return start === null ? null : [start, text.length];
+}
