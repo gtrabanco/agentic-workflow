@@ -35,6 +35,8 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, relative, resolve } from "node:path";
+// Shared section parser (fence-aware, issue #308 F28).
+import { sectionBounds } from "./unit-doc-phases.mjs";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
 /**
@@ -364,15 +366,6 @@ function runDocRecount({ rel: docRel, text, asJson: json, checkOnly: check }) {
       process.stdout.write("CHECK PASS: every folded line names a verified commit\n");
     }
   }
-}
-
-/** The `[from, to)` range of one level-2 section, heading included, or null. */
-function sectionBounds(text, name) {
-  const start = text.search(new RegExp(`^## ${name}[ \\t]*$`, "m"));
-  if (start === -1) return null;
-  const after = text.indexOf("\n", start) + 1;
-  const next = text.slice(after).search(/^## /m);
-  return [start, next === -1 ? text.length : after + next];
 }
 
 // --- 1. flip + introduction detection: walk every historical version ---------

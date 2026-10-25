@@ -35,7 +35,10 @@ import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
 // echoed-cell bound. The sensor imports them instead of re-deriving them: two
 // vocabularies let the same ledger row answer `route: execute` from the router and
 // `/fold-findings` from the sensor (#224 fold F13/F2/F15).
-import { isOpen, isMarkRow, routeOfRow, sanitize } from "./unit-route.mjs";
+import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows } from "./unit-route.mjs";
+// Shared section parser (fence-aware, issue #308 F28) — avoids re-defining
+// sectionBounds (fence-blind) in workflow-status and ledger-provenance.
+import { sectionBounds, sectionText } from "./unit-doc-phases.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -648,9 +651,9 @@ function reviewMark(unitDir) {
   // a unit with the section never reads the side file, so one carrier answers for
   // the rows, the marks and the fold history alike.
   if (doc !== null && /^## Findings\s*$/m.test(doc)) {
-    const log = sectionRange(doc, "Log");
+  const log = sectionRange(doc, "Log");
     if (log === null) return null;
-    const marks = [...log[1].matchAll(/^\s*[-*+ ]\s+\*\*R(\d+)\*\*\s*[—-]\s*(.*)$/gm)];
+    const marks = [...log[1].matchAll(/\s*[-*+ ]\s+\*\*R(\d+)\*\*\s*[—-]\s*(.*)$/gm)];
     if (marks.length === 0) return { sha: null, carrier: "doc" };
     const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1][2])?.[1] ?? null;
     return { sha, carrier: "doc" };
@@ -660,15 +663,6 @@ function reviewMark(unitDir) {
   const mark = ledger.split("\n").find((line) => line.startsWith("| REVIEW-RAN"));
   if (!mark) return null;
   return { sha: /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null, carrier: "ledger" };
-}
-
-/** The `[from, to)` range of one level-2 section, its heading included, or null. */
-function sectionBounds(text, name) {
-  const start = text.search(new RegExp(`^## ${name}[ \\t]*$`, "m"));
-  if (start === -1) return null;
-  const after = text.indexOf("\n", start) + 1;
-  const next = text.slice(after).search(/^## /m);
-  return [start, next === -1 ? text.length : after + next];
 }
 
 /** One level-2 section's body (after its heading line), or null when it is absent. */
@@ -754,35 +748,11 @@ const SEVERITY_VOCABULARY = new Map([
 function findingsCarrier(unitDir) {
   const doc = readProject(path.join(unitDir, "SPEC.md"));
   if (doc !== null && /^## Findings\s*$/m.test(doc)) {
-    return { rows: rowsFromFindingsSection(doc), carrier: "doc", text: doc };
+    return { rows: findingsRows(doc), carrier: "doc", text: doc };
   }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return { rows: [], carrier: "none", text: "" };
   return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger };
-}
-
-/** The `## Findings` table's rows: OPEN by definition, and shaped like a ledger row. */
-function rowsFromFindingsSection(doc) {
-  // The section body runs from after its heading to the next level-2 heading —
-  // never past it, so a later `## Log` table can never leak a row in.
-  const start = doc.search(/^## Findings\s*$/m);
-  const after = doc.indexOf("\n", start) + 1;
-  const next = doc.slice(after).search(/^## /m);
-  const body = next === -1 ? doc.slice(after) : doc.slice(after, after + next);
-  const rows = [];
-  for (const line of body.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = cellsOf(line).slice(1, -1);
-    if (cells.length < 6) continue;
-    const [id, file, axis, severity, klass] = cells;
-    if (/^id$/i.test(id) || isMarkRow(id) || /^[-:\s]*$/.test(id)) continue;
-    // The re-cut table has no `folded` column — a folded row leaves it for a log
-    // line — so every row here is open and the shape is normalized to the ledger's.
-    // `carrier: "doc"` is the marker `routeOfRow` needs to read the collapsed
-    // carrier's closed column vocabularies; it is dropped before the envelope.
-    rows.push({ id, file, axis, severity, klass, route: cells.slice(5).join(" | "), folded: "no", carrier: "doc" });
-  }
-  return rows;
 }
 
 /** The open rows of a legacy `review-findings.md`, in file order — the router's own
