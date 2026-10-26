@@ -20,10 +20,11 @@ import {
   collectDrift,
   collectPyPIDrift,
   driftMarker,
+  installedVersion,
   planIssues,
+  parsePypiLatest,
   pypiIssueFor,
   pypiLatest,
-  pipInstalled,
   renderReport,
   watchedPackages,
   watchedPyPI,
@@ -32,7 +33,7 @@ import {
 const PI = "@gtrabanco/pi-agentic-workflow";
 const RUNNER = "@gtrabanco/agentic-workflow";
 
-/** Two packages, exactly as `--check` discovers them. */
+/** Two synthetic offline packages — the real manifest no longer carries the bridge pin (issue #321), which the shipped-wiring test below asserts. */
 function packages(overrides = {}) {
   return [
     {
@@ -459,6 +460,86 @@ test("pypi issue: the filed issue names the installed and published versions", (
   assert.doesNotMatch(JSON.stringify(issue), /uv tool upgrade [^\n]*automat/u, "the issue proposes a manual step, never a silent upgrade");
 });
 
+// ---------------------------------------------------------------------------
+// installed-version detection (external-verify correction batch: `pip show`
+// never sees the `uv tool install` route this repo documents — the uv-tool
+// venv is isolated from pip, and the pip binary may not exist at all)
+// ---------------------------------------------------------------------------
+
+/** A probe stub keyed by "<bin> <args...>" → stdout; a miss reads as absent/failed (null). */
+function probeStub(map) {
+  return (bin, args) => {
+    const key = `${bin} ${args.join(" ")}`;
+    return key in map ? map[key] : null;
+  };
+}
+
+test("installed-version: the tool's own binary answers first and the chain stops there", () => {
+  const calls = [];
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: (bin, args) => { calls.push(`${bin} ${args.join(" ")}`); return "Serena 2.1.0\n"; } },
+  );
+
+  assert.equal(version, "2.1.0");
+  assert.deepEqual(calls, ["serena --version"], "once a source answers, uv/pip are not consulted");
+});
+
+test("installed-version: `uv tool list` answers when the binary is absent", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: probeStub({ "uv tool list": "serena-agent v1.7.0\n- serena\n- serena-agent\n" }) },
+  );
+
+  assert.equal(version, "1.7.0");
+});
+
+test("installed-version: `pip show` is the last fallback", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: probeStub({ "pip show serena-agent": "Name: serena-agent\nVersion: 1.7.0\n" }) },
+  );
+
+  assert.equal(version, "1.7.0");
+});
+
+test("installed-version: a machine with none of the sources reports not installed", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: () => null },
+  );
+
+  assert.equal(version, null);
+});
+
+test("blocker pin: a uv-tool install is detected and drifts against PyPI — never `not installed`", () => {
+  // The shape of the machine this blocker reproduced on: no pip binary, uv
+  // manages serena-agent, `serena --version` answers. A stale install must
+  // produce the drift finding; the pip-only detector reported
+  // `not installed on this machine` here with a PASS verdict.
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: (entry) =>
+      installedVersion(entry, {
+        probe: probeStub({
+          "serena --version": "Serena 1.7.0\n",
+          "uv tool list": "serena-agent v1.7.0\n- serena\n",
+        }),
+      }),
+  });
+
+  assert.equal(result.findings.length, 1, "a stale uv-tool install is drift");
+  assert.equal(result.findings[0].installed, "1.7.0");
+  assert.equal(result.findings[0].latest, "2.1.0");
+  assert.deepEqual(result.skipped, [], "an installed package is never reported not-installed");
+});
+
+test("the watched entry carries the tool binary (`serena` for serena-agent)", () => {
+  const [entry] = watchedPyPI();
+  assert.equal(entry.binary, "serena");
+});
+
 test("regression: a PyPI skipped entry prints its name, never `undefined` (differential pin)", () => {
   const npm = collectDrift({ packages: packages(), fetchLatest: registry({ typebox: "1.3.7" }) });
   const pypi = collectPyPIDrift({
@@ -475,4 +556,10 @@ test("regression: a PyPI skipped entry prints its name, never `undefined` (diffe
   });
   assert.doesNotMatch(report, /undefined/u, "no skipped entry may render as `undefined:`");
   assert.match(report, /serena-agent: not installed on this machine/u);
+});
+
+test("pypi json payload: the API's info.version parses; junk and empty degrade to null", () => {
+  assert.equal(parsePypiLatest('{"info":{"version":"2.1.0"}}'), "2.1.0");
+  assert.equal(parsePypiLatest('{"info":{}}'), null, "no version field is not a version");
+  assert.equal(parsePypiLatest("not json"), null, "a non-JSON body is not a version");
 });
