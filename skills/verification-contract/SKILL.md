@@ -1,15 +1,16 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.4.3
+version: 1.5.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: the acceptance artifact per delivery unit — legacy (pre-
   feature 61) units may carry a frozen `ACCEPTANCE.md` (binding if present);
   post-feature 61 units use the unit doc's `## Acceptance criteria` section as
-  the canonical acceptance source; the unit doc's `## Evidence` table serves as
-  the execution receipt. Consumed by planners, execute-phase, and review-change.
+  the canonical acceptance source; the unit doc's evidence carrier — `## Evidence`
+  table, or `## Log` `E` lines for a re-cut unit (#308) — serves as the execution
+  receipt. Consumed by planners, execute-phase, and review-change.
 ---
 
 # Verification Contract (internal)
@@ -63,9 +64,10 @@ v1` is needed: property/fuzz rides the existing `commands` class.
 
 ## Freeze and receipt
 
-The unit doc's `## Evidence` table is the execution receipt: each Evidence row
-records a validator command, its exit code or blob digest, output excerpt, and
-who verified it. A frozen criterion's receipt is the Evidence row for that
+The unit doc's own evidence carrier is the execution receipt: the `## Evidence`
+table for a legacy-shape unit, the `## Log` `E` lines for a re-cut one (#308). Each
+row or line records a validator command, its exit code or blob digest, output
+excerpt, and who verified it. A frozen criterion's receipt is the Evidence row for that
 criterion — exact match continues; missing/mismatched evidence stops before
 edits:
 
@@ -122,4 +124,4 @@ semantics are verified against authoritative documentation **before a test encod
 
 ## Done when
 
-Execution receipt (unit doc `## Evidence` table for post-feature 61 units; legacy `ACCEPTANCE.md` manifest binding-if-present) + named validators + literal quality floor; executor and reviewer evaluate identical evidence.
+Execution receipt (unit doc `## Log` `E` lines for a re-cut unit, `## Evidence` table for a post-feature 61 one; legacy `ACCEPTANCE.md` manifest binding-if-present) + named validators + literal quality floor; executor and reviewer evaluate identical evidence.

@@ -35,7 +35,13 @@ import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
 // echoed-cell bound. The sensor imports them instead of re-deriving them: two
 // vocabularies let the same ledger row answer `route: execute` from the router and
 // `/fold-findings` from the sensor (#224 fold F13/F2/F15).
-import { isOpen, isMarkRow, routeOfRow, sanitize } from "./unit-route.mjs";
+import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } from "./unit-route.mjs";
+// Shared section parser (fence-aware, issue #308 F28) — avoids re-defining
+// sectionBounds (fence-blind) in workflow-status and ledger-provenance. The
+// sensor reads `## Log` through `parseLog`, never through its own line grammar
+// (#308 cycle-3 F37/F39: the inline copies had drifted — one unanchored, one
+// fence-blind — while the shared reader was already both).
+import { sectionBounds, parseLog } from "./unit-doc-phases.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -635,20 +641,91 @@ const boundPathsFor = (unitDir, stage) => [
   ...REVIEW_CONTEXT_PATHS,
 ];
 
-/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
-function readReviewMark(unitDir, stage) {
+/**
+ * The head a review mark names, from whichever carrier owns it (#308 §Scope 3).
+ * A migrated unit writes the `review-mark@1` row into its own `## Log` as an `R`
+ * line; a legacy unit keeps it in `review-findings.md`. The doc is probed first and
+ * the side file is the fallback — never both, which is what makes the collapse real.
+ * The mark's row shape stays owned by `LEDGERS.md` §review-mark@1; this reads it.
+ */
+function reviewMark(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  // The migrated marker is `## Findings`, the same predicate `findingsCarrier` uses:
+  // a unit with the section never reads the side file, so one carrier answers for
+  // the rows, the marks and the fold history alike. The predicate is the shared
+  // fence-aware section reader, not a `/m` regex — a legacy unit that quotes the
+  // re-cut shape inside a fenced sample is not a migrated unit (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
+    // One grammar for the whole carrier: `parseLog` is anchored on the published
+    // `- **R<n>** — …` line shape and fence-aware, so a prose mention of an `R`
+    // token and a forged line inside a fenced block are text, never marks (F37).
+    const marks = parseLog(doc).lines.filter((line) => line.kind === "R");
+    if (marks.length === 0) return { sha: null, carrier: "doc" };
+    const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1].body)?.[1] ?? null;
+    return { sha, carrier: "doc" };
+  }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return null;
   const mark = ledger.split("\n").find((line) => line.startsWith("| REVIEW-RAN"));
   if (!mark) return null;
-  const sha = /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null;
+  return { sha: /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null, carrier: "ledger" };
+}
+
+/** One level-2 section's body (after its heading line), or null when it is absent. */
+function sectionRange(text, name) {
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  return [bounds[0], text.slice(after, bounds[1])];
+}
+
+
+/**
+ * The unit doc with the two collapsed-carrier sections (`## Findings`, `## Log`)
+ * cut out — the bytes a review mark is NOT allowed to have changed. A migrated
+ * unit writes its marks and its OPEN rows into the bound `SPEC.md` itself, so a
+ * check over the whole document aged every mark the moment it was committed (F38's
+ * class, in the new carrier): the mark's own write must not void the mark.
+ */
+function docOutsideCarrierSections(text) {
+  let body = text;
+  for (const name of ["Log", "Findings"]) {
+    const bounds = sectionBounds(body, name);
+    if (bounds === null) continue;
+    body = `${body.slice(0, bounds[0])}${body.slice(bounds[1])}`;
+  }
+  // `git show` output arrives trimmed, the working-tree read does not: the final
+  // newline is a transport artifact, never a bound-input edit, so both sides are
+  // compared with their trailing whitespace normalized.
+  return body.replace(/\s+$/, "");
+}
+
+/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
+function readReviewMark(unitDir, stage) {
+  const found = reviewMark(unitDir);
+  if (found === null) return null;
+  const { sha, carrier } = found;
   if (!sha) return { sha: null, current: false };
   const ancestor = run("git", ["merge-base", "--is-ancestor", sha, "HEAD"]).ok;
   // Currency is over the BOUND inputs, never the unit directory: the ledger the mark
   // lives in is not bound, and the commit that carries the mark touches it — scoping
   // the check to the unit dir aged every mark on arrival, so no unit could ever
   // report a current review.
-  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...boundPathsFor(unitDir, stage));
+  const bound = boundPathsFor(unitDir, stage);
+  if (carrier === "doc") {
+    // The doc is bound, and the mark write lands in it: the mark stays current only
+    // while every other bound input is untouched AND the document changed outside
+    // its own carrier sections in no way.
+    const others = bound.filter((file) => file !== `${unitDir}/SPEC.md`);
+    const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...others);
+    if (later === null) return { sha, current: false };
+    if (later !== "") return { sha, current: false };
+    const before = git("show", `${sha}:${unitDir}/SPEC.md`);
+    const head = readProject(path.join(unitDir, "SPEC.md"));
+    if (before === null || head === null) return { sha, current: false };
+    return { sha, current: ancestor && docOutsideCarrierSections(before) === docOutsideCarrierSections(head) };
+  }
+  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...bound);
   return { sha, current: ancestor && (later ?? "") === "" };
 }
 
@@ -666,11 +743,30 @@ const SEVERITY_VOCABULARY = new Map([
   ["high", "high"], ["med", "med"], ["low", "low"],
 ]);
 
-/** The open rows of a unit's fix-now ledger, in file order — the router's own
- *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
-function readOpenRows(unitDir) {
+/**
+ * The unit's findings *carrier* — issue #308. A migrated unit doc holds its OPEN
+ * rows in `## Findings` and its marks as `## Log` lines, so the doc is probed
+ * first and the side ledger is the legacy carrier. A unit never reads both: the
+ * doc wins when it has the section, which is what makes the collapse real rather
+ * than a second place to look.
+ *
+ * @returns {{ rows: Array<object>, carrier: "doc" | "ledger" | "none", text: string }}
+ */
+function findingsCarrier(unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  // The same fence-aware predicate as `reviewMark`: one section, read once, decides
+  // the carrier for the rows and the marks alike (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
+    return { rows: findingsRows(doc), carrier: "doc", text: doc };
+  }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
-  if (!ledger) return [];
+  if (!ledger) return { rows: [], carrier: "none", text: "" };
+  return { rows: rowsFromLedger(ledger), carrier: "ledger", text: ledger };
+}
+
+/** The open rows of a legacy `review-findings.md`, in file order — the router's own
+ *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
+function rowsFromLedger(ledger) {
   const rows = [];
   for (const line of ledger.split("\n")) {
     if (!line.startsWith("|")) continue;
@@ -689,18 +785,71 @@ function readOpenRows(unitDir) {
   return rows;
 }
 
+/**
+ * The `## Log` lines a migrated unit doc carries that a reviewer reads as marks —
+ * gate runs (`G`), folds (`F`) and owner decisions (`D`). A legacy unit has no
+ * `## Log`, so this is empty for it; a migrated one reports each line's own words,
+ * never a restatement (the ledger's closed kind vocabulary is the owner of what a
+ * kind means, `log-kind@1`).
+ */
+function readLogMarks(unit, unitDir) {
+  const doc = readProject(path.join(unitDir, "SPEC.md"));
+  if (doc === null) return [];
+  // The shared reader, not an inline copy: `parseLog` bounds `## Log` with the
+  // fence-aware section reader and anchors every line on the published grammar,
+  // so a fenced `## ` heading truncates nothing and prose is never a mark (F39).
+  const labels = { G: "gate run", F: "folded finding", D: "owner decision", R: "review run", V: "finding verification" };
+  const marks = [];
+  for (const { kind, number, body } of parseLog(doc).lines) {
+    const label = labels[kind];
+    if (!label) continue;
+    marks.push(`${unitDir}: ${label} ${kind}${number} — ${bounded(body)}`);
+  }
+  return marks;
+}
+
+/** A log line's words, bounded for the envelope: the router's own flatten class
+ *  first (#308 cycle-3 F38 — a second, weaker copy here let control and format
+ *  characters through), then this surface's 120-char observation cap. */
+function bounded(text) {
+  const flat = flattenCell(text);
+  return flat.length <= 120 ? flat : `${flat.slice(0, 119)}…`;
+}
+
+/** The open rows a unit carries, from whichever carrier owns them (#308). */
+function readOpenRows(unitDir) {
+  return findingsCarrier(unitDir).rows;
+}
+
 function readFixNow(unitDir, observations = []) {
   const items = [];
-  for (const { id, file, axis, severity, klass, route } of readOpenRows(unitDir)) {
+  const carrier = findingsCarrier(unitDir);
+  for (const { id, file, axis, severity, klass, route } of carrier.rows) {
     const normalized = SEVERITY_VOCABULARY.get(String(severity).toLowerCase()) ?? null;
     if (!normalized) {
       // Named, never silent: the row is dropped from the envelope, and the ledger's
       // own vocabulary drift is reported (the AC-19 degradation pattern).
-      observations.push(`${unitDir}: dropped review-findings row '${id}' — severity '${severity}' is outside high|med|low`);
+      observations.push(`${unitDir}: dropped review-findings row '${flattenCell(id)}' — severity '${flattenCell(severity)}' is outside high|med|low`);
       continue;
     }
     const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
-    items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier });
+    // `carrier` is read here only to label the compact memo, and `buildProjections`
+    // drops it before the envelope is emitted: the schema's finding item names no
+    // such key, so a new field would fail the sensor's own self-check.
+    // Every echoed cell goes through the router's one flatten class (F38): clean
+    // cells are byte-identical under it, so the compact memo's length and the
+    // full-envelope identity pins hold, and no invisible character reaches a
+    // consumer.
+    items.push({
+      id: flattenCell(id),
+      file: flattenCell(file),
+      axis: flattenCell(axis),
+      severity: normalized,
+      class: flattenCell(klass),
+      route: flattenCell(route),
+      suggested_tier: tier,
+      carrier: carrier.carrier,
+    });
   }
   return items;
 }
@@ -1162,15 +1311,21 @@ function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable
  * In compact mode a finding's `route` is the multi-paragraph evidence memo the
  * reviewer wrote, and it is what makes the envelope tens of kilobytes: the
  * finding's identity (`id`, `file`, `axis`, `severity`, `class`, `suggested_tier`)
- * is the actionable half, and the memo is re-read from the unit's
- * `review-findings.md` ledger when the fold actually runs. The fingerprint keeps
+ * is the actionable half, and the memo points at the unit's findings carrier —
+ * the unit doc's `## Findings` for a migrated unit, `review-findings.md` for a
+ * legacy one — which is re-read when the fold actually runs. The fingerprint keeps
  * the original length visible so a consumer can tell a stub from a real row and
  * knows where the bytes live. Never applied to the full envelope, whose route
  * text stays byte-identical.
  */
-function compactRoute(route) {
+function compactRoute(route, carrier = "ledger") {
   if (typeof route !== "string" || route.length < 80) return route;
-  return `...(${route.length} char evidence, see the unit review-findings.md)`;
+  // The memo names the carrier the row was actually read from: `## Findings` in the
+  // unit doc for a migrated unit, `review-findings.md` for a legacy one. The legacy
+  // wording is byte-identical to the one the compact suite pins, so a migrated row
+  // is the only case whose memo changes (#308 review, F13).
+  const where = carrier === "doc" ? "the unit SPEC.md ## Findings" : "the unit review-findings.md";
+  return `...(${route.length} char evidence, see ${where})`;
 }
 
 function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent, merged, compact }) {
@@ -1207,9 +1362,8 @@ function buildProjections({ units, forge, readiness, phases, marks, fixNow, obse
   // guard's divergence note — and they total about a kilobyte, so "trimming" them
   // would trade a real signal for no size win. The compact win is `features` and the
   // findings' route memos, which are ten times larger and pure history.
-  const visibleFixNow = compact
-    ? fixNow.map((finding) => ({ ...finding, route: compactRoute(finding.route) }))
-    : fixNow;
+  const visibleFixNow = fixNow.map(({ carrier, ...finding }) =>
+    (compact ? { ...finding, route: compactRoute(finding.route, carrier) } : finding));
   return { features, fixes, fixNow: visibleFixNow, observations, urgent };
 }
 
@@ -1312,6 +1466,10 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
     const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
     const mark = markEligible ? readReviewMark(dir, "lane") : null;
     if (mark) marks.set(unit.id, mark);
+    // #308: a migrated unit records its gate runs, folds and review marks as
+    // `## Log` lines. They are reported the same way a legacy ledger's marks are,
+    // so the carrier change is visible in the envelope instead of silent.
+    observations.push(...readLogMarks(unit, dir));
     fixNow.push(...readFixNow(dir, observations));
     nextSuggested.push(...readSuggestions(unit, dir));
   }

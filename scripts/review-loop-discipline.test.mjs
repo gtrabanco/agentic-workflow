@@ -323,8 +323,12 @@ assert.match(foldPolicy, /materializ/);
 // `/unit-lane`, the lane command the router prints), issue #293 moved it
 // 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), and fix
 // #258 moved it 1.8.0 → 1.9.0 (the fold's scope rule: change + dependents,
-// survivors swept in the same batch), the assertion unchanged in strength.
-assert.match(foldSkill, /version: 1\.9\.0/);
+// survivors swept in the same batch), and issue #308 moved it 1.9.0 → 1.9.1
+// (the fold ledger read probes the unit doc's carrier first, never both), and the
+// #308 review fold moved it 1.9.1 → 1.9.2 (Step 0 states each carrier's own row
+// schema, so a migrated unit is no longer queued against a `folded` column it does
+// not have); the assertion is re-pointed, never weakened.
+assert.match(foldSkill, /version: 1\.9\.2/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
@@ -403,6 +407,48 @@ assert.match(foldSkill, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole
 assert.match(persist, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
 // IS-1: FOLDING.md cites the map
 assert.match(folding, /`ledger-ownership@1`.*`fold-findings:folded-flag`.*sole writer/s);
+
+// ── 13.5b. #308 review F30/F31/F32 — triage-issue routes, never folds ───────
+//
+// The turn contract and the review-finding reference must agree that a
+// `fix-now` row is ROUTED to the fold, not implemented by triage, and the
+// carrier reference that defines who may write the flip must be reachable
+// from the review-finding route (its verdict set never contains
+// `fix-in-unit`, so the old load condition hid the ownership rule).
+const triageSkill = read("skills/triage-issue/SKILL.md");
+// `reviewFindingProcess` is already read above (13.4) — reused here, never re-declared.
+
+// F30: no "implement it yourself" instruction survives the contract
+assert.doesNotMatch(triageSkill, /immediate-fix/i, "the triage contract must not promise an immediate-fix attempt");
+assert.doesNotMatch(triageSkill, /attempt to resolve every named finding\s+immediately/, "--prioritize-now must not be defined as resolving the fix inline");
+// F30: the contract states the route, and the reference agrees
+assert.match(triageSkill, /a `fix-now` row is (routed to|handed to) `\/fold-findings`/, "the turn contract routes a fix-now row to the fold");
+assert.match(reviewFindingProcess, /never implement it in this turn/i, "the review-finding reference forbids implementing the row");
+// F31: the flip's owner is named on the route that can actually write a row
+assert.match(reviewFindingProcess, /solely to `fold-findings:folded-flag`/, "the review-finding reference names the sole flipper");
+assert.match(reviewFindingProcess, /starts `folded: no` and stays/, "an appended row stays open until the fold closes it");
+// F31: the load condition covers both verdicts that write a row
+assert.match(triageSkill, /verdict writes a row \(`fix-in-unit` or `fix-now`\)/, "the fold-ledger reference loads for fix-now too");
+
+// ── 13.5c. #308 review F33/F34 — scope decides, the escape is forced ───────
+//
+// The classifier emits scope as evidence and the cap stops instead of
+// auto-selecting the escape.
+// `classify` is already read above (top of file) — reused here, never re-declared.
+const reviewImplementationSkill = read("skills/review-implementation/SKILL.md");
+
+// F33: scope is a cell with an evidence test, and disposition follows it
+assert.match(classify, /`scope: in-unit \| new-unit`/, "the classifier emits an explicit scope cell");
+assert.match(classify, /Scope decides disposition, never size:/, "scope — not size or axis — decides the disposition");
+assert.match(classify, /The unit did it" outranks "the path looks foreign/, "a unit-introduced defect stays in-unit");
+assert.match(reviewImplementationSkill, /`scope: in-unit \| new-unit` cell/, "Step 2 states the scope cell");
+assert.match(classify, /`triage-issue` consumes the cell, never re-derives it/, "triage consumes scope, never re-derives it");
+
+// F34: the cap hands the decision back and never auto-routes to the escape
+assert.match(reviewProcess, /- Decision: the owner decides — no route is auto-selected/, "the LOOP CAP block auto-selects no route");
+assert.match(reviewProcess, /stops and hands the\s+decision back/, "the cap stops instead of routing");
+assert.match(reviewProcess, /\*\*`--prioritize-now` is an escape, never the default\.\*\*/, "--prioritize-now is documented as an escape");
+assert.match(reviewProcess, /Size is the only gate/, "the escape's gate is expected-diff size, never the axis");
 // IS-1: no surviving old claim in docs/workflow/ (tutorial scan) — AC-01
 let workflowDocs = "";
 try {

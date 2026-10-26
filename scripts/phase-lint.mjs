@@ -59,6 +59,10 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import {
   parseUnitDocPhases as _parseUnitDocPhases,
+  parseSpecs,
+  parseLog,
+  sectionText,
+  LOG_KINDS,
   openFence,
   closesFence,
 } from "./unit-doc-phases.mjs";
@@ -751,8 +755,92 @@ function lintUnitDocPhase(phase, isLast) {
   return { findings };
 }
 
+/**
+ * The re-cut document's own rules — issue #308. A migrated unit doc carries
+ * `## Specs` (requirements quoting the requester verbatim), `## Tasks` (each
+ * bullet linked to the `S#` it implements) and `## Log` (a closed kind token per
+ * line). The legacy shape has none of these sections; the checks below are inert
+ * for it, so both shapes lint through the same entry point.
+ *
+ * Each finding is `{ id, reason }`, reported as `<id>: <reason>` — the ids are
+ * the linter's own vocabulary, not a box number, because these are document
+ * rules rather than per-phase boxes.
+ */
+function specByReferenceFindings(text, phases) {
+  const findings = [];
+  const specs = parseSpecs(text);
+  const log = parseLog(text);
+  const sections = { specs: sectionText(text, "Specs"), log: sectionText(text, "Log"), findings: sectionText(text, "Findings") };
+
+  // The re-cut shape is all-or-nothing in BOTH directions: a document that
+  // carries either `## Log` or `## Specs` must carry the other, or its receipt is
+  // split across two grammars and every reader would have to guess which one
+  // holds the truth. The router already refuses a half-migrated doc against its
+  // own shape table, so a one-direction check let the linter and the router
+  // disagree about the same document (#308 review, F1).
+  if (sections.log !== null && sections.specs === null) {
+    findings.push({ id: "spec-section-missing", reason: "a document carrying ## Log must also carry ## Specs" });
+    return findings;
+  }
+  if (sections.specs !== null && sections.log === null) {
+    findings.push({ id: "log-section-missing", reason: "a document carrying ## Specs must also carry ## Log" });
+    return findings;
+  }
+  if (specs.present === false) return findings;
+
+  const declared = new Set(specs.requirements.map((requirement) => requirement.id));
+  const missingQuote = specs.requirements.filter((requirement) => requirement.quote === null);
+  for (const requirement of missingQuote) {
+    findings.push({ id: "spec-quote-missing", reason: requirement.id });
+  }
+  if (specs.requirements.length === 0) {
+    findings.push({ id: "spec-quote-missing", reason: "## Specs declares no `**S# — title.**` requirement" });
+  }
+
+  // Every base requirement is implemented by some phase; a correction id (`S1a`)
+  // narrows or widens one already implemented, so it needs no phase of its own.
+  const implemented = new Set();
+  for (const phase of phases) {
+    const raw = phase.implements;
+    if (raw === null || raw === undefined) {
+      findings.push({ id: "task-link-missing", reason: `P${phase.number} links no requirement — add \`(Implements: S…)\`` });
+      continue;
+    }
+    const ids = raw.split(",").map((value) => value.trim()).filter(Boolean);
+    if (ids.length === 0) {
+      findings.push({ id: "task-link-missing", reason: `P${phase.number} carries an empty \`(Implements: …)\` link` });
+      continue;
+    }
+    for (const id of ids) {
+      if (!declared.has(id)) {
+        // The link's value is unit text with no charset bound (`IMPLEMENTS_LINK`
+        // takes anything up to the closing paren), so the echo is sanitized like
+        // every other unit-derived token the block prints (F49/F52/F66).
+        findings.push({ id: "task-link-dangling", reason: `P${phase.number} implements ${sanitizeEcho(id, 60)}, which ## Specs does not declare` });
+        continue;
+      }
+      implemented.add(id);
+    }
+  }
+  for (const requirement of specs.requirements) {
+    if (/[a-z]$/.test(requirement.id)) continue;
+    if (!implemented.has(requirement.id)) {
+      findings.push({ id: "spec-unlinked", reason: `${requirement.id} is implemented by no phase` });
+    }
+  }
+
+  // The log's kind token is a closed vocabulary published by the template block;
+  // anything else is a line no reader can route.
+  for (const line of log.lines) {
+    if (!LOG_KINDS.includes(line.kind)) {
+      findings.push({ id: "log-kind", reason: `${line.token} is not one of ${LOG_KINDS.join(", ")}` });
+    }
+  }
+  return findings;
+}
+
 /** The full run over a unit doc's bullet phases — same block shape, `6/6` boxes. */
-function lintUnitDocPhases(phases, orphans = []) {
+function lintUnitDocPhases(phases, orphans = [], text = "") {
   const fingerprints = [];
   const results = [];
   for (const [index, phase] of phases.entries()) {
@@ -783,6 +871,12 @@ function lintUnitDocPhases(phases, orphans = []) {
     blocked = true;
     lines.push("relevant-files: sub-section is not attached to a bullet phase");
   }
+  // #308: the re-cut document's own rules, reported before the verdict — they
+  // apply to the document, never to one phase, so they are not box findings.
+  for (const finding of specByReferenceFindings(text, phases)) {
+    blocked = true;
+    lines.push(`${finding.id}: ${finding.reason}`);
+  }
   lines.push(blocked ? "verdict BLOCKED: lint-blocked" : "verdict PASS");
   lines.push(`fingerprint: ${digest(fingerprints)}`);
   return { verdict: blocked ? "BLOCKED: lint-blocked" : "PASS", exitCode: blocked ? 1 : 0, lines };
@@ -800,7 +894,7 @@ export function lintPlan(text) {
     if (unitDocPhases.length === 0) {
       return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
     }
-    return lintUnitDocPhases(unitDocPhases, orphans);
+    return lintUnitDocPhases(unitDocPhases, orphans, normalized);
   }
 
   for (const phase of phases) {

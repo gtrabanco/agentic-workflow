@@ -1326,3 +1326,284 @@ test("32/P1: the sensor's feature 31 review-loop-cycle projection survives the N
     "review_loop_cycles has spec and plan keys"
   );
 });
+
+// ---------------------------------------------------------------------------
+// #308 — the collapsed carrier: a migrated unit's doc *is* the ledger
+//
+// A migrated unit doc carries its OPEN rows in `## Findings` and its folded
+// history, review marks and gate runs as `## Log` lines. The sensor must project
+// that doc exactly as it projected `review-findings.md` for a legacy unit: same
+// fix-now rows, same suggestions, same review-mark currency — one carrier change,
+// no behaviour change.
+// ---------------------------------------------------------------------------
+
+/** A migrated unit doc with a `## Findings` table and a `## Log`. */
+function migratedSpec({ findings = [], log = [], status = "in-progress" } = {}) {
+  return [
+    "---", "type: feature", "scope: standard", "---", "",
+    "# 90 — alpha", "",
+    "## Specs", "", "**S1 — the request.**", "> Do the thing.", "",
+    "## Impact", "", "nothing outside.", "",
+    "## Non-goals", "", "none.", "",
+    "## Future cost", "", "none.", "",
+    "## Applicable tests", "", "n/a — no tests step for this unit", "",
+    "## Known pre-existing issues", "", "none", "",
+    "## Tasks", "", "- P1 — do the thing (validator: `true` exits 0)", "  (Implements: S1)", "",
+    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    ...findings,
+    "", "## Log", "", "- **L1** — 2026-10-01, the request, verbatim: Do the thing.",
+    ...log,
+    "", "## Next", "", "P1.", "", "## References", "", "none", "",
+  ].join("\n");
+}
+
+test("#308 a migrated unit's OPEN ## Findings rows project as fix-now, exactly like the ledger", () => {
+  const spec = migratedSpec({
+    findings: [
+      "| F1 | S1 · scripts/a.mjs:1 | code | med | fix-now | fold into phase |",
+      "| F2 | S1 · scripts/b.mjs:2 | code | high | fix-now | replan-in-unit: plan owner |",
+    ],
+  });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": spec },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.findings.fix_now.map((item) => item.id), ["F1", "F2"],
+    `both OPEN rows project from ## Findings: ${JSON.stringify(envelope.findings.fix_now)}`);
+  assert.equal(envelope.findings.fix_now[0].file, "S1 · scripts/a.mjs:1", "the S#/file:line cell is the row's location");
+  assert.deepEqual(envelope.next.suggested, [{
+    command: "/unit-lane 90-alpha",
+    trigger: "an open finding's frozen route is the plan owner — replan-in-unit (F2)",
+    source_skill: "unit-lane",
+  }], "the plan-owned row wins the route table, read out of the doc");
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("#308 a migrated unit's ## Log lines carry the folded history and the marks", () => {
+  const spec = migratedSpec({
+    log: [
+      "- **F1** — 2026-10-02, folded · `0123456` · the row's surface was repaired and re-verified.",
+      `- **G1** — 2026-10-02, \`node --test scripts/*.test.mjs\` · exit 0.`,
+    ],
+  });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": spec },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.findings.fix_now, [], "a folded row is a log line, never an open row");
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /gate/i, `a G log line is read, not skipped: ${observations}`);
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("#308 a migrated unit's review mark gates `review_pending` from its own `## Log` line", () => {
+  // The case is the gate, not the envelope's shape: a unit whose `## Log` carries
+  // an `R` mark for the current head must read as reviewed, and the same unit must
+  // read as review-pending once a non-carrier section moves after the mark — the
+  // mark's own write is what the carrier sits in, so it must not age itself (F38's
+  // rule, re-based onto the collapsed carrier; #308 review F5/F15/F18).
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const specRel = "docs/features/90-alpha/SPEC.md";
+  const markLine = `- **R1** — 2026-10-23, review at HEAD ${head} · verdict REVIEW-PASS · cycle 1 · gate exit 0.`;
+  const featureOf = (stdout) => parseEnvelope(stdout).detail.features.find((entry) => entry.id === "90-alpha");
+
+  fixture.write(specRel, migratedSpec({ log: [markLine] }));
+  const marked = fixture.run();
+  assert.equal(marked.status, 0, marked.stderr);
+  assert.equal(validateEnvelope(parseEnvelope(marked.stdout)).ok, true, "the envelope stays schema-valid");
+  assert.equal(featureOf(marked.stdout).review_pending, false,
+    `an R mark at the current head is a current review: ${JSON.stringify(featureOf(marked.stdout))}`);
+
+  // The fold's own write (a `## Findings` row, a `## Log` line) leaves it current…
+  fixture.write(specRel, migratedSpec({
+    findings: ["| F1 | S1 · scripts/a.mjs:1 | code | high | fix-now | fold: repair it |"],
+    log: [markLine, "- **F1** — 2026-10-23, folded · `abcdef1` · re-verified at the head."],
+  }));
+  const folded = fixture.run();
+  assert.equal(folded.status, 0, folded.stderr);
+  assert.equal(featureOf(folded.stdout).review_pending, false,
+    "the carrier sections are the mark's own bytes: writing them does not age the mark");
+
+  // …but a change outside them does, the same way it ages a legacy `REVIEW-RAN` row.
+  fixture.write(specRel, migratedSpec({
+    log: [markLine],
+  }).replace("**S1 — the request.**", "**S1 — the amended request.**"));
+  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["commit", "-q", "-m", "amend the requirement after the review"], { cwd: fixture.dir });
+  const aged = fixture.run();
+  assert.equal(aged.status, 0, aged.stderr);
+  assert.equal(featureOf(aged.stdout).review_pending, true,
+    "a later edit to a bound input outside the carrier sections voids the mark");
+
+  const bareFixture = makeFixture({
+    roadmapRows: ["| 91 | `beta` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/91-beta/SPEC.md": migratedSpec() },
+  });
+  const bare = bareFixture.run();
+  assert.equal(bare.status, 0, bare.stderr);
+  const bareUnit = parseEnvelope(bare.stdout).detail.features.find((entry) => entry.id === "91-beta");
+  assert.equal(bareUnit.review_pending, true, "a migrated unit with no `R` mark stays review-pending");
+});
+
+// ---------------------------------------------------------------------------
+// #308 cycle 3 folds: F37 (anchored marks), F38 (one flatten class), F39
+// (fence-aware Log reading in every reader). Red until the fold lands.
+// ---------------------------------------------------------------------------
+
+test("#308 F37: a review mark is a real `## Log` line, never a prose mention or a fenced forgery", () => {
+  // The doc-carrier mark reader must agree with the shared `parseLog` grammar:
+  // only a `[-*+] **R<n>** — …` line outside any fence is a mark. A prose
+  // mention of `**R1**` and a forged line inside a fenced block are text.
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const specRel = "docs/features/90-alpha/SPEC.md";
+
+  // (a) prose mention only — no mark exists.
+  fixture.write(specRel, migratedSpec({
+    log: ["- the review at **R1** — HEAD 0000000000000000000000000000000000000000 was cycle 1, not a mark"],
+  }));
+  const prose = fixture.run();
+  assert.equal(prose.status, 0, prose.stderr);
+  assert.equal(parseEnvelope(prose.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, true,
+    "a prose mention of `**R1** — HEAD …` is not a review mark");
+
+  // (b) forged mark inside a fence, no real mark after it — still unreviewed.
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head}`, "```"],
+  }));
+  const forged = fixture.run();
+  assert.equal(forged.status, 0, forged.stderr);
+  assert.equal(parseEnvelope(forged.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, true,
+    "an `R` line inside a fenced block is text, not a review mark");
+
+  // (c) the same forgery before the real mark: the last real line answers.
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head}`, "```",
+      `- **R1** — review at HEAD ${head} · verdict REVIEW-PASS`],
+  }));
+  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["commit", "-q", "-m", "add the real mark"], { cwd: fixture.dir });
+  const head2 = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head2}`, "```",
+      `- **R1** — review at HEAD ${head2} · verdict REVIEW-PASS`],
+  }));
+  const real = fixture.run();
+  assert.equal(real.status, 0, real.stderr);
+  assert.equal(validateEnvelope(parseEnvelope(real.stdout)).ok, true);
+  assert.equal(parseEnvelope(real.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, false,
+    "the last real `R` line marks the review, fence content ignored");
+});
+
+test("#308 F39: a fenced `## ` line inside `## Log` truncates no reader — marks project as observations", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  fixture.write("docs/features/90-alpha/SPEC.md", migratedSpec({
+    log: [
+      "```text",
+      "## Not a heading, a fenced illustration of the L1 verbatim-request form",
+      "```",
+      "- **F1** — 2026-10-25, folded · `abc1234` · re-verified at the head.",
+    ],
+  }));
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(validateEnvelope(envelope).ok, true);
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /folded finding F1/,
+    `a mark line after a fenced \`## \` heading is still read: ${observations}`);
+});
+
+test("#308 F38: no control or format character survives the sensor's echo of ledger cells", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: {
+      "docs/features/90-alpha/SPEC.md": migratedSpec({
+        findings: ["| F1\u200b | S1\u200b·\u202e scripts/a.mjs:1 | code | med | fix-now | fold: repair \u2028the defect |"],
+        log: ["- **G1** — \u0085`node --test scripts/*.test.mjs` · exit 0\u200b."],
+      }),
+    },
+  });
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(validateEnvelope(envelope).ok, true, JSON.stringify(envelope.validate?.errors ?? ""));
+  const item = envelope.findings.fix_now.find((f) => f.id === "F1");
+  assert.ok(item, `the zero-width-prefixed id projects flattened: ${JSON.stringify(envelope.findings.fix_now)}`);
+  const json = JSON.stringify(envelope);
+  for (const ch of ["\u0000-\u001f", "\u200b", "\u2028", "\u202e", "\u0085"]) {
+    if (ch.length === 1) assert.ok(!json.includes(ch), `the format character ${escape(ch)} never reaches the envelope`);
+  }
+  assert.ok(!json.includes("\u200b") && !json.includes("\u2028") && !json.includes("\u202e") && !json.includes("\u0085"),
+    "no control, C1, line-separator or bidi character reaches an envelope consumer");
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /gate run G1 — `node --test/, "the flattened gate line is still reported");
+});
+
+test("#308 F45 a `## Findings` heading quoted inside a fence does not make a legacy unit migrated", () => {
+  // The carrier probe must be the fence-aware section reader, not a bare `/m`
+  // regex: a legacy unit that illustrates the re-cut grammar inside a fenced
+  // sample is not a migrated unit. Fence-blind, the doc wins the probe, its
+  // (absent) real `## Findings` section yields no rows, and the OPEN work in the
+  // unit's `review-findings.md` vanishes from the envelope — with it the current
+  // review mark (F5's failure mode, reached through the probe instead of the body).
+  const spec = [
+    "---", "type: feature", "scope: standard", "---", "",
+    "# 92 — gamma", "",
+    "## Objective", "", "A legacy unit that quotes the migrated shape.", "",
+    "## Why", "", "to prove the probe.", "",
+    "## Acceptance criteria", "", "1. quoted fence", "",
+    "## Impact", "", "nothing.", "", "## Non-goals", "", "none.", "",
+    "## Future cost", "", "none.", "",
+    "## Applicable tests", "", "n/a — no tests step for this unit", "",
+    "## Known pre-existing issues", "", "none", "",
+    "## Tasks", "", "### P1 — sample", "", "Layer: config/infra. Done-when: `true` exits 0.", "",
+    "## Evidence", "", "| AC | What | Exit | Output | Verified-by |", "|---|---|---|---|---|", "",
+    "The re-cut carrier looks like this, in a fence only:", "", "```markdown",
+    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    "| F9 | S1 · scripts/z.mjs:9 | code | high | source | fold: quoted, not real |",
+    "```", "", "## Progress log", "", "`2026-10-26 — quoted fence → abc1234`", "",
+    "## Next", "", "P1.", "", "## References", "", "none", "",
+  ].join("\n");
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|---|---|---|---|---|---|---|",
+    "| F1 | scripts/a.mjs:1 | code | med | fix-now | fold into phase | no |",
+  ].join("\n");
+  const fixture = makeFixture({
+    roadmapRows: ["| 92 | `gamma` | in-progress | — | a unit |"],
+    extraFiles: {
+      "docs/features/92-gamma/SPEC.md": spec,
+      "docs/features/92-gamma/review-findings.md": `${ledger}\n`,
+    },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  fixture.write(
+    "docs/features/92-gamma/review-findings.md",
+    `${ledger}\n| REVIEW-RAN | HEAD ${head} | n/a | n/a | review-mark | n/a | n/a |\n`,
+  );
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const unit = envelope.detail.features.find((entry) => entry.id === "92-gamma");
+  assert.deepEqual(envelope.findings.fix_now.map((item) => item.id), ["F1"],
+    `the legacy ledger still owns the rows: ${JSON.stringify(envelope.findings.fix_now)}`);
+  assert.equal(unit.review_pending, false,
+    `the ledger's current REVIEW-RAN still counts: ${JSON.stringify(unit)}`);
+});

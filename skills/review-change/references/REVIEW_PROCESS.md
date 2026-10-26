@@ -170,12 +170,20 @@ cycles without convergence, the review prints
 LOOP CAP REACHED — <unit>
 - Finding ids: <every open id>
 - Cycles: 2 (REVIEW-RAN marks + forge receipts)
-- Route: /triage-issue --prioritize-now <unit> F<k> … (or the programmatic outer driver)
+- Expected diff: <per finding: files cited and whether it hits a normative surface>
+- Decision: the owner decides — no route is auto-selected
 ```
 
 A **third cycle never starts** unless the user explicitly instructs it — it is
-the user's escape, never a reviewer election. The residue routes to
-`triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
-that needs a third cycle has a planning or root-cause defect, not a review
-deficit. Re-runs count **separate review invocations**, not in-session steps:
-`/review-change` is invoked by the user in a fresh turn each time.
+the user's escape, never a reviewer election. The cap **stops and hands the
+decision back**, emitting no route of its own: this is the moment with the least
+evidence about the findings, and an auto-selected escape is how a fix escapes
+its own gate (F34).
+
+**`--prioritize-now` is an escape, never the default.** The owner may force
+`/triage-issue --prioritize-now <unit> F<k>` for an **in-scope** finding whose
+expected diff is small: at most two files, no `normative-surfaces@1` surface, no
+published contract or package version. Size is the only gate — a `security` or
+`package` row is never "too expensive to fold now".
+Re-runs are **separate review invocations** and not in-session steps:
+`/review-change` is invoked by the user in a fresh turn.

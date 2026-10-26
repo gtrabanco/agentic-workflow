@@ -239,6 +239,44 @@ export const UNIT_DOC_REQUIRED_SECTIONS = Object.freeze([
   "References",
 ] as const);
 
+/**
+ * The re-cut (`spec-by-reference`, issue #308) required-section list: the shape a
+ * migrated unit doc carries. `## Specs` numbers the owner's requirements
+ * verbatim and `## Log` appends every request, correction, evidence run, gate
+ * run and folded finding; `## Findings` carries the OPEN rows that used to live
+ * in `review-findings.md`. Everything else is shared with the legacy list: the
+ * re-cut adds three headings (`Specs`, `Findings`, `Log`) and drops the six they
+ * replace — `Objective`, `Why`, `User outcome` and `Acceptance criteria` into
+ * `Specs`, `Evidence` and `Progress log` into `Findings` and `Log`.
+ */
+export const UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze([
+  "Specs",
+  "Impact",
+  "Non-goals",
+  "Future cost",
+  "Applicable tests",
+  "Known pre-existing issues",
+  "Tasks",
+  "Findings",
+  "Log",
+  "Next",
+  "References",
+] as const);
+
+/**
+ * The accepted shapes, keyed by the name the readers report. Migration is
+ * additive (issue #308 §Scope 4): a closed unit keeps `legacy` and is never
+ * rewritten, an open unit picks up `spec-by-reference` at its next touch, and
+ * both resolve through the same selector — one shape table, never two lists a
+ * reader has to choose between by guesswork.
+ */
+export const UNIT_DOC_SECTION_SHAPES = Object.freeze({
+  legacy: UNIT_DOC_REQUIRED_SECTIONS,
+  "spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS,
+} as const);
+
+export type UnitDocShape = keyof typeof UNIT_DOC_SECTION_SHAPES;
+
 /** One artifact bound into a snapshot, by the exact bytes the reviewer read. */
 export interface PreExecutionArtifactRow {
   readonly kind: PreExecutionArtifactKind;
@@ -472,6 +510,25 @@ function selectionError(code: SpecProductSelectorError["code"], heading: string)
 }
 
 /**
+ * Resolve which accepted shape a set of level-2 headings belongs to: the shape
+ * whose required sections are all present, preferring `legacy` when both are (a
+ * doc that carries both `Evidence` and `Log` is a half-migrated doc — the caller
+ * reports the excess, this function never guesses). Returns `null` when neither
+ * shape is satisfied, which is the missing-heading case the selector reports.
+ */
+export function resolveUnitDocShape(headings: readonly string[]): UnitDocShape | null {
+  for (const [name, sections] of Object.entries(UNIT_DOC_SECTION_SHAPES) as [UnitDocShape, readonly string[]][]) {
+    if (sections.every((section) => headings.includes(section))) return name;
+  }
+  return null;
+}
+
+/** The section list of the shape a document asserts, or the legacy list absent one. */
+export function unitDocSectionsFor(shape: UnitDocShape | null): readonly string[] {
+  return shape === null ? UNIT_DOC_REQUIRED_SECTIONS : UNIT_DOC_SECTION_SHAPES[shape];
+}
+
+/**
  * Cut the Product projection out of a SPEC document.
  *
  * The selection is byte-exact and total: the level-1 title and the required
@@ -526,7 +583,15 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   if (titleLine === -1) return selectionError("selector-title-missing", "<title>");
 
-  for (const required of UNIT_DOC_REQUIRED_SECTIONS) {
+  // One contract, two accepted shapes (#308). The required list is resolved from
+  // the headings the document actually carries; a document satisfying neither
+  // shape reports the first missing section of the legacy list, which is the
+  // shape every unit predating the re-cut carries.
+  const names = headings.map((heading) => heading.name);
+  const shape = resolveUnitDocShape(names);
+  const requiredSections = unitDocSectionsFor(shape);
+
+  for (const required of requiredSections) {
     if (!headings.some((heading) => heading.name === required)) {
       return selectionError("selector-heading-missing", required);
     }
@@ -534,14 +599,14 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   const seen = new Set<string>();
   for (const heading of headings) {
-    if (!(UNIT_DOC_REQUIRED_SECTIONS as readonly string[]).includes(heading.name)) continue;
+    if (!requiredSections.includes(heading.name)) continue;
     if (seen.has(heading.name)) return selectionError("selector-heading-duplicate", heading.name);
     seen.add(heading.name);
   }
 
   let highest = -1;
   for (const heading of headings) {
-    const index = (UNIT_DOC_REQUIRED_SECTIONS as readonly string[]).indexOf(heading.name);
+    const index = requiredSections.indexOf(heading.name);
     if (index === -1) continue;
     if (index < highest) return selectionError("selector-heading-order", heading.name);
     highest = index;

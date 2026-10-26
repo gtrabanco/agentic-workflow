@@ -24,10 +24,12 @@ findings end up "solved" locally but absent from the merged PR:
 ✓ Gate RUN and green (exit codes pasted)
 ✓ Never edit an existing test's expectation to match behaviour — a setup
   repair keeps assertions at least as strong and never touches expectations
-✓ Evidence rows updated where the finding touched them (the finding's row
-  in the unit doc's Evidence ledger flipped `folded: no → yes` — the one and
-  only state transition, `ledger-ownership@1` / `fold-findings:folded-flag`
-  is the sole writer)
+✓ Evidence rows updated where the finding touched them, in the unit's own findings
+  carrier: a legacy row flipped `folded: no → yes`; a migrated unit's row leaves
+  `## Findings` and its fold is a `## Log` `F` line naming the fold commit — that
+  carrier has no `folded` column to flip (#308). Either close is the one and only
+  state transition, and `ledger-ownership@1` / `fold-findings:folded-flag` is the
+  sole writer of it
 ✓ Progress log advanced with a dated entry noting the fold
 ✓ `git add` + `git commit` RUN (sha pasted) — e.g.
   `fix(<scope>): fold review findings — <summary>`
@@ -56,8 +58,9 @@ No auto-merge. Explicit `P<k>` stops after one step; omitted-step mode gates
 and commits every remaining step before the same final review.
 ## Gate-run marks (gate-ran@1)
 
-Every verification gate this cycle runs records a `GATE-RAN` mark in the unit
-doc's Evidence section at the head it actually ran:
+Every verification gate this cycle runs records a `GATE-RAN` mark at the head it
+actually ran — a row in the legacy `review-findings.md`, a `## Log` `G` line for a
+re-cut unit (#308):
 `GATE-RAN | HEAD <40-hex sha> | <cmds> | exit <code>`. A green run is recorded;
 a red run is also recorded (exit code ≠ 0 is evidence, not silence). Any skill
 may consume a green mark only at the identical HEAD — a changed head re-runs
@@ -70,5 +73,5 @@ the gate. The recorders are `execute-phase:gate-ran-marks` and
 When the final triaged step closes: mark the unit done, push the branch, and
 open the PR with `gh pr create` (per the project's Workflow conventions) —
 regardless of the review still to come. The PR body carries the unit doc's
-Evidence section as its verification record and closes the unit's tracked
-issues via `Closes #N`.
+verification record (its `## Evidence` rows, or a re-cut unit's `## Log` `E`/`G`
+lines) and closes the unit's tracked issues via `Closes #N`.

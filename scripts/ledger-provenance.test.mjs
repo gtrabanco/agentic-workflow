@@ -594,3 +594,216 @@ test("an annotated ledger's citations are read and validated, not silently passe
   assert.match(check.stdout, /F2/, "the unclaimable citation is named");
   assert.doesNotMatch(check.stdout, /F1/, "the honest marker is never flagged");
 });
+
+// ---------------------------------------------------------------------------
+// #308 §Scope 3 — the collapsed carrier (a migrated unit doc)
+//
+// A migrated unit has no `folded` column: its OPEN rows live in `## Findings` and a
+// folded row leaves that table for a `## Log` line naming its own commit. The recount
+// reads that carrier at the same proof standard, and refuses to annotate an
+// append-only section. P5's path-protection receipt promised these cases.
+// ---------------------------------------------------------------------------
+
+const UNIT_DOC = "docs/features/9-x/SPEC.md";
+const docRun = (cwd, ...flags) => spawnSync(process.execPath, [script, UNIT_DOC, ...flags], { cwd, encoding: "utf8" });
+
+function makeDocFixture(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-doc-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  fs.mkdirSync(path.join(root, "docs/features/9-x"), { recursive: true });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src/index.ts"), "export const a = 1;\n");
+  git(root, "add", "-A", "--", ".");
+  git(root, "commit", "-qm", "planning artifacts");
+  let folded = 0;
+  /**
+   * A fold commit: every call changes a surface first (git refuses an empty commit,
+   * and a fold that touched nothing is not a fold), then commits with `message`.
+   */
+  const fold = (message) => {
+    fs.writeFileSync(path.join(root, `src/fold-${++folded}.ts`), "export const folded = true;\n");
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "--short", "HEAD");
+  };
+  const writeDoc = (lines) =>
+    fs.writeFileSync(
+      path.join(root, UNIT_DOC),
+      ["# 9 — doc", "", "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+       "|---|---|---|---|---|---|", "| F9 | S1 · src/index.ts:1 | code | med | source | fold: fix it |", "",
+       "## Log", "", "- **L1** — 2026-10-23, the request, verbatim", ...lines, ""].join("\n"),
+    );
+  return { root, fold, writeDoc };
+}
+
+test("#308 a folded line naming a commit that claims its id is proven", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): fold F7 — correct the parse");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${sha}\` · the parse was re-verified at the head.`]);
+  const report = JSON.parse(docRun(root, "--json").stdout).rows;
+  const proven = report.find((row) => row.id === "F7");
+  assert.equal(proven.status, "proven-cited", JSON.stringify(proven));
+  assert.equal(proven.carrier, "log");
+  // The OPEN row of `## Findings` is work, not a receipt: it owes no proof.
+  assert.equal(report.find((row) => row.id === "F9").status, "open");
+  assert.equal(docRun(root, "--check").status, 0, docRun(root, "--check").stdout + docRun(root, "--check").stderr);
+});
+
+test("#308 a folded line with no commit, or a commit that claims nothing, fails the recount", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): unrelated repair");
+  writeDoc([
+    "- **F1** — 2026-10-23, folded F7 · a commit was named nowhere in this line",
+    `- **F2** — 2026-10-23, folded F8 · \`${sha}\` · claims no finding id`,
+  ]);
+  const statuses = JSON.parse(docRun(root, "--json").stdout).rows.map((row) => row.status);
+  assert.ok(statuses.includes("unproven"), `a line with no commit token is named: ${statuses.join(",")}`);
+  assert.ok(statuses.includes("cited-unverified"), `a commit that claims no id is named: ${statuses.join(",")}`);
+  const check = docRun(root, "--check");
+  assert.equal(check.status, 1, "an unproven folded line fails the merge-gate recount");
+  assert.match(check.stdout, /CHECK FAIL/);
+});
+
+test("#308 --annotate refuses the append-only carrier instead of rewriting it", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const sha = fold("fix(x): fold F7 — the repair");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${sha}\` · verified`]);
+  const bytes = fs.readFileSync(path.join(root, UNIT_DOC), "utf8");
+  const run = docRun(root, "--annotate");
+  assert.equal(run.status, 2, `a doc target is refused, not rewritten: ${run.stdout}${run.stderr}`);
+  assert.match(run.stderr, /append-only/);
+  assert.equal(fs.readFileSync(path.join(root, UNIT_DOC), "utf8"), bytes, "the refusal wrote nothing");
+});
+
+// ---------------------------------------------------------------------------
+// #308 cycle 3 F36: a fold marker outranks the row's prose context citations.
+// The F27 shape: the route prose names two reachable commits as BACKGROUND
+// (the version the base consumed, the commit that registered it). The recount
+// reads any reachable token as a fold citation, so the bare prose citations
+// demote the genuinely-proven fold to `cited-unverified` — and the annotator's
+// own marker, naming the real fold commit, outranks them. Both halves are
+// pinned here so the precedence can never silently flip again.
+// ---------------------------------------------------------------------------
+
+test("#308 F36: prose context citations demote a proven fold; the fold marker outranks them", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const abs = (rel) => path.join(root, rel);
+  const write = (rel, text) => fs.writeFileSync(abs(rel), text);
+  const g = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const gitRun = (...args) => g(...args);
+  const short7 = (sha) => sha.slice(0, 7);
+  fs.mkdirSync(abs("src"), { recursive: true });
+  fs.mkdirSync(path.dirname(abs(LEDGER)), { recursive: true });
+
+  g("init", "-q", "-b", "main");
+  g("config", "user.email", "fixture@example.invalid");
+  g("config", "user.name", "Fixture");
+  g("config", "commit.gpgsign", "false");
+  write("src/index.ts", 'export const version = "0.31.0";\n');
+  write(LEDGER, HEADER + row("F1", "src/index.ts:1", "fold into current unit", "no"));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "planning artifacts");
+
+  // The background commits the finding's prose will cite: neither claims F1.
+  write("src/index.ts", 'export const version = "0.31.0"; // consumed downstream\n');
+  const consumed = g("rev-parse", "HEAD");
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "chore(x): feature 66 consumes the published version");
+  const ctx2 = g("rev-parse", "HEAD");
+
+  // The row records with the prose citations already in it.
+  write(
+    LEDGER,
+    HEADER +
+      row("F1", "src/index.ts:1", `fold: the pins 0.31.0 (consumed by 66, ${short7(consumed)}; registered in ${short7(ctx2)}) — bump and add the companion row`, "no"),
+  );
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): record F1 open");
+
+  // The true fold: names the id, changes the cited surface.
+  write("src/index.ts", 'export const version = "0.32.0";\n');
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "fix(x): close F1 — bump to 0.32.0 with its companion row");
+  const fold = g("rev-parse", "HEAD");
+
+  // The tick lands in a later, unrelated batch (F1 is not named there).
+  const read1 = () => fs.readFileSync(abs(LEDGER), "utf8");
+  write(LEDGER, read1().replace(/\| no \|\n$/, "| yes |\n"));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): record the next triage fold");
+
+  const before = entry(root, "F1");
+  assert.equal(before.status, "cited-unverified", `background citations outrank nothing until marked: ${before.status}`);
+  assert.deepEqual(before.cited, [short7(consumed), short7(ctx2)], "both background tokens are named");
+  assert.equal(run(root, "--check").status, 1, "the demoted row keeps the recount red");
+
+  // The annotator's repair: `· fold <sha>` naming the commit that owns the bump.
+  write(LEDGER, read1().replace(`bump and add the companion row |`, `bump and add the companion row · fold ${short7(fold)} |`));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): annotate the fold provenance");
+
+  const after = entry(root, "F1");
+  assert.equal(after.status, "proven-cited", `the marker proves the fold the prose names: ${after.status}`);
+  assert.equal(after.fold, short7(fold), "and it names the fold commit, not the background ones");
+  assert.equal(run(root, "--check").status, 0, run(root, "--check").stdout + run(root, "--check").stderr);
+});
+
+// ---------------------------------------------------------------------------
+// #308 cycle 7 F45: the collapsed-carrier probe is the fence-aware section
+// reader, not a `/m` regex. A legacy unit doc that quotes the re-cut shape
+// inside a fenced sample is NOT a migrated unit; reading the fence heading as
+// the marker made the tool refuse it as an append-only carrier, and recounted
+// an absent section as `CHECK PASS` over nothing.
+// ---------------------------------------------------------------------------
+
+test("#308 F45 a legacy unit doc quoting ## Findings in a fence is not the collapsed carrier", (t) => {
+  const { root, writeDoc } = makeDocFixture(t);
+  // The legacy shape: no real `## Findings`/`## Log` sections, only a fenced
+  // illustration of the migrated grammar.
+  writeDoc([]);
+  fs.writeFileSync(
+    path.join(root, UNIT_DOC),
+    [
+      "# 9 — legacy doc", "", "## Objective", "quoted fence only", "",
+      "How a migrated unit reads:", "", "```markdown", "## Findings", "",
+      "| id | S# / file:line | axis | severity | class | route |", "|---|---|---|---|---|---|",
+      "| F1 | S1 · src/index.ts:1 | code | med | source | fold: quoted |", "",
+      "## Log", "", "- **F9** — folded F9 · `dead000` · quoted, not a receipt", "```", "",
+    ].join("\n"),
+  );
+  git(root, "add", "-A", "--", ".");
+  git(root, "commit", "-qm", "quote the migrated shape in a fence");
+
+  const run = docRun(root, "--check");
+  assert.doesNotMatch(run.stdout, /^unit-doc /, `the fence heading was read as the carrier: ${run.stdout}`);
+
+  const annotate = docRun(root, "--annotate");
+  assert.equal(annotate.status, 0, `a legacy doc is not an append-only carrier: ${annotate.stdout}${annotate.stderr}`);
+  assert.doesNotMatch(annotate.stderr, /append-only/);
+});
+
+// ---------------------------------------------------------------------------
+// #308 cycle 7 F47: a folded `## Log` line may name its fold commit AND a later
+// context commit. The recount read only the LAST token, so a line that cited the
+// commit proving it first was misreported `cited-unverified` and `--check`
+// failed a legitimate receipt (the mirror of F36, which demoted on prose
+// citations in the legacy ledger).
+// ---------------------------------------------------------------------------
+
+test("#308 F47 a folded line citing its fold commit before a context commit is proven", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const proof = fold("fix(x): fold F7 — correct the parse");
+  const context = fold("docs(x): note the follow-up that shipped with it");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${proof}\` · context \`${context}\` · verified at the head.`]);
+
+  const row = JSON.parse(docRun(root, "--json").stdout).rows.find((e) => e.id === "F7");
+  assert.equal(row.status, "proven-cited", `the citing order decided the verdict: ${JSON.stringify(row)}`);
+  assert.equal(row.fold, proof.slice(0, 7));
+  const check = docRun(root, "--check");
+  assert.equal(check.status, 0, `${check.stdout}${check.stderr}`);
+  assert.match(check.stdout, /CHECK PASS/);
+});
