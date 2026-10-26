@@ -258,6 +258,8 @@ decision back.
 | VF-47 | HEAD 7597376b0c8060950b3966129212527220c17134 · reviewer review-change cycle 7 · recheck reproducer: crafted unit-doc carrier, `ledger-provenance --check` → `F36 cited-unverified fold=9a35a97 … CHECK FAIL` exit 1 on a line whose first token proves it | code | confirmed | finding-mark | n/a | n/a |
 | F48 | docs/features/79-spec-by-reference/SPEC.md:6 | docs | high | fix-now | fold: the renumber to 79 left the unit-identity headings behind — `SPEC.md:6` reads `# 78 — spec-by-reference` and the five sibling H1s read `unit 78` (`BRIEF.md:1`, `decisions.md:1`, `sources.md:1`, `planning-evidence.md:1`, `planning-obligations.md:1`), while the folder, roadmap row 79 and this doc's own 2026-10-26 Progress-log entry state the unit is **79** and feature 78 is `78-unit-cycle` (PR #314) — contradicting the template's `# NN — <unit-slug>` H1 (`docs/features/_TEMPLATE/SPEC.md:1`) and every sibling feature SPEC; re-point the six headings and the stale `## Next` pane (`SPEC.md:438` still routes to `/review-change` although the receipt is posted at the head) · audit 2026-10-26 · fold 664cc40c | yes |
 | F49 | docs/features/79-spec-by-reference/SPEC.md:424,444-446 | docs | high | fix-now | fold: the required `## Next` section (the template's "the single next action") was last written at `664cc40c` and never re-cut by review cycles 5–9, so it now asserts two incompatible facts and routes to a completed step — `:424` says "review receipt current at `89b9eeb`" while `:444-445` says "the receipt at `89b9eeb` is void here", the current receipt is `86996466` (`bun scripts/review-receipt.mjs verify --pr 311` → `status: current`), and the hand-off still routes to `/review-change` while `bun scripts/unit-route.mjs 79-spec-by-reference` answers `route: close-out · next: /audit-pr`; a reader following the pane pays a redundant review cycle (the class F48 rated high), while `## Review verdict` (`:449`) stands at cycle 4 — re-cut the pane to the close-out/merge action, record the cycle-9 receipt at its own head, then post a fresh receipt (this docs commit voids the current one) · audit 2026-10-26 · route: docs fold → /review-change → /audit-pr · fold d8357e0 | yes |
+| F50 | docs/features/79-spec-by-reference/SPEC.md:478 | docs | med | fix-now | fold: the re-cut `## Review verdict` history line says rows F1–F49 were persisted "across those cycles and the two audit passes between them", but three audit passes produced ledger rows — F41+F42+F43 (audit at `fca4ba8d`, folded `62b36a56`), F48 (folded `664cc40c`), F49 (folded `d8357e0e`) — plus a fourth re-audit that found only the stale receipt, and the same pane's own `## Next` header reads `/audit-pr pass 3`, so the count contradicts the pane beside it; re-cut the sentence to "the three audit passes" (or name them) | no |
+| VF-50 | docs/features/79-spec-by-reference/SPEC.md:478 · reviewer review-change cycle 10 · HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 · recheck direct read: the sentence names "the two audit passes"; this ledger's rows carry `· fold 62b36a56` (F41+F42+F43, audit at `fca4ba8d`), `· fold 664cc40c` (F48, `audit 2026-10-26`), `· fold d8357e0` (F49, `audit 2026-10-26`); `docs/LOGS.md` records the 2026-10-26 audit invocations (three blockers cleared; F48 pass 2; `/audit-pr #311 → BLOCKED (F49 …)` then the stale-receipt re-audit) | docs | confirmed | finding-mark | n/a | n/a |
 
 F41: RESOLVED — audit blocker folded at `e3aecb34` (folded by the rebase onto `origin/main` + the renumber commit: `docs/features/79-spec-by-reference` replaces the colliding 78 folder, its 63 in-tree references and the roadmap row move to 79, and the seven conflicted files are resolved (`git merge-tree --write-tree origin/main HEAD` at 21dfb67f → 0 conflicts, `gh pr view 311 --json mergeable` → MERGEABLE after the push)).
 F42: RESOLVED — audit blocker folded at `21dfb67f` (folded: the rebase lands the published pin (`@gtrabanco/agentic-workflow-schema` 4.7.0 in package.json and bun.lock) and the version ladder above main (pi 0.34.0, execute-phase 6.2.2, unit-lane 2.4.3) so `version-parity-gate --pins` and `--content` both PASS; CI runs at the new head).
@@ -398,6 +400,50 @@ untouched, no parser reads Future status (behavior unchanged, as F40 recorded).
 Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
 (`/review-change` owns it); the audit stage follows the receipt.
 
+### Cycle 10 — delta pass, verdict REVIEW-FAIL (2026-10-26)
+
+Run on the recorded route of the F49 audit fold (`docs fold → /review-change →
+/audit-pr`; the two-cycle cap's escape stays the owner's, as for cycles 5–9).
+Cycle: 10 (nine completed `REVIEW-RAN` marks + 1). Reviewed head frozen at
+`e08ddfc0d69724ee1713a73a1aa4f9774eed8377` (= PR #311 head). Delta mode: the
+fold batch `d8357e0e` + `1193022b` touches exactly F49's cited surfaces (the
+SPEC panes and this ledger); the `86996466` mark rows and five `docs(log)`
+commits are the previous turns' session-log bookkeeping (foreign-only class,
+fix/286) — no width or size escalation trigger fired (170 added+deleted / 3
+files vs 200 / 15), so the delta ran as a delta pass. All 46 `folded: yes` rows
+re-verified **fixed** at their cited constructs (two isolated passes: F1–F26
+23/23, F27–F49 23/23, 0 regressions); F17/F20/F24 stay owner-decided
+(`ignore`). Four applicable axes ran isolated over the fold delta
+(`review-code` FAIL 1 med, `review-security` PASS 0, `review-verify` PASS 1
+low report-note, `review-perf` PASS 0); design/a11y/brand/seo skipped — no UI
+surface. Structural preconditions: `## Acceptance criteria` byte-identical to
+both `1817d8fd` and the pre-renumber unit basis (digest `de9aea6898468b0d`
+stands); receipt `stale` (exit 4) exactly as the re-cut pane's hand-off
+predicts; `git merge-tree` 0 conflicts; CI green at the head (root-suite,
+pi-compat-guard, dependency-pin-gate). One med finding persisted (F50);
+`CONVERGENCE-ANOMALY` block carried in the report. Refuted candidate: the
+F49 row carries no `VF-49` mark — not a defect: the row was persisted under
+`audit-pr:audit-rows` ownership (`LEDGERS.md:146`) and `finding-mark@1`
+governs review-change persists (its reviewer cell names review-change);
+F41–F43's `VF` rows were auditor diligence, not a mandate.
+
+```text
+CONVERGENCE-ANOMALY — 79-spec-by-reference spec
+- Finding ids: F49 (repeated — folded, verified fixed) / F50 (new)
+- Snapshots: 1817d8fd (cycle 9) → e08ddfc0 (cycle 10); AC digest unchanged
+  (`de9aea6898468b0d`); phase-lint fingerprint at this head fc84b4e4…
+- Missed: the F49 fold re-cut `## Review verdict` with an audit-pass count the
+  ledger contradicts — a pane fact no validator reads
+- Owning stage: source
+- Why the prior review failed: cycle 9 reviewed before the F49 fold existed;
+  the audit-owned re-cut (d8357e0e) introduced the miscount after the last
+  reviewed head
+- Route to owner: source-owned defect → /fold-findings F50, then
+  /review-change delta at the new head
+```
+
+Verdict: **REVIEW-VERDICT: FAIL** — one med fix-now open; no receipt posted.
+
 ### Marks
 
 | id | file:line | axis | severity | class | route | folded |
@@ -437,3 +483,9 @@ Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
 | GATE-RAN | HEAD 1817d8fda5dca736d9123e31bf0a7bd21b4d258d | bun run test (packages/pi-agentic-workflow) | exit 0 | 471 tests · 471 pass · 0 fail | n/a | n/a |
 | GATE-RAN | HEAD 1817d8fda5dca736d9123e31bf0a7bd21b4d258d | node scripts/version-parity-gate.mjs --content --base main | exit 0 | content parity holds: 0.31.0 → 0.34.0 · VERDICT: PASS | n/a | n/a |
 | GATE-RAN | HEAD 1817d8fda5dca736d9123e31bf0a7bd21b4d258d | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 79-spec-by-reference · node scripts/needs-input.mjs docs/features/79-spec-by-reference · node scripts/promise-coherence.mjs · node scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 79-spec-by-reference · node scripts/ledger-provenance.mjs docs/features/79-spec-by-reference/review-findings.md --check | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK (10) · open questions 0 · promise PASS (42 checked) · phase-lint PASS (7/7 phases) · open-rows: 0 · route close-out · CHECK PASS | n/a | n/a |
+| REVIEW-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 · cycle 10 (delta pass — fold batch d8357e0e+1193022b plus foreign-only session-log bookkeeping, 170 added+deleted / 3 files, no width or size escalation trigger; four isolated axis passes code FAIL 1 med / security PASS / verify PASS / perf PASS + two folded-row re-verification passes 46/46 fixed, 0 regressions; 1 med finding F50) · verdict REVIEW-FAIL | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | node --test scripts/*.test.mjs | exit 0 | 889 tests · 889 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | bun run build + bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | bun run test (packages/pi-agentic-workflow) | exit 0 | 471 tests · 471 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | node scripts/version-parity-gate.mjs --content --base main · node scripts/version-parity-gate.mjs --pins | exit 0 (each) | content parity holds: 0.31.0 → 0.34.0 · VERDICT: PASS · exact pins checked: 3 · VERDICT: PASS | n/a | n/a |
+| GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 79-spec-by-reference · node scripts/needs-input.mjs docs/features/79-spec-by-reference · node scripts/promise-coherence.mjs · bun scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 79-spec-by-reference · node scripts/ledger-provenance.mjs docs/features/79-spec-by-reference/review-findings.md --check | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK (10) · open questions 0 · promise PASS (42 checked · 95 skipped) · phase-lint PASS (6/6) · open-rows: 0 · route close-out · CHECK PASS (the pre-existing `GIT ERROR … deadbeef` line is recorded noise) | n/a | n/a |
