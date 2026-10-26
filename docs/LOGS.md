@@ -3412,3 +3412,14 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 3 (dff48f88…5e752124)
 - **Files:** 2 (SPEC.md, review-findings.md)
 - **Summary:** /review-change cycle 10 delta over the F49 fold: 46/46 folded rows fixed, one new med finding F50 (verdict pane miscounted audit passes); /fold-findings closed the ledger (open-rows 0, route close-out). Unit 79 is now ready for the receipt post and /audit-pr.
+## 2026-10-26T18:43:35Z — feat/308-spec-by-reference — manual
+- **Commits:** 81 (`1c68fcf4…37830bcb`)
+- **Files:** 76 files
+- **Summary:** review-change + fold-cycle-11: delta review over the F51 fold at 37830bcb - all 47 folded rows re-verified fixed, code FAIL 1 med (F51), security/verify/perf PASS, two refuted candidates; delta 153+/41-/3 files, no escalation
+- **Decisions:** F51 recurring class (F49-F50-F51): persist narration wrote wrong delta count, restated in three copies. Each corrected with numstat-verified figure. Two refuted candidates confirmed.
+- **Next:** /review-change 79-spec-by-reference - delta re-review at the new head, post the SHA-bound receipt, then /audit-pr
+## 2026-10-26T18:43:39Z — feat/308-spec-by-reference — manual
+- **Commits:** 81 (`1c68fcf4…37830bcb`)
+- **Files:** 76 files
+- **Summary:** /fold-findings F51 — re-cut the cycle-10 delta-size figure from 170 to 129 (git diff --numstat = 88 insertions + 41 deletions / 3 files) across three copies in LOGS.md, SPEC.md, and review-findings.md — the hand-tally from a raw-diff grep was replaced by a numstat-verified measure in each copy's own cited range — then cited the fold commit on the ledger row
+- **Decisions:** --annotate was used on the ledger after the fold commit: the tool's repair route is whole-ledger (appended · fold <sha> provenance to 33 recovered rows), verified cell-by-cell that no frozen field was touched — only append to route cells; also discovered the cb12be19 false positive where a feature-65 session-log subject's 'F49–F53' range matched F51 because it touched docs/LOGS.md (score-3 surface intersection on a row that only describes that file) --next: /review-change 79-spec-by-reference — delta re-review to post the SHA-bound receipt at 37830bcb (currently stale/exit 4), then /audit-pr on PR #311
