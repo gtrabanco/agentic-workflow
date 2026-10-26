@@ -17,7 +17,8 @@
 ```
 
 **A box that runs a command discloses what the command needs.** When a box
-invokes a script with a placeholder (`node scripts/x.mjs <unit-dir>`), the same
+invokes a script with a placeholder (`bun scripts/x.mjs <unit-dir>`; node fallback
+if bun is not installed), the same
 skill's text must name the artifact that placeholder requires — the script
 declares it (`PREREQUISITES` in `scripts/needs-input.mjs`) and
 `scripts/promise-coherence.mjs` checks the disclosure. A box that instructs a

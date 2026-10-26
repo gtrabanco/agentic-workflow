@@ -166,7 +166,17 @@ name those files instead.
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
 - [ ] Final task is verification (proves the whole unit works)
 - [ ] No task reaches into a future-phase concern (docs, release, migrations)
-- [ ] Phases labeled P1, P2, … (never S1, Step 1)
+- [ ] Phases labeled P1, P2, … — `#308`: `S#` is the requirement id (a spec),
+      `P#` is the phase label (a task); the two vocabularies never swap roles
+- [ ] Each requirement is cut from the request verbatim: numbered `S#` in
+      `## Specs`, one per distinct ask, with the requester's own words as its
+      quote and no requirement the request did not make
+- [ ] A later correction is appended under its own id (`S1a`) and leaves the
+      requirement it corrects untouched
+- [ ] Every task bullet names the `S#` it delivers on its `(Implements: …)` line
+- [ ] The `## Log` is opened with `L1` = the request verbatim, and later entries
+      append (never rewrite) in the `log-kind@1` vocabulary
+- [ ] `## Findings` is present and carries only OPEN rows (empty at plan time)
 - [ ] Both planning ledgers are cut (planning evidence + obligations), in the
       sizing rule's home, with stable ids
 

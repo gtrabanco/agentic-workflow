@@ -1,15 +1,16 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.11.0
+version: 2.12.0
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Verify an issue, persisted audit finding, or unresolved review finding against
   current code, classify it, and write only the contracted forge/ledger
-  outcome. Supports independent batches and an immediate-fix review-finding
-  route. Triggers: "triage-issue", "triage issue N", "triage this finding",
+  outcome. Supports independent batches and a routed review-finding
+  route: a `fix-now` row is handed to `/fold-findings`, never implemented
+  here. Triggers: "triage-issue", "triage issue N", "triage this finding",
   "is this trigger met".
 ---
 
@@ -25,7 +26,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
-✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict, an immediate-fix attempt, or an explicit replan/user-decision route
+✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict **and a route** — a `fix-now` row is routed to `/fold-findings` (or an explicit `/execute-phase <unit> P<n>`), never implemented in this turn
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
@@ -47,10 +48,14 @@ first on purpose).
   from a persisted `product-audit` report instead of existing issues (see
   *Audit-finding mode* below). Batching works the same way.
 - **Review findings** — `triage-issue --prioritize-now <unit> F<k> [F<j> …]`
-  triages unresolved rows from the current feature/fix unit's
-  `review-findings.md`. This route is for findings that `fold-findings` could
-  not close. `--prioritize-now` means attempt to resolve every named finding
-  immediately; it does not permit a downgrade, postponement, or silent drop.
+  triages unresolved rows from the current feature/fix unit's findings carrier:
+  its `## Findings` section in `SPEC.md` for a migrated unit (issue #308), or
+  `review-findings.md` for a legacy one — probe the doc first, never both. This
+  route is for findings that `fold-findings` could not close. `--prioritize-now`
+  forces the fold route for the named rows in this turn instead of queuing them
+  for a later turn; it does not permit a downgrade, postponement, or silent
+  drop, and it never authorizes implementing them here — the fold owns the fix
+  and the `folded:` flip.
 
 
 ## Step 0 — Discover the project (always first)
@@ -86,7 +91,7 @@ read another `references/` path. After Step 0:
 - Before applying an urgency or disposition label, read
   [label vocabulary](references/LABELS.md); this file is the sole definition of
   names, colors, and mutation rules.
-- Only when the verdict is `fix-in-unit`, read
+- Only when the verdict writes a row (`fix-in-unit` or `fix-now`), read
   [fold ledger](references/FOLD_LEDGER.md) before writing the row.
 
 Every resource is one hop from this file. A missing source artifact or required
@@ -121,9 +126,10 @@ triage-issue ────┤                    or fold-findings (ledger row)
                  └─ wontfix ─────────▶ propose close
 ```
 
-In review-finding mode, `replan-in-unit` runs `node scripts/unit-route.mjs
-<unit>`: its `route: replan` line prints the planner command — `/unit-lane
-<unit>` for a feature, `/unit-lane --fix <n>` for a fix — which re-runs the
+In review-finding mode, `replan-in-unit` runs `bun scripts/unit-route.mjs
+<unit>` (node fallback if bun is not installed): its `route: replan` line prints
+the planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
+for a fix — which re-runs the
 lane's `plan` catalog step and appends new `P<n>` phases to the same unit. The
 lane's own `review` step is the gate before execution. The user manually runs
 those phases; this skill never implements them.

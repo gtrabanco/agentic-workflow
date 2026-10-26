@@ -104,7 +104,9 @@ Exactly two fields change:
   `in-progress` stays in both modes, so `detail.startable_now` and
   `detail.blocked_units` keep naming every unit either way.
 - `findings.fix_now[].route`: the reviewer's multi-paragraph evidence memo becomes
-  `...(N char evidence, see the unit review-findings.md)`, keeping the original
+  `...(N char evidence, see the unit review-findings.md)` for a legacy carrier and
+  `...(N char evidence, see the unit SPEC.md ## Findings)` for a migrated one (#308),
+  keeping the original
   length visible. `id`, `file`, `axis`, `severity`, `class` and `suggested_tier`
   are untouched, and the memo is on disk in the unit's `review-findings.md`, which
   is where the fold reads it.

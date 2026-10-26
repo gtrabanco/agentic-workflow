@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 6.2.1
+version: 6.2.2
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -35,7 +35,8 @@ done:
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
-  is inferred: a gap runs `node scripts/needs-input.mjs <unit-dir>` and the
+  is inferred: a gap runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback
+if bun is not installed) and the
   `open-questions@1` block is pasted, then the run stops.
 ✓ Triage verified — unit doc Evidence section header matches
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
@@ -66,8 +67,8 @@ This skill **never interviews**. It reads its inputs — the unit doc's `Tasks`,
 one is a **gap**, resolved in one fixed order and never by inference:
 **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (2–3 concrete options with trade-offs; asking for more research
-is a legitimate answer) → **(2) halt**: run `node scripts/needs-input.mjs
-<unit-dir>`, paste the `open-questions@1` block verbatim, stop. Interactive the
+is a legitimate answer) → **(2) halt**: run `bun scripts/needs-input.mjs
+<unit-dir>` (node fallback if bun is not installed), paste the `open-questions@1` block verbatim, stop. Interactive the
 block is the pause point, unattended it is a hard fail. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 
@@ -81,9 +82,13 @@ path-protection checkpoint.
 ## Step 0 — Discover the project
 
 Per the agent guide's **Workflow conventions** + **documentation map**, read the
-unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1…Pn),
-`## Evidence`, and `## Progress` sections. If absent, the unit is not ready —
-stop and suggest `unit-lane` triage first.
+unit doc at `docs/features/<NN-slug>/SPEC.md`. Verify it carries `## Tasks` (P1…Pn)
+**and the receipt sections of the shape it is written in** (#308 accepts both):
+the legacy shape carries `## Evidence` + `## Progress log`, a re-cut unit doc carries
+`## Specs`, `## Findings` + `## Log` (its evidence and gate runs are `E`/`G` log
+lines, its progress is `P` lines). If neither pair is present, the unit is not ready —
+stop and suggest `unit-lane` triage first. `scripts/unit-route.mjs` resolves the
+shape; never judge a re-cut unit by the legacy headings and stop it.
 
 ## Process
 

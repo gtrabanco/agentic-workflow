@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.9.0
+version: 1.9.2
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -49,19 +49,30 @@ postpone/wontfix/promote/documented-tradeoff rows; those belong to `/triage-issu
 
 Per Workflow conventions, read:
 
-1. The unit's `review-findings.md` under `docs/features/<NN>-<slug>/` or
-   `docs/fix/<n>-<topic>/`; schema is owned by `review-change`/`audit-pr`:
+1. The unit's findings carrier: a migrated unit (issue #308) keeps its OPEN rows
+   in its own `SPEC.md` under `## Findings`, with folded history and marks as
+   `## Log` lines; a legacy unit keeps `review-findings.md` under
+   `docs/features/<NN>-<slug>/` or `docs/fix/<n>-<topic>/`. Probe the doc first and
+   fall back to the file — a unit with the section never reads both. Each carrier
+   has **its own** schema, owned by `review-change`/`audit-pr` and stated for both
+   shapes in `pre-execution-review/references/LEDGERS.md`:
 
-   ```
-   | id | file:line | axis | severity | class | route | folded |
-   ```
+   - legacy (7 cols): `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`
+     — closing a row flips `folded: no → yes`, and this skill is that flip's sole writer
+   - migrated (6 cols, `findings-table@1`): `\| id \| S# / file:line \| axis \| severity \|
+     class \| route \|` — every row it holds is OPEN; closing one **deletes the row** and
+     appends a `## Log` `F` line naming the fold commit. There is no `folded` column to
+     flip, and `class` here is the repairing owner (`product`/`plan`/`source`/
+     `environment`/`runtime`), not a disposition.
 
-   After `VERDICT: BLOCKED`, append missing rows (`class: fix-now`, `folded: no`,
-   next free `Fn`, dedupe `file:line`+axis), commit as
-   `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold;
-   never report “no findings”.
-2. Queue `folded: no` rows; explicit IDs restrict it and leave other rows
-   untouched. Group by root cause, verifier and rollback boundary.
+   Never write one carrier's row into the other's grammar. After `VERDICT: BLOCKED`,
+   append missing rows in the carrier's own schema (next free `Fn`, dedupe
+   `file:line`+axis; legacy `class: fix-now`, `folded: no`), commit as
+   `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold; never
+   report “no findings”.
+2. Queue the carrier's open rows — a legacy `folded: no` row, a migrated row of
+   `## Findings` (all of them are open); explicit IDs restrict the queue and leave
+   other rows untouched. Group by root cause, verifier and rollback boundary.
 3. The project's verification gate and forge CLI (use the declared forge).
 4. Whether the branch has an open PR; this decides immediate push after commit.
 
@@ -126,7 +137,7 @@ conclusion the already-run router printed, never the invocation itself: on
 `route: replan` the planner command it printed — `/unit-lane <slug>` for a
 feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
 and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
-`node scripts/unit-route.mjs <unit>` is the discovery step the fold already
+`bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) is the discovery step the fold already
 ran; it is never the recommendation.
 
 **Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
@@ -212,8 +223,8 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
+| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |

@@ -1304,3 +1304,34 @@ test("#244 freeze-batch hand-off: the decision-required branch surfaces the user
 });
 
 
+// #308 — the spec-by-reference grammar is the unit document's own: the `## Specs`
+// requirement ids, the `S#`-linked tasks and the closed `## Log` kind vocabulary
+// all order what an agent may write next, so each is a declared surface. The
+// pin is red until P4 publishes the three blocks and their inventory rows, and
+// it fails closed on a block that loses its grammar — the same shape as the
+// gate's own `undeclared-grammar` refusal.
+const SPEC_REF_SURFACES = ["spec-requirement-ids", "task-spec-links", "log-kind-vocabulary", "findings-carrier"];
+
+test("#308 the spec-by-reference grammar blocks are declared normative surfaces", (t) => {
+  if (!exists("docs/features/_TEMPLATE/SPEC.md")) return t.skip("no unit-doc template in this tree");
+  const declared = new Set(live.surfaces.map((surface) => surface.surface));
+  const missing = SPEC_REF_SURFACES.filter((surface) => !declared.has(surface));
+  assert.deepEqual(missing, [], `the inventory must declare ${SPEC_REF_SURFACES.join(", ")} — a grammar that orders the re-cut document is a normative surface`);
+  for (const name of SPEC_REF_SURFACES) {
+    const surface = live.surfaces.find((entry) => entry.surface === name);
+    assert.deepEqual(surface.faults, [], `${name}: ${surface.faults.join("; ")}`);
+    assert.ok(surface.grammar.startsWith("block:") || surface.grammar.startsWith("fenced:"),
+      `${name} resolves to a versioned grammar kind`);
+  }
+});
+
+test("#308 the closed log-kind vocabulary is published by the block, never restated in code", () => {
+  const block = versionedBlock(read("docs/features/_TEMPLATE/SPEC.md"), "log-kind@1");
+  assert.ok(block, "the unit-doc template publishes the log-kind@1 block");
+  const kinds = block.rows.map((row) => row.kind).filter(Boolean);
+  assert.deepEqual(kinds, ["L", "E", "G", "F", "D", "P", "R", "V"], `the log kind vocabulary is closed: ${kinds.join(", ")}`);
+  // The linter and the corpus suite read the same list; a second copy in code
+  // would let one drift from the other (the #305 defect class).
+  const order = read("scripts/unit-doc-phases.mjs");
+  assert.match(order, /LOG_KINDS|logKinds/, "the log grammar is read from one owner, named in code");
+});

@@ -1,7 +1,7 @@
 ---
 name: unit-lane
 user-invocable: true
-version: 2.4.1
+version: 2.4.3
 argument-hint: <NN-slug | "<idea>"> [--retriage] | --fix <issue-number> | --from-issue <issue-number>
 description: >
   One-shot lane conductor for a delivery unit: triage, implement, evidence, and
@@ -23,8 +23,9 @@ done:
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
   is inferred: a gap re-enters provenance → research, and a gap surviving both
-  runs `node scripts/needs-input.mjs <unit-dir>` and stops with the
-  `open-questions@1` block routed back to the owning stage.
+  runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback if bun is not
+  installed) and stops with the `open-questions@1` block routed back to the
+  owning stage.
 ✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
   its source — `path:line`, a doc, or an owner answer in the unit folder's
   `sources.md`. A claim with none is a question, never a default.
@@ -37,8 +38,9 @@ done:
   if new, with all mandatory sections filled or n/a)
 ✓ Guard ran (bun scripts/diff-guard.mjs --base <ref>) after each implement step;
   on BREACH: re-triage or record exception, never shrink the diff
-✓ Unit doc's Evidence rows updated (command → exit/digest → output → verified-by)
-  and Progress log updated (dated entry) before every commit
+✓ The unit's evidence carrier updated (Evidence rows, or `## Log` `E` lines for a
+  re-cut unit — command → exit/digest → output → verified-by) and its progress
+  recorded (dated Progress entry, or a `## Log` `P` line) before every commit
 ✓ Memory boundaries ran — probe verdict once, saves at unit start / each phase
   transition / close under `unit/<NN-slug>/doc`, degradation recorded as pending
 ✓ → Next: block printed as the absolute last output

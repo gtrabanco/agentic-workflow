@@ -14,6 +14,10 @@ export const FENCE_OPEN = /^(`{3,}|~{3,})/;
 export const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 /** A `P<n> —` task bullet. */
 const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
+/** The `(Implements: S1, S2)` link line a re-cut task bullet carries. Anchored like
+ *  `Relevant files:` — the link is metadata on its own line, so a sentence that
+ *  quotes the shape inside a task's prose is task text, never the phase's link. */
+const IMPLEMENTS_LINK = /^\(Implements:\s*([^)]*)\)$/;
 /** Metadata line that attaches relevant-files to the preceding bullet. */
 const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
 
@@ -105,7 +109,7 @@ export function parseUnitDocPhases(text) {
     const bullet = UNIT_DOC_BULLET.exec(line);
     if (bullet) {
       const number = Number(bullet[1]);
-      current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number) };
+      current = { number, lines: [bullet[2]], relevantFiles: null, duplicate: seen.has(number), implements: null };
       seen.add(number);
       phases.push(current);
       mode = "prose";
@@ -147,6 +151,14 @@ export function parseUnitDocPhases(text) {
       current.relevantFiles = `${current.relevantFiles} ${trimmed}`;
       continue;
     }
+    // A re-cut bullet's requirement link is its own line (`(Implements: S1, S2)`)
+    // and is metadata, exactly like `Relevant files:` — it never becomes task text,
+    // and no line that merely quotes the shape inside a sentence replaces it (F46).
+    const link = IMPLEMENTS_LINK.exec(trimmed);
+    if (link) {
+      current.implements = link[1];
+      continue;
+    }
     current.lines.push(trimmed);
   }
 
@@ -171,9 +183,178 @@ export function parseUnitDocPhases(text) {
       kind: "unit-doc",
       validator,
       relevantFiles: phase.relevantFiles,
+      implements: phase.implements,
       duplicate: phase.duplicate,
       body: phase.lines,
     };
   });
   return { phases: built, orphans };
+}
+// ---------------------------------------------------------------------------
+// The re-cut (`spec-by-reference`) grammar — issue #308
+//
+// A migrated unit doc numbers its requirements `S#` in `## Specs` (each one
+// quoting the requester verbatim), links every task bullet to the requirements
+// it implements, and appends its history to one `## Log` whose lines carry a
+// closed kind token. The linter and the router read the same three readers, so
+// the two can never disagree about what a migrated document says.
+// ---------------------------------------------------------------------------
+
+/**
+ * The closed log-kind vocabulary, published by the unit-doc templates as the
+ * `log-kind@1` block. This is the reader of that block's `token` column — one
+ * definition, never a second copy in code (`scripts/phase-lint.test.mjs` pins the
+ * template to this exact list).
+ */
+export const LOG_KINDS = Object.freeze(["L", "E", "G", "F", "D", "P", "R", "V"]);
+
+/** A requirement heading in `## Specs`: `**S1 — title.**` / `**S2a — title.**`. */
+const SPEC_REQUIREMENT = /^\*\*(S\d+[a-z]?)\s*—\s*(.*)$/;
+/** A log line: `- **L1** — …` (the kind token is the id prefix). */
+const LOG_LINE = /^[-*+]\s+\*\*([A-Z]+)(\d+)\*\*\s*[—-]\s*(.*)$/;
+
+/**
+ * Read `## Specs` into requirement records.
+ *
+ * @param {string} text — the full unit doc text.
+ * @returns {{ requirements: Array<{ id, title, quote }>, present: boolean }}
+ *   `quote` is the requirement's first blockquote line, `null` when it has none
+ *   (the defect the linter reports as `spec-quote-missing`).
+ */
+export function parseSpecs(text) {
+  const body = sectionText(text, "Specs");
+  if (body === null) return { requirements: [], present: false };
+  const requirements = [];
+  let current = null;
+  let fence = null;
+  for (const line of body.split("\n")) {
+    const trimmed = line.trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    const heading = SPEC_REQUIREMENT.exec(trimmed);
+    if (heading) {
+      // The heading is `**S1 — title.**`, optionally followed by a note
+      // (`_…_`): the title ends at the bold close, the note is not a title.
+      const title = heading[2].replace(/\*\*[\s\S]*$/, "").trim();
+      current = { id: heading[1], title, quote: null };
+      requirements.push(current);
+      continue;
+    }
+    if (!current || current.quote !== null) continue;
+    // The quote is the blockquote body; a bold marker (`> **S1a** — …`) and the
+    // guillemets a translated correction arrives in are markers, not the words.
+    const quoted = /^>\s*(.*)$/.exec(trimmed);
+    if (quoted === null) continue;
+    const words = quoted[1].replace(/^\*\*[^*]+\*\*\s*[—-]?\s*/, "").trim();
+    if (words === "") continue;
+    if (/^«.*»$/.test(words)) current.quote = words.slice(1, -1).trim();
+    else current.quote = words;
+  }
+  return { requirements, present: true };
+}
+
+/**
+ * Read `## Log` into its lines.
+ *
+ * @param {string} text — the full unit doc text.
+ * @returns {{ lines: Array<{ kind, number, token, body }>, present: boolean }}
+ */
+export function parseLog(text) {
+  const body = sectionText(text, "Log");
+  if (body === null) return { lines: [], present: false };
+  const lines = [];
+  let fence = null;
+  for (const line of body.split("\n")) {
+    const trimmed = line.trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    const entry = LOG_LINE.exec(trimmed);
+    if (entry) lines.push({ kind: entry[1], number: Number(entry[2]), token: `${entry[1]}${entry[2]}`, body: entry[3] });
+  }
+  return { lines, present: true };
+}
+
+/** The `P<n>` phases a `## Log` records, in order — a `P<n>` progress line is the receipt. */
+export function loggedPhases(text) {
+  const { lines, present } = parseLog(text);
+  if (!present) return [];
+  return lines.filter((line) => line.kind === "P").map((line) => line.number);
+}
+
+/** The raw body of one level-2 section, fence-aware; `null` when absent. */
+export function sectionText(text, name) {
+  let fence = null;
+  let offset = 0;
+  let start = null;
+  const heading = new RegExp(`^## ${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \\t]*$`);
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    const lineStart = offset;
+    offset += line.length + 1;
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    if (start === null) {
+      if (heading.test(trimmed)) start = offset;
+      continue;
+    }
+    if (H2_HEADING.test(trimmed)) return text.slice(start, lineStart);
+  }
+  return start === null ? null : text.slice(start);
+}
+
+/** The `[from, to)` range of one level-2 section, its heading included, or null.
+ * Fence-aware: fenced blocks inside the section body are skipped so a line
+ * like `## Status` inside a code block does not truncate the section. The
+ * old fence-unaware copy (`/^## /m`) is the defect class #308 F28.
+ */
+export function sectionBounds(text, name) {
+  let fence = null;
+  let start = null;
+  const heading = new RegExp(
+    `^## ${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \t]*$`,
+  );
+  for (let offset = 0; offset < text.length; offset++) {
+    const eol = text.indexOf("\n", offset);
+    const lineEnd = eol === -1 ? text.length : eol;
+    const trimmed = text.slice(offset, lineEnd).trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      offset = lineEnd;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      offset = lineEnd;
+      continue;
+    }
+    if (start === null) {
+      if (heading.test(trimmed)) start = offset;
+      offset = lineEnd;
+      continue;
+    }
+    if (H2_HEADING.test(trimmed)) return [start, offset];
+  }
+  return start === null ? null : [start, text.length];
 }

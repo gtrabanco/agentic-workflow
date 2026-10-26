@@ -96,6 +96,22 @@ reviewer-created issue creation are **forbidden** (AC 10). A previously approved
 trade-off is **cited as existing evidence**, never reinvented by review.
 `disputed` remains a later fold/user outcome, not a reviewer shortcut.
 
+### Scope is evidence, not impression (F33)
+
+Every classified row carries a `scope: in-unit | new-unit` cell, contrasted
+with what the unit declared:
+
+| Answer | Test |
+|---|---|
+| **in-unit** | path in the unit's `## Impact` set, in files its commits touch, or a surface it created/moved/claimed unchanged |
+| **new-unit** | path outside that set **and** the defect already exists at the base commit |
+| **undecidable** | the set is missing or the path is ambiguous — state the gap; never guess `new-unit` to escape |
+
+**Scope decides disposition, never size:** an in-unit defect is `fix-now`
+whatever its axis (`security`/`package` included); size only chooses fold vs
+`replan-in-unit`. "The unit did it" outranks "the path looks foreign".
+`triage-issue` consumes the cell, never re-derives it.
+
 ### Step 3 — Independent future capabilities → proposals, never issues
 
 Only a **truly independent future capability** — work the current unit does not
@@ -109,7 +125,7 @@ the user routes a proposal to `triage-issue`.
 An in-scope fix-now too large to fold as-is (multi-file redesign, or evidence
 the unit should have been split) keeps its **fix-now** class — size is never a
 reason to downgrade. Set its `Route` to **`replan-in-unit`**: run
-`node scripts/unit-route.mjs <unit>` — its `route: replan` line prints the
+`bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) — its `route: replan` line prints the
 planner command (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>` for a
 fix) — and the unit's SPEC `## Phases`
 ledger gets one or more new phases covering the work, on the SAME branch, the
@@ -152,7 +168,8 @@ your domains):
 
 - **fix-now** → fold directly into the current unit's open phase; never a
   tracked issue, never a standalone planner (AC 12).
-- **fix-now / `replan-in-unit`** → `node scripts/unit-route.mjs <unit>` prints
+- **fix-now / `replan-in-unit`** → `bun scripts/unit-route.mjs <unit>` (node fallback
+  if bun is not installed) prints
   `route: replan`; the planner command it prints re-cuts the SPEC `## Phases`
   ledger
   (user confirms), the lane's `review` step gates, then `execute-phase`
@@ -174,8 +191,8 @@ finding in its `Route` cell.
 | Owning stage | Hand-off | Never |
 |---|---|---|
 | `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | — |
-| `plan` | run `node scripts/unit-route.mjs <unit>` → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
-| `product` | run `node scripts/unit-route.mjs <unit>` → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
+| `plan` | run `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
+| `product` | run `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
 
 - `fix-now` with a `plan` or `product` owner keeps its severity but is **not**

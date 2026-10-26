@@ -25,6 +25,7 @@
  */
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -68,6 +69,8 @@ const PRODUCER_FILE = "packages/agentic-workflow/src/edit/UnitDoc.mjs";
 const ROUTER_FILE = "scripts/unit-route.mjs";
 
 const owner = () => listAfter(read(OWNER_FILE), "UNIT_DOC_REQUIRED_SECTIONS = Object.freeze(", OWNER_FILE);
+/** The re-cut list the owner publishes beside the legacy one (#308). */
+const ownerSpecRef = () => listAfter(read(OWNER_FILE), "UNIT_DOC_SPEC_REF_SECTIONS = Object.freeze(", OWNER_FILE);
 
 test("#305 the owner constant is the 14-section contract, Impact between AC and Non-goals", () => {
   assert.deepEqual(owner(), [
@@ -93,12 +96,16 @@ test("#305 the SDK's duplicate list equals the owner, in order", () => {
   assert.deepEqual(sdk, owner(), `${SDK_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
 });
 
-test("#305 the router's duplicate list equals the owner, in order", () => {
+test("#305/#308 the router's duplicate lists equal the owner's, in order", () => {
   // The triage step refuses a "mandatory" section list of its own; when it lagged
   // the owner it answered TRIAGE on unit docs the selector rejects (blocker 3 of
-  // the external verify).
-  const router = listAfter(read(ROUTER_FILE), "const UNIT_DOC_SECTIONS = ", ROUTER_FILE);
-  assert.deepEqual(router, owner(), `${ROUTER_FILE} duplicates the list: it must be byte-equal to ${OWNER_FILE}`);
+  // the external verify). Since #308 the owner publishes two accepted shapes, so
+  // the router's copy is pinned to both — the legacy list and the re-cut one.
+  const router = read(ROUTER_FILE);
+  assert.deepEqual(listAfter(router, "  legacy: [", ROUTER_FILE), owner(),
+    `${ROUTER_FILE} duplicates the legacy list: it must be byte-equal to ${OWNER_FILE}`);
+  assert.deepEqual(listAfter(router, '  "spec-by-reference": [', ROUTER_FILE), ownerSpecRef(),
+    `${ROUTER_FILE} duplicates the re-cut list: it must be byte-equal to ${OWNER_FILE}`);
 });
 
 test("#305 the producer's skeleton carries every required section in order", () => {
@@ -136,10 +143,14 @@ test("#305 every router fixture is a unit doc the contract accepts", () => {
   }
 });
 
+// #308: both templates publish the re-cut shape, so the pin follows the shape the
+// template declares. The legacy shape keeps its own proof — a legacy unit doc is
+// still a valid unit doc (the corpus's `20-legacy-shape` fixture and every closed
+// unit in the tree), and the selector accepts it (the schema package's tests).
 for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
-  test(`#305 ${template} carries every required section in contract order`, () => {
+  test(`#305/#308 ${template} carries the re-cut shape's sections in contract order`, () => {
     const found = headings(read(template));
-    const required = owner();
+    const required = ownerSpecRef();
     let cursor = -1;
     for (const section of required) {
       const at = found.indexOf(section);
@@ -147,5 +158,105 @@ for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/S
       assert.ok(at > cursor, `${template} places ## ${section} out of contract order`);
       cursor = at;
     }
+    // A template that kept a legacy-only section would publish a half-migrated
+    // document — the producer refuses that shape, so the template must not show it.
+    for (const legacyOnly of owner().filter((section) => !required.includes(section))) {
+      assert.ok(!found.includes(legacyOnly), `${template} still carries the legacy-only ## ${legacyOnly}`);
+    }
   });
 }
+
+// ---------------------------------------------------------------------------
+// #308 — two accepted shapes, one contract
+//
+// The re-cut shape replaces `Evidence` / `Progress log` with `Specs` / `Log` and
+// adds `Findings`. Migration is additive: closed units keep the current 14-section
+// set and are never rewritten, migrated units carry the re-cut set, and both
+// resolve through the same selector. The two sets below are the contract; the
+// surfaces that must agree (constant, SDK copy, producer skeleton, router copy,
+// templates) follow in P2/P3.
+// ---------------------------------------------------------------------------
+
+/** The re-cut set: the shared tail plus its replaced and added sections. */
+const SPEC_REF_SECTIONS = Object.freeze([
+  "Specs",
+  "Impact",
+  "Non-goals",
+  "Future cost",
+  "Applicable tests",
+  "Known pre-existing issues",
+  "Tasks",
+  "Findings",
+  "Log",
+  "Next",
+  "References",
+]);
+
+test("#308 the owner constant publishes both accepted shapes", () => {
+  const source = read(OWNER_FILE);
+  assert.match(source, /UNIT_DOC_SECTION_SHAPES = Object\.freeze\(\{/,
+    `${OWNER_FILE} must publish the shape table beside the current list — one list cannot accept two shapes`);
+  assert.match(source, /legacy: UNIT_DOC_REQUIRED_SECTIONS/, "the legacy shape is the current list, never a copy of it");
+  assert.match(source, /"spec-by-reference": UNIT_DOC_SPEC_REF_SECTIONS/, "the re-cut shape is its own published list");
+  // The two shapes differ in exactly the headings #308 names. `## Specs` replaces
+  // the `Objective` / `Why` / `User outcome` / `Acceptance criteria` prose
+  // quartet — a requirement that quotes the requester is all four at once — and
+  // `## Findings` / `## Log` replace `## Evidence` / `## Progress log`; every
+  // other heading is shared. Anything beyond this pair of sets is drift.
+  const legacy = owner();
+  const reCut = ownerSpecRef();
+  const added = reCut.filter((section) => !legacy.includes(section)).sort();
+  const removed = legacy.filter((section) => !reCut.includes(section)).sort();
+  assert.deepEqual(added, ["Findings", "Log", "Specs"]);
+  assert.deepEqual(removed, ["Acceptance criteria", "Evidence", "Objective", "Progress log", "User outcome", "Why"]);
+});
+
+test("#308 the re-cut shape keeps every section the two shapes share", () => {
+  const reCut = headings(read("scripts/fixtures/spec-by-reference/258-harden-needs-input-contracts/SPEC.md"));
+  const shared = reCut.filter((name) => ["Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Next", "References"].includes(name));
+  assert.deepEqual(shared, ["Impact", "Non-goals", "Future cost", "Applicable tests",
+    "Known pre-existing issues", "Tasks", "Next", "References"], "the shared tail is identical in both shapes");
+});
+
+test("#308 both templates carry the re-cut shape's section set", () => {
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    const found = headings(read(template));
+    for (const section of SPEC_REF_SECTIONS) {
+      assert.ok(found.includes(section), `${template} is missing ## ${section} from the re-cut shape`);
+    }
+    for (const replaced of ["Evidence", "Progress log"]) {
+      assert.ok(!found.includes(replaced), `${template} still carries ## ${replaced}: the re-cut template folds it into ## Log`);
+    }
+  }
+});
+
+test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
+  // AC1's validators read the templates' section list; nothing ran the shipped
+  // linter over them, so a template whose own example violated its own rule
+  // passed AC1 while a unit created from it failed `phase-lint` (#308 review, N8).
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    let stdout = "";
+    let failed = null;
+    try {
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+    } catch (error) {
+      failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    assert.equal(failed, null, failed ?? "");
+    assert.match(stdout, /^verdict PASS$/m, `${template} did not lint PASS under the grammar it publishes`);
+  }
+});
+
+test("#308 every reader resolves a shape instead of duplicating one list", () => {
+  for (const file of [ROUTER_FILE, SDK_FILE, PRODUCER_FILE]) {
+    const source = read(file);
+    // The producer imports the SDK's table instead of keeping a copy of its own,
+    // which is the same single-source rule the other two follow.
+    const declares = /export const UNIT_DOC_SECTION_SHAPES|const UNIT_DOC_SECTION_SHAPES = Object\.freeze/.test(source);
+    const imports = /UNIT_DOC_SECTION_SHAPES/.test(source);
+    assert.ok(declares || imports, `${file} must read the shape table instead of duplicating one list`);
+    assert.match(source, /resolveUnitDocShape|resolveSectionShape/,
+      `${file} must derive the shape from the headings a document carries`);
+  }
+});

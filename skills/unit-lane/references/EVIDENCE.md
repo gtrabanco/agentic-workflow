@@ -7,12 +7,16 @@ output (≤2 lines), verified-by. A reviewer re-runs it.
 
 ## Inputs
 
-- The unit's Acceptance criteria
-- The Evidence section (where evidence rows are appended)
+- The unit's Acceptance criteria (`## Acceptance criteria`, or `## Specs` for a
+  re-cut unit — `scripts/unit-route.mjs` resolves the shape)
+- The unit's evidence carrier: the `## Evidence` section (legacy shape) or the
+  `## Log` section (re-cut shape, where each run is one `E` line)
 
 ## Fixed output contract
 
-Append to the unit doc's **Evidence** table. One row per AC:
+Append one row per AC to the unit doc's **Evidence** table (legacy shape). A
+re-cut unit (#308) has no Evidence section: append one `## Log` `E` line per AC in
+the same order, carrying the same five facts.
 
 | AC | What was run | Exit / digest | Output (≤2 lines) | Verified-by |
 |---|---|---|---|---|

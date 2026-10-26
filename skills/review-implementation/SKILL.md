@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.11.1
+version: 1.12.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -69,6 +69,13 @@ then the current-unit contract (fix-now / replan-in-unit / decision-required
 for in-scope work), then `proposal` for genuinely independent future
 capabilities. One pass — no per-pass or per-reviewer classification.
 
+Every classified row also carries an explicit `scope: in-unit | new-unit` cell
+(`#308` review, F33) filled from evidence — the row's `file:line` against the
+unit's `## Impact` set and the files the unit's own commits touch — never from
+an impression of size or axis. Scope decides disposition (in-unit is always
+`fix-now`); size decides only whether that fix folds directly or needs
+`replan-in-unit`. `triage-issue` consumes the cell and never re-derives it.
+
 ## Context budget
 
 The input is the synthesized table, not the diff. Read at most 10 non-diff
@@ -97,7 +104,8 @@ each classification as its table row immediately and drop raw file content.
   rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
 - `fix-now` folds into the current unit; `replan-in-unit` runs
-  `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
+  `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed),
+  whose `route: replan` line names the
   planner that appends user-confirmed phases before `execute-phase`;
   `decision-required` blocks for the user; independent work becomes proposals
   the user routes to `triage-issue` (D3).

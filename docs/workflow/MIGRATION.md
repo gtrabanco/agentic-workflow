@@ -8,10 +8,16 @@
 `evidence-grounding` cease to be standalone user-invocable commands. Their
 functionality is absorbed into the lane's catalog steps (`design`, `plan`,
 `review`) and triage-driven step selection. Every NEW unit produces one
-`SPEC.md` with 14 sections (Objective, Why, User outcome, Acceptance criteria, Impact,
-Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
-Evidence, Progress log, Next, References) instead of separate SPEC/PLAN/TASKS/
-ACCEPTANCE files.
+`SPEC.md` — never separate SPEC/PLAN/TASKS/ACCEPTANCE files — in one of **two
+accepted shapes** (issue #308): the 14-section shape (Objective, Why, User outcome,
+Acceptance criteria, Impact, Non-goals, Future cost, Applicable tests, Known
+pre-existing issues, Tasks, Evidence, Progress log, Next, References), and the
+re-cut **spec-by-reference** shape, whose `## Specs` numbers the owner's
+requirements `S#` verbatim (replacing Objective / Why / User outcome / Acceptance
+criteria), whose `## Tasks` links each phase to its `S#`, and whose `## Findings` +
+append-only `## Log` replace Evidence + Progress log. `scripts/unit-route.mjs`
+resolves which shape a document carries; both route, lint and execute. Closed units
+keep the shape they were written in and are never rewritten.
 
 The lane: `skills/unit-lane` (conductor) + `skills/execute-phase` (executor) +
 the review pack (`review-change`, `review-implementation`).
@@ -35,8 +41,10 @@ table drops `review-spec` and `review-plan` rows.
 - **Docs to update?** Run `init-workspace` in upgrade mode — it will propose
   the updated AGENTS.md conventions (unit document, catalog, guards, evidence)
   and the new workflow docs.
-- **New units?** Use the single-file format (`SPEC.md` with 14 sections) under
-  `docs/features/<NN>-<slug>/` or `docs/fix/<N>-<topic>/`.
+- **New units?** Use the single-file format under `docs/features/<NN>-<slug>/` or
+  `docs/fix/<N>-<topic>/` — `SPEC.md` in the shape the installed template ships (the
+  re-cut `## Specs` / `## Findings` / `## Log` set, or the 14-section set; both are
+  accepted by the machine).
 - **Old skills referenced in docs?** Replace:
   - `/design-feature` → lane catalog step (no direct command; triage decides)
   - `/plan-feature` → lane catalog step (no direct command; triage decides)
