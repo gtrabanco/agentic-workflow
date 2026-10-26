@@ -1,4 +1,4 @@
-# Brief — unit 78 (spec-by-reference)
+# Brief — unit 79 (spec-by-reference)
 
 A reviewer's two-minute restatement of what this unit changes and why, written
 from `decisions.md` so no reviewer has to re-derive the step's questions.
@@ -23,7 +23,8 @@ and the marks as Log lines.
 | Q3 — where OPEN findings live once `review-findings.md` disappears? | **A — its own `## Findings` section** (owner, `D3`): `## Log` stays strictly append-only, which is the contract a change-append-and-rewrite document depends on. |
 
 Assumptions taken instead of asking (dated, correctable) live in
-`decisions.md` §Assumptions — A1 unit number 78, A2 `scope: large` pending Q2,
+`decisions.md` §Assumptions — A1 unit number 78 (superseded 2026-10-26: the unit
+is **79**), A2 `scope: large` pending Q2,
 A3 this unit's own doc stays in the current shape until its next touch, A4
 `S#` = requirement ids / `P#` = phase labels with the guide wording amended in
 P6, A5 fixtures under `scripts/fixtures/spec-by-reference/`.
