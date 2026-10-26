@@ -256,7 +256,12 @@ const ledgerText = readFileSync(ledger, "utf8");
 // OPEN rows are the `## Findings` table, which has no `folded` column: every row in it
 // is open by definition. The recount reads whichever carrier the target is, so a
 // migrated unit's fold receipts are provable at the same standard as a legacy ledger's.
-const isUnitDoc = basename(ledger) === "SPEC.md" && /^## (Findings|Log)\s*$/m.test(ledgerText);
+const isUnitDoc = basename(ledger) === "SPEC.md"
+  // The same fence-aware reader the recount itself uses: a legacy unit doc that
+  // quotes `## Findings` or `## Log` inside a fenced sample is not a migrated
+  // unit, and must not be read as the collapsed carrier (F45 — the bare `/m`
+  // regex was the class F28 closed on the section readers).
+  && (sectionBounds(ledgerText, "Findings") !== null || sectionBounds(ledgerText, "Log") !== null);
 if (isUnitDoc) {
   if (annotate) {
     process.stderr.write(

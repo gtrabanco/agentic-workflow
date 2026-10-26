@@ -751,3 +751,37 @@ test("#308 F36: prose context citations demote a proven fold; the fold marker ou
   assert.equal(after.fold, short7(fold), "and it names the fold commit, not the background ones");
   assert.equal(run(root, "--check").status, 0, run(root, "--check").stdout + run(root, "--check").stderr);
 });
+
+// ---------------------------------------------------------------------------
+// #308 cycle 7 F45: the collapsed-carrier probe is the fence-aware section
+// reader, not a `/m` regex. A legacy unit doc that quotes the re-cut shape
+// inside a fenced sample is NOT a migrated unit; reading the fence heading as
+// the marker made the tool refuse it as an append-only carrier, and recounted
+// an absent section as `CHECK PASS` over nothing.
+// ---------------------------------------------------------------------------
+
+test("#308 F45 a legacy unit doc quoting ## Findings in a fence is not the collapsed carrier", (t) => {
+  const { root, writeDoc } = makeDocFixture(t);
+  // The legacy shape: no real `## Findings`/`## Log` sections, only a fenced
+  // illustration of the migrated grammar.
+  writeDoc([]);
+  fs.writeFileSync(
+    path.join(root, UNIT_DOC),
+    [
+      "# 9 — legacy doc", "", "## Objective", "quoted fence only", "",
+      "How a migrated unit reads:", "", "```markdown", "## Findings", "",
+      "| id | S# / file:line | axis | severity | class | route |", "|---|---|---|---|---|---|",
+      "| F1 | S1 · src/index.ts:1 | code | med | source | fold: quoted |", "",
+      "## Log", "", "- **F9** — folded F9 · `dead000` · quoted, not a receipt", "```", "",
+    ].join("\n"),
+  );
+  git(root, "add", "-A", "--", ".");
+  git(root, "commit", "-qm", "quote the migrated shape in a fence");
+
+  const run = docRun(root, "--check");
+  assert.doesNotMatch(run.stdout, /^unit-doc /, `the fence heading was read as the carrier: ${run.stdout}`);
+
+  const annotate = docRun(root, "--annotate");
+  assert.equal(annotate.status, 0, `a legacy doc is not an append-only carrier: ${annotate.stdout}${annotate.stderr}`);
+  assert.doesNotMatch(annotate.stderr, /append-only/);
+});

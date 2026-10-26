@@ -652,8 +652,10 @@ function reviewMark(unitDir) {
   const doc = readProject(path.join(unitDir, "SPEC.md"));
   // The migrated marker is `## Findings`, the same predicate `findingsCarrier` uses:
   // a unit with the section never reads the side file, so one carrier answers for
-  // the rows, the marks and the fold history alike.
-  if (doc !== null && /^## Findings\s*$/m.test(doc)) {
+  // the rows, the marks and the fold history alike. The predicate is the shared
+  // fence-aware section reader, not a `/m` regex — a legacy unit that quotes the
+  // re-cut shape inside a fenced sample is not a migrated unit (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
     // One grammar for the whole carrier: `parseLog` is anchored on the published
     // `- **R<n>** — …` line shape and fence-aware, so a prose mention of an `R`
     // token and a forged line inside a fenced block are text, never marks (F37).
@@ -752,7 +754,9 @@ const SEVERITY_VOCABULARY = new Map([
  */
 function findingsCarrier(unitDir) {
   const doc = readProject(path.join(unitDir, "SPEC.md"));
-  if (doc !== null && /^## Findings\s*$/m.test(doc)) {
+  // The same fence-aware predicate as `reviewMark`: one section, read once, decides
+  // the carrier for the rows and the marks alike (F45).
+  if (doc !== null && sectionBounds(doc, "Findings") !== null) {
     return { rows: findingsRows(doc), carrier: "doc", text: doc };
   }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
