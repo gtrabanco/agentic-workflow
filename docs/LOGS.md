@@ -3443,3 +3443,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verification of PR #311 (unit 79 spec-by-reference) — reviewed 81 files (+5490/-371), ran all AC validators (golden-fixture 15/15, spec-by-reference 17/17, unit-doc-contract 12/12, phase-lint+unit-route 212/212, normative-drift 20/20, ledger-ownership+provenance+review-loop+workflow-status-sensor 112/112, knowledge-honesty 9/9), package suites green (schema 721/721, pi 471/471), version-parity PASS 0.31.0→0.34.0, all 51 review findings folded or owner-decided, no surviving old-shape references in siblings, no blockers found
 - **Decisions:** No blockers found. All 8 acceptance criteria verifiable at HEAD. Minor route-budget drift (1–8 lines) on execute-phase/* and review-change/* routes is accumulated rebase/version-bump pattern documented in LOGS.md as `policy re-basis` — not specific to this PR.
 - **Next:** /audit-pr on PR #311 to get MERGE-READY, then merge. Fix route-budget drift at policy re-basis before merge.
+
+## 2026-10-26T19:23:19Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Unit 79 spec-by-reference (PR #311): closed the lane through review cycles 1-11, F51 fold, re-review and final audit-block. Key: unit 79 ran the new S#-referencing unit doc grammar and appended phases iteratively through 11 review-change/fold-findings cycles. Delta over cycle 10 revealed F51 (delta-size figure read from git numstat instead of prose) which was folded (fix 79). Final audit on PR #311 BLOCKED: F49 current-state panes and F48/49 audit fold issues. No merge — BLOCKED on open review findings.
+- **Decisions:** F51 delta-size reading moved from prose to git numstat (fix 79); cycle 10 delta revealed F51 and fixed it in-line; unit 79 doc adopted the new S# quoting / S#-linked tasks / append-only Log / collapsed findings grammar
+- **Next:** /review-change on PR #311 unit 79 (F48, F49 still open) or /product-audit on the lane-close review gap from unit 73 that still blocks some units
+
