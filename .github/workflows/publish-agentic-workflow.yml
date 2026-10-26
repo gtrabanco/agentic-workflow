@@ -96,6 +96,14 @@ jobs:
       - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
         run: npm install -g npm@latest
 
+      # The gate needs the crate's pinned dependencies: `src/doc/envelope.mjs`
+      # imports `typebox` lazily, so without node_modules every test that reaches
+      # `--json-only` fails module resolution. Same install the node-compat job
+      # runs, same frozen lockfile — the gate must never be red for a reason the
+      # runner never installed.
+      - name: Install deps (the gate needs typebox)
+        run: bun install --frozen-lockfile
+
       - name: Test (the gate — never publish red)
         run: bun test test/
 
