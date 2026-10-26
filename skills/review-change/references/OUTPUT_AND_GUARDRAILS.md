@@ -27,7 +27,8 @@ lost, and none becomes reviewer-created backlog (D3):
   always fix-now / replan-in-unit — never a postpone/tradeoff/wontfix/new-issue
   escape.
 - **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
-  class and ledger row; run `node scripts/unit-route.mjs <unit>` — its
+  class and ledger row; run `bun scripts/unit-route.mjs <unit>` (node fallback
+  if bun is not installed) — its
   `route: replan` line prints the planner command (`/unit-lane <unit>` for a
   feature, `/unit-lane --fix <n>` for a fix). The lane re-runs its plan step on
   this branch, the user confirms the appended SPEC phase(s), its review step

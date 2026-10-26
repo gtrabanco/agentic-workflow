@@ -43,8 +43,10 @@
 
    | Condition over the taken batch | Batch class | Fold behavior |
    |---|---|---|
-   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner command the router printed — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
-   | ≥ 1 row with frozen class `fix-now` whose `Route` cell begins `product owner`, `product-owned` or `owned by product` (head-anchored, identical to `scripts/unit-route.mjs`'s `PRODUCT_ROUTE` regex: `/^(?:product[- ]owner\|product[- ]owned\|owned by product)\b/i`, per `#293`) | `frozen (product owner present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the PRODUCT-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `node scripts/unit-route.mjs <unit>`: `route: product` and the lane hand-off — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane repairs the half, its `review` step re-judges it, then `/execute-phase` on this unit |
+   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback
+if bun is not installed) (discovery step the fold already ran), where `<unit>` is the bare folder number or the full slug (both resolve): on `route: replan` the planner command the router printed — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user, never a planner |
+   | ≥ 1 row with frozen class `fix-now` whose `Route` cell begins `product owner`, `product-owned` or `owned by product` (head-anchored, identical to `scripts/unit-route.mjs`'s `PRODUCT_ROUTE` regex: `/^(?:product[- ]owner\|product[- ]owned\|owned by product)\b/i`, per `#293`) | `frozen (product owner present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the PRODUCT-ROUTE and every retained (unfolded) row id; the loop stops; the consumer is the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback
+if bun is not installed): `route: product` and the lane hand-off — `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) — the lane repairs the half, its `review` step re-judges it, then `/execute-phase` on this unit |
    | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
    | empty queue (zero findings taken) | `none` | receipt only |
 
@@ -60,7 +62,7 @@
    `DISPUTED <evidence → user decision>`; never edit classification or create an
    issue.
 9. **Replan.** If the smallest correct group exceeds a reviewable correction,
-   run `node scripts/unit-route.mjs <unit>` — its `route: replan` line prints the
+   run `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) — its `route: replan` line prints the
    planner command (`/unit-lane <slug>` for a feature, `/unit-lane --fix <n>` for
    a fix) that appends the proposed
    phases to the unit's SPEC. The `<unit>` argument accepts the bare folder number

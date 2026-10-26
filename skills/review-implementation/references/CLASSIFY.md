@@ -125,7 +125,7 @@ the user routes a proposal to `triage-issue`.
 An in-scope fix-now too large to fold as-is (multi-file redesign, or evidence
 the unit should have been split) keeps its **fix-now** class — size is never a
 reason to downgrade. Set its `Route` to **`replan-in-unit`**: run
-`node scripts/unit-route.mjs <unit>` — its `route: replan` line prints the
+`bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) — its `route: replan` line prints the
 planner command (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>` for a
 fix) — and the unit's SPEC `## Phases`
 ledger gets one or more new phases covering the work, on the SAME branch, the
@@ -168,7 +168,8 @@ your domains):
 
 - **fix-now** → fold directly into the current unit's open phase; never a
   tracked issue, never a standalone planner (AC 12).
-- **fix-now / `replan-in-unit`** → `node scripts/unit-route.mjs <unit>` prints
+- **fix-now / `replan-in-unit`** → `bun scripts/unit-route.mjs <unit>` (node fallback
+  if bun is not installed) prints
   `route: replan`; the planner command it prints re-cuts the SPEC `## Phases`
   ledger
   (user confirms), the lane's `review` step gates, then `execute-phase`
@@ -190,8 +191,8 @@ finding in its `Route` cell.
 | Owning stage | Hand-off | Never |
 |---|---|---|
 | `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | — |
-| `plan` | run `node scripts/unit-route.mjs <unit>` → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
-| `product` | run `node scripts/unit-route.mjs <unit>` → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
+| `plan` | run `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then the lane's **`review` step** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
+| `product` | run `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) → `route: product` → `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix): the lane repairs the half through its `design` step, its `review` step re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
 
 - `fix-now` with a `plan` or `product` owner keeps its severity but is **not**

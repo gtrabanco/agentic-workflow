@@ -126,9 +126,10 @@ triage-issue ────┤                    or fold-findings (ledger row)
                  └─ wontfix ─────────▶ propose close
 ```
 
-In review-finding mode, `replan-in-unit` runs `node scripts/unit-route.mjs
-<unit>`: its `route: replan` line prints the planner command — `/unit-lane
-<unit>` for a feature, `/unit-lane --fix <n>` for a fix — which re-runs the
+In review-finding mode, `replan-in-unit` runs `bun scripts/unit-route.mjs
+<unit>` (node fallback if bun is not installed): its `route: replan` line prints
+the planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
+for a fix — which re-runs the
 lane's `plan` catalog step and appends new `P<n>` phases to the same unit. The
 lane's own `review` step is the gate before execution. The user manually runs
 those phases; this skill never implements them.
