@@ -35,10 +35,13 @@ import { deriveReviewLoopCycles } from "./pre-execution-contract.mjs";
 // echoed-cell bound. The sensor imports them instead of re-deriving them: two
 // vocabularies let the same ledger row answer `route: execute` from the router and
 // `/fold-findings` from the sensor (#224 fold F13/F2/F15).
-import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows } from "./unit-route.mjs";
+import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } from "./unit-route.mjs";
 // Shared section parser (fence-aware, issue #308 F28) — avoids re-defining
-// sectionBounds (fence-blind) in workflow-status and ledger-provenance.
-import { sectionBounds, sectionText } from "./unit-doc-phases.mjs";
+// sectionBounds (fence-blind) in workflow-status and ledger-provenance. The
+// sensor reads `## Log` through `parseLog`, never through its own line grammar
+// (#308 cycle-3 F37/F39: the inline copies had drifted — one unanchored, one
+// fence-blind — while the shared reader was already both).
+import { sectionBounds, parseLog } from "./unit-doc-phases.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -651,11 +654,12 @@ function reviewMark(unitDir) {
   // a unit with the section never reads the side file, so one carrier answers for
   // the rows, the marks and the fold history alike.
   if (doc !== null && /^## Findings\s*$/m.test(doc)) {
-  const log = sectionRange(doc, "Log");
-    if (log === null) return null;
-    const marks = [...log[1].matchAll(/\s*[-*+ ]\s+\*\*R(\d+)\*\*\s*[—-]\s*(.*)$/gm)];
+    // One grammar for the whole carrier: `parseLog` is anchored on the published
+    // `- **R<n>** — …` line shape and fence-aware, so a prose mention of an `R`
+    // token and a forged line inside a fenced block are text, never marks (F37).
+    const marks = parseLog(doc).lines.filter((line) => line.kind === "R");
     if (marks.length === 0) return { sha: null, carrier: "doc" };
-    const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1][2])?.[1] ?? null;
+    const sha = /HEAD ([0-9a-f]{40})/.exec(marks[marks.length - 1].body)?.[1] ?? null;
     return { sha, carrier: "doc" };
   }
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
@@ -672,6 +676,7 @@ function sectionRange(text, name) {
   const after = text.indexOf("\n", bounds[0]) + 1;
   return [bounds[0], text.slice(after, bounds[1])];
 }
+
 
 /**
  * The unit doc with the two collapsed-carrier sections (`## Findings`, `## Log`)
@@ -786,24 +791,24 @@ function rowsFromLedger(ledger) {
 function readLogMarks(unit, unitDir) {
   const doc = readProject(path.join(unitDir, "SPEC.md"));
   if (doc === null) return [];
-  const start = doc.search(/^## Log\s*$/m);
-  if (start === -1) return [];
-  const after = doc.indexOf("\n", start) + 1;
-  const next = doc.slice(after).search(/^## /m);
-  const body = next === -1 ? doc.slice(after) : doc.slice(after, after + next);
+  // The shared reader, not an inline copy: `parseLog` bounds `## Log` with the
+  // fence-aware section reader and anchors every line on the published grammar,
+  // so a fenced `## ` heading truncates nothing and prose is never a mark (F39).
   const labels = { G: "gate run", F: "folded finding", D: "owner decision", R: "review run", V: "finding verification" };
   const marks = [];
-  for (const line of body.split("\n")) {
-    const entry = /^[-*+]\s+\*\*([A-Z]+)(\d+)\*\*\s*[—-]\s*(.*)$/.exec(line.trim());
-    if (!entry || !labels[entry[1]]) continue;
-    marks.push(`${unitDir}: ${labels[entry[1]]} ${entry[1]}${entry[2]} — ${bounded(entry[3])}`);
+  for (const { kind, number, body } of parseLog(doc).lines) {
+    const label = labels[kind];
+    if (!label) continue;
+    marks.push(`${unitDir}: ${label} ${kind}${number} — ${bounded(body)}`);
   }
   return marks;
 }
 
-/** A log line's words, bounded for the envelope. */
+/** A log line's words, bounded for the envelope: the router's own flatten class
+ *  first (#308 cycle-3 F38 — a second, weaker copy here let control and format
+ *  characters through), then this surface's 120-char observation cap. */
 function bounded(text) {
-  const flat = String(text).replace(/\s+/g, " ").trim();
+  const flat = flattenCell(text);
   return flat.length <= 120 ? flat : `${flat.slice(0, 119)}…`;
 }
 
@@ -820,14 +825,27 @@ function readFixNow(unitDir, observations = []) {
     if (!normalized) {
       // Named, never silent: the row is dropped from the envelope, and the ledger's
       // own vocabulary drift is reported (the AC-19 degradation pattern).
-      observations.push(`${unitDir}: dropped review-findings row '${id}' — severity '${severity}' is outside high|med|low`);
+      observations.push(`${unitDir}: dropped review-findings row '${flattenCell(id)}' — severity '${flattenCell(severity)}' is outside high|med|low`);
       continue;
     }
     const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
     // `carrier` is read here only to label the compact memo, and `buildProjections`
     // drops it before the envelope is emitted: the schema's finding item names no
     // such key, so a new field would fail the sensor's own self-check.
-    items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier, carrier: carrier.carrier });
+    // Every echoed cell goes through the router's one flatten class (F38): clean
+    // cells are byte-identical under it, so the compact memo's length and the
+    // full-envelope identity pins hold, and no invisible character reaches a
+    // consumer.
+    items.push({
+      id: flattenCell(id),
+      file: flattenCell(file),
+      axis: flattenCell(axis),
+      severity: normalized,
+      class: flattenCell(klass),
+      route: flattenCell(route),
+      suggested_tier: tier,
+      carrier: carrier.carrier,
+    });
   }
   return items;
 }

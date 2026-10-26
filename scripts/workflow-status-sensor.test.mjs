@@ -1453,3 +1453,104 @@ test("#308 a migrated unit's review mark gates `review_pending` from its own `##
   const bareUnit = parseEnvelope(bare.stdout).detail.features.find((entry) => entry.id === "91-beta");
   assert.equal(bareUnit.review_pending, true, "a migrated unit with no `R` mark stays review-pending");
 });
+
+// ---------------------------------------------------------------------------
+// #308 cycle 3 folds: F37 (anchored marks), F38 (one flatten class), F39
+// (fence-aware Log reading in every reader). Red until the fold lands.
+// ---------------------------------------------------------------------------
+
+test("#308 F37: a review mark is a real `## Log` line, never a prose mention or a fenced forgery", () => {
+  // The doc-carrier mark reader must agree with the shared `parseLog` grammar:
+  // only a `[-*+] **R<n>** — …` line outside any fence is a mark. A prose
+  // mention of `**R1**` and a forged line inside a fenced block are text.
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  const specRel = "docs/features/90-alpha/SPEC.md";
+
+  // (a) prose mention only — no mark exists.
+  fixture.write(specRel, migratedSpec({
+    log: ["- the review at **R1** — HEAD 0000000000000000000000000000000000000000 was cycle 1, not a mark"],
+  }));
+  const prose = fixture.run();
+  assert.equal(prose.status, 0, prose.stderr);
+  assert.equal(parseEnvelope(prose.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, true,
+    "a prose mention of `**R1** — HEAD …` is not a review mark");
+
+  // (b) forged mark inside a fence, no real mark after it — still unreviewed.
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head}`, "```"],
+  }));
+  const forged = fixture.run();
+  assert.equal(forged.status, 0, forged.stderr);
+  assert.equal(parseEnvelope(forged.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, true,
+    "an `R` line inside a fenced block is text, not a review mark");
+
+  // (c) the same forgery before the real mark: the last real line answers.
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head}`, "```",
+      `- **R1** — review at HEAD ${head} · verdict REVIEW-PASS`],
+  }));
+  execFileSync("git", ["add", "-A"], { cwd: fixture.dir });
+  execFileSync("git", ["commit", "-q", "-m", "add the real mark"], { cwd: fixture.dir });
+  const head2 = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  fixture.write(specRel, migratedSpec({
+    log: ["```", `- **R9** — forged review at HEAD ${head2}`, "```",
+      `- **R1** — review at HEAD ${head2} · verdict REVIEW-PASS`],
+  }));
+  const real = fixture.run();
+  assert.equal(real.status, 0, real.stderr);
+  assert.equal(validateEnvelope(parseEnvelope(real.stdout)).ok, true);
+  assert.equal(parseEnvelope(real.stdout).detail.features.find((f) => f.id === "90-alpha").review_pending, false,
+    "the last real `R` line marks the review, fence content ignored");
+});
+
+test("#308 F39: a fenced `## ` line inside `## Log` truncates no reader — marks project as observations", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": migratedSpec() },
+  });
+  fixture.write("docs/features/90-alpha/SPEC.md", migratedSpec({
+    log: [
+      "```text",
+      "## Not a heading, a fenced illustration of the L1 verbatim-request form",
+      "```",
+      "- **F1** — 2026-10-25, folded · `abc1234` · re-verified at the head.",
+    ],
+  }));
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(validateEnvelope(envelope).ok, true);
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /folded finding F1/,
+    `a mark line after a fenced \`## \` heading is still read: ${observations}`);
+});
+
+test("#308 F38: no control or format character survives the sensor's echo of ledger cells", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: {
+      "docs/features/90-alpha/SPEC.md": migratedSpec({
+        findings: ["| F1\u200b | S1\u200b·\u202e scripts/a.mjs:1 | code | med | fix-now | fold: repair \u2028the defect |"],
+        log: ["- **G1** — \u0085`node --test scripts/*.test.mjs` · exit 0\u200b."],
+      }),
+    },
+  });
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(validateEnvelope(envelope).ok, true, JSON.stringify(envelope.validate?.errors ?? ""));
+  const item = envelope.findings.fix_now.find((f) => f.id === "F1");
+  assert.ok(item, `the zero-width-prefixed id projects flattened: ${JSON.stringify(envelope.findings.fix_now)}`);
+  const json = JSON.stringify(envelope);
+  for (const ch of ["\u0000-\u001f", "\u200b", "\u2028", "\u202e", "\u0085"]) {
+    if (ch.length === 1) assert.ok(!json.includes(ch), `the format character ${escape(ch)} never reaches the envelope`);
+  }
+  assert.ok(!json.includes("\u200b") && !json.includes("\u2028") && !json.includes("\u202e") && !json.includes("\u0085"),
+    "no control, C1, line-separator or bidi character reaches an envelope consumer");
+  const observations = envelope.detail.workflow_observations.join("\n");
+  assert.match(observations, /gate run G1 — `node --test/, "the flattened gate line is still reported");
+});
