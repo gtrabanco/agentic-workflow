@@ -265,3 +265,84 @@ import `sectionText` (workflow-status.mjs:41); the shared `sectionBounds`/
 note, trigger: a doc with an indented `## Log` line). Proposals unchanged from
 cycle 2 (user-routed, D3): `createSpecByReference` exported and unwired; a
 perf-benchmark pin for the append-only-Log parsers.
+
+### Cycle 5 — review-change cycle 4: delta escalated to a full pass — verdict PASS (2026-10-26)
+
+Run on the owner's standing authorization (the doc's `## Next` pane named this
+delta re-review; the two-cycle cap was reached at cycle 2, so the escape stays
+the owner's, never a reviewer election). Reviewed head frozen at
+`56f8ea254f12b1d433a086d8812be5297cfb4421` (= PR #311 head, after the ledger
+closure commit below). Delta mode first: the fold diff `66837370..56f8ea25`
+measures 314 added+deleted lines (> 200) — **size trigger fired**, so the
+delta escalated to a full pass over `git diff main...HEAD`.
+
+**Ledger closure first (owner decisions persisted).** The three DISPUTED rows
+were decided by the owner on 2026-10-23 (SPEC Progress log) and re-judged
+settled in cycles 2 and 4; their folded cells now read
+`ignore · owner decision 2026-10-23` with a dated RESOLVED line each (F17 —
+dismissed as reported and re-scoped, A3 defers this doc's own migration;
+F20 — dismissed, `## Impact` is the pre-change surface map by contract; F24 —
+resolved by `D5`, the citation pin is the machine backing and the map
+amendment runs as its own future unit). `ignore` is `unit-route`'s
+decided-never-routed disposition (`scripts/unit-route.mjs` NOT_OPEN) — no
+`folded: yes` flip was written and none of these rows claims a fold; the
+router now reports `open-rows: 0`.
+
+**Re-verification (two isolated passes):** all 36 `folded: yes` rows re-verified
+**fixed** at their cited surfaces (construct-level check at shifted offsets,
+with /tmp reproducers for the behavior rows: sanitizeEcho, fence-aware
+`parseLog`/`sectionBounds`, `flattenCell`, parity gate, lineage,
+ledger-provenance precedence). F17/F20/F24 skipped as owner-decided.
+
+**Four isolated axis passes:** `review-code` PASS (2 low), `review-security`
+PASS (0 findings — F14/F37/F38 fixes re-proven by reproducers),
+`review-perf` PASS (2 low proposals), `review-verify` PASS (every declared AC
+validator and all three suites green). No same-`file:line`+axis re-report and
+no regression of any folded row; no new high/med finding, so nothing is
+persisted below and no `CONVERGENCE-ANOMALY` table is due (the two low
+code-classed notes are below the materiality floor and ride as report-notes).
+
+**Gates at the reviewed head (verify axis, isolated):** root
+`node --test scripts/*.test.mjs` → 828/828 · schema `bun run test` → 721/721 ·
+pi `bun run test` → 432/432 · AC1 13/13 · AC2 211/211 · AC3 20/20 · AC4 109/109
+· AC5 32/32 with no closed-unit doc in the merge-base diff (the two-dot `docs/`
+rows for 61/66/67/78-unit-cycle are main-side drift: main tip `b659bf63` is
+ahead of merge-base `01151e6b`) · AC6 9/9 · budgets 28 skills/14 routes ·
+parity `0.31.0 → 0.33.0` PASS · `LINEAGE OK` · needs-input 0 ·
+promise-coherence PASS (36 checked) · phase-lint PASS ·
+`ledger-provenance --check` CHECK PASS (the pre-existing `GIT ERROR …
+deadbeef` line is recorded noise). AC integrity: `## Acceptance criteria`
+byte-identical between `15ab46a1` and `56f8ea25` (`de9aea6898468b0d`,
+extractor-normalized). Merge-drift check: `git merge-tree` → 0 conflict
+markers against the advanced main.
+
+**Report-notes (low, never persisted — the owner routes them):**
+- `review-code` — dead `sectionRange` helper in `scripts/workflow-status.mjs`
+  (the F37/F39 fold removed its last caller); dead branch in the F38 corpus
+  test (`workflow-status-sensor.test.mjs` — a 10-char range string is always
+  skipped by the `ch.length === 1` guard).
+- `review-perf` (proposals) — one SPEC.md read+parse up to 4× per unit per
+  envelope build (constant-factor, all scans O(doc) and fence-aware); one
+  observation per `## Log` mark line with no cap on an append-only Log
+  (extends the recorded cycle-2 perf-benchmark proposal — trigger: a real Log
+  exceeds ~1 MB).
+- `review-verify` (n/a-class) — `phase-lint.mjs` accepts exactly one plan path
+  (a two-path invocation exits 1; both templates PASS individually); a stray
+  untracked reproducer file at the repo root was deleted by the orchestrator.
+
+**Proposals (user-routed, D3 — unchanged set):** `createSpecByReference`
+exported and unwired; perf-benchmark pin for the append-only-Log parsers (now
+also covering the observation path).
+
+Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
+(`/review-change` owns it); the audit stage follows the receipt.
+
+### Marks
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| REVIEW-RAN | HEAD 56f8ea254f12b1d433a086d8812be5297cfb4421 · cycle 4 (delta, escalated full pass — size trigger 314 > 200) · verdict REVIEW-PASS | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 56f8ea254f12b1d433a086d8812be5297cfb4421 | node --test scripts/*.test.mjs | exit 0 | 828 tests · 828 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 56f8ea254f12b1d433a086d8812be5297cfb4421 | bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 56f8ea254f12b1d433a086d8812be5297cfb4421 | bun run test (packages/pi-agentic-workflow) | exit 0 | 432 tests · 432 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 56f8ea254f12b1d433a086d8812be5297cfb4421 | node scripts/version-parity-gate.mjs --content --base main | exit 0 | content parity holds: 0.31.0 → 0.33.0 · VERDICT: PASS | n/a | n/a |
