@@ -785,3 +785,25 @@ test("#308 F45 a legacy unit doc quoting ## Findings in a fence is not the colla
   assert.equal(annotate.status, 0, `a legacy doc is not an append-only carrier: ${annotate.stdout}${annotate.stderr}`);
   assert.doesNotMatch(annotate.stderr, /append-only/);
 });
+
+// ---------------------------------------------------------------------------
+// #308 cycle 7 F47: a folded `## Log` line may name its fold commit AND a later
+// context commit. The recount read only the LAST token, so a line that cited the
+// commit proving it first was misreported `cited-unverified` and `--check`
+// failed a legitimate receipt (the mirror of F36, which demoted on prose
+// citations in the legacy ledger).
+// ---------------------------------------------------------------------------
+
+test("#308 F47 a folded line citing its fold commit before a context commit is proven", (t) => {
+  const { root, fold, writeDoc } = makeDocFixture(t);
+  const proof = fold("fix(x): fold F7 — correct the parse");
+  const context = fold("docs(x): note the follow-up that shipped with it");
+  writeDoc([`- **F1** — 2026-10-23, folded F7 · \`${proof}\` · context \`${context}\` · verified at the head.`]);
+
+  const row = JSON.parse(docRun(root, "--json").stdout).rows.find((e) => e.id === "F7");
+  assert.equal(row.status, "proven-cited", `the citing order decided the verdict: ${JSON.stringify(row)}`);
+  assert.equal(row.fold, proof.slice(0, 7));
+  const check = docRun(root, "--check");
+  assert.equal(check.status, 0, `${check.stdout}${check.stderr}`);
+  assert.match(check.stdout, /CHECK PASS/);
+});

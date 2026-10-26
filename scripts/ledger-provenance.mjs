@@ -335,7 +335,13 @@ function runDocRecount({ rel: docRel, text, asJson: json, checkOnly: check }) {
       });
       continue;
     }
-    const sha = cited.at(-1);
+    // A folded line may name its fold commit and later context commits in any
+    // order. The proof is the token whose SUBJECT claims the ids the line folds,
+    // not the last token written: reading only `cited.at(-1)` failed a legitimate
+    // receipt whenever the proving commit came first (F47 — the mirror of F36,
+    // which demoted on prose citations in the legacy ledger).
+    const proof = cited.find((candidate) => claimed.some((id) => foldSubjectIds(candidate).has(id)));
+    const sha = proof ?? cited.at(-1);
     const claims = claimed.filter((id) => foldSubjectIds(sha).has(id));
     if (claims.length === 0) {
       report.push({
