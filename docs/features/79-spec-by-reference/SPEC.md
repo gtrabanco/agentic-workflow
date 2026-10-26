@@ -414,30 +414,29 @@ output (≤2 lines), verified-by.
 `2026-10-25 09:15 — triage (cycle 2): /triage-issue --prioritize-now 79-spec-by-reference F27 + F28 + F29 — all three classified fix-now, source-owned. F27 (parity gate high): 0.31.0→0.32.0 bump + CHANGELOG row committed (bc4d37ba). F28 (sectionBounds med): sectionBounds moved into unit-doc-phases.mjs as shared fence-aware reader, imported by workflow-status.mjs and ledger-provenance.mjs. F29 (findingsRows med): workflow-status imports findingsRows from unit-route.mjs instead of re-defining rowsFromFindingsSection. Gates: parity PASS 0.31.0→0.32.0 · phase-lint 160/160 · golden-fixture 15/15 · spec-by-reference 17/17 · ledger-ownership 12/12. All three folded → next: /review-change 79-spec-by-reference (final cycle)
 `2026-10-26 — review fold (cycle 5) — F40 folded: the two `## Future` rows' status token `kept deferred <date>` re-cut to the published vocabulary — `open` with the deferral dated in prose (`open | planned | discarded <YYYY-MM-DD>`, `_TEMPLATE/SPEC.md:48` · `docs/fix/_TEMPLATE/SPEC.md:60` · `UnitDoc.mjs:70,150`; "keep-deferred" stays an offer outcome); the owner's D5 deferral decision untouched; sweep confirms no other off-vocab status token in the unit's docs → next: /review-change 79-spec-by-reference (delta)
 `2026-10-26 — review cycle 4 (delta escalated to a full pass; owner-authorized) — persisted the owner's 2026-10-23 dispute resolutions into the ledger (F17/F20/F24 → disposition `ignore`, decided-never-routed per `unit-route` NOT_OPEN; fold queue empty, router `open-rows: 0`); reviewed head frozen at 56f8ea25, size trigger fired (314 > 200) so the delta ran as a full pass: four isolated axis reviewers (code PASS · security PASS · perf PASS · verify PASS) + two re-verification passes (36/36 folded rows fixed); every gate green at this head (root 828/828, schema 721/721, pi 432/432, parity 0.31.0→0.33.0, budgets 28/14, lineage OK, needs-input 0, promise-coherence PASS, phase-lint PASS, ledger-provenance CHECK PASS); AC integrity unchanged (`de9aea6898468b0d`, byte-identical to `15ab46a1`); main advanced under the PR (feature 66 merged, main pi 0.31.0) — merge-tree shows 0 conflicts, parity re-checked green → `REVIEW-VERDICT: PASS` — next: /review-change 79-spec-by-reference posts the SHA-bound receipt, then the audit stage closes the ladder`
+`2026-10-26 — audit stage (/audit-pr) — BLOCKED with three blockers, all cleared in this pass: the branch conflicted with main (7 files) because feature 78 was merged as `78-unit-cycle` (#314) while this branch was open → rebased onto origin/main (44 commits replayed), renumbered the unit to 79 (folder, 63 in-tree references, roadmap row), re-cut the version ladder above main's published versions (execute-phase 6.2.2, unit-lane 2.4.3, pi 0.34.0; the schema pin stays at the published 4.7.0), and settled roadmap row 79 to `done · [#311]`; the second blocker was missing CI evidence (no run at the audited head, the last one red on dependency-pin-drift) and the third the unreachable close-out route. Every gate re-run at the rebased head: root 885/885, schema 721/721, pi 471/471, budgets 28 skills / 14 routes (policy re-basis #9), parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0, ledger-provenance CHECK PASS, LINEAGE OK. The rebase rewrote every SHA, so the citations above name pre-rebase commits; the two ledger markers that pointed at rewritten commits are re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`) → next: /review-change 79-spec-by-reference (the receipt at the old head is void)`
 ## Next
 
 ```text
-REVIEW-VERDICT: PASS (cycle 4 — delta over the last three fold batches,
-escalated to a full pass; owner-authorized after the two-cycle cap)
-- Findings: 0 material · 2 low report-notes · 2 low proposals (never
-  persisted — below the materiality floor; the owner routes them)
-- Re-verification: 36/36 folded rows fixed at their cited surfaces;
-  F17/F20/F24 owner-decided (`ignore`) — the fold queue is empty
-- Gates: root 828/828 · schema 721/721 · pi 432/432 · parity 0.31.0→0.33.0
-  PASS · budgets 28/14 · lineage OK · needs-input 0 · promise-coherence PASS
-  · phase-lint PASS · ledger-provenance CHECK PASS
-- AC integrity: `## Acceptance criteria` byte-identical between `15ab46a1`
-  and `56f8ea25`
+AUDIT-VERDICT: BLOCKED → fixed (2026-10-26)
+- Three blockers cleared: the branch conflicted with `main` because feature 78
+  was taken by `78-unit-cycle` (PR #314) — this unit is **79** and its folder,
+  its 63 references and its roadmap row moved; no CI run existed at the audited
+  head while the last one failed on the schema pin (now `4.7.0` with pi
+  `0.34.0`); roadmap row 79 read `in-progress` with every phase logged (now
+  `done · [#311]`)
+- The rebase onto `origin/main` replayed 44 commits and rewrote every SHA, so
+  the citations above name pre-rebase commits; the two ledger markers that
+  pointed at rewritten commits are re-pointed (F27 → `9a35a976`,
+  F36 → `ac8e20b8`)
+- Gates at the rebased head: root 885/885 · schema 721/721 · pi 471/471 ·
+  context and route budgets PASS · parity PASS · phase-lint PASS ·
+  promise-coherence PASS · needs-input 0 · ledger-provenance CHECK PASS ·
+  LINEAGE OK
 ```
 
-The verdict's full history (cycles 1–4) lives once in **`review-findings.md`**;
-the cycle-1 FAIL tables the verdict section carried were its canonical copy
-and are superseded by the ledger's folded rows (F1–F26 map M1–M7/N1–N15
-one-to-one).
-
-→ next: /review-change 79-spec-by-reference — post the SHA-bound
-review-change:pass receipt at the settled head (its precondition — a clean
-review table — now exists); the ladder's audit stage follows the receipt.
+→ next: /review-change 79-spec-by-reference — the receipt at the pre-rebase head
+is void; post the SHA-bound receipt at this head, then /audit-pr re-runs.
 
 ## Review verdict
 
