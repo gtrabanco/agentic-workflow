@@ -3304,3 +3304,9 @@ out to do, what was decided and *why*, and where to resume.
   Then ran review-change + fold-findings until green (10 findings, six batches), rebased onto origin/main (83 commits ahead), opened PR #312, started feature 67 (serena-provisioning) and unit 78 (unit-cycle as-code, also landed).
 - **Decisions:** Engram is required substrate, never a hard failure dependency (the probe always exits 0). The install route is `pi install npm:gentle-engram@latest` (never the CLI setup subcommand, which pins the version that ran it until re-run). Pi package degrades to `unsupported-host` on older hosts rather than throwing. Budget ceilings re-based only where measurement forced it; prose tightened first. Two test expectations grew (DEFAULT_CONFIG shape, lifecycle event set) — exact deep-equals preserved, nothing loosened.
 - **Next:** Continue with feature 67 (serena-provisioning, PIGGYBACK) or audit PR #312.
+## 2026-10-26T11:01:24Z — feat/308-spec-by-reference — manual
+- **Commits:** 46 (`1c68fcf4…a48fe5e0`)
+- **Files:** 75 files
+- **Summary:** review-change fold cycle for F40 (Future status token vocab drift) and post-merge audit of unit 79
+- **Decisions:** F40 class: published-but-unpinned vocabularies in prose (same family as #305 but not mechanism); F40 fix: re-cut tokens to open|planned|discarded; decision: committed files = truth, Engram = index (no memory-side promise recreates #305); issue #315 created (published-vocabulary machine pin + fold survivors-sweep gate); unit 79: duplicate of #308 after merge, audit fold F41+F42+F43 closed
+- **Next:** /review-change 78-spec-by-reference (delta) → /audit-pr → merge; /product-audit acotado (survivors sweep 258+78+5 urgent PRs + vocab census para #315); triage issues con evidencia fresca
