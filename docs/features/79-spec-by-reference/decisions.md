@@ -1,4 +1,4 @@
-# Decisions — unit 78 (spec-by-reference)
+# Decisions — unit 79 (spec-by-reference)
 
 The question ledger (`open-questions@1`, the grammar `scripts/needs-input.mjs`
 reads), the resolutions the decide stage recorded, and the assumptions taken
@@ -24,6 +24,9 @@ Cheap defaults taken instead of asking, dated and correctable:
 - **A1 — 2026-10-21** — unit number `78`, slug `spec-by-reference` (roadmap's
   highest row is 77; the branch is `feat/308-spec-by-reference`). Change of
   number = rename + `MIGRATION.md` note, so it is worth correcting early.
+  **Superseded 2026-10-26 (F48):** feature 78 was taken by `78-unit-cycle`
+  (PR #314) while this branch was open — the unit is **79**, and its folder,
+  references and roadmap row moved.
 - **A2 — 2026-10-21** — `scope: large` set in the frontmatter so triage can run
   before Q2 answers. If Q2 splits the unit, re-triage with
   `bun scripts/unit-route.mjs --triage 79-spec-by-reference --retriage`.

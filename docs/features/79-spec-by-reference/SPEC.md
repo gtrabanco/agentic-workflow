@@ -3,7 +3,7 @@ type: feature
 scope: large
 ---
 
-# 78 — spec-by-reference
+# 79 — spec-by-reference
 
 > One-line: the unit document re-cut to spec-by-reference — requirements as
 > numbered `S#` quoting the owner's exact words verbatim, tasks linked to their
@@ -415,28 +415,35 @@ output (≤2 lines), verified-by.
 `2026-10-26 — review fold (cycle 5) — F40 folded: the two `## Future` rows' status token `kept deferred <date>` re-cut to the published vocabulary — `open` with the deferral dated in prose (`open | planned | discarded <YYYY-MM-DD>`, `_TEMPLATE/SPEC.md:48` · `docs/fix/_TEMPLATE/SPEC.md:60` · `UnitDoc.mjs:70,150`; "keep-deferred" stays an offer outcome); the owner's D5 deferral decision untouched; sweep confirms no other off-vocab status token in the unit's docs → next: /review-change 79-spec-by-reference (delta)
 `2026-10-26 — review cycle 4 (delta escalated to a full pass; owner-authorized) — persisted the owner's 2026-10-23 dispute resolutions into the ledger (F17/F20/F24 → disposition `ignore`, decided-never-routed per `unit-route` NOT_OPEN; fold queue empty, router `open-rows: 0`); reviewed head frozen at 56f8ea25, size trigger fired (314 > 200) so the delta ran as a full pass: four isolated axis reviewers (code PASS · security PASS · perf PASS · verify PASS) + two re-verification passes (36/36 folded rows fixed); every gate green at this head (root 828/828, schema 721/721, pi 432/432, parity 0.31.0→0.33.0, budgets 28/14, lineage OK, needs-input 0, promise-coherence PASS, phase-lint PASS, ledger-provenance CHECK PASS); AC integrity unchanged (`de9aea6898468b0d`, byte-identical to `15ab46a1`); main advanced under the PR (feature 66 merged, main pi 0.31.0) — merge-tree shows 0 conflicts, parity re-checked green → `REVIEW-VERDICT: PASS` — next: /review-change 79-spec-by-reference posts the SHA-bound receipt, then the audit stage closes the ladder`
 `2026-10-26 — audit stage (/audit-pr) — BLOCKED with three blockers, all cleared in this pass: the branch conflicted with main (7 files) because feature 78 was merged as `78-unit-cycle` (#314) while this branch was open → rebased onto origin/main (44 commits replayed), renumbered the unit to 79 (folder, 63 in-tree references, roadmap row), re-cut the version ladder above main's published versions (execute-phase 6.2.2, unit-lane 2.4.3, pi 0.34.0; the schema pin stays at the published 4.7.0), and settled roadmap row 79 to `done · [#311]`; the second blocker was missing CI evidence (no run at the audited head, the last one red on dependency-pin-drift) and the third the unreachable close-out route. Every gate re-run at the rebased head: root 885/885, schema 721/721, pi 471/471, budgets 28 skills / 14 routes (policy re-basis #9), parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0, ledger-provenance CHECK PASS, LINEAGE OK. The rebase rewrote every SHA, so the citations above name pre-rebase commits; the two ledger markers that pointed at rewritten commits are re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`) → next: /review-change 79-spec-by-reference (the receipt at the old head is void)`
+`2026-10-26 — audit fold (F48) — the renumber to 79 left the unit-identity headings behind: the H1s of SPEC/BRIEF/decisions/sources/planning-evidence/planning-obligations still read unit 78 while the folder, roadmap row 79, `unit-route` and the audit entry above say 79 (feature 78 is `78-unit-cycle`, PR #314); the six H1s are re-pointed to 79, the dated assumption A1 is marked superseded in place (history kept, never rewritten) and the `## Next` pane is re-cut — the receipt at `89b9eeb` is void at this fold's head → next: /review-change 79-spec-by-reference, then /audit-pr re-runs`
+
 ## Next
 
 ```text
-AUDIT-VERDICT: BLOCKED → fixed (2026-10-26)
-- Three blockers cleared: the branch conflicted with `main` because feature 78
-  was taken by `78-unit-cycle` (PR #314) — this unit is **79** and its folder,
-  its 63 references and its roadmap row moved; no CI run existed at the audited
-  head while the last one failed on the schema pin (now `4.7.0` with pi
-  `0.34.0`); roadmap row 79 read `in-progress` with every phase logged (now
-  `done · [#311]`)
-- The rebase onto `origin/main` replayed 44 commits and rewrote every SHA, so
-  the citations above name pre-rebase commits; the two ledger markers that
-  pointed at rewritten commits are re-pointed (F27 → `9a35a976`,
+AUDIT-VERDICT: BLOCKED (2026-10-26, /audit-pr pass 2) → fixed (F48)
+- Evidence consumed, every other gate pass: review receipt current at `89b9eeb`
+  (scope manifest `585e6ff7…`, AC1–AC8 named, 0 open findings, invariants
+  `n/a`, manual checks none) · `LINEAGE OK — lane-era … obligations closed
+  (10)` · CI green (root-suite, pi-compat-guard, dependency-pin-gate) ·
+  MERGEABLE, base `main`, not draft · roadmap row 79 `done · [#311]` ·
+  `Closes #308` in the PR body · hygiene clean. Closure block absent →
+  `design-debt` warning (retrofit at the next touch)
+- One blocker, folded here: the renumber to 79 left the unit-identity headings
+  behind — the six H1s still read `78` while the folder, roadmap row 79,
+  `unit-route` and the log say 79 (feature 78 is `78-unit-cycle`, PR #314).
+  Folded: the six H1s re-pointed to 79, dated assumption A1 marked superseded
+  in place (history kept, never rewritten), this pane re-cut
+- Gates at the fold head: root 889/889 · phase-lint PASS · promise-coherence
+  PASS (42 claims) · needs-input 0 · ledger-provenance CHECK PASS
+- The rebase onto `origin/main` earlier in this unit replayed 44 commits and
+  rewrote every SHA, so citations above this fold name pre-rebase commits and
+  the two ledger markers are re-pointed (F27 → `9a35a976`,
   F36 → `ac8e20b8`)
-- Gates at the rebased head: root 885/885 · schema 721/721 · pi 471/471 ·
-  context and route budgets PASS · parity PASS · phase-lint PASS ·
-  promise-coherence PASS · needs-input 0 · ledger-provenance CHECK PASS ·
-  LINEAGE OK
 ```
 
-→ next: /review-change 79-spec-by-reference — the receipt at the pre-rebase head
-is void; post the SHA-bound receipt at this head, then /audit-pr re-runs.
+→ next: /review-change 79-spec-by-reference — the F48 audit fold moved the head,
+so the receipt at `89b9eeb` is void here; post the SHA-bound receipt at this head,
+then /audit-pr re-runs.
 
 ## Review verdict
 

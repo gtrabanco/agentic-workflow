@@ -1,4 +1,4 @@
-# Planning evidence — unit 78 (spec-by-reference)
+# Planning evidence — unit 79 (spec-by-reference)
 
 M/L unit: this file is the planning-evidence ledger (sizing rule,
 `skills/unit-lane/references/PLAN.md:153-160`). Row shape and vocabularies are

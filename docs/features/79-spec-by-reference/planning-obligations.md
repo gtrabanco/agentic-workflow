@@ -1,4 +1,4 @@
-# Planning obligations — unit 78 (spec-by-reference)
+# Planning obligations — unit 79 (spec-by-reference)
 
 M/L unit: this file is the obligations ledger (sizing rule,
 `skills/unit-lane/references/PLAN.md:153-160`; row shape owned by

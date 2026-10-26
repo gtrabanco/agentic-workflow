@@ -1,4 +1,4 @@
-# Sources — unit 78 (spec-by-reference)
+# Sources — unit 79 (spec-by-reference)
 
 Provenance receipt for the design step: where I looked before I wrote anything
 (`## Investigate` receipt), then one row per claim the SPEC makes, each with a
