@@ -677,3 +677,77 @@ test("#308 --annotate refuses the append-only carrier instead of rewriting it", 
   assert.match(run.stderr, /append-only/);
   assert.equal(fs.readFileSync(path.join(root, UNIT_DOC), "utf8"), bytes, "the refusal wrote nothing");
 });
+
+// ---------------------------------------------------------------------------
+// #308 cycle 3 F36: a fold marker outranks the row's prose context citations.
+// The F27 shape: the route prose names two reachable commits as BACKGROUND
+// (the version the base consumed, the commit that registered it). The recount
+// reads any reachable token as a fold citation, so the bare prose citations
+// demote the genuinely-proven fold to `cited-unverified` — and the annotator's
+// own marker, naming the real fold commit, outranks them. Both halves are
+// pinned here so the precedence can never silently flip again.
+// ---------------------------------------------------------------------------
+
+test("#308 F36: prose context citations demote a proven fold; the fold marker outranks them", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const abs = (rel) => path.join(root, rel);
+  const write = (rel, text) => fs.writeFileSync(abs(rel), text);
+  const g = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const gitRun = (...args) => g(...args);
+  const short7 = (sha) => sha.slice(0, 7);
+  fs.mkdirSync(abs("src"), { recursive: true });
+  fs.mkdirSync(path.dirname(abs(LEDGER)), { recursive: true });
+
+  g("init", "-q", "-b", "main");
+  g("config", "user.email", "fixture@example.invalid");
+  g("config", "user.name", "Fixture");
+  g("config", "commit.gpgsign", "false");
+  write("src/index.ts", 'export const version = "0.31.0";\n');
+  write(LEDGER, HEADER + row("F1", "src/index.ts:1", "fold into current unit", "no"));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "planning artifacts");
+
+  // The background commits the finding's prose will cite: neither claims F1.
+  write("src/index.ts", 'export const version = "0.31.0"; // consumed downstream\n');
+  const consumed = g("rev-parse", "HEAD");
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "chore(x): feature 66 consumes the published version");
+  const ctx2 = g("rev-parse", "HEAD");
+
+  // The row records with the prose citations already in it.
+  write(
+    LEDGER,
+    HEADER +
+      row("F1", "src/index.ts:1", `fold: the pins 0.31.0 (consumed by 66, ${short7(consumed)}; registered in ${short7(ctx2)}) — bump and add the companion row`, "no"),
+  );
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): record F1 open");
+
+  // The true fold: names the id, changes the cited surface.
+  write("src/index.ts", 'export const version = "0.32.0";\n');
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "fix(x): close F1 — bump to 0.32.0 with its companion row");
+  const fold = g("rev-parse", "HEAD");
+
+  // The tick lands in a later, unrelated batch (F1 is not named there).
+  const read1 = () => fs.readFileSync(abs(LEDGER), "utf8");
+  write(LEDGER, read1().replace(/\| no \|\n$/, "| yes |\n"));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): record the next triage fold");
+
+  const before = entry(root, "F1");
+  assert.equal(before.status, "cited-unverified", `background citations outrank nothing until marked: ${before.status}`);
+  assert.deepEqual(before.cited, [short7(consumed), short7(ctx2)], "both background tokens are named");
+  assert.equal(run(root, "--check").status, 1, "the demoted row keeps the recount red");
+
+  // The annotator's repair: `· fold <sha>` naming the commit that owns the bump.
+  write(LEDGER, read1().replace(`bump and add the companion row |`, `bump and add the companion row · fold ${short7(fold)} |`));
+  gitRun("add", "-A");
+  gitRun("commit", "-qm", "docs(x): annotate the fold provenance");
+
+  const after = entry(root, "F1");
+  assert.equal(after.status, "proven-cited", `the marker proves the fold the prose names: ${after.status}`);
+  assert.equal(after.fold, short7(fold), "and it names the fold commit, not the background ones");
+  assert.equal(run(root, "--check").status, 0, run(root, "--check").stdout + run(root, "--check").stderr);
+});
