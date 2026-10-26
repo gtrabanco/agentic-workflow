@@ -100,6 +100,11 @@ P1 — <task description> (validator: <backticked command> <expected outcome>)
 P2 — <task description> (validator: <backticked command> <expected outcome>)
 …
 Pn — last task is verification when the unit has behavior
+P<n+1> — release settle, when the unit opens a PR: after the PR exists, settle
+  the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`,
+  status `done · [#N](<pr-url>)`, every other cell preserved) — validator:
+  `bun scripts/roadmap-settle.mjs` exits 0 (#316: the settle is a task the
+  executor owns, never a missing courtesy)
 ```
 
 Both phase grammars are accepted (owner: `phase-contract`): these bullets, or
@@ -164,7 +169,8 @@ name those files instead.
 - [ ] Every AC maps to at least one task, and no task re-decides an AC
 - [ ] Tasks are ordered smallest first
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
-- [ ] Final task is verification (proves the whole unit works)
+- [ ] Final task is verification (proves the whole unit works); a unit that
+      opens a PR ends with the release-settle task (#316)
 - [ ] No task reaches into a future-phase concern (docs, release, migrations)
 - [ ] Phases labeled P1, P2, … — `#308`: `S#` is the requirement id (a spec),
       `P#` is the phase label (a task); the two vocabularies never swap roles
@@ -190,7 +196,8 @@ name those files instead.
 - Do not decide at the ask stage, and do not re-ask an answered question
 - Do not bundle across phase boundaries — one phase = one commit
 - Do not plan work beyond the unit's acceptance criteria
-- Do not include docs/release tasks here — those are separate catalog steps
+- Do not include docs/release tasks here — those are separate catalog steps;
+  the release-settle task above is the sole exception (#316)
 - Do not invent tasks that the ACs do not demand
 - Do not turn the sweep into a gate, stage verdict or blocking check — it routes,
   it never blocks a miss, and it adds no authority
