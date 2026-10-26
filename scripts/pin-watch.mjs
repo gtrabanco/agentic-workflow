@@ -458,18 +458,22 @@ function main(argv) {
 
   if (result.findings.length === 0 && pypiResult.findings.length === 0) return 0;
 
-  // Only npm findings go through the marker-based dedupe: a PyPI finding has
-  // no package/dependency pair, and feeding it to planIssues would corrupt the
-  // marker match. PyPI findings are filed in their own pass below.
-  let plan;
+  // The open-issue list is fetched once and feeds both halves' dedupe: the
+  // npm marker match and the PyPI title match read the same list.
+  let issues;
   try {
-    plan = planIssues({ findings: npmResult.findings, openIssues: openIssues(repo) });
+    issues = openIssues(repo);
   } catch (error) {
     // Filing is best-effort on a network host: report the drift loudly and let
     // the exit code carry the signal rather than crashing on a gh hiccup.
     process.stdout.write(`::warning::issue planning failed: ${error.message}\n`);
     return 1;
   }
+
+  // Only npm findings go through the marker-based dedupe: a PyPI finding has
+  // no package/dependency pair, and feeding it to planIssues would corrupt the
+  // marker match. PyPI findings are filed in their own pass below.
+  const plan = planIssues({ findings: npmResult.findings, openIssues: issues });
 
   for (const { finding, issue } of plan.reuse) {
     const dep = finding.dependency ?? finding.name;
@@ -491,9 +495,8 @@ function main(argv) {
   const pypiFindings = allFindings.filter((f) => f.registry === "pypi.org");
   if (pypiFindings.length > 0) {
     try {
-      const pyOpenIssues = openIssues(repo);
       for (const pyFinding of pypiFindings) {
-        const existing = pyOpenIssues.find(
+        const existing = issues.find(
           (issue) => issue.title && issue.title.includes(pyFinding.name),
         );
         if (existing) {
@@ -505,7 +508,8 @@ function main(argv) {
         }
       }
     } catch (error) {
-      process.stdout.write(`::warning::PyPI issue planning failed: ${error.message}\n`);
+      process.stdout.write(`::warning::PyPI issue creation failed: ${error.message}\n`);
+      return 1;
     }
   }
 
