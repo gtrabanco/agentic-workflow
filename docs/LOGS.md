@@ -3436,3 +3436,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Delta re-review of unit 79 (cycle 11): F51 fold + persist (REVIEW-FAIL) + triage of three issues (#307/#315/#318 promoted) + candid admission on LOGS.md edit
 - **Decisions:** F51: re-cut cycle-10 delta-size from 170 to 129 across all three surfaces; all 47 folded rows verified fixed, 0 regressions, six axis passes · F51 fold: re-cut figure via fold-findings (1a981da6), cite commit (5e752124), LOGS.md edited wrongly (admitted) · #318 created without backlog sweep (admitted, corrective comment 6 catalogues 5 new candidates) · triage: #307/#315/#318 promoted with dated evidence comments
 - **Next:** /review-change 79-spec-by-reference (delta) → /audit-pr #311 → merge · design #307/#318
+
+## 2026-10-26T19:17:41Z — feat/308-spec-by-reference — manual
+- **Commits:** 85 (`1c68fcf4…a1bb6dd5`)
+- **Files:** 81 files
+- **Summary:** External verification of PR #311 (unit 79 spec-by-reference) — reviewed 81 files (+5490/-371), ran all AC validators (golden-fixture 15/15, spec-by-reference 17/17, unit-doc-contract 12/12, phase-lint+unit-route 212/212, normative-drift 20/20, ledger-ownership+provenance+review-loop+workflow-status-sensor 112/112, knowledge-honesty 9/9), package suites green (schema 721/721, pi 471/471), version-parity PASS 0.31.0→0.34.0, all 51 review findings folded or owner-decided, no surviving old-shape references in siblings, no blockers found
+- **Decisions:** No blockers found. All 8 acceptance criteria verifiable at HEAD. Minor route-budget drift (1–8 lines) on execute-phase/* and review-change/* routes is accumulated rebase/version-bump pattern documented in LOGS.md as `policy re-basis` — not specific to this PR.
+- **Next:** /audit-pr on PR #311 to get MERGE-READY, then merge. Fix route-budget drift at policy re-basis before merge.
