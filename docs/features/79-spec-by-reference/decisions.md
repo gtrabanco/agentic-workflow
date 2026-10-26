@@ -26,7 +26,7 @@ Cheap defaults taken instead of asking, dated and correctable:
   number = rename + `MIGRATION.md` note, so it is worth correcting early.
 - **A2 — 2026-10-21** — `scope: large` set in the frontmatter so triage can run
   before Q2 answers. If Q2 splits the unit, re-triage with
-  `bun scripts/unit-route.mjs --triage 78-spec-by-reference --retriage`.
+  `bun scripts/unit-route.mjs --triage 79-spec-by-reference --retriage`.
 - **A3 — 2026-10-21** — this unit's own SPEC stays in the current 14-section
   shape while it is being written (every gate it runs reads that shape today);
   it migrates at its next touch after the new template lands, exactly as
