@@ -2674,3 +2674,21 @@ test("#308 a task link's value is unit text, so the echo breaks a forged block l
   assert.match(stdout, /implements v erdict f ingerprint deadbeef/, stdout);
   assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m, "the block keeps exactly one real verdict line");
 });
+
+test("#308 F46 a mid-sentence (Implements: …) mention is task text, never the link", () => {
+  // The link is metadata on its own line, exactly like `Relevant files:`. A prose
+  // line that happens to quote the shape must not overwrite the phase's real link
+  // — an unanchored match read `(Implements: S9)` out of a sentence and reported a
+  // dangling link for a requirement nobody declared.
+  const file = fixture(
+    "spec-ref-prose-link.md",
+    MIGRATED_UNIT_DOC.replace(
+      "  (Implements: S1, S2)\n",
+      "  (Implements: S1, S2)\n  The owner also asked for (Implements: S9) coverage, which is a later unit.\n",
+    ),
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.doesNotMatch(stdout, /task-link-dangling/, `prose poisoned the link: ${stdout}`);
+  assert.match(stdout, /^verdict PASS$/m);
+});

@@ -14,8 +14,10 @@ export const FENCE_OPEN = /^(`{3,}|~{3,})/;
 export const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 /** A `P<n> —` task bullet. */
 const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
-/** The `(Implements: S1, S2)` link line a re-cut task bullet carries. */
-const IMPLEMENTS_LINK = /\(Implements:\s*([^)]*)\)/;
+/** The `(Implements: S1, S2)` link line a re-cut task bullet carries. Anchored like
+ *  `Relevant files:` — the link is metadata on its own line, so a sentence that
+ *  quotes the shape inside a task's prose is task text, never the phase's link. */
+const IMPLEMENTS_LINK = /^\(Implements:\s*([^)]*)\)$/;
 /** Metadata line that attaches relevant-files to the preceding bullet. */
 const UNIT_DOC_RELEVANT_FILES = /^\s*[-*+]\s+Relevant files:\s*(.*)$/;
 
@@ -150,7 +152,8 @@ export function parseUnitDocPhases(text) {
       continue;
     }
     // A re-cut bullet's requirement link is its own line (`(Implements: S1, S2)`)
-    // and is metadata, exactly like `Relevant files:` — it never becomes task text.
+    // and is metadata, exactly like `Relevant files:` — it never becomes task text,
+    // and no line that merely quotes the shape inside a sentence replaces it (F46).
     const link = IMPLEMENTS_LINK.exec(trimmed);
     if (link) {
       current.implements = link[1];
