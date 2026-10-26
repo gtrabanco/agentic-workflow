@@ -260,6 +260,8 @@ decision back.
 | F49 | docs/features/79-spec-by-reference/SPEC.md:424,444-446 | docs | high | fix-now | fold: the required `## Next` section (the template's "the single next action") was last written at `664cc40c` and never re-cut by review cycles 5–9, so it now asserts two incompatible facts and routes to a completed step — `:424` says "review receipt current at `89b9eeb`" while `:444-445` says "the receipt at `89b9eeb` is void here", the current receipt is `86996466` (`bun scripts/review-receipt.mjs verify --pr 311` → `status: current`), and the hand-off still routes to `/review-change` while `bun scripts/unit-route.mjs 79-spec-by-reference` answers `route: close-out · next: /audit-pr`; a reader following the pane pays a redundant review cycle (the class F48 rated high), while `## Review verdict` (`:449`) stands at cycle 4 — re-cut the pane to the close-out/merge action, record the cycle-9 receipt at its own head, then post a fresh receipt (this docs commit voids the current one) · audit 2026-10-26 · route: docs fold → /review-change → /audit-pr · fold d8357e0 | yes |
 | F50 | docs/features/79-spec-by-reference/SPEC.md:478 | docs | med | fix-now | fold: the re-cut `## Review verdict` history line says rows F1–F49 were persisted "across those cycles and the two audit passes between them", but three audit passes produced ledger rows — F41+F42+F43 (audit at `fca4ba8d`, folded `62b36a56`), F48 (folded `664cc40c`), F49 (folded `d8357e0e`) — plus a fourth re-audit that found only the stale receipt, and the same pane's own `## Next` header reads `/audit-pr pass 3`, so the count contradicts the pane beside it; re-cut the sentence to "the three audit passes" (or name them) · fold a7746a9d | yes |
 | VF-50 | docs/features/79-spec-by-reference/SPEC.md:478 · reviewer review-change cycle 10 · HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 · recheck direct read: the sentence names "the two audit passes"; this ledger's rows carry `· fold 62b36a56` (F41+F42+F43, audit at `fca4ba8d`), `· fold 664cc40c` (F48, `audit 2026-10-26`), `· fold d8357e0` (F49, `audit 2026-10-26`); `docs/LOGS.md` records the 2026-10-26 audit invocations (three blockers cleared; F48 pass 2; `/audit-pr #311 → BLOCKED (F49 …)` then the stale-receipt re-audit) | docs | confirmed | finding-mark | n/a | n/a |
+| F51 | docs/LOGS.md:3407 | code | med | fix-now | fold: the cycle-10 delta-size claim "170 added+deleted / 3 files" contradicts the record it cites — `git diff --numstat 1817d8fd..e08ddfc0` = 88+/41− = 129 lines / 3 files (129+41 suggests deletions double-counted by a raw-diff grep incl. hunk headers), and no git measure of the cited range yields 170; the same wrong figure sits in two pre-delta copies the fold sweep must include — SPEC.md:462 (`## Review verdict` cycle-10 line) and review-findings.md:488 (cycle-10 `REVIEW-RAN` mark); delta-mode escalation keys on "added+deleted > 200", so the measure must re-derive from `git diff --numstat`, never a raw-diff grep; re-cut all three copies to the measured figure | no |
+| VF-51 | docs/LOGS.md:3407 · reviewer review-change cycle 11 · HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 · recheck reproducer: `git diff --shortstat 1817d8fd..e08ddfc0` → "3 files changed, 88 insertions(+), 41 deletions(-)"; direct read: LOGS.md:3407 "Delta measured: 170 lines / 3 files", SPEC.md:462 "170 added+deleted / 3 files", review-findings.md:488 mark carries the same 170; alternate ranges all smaller (86996466..e08ddfc0 = 123, d8357e0e..e08ddfc0 = 36, 1193022b..e08ddfc0 = 32) | code | confirmed | finding-mark | n/a | n/a |
 
 F41: RESOLVED — audit blocker folded at `e3aecb34` (folded by the rebase onto `origin/main` + the renumber commit: `docs/features/79-spec-by-reference` replaces the colliding 78 folder, its 63 in-tree references and the roadmap row move to 79, and the seven conflicted files are resolved (`git merge-tree --write-tree origin/main HEAD` at 21dfb67f → 0 conflicts, `gh pr view 311 --json mergeable` → MERGEABLE after the push)).
 F42: RESOLVED — audit blocker folded at `21dfb67f` (folded: the rebase lands the published pin (`@gtrabanco/agentic-workflow-schema` 4.7.0 in package.json and bun.lock) and the version ladder above main (pi 0.34.0, execute-phase 6.2.2, unit-lane 2.4.3) so `version-parity-gate --pins` and `--content` both PASS; CI runs at the new head).
@@ -268,6 +270,64 @@ F49: RESOLVED — audit blocker folded at `d8357e0`, the commit that also ticked
 F48: RESOLVED — audit blocker folded at `664cc40c` (folded: the six unit-identity H1s read `79` (`SPEC.md:6` `# 79 — spec-by-reference`, and `BRIEF.md:1`, `decisions.md:1`, `sources.md:1`, `planning-evidence.md:1`, `planning-obligations.md:1` `unit 79`), assumption A1 carries an additive `Superseded 2026-10-26 (F48)` note with the plan-time row kept as history, and the `## Next` pane names the F48 fold head; gates at the fold head: root 889/889, phase-lint PASS, promise-coherence PASS (42 claims), needs-input 0, ledger-provenance CHECK PASS).
 
 F50: RESOLVED — review finding folded at `a7746a9d`, the commit that also ticked this row (the `· fold` citation lands in this following bookkeeping commit — a commit cannot carry its own sha): `## Review verdict`'s history line now names each row-producing audit pass (F41+F42+F43 audited at `fca4ba8d` / folded `62b36a56`, F48 folded `664cc40c`, F49 folded `d8357e0e`) and the fourth invocation that produced none, so the count reads from the ledger instead of a hand tally; the same sweep brought the pane's cycle history current (ten `REVIEW-RAN` marks, cycle 10 newest, the newest passing receipt still `86996466`) and re-cut `## Next` to this fold's exit. No `severity`, `class` or `route` cell was touched; the gate ran green on this batch's tree (numbers recorded in the fold entry in the unit doc's `## Progress log`).
+
+### Cycle 11 — delta pass, verdict REVIEW-FAIL (2026-10-26)
+
+Run on the user's explicit instruction (the unit is far past the two-cycle
+cap; each post-cap cycle starts only because the user asks for it, as for
+cycles 5–10). Cycle: 11 (ten completed `REVIEW-RAN` marks + 1). Reviewed head
+frozen at `382a99af23823fe12b3afedb10d29f5902fc4e21` (= PR #311 head, pushed
+before the freeze so the tree is forge-visible). Delta mode: the fold batch
+`a7746a9d` (F50 fold) + `5e752124` (fold citation) plus the foreign-only
+session-log commit `382a99af` (fix/286 class) — 60 added+deleted / 3 files,
+no width or size escalation trigger, so the delta ran as a delta pass. All 47
+`folded: yes` rows re-verified **fixed** at their cited constructs (two
+isolated passes: F1–F26 23 fixed + 3 owner-decided, F27–F50 24/24, 0
+regressions); F17/F20/F24 stay owner-decided (`ignore`). Four applicable axes
+ran isolated over the fold delta (`review-code` FAIL 1 med,
+`review-security` PASS 0, `review-verify` PASS 0 — 8 commands run,
+`review-perf` PASS 0); design/a11y/brand/seo skipped — no UI surface.
+Structural preconditions: `## Acceptance criteria` byte-identical (digest
+`d8ea4523b3e6873e` · 53 lines, matching the receipt recorded at `15ab46a1`);
+receipt `stale` (exit 4) exactly as the re-cut pane's hand-off predicts;
+`git merge-tree` 0 conflicts; PR MERGEABLE/CLEAN; CI Root suite success at
+the head. One med finding persisted (F51); `CONVERGENCE-ANOMALY` block
+carried in the report. Two refuted candidates, reported with
+counter-evidence and never persisted: (a) the F50 RESOLVED note's "No
+`severity`, `class` or `route` cell was touched" — the note scopes the claim
+to the fold commit `a7746a9d`, which flipped only `folded`; the `· fold
+a7746a9d` append is explicitly attributed to the following bookkeeping commit
+in the same sentence (the sanctioned F48/F49 pattern `ledger-provenance`
+recovers); (b) the `## Next` pane's "scope manifest `c326ce14…`" — it is the
+scope digest of the newest passing receipt: the PR comment marker at
+`sha=86996466` carries `scope=c326ce14cbaac26c…`, so the reference resolves
+to the durable forge record (a content digest, not a git object — `git
+cat-file` is the wrong probe).
+
+```text
+CONVERGENCE-ANOMALY — 79-spec-by-reference spec
+- Finding ids: F50 (repeated — folded, verified fixed) / F51 (new)
+- Snapshots: e08ddfc0 (cycle 10) → 382a99af (cycle 11); AC digest unchanged
+  (`d8ea4523b3e6873e`); phase-lint fingerprint at this head fc84b4e4…
+- Missed: the cycle-10 persist's own narration carries a delta-size figure
+  (170) that `git diff --numstat` re-derivation contradicts (129) — a measure
+  fact no validator reads
+- Owning stage: source
+- Why the prior review failed: cycle 10 reviewed before its persist existed;
+  the narration was written after the last reviewed head (the same
+  self-referential gap F49 recorded)
+- Route to owner: source-owned defect → /fold-findings F51, then
+  /review-change delta at the new head
+```
+
+Debt item (review-debt transform, carried in the report — the review creates
+no backlog, D3): recurring class F49 → F50 → F51 — hand-tallied counts in
+panes/marks/log entries contradicting `git`. TRIGGER: any numeric delta/size
+figure written into a pane, mark, or log entry must re-derive from `git diff
+--numstat`, never a raw-diff grep; a future unit citing a count whose numstat
+re-derivation disagrees is a fix-now docs defect.
+
+Verdict: **REVIEW-VERDICT: FAIL** — one med fix-now open; no receipt posted.
 
 ### Marks
 
@@ -491,3 +551,9 @@ Verdict: **REVIEW-VERDICT: FAIL** — one med fix-now open; no receipt posted.
 | GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | bun run test (packages/pi-agentic-workflow) | exit 0 | 471 tests · 471 pass · 0 fail | n/a | n/a |
 | GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | node scripts/version-parity-gate.mjs --content --base main · node scripts/version-parity-gate.mjs --pins | exit 0 (each) | content parity holds: 0.31.0 → 0.34.0 · VERDICT: PASS · exact pins checked: 3 · VERDICT: PASS | n/a | n/a |
 | GATE-RAN | HEAD e08ddfc0d69724ee1713a73a1aa4f9774eed8377 | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 79-spec-by-reference · node scripts/needs-input.mjs docs/features/79-spec-by-reference · node scripts/promise-coherence.mjs · bun scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 79-spec-by-reference · node scripts/ledger-provenance.mjs docs/features/79-spec-by-reference/review-findings.md --check | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK (10) · open questions 0 · promise PASS (42 checked · 95 skipped) · phase-lint PASS (6/6) · open-rows: 0 · route close-out · CHECK PASS (the pre-existing `GIT ERROR … deadbeef` line is recorded noise) | n/a | n/a |
+| REVIEW-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 · cycle 11 (delta pass — fold batch a7746a9d+5e752124 plus foreign-only session-log bookkeeping 382a99af, 60 added+deleted / 3 files, no width or size escalation trigger; four isolated axis passes code FAIL 1 med / security PASS / verify PASS / perf PASS + two folded-row re-verification passes 47/47 fixed, 0 regressions; 1 med finding F51; 2 refuted candidates) · verdict REVIEW-FAIL | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 | node --test scripts/*.test.mjs | exit 0 | 889 tests · 889 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 | bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 | bun run test (packages/pi-agentic-workflow) | exit 0 | 471 tests · 471 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 | node scripts/version-parity-gate.mjs --content --base main · node scripts/version-parity-gate.mjs --pins (each package) | exit 0 (each) | content parity holds: 0.31.0 → 0.34.0 · VERDICT: PASS · exact pins checked: 0 (schema) / 3 (pi) · VERDICT: PASS | n/a | n/a |
+| GATE-RAN | HEAD 382a99af23823fe12b3afedb10d29f5902fc4e21 | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 79-spec-by-reference · node scripts/needs-input.mjs docs/features/79-spec-by-reference · node scripts/promise-coherence.mjs · node scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 79-spec-by-reference · node scripts/ledger-provenance.mjs docs/features/79-spec-by-reference/review-findings.md --check · node scripts/diff-guard.mjs --base dff48f88 | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK (10) · open questions 0 · promise PASS (42 checked · 95 skipped) · phase-lint PASS · open-rows: 0 · route close-out · CHECK PASS (F50 citation resolves) · DIFF-GUARD PASS (99 lines / 3 files) | n/a | n/a |
