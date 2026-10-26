@@ -3423,3 +3423,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 76 files
 - **Summary:** /fold-findings F51 — re-cut the cycle-10 delta-size figure from 170 to 129 (git diff --numstat = 88 insertions + 41 deletions / 3 files) across three copies in LOGS.md, SPEC.md, and review-findings.md — the hand-tally from a raw-diff grep was replaced by a numstat-verified measure in each copy's own cited range — then cited the fold commit on the ledger row
 - **Decisions:** --annotate was used on the ledger after the fold commit: the tool's repair route is whole-ledger (appended · fold <sha> provenance to 33 recovered rows), verified cell-by-cell that no frozen field was touched — only append to route cells; also discovered the cb12be19 false positive where a feature-65 session-log subject's 'F49–F53' range matched F51 because it touched docs/LOGS.md (score-3 surface intersection on a row that only describes that file) --next: /review-change 79-spec-by-reference — delta re-review to post the SHA-bound receipt at 37830bcb (currently stale/exit 4), then /audit-pr on PR #311
+
+## 2026-10-26T18:54:52Z — feat/308-spec-by-reference — manual
+- **Commits:** 83 (`1c68fcf4…dfda8ad0`)
+- **Files:** 81 files
+- **Summary:** Replace hardcoded `node scripts/...` with `bun scripts/...` (node fallback) across all skills
+- **Decisions:** 23 instances of `node scripts/...` hard-coded across 13 skill files; unified to bun-first with node fallback to align with the repo's documented bun-first convention. Only PREFLIGHT.md line 158 (the existing fallback line) was left untouched.
+- **Next:** Review the diff, commit and push, then merge or verify the skills work correctly with bun-first execution in target projects
