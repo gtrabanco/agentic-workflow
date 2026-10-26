@@ -3310,3 +3310,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change fold cycle for F40 (Future status token vocab drift) and post-merge audit of unit 79
 - **Decisions:** F40 class: published-but-unpinned vocabularies in prose (same family as #305 but not mechanism); F40 fix: re-cut tokens to open|planned|discarded; decision: committed files = truth, Engram = index (no memory-side promise recreates #305); issue #315 created (published-vocabulary machine pin + fold survivors-sweep gate); unit 79: duplicate of #308 after merge, audit fold F41+F42+F43 closed
 - **Next:** /review-change 78-spec-by-reference (delta) → /audit-pr → merge; /product-audit acotado (survivors sweep 258+78+5 urgent PRs + vocab census para #315); triage issues con evidencia fresca
+## 2026-10-26T11:14:58Z — feat/308-spec-by-reference — manual
+- **Commits:** 47 (`1c68fcf4…c1b11b16`)
+- **Files:** 76 files
+- **Summary:** Unit 78 (spec-by-reference): implementation — migrated the unit document from the legacy 14-section shape to the re-cut spec-by-reference shape (S# quoting, S#-linked tasks, append-only Log, collapsed findings carrier); 7 skills bumped, CHANGELOG/README re-verified, 814/814 tests, schema 721/721, pi 432/432; opened PR #311
+- **Decisions:** Diff-guard splits: P4/P5 exceeded the 8-file limit as single commits, split at real seams (grammar/declaration, carrier/prose) rather than using an exception — two honest halves per phase; Drift gate caught a real defect mid-P6: a CHANGELOG row restating pre-execution-review at 2.8.0 while its frontmatter said 2.8.1 — fixed by adding the missing internal row; ENOSPC mid-P5: /tmp inodes exhausted (1,048,576) from test suites leaving temp trees behind — cleared stale trees and re-ran all suites
+- **Next:** /review-change on the changed HEAD (mandatory end review of PR #311); then /fold-findings if any findings; /audit-pr after REVIEW-PASS for the merge gate
