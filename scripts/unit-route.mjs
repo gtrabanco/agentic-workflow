@@ -67,11 +67,20 @@ const BRACE_CITE_RE = /([A-Za-z0-9_.@/-]+)\{([^{}]*)\}/g;
  * embeddings/overrides/isolates, the soft hyphen and the BOM, all of which are
  * invisible to a reader and structural to a parser that honours them.
  */
+const FLATTEN_CLASS = /[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u2064\u2066-\u2069\ufeff]+/g;
+
+/**
+ * Flatten and collapse without truncating: the class and the collapse one
+ * reader shares with `sanitize`, minus the cell bound. An echoed value that
+ * must survive byte-for-byte (a projection, a bounded observation whose cap
+ * its own surface owns) goes through this, never a second copy of the class.
+ */
+export function flattenCell(value) {
+  return String(value ?? "").replace(FLATTEN_CLASS, " ").replace(/\s+/g, " ").trim();
+}
+
 export function sanitize(value) {
-  const flat = String(value ?? "")
-    .replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u2064\u2066-\u2069\ufeff]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const flat = flattenCell(value);
   return flat.length > CELL_MAX ? `${flat.slice(0, CELL_MAX - 1)}…` : flat;
 }
 
