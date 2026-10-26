@@ -3378,3 +3378,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** /review-change delta over unit 79-spec-by-reference (F48 audit fold): 42/42 folded rows re-verified fixed, 0 regressions, 0 high/med findings, 2 low report-notes; gates green at reviewed head; REVIEW-PASS; receipt posted at 86996466
 - **Decisions:** No /fold-findings: the F48 fold was a unit-identity renumber (78→79) handled by /audit-pr, not a review finding; delta mode escalated when size trigger would fire — all 4 passes ran over the small docs-only delta and confirmed clean; 2 low report-notes (scope-manifest digest naming, gate-attribution wording) not material enough to block
 - **Next:** /audit-pr on the review-pass receipt at 86996466 to close out the ladder and merge unit 79
+## 2026-10-26T15:49:40Z — feat/308-spec-by-reference — manual
+- **Commits:** 70 (1c68fcf4…a0af017a)
+- **Files:** 76 files
+- **Summary:** PR #311 audit fold — F48 unit-identity H1s, F49 current-state panes, receipt re-posted at head 3c238518; unit-route open-rows 0, LINEAGE OK, gates green
+- **Decisions:** F49: the audit/ledger panes read from review-findings.md which itself was edited by the same fold — a circular-read that left a stale panes snapshot. Fixed by folding F49 into the spec's Next pane which reads from the unit doc itself, not from a self-editing carrier — one edit, one fold commit, zero second-order. F49's fold was committed before the receipt delta because the fold changed review-findings.md, voiding the receipt at 89b9eeb.
+- **Next:** /unit-lane 79-spec-by-reference (design step: upsert Capability closure from the review CHANGELOG 0.31.0 row) → /review-change 79-spec-by-reference (receipt at new head) → /audit-pr → merge
