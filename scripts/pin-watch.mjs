@@ -16,7 +16,10 @@
  * published — and files the same kind of drift issue. `serena-agent` is a tool
  * installed on the operator's machine (`uv tool install serena-agent`), not a
  * manifest pin, so "drift" here means the machine's install is behind PyPI.
- * A machine without it contributes a skipped entry, never an error.
+ * The installed version is read from the tool itself (`serena --version`,
+ * then `uv tool list`, then `pip show`): the uv-tool venv `pip show` cannot
+ * see is the install route this repo documents. A machine without it
+ * contributes a skipped entry, never an error.
  *
  * What it deliberately does NOT do: it never bumps a pin, never edits a
  * manifest, never opens a PR. The upgrade cadence is a human decision (PE-005).
@@ -83,8 +86,10 @@ export function watchedPackages({ root = REPO_ROOT } = {}) {
 export function watchedPyPI() {
   return [
     // `expectedVersion` is null: the installed version is read from the machine
-    // at check time (`pipInstalled`), never pinned in this file.
-    { name: "serena-agent", expectedVersion: null },
+    // at check time (see `installedVersion`), never pinned in this file.
+    // `binary` is the PATH shim `uv tool install` exposes for the package —
+    // the first source `installedVersion` asks.
+    { name: "serena-agent", binary: "serena", expectedVersion: null },
   ];
 }
 
@@ -233,9 +238,22 @@ export function renderReport(result, { repo = REPO } = {}) {
 
 /**
  * PyPI as the registry fetcher; throws on any failure (the degraded path).
- * Uses `pip index versions` to get the latest published version.
+ * PyPI's JSON API via `curl` first — it needs no Python tooling on PATH,
+ * which matters because the machine this watch exists for installs
+ * `serena-agent` through `uv tool` and may have no pip binary at all.
+ * `pip index versions` (pip ≥ 21.2) is the fallback.
  */
 export function pypiLatest(name) {
+  const viaApi = spawnSync("curl", ["-fsS", `https://pypi.org/pypi/${name}/json`], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (viaApi.status === 0 && viaApi.stdout) {
+    const fromApi = parsePypiLatest(viaApi.stdout);
+    if (fromApi !== null) return fromApi;
+  }
   const result = spawnSync("pip", ["index", "versions", name], {
     cwd: REPO_ROOT,
     encoding: "utf8",
@@ -254,28 +272,75 @@ export function pypiLatest(name) {
   return match[1];
 }
 
+/** The version PyPI's JSON API payload reports, or null. Pure; the suite tests this. */
+export function parsePypiLatest(jsonText) {
+  try {
+    const parsed = JSON.parse(jsonText);
+    const version = parsed?.info?.version;
+    return typeof version === "string" && version !== "" ? version : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Read the installed version of a Python package from the system.
- * Uses `pip show` to get the current installed version.
+ * Read the installed version of a watched Python package from the machine.
+ * Most-specific source first:
+ *
+ *   1. the tool's own binary on PATH (`serena --version`) — the shim
+ *      `uv tool install` exposes, i.e. the install route this repo documents;
+ *   2. `uv tool list` — names uv-managed tools even when the shim is off PATH;
+ *   3. `pip show` — a pip-managed install (the legacy fallback).
+ *
+ * A machine with none of the three returns null: `collectPyPIDrift` records a
+ * skipped entry, never an error. `probe(bin, args)` returns the command's
+ * stdout or null when the CLI is absent or fails; injectable so the offline
+ * suite never touches the system.
  */
-export function pipInstalled(name) {
-  const result = spawnSync("pip", ["show", name], {
+export function installedVersion(entry, { probe = spawnProbe } = {}) {
+  const name = entry?.name;
+  if (!name) return null;
+  if (entry.binary) {
+    for (const flag of ["--version", "-V"]) {
+      const out = probe(entry.binary, [flag]);
+      if (out !== null) {
+        const match = /(\d+(?:\.\d+)+)/u.exec(out);
+        if (match) return match[1];
+      }
+    }
+  }
+  const uv = probe("uv", ["tool", "list"]);
+  if (uv !== null) {
+    const match = new RegExp(`^${escapeRegExp(name)}\\s+v?(\\S+)`, "mu").exec(uv);
+    if (match) return match[1];
+  }
+  const pip = probe("pip", ["show", name]);
+  if (pip !== null) {
+    const match = /^Version:\s*(\S+)/mu.exec(pip);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/** One spawned probe: stdout, or null when the CLI is absent or fails. */
+function spawnProbe(bin, args) {
+  const result = spawnSync(bin, args, {
     cwd: REPO_ROOT,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
-    timeout: 10_000,
+    timeout: 30_000,
   });
   if (result.error || result.status !== 0) return null;
-  const match = /^Version:\s*(.+)/mu.exec(result.stdout);
-  return match ? match[1].trim() : null;
+  return result.stdout ?? "";
 }
 
 /**
  * Collect drift for PyPI packages. Each entry carries the installed version
- * (read at runtime) and the latest from PyPI. Drift = latest > installed.
- * `readInstalled` is injectable so the offline suite never touches the system.
+ * (read at runtime by `installedVersion`) and the latest from PyPI.
+ * Drift = latest > installed. `readInstalled` is injectable so the offline
+ * suite never touches the system.
  */
-export function collectPyPIDrift({ packages, fetchLatest, readInstalled = pipInstalled }) {
+export function collectPyPIDrift({ packages, fetchLatest, readInstalled = installedVersion }) {
   const findings = [];
   const degraded = [];
   const skipped = [];
@@ -283,7 +348,7 @@ export function collectPyPIDrift({ packages, fetchLatest, readInstalled = pipIns
 
   for (const entry of packages ?? []) {
     try {
-      const installed = readInstalled(entry.name);
+      const installed = readInstalled(entry);
       if (installed === null) {
         skipped.push({ name: entry.name, message: "not installed on this machine" });
         continue;
