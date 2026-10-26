@@ -24,9 +24,9 @@ after `/fold-findings` leaves rows unresolved.
      (`LEDGERS.md`), so a row this skill appends starts `folded: no` and stays
      that way until the fold closes it.
    - A correction too large for the current fold is `replan-in-unit`. Run
-     `node scripts/unit-route.mjs <unit>`; its `route: replan` line prints the
-     planner command — `/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
-     for a fix — which re-runs the lane's `plan` step and appends concrete
+     `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed);
+     its `route: replan` line prints the planner command — `/unit-lane <unit>` for a
+     feature, `/unit-lane --fix <n>` for a fix — which re-runs the lane's `plan` step and appends concrete
      `P<n>` phases to the unit's SPEC, preserving the finding's acceptance
      evidence. The lane's `review` step gates execution.
    - A product, architecture, or acceptance decision that blocks safe work is
@@ -35,8 +35,8 @@ after `/fold-findings` leaves rows unresolved.
      and show the evidence; do not mark it folded or silently delete it.
    - A `fix-now` finding whose owning stage is `product` — the finding is
      against the product half, not the code — is `product-repair` (#293). Run
-     `node scripts/unit-route.mjs <unit>`; its `route: product` line prints the
-     lane hand-off (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
+     `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed);
+     its `route: product` line prints the lane hand-off (`/unit-lane <unit>` for a feature, `/unit-lane --fix <n>`
      for a fix): the lane repairs the half, its review step re-judges it. Never
      fold it into the current unit — the fold loop repairs source, not
      authority (`pre-execution-review` POLICY §4).

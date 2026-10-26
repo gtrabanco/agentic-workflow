@@ -104,7 +104,8 @@ each classification as its table row immediately and drop raw file content.
   rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
 - `fix-now` folds into the current unit; `replan-in-unit` runs
-  `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
+  `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed),
+  whose `route: replan` line names the
   planner that appends user-confirmed phases before `execute-phase`;
   `decision-required` blocks for the user; independent work becomes proposals
   the user routes to `triage-issue` (D3).

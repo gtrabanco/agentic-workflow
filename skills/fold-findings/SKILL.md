@@ -137,7 +137,7 @@ conclusion the already-run router printed, never the invocation itself: on
 `route: replan` the planner command it printed — `/unit-lane <slug>` for a
 feature unit or `/unit-lane --fix <n>` for a fix unit; on `route: decision` stop
 and surface the decision to the user, never a planner. `<unit>` is the bare folder number or the full slug (both resolve). The invocation
-`node scripts/unit-route.mjs <unit>` is the discovery step the fold already
+`bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed) is the discovery step the fold already
 ran; it is never the recommendation.
 
 **Freeze-batch (product owner present).** Any taken `fix-now` row whose `Route`
@@ -223,8 +223,8 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `node scripts/unit-route.mjs <unit>` (discovery step the fold already ran) |
+| freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |

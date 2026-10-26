@@ -35,7 +35,8 @@ done:
 
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
-  is inferred: a gap runs `node scripts/needs-input.mjs <unit-dir>` and the
+  is inferred: a gap runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback
+if bun is not installed) and the
   `open-questions@1` block is pasted, then the run stops.
 ✓ Triage verified — unit doc Evidence section header matches
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
@@ -66,8 +67,8 @@ This skill **never interviews**. It reads its inputs — the unit doc's `Tasks`,
 one is a **gap**, resolved in one fixed order and never by inference:
 **(0) provenance** (search the repo's own docs and record where) →
 **(1) research** (2–3 concrete options with trade-offs; asking for more research
-is a legitimate answer) → **(2) halt**: run `node scripts/needs-input.mjs
-<unit-dir>`, paste the `open-questions@1` block verbatim, stop. Interactive the
+is a legitimate answer) → **(2) halt**: run `bun scripts/needs-input.mjs
+<unit-dir>` (node fallback if bun is not installed), paste the `open-questions@1` block verbatim, stop. Interactive the
 block is the pause point, unattended it is a hard fail. Grammar and exit codes:
 `orchestration-envelope`'s `references/TURN_CONTRACT.md` §Open questions.
 

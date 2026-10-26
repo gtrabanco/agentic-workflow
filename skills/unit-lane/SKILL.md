@@ -23,8 +23,9 @@ done:
 ```
 ✓ Required user inputs were answered concretely (not defaulted). Nothing here
   is inferred: a gap re-enters provenance → research, and a gap surviving both
-  runs `node scripts/needs-input.mjs <unit-dir>` and stops with the
-  `open-questions@1` block routed back to the owning stage.
+  runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback if bun is not
+  installed) and stops with the `open-questions@1` block routed back to the
+  owning stage.
 ✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
   its source — `path:line`, a doc, or an owner answer in the unit folder's
   `sources.md`. A claim with none is a question, never a default.
