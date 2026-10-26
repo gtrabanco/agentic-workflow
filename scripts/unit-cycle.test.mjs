@@ -21,6 +21,8 @@ import {
   designedFrom,
   researchDoneFrom,
   parsePrNumber,
+  parsePrUrl,
+  settleRoadmapRow,
   phaseOrder,
   runCycle,
   OUTCOME,
@@ -46,6 +48,7 @@ const BASE = {
   docsDone: true,
   releaseDone: true,
   prNumber: 313,
+  roadmapSettled: true,
   receipt: "current",
   openFindings: [],
   mergeReady: true,
@@ -243,6 +246,81 @@ test("renderPrompt: a phase names one phase and its tier, never the whole unit",
 test("renderPrompt: review and audit carry the PR handle", () => {
   assert.match(renderPrompt({ type: "step", step: "review" }, at({})).prompt, /pull\/313|#313/);
   assert.match(renderPrompt({ type: "step", step: "audit" }, at({})).prompt, /audit-pr.*313|313.*audit-pr/is);
+});
+
+// ---------------------------------------------------------------------------
+// the roadmap settle (issue #316): the loop writes the row itself, it never
+// asks the model to
+// ---------------------------------------------------------------------------
+
+test("decide: a released unit whose roadmap row is not settled runs the deterministic settle act", () => {
+  const action = decide(at({ roadmapSettled: false }));
+  assert.equal(action.type, "settle-roadmap");
+});
+
+test("decide: the settle act precedes the receipt chain — an unsettled row is never reviewed around", () => {
+  const action = decide(at({ roadmapSettled: false, receipt: "absent" }));
+  assert.equal(action.type, "settle-roadmap");
+});
+
+test("decide: a settled row changes no transition (previous behavior holds)", () => {
+  assert.deepEqual(decide(at({ roadmapSettled: true })), { type: "stop", reason: OUTCOME.DONE });
+  const fold = decide(at({ roadmapSettled: true, receipt: "absent", openFindings: ["F1"] }));
+  assert.equal(fold.type, "step");
+  assert.equal(fold.step, "fold");
+});
+
+test("decide: a fix unit's row is settled by the fix index's own convention — no settle act", () => {
+  // The fix index removes merged rows; the crate's rowUpsert grammar is the
+  // roadmap's five-column table and fails closed on the fix index's header,
+  // so the deterministic settle writes roadmap rows only.
+  assert.equal(decide(at({ roadmapSettled: null, kind: "fix" })).type, "stop");
+});
+
+test("renderPrompt: the release step no longer instructs the row write — the loop owns it", () => {
+  const { prompt } = renderPrompt({ type: "step", step: "release" }, at({}));
+  assert.match(prompt, /push the branch/);
+  assert.doesNotMatch(prompt, /set the roadmap row/);
+});
+
+test("parsePrUrl: the References PR URL is captured whole, for the settle link", () => {
+  assert.equal(
+    parsePrUrl("- PR: https://github.com/gtrabanco/agentic-workflow/pull/313\n- Branch: feat/x"),
+    "https://github.com/gtrabanco/agentic-workflow/pull/313",
+  );
+  assert.equal(parsePrUrl("- PR: #313"), null);
+  assert.equal(parsePrUrl("no references"), null);
+});
+
+test("settleRoadmapRow: writes done · [#N](url) preserving every other cell, via the crate's rowUpsert", async () => {
+  const { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const tmp = mkdtempSync(join(tmpdir(), "unit-cycle-settle-"));
+  try {
+    mkdirSync(join(tmp, "docs", "features", "77-settle-me"), { recursive: true });
+    const table = join(tmp, "docs", "features", "ROADMAP.md");
+    writeFileSync(
+      table,
+      [
+        "# Roadmap",
+        "",
+        "## Features",
+        "",
+        "| NN | Slug | Status | Depends on | Summary |",
+        "|----|------|--------|------------|---------|",
+        "| 77 | `settle-me` | in-progress | 78 | Issue [#305](…) (M): the long summary must survive the settle |",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    const result = settleRoadmapRow({ nn: "77", pr: 309, prUrl: "https://github.com/gtrabanco/agentic-workflow/pull/309" }, { cwd: tmp });
+    assert.equal(result.ok, true, result.detail ?? "");
+    const row = readFileSync(table, "utf8").split("\n").find((l) => l.startsWith("| 77 |"));
+    assert.match(row, /\| 77 \| `settle-me` \| done · \[#309\]\(https:\/\/github\.com\/gtrabanco\/agentic-workflow\/pull\/309\) \| 78 \| Issue \[#305\]/);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 // ---------------------------------------------------------------------------
