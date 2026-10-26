@@ -416,61 +416,68 @@ output (≤2 lines), verified-by.
 `2026-10-26 — review cycle 4 (delta escalated to a full pass; owner-authorized) — persisted the owner's 2026-10-23 dispute resolutions into the ledger (F17/F20/F24 → disposition `ignore`, decided-never-routed per `unit-route` NOT_OPEN; fold queue empty, router `open-rows: 0`); reviewed head frozen at 56f8ea25, size trigger fired (314 > 200) so the delta ran as a full pass: four isolated axis reviewers (code PASS · security PASS · perf PASS · verify PASS) + two re-verification passes (36/36 folded rows fixed); every gate green at this head (root 828/828, schema 721/721, pi 432/432, parity 0.31.0→0.33.0, budgets 28/14, lineage OK, needs-input 0, promise-coherence PASS, phase-lint PASS, ledger-provenance CHECK PASS); AC integrity unchanged (`de9aea6898468b0d`, byte-identical to `15ab46a1`); main advanced under the PR (feature 66 merged, main pi 0.31.0) — merge-tree shows 0 conflicts, parity re-checked green → `REVIEW-VERDICT: PASS` — next: /review-change 79-spec-by-reference posts the SHA-bound receipt, then the audit stage closes the ladder`
 `2026-10-26 — audit stage (/audit-pr) — BLOCKED with three blockers, all cleared in this pass: the branch conflicted with main (7 files) because feature 78 was merged as `78-unit-cycle` (#314) while this branch was open → rebased onto origin/main (44 commits replayed), renumbered the unit to 79 (folder, 63 in-tree references, roadmap row), re-cut the version ladder above main's published versions (execute-phase 6.2.2, unit-lane 2.4.3, pi 0.34.0; the schema pin stays at the published 4.7.0), and settled roadmap row 79 to `done · [#311]`; the second blocker was missing CI evidence (no run at the audited head, the last one red on dependency-pin-drift) and the third the unreachable close-out route. Every gate re-run at the rebased head: root 885/885, schema 721/721, pi 471/471, budgets 28 skills / 14 routes (policy re-basis #9), parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0, ledger-provenance CHECK PASS, LINEAGE OK. The rebase rewrote every SHA, so the citations above name pre-rebase commits; the two ledger markers that pointed at rewritten commits are re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`) → next: /review-change 79-spec-by-reference (the receipt at the old head is void)`
 `2026-10-26 — audit fold (F48) — the renumber to 79 left the unit-identity headings behind: the H1s of SPEC/BRIEF/decisions/sources/planning-evidence/planning-obligations still read unit 78 while the folder, roadmap row 79, `unit-route` and the audit entry above say 79 (feature 78 is `78-unit-cycle`, PR #314); the six H1s are re-pointed to 79, the dated assumption A1 is marked superseded in place (history kept, never rewritten) and the `## Next` pane is re-cut — the receipt at `89b9eeb` is void at this fold's head → next: /review-change 79-spec-by-reference, then /audit-pr re-runs`
+`2026-10-26 — audit fold (F49) — the current-state panes lagged the review they describe: `## Next` was last written at `664cc40c`, so it claimed the receipt was current at `89b9eeb` in the same block that called that receipt void, and routed to `/review-change` after cycles 5–9 had already run and posted the receipt at `86996466`; `## Review verdict` still reported cycle 4 at `56f8ea25` as the PR head. Both panes re-cut from the durable record (the `REVIEW-RAN` / `GATE-RAN` marks and the newest `review-change:pass` marker), the hand-off now names the one action the fold leaves — post the receipt at the fold head, then re-audit — and no `## Evidence` or `## Progress log` row was rewritten. Swept surfaces: SPEC `## Next`, SPEC `## Review verdict`, the fold's own ledger row → next: /review-change 79-spec-by-reference (delta at the fold head), then /audit-pr`
 
 ## Next
 
 ```text
-AUDIT-VERDICT: BLOCKED (2026-10-26, /audit-pr pass 2) → fixed (F48)
-- Evidence consumed, every other gate pass: review receipt current at `89b9eeb`
-  (scope manifest `585e6ff7…`, AC1–AC8 named, 0 open findings, invariants
-  `n/a`, manual checks none) · `LINEAGE OK — lane-era … obligations closed
-  (10)` · CI green (root-suite, pi-compat-guard, dependency-pin-gate) ·
-  MERGEABLE, base `main`, not draft · roadmap row 79 `done · [#311]` ·
-  `Closes #308` in the PR body · hygiene clean. Closure block absent →
-  `design-debt` warning (retrofit at the next touch)
-- One blocker, folded here: the renumber to 79 left the unit-identity headings
-  behind — the six H1s still read `78` while the folder, roadmap row 79,
-  `unit-route` and the log say 79 (feature 78 is `78-unit-cycle`, PR #314).
-  Folded: the six H1s re-pointed to 79, dated assumption A1 marked superseded
-  in place (history kept, never rewritten), this pane re-cut
-- Gates at the fold head: root 889/889 · phase-lint PASS · promise-coherence
-  PASS (42 claims) · needs-input 0 · ledger-provenance CHECK PASS
-- The rebase onto `origin/main` earlier in this unit replayed 44 commits and
-  rewrote every SHA, so citations above this fold name pre-rebase commits and
-  the two ledger markers are re-pointed (F27 → `9a35a976`,
-  F36 → `ac8e20b8`)
+AUDIT-VERDICT: BLOCKED (2026-10-26, /audit-pr pass 3) → fixed (F49)
+- Receipt currency is stated once, in the hand-off line below: a docs fold moves
+  the head, so no receipt is current at this pane's head
+- Evidence consumed, every other gate pass: newest `review-change:pass` marker
+  at `86996466` (cycle 9, scope manifest `c326ce14…`, AC1–AC8 named, 0 high/med
+  findings open, invariants `n/a`, manual checks none) · `LINEAGE OK — lane-era
+  … obligations closed (10)` · CI green (root-suite, pi-compat-guard,
+  dependency-pin-gate) · MERGEABLE, base `main`, not draft · roadmap row 79
+  `done · [#311]` · `Closes #308` in the PR body · hygiene clean (tree clean,
+  branch pushed) · descope gate pass (#315 + #316 + #317 born during this unit
+  map to no unmet criterion or task). Closure block absent → `design-debt`
+  warning (retrofit at the next touch)
+- One blocker, folded here: this pane and `## Review verdict` were last written
+  at `664cc40c` and never re-cut by review cycles 5–9, so the pane asserted the
+  receipt was current at `89b9eeb` in the same block that called it void, and
+  the verdict block named `56f8ea25` as PR #311's head. Both panes re-cut: the
+  receipt now reads at its own head `86996466`, the verdict block records the
+  cycle-9 pass and the cycles that followed
+- Gates at the fold head: root 889/889 · schema 721/721 · pi 471/471 ·
+  phase-lint PASS · promise-coherence PASS · needs-input 0 ·
+  ledger-provenance CHECK PASS · unit-route `open-rows: 0 · route: close-out`
+- Folded rows are append-only evidence: the `## Evidence` and `## Progress log`
+  entries above this pane name pre-rebase SHAs, and the two ledger markers are
+  re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`)
 ```
 
-→ next: /review-change 79-spec-by-reference — the F48 audit fold moved the head,
-so the receipt at `89b9eeb` is void here; post the SHA-bound receipt at this head,
-then /audit-pr re-runs.
+→ next: /review-change 79-spec-by-reference — this docs fold moves the head, so
+the receipt at `86996466` is void at the fold head; post the SHA-bound receipt
+there, then /audit-pr re-runs and hands the MERGE-READY URL to the owner.
 
 ## Review verdict
 
 ```text
 REVIEW-VERDICT: PASS
-- Cycle: 4 — delta over the last three fold batches (`e838a8c7` F37+F38+F39 ·
-  `b1c83f3e` F36 · `b52e7743` F35), escalated to a full pass — size trigger
-  fired (314 added+deleted > 200); owner-authorized after the two-cycle cap
-- Reviewed head: 56f8ea254f12b1d433a086d8812be5297cfb4421 (= PR #311 head)
-- Findings: 0 material · 2 low report-notes · 2 low proposals (never
-  persisted — below the materiality floor; the owner routes them)
-- Re-verification: 36/36 folded rows fixed at their cited surfaces;
-  F17/F20/F24 owner-decided (`ignore`) — the fold queue is empty
+- Cycle: 9 — delta pass over the F48 mark batch (`3c238518..1817d8fd`, 64
+  added+deleted / 7 files, no width or size escalation trigger)
+- Reviewed head: 1817d8fda5dca736d9123e31bf0a7bd21b4d258d; the SHA-bound receipt
+  is the persist commit at `86996466` (PR #311 head at this audit)
+- Findings: 0 high/med · 2 low report-notes (never persisted — below the
+  materiality floor; the owner routes them)
+- Axes: four isolated passes `review-code` · `review-security` · `review-verify`
+  · `review-perf`, all PASS, plus two folded-row re-verification passes
+  42/42 fixed, 0 regressions
+- Re-verification: F17/F20/F24 owner-decided (`ignore`) — the fold queue is
+  empty at this head (`unit-route` → `open-rows: 0`)
 - AC integrity: `## Acceptance criteria` byte-identical between `15ab46a1`
-  and this head
+  and this head (`de9aea6898468b0d`)
 ```
 
-Four isolated axis passes ran over `git diff main...HEAD` at the reviewed head
-(`review-code` PASS, `review-security` PASS, `review-perf` PASS,
-`review-verify` PASS) plus two folded-row re-verification passes (F1–F26,
-F27–F39): every gate re-run green (root 828/828, schema 721/721, pi 432/432,
-parity 0.31.0→0.33.0 PASS, budgets 28 skills/14 routes, lineage OK,
-promise-coherence PASS, needs-input 0, phase-lint PASS, ledger-provenance
-CHECK PASS); no test deleted or loosened. History: cycle 1 FAIL (7 material /
-15 report-notes — folded as F1–F26), cycle 2 FAIL (F27–F29), cycle 3 FAIL
-(F35–F39) — every row folded or owner-decided; the per-cycle record lives in
-`review-findings.md`. The low rows (never persisted): dead `sectionRange`
+The per-cycle record is the `### Cycle` sections and the `REVIEW-RAN` /
+`GATE-RAN` marks in `review-findings.md`: nine review cycles ran on this branch
+(marks at `5c81b240`, `ac543b6d`, `d7b8ea14`, `56f8ea25`, `a775c112`, `b6f45995`,
+`7597376b`, `3c238518`, `1817d8fd`), the newest reading **REVIEW-PASS**, with the
+SHA-bound receipt at `86996466`; rows F1–F49 were persisted across those cycles
+and the two audit passes between them. Every row is folded or owner-decided, no
+test deleted or loosened. The low rows (never
+persisted): dead `sectionRange`
 helper (`scripts/workflow-status.mjs`) and a dead branch in the F38 corpus
 test (report-notes); per-unit doc re-read ×4 and unbounded `## Log`
 observation growth (proposals — the second extends the recorded perf-benchmark
