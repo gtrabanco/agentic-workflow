@@ -172,6 +172,29 @@ entry, never another line.
 | Cursor | `.cursor/mcp.json` → `mcpServers.serena` | `{"command":"serena","args":["start-mcp-server","--context=ide"]}` |
 | JetBrains Copilot | the global `mcp.json` Copilot opens | `{"type":"stdio","command":"serena","args":["start-mcp-server","--context=jb-copilot-plugin"]}` |
 | Codex | `~/.codex/config.toml` → `[mcp_servers.serena]` | `command = "serena"`, `args = ["start-mcp-server","--project-from-cwd","--context=codex"]` |
+| **pi** (this agent harness) | `pi mcp add serena -- serena start-mcp-server --context claude-code` (user-level default → `~/.pi/agent/mcp.json`; project-level: add `--local` → `.pi/mcp.json`) | command `serena` |
+
+**pi-specific notes:** the native MCP registration replaces the old `@bacnh85/pi-serena` bridge (removed by issue #321). Two options:
+
+- **User-level (default)** — `pi mcp add serena -- serena start-mcp-server --context claude-code` writes `~/.pi/agent/mcp.json`; fresh clones are zero-config. Ask first, like every other global write.
+- **Project-level** — `pi mcp add --local serena -- serena start-mcp-server --context claude-code` writes `.pi/mcp.json` (read only after project trust is granted), keeping the choice in git:
+  ```json
+  {
+    "mcpServers": {
+      "serena": {
+        "command": "serena",
+        "args": ["start-mcp-server", "--context", "claude-code"]
+      }
+    }
+  }
+  ```
+  Same consent rule as the other per-workspace files (`.vscode/mcp.json`, `.cursor/mcp.json`).
+
+Verify either option with `pi mcp list` (it connects and exits 1 on a broken entry). Tools are namespaced `mcp__serena__<tool>` (e.g. `mcp__serena__find_symbol`), so generic native names cannot collide with other MCP servers. If the full tool surface is too wide for the session, pi's per-server `toolExposure` config narrows it — the same knob the bridge solved by shipping a curated 22.
+
+The `--context claude-code` value resolves issue #321's open question: pi is a terminal agent harness like Claude Code, so it uses Serena's `claude-code` context (not the REPL `agent_interface`, which stays out of scope — the classic `tools` interface remains the default).
+
+**Consent gating:** the registration is asked inside the same consented question as the tool install and trust append. A project-level `.pi/mcp.json` write additionally commits a file to the repo, so it needs the same explicit yes as any other write.
 
 ### Trust — the fresh clone (global config, consent-gated)
 
