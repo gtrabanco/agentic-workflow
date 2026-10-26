@@ -30,12 +30,12 @@ P6, A5 fixtures under `scripts/fixtures/spec-by-reference/`.
 
 ## What a reviewer can check, mechanically
 
-- `bun scripts/unit-route.mjs --triage 78-spec-by-reference` — exit 0, the
+- `bun scripts/unit-route.mjs --triage 79-spec-by-reference` — exit 0, the
   nine-step block pasted verbatim in the SPEC.
-- `bun scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md` —
+- `bun scripts/phase-lint.mjs docs/features/79-spec-by-reference/SPEC.md` —
   `verdict PASS`, P1–P7 `PASS (6/6)`.
 - `node scripts/promise-coherence.mjs` — `verdict PASS` at the head.
-- `node scripts/needs-input.mjs docs/features/78-spec-by-reference` — exit 0,
+- `node scripts/needs-input.mjs docs/features/79-spec-by-reference` — exit 0,
   zero pending questions once `D1`–`D3` are read.
 - `node --test scripts/*.test.mjs` — 775/775 at `39e2aa3a`.
 
