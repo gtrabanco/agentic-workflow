@@ -417,66 +417,77 @@ output (≤2 lines), verified-by.
 `2026-10-26 — audit stage (/audit-pr) — BLOCKED with three blockers, all cleared in this pass: the branch conflicted with main (7 files) because feature 78 was merged as `78-unit-cycle` (#314) while this branch was open → rebased onto origin/main (44 commits replayed), renumbered the unit to 79 (folder, 63 in-tree references, roadmap row), re-cut the version ladder above main's published versions (execute-phase 6.2.2, unit-lane 2.4.3, pi 0.34.0; the schema pin stays at the published 4.7.0), and settled roadmap row 79 to `done · [#311]`; the second blocker was missing CI evidence (no run at the audited head, the last one red on dependency-pin-drift) and the third the unreachable close-out route. Every gate re-run at the rebased head: root 885/885, schema 721/721, pi 471/471, budgets 28 skills / 14 routes (policy re-basis #9), parity PASS, phase-lint PASS, promise-coherence PASS, needs-input 0, ledger-provenance CHECK PASS, LINEAGE OK. The rebase rewrote every SHA, so the citations above name pre-rebase commits; the two ledger markers that pointed at rewritten commits are re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`) → next: /review-change 79-spec-by-reference (the receipt at the old head is void)`
 `2026-10-26 — audit fold (F48) — the renumber to 79 left the unit-identity headings behind: the H1s of SPEC/BRIEF/decisions/sources/planning-evidence/planning-obligations still read unit 78 while the folder, roadmap row 79, `unit-route` and the audit entry above say 79 (feature 78 is `78-unit-cycle`, PR #314); the six H1s are re-pointed to 79, the dated assumption A1 is marked superseded in place (history kept, never rewritten) and the `## Next` pane is re-cut — the receipt at `89b9eeb` is void at this fold's head → next: /review-change 79-spec-by-reference, then /audit-pr re-runs`
 `2026-10-26 — audit fold (F49) — the current-state panes lagged the review they describe: `## Next` was last written at `664cc40c`, so it claimed the receipt was current at `89b9eeb` in the same block that called that receipt void, and routed to `/review-change` after cycles 5–9 had already run and posted the receipt at `86996466`; `## Review verdict` still reported cycle 4 at `56f8ea25` as the PR head. Both panes re-cut from the durable record (the `REVIEW-RAN` / `GATE-RAN` marks and the newest `review-change:pass` marker), the hand-off now names the one action the fold leaves — post the receipt at the fold head, then re-audit — and no `## Evidence` or `## Progress log` row was rewritten. Swept surfaces: SPEC `## Next`, SPEC `## Review verdict`, the fold's own ledger row → next: /review-change 79-spec-by-reference (delta at the fold head), then /audit-pr`
+`2026-10-26 — review fold (cycle 10) — /fold-findings over the one open fix-now row F50: `## Review verdict`'s history line counted "the two audit passes" where this ledger records three that produced rows — F41+F42+F43 (audited at `fca4ba8d`, folded `62b36a56`), F48 (folded `664cc40c`), F49 (folded `d8357e0e`) — plus a fourth invocation that produced none (the post-F49 re-audit, refused on the stale receipt). The line is re-cut to name each pass with the rows it produced; the same sweep brought the pane's cycle history current (ten `REVIEW-RAN` marks, cycle 10 newest and reading REVIEW-FAIL with its finding folded here, the newest passing receipt still the cycle-9 marker at `86996466`) and re-cut `## Next` to the one action this fold leaves. `grep` over `scripts/` shows no machine reader of the `AUDIT-VERDICT` / `REVIEW-VERDICT` pane tokens, so the correction is prose-only; `## Acceptance criteria` and every `## Evidence` row stay byte-identical. Swept surfaces: SPEC `## Review verdict` history line and verdict block, SPEC `## Next` pane, the F50 ledger row → next: /review-change 79-spec-by-reference (delta at the fold head), then /audit-pr`
 
 ## Next
 
 ```text
 AUDIT-VERDICT: BLOCKED (2026-10-26, /audit-pr pass 3) → fixed (F49)
+REVIEW-VERDICT: FAIL (2026-10-26, /review-change cycle 10) → fixed (F50)
 - Receipt currency is stated once, in the hand-off line below: a docs fold moves
   the head, so no receipt is current at this pane's head
-- Evidence consumed, every other gate pass: newest `review-change:pass` marker
-  at `86996466` (cycle 9, scope manifest `c326ce14…`, AC1–AC8 named, 0 high/med
-  findings open, invariants `n/a`, manual checks none) · `LINEAGE OK — lane-era
-  … obligations closed (10)` · CI green (root-suite, pi-compat-guard,
-  dependency-pin-gate) · MERGEABLE, base `main`, not draft · roadmap row 79
-  `done · [#311]` · `Closes #308` in the PR body · hygiene clean (tree clean,
-  branch pushed) · descope gate pass (#315 + #316 + #317 born during this unit
-  map to no unmet criterion or task). Closure block absent → `design-debt`
-  warning (retrofit at the next touch)
-- One blocker, folded here: this pane and `## Review verdict` were last written
-  at `664cc40c` and never re-cut by review cycles 5–9, so the pane asserted the
-  receipt was current at `89b9eeb` in the same block that called it void, and
-  the verdict block named `56f8ea25` as PR #311's head. Both panes re-cut: the
-  receipt now reads at its own head `86996466`, the verdict block records the
-  cycle-9 pass and the cycles that followed
-- Gates at the fold head: root 889/889 · schema 721/721 · pi 471/471 ·
-  phase-lint PASS · promise-coherence PASS · needs-input 0 ·
-  ledger-provenance CHECK PASS · unit-route `open-rows: 0 · route: close-out`
+- Evidence consumed at the cycle-10 reviewed head `e08ddfc0`, every other gate
+  pass: `LINEAGE OK — lane-era … obligations closed (10)` · CI green
+  (root-suite, pi-compat-guard, dependency-pin-gate) · MERGEABLE, base `main`,
+  not draft · roadmap row 79 `done · [#311]` · `Closes #308` in the PR body ·
+  hygiene clean (tree clean, branch pushed) · descope gate pass (#315 + #316 +
+  #317 born during this unit map to no unmet criterion or task). Closure block
+  absent → `design-debt` warning (retrofit at the next touch)
+- Audit blockers, folded: F48 at `664cc40c`, F49 at `d8357e0e`. F49's fold moved
+  the head, so the newest passing receipt stays at `86996466` (cycle 9, scope
+  manifest `c326ce14…`, AC1–AC8 named, invariants `n/a`) and is void here
+- Review finding, folded by this pane's re-cut: F50 — `## Review verdict`'s
+  history line counted "the two audit passes" where the ledger records three
+  that produced rows plus a fourth that produced none. The line is re-cut to
+  name them and the pane's cycle history is brought current
+- Gates at the cycle-10 reviewed head `e08ddfc0` (recorded as `GATE-RAN` marks
+  in `review-findings.md`): root 889/889 · schema 721/721 · pi 471/471 · parity
+  content `0.31.0 → 0.34.0` PASS and 3 pins PASS · budgets 14 routes ·
+  LINEAGE OK (10) · needs-input 0 · promise-coherence PASS (42 checked) ·
+  phase-lint PASS · ledger-provenance CHECK PASS
 - Folded rows are append-only evidence: the `## Evidence` and `## Progress log`
   entries above this pane name pre-rebase SHAs, and the two ledger markers are
   re-pointed (F27 → `9a35a976`, F36 → `ac8e20b8`)
 ```
 
-→ next: /review-change 79-spec-by-reference — this docs fold moves the head, so
-the receipt at `86996466` is void at the fold head; post the SHA-bound receipt
-there, then /audit-pr re-runs and hands the MERGE-READY URL to the owner.
+→ next: /review-change 79-spec-by-reference — the F50 fold moves the head, so the
+receipt at `86996466` is void at the fold head and none is posted for a FAIL;
+the delta re-review posts the SHA-bound receipt there, then /audit-pr re-runs
+and hands the MERGE-READY URL to the owner.
 
 ## Review verdict
 
 ```text
-REVIEW-VERDICT: PASS
-- Cycle: 9 — delta pass over the F48 mark batch (`3c238518..1817d8fd`, 64
-  added+deleted / 7 files, no width or size escalation trigger)
-- Reviewed head: 1817d8fda5dca736d9123e31bf0a7bd21b4d258d; the SHA-bound receipt
-  is the persist commit at `86996466` (PR #311 head at this audit)
-- Findings: 0 high/med · 2 low report-notes (never persisted — below the
-  materiality floor; the owner routes them)
-- Axes: four isolated passes `review-code` · `review-security` · `review-verify`
-  · `review-perf`, all PASS, plus two folded-row re-verification passes
-  42/42 fixed, 0 regressions
-- Re-verification: F17/F20/F24 owner-decided (`ignore`) — the fold queue is
-  empty at this head (`unit-route` → `open-rows: 0`)
+REVIEW-VERDICT: FAIL
+- Cycle: 10 — delta pass over the F49 audit fold (`1817d8fd..e08ddfc0`, 170
+  added+deleted / 3 files; no width or size escalation trigger — the five
+  `docs(log)` commits inside the range are foreign-only session-log
+  bookkeeping, the fix/286 class)
+- Reviewed head: e08ddfc0d69724ee1713a73a1aa4f9774eed8377 (= PR #311 head at the
+  review); no receipt posted — REVIEW-FAIL posts none
+- Findings: 1 med fix-now (F50, folded by the re-cut below) · 1 low report-note
+  (the recorded `GIT ERROR … deadbeef` noise, never persisted)
+- Axes: four isolated passes — `review-code` FAIL (1 med), `review-security`
+  PASS, `review-verify` PASS, `review-perf` PASS — plus two folded-row
+  re-verification passes 46/46 fixed, 0 regressions
+- Re-verification: F17/F20/F24 owner-decided (`ignore`)
+- Prior pass: cycle 9 at `1817d8fd`, the SHA-bound receipt at `86996466` —
+  superseded as the newest review record by this cycle
 - AC integrity: `## Acceptance criteria` byte-identical between `15ab46a1`
   and this head (`de9aea6898468b0d`)
 ```
 
 The per-cycle record is the `### Cycle` sections and the `REVIEW-RAN` /
-`GATE-RAN` marks in `review-findings.md`: nine review cycles ran on this branch
+`GATE-RAN` marks in `review-findings.md`: ten review cycles ran on this branch
 (marks at `5c81b240`, `ac543b6d`, `d7b8ea14`, `56f8ea25`, `a775c112`, `b6f45995`,
-`7597376b`, `3c238518`, `1817d8fd`), the newest reading **REVIEW-PASS**, with the
-SHA-bound receipt at `86996466`; rows F1–F49 were persisted across those cycles
-and the two audit passes between them. Every row is folded or owner-decided, no
-test deleted or loosened. The low rows (never
+`7597376b`, `3c238518`, `1817d8fd`, `e08ddfc0`), the newest reading
+**REVIEW-FAIL** with its single finding folded here; the newest **passing**
+receipt is the cycle-9 marker at `86996466`. Rows F1–F50 were persisted across
+those cycles and the three `/audit-pr` passes that produced ledger rows —
+F41+F42+F43 (audited at `fca4ba8d`, folded `62b36a56`), F48 (folded `664cc40c`),
+F49 (folded `d8357e0e`) — plus a fourth audit invocation that produced no row
+(the post-F49 re-audit, refused on the stale receipt). Every row is folded or
+owner-decided, no test deleted or loosened. The low rows (never
 persisted): dead `sectionRange`
 helper (`scripts/workflow-status.mjs`) and a dead branch in the F38 corpus
 test (report-notes); per-unit doc re-read ×4 and unbounded `## Log`
