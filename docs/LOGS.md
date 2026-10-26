@@ -3430,3 +3430,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Replace hardcoded `node scripts/...` with `bun scripts/...` (node fallback) across all skills
 - **Decisions:** 23 instances of `node scripts/...` hard-coded across 13 skill files; unified to bun-first with node fallback to align with the repo's documented bun-first convention. Only PREFLIGHT.md line 158 (the existing fallback line) was left untouched.
 - **Next:** Review the diff, commit and push, then merge or verify the skills work correctly with bun-first execution in target projects
+## 2026-10-26T18:58:10Z — feat/308-spec-by-reference — manual
+- **Commits:** 84 (`1c68fcf4…26df7324`)
+- **Files:** 81 files
+- **Summary:** Delta re-review of unit 79 (cycle 11): F51 fold + persist (REVIEW-FAIL) + triage of three issues (#307/#315/#318 promoted) + candid admission on LOGS.md edit
+- **Decisions:** F51: re-cut cycle-10 delta-size from 170 to 129 across all three surfaces; all 47 folded rows verified fixed, 0 regressions, six axis passes · F51 fold: re-cut figure via fold-findings (1a981da6), cite commit (5e752124), LOGS.md edited wrongly (admitted) · #318 created without backlog sweep (admitted, corrective comment 6 catalogues 5 new candidates) · triage: #307/#315/#318 promoted with dated evidence comments
+- **Next:** /review-change 79-spec-by-reference (delta) → /audit-pr #311 → merge · design #307/#318
