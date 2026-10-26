@@ -21,12 +21,12 @@
  * that blocks the caller (feature 66, AC2).
  */
 
-import { readFileSync } from "node:fs";
-import { join, resolve, basename } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { join, resolve, basename, dirname } from "node:path";
 
 // Import SDK modules
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
-import { rowUpsert, annotate as roadmapAnnotate } from "../src/edit/Roadmap.mjs";
+import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
@@ -66,6 +66,21 @@ function parseArgs(args) {
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
   process.exit(2);
+}
+
+/**
+ * Walk up from a unit doc to the repo root until the default index (e.g.
+ * `docs/features/ROADMAP.md`) exists; null when no ancestor carries it.
+ */
+function findUpIndex(docPath, relativeIndex) {
+  let dir = dirname(docPath);
+  for (;;) {
+    const candidate = join(dir, relativeIndex);
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
 }
 
 // ── Router ───────────────────────────────────────────────────────────────
@@ -229,6 +244,60 @@ switch (command) {
         const receipt = roadmapAnnotate(filePath, nn, note);
         if (parsed.json) console.log(JSON.stringify(receipt, null, 2));
         else printReceipt(receipt);
+      } catch (e) {
+        refuse(e.message);
+      }
+    } else if (rawArgs[0] === "check" || (rawArgs[0] && rawArgs[1] === "check")) {
+      // roadmap check <unit-doc-path> [--roadmap <file>] [--index <file>] [--json]
+      //   Cross-document check (issue #316): the unit doc's own facts (NN,
+      //   slug, PR URL) against its index row. Exit contract: 0 consistent,
+      //   1 violations (named codes), 2 usage.
+      const docArg = rawArgs[1] === "check" ? rawArgs[2] : rawArgs[1];
+      if (!docArg) {
+        process.stderr.write("usage: agentic-workflow roadmap check <unit-doc-path> [--roadmap <file>] [--index <file>] [--json]\n");
+        process.exit(2);
+      }
+      const flag = (name) => {
+        const i = restArgs.indexOf(name);
+        return i !== -1 ? restArgs[i + 1] : undefined;
+      };
+      try {
+        const docPath = resolve(docArg);
+        const docText = readFileSync(docPath, "utf8");
+        // Kind and index defaults follow the doc's own tree position:
+        // docs/features → the roadmap, docs/fix → the fix index (its rows are
+        // removed once merged, so a missing row there is convention, not
+        // contradiction).
+        const parts = docPath.split("/");
+        const isFix = parts.includes("docs") && parts[parts.indexOf("docs") + 1] === "fix";
+        const defaultIndex = isFix ? "docs/fix/README.md" : "docs/features/ROADMAP.md";
+        const indexArg = flag("--roadmap") ?? flag("--index");
+        const indexPath = indexArg
+          ? resolve(indexArg)
+          : findUpIndex(docPath, defaultIndex.split("/").pop());
+        if (!indexPath) {
+          refuse(`index not found for ${docArg} — pass --roadmap <file>`);
+        }
+        const dirName = basename(dirname(docPath));
+        const nn = /^(\d+)/.exec(dirName)?.[1] ?? "";
+        const slug = dirName.replace(/^\d+-/, "");
+        const result = checkUnitDoc({ nn, slug, kind: isFix ? "fix" : "feature", docText, indexText: readFileSync(indexPath, "utf8") });
+        if (parsed.json) {
+          console.log(
+            JSON.stringify(
+              { service: "roadmap", op: "check", path: docPath, schema: "roadmap-table@1", codes: ROADMAP_CHECK_CODES, ok: result.ok, violations: result.violations },
+              null,
+              2,
+            ),
+          );
+        } else {
+          for (const v of result.violations) {
+            console.log(`roadmap-check: ${docPath}:${v.line} ${v.code} — ${v.detail}`);
+          }
+          console.log(`verdict: ${result.ok ? "PASS" : "FAIL"}`);
+          console.log(`violations: ${result.violations.length}`);
+        }
+        process.exit(result.ok ? 0 : 1);
       } catch (e) {
         refuse(e.message);
       }
