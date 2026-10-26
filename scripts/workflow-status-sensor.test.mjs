@@ -1554,3 +1554,56 @@ test("#308 F38: no control or format character survives the sensor's echo of led
   const observations = envelope.detail.workflow_observations.join("\n");
   assert.match(observations, /gate run G1 — `node --test/, "the flattened gate line is still reported");
 });
+
+test("#308 F45 a `## Findings` heading quoted inside a fence does not make a legacy unit migrated", () => {
+  // The carrier probe must be the fence-aware section reader, not a bare `/m`
+  // regex: a legacy unit that illustrates the re-cut grammar inside a fenced
+  // sample is not a migrated unit. Fence-blind, the doc wins the probe, its
+  // (absent) real `## Findings` section yields no rows, and the OPEN work in the
+  // unit's `review-findings.md` vanishes from the envelope — with it the current
+  // review mark (F5's failure mode, reached through the probe instead of the body).
+  const spec = [
+    "---", "type: feature", "scope: standard", "---", "",
+    "# 92 — gamma", "",
+    "## Objective", "", "A legacy unit that quotes the migrated shape.", "",
+    "## Why", "", "to prove the probe.", "",
+    "## Acceptance criteria", "", "1. quoted fence", "",
+    "## Impact", "", "nothing.", "", "## Non-goals", "", "none.", "",
+    "## Future cost", "", "none.", "",
+    "## Applicable tests", "", "n/a — no tests step for this unit", "",
+    "## Known pre-existing issues", "", "none", "",
+    "## Tasks", "", "### P1 — sample", "", "Layer: config/infra. Done-when: `true` exits 0.", "",
+    "## Evidence", "", "| AC | What | Exit | Output | Verified-by |", "|---|---|---|---|---|", "",
+    "The re-cut carrier looks like this, in a fence only:", "", "```markdown",
+    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
+    "|---|---|---|---|---|---|",
+    "| F9 | S1 · scripts/z.mjs:9 | code | high | source | fold: quoted, not real |",
+    "```", "", "## Progress log", "", "`2026-10-26 — quoted fence → abc1234`", "",
+    "## Next", "", "P1.", "", "## References", "", "none", "",
+  ].join("\n");
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|---|---|---|---|---|---|---|",
+    "| F1 | scripts/a.mjs:1 | code | med | fix-now | fold into phase | no |",
+  ].join("\n");
+  const fixture = makeFixture({
+    roadmapRows: ["| 92 | `gamma` | in-progress | — | a unit |"],
+    extraFiles: {
+      "docs/features/92-gamma/SPEC.md": spec,
+      "docs/features/92-gamma/review-findings.md": `${ledger}\n`,
+    },
+  });
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: fixture.dir, encoding: "utf8" }).trim();
+  fixture.write(
+    "docs/features/92-gamma/review-findings.md",
+    `${ledger}\n| REVIEW-RAN | HEAD ${head} | n/a | n/a | review-mark | n/a | n/a |\n`,
+  );
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const unit = envelope.detail.features.find((entry) => entry.id === "92-gamma");
+  assert.deepEqual(envelope.findings.fix_now.map((item) => item.id), ["F1"],
+    `the legacy ledger still owns the rows: ${JSON.stringify(envelope.findings.fix_now)}`);
+  assert.equal(unit.review_pending, false,
+    `the ledger's current REVIEW-RAN still counts: ${JSON.stringify(unit)}`);
+});
