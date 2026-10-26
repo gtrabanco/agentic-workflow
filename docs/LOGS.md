@@ -4,6 +4,13 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
+## 2026-10-26T11:21:16Z — feat/308-spec-by-reference — manual
+- **Commits:** 17 (39e2aa3a…bf46d8ea)
+- **Files:** 52 files (3366 additions, 162 deletions)
+- **Summary:** /review-change on PR #311 (unit 78: spec-by-reference). Five isolated finder passes (code, security, verify, perf, api-ergonomics). 4 of 5 returned FAIL: code 10 findings (5 major), perf 2 major + 2 minor, verify 1 major, API 20 findings. Classified: 20 fix-now, 9 replan-in-unit, 1 proposal, 4 ignore. Root cause: P5 carrier migration executed against the unit's name list instead of derived from the carrier — loaded skill references, one named script, the executor pair, the sensor mark reader, the schema version and template lint all still assert the retired shape. Fold frozen: 32 rows queued, all replan-in-unit, no ledger exists to persist to (the writer contract is itself a finding). Outcome: REVIEW-FAIL. No code changed.
+- **Decisions:** Rejected /fold-findings until the carrier phase was appended, because fold's writer contract (F6) is one of the replan rows — persisting a ledger to a shape that does not yet exist would duplicate the half-migration defect. Chose one appended phase over N independent folds: the review found 32 instances of a single root cause, and folding them separately would write the probe-first contract 8+ times in 8 wordings.
+- **Next:** /unit-lane 78-spec-by-reference to append the carrier-migration phase; /product-audit on the planning premise that failed twice in one unit
+
 ## 2026-10-17T08:35:37Z — feat/73-lane-closeout-handoffs — manual
 - **Commits:** 34 (`22e96166…74990e84`)
 - **Files:** 28 files
