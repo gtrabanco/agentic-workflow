@@ -28,9 +28,10 @@
         "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)"
       },
       "mainLinesMax": 252,
-      "referenceEstimateMax": 2759,
+      "referenceEstimateMax": 3412,
       "referenceSources": {
-        "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)"
+        "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)",
+        "issue #321 pi native MCP registration": "SERENA.md gains the pi row in the per-platform MCP registration table (pi mcp add serena -- serena start-mcp-server --context claude-code; user-level default → ~/.pi/agent/mcp.json, --local → .pi/mcp.json) plus the pi-specific notes block (the two registration options, the mcp__serena__ tool namespace, the toolExposure knob, the resolved --context open question and the consent gating) — measured 3101 est / 242 lines; ceiling re-based to ceil(3101 x 1.10) = 3412 (lines stay under the 280 default)"
       }
     },
     "log-session": {
