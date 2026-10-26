@@ -339,6 +339,42 @@ also covering the observation path).
 Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
 (`/review-change` owns it); the audit stage follows the receipt.
 
+### Cycle 6 — review-change cycle 5: delta pass, verdict PASS (2026-10-26)
+
+Run on the owner's explicit invocation (the cap's escape stays the owner's; the
+`## Next` pane and the cycle-5 fold entry both named this delta re-review).
+Reviewed head frozen at `b6f45995a501d868cf3ef2cc275b44461f49ef59` (= PR #311
+head before the marks below). Delta mode: the fold diff `a775c112..b6f45995`
+measures 13 added+deleted lines over 2 files, both inside the folded rows'
+cited union — **no escalation trigger fired**, so the delta ran as a delta pass
+over `git diff a775c112..HEAD`. All 37 `folded: yes` rows re-verified **fixed**
+at their cited constructs (two isolated passes: F1–F26 23/23, F27–F40 14/14);
+F17/F20/F24 stay owner-decided (`ignore`, not folded rows). Four applicable
+axes ran isolated over the fold delta (`review-code` PASS 2 low,
+`review-security` PASS 0, `review-verify` PASS 1 low informational,
+`review-perf` PASS 0); design/a11y/brand/seo skipped — no UI surface. No
+high/med finding, so nothing is persisted below and no `CONVERGENCE-ANOMALY`
+block is due; the lows ride as report-notes (VF-40's provenance cell omits the
+reviewer semver its siblings carry; the cycle-5 fold Progress entry sits above
+the cycle-4 review entry, both dated 2026-10-26; the `unit-lane` offer menu
+still lists `kept deferred` — trigger: the D5-deferred Future-carrier unit;
+one branch commit lacks a scope token: `docs: fold F19+F13's documented half`).
+
+**Gates at the reviewed head (verify axis, run fresh — no identical-head mark
+existed):** root `node --test scripts/*.test.mjs` → 828/828 · schema `bun run
+build` + `bun run test` → 721/721 · pi `bun run test` → 432/432 · parity
+`0.31.0 → 0.33.0` PASS · budgets 14 routes PASS · `LINEAGE OK` · needs-input 0
+· promise-coherence PASS (36 checked) · phase-lint PASS · unit-route
+`open-rows: 0`. AC integrity: `## Acceptance criteria` byte-identical between
+`a775c112` and `b6f45995` (the delta hunks touch only `## Future` and the
+Progress log; the recorded extractor-normalized digest `de9aea6898468b0d`
+stands). F40's fix verified in place: both re-cut rows read `open` — kept
+deferred `<date>` with the D5 deferral in prose, `discarded 2026-10-21`
+untouched, no parser reads Future status (behavior unchanged, as F40 recorded).
+
+Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
+(`/review-change` owns it); the audit stage follows the receipt.
+
 ### Marks
 
 | id | file:line | axis | severity | class | route | folded |
@@ -354,3 +390,9 @@ Verdict: **REVIEW-VERDICT: PASS** — the SHA-bound receipt is the next stage
 | GATE-RAN | HEAD a775c112ad73bff51b42a78876cea526e542b64d | bun run test (packages/pi-agentic-workflow) | exit 0 | 432 tests · 432 pass · 0 fail | n/a | n/a |
 | GATE-RAN | HEAD a775c112ad73bff51b42a78876cea526e542b64d | node scripts/version-parity-gate.mjs --content --base main | exit 0 | content parity holds: 0.31.0 → 0.33.0 · VERDICT: PASS | n/a | n/a |
 | GATE-RAN | HEAD a775c112ad73bff51b42a78876cea526e542b64d | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 78-spec-by-reference · node scripts/needs-input.mjs docs/features/78-spec-by-reference · node scripts/promise-coherence.mjs · node scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 78-spec-by-reference | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK · open questions 0 · promise PASS (36 checked) · phase-lint PASS · open-rows: 0 | n/a | n/a |
+| REVIEW-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 · cycle 6 (delta pass — fold diff a775c112..b6f45995, 13 lines / 2 files, no escalation trigger) · verdict REVIEW-PASS | n/a | n/a | review-mark | n/a | n/a |
+| GATE-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 | node --test scripts/*.test.mjs | exit 0 | 828 tests · 828 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 | bun run build + bun run test (packages/agentic-workflow-schema) | exit 0 | 721 tests · 721 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 | bun run test (packages/pi-agentic-workflow) | exit 0 | 432 tests · 432 pass · 0 fail | n/a | n/a |
+| GATE-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 | node scripts/version-parity-gate.mjs --content --base main | exit 0 | content parity holds: 0.31.0 → 0.33.0 · VERDICT: PASS | n/a | n/a |
+| GATE-RAN | HEAD b6f45995a501d868cf3ef2cc275b44461f49ef59 | bun scripts/check-skill-context.mjs --routes · node scripts/unit-lineage.mjs --unit 78-spec-by-reference · node scripts/needs-input.mjs docs/features/78-spec-by-reference · node scripts/promise-coherence.mjs · node scripts/phase-lint.mjs docs/features/78-spec-by-reference/SPEC.md · node scripts/unit-route.mjs 78-spec-by-reference | exit 0 (each) | budgets PASS 14 routes · LINEAGE OK · open questions 0 · promise PASS (36 checked) · phase-lint PASS · open-rows: 0 | n/a | n/a |
