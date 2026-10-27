@@ -82,7 +82,8 @@ test("every prose copy of the Future-status set carries exactly the canonical to
   for (const copy of copies) {
     const text = read(copy);
     for (const status of FUTURE_STATUS_KINDS) {
-      assert.match(text, new RegExp("`" + status + "(?:`| <)"), `${copy}: the canonical token '${status}' is present`);
+      // The `UnitDoc` skeleton escapes its backticks (`\`open\``); both forms cite.
+      assert.match(text, new RegExp("\\\\?`" + status + "(?:\\\\?`| <)"), `${copy}: the canonical token '${status}' is present`);
     }
     assert.doesNotMatch(text, /kept deferred/, `${copy}: no off-vocabulary status token survives here`);
   }
