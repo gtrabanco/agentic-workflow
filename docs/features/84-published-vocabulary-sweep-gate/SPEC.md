@@ -184,7 +184,10 @@ Research, design and plan ran in the authoring turn (this doc, `sources.md`,
   `S#` rows and the AC block above; the elision markers name where, per the
   `spec-requirement@1` grammar ("unedited apart from a marked elision"). The
   full unedited body is issue #315 in the forge.
-- **P1** — 2026-10-27 00:00 — lane: unit doc resolved from issue #315 (`--from-issue`), specs S1–S4 quoted verbatim, provenance searched (`sources.md`), decisions D1–D3 recorded, roadmap row 84 → `defined`, triage run and pasted — next: P1 (vocabulary census).
+- **P1** — 2026-10-27 00:00 — lane: unit doc resolved from issue #315 (`--from-issue`), specs S1–S4 quoted verbatim, provenance searched (`sources.md`), decisions D1–D3 recorded, roadmap row 84 → `defined`, triage run and pasted → 1a62e2c1 — next: P1 (vocabulary census).
+- **E1** — 2026-10-27, `bun scripts/unit-route.mjs --triage 84` · exit 0 · all 9 steps, budget strong, implement tier cheap.
+- **E2** — 2026-10-27, `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · verdict PASS, 7/7 phases.
+- **E3** — 2026-10-27, memory probe (`agentic-workflow memory probe` via the crate bin) · exit 0 · verdict `degraded` — `session-ambiguity` check failed (1+20 findings); recorded per the memory protocol §1/§7, non-blocking, boundary save attempted with explicit `project`.
 
 ## Next
 
