@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.10.0
+version: 1.11.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -183,8 +183,12 @@ allowed); `<n>` is the survivor count you expect outside the allowlist —
 normally `0`, and non-zero only where the `<glob>` names surfaces that
 legitimately keep the form (the ledger's own quote of the finding, log lines,
 fixtures). `<glob>` is the bounded scope: the finding's cited surface plus its
-inventory-declared siblings, never a repo-wide sweep. `bun
-scripts/promise-coherence.mjs` (node fallback if bun is not installed) re-runs
+inventory-declared siblings, never a repo-wide sweep. The pattern body carries
+the bounds the gate refuses outside — at most 200 characters, and never a
+quantified group whose own body is quantified — because the gate runs that body
+once per line of the whole `<glob>` corpus, so an over-bound declaration is
+refused by name instead of compiled (`bun
+scripts/promise-coherence.mjs`, node fallback if bun is not installed) re-runs
 every declared grep and fails closed with `sweep-mismatch`, naming
 `file:line`, the regex and the observed count. A fold that changes such a
 surface and emits no declaration is a `workflow` finding at review.
