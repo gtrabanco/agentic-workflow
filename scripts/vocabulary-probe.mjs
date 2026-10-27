@@ -36,6 +36,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
+import { sectionBounds } from "./unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -73,16 +74,19 @@ function outsideFences(doc, visit) {
   });
 }
 
-/** Fence-aware body of the first `## <name>` section, with line numbers, or null. */
+/** Fence-aware body of the first `## <name>` section, with line numbers, or null.
+ *  Delegates to the shared fence-aware reader (`unit-doc-phases.sectionBounds`):
+ *  a fenced block inside the section never truncates it, and a fenced line that
+ *  looks like a heading never starts or ends one. */
 function sectionLines(doc, name) {
-  const start = doc.lines.findIndex((line) => line.trim() === `## ${name}`);
-  if (start === -1) return null;
-  const body = [];
-  for (let index = start + 1; index < doc.lines.length; index += 1) {
-    if (/^## /.test(doc.lines[index])) break;
-    body.push({ line: doc.lines[index], number: index + 1 });
-  }
-  return body;
+  const text = doc.lines.join("\n");
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  const startNumber = text.slice(0, after).split("\n").length;
+  return text.slice(after, bounds[1])
+    .split("\n")
+    .map((line, offset) => ({ line, number: startNumber + offset }));
 }
 
 /**
