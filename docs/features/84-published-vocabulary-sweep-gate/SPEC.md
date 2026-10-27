@@ -125,6 +125,15 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F1 | docs/features/ROADMAP.md:94 | verify | high | source | fold |
+| F2 | scripts/promise-coherence.mjs:342 | security | med | source | fold |
+| F3 | scripts/promise-coherence.mjs:435 | code | med | source | fold |
+| F4 | scripts/vocabulary-probe.mjs:64 | code | med | source | fold |
+| F5 | scripts/vocabulary-probe.mjs:199 | perf | med | source | fold |
+| F6 | scripts/vocabulary-probe.mjs:103 | code | med | source | fold |
+| F7 | scripts/promise-coherence.mjs:406 | code | med | source | fold |
+| F8 | scripts/structural-sibling-pins.mjs:125 | code | med | source | fold |
+| F12 | scripts/promise-coherence.mjs:206 | verify | med | source | fold |
 
 ## Triaged steps
 
@@ -205,6 +214,18 @@ Research, design and plan ran in the authoring turn (this doc, `sources.md`,
 - **P8** — 2026-10-27 00:00 — P7 release settle: the PR opened on `main` with `Closes #315` (https://github.com/gtrabanco/agentic-workflow/pull/330), the unit doc's References carries `- PR: <url>`, and the roadmap row settled to `done · [#330](<url>)` through the crate's writer at HEAD `27f15a80` with its `dependsOn` and `description` cells re-emitted unchanged — next: the mandatory end review.
 - **E12** — 2026-10-27, `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS` — 111 unit docs checked, 0 violations.
 - **E13** — 2026-10-27, `bunx @gtrabanco/agentic-workflow roadmap docs/features/ROADMAP.md rowUpsert '<json>'` · exit 0 · `Schema: roadmap-table@1 · Receipt: pass` — Before `558aae60` · After `27f15a80`.
+- **R1** — 2026-10-27, review-change cycle 1 · HEAD `e835f15895ed5c4a57726cd08751546e0b676400` · four isolated axis passes (code, security, verify, perf; design/a11y/brand/seo skipped — no UI/web surface) + isolated classifier and debt transform · verdict **REVIEW-FAIL** — 9 fix-now open (F1–F8, F12), gate red at the reviewed head (G1) · no passing receipt posted.
+- **G1** — 2026-10-27, `node --test scripts/*.test.mjs` · exit 1 · `tests 951 / pass 950 / fail 1` (`vocabulary-probe.test.mjs` "the repository's own head is in vocabulary" — the probe corpus is empty because roadmap row 84 is already `done`); `bun run test` in `packages/agentic-workflow-schema` · exit 0 · 721/721; `bun run test` in `packages/agentic-workflow` · exit 0 · 254/254; `bun scripts/check-skill-context.mjs` and `--routes` · exit 0 · 28 skills / 14 routes; `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · PASS; `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · PASS (claims 0 checked · 7 skipped — see F12).
+- **V1** — 2026-10-27, F1 · reviewer review-change · HEAD `e835f158…` · recheck command reproducer: `node --test scripts/vocabulary-probe.test.mjs` exit 1 ("the probe scanned at least the in-flight unit docs"); `bun scripts/vocabulary-probe.mjs` → `0 documents checked`.
+- **V2** — 2026-10-27, F2 · reviewer review-change · HEAD `e835f158…` · recheck reproducer + direct read: a grammar-legal nested-quantifier pattern (`(a+)+$`) takes 83.2 s for five `test()` calls on one 29-char line; `parseSweepDeclaration` (`scripts/promise-coherence.mjs:342-353`) compiles the doc-sourced body with no size/complexity/time bound and `sweepCount` runs it per line over ≤5000 files × 2 MB.
+- **V3** — 2026-10-27, F3 · reviewer review-change · HEAD `e835f158…` · recheck reproducer: `sectionBounds` returns UTF-16 indices (`[47,69]` on a 69-char/76-byte doc) while `sweepCount` accumulates `Buffer.byteLength` offsets (`scripts/promise-coherence.mjs:435`) — the declaring doc's Log exemption misaligns on any non-ASCII doc; the `:417` comment mislabels `sectionBounds` as byte ranges.
+- **V4** — 2026-10-27, F4 · reviewer review-change · HEAD `e835f158…` · recheck direct read + grep: the only occurrence of `outsideFences` in `scripts/vocabulary-probe.mjs` is its definition (`:64`); `documentViolations` re-implements the same fence walk inline.
+- **V5** — 2026-10-27, F5 · reviewer review-change · HEAD `e835f158…` · recheck direct read: `inFlightDocs` (`scripts/vocabulary-probe.mjs:199`) and `runProbe` (`:201-204`) both `readLines` the same corpus per run.
+- **V6** — 2026-10-27, F6 · reviewer review-change · HEAD `e835f158…` · recheck direct read: the Future (`:103`) and Findings (`:129`) loops inline the fence walk while `openFence`/`closesFence` are exported by `scripts/unit-doc-phases.mjs:24,29` — the F37-class duplication S3's own pin targets.
+- **V7** — 2026-10-27, F7 · reviewer review-change · HEAD `e835f158…` · recheck direct read: `out.push` precedes the cap check and the `return` exits only the current walk level (`scripts/promise-coherence.mjs:406-408`), so sibling recursion keeps appending past 5000.
+- **V8** — 2026-10-27, F8 · reviewer review-change · HEAD `e835f158…` · recheck direct read: `allowlisted.has(path.basename(hit.file))` (`scripts/structural-sibling-pins.mjs:125`) — a same-named script in any subdirectory bypasses pin A.
+- **V9** — 2026-10-27, F12 · reviewer review-change · HEAD `e835f158…` · recheck command output: `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` → `claims: 0 checked · 7 skipped` (every validator command "outside the reader allowlist") — the gate's PASS on this doc is vacuous.
+- **V10** — 2026-10-27, refuted candidate (review-code) · HEAD `e835f158…` · counter-evidence: the `SWEEP_DECLARATION` grammar `(?:(?:[^/\\]|\\.)*)` forces every in-body `/` to be escaped, so `lastIndexOf("/")` in `parseSweepDeclaration:345` always lands on the closing delimiter — reproducer payloads with escaped-slash/escaped-backslash bodies extract identically via `slice(1, lastIndexOf("/"))` and via delimiter math. Not a row.
 
 ## Next
 
