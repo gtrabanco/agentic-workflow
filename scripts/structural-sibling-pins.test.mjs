@@ -51,13 +51,32 @@ test("pin A — reintroducing the F37/F38/F39 pattern in a new script fails the 
   }
 });
 
-test("pin A — the pin is not vacuous: an allowlisted reader really carries the pattern", () => {
+test("pin A — reintroducing the F37/F38/F39 pattern under an allowlisted file name is still a violation", () => {
+  // Review F8: the allowlist was keyed by `path.basename`, so a script in any
+  // subdirectory that happened to share an allowlisted name (a nested
+  // `unit-doc-phases.mjs`) bypassed the pin silently. Keys are repository-
+  // relative paths now, so only the real reader owns its exemption.
+  const scratch = mkdtempSync(path.join(tmpdir(), "pin-a-key-"));
+  try {
+    mkdirSync(path.join(scratch, "nested"), { recursive: true });
+    writeFileSync(path.join(scratch, "nested", "unit-doc-phases.mjs"), "const bound = /^## /.exec(rest);\n");
+    const violations = headingSearchViolations(scratch);
+    assert.equal(violations.length, 1, "the same-named nested file is not exempt");
+    assert.match(violations[0].file, /nested\/unit-doc-phases\.mjs$/);
+    assert.equal(violations[0].line, 1, "the violation names the line");
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
+test("pin A — the pin is not vacuous: every allowlisted reader really carries the pattern", () => {
   const hits = headingSearchHits(SCRIPTS);
-  const allowlisted = new Set([...HEADING_READER_ALLOWLIST.keys()].map((file) => path.basename(file)));
-  assert.ok(
-    hits.some((hit) => allowlisted.has(path.basename(hit.file))),
-    "no allowlisted file carries a heading search any more — prune the allowlist",
-  );
+  // Keyed by repository-relative path, so a prunable entry is one nothing
+  // needs any more — and an entry nobody carries is a hole, not a hedge.
+  const carried = new Set(hits.map((hit) => hit.repoFile));
+  for (const file of HEADING_READER_ALLOWLIST.keys()) {
+    assert.ok(carried.has(file), `${file} no longer carries a heading search — prune the allowlist entry`);
+  }
   for (const [file, reason] of HEADING_READER_ALLOWLIST) {
     assert.ok(reason.length > 20, `${file}'s allowlist reason is prose, not a dash`);
   }

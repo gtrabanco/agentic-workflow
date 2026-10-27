@@ -28,24 +28,27 @@ const HEADING_SEARCH = /\/\^##\s?/;
 
 /**
  * The files allowed to carry a `## `-anchored regex literal, each with the
- * reason recorded at pin time. Keyed by base file name; the pin suite asserts
- * the allowlist stays honest (at least one entry still carries the pattern).
+ * reason recorded at pin time. Keyed by the **repository-relative path**, not
+ * the base name (review F8: basename keying let any script in any
+ * subdirectory that happened to share an allowlisted name bypass the pin in
+ * silence); the pin suite asserts every key still carries the pattern, so the
+ * list cannot rot into entries nobody needs.
  */
 export const HEADING_READER_ALLOWLIST = new Map([
   [
-    "unit-doc-phases.mjs",
+    "scripts/unit-doc-phases.mjs",
     "the shared fence-aware reader owns the grammar — sectionText, sectionBounds and H2_HEADING are the one definition (#308 F28/F39); every other reader cites it",
   ],
   [
-    "workflow-status.mjs",
+    "scripts/workflow-status.mjs",
     "the legacy TASKS.md phase reader is fence-aware since unit 84 (S3 pin); its remaining `^##` literal only labels boundaries inside the fence-aware walk, never bounds a section on its own",
   ],
   [
-    "promise-coherence.mjs",
+    "scripts/promise-coherence.mjs",
     "its own sectionsOf is a fence-aware reader (it collects every section, not one); the remaining literals are `## Turn contract` presence probes, never section bounds",
   ],
   [
-    "pre-execution-contract.mjs",
+    "scripts/pre-execution-contract.mjs",
     "receipt chunk parser: versioned titled headings (## Pre-execution review receipt v1 — …) that the exact-name shared reader cannot match; machine-generated receipts carry no fenced blocks",
   ],
 ]);
@@ -78,8 +81,10 @@ function scriptFiles(directory) {
 
 /**
  * Every `## `-anchored regex-literal line under `directory` (recursive), as
- * `{ file, line, text }` — `file` relative to `directory`. The allowlist is
- * applied only by `headingSearchViolations`; this is the raw census.
+ * `{ file, repoFile, line, text }` — `file` relative to `directory` (what a
+ * report shows), `repoFile` relative to this repository (what the allowlist
+ * keys on). The allowlist is applied only by `headingSearchViolations`; this
+ * is the raw census.
  */
 export function headingSearchHits(directory) {
   const hits = [];
@@ -104,9 +109,14 @@ export function headingSearchHits(directory) {
       } catch {
         continue;
       }
+      const relative = path.relative(directory, absolute).split(path.sep).join("/");
+      // Keys are repository-relative, so a file outside this checkout can never
+      // collide with an allowlisted reader: its repo-relative path starts with
+      // `../` and matches nothing in the map.
+      const repoFile = path.relative(MODULE_ROOT, absolute).split(path.sep).join("/");
       text.split(/\r?\n/).forEach((line, index) => {
         if (HEADING_SEARCH.test(line)) {
-          hits.push({ file: path.relative(directory, absolute).split(path.sep).join("/"), line: index + 1, text: line.trim() });
+          hits.push({ file: relative, repoFile, line: index + 1, text: line.trim() });
         }
       });
     }
@@ -118,11 +128,11 @@ export function headingSearchHits(directory) {
 /**
  * The heading-search lines that no allowlisted reader owns — empty when the
  * tree is clean, each row naming `file:line` when a new script reintroduces
- * the fence-blind-reader pattern.
+ * the fence-blind-reader pattern. Keyed on the repository-relative path, so a
+ * same-named file in a subdirectory is a violation, not a silent exemption.
  */
 export function headingSearchViolations(directory) {
-  const allowlisted = new Set([...HEADING_READER_ALLOWLIST.keys()]);
-  return headingSearchHits(directory).filter((hit) => !allowlisted.has(path.basename(hit.file)));
+  return headingSearchHits(directory).filter((hit) => !HEADING_READER_ALLOWLIST.has(hit.repoFile));
 }
 
 /**
