@@ -332,6 +332,8 @@ token from `log-kind@1`.
 - **F1** — 2026-10-26, folded — F1 repaired: the settle commit argv extracted into pure `settleCommitArgs()` (`-m` before `--`), 2 new tests covering the argv contract, fixed command verified to commit in a scratch repo · commit 523a95e2.
 - **F2** — 2026-10-26, folded — F2 resolved by documentation: D3 records the row-244 rename and its gate-driven reason · commit 523a95e2.
 - **R2** — 2026-10-26, review run — `HEAD 523a95e2`, verdict **PASS**, cycle 2, gates exit 0. 0 material, 4 report-notes (F3–F6 stand).
+- **G4** — 2026-10-27, gate runs at `HEAD 783b57f1` — `node --test scripts/*.test.mjs` · exit 0 · 905 pass / 0 fail; `bun test scripts/unit-cycle.test.mjs` · exit 0 · 45 pass / 0 fail; `node --test packages/agentic-workflow/test/roadmap-check.test.mjs` · exit 0; `bun test scripts/roadmap-settle.test.mjs` · exit 0 · 7 pass / 0 fail; `bun scripts/roadmap-settle.mjs` (live tree) · exit 0 · `verdict: PASS · violations: 0` over 110 unit docs; `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills.
+- **R3** — 2026-10-27, review run — `HEAD 783b57f1`, delta-scoped cycle 3 (delta since the cycle-2 head: the post-PASS record commits fc36bfe3 + 783b57f1, unit-doc log lines only), verdict **PASS**, gates exit 0 (G4). 0 material; 2 low report-notes (G3 sits above G1 in this log — insert position, left in place per append-only; R1's "gates exit 0" unqualified — the settle gates, diff-guard excepted per D2). Folded rows re-verified: F1 fixed (`settleCommitArgs()` `-m` before `--`, scripts/unit-cycle.mjs:543, 45 tests), F2 resolved by D3 (direct read). Findings table stays empty; receipt emitted at the head of the record commit below.
 
 ## Next
 
