@@ -14,7 +14,7 @@ table — history lives in git log + closed issues.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| [#316](https://github.com/gtrabanco/agentic-workflow/issues/316) | roadmap-settle | `done` · [#323](https://github.com/gtrabanco/agentic-workflow/pull/323) · [SPEC](316-roadmap-settle/SPEC.md) | The roadmap row's `done` settle is code: the crate's `roadmap check` cross-document check (closed codes `row-missing`/`slug-mismatch`/`pr-url-unsettled`), the offline root gate `scripts/roadmap-settle.mjs` with the 77/79 frozen-failure corpus, `unit-cycle` writes the settle itself via `rowUpsert`, and the writer's call sites land in `unit-lane` (RELEASE/PLAN) + `execute-phase` close-out. Out of scope: #227 composer, #260 verifier, #301 receiver. Depends on none. |
+| none | — | — | No fix is in flight. A fix gets its row when `/unit-lane --fix <n>` opens its unit doc, and the row is removed after its PR merges. |
 
 Historical artifacts remain under `docs/fix/`; merged and closed work is
 intentionally absent from this index.
