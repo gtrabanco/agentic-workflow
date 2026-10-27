@@ -202,13 +202,18 @@ Research, design and plan ran in the authoring turn (this doc, `sources.md`,
 - **E9** — 2026-10-27, `cd packages/agentic-workflow && bun run test` · exit 0 · `254 pass, 0 fail`.
 - **E10** — 2026-10-27, `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · `verdict PASS` 7/7 phases.
 - **E11** — 2026-10-27, `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · `verdict PASS` (claims 0 checked · 7 skipped, every skip a command outside the reader allowlist).
+- **P8** — 2026-10-27 00:00 — P7 release settle: the PR opened on `main` with `Closes #315` (https://github.com/gtrabanco/agentic-workflow/pull/330), the unit doc's References carries `- PR: <url>`, and the roadmap row settled to `done · [#330](<url>)` through the crate's writer at HEAD `27f15a80` with its `dependsOn` and `description` cells re-emitted unchanged — next: the mandatory end review.
+- **E12** — 2026-10-27, `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS` — 111 unit docs checked, 0 violations.
+- **E13** — 2026-10-27, `bunx @gtrabanco/agentic-workflow roadmap docs/features/ROADMAP.md rowUpsert '<json>'` · exit 0 · `Schema: roadmap-table@1 · Receipt: pass` — Before `558aae60` · After `27f15a80`.
 
 ## Next
 
-Run P1 — the vocabulary census and canonical declarations, fixtures first.
+P1–P7 closed; the PR is open and every phase's validator is green at the head.
+Next is the mandatory end review of the accumulated diff.
 
 ## References
 
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/330
 Issue `#315` (this unit's request, `Closes #315` in the PR); roadmap row 84;
 `docs/features/77-promise-coherence-guard/SPEC.md` (the #305 carrier whose
 `CLAIM_KINDS` this unit extends); `scripts/unit-doc-phases.mjs` (`LOG_KINDS`,
