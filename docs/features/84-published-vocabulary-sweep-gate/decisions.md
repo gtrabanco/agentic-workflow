@@ -13,6 +13,19 @@ D1 | 2026-10-27 | decision | Q1 | lane decision under the owner's issue delegati
 D2 | 2026-10-27 | decision | Q2 | lane decision under the owner's explicit delegation in issue #315 §Open questions ("decide at the plan step") | recorded here (this file) | A — schema-package consts are canonical, prose surfaces and root scripts cite them, parity tests pin every second copy, and the AGENTS.md mirror rule applies by construction | B — template grammar blocks as canonical: discarded — the schema mirror would become a hand-synced second copy, recreating the drift the parity pins exist to kill
 D3 | 2026-10-27 | decision | Q3 | lane decision from the issue's own pair of constraints (S1 "every unit doc" vs §Out of scope "closed units stay closed"); cheap to widen later by changing one status filter | recorded here (this file) | A — the probe's corpus is open units + fixtures; closed units are skipped via the roadmap status source, and a closed unit's off-vocabulary token stays recorded debt with its re-trigger condition | B — scan every doc: discarded — it fails the suite on unit 79's recorded debt today and forces a closed-unit rewrite the issue forbids
 
+## Justifications
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/vocabulary-probe.mjs | P2 | 2026-10-27 | execute-phase | S1's validator probe is a new deterministic script; the issue mandates it as a root-suite gate, not an edit to an existing one
+justification | scripts/vocabulary-probe.test.mjs | P2 | 2026-10-27 | execute-phase | the probe's owning suite (frozen-failure corpus: the F40 reproducer must fail it first)
+justification | scripts/vocabulary-parity.test.mjs | P1 | 2026-10-27 | execute-phase | the parity pins for every second copy of each declared set (the F22/LOG_KINDS pattern, S1/AC1)
+justification | scripts/structural-sibling-pins.mjs | P5 | 2026-10-27 | execute-phase | the pin implementations (heading-search allowlist scanner, flatten-coverage scanner) shared by the pin suite
+justification | scripts/structural-sibling-pins.test.mjs | P5 | 2026-10-27 | execute-phase | the negative-capability pin suite (S3/AC3): each pin fails on a fixture reintroducing the F37/F38/F39 pattern
+justification | scripts/promise-coherence.test.mjs | P3 | 2026-10-27 | execute-phase | S2 extends the gate's closed claim-kind vocabulary: the sweep cases and the frozen-set deepEqual are the conscious-set-change path the closed-set test exists to force
+```
+
 ## Assumptions
 
 Cheap defaults taken instead of asking, dated and correctable:
