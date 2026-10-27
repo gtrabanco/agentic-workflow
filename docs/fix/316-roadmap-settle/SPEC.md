@@ -395,6 +395,8 @@ token from `log-kind@1`.
 - **D4** — 2026-10-27, owner-noted decision: writing the ledger exposed a defect in the gate it had to pass — `scripts/unit-lineage.mjs`'s `subsectionBody` preferred the first `###` heading found anywhere over a nearer `##`, so the `### Obligations` section swallowed the following `## Findings` table and reported F7–F12 as open obligations. Fixed to stop at the nearest `##`/`###`, with a regression test; the defect would have blocked every unit doc carrying a findings table.
 - **D5** — 2026-10-27, owner-noted decision: the pi package re-cuts to **0.35.1** because `main` published 0.35.0 (#321, the Serena bridge replacement) while this branch was open; shipping 0.35.0 again would publish nothing. The crate keeps **0.5.0** (above `main`'s 0.4.0, no collision). D3's row-244 rename is moot on the rebased base: `main` had already removed that row.
 
+- **G5** — 2026-10-27, gate runs at `HEAD 5239889a` — `node --test scripts/*.test.mjs` · exit 0 · 922 pass / 0 fail; crate suite `bun run test` · exit 0 · 254 pass / 0 fail; `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS · violations: 0` (110 unit docs); `bun scripts/check-skill-context.mjs` and `--routes` · exit 0 (28 skills, 14 routes); `bun scripts/unit-lineage.mjs --unit 316-roadmap-settle` · exit 0 · `LINEAGE OK — lane-era · obligations closed (6)`; `roadmap check docs/fix/316-roadmap-settle/SPEC.md` · exit 0 · PASS.
+
 ## Next
 
 The receipt is **stale**: the audit pass that produced findings F7–F12 moved the
