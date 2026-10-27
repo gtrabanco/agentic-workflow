@@ -36,7 +36,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
-import { sectionBounds } from "./unit-doc-phases.mjs";
+import { sectionBounds, openFence, closesFence } from "./unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -44,9 +44,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const { FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, PRE_EXECUTION_FINDING_CLASSES } = await import(
   schemaRuntimePath
 );
-
-/** A fenced code block opener (the closing side mirrors it). */
-const FENCE = /^\s*(`{3,}|~{3,})/;
 
 /** The dated progress entry that makes a plan a unit in flight. */
 const IN_FLIGHT = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
@@ -58,20 +55,29 @@ const FUTURE_BULLET = /^\s*[-*+]\s+(.*)$/;
 const DISCARDED = /^discarded (\d{4}-\d{2}-\d{2})$/;
 
 /**
- * Fence-aware scan of one document: the callback sees every line outside a
- * fenced block, with its 1-based line number.
+ * The rows of one section that sit outside a fenced block, line numbers kept.
+ * Fence tracking belongs to the shared reader (`openFence` / `closesFence` in
+ * `unit-doc-phases.mjs`): the probe carried three private copies of the walk,
+ * one of them dead, which is the F37/F38/F39 class this unit pins out (review
+ * F4/F6). A fenced quote is the fold's own evidence, never a violation.
  */
-function outsideFences(doc, visit) {
+function unfenced(rows) {
+  const out = [];
   let fence = null;
-  doc.lines.forEach((line, index) => {
-    const run = FENCE.exec(line);
-    if (run) {
-      if (fence === null) fence = run[1];
-      else if (line.trim() !== "" && line.trim()[0] === fence[0] && line.trim().length >= fence.length) fence = null;
-      return;
+  for (const row of rows) {
+    const trimmed = row.line.trim();
+    if (fence !== null) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
     }
-    if (fence === null) visit(line, index + 1);
-  });
+    const opened = openFence(trimmed);
+    if (opened !== null) {
+      fence = opened;
+      continue;
+    }
+    out.push(row);
+  }
+  return out;
 }
 
 /** Fence-aware body of the first `## <name>` section, with line numbers, or null.
@@ -100,15 +106,7 @@ function documentViolations(doc) {
   // ── future-status: every `## Future` bullet's status token.
   const future = sectionLines(doc, "Future");
   if (future !== null) {
-    let fence = null;
-    for (const row of future) {
-      const run = FENCE.exec(row.line);
-      if (run) {
-        if (fence === null) fence = run[1];
-        else if (row.line.trim() !== "" && row.line.trim()[0] === fence[0] && row.line.trim().length >= fence.length) fence = null;
-        continue;
-      }
-      if (fence !== null) continue;
+    for (const row of unfenced(future)) {
       const bullet = FUTURE_BULLET.exec(row.line);
       if (bullet === null) continue;
       const token = /`([^`]+)`/.exec(bullet[1]);
@@ -126,15 +124,7 @@ function documentViolations(doc) {
   // ── finding-severity / finding-class: the `## Findings` table cells.
   const findings = sectionLines(doc, "Findings");
   if (findings !== null) {
-    let fence = null;
-    for (const row of findings) {
-      const run = FENCE.exec(row.line);
-      if (run) {
-        if (fence === null) fence = run[1];
-        else if (row.line.trim() !== "" && row.line.trim()[0] === fence[0] && row.line.trim().length >= fence.length) fence = null;
-        continue;
-      }
-      if (fence !== null) continue;
+    for (const row of unfenced(findings)) {
       if (!row.line.trimStart().startsWith("|")) continue;
       const cells = row.line.split("|").map((cell) => cell.trim());
       if (cells.length < 7) continue;
@@ -152,7 +142,9 @@ function documentViolations(doc) {
   return violations;
 }
 
-/** The unit docs the roadmap and the fix index still call in flight.
+/** The unit docs the roadmap and the fix index still call in flight, read once:
+ *  `{ file, lines }` pairs the probe consumes directly (review F5 — the corpus
+ *  was read twice per run, once to filter and once to scan).
  *  Exported so the suite can assert the corpus rule itself, not only the
  *  violations it finds: a settled head legitimately scans nothing, and that
  *  must not be confused with a corpus rule that stopped matching. */
@@ -178,10 +170,12 @@ export function inFlightDocs(root) {
   }
   // A plan that was never started is a plan, not a promise (the same rule the
   // promise-coherence gate applies): a dated progress entry makes it live.
-  return out.filter((file) => {
+  const docs = [];
+  for (const file of out) {
     const lines = readLines(root, file);
-    return lines !== null && IN_FLIGHT.test(lines.join("\n"));
-  });
+    if (lines !== null && IN_FLIGHT.test(lines.join("\n"))) docs.push({ file, lines });
+  }
+  return docs;
 }
 
 function readLines(root, relative) {
@@ -198,10 +192,7 @@ function readLines(root, relative) {
  */
 export function runProbe(root) {
   const violations = [];
-  const docs = inFlightDocs(root).map((file) => {
-    const lines = readLines(root, file);
-    return { file, lines: lines ?? [] };
-  });
+  const docs = inFlightDocs(root);
   for (const doc of docs) {
     violations.push(...documentViolations(doc));
   }

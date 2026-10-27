@@ -66,6 +66,15 @@ test("the clean fixture document passes every declared vocabulary", () => {
   }
 });
 
+test("#315 F6: a fenced off-vocabulary quote is the fold's evidence, not a violation", () => {
+  // The clean fixture quotes the F40 token inside a fenced block. Reading the
+  // section through the shared fence-aware reader keeps it out of the corpus;
+  // an inline fence walk that lost the open/close pairing would flag it and
+  // this case goes red — the durable check for the dead/duplicated walks F4/F6.
+  const clean = runProbe(FIXTURE_ROOT).violations.filter((violation) => /91-clean-future/.test(violation.file));
+  assert.deepEqual(clean, [], "the fenced `kept deferred` quote is exempt");
+});
+
 test("the repository's own head is in vocabulary", () => {
   const result = runProbe(ROOT);
   assert.equal(result.verdict, "PASS", `live violations: ${result.lines.join(" | ")}`);
@@ -86,7 +95,7 @@ test("the corpus rule is the documented one, re-derived from the indexes", () =>
   // An independent oracle for decision D3: a row is in flight when its status
   // cell is not settled and its doc exists and carries a dated progress entry.
   const derived = corpusFromTheIndexes(ROOT);
-  const probe = inFlightDocs(ROOT);
+  const probe = inFlightDocs(ROOT).map((doc) => doc.file);
   assert.deepEqual([...probe].sort(), [...derived].sort(), "the probe's corpus matches the re-derived set");
 });
 
