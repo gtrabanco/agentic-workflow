@@ -125,15 +125,6 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F1 | docs/features/ROADMAP.md:94 | verify | high | source | fold |
-| F2 | scripts/promise-coherence.mjs:342 | security | med | source | fold |
-| F3 | scripts/promise-coherence.mjs:435 | code | med | source | fold |
-| F4 | scripts/vocabulary-probe.mjs:64 | code | med | source | fold |
-| F5 | scripts/vocabulary-probe.mjs:199 | perf | med | source | fold |
-| F6 | scripts/vocabulary-probe.mjs:103 | code | med | source | fold |
-| F7 | scripts/promise-coherence.mjs:406 | code | med | source | fold |
-| F8 | scripts/structural-sibling-pins.mjs:125 | code | med | source | fold |
-| F12 | scripts/promise-coherence.mjs:206 | verify | med | source | fold |
 
 ## Triaged steps
 
@@ -226,11 +217,37 @@ Research, design and plan ran in the authoring turn (this doc, `sources.md`,
 - **V8** — 2026-10-27, F8 · reviewer review-change · HEAD `e835f158…` · recheck direct read: `allowlisted.has(path.basename(hit.file))` (`scripts/structural-sibling-pins.mjs:125`) — a same-named script in any subdirectory bypasses pin A.
 - **V9** — 2026-10-27, F12 · reviewer review-change · HEAD `e835f158…` · recheck command output: `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` → `claims: 0 checked · 7 skipped` (every validator command "outside the reader allowlist") — the gate's PASS on this doc is vacuous.
 - **V10** — 2026-10-27, refuted candidate (review-code) · HEAD `e835f158…` · counter-evidence: the `SWEEP_DECLARATION` grammar `(?:(?:[^/\\]|\\.)*)` forces every in-body `/` to be escaped, so `lastIndexOf("/")` in `parseSweepDeclaration:345` always lands on the closing delimiter — reproducer payloads with escaped-slash/escaped-backslash bodies extract identically via `slice(1, lastIndexOf("/"))` and via delimiter math. Not a row.
+- **F1** — 2026-10-27, folded — the head test no longer gates the root suite on the release step's own roadmap write (`done · [#330]` is the prescribed state once the PR exists, and a validator may not depend on a surface another actor mutates). The pin is now the corpus rule itself: the scanned set must equal the set independently re-derived from the roadmap and the fix index, both directions, and the non-vacuity witness moved to the frozen fixture corpus (asserted at exactly its two documents) — strictly stronger than `>= 1`. · commit 87afdf30
+  swept: /assert\.ok\(result\.documentsChecked >= 1/ → expected 0 in scripts/vocabulary-probe.test.mjs
+  swept: /documentsChecked >= 1/ → expected 1 in scripts/vocabulary-probe.test.mjs
+- **F2** — 2026-10-27, folded — the sweep's pattern body is bounded before it is compiled: `sweepPatternRefusal` refuses a body over 200 characters and a group quantified over its own quantified body (the recorded reproducer `(a+)+$` cost 83 s for five `test()` calls on one 29-character line). An outside-bound declaration fails closed naming which bound tripped, reusing the published `sweep-mismatch` reason — no vocabulary moved, so no schema mirror was due. The fixture declares both shapes and the suite asserts the refusal is a bound check, not a timed-out run. · commit 1fa35626
+  swept: /<pattern> is the stale form as a JS regex body, <flags> the flags/ → expected 0 in skills/execute-phase/references/FOLDING.md
+- **F3** — 2026-10-27, folded — `sweepCount` walked the file with `Buffer.byteLength` offsets while the declaring document's Log exemption is a `sectionBounds` string-index range; on any doc with non-ASCII before `## Log` the exemption mis-aligned and a clean fold failed its own declaration. The scan now walks string indices (CRLF-safe), and the two comments that called the ranges byte ranges are corrected. New corpus: a declaring doc whose drift before `## Log` is asserted to be real, so the case cannot go ASCII-only and stop proving anything. · commit 1fa35626
+  swept: /Buffer\.byteLength\(line, "utf8"\)/ → expected 0 in scripts/promise-coherence.mjs
+  swept: /as byte ranges to skip/ → expected 0 in scripts/promise-coherence.mjs
+- **F4** — 2026-10-27, folded — `outsideFences()` was dead: the only occurrence in the probe was its own definition while both section loops re-implemented the same walk. Deleted with the private `FENCE` const it depended on. · commit 4de8ea19
+  swept: /outsideFences/ → expected 0 in scripts/vocabulary-probe.mjs
+- **F5** — 2026-10-27, folded — every in-flight unit doc was read twice per probe run (once to filter on the dated progress entry, once again in `runProbe`). `inFlightDocs` now returns the `{ file, lines }` pairs and the probe consumes them directly; the scanned set is also exposed so a test can pin the corpus. · commit 4de8ea19
+  swept: /inFlightDocs\(root\)\.map/ → expected 0 in scripts/vocabulary-probe.mjs
+- **F6** — 2026-10-27, folded — the probe's three private fence walks collapsed into one `unfenced()` helper built on the shared reader's exported `openFence`/`closesFence`, the exact F37-class duplication this unit's S3 pin exists to refuse. The clean fixture gained a fenced F40 quote, so routing through the helper is proven to exempt the fold's own evidence rather than assumed. · commit 4de8ea19
+  swept: /let fence = null;/ → expected 1 in scripts/vocabulary-probe.mjs
+- **F7** — 2026-10-27, folded — the 5000-file ceiling was checked after `push` and `return`ed only out of the current recursion level, so sibling directories kept appending past the bound. The check now runs at the top of every walk level, the constant is named, and `sweepFiles(root, glob, maxFiles)` takes its ceiling so the bound is proven on a three-file corpus instead of a fabricated 5000-file one. · commit 1fa35626
+  swept: /if \(out\.length >= 5000\) return;/ → expected 0 in scripts/promise-coherence.mjs
+- **F8** — 2026-10-27, folded — `HEADING_READER_ALLOWLIST` was keyed by base name and matched with `path.basename(hit.file)`, so a script in any subdirectory that shared an allowlisted name bypassed pin A in silence. Hits now carry the repository-relative path and the filter compares whole paths; the non-vacuity pin got stronger with it — every key must still carry a heading search or the entry fails as prunable, replacing "some entry is still used". · commit e7db7293
+  swept: /path\.basename\(hit\.file\)/ → expected 0 in scripts/structural-sibling-pins*.mjs
+- **F12** — 2026-10-27, folded — the gate re-runs the class it can re-run safely: a claim whose command is `node`/`bun` plus a committed report validator (`phase-lint`, `check-skill-context`, `roadmap-settle`, `vocabulary-probe`, `structural-sibling-pins`) executes argv-style with no shell, no glob, no placeholder argument, never a `.test.mjs`, and never this gate's own file. The span search prefers a runnable command, so a cell whose first span is prose no longer hides its real validator, and every refusal names itself (`suite runner — this pass never executes the suite that runs it`; `this gate itself`). A document that extracted claims but machine-checked none now says so in its tally. This unit's own doc reads `2 checked · 5 skipped` where it read `0 checked · 7 skipped`. · commit 1fa35626
+  swept: /`bun …` or `gh …` from a document would make this pass/ → expected 0 in scripts/promise-coherence.mjs
+- **G2** — 2026-10-27, gate runs at `HEAD e7db7293` (the fold head; the ledger line that records them is the next commit and carries no code) — `node --test scripts/*.test.mjs` · exit 0 · `958 pass / 0 fail`; `bun run test` in `packages/agentic-workflow-schema` · exit 0 · 721/721; `bun run test` in `packages/agentic-workflow` · exit 0 · 254/254; `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` · exit 0 · 14 routes; `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · PASS; `bun scripts/normative-drift.test.mjs` · exit 0 · 20/20; `bun scripts/vocabulary-probe.mjs` · exit 0; `bun scripts/structural-sibling-pins.mjs` · exit 0; `bun scripts/roadmap-settle.mjs` · exit 0 · 0 violations.
+- **E14** — 2026-10-27, `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · `verdict PASS` — every `swept:` declaration above re-ran to its expected count at this head, and the tally reads checked claims, not only skips.
 
 ## Next
 
-P1–P7 closed; the PR is open and every phase's validator is green at the head.
-Next is the mandatory end review of the accumulated diff.
+Cycle-1 findings F1–F8 and F12 are folded and their rows left this table; the head
+carries the repairs. Next is the bounded re-review of the fold diff: `/review-change`
+on this branch (cycle 2, delta scope), then `/audit-pr` once it posts the exact-HEAD
+`review-change:pass` receipt. F9–F11 stay report-only notes and F13 the batched
+proposal — none of them is ledger work, and the third cycle never starts without an
+explicit owner instruction.
 
 ## References
 
