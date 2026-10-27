@@ -1,0 +1,22 @@
+# Obligations — unit 84 (published-vocabulary-sweep-gate)
+
+M/L unit: this file is the obligations ledger (sizing rule,
+`skills/unit-lane/references/PLAN.md`). Row shape, vocabularies and the status
+lifecycle are owned by `skills/pre-execution-review/references/LEDGERS.md` §2;
+ids are stable (`O1`, `O2`, …) and renaming one is a replan. Before the unit
+ships, every row is `verified` (or an evidenced `n/a`).
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | S1 / AC1 (owner words) | Every inventory-declared vocabulary has one canonical machine-readable declaration the prose surfaces cite | P1 | P1 | execute-phase | `node --test scripts/*.test.mjs` exits 0 | parity-test names + the census dated in the inventory rows | planned |
+| O2 | S1 / AC1 | Every second copy of a declared set is pinned by a parity test (LOG_KINDS/F22 pattern) | P1 | P1 | execute-phase | `node --test scripts/*.test.mjs` exits 0 | each pinned copy named in its test's assertion | planned |
+| O3 | S2 / AC2 | A fold changing a token/claim-shaped surface appends a `swept: <regex> → expected <n>` declaration its log entry carries | P3 | P3 | execute-phase | `node --test scripts/promise-coherence.test.mjs` exits 0 | sweep-claim fixtures (accepted + rejected) committed | planned |
+| O4 | S2 / AC2 | The gate re-runs each declared grep and fails closed naming `file:line`, the regex and the observed count; a seeded stale survivor fails | P3 | P3 | execute-phase | `node --test scripts/promise-coherence.test.mjs` exits 0 | rejected fixture naming all three fields | planned |
+| O5 | AC5 / PE-007 | The schema package mirrors any new published vocabulary (types + `envelope.schema.json` + version bump, same PR) | P3 | P3 | execute-phase | `cd packages/agentic-workflow-schema && bun run test` exits 0 | package version bump + CHANGELOG companion row in the PR diff | planned |
+| O6 | S3 / AC3 | The negative-capability pins fail on a fixture reintroducing the F37/F38/F39 pattern (inline `## `-heading search; echo path bypassing the one flatten class) | P5 | P5 | execute-phase | `node --test scripts/*.test.mjs` exits 0 | each pin's corpus case naming the motivating finding | planned |
+| O7 | S2 / AC4 / PE-006 | The sweep declaration is weak-model-executable (fixed grammar, fixed output, no judgment calls) and every touched skill bumps via `bump-skill` with the pi-package CHANGELOG row | P4 | P4 | execute-phase | `bun scripts/check-skill-context.mjs --routes` exits 0 | FOLDING.md box + `fold-findings` guardrail wording; version bumps in the same PR | planned |
+| O8 | S1 / AC1 | The vocabulary validator probe applies declared vocabularies across open unit docs' `## Future` rows and inventory-declared sections; an off-vocabulary token in a fixture fails the root suite naming `file:line` (corpus scope: open units + fixtures, decision D3) | P2 | P2 | execute-phase | `node --test scripts/vocabulary-probe.test.mjs` exits 0 | rejected fixture naming `file:line` + token | planned |
+| O9 | S4 / AC1 / PE-008 | The dated inventory census (published-but-unpinned vocabularies + reader/echo patterns) is recorded as the inventory rows and pins; fixtures precede the code that must reject them | P1 | P1 | execute-phase | `node --test scripts/*.test.mjs` exits 0 | dated census rows in `AGENTS.md` inventory + fixture-first commit order | planned |
+| O10 | AC5 / PE-010 | No existing test is deleted or loosened; root + both package suites stay green at the head | P6 | P6 | execute-phase | `node --test scripts/*.test.mjs` exits 0; `cd packages/agentic-workflow && bun run test` exits 0 | Evidence `E` lines re-run at the head naming pass counts | planned |
+| O11 | AC6 (#308 discipline) | Validators re-confirmed at the plan step: every task's validator command exists and its expected outcome is checkable | plan | — (ran in the authoring turn) | unit-lane | `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` exits 0 | phase-lint PASS on this SPEC | planned |
+| O12 | issue #315 §Out of scope | No historical unit doc is rewritten; no LSP verification; no new review authority; no memory-side persistence of norms | all | P1–P6 | execute-phase | `git diff --name-only main` lists no closed/historical unit doc | PR file list reviewed against the non-goals | planned |
