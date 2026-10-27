@@ -278,3 +278,85 @@ test("the trigger set is the closed AC2 list and the package dir is the Pi packa
   assert.deepEqual(TRIGGER_PREFIXES, ["skills/", "packages/pi-agentic-workflow/"]);
   assert.equal(PACKAGE_DIR, "packages/pi-agentic-workflow");
 });
+
+// --- local-authority rule (the registry-vs-local bind): a pin whose target has
+// --- a local package under packages/ is verified against the LOCAL version —
+// --- the one this merge will publish — not only against npmjs.
+
+function pinsLocal(deps, fetchLatest, localVersions) {
+  return evaluatePins({ packageName: PKG, dependencies: deps, fetchLatest, localVersions });
+}
+
+test("pins: pin equal to the local version passes even when the registry is behind (same-PR release)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+    () => "0.4.0",
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
+  assert.equal(r.violations.length, 0);
+  assert.ok(r.notices.some((n) => /local package version/.test(n.message)));
+});
+
+test("pins: pin below the registry fails even when it matches the local version (local behind registry)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.4.0" },
+    () => "0.5.0",
+    { "@gtrabanco/agentic-workflow": "0.4.0" },
+  );
+  assert.equal(r.violations.length, 1);
+  assert.match(r.violations[0].message, /registry published 0\.5\.0/);
+});
+
+test("pins: crate bumped in the same PR without the pin fails offline — the same-PR coupling is enforced", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.4.0" },
+    () => "0.4.0",
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
+  assert.equal(r.violations.length, 1);
+  assert.match(r.violations[0].message, /local package version is 0\.5\.0/);
+});
+
+test("pins: pin ahead of the registry that matches no local version fails (points at a version that will never exist)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.9.9" },
+    () => "0.4.0",
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
+  assert.equal(r.violations.length, 1);
+  assert.match(r.violations[0].message, /neither published nor the local package version/);
+});
+
+test("pins: registry unreachable + pin != local version still fails (the local check is offline-deterministic)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.4.0" },
+    () => {
+      throw new Error("network ECONNREFUSED");
+    },
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
+  assert.equal(r.violations.length, 1);
+  assert.equal(r.degraded.length, 1);
+});
+
+test("pins: registry unreachable + pin == local version is the degraded pass (AC3 preserved)", () => {
+  const r = pinsLocal(
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+    () => {
+      throw new Error("network ECONNREFUSED");
+    },
+    { "@gtrabanco/agentic-workflow": "0.5.0" },
+  );
+  assert.equal(r.violations.length, 0);
+  assert.equal(r.degraded.length, 1);
+});
+
+test("pins: a dependency with no local sibling keeps the registry-only rule", () => {
+  const r = pinsLocal(
+    { "external-dep": "1.0.0" },
+    () => "1.1.0",
+    {},
+  );
+  assert.equal(r.violations.length, 1);
+  assert.match(r.violations[0].message, /registry published 1\.1\.0/);
+});
