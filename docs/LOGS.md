@@ -3502,3 +3502,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verification and PR for issue #316 (roadmap settle is code)
 - **Decisions:** External verifier: read-only verification of all 4 commits on fix-316-roadmap-writer-call-sites against base 9da14169 — all tests green (7+43+17=67), sibling sweep clean, no blockers. Verdict: VERIFIED. PR #323 opened targeting main.
 - **Next:** Monitor PR #323 CI, merge once green. Continue fix-316 work if any follow-up items remain in the 316 unit doc.
+
+## 2026-10-27T14:18:00Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Diagnosed and fixed version-parity pin gate: pins verified only against npmjs created an unsolvable bind where every post-publish merge red-blocked all open PRs; the gate now verifies pins against the local package version (offline, AC3 preserved). Separately: closed bilingualism (row 57) by owner decision — bilingüismo moves to the web layer (#295), package stays 100% English permanently; closed issue #206 as superseded by #307 moving its kernel tier-conditional to T2; rescued 4 surviving ideas from closed #205/#218 into #318. Two PRs: #326 (deps pin, merge first) and #327 (gate fix, red until #326 merges).
+- **Decisions:** Pin gate: for every exact pin whose target has a local sibling package under packages/, the pin must equal the LOCAL version — the one the merge publishes, verified offline even when the registry is unreachable. Bilingualism: owner decided bilingüismo is a rendering concern of the upcoming web layer, the package stays English-only permanently (row 57 closed not_planned). Issue #206: closed superseded by #307 — research gate widened tier-conditional to T2 only, not uniform.
+- **Next:** Merge #326 → rebase #327 (its own gate check goes green after rebase) → merge #325 → then proceed to /product-audit scoped to doc-surfaces baseline, which is the prerequisite before unit #315.
