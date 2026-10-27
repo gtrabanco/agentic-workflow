@@ -185,8 +185,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13485,
-      "routeLinesMax": 1029,
+      "routeEstimateMax": 13496,
+      "routeLinesMax": 1030,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -198,7 +198,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 12173 est / 930 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(12173 x 1.10) = 13391 / ceil(930 x 1.10) = 1023",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12259 est / 935 lines, ceiling re-based to ceil(12259 x 1.10) = 13485 / ceil(935 x 1.10) = 1029"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12259 est / 935 lines, ceiling re-based to ceil(12259 x 1.10) = 13485 / ceil(935 x 1.10) = 1029",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 12269, lines 936; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:feature": {
@@ -215,8 +216,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -227,7 +228,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 11523 est / 885 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(11523 x 1.10) = 12676 / ceil(885 x 1.10) = 974",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:final-pr": {
@@ -245,8 +247,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13335,
-      "routeLinesMax": 1006,
+      "routeEstimateMax": 13346,
+      "routeLinesMax": 1007,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -258,7 +260,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 12036 est / 909 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(12036 x 1.10) = 13240 / ceil(909 x 1.10) = 1000",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12122 est / 914 lines, ceiling re-based to ceil(12122 x 1.10) = 13335 / ceil(914 x 1.10) = 1006"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12122 est / 914 lines, ceiling re-based to ceil(12122 x 1.10) = 13335 / ceil(914 x 1.10) = 1006",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 12132, lines 915; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:finding": {
@@ -275,8 +278,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -286,7 +289,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 11523 est / 885 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(11523 x 1.10) = 12676 / ceil(885 x 1.10) = 974",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:fix": {
@@ -303,8 +307,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -314,7 +318,8 @@
         "fix 258 / #258 harden-needs-input": "the needs-input contract moved into code (fix 258 P10–P11): the hand-written guard section was replaced by one named-policy section carrying the three-tier ladder and the pointer to scripts/needs-input.mjs, and the \"confirmed phase\"/\"confirmed file targets\" bullets were deleted (owner decisions F33-D/F34-D); ceiling re-based to ceil(measured x 1.10)",
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes and FOLDING's close rule now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows, re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10), reason declared.",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:legacy": {
@@ -331,8 +336,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -342,7 +347,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 11523 est / 885 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(11523 x 1.10) = 12676 / ceil(885 x 1.10) = 974",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:small": {
@@ -359,8 +365,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -371,7 +377,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 11523 est / 885 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(11523 x 1.10) = 12676 / ceil(885 x 1.10) = 974",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "execute-phase:unit-loop": {
@@ -388,8 +395,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12770,
-      "routeLinesMax": 979,
+      "routeEstimateMax": 12781,
+      "routeLinesMax": 981,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -397,7 +404,8 @@
         "feature 36 x fix/258 merge re-basis (PR #304)": "main-into-branch merge (PR #304): the rebase onto origin/main unions this branch's verification-contract / ACCEPTANCE-mandate growth with main's fix/258 needs-input contract, so every execute-phase:* route loads both and measures above either parent's ceiling. Route re-measured at this re-basis; estimate and line ceilings re-set to ceil(measured x 1.10). Growth sources: feature 36 (verification-contract 1.4.2 validator-determinism + ACCEPTANCE.md mandate) and fix/258 harden-needs-input, with feature 60 P3 path-protection checkpoint adoption already on main.",
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 11523 est / 885 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(11523 x 1.10) = 12676 / ceil(885 x 1.10) = 974",
-        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979"
+        "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
+        "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)"
       }
     },
     "review-change:adversarial": {

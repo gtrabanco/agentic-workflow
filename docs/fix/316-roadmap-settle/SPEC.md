@@ -156,6 +156,36 @@ Budget: strong
 Plan/implement/tests already ran (retrospective — P1–P4 in the Log above);
 remaining triaged steps: evidence, review, docs.
 
+### Planning evidence
+
+One row per claim the SPEC rests on. Every claim is either the issue's own words
+(quoted verbatim in `## Specs`) or a reproduction run on this candidate — no
+claim here is a guess.
+
+| id | claim | authority-kind | authority-source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | The crate's roadmap writer exists and is tested, but carries zero call sites and nothing verifies doc↔row. | issue-text | `#316` body, "The four layers, measured" table | current | O1, O2 |
+| PE-002 | A unit doc carrying a PR URL is offline-detectable against its own index row, with no forge call. | reproduced | `bun scripts/roadmap-settle.mjs` over the 77/79 frozen corpus — fails closed with `pr-url-unsettled` | current | O2 |
+| PE-003 | The transition is a `## Tasks` item, not a courtesy: the lane's plan step emits it and a skipped write fails the task. | issue-text | `#316` body, "Expected behaviour" third bullet | current | O3 |
+| PE-004 | The writer's separator rule refused this repository's own tables, so the writer the issue names could not write them. | reproduced | `packages/agentic-workflow/test/roadmap-check.test.mjs` separator cases; `SEPARATOR_RE` now accepts any pipes/dashes/colons rule | current | O1, O4 |
+| PE-005 | `roadmap rowUpsert` resolved a bare subcommand word as the table path, so the form the skills named could never run. | reproduced | scratch dir: `roadmap rowUpsert '{…}'` → `EDIT REFUSAL — ENOENT … rowUpsert`; after the repair → `usage…`, exit 2 | current | O4 |
+| PE-006 | A fix-index row is not an `NN`-headed roadmap table, so `rowUpsert` cannot settle a fix unit. | reproduced | scratch dir: `rowUpsert` over `docs/fix/README.md` → `Roadmap table header not found` | current | O4 |
+
+### Obligations
+
+One row per normative behaviour, compatibility invariant, affected use case, and
+required failure state. Every row is `verified` on this candidate — the validator
+in each row is the command that was run, with the outcome it produced.
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+| O1 | S1 | The close-out/release step **calls** the crate's writer instead of instructing it in prose; `unit-cycle` writes the row itself. | P3, P4 | P3, P4 | `execute-phase` | `bun test scripts/unit-cycle.test.mjs` exits 0 (45 pass, incl. the `settleRoadmapRow` cell-preservation case) | `## Log` E3, E7 | verified |
+| O2 | S2 | A unit doc that carries a PR URL whose row is not `done · [#N](same url)` fails closed **offline**, with a named code and no forge call. | P1, P2 | P1, P2 | `scripts/roadmap-settle.mjs` | `bun test scripts/roadmap-settle.test.mjs` exits 0 (8 pass, incl. the `--root`-without-value usage case) and `node --test packages/agentic-workflow/test/roadmap-check.test.mjs` exits 0 (18 pass) | `## Log` E1, E2 | verified |
+| O3 | S3 | The settle is a `## Tasks` item so the executor owns it and a skipped write is a failed task. | P4 | P4 | `unit-lane` plan step | `grep -c 'release-settle' skills/unit-lane/references/PLAN.md` matches ≥1 and `bun scripts/check-skill-context.mjs` exits 0 | `## Log` E5 | verified |
+| O4 | S4 | The writer's call sites name a form that executes, and the roadmap grammar keeps accepting the repository's real tables. | P1, P4 | P1, P4 | `agentic-workflow` crate | `node --test packages/agentic-workflow/test/roadmap-check.test.mjs` exits 0 (18 pass) and a bare `roadmap rowUpsert` exits 2 with usage | `## Log` E1, E9 | verified |
+| O5 | `## Regression scope` | Existing `rowUpsert`/`annotate` grammar and cell preservation are unchanged; `unit-cycle`'s prior actions and ordering are unchanged. | P1, P3 | P1, P3 | `agentic-workflow` crate | `node --test packages/agentic-workflow/test/edit.test.mjs` exits 0 and `bun test scripts/unit-cycle.test.mjs` exits 0 | `## Log` E3, E7 | verified |
+| O6 | S2 | The live tree stays green: no shipped unit doc fails the new gate. | P5 | P5 | `scripts/roadmap-settle.mjs` | `bun scripts/roadmap-settle.mjs` exits 0 · `verdict: PASS · violations: 0` | `## Log` E4 | verified |
+
 ## Findings
 
 OPEN rows only: a row a review persisted as fix-now work and no fold has closed
@@ -174,12 +204,6 @@ route | fold \| replan-in-unit \| decision-required \| product owner — … \| 
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F7 | S4 · PR #323 mergeability | mergeability | high | source | fold — the branch is CONFLICTING against `main` (`mergeable: CONFLICTING`, `mergeStateStatus: DIRTY`). Against the current `origin/main` `c893ea1a` (PR #324 merged mid-audit) `git merge-tree --write-tree --name-only origin/main HEAD` conflicts on exactly two files: `CHANGELOG.md` and `docs/fix/README.md`; `packages/pi-agentic-workflow/package.json` now auto-merges (originally a third conflict at `main` `c4cd5506`). No source file conflicts. Nothing is mergeable until the branch merges/rebase `main` and re-pushes |
-| F8 | S1 · docs/fix/316-roadmap-settle/SPEC.md (missing `### Obligations`) | pre-execution lineage | high | plan | replan-in-unit — `bun scripts/unit-lineage.mjs --unit 316-roadmap-settle` exits 1 `LINEAGE BLOCKED — no obligation ledger found`; the doc carries the `## Triaged steps` block (re-derives identically) but neither the embedded `### Obligations` section nor `planning-obligations.md`, and no `### Planning evidence`, so the plan hop is unsatisfiable per `skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` §Pre-execution lineage items 1–2 |
-| F9 | S4 · PR #323 `statusCheckRollup` | verification gate / CI | high | environment | fold — the head `e6251202` carries zero check runs (`gh api .../check-runs` → `total_count: 0`; `gh pr view --json statusCheckRollup` → `[]`), so no forge evidence exists at the audited head; the Root suite does pass locally at that head (`node --test scripts/*.test.mjs` → 905/905). A push that resolves F7 is what produces the missing run |
-| F10 | S4 · PR #323 body | traceability | high | source | fold — the body carries no `Closes #316`, which the governing SPEC's `## Issue` section (line 14) makes mandatory for issue-born work; the fix-index row itself is correct and settled (`docs/fix/README.md:17` — `done` · `[#323](…)`) |
-| F11 | S4 · docs/fix/316-roadmap-settle/SPEC.md:340-344 | docs | high | source | fold — the `## Next` close-out block still states `bun scripts/review-receipt.mjs verify --pr 323` exited 3 (`missing-review-receipt`) and that `/audit-pr` must not run; the receipt is now current at the head (`scripts/review-receipt.mjs verify --pr 323` exits 0, marker sha `e6251202…`), so the section contradicts the artifact state it describes (the `## Review verdict` section likewise stops at cycle 2 while `## Log` records cycle 3 / R3) |
-| F12 | S1 · skills/execute-phase/SKILL.md:186 · skills/unit-lane/references/RELEASE.md:33 | contract consistency | high | source | triage-issue — review report-notes F3–F6 were left standing by cycle 2 with no tracked destination (no issue, no ledger row). F4 is the material one and was verified at this head: both call sites instruct a bare `agentic-workflow roadmap rowUpsert` with no path, and that argv is not executable — `packages/agentic-workflow/bin/agentic-workflow.mjs:228` computes `resolve(rawArgs[0])` before testing for the subcommand, so the word `rowUpsert` becomes the file path and every bare invocation refuses with `EDIT REFUSAL — ENOENT: … rowUpsert` (exit 2, reproduced in a scratch dir). The pre-existing CLI defect is `main`'s (line 213 there), but S1 asks for these call sites and they cannot run as written; the working form is `roadmap <path> rowUpsert '<json>'` (verified: `EDIT roadmap.rowUpsert … Receipt: pass`). Fix units are doubly wrong — `docs/fix/README.md` is not an `NN`-headed roadmap table, so `rowUpsert` refuses `Roadmap table header not found`, which is exactly the case `scripts/unit-cycle.mjs:430-431` exempts in code (`if (!isFix && nn)`); this very unit is a fix unit. F5 reproduced too: `node scripts/roadmap-settle.mjs --root` exits 1 with a raw `validateString` stack trace instead of the documented exit 2 (line 50: `path.resolve(argv[++i])` on a missing value) |
 
 ## Review verdict
 
@@ -214,6 +238,27 @@ F1 re-verified fixed (argv order + 2 new tests + scratch-repo commit run);
 F2 resolved by documentation (D3). Report-notes are informational, not blockers;
 F4 is the strongest — it stays visible as a re-trigger condition for a future
 fix-unit routing pass.
+
+### Cycle 3 — 2026-10-27, delta-scoped, after the post-PASS record commits
+
+```
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 2 low report-notes
+- Evidence reproduced: yes
+- AC integrity: unchanged from triage
+```
+
+The delta since cycle 2's head was the post-PASS record commits (unit-doc log
+lines only). The two low notes: G3 sits above G1 in the `## Log` (append-only,
+left in place), and R1's "gates exit 0" is unqualified — the settle gates
+passed, `diff-guard` excepted per D2. Folded rows F1/F2 re-verified.
+
+### Cycle 4 — 2026-10-27, the audit's blockers repaired (this commit range)
+
+No review has run over this range yet — the `audit-pr` pass that produced
+findings F7–F12 moved the head, so the cycle-3 receipt is void and the next
+review is `/review-change 316-roadmap-settle`, not a new verdict here. What the
+range contains is recorded in `## Log` as F7–F12's fold lines.
 
 ## Log
 
@@ -341,13 +386,29 @@ token from `log-kind@1`.
 - **G4** — 2026-10-27, gate runs at `HEAD 783b57f1` — `node --test scripts/*.test.mjs` · exit 0 · 905 pass / 0 fail; `bun test scripts/unit-cycle.test.mjs` · exit 0 · 45 pass / 0 fail; `node --test packages/agentic-workflow/test/roadmap-check.test.mjs` · exit 0; `bun test scripts/roadmap-settle.test.mjs` · exit 0 · 7 pass / 0 fail; `bun scripts/roadmap-settle.mjs` (live tree) · exit 0 · `verdict: PASS · violations: 0` over 110 unit docs; `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills.
 - **R3** — 2026-10-27, review run — `HEAD 783b57f1`, delta-scoped cycle 3 (delta since the cycle-2 head: the post-PASS record commits fc36bfe3 + 783b57f1, unit-doc log lines only), verdict **PASS**, gates exit 0 (G4). 0 material; 2 low report-notes (G3 sits above G1 in this log — insert position, left in place per append-only; R1's "gates exit 0" unqualified — the settle gates, diff-guard excepted per D2). Folded rows re-verified: F1 fixed (`settleCommitArgs()` `-m` before `--`, scripts/unit-cycle.mjs:543, 45 tests), F2 resolved by D3 (direct read). Findings table stays empty; receipt emitted at the head of the record commit below.
 
+- **F7** — 2026-10-27, folded — the `main` conflict is gone: the branch was rebased onto `origin/main` (`c893ea1a`, which had meanwhile merged #324). Two files conflicted and both resolved on the base's intent: `CHANGELOG.md` (main's 0.35.0 kept, this unit re-cut as 0.35.1) and `docs/fix/README.md` (main had cleared the index of merged entries; only the #316 row returns). Nothing was deleted to make a merge pass.
+- **F8** — 2026-10-27, folded — the obligation ledger exists: `### Planning evidence` (PE-001…PE-006) and `### Obligations` (O1…O6, every row `verified` with the validator that ran) join the unit doc. `bun scripts/unit-lineage.mjs --unit 316-roadmap-settle` → `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (6)`.
+- **F9** — 2026-10-27, folded — the head that carries the repairs is the one that produces the forge run; the pre-repair head carried zero check runs. Local gate at this head: `node --test scripts/*.test.mjs` 922/922, crate suite 254/254, `bun scripts/roadmap-settle.mjs` PASS over 110 unit docs, `bun scripts/check-skill-context.mjs` (skills and `--routes`) exit 0.
+- **F10** — 2026-10-27, folded — `Closes #316` added to the PR #323 body; the fix-index row stays `done` · `[#323](…)`.
+- **F11** — 2026-10-27, folded — `## Next` rewritten to this head's real state (receipt stale, hand-off `/review-change`) and the cycle-3 verdict block recorded, so the section no longer contradicts the receipt it describes.
+- **F12** — 2026-10-27, folded — F3: `unit-cycle` grades the settle through the crate's `checkUnitDoc` (one rule, exact URL) instead of its own `[#N](`-prefix test. F4: both call sites name the executable form and the kind boundary, and a bare `roadmap rowUpsert`/`annotate` is a usage error rather than a filename. F5: `roadmap-settle --root` with no value exits 2 with usage. F6 is moot — `main` had already settled roadmap row 77, so the rebase carries no out-of-scope live edit.
+- **D4** — 2026-10-27, owner-noted decision: writing the ledger exposed a defect in the gate it had to pass — `scripts/unit-lineage.mjs`'s `subsectionBody` preferred the first `###` heading found anywhere over a nearer `##`, so the `### Obligations` section swallowed the following `## Findings` table and reported F7–F12 as open obligations. Fixed to stop at the nearest `##`/`###`, with a regression test; the defect would have blocked every unit doc carrying a findings table.
+- **D5** — 2026-10-27, owner-noted decision: the pi package re-cuts to **0.35.1** because `main` published 0.35.0 (#321, the Serena bridge replacement) while this branch was open; shipping 0.35.0 again would publish nothing. The crate keeps **0.5.0** (above `main`'s 0.4.0, no collision). D3's row-244 rename is moot on the rebased base: `main` had already removed that row.
+
 ## Next
 
-Close-out ladder ran: the receipt stage verified
-`bun scripts/review-receipt.mjs verify --pr 323` → exit 3 (`missing-review-receipt`
-— no `REVIEW-PASS` marker with `contract=v1` in the PR comments). No current
-receipt exists, so the closing hand-off is `/review-change 316-roadmap-settle`
-— `/audit-pr` is never named before its precondition exists.
+The receipt is **stale**: the audit pass that produced findings F7–F12 moved the
+head past the `REVIEW-PASS` marker (`sha=e6251202…`), and the repair commits
+below moved it again. `bun scripts/review-receipt.mjs verify --pr 323` answers
+`stale` at this head, so the closing hand-off is
+`/review-change 316-roadmap-settle`, then `/audit-pr 323`.
+
+The blockers that pass cleared, so the next audit re-checks rather than
+re-discovers: F7 (rebase onto `main`), F8 (the obligations ledger, plus the
+`subsectionBody` section-boundary defect it exposed), F9 (the push that produces
+the CI run), F10 (`Closes #316` on the PR body), F11 (this section and the
+cycle-3 verdict block), F12 (the writer's call sites, the single settle grader,
+the `--root` usage path).
 
 ## References
 
