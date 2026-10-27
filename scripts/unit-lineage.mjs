@@ -45,6 +45,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { sectionBounds } from "./unit-doc-phases.mjs";
 
 /** Unescaped-pipe cell split — a markdown table escapes a literal `\|`. */
 const CELL_RE = /(?<!\\)\|/;
@@ -52,13 +53,16 @@ const CELL_RE = /(?<!\\)\|/;
 /** The three triage lines the currency check compares, verbatim. */
 const TRIAGE_LINE_NAMES = ["Steps", "Skipped", "Budget"];
 
-/** Body of a `## <name>` section (to the next `## ` heading), or `null`. */
+/** Body of a `## <name>` section (after its heading line), or `null`.
+ *  Delegates to the shared fence-aware reader (`unit-doc-phases.sectionBounds`):
+ *  a fenced block inside the section never truncates it — the
+ *  fence-blind inline copy this replaces is the F37/F38/F39 defect class
+ *  (unit 84, issue #315 S3 pin). */
 export function sectionBody(text, name) {
-  const m = new RegExp(`^## ${name}\\s*$`, "m").exec(text);
-  if (!m) return null;
-  const rest = text.slice(m.index + m[0].length);
-  const next = /^## /m.exec(rest);
-  return next ? rest.slice(0, next.index) : rest;
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  return text.slice(after, bounds[1]);
 }
 
 /** The first fenced code block inside a section body, or `null`. */

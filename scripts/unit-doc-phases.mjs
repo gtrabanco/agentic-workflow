@@ -355,6 +355,10 @@ export function sectionBounds(text, name) {
       continue;
     }
     if (H2_HEADING.test(trimmed)) return [start, offset];
+    // Advance past this line before the loop's `offset++` skips the newline;
+    // without it the loop re-slices the same line once per character — the F7
+    // quadratic class, found by the unit-84 sibling pin on a 50k-char log line.
+    offset = lineEnd;
   }
   return start === null ? null : [start, text.length];
 }

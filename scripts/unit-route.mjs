@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseUnitDocPhases, loggedPhases, parseLog, sectionText } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, loggedPhases, parseLog, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -502,12 +502,13 @@ function frontmatterOf(text) {
 }
 
 export function sectionBody(text, name) {
-  const re = new RegExp(`^## ${name}\\s*$`, "m");
-  const m = re.exec(text);
-  if (!m) return null;
-  const rest = text.slice(m.index + m[0].length);
-  const next = /^## /m.exec(rest);
-  return next ? rest.slice(0, next.index) : rest;
+  // The shared fence-aware reader: a fenced block inside the section never
+  // truncates it. The fence-blind inline copy this replaces is the
+  // F37/F38/F39 defect class (unit 84, issue #315 S3 pin).
+  const bounds = sectionBounds(text, name);
+  if (bounds === null) return null;
+  const after = text.indexOf("\n", bounds[0]) + 1;
+  return text.slice(after, bounds[1]);
 }
 
 function unitFacts(doc, unitDir) {
