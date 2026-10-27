@@ -280,6 +280,20 @@ assert.match(foldProcess, /product owner[\s\S]{0,400}product-owned[\s\S]{0,400}o
 // asserts the freeze-batch table uses the same predicate.
 assert.match(foldProcess, /head-anchored/);
 
+// 10e2/#293 F25. The emitted-branch mapping is pinned, not just the table row:
+// the paragraph that decides which branch a freeze-batch selects must pair
+// `frozen (replan present)` with `REPLAN-ROUTE` and `frozen (product owner
+// present)` with `PRODUCT-ROUTE`. Without this pin, rewriting the sentence so
+// every freeze-batch selects `REPLAN-ROUTE` leaves the suite green (F25).
+{
+  const emittedBranch = foldProcess.match(
+    /a freeze-batch selects `([^`]+)` for a `frozen \(replan present\)` batch[\s\S]{0,200}?and `([^`]+)` for a `frozen \(product owner present\)` batch/,
+  );
+  assert.ok(emittedBranch, "FOLD_PROCESS.md must state the emitted branch for each freeze-batch class");
+  assert.equal(emittedBranch[1], "REPLAN-ROUTE", "a frozen (replan present) batch must select REPLAN-ROUTE");
+  assert.equal(emittedBranch[2], "PRODUCT-ROUTE", "a frozen (product owner present) batch must select PRODUCT-ROUTE");
+}
+
 // 10f. Four-branch closing block + the literal no-decision→re-review default.
 assert.match(foldSkill, /RE-REVIEW-REQUIRED \(delta\)/);
 assert.match(foldSkill, /RE-REVIEW-OPTIONAL/);
