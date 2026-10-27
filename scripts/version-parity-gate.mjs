@@ -18,12 +18,19 @@
  *               stale skills (live 2026-10-15: registry 0.19.1's bundle 5 files
  *               behind main's skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
- *   --pins      Online. For every exact `dependencies` pin, compares the
- *               registry's latest version against the pin; registry > pin ⇒
- *               fail with the fix in the message ("bump the pin + the package
- *               version in the same PR"). A registry that cannot be reached is
- *               a clearly-degraded pass (visible ::warning::, exit 0) — a
- *               network blip must never redden a PR no commit caused (AC3).
+ *   --pins      Online + offline. For every exact `dependencies` pin whose
+ *               target has a local sibling package under `packages/`, the pin
+ *               must equal the LOCAL package version (the one this merge
+ *               publishes) — a pin behind it recreates the post-publish red
+ *               window, a pin ahead of everything points at a version that
+ *               will never exist; this check is offline-deterministic and
+ *               holds even when the registry is unreachable. Without a local
+ *               sibling, the registry's latest is compared against the pin;
+ *               registry > pin ⇒ fail with the fix in the message ("bump the
+ *               pin + the package version in the same PR"). A registry that
+ *               cannot be reached is a clearly-degraded pass (visible
+ *               ::warning::, exit 0) — a network blip must never redden a PR
+ *               no commit caused (AC3).
  *               peerDependencies and non-exact specs are skipped with a notice
  *               (peer ranges are ranges by nature; the exact-pin rule for
  *               `dependencies` is the package's own lockfile-policy test's job).
@@ -288,10 +295,11 @@ function runContent({ base }) {
  * latest version string or throws (the CLI wires it to `npm view <name>
  * version`; tests inject fakes).
  */
-export function evaluatePins({ packageName, dependencies, fetchLatest }) {
+export function evaluatePins({ packageName, dependencies, fetchLatest, localVersions }) {
   const violations = [];
   const degraded = [];
   const skipped = [];
+  const notices = [];
   for (const [name, spec] of Object.entries(dependencies ?? {})) {
     if (!isExactSemver(spec)) {
       skipped.push({
@@ -309,9 +317,13 @@ export function evaluatePins({ packageName, dependencies, fetchLatest }) {
         name,
         message: `registry unreachable for ${name}: ${String(err?.message ?? err).split("\n")[0]}`,
       });
-      continue;
+      latest = undefined;
     }
-    if (semverGt(latest, spec)) {
+    const localVersion = localVersions?.[name];
+    // Registry rule first (precedence over the local check): a pin behind the
+    // published latest is a violation even when it matches the local package —
+    // that is a branch off an outdated main, and rebasing is the fix.
+    if (latest !== undefined && semverGt(latest, spec)) {
       violations.push({
         name,
         pin: spec,
@@ -321,9 +333,36 @@ export function evaluatePins({ packageName, dependencies, fetchLatest }) {
           `  ${packageName} pins ${name} at ${spec} but the registry published ${latest}.\n` +
           `  Fix: bump the pin + the package version in the same PR (consumers cannot reach the newer package while the pin holds).`,
       });
+      continue;
+    }
+    // Local rule: a pin whose target has a local package under packages/ is
+    // verified against the LOCAL version — the one this merge will publish —
+    // closing the registry-vs-local bind: a pin behind it recreates the
+    // post-publish red window, a pin ahead of everything points at a version
+    // that will never exist. Offline-deterministic: it holds even when the
+    // registry is unreachable (a network blip still degrades, never fails, a
+    // pin that matches its local package — AC3).
+    if (localVersion !== undefined) {
+      if (spec !== localVersion) {
+        violations.push({
+          name,
+          pin: spec,
+          localVersion,
+          message:
+            `GATE REJECTION — dependency-pin-drift\n` +
+            `  ${packageName} pins ${name} at ${spec} but the local package version is ${localVersion}.\n` +
+            `  The pin points at a version that is neither published nor the local package version.\n` +
+            `  Fix: bump the pin to the local package version in the same PR (the merge publishes it; consumers cannot reach a package the pin does not name).`,
+        });
+        continue;
+      }
+      notices.push({
+        name,
+        message: `${name}: pin ${spec} matches the local package version (verified offline; the merge publishes it when the registry is behind)`,
+      });
     }
   }
-  return { violations, degraded, skipped };
+  return { violations, degraded, skipped, notices };
 }
 
 /** npm view as the registry fetcher; throws on any failure (degraded path). */
@@ -340,6 +379,22 @@ function npmLatest(name) {
   return r.stdout.trim();
 }
 
+/** The local sibling packages' name → version at HEAD — the offline authority
+ * a pin is verified against alongside the registry (the merge publishes them). */
+export function localPackageVersions() {
+  const packagesDir = path.join(REPO_ROOT, "packages");
+  const versions = {};
+  if (!fs.existsSync(packagesDir)) return versions;
+  for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const pkgJsonPath = path.join(packagesDir, entry.name, "package.json");
+    if (!fs.existsSync(pkgJsonPath)) continue;
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+    if (pkg.name && pkg.version) versions[pkg.name] = String(pkg.version);
+  }
+  return versions;
+}
+
 function runPins({ packageDir }) {
   const pkgJsonPath = path.join(packageDir, "package.json");
   const pkg = JSON.parse(fs.readFileSync(path.resolve(REPO_ROOT, pkgJsonPath), "utf8"));
@@ -348,10 +403,12 @@ function runPins({ packageDir }) {
     packageName,
     dependencies: pkg.dependencies ?? {},
     fetchLatest: npmLatest,
+    localVersions: localPackageVersions(),
   });
   console.log(`VERSION-PARITY-GATE (pins) — ${packageName}`);
   console.log(`exact pins checked: ${Object.keys(pkg.dependencies ?? {}).length - result.skipped.length}`);
   for (const s of result.skipped) console.log(`notice: ${s.message}`);
+  for (const n of result.notices) console.log(`notice: ${n.message}`);
   for (const d of result.degraded) console.log(`::warning::${d.message} — gate degraded, not failed (AC3)`);
   for (const v of result.violations) console.log(v.message);
   console.log(`VERDICT: ${result.violations.length === 0 ? "PASS" : "FAIL"}${result.degraded.length ? " (degraded)" : ""}`);
