@@ -22,6 +22,7 @@ import {
   researchDoneFrom,
   parsePrNumber,
   parsePrUrl,
+  settleCommitArgs,
   settleRoadmapRow,
   phaseOrder,
   runCycle,
@@ -426,4 +427,22 @@ test("runCycle: review and audit acts are exempt from the commit expectation", a
     act: async () => {},
   });
   assert.equal(result.outcome, OUTCOME.DONE);
+});
+
+test("settleCommitArgs: the -m option precedes the -- separator (F1: after -- every token is a pathspec, so the settle commit failed unconditionally)", () => {
+  const argv = settleCommitArgs({ unit: "80-example", prNumber: 323, prUrl: "https://github.com/gtrabanco/agentic-workflow/pull/323" });
+  assert.equal(argv[0], "commit");
+  const separator = argv.indexOf("--");
+  assert.ok(separator > 0, "argv carries a -- separator");
+  // Everything after -- is a pathspec: the -m flag and its message must sit before it.
+  assert.ok(argv.indexOf("-m") > 0 && argv.indexOf("-m") < separator, "-m precedes --");
+  assert.equal(argv[separator + 1], "docs/features/ROADMAP.md");
+  const message = argv[argv.indexOf("-m") + 1];
+  assert.match(message, /settle 80-example — done · \[#323\]\(https:\/\/github\.com\/gtrabanco\/agentic-workflow\/pull\/323\)/);
+});
+
+test("settleCommitArgs: the only pathspec is the roadmap table (no stray option lands after --)", () => {
+  const argv = settleCommitArgs({ unit: "316-roadmap-settle", prNumber: 1, prUrl: "https://example.test/pr/1" });
+  const separator = argv.indexOf("--");
+  assert.deepEqual(argv.slice(separator + 1), ["docs/features/ROADMAP.md"]);
 });
