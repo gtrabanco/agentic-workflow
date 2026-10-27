@@ -3472,3 +3472,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Bun-first for all manual script invocation; node-deliberate only for the root suite (single-process bun terminates the run on one file's exit). The runner pin move 0.2.0→0.4.0 is additive only (memory probe, feature 66 P1) — no API break. Both PRs verified locally: version-parity --pins PASS, --content PASS, pi suite 471 pass, root suite 889 pass (node).
 - **Next:** Merge #322, rebase #320 on top → both green. The fix index and 14 merged units with stale `folded: no` rows → /triage-issue. Residual drift: 10 usage strings in scripts/*.mjs need bun-first form, bun suite trap in pre-execution-quality.test.mjs needs a fix unit.
 
+## 2026-10-27T08:48:28Z — fix-serena-mcp — manual
+- **Commits:** 5 (`f930223a…9b2ea505`)
+- **Files:** 12 files
+- **Summary:** Replace the @bacnh85/pi-serena bridge with native Serena MCP registration (#321)
+- **Decisions:** Replaced the @bacnh85/pi-serena bridge (which coupled pi to Serena's internal Python APIs and predates v2.0.0) with pi's native MCP support (pi mcp add serena -- serena start-mcp-server --context claude-code). The installed version chain was reworked to read from the tool itself (serena --version -> uv tool list -> pip show fallback) because pip show cannot see the uv tool install route documented by the repo. PyPI fetch moved to curl against PyPI's JSON API (pip index versions fallback). External verification blocked the PyPI half on realistic input and the fix was applied in a correction batch.
+- **Next:** PR #324 is open (fix-serena-mcp -> main) awaiting CI green and human merge. Pending by design: AC2 live tool-reachability in a session (consent-gated, closes with the first real /init-workspace run with Serena).

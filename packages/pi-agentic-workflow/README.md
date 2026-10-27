@@ -146,16 +146,27 @@ set of routes, and you can define as many as you like under `profiles`:
   The built-in `nan` profile is shown but not editable — create a profile to
   override it.
 
-## Serena (ships by default)
+## Serena (native MCP registration)
 
-Installing this package also gives you **Serena's language-server tools** —
-`serena_find_symbol`, `serena_find_referencing_symbols`,
-`serena_get_symbols_overview`, `serena_find_declaration`, diagnostics and the
-rest. Two declarations make that work, and they ship together: the exact-pinned
-`@bacnh85/pi-serena` dependency, and a second `pi.extensions` entry pointing at
-that dependency's own extension. Pi installs a package's dependencies but
-activates only the package's own `pi.extensions` entries, so the pin alone would
-install a toolset nothing ever loaded.
+Serena's language-server tools reach pi through Serena's own MCP server — the
+interface Serena documents, tests and keeps version-stable — not through a
+bundled bridge. This package ships no Serena dependency; provisioning is one
+consented step:
+
+```sh
+pi mcp add serena -- serena start-mcp-server --context claude-code
+pi mcp list   # verifies the connection
+```
+
+That writes the user-level `~/.pi/agent/mcp.json` (add `--local` for a
+project-level `.pi/mcp.json`, read only after project trust is granted). The
+tools appear under the `mcp__serena__<tool>` namespace — `find_symbol`,
+`find_referencing_symbols`, `get_symbols_overview`, `get_diagnostics` and the
+rest — and pi's per-server `toolExposure` config narrows the surface if the
+full toolset is more than a session needs. The machine half is the same local
+tool as before: `uv tool install -p 3.13 serena-agent` (or `/init-workspace`,
+which offers the install, the registration and the global trust append in one
+consented question).
 
 **You must run `/init-workspace` once per project.** This package never writes or
 repairs `.serena/project.yml` — `init-workspace` is its only writer, so there is
@@ -165,27 +176,12 @@ missing, lists no `language_servers`, or was provisioned by an older bundled
 `/init-workspace`; the latch lives in this package's state file, so a restart does
 not re-nag.
 
-Serena itself is a local tool: install the machine half with `uv tool install -p
-3.13 serena-agent` (or `/init-workspace`, which offers it). Nothing is uploaded
-and no key is configured.
+Nothing is uploaded and no key is configured.
 
-**Switching it off.** pi owns package resources, so the off switch is pi's, not a
-key of ours: `pi config` opens the resource picker (tab switches scope) and lets
-you disable the package's resources, and the same filter is expressible in
-settings under `packages`:
-
-```json
-{
-  "packages": [
-    { "source": "npm:@gtrabanco/pi-agentic-workflow", "extensions": ["./dist/extension/index.js"] }
-  ]
-}
-```
-
-That keeps the workflow's own extension and commands and drops the Serena
-extension entry, so the `serena_*` tools are never registered. There is no
-settings key inside this package for it: the entry is declared in the manifest,
-and a config key cannot gate a manifest-declared extension.
+**Switching it off.** Serena is an MCP server now, so pi's own MCP controls are
+the off switch: `pi mcp remove serena` unregisters it, `/mcp` inside a session
+disables or re-enables it, or set `"enabled": false` on the entry in
+`~/.pi/agent/mcp.json` to keep it listed but disconnected.
 
 ## Path protection (optional)
 

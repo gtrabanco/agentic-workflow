@@ -18,16 +18,22 @@ import { test } from "node:test";
 
 import {
   collectDrift,
+  collectPyPIDrift,
   driftMarker,
+  installedVersion,
   planIssues,
+  parsePypiLatest,
+  pypiIssueFor,
+  pypiLatest,
   renderReport,
   watchedPackages,
+  watchedPyPI,
 } from "./pin-watch.mjs";
 
 const PI = "@gtrabanco/pi-agentic-workflow";
 const RUNNER = "@gtrabanco/agentic-workflow";
 
-/** Two packages, exactly as `--check` discovers them. */
+/** Two synthetic offline packages — the real manifest no longer carries the bridge pin (issue #321), which the shipped-wiring test below asserts. */
 function packages(overrides = {}) {
   return [
     {
@@ -335,10 +341,20 @@ test("the watch discovers the shipped packages and their exact pins", () => {
   assert.ok(names.includes("@gtrabanco/pi-agentic-workflow"), `missing the Pi package in ${names.join(", ")}`);
   assert.ok(names.includes("@gtrabanco/agentic-workflow"), `missing the runner in ${names.join(", ")}`);
 
-  // The Pi package's Serena pin is the one this unit added (P1): the watch must
-  // see it, or a stale Serena toolset would never be reported.
+  // Issue #321: the bridge pin is gone. The watch must not resurrect it — and
+  // if it ever reappears in the manifest, that IS drift worth reporting.
   const pi = packages.find((pkg) => pkg.name === "@gtrabanco/pi-agentic-workflow");
-  assert.ok("@bacnh85/pi-serena" in pi.dependencies, "the Serena pin is not watched");
+  assert.ok(!("@bacnh85/pi-serena" in pi.dependencies), "the bridge pin is removed (issue #321) and must stay gone");
+});
+
+// ---------------------------------------------------------------------------
+// the PyPI half (issue #321 S5: "Extend `pin-watch` to check `serena-agent` on
+// PyPI (installed vs latest) and file a drift issue — never a silent upgrade")
+// ---------------------------------------------------------------------------
+
+test("the PyPI watch lists serena-agent (issue #321)", () => {
+  const entries = watchedPyPI();
+  assert.ok(entries.some((entry) => entry.name === "serena-agent"), `serena-agent is not watched, got ${JSON.stringify(entries)}`);
 });
 
 test("the watch's report never proposes a bump — the fix is always a human PR", () => {
@@ -350,4 +366,200 @@ test("the watch's report never proposes a bump — the fix is always a human PR"
 
   assert.match(report, /fix\(deps\)/u);
   assert.doesNotMatch(report, /bumped|upgraded to|applied/u, "the watch reports; the upgrade is a deliberate PR (PE-005)");
+});
+
+// ---------------------------------------------------------------------------
+// PyPI drift (issue #321): installed vs latest, with both sides injected so
+// no test touches the system pip or the network.
+// ---------------------------------------------------------------------------
+
+/** A pypi stub: `versions` maps a package name to its published latest. */
+function pypiRegistry(versions) {
+  return (name) => {
+    if (!(name in versions)) throw new Error(`404 ${name} not found on PyPI`);
+    return versions[name];
+  };
+}
+
+test("pypi drift: an installed version behind PyPI is a finding naming both versions", () => {
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: () => "1.7.0",
+  });
+
+  assert.equal(result.findings.length, 1);
+  const [finding] = result.findings;
+  assert.equal(finding.name, "serena-agent");
+  assert.equal(finding.installed, "1.7.0");
+  assert.equal(finding.latest, "2.1.0");
+  assert.equal(finding.registry, "pypi.org");
+  assert.equal(result.ok, false, "a drift fails the run");
+});
+
+test("pypi clean: installed equal to latest is no drift", () => {
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: () => "2.1.0",
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.checked, 1);
+  assert.match(renderReport(result), /no drift/u);
+});
+
+test("pypi clean: an installed version ahead of PyPI (local build) is not drift", () => {
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: () => "2.2.0",
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.findings, []);
+});
+
+test("pypi degraded: an unreachable PyPI never fails and never reads as drift", () => {
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: () => {
+      throw new Error("ECONNREFUSED pypi.org");
+    },
+    readInstalled: () => "1.7.0",
+  });
+
+  assert.equal(result.ok, true, "a network blip must not redden a scheduled run");
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.degraded.length, 1);
+  assert.match(renderReport(result), /degraded/u);
+});
+
+test("pypi skipped: a package not installed on the machine is skipped, never degraded", () => {
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: () => null,
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.degraded.length, 0);
+  assert.equal(result.skipped.length, 1);
+  assert.match(result.skipped[0].message, /not installed/u);
+});
+
+test("pypi issue: the filed issue names the installed and published versions", () => {
+  const issue = pypiIssueFor({ name: "serena-agent", registry: "pypi.org", installed: "1.7.0", latest: "2.1.0" });
+
+  assert.match(issue.title, /serena-agent/u);
+  assert.match(issue.title, /PyPI/u);
+  assert.match(issue.body, /1\.7\.0/u, "the body names the installed version");
+  assert.match(issue.body, /2\.1\.0/u, "the body names the published version");
+  assert.doesNotMatch(JSON.stringify(issue), /uv tool upgrade [^\n]*automat/u, "the issue proposes a manual step, never a silent upgrade");
+});
+
+// ---------------------------------------------------------------------------
+// installed-version detection (external-verify correction batch: `pip show`
+// never sees the `uv tool install` route this repo documents — the uv-tool
+// venv is isolated from pip, and the pip binary may not exist at all)
+// ---------------------------------------------------------------------------
+
+/** A probe stub keyed by "<bin> <args...>" → stdout; a miss reads as absent/failed (null). */
+function probeStub(map) {
+  return (bin, args) => {
+    const key = `${bin} ${args.join(" ")}`;
+    return key in map ? map[key] : null;
+  };
+}
+
+test("installed-version: the tool's own binary answers first and the chain stops there", () => {
+  const calls = [];
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: (bin, args) => { calls.push(`${bin} ${args.join(" ")}`); return "Serena 2.1.0\n"; } },
+  );
+
+  assert.equal(version, "2.1.0");
+  assert.deepEqual(calls, ["serena --version"], "once a source answers, uv/pip are not consulted");
+});
+
+test("installed-version: `uv tool list` answers when the binary is absent", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: probeStub({ "uv tool list": "serena-agent v1.7.0\n- serena\n- serena-agent\n" }) },
+  );
+
+  assert.equal(version, "1.7.0");
+});
+
+test("installed-version: `pip show` is the last fallback", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: probeStub({ "pip show serena-agent": "Name: serena-agent\nVersion: 1.7.0\n" }) },
+  );
+
+  assert.equal(version, "1.7.0");
+});
+
+test("installed-version: a machine with none of the sources reports not installed", () => {
+  const version = installedVersion(
+    { name: "serena-agent", binary: "serena" },
+    { probe: () => null },
+  );
+
+  assert.equal(version, null);
+});
+
+test("blocker pin: a uv-tool install is detected and drifts against PyPI — never `not installed`", () => {
+  // The shape of the machine this blocker reproduced on: no pip binary, uv
+  // manages serena-agent, `serena --version` answers. A stale install must
+  // produce the drift finding; the pip-only detector reported
+  // `not installed on this machine` here with a PASS verdict.
+  const result = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: (entry) =>
+      installedVersion(entry, {
+        probe: probeStub({
+          "serena --version": "Serena 1.7.0\n",
+          "uv tool list": "serena-agent v1.7.0\n- serena\n",
+        }),
+      }),
+  });
+
+  assert.equal(result.findings.length, 1, "a stale uv-tool install is drift");
+  assert.equal(result.findings[0].installed, "1.7.0");
+  assert.equal(result.findings[0].latest, "2.1.0");
+  assert.deepEqual(result.skipped, [], "an installed package is never reported not-installed");
+});
+
+test("the watched entry carries the tool binary (`serena` for serena-agent)", () => {
+  const [entry] = watchedPyPI();
+  assert.equal(entry.binary, "serena");
+});
+
+test("regression: a PyPI skipped entry prints its name, never `undefined` (differential pin)", () => {
+  const npm = collectDrift({ packages: packages(), fetchLatest: registry({ typebox: "1.3.7" }) });
+  const pypi = collectPyPIDrift({
+    packages: watchedPyPI(),
+    fetchLatest: pypiRegistry({ "serena-agent": "2.1.0" }),
+    readInstalled: () => null,
+  });
+  const report = renderReport({
+    ok: true,
+    findings: [],
+    degraded: [],
+    skipped: [...npm.skipped, ...pypi.skipped],
+    checked: npm.checked + pypi.checked,
+  });
+  assert.doesNotMatch(report, /undefined/u, "no skipped entry may render as `undefined:`");
+  assert.match(report, /serena-agent: not installed on this machine/u);
+});
+
+test("pypi json payload: the API's info.version parses; junk and empty degrade to null", () => {
+  assert.equal(parsePypiLatest('{"info":{"version":"2.1.0"}}'), "2.1.0");
+  assert.equal(parsePypiLatest('{"info":{}}'), null, "no version field is not a version");
+  assert.equal(parsePypiLatest("not json"), null, "a non-JSON body is not a version");
 });
