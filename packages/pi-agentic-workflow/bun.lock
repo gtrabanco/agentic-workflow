@@ -5,7 +5,6 @@
     "": {
       "name": "@gtrabanco/pi-agentic-workflow",
       "dependencies": {
-        "@bacnh85/pi-serena": "0.10.0",
         "@gtrabanco/agentic-workflow": "0.4.0",
         "@gtrabanco/agentic-workflow-schema": "4.8.0",
       },
@@ -61,8 +60,6 @@
     "@aws/lambda-invoke-store": ["@aws/lambda-invoke-store@0.3.0", "", {}, "sha512-sl4Bm6yiMNYrZKkqqDFWN0UfnWhlS8ivKxrYl+6t0gCLrqr8y3B2IqZZbFRkfaVVp7C/baApyh71P+LeE1A2sQ=="],
 
     "@babel/runtime": ["@babel/runtime@7.29.7", "", {}, "sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw=="],
-
-    "@bacnh85/pi-serena": ["@bacnh85/pi-serena@0.10.0", "", { "peerDependencies": { "@earendil-works/pi-coding-agent": "*", "typebox": "*" } }, "sha512-TEwvFMHcJuYwqFlaCdssvPzS7/ZSjEo6wQ8e0sOkuQzsb598wRy7lX4n05oxPYjJX8t2+Ls05Qx6SJUifmjHGQ=="],
 
     "@earendil-works/chord": ["@earendil-works/chord@0.99.1", "", { "dependencies": { "esbuild": "0.28.2" } }, "sha512-4xyn0IBzJ+Xu/iOGi2hjXJGAR61QEhEWZsIqTDqr+GmItdquYwBO5jYFnqGiBaTqlY12/EpM7QHoEKSHbyvOug=="],
 

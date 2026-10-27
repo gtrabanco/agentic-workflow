@@ -12,6 +12,15 @@
  * naming the package, the pinned version and the published version — so the
  * upgrade lands as a deliberate human `fix(deps)` PR and never as a side effect.
  *
+ * A second half (issue #321) watches `serena-agent` on PyPI — installed vs
+ * published — and files the same kind of drift issue. `serena-agent` is a tool
+ * installed on the operator's machine (`uv tool install serena-agent`), not a
+ * manifest pin, so "drift" here means the machine's install is behind PyPI.
+ * The installed version is read from the tool itself (`serena --version`,
+ * then `uv tool list`, then `pip show`): the uv-tool venv `pip show` cannot
+ * see is the install route this repo documents. A machine without it
+ * contributes a skipped entry, never an error.
+ *
  * What it deliberately does NOT do: it never bumps a pin, never edits a
  * manifest, never opens a PR. The upgrade cadence is a human decision (PE-005).
  *
@@ -67,6 +76,24 @@ export function watchedPackages({ root = REPO_ROOT } = {}) {
 }
 
 /**
+ * Python packages whose PyPI versions are watched. Each entry names the PyPI
+ * package and the version expected on the operator's machine (read from the
+ * installed version at check time). Drift is reported when PyPI has a newer
+ * version.
+ *
+ * S5: extend pin-watch to check serena-agent on PyPI (installed vs latest).
+ */
+export function watchedPyPI() {
+  return [
+    // `expectedVersion` is null: the installed version is read from the machine
+    // at check time (see `installedVersion`), never pinned in this file.
+    // `binary` is the PATH shim `uv tool install` exposes for the package —
+    // the first source `installedVersion` asks.
+    { name: "serena-agent", binary: "serena", expectedVersion: null },
+  ];
+}
+
+/**
  * Collect drift across every watched package. `fetchLatest(name)` returns the
  * registry's latest version or throws (the CLI wires it to `npm view`; the
  * suite injects fakes, so no test touches the network).
@@ -106,6 +133,28 @@ export function collectDrift({ packages, fetchLatest }) {
 /** The stable token an issue title carries, so a later run recognises its own issue. */
 export function driftMarker(packageName, dependency) {
   return `${packageName}/${dependency}`;
+}
+
+/** The issue a PyPI finding would file. */
+export function pypiIssueFor(finding, { repo = REPO } = {}) {
+  return {
+    name: finding.name,
+    registry: "pypi.org",
+    installed: finding.installed,
+    latest: finding.latest,
+    title: `chore(deps): pin drift in ${finding.name} (PyPI)`,
+    body: [
+      `\`${finding.name}\` is at **${finding.installed}** on this machine,`,
+      `but pypi.org published **${finding.latest}**.`,
+      "",
+      "Reported by the scheduled pin watch (`scripts/pin-watch.mjs`; the PyPI half",
+      "was added by issue #321). Upgrading should be a deliberate manual step",
+      "never a side effect of other work.",
+      "",
+      "Resolve by running the appropriate installer (uv/pipx) and closing this issue.",
+      `Repository: ${repo}`,
+    ].join("\n"),
+  };
 }
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
@@ -161,10 +210,14 @@ const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one :
 /** The fixed human report. */
 export function renderReport(result, { repo = REPO } = {}) {
   const lines = [`PIN-WATCH — ${repo}`, `exact pins checked: ${result.checked}`];
-  for (const entry of result.skipped) lines.push(`notice: ${entry.package}: ${entry.message}`);
+  for (const entry of result.skipped) lines.push(`notice: ${entry.package ?? entry.name}: ${entry.message}`);
   for (const entry of result.degraded) lines.push(`::warning::${entry.message} — watch degraded, not failed`);
   for (const finding of result.findings) {
-    lines.push(`drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.latest}`);
+    if (finding.registry === "pypi.org") {
+      lines.push(`drift: ${finding.name} ${finding.installed} → ${finding.latest} (pypi.org)`);
+    } else {
+      lines.push(`drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.latest}`);
+    }
   }
   if (result.findings.length === 0) {
     lines.push(`no drift — every exact pin matches the registry's latest (+${plural(result.degraded.length, "degraded entry", "degraded entries")})`);
@@ -182,6 +235,152 @@ export function renderReport(result, { repo = REPO } = {}) {
 // ---------------------------------------------------------------------------
 // CLI wiring (spawned CLIs — never called by the suite)
 // ---------------------------------------------------------------------------
+
+/**
+ * PyPI as the registry fetcher; throws on any failure (the degraded path).
+ * PyPI's JSON API via `curl` first — it needs no Python tooling on PATH,
+ * which matters because the machine this watch exists for installs
+ * `serena-agent` through `uv tool` and may have no pip binary at all.
+ * `pip index versions` (pip ≥ 21.2) is the fallback.
+ */
+export function pypiLatest(name) {
+  const viaApi = spawnSync("curl", ["-fsS", `https://pypi.org/pypi/${name}/json`], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (viaApi.status === 0 && viaApi.stdout) {
+    const fromApi = parsePypiLatest(viaApi.stdout);
+    if (fromApi !== null) return fromApi;
+  }
+  const result = spawnSync("pip", ["index", "versions", name], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (result.error || result.status !== 0) {
+    throw new Error(
+      (result.stderr || result.error?.message || "pip index versions failed").trim().split("\n")[0],
+    );
+  }
+  // Output: "serena-agent (2.1.0)\nAvailable versions: 2.0.0, 1.7.0, ...\n  INSTALLED: 1.7.0"
+  const line = result.stdout.trim().split("\n")[0];
+  const match = /^.+ \(([^)]+)\)/u.exec(line);
+  if (!match) throw new Error("pip index versions returned unexpected format");
+  return match[1];
+}
+
+/** The version PyPI's JSON API payload reports, or null. Pure; the suite tests this. */
+export function parsePypiLatest(jsonText) {
+  try {
+    const parsed = JSON.parse(jsonText);
+    const version = parsed?.info?.version;
+    return typeof version === "string" && version !== "" ? version : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read the installed version of a watched Python package from the machine.
+ * Most-specific source first:
+ *
+ *   1. the tool's own binary on PATH (`serena --version`) — the shim
+ *      `uv tool install` exposes, i.e. the install route this repo documents;
+ *   2. `uv tool list` — names uv-managed tools even when the shim is off PATH;
+ *   3. `pip show` — a pip-managed install (the legacy fallback).
+ *
+ * A machine with none of the three returns null: `collectPyPIDrift` records a
+ * skipped entry, never an error. `probe(bin, args)` returns the command's
+ * stdout or null when the CLI is absent or fails; injectable so the offline
+ * suite never touches the system.
+ */
+export function installedVersion(entry, { probe = spawnProbe } = {}) {
+  const name = entry?.name;
+  if (!name) return null;
+  if (entry.binary) {
+    for (const flag of ["--version", "-V"]) {
+      const out = probe(entry.binary, [flag]);
+      if (out !== null) {
+        const match = /(\d+(?:\.\d+)+)/u.exec(out);
+        if (match) return match[1];
+      }
+    }
+  }
+  const uv = probe("uv", ["tool", "list"]);
+  if (uv !== null) {
+    const match = new RegExp(`^${escapeRegExp(name)}\\s+v?(\\S+)`, "mu").exec(uv);
+    if (match) return match[1];
+  }
+  const pip = probe("pip", ["show", name]);
+  if (pip !== null) {
+    const match = /^Version:\s*(\S+)/mu.exec(pip);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/** One spawned probe: stdout, or null when the CLI is absent or fails. */
+function spawnProbe(bin, args) {
+  const result = spawnSync(bin, args, {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (result.error || result.status !== 0) return null;
+  return result.stdout ?? "";
+}
+
+/**
+ * Collect drift for PyPI packages. Each entry carries the installed version
+ * (read at runtime by `installedVersion`) and the latest from PyPI.
+ * Drift = latest > installed. `readInstalled` is injectable so the offline
+ * suite never touches the system.
+ */
+export function collectPyPIDrift({ packages, fetchLatest, readInstalled = installedVersion }) {
+  const findings = [];
+  const degraded = [];
+  const skipped = [];
+  let checked = 0;
+
+  for (const entry of packages ?? []) {
+    try {
+      const installed = readInstalled(entry);
+      if (installed === null) {
+        skipped.push({ name: entry.name, message: "not installed on this machine" });
+        continue;
+      }
+      const latest = fetchLatest(entry.name);
+      checked += 1;
+      // Compare: latest > installed → drift
+      // Simple semver compare: split into parts and compare numerically
+      const latestParts = latest.split(".").map((p) => parseInt(p, 10) || 0);
+      const installedParts = installed.split(".").map((p) => parseInt(p, 10) || 0);
+      let isDrift = false;
+      for (let i = 0; i < Math.max(latestParts.length, installedParts.length); i++) {
+        const lp = latestParts[i] ?? 0;
+        const ip = installedParts[i] ?? 0;
+        if (lp > ip) { isDrift = true; break; }
+        if (lp < ip) { break; } // installed is newer (unlikely)
+      }
+      if (isDrift) {
+        findings.push({
+          name: entry.name,
+          registry: "pypi.org",
+          installed,
+          latest,
+        });
+      }
+    } catch (error) {
+      degraded.push({ name: entry.name, message: `PyPI check degraded: ${error.message}` });
+    }
+  }
+
+  return { ok: findings.length === 0, findings, degraded, skipped, checked };
+}
 
 /** npm view as the registry fetcher; throws on any failure (the degraded path). */
 export function npmLatest(name) {
@@ -244,17 +443,26 @@ function main(argv) {
     return 2;
   }
 
-  const result = collectDrift({ packages: watchedPackages(), fetchLatest: npmLatest });
+  const npmResult = collectDrift({ packages: watchedPackages(), fetchLatest: npmLatest });
+  const pypiResult = collectPyPIDrift({ packages: watchedPyPI(), fetchLatest: pypiLatest });
+  // Merge: both must pass for overall clean
+  const allFindings = [...npmResult.findings, ...pypiResult.findings];
+  const allDegraded = [...npmResult.degraded, ...pypiResult.degraded];
+  const allSkipped = [...npmResult.skipped, ...pypiResult.skipped];
+  const checked = npmResult.checked + pypiResult.checked;
+  const result = { ok: allFindings.length === 0, findings: allFindings, degraded: allDegraded, skipped: allSkipped, checked };
   if (json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   else process.stdout.write(`${renderReport(result, { repo })}\n`);
 
   if (!fileIssues) return result.ok ? 0 : 1;
 
-  if (result.findings.length === 0) return 0;
+  if (result.findings.length === 0 && pypiResult.findings.length === 0) return 0;
 
-  let plan;
+  // The open-issue list is fetched once and feeds both halves' dedupe: the
+  // npm marker match and the PyPI title match read the same list.
+  let issues;
   try {
-    plan = planIssues({ findings: result.findings, openIssues: openIssues(repo) });
+    issues = openIssues(repo);
   } catch (error) {
     // Filing is best-effort on a network host: report the drift loudly and let
     // the exit code carry the signal rather than crashing on a gh hiccup.
@@ -262,8 +470,14 @@ function main(argv) {
     return 1;
   }
 
+  // Only npm findings go through the marker-based dedupe: a PyPI finding has
+  // no package/dependency pair, and feeding it to planIssues would corrupt the
+  // marker match. PyPI findings are filed in their own pass below.
+  const plan = planIssues({ findings: npmResult.findings, openIssues: issues });
+
   for (const { finding, issue } of plan.reuse) {
-    process.stdout.write(`reused open issue #${issue.number} for ${finding.dependency}\n`);
+    const dep = finding.dependency ?? finding.name;
+    process.stdout.write(`reused open issue #${issue.number} for ${dep}\n`);
   }
   let opened = 0;
   try {
@@ -274,6 +488,29 @@ function main(argv) {
   } catch (error) {
     process.stdout.write(`::warning::issue creation failed: ${error.message}\n`);
     return 1;
+  }
+
+  // PyPI findings are filed separately (they don't use driftMarker dedup).
+  // Reuse is based on the issue title matching the package name.
+  const pypiFindings = allFindings.filter((f) => f.registry === "pypi.org");
+  if (pypiFindings.length > 0) {
+    try {
+      for (const pyFinding of pypiFindings) {
+        const existing = issues.find(
+          (issue) => issue.title && issue.title.includes(pyFinding.name),
+        );
+        if (existing) {
+          process.stdout.write(`reused open issue #${existing.number} for ${pyFinding.name} (PyPI)\n`);
+        } else {
+          const pyIssue = pypiIssueFor(pyFinding);
+          process.stdout.write(`opened ${createIssue(repo, pyIssue)}\n`);
+          opened += 1;
+        }
+      }
+    } catch (error) {
+      process.stdout.write(`::warning::PyPI issue creation failed: ${error.message}\n`);
+      return 1;
+    }
   }
 
   // A weekly job that re-files a known drift stays green; only a genuinely new
