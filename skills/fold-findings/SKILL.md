@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.9.2
+version: 1.10.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -166,6 +166,28 @@ the same thing — is part of this same fold, never a finding for the next
 cycle. The fold ends when nothing still asserts what is no longer true; state
 in the commit which surfaces the correction swept. Artifact language follows user
 instruction > project docs language > English; conversation language never decides.
+
+**A token- or claim-shaped change carries its sweep declaration.** When the
+fold changes a published vocabulary token, a claim kind, a phrase a surface
+asserted, or a reader/echo pattern, append one fixed line per stale form to
+this fold's `## Log` entry (a legacy unit's `## Progress log`) — the same
+bar as `log-kind@1` and `findings-table@1`: fixed grammar, fixed output, no
+judgment calls:
+
+```
+swept: /<pattern>/<flags> → expected <n> in <glob>
+```
+
+`<pattern>` is the stale form as a JS regex body, `<flags>` its flags (empty
+allowed); `<n>` is the survivor count you expect outside the allowlist —
+normally `0`, and non-zero only where the `<glob>` names surfaces that
+legitimately keep the form (the ledger's own quote of the finding, log lines,
+fixtures). `<glob>` is the bounded scope: the finding's cited surface plus its
+inventory-declared siblings, never a repo-wide sweep. `bun
+scripts/promise-coherence.mjs` (node fallback if bun is not installed) re-runs
+every declared grep and fails closed with `sweep-mismatch`, naming
+`file:line`, the regex and the observed count. A fold that changes such a
+surface and emits no declaration is a `workflow` finding at review.
 
 ## Portability (agents other than Claude Code)
 

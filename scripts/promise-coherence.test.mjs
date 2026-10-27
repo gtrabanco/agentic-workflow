@@ -316,6 +316,15 @@ test("#315 AC4: a declaration outside the fixed grammar fails closed as unparsea
   assert.match(sweep.observed, /swept:\s*\/<pattern>\/<flags> → expected <n> in <glob>/);
 });
 
+test("#315 F35 true shape: a stale copy in the declaring doc's own sibling section is counted, its Log is exempt", () => {
+  const result = coherence([fixture("sweep-same-doc-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /1 match \(expected 0\)/);
+  assert.match(sweep.observed, /sweep-same-doc-unit-doc\.md:\d+/);
+});
+
 test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
   const failing = spawnSync(process.execPath, [path.join(ROOT, "scripts/promise-coherence.mjs"), fixture("unit-doc-count.md")], {
     cwd: ROOT,

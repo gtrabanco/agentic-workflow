@@ -372,8 +372,11 @@ function sweepGlobToRegExp(glob) {
   return new RegExp(`^${out}$`);
 }
 
-/** Files under `root` matching the glob, bounded (skip dirs, size, count). */
-function sweepFiles(root, glob, declaringRelative) {
+/** Files under `root` matching the glob, bounded (skip dirs, size, count).
+ *  The declaring document itself stays in the corpus — the F35 class is a
+ *  stale copy in another section of the same doc — and the caller exempts its
+ *  own log sections only when scanning it. */
+function sweepFiles(root, glob) {
   const matcher = sweepGlobToRegExp(glob);
   const out = [];
   const walk = (directory) => {
@@ -391,7 +394,6 @@ function sweepFiles(root, glob, declaringRelative) {
         walk(absolute);
         continue;
       }
-      if (relative === declaringRelative) continue;
       if (!matcher.test(relative)) continue;
       if (!SWEEP_TEXT.test(entry.name)) continue;
       let size = 0;
@@ -472,10 +474,12 @@ function sweepClaims(doc, claims) {
         claims.push(claim);
         continue;
       }
-      const skipRanges = declaringLogRanges(doc.text);
-      const files = sweepFiles(ROOT, parsed.glob, doc.file);
+      const files = sweepFiles(ROOT, parsed.glob);
       const hits = [];
       for (const file of files) {
+        // The declaring document's own log sections are exempt (D1) — only when
+        // scanning the declaring document itself, never a survivor surface.
+        const skipRanges = file.relative === doc.file ? declaringLogRanges(doc.text) : [];
         const found = sweepCount(file.absolute, parsed.regex, skipRanges);
         for (const lineNumber of found ?? []) hits.push(`${file.relative}:${lineNumber}`);
       }
