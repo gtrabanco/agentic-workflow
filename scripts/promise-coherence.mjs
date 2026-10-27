@@ -61,10 +61,15 @@
  *
  * Allowed / forbidden: a claim is executed only when its command begins with a
  * reader (`grep`, `rg`, `wc`, `ls`, `cat`, `head`, `tail`, `test`, `git grep`)
- * and carries no shell composition (`;`, `&&`, `||`, `$(`, `>`, `<`). Anything
- * else is a printed `skip:` line — never a silent pass. Running `node --test`,
- * `bun …` or `gh …` from a document would make this pass a second, slower copy
- * of the root gate with the network and the filesystem in its blast radius.
+ * and carries no shell composition (`;`, `&&`, `||`, `$(`, `>`, `<`), or when it
+ * is a `node`/`bun` call of one of the committed report validators in
+ * `REPORT_VALIDATORS` — read-only verdict scripts that write nothing, hit no
+ * forge and spawn no process, executed argv-style with no shell at all.
+ * Anything else is a printed `skip:` line naming why — never a silent pass, and
+ * never a pass that checked nothing. Running `node --test`, a package `test`
+ * script or `gh …` from a document would still make this pass a second, slower
+ * copy of the root gate with the network and the filesystem in its blast
+ * radius, so those forms are refused by name.
  *
  * Read-only: it executes reader commands with `cwd` at the repository root and
  * never writes. No external dependencies.
@@ -121,8 +126,53 @@ export const REASON_CODES = Object.freeze([
 
 /** Reader commands this pass may execute. Everything else is skipped. */
 const READERS = new Set(["grep", "rg", "wc", "ls", "cat", "head", "tail", "test"]);
+/**
+ * The committed report validators this pass may also re-run (review F12): a
+ * unit doc's `(validator: …)` cells name these forms, and when none of them
+ * was executable every claim of the document was skipped and the pass still
+ * printed `verdict PASS` — a green that checked nothing. The class is bounded
+ * by what makes it safe: head `node` or `bun`, one argument that is a real
+ * file under `scripts/` and not a `*.test.mjs` suite, no argument that is a
+ * flag the runtime itself consumes (`-e`, `--test`, `--run`), nothing else,
+ * and never this gate (its own runner would re-enter it). Unit 77's boundary
+ * stands: this pass still never runs the suite, the package runners or `gh`.
+ */
+/**
+ * The committed report validators this pass may also re-run (review F12): a
+ * unit doc's `(validator: …)` cells name these forms, and while none of them
+ * was executable every claim of the document was skipped and the pass still
+ * printed `verdict PASS` — a green that checked nothing.
+ *
+ * The criterion is stated once and every entry meets it: the script reads the
+ * tree, prints a verdict, exits 0/1/2, writes nothing, touches no forge and
+ * spawns no process (so it cannot re-enter this gate). A claim naming anything
+ * else — a suite runner, a package runner, `gh`, a script that writes — stays a
+ * disclosed skip, refused by name. Unit 77's boundary stands: this pass never
+ * runs the suite.
+ */
+const REPORT_VALIDATORS = new Set([
+  "scripts/phase-lint.mjs",
+  "scripts/check-skill-context.mjs",
+  "scripts/roadmap-settle.mjs",
+  "scripts/vocabulary-probe.mjs",
+  "scripts/structural-sibling-pins.mjs",
+]);
+const VALIDATOR_SCRIPT = /^scripts\/[A-Za-z0-9._/-]+\.mjs$/;
+/** Never a test file: executing the suite from inside the suite recurses. */
+const SUITE_SCRIPT = /\.test\.mjs$/;
+/** The gate's own file — a claim that runs it would run this claim again. */
+const SELF = "scripts/promise-coherence.mjs";
 /** Shell composition that turns a reader into something else. */
 const COMPOSITION = /(?:;|&&|\|\||\$\(|>|<|\n)/;
+/**
+ * Any character a shell would interpret, or a human placeholder would use: the
+ * runner class refuses a command carrying one, so a document cannot smuggle an
+ * argument list into an interpreter. Reader claims keep the existing
+ * `COMPOSITION` rule; this is the stricter one for code-executing heads.
+ */
+const RUNNER_UNSAFE = /["'`$*?(){}|[\]\\]/;
+/** A suite/package runner form: refused by name, with the reason disclosed. */
+const SUITE_FORM = /^(?:node|bun)\s+--test\b|^(?:bun|npm|pnpm|yarn)\s+(?:run\s+)?test\b/;
 /** A backticked span in Markdown source. */
 const BACKTICK = /`([^`\n]+)`/g;
 /** `matches <N>` / `exactly <N>`. */
@@ -216,6 +266,75 @@ function runnableCommand(command) {
   return trimmed;
 }
 
+/**
+ * The claim's command as a bounded runner invocation, or null.
+ * @returns {{argv: string[], why?: string}|null} `why` names the refusal when
+ * the command is a runner form this pass will not execute.
+ */
+/**
+ * The claim's command as a bounded report-validator invocation, or null.
+ * @returns {{argv: string[]}|{argv: null, why: string}|null} `why` names the
+ * refusal when the command is a form this pass declines for a stated reason.
+ */
+function runnerCommand(command) {
+  const trimmed = command.trim();
+  const tokens = trimmed.split(/\s+/);
+  if (!(tokens[0] === "node" || tokens[0] === "bun")) return null;
+  const target = tokens[1] ?? "";
+  if (SUITE_FORM.test(trimmed)) {
+    return { argv: null, why: "suite runner — this pass never executes the suite that runs it" };
+  }
+  if (target === SELF) {
+    return { argv: null, why: "this gate itself — the claim would re-enter the pass that runs it" };
+  }
+  // The allowlist is the criterion enforced: a report validator, not any
+  // committed file a document happens to name.
+  if (!VALIDATOR_SCRIPT.test(target) || SUITE_SCRIPT.test(target) || !REPORT_VALIDATORS.has(target)) {
+    return null;
+  }
+  for (const token of tokens.slice(2)) {
+    // A long flag the script itself parses is allowed (`--routes`); anything
+    // the *runtime* would consume (`-e`, `--test`, `--experimental`) is not.
+    if (token.startsWith("-") && !/^--(?![a-z]*=)[a-z][a-z0-9-]*$/.test(token)) return null;
+    if (RUNNER_UNSAFE.test(token)) return null;
+  }
+  if (!fs.existsSync(path.join(ROOT, target))) {
+    return { argv: null, why: `the validator script '${target}' is not in the tree` };
+  }
+  return { argv: [tokens[0], target, ...tokens.slice(2)] };
+}
+
+/**
+ * The runner this environment has: `bun` when it is installed, else `node` —
+ * the repo's own bun-else-node convention, so a claim written as `bun …` does
+ * not fail on a node-only runner. Resolved once per process.
+ */
+let runnerBin = null;
+function resolveRunner(head) {
+  if (head !== "bun") return process.execPath;
+  if (runnerBin === null) {
+    const probe = spawnSync("bun", ["--version"], { encoding: "utf8" });
+    runnerBin = probe.status === 0 ? "bun" : process.execPath;
+  }
+  return runnerBin;
+}
+
+/** Execute one bounded runner invocation without a shell. */
+function runArgv(argv) {
+  const head = argv[0] === "bun" ? resolveRunner("bun") : process.execPath;
+  const result = spawnSync(head, argv.slice(1), {
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: 20_000,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  return {
+    status: typeof result.status === "number" ? result.status : 1,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
+  };
+}
+
 /** Execute one reader command at the repository root. */
 function runCommand(command) {
   const result = spawnSync(command, {
@@ -255,20 +374,40 @@ function observedCount(stdout) {
 /**
  * Parse one validator cell into a claim, or into a skip reason.
  * The first expectation after the first command binds it.
+ *
+ * The span search prefers a command this pass can actually run (review F12):
+ * the old single pass took the *first* lowercase-led span, so a prose span in
+ * the same cell — `done · [#N](<pr-url>)` — bound as "the command", the real
+ * validator never got examined, and the cell was skipped with a reason that
+ * described the prose instead. Runnable first, prose-only as the fallback, so
+ * an unexecutable cell is still disclosed rather than dropped.
  */
 function validatorClaim(text, file, line) {
   const spans = [...text.matchAll(BACKTICK)];
-  const commandSpan = spans.find((span) => runnableCommand(span[1]) !== null || /^[a-z]+\s+/.test(span[1]));
+  const isCommandForm = (span) => runnableCommand(span[1]) !== null || runnerCommand(span[1])?.argv;
+  const commandSpan =
+    spans.find(isCommandForm) ??
+    spans.find((span) => /^[a-z]+\s+/.test(span[1]) || runnableCommand(span[1]) !== null || runnerCommand(span[1]) !== null);
   if (commandSpan === undefined) return null;
   const command = commandSpan[1].trim();
   const rest = text.slice(commandSpan.index + commandSpan[0].length);
   const claim = blankResult("validator", file, line, `${command}${rest === "" ? "" : ` —${rest}`}`);
-  const runnable = runnableCommand(command);
+  let runner = null;
+  let runnable = runnableCommand(command);
   if (runnable === null) {
-    claim.skip = /^[a-z]+\s+/.test(command)
-      ? "command outside the reader allowlist"
-      : "not a command";
-    return claim;
+    runner = runnerCommand(command);
+    if (runner === null) {
+      claim.skip = /^[a-z]+\s+/.test(command)
+        ? "command outside the reader allowlist"
+        : "not a command";
+      return claim;
+    }
+    if (runner.argv === null) {
+      // Named, not generic: refused because running it here would re-enter this
+      // pass, or because the artifact the claim names is gone from the tree.
+      claim.skip = runner.why;
+      return claim;
+    }
   }
   const matches = MATCHES.exec(rest);
   const exits = EXITS.exec(rest);
@@ -276,7 +415,7 @@ function validatorClaim(text, file, line) {
     claim.skip = "no declared outcome (matches <N> / exits <N>)";
     return claim;
   }
-  const run = runCommand(runnable);
+  const run = runnable === null ? runArgv(runner.argv) : runCommand(runnable);
   if (matches !== null) {
     const expected = Number(matches[1]);
     const observed = observedCount(run.stdout);
@@ -332,18 +471,54 @@ const SWEEP_SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
 const SWEEP_TEXT = /\.(?:md|mjs|js|cjs|json|ts|tsx|yml|yaml|txt|sh)$/;
 /** A per-file read ceiling: a survivor surface is a document, not a data set. */
 const SWEEP_MAX_FILE_BYTES = 2_000_000;
+/** How many files one declaration may walk — a bound, not an estimate. */
+const SWEEP_MAX_FILES = 5000;
+/**
+ * How long a pattern body may be (review F2). The body is authored in a unit
+ * doc and compiled with `new RegExp` here, so an unbounded body is unbounded
+ * work: the declaration names a stale *form*, never a program.
+ */
+const SWEEP_MAX_PATTERN_CHARS = 200;
+/**
+ * A quantified group whose body is itself quantified — the catastrophic
+ * backtracking class. Conservative on purpose: the reviewed reproducer
+ * `(a+)+$` cost 83 s for five `test()` calls on one 29-character line, and the
+ * scan runs the pattern per line over the whole glob corpus. A refused
+ * declaration asks the fold to name the literal instead; a compiled one can
+ * hang the gate that runs it.
+ */
+const SWEEP_NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[*+][^()\\]*\)[*+{]/;
+
+/**
+ * The sweep's bounds on one pattern body, or null when the body is inside them.
+ * Deterministic by construction: shape and size, never a clock, so the same
+ * declaration answers the same at any head.
+ */
+function sweepPatternRefusal(pattern) {
+  if (pattern.length > SWEEP_MAX_PATTERN_CHARS) {
+    return `the pattern body is ${pattern.length} characters, over the sweep bound of ${SWEEP_MAX_PATTERN_CHARS} — name the stale form, not a program`;
+  }
+  if (SWEEP_NESTED_QUANTIFIER.test(pattern)) {
+    return "the pattern is a quantified group whose body is itself quantified (the catastrophic-backtracking class) — the gate refuses to compile it over a whole corpus; name the literal form instead";
+  }
+  return null;
+}
 
 /**
  * Parse one sweep declaration payload, or null when it is outside the fixed
  * grammar. The `in <glob>` scope is required — the cost bound (issue #315) is
  * that a declaration is the cited surface plus its inventory-declared
- * siblings, never a repo-wide regex sweep.
+ * siblings, never a repo-wide regex sweep. A payload inside the grammar but
+ * outside the pattern bounds comes back as `{ refused }` so the claim names
+ * which bound tripped (review F2).
  */
 function parseSweepDeclaration(payload) {
   const match = SWEEP_DECLARATION.exec(payload.trim());
   if (match === null) return null;
   const pattern = match[1].slice(1, match[1].lastIndexOf("/"));
   const flags = match[2].replace(/[gy]/g, "");
+  const refused = sweepPatternRefusal(pattern);
+  if (refused !== null) return { refused };
   try {
     return { regex: new RegExp(pattern, flags), display: match[1], expected: Number(match[3]), glob: match[4] };
   } catch {
@@ -375,11 +550,17 @@ function sweepGlobToRegExp(glob) {
 /** Files under `root` matching the glob, bounded (skip dirs, size, count).
  *  The declaring document itself stays in the corpus — the F35 class is a
  *  stale copy in another section of the same doc — and the caller exempts its
- *  own log sections only when scanning it. */
-function sweepFiles(root, glob) {
+ *  own log sections only when scanning it.
+ *  The `maxFiles` ceiling is enforced as a stop, not an overshoot: the bound is
+ *  the contract (review F7 — the old check ran after `push` and `return`ed only
+ *  out of the current recursion level, so sibling directories kept appending
+ *  past it). Exported so the bound itself is testable without 5000 files.
+ */
+export function sweepFiles(root, glob, maxFiles = SWEEP_MAX_FILES) {
   const matcher = sweepGlobToRegExp(glob);
   const out = [];
   const walk = (directory) => {
+    if (out.length >= maxFiles) return;
     let entries;
     try {
       entries = fs.readdirSync(directory, { withFileTypes: true });
@@ -387,6 +568,7 @@ function sweepFiles(root, glob) {
       return;
     }
     for (const entry of entries) {
+      if (out.length >= maxFiles) return;
       if (SWEEP_SKIP_DIRS.has(entry.name)) continue;
       const absolute = path.join(directory, entry.name);
       const relative = path.relative(root, absolute).split(path.sep).join("/");
@@ -404,7 +586,6 @@ function sweepFiles(root, glob) {
       }
       if (size > SWEEP_MAX_FILE_BYTES) continue;
       out.push({ relative, absolute });
-      if (out.length >= 5000) return;
     }
   };
   walk(root);
@@ -414,8 +595,11 @@ function sweepFiles(root, glob) {
 /**
  * Count the regex-matching lines of one file, fence-aware: fenced blocks are
  * the fold's own evidence quote (decision D1) and never count. `skipRanges`
- * are [start, end) byte ranges (a `sectionBounds` result) excluded up front —
- * the declaring document's own log sections are exempt.
+ * are [start, end) **string-index** ranges — the shape `sectionBounds` returns
+ * — so the declaring document's own log sections are exempt in the same unit
+ * the scan walks (review F3: a byte cursor here and a string-index range there
+ * mis-align the exemption on every document carrying non-ASCII before `## Log`,
+ * and a clean fold then fails its own declaration).
  */
 function sweepCount(file, regex, skipRanges = []) {
   let text;
@@ -425,27 +609,32 @@ function sweepCount(file, regex, skipRanges = []) {
     return null;
   }
   const skipped = (offset) => skipRanges.some(([start, end]) => offset >= start && offset < end);
-  const lines = [];
+  const hits = [];
   let fence = null;
   let offset = 0;
   let number = 0;
-  for (const line of text.split(/\r?\n/)) {
+  while (offset <= text.length) {
     number += 1;
     const lineStart = offset;
-    offset += Buffer.byteLength(line, "utf8") + 1;
+    const eol = text.indexOf("\n", lineStart);
+    const lineEnd = eol === -1 ? text.length : eol;
+    const line = text.endsWith("\r", lineEnd) ? text.slice(lineStart, lineEnd - 1) : text.slice(lineStart, lineEnd);
+    offset = lineEnd + 1;
     const run = /^\s*(`{3,}|~{3,})/.exec(line);
-    if (run) {
+    if (run !== null) {
       if (fence === null) fence = run[1];
       else if (line.trim() !== "" && line.trim()[0] === fence[0] && line.trim().length >= fence.length) fence = null;
+      if (eol === -1) break;
       continue;
     }
-    if (fence !== null || skipped(lineStart)) continue;
-    if (regex.test(line)) lines.push(number);
+    if (fence === null && !skipped(lineStart) && regex.test(line)) hits.push(number);
+    if (eol === -1) break;
   }
-  return lines;
+  return hits;
 }
 
-/** The declaring document's own log sections, as byte ranges to skip. */
+/** The declaring document's own log sections, as `sectionBounds` string-index
+ *  ranges for `sweepCount` to exempt. */
 function declaringLogRanges(text) {
   const ranges = [];
   for (const name of ["Log", "Progress log"]) {
@@ -467,6 +656,15 @@ function sweepClaims(doc, claims) {
       if (line === null) continue;
       const parsed = parseSweepDeclaration(line[1]);
       const claim = blankResult("sweep", doc.file, row.line, `swept: ${line[1].trim()}`);
+      if (parsed !== null && parsed.refused !== undefined) {
+        // Inside the grammar, outside the bounds: fail closed naming the bound
+        // rather than compiling a pattern the gate cannot finish running.
+        claim.outcome = "fail";
+        claim.reason = "sweep-mismatch";
+        claim.observed = `refused before it ran — ${parsed.refused}`;
+        claims.push(claim);
+        continue;
+      }
       if (parsed === null) {
         claim.outcome = "fail";
         claim.reason = "unparseable-claim";
@@ -986,7 +1184,16 @@ export function coherence(paths) {
     ? failures[0].reason
     : claims.length === 0 ? "no-claims" : null;
   lines.push(reason === null ? "verdict PASS" : `verdict BLOCKED: ${reason}`);
-  lines.push(`claims: ${passed.length + failures.length} checked · ${skipped.length} skipped`);
+  // A document that named claims but had none machine-checked is a green that
+  // examined nothing (review F12). The bounded runner class makes that rare;
+  // the tally still has to say it out loud when it happens, because a line
+  // reading `0 checked` and nothing else is how a vacuous pass hides.
+  const checkedTotal = passed.length + failures.length;
+  lines.push(
+    checkedTotal === 0 && skipped.length > 0
+      ? `claims: 0 checked · ${skipped.length} skipped — nothing was machine-checked`
+      : `claims: ${checkedTotal} checked · ${skipped.length} skipped`,
+  );
 
   return {
     verdict: reason === null ? "PASS" : `BLOCKED: ${reason}`,

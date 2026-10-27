@@ -342,9 +342,10 @@ assert.match(foldPolicy, /materializ/);
 // #308 review fold moved it 1.9.1 → 1.9.2 (Step 0 states each carrier's own row
 // schema, so a migrated unit is no longer queued against a `folded` column it does
 // not have), and unit 84 moved it 1.9.2 → 1.10.0 (a token- or claim-shaped change
-// carries its `swept:` declaration, which the promise-coherence gate re-runs); the
-// assertion is re-pointed, never weakened.
-assert.match(foldSkill, /version: 1\.10\.0/);
+// carries its `swept:` declaration, which the promise-coherence gate re-runs) and
+// then 1.10.0 → 1.11.0 (the guardrail states the bounds the gate enforces on that
+// declaration); the assertion is re-pointed, never weakened.
+assert.match(foldSkill, /version: 1\.11\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);

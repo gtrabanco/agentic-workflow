@@ -30,17 +30,17 @@ findings end up "solved" locally but absent from the merged PR:
   swept: /<pattern>/<flags> → expected <n> in <glob>
   ```
 
-  `<pattern>` is the stale form as a JS regex body, `<flags>` the flags (empty
-  allowed), `<n>` the survivor count you expect **outside** the allowlist —
-  normally `0`, and a non-zero number only for the surfaces that legitimately
-  keep the form (the ledger's own quote of the finding, log lines, fixtures),
-  which the `<glob>` naming makes explicit. `<glob>` is the bounded scope: the
-  finding's cited surface plus its inventory-declared siblings, never a
-  repo-wide sweep. A fold that changes a token/claim-shaped surface and emits
-  no declaration is a `workflow` finding at review.
+  The field shapes and the bounds the gate enforces on them are stated once, in
+  the `sweep-declaration@1` block at the foot of this file — a declaration
+  outside those bounds is **refused, not run**, and the failed claim names which
+  bound tripped. Name the literal stale form, never a program. A fold that
+  changes a token/claim-shaped surface and emits no declaration is a `workflow`
+  finding at review.
 ✓ `bun scripts/promise-coherence.mjs` RUN → `verdict PASS` (the repaired claims
-  reproduce at the head; every declared sweep re-runs to its expected count; a
-  skipped line is read, never assumed)
+  reproduce at the head; every declared sweep re-runs to its expected count and
+  an over-bound pattern is refused by name; a skipped line is read, never
+  assumed, and a document whose tally says nothing was machine-checked is not a
+  verified green)
 ✓ Gate RUN and green (exit codes pasted)
 ✓ Never edit an existing test's expectation to match behaviour — a setup
   repair keeps assertions at least as strong and never touches expectations
@@ -95,3 +95,24 @@ open the PR with `gh pr create` (per the project's Workflow conventions) —
 regardless of the review still to come. The PR body carries the unit doc's
 verification record (its `## Evidence` rows, or a re-cut unit's `## Log` `E`/`G`
 lines) and closes the unit's tracked issues via `Closes #N`.
+
+## The sweep declaration grammar
+
+The one statement of the fields the checklist box names. `scripts/promise-coherence.mjs`
+parses the line and re-runs it; `AGENTS.md`'s `normative-surfaces@1` inventory
+declares this block as the grammar's owner, and the schema package's
+`SWEEP_CLAIM_KINDS` const cites it as its home.
+
+```text
+sweep-declaration@1
+# literal: swept: /<pattern>/<flags> → expected <n> in <glob>
+field | shape | bound the gate enforces
+pattern | /<the stale form as a JS regex body>/ | at most 200 characters; a group that is quantified while its own body is quantified is refused before it is compiled — one such pattern cost 83 s on a 29-character line, and the gate runs the body once per line of the whole `<glob>` corpus
+flags | <a-z, empty allowed> | `g` and `y` are stripped: the gate counts matching lines and carries no lastIndex
+expected | <n> | the survivor count outside the exempt surfaces — normally 0; non-zero only where `<glob>` names the surfaces that legitimately keep the form (the ledger's own quote of the finding, log lines, fixtures)
+glob | <repo-relative scope> | the finding's cited surface plus its inventory-declared siblings, never a repo-wide sweep
+```
+
+Outside a bound the claim fails closed naming which one tripped: a refused
+declaration is a red fold gate, not a warning, and the fold names the literal
+stale form instead.

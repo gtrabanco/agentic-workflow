@@ -22,7 +22,7 @@ import path from "node:path";
 import process from "node:process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { CLAIM_KINDS, REASON_CODES, coherence } from "./promise-coherence.mjs";
+import { CLAIM_KINDS, REASON_CODES, coherence, sweepFiles } from "./promise-coherence.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURES = "scripts/fixtures/promise-coherence";
@@ -323,6 +323,73 @@ test("#315 F35 true shape: a stale copy in the declaring doc's own sibling secti
   assert.equal(sweep.outcome, "fail");
   assert.match(sweep.observed, /1 match \(expected 0\)/);
   assert.match(sweep.observed, /sweep-same-doc-unit-doc\.md:\d+/);
+});
+
+test("#315 F3: the declaring doc's Log exemption is in the scan's own units — non-ASCII does not misalign it", () => {
+  // The fixture's text before `## Log` is deliberately non-ASCII (each
+  // em-dash, arrow and accented letter is a byte longer than the character
+  // `sectionBounds` indexes by). With a byte cursor in `sweepCount` and a
+  // string-index range from `declaringLogRanges`, the fold's own log quote fell
+  // outside the exemption and a clean fold failed its own declaration.
+  const text = readFileSync(join(ROOT, FIXTURES, "sweep-selfquote-nonascii-unit-doc.md"), "utf8");
+  const beforeLog = text.slice(0, text.indexOf("## Log\n"));
+  assert.ok(
+    Buffer.byteLength(beforeLog, "utf8") > beforeLog.length,
+    "the fixture must really carry the offset drift the defect needs",
+  );
+  const result = coherence([fixture("sweep-selfquote-nonascii-unit-doc.md")]);
+  assert.equal(result.verdict, "PASS", result.lines.join("\n"));
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "pass", "the declaring doc's own log quote is exempt");
+  assert.match(sweep.observed, /^0 matches/);
+});
+
+test("#315 F2: a doc-sourced pattern outside the sweep's bounds is refused before it is compiled", () => {
+  // Both declarations fit the line grammar; one is a quantified group over a
+  // quantified body, the other a 240-character body. Compiled, the first is
+  // the 83-second-per-line reproducer, so the bound answers in shape and size,
+  // never in elapsed time — and the claim is refused, not executed.
+  const started = Date.now();
+  const result = coherence([fixture("sweep-bounds-unit-doc.md")]);
+  const elapsed = Date.now() - started;
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+  const sweeps = result.claims.filter((claim) => claim.kind === "sweep");
+  assert.equal(sweeps.length, 2, "both over-bound declarations are claims, neither is silently dropped");
+  for (const claim of sweeps) assert.equal(claim.outcome, "fail");
+  assert.match(sweeps[0].observed, /catastrophic-backtracking/);
+  assert.match(sweeps[1].observed, /over the sweep bound of 200/);
+  assert.match(sweeps[0].observed, /refused before it ran/);
+  assert.ok(elapsed < 5_000, `the refusal is a bound check, not a timed-out run (${elapsed} ms)`);
+});
+
+test("#315 F7: the walk honours its file ceiling instead of overshooting it", () => {
+  const dir = join(ROOT, "scripts", "fixtures", "promise-coherence");
+  const all = sweepFiles(dir, "*.md");
+  assert.ok(all.length > 3, `the corpus needs more than three files to prove the bound (${all.length})`);
+  for (const max of [1, 2, 3]) {
+    assert.equal(sweepFiles(dir, "*.md", max).length, max, `a ceiling of ${max} returns exactly ${max}`);
+  }
+  assert.equal(sweepFiles(dir, "*.md", 0).length, 0, "a ceiling of zero walks nothing");
+  assert.equal(sweepFiles(dir, "*.md").length, all.length, "the default ceiling is not the one in play here");
+});
+
+test("#315 F12: a report-validator claim is re-run instead of skipped, and each refusal names itself", () => {
+  // The vacuity: every `(validator: …)` cell of a unit doc named a form this
+  // pass could not run, so the document passed having checked nothing. Now the
+  // bounded class is executed argv-style, and the refusals are specific enough
+  // to read as a policy, not an oversight.
+  const result = coherence([fixture("validator-runner-unit-doc.md")]);
+  const claims = result.claims.filter((claim) => claim.kind === "validator");
+  const byCommand = (needle) => claims.find((claim) => claim.claim.includes(needle));
+
+  const checked = byCommand("vocabulary-probe.mjs --root");
+  assert.equal(checked?.outcome, "pass", "a committed report validator is re-run, not skipped");
+  assert.equal(checked?.observed, "exit 1", "the report validator's real verdict is what the claim promised");
+
+  assert.match(byCommand("node --test")?.skip, /suite runner — this pass never executes the suite/);
+  assert.match(byCommand("promise-coherence.mjs")?.skip, /this gate itself/);
+  assert.equal(byCommand("unit-route.mjs")?.skip, "command outside the reader allowlist", "not every committed script is a report validator");
+  assert.match(result.lines.at(-1), /^claims: 1 checked · 3 skipped$/, "the tally counts what was actually run");
 });
 
 test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
