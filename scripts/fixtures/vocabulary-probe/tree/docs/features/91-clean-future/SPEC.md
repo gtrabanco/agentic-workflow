@@ -9,6 +9,15 @@
   prose allowed)
 - `discarded 2026-10-27` — "an idea the owner dropped, dated per the grammar"
 
+The fenced quote below is the fold's own evidence, not a published token: the
+probe reads the section through the shared fence-aware reader and stays silent
+about it (review F6 — the probe used to carry three private copies of the
+fence walk, one of them dead).
+
+```markdown
+- `kept deferred 2026-10-26` — the F40 token, quoted inside a fence
+```
+
 ## Findings
 
 | id | S# / file:line | axis | severity | class | route |

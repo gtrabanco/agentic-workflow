@@ -24,6 +24,7 @@ justification | scripts/vocabulary-parity.test.mjs | P1 | 2026-10-27 | execute-p
 justification | scripts/structural-sibling-pins.mjs | P5 | 2026-10-27 | execute-phase | the pin implementations (heading-search allowlist scanner, flatten-coverage scanner) shared by the pin suite
 justification | scripts/structural-sibling-pins.test.mjs | P5 | 2026-10-27 | execute-phase | the negative-capability pin suite (S3/AC3): each pin fails on a fixture reintroducing the F37/F38/F39 pattern
 justification | scripts/promise-coherence.test.mjs | P3 | 2026-10-27 | execute-phase | S2 extends the gate's closed claim-kind vocabulary: the sweep cases and the frozen-set deepEqual are the conscious-set-change path the closed-set test exists to force
+justification | scripts/fixtures/vocabulary-probe/tree/docs/features/91-clean-future/SPEC.md | P5 | 2026-10-27 | execute-phase | review F6's fold: the clean fixture gains a fenced off-vocabulary quote so the shared fence-aware reader (the one path `openFence`/`closesFence` now owns) is proven to exempt the fold's own evidence — without the case, routing the probe onto the helper is unpinned
 ```
 
 ## Assumptions
