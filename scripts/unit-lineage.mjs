@@ -89,7 +89,12 @@ function subsectionBody(text, name) {
   const m = new RegExp(`^### ${name}\\s*$`, "m").exec(text);
   if (!m) return null;
   const rest = text.slice(m.index + m[0].length);
-  const next = /^### /m.exec(rest) ?? /^## /m.exec(rest);
+  // The section ends at the nearest `###` or `##` heading, whichever comes
+  // first. Preferring the first `###` found anywhere swallowed every `##`
+  // section up to a much later subsection, so a reader would parse another
+  // section's table as its own rows — an obligation ledger read the Findings
+  // table and reported its ids as open obligations.
+  const next = /^#{2,3} /m.exec(rest);
   return next ? rest.slice(0, next.index) : rest;
 }
 

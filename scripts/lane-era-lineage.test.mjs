@@ -358,6 +358,25 @@ test("unit-lineage: an open obligation row is BLOCKED, naming the id", (t) => {
   assert.match(r.stdout, /O1/, "the verdict names the open obligation id");
 });
 
+// The ledger's section ends at the nearest `##`/`###` heading. Preferring a
+// `###` found anywhere sliced through the following `##` sections, so the ledger
+// parsed the Findings table as its own rows and reported those ids as open
+// obligations — every unit doc carrying a findings table failed lineage.
+test("unit-lineage: a later `###` heading never leaks the Findings table into the ledger", (t) => {
+  const { root } = makeRepo(t, { obligations: "verified" });
+  const specPath = path.join(root, UNIT_DIR, "SPEC.md");
+  const spec = fs.readFileSync(specPath, "utf8");
+  const findings =
+    "\n## Findings\n\n| id | S# / file:line | axis | severity | class | route |\n" +
+    "|---|---|---|---|---|---|\n" +
+    "| F7 | S4 · x.mjs:1 | mergeability | high | source | fold — an open repair |\n" +
+    "\n## Review verdict\n\n### Cycle 1 — 2026-10-27\n\n```\nREVIEW-VERDICT: FAIL\n```\n";
+  fs.writeFileSync(specPath, spec + findings);
+  const r = lineage(root);
+  assert.equal(r.status, 0, `must pass, got ${r.status}: ${r.stdout}${r.stderr}`);
+  assert.match(r.stdout, /obligations closed \(1\)/, "only the ledger's own row counts");
+});
+
 test("unit-lineage: an explicit n/a obligations row passes", (t) => {
   const { root } = makeRepo(t, { obligations: "na" });
   const r = lineage(root);
