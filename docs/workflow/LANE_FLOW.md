@@ -253,6 +253,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `agentic-workflow unit-doc progress_logEntry` | Add progress entry (SDK) |
 | `agentic-workflow unit-doc validate` | Validate the doc schema (SDK) |
 | `agentic-workflow roadmap rowUpsert` | Upsert a roadmap row (SDK) |
+| `agentic-workflow roadmap check` | Cross-document settle check: a unit doc that carries a PR URL must have its row `done · [#N](<same url>)` — named codes, exit 1 fail-closed (issue #316) |
 | `agentic-workflow changelog rowAdd` | Add a changelog row (SDK) |
 | `agentic-workflow budgets ceilingRebase` | Rebase budget ceiling (SDK) |
 | `agentic-workflow manifest skillAdd` / `skillRemove` | Update manifest (SDK) |

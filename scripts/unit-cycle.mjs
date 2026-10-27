@@ -35,6 +35,7 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 import { compute as needsInputCompute } from "./needs-input.mjs";
+import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 import {
   openRows,
   routeOfRow,
@@ -59,7 +60,7 @@ export const OUTCOME = Object.freeze({
 });
 
 /** Acts that must move the head+findings key (the no-progress rule, D6). */
-const COMMITS = new Set(["research", "design", "plan", "phase", "evidence", "docs", "release", "fold"]);
+const COMMITS = new Set(["research", "design", "plan", "phase", "evidence", "docs", "release", "fold", "settle-roadmap"]);
 
 /* ------------------------------------------------------------------ pure */
 
@@ -94,6 +95,43 @@ export function parsePrNumber(references) {
   if (!m) return null;
   const pr = /\/pull\/(\d+)/.exec(m[1]) ?? /^#?(\d+)$/.exec(m[1]);
   return pr ? Number(pr[1]) : null;
+}
+
+/** The PR URL a unit's References section names whole, for the settle link. */
+export function parsePrUrl(references) {
+  const m = /(?:^|\n)-\s*PR:\s*(\S+)/.exec(references ?? "");
+  if (!m) return null;
+  return /\/pull\/\d+/.test(m[1]) ? m[1] : null;
+}
+
+/**
+ * settleRoadmapRow — the loop writes the roadmap row itself (issue #316):
+ * the done settle goes through the crate's `rowUpsert` (the writer the issue
+ * names), with every cell the write does not own preserved verbatim, so the
+ * row's slug, dependency and summary survive. Never asks the model to.
+ *
+ * Writes `done · [#<pr>](<prUrl>)` into the status cell. A rowless NN is
+ * inserted (slug when given); a fix-unit row is refused — the fix index
+ * removes merged rows by its own convention and its table grammar is not the
+ * roadmap's, so the writer fails closed there and the settle stays the
+ * release step's documented duty.
+ */
+export function settleRoadmapRow({ nn, pr, prUrl, slug }, { cwd } = {}) {
+  const table = path.join(cwd ?? REPO, "docs", "features", "ROADMAP.md");
+  const status = `done · [#${pr}](${prUrl})`;
+  try {
+    const row = findRow(table, String(nn));
+    const receipt = rowUpsert(table, {
+      nn: String(nn),
+      slug: row?.slug ?? (slug ? `\`${slug}\`` : ""),
+      status,
+      dependsOn: row?.dependsOn ?? "",
+      description: row?.description ?? "",
+    });
+    return receipt.ok ? { ok: true, status } : { ok: false, detail: `rowUpsert receipt not ok for NN ${nn}` };
+  } catch (error) {
+    return { ok: false, detail: error?.message ?? String(error) };
+  }
 }
 
 /**
@@ -131,6 +169,10 @@ export function decide(state) {
   if (wants("evidence") && !state.evidenceDone) return step("evidence");
   if (wants("docs") && !state.docsDone) return step("docs");
   if (!state.releaseDone) return step("release");
+  // The done settle is code (issue #316): between the release and the receipt
+  // chain, the loop writes the row itself — a skipped write can never reach
+  // review, and `roadmapSettled === false` is sensed, never assumed.
+  if (state.roadmapSettled === false) return { type: "settle-roadmap" };
 
   // Receipt → fold loop → audit. The receipt is machine ground truth.
   const foldCycles = state.foldCycles ?? 0;
@@ -224,7 +266,8 @@ export function renderPrompt(action, state) {
           `${head}\n\nStep: run unit-lane's release step ` +
           `(\`skills/unit-lane/references/RELEASE.md\`) for ${unit}: push the branch, open ` +
           `the PR against \`main\` carrying the Evidence section and \`Closes\`, write ` +
-          `\`- PR: <url>\` into the unit doc's References, and set the roadmap row.`,
+          `\`- PR: <url>\` into the unit doc's References, and stop — the loop ` +
+          `settles the roadmap row itself before the review runs.`,
       };
     case "review":
       return {
@@ -376,6 +419,33 @@ export function sense(token) {
   const dirty = sh("git", ["status", "--porcelain"]).stdout.trim() !== "";
   const head = sh("git", ["rev-parse", "HEAD"]).stdout.trim();
   const prNumber = parsePrNumber(references);
+  const prUrl = parsePrUrl(references);
+
+  // The settle fact (issue #316): a roadmap row reading `done · [#N](<same
+  // url>)`. Fix units are exempt in-code — the fix index removes merged rows
+  // by its own convention, so `roadmapSettled` stays null there and the
+  // release step's documented duty owns their row.
+  let roadmapSettled = null;
+  const nn = path.basename(unitDir).match(/^(\d+)/)?.[1] ?? null;
+  const isFix = unitDir.split(path.sep).includes("fix") && unitDir.split(path.sep).includes("docs");
+  if (!isFix && nn) {
+    const row = findRow(path.join(TARGET, "docs", "features", "ROADMAP.md"), nn);
+    if (!row || prNumber === null) {
+      roadmapSettled = false;
+    } else {
+      // One grader for the settle (review F3, #316): the crate's own check, so
+      // the loop and the root gate can never disagree. This block used to accept
+      // any `[#N](` link while `roadmap-settle.mjs` compared the exact URL.
+      const { violations } = checkUnitDoc({
+        nn,
+        slug: path.basename(unitDir).replace(/^\d+-/, ""),
+        kind: "feature",
+        docText: doc,
+        indexText: fs.readFileSync(path.join(TARGET, "docs", "features", "ROADMAP.md"), "utf8"),
+      });
+      roadmapSettled = !violations.some((violation) => violation.code === "pr-url-unsettled");
+    }
+  }
 
   let receipt = null;
   if (prNumber) {
@@ -418,6 +488,7 @@ export function sense(token) {
     evidenceDone: progressHasStep(progress, "evidence"),
     docsDone: progressHasStep(progress, "docs"),
     releaseDone: prNumber !== null,
+    roadmapSettled,
     phasesDeclared: phases,
     phasesDone: [...recordedPhases(doc)],
     testsOk: null,
@@ -470,12 +541,44 @@ function runRootSuite() {
   return `${files.length} files green`;
 }
 
-/** One act: `tests` runs in code, everything else spawns a pi session. */
+/**
+ * Pure argv builder for the settle commit (F1, review cycle 1): `git commit
+ * -m <msg> -- <path>`. Options must precede `--` — after the separator every
+ * token is a pathspec, so the previous literal order
+ * (`commit -- <path> -m <msg>`) made `-m <msg>` a pathspec and the settle
+ * commit failed unconditionally.
+ */
+export function settleCommitArgs({ unit, prNumber, prUrl }) {
+  const message = `docs(roadmap): settle ${unit} — done · [#${prNumber}](${prUrl})`;
+  return ["commit", "-m", message, "--", "docs/features/ROADMAP.md"];
+}
+
+/** One act: `tests` and the roadmap settle run in code, everything else spawns a pi session. */
 function makeAct() {
   return (action, state) => {
-    const label = action.type === "phase" ? `P${action.n}` : action.step;
+    const label = action.type === "phase" ? `P${action.n}` : (action.step ?? action.type);
     if (action.type === "step" && action.step === "tests") {
       runRootSuite();
+      return;
+    }
+    if (action.type === "settle-roadmap") {
+      // The loop writes the row itself (issue #316) — through the crate's
+      // rowUpsert, cells preserved — then commits and pushes the settle so the
+      // receipt chain sees a current head.
+      const unit = state.unit;
+      const result = settleRoadmapRow(
+        { nn: /^\d+/.exec(unit)?.[0], pr: state.prNumber, prUrl: state.prUrl, slug: unit.replace(/^\d+-/, "") },
+        { cwd: TARGET },
+      );
+      if (!result.ok) throw new Error(`roadmap settle failed: ${result.detail}`);
+      const commit = spawnSync(
+        "git",
+        settleCommitArgs({ unit, prNumber: state.prNumber, prUrl: state.prUrl }),
+        { cwd: TARGET, encoding: "utf8" },
+      );
+      if ((commit.status ?? 1) !== 0) {
+        throw new Error(`roadmap settle commit failed: ${(commit.stderr ?? "").trim().split("\n")[0] || `exit ${commit.status}`}`);
+      }
       return;
     }
     const { prompt } = renderPrompt(action, state);
@@ -492,7 +595,7 @@ function makeAct() {
     // `review` joins the push set without joining the commit set: its own
     // artifacts must already be pushed before its receipt was emitted, and a
     // no-op push cannot void a receipt.
-    const pushedLabel = action.type === "phase" ? "phase" : action.step;
+    const pushedLabel = action.type === "phase" ? "phase" : (action.step ?? action.type);
     if (COMMITS.has(pushedLabel) || pushedLabel === "review") {
       const pushed = spawnSync("git", ["push"], { cwd: TARGET, encoding: "utf8", timeout: 30_000 });
       if ((pushed.status ?? 1) !== 0) {
@@ -538,9 +641,9 @@ export async function runCycle({ sense: senseFn, act, log = () => {} }) {
         foldCycles: history.foldCycles,
       };
     }
-    history.acted.push(action.type === "phase" ? `phase${action.n}` : action.step);
+    history.acted.push(action.type === "phase" ? `phase${action.n}` : (action.step ?? action.type));
     const after = await senseFn();
-    const key = action.type === "phase" ? "phase" : action.step;
+    const key = action.type === "phase" ? "phase" : (action.step ?? action.type);
     if (COMMITS.has(key) && after.key === state.key) {
       return {
         outcome: OUTCOME.NO_PROGRESS,
