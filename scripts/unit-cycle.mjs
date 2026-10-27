@@ -533,6 +533,18 @@ function runRootSuite() {
   return `${files.length} files green`;
 }
 
+/**
+ * Pure argv builder for the settle commit (F1, review cycle 1): `git commit
+ * -m <msg> -- <path>`. Options must precede `--` — after the separator every
+ * token is a pathspec, so the previous literal order
+ * (`commit -- <path> -m <msg>`) made `-m <msg>` a pathspec and the settle
+ * commit failed unconditionally.
+ */
+export function settleCommitArgs({ unit, prNumber, prUrl }) {
+  const message = `docs(roadmap): settle ${unit} — done · [#${prNumber}](${prUrl})`;
+  return ["commit", "-m", message, "--", "docs/features/ROADMAP.md"];
+}
+
 /** One act: `tests` and the roadmap settle run in code, everything else spawns a pi session. */
 function makeAct() {
   return (action, state) => {
@@ -553,7 +565,7 @@ function makeAct() {
       if (!result.ok) throw new Error(`roadmap settle failed: ${result.detail}`);
       const commit = spawnSync(
         "git",
-        ["commit", "--", "docs/features/ROADMAP.md", "-m", `docs(roadmap): settle ${unit} — done · [#${state.prNumber}](${state.prUrl})`],
+        settleCommitArgs({ unit, prNumber: state.prNumber, prUrl: state.prUrl }),
         { cwd: TARGET, encoding: "utf8" },
       );
       if ((commit.status ?? 1) !== 0) {
