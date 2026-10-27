@@ -3889,3 +3889,19 @@ export {
   ROADMAP_OPERATIONS,
   CHANGELOG_OPERATIONS,
 } from "./file-schemas.js";
+
+// ── Published closed vocabularies (unit 84, issue #315) ─────────────
+export {
+  FUTURE_STATUS_KINDS,
+  FINDINGS_TABLE_SEVERITIES,
+  LOG_KIND_TOKENS,
+  SWEEP_CLAIM_KINDS,
+  SWEEP_MISMATCH_REASONS,
+} from "./vocabularies.js";
+export type {
+  FutureStatus,
+  FindingsTableSeverity,
+  LogKindToken,
+  SweepClaimKind,
+  SweepMismatchReason,
+} from "./vocabularies.js";
