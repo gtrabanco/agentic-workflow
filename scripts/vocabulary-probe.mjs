@@ -152,8 +152,11 @@ function documentViolations(doc) {
   return violations;
 }
 
-/** The unit docs the roadmap and the fix index still call in flight. */
-function inFlightDocs(root) {
+/** The unit docs the roadmap and the fix index still call in flight.
+ *  Exported so the suite can assert the corpus rule itself, not only the
+ *  violations it finds: a settled head legitimately scans nothing, and that
+ *  must not be confused with a corpus rule that stopped matching. */
+export function inFlightDocs(root) {
   const out = [];
   const roadmap = readLines(root, "docs/features/ROADMAP.md");
   if (roadmap !== null) {
@@ -216,6 +219,7 @@ export function runProbe(root) {
     lines,
     violations,
     documentsChecked: docs.length,
+    documents: docs.map((doc) => doc.file),
   };
 }
 
