@@ -3478,3 +3478,27 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Replace the @bacnh85/pi-serena bridge with native Serena MCP registration (#321)
 - **Decisions:** Replaced the @bacnh85/pi-serena bridge (which coupled pi to Serena's internal Python APIs and predates v2.0.0) with pi's native MCP support (pi mcp add serena -- serena start-mcp-server --context claude-code). The installed version chain was reworked to read from the tool itself (serena --version -> uv tool list -> pip show fallback) because pip show cannot see the uv tool install route documented by the repo. PyPI fetch moved to curl against PyPI's JSON API (pip index versions fallback). External verification blocked the PyPI half on realistic input and the fix was applied in a correction batch.
 - **Next:** PR #324 is open (fix-serena-mcp -> main) awaiting CI green and human merge. Pending by design: AC2 live tool-reachability in a session (consent-gated, closes with the first real /init-workspace run with Serena).
+## 2026-10-27T09:31:40Z — fix-316-roadmap-writer-call-sites — manual
+- **Commits:** 12 (`8aaf102f…a2f0d096`)
+- **Files:** 30 files
+- **Summary:** /audit-pr on PR #323 (unit 316: roadmap settle is code) — BLOCKED with 6 blockers (merge conflict, CI missing, Closes #316, receipt stale, missing ledger, call sites executable); cleared all blockers: fixed roadmap CLI bare-subcommand resolution, unified unit-cycle settle grader, added --root usage guard, wrote obligation ledger + planning evidence, re-cut pi package to 0.35.1, resolved rebase, fixed subsectionBody section-boundary defect in unit-lineage, re-based skill-context budgets, Closes #316 in PR body, pushed, CI green -- receipt stale --
+- **Decisions:** roadmap rowUpsert bare subcommand resolved the word as table path (ENOENT) -- fixed with usage-error guard; bare rowUpsert/annotate now exits 2 with usage line; unit-cycle settled through checkUnitDoc instead of own weaker grader; segment body closed at nearest ##/### instead of first ### anywhere (defect that would have blocked every unit with a findings table) -- learned the working form and the kind boundary (rowUpsert only speaks roadmap-table@1 with NN header, so fix indexes use status-cell edit instead)
+- **Next:** /review-change 316-roadmap-settle — receipt is stale (moved head past the marker); /audit-pr 323 after review passes
+## 2026-10-27T09:32:07Z — fix-316-roadmap-writer-call-sites — manual
+- **Commits:** 13 (`8aaf102f…9bc57997`)
+- **Files:** 31 files
+- **Summary:** Unit 316 resumed. Retrospective unit doc created and index registered. Triage ran (plan implement tests evidence review docs). Evidence verified: roadmap-check 17 pass, roadmap-settle 7 pass, unit-cycle 45 pass, live gate PASS 0 violations, budgets 28 skills pass, root suite 905 pass. Review cycle 1: FAIL with F1 (high) unit-cycle settle commit argv bug and F2 (low) row 244 rename undocumented. Fold 523a95e2: settleCommitArgs() pure builder fixing the argv bug. Cycle 2: PASS. Receipt stage: review-receipt verify --pr 323 exit 3 missing-review-receipt.
+- **Decisions:** Tree: user chose fix tree for #316 (D-Q1). Diff-guard BREACH recorded as exception (D2). Row 244 rename resolved by documentation (D3).
+- **Next:** Close-out blocked on receipt: /review-change 316-roadmap-settle to post the SHA-bound review-change:pass on PR #323; once receipt current /audit-pr PR #323 for merge
+## 2026-10-27T09:32:48Z — fix-316-roadmap-writer-call-sites — manual
+- **Commits:** 14 (`8aaf102f…7c3f23cb`)
+- **Files:** 31 files
+- **Summary:** /review-change on unit 316 — delta-scoped cycle 3 review: all folded rows re-verified fixed, all gates green at reviewed head, SHA-bound receipt posted and current at PR #323
+- **Decisions:** Cycle 3 ran delta-scoped (the post-PASS record commits fc36bfe3+783b57f1 — unit-doc only) rather than re-running the full-pack on the whole diff; the review appended R3+G4 marks to the unit doc, committed, pushed, and emitted the SHA-bound receipt at the new head using --scope-base main to derive the affecting-path manifest so later foreign-only commits don't void it
+- **Next:** Merge PR #323 (unit 316 roadmap-settle): receipt is current, review is clean. The fix-index unit 258 (gate evidence) and unit 261 (settle call sites execute) are separate units on the same branch — each will need its own /review-change + /audit-pr cycle before the branch is mergeable as a whole.
+## 2026-10-27T09:32:53Z — fix-316-roadmap-writer-call-sites — manual
+- **Commits:** 15 (`8aaf102f…3b007036`)
+- **Files:** 31 files
+- **Summary:** External verification and PR for issue #316 (roadmap settle is code)
+- **Decisions:** External verifier: read-only verification of all 4 commits on fix-316-roadmap-writer-call-sites against base 9da14169 — all tests green (7+43+17=67), sibling sweep clean, no blockers. Verdict: VERIFIED. PR #323 opened targeting main.
+- **Next:** Monitor PR #323 CI, merge once green. Continue fix-316 work if any follow-up items remain in the 316 unit doc.

@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 6.2.2
+version: 6.3.1
 argument-hint: <NN-slug> [P<k>|step] [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
@@ -182,7 +182,13 @@ lane hand-off is a defect; re-read the hand-off before looping. After each
 step: gates, execute, diff guard (if implement), evidence/progress update,
 commit. Skip intermediate review checkpoints; the mandatory end review covers
 the full accumulated diff. On gate red at any step: repair that step (up to
-`--max-attempts`), then continue the loop. Terminal:
+`--max-attempts`), then continue the loop. The close-out is part of the last
+step's completion: open the PR on `main` with `Closes #N`, write `- PR: <url>`
+into References, and settle the index row with `agentic-workflow roadmap
+<index> rowUpsert '<json>'` (`docs/features/ROADMAP.md`; a fix unit edits its
+`docs/fix/README.md` status cell — no `NN` column, no `rowUpsert`).
+`bun scripts/roadmap-settle.mjs` exits 0 (#316).
+Terminal:
 
 ```text
 UNIT LOOP — <unit> COMPLETE
