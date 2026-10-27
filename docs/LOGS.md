@@ -3496,3 +3496,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** /review-change on unit 316 — delta-scoped cycle 3 review: all folded rows re-verified fixed, all gates green at reviewed head, SHA-bound receipt posted and current at PR #323
 - **Decisions:** Cycle 3 ran delta-scoped (the post-PASS record commits fc36bfe3+783b57f1 — unit-doc only) rather than re-running the full-pack on the whole diff; the review appended R3+G4 marks to the unit doc, committed, pushed, and emitted the SHA-bound receipt at the new head using --scope-base main to derive the affecting-path manifest so later foreign-only commits don't void it
 - **Next:** Merge PR #323 (unit 316 roadmap-settle): receipt is current, review is clean. The fix-index unit 258 (gate evidence) and unit 261 (settle call sites execute) are separate units on the same branch — each will need its own /review-change + /audit-pr cycle before the branch is mergeable as a whole.
+## 2026-10-27T09:32:53Z — fix-316-roadmap-writer-call-sites — manual
+- **Commits:** 15 (`8aaf102f…3b007036`)
+- **Files:** 31 files
+- **Summary:** External verification and PR for issue #316 (roadmap settle is code)
+- **Decisions:** External verifier: read-only verification of all 4 commits on fix-316-roadmap-writer-call-sites against base 9da14169 — all tests green (7+43+17=67), sibling sweep clean, no blockers. Verdict: VERIFIED. PR #323 opened targeting main.
+- **Next:** Monitor PR #323 CI, merge once green. Continue fix-316 work if any follow-up items remain in the 316 unit doc.
