@@ -399,8 +399,13 @@ hoists.
   version + add its CHANGELOG companion row (root `skills/` is the Pi package's
   shipped content, which is exactly why a skills-only merge used to publish
   nothing); the **registry** half (a separate job, clearly-degraded-when-
-  unreachable) fails an exact pin whose target has published a newer version —
-  fix: bump the pin + the package version in the same PR. CI publishes on merge
+  unreachable) fails an exact pin whose target has published a newer version,
+  and — for pins whose target is a local package under `packages/` — a pin that
+  does not equal the **local package version** (the one the merge publishes;
+  verified offline even when the registry is unreachable): a pin behind it
+  recreates the post-publish red window, a pin ahead of everything points at a
+  version that will never exist — fix: bump the pin + the package version in
+  the same PR. CI publishes on merge
   to `main` when the version differs
   from the registry (`publish-schema.yml`, `publish-pi-package.yml` — one
   file per package, because npm Trusted Publisher records pin the workflow
