@@ -175,6 +175,40 @@ route | fold \| replan-in-unit \| decision-required \| product owner — … \| 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
 
+## Review verdict
+
+### Cycle 1 — 2026-10-26, independent reviewer @ HEAD 445a0777 + 27762d27
+
+```
+REVIEW-VERDICT: FAIL
+- Findings: 2 material, 4 report-notes
+- Evidence reproduced: yes
+- AC integrity: unchanged from triage
+```
+
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
+| F1 | S1 · scripts/unit-cycle.mjs:553 | correctness | high | source | fold — the settle act's commit ran `git commit -- <path> -m <msg>`: options after `--` are pathspecs, so the commit always failed (reproduced exit 1) and the S1 code-driven settle could never land its commit; the 43 unit-cycle tests only covered pure `decide`/`settleRoadmapRow`, never the commit argv |
+| F2 | S4 · docs/fix/README.md (row 244) | scope | low | source | fold — the fix-index row 244 topic rename (`freeze-batch-next-consumer` → `freeze-batch-planner-consumer`, commit 96544a7d) was a deliberate gate-driven repair (the gate's `slug-mismatch` code fails the live tree on the d1bb61c5-born mismatch) but was never documented in the unit doc |
+| F3 | S4 · scripts/unit-cycle.mjs:451 | correctness | low | source | report-note — the loop's settle fact checks only `[#<pr>](` link presence, not the exact URL; a wrong-URL settle passes unit-cycle yet fails `roadmap-settle.mjs` — two graders, two strengths |
+| F4 | S1 · skills/execute-phase/SKILL.md:186 · skills/unit-lane/references/RELEASE.md:33 | contract consistency | low | source | report-note — the close-out/release settle instruction is unconditioned on unit kind; for fix units a `roadmap rowUpsert` against `docs/features/ROADMAP.md` would insert a spurious feature row, while `unit-cycle`'s `sense`/`settleRoadmapRow` exempt fix units — prose and code disagree on the fix-unit case |
+| F5 | S4 · scripts/roadmap-settle.mjs:50 | correctness | low | source | report-note — `--root` with no value throws an uncaught TypeError instead of the documented exit-2 usage path |
+| F6 | S2 · docs/features/ROADMAP.md:87 | scope | low | source | report-note — live row 77 is settled to `done · [#309]` in this diff although the SPEC's Known-issues section declares live-row repair post-merge reconciliation, out of scope — necessary for the live-tree-green gate, but it contradicts the doc's own scope statement |
+
+### Cycle 2 — 2026-10-26, after the fold
+
+```
+REVIEW-VERDICT: PASS
+- Findings: 0 material, 4 report-notes (F3–F6 stand)
+- Evidence reproduced: yes
+- AC integrity: unchanged from triage
+```
+
+F1 re-verified fixed (argv order + 2 new tests + scratch-repo commit run);
+F2 resolved by documentation (D3). Report-notes are informational, not blockers;
+F4 is the strongest — it stays visible as a re-trigger condition for a future
+fix-unit routing pass.
+
 ## Log
 
 Append-only. `L1` is the issue text verbatim; every later line carries one kind
@@ -286,13 +320,25 @@ token from `log-kind@1`.
 - **E4** — 2026-10-26, `bun scripts/roadmap-settle.mjs` (live tree) · exit 0 · `verdict: PASS · violations: 0` over 110 unit docs.
 - **E5** — 2026-10-26, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 28 skills`.
 - **E6** — 2026-10-26, `node --test scripts/*.test.mjs` · exit 0 · 903 pass / 0 fail (120s).
+- **E7** — 2026-10-26 (post-fold), `bun test scripts/unit-cycle.test.mjs` · exit 0 · 45 pass / 0 fail (43 + 2 new settleCommitArgs tests).
+- **E8** — 2026-10-26 (post-fold), `node --test scripts/*.test.mjs` · exit 0 · 905 pass / 0 fail.
+- **E9** — 2026-10-26 (post-fold), scratch-repo verification of the fixed argv: `git commit -m "docs(roadmap): settle 80-example — done · [#323](url)" -- docs/features/ROADMAP.md` · exit 0 · commit landed (the F1 repro now passes).
+- **G2** — 2026-10-26, `bun scripts/review-receipt.mjs verify --pr 323` · exit 3 · `missing-review-receipt` (no REVIEW-PASS marker with contract=v1 in the PR comments) — routes the close-out to `/review-change`.
 - **G1** — 2026-10-26, `bun scripts/diff-guard.mjs --base main --unit 316` · **BREACH** — Lines: 1101 > 400 · Files: 30 > 8. Anti-gaming respected: nothing deleted to shrink the diff. → recorded as exception D2.
 - **D2** — 2026-10-26, owner-recorded exception (diff-guard): the whole-unit diff is 1101 lines / 30 files against the 400/8 budget — a four-layer slice (crate + root gate + unit-cycle + four skills/docs surfaces) that cannot shrink without dropping one of the four layers S1–S4 demand; work was committed across four scoped commits (9950ba61 → 445a0777) before this doc existed. Precedent: unit 78's recorded exception in `docs/features/78-spec-by-reference` decisions.md. Not gaming: the diff was never shrunk.
+- **D3** — 2026-10-26, owner-recorded decision (resolves review finding F2): commit 96544a7d renamed fix-index row 244's topic `freeze-batch-next-consumer` → `freeze-batch-planner-consumer` because the new root gate's `slug-mismatch` code fails the live tree on the row↔folder mismatch born in d1bb61c5 — the repair is the gate's own first catch, in-scope as P2's validator passing on the live tree (E4), now documented here.
+- **R1** — 2026-10-26, review run — `HEAD 445a0777 (+27762d27)`, verdict **FAIL**, cycle 1, gates exit 0. 2 material (F1, F2), 4 report-notes (F3–F6); verdict section above.
+- **F1** — 2026-10-26, folded — F1 repaired: the settle commit argv extracted into pure `settleCommitArgs()` (`-m` before `--`), 2 new tests covering the argv contract, fixed command verified to commit in a scratch repo · commit 523a95e2.
+- **F2** — 2026-10-26, folded — F2 resolved by documentation: D3 records the row-244 rename and its gate-driven reason · commit 523a95e2.
+- **R2** — 2026-10-26, review run — `HEAD 523a95e2`, verdict **PASS**, cycle 2, gates exit 0. 0 material, 4 report-notes (F3–F6 stand).
 
 ## Next
 
-Close-out ladder: review step (in-doc `REVIEW-VERDICT`), then the receipt stage
-against PR #323 (`bun scripts/review-receipt.mjs verify --pr 323`).
+Close-out ladder ran: the receipt stage verified
+`bun scripts/review-receipt.mjs verify --pr 323` → exit 3 (`missing-review-receipt`
+— no `REVIEW-PASS` marker with `contract=v1` in the PR comments). No current
+receipt exists, so the closing hand-off is `/review-change 316-roadmap-settle`
+— `/audit-pr` is never named before its precondition exists.
 
 ## References
 
