@@ -13,10 +13,11 @@
  */
 
 import assert from "node:assert/strict";
+import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { runProbe } from "./vocabulary-probe.mjs";
+import { runProbe, inFlightDocs } from "./vocabulary-probe.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE_ROOT = path.join(ROOT, "scripts", "fixtures", "vocabulary-probe", "tree");
@@ -26,6 +27,18 @@ const violationsOf = (result, vocab) => result.violations.filter((violation) => 
 
 test("#315 F40: the `kept deferred <date>` reproducer fails the probe naming file:line and token", () => {
   const result = runProbe(FIXTURE_ROOT);
+  // The non-vacuity guarantee lives on this frozen corpus, never on the
+  // repository's transient roadmap state (review F1): a settled head scans
+  // nothing, and that is the rule working, not the probe being broken.
+  assert.equal(result.documentsChecked, 2, "both fixture unit docs are in the corpus");
+  assert.deepEqual(
+    [...result.documents].sort(),
+    [
+      "docs/features/90-off-vocab-future/SPEC.md",
+      "docs/features/91-clean-future/SPEC.md",
+    ].sort(),
+    "the corpus is exactly the docs the fixture roadmap still calls in flight",
+  );
   assert.equal(result.verdict, "BLOCKED: future-status-token");
   assert.equal(result.exitCode, 1);
   const violations = violationsOf(result, "future-status");
@@ -57,8 +70,55 @@ test("the repository's own head is in vocabulary", () => {
   const result = runProbe(ROOT);
   assert.equal(result.verdict, "PASS", `live violations: ${result.lines.join(" | ")}`);
   assert.equal(result.exitCode, 0);
-  assert.ok(result.documentsChecked >= 1, "the probe scanned at least the in-flight unit docs");
+  // F1 (review cycle 1): the pin used to be `documentsChecked >= 1`, which
+  // gated the suite on the release step's own roadmap write — `done · [#N]`
+  // is the prescribed state once the PR exists, and a validator must never
+  // gate on a surface another workflow actor mutates. The corpus rule is now
+  // pinned against an independent reading of the indexes instead.
+  assert.deepEqual(
+    [...result.documents].sort(),
+    [...corpusFromTheIndexes(ROOT)].sort(),
+    "the probe scanned exactly the unit docs the indexes still call in flight",
+  );
 });
+
+test("the corpus rule is the documented one, re-derived from the indexes", () => {
+  // An independent oracle for decision D3: a row is in flight when its status
+  // cell is not settled and its doc exists and carries a dated progress entry.
+  const derived = corpusFromTheIndexes(ROOT);
+  const probe = inFlightDocs(ROOT);
+  assert.deepEqual([...probe].sort(), [...derived].sort(), "the probe's corpus matches the re-derived set");
+});
+
+/**
+ * The in-flight corpus read straight off the two indexes — the test's own
+ * parse of the published row shape, deliberately not the probe's code.
+ */
+function corpusFromTheIndexes(root) {
+  const settled = /done|discarded|superseded/i;
+  const dated = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
+  const rows = [];
+  const roadmap = path.join(root, "docs/features/ROADMAP.md");
+  if (existsSync(roadmap)) {
+    for (const line of readFileSync(roadmap, "utf8").split(/\r?\n/)) {
+      const row = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/.exec(line);
+      if (row === null || settled.test(row[3])) continue;
+      rows.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
+    }
+  }
+  const index = path.join(root, "docs/fix/README.md");
+  if (existsSync(index)) {
+    for (const line of readFileSync(index, "utf8").split(/\r?\n/)) {
+      const row = /^\|\s*\[#(\d+)\]\([^)]*\)\s*\|\s*([a-z0-9-]+)\s*\|\s*`?([a-z-]+)`?/.exec(line);
+      if (row === null || /done/i.test(row[3])) continue;
+      rows.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);
+    }
+  }
+  return rows.filter((file) => {
+    const absolute = path.join(root, file);
+    return existsSync(absolute) && dated.test(readFileSync(absolute, "utf8"));
+  });
+}
 
 test("closed units are not scanned (append-only evidence holds, decision D3)", () => {
   const result = runProbe(ROOT);
