@@ -42,6 +42,7 @@ test("the claim-kind and reason vocabularies are closed and exported", () => {
     "section-length",
     "prerequisite",
     "contradiction",
+    "sweep",
   ]);
   assert.deepEqual([...REASON_CODES], [
     "validator-mismatch",
@@ -55,6 +56,7 @@ test("the claim-kind and reason vocabularies are closed and exported", () => {
     "unparseable-claim",
     "no-claims",
     "missing-document",
+    "sweep-mismatch",
   ]);
 });
 
@@ -279,6 +281,39 @@ test("#305 an out-of-scope command is printed as a skip line and counted, never 
   assert.ok(skips.some((line) => line.includes("command outside the reader allowlist")));
   assert.ok(skips.some((line) => line.includes("no declared outcome")));
   assert.match(result.lines.join("\n"), /^claims: 1 checked · 3 skipped$/m);
+});
+
+// ---------------------------------------------------------------------------
+// #315 · S2 — the sweep claim kind (the F35/F37/F38/F39 class)
+// ---------------------------------------------------------------------------
+
+test("#315 F35: a seeded stale survivor fails the sweep declaration naming file:line, regex and count", () => {
+  const result = coherence([fixture("sweep-breach-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.ok(sweep, "the declaration is read as a sweep claim");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /1 match/);
+  assert.match(sweep.observed, /M1-VERDICT-COPY/);
+  assert.match(sweep.observed, /sweep-breach\/verdict\.md:\d+/);
+  const block = result.lines.join("\n");
+  assert.match(block, /^Promise-coherence: sweep scripts\/fixtures\/promise-coherence\/sweep-breach-unit-doc\.md:\d+$/m);
+});
+
+test("#315 D1: the stale form inside the fold's fenced evidence quote is exempt — a clean sweep passes", () => {
+  const result = coherence([fixture("sweep-clean-unit-doc.md")]);
+  assert.equal(result.verdict, "PASS", result.lines.join("\n"));
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "pass");
+  assert.match(sweep.observed, /^0 matches/);
+});
+
+test("#315 AC4: a declaration outside the fixed grammar fails closed as unparseable", () => {
+  const result = coherence([fixture("sweep-unparseable-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: unparseable-claim");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /swept:\s*\/<pattern>\/<flags> → expected <n> in <glob>/);
 });
 
 test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
