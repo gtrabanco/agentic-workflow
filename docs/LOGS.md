@@ -3515,3 +3515,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Upgraded workspace substrate, verified Serena across root and packages, fixed .gitignore .serena negation bug; merged CLAUDE.md shim
 - **Decisions:** Serena works as LSP but is not registered as MCP in pi — the registry command (pi mcp add serena -- serena start-mcp-server --context claude-code) is pending explicit user yes. The .gitignore **.gitignore negation with unanchored path defeated the above rule, causing nested .serena/ trees to leak; fix anchors with leading slash. /home/agent/CLAUDE.md removed (pi first-class decision).
 - **Next:** Register Serena MCP in pi (pi mcp add serena ...) if user confirms; fill the docs/architecture/ stubs with project-specific content
+
+## 2026-10-27T18:12:45Z — main — manual
+- **Commits:** 3 (`1060c343…3992680b` + merged `3205ca33` / PR #328)
+- **Files:** 4 (`docs/features/ROADMAP.md`, `docs/fix/README.md`, `scripts/review-loop-discipline.test.mjs`, `docs/features/76-lane-product-route/review-findings.md`)
+- **Summary:** audit-docs: applied --fix on main — roadmap status settle (5 folded rows → folded/declined), 7 new rows registered (#269/#284/#294/#307/#315/#318/#319), fix index cleared (#316); fold-findings: folded 76-F25 (PR #328 merged), disputed 36 stale flags, identified 2 replans (55-F4, 69-F36) and 1 blocked (69-F34)
+- **Decisions:** Owner authorized direct --fix on main (override of the one-PR-per-unit rule): no PR for roadmap/fix-index changes; folded F25 with a two-class pin in review-loop-discipline.test.mjs and FOLD_PROCESS.md because the previous table-only pin did not catch emitted-branch mutations; 36 DISPUTED rows flagged as resolved-at-HEAD but stale-in-ledger (squash-merge orphaned the fold commit)
+- **Next:** /triage-issue #315 to investigate the 11 done-units with open ledger rows (audit-docs finding #4); /audit-docs re-run to confirm PASS on the settled state
