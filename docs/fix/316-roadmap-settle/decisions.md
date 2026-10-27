@@ -12,3 +12,16 @@ resolution.
 
 none — no other questions were asked; every other lane input (objective, scope,
 non-goals, ACs) cites the issue text verbatim (`SPEC.md` `## Specs` quotes).
+
+## Path-protection records
+
+The three settle suites are `**/*.test.*` surfaces (`test-file`, frozen). The two
+created by this unit carry their declaration here; the third (`scripts/unit-cycle.test.mjs`)
+exists on `main` and is a modification, not a creation.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/roadmap-settle.test.mjs | P2 | 2026-10-27 | execute-phase | S2's offline gate is verified by this suite; the #316 repair adds the `--root`-without-value usage case (review F5) to the file the gate already owns
+justification | packages/agentic-workflow/test/roadmap-check.test.mjs | P1 | 2026-10-27 | execute-phase | S4's crate check and its exit contract are pinned here; the #316 repair adds the bare-subcommand usage case that stops the writer resolving a subcommand word as a table path (review F4)
+```

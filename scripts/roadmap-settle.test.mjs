@@ -94,3 +94,10 @@ test("usage — an unreadable root fails closed with exit 2", () => {
   const r = run(["--root", path.join(FIXTURES, "no-such-dir")]);
   assert.equal(r.status, 2);
 });
+
+test("usage — --root with no value is a usage error, never a crash (review F5, #316)", () => {
+  const r = run(["--root"]);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /usage: roadmap-settle\.mjs/);
+  assert.doesNotMatch(r.stderr, /ERR_INVALID_ARG_TYPE/);
+});
