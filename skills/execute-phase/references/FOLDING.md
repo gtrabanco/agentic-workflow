@@ -19,8 +19,28 @@ findings end up "solved" locally but absent from the merged PR:
   depends on them**: callers of what changes, consumers of what it delivers, and
   every mention that stops being true (a comment, a prose claim, a declared
   validator, a manifest narration). Nothing beyond that
+✓ Sweep declaration EMITTED when the change is token- or claim-shaped — the
+  fixed line below appended to this fold's `## Log` entry (a legacy unit's
+  `## Progress log`). One line per stale form swept, no prose around it, no
+  judgment call: a published vocabulary token, a claim kind, a phrase a
+  surface asserted, a reader/echo pattern. It is the survivors rule with a
+  receipt the gate can re-run:
+
+  ```
+  swept: /<pattern>/<flags> → expected <n> in <glob>
+  ```
+
+  `<pattern>` is the stale form as a JS regex body, `<flags>` the flags (empty
+  allowed), `<n>` the survivor count you expect **outside** the allowlist —
+  normally `0`, and a non-zero number only for the surfaces that legitimately
+  keep the form (the ledger's own quote of the finding, log lines, fixtures),
+  which the `<glob>` naming makes explicit. `<glob>` is the bounded scope: the
+  finding's cited surface plus its inventory-declared siblings, never a
+  repo-wide sweep. A fold that changes a token/claim-shaped surface and emits
+  no declaration is a `workflow` finding at review.
 ✓ `bun scripts/promise-coherence.mjs` RUN → `verdict PASS` (the repaired claims
-  reproduce at the head; a skipped line is read, never assumed)
+  reproduce at the head; every declared sweep re-runs to its expected count; a
+  skipped line is read, never assumed)
 ✓ Gate RUN and green (exit codes pasted)
 ✓ Never edit an existing test's expectation to match behaviour — a setup
   repair keeps assertions at least as strong and never touches expectations
