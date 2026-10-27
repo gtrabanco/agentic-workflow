@@ -48,7 +48,14 @@ function parseArgs(argv) {
   const result = { json: false, root: REPO };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--json") result.json = true;
-    else if (argv[i] === "--root") result.root = path.resolve(argv[++i]);
+    else if (argv[i] === "--root") {
+      const value = argv[++i];
+      if (value === undefined) {
+        process.stderr.write(`usage: roadmap-settle.mjs [--root <dir>] [--json]\n`);
+        process.exit(2);
+      }
+      result.root = path.resolve(value);
+    }
     else {
       process.stderr.write(`usage: roadmap-settle.mjs [--root <dir>] [--json]\n`);
       process.exit(2);

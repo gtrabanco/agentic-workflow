@@ -225,6 +225,14 @@ switch (command) {
 
   // ── roadmap ──────────────────────────────────────────────────────────
   case "roadmap": {
+    // `rowUpsert`/`annotate` take a table path first: a bare first positional is
+    // a missing path, never a filename. Resolving the subcommand word would make
+    // `roadmap rowUpsert …` open a file literally named `rowUpsert` and refuse
+    // with ENOENT, which reads as a missing table instead of a usage error.
+    if (rawArgs[0] === "rowUpsert" || rawArgs[0] === "annotate") {
+      process.stderr.write(`usage: agentic-workflow roadmap <table-path> ${rawArgs[0]} <json>\n`);
+      process.exit(2);
+    }
     const filePath = rawArgs[0] ? resolve(rawArgs[0]) : join(process.cwd(), "ROADMAP.md");
 
     if (rawArgs[0] === "rowUpsert" || (rawArgs[0] && rawArgs[1] === "rowUpsert")) {

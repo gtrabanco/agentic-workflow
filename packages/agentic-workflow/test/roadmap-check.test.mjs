@@ -216,6 +216,21 @@ describe("roadmap check — CLI exit contract", () => {
     strictEqual(usage.status, 2);
   });
 
+  it("a bare rowUpsert is a usage error, never a table path (review F4)", () => {
+    // `roadmap rowUpsert …` used to resolve the subcommand word as the table
+    // path, so the writer refused with ENOENT on a file named `rowUpsert` — an
+    // unreadable-table error for what is a missing-argument mistake
+    // (issue #316).
+    const bare = spawnSync(process.execPath, [CLI, "roadmap", "rowUpsert", '{"nn":"77"}'], { encoding: "utf8", cwd: tmpDir });
+    strictEqual(bare.status, 2);
+    ok(bare.stderr.includes("usage: agentic-workflow roadmap <table-path> rowUpsert"), bare.stderr);
+    ok(!bare.stderr.includes("ENOENT"), bare.stderr);
+    strictEqual(existsSync(join(tmpDir, "rowUpsert")), false);
+
+    const bareAnnotate = spawnSync(process.execPath, [CLI, "roadmap", "annotate", "77", "note"], { encoding: "utf8", cwd: tmpDir });
+    strictEqual(bareAnnotate.status, 2);
+  });
+
   it("--json emits the envelope with the same codes", () => {
     const docDir = join(tmpDir, "docs", "features", "78-json-unit");
     mkdirSync(docDir, { recursive: true });

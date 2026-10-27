@@ -184,9 +184,13 @@ commit. Skip intermediate review checkpoints; the mandatory end review covers
 the full accumulated diff. On gate red at any step: repair that step (up to
 `--max-attempts`), then continue the loop. The close-out is part of the last
 step's completion: open the PR on `main` with `Closes #N`, write `- PR: <url>`
-into References, and settle the roadmap row through the crate's writer —
-`agentic-workflow roadmap rowUpsert` with status `done · [#N](<pr-url>)` and
-every other cell preserved; `bun scripts/roadmap-settle.mjs` exits 0 (#316).
+into References, and settle the index row through the crate's writer. Feature
+unit: `agentic-workflow roadmap docs/features/ROADMAP.md rowUpsert
+'{"nn":"<NN>","slug":"<slug>","status":"done · [#N](<pr-url>)"}'`, re-emitting
+the row's `dependsOn`/`description` cells exactly as they are. Fix unit: write
+the `docs/fix/README.md` status cell instead — that index has no `NN` column, so
+`rowUpsert` does not apply to it. Either way `bun scripts/roadmap-settle.mjs`
+exits 0 (#316).
 Terminal:
 
 ```text

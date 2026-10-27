@@ -28,6 +28,7 @@ import {
   runCycle,
   OUTCOME,
 } from "./unit-cycle.mjs";
+import { checkUnitDoc } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 
 // ---------------------------------------------------------------------------
 // decide() — the state machine, one case per transition
@@ -319,6 +320,18 @@ test("settleRoadmapRow: writes done · [#N](url) preserving every other cell, vi
     assert.equal(result.ok, true, result.detail ?? "");
     const row = readFileSync(table, "utf8").split("\n").find((l) => l.startsWith("| 77 |"));
     assert.match(row, /\| 77 \| `settle-me` \| done · \[#309\]\(https:\/\/github\.com\/gtrabanco\/agentic-workflow\/pull\/309\) \| 78 \| Issue \[#305\]/);
+
+    // What the writer emits is exactly what the crate's own settle grader
+    // accepts — one rule, no second opinion (review F3, #316). A row settled to
+    // a different PR URL is refused by that same grader.
+    const docText = "# 77 — settle-me\n## Next\n\nPR #309 (https://github.com/gtrabanco/agentic-workflow/pull/309).\n";
+    const indexText = readFileSync(table, "utf8");
+    assert.deepEqual(checkUnitDoc({ nn: "77", slug: "settle-me", kind: "feature", docText, indexText }).violations, []);
+    const wrongUrl = docText.replace("pull/309", "pull/999");
+    assert.deepEqual(
+      checkUnitDoc({ nn: "77", slug: "settle-me", kind: "feature", docText: wrongUrl, indexText }).violations.map((v) => v.code),
+      ["pr-url-unsettled"],
+    );
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

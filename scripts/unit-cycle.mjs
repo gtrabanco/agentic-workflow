@@ -35,7 +35,7 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 import { compute as needsInputCompute } from "./needs-input.mjs";
-import { findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
+import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
 import {
   openRows,
   routeOfRow,
@@ -433,9 +433,17 @@ export function sense(token) {
     if (!row || prNumber === null) {
       roadmapSettled = false;
     } else {
-      const token = row.status.replace(/[`*]/g, "").split("·")[0].trim();
-      const link = prUrl ? new RegExp(`\\[#${prNumber}\\]\\(`).test(row.status) : false;
-      roadmapSettled = token === "done" && link;
+      // One grader for the settle (review F3, #316): the crate's own check, so
+      // the loop and the root gate can never disagree. This block used to accept
+      // any `[#N](` link while `roadmap-settle.mjs` compared the exact URL.
+      const { violations } = checkUnitDoc({
+        nn,
+        slug: path.basename(unitDir).replace(/^\d+-/, ""),
+        kind: "feature",
+        docText: doc,
+        indexText: fs.readFileSync(path.join(TARGET, "docs", "features", "ROADMAP.md"), "utf8"),
+      });
+      roadmapSettled = !violations.some((violation) => violation.code === "pr-url-unsettled");
     }
   }
 

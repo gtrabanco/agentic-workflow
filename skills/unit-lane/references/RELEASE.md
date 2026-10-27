@@ -30,10 +30,13 @@ Write into the unit doc's **References** section:
 - [ ] Branch follows the project's Workflow conventions
 - [ ] Commit messages follow conventional format (`type(scope): description`)
 - [ ] PR body includes the Evidence section as verification record
-- [ ] Roadmap row settled via the crate's writer — re-emit the row with
-      `agentic-workflow roadmap rowUpsert` (status `done · [#<pr>](<pr-url>)`,
-      every other cell as it is); `bun scripts/roadmap-settle.mjs` exits 0
-      afterwards (issue #316: the settle is code, never prose)
+- [ ] Index row settled via the crate's writer — feature: re-emit the row with
+      `agentic-workflow roadmap docs/features/ROADMAP.md rowUpsert
+      '{"nn":"<NN>","slug":"<slug>","status":"done · [#<pr>](<pr-url>)"}'`,
+      every other cell as it is; fix: the `docs/fix/README.md` status cell — that
+      index has no `NN` column, so `rowUpsert` (the roadmap's writer) does not
+      apply to it. `bun scripts/roadmap-settle.mjs` exits 0 afterwards (issue
+      #316: the settle is code, never prose)
 - [ ] `git status --porcelain` is empty
 
 ## Allowed
