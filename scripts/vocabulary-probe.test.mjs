@@ -31,10 +31,10 @@ test("#315 F40: the `kept deferred <date>` reproducer fails the probe naming fil
   const violations = violationsOf(result, "future-status");
   assert.equal(violations.length, 1, "exactly the off-vocabulary row is refused");
   assert.match(violations[0].file, /90-off-vocab-future\/SPEC\.md$/);
-  assert.equal(violations[0].line, 7, "the finding names the row's own line");
+  assert.equal(violations[0].line, 9, "the finding names the row's own line");
   assert.match(violations[0].token, /kept deferred 2026-10-26/);
   const block = result.lines.join("\n");
-  assert.match(block, /^Vocabulary-probe: future-status .*90-off-vocab-future\/SPEC\.md:7$/m);
+  assert.match(block, /^Vocabulary-probe: future-status .*90-off-vocab-future\/SPEC\.md:9 — `kept deferred 2026-10-26`$/m);
   assert.match(block, /kept deferred 2026-10-26/);
 });
 
