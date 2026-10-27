@@ -39,11 +39,18 @@
  *                    whose required artifact the box never names
  *   contradiction    a Non-goals bullet denying scripts while the doc's own
  *                    tasks name one
+ *   sweep            a fold's sweep declaration — `swept: /<pattern>/<flags> →
+ *                    expected <n> in <glob>` in the unit doc's `## Log` (or
+ *                    legacy `## Progress log`) — re-run as a fence-aware grep:
+ *                    every matching line outside a fenced block and outside the
+ *                    declaring document's own log sections counts, and the
+ *                    observed count must equal `<n>` (unit 84, issue #315 S2,
+ *                    the F35/F37/F38/F39 class)
  *
  * Fail-closed reason codes: `validator-mismatch`, `formula-mismatch`,
  * `measure-mismatch`, `surface-missing`, `phrase-present`, `claim-mismatch`,
  * `undisclosed-prerequisite`, `contradicts-plan`, `unparseable-claim`,
- * `no-claims`, `missing-document`.
+ * `no-claims`, `missing-document`, `sweep-mismatch`.
  *
  * Grammar ownership (this script mechanizes, it never redefines): the validator
  * cell is `skills/pre-execution-review/references/LEDGERS.md`; the unit-doc task
@@ -78,7 +85,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, sectionBounds } from "./unit-doc-phases.mjs";
 import { PREREQUISITES } from "./needs-input.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -93,6 +100,7 @@ export const CLAIM_KINDS = Object.freeze([
   "section-length",
   "prerequisite",
   "contradiction",
+  "sweep",
 ]);
 
 /** The closed fail-closed reason vocabulary. */
@@ -108,6 +116,7 @@ export const REASON_CODES = Object.freeze([
   "unparseable-claim",
   "no-claims",
   "missing-document",
+  "sweep-mismatch",
 ]);
 
 /** Reader commands this pass may execute. Everything else is skipped. */
@@ -312,6 +321,176 @@ function sectionsOf(doc) {
   return out;
 }
 
+/* --------------------------------------------------------- sweep claims */
+
+/** A sweep declaration: `swept: /<pattern>/<flags> → expected <n> in <glob>`. */
+const SWEEP_LINE = /^\s*(?:[-*+]\s+)?swept:\s*(.+)$/;
+const SWEEP_DECLARATION = /^(\/(?:(?:[^/\\]|\\.)*)\/([a-z]*))\s*→\s*expected\s+(\d+)\s+in\s+(\S+)\s*$/;
+/** Directories the sweep never walks. */
+const SWEEP_SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
+/** A text file the sweep may read; anything else is never a survivor surface. */
+const SWEEP_TEXT = /\.(?:md|mjs|js|cjs|json|ts|tsx|yml|yaml|txt|sh)$/;
+/** A per-file read ceiling: a survivor surface is a document, not a data set. */
+const SWEEP_MAX_FILE_BYTES = 2_000_000;
+
+/**
+ * Parse one sweep declaration payload, or null when it is outside the fixed
+ * grammar. The `in <glob>` scope is required — the cost bound (issue #315) is
+ * that a declaration is the cited surface plus its inventory-declared
+ * siblings, never a repo-wide regex sweep.
+ */
+function parseSweepDeclaration(payload) {
+  const match = SWEEP_DECLARATION.exec(payload.trim());
+  if (match === null) return null;
+  const pattern = match[1].slice(1, match[1].lastIndexOf("/"));
+  const flags = match[2].replace(/[gy]/g, "");
+  try {
+    return { regex: new RegExp(pattern, flags), display: match[1], expected: Number(match[3]), glob: match[4] };
+  } catch {
+    return null;
+  }
+}
+
+/** Anchored glob → RegExp: `**` crosses `/`, `*` and `?` do not. */
+function sweepGlobToRegExp(glob) {
+  let out = "";
+  for (let index = 0; index < glob.length; index += 1) {
+    const char = glob[index];
+    if (char === "*") {
+      if (glob[index + 1] === "*") {
+        out += ".*";
+        index += 1;
+      } else {
+        out += "[^/]*";
+      }
+    } else if (char === "?") {
+      out += "[^/]";
+    } else {
+      out += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp(`^${out}$`);
+}
+
+/** Files under `root` matching the glob, bounded (skip dirs, size, count). */
+function sweepFiles(root, glob, declaringRelative) {
+  const matcher = sweepGlobToRegExp(glob);
+  const out = [];
+  const walk = (directory) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (SWEEP_SKIP_DIRS.has(entry.name)) continue;
+      const absolute = path.join(directory, entry.name);
+      const relative = path.relative(root, absolute).split(path.sep).join("/");
+      if (entry.isDirectory()) {
+        walk(absolute);
+        continue;
+      }
+      if (relative === declaringRelative) continue;
+      if (!matcher.test(relative)) continue;
+      if (!SWEEP_TEXT.test(entry.name)) continue;
+      let size = 0;
+      try {
+        size = fs.statSync(absolute).size;
+      } catch {
+        continue;
+      }
+      if (size > SWEEP_MAX_FILE_BYTES) continue;
+      out.push({ relative, absolute });
+      if (out.length >= 5000) return;
+    }
+  };
+  walk(root);
+  return out;
+}
+
+/**
+ * Count the regex-matching lines of one file, fence-aware: fenced blocks are
+ * the fold's own evidence quote (decision D1) and never count. `skipRanges`
+ * are [start, end) byte ranges (a `sectionBounds` result) excluded up front —
+ * the declaring document's own log sections are exempt.
+ */
+function sweepCount(file, regex, skipRanges = []) {
+  let text;
+  try {
+    text = fs.readFileSync(file, "utf8");
+  } catch {
+    return null;
+  }
+  const skipped = (offset) => skipRanges.some(([start, end]) => offset >= start && offset < end);
+  const lines = [];
+  let fence = null;
+  let offset = 0;
+  let number = 0;
+  for (const line of text.split(/\r?\n/)) {
+    number += 1;
+    const lineStart = offset;
+    offset += Buffer.byteLength(line, "utf8") + 1;
+    const run = /^\s*(`{3,}|~{3,})/.exec(line);
+    if (run) {
+      if (fence === null) fence = run[1];
+      else if (line.trim() !== "" && line.trim()[0] === fence[0] && line.trim().length >= fence.length) fence = null;
+      continue;
+    }
+    if (fence !== null || skipped(lineStart)) continue;
+    if (regex.test(line)) lines.push(number);
+  }
+  return lines;
+}
+
+/** The declaring document's own log sections, as byte ranges to skip. */
+function declaringLogRanges(text) {
+  const ranges = [];
+  for (const name of ["Log", "Progress log"]) {
+    const bounds = sectionBounds(text, name);
+    if (bounds !== null) ranges.push(bounds);
+  }
+  return ranges;
+}
+
+/** The sweep claims of one unit document. */
+function sweepClaims(doc, claims) {
+  const sections = [];
+  for (const label of ["Log", "Progress log"]) {
+    sections.push(...named(sectionsOf(doc), label));
+  }
+  for (const section of sections) {
+    for (const row of section.body) {
+      const line = SWEEP_LINE.exec(row.text);
+      if (line === null) continue;
+      const parsed = parseSweepDeclaration(line[1]);
+      const claim = blankResult("sweep", doc.file, row.line, `swept: ${line[1].trim()}`);
+      if (parsed === null) {
+        claim.outcome = "fail";
+        claim.reason = "unparseable-claim";
+        claim.observed = "the declaration does not match `swept: /<pattern>/<flags> → expected <n> in <glob>` — the bounded scope is required";
+        claims.push(claim);
+        continue;
+      }
+      const skipRanges = declaringLogRanges(doc.text);
+      const files = sweepFiles(ROOT, parsed.glob, doc.file);
+      const hits = [];
+      for (const file of files) {
+        const found = sweepCount(file.absolute, parsed.regex, skipRanges);
+        for (const lineNumber of found ?? []) hits.push(`${file.relative}:${lineNumber}`);
+      }
+      claim.observed = `${hits.length} match${hits.length === 1 ? "" : "es"} (expected ${parsed.expected}) for ${parsed.display}; ${hits.length === 0 ? "no survivor" : `first: ${hits[0]}`}`;
+      if (hits.length === parsed.expected) {
+        claim.outcome = "pass";
+      } else {
+        claim.outcome = "fail";
+        claim.reason = "sweep-mismatch";
+      }
+      claims.push(claim);
+    }
+  }
+}
+
 /** Claims from a unit document's Tasks / Obligations / Evidence surfaces. */
 function unitDocClaims(doc, claims) {
   const tasks = parseUnitDocPhases(doc.text);
@@ -336,6 +515,10 @@ function unitDocClaims(doc, claims) {
       }
     }
   }
+
+  // The fold's sweep declarations (unit 84 S2): every declared survivor grep
+  // re-runs, fence-aware, and the observed count must reproduce.
+  sweepClaims(doc, claims);
 
   // An `## Impact` that names a path is a claim that the path exists (or that
   // the unit's own plan declares creating it).
