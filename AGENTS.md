@@ -46,14 +46,17 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
 
 ## Working rules
 
-- **Docs language is English-only (interim).** Every committed artifact (skills,
+- **Docs language is English-only (permanent).** Every committed artifact (skills,
   docs, templates, `README`, `CHANGELOG`, commits, PR descriptions) is in English,
   regardless of the language used to request the work; reply to the user in the
   user's language. The bilingual EN/ES `.es.md` siblings and their reciprocal
   language-switcher links were removed repo-wide (2026-09-15) to stop paying a
-  per-commit translation cost. Feature 57 (`per-release-bilingual`, issue #232)
-  restores bilingualism as a per-release batch pass. Until then: do **not** create
-  or update any `.es.md` sibling and do **not** add a language-switcher link.
+  per-commit translation cost. Owner decision 2026-10-27 (issue
+  [#232](https://github.com/gtrabanco/agentic-workflow/issues/232)): the package
+  ships **English-only permanently** — bilingualism is a rendering concern of the
+  project's upcoming web layer (#295 direction), never a committed artifact. Do
+  **not** create or update any `.es.md` sibling, add a language-switcher link, or
+  translate any package surface.
 - **Vendored third-party code carries its provenance.** Any code copied from a
   third party into this repository — into a package's `src/`, a script, or a
   skill reference — keeps a header comment naming the **source URL, the author,
