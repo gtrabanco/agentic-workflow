@@ -310,3 +310,19 @@ test("the base never sits below an already-published package version (a stale v-
   assert.match(result.stdout, /base: 4\.9\.0/);
   assert.match(result.stdout, /train version: 4\.10\.0/);
 });
+
+test("release-notes prints the assembled release body (the changeset bodies)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
+  const result = run(["release-notes", "--root", root]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Change number 1 body line\./);
+  assert.match(result.stdout, /Change number 2 body line\./);
+  assert.doesNotMatch(result.stdout, /forced by operator/i);
+});
+
+test("release-notes marks a forced version", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const result = run(["release-notes", "--root", root, "--version", "5.0.0"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
+});
