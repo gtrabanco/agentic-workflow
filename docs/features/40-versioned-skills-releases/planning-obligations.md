@@ -1,6 +1,6 @@
 # Obligations — 40-versioned-skills-releases
 
-Frozen at plan cut (2026-10-28); only `status` evolves. All 24 rows flipped to
+Frozen at plan cut (2026-10-28); only `status` evolves. All 26 rows flipped to
 `verified` on 2026-10-28 at head `a38863a5` — every validator was run in the
 foreground in one block (outputs: bump-skill suite 12 pass / release suite 17
 pass / lint-changeset 9 pass / release-workflows 5 pass / parity-gate 33 pass /
@@ -45,3 +45,5 @@ lint + parity-gate route · P4 release.mjs · P5 workflows, docs, version bumps.
 | O22 | S4 (non-goals) | Publish workflow filenames unchanged (Trusted Publisher binding intact, PE-008); npm publish + OIDC steps untouched | P5 | non-goal guard | execute-phase | `ls .github/workflows/publish-schema.yml .github/workflows/publish-pi-package.yml .github/workflows/publish-agentic-workflow.yml` exits 0 | file listing | verified |
 | O23 | #164 gate extension | A valid `.changeset/` file declaring the pi package satisfies the content half of the version-parity gate | P3 | parity-gate changeset route | execute-phase | `node --test scripts/version-parity-gate.test.mjs` exits 0 | new test `a changeset file declaring the package satisfies the content half` | verified |
 | O24 | user workflow §6 (differential) | Existing behavior of the parity gate is preserved: no regression in its current suite | P3 | differential run after parity-gate slice | execute-phase | `node --test scripts/version-parity-gate.test.mjs` exits 0 | suite passes at head | verified |
+| O25 | D-40-10 (owner follow-up) | apply rewrites every exact local-package pin to the train version; ranges and foreign deps untouched | P7 | pin closure in release.mjs | execute-phase | `node --test scripts/release.test.mjs` exits 0 | tests `apply rewrites the downstream exact pins to the train version` / `apply leaves non-exact and foreign ranges untouched` | verified |
+| O26 | D-40-10 (owner follow-up) | Publish chain schema → crate → pi via workflow_run (guarded on success); release-plan.yml suggests stable + canary read-only | P7 | chain + suggestion GHA | execute-phase | `node --test scripts/release-workflows.test.mjs` exits 0 | tests `the publish chain runs in dependency order` / `release-plan.yml is read-only` / `suggests both the stable train and the canary version` | verified |
