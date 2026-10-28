@@ -25,7 +25,9 @@
  * latest channel, then deletes the consumed `.changeset/*.md` files so the
  * next cut carries only new intent). `--version` forces the LATEST train
  * only — prerelease channels compute their own version and reject it. git/npm/gh
- * commands are always PRINTED, never executed —
+ * commands are always PRINTED, never executed — an operator or workflow runs
+ * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
+ * are third-party data, never interpolated into a shell command.
  * an operator or workflow runs them. GitHub Release notes use
  * `--generate-notes` so merged PR authors are credited (AC-15, PE-004).
  *
@@ -85,6 +87,15 @@ function parseArgs(argv) {
 function fail(message) {
   console.error(`error: ${message}`);
   process.exit(1);
+}
+
+/**
+ * A changeset body (or an operator --summary) is third-party data that lands
+ * inside a markdown table cell — a raw pipe would break out of the cell and
+ * shift every column after it. Markdown-escape it; never trust it as markup.
+ */
+function escapeCell(text) {
+  return String(text).replaceAll("|", "\\|");
 }
 
 // --- semver helpers ---------------------------------------------------------
@@ -214,7 +225,7 @@ function rewriteLocalPins(root, packages, version) {
 function insertCompanionRow(changelogPath, { name, dirName, version, date, level, summary }) {
   const changelog = fs.readFileSync(changelogPath, "utf8");
   const rowStart = companionRowStart(changelog, { name, dirName });
-  const row = `| ${version} | ${date} | ${level} | ${summary} |`;
+  const row = `| ${version} | ${date} | ${level} | ${escapeCell(summary)} |`;
   fs.writeFileSync(changelogPath, changelog.slice(0, rowStart) + row + "\n" + changelog.slice(rowStart));
 }
 
@@ -386,12 +397,18 @@ function main() {
     }
     const body = [...notesBodies];
     if (forced) body.push(`Version forced by operator: ${version}`);
-    const notes = body.join("\n\n").replaceAll('"', '\\"');
+    const notes = body.join("\n\n");
+    // Third-party bodies are DATA: they ride the release-notes FILE, never a
+    // shell command. The old inline `--notes "…"` interpolated operator- or
+    // contributor-controlled text into a pastable command — pasting the plan
+    // could execute a body, and an agent reading the plan could mistake it
+    // for an instruction. `release-notes` writes exactly this `notes` value.
     console.log("commands (run at the release commit):");
+    console.log("  node scripts/release.mjs release-notes > release-notes.txt");
     console.log(`  git tag v${version}`);
     console.log(`  git push origin v${version}`);
     console.log(`  git push origin HEAD:refs/heads/stable`);
-    console.log(`  gh release create v${version} --generate-notes --notes "${notes}"`);
+    console.log(`  gh release create v${version} --generate-notes --title "v${version}" --notes-file release-notes.txt`);
   } else {
     // canary / alpha / beta / rc — prerelease of the base, never touching latest.
     const n = gitRepo ? channelTagCounter(root, base, stamp, args.channel) + 1 : 1;
