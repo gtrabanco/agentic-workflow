@@ -413,9 +413,10 @@ hoists.
   D-40-12): npm Trusted Publisher records pin the workflow filename, so the
   consolidation required re-registering the three packages' records to
   `publish.yml` on npmjs.com (owner one-time step; until then a publish
-  fails E403). The releases themselves are cut by `release-train.yml`
-  (manual dispatch — versions, pins, changelog, tag, stable branch,
-  GitHub Release).
+  fails E403). Releases are cut by dispatching `publish.yml` with `mode: cut`
+  (`channel: latest` = train + publish; `channel: canary|alpha|beta|rc` =
+  prerelease cut for the declared packages) — `mode: suggest` previews the
+  versions read-only; everything runs `scripts/release.mjs` in CI.
 - **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>": patch|minor|major` + a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring the Pi package satisfies the version-parity gate's content half in place of a manual package.json bump; the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 
 ---

@@ -326,3 +326,35 @@ test("release-notes marks a forced version", () => {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
 });
+
+test("publish-plan prints per-package TSV lines for the declared packages (the channel publish job's input)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
+  const result = run(["publish-plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const lines = result.stdout.trim().split("\n");
+  assert.deepEqual(lines.sort(), [
+    "@gtrabanco/agentic-workflow-schema\tagentic-workflow-schema\t1.0.0-canary.20260916.1\tcanary",
+    "@gtrabanco/pi-agentic-workflow\tpi-agentic-workflow\t1.0.0-canary.20260916.1\tcanary",
+  ]);
+});
+
+test("publish-plan lists nothing when no changeset declares packages (empty cut, not an error)", () => {
+  const root = fixture({ changesets: {} });
+  const result = run(["publish-plan", "--root", root, "--channel", "beta", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(result.stdout.trim(), "");
+});
+
+test("publish-plan refuses channel latest (that is apply's job)", () => {
+  const root = fixture();
+  const result = run(["publish-plan", "--root", root, "--channel", "latest"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr || result.stdout, /apply/);
+});
+
+test("publish-plan carries the manual channel shape (beta → <base>-beta.<n>)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const result = run(["publish-plan", "--root", root, "--channel", "beta", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.0-beta\.1\tbeta/);
+});

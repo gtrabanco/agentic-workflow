@@ -122,14 +122,15 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 2. **Skill edits** — `bump-skill` classifies the change, runs its bundled
    writer, and pastes the summary; the writer applies the `version:` line and
    the CHANGELOG row atomically.
-3. **At release time** — launch the **`release-train.yml`** GHA (or run
-   `node scripts/release.mjs apply` + commit by hand): it moves all three
-   package.json versions + the exact local pins to the train version, writes
-   the CHANGELOG companion rows from the changeset bodies, refreshes the
-   lockfiles, pushes ONE release commit (firing the publish chain), tags
-   `vX.Y.Z`, fast-forwards `stable` and opens the GitHub Release
-   (`--generate-notes` credits the merged PR authors). `release-plan.yml` is
-   the read-only preview (stable + canary suggestions).
+3. **At release time** — launch **`publish.yml`** with `mode: cut`:
+   `channel: latest` applies the train (all package.json versions + the exact
+   local pins, CHANGELOG rows from the changeset bodies, lockfiles), pushes
+   ONE release commit, tags `vX.Y.Z`, fast-forwards `stable`, opens the
+   GitHub Release, and the push fires the publish jobs (schema → crate → pi)
+   that publish npm. `channel: canary` (or alpha/beta/rc) instead publishes
+   only the declared packages under that dist-tag — the repo is untouched,
+   and canaries are grouped by you. `mode: suggest` is the read-only preview
+   (stable + canary suggestions + every changeset's semver annotation).
 4. **Channels** — npm dist-tags via the publish workflows' `channel` dispatch
    input (`latest` default; `canary` / `alpha` / `beta` / `rc` never move
    `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
@@ -142,10 +143,12 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    dependency order: schema → runner crate → pi, chained with `workflow_run`
    so a pin never resolves to an unpublished version. Nothing publishes
    "alone": every train release moves the three packages together.
-6. **Suggestion GHA** — `release-plan.yml` (workflow_dispatch, read-only)
-   prints the suggested version for both channels plus every changeset with
-   its semver annotation and body; a `version` input previews a forced
-   version. It publishes nothing.
+6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
+   whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`
+   (latest = train cut; canary/alpha/beta/rc = prerelease cut for the
+   declared packages), `version` input for the forced override, and the
+   push-triggered publish jobs. `scripts/release.mjs` always runs in CI —
+   no release step is done by hand.
 5. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
    overrides the computation for marketing campaigns; the release body is
    marked `Version forced by operator: X.Y.Z`.

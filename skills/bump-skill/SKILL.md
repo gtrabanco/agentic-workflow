@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.4.0
+version: 2.4.2
 metadata:
   internal: true
 description: >
@@ -14,7 +14,7 @@ description: >
 ## Turn contract — verify before ending the turn
 
 ```
-✓ Every changed skill's version: was bumped (by its bundled scripts/bump-skill.mjs) and
+✓ Every changed skill's version: was bumped (by its bundled skills/bump-skill/scripts/bump-skill.mjs) and
   the per-skill CHANGELOG table got its row
 ✓ The lint results (all 7 authoring rules, including the two machine-surface
   parity/ordering checks and the internal-skill discovery-exclusion check)
@@ -121,7 +121,7 @@ be worked on from any agent:
 - Run after any manual edit to a skill or after `execute-phase` touches a
   skill file, and before the commit.
 - `AGENTS.md` section "Version every change" is the policy this skill enforces
-  mechanically (via the bundled `scripts/bump-skill.mjs`).
+  mechanically (via the bundled `skills/bump-skill/scripts/bump-skill.mjs`).
 - The version-parity gate (`scripts/version-parity-gate.mjs`) is the CI half:
   a skills change must ship with a package version bump + companion row (or a
   `.changeset/` intent file).

@@ -90,7 +90,8 @@ jobs:
         run: node scripts/version-parity-gate.mjs --content
 
   # Compatibility guard for @gtrabanco/pi-agentic-workflow (issue #283): the
-  # package's own tsc only runs in publish-pi-package.yml — post-merge, and
+  # package's own tsc only runs in publish.yml (D-40-12, consolidated from
+  # publish-pi-package.yml) — post-merge, and
   # against the pi version the frozen bun.lock pins — so a pi API change could
   # reach main unseen. This job type-checks src/ against TWO pi legs, both
   # installed OUTSIDE the lockfile path (temp copy + `npm install --no-save

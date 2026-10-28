@@ -149,9 +149,12 @@ changes in the repo.
 - **No CI automation** — stable release is always manual via `workflow_dispatch`;
   canary is auto-on-merge but gated by version ≠ registry (same as current
   publish workflows).
-- **No changes to npm OIDC publishing** — the existing publish workflows
-  (`publish-schema.yml`, `publish-pi-package.yml`) stay; dispatch input
-  adds `--tag` for dist-tag. No Trusted Publisher re-binding needed.
+- **No changes to npm OIDC publishing** — the consolidated publish workflow
+  (`publish.yml`) handles all three packages; dispatch input adds `--tag`
+  for dist-tag. D-40-12 consolidated the former per-package trio (`publish-schema.yml`,
+  `publish-agentic-workflow.yml`, `publish-pi-package.yml`) into one file;
+  the Trusted Publisher records are bound to the new filename (re-registered
+  on npmjs.com per D-40-12).
 - **No skills.sh registry changes** — skills.sh has no version registry
   (it's install-derived only). Channels via git refs only.
 - **No automatic release notes generation** — the curated `CHANGELOG.md`
@@ -267,12 +270,15 @@ Objective, verifiable conditions for "done".
   file doesn't parse (YAML frontmatter + body): `node scripts/lint-changeset.mjs` →
   exit 0 on valid, exit 1 on malformed.
 - **AC-03** (`version compute`): `scripts/release.mjs --version 4.2.0` bumps
-  package versions (schema, pi, agentic-workflow), CHANGELOG tables (EN+ES),
-  README skills table, model-routing.yml, and prints the diff. Verified:
+  package versions (schema, pi, agentic-workflow), CHANGELOG rows, and prints
+  the diff. Verified:
   `grep '"version"' packages/*/package.json` returns `4.2.0` for all.
-- **AC-04** (`npm publish --tag canary`): On merge to main, `publish-*.yml`
-  adds `--tag canary` dispatch input variant. Verified:
-  `grep '"canary"' .github/workflows/publish-*.yml` returns a dispatch input row.
+- **AC-04** (`npm publish --tag canary`): The consolidated publish workflow
+  (`publish.yml`) exposes a `channel` dispatch input; `canary` is one valid
+  value. Verified:
+  `grep 'channel:' .github/workflows/publish.yml` returns a dispatch input
+  definition, and `grep 'canary' .github/workflows/publish.yml` matches
+  one of its values.
 - **AC-05** (`npm publish --tag latest`): On stable release dispatch,
   `--tag latest` publishes the stable version. Verified:
   `npm view <pkg> dist-tags --json` returns `latest` after dispatch.
@@ -487,11 +493,11 @@ One observable, testable criterion per requirement, frozen at plan cut.
 | S# | Criterion | Check that proves it |
 |---|---|---|
 | S1 | The release pipeline exists: accumulated `.changeset/` intent files drive a deterministic release that bumps the declared packages and cuts the `vX.Y.Z` tag | `node --test scripts/release.test.mjs` exits 0 |
-| S2/S2a | `node scripts/bump-skill.mjs` applies `version:` + CHANGELOG row from an inferred (or `--level`) classification, printing the derivation | `node --test scripts/bump-skill.test.mjs` exits 0 |
+| S2/S2a | `node skills/bump-skill/scripts/bump-skill.mjs` applies `version:` + CHANGELOG row from an inferred (or `--level`) classification, printing the derivation | `node --test scripts/bump-skill.test.mjs` exits 0 |
 | S3 | A stable release plans `git tag vX.Y.Z` and the `stable` branch push at the release commit | test `stable release plans the vX.Y.Z tag and stable branch push` |
-| S4 | Non-goals hold: publish workflow filenames unchanged, OIDC/npm-publish steps untouched, roadmap machine untouched | `ls .github/workflows/publish-schema.yml .github/workflows/publish-pi-package.yml .github/workflows/publish-agentic-workflow.yml` exits 0 + diff inspection |
+| S4 | Non-goals hold: npm publish + OIDC stay in the publish workflow (consolidated into `publish.yml` per D-40-12), the release train never publishes, roadmap machine untouched | `ls .github/workflows/publish.yml` exits 0 + `ls .github/workflows/publish-schema.yml .github/workflows/publish-agentic-workflow.yml .github/workflows/publish-pi-package.yml` exits 2 (files deleted) |
 | S5 | The four tests-first bullets each have a named test | test names in `scripts/bump-skill.test.mjs` / `scripts/release.test.mjs` |
-| S6 | ROADMAP row 40 dependency cell is `—`; SPEC drift (es.md/CLAUDE.md/package versions) corrected in this unit | `grep -n "versioned-skills-releases" docs/features/ROADMAP.md` shows the `—` cell |
+| S6 | ROADMAP row 40 dependency cell is `—`; SPEC drift (es.md/CLAUDE.md/package versions) corrected in this unit (see Drift corrections §2026-10-28) | `grep -n "versioned-skills-releases" docs/features/ROADMAP.md` shows the `—` cell |
 | S7 | The SPEC pipeline criteria AC-01..AC-16 that are implementable offline are covered by the obligations ledger; the es.md/CLAUDE.md drift rows are corrected in this unit | obligations ledger all `verified`/`n/a` with evidence |
 
 ## Artifacts that still need to be created by plan-feature
