@@ -275,3 +275,16 @@ test("the script prints the bundle:skills reminder (mechanical surface, issue am
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /bundle:skills/);
 });
+
+// A summary is human text that lands inside a markdown table cell — a raw pipe
+// would break out of the cell and shift every column after it.
+test("a summary containing '|' stays inside its table cell", () => {
+  const root = fixture();
+  const result = run(["alpha", "--level", "patch", "--date", "2026-10-28", "--root", root, "--summary", "a | b | c"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const changelog = read(root, "CHANGELOG.md");
+  const row = changelog.split("\n").find((l) => l.startsWith("| `alpha` | 1.2.4 |"));
+  assert.ok(row, "the combined internal row exists");
+  assert.equal(row.split(/(?<!\\)\|/).length - 2, 5, "the row keeps exactly its 5 cells");
+  assert.match(row, /a \\| b \\| c/);
+});

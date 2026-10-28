@@ -74,6 +74,15 @@ function bumpVersion(version, level) {
   return `${major}.${minor}.${patch}`;
 }
 
+/**
+ * A summary is human text that lands inside a markdown table cell — a raw
+ * pipe would break out of the cell and shift every column after it.
+ * Markdown-escape it; never trust it as markup.
+ */
+function escapeCell(text) {
+  return String(text).replaceAll("|", "\\|");
+}
+
 /** Diff of a skill's SKILL.md vs HEAD (worktree + index), or null when unavailable. */
 function skillDiff(root, skill) {
   const rel = `skills/${skill}/SKILL.md`;
@@ -106,6 +115,7 @@ function inferLevel(diff, skill) {
  * table in the matching section when the skill has none yet.
  */
 function updateChangelog(changelog, { skill, internal, newVersion, date, level, summary }) {
+  summary = escapeCell(summary);
   const row = `| ${newVersion} | ${date} | ${level} | ${summary} |`;
   const anchor = `#### \`${skill}\``;
   const idx = changelog.indexOf(anchor);

@@ -67,6 +67,7 @@ justification | scripts/release-workflows.test.mjs | P9 | 2026-10-28 | execute-p
 justification | scripts/npm-version-gate.test.mjs | P9 | 2026-10-28 | execute-phase | Owner-directed consolidation (D-40-12): the gate's workflow list re-targets the single publish.yml — the workflow-routing assertions must scan the file that now exists, none is weakened.
 justification | scripts/release-workflows.test.mjs | P10 | 2026-10-28 | execute-phase | Owner-directed single entry point (D-40-13): the suite re-targets the one publish.yml with mode/channel/version dispatch inputs (suggest read-only; cut+latest = train apply; cut+prerelease = gated per-package channel publish) and pins the deletion of release-plan.yml/release-train.yml — the multi-file assertions are replaced, not weakened.
 justification | scripts/release.test.mjs | P10 | 2026-10-28 | execute-phase | Owner-directed single entry point (D-40-13): the machine-readable publish-plan mode (per-package TSV for the channel publish job) joins the corpus; extension, no assertion weakened.
+justification | scripts/lint-changeset.test.mjs | P12 | 2026-10-28 | execute-phase | Review-fold (owner-directed injection hardening): the corpus gains the command-substitution warning test (warn non-failing on $( shapes) — extension, no assertion weakened; the structural gate's fail-closed assertions stay untouched.
 ```
 
 ## 2026-10-28 — D-40-8: the bump writer is the skill's bundled tool, not a repo script

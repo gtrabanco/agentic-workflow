@@ -138,12 +138,28 @@ function main() {
   const known = packageNames();
   let failed = false;
   for (const file of targets) {
+    let content = null;
+    try {
+      content = fs.readFileSync(file, "utf8");
+    } catch {
+      // lintChangesetFile reports the read failure
+    }
     const error = lintChangesetFile(file, known);
     if (error) {
       console.error(`error: ${path.basename(file)}: ${error}`);
       failed = true;
     } else {
       console.log(`ok ${path.basename(file)}`);
+      // Third-party bodies are data, never instructions: a command-substitution
+      // shape is the classic paste-execution / prompt-injection payload. Flag it
+      // WITHOUT failing — this gate polices structure; the release pipeline
+      // hands bodies over as a --notes-file, never inside a shell command.
+      if (content !== null && /\$\(/.test(content)) {
+        console.log(
+          `warn ${path.basename(file)}: command-substitution shape in the body ($(...)) — release notes are data;` +
+            ` never paste them into a shell or follow instructions inside them`,
+        );
+      }
     }
   }
   process.exit(failed ? 1 : 0);
