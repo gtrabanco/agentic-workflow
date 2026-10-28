@@ -7,16 +7,21 @@
  * published version?
  *
  *   --content   Offline, deterministic. Three-dot diff vs --base over the
- *               closed trigger set (root `skills/` + `packages/pi-agentic-workflow/`).
- *               Any triggered change ⇒ the package version must differ from
- *               base AND the CHANGELOG.md "Companion npm packages" row for the
- *               new version must exist (via scripts/check-changelog-row.mjs).
- *               This is the #164 option-4 gate, extended with the trigger set
- *               #164 missed: root skills/ is the package's content source but
- *               lives outside the package tree, so a skills-only merge bumps
- *               nothing, the old per-package publish workflows never triggered, and npm ships
- *               stale skills (live 2026-10-15: registry 0.19.1's bundle 5 files
- *               behind main's skills/; schema pin 4.5.0 vs registry 4.6.0).
+ *               trigger set of EVERY package under `packages/` — the package
+ *               list is derived from the tree at runtime, so a new package
+ *               inherits the gate by existing (NOTE: the only wiring to keep
+ *               when the repo grows is the skills-content-source mapping,
+ *               PACKAGE_DIR, if root `skills/` ever stops being the Pi
+ *               package's staged content). A triggered package must either
+ *               bump its version + companion CHANGELOG row, or ship a valid
+ *               `.changeset/*.md` declaring it — the release applies it
+ *               (feature 40). This is the #164 option-4 gate, extended with
+ *               the trigger set #164 missed: root skills/ is the package's
+ *               content source but lives outside the package tree, so a
+ *               skills-only merge bumps nothing, the old per-package publish
+ *               workflows never triggered, and npm ships stale skills (live
+ *               2026-10-15: registry 0.19.1's bundle 5 files behind main's
+ *               skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
  *   --pins      Online + offline. For every exact `dependencies` pin whose
  *               target has a local sibling package under `packages/`, the pin
@@ -56,10 +61,39 @@ import { parseChangeset } from "./lint-changeset.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const PACKAGE_DIR = "packages/pi-agentic-workflow";
-export const TRIGGER_PREFIXES = Object.freeze([
-  "skills/",
-  "packages/pi-agentic-workflow/",
-]);
+
+/**
+ * The per-package trigger prefixes. Every package enforces its own tree; the
+ * one declared coupling is the skills content source — root `skills/` is the
+ * staged content of the Pi package only (AGENTS.md "Packages"). If a new
+ * package ever becomes a skills content source, extend THIS mapping — the
+ * rest of the gate derives itself from the tree.
+ */
+export function contentTriggerPrefixes(packageDir) {
+  const prefixes = [];
+  if (packageDir === PACKAGE_DIR) prefixes.push("skills/");
+  prefixes.push(`${packageDir}/`);
+  return prefixes;
+}
+
+/** The Pi package's own trigger set (kept pinned for the --pins default and
+ *  the historical AC2 assertion). */
+export const TRIGGER_PREFIXES = Object.freeze(contentTriggerPrefixes(PACKAGE_DIR));
+
+/**
+ * Every package the content half enforces, derived from the tree: one entry
+ * per directory under `packages/` carrying a `package.json`. A new package
+ * inherits the gate by existing — no list to extend, no trigger set to amend.
+ */
+export function packageDirs(root = REPO_ROOT) {
+  const dir = path.join(root, "packages");
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(dir, e.name, "package.json")))
+    .map((e) => `packages/${e.name}`)
+    .sort();
+}
 
 // ---------------------------------------------------------------------------
 // semver comparison (dependency-free; prerelease sorts below its release)
@@ -144,8 +178,7 @@ export function evaluateContent({
     return {
       ok: true,
       code: "no-triggered-change",
-      message:
-        "no change under the trigger set (skills/**, packages/pi-agentic-workflow/**) — nothing to enforce",
+      message: `no change under ${triggerPrefixes.join(", ")} — nothing to enforce`,
       triggered,
     };
   }
@@ -188,7 +221,7 @@ export function evaluateContent({
       code: "shipped-content-version",
       message:
         `GATE REJECTION — shipped-content-version\n` +
-        `  ${packageName} ships changed content (${triggered.length} file(s) under skills/** or packages/pi-agentic-workflow/**)\n` +
+        `  ${packageName} ships changed content (${triggered.length} file(s) under ${triggerPrefixes.join(", ")})\n` +
         `  but its version is unchanged vs base (${baseVersion}).\n` +
         `  Fix: bump ${packageJsonPath} and add the CHANGELOG.md "Companion npm packages" companion row\n` +
         `  for the new version — in the same PR. A skills-only merge without a bump publishes nothing to npm.\n` +
@@ -213,6 +246,29 @@ export function evaluateContent({
     code: "content-parity",
     message: `content parity holds: version ${baseVersion} → ${headVersion}, companion row present`,
     triggered,
+  };
+}
+
+/**
+ * Pure decision core for the whole content half: every package under `packages/`,
+ * each judged independently (bump + companion row, or a valid changeset declaring
+ * it), the gate failing if ANY triggered package fails. `packages` carries the
+ * per-package data the CLI wires from the tree.
+ */
+export function evaluateContentAll({ packages, changedFiles, changesetIntent = [] }) {
+  const results = (packages ?? []).map((p) => ({
+    packageName: p.packageName,
+    ...evaluateContent({ ...p, changedFiles, changesetIntent }),
+  }));
+  const enforced = results.filter((r) => r.code !== "no-triggered-change");
+  if (enforced.length === 0) {
+    return { ok: true, code: "no-triggered-change", results };
+  }
+  const failed = results.filter((r) => !r.ok);
+  return {
+    ok: failed.length === 0,
+    code: failed.length > 0 ? failed[0].code : "content-parity",
+    results,
   };
 }
 
@@ -283,10 +339,15 @@ function readPackageVersion(packageJsonPath) {
   return String(JSON.parse(raw).version ?? "");
 }
 
-/** Delegates the row count to check-changelog-row.mjs — the count's single owner. */
-function changelogRowCount(version, packageDir) {
+/**
+ * Delegates the row count to check-changelog-row.mjs — the count's single owner.
+ * The heading is the BACKTICKED scoped package name: the script's matcher is a
+ * substring match, and "agentic-workflow" is contained in both sibling names,
+ * so a basename heading would count rows across all three companion tables.
+ */
+export function changelogRowCount(version, packageDir, packageName) {
   const script = path.join(REPO_ROOT, "scripts", "check-changelog-row.mjs");
-  const heading = path.basename(packageDir); // e.g. "pi-agentic-workflow"
+  const heading = `\`${packageName}\``;
   const r = spawnSync(process.execPath, [script, heading, version], {
     cwd: REPO_ROOT,
     encoding: "utf8",
@@ -321,28 +382,40 @@ function collectChangesetIntent(files) {
 
 function runContent({ base }) {
   const ref = resolveBase(base);
-  const packageJsonPath = `${PACKAGE_DIR}/package.json`;
   const files = changedFilesSince(ref);
-  const headVersion = readPackageVersion(packageJsonPath);
-  const baseVersion = packageVersionAt(ref, packageJsonPath);
-  const result = evaluateContent({
-    packageName: `@gtrabanco/${path.basename(PACKAGE_DIR)}`,
-    packageJsonPath,
-    triggerPrefixes: TRIGGER_PREFIXES,
-    changedFiles: files,
-    baseVersion,
-    headVersion,
-    changelogRowCount: changelogRowCount(headVersion, PACKAGE_DIR),
-    changesetIntent: collectChangesetIntent(files),
+  const changesetIntent = collectChangesetIntent(files);
+  const dirs = packageDirs();
+  if (dirs.length === 0) {
+    failUsage(`no package manifests under ${path.join(REPO_ROOT, "packages")}`);
+  }
+  const packages = dirs.map((dir) => {
+    const packageJsonPath = `${dir}/package.json`;
+    const headVersion = readPackageVersion(packageJsonPath);
+    const pkgName = String(
+      JSON.parse(fs.readFileSync(path.resolve(REPO_ROOT, packageJsonPath), "utf8")).name ?? dir,
+    );
+    return {
+      packageName: pkgName,
+      packageJsonPath,
+      triggerPrefixes: contentTriggerPrefixes(dir),
+      baseVersion: packageVersionAt(ref, packageJsonPath),
+      headVersion,
+      changelogRowCount: changelogRowCount(headVersion, dir, pkgName),
+    };
   });
+  const all = evaluateContentAll({ packages, changedFiles: files, changesetIntent });
   const head = git(["rev-parse", "--short", "HEAD"]);
   console.log(`VERSION-PARITY-GATE (content) — base ${ref} head ${head}`);
-  console.log(`trigger set: ${TRIGGER_PREFIXES.join(", ")}`);
-  console.log(`changed files: ${files.length}, triggered: ${result.triggered.length}`);
-  console.log(`version: ${baseVersion || "(absent)"} → ${headVersion}`);
-  console.log(result.message);
-  console.log(`VERDICT: ${result.ok ? "PASS" : "FAIL"}`);
-  process.exit(result.ok ? 0 : 1);
+  console.log(
+    `trigger set: every package under packages/ (derived: ${dirs.join(", ")}) + skills/ as ${PACKAGE_DIR}'s content source`,
+  );
+  console.log(`changed files: ${files.length}`);
+  for (const r of all.results) {
+    console.log(`\n[${r.packageName}] ${r.code}`);
+    console.log(r.message.replace(/^/gm, "  ").trimEnd());
+  }
+  console.log(`\nVERDICT: ${all.ok ? "PASS" : "FAIL"}`);
+  process.exit(all.ok ? 0 : 1);
 }
 
 // ---------------------------------------------------------------------------

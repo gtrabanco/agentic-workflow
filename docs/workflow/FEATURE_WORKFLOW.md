@@ -116,7 +116,7 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    (YAML frontmatter mapping `"@gtrabanco/<package>": patch|minor|major` + a
    release-note body) or let the repo's skills bump per-skill versions via
    the bundled `skills/bump-skill/scripts/bump-skill.mjs`. `scripts/lint-changeset.mjs`
-   lints intent files in CI; a valid intent file declaring the Pi package
+   lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
    package.json bump.
 2. **Skill edits** — `bump-skill` classifies the change, runs its bundled
