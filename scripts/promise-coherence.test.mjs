@@ -495,6 +495,24 @@ test("#305 the fold and implement steps state the batch as the change plus its d
   }
 });
 
+test("F20: the in-flight corpus rule lives in one owner, not two copies", () => {
+  // Two gates each kept a byte-similar copy of the roadmap + fix-index row
+  // grammar and the dated-progress filter; either could be edited and silently
+  // disagree about which docs are live. The shared reader owns the rule now —
+  // the pin refuses a re-implementation in either consumer and requires the
+  // one owner to actually hold it.
+  for (const file of ["scripts/promise-coherence.mjs", "scripts/vocabulary-probe.mjs"]) {
+    const text = readFileSync(path.join(ROOT, file), "utf8");
+    assert.ok(
+      !text.includes("docs/features/ROADMAP.md"),
+      `${file} must not re-implement the corpus rule — scripts/unit-doc-phases.mjs owns it`,
+    );
+  }
+  const shared = readFileSync(path.join(ROOT, "scripts/unit-doc-phases.mjs"), "utf8");
+  assert.match(shared, /docs\/features\/ROADMAP\.md/, "the shared reader is the one owner");
+  assert.match(shared, /docs\/fix\/README\.md/, "the shared reader owns both indexes");
+});
+
 test("F19: the sweep walk bounds entries visited, not only files pushed", () => {
   // The F7 fix capped how many files a declaration may collect; nothing
   // bounded how many entries the walk below that ceiling still had to visit
