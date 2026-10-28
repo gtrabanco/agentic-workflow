@@ -3562,6 +3562,12 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 49 files
 - **Summary:** Verify AGENTS.md structure, plan and open setup tooling and AGENTS.md split issues (#331, #332) without implementation
 
+## 2026-10-28T22:21:16Z — feature/331-authoring-repo-setup — manual
+- **Commits:** 14 (`e685d7fe…7782a081`)
+- **Files:** 14 files
+- **Summary:** Apply issue #331 (authoring-repo setup doc + scripts + CI) via the /aw-local-apply workflow: unit fix/331-authoring-setup cut verbatim S1-S9 (plus S2a/S2b/S8/S9/S10 amendments), ledgers frozen, RED tests first, fixtures in /tmp, gates green (1040/1040). Owner correction S2a/S2b: .bun-version pin semantics evolved from exact-match to minimum (>=1.4.0). PE-010 fixed at root cause (serena die in worktrees: marksman/libicu crash, override created local-only). PE-009 blocked by #180.
+- **Decisions:** 1) Bun pin: exact match (S2a) → minimum (S2b), per owner. 2) Config-repair: local-only authority (S8, 'Solo estado local'). 3) PE-010: marksman/libicu crash kills serena in worktrees; fix is machine-local override written by setup-env, never rewriting committed config. 4) PE-009: CI green blocked by #180 (versioned skills release, pin error); no CI-side attempt. 5) bun pin exactness: the repo commits .bun-version@1.4.0 matching CI's setup-bun pin (1.4.0 writes lockfile v2).
+- **Next:** Open PR #334 on https://github.com/gtrabanco/agentic-workflow/pull/334; review commit 7782a081 (latest) for the full scope.
 ## 2026-10-28T22:36:10Z — main — manual
 - **Commits:** 0
 - **Files:** —
