@@ -1,0 +1,18 @@
+# Planning evidence — fix/331-authoring-setup
+
+One row per Engineering claim the change rests on. Ids are stable (`PE-001`, …);
+an obligation or finding cites a row by id. Column order per
+`skills/pre-execution-review/references/LEDGERS.md` §1 and the unit-lane
+planning reference.
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | external-doc | The `engram` binary is a standalone Go binary (not a uv tool, not an npm package), distributed via the Homebrew tap `gentleman-programming/tap/engram` (macOS/Linux) and GitHub-Releases tarballs `engram_<version>_<os>_<arch>.tar.gz` | github.com/Gentleman-Programming/engram `README.md` §Install + `docs/INSTALLATION.md` (fetched 2026-10-28) | 2026-10-28 | O10 (install route) |
+| PE-002 | external-doc | The latest engram release at design time is `v3.6.0` and its release assets are exactly named `engram_3.6.0_{darwin,linux,windows}_{amd64,arm64}.<ext>` — the tarball route can build the asset name as `engram_<tag>_<os>_<arch>.tar.gz` | api.github.com `/repos/Gentleman-Programming/engram/releases/latest` (sampled 2026-10-28) | 2026-10-28 | O10 |
+| PE-003 | repo-doc | The canonical Serena install for this repo is `uv tool install -p 3.13 serena-agent`; the committed `.serena/project.yml` is the project config the setup verifies | docs/features/67-serena-provisioning/SPEC.md (R5, AC3; committed) | 2026-10-28 | O2, O6 |
+| PE-004 | repo-doc | The gentle-engram pi package install route is `pi install npm:gentle-engram@latest` (never `engram setup pi`) — feature 66 decision, not relitigated | docs/features/66-engram-memory-substrate/SPEC.md (committed) | 2026-10-28 | O9 |
+| PE-005 | committed-source | `scripts/pin-watch.mjs` exports the reusable detection/pin logic S3 names: `installedVersion` (serena `--version` → `uv tool list` → `pip show`), `pypiLatest` (PyPI JSON API via curl), `npmLatest` (`npm view <name> version`) | scripts/pin-watch.mjs (committed source, read 2026-10-28) | 2026-10-28 | O7, O8 |
+| PE-006 | unknown | Interpretation of S2's "installs bun (respecting `.node-version`)": bun's installer is node-independent, so the `.node-version` (v24) binds the **node verification** (node present, major ≥ 24 — exact equality not required; the authoring machine runs v26) while bun is installed unconditionally when absent. **Owner: human-owner — confirm at review; a contrary reading means `bun install` gains a node-version gate.** | issue #331 S2 wording + machine sample (`node v26.12.1` vs `.node-version` v24.21.0) | unknown | O1, O3 |
+| PE-007 | sampled-machine | gentle-engram's installed pi-package version is readable from `<pi-agent-dir>/npm/node_modules/gentle-engram/package.json`, where `<pi-agent-dir>` is `$PI_CODING_AGENT_DIR` or `~/.pi/agent`; sampled present at 0.4.x on the authoring machine | /home/agent/.pi/agent/npm/node_modules/gentle-engram/package.json (sampled 2026-10-28); gentle-engram README §"The command respects `PI_CODING_AGENT_DIR`" | 2026-10-28 | O7, O9 |
+| PE-008 | external-doc | The bun and uv installers are the official curl scripts `curl -fsSL https://bun.sh/install | bash` and `curl -LsSf https://astral.sh/uv/install.sh | sh` | bun.sh / astral.sh install pages (canonical routes, fetched 2026-10-28) | 2026-10-28 | O10 |
+| PE-009 | unknown | CI green (AC5): provisioning a pristine macos/ubuntu runner end-to-end (bun.sh, astral.sh, PyPI, npm, Homebrew tap / GitHub Releases) succeeds with no manual tolerance knob. **Owner: human-owner — observable only after push; the workflow is asserted locally, the green run is the verifier's.** | .github/workflows/setup-check.yml (asserted locally); the run itself unsampled | unknown | O11 |
