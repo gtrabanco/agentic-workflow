@@ -125,7 +125,6 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F15 | scripts/promise-coherence.mjs:538 | security | high | source | fold |
 | F16 | packages/pi-agentic-workflow/bun.lock | workflow | med | source | fold |
 | F18 | scripts/promise-coherence.mjs:682 | code | med | source | fold |
 | F19 | scripts/promise-coherence.mjs:588 | perf | med | source | fold |

@@ -625,11 +625,27 @@ const SWEEP_MAX_PATTERN_CHARS = 200;
  * A quantified group whose body is itself quantified — the catastrophic
  * backtracking class. Conservative on purpose: the reviewed reproducer
  * `(a+)+$` cost 83 s for five `test()` calls on one 29-character line, and the
- * scan runs the pattern per line over the whole glob corpus. A refused
- * declaration asks the fold to name the literal instead; a compiled one can
- * hang the gate that runs it.
+ * scan runs the pattern per line over the whole glob corpus. The body class
+ * counts `*`, `+` and `{` alike — cycle-2 review F15 measured `(a{2,})+`
+ * hiding from a `*`/`+`-only scan. A refused declaration asks the fold to name
+ * the literal instead; a compiled one can hang the gate that runs it.
  */
-const SWEEP_NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[*+][^()\\]*\)[*+{]/;
+const SWEEP_NESTED_QUANTIFIER = /\((?:[^()\\]|\\.)*[*+{][^()\\]*\)[*+{]/;
+/**
+ * An alternation inside a quantified group — the same class with the overlap
+ * spelled as choices: the measured reproducer `(a|aa)+$` cost 66 s on one
+ * short line (cycle-2 review F15). Any quantified group carrying `|` is
+ * refused, overlap or not: a declaration names a stale *form*, never a
+ * program, so the conservative shape is the correct bound.
+ */
+const SWEEP_QUANTIFIED_ALTERNATION = /\((?:[^()\\]|\\.)*\|(?:[^()\\]|\\.)*\)[*+{]/;
+/**
+ * Quantifiers stacked directly or separated by a single atom: `a*a*a*b`,
+ * `.*.*`, `x{2,}y+` — the groupless members of the class (cycle-2 review
+ * F15), which carry the same exponential backtrack with no `(` to watch.
+ * A lone `?` is not in the chain class: optional atoms do not overlap.
+ */
+const SWEEP_QUANTIFIER_CHAIN = /(?:[*+]|\{\d+(?:,\d*)?\})\s*(?:[*+]|\{\d+(?:,\d*)?\}|(?:\\.|[^\s\\|()[\]{}])(?:[*+]|\{\d+(?:,\d*)?\}))/;
 
 /**
  * The sweep's bounds on one pattern body, or null when the body is inside them.
@@ -642,6 +658,12 @@ function sweepPatternRefusal(pattern) {
   }
   if (SWEEP_NESTED_QUANTIFIER.test(pattern)) {
     return "the pattern is a quantified group whose body is itself quantified (the catastrophic-backtracking class) — the gate refuses to compile it over a whole corpus; name the literal form instead";
+  }
+  if (SWEEP_QUANTIFIED_ALTERNATION.test(pattern)) {
+    return "the pattern is a quantified group containing an alternation (the catastrophic-backtracking class — repeated choices overlap) — the gate refuses to compile it over a whole corpus; name the literal form instead";
+  }
+  if (SWEEP_QUANTIFIER_CHAIN.test(pattern)) {
+    return "the pattern stacks quantifiers or repeats adjacent quantified atoms (the catastrophic-backtracking class — an ungrouped chain like a*a*a*b) — the gate refuses to compile it over a whole corpus; name the literal form instead";
   }
   return null;
 }
