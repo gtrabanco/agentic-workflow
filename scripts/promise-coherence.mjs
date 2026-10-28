@@ -59,11 +59,21 @@
  * `skills/orchestration-envelope/references/TURN_CONTRACT.md`; the budget
  * narration is `docs/workflow/SKILL_CONTEXT_BUDGETS.json`'s own `policy.rules`.
  *
- * Allowed / forbidden: a claim is executed only when its command begins with a
+ * Allowed / forbidden: a claim is executed only when its command is a single
  * reader (`grep`, `rg`, `wc`, `ls`, `cat`, `head`, `tail`, `test`, `git grep`)
- * and carries no shell composition (`;`, `&&`, `||`, `$(`, `>`, `<`), or when it
- * is a `node`/`bun` call of one of the committed report validators in
- * `REPORT_VALIDATORS` — read-only verdict scripts that write nothing, hit no
+ * or a pipeline of readers, lexically bounded — unquoted `$`, backtick, `(`,
+ * `)`, `&` and `#` are refused (expansion, subshell, chaining), `$` and
+ * backtick inside double quotes are refused (the shell expands them there),
+ * single quotes protect everything they enclose, and every pipeline stage
+ * must begin with an allowlisted reader; a quoted metacharacter — the `|` of
+ * `grep -E "a|b"`, the `$` of `'^name: x$'` — is a literal argument, never
+ * shell surface (review F14: the old raw scan missed the single `|` that
+ * splits two commands and the backtick that runs one, while a wider raw ban
+ * would have silently skipped the quoted patterns the in-flight docs declare).
+ * Or when the claim is a `node`/`bun` call of one of the committed report
+ * validators in `REPORT_VALIDATORS` with every argument resolving inside the
+ * repository (review F17: `--root /home` was an allowlisted script reading an
+ * un-allowlisted tree) — read-only verdict scripts that write nothing, hit no
  * forge and spawn no process, executed argv-style with no shell at all.
  * Anything else is a printed `skip:` line naming why — never a silent pass, and
  * never a pass that checked nothing. Running `node --test`, a package `test`
@@ -162,7 +172,13 @@ const VALIDATOR_SCRIPT = /^scripts\/[A-Za-z0-9._/-]+\.mjs$/;
 const SUITE_SCRIPT = /\.test\.mjs$/;
 /** The gate's own file — a claim that runs it would run this claim again. */
 const SELF = "scripts/promise-coherence.mjs";
-/** Shell composition that turns a reader into something else. */
+/**
+ * Shell composition that turns a reader into something else — the raw
+ * pre-check, conservative even inside quoted spans (the historical skip
+ * class, kept so no previously-skipped claim becomes executed). The
+ * contextual half this scan cannot see is the lexical bound in
+ * `lexReaderPipeline` (review F14).
+ */
 const COMPOSITION = /(?:;|&&|\|\||\$\(|>|<|\n)/;
 /**
  * Any character a shell would interpret, or a human placeholder would use: the
@@ -252,18 +268,122 @@ function blankResult(kind, file, line, claim) {
   return { kind, file, line, claim: sanitize(claim), outcome: null, observed: null, skip: null };
 }
 
-/** A runnable command, or null when the claim's command is out of scope. */
+/**
+ * Lex a reader command into pipeline stages, quote-aware. Returns `{ command }`
+ * when every stage begins with an allowlisted reader and nothing in the string
+ * expands or composes at the shell, or `{ refusal }` naming the trip. Single
+ * quotes are literal; double quotes reject backtick and any `$` the shell
+ * would expand there; outside quotes `$`, backtick, `(`, `)`, `&` and `#` are
+ * refused and an unquoted `|` separates stages, each of which must be a
+ * reader. Word splitting and pathname globs stay — they are the shell surface
+ * claims actually use, and none of it executes (review F14).
+ */
+function lexReaderPipeline(command) {
+  const stages = [[]];
+  let token = null;
+  const refusal = (why) => ({ refusal: why });
+  const flush = () => {
+    if (token !== null) {
+      stages[stages.length - 1].push(token);
+      token = null;
+    }
+  };
+  for (let i = 0; i < command.length; i += 1) {
+    const ch = command[i];
+    if (ch === " " || ch === "\t") {
+      flush();
+      continue;
+    }
+    if (ch === "|") {
+      flush();
+      if (stages[stages.length - 1].length === 0) {
+        return refusal("the command carries an empty pipeline stage — the reader allowlist runs a single command or a reader pipeline");
+      }
+      stages.push([]);
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      token = token ?? "";
+      let j = i + 1;
+      let closed = false;
+      while (j < command.length) {
+        const c = command[j];
+        if (ch === "'") {
+          if (c === "'") {
+            closed = true;
+            break;
+          }
+          token += c;
+          j += 1;
+          continue;
+        }
+        if (c === "\\") {
+          const next = command[j + 1];
+          if (next === undefined) return refusal("the command ends in a dangling backslash — the reader allowlist runs literal arguments only");
+          if ("$`\"\\".includes(next)) {
+            token += next;
+            j += 2;
+            continue;
+          }
+          token += c;
+          j += 1;
+          continue;
+        }
+        if (c === '"') {
+          closed = true;
+          break;
+        }
+        if (c === "`") return refusal("the command carries shell expansion (a backtick inside double quotes) — the reader allowlist runs literal arguments only");
+        if (c === "$") {
+          const next = command[j + 1] ?? "";
+          if (/[$@*?!#A-Za-z0-9_(-]/.test(next)) {
+            return refusal("the command carries shell expansion (a $ the shell expands inside double quotes) — the reader allowlist runs literal arguments only");
+          }
+        }
+        token += c;
+        j += 1;
+      }
+      if (!closed) return refusal("the command carries an unbalanced quote — the reader allowlist runs literal arguments only");
+      i = j;
+      continue;
+    }
+    if (ch === "`") return refusal("the command carries shell expansion (a backtick) — the reader allowlist runs literal arguments only");
+    if (ch === "$") return refusal("the command carries shell expansion (an unquoted $) — the reader allowlist runs literal arguments only");
+    if (ch === "(" || ch === ")" || ch === "&" || ch === "#") {
+      return refusal(`the command carries shell composition (${ch}) — the reader allowlist runs a single command or a reader pipeline`);
+    }
+    if (ch === "\\") {
+      const next = command[i + 1];
+      if (next === undefined) return refusal("the command ends in a dangling backslash — the reader allowlist runs literal arguments only");
+      token = (token ?? "") + next;
+      i += 1;
+      continue;
+    }
+    token = (token ?? "") + ch;
+  }
+  flush();
+  for (const stage of stages) {
+    if (stage.length === 0) {
+      return refusal("the command carries an empty pipeline stage — the reader allowlist runs a single command or a reader pipeline");
+    }
+    const reader = stage[0] === "git" ? stage[1] === "grep" : READERS.has(stage[0]);
+    if (!reader) {
+      return refusal(`a pipeline stage is outside the reader allowlist (${stage[0]}) — claims chain readers, not interpreters`);
+    }
+  }
+  return { command };
+}
+
+/** A runnable reader command, a named refusal, or null when it is out of the
+ *  reader class entirely (the runner class and the generic skip still apply). */
 function runnableCommand(command) {
   const trimmed = command.trim();
   if (trimmed === "" || COMPOSITION.test(trimmed)) return null;
-  const tokens = trimmed.split(/\s+/);
-  const head = tokens[0];
-  if (head === "git") {
-    if (tokens[1] !== "grep") return null;
-  } else if (!READERS.has(head)) {
-    return null;
-  }
-  return trimmed;
+  const first = trimmed.split(/\s+/);
+  const head = first[0];
+  const isReaderForm = head === "git" ? first[1] === "grep" : READERS.has(head);
+  if (!isReaderForm) return null;
+  return lexReaderPipeline(trimmed);
 }
 
 /**
@@ -297,6 +417,19 @@ function runnerCommand(command) {
     // the *runtime* would consume (`-e`, `--test`, `--experimental`) is not.
     if (token.startsWith("-") && !/^--(?![a-z]*=)[a-z][a-z0-9-]*$/.test(token)) return null;
     if (RUNNER_UNSAFE.test(token)) return null;
+    if (!token.startsWith("-")) {
+      // Review F17: the script is allowlisted; now its arguments are too. A
+      // report validator may be pointed only at a tree inside the repository
+      // — an absolute path, a `~` home, or a `..` that walks out is refused
+      // by name rather than run over foreign content the gate then echoes.
+      const inside =
+        !token.startsWith("/") &&
+        !token.startsWith("~") &&
+        path.resolve(ROOT, token).startsWith(ROOT + path.sep);
+      if (!inside) {
+        return { argv: null, why: `the validator argument '${token}' resolves outside the repository — report validators run over the repository only` };
+      }
+    }
   }
   if (!fs.existsSync(path.join(ROOT, target))) {
     return { argv: null, why: `the validator script '${target}' is not in the tree` };
@@ -335,7 +468,10 @@ function runArgv(argv) {
   };
 }
 
-/** Execute one reader command at the repository root. */
+/** Execute one reader command at the repository root. The string is the
+ *  lexical bound's output — readers only, no expansion, no composition; the
+ *  shell stays because word splitting and pathname globs (`scripts/*.mjs`)
+ *  are what claims use, and nothing left in the string executes. */
 function runCommand(command) {
   const result = spawnSync(command, {
     shell: true,
@@ -393,7 +529,13 @@ function validatorClaim(text, file, line) {
   const rest = text.slice(commandSpan.index + commandSpan[0].length);
   const claim = blankResult("validator", file, line, `${command}${rest === "" ? "" : ` —${rest}`}`);
   let runner = null;
-  let runnable = runnableCommand(command);
+  const runnable = runnableCommand(command);
+  if (runnable !== null && runnable.refusal !== undefined) {
+    // A reader-family command the lexical bound refuses: named and never
+    // executed (review F14 — the raw scan used to let exactly this through).
+    claim.skip = runnable.refusal;
+    return claim;
+  }
   if (runnable === null) {
     runner = runnerCommand(command);
     if (runner === null) {
@@ -415,7 +557,7 @@ function validatorClaim(text, file, line) {
     claim.skip = "no declared outcome (matches <N> / exits <N>)";
     return claim;
   }
-  const run = runnable === null ? runArgv(runner.argv) : runCommand(runnable);
+  const run = runnable === null ? runArgv(runner.argv) : runCommand(runnable.command);
   if (matches !== null) {
     const expected = Number(matches[1]);
     const observed = observedCount(run.stdout);
