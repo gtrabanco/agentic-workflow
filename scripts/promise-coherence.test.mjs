@@ -15,7 +15,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import path from "node:path";
@@ -390,6 +390,42 @@ test("#315 F12: a report-validator claim is re-run instead of skipped, and each 
   assert.match(byCommand("promise-coherence.mjs")?.skip, /this gate itself/);
   assert.equal(byCommand("unit-route.mjs")?.skip, "command outside the reader allowlist", "not every committed script is a report validator");
   assert.match(result.lines.at(-1), /^claims: 1 checked · 3 skipped$/, "the tally counts what was actually run");
+});
+
+// ---------------------------------------------------------------------------
+// cycle-2 · F14 / F17 — the doc-sourced execution surface is lexically bounded
+// ---------------------------------------------------------------------------
+
+test("F14/F17: a piped interpreter, an expansion, and an escaping validator root are refused by name and never executed", () => {
+  // The reader path executed any command whose head was a reader as long as
+  // the raw scan missed `;`/`&&`/`||`/`$( `/`>`/`<` — a single `|` into `node`,
+  // an unquoted `$HOME`, and a quoted `$$` all reached a shell. The runner
+  // class allowlisted the script but not its arguments, so `--root /home`
+  // pointed a report validator at arbitrary tree content. Refusals name
+  // themselves; the controls prove the bound is lexical, not scorched-earth:
+  // quoted alternation, a reader→reader pipeline, and a plain `test` keep
+  // running exactly as before.
+  const marker = join(ROOT, FIXTURES, ".f14-marker");
+  rmSync(marker, { force: true });
+  try {
+    const result = coherence([fixture("shell-and-args-unit-doc.md")]);
+    const claims = result.claims.filter((claim) => claim.kind === "validator");
+    const byCommand = (needle) => claims.find((claim) => claim.claim.includes(needle));
+
+    assert.match(byCommand("cat README.md | node")?.skip ?? "", /pipeline stage is outside the reader allowlist \(node\)/);
+    assert.match(byCommand("grep -c $HOME")?.skip ?? "", /shell expansion/);
+    assert.match(byCommand("a$$b")?.skip ?? "", /shell expansion/);
+    assert.equal(byCommand("--root /home")?.outcome, null, "the absolute validator root is not executed");
+    assert.match(byCommand("--root /home")?.skip ?? "", /resolves outside the repository/);
+    assert.match(byCommand("--root ../..")?.skip ?? "", /resolves outside the repository/);
+    assert.ok(!existsSync(marker), "the refused piped command never reached a shell");
+
+    assert.equal(byCommand("agentic|workflow")?.outcome, "pass", "a quoted alternation is a literal argument");
+    assert.equal(byCommand("ls scripts | wc -l")?.outcome, "pass", "a reader→reader pipeline still runs");
+    assert.equal(byCommand("test -f README.md")?.outcome, "pass", "a plain test still runs");
+  } finally {
+    rmSync(marker, { force: true });
+  }
 });
 
 test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
