@@ -1,7 +1,8 @@
 name: Publish Pi package
 
-# Publishes @gtrabanco/pi-agentic-workflow to npm whenever a push to main
-# touches the package AND that exact version is not on the registry yet
+# Publishes @gtrabanco/pi-agentic-workflow to npm after its upstream (the
+# runner crate) published (feature 40 publish chain) AND that exact version
+# is not on the registry yet
 # (already-published versions are a safe no-op — the gate asks exact-version
 # membership, never "is it the latest": see scripts/npm-version-gate.mjs).
 # Also runnable by hand
@@ -62,11 +63,13 @@ name: Publish Pi package
 #   Re-run once the config is fixed: gh workflow run publish-pi-package.yml
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/pi-agentic-workflow/**"
-      - ".github/workflows/publish-pi-package.yml"
+  # Dependency order (feature 40, issue #180): this package's install pins
+  # "Publish runner crate" exactly, so it must already be on the registry when the
+  # gate installs — this workflow only runs after that upstream published.
+  # workflow_run checks out the default branch (the release train's head).
+  workflow_run:
+    workflows: ["Publish runner crate"]
+    types: [completed]
   workflow_dispatch:
     # Release channel for this run (feature 40, issue #180): `latest` (the
     # default — push-triggered runs behave exactly as before), or a prerelease
@@ -111,6 +114,7 @@ jobs:
         run: bun run test:node
 
   publish:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     defaults:
       run:

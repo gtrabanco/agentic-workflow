@@ -180,6 +180,32 @@ function setPackageVersion(pkgPath, version) {
   fs.writeFileSync(pkgPath, JSON.stringify(json, null, 2) + "\n");
 }
 
+/**
+ * Dependency closure (owner-directed, feature 40 follow-up): every exact
+ * pin a package holds on ANOTHER local package must equal the train version —
+ * the parity gate's --pins half fails a pin whose target has published a
+ * newer version, and npm refuses to walk a version back. Non-exact ranges
+ * (peer/^/~) and foreign packages are never touched.
+ */
+function rewriteLocalPins(root, packages, version) {
+  const local = new Map(packages.map((p) => [p.name, p]));
+  const rewrites = [];
+  for (const pkg of packages) {
+    const json = JSON.parse(fs.readFileSync(pkg.path, "utf8"));
+    const deps = json.dependencies ?? {};
+    let changed = false;
+    for (const [dep, spec] of Object.entries(deps)) {
+      if (!local.has(dep) || !SEMVER_RE.test(String(spec)) || spec === version) continue;
+      deps[dep] = version;
+      changed = true;
+      console.log(`pin: ${pkg.name} ${dep} ${spec} → ${version}`);
+    }
+    if (changed) fs.writeFileSync(pkg.path, JSON.stringify(json, null, 2) + "\n");
+    rewrites.push({ pkg: pkg.name, changed });
+  }
+  return rewrites;
+}
+
 function insertCompanionRow(changelogPath, { name, dirName, version, date, level, summary }) {
   const changelog = fs.readFileSync(changelogPath, "utf8");
   const anchor = `#### [\`${name}\`](packages/${dirName}/)`;
@@ -219,12 +245,35 @@ function main() {
   const forced = args.version !== null;
   const gitRepo = isGitRepo(root);
 
-  // Resolve the base (last stable v-tag by default) and the release version.
+  // Resolve the base: the last stable v-tag, else the highest package version
+  // (the first release — deterministic and printed, never guessed in silence).
   // A forced latest release needs no base to compute from — the operator named
   // the exact version (D-40-4); the base is then display-only.
   let base = args.base ?? lastStableTag(root);
+  let baseNote = "";
+  // The train never cuts below what is already published: a stale v-tag (or
+  // its absence) must not downgrade the train below a package version npm
+  // would refuse to walk back.
+  const pkgVersions = packages.map((p) => p.version).filter((v) => SEMVER_RE.test(v));
+  const newer = (a, b) => {
+    const [a1, a2, a3] = a.split(".").map(Number);
+    const [b1, b2, b3] = b.split(".").map(Number);
+    return b1 - a1 || b2 - a2 || b3 - a3;
+  };
+  const highestPkg = [...pkgVersions].sort(newer)[0];
+  if (!args.base && highestPkg && (!base || newer(base, highestPkg) > 0)) {
+    base = highestPkg;
+    baseNote = baseNote || (stableTags(root).length === 0
+      ? " (highest package version — no stable v-tag)"
+      : " (highest package version — above the stale v-tag)" );
+  } else if (!base) {
+    if (pkgVersions.length > 0) {
+      base = highestPkg;
+      baseNote = " (highest package version — no stable v-tag)";
+    }
+  }
   if (!base && forced && args.channel === "latest") base = args.version;
-  if (!base) fail("no --base given and the repository has no stable v* tag to compute from");
+  if (!base) fail("no --base given and neither a stable v* tag nor a package version provides one");
   if (!SEMVER_RE.test(base)) fail(`base must be a stable X.Y.Z version, got: ${base}`);
 
   let version;
@@ -242,18 +291,30 @@ function main() {
     version = bumpVersion(base, level);
   }
 
-  console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${base}, date: ${date}`);
+  console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${base}${baseNote}, date: ${date}`);
   if (forced) console.log(`Version forced by operator: ${version}`);
 
   // Per-channel version + commands.
   const notesBodies = changesets.map((c) => c.body.join("\n"));
+  if (changesets.length > 0) {
+    console.log(`changesets (${changesets.length}):`);
+    for (const c of changesets) {
+      for (const e of c.entries) {
+        console.log(`  ${c.file}: ${e.pkg}=${e.level} — ${c.body[0] ?? ""}`);
+      }
+    }
+  }
   if (args.channel === "latest") {
+    // The changelog row summary IS the release note: the accumulated changeset
+    // bodies (first line each, file order), unless the operator names one.
+    const summary = args.summary ?? (changesets.length > 0
+      ? changesets.map((c) => c.body[0]).join(" · ")
+      : `Release ${version}`);
     console.log(`train version: ${version} (highest bump: ${level ?? "n/a — forced"}); unified train: all packages carry it`);
     for (const pkg of packages) {
       console.log(`${pkg.name}: ${pkg.version} → ${version} (packages/${pkg.dirName}/)`);
     }
     if (args.mode === "apply") {
-      const summary = args.summary ?? `Release ${version}`;
       for (const pkg of packages) {
         setPackageVersion(pkg.path, version);
         insertCompanionRow(path.join(root, "CHANGELOG.md"), {
@@ -261,6 +322,8 @@ function main() {
           date, level: level ?? "patch", summary,
         });
       }
+      rewriteLocalPins(root, packages, version);
+      console.log("note: exact pins moved with the train — run `bun install` in each touched package to refresh its lockfile before committing");
       console.log(`applied: ${packages.length} package.json version(s) + ${packages.length} CHANGELOG companion row(s)`);
     }
     const body = [...notesBodies];

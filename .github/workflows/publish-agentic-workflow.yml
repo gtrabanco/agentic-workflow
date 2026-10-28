@@ -38,11 +38,13 @@ name: Publish runner crate
 #   Re-run once the config is fixed: gh workflow run publish-agentic-workflow.yml
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/agentic-workflow/**"
-      - ".github/workflows/publish-agentic-workflow.yml"
+  # Dependency order (feature 40, issue #180): this package's install pins
+  # "Publish schema package" exactly, so it must already be on the registry when the
+  # gate installs — this workflow only runs after that upstream published.
+  # workflow_run checks out the default branch (the release train's head).
+  workflow_run:
+    workflows: ["Publish schema package"]
+    types: [completed]
   workflow_dispatch:
     # Release channel for this run (feature 40, issue #180): `latest` (the
     # default — push-triggered runs behave exactly as before), or a prerelease
@@ -83,6 +85,7 @@ jobs:
         run: node --test
 
   publish:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     defaults:
       run:

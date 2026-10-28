@@ -47,7 +47,10 @@ function fixture({ changesets = { "the-change.md": ["pi:patch"] }, version = "1.
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(
       path.join(dir, "package.json"),
-      JSON.stringify({ name, version }, null, 2) + "\n",
+      JSON.stringify({ name, version, ...(name === PACKAGES[0] ? { dependencies: {
+        "@gtrabanco/agentic-workflow": version,
+        "@gtrabanco/agentic-workflow-schema": version,
+      } } : {}) }, null, 2) + "\n",
     );
   }
   const changesetDir = path.join(root, ".changeset");
@@ -143,6 +146,35 @@ test("apply writes one companion changelog row per package (AC-14, English-only)
   }
 });
 
+test("the changelog row summary is built from the changeset bodies (the changeset IS the release note)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+  const section = changelog.slice(changelog.indexOf(`#### [\`${PACKAGES[0]}\`]`));
+  assert.match(section, /Change number 1 body line\. · Change number 2 body line\./,
+    "the row summary must carry the changeset bodies, not a generic line");
+  assert.doesNotMatch(section, /Release 1\.0\.1/);
+});
+
+// --summary still wins when the operator names one explicitly.
+test("--summary overrides the changeset-derived summary", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28",
+    "--summary", "Operator summary"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+  assert.match(changelog, /\| 1\.0\.1 \| 2026-10-28 \| patch \| Operator summary \|/);
+});
+
+test("plan lists every changeset with its semver annotation and body (the per-PR type, visible)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /a\.md: @gtrabanco\/pi-agentic-workflow=patch — Change number 1 body line\./);
+  assert.match(result.stdout, /b\.md: @gtrabanco\/agentic-workflow-schema=minor — Change number 2 body line\./);
+});
+
 test("plan writes nothing (read-only by construction)", () => {
   const root = fixture();
   const before = fs.readFileSync(path.join(root, "packages/pi-agentic-workflow/package.json"), "utf8");
@@ -229,4 +261,52 @@ test("--version override must not collide with an existing tag (D-40-4)", () => 
   const result = run(["plan", "--root", root, "--version", "5.0.0"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr || result.stdout, /already exists|collide/);
+});
+
+test("apply rewrites the downstream exact pins to the train version (dependency closure)", () => {
+  // Real graph: pi-agentic-workflow pins @gtrabanco/agentic-workflow and
+  // @gtrabanco/agentic-workflow-schema exactly — when the train moves schema,
+  // a pi pin at the old version reds the parity gate (--pins: pin == local).
+  const root = fixture({ changesets: { "a.md": ["schema:minor"] } });
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const pi = JSON.parse(fs.readFileSync(path.join(root, "packages/pi-agentic-workflow/package.json"), "utf8"));
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow"], "1.1.0");
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow-schema"], "1.1.0");
+  assert.match(result.stdout, /pin: @gtrabanco\/pi-agentic-workflow @gtrabanco\/agentic-workflow-schema 1\.0\.0 → 1\.1\.0/);
+  // a package with no exact local pins has nothing to rewrite
+  const crate = JSON.parse(fs.readFileSync(path.join(root, "packages/agentic-workflow/package.json"), "utf8"));
+  assert.equal(crate.dependencies?.["@gtrabanco/agentic-workflow-schema"], undefined);
+});
+
+test("apply leaves non-exact and foreign ranges untouched", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const piPath = path.join(root, "packages/pi-agentic-workflow/package.json");
+  const pi = JSON.parse(fs.readFileSync(piPath, "utf8"));
+  pi.dependencies["@gtrabanco/agentic-workflow"] = "^1.0.0";
+  pi.dependencies["left-pad"] = "1.3.0";
+  fs.writeFileSync(piPath, JSON.stringify(pi, null, 2) + "\n");
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const after = JSON.parse(fs.readFileSync(piPath, "utf8"));
+  assert.equal(after.dependencies["@gtrabanco/agentic-workflow"], "^1.0.0", "ranges are ranges by nature — never rewritten");
+  assert.equal(after.dependencies["left-pad"], "1.3.0", "foreign exact pins are not this train's business");
+});
+
+test("without v-tags the base falls back to the highest package version (the first release)", () => {
+  // packages carry 1.0.0; the repo has no vX.Y.Z tag — the train still computes
+  const root = fixture({ changesets: { "a.md": ["pi:minor"] } });
+  const result = run(["plan", "--root", root]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /base: 1\.0\.0 \(highest package version — no stable v-tag\)/);
+  assert.match(result.stdout, /train version: 1\.1\.0/);
+});
+
+test("the base never sits below an already-published package version (a stale v-tag cannot downgrade the train)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:minor"] }, git: true, version: "4.9.0" });
+  execFileSync("git", ["tag", "v1.0.0"], { cwd: root });
+  const result = run(["plan", "--root", root]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /base: 4\.9\.0/);
+  assert.match(result.stdout, /train version: 4\.10\.0/);
 });
