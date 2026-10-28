@@ -493,3 +493,29 @@ test("a prerelease cut never stamps the repo's skills", () => {
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), before);
 });
+
+// D-40-15: skill entries feed the train level (a skill's severity is content
+// severity — skills ride the pi package), and the changelog row names them.
+test("a skill-declaring changeset feeds the train level and names the skills in the changelog", () => {
+  const root = fixture({ changesets: {} });
+  fs.writeFileSync(
+    path.join(root, ".changeset", "mixed.md"),
+    '---\n"@gtrabanco/pi-agentic-workflow": patch\n"unit-lane": major\n---\n\nThe lane contract changes.\n',
+  );
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /train version: 2\.0\.0/, "the skill's major wins the train");
+  const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+  const row = changelog.split("\n").find((l) => l.startsWith("| 2.0.0 |"));
+  assert.match(row, /\(skills: unit-lane\)/, "the affected skill is named from the entry, not the body");
+  assert.match(row, /The lane contract changes\./);
+});
+
+test("the .changeset directory survives a cut that consumes every intent file", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  fs.writeFileSync(path.join(root, ".changeset", ".gitkeep"), "");
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(fs.existsSync(path.join(root, ".changeset", ".gitkeep")), true, ".gitkeep keeps the empty dir alive");
+  assert.equal(fs.existsSync(path.join(root, ".changeset", "a.md")), false);
+});

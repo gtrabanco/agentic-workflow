@@ -133,3 +133,18 @@ test("warns without failing when a body carries a command-substitution shape", (
   assert.match(result.stdout, /ok clean\.md/);
   assert.doesNotMatch(result.stdout, /warn clean\.md/);
 });
+
+// D-40-15: a changeset can declare SKILLS as well as packages — the skill
+// entry carries the change's intention for that skill and is validated
+// against the skills/ tree, not the packages/.
+test("a skill entry is valid and an unknown skill name is not", () => {
+  const dir = fixtureDir({
+    "skill-change.md": '---\n"unit-lane": patch\n---\n\nA wording fix in unit-lane.\n',
+    "bad-skill.md": '---\n"no-such-skill": patch\n---\n\nBody.\n',
+  });
+  const good = run([path.join(dir, "skill-change.md")]);
+  assert.equal(good.status, 0, good.stderr || good.stdout);
+  const bad = run([path.join(dir, "bad-skill.md")]);
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr || bad.stdout, /unknown skill: no-such-skill/);
+});

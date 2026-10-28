@@ -113,8 +113,10 @@ skipped by triage.
 Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 
 1. **In the PR** — add a changeset intent file `.changeset/<name>.md`
-   (YAML frontmatter mapping `"@gtrabanco/<package>": patch|minor|major` + a
-   release-note body). `scripts/lint-changeset.mjs`
+   (YAML frontmatter mapping `"@gtrabanco/<package>"` or `"<skill-name>"`:
+   patch|minor|major + a release-note body; add as many files as the change
+   needs — the highest severity wins the train and every change lands in the
+   changelog at cut time). `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
    package.json bump. The `skill-lint` helper lints the authoring rules

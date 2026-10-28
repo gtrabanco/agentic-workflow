@@ -202,8 +202,12 @@ export function evaluateContent({
         triggered,
       };
     }
+    // A skill entry declares the package whose trigger set carries skills/
+    // (the skills-content package): skills are its shipped content (D-40-15).
     const declaring = changesetIntent.find((entry) =>
-      (entry.entries ?? []).some((e) => e.pkg === packageName),
+      (entry.entries ?? []).some(
+        (e) => e.pkg === packageName || (e.kind === "skill" && triggerPrefixes.includes("skills/")),
+      ),
     );
     if (declaring) {
       return {

@@ -4,9 +4,10 @@
  * (feature 40, issue #180 — SPEC AC-02 / AC-16: fail closed on malformed).
  *
  * The adopted format is the changesets FILE FORMAT, not the tool: markdown
- * with a YAML frontmatter mapping `"<package-name>": patch|minor|major` (one
- * or more) and a markdown body that becomes the release note. Restricted
- * grammar, dependency-free:
+ * with a YAML frontmatter mapping `"<package-name>": patch|minor|major` or
+ * `"<skill-name>": patch|minor|major` (one or more; a bare key names a skill
+ * of this repo — D-40-15) and a markdown body that becomes the release note.
+ * Restricted grammar, dependency-free:
  *
  *   ---
  *   "@gtrabanco/pi-agentic-workflow": patch
@@ -36,6 +37,16 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const LEVELS = new Set(["patch", "minor", "major"]);
 const ENTRY_RE = /^"([^"]+)":\s*(patch|minor|major)$/;
 
+function skillNames() {
+  const dir = path.join(REPO_ROOT, "skills");
+  const names = [];
+  if (!fs.existsSync(dir)) return names;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && fs.existsSync(path.join(dir, entry.name, "SKILL.md"))) names.push(entry.name);
+  }
+  return names;
+}
+
 function packageNames() {
   const dir = path.join(REPO_ROOT, "packages");
   const names = [];
@@ -54,7 +65,7 @@ function packageNames() {
 }
 
 /** Validate one file; returns an error string or null. */
-export function lintChangesetFile(filePath, knownPackages) {
+export function lintChangesetFile(filePath, knownPackages, knownSkills = []) {
   let content;
   try {
     content = fs.readFileSync(filePath, "utf8");
@@ -64,7 +75,11 @@ export function lintChangesetFile(filePath, knownPackages) {
   const parsed = parseChangeset(content);
   if (!parsed.ok) return parsed.error;
   for (const entry of parsed.entries) {
-    if (!knownPackages.includes(entry.pkg)) {
+    if (entry.kind === "skill") {
+      if (!knownSkills.includes(entry.pkg)) {
+        return `unknown skill: ${entry.pkg} (this repo ships: ${knownSkills.join(", ")})`;
+      }
+    } else if (!knownPackages.includes(entry.pkg)) {
       return `unknown package: ${entry.pkg} (this repo ships: ${knownPackages.join(", ")})`;
     }
   }
@@ -102,7 +117,11 @@ export function parseChangeset(content) {
     if (!LEVELS.has(level)) {
       return { ok: false, error: `unknown bump level: ${level}` };
     }
-    entries.push({ pkg, level });
+    // A scoped key names a package; a bare key names a SKILL of this repo
+    // (D-40-15) — the skill entry carries the change's intention for that
+    // skill; its severity feeds the train like any package entry's.
+    const kind = pkg.startsWith("@") ? "package" : "skill";
+    entries.push({ pkg, level, kind });
   }
   const body = lines.slice(close + 1).filter((l) => l.trim() !== "");
   if (body.length === 0) {
@@ -136,6 +155,7 @@ function main() {
         : [];
 
   const known = packageNames();
+  const knownSkillNames = skillNames();
   let failed = false;
   for (const file of targets) {
     let content = null;
@@ -144,7 +164,7 @@ function main() {
     } catch {
       // lintChangesetFile reports the read failure
     }
-    const error = lintChangesetFile(file, known);
+    const error = lintChangesetFile(file, known, knownSkillNames);
     if (error) {
       console.error(`error: ${path.basename(file)}: ${error}`);
       failed = true;
