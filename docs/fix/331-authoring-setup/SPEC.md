@@ -43,6 +43,18 @@ issue states them.
 **S10 — fix PE-010, the serena-in-worktree failure (owner amendment, 2026-10-28).**
 > Arregla PE-010
 
+**S11 — node and bun are the user's prerequisites; bun is opt-in (owner amendment, 2026-10-28).**
+> bun y node fuera, ya el usuario debe instalar una para tener pi y poder desarrollar, lo demás sí está bien. Si el usuario no tiene bun debe preguntar si quiere usar bun ya que preferimos bun por su rendimiento.
+
+**S12 — no setup CI (owner decision, 2026-10-28).**
+> cuando acabes, acuerdate de quitar los dos ci de las gha
+
+The owner's operating rule behind S12 (recorded as D8): CI is not created or
+modified without explicit permission — GHA minutes and red noise are real
+costs; what is not explicitly permitted is asked, never assumed. The
+`setup-check.yml` workflow S4 introduced is deleted; `--check` remains a local
+verification tool.
+
 **S9 — worktree quick resetup (owner amendment, 2026-10-28).**
 > esto permite algo progresivo y rápido y por ejemplo corregir defectos que surgen al, por ejemplo crear un worktree porque entiendo que habrá archivos que viven en el directorio pero están en el gitignore y así al crear un worktree se puede hacer un resetup rápido si es necesario.
 
@@ -66,11 +78,11 @@ issue states them.
 
 One observable, testable criterion per requirement; the check that proves each is named. This section is the frozen acceptance source (post-feature-61 unit-doc era).
 
-- **AC1 (S2)** — `node scripts/setup-env.mjs` on a fresh macOS/Linux clone provisions bun, uv, `serena-agent`, `engram` and the `gentle-engram` pi package end-to-end; a second run performs zero installs; an unresolvable prerequisite (node absent/behind `.node-version`, `pi` absent) exits non-zero with a message naming the tool. Check: `node --test scripts/setup-env.test.mjs` exits 0 (plan/idempotency/failure tests) + a foreground idempotency run recorded in the unit `## Log`.
-- **AC2 (S2)** — `node scripts/setup-env.mjs --check` verifies without installing or writing anything and exits 0 when every tool is present, 1 when any is missing. Check: `node --test scripts/setup-env.test.mjs` exits 0 + foreground `node scripts/setup-env.mjs --check` · exit 0.
+- **AC1 (S2)** — `node scripts/setup-env.mjs` on a fresh macOS/Linux clone provisions uv, `serena-agent`, `engram` and the `gentle-engram` pi package end-to-end (bun only when the user opted in); a second run performs zero installs; an unresolvable prerequisite (`pi` absent) exits non-zero with a message naming the tool. node/bun are never installed or failed-over by the script (S11). Check: `node --test scripts/setup-env.test.mjs` exits 0 (plan/idempotency/failure tests) + a foreground idempotency run recorded in the unit `## Log`.
+- **AC2 (S2)** — `node scripts/setup-env.mjs --check` verifies without installing or writing anything and exits 0 when every required tool is present, 1 when any required one is missing; an absent optional bun (S11) is a `warn` row that never fails the verdict. Check: `node --test scripts/setup-env.test.mjs` exits 0 + foreground `node scripts/setup-env.mjs --check` · exit 0.
 - **AC3 (S2)** — `.engram/` is byte-identical after any script run. Check: `node --test scripts/setup-env.test.mjs` — the dedicated guard test hashes `.engram/` before/after a `--check` subprocess run at the repo root and asserts no plan step can ever target `.engram/`, run `engram setup`, or `pi-engram init`.
 - **AC4 (S3)** — `node scripts/update-tools.mjs --dry-run` reports current vs latest for `serena-agent` and `gentle-engram` without changing anything. Check: `node --test scripts/update-tools.test.mjs` exits 0 + foreground dry-run recorded in the `## Log`.
-- **AC5 (S4)** — `.github/workflows/setup-check.yml` runs on `macos-latest` and `ubuntu-latest`, provisions the runner, then runs `node scripts/setup-env.mjs --check`. Check: `node --test scripts/setup-env.test.mjs` (workflow assertions) exits 0. Actual CI green is observable only after push — disclosed to the external verifier, never claimed locally.
+- **AC5 (S4 — superseded by S12)** — the `setup-check.yml` CI job was removed by owner decision D8 (CI never without explicit permission); no workflow may run `setup-env`. Check: `node --test scripts/setup-env.test.mjs` (S12 absence assertions) exits 0.
 - **AC6 (S1, S5)** — `docs/workflow/SETUP.md` documents every step the scripts automate (each install command verbatim) and README's Setup area links it. Check: `grep -n "docs/workflow/SETUP.md" README.md` exits 0 · ≥1 match; `node --test scripts/setup-env.test.mjs` (doc-coverage assertions) exits 0.
 - **AC7 (S3)** — update-tools reuses pin-watch's detection/pin logic (`installedVersion`, `pypiLatest`, `npmLatest`) and upgrades via `uv tool upgrade serena-agent` + `pi install npm:gentle-engram@latest`. Check: `node --test scripts/update-tools.test.mjs` exits 0.
 - **AC8 (S6)** — both scripts are `.mjs` entry points run with `node`; no root `package.json` exists. Check: `test ! -e package.json` exits 0; `node --test scripts/setup-env.test.mjs scripts/update-tools.test.mjs` exits 0.
@@ -78,8 +90,10 @@ One observable, testable criterion per requirement; the check that proves each i
 - **AC10 (S8)** — the provision run is a progressive verify→fix→next pipeline: tools are installed before the next step runs, a failed step stops the pipeline with the tool named, and the run loops verify→fix (bounded, max 3 passes) until everything verifies or the unfixable rows are reported with exit 1. Check: `node --test scripts/setup-env.test.mjs` exits 0 (pipeline/stop/convergence tests) + the foreground run in the `## Log`.
 - **AC11 (S8)** — config verification covers committed state read-only (`.serena/project.yml` non-empty; `.engram/config.json` valid JSON with `project_name` — never rewritten, never initialized) and local gitignored state, which the script creates or rebuilds: `.serena/cache`, `packages/agentic-workflow-schema/dist/` (bun install + build), `packages/pi-agentic-workflow/node_modules`. `--check` reports all of it without writing. Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC14 (S10)** — PE-010 is fixed at its reproduced root cause: the machine-local `.serena/project.local.yml` override (markdown deliberately absent — marksman crashes on this machine for lack of libicu, and one failing LS kills the whole manager) is created by setup-env in any checkout that lacks it, so a fresh worktree's serena starts; PE-010's `unknown` evidence row resolves to this reproduction. Check: `node --test scripts/setup-env.test.mjs` exits 0 + the foreground worktree reproduction (`serena project index` succeeding after the fix) recorded in the `## Log`.
-- **AC13 (S2a, amended by S2b)** — the repo commits `.bun-version` (1.4.0, matching the CI setup-bun pin); setup-env reads it as a **minimum** (S2b): bun ≥ the pin verifies (a newer bun is accepted, like node's ≥-major rule), bun behind the pin is a MISS row, and provision installs/repairs bun at the pinned version via the official installer's version argument (`| bash -s "bun-v<version>"`) when bun is missing or behind. Check: `node --test scripts/setup-env.test.mjs` exits 0.
+- **AC13 (S2a, amended by S2b)** — the repo commits `.bun-version` (1.4.0); setup-env reads it as a **minimum** (S2b): an installed bun ≥ the pin verifies (a newer bun is accepted), bun behind the pin is a MISS row repaired at the pinned version via the official installer's version argument (`| bash -s "bun-v<version>"`); since S11 an **absent** bun installs only on the user's opt-in answer. Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC12 (S9)** — the same command run inside a fresh worktree (gitignored local state absent, committed config present) converges to exit 0, so a worktree can be re-setup quickly. Check: `node --test scripts/setup-env.test.mjs` exits 0 (worktree-shaped fixture: committed files present, local state absent).
+- **AC15 (S11)** — node is never a verify row or a plan step; a bun-less machine plans zero installs and verifies ok with a `warn` row; the opt-in question is only asked in an interactive terminal, the accepted answers are pinned (`y`/`yes`), and a declined/non-interactive run prints the note naming node as the fallback and the pinned installer; the bun-built local steps (`schema-dist`, `pi-crate-modules`) are skipped — never failed — while bun is absent. Check: `node --test scripts/setup-env.test.mjs` exits 0 (S11 describes).
+- **AC16 (S12)** — `.github/workflows/setup-check.yml` does not exist and no workflow under `.github/workflows/` runs `setup-env`. Check: `node --test scripts/setup-env.test.mjs` (S12 describe) exits 0.
 
 ## Future
 
@@ -92,8 +106,8 @@ Ideas the user deferred, captured verbatim with a date and a status. Write `none
 Standing obligations this fix imposes on future work. Each row: the rule + who it binds.
 
 - `scripts/pin-watch.mjs` exports (`installedVersion`, `pypiLatest`, `npmLatest`) are now a consumed API surface: renaming or reshaping them binds `scripts/update-tools.mjs`. Binds anyone editing pin-watch.
-- The CI provision job installs real tools on runners; a broken upstream installer (bun.sh, astral.sh, PyPI, Homebrew tap, GitHub Releases) reddens it through no commit of ours. Binds workflow maintenance.
 - `SETUP.md` must track any change to the automated steps — a script step changed without its doc row is SPEC drift. Binds future edits to either script.
+- The toolchain contract is owner-set (S11): node and bun are the user's prerequisites, bun opt-in. A future change that re-introduces automated node/bun management needs a new owner amendment. Binds future edits to `setup-env.mjs`.
 
 ## Applicable tests
 
@@ -104,7 +118,7 @@ Standing obligations this fix imposes on future work. Each row: the rule + who i
 ## Known pre-existing issues
 
 - `engram doctor --json` still warns about ambiguous attribution on this repo (feature 66 `## Known issues`) — does-not-affect: this unit never runs `engram doctor`.
-- `node` on the authoring machine is v26 while `.node-version` pins `v24.21.0` — affects: the node *verification* rule must tolerate a newer major (documented in SETUP.md), not require exact equality; the CI runner gets v24 from `setup-node` with `node-version-file`.
+- `node` on the authoring machine is v26 while `.node-version` pins `v24.21.0` — moot for this unit since S11 (the setup script no longer verifies node; CI's `setup-node` reads the file directly).
 
 ## Tasks
 
@@ -168,6 +182,14 @@ Standing obligations this fix imposes on future work. Each row: the rule + who i
 - P21 — Reproduce PE-010 in a fresh worktree and record the fix in `docs/workflow/SETUP.md` (validator: `node scripts/setup-env.mjs` in a fresh `git worktree` exits 0 and the `--check` after it exits 0)
   (Implements: S10)
   Relevant files: docs/workflow/SETUP.md, scripts/setup-env.test.mjs
+- P22 — RED tests for the S11 amendment, then implement it: node gone from verify/plan, bun opt-in via interactive question (`parseYesNo`, `bunOptInNote`), warn rows that never fail `--check`, bun-built local steps skipped while bun is absent (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S11)
+  Relevant files: scripts/setup-env.mjs, scripts/setup-env.test.mjs
+- P23 — Remove `.github/workflows/setup-check.yml` and its suite assertions; add the S12 absence assertions (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S12)
+  Relevant files: .github/workflows/setup-check.yml, scripts/setup-env.test.mjs
+- P24 — Update `docs/workflow/SETUP.md` (node/bun prerequisites, bun opt-in, warn semantics, CI section removed), re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S11, S12)
 
 ### Planning evidence
 
@@ -249,6 +271,20 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **P10** — 2026-10-28, progressive pipeline implemented (config steps, verify→fix loop max 3 passes, PATH augmentation, stop-on-first-failure) · a4a777da.
 - **P11** — 2026-10-28, SETUP.md config-layer + worktree-resetup sections, doc-coverage assertions green · a4a777da.
 - **P12** — 2026-10-28, whole-unit re-verification (E6/E7, 1022/1022) and the amended ledger closed (19/19 verified) · a4a777da.
+- **L6** — 2026-10-28, owner amendment, verbatim:
+  ```
+  bun y node fuera, ya el usuario debe instalar una para tener pi y poder desarrollar, lo demás sí está bien. Si el usuario no tiene bun debe preguntar si quiere usar bun ya que preferimos bun por su rendimiento.
+  ```
+- **L7** — 2026-10-28, owner decision, verbatim:
+  ```
+  cuando acabes, acuerdate de quitar los dos ci de las gha
+  ```
+- **D8** — 2026-10-28, owner decision (with its operating rule): the setup CI leg (S4's `setup-check.yml`, macos + ubuntu matrix) is **removed** — CI is never created or modified without explicit permission (GHA minutes and red noise are real costs); what is not explicitly permitted is asked, never assumed. S4/AC5/O11/PE-009 are superseded; `--check` stays as a local verification tool. Recorded in decisions.md.
+- **E11** — 2026-10-28, `node scripts/setup-env.mjs --check` after S11 · exit 1 in this worktree only for the S10 override row (created by the provision run that follows); no node row exists; bun present → `ok bun: bun 1.4.0 (≥ .bun-version)`. Non-TTY provision run (`echo | node scripts/setup-env.mjs`) prints no bun question and never installs bun; 76/76 setup-env tests.
+- **P22** — 2026-10-28, S11 implemented: node rows removed from verify/plan, bun opt-in question (interactive) with `parseYesNo`/`bunOptInNote`, warn rows never fail the verdict, bun-built local steps skipped while bun is absent.
+- **P23** — 2026-10-28, `.github/workflows/setup-check.yml` deleted; suite assertions replaced with the S12 absence assertions (no workflow runs `setup-env`).
+- **P24** — 2026-10-28, SETUP.md amended (node/bun user prerequisites, bun opt-in row, warn semantics, CI section removed); ledger amended (O5 n/a, O11 superseded, O2/O21 amended, O23/O24 added) and the whole gate re-run green (E12).
+- **E12** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · the full root gate after S11/S12; `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` · exit 0 · verdict PASS.
   ## Goal
 
   A developer (or agent session) that clones this repository has **no documented or automated path** to provision the authoring toolchain. `init-workspace` provisions Serena and Engram for *target projects* (consumers of `template/`); the authoring side never got the counterpart when feature 66 adopted them. Today the prerequisites — bun + `.node-version` (v24), `uv tool install -p 3.13 serena-agent` with the committed `.serena/project.yml`, the `engram` binary plus the `pi install npm:gentle-engram@latest` package, and the opt-in dogfooding symlink (`ln -sfn ../skills .claude/skills`) — are discoverable only by reading logs and AGENTS.md side notes.
@@ -297,7 +333,7 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 
 ## Next
 
-PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) is the owner's to open and merge. Remaining before merge: PE-009 (CI green of `setup-check.yml`) stays blocked by issue #180; every other row is verified.
+PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) is the owner's to open and merge. The setup CI leg (S4/AC5/O11/PE-009) was removed by owner decision D8 — nothing CI-side remains in this unit.
 
 ## References
 
