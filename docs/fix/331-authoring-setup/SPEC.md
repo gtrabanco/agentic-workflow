@@ -142,6 +142,32 @@ Standing obligations this fix imposes on future work. Each row: the rule + who i
   Relevant files: docs/workflow/SETUP.md, scripts/setup-env.test.mjs
 - P12 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S8, S9)
+- P13 — RED tests for the bun pin: `.bun-version` read, minimum verification, pinned install/repair command, doc-coverage (validator: `node --test scripts/setup-env.test.mjs` fails RED before P14, exits 0 after)
+  (Implements: S2a)
+  Relevant files: scripts/setup-env.test.mjs
+- P14 — Implement the bun pin in `scripts/setup-env.mjs` + commit `.bun-version` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S2a)
+  Relevant files: scripts/setup-env.mjs, .bun-version
+- P15 — Update `docs/workflow/SETUP.md` (`.bun-version` in the tool table and the committed-state list), re-verify and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S2a, S1)
+  Relevant files: docs/workflow/SETUP.md
+- P16 — RED tests for the minimum semantics (S2b): ≥ comparison, behind-row, repair-only-when-behind (validator: `node --test scripts/setup-env.test.mjs` fails RED before P17, exits 0 after)
+  (Implements: S2b)
+  Relevant files: scripts/setup-env.test.mjs
+- P17 — Implement the minimum semantics in `scripts/setup-env.mjs` and amend SETUP.md (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S2b)
+  Relevant files: scripts/setup-env.mjs, docs/workflow/SETUP.md
+- P18 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S2b)
+- P19 — RED tests for the S10 override row, including the AC3 guard scanning the write payload (validator: `node --test scripts/setup-env.test.mjs` fails RED before P20, exits 0 after)
+  (Implements: S10)
+  Relevant files: scripts/setup-env.test.mjs
+- P20 — Plan the machine-local `.serena/project.local.yml` override in `scripts/setup-env.mjs`, never overwriting an existing one (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S10)
+  Relevant files: scripts/setup-env.mjs
+- P21 — Reproduce PE-010 in a fresh worktree and record the fix in `docs/workflow/SETUP.md` (validator: `node scripts/setup-env.mjs` in a fresh `git worktree` exits 0 and the `--check` after it exits 0)
+  (Implements: S10)
+  Relevant files: docs/workflow/SETUP.md, scripts/setup-env.test.mjs
 
 ### Planning evidence
 
@@ -166,10 +192,13 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **E2** — 2026-10-28, `node scripts/setup-env.mjs --check` · exit 0 · all 8 rows ok (node v26 ≥ 24, bun 1.4.4, uv 0.12.4, serena 2.1.0, engram 3.6.0, pi 1.4.0, gentle-engram 0.4.2, project.yml 10993 bytes).
 - **E3** — 2026-10-28, `node scripts/update-tools.mjs --dry-run` · exit 0 · serena-agent 2.1.0/2.1.0 current, gentle-engram 0.4.2/0.4.2 current, nothing changed.
 - **E4** — 2026-10-28, `node --test scripts/setup-env.test.mjs` · exit 0 · 34/34, including the `.engram/` byte-identity guard (sha256 before/after a repo-root `--check` subprocess) and the /tmp fixture run that caught the missing `os` import before any real-tree run.
-- **G1** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · 1008/1008 pass (full root gate; includes pin-watch 35/35 — previous behavior holds, S3 differential).
+- **G1** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · 1008/1008 pass at P8 (later amended: 1022 after S8/S9, 1030 after S2a, 1040 after S10 — the latest full-gate run is the authoritative one, G5). Includes pin-watch 35/35 — previous behavior holds, S3 differential.
 - **G2** — 2026-10-28, `bun scripts/check-skill-context.mjs --routes` · exit 0 · "PASS route budgets: 14 routes".
-- **G3** — 2026-10-28, `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` · exit 0 · verdict PASS, fingerprint 4b073c2c…
+- **G3** — 2026-10-28, `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` · exit 0 · verdict PASS at P8 (fingerprint 4b073c2c…; superseded on every later commit — the current verdict is G6 and it is the one that must hold).
 - **G4** — 2026-10-28, `grep -n "docs/workflow/SETUP.md" README.md` · exit 0 · README.md:78; `test ! -e package.json` · exit 0.
+- **G5** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · 1045/1045 (full root gate after the review round: 71/71 in the setup-env suite, 10/10 update-tools, pin-watch 35/35 unchanged).
+- **G6** — 2026-10-28, `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` · exit 0 · verdict PASS, fingerprint 0c04e043… (the S10 requirement is linked from P19–P21; the earlier BLOCKED verdict was the missing link, now closed).
+- **V1** — 2026-10-28, external-verification round, four blockers closed: (1) S10 linked from P19–P21 so the declared phase-lint validator passes again (the previous 90f7fe7d commit left `spec-unlinked: S10` and G3's PASS no longer reproduced); (2) `planSetup` fails on a missing `pi` CLI even when the package is already installed — an isolated-HOME run with the package present and no pi now exits 1 naming pi instead of reporting `done`; (3) the engram tarball route names the real release asset (`process.arch` is passed through and `x64` maps to `amd64`) and the unused `fetch` seam is gone; (4) `runProvision` re-probes through `advance` so the loop tests prove ordering, a second-pass convergence and PATH-driven unlocking, and the AC3 guard scans the override write payload. Six of the new tests fail against the pre-fix script and pass here. G5/G6 record the green run.
 - **L2** — 2026-10-28, owner amendment, verbatim:
   ```
   Al crear worktrees del repo a veces falla serena por lo que el setup debe verificar si las tools están instaladas, si no lo están instalarlas antes de pasar al siguiente paso.
@@ -199,20 +228,12 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **P16** — 2026-10-28, S2b RED tests, minimum semantics implemented, SETUP.md amended · 82f4c2a7.
 - **P17** — 2026-10-28, bun minimum pin live: no repair planned for 1.4.4 · 82f4c2a7.
 - **P18** — 2026-10-28, S2b ledger closed (O21 verified, O20 n/a-superseded) · 82f4c2a7.
-- **P19** — 2026-10-28, S10 RED tests (override row, create-never-overwrite, AC3 guard refinement) · this commit.
-- **P20** — 2026-10-28, override creation implemented in setup-env.mjs · this commit.
-- **P21** — 2026-10-28, worktree reproduction (E10) + SETUP.md row + ledger closed (23 rows: 21 verified, 1 n/a evidenced, 1 blocked-by-#180 disclosed) · this commit.
-- **P13** — 2026-10-28, bun-pin RED tests (8) · this commit.
-- **P14** — 2026-10-28, `.bun-version` (1.4.0) committed + pin implemented in setup-env.mjs · this commit.
-- **P15** — 2026-10-28, SETUP.md pin rows, whole-unit re-verification, ledger 20/20 verified · this commit.
-- **P16** — RED tests for the minimum semantics (S2b): ≥ comparison, behind-row, repair-only-when-behind (validator: `node --test scripts/setup-env.test.mjs` fails RED before P17, exits 0 after)
-  (Implements: S2b)
-  Relevant files: scripts/setup-env.test.mjs
-- P17 — Implement the minimum semantics in `scripts/setup-env.mjs` and amend SETUP.md (validator: `node --test scripts/setup-env.test.mjs` exits 0)
-  (Implements: S2b)
-  Relevant files: scripts/setup-env.mjs, docs/workflow/SETUP.md
-- P18 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
-  (Implements: S2b)
+- **P19** — 2026-10-28, S10 RED tests (override row, create-never-overwrite, AC3 guard refinement) · 90f7fe7d.
+- **P20** — 2026-10-28, override creation implemented in setup-env.mjs · 90f7fe7d.
+- **P21** — 2026-10-28, worktree reproduction (E10) + SETUP.md row + ledger closed (23 rows: 21 verified, 1 n/a evidenced, 1 blocked-by-#180 disclosed) · 90f7fe7d.
+- **P13** — 2026-10-28, bun-pin RED tests (8) · 82f4c2a7.
+- **P14** — 2026-10-28, `.bun-version` (1.4.0) committed + minimum pin implemented in setup-env.mjs · 82f4c2a7.
+- **P15** — 2026-10-28, SETUP.md pin rows, whole-unit re-verification, ledger 20/20 verified · 82f4c2a7.
 - **E5** — 2026-10-28, live evidence for S9: this workspace is itself a git worktree (`git worktree list` → /home/agent/projects/agentic-workflow-331) and shows the exact shape — committed `.serena/project.yml` present, gitignored `.serena/cache` and `packages/pi-agentic-workflow/node_modules` absent, `dist/` present only because it was built during G1.
 - **P1** — 2026-10-28, ledgers frozen (SPEC + evidence + obligations + fix-index row) · 883ea2cd.
 - **P2** — 2026-10-28, setup-env RED tests + /tmp fixture validation (bare machine exit 1, all-present exit 0 no-op, unresolvable node exit 1, .engram byte-identical; the fixture caught the missing `os` import the injected-probe suite masked) · c4a03239.
@@ -221,13 +242,13 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **P5** — 2026-10-28, docs/workflow/SETUP.md + doc-coverage assertions · 075d0a25.
 - **P6** — 2026-10-28, README Setup-area pointer · 075d0a25.
 - **P7** — 2026-10-28, .github/workflows/setup-check.yml + workflow assertions · dfdc2106.
-- **P8** — 2026-10-28, whole-unit verification (G1–G4, E1–E4) and the obligations ledger closed (15/15 verified) · this commit.
+- **P8** — 2026-10-28, whole-unit verification (G1–G4, E1–E4) and the obligations ledger closed (15/15 verified) · 2090ef90.
 - **E6** — 2026-10-28, `node scripts/setup-env.mjs` in THIS worktree · exit 0 · pass 1 created `.serena/cache` and installed `packages/pi-agentic-workflow/node_modules` (frozen lockfile), pass 2 verified clean — the S9 quick-resetup run on the live scenario; `--check` exit 0 afterwards; `.engram/` byte-identical (fixture run: /tmp/setup-env-wt worktree-shaped copy — check exit 1 naming serena-cache, provision converged, no-op second run).
 - **E7** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · 1022/1022 (48/48 in the setup-env suite); `node scripts/update-tools.mjs --dry-run` · exit 0.
-- **P9** — 2026-10-28, amendment RED tests (13 failing before P10) · this commit.
-- **P10** — 2026-10-28, progressive pipeline implemented (config steps, verify→fix loop max 3 passes, PATH augmentation, stop-on-first-failure) · this commit.
-- **P11** — 2026-10-28, SETUP.md config-layer + worktree-resetup sections, doc-coverage assertions green · this commit.
-- **P12** — 2026-10-28, whole-unit re-verification (E6/E7, 1022/1022) and the amended ledger closed (19/19 verified) · this commit.
+- **P9** — 2026-10-28, amendment RED tests (13 failing before P10) · a4a777da.
+- **P10** — 2026-10-28, progressive pipeline implemented (config steps, verify→fix loop max 3 passes, PATH augmentation, stop-on-first-failure) · a4a777da.
+- **P11** — 2026-10-28, SETUP.md config-layer + worktree-resetup sections, doc-coverage assertions green · a4a777da.
+- **P12** — 2026-10-28, whole-unit re-verification (E6/E7, 1022/1022) and the amended ledger closed (19/19 verified) · a4a777da.
   ## Goal
 
   A developer (or agent session) that clones this repository has **no documented or automated path** to provision the authoring toolchain. `init-workspace` provisions Serena and Engram for *target projects* (consumers of `template/`); the authoring side never got the counterpart when feature 66 adopted them. Today the prerequisites — bun + `.node-version` (v24), `uv tool install -p 3.13 serena-agent` with the committed `.serena/project.yml`, the `engram` binary plus the `pi install npm:gentle-engram@latest` package, and the opt-in dogfooding symlink (`ln -sfn ../skills .claude/skills`) — are discoverable only by reading logs and AGENTS.md side notes.
@@ -274,18 +295,9 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **D1** — 2026-10-28, implementer (the issue's first open question, resolved at design time with evidence `planning-evidence.md` PE-001/PE-005): the `engram` binary is neither a uv tool nor an npm package — it is a Go binary distributed via the Homebrew tap `gentleman-programming/tap/engram` (macOS/Linux) and GitHub-Releases tarballs `engram_<version>_<os>_<arch>.tar.gz`. `setup-env.mjs` installs: brew on macOS when Homebrew is present, the release tarball into `~/.local/bin` otherwise.
 - **D2** — 2026-10-28, implementer (S4 on a fresh runner): `--check` alone on a pristine runner fails by design (nothing is installed yet), so the CI job **provisions first** (`node scripts/setup-env.mjs`) and then runs the `--check` demanded by S4 as the verification step. The issue's degraded-mode risk is answered the same way the registry-half gates answer it: the job tolerates upstream installer breakage by failing visibly, never by silently skipping.
 
-- P13 — RED tests for the bun pin: `.bun-version` read, exact-match verification, pinned install/repair command, doc-coverage (validator: `node --test scripts/setup-env.test.mjs` fails RED before P14, exits 0 after)
-  (Implements: S2a)
-  Relevant files: scripts/setup-env.test.mjs
-- P14 — Implement the bun pin in `scripts/setup-env.mjs` + commit `.bun-version` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
-  (Implements: S2a)
-  Relevant files: scripts/setup-env.mjs, .bun-version
-- P15 — Update `docs/workflow/SETUP.md` (.bun-version in the tool table and the committed-state list), re-verify and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
-  (Implements: S2a, S1)
-
 ## Next
 
-Owner correction S2a received 2026-10-28 (resolves PE-006: bun pins via its own `.bun-version`, exact match). Implement P13–P15, then hand the amended diff back for the external verdict; the PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) stays the owner's to open/merge.
+PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) is the owner's to open and merge. Remaining before merge: PE-009 (CI green of `setup-check.yml`) stays blocked by issue #180; every other row is verified.
 
 ## References
 
