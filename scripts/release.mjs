@@ -394,15 +394,25 @@ function main() {
   if (args.channel === "latest") {
     // The changelog row summary IS the release note: the accumulated changeset
     // bodies (first line each, file order), unless the operator names one.
-    // Each change lands in the right section: the package's companion row
-    // carries every accumulated body, and a skill-declaring changeset names
-    // its skills from the frontmatter entries (D-40-15), never from prose.
-    const summary = args.summary ?? (changesets.length > 0
-      ? changesets.map((c) => {
-          const skills = c.entries.filter((e) => e.kind === "skill").map((e) => e.pkg);
-          return skills.length ? `${c.body[0]} (skills: ${skills.join(", ")})` : c.body[0];
-        }).join(" · ")
-      : `Release ${version}`);
+    const SKILLS_CONTENT_PACKAGE = "@gtrabanco/pi-agentic-workflow"; // skills ship only inside the pi bundle (D-40-8/D-40-14)
+
+    // Per-package attribution (D-40-16): the scoped key IS the routing key —
+    // each package's companion row carries the changesets that declare it, a
+    // skill-declaring changeset rides the skills-content package's row (named
+    // from the entries, never from prose), and a train-bumped package with
+    // nothing declared says so explicitly. --summary overrides every row.
+    const summaryFor = (pkgName) => {
+      if (args.summary !== null) return args.summary;
+      const parts = [];
+      for (const c of changesets) {
+        const declares = c.entries.some((e) => e.pkg === pkgName);
+        const skillRide = pkgName === SKILLS_CONTENT_PACKAGE && c.entries.some((e) => e.kind === "skill");
+        if (!declares && !skillRide) continue;
+        const skills = c.entries.filter((e) => e.kind === "skill").map((e) => e.pkg);
+        parts.push(c.body[0] + (skills.length && pkgName === SKILLS_CONTENT_PACKAGE ? ` (skills: ${skills.join(", ")})` : ""));
+      }
+      return parts.length > 0 ? parts.join(" · ") : `Unified train bump — no ${pkgName}-specific change declared`;
+    };
     console.log(`train version: ${version} (highest bump: ${level ?? "n/a — forced"}); unified train: all packages carry it`);
     for (const pkg of packages) {
       console.log(`${pkg.name}: ${pkg.version} → ${version} (packages/${pkg.dirName}/)`);
@@ -416,7 +426,7 @@ function main() {
         setPackageVersion(pkg.path, version);
         insertCompanionRow(path.join(root, "CHANGELOG.md"), {
           name: pkg.name, dirName: pkg.dirName, version,
-          date, level: level ?? "patch", summary,
+          date, level: level ?? "patch", summary: summaryFor(pkg.name),
         });
       }
       rewriteLocalPins(root, packages, version);

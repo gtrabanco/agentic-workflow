@@ -193,6 +193,17 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > skill ships with a `.changeset/*.md` intent file (or the parity gate fails
 > the PR); renames and other breaking surfaces still need a note in
 > `docs/workflow/MIGRATION.md`.
+>
+> **Create the intent file by running code, not by hand:**
+> `node scripts/changeset-create.mjs` derives the affected packages and skills
+> from the modified files, the semver from the conventional commit title
+> (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; `--level`
+> overrides), and the file name PR-first (`<pr|branch>-<title>.md`) so names
+> stay unique. One file per PR, as many entries as the change needs; it never
+> overwrites. At cut time each change lands in the changelog's right section:
+> the scoped key routes the row to that package's own table, skill entries
+> ride the skills-content package's row named as `(skills: …)`, and a package
+> bumped by the train with nothing declared says so explicitly.
 
 > **Smoke-test wording changes to executor-path skills.** After editing
 > `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
