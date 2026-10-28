@@ -35,9 +35,16 @@ function jobBlock(text, job) {
   return next === -1 ? rest : rest.slice(0, next + 1);
 }
 
-test("publish.yml is the single entry point; the mode workflows are deleted", () => {
+test("publish.yml is the single entry point; the mode workflows and the per-package trio are deleted", () => {
   assert.ok(fs.existsSync(path.join(repoRoot, PUBLISH)));
-  for (const gone of [".github/workflows/release-plan.yml", ".github/workflows/release-train.yml"]) {
+  for (const gone of [
+    ".github/workflows/release-plan.yml",
+    ".github/workflows/release-train.yml",
+    // D-40-12: the consolidated publish.yml replaced the per-package trio too.
+    ".github/workflows/publish-schema.yml",
+    ".github/workflows/publish-agentic-workflow.yml",
+    ".github/workflows/publish-pi-package.yml",
+  ]) {
     assert.equal(fs.existsSync(path.join(repoRoot, gone)), false, `${gone} must be gone`);
   }
 });

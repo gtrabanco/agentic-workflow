@@ -20,9 +20,12 @@
  *             release body is marked "Version forced by operator: X.Y.Z"
  *             (AC-10) and the version must not collide with an existing tag.
  *
- * Modes: `plan` (default, read-only — also what --dry-run means here) and
+ * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias) and
  * `apply` (writes package.json versions + CHANGELOG companion rows for the
- * latest channel). git/npm/gh commands are always PRINTED, never executed —
+ * latest channel, then deletes the consumed `.changeset/*.md` files so the
+ * next cut carries only new intent). `--version` forces the LATEST train
+ * only — prerelease channels compute their own version and reject it. git/npm/gh
+ * commands are always PRINTED, never executed —
  * an operator or workflow runs them. GitHub Release notes use
  * `--generate-notes` so merged PR authors are credited (AC-15, PE-004).
  *
@@ -55,7 +58,8 @@ function usage() {
     "",
     "Deterministic release pipeline for the unified version train (issue #180).",
     "`plan` (default) is read-only; `apply` writes package versions + CHANGELOG",
-    "companion rows for the latest channel. git/npm/gh commands are printed,",
+    "companion rows for the latest channel and consumes the applied changesets.",
+    "--version forces the latest train only. git/npm/gh commands are printed,",
     "never executed.",
   ].join("\n");
 }
@@ -70,6 +74,7 @@ function parseArgs(argv) {
     else if (a === "--base") args.base = argv[++i];
     else if (a === "--date") args.date = argv[++i];
     else if (a === "--summary") args.summary = argv[++i];
+    else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--root") args.root = path.resolve(argv[++i]);
     else if (a === "--help" || a === "-h") args.help = true;
     else throw new Error(`unknown argument: ${a}`);
@@ -239,6 +244,15 @@ function main() {
   if (args.mode === "publish-plan" && args.channel === "latest") {
     fail("publish-plan is for prerelease channels — channel latest cuts the train with apply");
   }
+  if (args.dryRun && args.mode !== "plan") {
+    fail("--dry-run plans only — drop it to run apply");
+  }
+  if (args.mode !== "release-notes" && args.version !== null && args.channel !== "latest") {
+    // A prerelease channel computes its own version — an operator-supplied
+    // --version there must fail loudly, never be silently ignored (the old
+    // behavior printed "Version forced by operator: undefined" and succeeded).
+    fail(`--version forces the latest train only — channel ${args.channel} computes its own prerelease version`);
+  }
   const root = args.root;
   const date = args.date ?? new Date().toISOString().slice(0, 10);
   const stamp = date.replaceAll("-", "");
@@ -344,6 +358,12 @@ function main() {
         });
       }
       rewriteLocalPins(root, packages, version);
+      // Consume the intent that was just applied — the changesets-tool
+      // behavior this format adopted. Without the deletion the files ride
+      // into the next cut, whose bump level and notes then re-apply stale
+      // intent. The release commit (git add -A in the cut job) records it.
+      for (const c of changesets) fs.unlinkSync(path.join(root, ".changeset", c.file));
+      console.log(`consumed: removed ${changesets.length} applied changeset file(s) from .changeset/`);
       console.log("note: exact pins moved with the train — run `bun install` in each touched package to refresh its lockfile before committing");
       console.log(`applied: ${packages.length} package.json version(s) + ${packages.length} CHANGELOG companion row(s)`);
     }

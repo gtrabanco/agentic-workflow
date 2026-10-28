@@ -139,9 +139,10 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 5. **Dependency closure and publish order (D-40-10)** — pi-agentic-workflow
    pins the runner crate and the schema exactly, so `apply` rewrites those
    pins to the train version (run `bun install` in each touched package
-   before committing — apply reminds you), and the publish workflows run in
-   dependency order: schema → runner crate → pi, chained with `workflow_run`
-   so a pin never resolves to an unpublished version. Nothing publishes
+   before committing — apply reminds you), and the publish workflow runs in
+   dependency order: schema → runner crate → pi, chained with `needs:`
+   (`pi-publish` waits for both upstream publish jobs) so a pin never
+   resolves to an unpublished version. Nothing publishes
    "alone": every train release moves the three packages together.
 6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
    whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`
@@ -149,9 +150,12 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    declared packages), `version` input for the forced override, and the
    push-triggered publish jobs. `scripts/release.mjs` always runs in CI —
    no release step is done by hand.
-5. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
-   overrides the computation for marketing campaigns; the release body is
-   marked `Version forced by operator: X.Y.Z`.
+7. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
+   overrides the computation for marketing campaigns (latest train only —
+   prerelease channels compute their own version and reject `--version`);
+   the release body is marked `Version forced by operator: X.Y.Z`. A cut
+   consumes the changesets it applied, so the next cut carries only new
+   intent.
 
 **Rollback (AC-13):** a broken stable release is rolled back by
 fast-forwarding the `stable` branch back to the last good commit
