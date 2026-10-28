@@ -616,6 +616,13 @@ const SWEEP_MAX_FILE_BYTES = 2_000_000;
 /** How many files one declaration may walk — a bound, not an estimate. */
 const SWEEP_MAX_FILES = 5000;
 /**
+ * How many entries one walk may visit (cycle-2 review F19): the file ceiling
+ * bounds what a declaration collects, but the walk below it still statted and
+ * descended every entry of the tree — the ceiling now bounds the visit
+ * itself, checked before any work on an entry, at every recursion level.
+ */
+const SWEEP_MAX_ENTRIES = 20_000;
+/**
  * How long a pattern body may be (review F2). The body is authored in a unit
  * doc and compiled with `new RegExp` here, so an unbounded body is unbounded
  * work: the declaration names a stale *form*, never a program.
@@ -718,11 +725,15 @@ function sweepGlobToRegExp(glob) {
  *  The `maxFiles` ceiling is enforced as a stop, not an overshoot: the bound is
  *  the contract (review F7 — the old check ran after `push` and `return`ed only
  *  out of the current recursion level, so sibling directories kept appending
- *  past it). Exported so the bound itself is testable without 5000 files.
+ *  past it). `maxEntries` bounds the walk itself, not just the collection
+ *  (review F19): a double-star markdown glob visits the whole tree on its way
+ *  to the ceiling. Exported so both bounds are testable without fabricating
+ *  thousands of files.
  */
-export function sweepFiles(root, glob, maxFiles = SWEEP_MAX_FILES) {
+export function sweepFiles(root, glob, maxFiles = SWEEP_MAX_FILES, maxEntries = SWEEP_MAX_ENTRIES) {
   const matcher = sweepGlobToRegExp(glob);
   const out = [];
+  let visited = 0;
   const walk = (directory) => {
     if (out.length >= maxFiles) return;
     let entries;
@@ -733,6 +744,8 @@ export function sweepFiles(root, glob, maxFiles = SWEEP_MAX_FILES) {
     }
     for (const entry of entries) {
       if (out.length >= maxFiles) return;
+      if (visited >= maxEntries) return;
+      visited += 1;
       if (SWEEP_SKIP_DIRS.has(entry.name)) continue;
       const absolute = path.join(directory, entry.name);
       const relative = path.relative(root, absolute).split(path.sep).join("/");
@@ -808,8 +821,11 @@ function declaringLogRanges(text) {
   return ranges;
 }
 
-/** The sweep claims of one unit document. */
-function sweepClaims(doc, claims) {
+/** The sweep claims of one unit document. `corpora` is the run's walk cache:
+ *  declarations of the same glob share one walk instead of each re-visiting
+ *  and re-reading the whole corpus (cycle-2 review F19 — the F35-class doc
+ *  declares several patterns over one surface and each cost a full scan). */
+function sweepClaims(doc, claims, corpora) {
   const sections = [];
   for (const label of ["Log", "Progress log"]) {
     sections.push(...named(sectionsOf(doc), label));
@@ -836,7 +852,11 @@ function sweepClaims(doc, claims) {
         claims.push(claim);
         continue;
       }
-      const files = sweepFiles(ROOT, parsed.glob);
+      let files = corpora.get(parsed.glob);
+      if (files === undefined) {
+        files = sweepFiles(ROOT, parsed.glob);
+        corpora.set(parsed.glob, files);
+      }
       const hits = [];
       const unreadable = [];
       for (const file of files) {
@@ -874,7 +894,7 @@ function sweepClaims(doc, claims) {
 }
 
 /** Claims from a unit document's Tasks / Obligations / Evidence surfaces. */
-function unitDocClaims(doc, claims) {
+function unitDocClaims(doc, claims, corpora) {
   const tasks = parseUnitDocPhases(doc.text);
   for (const phase of tasks.phases) {
     const scan = phase.taskScan.join(" ");
@@ -900,7 +920,7 @@ function unitDocClaims(doc, claims) {
 
   // The fold's sweep declarations (unit 84 S2): every declared survivor grep
   // re-runs, fence-aware, and the observed count must reproduce.
-  sweepClaims(doc, claims);
+  sweepClaims(doc, claims, corpora);
 
   // An `## Impact` that names a path is a claim that the path exists (or that
   // the unit's own plan declares creating it).
@@ -1322,6 +1342,7 @@ function turnContractDocs() {
  */
 export function coherence(paths) {
   const claims = [];
+  const corpora = new Map();
   const selected = paths.length === 0
     ? [...inFlightUnitDocs(), "docs/workflow/SKILL_CONTEXT_BUDGETS.json", ...turnContractDocs()]
     : paths;
@@ -1337,7 +1358,7 @@ export function coherence(paths) {
     const trimmed = doc.text.trimStart();
     if (/^\{/.test(trimmed)) manifestClaims(doc, claims);
     else if (/^---\n/.test(doc.text) && /^## Turn contract/m.test(doc.text)) turnContractClaims(doc, claims);
-    else unitDocClaims(doc, claims);
+    else unitDocClaims(doc, claims, corpora);
   }
 
   const failures = claims.filter((claim) => claim.outcome === "fail");

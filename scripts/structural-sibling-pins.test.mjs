@@ -116,3 +116,21 @@ test("pin B — reintroducing an unflattened echo path fails the pin", () => {
     rmSync(scratch, { recursive: true, force: true });
   }
 });
+
+test("F19 — the heading-search walk carries an entry ceiling", () => {
+  // The census walk read every matching file with no bound on entries
+  // visited. The ceiling is a budget on the walk itself, checked before any
+  // work on an entry; the default is far above this repository's tree, so the
+  // census over `scripts/` stays complete while a hostile directory cannot.
+  const scratch = mkdtempSync(path.join(tmpdir(), "pin-cap-"));
+  try {
+    for (const name of ["a.mjs", "b.mjs", "c.mjs"]) {
+      writeFileSync(path.join(scratch, name), "const H = /^## x/;\n");
+    }
+    assert.equal(headingSearchHits(scratch).length, 3, "the default ceiling is not the one in play here");
+    assert.equal(headingSearchHits(scratch, 1).length, 1, "a one-entry ceiling visits one entry");
+    assert.equal(headingSearchHits(scratch, 0).length, 0, "a zero-entry ceiling walks nothing");
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
