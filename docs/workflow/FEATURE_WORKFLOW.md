@@ -133,6 +133,17 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
    (deterministic per state). Skills install via git refs: `#main`
    (canary-equivalent), `#stable`, `#vX.Y.Z` (hard pin).
+5. **Dependency closure and publish order (D-40-10)** — pi-agentic-workflow
+   pins the runner crate and the schema exactly, so `apply` rewrites those
+   pins to the train version (run `bun install` in each touched package
+   before committing — apply reminds you), and the publish workflows run in
+   dependency order: schema → runner crate → pi, chained with `workflow_run`
+   so a pin never resolves to an unpublished version. Nothing publishes
+   "alone": every train release moves the three packages together.
+6. **Suggestion GHA** — `release-plan.yml` (workflow_dispatch, read-only)
+   prints the suggested version for both channels plus every changeset with
+   its semver annotation and body; a `version` input previews a forced
+   version. It publishes nothing.
 5. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
    overrides the computation for marketing campaigns; the release body is
    marked `Version forced by operator: X.Y.Z`.
