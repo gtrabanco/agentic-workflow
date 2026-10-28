@@ -358,3 +358,58 @@ test("publish-plan carries the manual channel shape (beta → <base>-beta.<n>)",
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.0-beta\.1\tbeta/);
 });
+
+// External-verify blocker: apply consumed the intent but left the files in
+// .changeset/, so the NEXT cut re-consumed them — a patch-only release
+// computed the stale minor again and re-printed stale bodies into the notes.
+test("apply consumes the changesets it applied (the next cut carries only new intent)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:minor"] }, git: true });
+  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(applied.status, 0, applied.stderr || applied.stdout);
+  assert.equal(
+    fs.existsSync(path.join(root, ".changeset", "a.md")),
+    false,
+    "the applied changeset is consumed — it must not ride into the next cut",
+  );
+  execFileSync("git", ["tag", "v1.1.0"], { cwd: root });
+  fs.writeFileSync(
+    path.join(root, ".changeset", "b.md"),
+    '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\nA later patch body line.\n',
+  );
+  const next = run(["plan", "--root", root]);
+  assert.equal(next.status, 0, next.stderr || next.stdout);
+  assert.match(next.stdout, /train version: 1\.1\.1/, "a patch-only cut is a patch");
+  assert.doesNotMatch(next.stdout, /1\.1\.2/, "the stale minor must not re-apply");
+});
+
+test("plan still leaves the changesets in place (read-only by construction)", () => {
+  const root = fixture();
+  const result = run(["plan", "--root", root, "--base", "1.0.0"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(fs.existsSync(path.join(root, ".changeset", "the-change.md")), true);
+});
+
+// The docstring (and SPEC capability closure) name --dry-run as the plan alias,
+// but the flag used to exit 2 as unknown.
+test("--dry-run is an accepted alias for plan (SPEC capability-closure Read test)", () => {
+  const root = fixture();
+  const result = run(["--dry-run", "--version", "4.2.0", "--root", root]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /train version: 4\.2\.0/);
+  assert.match(result.stdout, /plan only — nothing written/);
+  const applied = run(["apply", "--dry-run", "--root", root]);
+  assert.equal(applied.status, 1, "--dry-run never lets apply write");
+  assert.match(applied.stderr || applied.stdout, /--dry-run/);
+});
+
+// External-verify blocker: --version with a prerelease channel printed
+// "Version forced by operator: undefined" and silently ignored the override.
+test("--version with a prerelease channel is rejected, never silently ignored", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  for (const channel of ["canary", "alpha", "beta", "rc"]) {
+    const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", channel, "--version", "9.9.9"]);
+    assert.equal(result.status, 1, `${channel}: --version off the latest train must fail, not succeed`);
+    assert.match(result.stderr || result.stdout, /--version/);
+    assert.doesNotMatch(result.stdout, /undefined/);
+  }
+});
