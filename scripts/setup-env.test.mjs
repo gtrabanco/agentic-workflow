@@ -28,6 +28,8 @@ import {
   planSetup,
   verify,
   probeEnvironment,
+  runProvision,
+  augmentPath,
 } from "./setup-env.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -47,6 +49,10 @@ function fullState(overrides = {}) {
     gentleEngram: { present: true, version: "0.4.2" },
     brew: { present: false },
     projectYml: { present: true, bytes: 10993 },
+    cachePresent: true,
+    schemaDistPresent: true,
+    piCrateModulesPresent: true,
+    engramConfigValid: true,
     ...overrides,
   };
 }
@@ -388,5 +394,180 @@ describe(".github/workflows/setup-check.yml runs the check on macos + linux (S4,
     assert.ok(piAt !== -1, "the workflow must install the pi CLI");
     assert.ok(provisionAt !== -1);
     assert.ok(piAt < provisionAt, "pi must be installed before the provision step");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Owner amendment S8/S9 (2026-10-28): progressive verify→fix→next pipeline,
+// local-only config repair, worktree quick resetup. Decision: "Solo estado
+// local" — committed config is verified read-only, never rewritten.
+// ---------------------------------------------------------------------------
+
+/** A state where every tool is present but every piece of local state is missing. */
+function worktreeState(overrides = {}) {
+  return fullState({
+    cachePresent: false,
+    schemaDistPresent: false,
+    piCrateModulesPresent: false,
+    engramConfigValid: true,
+    projectYml: { present: true, bytes: 10993 },
+    ...overrides,
+  });
+}
+
+describe("config verification (S8, AC11)", () => {
+  it("fullState plans zero steps — committed valid config plus present local state is done", () => {
+    const plan = planSetup(fullState({ cachePresent: true, schemaDistPresent: true, piCrateModulesPresent: true, engramConfigValid: true }));
+    assert.deepEqual(plan.steps, []);
+    assert.equal(plan.ok, true);
+  });
+
+  it("plans a fix for a missing .serena/cache (local, gitignored)", () => {
+    const plan = planSetup(worktreeState());
+    const step = plan.steps.find((s) => s.tool === "serena-cache");
+    assert.ok(step, "serena-cache step planned");
+    assert.equal(step.action, "fix");
+  });
+
+  it("plans the schema dist build (install + build in packages/agentic-workflow-schema) when dist is missing", () => {
+    const plan = planSetup(worktreeState());
+    const step = plan.steps.find((s) => s.tool === "schema-dist");
+    assert.ok(step);
+    assert.match(String(step.command), /packages\/agentic-workflow-schema/);
+    assert.match(String(step.command), /--frozen-lockfile/);
+    assert.match(String(step.command), /build/);
+  });
+
+  it("plans the pi crate module install when its node_modules is missing", () => {
+    const plan = planSetup(worktreeState());
+    const step = plan.steps.find((s) => s.tool === "pi-crate-modules");
+    assert.ok(step);
+    assert.match(String(step.command), /packages\/pi-agentic-workflow/);
+    assert.match(String(step.command), /--frozen-lockfile/);
+  });
+
+  it("never plans a fix for committed state — invalid .engram/config.json is a failure, not a rewrite", () => {
+    const plan = planSetup(fullState({ engramConfigValid: false, cachePresent: true, schemaDistPresent: true, piCrateModulesPresent: true }));
+    assert.equal(plan.ok, false);
+    const step = plan.steps.find((s) => s.tool === "engram-config");
+    assert.ok(step);
+    assert.equal(step.action, "fail");
+    assert.match(step.reason, /committed/);
+    assert.doesNotMatch(planCommands(plan), /engram\s+(setup|init)|rewrite/i);
+  });
+
+  it("never plans a fix for an empty committed .serena/project.yml either", () => {
+    const plan = planSetup(fullState({ projectYml: { present: false, bytes: null }, cachePresent: true, schemaDistPresent: true, piCrateModulesPresent: true }));
+    assert.equal(plan.ok, false);
+    const step = plan.steps.find((s) => s.tool === "serena-project");
+    assert.ok(step);
+    assert.equal(step.action, "fail");
+  });
+});
+
+describe("the verify→fix loop converges (S8, AC10)", () => {
+  it("runs every fix before the next step and exits 0 when verification then passes", () => {
+    const executed = [];
+    const result = runProvision({
+      state: worktreeState(),
+      // The fake executor fixes one layer per call; verification state advances
+      // with each executed fix, like the real machine would.
+      execute: (step) => {
+        executed.push(step.tool);
+        return { ok: true, message: `fixed ${step.tool}` };
+      },
+      // Verification succeeds once every tool has run (the loop re-probes in
+      // reality; here the fake says "converged after all fixes").
+      verifyAfterPass: (pass) => pass >= 1,
+    });
+    assert.equal(result.code, 0);
+    assert.ok(executed.length > 0);
+  });
+
+  it("stops the pipeline naming the tool when a fix fails — later steps never run", () => {
+    const executed = [];
+    const result = runProvision({
+      state: worktreeState({ bun: { present: false, version: null } }),
+      execute: (step) => {
+        executed.push(step.tool);
+        return step.tool === "bun" ? { ok: false, message: "network unreachable" } : { ok: true, message: "fixed" };
+      },
+      verifyAfterPass: () => false,
+    });
+    assert.equal(result.code, 1);
+    assert.match(result.output, /bun/);
+    assert.match(result.output, /network unreachable/);
+    assert.deepEqual(executed.slice(executed.indexOf("bun") + 1), [], "no step runs after a failed one");
+  });
+
+  it("is bounded — a check that never converges exits 1 after the last pass, naming the misses", () => {
+    const result = runProvision({
+      state: worktreeState(),
+      execute: () => ({ ok: true, message: "fixed" }),
+      verifyAfterPass: () => false,
+      maxPasses: 3,
+    });
+    assert.equal(result.code, 1);
+    assert.match(result.output, /VERDICT: FAIL/);
+  });
+});
+
+describe("PATH augmentation after installer runs (S8)", () => {
+  it("adds the bun and uv install dirs so the next pass probes the freshly installed tools", () => {
+    const next = augmentPath("/home/tester", "/usr/bin:/bin");
+    assert.ok(next.includes("/home/tester/.bun/bin"));
+    assert.ok(next.includes("/home/tester/.local/bin"));
+    assert.ok(next.startsWith("/home/tester/.bun/bin:/home/tester/.local/bin:"));
+  });
+
+  it("does not duplicate entries already present", () => {
+    const next = augmentPath("/home/tester", "/home/tester/.local/bin:/usr/bin");
+    assert.equal(next.split(":").filter((p) => p === "/home/tester/.local/bin").length, 1);
+  });
+});
+
+describe("probeEnvironment reads the local-state and committed-config facts (S8)", () => {
+  let tmp;
+  before(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "setup-env-amend-"));
+    fs.writeFileSync(path.join(tmp, ".node-version"), "v24.21.0\n");
+    fs.mkdirSync(path.join(tmp, ".serena"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, ".serena", "project.yml"), "project_name: fixture\n");
+    fs.mkdirSync(path.join(tmp, ".engram"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, ".engram", "config.json"), '{"project_name":"fixture"}\n');
+    fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"), "export {};\n");
+  });
+  after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  it("reports cache/dist/modules present when they exist and engram config as valid", () => {
+    const state = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+    assert.equal(state.cachePresent, false, "no .serena/cache in the fixture");
+    assert.equal(state.schemaDistPresent, true);
+    assert.equal(state.piCrateModulesPresent, false);
+    assert.equal(state.engramConfigValid, true);
+  });
+
+  it("marks an invalid committed .engram/config.json without ever writing to it", () => {
+    fs.writeFileSync(path.join(tmp, ".engram", "config.json"), "{ not json");
+    const state = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+    assert.equal(state.engramConfigValid, false);
+    assert.equal(fs.readFileSync(path.join(tmp, ".engram", "config.json"), "utf8"), "{ not json");
+  });
+});
+
+describe("docs/workflow/SETUP.md documents the amendment (S1/S8/S9)", () => {
+  const doc = () => fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
+
+  it("names the progressive pipeline, the rebuilt local state and the worktree resetup", () => {
+    const text = doc();
+    for (const needle of [
+      "packages/agentic-workflow-schema",
+      "--frozen-lockfile",
+      ".serena/cache",
+      "worktree",
+    ]) {
+      assert.ok(text.includes(needle), `SETUP.md must mention ${needle}`);
+    }
   });
 });
