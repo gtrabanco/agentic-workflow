@@ -134,11 +134,16 @@ export function parseNodeMajor(text) {
 /**
  * The engram release asset name for a tag, platform and arch — the layout the
  * project's GoReleaser ships (PE-002): `engram_<tag>_<os>_<arch>.tar.gz`.
+ * Release assets carry Go's arch names, so every `process.arch` spelling of
+ * this platform's architectures maps onto them: `x64` → `amd64` (the asset
+ * never says `x64`), `arm64` → `arm64`. Anything else is refused rather than
+ * silently downloaded as the wrong binary.
  */
 export function engramAssetName(tag, platform, arch) {
   const osName = platform === "darwin" ? "darwin" : platform === "linux" ? "linux" : null;
   if (!osName) throw new Error(`engram tarball is not available for platform ${platform}`);
-  const archName = arch === "arm64" ? "arm64" : "amd64";
+  const archName = { x64: "amd64", amd64: "amd64", arm64: "arm64" }[String(arch)] ?? null;
+  if (!archName) throw new Error(`engram tarball is not available for architecture ${arch}`);
   return `engram_${tag}_${osName}_${archName}.tar.gz`;
 }
 
@@ -406,7 +411,11 @@ export function planSetup(state) {
     }
   }
 
-  if (!state.pi.present && !state.gentleEngram.present) {
+  // The pi CLI is an unresolvable prerequisite of the gentle-engram step — it is
+  // never installed here. A machine without pi fails naming it even when the
+  // package is already present: the package cannot be maintained (upgraded via
+  // `pi install`), so reporting `done` would be a green lie (AC1/O2).
+  if (!state.pi.present) {
     steps.push({ tool: "gentle-engram", action: "fail", reason: "the pi CLI is not installed — install pi first (see docs/workflow/SETUP.md); this script never installs pi" });
     ok = false;
   } else if (!state.gentleEngram.present) {
@@ -448,10 +457,11 @@ export function planSetup(state) {
 
 /**
  * The engram tarball route (D1): resolve the latest release tag, download the
- * platform asset, extract the binary into `~/.local/bin`. Injectable `fetch`
- * and `spawn` keep the suite offline.
+ * platform asset, extract the binary into `~/.local/bin`. Injectable `spawn`
+ * keeps the suite offline; the download rides the same seam as the metadata
+ * lookup, so there is no second transport to stub.
  */
-export function installEngramTarball({ platform, arch, home, fetch = globalThis.fetch, spawn = spawnSync, root = REPO_ROOT } = {}) {
+export function installEngramTarball({ platform, arch, home, spawn = spawnSync, root = REPO_ROOT } = {}) {
   const binDir = path.join(home, ".local", "bin");
   const meta = spawn("curl", ["-fsSL", "https://api.github.com/repos/Gentleman-Programming/engram/releases/latest"], {
     cwd: root,
@@ -485,28 +495,35 @@ function runShell(command, { root = REPO_ROOT } = {}) {
 
 /**
  * The progressive verify→fix→next pipeline (S8, AC10), as one injectable seam:
- * each pass plans from the current state, executes every fix **in order**
- * (a failed step stops the pipeline naming its tool — nothing after it runs),
- * and the caller's `verifyAfterPass` stands in for the next pass's re-probe.
+ * each pass plans from the state, executes every fix **in order** (a failed
+ * step stops the pipeline naming its tool — nothing after it runs), then asks
+ * `verifyAfterPass` to re-probe so the next pass plans from what the fixes
+ * actually left behind. `state` is only the first probe; after each pass
+ * `advance` (default: keep the same state) supplies the re-probed one, so the
+ * loop can be driven offline yet still converge like the real machine.
  * Bounded by `maxPasses` (default 3): a run that never converges ends exit 1
  * with VERDICT: FAIL instead of looping forever.
  */
-export function runProvision({ state, execute, verifyAfterPass, maxPasses = 3 }) {
+export function runProvision({ state, execute, verifyAfterPass, advance = () => state, maxPasses = 3 }) {
   const output = [];
+  let current = state;
+  let executed = 0;
   for (let pass = 1; pass <= maxPasses; pass++) {
-    const plan = planSetup(state);
+    const plan = planSetup(current);
     const fails = plan.steps.filter((step) => step.action === "fail");
     if (fails.length > 0) {
       for (const step of fails) output.push(`✗ ${step.tool}: ${step.reason}`);
       output.push("Nothing was changed. Resolve the unresolvable prerequisites above and re-run.");
-      return { code: 1, output: output.join("\n") };
+      return { code: 1, output: output.join("\n"), passes: pass, executed };
     }
     if (plan.steps.length === 0) {
       if (verifyAfterPass(pass)) {
-        output.push("SETUP — everything is already provisioned; nothing to do (idempotent re-run).");
-        return { code: 0, output: output.join("\n") };
+        output.push(executed > 0 ? "SETUP — done. Verify with: node scripts/setup-env.mjs --check" : "SETUP — everything is already provisioned; nothing to do (idempotent re-run).");
+        return { code: 0, output: output.join("\n"), passes: pass, executed };
       }
-      continue; // nothing plannable but verification still red — count the pass and re-check
+      output.push(`SETUP — pass ${pass}: nothing left to fix, but verification is still red.`);
+      current = advance(pass, current);
+      continue;
     }
     for (const step of plan.steps) {
       output.push(`→ ${step.tool}: ${step.reason}`);
@@ -514,17 +531,19 @@ export function runProvision({ state, execute, verifyAfterPass, maxPasses = 3 })
       if (!outcome.ok) {
         output.push(`  ✗ ${step.tool}: ${outcome.message}`);
         output.push(`SETUP — stopped at ${step.tool}: each step must succeed before the next one runs; fix it and re-run (the run is idempotent).`);
-        return { code: 1, output: output.join("\n") };
+        return { code: 1, output: output.join("\n"), passes: pass, executed };
       }
+      executed++;
       output.push(`  ✓ ${outcome.message}`);
     }
     if (verifyAfterPass(pass)) {
       output.push("SETUP — done. Verify with: node scripts/setup-env.mjs --check");
-      return { code: 0, output: output.join("\n") };
+      return { code: 0, output: output.join("\n"), passes: pass, executed };
     }
+    current = advance(pass, current);
   }
   output.push("VERDICT: FAIL — the pipeline did not converge after " + maxPasses + " passes; run `node scripts/setup-env.mjs --check` for the remaining rows.");
-  return { code: 1, output: output.join("\n") };
+  return { code: 1, output: output.join("\n"), passes: maxPasses, executed };
 }
 
 /** The fixed human report header/footer shared by both modes. */
@@ -602,8 +621,7 @@ function main(argv) {
           outcome = { ok: false, message: error.message };
         }
       } else if (step.kind === "engram-tarball") {
-        const arch = process.arch === "arm64" ? "arm64" : "x64";
-        outcome = installEngramTarball({ platform: process.platform, arch, home: current.home });
+        outcome = installEngramTarball({ platform: process.platform, arch: process.arch, home: current.home });
       } else {
         outcome = runShell(step.command);
       }
