@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@gtrabanco/agentic-workflow": "0.5.0",
-    "@gtrabanco/agentic-workflow-schema": "4.8.0"
+    "@gtrabanco/agentic-workflow-schema": "4.9.0"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
