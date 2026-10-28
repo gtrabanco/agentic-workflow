@@ -495,6 +495,24 @@ test("#305 the fold and implement steps state the batch as the change plus its d
   }
 });
 
+test("F19: the sweep walk bounds entries visited, not only files pushed", () => {
+  // The F7 fix capped how many files a declaration may collect; nothing
+  // bounded how many entries the walk below that ceiling still had to visit
+  // and stat. The ceiling is now an entry budget, checked the same way the
+  // file cap is — before any work on the entry, at every recursion level.
+  const dir = mkdtempSync(join(tmpdir(), "sweep-cap-"));
+  try {
+    for (const name of ["a.md", "b.md", "c.md", "d.md", "e.md", "f.md"]) {
+      writeFileSync(join(dir, name), "# x\n");
+    }
+    assert.equal(sweepFiles(dir, "*.md").length, 6, "the default ceilings are not the ones in play here");
+    assert.equal(sweepFiles(dir, "*.md", 500, 2).length, 2, "a two-entry ceiling visits two entries");
+    assert.equal(sweepFiles(dir, "*.md", 500, 0).length, 0, "a zero-entry ceiling walks nothing");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("F18: an unreadable corpus file fails the sweep declaration closed, never a silent zero-match pass", () => {
   // The defect: `found ?? []` folded read failures into zero matches, so
   // `expected 0` passed over a file the scan never examined. The unreadable

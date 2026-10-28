@@ -79,15 +79,22 @@ function scriptFiles(directory) {
     .map((entry) => path.join(directory, entry.name));
 }
 
+/** The census walk's entry ceiling — far above this repository's tree. */
+export const PINS_MAX_ENTRIES = 20_000;
+
 /**
  * Every `## `-anchored regex-literal line under `directory` (recursive), as
  * `{ file, repoFile, line, text }` — `file` relative to `directory` (what a
  * report shows), `repoFile` relative to this repository (what the allowlist
  * keys on). The allowlist is applied only by `headingSearchViolations`; this
- * is the raw census.
+ * is the raw census. `maxEntries` bounds the walk (cycle-2 review F19): the
+ * default is far above this repository's tree, so the census over a real
+ * checkout stays complete while a hostile or accidental directory cannot
+ * turn one read into an unbounded scan.
  */
-export function headingSearchHits(directory) {
+export function headingSearchHits(directory, maxEntries = PINS_MAX_ENTRIES) {
   const hits = [];
+  let visited = 0;
   const walk = (current) => {
     let entries;
     try {
@@ -96,6 +103,8 @@ export function headingSearchHits(directory) {
       return;
     }
     for (const entry of entries) {
+      if (visited >= maxEntries) return;
+      visited += 1;
       if (entry.name === "node_modules" || entry.name === ".git") continue;
       const absolute = path.join(current, entry.name);
       if (entry.isDirectory()) {
