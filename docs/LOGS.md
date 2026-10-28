@@ -3568,6 +3568,12 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Apply issue #331 (authoring-repo setup doc + scripts + CI) via the /aw-local-apply workflow: unit fix/331-authoring-setup cut verbatim S1-S9 (plus S2a/S2b/S8/S9/S10 amendments), ledgers frozen, RED tests first, fixtures in /tmp, gates green (1040/1040). Owner correction S2a/S2b: .bun-version pin semantics evolved from exact-match to minimum (>=1.4.0). PE-010 fixed at root cause (serena die in worktrees: marksman/libicu crash, override created local-only). PE-009 blocked by #180.
 - **Decisions:** 1) Bun pin: exact match (S2a) → minimum (S2b), per owner. 2) Config-repair: local-only authority (S8, 'Solo estado local'). 3) PE-010: marksman/libicu crash kills serena in worktrees; fix is machine-local override written by setup-env, never rewriting committed config. 4) PE-009: CI green blocked by #180 (versioned skills release, pin error); no CI-side attempt. 5) bun pin exactness: the repo commits .bun-version@1.4.0 matching CI's setup-bun pin (1.4.0 writes lockfile v2).
 - **Next:** Open PR #334 on https://github.com/gtrabanco/agentic-workflow/pull/334; review commit 7782a081 (latest) for the full scope.
+## 2026-10-28T22:21:58Z — feature/331-authoring-repo-setup — manual
+- **Commits:** 15 (`e685d7fe…d8cf81b8`)
+- **Files:** 15 files
+- **Summary:** S11 + S12 amendments: node/bun user prerequisites, bun opt-in, setup CI deleted
+- **Decisions:** S11: script no longer verifies node (user prerequisite for pi) and never installs bun unasked — opt-in question in TTY (y/yes installs pinned version), non-TTY prints note and stays ok, warn rows never fail --check; bun behind pin still auto-repaired. S12: setup-check.yml deleted (owner: quita los dos ci de las gha); D8 operating rule recorded in decisions.md (CI never without explicit permission). catalog.test.mjs and unit-route.mjs left uncommitted (parallel session).
+- **Next:** git push origin feature/331-authoring-repo-setup and open PR
 ## 2026-10-28T22:36:10Z — main — manual
 - **Commits:** 0
 - **Files:** —
