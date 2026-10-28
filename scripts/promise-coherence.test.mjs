@@ -362,6 +362,26 @@ test("#315 F2: a doc-sourced pattern outside the sweep's bounds is refused befor
   assert.ok(elapsed < 5_000, `the refusal is a bound check, not a timed-out run (${elapsed} ms)`);
 });
 
+test("cycle-2 F15: quantified alternation, a curly group body and adjacent quantifier chains are refused before compile", () => {
+  // The F2 pin watched `(x+)+` only. The measured class is wider: `(a|aa)+$
+  //` costs 66 s on one line, `(a{2,})+` hides its quantifier from a scan for
+  // */+ alone, and `a*a*a*b` overlaps without any group. All three are inside
+  // the line grammar and the 200-char budget; the bound must answer in shape
+  // and size, never in elapsed time — a refused declaration is a red claim.
+  const started = Date.now();
+  const result = coherence([fixture("sweep-redos-unit-doc.md")]);
+  const elapsed = Date.now() - started;
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+  const sweeps = result.claims.filter((claim) => claim.kind === "sweep");
+  assert.equal(sweeps.length, 3, "all three evading declarations are claims, none is silently dropped");
+  for (const claim of sweeps) {
+    assert.equal(claim.outcome, "fail");
+    assert.match(claim.observed, /refused before it ran/);
+    assert.match(claim.observed, /catastrophic-backtracking/);
+  }
+  assert.ok(elapsed < 5_000, `the bound answers in shape, not in a timed-out run (${elapsed} ms)`);
+});
+
 test("#315 F7: the walk honours its file ceiling instead of overshooting it", () => {
   const dir = join(ROOT, "scripts", "fixtures", "promise-coherence");
   const all = sweepFiles(dir, "*.md");
