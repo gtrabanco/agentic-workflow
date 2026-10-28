@@ -21,7 +21,7 @@ target: run everything inside WSL (the scripts refuse `win32` with this note).
 |---|---|---|
 | `node` (major ≥ `.node-version`) | runs the repo's scripts and suites | you — the scripts verify it, they never install node |
 | `git` | the repo itself | you |
-| `pi` CLI | the agent this workflow ships for; hosts the `gentle-engram` pi package | you — `setup-env.mjs` fails with a clear message when it is absent, it never installs pi |
+| `pi` CLI | the agent this workflow ships for; hosts the `gentle-engram` pi package | you — `npm install -g @earendil-works/pi-coding-agent`; `setup-env.mjs` fails with a clear message when it is absent, it never installs pi |
 
 `.node-version` pins the Node major the CI suites run (`v24` at the time of
 writing). A newer major is accepted; the exact match is not required.

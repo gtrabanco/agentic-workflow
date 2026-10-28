@@ -369,3 +369,24 @@ describe("docs/workflow/SETUP.md covers every automated step (S1, AC6)", () => {
     }
   });
 });
+
+describe(".github/workflows/setup-check.yml runs the check on macos + linux (S4, AC5)", () => {
+  const workflow = () => fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "setup-check.yml"), "utf8");
+
+  it("matrices ubuntu-latest and macos-latest and runs provision then --check", () => {
+    const text = workflow();
+    assert.match(text, /ubuntu-latest/);
+    assert.match(text, /macos-latest/);
+    assert.match(text, /node scripts\/setup-env\.mjs\n/);
+    assert.match(text, /node scripts\/setup-env\.mjs --check/);
+  });
+
+  it("installs the pi CLI before provisioning (setup-env refuses to install it)", () => {
+    const text = workflow();
+    const piAt = text.indexOf("pi-coding-agent");
+    const provisionAt = text.indexOf("node scripts/setup-env.mjs\n");
+    assert.ok(piAt !== -1, "the workflow must install the pi CLI");
+    assert.ok(provisionAt !== -1);
+    assert.ok(piAt < provisionAt, "pi must be installed before the provision step");
+  });
+});
