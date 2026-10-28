@@ -55,6 +55,15 @@ function fixture({ changesets = { "the-change.md": ["pi:patch"] }, version = "1.
   }
   const changesetDir = path.join(root, ".changeset");
   fs.mkdirSync(changesetDir, { recursive: true });
+  // skills carry the train version — stamped by apply (D-40-14)
+  for (const [name, withVersion] of [["alpha", true], ["beta", false]]) {
+    const skillDir = path.join(root, "skills", name);
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(skillDir, "SKILL.md"),
+      ["---", `name: ${name}`, ...(withVersion ? ["version: 0.9.0"] : []), 'user-invocable: false', "---", "", "## When to use", "", "Fixture skill.", ""].join("\n"),
+    );
+  }
   const levels = { pi: "patch", schema: "minor", agentic: "major" };
   let i = 0;
   for (const [file, entries] of Object.entries(changesets)) {
@@ -462,4 +471,25 @@ test("apply fails closed on a companion table missing its grid — nothing is wr
   assert.match(result.stderr || result.stdout, /\|---\|/);
   assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0", "the pre-flight runs before any write");
   assert.equal(fs.existsSync(path.join(root, ".changeset", "a.md")), true, "nothing consumed on a failed apply");
+});
+
+// D-40-14: skills carry the train version — stamped by code at apply time,
+// never by a per-skill prose bump. A skill without a version line gains one.
+test("apply stamps every skill's frontmatter with the train version", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:minor"] } });
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  for (const name of ["alpha", "beta"]) {
+    const md = fs.readFileSync(path.join(root, "skills", name, "SKILL.md"), "utf8");
+    assert.match(md, /^version: 1\.1\.0$/m, `${name} carries the train version`);
+  }
+  assert.match(result.stdout, /skills: 2 SKILL\.md frontmatter\(s\) stamped/);
+});
+
+test("a prerelease cut never stamps the repo's skills", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const before = fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8");
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), before);
 });

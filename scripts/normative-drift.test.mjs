@@ -698,13 +698,6 @@ function runDriftChecks(model) {
           if (!literal.includes(value)) {
             findings.push(refuse("unrendered-value", surface, literal, `${publisher} recomputes to ${value} but ${surface} restates "${literal}" — the prose is the defect`));
           }
-        } else if (kind === "version-tables") {
-          for (const [skill, meta] of model.hints) {
-            const declared = newestVersionCell(text, skill);
-            if (declared !== null && meta.version && declared !== meta.version) {
-              findings.push(refuse("unrendered-value", surface, `${skill} ${declared}`, `${surface} restates ${skill} as ${declared} while its frontmatter says ${meta.version} — the prose is the defect`));
-            }
-          }
         } else if (kind === "package-versions") {
           for (const pkg of ["packages/agentic-workflow-schema", "packages/pi-agentic-workflow"]) {
             const manifest = JSON.parse(read(`${pkg}/package.json`));
@@ -1014,7 +1007,7 @@ test("render-only prose: a restatement that drifts from the machine value is the
   assert.deepEqual(before, [], "every pinned restatement agrees with its recomputed value today");
   const guide = read(GUIDE_REL);
   const facts = versionedBlock(guide, FACTS_MARKER);
-  assert.ok(facts.rows.length >= 3, `the restatements are pinned as a table (${facts.rows.length} rows)`);
+  assert.ok(facts.rows.length >= 2, `the restatements are pinned as a table (${facts.rows.length} rows)`);
   // A stale claim: the surface lost the number the machine recomputes.
   const stale = { ...model };
   const original = read("docs/workflow/SKILLS.md");
@@ -1036,13 +1029,8 @@ test("render-only prose: a restatement that drifts from the machine value is the
   }
 });
 
-test("version cells and package versions are recomputed, not trusted", () => {
-  const model = buildSurfaceModel();
+test("package versions are recomputed, not trusted", () => {
   const en = read("CHANGELOG.md");
-  for (const [skill, meta] of model.hints) {
-    const cell = newestVersionCell(en, skill);
-    if (cell !== null && meta.version) assert.equal(cell, meta.version, `CHANGELOG.md must restate ${skill} at its frontmatter version`);
-  }
   assert.equal(newestVersionCell(en, "pi-agentic-workflow"), JSON.parse(read("packages/pi-agentic-workflow/package.json")).version);
   assert.equal(newestVersionCell(en, "agentic-workflow-schema"), JSON.parse(read("packages/agentic-workflow-schema/package.json")).version);
 });

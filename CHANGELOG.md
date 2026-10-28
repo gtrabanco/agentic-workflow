@@ -69,7 +69,13 @@ How pinning actually works, verified against the `skills` CLI:
 
 ---
 
-## Per-skill version history
+## Per-skill version history (FROZEN ARCHIVE — D-40-14)
+
+> Frozen 2026-10-28: skills carry the unified train version, stamped by
+> `scripts/release.mjs apply` at cut time. The tables below are the permanent
+> archive of the retired per-skill ledger; nothing is appended anymore. The
+> train's own history lives in the "Companion npm packages" tables and the
+> GitHub Release notes (the changeset bodies).
 
 ### Companion npm packages
 
