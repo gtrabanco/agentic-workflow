@@ -52,6 +52,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { parseChangeset } from "./lint-changeset.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const PACKAGE_DIR = "packages/pi-agentic-workflow";
@@ -134,6 +135,7 @@ export function evaluateContent({
   baseVersion,
   headVersion,
   changelogRowCount,
+  changesetIntent = [],
 }) {
   const triggered = (changedFiles ?? []).filter((file) =>
     triggerPrefixes.some((prefix) => file.startsWith(prefix)),
@@ -149,6 +151,38 @@ export function evaluateContent({
   }
   const versionBumped = semverGt(headVersion, baseVersion) || (!baseVersion && !!headVersion);
   if (!versionBumped || headVersion === baseVersion) {
+    // The changeset route (feature 40, issue #180): a PR may declare the bump
+    // intent in a valid .changeset/*.md instead of bumping the package.json —
+    // scripts/release.mjs applies it at release time. A malformed intent file
+    // never sails through (AC-16: fail closed).
+    const malformed = changesetIntent.find((entry) => !entry.ok);
+    if (malformed) {
+      return {
+        ok: false,
+        code: "changeset-invalid",
+        message:
+          `GATE REJECTION — changeset-invalid\n` +
+          `  ${packageName} ships changed content and the intent file ${malformed.file} is malformed:\n` +
+          `  ${malformed.error}\n` +
+          `  Fix: repair the file (see scripts/lint-changeset.mjs) or bump ${packageJsonPath}\n` +
+          `  and add the CHANGELOG.md "Companion npm packages" row — in the same PR.`,
+        triggered,
+      };
+    }
+    const declaring = changesetIntent.find((entry) =>
+      (entry.entries ?? []).some((e) => e.pkg === packageName),
+    );
+    if (declaring) {
+      return {
+        ok: true,
+        code: "changeset-intent",
+        message:
+          `changeset route: ${declaring.file} declares ${packageName} — the bump happens at\n` +
+          `  release time via scripts/release.mjs; no package.json bump or companion row is\n` +
+          `  required in this PR (feature 40).`,
+        triggered,
+      };
+    }
     return {
       ok: false,
       code: "shipped-content-version",
@@ -157,7 +191,8 @@ export function evaluateContent({
         `  ${packageName} ships changed content (${triggered.length} file(s) under skills/** or packages/pi-agentic-workflow/**)\n` +
         `  but its version is unchanged vs base (${baseVersion}).\n` +
         `  Fix: bump ${packageJsonPath} and add the CHANGELOG.md "Companion npm packages" companion row\n` +
-        `  for the new version — in the same PR. A skills-only merge without a bump publishes nothing to npm.`,
+        `  for the new version — in the same PR. A skills-only merge without a bump publishes nothing to npm.\n` +
+        `  Alternative: add a valid .changeset/*.md declaring ${packageName} (the release applies it).`,
       triggered,
     };
   }
@@ -261,6 +296,29 @@ function changelogRowCount(version, packageDir) {
   return Number.isFinite(count) ? count : 0;
 }
 
+/**
+ * The PR's .changeset/*.md intent files (added/modified, README ignored), read
+ * from the working tree and parsed. This is the changeset route of the
+ * content half: a valid file declaring the package replaces the manual bump
+ * (feature 40, issue #180).
+ */
+function collectChangesetIntent(files) {
+  const intent = [];
+  for (const file of files) {
+    if (!/^\.changeset\/[^/]+\.md$/.test(file) || file.endsWith("/README.md")) continue;
+    const abs = path.resolve(REPO_ROOT, file);
+    let content;
+    try {
+      content = fs.readFileSync(abs, "utf8");
+    } catch {
+      continue; // deleted or unreadable — nothing to enforce from it
+    }
+    const parsed = parseChangeset(content);
+    intent.push({ file, ok: parsed.ok, entries: parsed.ok ? parsed.entries : [], error: parsed.ok ? null : parsed.error });
+  }
+  return intent;
+}
+
 function runContent({ base }) {
   const ref = resolveBase(base);
   const packageJsonPath = `${PACKAGE_DIR}/package.json`;
@@ -275,6 +333,7 @@ function runContent({ base }) {
     baseVersion,
     headVersion,
     changelogRowCount: changelogRowCount(headVersion, PACKAGE_DIR),
+    changesetIntent: collectChangesetIntent(files),
   });
   const head = git(["rev-parse", "--short", "HEAD"]);
   console.log(`VERSION-PARITY-GATE (content) — base ${ref} head ${head}`);

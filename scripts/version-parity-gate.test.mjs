@@ -133,6 +133,54 @@ test("content: skills change + version bump + CHANGELOG row passes", () => {
   assert.equal(r.ok, true);
 });
 
+// ---------------------------------------------------------------------------
+// changeset route (feature 40, issue #180 / O23)
+// ---------------------------------------------------------------------------
+
+const INTENT = { file: ".changeset/the-change.md", ok: true, entries: [{ pkg: PKG, level: "minor" }], error: null };
+
+function contentWithIntent(changedFiles, intent) {
+  return evaluateContent({
+    packageName: PKG,
+    packageJsonPath: "packages/pi-agentic-workflow/package.json",
+    triggerPrefixes: TRIGGER_PREFIXES,
+    changedFiles,
+    baseVersion: BASE_VERSION,
+    headVersion: BASE_VERSION,
+    changelogRowCount: 0,
+    changesetIntent: intent,
+  });
+}
+
+test("content: a changeset file declaring the package satisfies the content half (feature 40)", () => {
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/the-change.md"], [INTENT]);
+  assert.equal(r.ok, true);
+  assert.equal(r.code, "changeset-intent");
+  assert.match(r.message, /release\.mjs/);
+});
+
+test("content: a changeset file declaring a different package does NOT satisfy the gate", () => {
+  const other = { ...INTENT, entries: [{ pkg: "@gtrabanco/agentic-workflow-schema", level: "patch" }] };
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/the-change.md"], [other]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "shipped-content-version");
+});
+
+test("content: a malformed changeset file fails closed (AC-16)", () => {
+  const bad = { file: ".changeset/bad.md", ok: false, entries: [], error: "empty body — a release note needs words" };
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/bad.md"], [bad]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "changeset-invalid");
+  assert.match(r.message, /bad\.md/);
+});
+
+test("content: no changeset intent keeps the historical rejection verbatim", () => {
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md"], []);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "shipped-content-version");
+  assert.match(r.message, /Companion npm packages/);
+});
+
 test("content: version bump with no triggered change passes without demanding a row", () => {
   const r = content(["AGENTS.md"], "0.20.0", 0);
   assert.equal(r.ok, true);
