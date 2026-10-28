@@ -64,7 +64,7 @@ function parseArgs(argv) {
   const args = { mode: "plan", channel: "latest", version: null, base: null, date: null, summary: null, root: DEFAULT_ROOT };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "plan" || a === "apply") args.mode = a;
+    if (a === "plan" || a === "apply" || a === "release-notes") args.mode = a;
     else if (a === "--channel") args.channel = argv[++i];
     else if (a === "--version") args.version = argv[++i];
     else if (a === "--base") args.base = argv[++i];
@@ -241,6 +241,21 @@ function main() {
   const stamp = date.replaceAll("-", "");
   const packages = readPackages(root);
   const changesets = readChangesets(root);
+
+  // release-notes — the assembled release body for `gh release create
+  // --notes-file`: the accumulated changeset bodies (the changeset IS the
+  // release note), plus the forced-version marker when D-40-4 applies. No
+  // base, no version computation, no writes.
+  if (args.mode === "release-notes") {
+    const bodies = changesets.map((c) => c.body.join("\n"));
+    if (args.version !== null) {
+      if (!SEMVER_RE.test(args.version)) fail(`--version must be a stable X.Y.Z version, got: ${args.version}`);
+      bodies.push(`Version forced by operator: ${args.version}`);
+    }
+    console.log(bodies.join("\n\n"));
+    process.exit(0);
+  }
+
   const declared = new Set(changesets.flatMap((c) => c.entries.map((e) => e.pkg)));
   const forced = args.version !== null;
   const gitRepo = isGitRepo(root);

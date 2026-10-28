@@ -140,3 +140,43 @@ test("release-plan.yml accepts a forced-version preview input (D-40-4 preview)",
   assert.match(text, /inputs:\s*\n\s*version:/, "a version input exists");
   assert.match(text, /FORCE_VERSION/, "the input reaches the plan via env (no injection)");
 });
+
+// ---------------------------------------------------------------------------
+// release-train.yml — the apply GHA: one launch = one release train
+// ---------------------------------------------------------------------------
+
+const TRAIN_WORKFLOW = ".github/workflows/release-train.yml";
+
+test("release-train.yml is dispatch-only with a contents:write permission", () => {
+  const text = read(TRAIN_WORKFLOW);
+  assert.match(text, /workflow_dispatch:/);
+  assert.doesNotMatch(text, /\n\s+push:/, "the train is never cut by a push");
+  assert.match(text, /contents:\s*write/, "it commits, tags and opens the release");
+});
+
+test("release-train.yml applies the train (versions + pins + changelog), never publishes npm", () => {
+  const text = read(TRAIN_WORKFLOW);
+  assert.match(text, /release\.mjs apply/);
+  assert.doesNotMatch(text, /npm publish/, "publishing stays in the publish chain");
+});
+
+test("release-train.yml refreshes the lockfiles after the pins moved", () => {
+  const text = read(TRAIN_WORKFLOW);
+  assert.match(text, /bun install/, "frozen lockfiles would fail CI otherwise");
+});
+
+test("release-train.yml adds exactly one release commit, pushes, tags and opens the release", () => {
+  const text = read(TRAIN_WORKFLOW);
+  assert.match(text, /git commit -m "chore\(release\)/);
+  assert.match(text, /git push/);
+  assert.match(text, /git tag "v\$/);
+  assert.match(text, /refs\/heads\/stable/);
+  assert.match(text, /gh release create "v\$VERSION" --generate-notes/);
+  assert.match(text, /release-notes/, "the notes come from release.mjs release-notes");
+});
+
+test("release-train.yml accepts a forced-version input carried via env (D-40-4)", () => {
+  const text = read(TRAIN_WORKFLOW);
+  assert.match(text, /inputs:\s*\n\s*version:/);
+  assert.match(text, /FORCE_VERSION/);
+});

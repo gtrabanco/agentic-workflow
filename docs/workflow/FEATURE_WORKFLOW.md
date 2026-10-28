@@ -122,12 +122,14 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 2. **Skill edits** — `bump-skill` classifies the change, runs its bundled
    writer, and pastes the summary; the writer applies the `version:` line and
    the CHANGELOG row atomically.
-3. **At release time** — `node scripts/release.mjs plan` computes the unified
-   train version from the accumulated intent files (highest bump wins) and
-   prints the exact commands; `apply` writes all three package.json versions
-   + the CHANGELOG companion rows. A stable release cuts the `vX.Y.Z` git tag,
-   pushes the `stable` branch, and opens the GitHub Release
-   (`--generate-notes` credits the merged PR authors).
+3. **At release time** — launch the **`release-train.yml`** GHA (or run
+   `node scripts/release.mjs apply` + commit by hand): it moves all three
+   package.json versions + the exact local pins to the train version, writes
+   the CHANGELOG companion rows from the changeset bodies, refreshes the
+   lockfiles, pushes ONE release commit (firing the publish chain), tags
+   `vX.Y.Z`, fast-forwards `stable` and opens the GitHub Release
+   (`--generate-notes` credits the merged PR authors). `release-plan.yml` is
+   the read-only preview (stable + canary suggestions).
 4. **Channels** — npm dist-tags via the publish workflows' `channel` dispatch
    input (`latest` default; `canary` / `alpha` / `beta` / `rc` never move
    `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
