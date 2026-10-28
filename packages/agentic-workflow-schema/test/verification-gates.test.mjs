@@ -115,7 +115,7 @@ test("files and exports agree on the shipped schema documents", () => {
 test("the package version matches the AC7 release contract", () => {
   // Feature 31 bumped the additive finding-record `reproducer` minor: 4.2.0 → 4.3.0.
   // Issue #308 shipped the dual-shape selector as the next additive minor: 4.7.0 → 4.8.0.
-  assert.equal(manifest.version, "4.8.0");
+  assert.equal(manifest.version, "4.9.0");
 });
 
 // ---------------------------------------------------------------------------

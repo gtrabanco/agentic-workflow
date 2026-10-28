@@ -1,7 +1,7 @@
 ---
 name: review-code
 user-invocable: false
-version: 1.2.0
+version: 1.3.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -43,6 +43,12 @@ default branch. State the scope at the top of the returned table.
   behavior (cite before/after)
 ✓ Reference trace: every changed symbol/API got a reference search —
   un-updated callers are findings
+✓ Sweep declaration present: a changed token- or claim-shaped surface (a
+  published vocabulary token, a claim kind, a phrase a surface asserted, a
+  reader/echo pattern) carries its `swept: /<pattern>/<flags> → expected <n> in
+  <glob>` line on the fold's `## Log` entry — class `workflow`, the project's
+  own survivors rule, and `scripts/promise-coherence.mjs` re-runs it as
+  `sweep-mismatch`
 ✓ Edge cases the SPEC's dev scenarios name are actually handled in code, not
   just in tests
 
