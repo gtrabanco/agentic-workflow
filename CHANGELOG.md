@@ -814,6 +814,11 @@ How pinning actually works, verified against the `skills` CLI:
 | `evidence-grounding` | 1.1.0 | 2026-08-30 | minor | The `stage: plan` readiness boxes cite the shared ledger owner for the table shapes and point the review-cycle no-progress rule at `pre-execution-review`; emitted vocabularies unchanged, and it still cannot emit a review PASS.
 ### Internal (`user-invocable: false`)
 
+#### `bump-skill`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 2.4.0 | 2026-10-28 | minor | The bump is a script: SKILL.md slims to classify + run scripts/bump-skill.mjs + paste its summary (issue #180 amendment) |
+
 | Skill | Version | Date | Type | What changed |
 | `review-code` | 1.3.0 | 2026-10-27 | minor | **A missing sweep declaration is a `workflow` finding (feature 84, issue #315 S2).** The checklist gains one box: a changed token- or claim-shaped surface — a published vocabulary token, a claim kind, a phrase a surface asserted, a reader/echo pattern — carries its `swept: /<pattern>/<flags> → expected <n> in <glob>` line on the fold's `## Log` entry, class `workflow`, and `scripts/promise-coherence.mjs` re-runs it as `sweep-mismatch`. The fold-side grammar itself stays in `fold-findings` and `FOLDING.md`; this pass only reports. |
 | `pre-execution-review` | 2.8.3 | 2026-10-27 | patch | **`LEDGERS.md` states what the coherence gate executes (feature 84 review F12).** The `validator` row now names the class the gate re-runs — a reader command *or* one of the committed report validators — and states that a validator the gate declines to execute is disclosed as a skip naming why, never counted as checked. Wording sync for the shipped machine surface; no ownership map change. |
