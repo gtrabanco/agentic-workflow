@@ -3536,3 +3536,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** PR #330 pin fix and publish ordering design — reverted
 - **Decisions:** Owner deliberadamente mergeará PR #330 con pin 4.9.0 dejando CI rojo (dependency-pin-gate job): no es un problema pendiente. Publicación en cascada delegada a feature 40 (#180) que ya tiene SPEC definido (PR #235). La cascada única que implementé y fue aceptada fue revertida por completo por petición del owner.
 - **Next:** Mergear PR #330; cuando se trabaje la feature 40 decidir entre cascada única (con re-registro de los tres Trusted Publishers en npmjs.com) o workflows separados con precondición de orden
+
+## 2026-10-28T08:46:22Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 18 (`1a62e2c1…fe08f2af`)
+- **Files:** 46 files
+- **Summary:** Unit 84: published-vocabulary-sweep-gate — fold survivors-sweep from prose to machine bytes (issue #315). Four deliverables: (1) vocabulary probe scans open units and fixtures for non-published Future/Findings tokens; (2) schema package publishes 4.9.0 with canonical consts (FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, LOG_KIND_TOKENS, SWEEP_CLAIM_KINDS, SWEEP_MISMATCH_REASONS); (3) promise-coherence gate adds `sweep` claim kind — folds must declare survivors via `swept: /pattern/<flags> → expected <n> in <glob>`, gate re-runs greps; (4) structural-sibling-pins refactors all fence-blind `## -anchored regex` readers to share `sectionBounds` from `unit-doc-phases.mjs`, fixes quadratic bug in `sectionBounds` itself (F7).
+- **Decisions:** D1 allowlist fenced-quote-only (byte-identical copies cannot hide behind allowlist row); D2 schema consts canonical at `packages/agentic-workflow-schema/src/vocabularies.ts`; D3 corpus = open units + fixtures only (closed units carry recorded debt, must not retroactively fail); F35 fix — declaring doc's Log exemption was leaking to all scanned files, not just the declaring doc itself; F7 quadratic bug in `sectionBounds` fixed by advancing offset past scanned line.
+- **Next:** git push origin feature/84-published-vocabulary-sweep-gate and open PR toward main
