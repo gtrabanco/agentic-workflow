@@ -98,6 +98,19 @@ export function engramAssetName(tag, platform, arch) {
   return `engram_${tag}_${osName}_${archName}.tar.gz`;
 }
 
+/**
+ * PATH for the passes after an installer ran: the bun and uv installers write
+ * into `~/.bun/bin` and `~/.local/bin` but only mutate the shell profile, so
+ * the same process must prepend them itself to probe what it just installed.
+ * Entries already present are never duplicated.
+ */
+export function augmentPath(home, currentPath) {
+  const additions = [path.join(home, ".bun", "bin"), path.join(home, ".local", "bin")];
+  const existing = String(currentPath ?? "").split(":").filter(Boolean);
+  const merged = [...additions.filter((dir) => !existing.includes(dir)), ...existing];
+  return merged.join(":");
+}
+
 /** One spawned probe: stdout trimmed, or null when the CLI is absent or fails. */
 function spawnProbe(bin, args, { cwd = REPO_ROOT } = {}) {
   const result = spawnSync(bin, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 });
@@ -149,6 +162,29 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     // absent stays absent
   }
 
+  // Local, gitignored state a fresh worktree lacks (S9): the checks are
+  // path-shaped so the same probe works in any checkout.
+  const isDir = (p) => {
+    try {
+      return fs.statSync(p).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  const cachePresent = isDir(path.join(root, ".serena", "cache"));
+  const schemaDistPresent = isDir(path.join(root, "packages", "agentic-workflow-schema", "dist"));
+  const piCrateModulesPresent = isDir(path.join(root, "packages", "pi-agentic-workflow", "node_modules"));
+
+  // Committed shared state is verified read-only (PE-012, owner decision
+  // "Solo estado local"): parse errors are reported, the bytes never change.
+  let engramConfigValid = false;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(root, ".engram", "config.json"), "utf8"));
+    engramConfigValid = typeof parsed?.project_name === "string" && parsed.project_name.length > 0;
+  } catch {
+    engramConfigValid = false;
+  }
+
   let requiredNodeMajor = null;
   try {
     requiredNodeMajor = parseNodeMajor(fs.readFileSync(path.join(root, ".node-version"), "utf8"));
@@ -169,6 +205,10 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     brew: { present: brewOut !== null },
     gentleEngram: { present: readPiPkg({ env, home, fsMod: fs }) !== null, version: readPiPkg({ env, home, fsMod: fs }) },
     projectYml,
+    cachePresent,
+    schemaDistPresent,
+    piCrateModulesPresent,
+    engramConfigValid,
   };
 }
 
@@ -217,6 +257,26 @@ export function verify(state) {
     state.projectYml.present
       ? { tool: "serena-project", ok: true, detail: `.serena/project.yml present (${state.projectYml.bytes} bytes)` }
       : { tool: "serena-project", ok: false, detail: "the committed .serena/project.yml is missing or empty" },
+  );
+  results.push(
+    state.engramConfigValid
+      ? { tool: "engram-config", ok: true, detail: ".engram/config.json is valid committed JSON with a project_name" }
+      : { tool: "engram-config", ok: false, detail: "the committed .engram/config.json is missing, invalid JSON, or has no project_name — fix it in a commit; this script never rewrites it" },
+  );
+  results.push(
+    state.cachePresent
+      ? { tool: "serena-cache", ok: true, detail: ".serena/cache present (local, gitignored)" }
+      : { tool: "serena-cache", ok: false, detail: ".serena/cache is missing (local state a fresh worktree lacks) — run without --check to create it" },
+  );
+  results.push(
+    state.schemaDistPresent
+      ? { tool: "schema-dist", ok: true, detail: "packages/agentic-workflow-schema/dist built" }
+      : { tool: "schema-dist", ok: false, detail: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — run without --check to build it" },
+  );
+  results.push(
+    state.piCrateModulesPresent
+      ? { tool: "pi-crate-modules", ok: true, detail: "packages/pi-agentic-workflow/node_modules installed" }
+      : { tool: "pi-crate-modules", ok: false, detail: "packages/pi-agentic-workflow/node_modules is missing — run without --check to install" },
   );
 
   return { ok: results.every((row) => row.ok), results };
@@ -273,6 +333,26 @@ export function planSetup(state) {
     steps.push({ tool: "gentle-engram", action: "install", command: PI_ENGRAM_INSTALL, kind: "shell", reason: "npm:gentle-engram is not installed in the pi agent directory — installing via pi" });
   }
 
+  // --- Config phase (S8, PE-012 owner decision "Solo estado local"): local
+  // gitignored state is rebuilt; committed state is only ever a fail row. ---
+  if (!state.cachePresent) {
+    steps.push({ tool: "serena-cache", action: "fix", kind: "mkdir", target: ".serena/cache", reason: ".serena/cache is missing (local state a fresh worktree lacks) — creating it" });
+  }
+  if (!state.schemaDistPresent) {
+    steps.push({ tool: "schema-dist", action: "fix", kind: "shell", command: "cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build", reason: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — installing and building" });
+  }
+  if (!state.piCrateModulesPresent) {
+    steps.push({ tool: "pi-crate-modules", action: "fix", kind: "shell", command: "cd packages/pi-agentic-workflow && bun install --frozen-lockfile", reason: "packages/pi-agentic-workflow/node_modules is missing — installing with a frozen lockfile" });
+  }
+  if (!state.engramConfigValid) {
+    steps.push({ tool: "engram-config", action: "fail", reason: "the committed .engram/config.json is missing, invalid, or has no project_name — fix it in a commit; this script never rewrites committed shared state" });
+    ok = false;
+  }
+  if (state.projectYml && state.projectYml.present === false) {
+    steps.push({ tool: "serena-project", action: "fail", reason: "the committed .serena/project.yml is missing or empty — restore it from git; this script never rewrites committed shared state" });
+    ok = false;
+  }
+
   return { ok, steps };
 }
 
@@ -313,6 +393,50 @@ function runShell(command, { root = REPO_ROOT } = {}) {
   return { ok: !result.error && result.status === 0, message: ((result.stderr || result.stdout || result.error?.message || "").trim().split("\n")[0]) || command };
 }
 
+/**
+ * The progressive verify→fix→next pipeline (S8, AC10), as one injectable seam:
+ * each pass plans from the current state, executes every fix **in order**
+ * (a failed step stops the pipeline naming its tool — nothing after it runs),
+ * and the caller's `verifyAfterPass` stands in for the next pass's re-probe.
+ * Bounded by `maxPasses` (default 3): a run that never converges ends exit 1
+ * with VERDICT: FAIL instead of looping forever.
+ */
+export function runProvision({ state, execute, verifyAfterPass, maxPasses = 3 }) {
+  const output = [];
+  for (let pass = 1; pass <= maxPasses; pass++) {
+    const plan = planSetup(state);
+    const fails = plan.steps.filter((step) => step.action === "fail");
+    if (fails.length > 0) {
+      for (const step of fails) output.push(`✗ ${step.tool}: ${step.reason}`);
+      output.push("Nothing was changed. Resolve the unresolvable prerequisites above and re-run.");
+      return { code: 1, output: output.join("\n") };
+    }
+    if (plan.steps.length === 0) {
+      if (verifyAfterPass(pass)) {
+        output.push("SETUP — everything is already provisioned; nothing to do (idempotent re-run).");
+        return { code: 0, output: output.join("\n") };
+      }
+      continue; // nothing plannable but verification still red — count the pass and re-check
+    }
+    for (const step of plan.steps) {
+      output.push(`→ ${step.tool}: ${step.reason}`);
+      const outcome = execute(step);
+      if (!outcome.ok) {
+        output.push(`  ✗ ${step.tool}: ${outcome.message}`);
+        output.push(`SETUP — stopped at ${step.tool}: each step must succeed before the next one runs; fix it and re-run (the run is idempotent).`);
+        return { code: 1, output: output.join("\n") };
+      }
+      output.push(`  ✓ ${outcome.message}`);
+    }
+    if (verifyAfterPass(pass)) {
+      output.push("SETUP — done. Verify with: node scripts/setup-env.mjs --check");
+      return { code: 0, output: output.join("\n") };
+    }
+  }
+  output.push("VERDICT: FAIL — the pipeline did not converge after " + maxPasses + " passes; run `node scripts/setup-env.mjs --check` for the remaining rows.");
+  return { code: 1, output: output.join("\n") };
+}
+
 /** The fixed human report header/footer shared by both modes. */
 function renderCheck(result) {
   const lines = ["SETUP-CHECK — authoring toolchain (issue #331)"];
@@ -343,43 +467,66 @@ function main(argv) {
     return result.ok ? 0 : 1;
   }
 
-  const plan = planSetup(state);
-  if (!plan.ok) {
-    process.stdout.write("SETUP — unresolvable prerequisites:\n");
-    for (const step of plan.steps.filter((s) => s.action === "fail")) process.stdout.write(`  ✗ ${step.tool}: ${step.reason}\n`);
-    process.stdout.write("Nothing was installed. Resolve the prerequisites above and re-run.\n");
-    return 1;
+  // Progressive verify→fix→next (S8): every pass re-probes the machine, so a
+  // pass that installs bun/uv finds them (and what they unlock) on the next
+  // one. Bounded at 3 passes; a still-red run reports the remaining rows.
+  const maxPasses = 3;
+  for (let pass = 1; pass <= maxPasses; pass++) {
+    const current = probeEnvironment();
+    const plan = planSetup(current);
+    if (!plan.ok) {
+      process.stdout.write("SETUP — unresolvable prerequisites:\n");
+      for (const step of plan.steps.filter((s) => s.action === "fail")) process.stdout.write(`  ✗ ${step.tool}: ${step.reason}\n`);
+      process.stdout.write("Nothing was installed. Resolve the prerequisites above and re-run.\n");
+      return 1;
+    }
+    if (plan.steps.length === 0) {
+      const verdict = verify(current);
+      if (verdict.ok) {
+        process.stdout.write("SETUP — everything is already provisioned; nothing to do (idempotent re-run).\n");
+        return 0;
+      }
+      continue;
+    }
+    process.stdout.write(`SETUP — pass ${pass}/${maxPasses}\n`);
+    for (const step of plan.steps) {
+      process.stdout.write(`→ ${step.tool}: ${step.reason}\n`);
+      let outcome;
+      if (step.kind === "mkdir") {
+        try {
+          fs.mkdirSync(path.join(REPO_ROOT, step.target), { recursive: true });
+          outcome = { ok: true, message: `${step.target} created` };
+        } catch (error) {
+          outcome = { ok: false, message: error.message };
+        }
+      } else if (step.kind === "engram-tarball") {
+        const arch = process.arch === "arm64" ? "arm64" : "x64";
+        outcome = installEngramTarball({ platform: process.platform, arch, home: current.home });
+      } else {
+        outcome = runShell(step.command);
+      }
+      if (!outcome.ok) {
+        process.stdout.write(`  ✗ ${step.tool}: ${outcome.message}\n`);
+        process.stdout.write(`SETUP — stopped at ${step.tool}: each step must succeed before the next one runs; fix it and re-run (the run is idempotent).\n`);
+        return 1;
+      }
+      process.stdout.write(`  ✓ ${outcome.message}\n`);
+      if (step.tool === "bun" || step.tool === "uv") {
+        // The installers only mutate the shell profile — this process must
+        // prepend their bin dirs itself for the next pass's probes.
+        process.env.PATH = augmentPath(current.home, process.env.PATH);
+      }
+    }
   }
 
-  if (plan.steps.length === 0) {
-    process.stdout.write("SETUP — everything is already provisioned; nothing to do (idempotent re-run).\n");
+  const verdict = verify(probeEnvironment());
+  process.stdout.write(renderCheck(verdict) + "\n");
+  if (verdict.ok) {
+    process.stdout.write("SETUP — done.\n");
     return 0;
   }
-
-  let failed = false;
-  for (const step of plan.steps) {
-    process.stdout.write(`→ ${step.tool}: ${step.reason}\n`);
-    let outcome;
-    if (step.kind === "engram-tarball") {
-      const arch = process.arch === "arm64" ? "arm64" : "x64";
-      outcome = installEngramTarball({ platform: process.platform, arch, home: state.home });
-    } else {
-      outcome = runShell(step.command);
-    }
-    if (outcome.ok) process.stdout.write(`  ✓ ${outcome.message}\n`);
-    else {
-      process.stdout.write(`  ✗ ${outcome.message}\n`);
-      failed = true;
-    }
-  }
-
-  if (failed) {
-    process.stdout.write("SETUP — one or more installs failed; fix the reported tool and re-run (the run is idempotent).\n");
-    return 1;
-  }
-
-  process.stdout.write("SETUP — done. Verify with: node scripts/setup-env.mjs --check\n");
-  return 0;
+  process.stdout.write("SETUP — the pipeline did not converge; resolve the rows above and re-run.\n");
+  return 1;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
