@@ -6,7 +6,7 @@
       "name": "@gtrabanco/pi-agentic-workflow",
       "dependencies": {
         "@gtrabanco/agentic-workflow": "0.5.0",
-        "@gtrabanco/agentic-workflow-schema": "4.8.0",
+        "@gtrabanco/agentic-workflow-schema": "4.9.0",
       },
       "devDependencies": {
         "@types/node": "24.13.3",
@@ -133,7 +133,7 @@
 
     "@gtrabanco/agentic-workflow": ["@gtrabanco/agentic-workflow@0.5.0", "", { "dependencies": { "typebox": "1.4.3" }, "bin": { "agentic-workflow": "bin/agentic-workflow.mjs" } }, "sha512-RQYDDSxR41eyqIYAwtBtXIxOJbKAnVyBTBrjVnnntVp2br30N1Ea1ffm3nntibMLVv25LMkKauKdh61z+6DydA=="],
 
-    "@gtrabanco/agentic-workflow-schema": ["@gtrabanco/agentic-workflow-schema@4.8.0", "", {}, "sha512-hBV7eY859DnnJjP/UhP+GviA/Iw054JMCNpcasrV/2TB0obBvGJKUpm99ns5lOQN5/U1VAaXgMkPt/sm7LmLwQ=="],
+    "@gtrabanco/agentic-workflow-schema": ["@gtrabanco/agentic-workflow-schema@4.9.0", "", {}, "sha512-AGvjOruseny5l3PjGGCuWlf0SIBwcaTJ3PlezZjmJjmrr2khhCJp33/J/G+EDERYoxJtNPXkEGITd+1a2UYHsw=="],
 
     "@protobufjs/aspromise": ["@protobufjs/aspromise@1.1.2", "", {}, "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ=="],
 
