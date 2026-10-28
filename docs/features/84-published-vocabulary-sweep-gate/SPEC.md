@@ -125,6 +125,13 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F14 | scripts/promise-coherence.mjs:341 | security | high | source | fold |
+| F15 | scripts/promise-coherence.mjs:538 | security | high | source | fold |
+| F16 | packages/pi-agentic-workflow/bun.lock | workflow | med | source | fold |
+| F17 | scripts/promise-coherence.mjs:295 | security | med | source | fold |
+| F18 | scripts/promise-coherence.mjs:682 | code | med | source | fold |
+| F19 | scripts/promise-coherence.mjs:588 | perf | med | source | fold |
+| F20 | scripts/vocabulary-probe.mjs:151 | code | med | source | fold |
 
 ## Triaged steps
 
@@ -239,6 +246,15 @@ Research, design and plan ran in the authoring turn (this doc, `sources.md`,
   swept: /`bun …` or `gh …` from a document would make this pass/ → expected 0 in scripts/promise-coherence.mjs
 - **G2** — 2026-10-27, gate runs at `HEAD e7db7293` (the fold head; the ledger line that records them is the next commit and carries no code) — `node --test scripts/*.test.mjs` · exit 0 · `958 pass / 0 fail`; `bun run test` in `packages/agentic-workflow-schema` · exit 0 · 721/721; `bun run test` in `packages/agentic-workflow` · exit 0 · 254/254; `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` · exit 0 · 14 routes; `bun scripts/phase-lint.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · PASS; `bun scripts/normative-drift.test.mjs` · exit 0 · 20/20; `bun scripts/vocabulary-probe.mjs` · exit 0; `bun scripts/structural-sibling-pins.mjs` · exit 0; `bun scripts/roadmap-settle.mjs` · exit 0 · 0 violations.
 - **E14** — 2026-10-27, `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · `verdict PASS` — every `swept:` declaration above re-ran to its expected count at this head, and the tally reads checked claims, not only skips.
+- **R2** — 2026-10-27, review-change cycle 2 (delta, escalated to full pass — width: 16 files outside the folded rows' cited union; size: 644 changed lines / 21 files) · folded rows F1–F8+F12 re-verified at cited locations, all defects gone · reviewed head `126a4a7e` frozen at start; branch moved to `c0206f1d` mid-review (4 foreign docs commits + affecting `fe08f2af`, increment verified) · four isolated axis passes (code, security, verify, perf; design/a11y/brand/seo skipped — no UI/web surface) + isolated classifier and debt transform · verdict **REVIEW-FAIL** — 7 fix-now open (F14–F20), gate red at current head (G3) · no passing receipt posted.
+- **G3** — 2026-10-27, at reviewed head `126a4a7e`: `node --test scripts/*.test.mjs` · exit 0 · 958/958; `bun scripts/promise-coherence.mjs docs/features/84-published-vocabulary-sweep-gate/SPEC.md` · exit 0 · `claims: 13 checked · 5 skipped`; schema 721/721 and runner 254/254, budgets 28/14, phase-lint PASS (verify pass, observed). At moved head `c0206f1d`: `version-parity-gate --content` PASS, but `cd packages/pi-agentic-workflow && bun run test` · exit 1 · 470/471 — `lockfile-policy.test.mjs` "bun.lock workspace pins match package.json dependencies" fails (schema pin 4.9.0 not in committed lock, F16).
+- **V11** — 2026-10-27, F14 · reviewer review-change · HEAD `c0206f1d` · two independent finders reproduced live: `runCommand` spawns `spawnSync(command, { shell: true })` (:341, comment claims "without a shell") and `COMPOSITION` (:64/180) blocks `; && || $( > < \n` but not a single `|`, backticks or `$VAR` — the code finder executed a doc-sourced claim piped into an arbitrary script; a `grep \`touch /tmp/pwned\` x` payload passes the guard.
+- **V12** — 2026-10-27, F15 · reviewer review-change · HEAD `c0206f1d` · measured reproducer: `(a|aa)+$` and `(a{2,})+` both test false against `SWEEP_NESTED_QUANTIFIER` (:538) yet backtrack 66–83 s on one short line; `sweepCount` runs `regex.test` per line over the corpus with no wall-clock bound — the 200-char budget admits ungrouped overlap chains (`a*a*a*b`).
+- **V13** — 2026-10-27, F16 · reviewer review-change · HEAD `c0206f1d` · recheck command output: `cd packages/pi-agentic-workflow && bun run test` → 470 pass / 1 fail; assertion actual `["@gtrabanco/agentic-workflow-schema: package.json 4.9.0"]` — commit fe08f2af bumped the pin without running `bun install`; the committed `bun.lock` is stale (F23 lockfile policy).
+- **V14** — 2026-10-27, F17 · reviewer review-change · HEAD `c0206f1d` · recheck direct read: the runner arg loop (:295-312) admits plain tokens, and `scripts/vocabulary-probe.mjs:217-222` resolves `--root <any-dir>` — a unit doc can point an allowlisted validator at an arbitrary directory and gate-echo its content.
+- **V15** — 2026-10-27, F18 · reviewer review-change · HEAD `c0206f1d` · recheck direct read: `for (const lineNumber of found ?? [])` (:682) — `sweepCount` returning null on an unreadable file folds to zero matches, so an `expected 0` declaration passes without the file being examined; violates the gate's own fail-closed rule.
+- **V16** — 2026-10-27, F19 · reviewer review-change · HEAD `c0206f1d` · recheck direct read: each `swept:` declaration re-walks and re-reads the whole glob corpus (:588-600); `sweepFiles`' cap bounds matching files only — the walk stats every entry below it (:556-578) and `headingSearchHits` has no count/depth cap (scripts/structural-sibling-pins.mjs:81-105).
+- **V17** — 2026-10-27, F20 · reviewer review-change · HEAD `c0206f1d` · recheck direct read: `inFlightDocs` (scripts/vocabulary-probe.mjs:151) and `inFlightUnitDocs` (scripts/promise-coherence.mjs:1091) are byte-similar copies of the roadmap + fix-index row grammar — two gates can silently disagree on which docs are "in flight".
 
 ## Next
 
