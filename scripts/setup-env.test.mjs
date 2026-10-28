@@ -66,6 +66,9 @@ function planCommands(plan) {
   return plan.steps.map((step) => [step.command ?? "", ...(step.detail ? [step.detail] : [])].join(" ")).join("\n");
 }
 
+/** The only plan tools allowed to name a path under .serena/ — both local, both gitignored. */
+const LOCAL_SERENA_WRITES = new Set(["serena-cache", "serena-local-override"]);
+
 describe("node verification against .node-version (S2, PE-006)", () => {
   it("parses the pinned major from a bare and a v-prefixed .node-version", () => {
     assert.equal(parseNodeMajor("24.21.0"), 24);
@@ -163,6 +166,17 @@ describe("engram install route — binaries first (S7, PE-001/PE-002/D1)", () =>
     assert.equal(engramAssetName("3.6.0", "darwin", "x64"), "engram_3.6.0_darwin_amd64.tar.gz");
   });
 
+  it("maps every process.arch spelling onto the Go name the releases ship", () => {
+    // The releases carry Go's arch names (PE-002); a `process.arch` value passed
+    // straight through would build `..._x64.tar.gz`, an asset that does not exist.
+    for (const arch of ["x64", "amd64"]) {
+      assert.match(engramAssetName("3.6.0", "linux", arch), /_amd64\.tar\.gz$/);
+    }
+    assert.match(engramAssetName("3.6.0", "linux", "arm64"), /_arm64\.tar\.gz$/);
+    assert.throws(() => engramAssetName("3.6.0", "linux", "ia32"), /architecture ia32/);
+    assert.throws(() => engramAssetName("3.6.0", "freebsd", "x64"), /platform freebsd/);
+  });
+
   it("plans nothing for a present engram (idempotent)", () => {
     const plan = planSetup(fullState());
     assert.equal(plan.steps.find((s) => s.tool === "engram"), undefined);
@@ -184,6 +198,25 @@ describe("gentle-engram pi package (S2, PE-004)", () => {
     assert.equal(step.action, "fail");
     assert.match(step.reason, /\bpi\b/);
     assert.equal(plan.ok, false);
+  });
+
+  it("still fails when the package is present but the pi CLI is gone — it cannot be maintained, so `done` would be a green lie", () => {
+    const plan = planSetup(fullState({ pi: { present: false, version: null }, gentleEngram: { present: true, version: "0.4.2" } }));
+    const step = plan.steps.find((s) => s.tool === "gentle-engram");
+    assert.ok(step, "the pi prerequisite is checked even with the package in place");
+    assert.equal(step.action, "fail");
+    assert.match(step.reason, /\bpi\b/);
+    assert.equal(plan.ok, false);
+  });
+
+  it("a plan with pi absent never reports success — the pipeline exits 1 naming pi", () => {
+    const result = runProvision({
+      state: fullState({ pi: { present: false, version: null }, gentleEngram: { present: true, version: "0.4.2" } }),
+      execute: () => ({ ok: true, message: "should never run" }),
+      verifyAfterPass: () => true,
+    });
+    assert.equal(result.code, 1);
+    assert.match(result.output, /\bpi\b/);
   });
 
   it("plans nothing for a present package (idempotent)", () => {
@@ -257,21 +290,46 @@ describe("the .engram/ protection (AC3) — guarded by a test, not prose", () =>
       fullState({ platform: "darwin", brew: { present: true }, engram: { present: false, version: null } }),
       fullState({ engram: { present: false, version: null } }),
       fullState({ gentleEngram: { present: false, version: null } }),
+      // Every local state missing: the S10 override WRITE step is in the plan
+      // here, so its content is scanned rather than filtered out of the walk.
+      worktreeState(),
+      worktreeState({ serenaLocalOverridePresent: false, engramConfigValid: false }),
     ];
     for (const state of states) {
-      const text = planCommands(planSetup(state));
-      for (const pattern of forbidden) {
-        assert.doesNotMatch(text, pattern, `plan for platform=${state.platform} matches forbidden pattern ${pattern}`);
-      }
-      // The only .serena/ path a plan may write is the machine-local override
-      // (S10); the committed project.yml is never a write target.
       const plan = planSetup(state);
+      // What a step ACTS on: the executable command, the write target and the
+      // payload. A fail row's reason is prose that names the file it refuses to
+      // touch, so it is scanned separately (it must never carry an action).
+      const written = plan.steps
+        .map((step) => [step.target, step.command, step.content].filter(Boolean).join(" "))
+        .join("\n");
+      for (const pattern of forbidden) {
+        assert.doesNotMatch(written, pattern, `plan for platform=${state.platform} acts on a forbidden target ${pattern}`);
+      }
+      for (const step of plan.steps.filter((s) => s.action === "fail")) {
+        assert.doesNotMatch(String(step.command ?? ""), /.engram|engram\s+setup|pi-engram\s+init|serena\s+init/u, `a fail row must not carry a command (${step.tool})`);
+      }
       for (const step of plan.steps) {
-        const written = [step.target, step.command].filter(Boolean).join(" ");
+        // The only .serena/ paths a plan may write are the machine-local, gitignored
+        // ones (S10); the committed project.yml is never a write target.
         assert.doesNotMatch(written, /project\.local\.yml.*>|>.*project\.yml/, "no step redirects into the committed project.yml");
-        if (step.tool !== "serena-local-override") {
-          assert.doesNotMatch(written, /\.serena\//, `${step.tool} must not touch .serena/`);
+        if (!LOCAL_SERENA_WRITES.has(step.tool)) {
+          assert.doesNotMatch([step.target, step.command].filter(Boolean).join(" "), /\.serena\//, `${step.tool} must not touch .serena/`);
         }
+      }
+      // The override step is the one .serena/ write the plan does carry, and its
+      // payload lists language servers only — never a committed file, and never a
+      // server that cannot start here (markdown/marksman, PE-014).
+      const override = plan.steps.find((step) => step.tool === "serena-local-override");
+      if (override) {
+        assert.match(override.target, /\.serena\/project\.local\.yml$/);
+        assert.ok(override.content.length > 0);
+        const listed = override.content
+          .split("\n")
+          .filter((line) => /^\s*-\s/u.test(line))
+          .map((line) => line.replace(/^\s*-\s*/u, "").trim());
+        assert.ok(listed.length > 0, "the override lists language servers");
+        assert.doesNotMatch(listed.join(" "), /\bmarkdown\b/, "markdown must stay unlisted (marksman crashes without libicu)");
       }
     }
   });
@@ -481,22 +539,65 @@ describe("config verification (S8, AC11)", () => {
 });
 
 describe("the verify→fix loop converges (S8, AC10)", () => {
-  it("runs every fix before the next step and exits 0 when verification then passes", () => {
+  it("executes every planned fix in dependency order within one pass", () => {
     const executed = [];
     const result = runProvision({
       state: worktreeState(),
-      // The fake executor fixes one layer per call; verification state advances
-      // with each executed fix, like the real machine would.
       execute: (step) => {
         executed.push(step.tool);
         return { ok: true, message: `fixed ${step.tool}` };
       },
-      // Verification succeeds once every tool has run (the loop re-probes in
-      // reality; here the fake says "converged after all fixes").
-      verifyAfterPass: (pass) => pass >= 1,
+      verifyAfterPass: () => true,
     });
     assert.equal(result.code, 0);
-    assert.ok(executed.length > 0);
+    assert.deepEqual(executed, ["serena-cache", "serena-local-override", "schema-dist", "pi-crate-modules"]);
+    assert.equal(result.passes, 1);
+  });
+
+  it("re-probes after a fix and converges on the next pass — the loop, not a lucky first pass (AC12)", () => {
+    const executed = [];
+    const probes = [];
+    let state = worktreeState();
+    const result = runProvision({
+      state,
+      execute: (step) => {
+        executed.push(step.tool);
+        // The machine only reflects the fix on the next probe, exactly like an
+        // installer that writes and lets the following pass find it.
+        return { ok: true, message: `fixed ${step.tool}` };
+      },
+      // First pass: the fake probe has not caught up yet. Second: the fixes landed.
+      verifyAfterPass: (pass) => {
+        probes.push(pass);
+        return pass >= 2;
+      },
+      advance: () => {
+        state = fullState({ serenaLocalOverridePresent: false });
+        return state;
+      },
+    });
+    assert.equal(result.code, 0);
+    assert.equal(result.passes, 2, "it takes the second pass to converge");
+    assert.deepEqual(probes, [1, 2]);
+    // The first pass ran every fix once; the second pass had nothing left to plan
+    // except the override whose state the fake never advanced.
+    assert.deepEqual(executed.slice(0, 4), ["serena-cache", "serena-local-override", "schema-dist", "pi-crate-modules"]);
+  });
+
+  it("a pass that installs a tool unlocks the next pass — PATH augmentation is what the loop relies on", () => {
+    const executed = [];
+    const result = runProvision({
+      state: fullState({ bun: { present: false, version: null }, uv: { present: false, version: null }, serena: { present: false, version: null } }),
+      execute: (step) => {
+        executed.push(step.tool);
+        return { ok: true, message: `installed ${step.tool}` };
+      },
+      verifyAfterPass: (pass) => pass >= 2,
+      advance: () => fullState(),
+    });
+    assert.equal(result.code, 0);
+    assert.deepEqual(executed, ["bun", "uv", "serena"]);
+    assert.equal(result.passes, 2);
   });
 
   it("stops the pipeline naming the tool when a fix fails — later steps never run", () => {
@@ -588,9 +689,10 @@ describe("docs/workflow/SETUP.md documents the amendment (S1/S8/S9)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Owner correction S2a (2026-10-28): bun pinned by the committed .bun-version
-// (exact match — the convention bun's ecosystem honors), symmetric with
-// .node-version for node. Evidence PE-013; supersedes the PE-006 reading.
+// Owner correction S2a (2026-10-28): bun pinned by the committed .bun-version,
+// symmetric with .node-version for node — read as a MINIMUM by the owner
+// correction S2b (newer accepted, behind repaired). Evidence PE-013; supersedes
+// the PE-006 reading (and S2a's own first, exact-match interpretation, D5/L4).
 // ---------------------------------------------------------------------------
 
 describe("bun pinned via .bun-version (S2a, AC13)", () => {
