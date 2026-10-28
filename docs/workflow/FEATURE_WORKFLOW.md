@@ -108,6 +108,42 @@ For medium+ features, the release step handles version bumps, changelog entries,
 migration notes, and deprecation notices. For XS/small units, this step is
 skipped by triage.
 
+### The release pipeline (feature 40, issue #180)
+
+Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
+
+1. **In the PR** — add a changeset intent file `.changeset/<name>.md`
+   (YAML frontmatter mapping `"@gtrabanco/<package>": patch|minor|major` + a
+   release-note body) or let the repo's skills bump per-skill versions via
+   the bundled `skills/bump-skill/scripts/bump-skill.mjs`. `scripts/lint-changeset.mjs`
+   lints intent files in CI; a valid intent file declaring the Pi package
+   satisfies the version-parity gate's content half in place of a manual
+   package.json bump.
+2. **Skill edits** — `bump-skill` classifies the change, runs its bundled
+   writer, and pastes the summary; the writer applies the `version:` line and
+   the CHANGELOG row atomically.
+3. **At release time** — `node scripts/release.mjs plan` computes the unified
+   train version from the accumulated intent files (highest bump wins) and
+   prints the exact commands; `apply` writes all three package.json versions
+   + the CHANGELOG companion rows. A stable release cuts the `vX.Y.Z` git tag,
+   pushes the `stable` branch, and opens the GitHub Release
+   (`--generate-notes` credits the merged PR authors).
+4. **Channels** — npm dist-tags via the publish workflows' `channel` dispatch
+   input (`latest` default; `canary` / `alpha` / `beta` / `rc` never move
+   `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
+   (deterministic per state). Skills install via git refs: `#main`
+   (canary-equivalent), `#stable`, `#vX.Y.Z` (hard pin).
+5. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
+   overrides the computation for marketing campaigns; the release body is
+   marked `Version forced by operator: X.Y.Z`.
+
+**Rollback (AC-13):** a broken stable release is rolled back by
+fast-forwarding the `stable` branch back to the last good commit
+(`git push --force origin <good-sha>:refs/heads/stable`) — the next
+`npx skills add gtrabanco/agentic-workflow#stable` resolves to the old
+version. npm versions are immutable; republish a fixed version instead of
+un-publishing.
+
 ## Diff-size guard bite example
 
 If a phase produces a 200-line diff against a 50-line budget:
