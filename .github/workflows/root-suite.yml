@@ -73,7 +73,7 @@ jobs:
         working-directory: packages/agentic-workflow
 
       - name: Root suites
-        run: node --test scripts/*.test.mjs
+        run: node scripts/run-root-suite.mjs
 
       # Version-parity gate, content half (feature 75, issue #292 — the #164
       # option-4 gate): root `skills/` is the Pi package's shipped content but

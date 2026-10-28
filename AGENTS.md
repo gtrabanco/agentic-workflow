@@ -259,8 +259,12 @@ This repo has no application build. "Green" means:
 - Context budgets pass: `bun scripts/check-skill-context.mjs` (every skill's
   `SKILL.md` is within its enforced line/token budget and reference reachability).
 - No stack/real-project references leaked into the skills or shared docs.
-- Root suites pass: `node --test scripts/*.test.mjs` — including
-  `scripts/golden-fixture.test.mjs`, which asserts the golden fixture's deterministic half.
+- Root suites pass: `node scripts/run-root-suite.mjs` (the same `scripts/*.test.mjs`
+  with git signing neutralized for the throwaway fixture repositories, so an
+  operator's `commit.gpgsign=true` cannot fail a suite that commits nothing real);
+  `node --test scripts/*.test.mjs` runs the identical suites when signing is off —
+  including `scripts/golden-fixture.test.mjs`, which asserts the golden fixture's
+  deterministic half.
 - If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
   there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
