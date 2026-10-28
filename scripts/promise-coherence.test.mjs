@@ -15,7 +15,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import path from "node:path";
@@ -492,5 +492,35 @@ test("#305 the fold and implement steps state the batch as the change plus its d
   }
   for (const file of ["skills/execute-phase/references/FOLDING.md", "skills/unit-lane/references/IMPLEMENT.md"]) {
     assert.match(readFileSync(path.join(ROOT, file), "utf8"), /bun scripts\/promise-coherence\.mjs/, `${file} runs the guard`);
+  }
+});
+
+test("F18: an unreadable corpus file fails the sweep declaration closed, never a silent zero-match pass", () => {
+  // The defect: `found ?? []` folded read failures into zero matches, so
+  // `expected 0` passed over a file the scan never examined. The unreadable
+  // surface is built under `.agentic-workflow/tmp/` — its tracked rule file
+  // ignores the whole directory, so no repo scan ever lists it, and it is
+  // removed the moment the claim answers. A symlink to a directory is
+  // deterministic everywhere: `statSync` follows it into the corpus, and
+  // `readFileSync` throws `EISDIR` for every user, root included.
+  const scratch = path.join(ROOT, ".agentic-workflow", "tmp", `f18-corpus-${process.pid}`);
+  const relScratch = path.relative(ROOT, scratch).split(path.sep).join("/");
+  try {
+    mkdirSync(path.join(scratch, "target"), { recursive: true });
+    writeFileSync(path.join(scratch, "target", "note.txt"), "the symlink target\n");
+    symlinkSync("target", path.join(scratch, "stale.md"));
+    writeFileSync(
+      path.join(scratch, "unit-doc.md"),
+      ["# f18 scratch doc", "", "## Log", "", "- **F1** — 2026-10-28, seeded an unreadable corpus member → deadbeef",
+       `  swept: /NO-SURVIVOR-FORM-F18/ → expected 0 in ${relScratch}/*`, ""].join("\n"),
+    );
+    const result = coherence([path.join(scratch, "unit-doc.md")]);
+    assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+    const sweep = result.claims.find((claim) => claim.kind === "sweep");
+    assert.equal(sweep.outcome, "fail", "an unexamined file is never a zero-match pass");
+    assert.match(sweep.observed, /stale\.md/);
+    assert.match(sweep.observed, /could not be read/);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
   }
 });
