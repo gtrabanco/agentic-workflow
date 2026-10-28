@@ -37,6 +37,12 @@ issue states them.
 **S2a — bun pinned by its own .bun-version (owner correction of S2's interpretation, 2026-10-28).**
 > .node-version para node y .bun-version para bun si es que bun lo soporta
 
+**S2b — bun pin is a minimum (owner correction of S2a's semantics, 2026-10-28).**
+> Pinea bun a >=1.4.0
+
+**S10 — fix PE-010, the serena-in-worktree failure (owner amendment, 2026-10-28).**
+> Arregla PE-010
+
 **S9 — worktree quick resetup (owner amendment, 2026-10-28).**
 > esto permite algo progresivo y rápido y por ejemplo corregir defectos que surgen al, por ejemplo crear un worktree porque entiendo que habrá archivos que viven en el directorio pero están en el gitignore y así al crear un worktree se puede hacer un resetup rápido si es necesario.
 
@@ -71,7 +77,8 @@ One observable, testable criterion per requirement; the check that proves each i
 - **AC9 (S7)** — installs go through binaries first (bun.sh installer, astral.sh uv installer, Homebrew tap / GitHub-Releases tarball for engram); `win32` is refused with the WSL note. Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC10 (S8)** — the provision run is a progressive verify→fix→next pipeline: tools are installed before the next step runs, a failed step stops the pipeline with the tool named, and the run loops verify→fix (bounded, max 3 passes) until everything verifies or the unfixable rows are reported with exit 1. Check: `node --test scripts/setup-env.test.mjs` exits 0 (pipeline/stop/convergence tests) + the foreground run in the `## Log`.
 - **AC11 (S8)** — config verification covers committed state read-only (`.serena/project.yml` non-empty; `.engram/config.json` valid JSON with `project_name` — never rewritten, never initialized) and local gitignored state, which the script creates or rebuilds: `.serena/cache`, `packages/agentic-workflow-schema/dist/` (bun install + build), `packages/pi-agentic-workflow/node_modules`. `--check` reports all of it without writing. Check: `node --test scripts/setup-env.test.mjs` exits 0.
-- **AC13 (S2a)** — the repo commits `.bun-version` (matching the CI setup-bun pin, 1.4.0); setup-env reads it, verifies the installed bun matches **exactly** (the convention is exact, unlike node's major rule), and provision installs/repairs bun at the pinned version via the official installer's version argument (`| bash -s "bun-v<version>"`). Check: `node --test scripts/setup-env.test.mjs` exits 0.
+- **AC14 (S10)** — PE-010 is fixed at its reproduced root cause: the machine-local `.serena/project.local.yml` override (markdown deliberately absent — marksman crashes on this machine for lack of libicu, and one failing LS kills the whole manager) is created by setup-env in any checkout that lacks it, so a fresh worktree's serena starts; PE-010's `unknown` evidence row resolves to this reproduction. Check: `node --test scripts/setup-env.test.mjs` exits 0 + the foreground worktree reproduction (`serena project index` succeeding after the fix) recorded in the `## Log`.
+- **AC13 (S2a, amended by S2b)** — the repo commits `.bun-version` (1.4.0, matching the CI setup-bun pin); setup-env reads it as a **minimum** (S2b): bun ≥ the pin verifies (a newer bun is accepted, like node's ≥-major rule), bun behind the pin is a MISS row, and provision installs/repairs bun at the pinned version via the official installer's version argument (`| bash -s "bun-v<version>"`) when bun is missing or behind. Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC12 (S9)** — the same command run inside a fresh worktree (gitignored local state absent, committed config present) converges to exit 0, so a worktree can be re-setup quickly. Check: `node --test scripts/setup-env.test.mjs` exits 0 (worktree-shaped fixture: committed files present, local state absent).
 
 ## Future
@@ -175,10 +182,37 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
   .node-version para node y .bun-version para bun si es que bun lo soporta
   ```
 - **D4** — 2026-10-28, owner decision resolving PE-006: bun is pinned by a committed `.bun-version` (exact match — the convention bun's ecosystem honors, PE-013), symmetric with `.node-version` for node. The S2 interpretation "bun respects `.node-version`" is superseded.
+- **L4** — 2026-10-28, owner correction, verbatim:
+  ```
+  Pinea bun a >=1.4.0
+  ```
+- **D5** — 2026-10-28, owner decision amending S2a's semantics: `.bun-version` is a **minimum** (bun ≥ pin verifies; only missing-or-behind installs/repairs at the pin), symmetric with node's ≥ rule — the exact-match reading is superseded.
+- **L5** — 2026-10-28, owner amendment, verbatim:
+  ```
+  Arregla PE-010 en PE-009 no lo puedes arreglar hasta que no se arregle con la issue 180 es un error de pin de versiones
+  ```
+- **D6** — 2026-10-28, owner decision: PE-009 (CI green of setup-check) is **blocked by issue #180** (versioned skills releases — a version-pinning error); the unit does not attempt CI-side fixes. AC5's CI-green clause stays disclosed as blocked-by-#180 until that unit lands; the workflow-file assertions (O11's local validator) remain in force.
+- **D7** — 2026-10-28, PE-010 resolution (owner-directed): the root cause is reproduced, not inferred — the machine-local `.serena/project.local.yml` (gitignored, deliberately omitting markdown because marksman crashes on this machine: "Couldn't find a valid ICU package"; one failing LS disables the whole manager) exists only in the main checkout, so every fresh worktree runs the committed project.yml whose `markdown` server kills serena. Fix: setup-env creates the override when missing (local-only authority, PE-012); `serena project init`/rewrite of committed config stays forbidden. Secondary observation (no code): serena logs warn on stale worktree paths in `~/.serena/serena_config.yml` and skips them itself — recorded, out of scope.
 - **E8** — 2026-10-28, `node scripts/setup-env.mjs` on this machine · exit 0 · pass 1 repaired bun 1.4.4 → 1.4.0 via the pinned installer (`bash -s "bun-v1.4.0"`), pass 2 clean; `--check` VERDICT: PASS afterwards; `bun --version` → 1.4.0; `bun scripts/check-skill-context.mjs --routes` exit 0 under the pinned bun; `node --test scripts/*.test.mjs` exit 0 · 1030/1030 (56/56 in the setup-env suite); fixture /tmp/setup-env-bunpin: drifted `--check` exit 1 naming the pin, real-installer repair converged in an isolated HOME.
+- **E9** — 2026-10-28, `node scripts/setup-env.mjs --check` after S2b · exit 0 · bun row "1.4.4 (≥ .bun-version)" — the machine's newer bun satisfies the minimum, no repair step; 66/66 setup-env tests (minimum semantics: 1.3.9 MISS, 1.4.4 ok).
+- **E10** — 2026-10-28, the PE-010 reproduction and fix, foreground: detached worktree `/tmp/serena-wt-probe` → `serena project index` FAILED twice (LanguageServerManagerInitialisationError, markdown LS "stdout read process terminated unexpectedly"; same failure in `agentic-workflow-180`) while the main checkout indexed 306 files cleanly; after `node scripts/setup-env.mjs` wrote `.serena/project.local.yml` (typescript, bash, json, yaml — markdown deliberately absent) the SAME worktree indexed 307 files, exit 0. Root cause: committed project.yml requests marksman, which crashes without libicu, and one failing LS kills the whole manager; only the main checkout's gitignored local override survived. Secondary (no code, D7): serena warns and self-skips stale worktree paths in its global config.
+- **P16** — 2026-10-28, S2b RED tests, minimum semantics implemented, SETUP.md amended · 82f4c2a7.
+- **P17** — 2026-10-28, bun minimum pin live: no repair planned for 1.4.4 · 82f4c2a7.
+- **P18** — 2026-10-28, S2b ledger closed (O21 verified, O20 n/a-superseded) · 82f4c2a7.
+- **P19** — 2026-10-28, S10 RED tests (override row, create-never-overwrite, AC3 guard refinement) · this commit.
+- **P20** — 2026-10-28, override creation implemented in setup-env.mjs · this commit.
+- **P21** — 2026-10-28, worktree reproduction (E10) + SETUP.md row + ledger closed (23 rows: 21 verified, 1 n/a evidenced, 1 blocked-by-#180 disclosed) · this commit.
 - **P13** — 2026-10-28, bun-pin RED tests (8) · this commit.
 - **P14** — 2026-10-28, `.bun-version` (1.4.0) committed + pin implemented in setup-env.mjs · this commit.
 - **P15** — 2026-10-28, SETUP.md pin rows, whole-unit re-verification, ledger 20/20 verified · this commit.
+- **P16** — RED tests for the minimum semantics (S2b): ≥ comparison, behind-row, repair-only-when-behind (validator: `node --test scripts/setup-env.test.mjs` fails RED before P17, exits 0 after)
+  (Implements: S2b)
+  Relevant files: scripts/setup-env.test.mjs
+- P17 — Implement the minimum semantics in `scripts/setup-env.mjs` and amend SETUP.md (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S2b)
+  Relevant files: scripts/setup-env.mjs, docs/workflow/SETUP.md
+- P18 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S2b)
 - **E5** — 2026-10-28, live evidence for S9: this workspace is itself a git worktree (`git worktree list` → /home/agent/projects/agentic-workflow-331) and shows the exact shape — committed `.serena/project.yml` present, gitignored `.serena/cache` and `packages/pi-agentic-workflow/node_modules` absent, `dist/` present only because it was built during G1.
 - **P1** — 2026-10-28, ledgers frozen (SPEC + evidence + obligations + fix-index row) · 883ea2cd.
 - **P2** — 2026-10-28, setup-env RED tests + /tmp fixture validation (bare machine exit 1, all-present exit 0 no-op, unresolvable node exit 1, .engram byte-identical; the fixture caught the missing `os` import the injected-probe suite masked) · c4a03239.

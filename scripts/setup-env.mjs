@@ -67,12 +67,48 @@ export const BUN_INSTALL = "curl -fsSL https://bun.sh/install | bash";
 export function bunInstallCommand(pinnedVersion) {
   return pinnedVersion ? `${BUN_INSTALL} -s "bun-v${pinnedVersion}"` : BUN_INSTALL;
 }
+
+/**
+ * Numeric semver compare (S2b): is `version` ≥ `minimum`? Numeric parts, not
+ * lexicographic — 1.10.0 ≥ 1.4.0. Missing versions never pass.
+ */
+export function versionAtLeast(version, minimum) {
+  if (!version || !minimum) return false;
+  const pa = String(version).split(".").map((p) => parseInt(p, 10) || 0);
+  const pb = String(minimum).split(".").map((p) => parseInt(p, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return false;
+  }
+  return true;
+}
 export const UV_INSTALL = "curl -LsSf https://astral.sh/uv/install.sh | sh";
 export const SERENA_INSTALL = "uv tool install -p 3.13 serena-agent";
 export const PI_ENGRAM_INSTALL = "pi install npm:gentle-engram@latest";
 export const BREW_ENGRAM_INSTALL = "brew install gentleman-programming/tap/engram";
 export const ENGRAM_RELEASES = "https://github.com/Gentleman-Programming/engram/releases";
 export const SERENA_PYTHON = "3.13";
+
+/**
+ * The machine-local Serena override this repo's checkouts need (S10, PE-014):
+ * markdown is deliberately absent — marksman is a .NET binary that crashes on
+ * machines without libicu, and one failing language server disables Serena's
+ * whole manager, which is what made every fresh worktree unusable. yaml and
+ * json never auto-detect, so they are listed explicitly. Created only when
+ * missing — an existing override is the user's, never overwritten.
+ */
+export const SERENA_LOCAL_OVERRIDE = `# Machine-local Serena override — gitignored on every branch.
+#
+# Written by scripts/setup-env.mjs (issue #331, S10). Verified 2026-09-25 and
+# reproduced 2026-10-28: markdown (marksman) crashes on this machine
+# ("Couldn't find a valid ICU package" — libicu missing) and one failing entry
+# disables the WHOLE language-server manager, so a server that cannot start
+# must never stay listed. The committed .serena/project.yml is never rewritten.
+language_servers:
+  - typescript
+  - bash
+  - json
+  - yaml
+`;
 
 /**
  * Windows is documented as WSL-only (S7): refuse before any check or install,
@@ -185,6 +221,13 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
 
   // Committed shared state is verified read-only (PE-012, owner decision
   // "Solo estado local"): parse errors are reported, the bytes never change.
+  let serenaLocalOverridePresent = false;
+  try {
+    serenaLocalOverridePresent = fs.statSync(path.join(root, ".serena", "project.local.yml")).isFile();
+  } catch {
+    serenaLocalOverridePresent = false;
+  }
+
   let engramConfigValid = false;
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(root, ".engram", "config.json"), "utf8"));
@@ -226,6 +269,7 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     schemaDistPresent,
     piCrateModulesPresent,
     engramConfigValid,
+    serenaLocalOverridePresent,
   };
 }
 
@@ -252,13 +296,13 @@ export function verify(state) {
     ["engram", state.engram, "engram"],
   ];
   for (const [tool, entry, label] of tools) {
-    if (tool === "bun" && entry.present && state.bunPinned && entry.version !== state.bunPinned) {
-      results.push({ tool, ok: false, detail: `bun ${entry.version} does not match the version .bun-version pins (${state.bunPinned}) — run without --check to repair` });
+    if (tool === "bun" && entry.present && state.bunPinned && !versionAtLeast(entry.version, state.bunPinned)) {
+      results.push({ tool, ok: false, detail: `bun ${entry.version} is behind the minimum .bun-version pins (${state.bunPinned}) — run without --check to repair` });
       continue;
     }
     results.push(
       entry.present
-        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}${tool === "bun" && state.bunPinned ? " (== .bun-version)" : ""}` }
+        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}${tool === "bun" && state.bunPinned ? " (≥ .bun-version)" : ""}` }
         : { tool, ok: false, detail: `${label} is not installed` },
     );
   }
@@ -283,6 +327,11 @@ export function verify(state) {
     state.engramConfigValid
       ? { tool: "engram-config", ok: true, detail: ".engram/config.json is valid committed JSON with a project_name" }
       : { tool: "engram-config", ok: false, detail: "the committed .engram/config.json is missing, invalid JSON, or has no project_name — fix it in a commit; this script never rewrites it" },
+  );
+  results.push(
+    state.serenaLocalOverridePresent
+      ? { tool: "serena-local-override", ok: true, detail: ".serena/project.local.yml present (machine-local override)" }
+      : { tool: "serena-local-override", ok: false, detail: ".serena/project.local.yml is missing — serena will try the committed markdown server and fail (PE-010); run without --check to create it" },
   );
   results.push(
     state.cachePresent
@@ -322,7 +371,7 @@ export function planSetup(state) {
     ok = false;
   }
 
-  if (!state.bun.present || (state.bunPinned !== null && state.bun.version !== state.bunPinned)) {
+  if (!state.bun.present || (state.bunPinned !== null && !versionAtLeast(state.bun.version, state.bunPinned))) {
     steps.push({
       tool: "bun",
       action: "install",
@@ -330,8 +379,8 @@ export function planSetup(state) {
       kind: "shell",
       reason: state.bunPinned
         ? state.bun.present
-          ? `bun ${state.bun.version} does not match .bun-version (${state.bunPinned}) — repairing at the pinned version`
-          : `bun is not installed — installing the .bun-version pin (${state.bunPinned})`
+          ? `bun ${state.bun.version} is behind the .bun-version minimum (${state.bunPinned}) — repairing at the pinned version`
+          : `bun is not installed — installing the .bun-version minimum (${state.bunPinned})`
         : "bun is not installed — running the official installer",
     });
   }
@@ -368,6 +417,16 @@ export function planSetup(state) {
   // gitignored state is rebuilt; committed state is only ever a fail row. ---
   if (!state.cachePresent) {
     steps.push({ tool: "serena-cache", action: "fix", kind: "mkdir", target: ".serena/cache", reason: ".serena/cache is missing (local state a fresh worktree lacks) — creating it" });
+  }
+  if (!state.serenaLocalOverridePresent) {
+    steps.push({
+      tool: "serena-local-override",
+      action: "fix",
+      kind: "write-local-override",
+      target: ".serena/project.local.yml",
+      content: SERENA_LOCAL_OVERRIDE,
+      reason: ".serena/project.local.yml is missing — without it serena starts the committed markdown server (marksman) and dies (PE-010); writing the known-good override (markdown deliberately absent)",
+    });
   }
   if (!state.schemaDistPresent) {
     steps.push({ tool: "schema-dist", action: "fix", kind: "shell", command: "cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build", reason: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — installing and building" });
@@ -527,6 +586,18 @@ function main(argv) {
         try {
           fs.mkdirSync(path.join(REPO_ROOT, step.target), { recursive: true });
           outcome = { ok: true, message: `${step.target} created` };
+        } catch (error) {
+          outcome = { ok: false, message: error.message };
+        }
+      } else if (step.kind === "write-local-override") {
+        try {
+          if (fs.existsSync(path.join(REPO_ROOT, step.target))) {
+            outcome = { ok: true, message: `${step.target} already exists — left untouched` };
+          } else {
+            fs.mkdirSync(path.dirname(path.join(REPO_ROOT, step.target)), { recursive: true });
+            fs.writeFileSync(path.join(REPO_ROOT, step.target), step.content);
+            outcome = { ok: true, message: `${step.target} written (markdown deliberately absent — PE-014)` };
+          }
         } catch (error) {
           outcome = { ok: false, message: error.message };
         }
