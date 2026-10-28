@@ -3543,3 +3543,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 84: published-vocabulary-sweep-gate — fold survivors-sweep from prose to machine bytes (issue #315). Four deliverables: (1) vocabulary probe scans open units and fixtures for non-published Future/Findings tokens; (2) schema package publishes 4.9.0 with canonical consts (FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, LOG_KIND_TOKENS, SWEEP_CLAIM_KINDS, SWEEP_MISMATCH_REASONS); (3) promise-coherence gate adds `sweep` claim kind — folds must declare survivors via `swept: /pattern/<flags> → expected <n> in <glob>`, gate re-runs greps; (4) structural-sibling-pins refactors all fence-blind `## -anchored regex` readers to share `sectionBounds` from `unit-doc-phases.mjs`, fixes quadratic bug in `sectionBounds` itself (F7).
 - **Decisions:** D1 allowlist fenced-quote-only (byte-identical copies cannot hide behind allowlist row); D2 schema consts canonical at `packages/agentic-workflow-schema/src/vocabularies.ts`; D3 corpus = open units + fixtures only (closed units carry recorded debt, must not retroactively fail); F35 fix — declaring doc's Log exemption was leaking to all scanned files, not just the declaring doc itself; F7 quadratic bug in `sectionBounds` fixed by advancing offset past scanned line.
 - **Next:** git push origin feature/84-published-vocabulary-sweep-gate and open PR toward main
+
+## 2026-10-28T09:02:18Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 21 (`1a62e2c1…d3111076`)
+- **Files:** 47 files
+- **Summary:** Unit 84 verification: external verify of fold-survivors-sweep changes against base #330 (e835f158), covering F1-F8/F12 review findings, all suites green
+- **Next:** Review the external-verify verdict; if VERIFIED, proceed to /review-change on this branch
