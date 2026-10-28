@@ -413,3 +413,16 @@ test("--version with a prerelease channel is rejected, never silently ignored", 
     assert.doesNotMatch(result.stdout, /undefined/);
   }
 });
+
+// A companion table without its |---| grid used to corrupt the CHANGELOG
+// silently: indexOf("|---|", idx) returned -1 and the row landed at offset 1.
+test("apply fails closed on a companion table missing its grid — nothing is written", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const changelogPath = path.join(root, "CHANGELOG.md");
+  fs.writeFileSync(changelogPath, fs.readFileSync(changelogPath, "utf8").replaceAll("|---|---|---|---|\n", ""));
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr || result.stdout, /\|---\|/);
+  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0", "the pre-flight runs before any write");
+  assert.equal(fs.existsSync(path.join(root, ".changeset", "a.md")), true, "nothing consumed on a failed apply");
+});

@@ -68,8 +68,7 @@ on:
         default: ""
 
 permissions:
-  contents: write # the release commit, the tags, the stable branch, the release
-  id-token: write # required for npm Trusted Publishing + --provenance
+  contents: read # least-privilege baseline — each job elevates only what it runs
 
 concurrency:
   group: publish-packages
@@ -80,6 +79,8 @@ jobs:
   suggest:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'suggest'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # read-only preview — plans and prints, never writes
     steps:
       - name: Checkout (full history — the base is the last stable v-tag)
         uses: actions/checkout@v7.0.0
@@ -128,6 +129,8 @@ jobs:
   cut:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel == 'latest'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the release commit, the tags, the stable branch, the release
     steps:
       - name: Checkout (full history — the base is the last stable v-tag)
         uses: actions/checkout@v7.0.0
@@ -141,6 +144,9 @@ jobs:
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
+
+      - name: Assemble the release notes (BEFORE apply — apply consumes the changesets; outside the worktree so git add -A never commits it)
+        run: node scripts/release.mjs release-notes > "$RUNNER_TEMP/release-notes.txt"
 
       - name: Apply the train (versions + pins + changelog rows)
         env:
@@ -179,16 +185,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node scripts/release.mjs release-notes > release-notes.txt
           git tag "v$VERSION"
           git push origin "v$VERSION"
           git push origin "HEAD:refs/heads/stable"
-          gh release create "v$VERSION" --generate-notes --title "v$VERSION" --notes-file release-notes.txt
+          gh release create "v$VERSION" --generate-notes --title "v$VERSION" --notes-file "$RUNNER_TEMP/release-notes.txt"
 
   # ───────────────────────────── cut + canary/alpha/beta/rc ────────────────
   cut-prerelease:
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel != 'latest'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the cut is recorded as a git tag
+      id-token: write # required for npm Trusted Publishing
     steps:
       - name: Checkout (full history — the canary counter counts the channel tags)
         uses: actions/checkout@v7.0.0
@@ -259,6 +267,8 @@ jobs:
   schema-node-compat:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: packages/agentic-workflow-schema
@@ -280,6 +290,9 @@ jobs:
   schema-publish:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing + --provenance
     defaults:
       run:
         working-directory: packages/agentic-workflow-schema
@@ -323,6 +336,8 @@ jobs:
   crate-node-compat:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: packages/agentic-workflow
@@ -345,6 +360,9 @@ jobs:
   crate-publish:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing + --provenance
     defaults:
       run:
         working-directory: packages/agentic-workflow
@@ -388,6 +406,8 @@ jobs:
   pi-node-compat:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: packages/pi-agentic-workflow
@@ -410,6 +430,9 @@ jobs:
     if: github.event_name == 'push'
     needs: [schema-publish, crate-publish] # dependency order: pi's install resolves its exact crate+schema pins from the registry — both published first
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing + --provenance
     defaults:
       run:
         working-directory: packages/pi-agentic-workflow

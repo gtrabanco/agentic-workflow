@@ -128,3 +128,46 @@ test("the pi job keeps its mutation and tarball gates (the #164 publish-time gua
   assert.match(block, /Tarball carries the skill bundle/);
 });
 
+// The notes are assembled from the accumulated changeset bodies — and apply
+// CONSUMES those files (the release commit records the consumption), so a
+// notes file generated after apply is empty and the release body loses them.
+test("the release notes are assembled BEFORE apply consumes the changesets, outside the commit", () => {
+  const cut = jobBlock(read(PUBLISH), "cut");
+  const notes = cut.indexOf("release-notes >");
+  const apply = cut.indexOf("release.mjs apply");
+  assert.ok(notes !== -1, "the cut job assembles the notes file");
+  assert.ok(apply !== -1, "the cut job applies the train");
+  assert.ok(notes < apply, "notes must be assembled before apply deletes the consumed changesets");
+  // the notes file lives outside the worktree — git add -A must never commit it
+  assert.match(cut, /release-notes > "\$RUNNER_TEMP\/release-notes\.txt"/);
+  assert.match(cut, /--notes-file "\$RUNNER_TEMP\/release-notes\.txt"/);
+});
+
+// Least privilege: the workflow baseline is contents: read and each job
+// elevates only what it needs — the read-only suggest job and the node-compat
+// gates never carry contents: write or the npm OIDC identity.
+test("least privilege: each job elevates only the permissions it needs", () => {
+  const text = read(PUBLISH);
+  assert.match(text.slice(text.indexOf("permissions:"), text.indexOf("concurrency:")), /contents: read/);
+  const suggest = jobBlock(text, "suggest");
+  assert.doesNotMatch(suggest, /id-token/);
+  assert.doesNotMatch(suggest, /contents: write/);
+  const cut = jobBlock(text, "cut");
+  assert.match(cut, /contents: write/, "the cut job commits, tags and opens the release");
+  assert.doesNotMatch(cut, /id-token/, "the cut job never publishes to npm");
+  const pre = jobBlock(text, "cut-prerelease");
+  assert.match(pre, /contents: write/, "the channel cut is recorded as a tag");
+  assert.match(pre, /id-token: write/, "the channel publish needs npm OIDC");
+  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+    const b = jobBlock(text, job);
+    assert.match(b, /id-token: write/, `${job} publishes via Trusted Publishing`);
+    assert.match(b, /contents: read/);
+    assert.doesNotMatch(b, /contents: write/, `${job} never mutates the repo`);
+  }
+  for (const job of ["schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
+    const b = jobBlock(text, job);
+    assert.doesNotMatch(b, /id-token/, `${job} is a test gate, not a publisher`);
+    assert.match(b, /contents: read/);
+  }
+});
+
