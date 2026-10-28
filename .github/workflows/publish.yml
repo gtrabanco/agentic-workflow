@@ -1,0 +1,284 @@
+name: Publish packages
+
+# Publishes the three npm packages — @gtrabanco/agentic-workflow-schema,
+# @gtrabanco/agentic-workflow (the runner crate) and
+# @gtrabanco/pi-agentic-workflow — in ONE workflow with the dependency order
+# as `needs:` (feature 40, issue #180; D-40-12 consolidated the former
+# one-file-per-package trio):
+#
+#   schema ─┐
+#   crate  ─┴─▶ pi (its exact pins on the crate + schema must already be on
+#                the registry when its gate installs)
+#
+# Each publish job is independently idempotent: the version gate skips an
+# already-published exact version, so a chain walk (or a re-run) is a safe
+# no-op for packages whose version did not move.
+#
+# Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
+# exchanges the job's GitHub OIDC token (id-token: write) for a short-lived
+# publish token at publish time, scoped to exactly this repo + workflow file.
+#
+# ⚠ ONE-TIME MIGRATION (D-40-12 — owner-approved consolidation, 2026-10-28):
+# the npm-side Trusted Publisher records previously bound
+# publish-schema.yml / publish-agentic-workflow.yml / publish-pi-package.yml.
+# Until each package's record names THIS file, its publish fails with
+# E403/OIDC. Re-register on npmjs.com → package → Settings → Trusted
+# Publisher → GitHub Actions → Organization or user: gtrabanco → Repository:
+# agentic-workflow → Workflow filename: publish.yml → (Environment blank) →
+# Add. Do it for all three packages; then the old records can be deleted.
+#
+# Troubleshooting — "npm error 403 … OIDC permission denied for this action":
+# the record is missing or a field doesn't match (diagnose: gh run view
+# --log-failed <run-id>; verify the record as above).
+#
+# Release channel: the `channel` dispatch input (`latest` default — push runs
+# behave exactly as before) or a prerelease dist-tag (`canary` / `alpha` /
+# `beta` / `rc`); only `latest` moves the latest dist-tag. Bun installs deps
+# and runs the gates (bun.lock is the sole lockfile); npm does the publish
+# step (Trusted Publishing + --provenance are npm-CLI-specific).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/agentic-workflow-schema/**"
+      - "packages/agentic-workflow/**"
+      - "packages/pi-agentic-workflow/**"
+      - ".github/workflows/publish.yml"
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "npm dist-tag for this publish (latest | canary | alpha | beta | rc)"
+        type: string
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+  id-token: write # required for npm Trusted Publishing + --provenance
+
+concurrency:
+  group: publish-packages
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------- schema --
+  # The fallback guarantee (#197): the package must pass under plain node when
+  # bun is absent. Publish jobs run the bun-first gate; node-compat jobs run
+  # the same suite through the test:node variant on the setup-node toolchain.
+  schema-node-compat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow-schema
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+      - name: Install (bun as installer only — frozen lockfile)
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - name: Build + test (node runtime — the guaranteed fallback)
+        run: bun run test:node
+
+  schema-publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow-schema
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        # Lockstep with the bun that generates the committed bun.lock files
+        # (1.4.0 writes lockfile version 2, which 1.3.14 cannot parse — a
+        # skew fails `bun install --frozen-lockfile` before the gate runs).
+        with:
+          bun-version: 1.4.0
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+      - name: Install (bun, frozen lockfile)
+        run: bun install --frozen-lockfile
+      - name: Build + test (the gate — never publish red)
+        run: bun run test
+      - name: Skip when the version is already published
+        id: version
+        run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
+      - name: Surface the gate's notice
+        if: steps.version.outputs.notice != ''
+        env:
+          NOTICE: ${{ steps.version.outputs.notice }}
+        run: echo "::warning::$NOTICE"
+      - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
+
+  # ----------------------------------------------------------------- crate --
+  crate-node-compat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - name: Install deps (node-compat — typebox is a pinned dependency)
+        run: bun install --frozen-lockfile
+      - name: Test (node runtime — the guaranteed fallback)
+        run: node --test
+
+  crate-publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+      # The gate needs the crate's pinned dependencies: `src/doc/envelope.mjs`
+      # imports `typebox` lazily, so without node_modules every test that
+      # reaches `--json-only` fails module resolution.
+      - name: Install deps (the gate needs typebox)
+        run: bun install --frozen-lockfile
+      - name: Test (the gate — never publish red)
+        run: bun test test/
+      - name: Skip when the version is already published
+        id: version
+        run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
+      - name: Surface the gate's notice
+        if: steps.version.outputs.notice != ''
+        env:
+          NOTICE: ${{ steps.version.outputs.notice }}
+        run: echo "::warning::$NOTICE"
+      - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
+
+  # -------------------------------------------------------------------- pi --
+  pi-node-compat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/pi-agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+      - name: Install (bun as installer only — frozen lockfile)
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - name: Build + test (node runtime — the guaranteed fallback)
+        run: bun run test:node
+
+  pi-publish:
+    needs: [schema-publish, crate-publish] # dependency order: pi's install resolves its exact crate+schema pins from the registry — both published first
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/pi-agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+      - name: Install + build (bun, frozen lockfile; prepare runs tsc and stages the bundle)
+        run: bun install --frozen-lockfile
+      - name: Test (the gate — never publish red)
+        run: bun run test
+      # A suite that cannot fail proves nothing, so the mutants are re-applied
+      # against a mirror of this commit before anything reaches the registry.
+      - name: Mutation gate (every ruled-out mutation must break a named test)
+        run: bun run mutation
+      # The one failure nothing else would catch: a tarball with an absent or
+      # empty skills/ still publishes green. Compares the tarball against the
+      # staged bundle file-for-file (the staged `skills/` tree is the
+      # contract); the list must be captured BEFORE `npm pack` because
+      # `postpack` deletes the staged copy.
+      - name: Tarball carries the skill bundle
+        run: |
+          bun run bundle:skills
+          EXPECTED=$(find skills -type f | sed 's|^|package/|' | sort)
+          EXPECTED_COUNT=$(printf '%s\n' "$EXPECTED" | grep -c . || true)
+          [ "$EXPECTED_COUNT" -gt 0 ] \
+            || { echo "::error::no staged skill files — check the repository skills/ tree"; exit 1; }
+
+          npm pack --pack-destination "$RUNNER_TEMP" >/dev/null
+          TGZ=$(ls "$RUNNER_TEMP"/gtrabanco-pi-agentic-workflow-*.tgz)
+          LISTING=$(tar tzf "$TGZ")
+          ACTUAL=$(printf '%s\n' "$LISTING" | grep '^package/skills/' | sort || true)
+          echo "skill files in the tarball: $(printf '%s\n' "$ACTUAL" | grep -c . || true)"
+
+          MISSING=$(comm -23 <(printf '%s\n' "$EXPECTED") <(printf '%s\n' "$ACTUAL") || true)
+          if [ -n "$MISSING" ]; then
+            echo "::error::tarball is missing staged skill files — check package.json 'files' and .npmignore:"
+            printf '%s\n' "$MISSING"
+            exit 1
+          fi
+          echo "the tarball carries every staged skill file ($EXPECTED_COUNT)"
+      - name: Skip when the version is already published
+        id: version
+        run: node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" >> "$GITHUB_OUTPUT"
+      - name: Surface the gate's notice
+        if: steps.version.outputs.notice != ''
+        env:
+          NOTICE: ${{ steps.version.outputs.notice }}
+        run: echo "::warning::$NOTICE"
+      - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"

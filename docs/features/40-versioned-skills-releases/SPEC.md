@@ -435,12 +435,14 @@ as corrected:
    "UPDATE CLAUDE.md" in-scope bullet reads "UPDATE AGENTS.md" and shipped in
    this unit (the changesets note is amended, not retired).
 3. **Package facts**: all three npm packages are published today (schema
-   4.9.0, pi 0.36.0, agentic-workflow 0.5.0) and there are **three** publish
-   workflows (`publish-schema.yml`, `publish-pi-package.yml`,
-   `publish-agentic-workflow.yml`). The version-parity gate (feature 75,
-   issue #292) now enforces the manual bump rule in CI — the changeset route
-   extends it (a valid intent file declaring the Pi package satisfies the
-   content half).
+   4.9.0, pi 0.36.0, agentic-workflow 0.5.0). The version-parity gate
+   (feature 75, issue #292) enforces the bump rule in CI — the changeset
+   route extends it (a valid intent file declaring the Pi package satisfies
+   the content half). **Correction 2026-10-28 (D-40-12, owner-directed)**:
+   the three per-package publish workflows are consolidated into ONE
+   `.github/workflows/publish.yml` (jobs chained schema → crate → pi);
+   re-registering the npm Trusted Publisher records to `publish.yml` is the
+   owner's one-time step.
 4. **ROADMAP row 40's dependency cell is already `—`** (corrected in PR #235);
    verifying it is all that remains of the in-scope bullet 8.
 5. **`scripts/release.mjs` is not an npm publisher** — it plans the release
