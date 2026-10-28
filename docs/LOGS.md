@@ -3556,3 +3556,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Cycle-2 re-review + fold of PR #330 (unit 84, published-vocabulary-sweep-gate)
 - **Decisions:** Escalated delta to full pass (width/size triggers fired); F14 (single pipe bypass + shell expansion in reader commands) and F17 (in-repo validator args) implemented as lexical, quote-aware bound before execution; F15 (evadable nested-quantifier) extended to cover alternation and chained quantifiers; F16 (stale bun.lock) BLOCKED pre-merge because schema 4.9.0 is unpublished — parity gate forces pin = local 4.9.0, bun install cannot resolve
 - **Next:** /review-change for cycle-3 delta re-review (requires explicit user instruction — two-cycle cap); F16: merge then bun install + fix(deps) to refresh lock, or issue #180 for structural fix
+
+## 2026-10-28T105343Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 29 (`1a62e2c1…295a36f3`)
+- **Files:** 49 files
+- **Summary:** Verify AGENTS.md structure, plan and open setup tooling and AGENTS.md split issues (#331, #332) without implementation
