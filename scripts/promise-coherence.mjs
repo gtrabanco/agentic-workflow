@@ -838,12 +838,28 @@ function sweepClaims(doc, claims) {
       }
       const files = sweepFiles(ROOT, parsed.glob);
       const hits = [];
+      const unreadable = [];
       for (const file of files) {
         // The declaring document's own log sections are exempt (D1) — only when
         // scanning the declaring document itself, never a survivor surface.
         const skipRanges = file.relative === doc.file ? declaringLogRanges(doc.text) : [];
         const found = sweepCount(file.absolute, parsed.regex, skipRanges);
-        for (const lineNumber of found ?? []) hits.push(`${file.relative}:${lineNumber}`);
+        if (found === null) {
+          // Review F18: a file the scan could not open is never zero matches.
+          // Folding it into `found ?? []` let an `expected 0` declaration pass
+          // over an unexamined surface — the gate's own fail-closed rule, run
+          // back. The claim names the file and fails.
+          unreadable.push(file.relative);
+          continue;
+        }
+        for (const lineNumber of found) hits.push(`${file.relative}:${lineNumber}`);
+      }
+      if (unreadable.length > 0) {
+        claim.outcome = "fail";
+        claim.reason = "sweep-mismatch";
+        claim.observed = `refused fail-closed — the corpus file ${unreadable[0]} could not be read${unreadable.length > 1 ? ` (${unreadable.length} corpus files could not be read)` : ""}; an unreadable surface is never a zero-match pass`;
+        claims.push(claim);
+        continue;
       }
       claim.observed = `${hits.length} match${hits.length === 1 ? "" : "es"} (expected ${parsed.expected}) for ${parsed.display}; ${hits.length === 0 ? "no survivor" : `first: ${hits[0]}`}`;
       if (hits.length === parsed.expected) {
