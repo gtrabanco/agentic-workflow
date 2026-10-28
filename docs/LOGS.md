@@ -3569,3 +3569,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Owner rejected the 3-workflow split (plan/train/publish) as 'salvar los muebles'. Consolidated everything into one `publish.yml` with modes: `suggest` = read-only plan (stable + canary + every changeset's semver annotation and body → run summary); `cut` + `channel: latest` = apply the train (versions + exact local pins + CHANGELOG rows from changeset bodies + lockfiles), ONE release commit, push (fires the publish jobs schema→crate→pi), tag vX.Y.Z, stable branch, gh release --generate-notes; `cut` + `channel: canary|alpha|beta|rc` = per-declared-package channel publish (temp version, exact-version gate, npm publish --tag, repo restored, cut as git tag — the tag IS the canary counter's input). npm publish ONLY inside `publish.yml` (Trusted Publisher). Push jobs run ONLY on push events (a dispatch run never publishes stale checkouts). `scripts/release.mjs` always runs in CI.
 - **Next:** /review-change on the final diff; create PR against main once npmjs.com Trusted Publisher records are confirmed working
 
+
+## 2026-10-28T21:52:47Z — feature/180-versioned-skills-releases — manual
+- **Summary:** Feature 40 — D-40-14: unified train stamps every skill's frontmatter at apply time, and prunable skill-lint remains as authoring lint only
+- **Commits:** 20 (ce40e4ef…2a518435), 38 files
+- **Decisions:** D-40-2 deferred decision resolved: per-skill prose bump retired, skills stamped by code at cut. bump-skill loses its bump half, becomes skill-lint. Release test suite now exercises stamping (2 new tests: apply-stamps + prerelease-no-stamp).
+- **Next:** Merge origin/main to bring in the bun.lock pin fix (09c054ff / fe08f2af), resolve the single CHANGELOG.md conflict, then run the full suite again to confirm clean before committing and opening PR.
