@@ -15,14 +15,14 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import path from "node:path";
 import process from "node:process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { CLAIM_KINDS, REASON_CODES, coherence } from "./promise-coherence.mjs";
+import { CLAIM_KINDS, REASON_CODES, coherence, sweepFiles } from "./promise-coherence.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURES = "scripts/fixtures/promise-coherence";
@@ -42,6 +42,7 @@ test("the claim-kind and reason vocabularies are closed and exported", () => {
     "section-length",
     "prerequisite",
     "contradiction",
+    "sweep",
   ]);
   assert.deepEqual([...REASON_CODES], [
     "validator-mismatch",
@@ -55,6 +56,7 @@ test("the claim-kind and reason vocabularies are closed and exported", () => {
     "unparseable-claim",
     "no-claims",
     "missing-document",
+    "sweep-mismatch",
   ]);
 });
 
@@ -281,6 +283,171 @@ test("#305 an out-of-scope command is printed as a skip line and counted, never 
   assert.match(result.lines.join("\n"), /^claims: 1 checked · 3 skipped$/m);
 });
 
+// ---------------------------------------------------------------------------
+// #315 · S2 — the sweep claim kind (the F35/F37/F38/F39 class)
+// ---------------------------------------------------------------------------
+
+test("#315 F35: a seeded stale survivor fails the sweep declaration naming file:line, regex and count", () => {
+  const result = coherence([fixture("sweep-breach-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.ok(sweep, "the declaration is read as a sweep claim");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /1 match/);
+  assert.match(sweep.observed, /M1-VERDICT-COPY/);
+  assert.match(sweep.observed, /sweep-breach\/verdict\.md:\d+/);
+  const block = result.lines.join("\n");
+  assert.match(block, /^Promise-coherence: sweep scripts\/fixtures\/promise-coherence\/sweep-breach-unit-doc\.md:\d+$/m);
+});
+
+test("#315 D1: the stale form inside the fold's fenced evidence quote is exempt — a clean sweep passes", () => {
+  const result = coherence([fixture("sweep-clean-unit-doc.md")]);
+  assert.equal(result.verdict, "PASS", result.lines.join("\n"));
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "pass");
+  assert.match(sweep.observed, /^0 matches/);
+});
+
+test("#315 AC4: a declaration outside the fixed grammar fails closed as unparseable", () => {
+  const result = coherence([fixture("sweep-unparseable-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: unparseable-claim");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /swept:\s*\/<pattern>\/<flags> → expected <n> in <glob>/);
+});
+
+test("#315 F35 true shape: a stale copy in the declaring doc's own sibling section is counted, its Log is exempt", () => {
+  const result = coherence([fixture("sweep-same-doc-unit-doc.md")]);
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch");
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "fail");
+  assert.match(sweep.observed, /1 match \(expected 0\)/);
+  assert.match(sweep.observed, /sweep-same-doc-unit-doc\.md:\d+/);
+});
+
+test("#315 F3: the declaring doc's Log exemption is in the scan's own units — non-ASCII does not misalign it", () => {
+  // The fixture's text before `## Log` is deliberately non-ASCII (each
+  // em-dash, arrow and accented letter is a byte longer than the character
+  // `sectionBounds` indexes by). With a byte cursor in `sweepCount` and a
+  // string-index range from `declaringLogRanges`, the fold's own log quote fell
+  // outside the exemption and a clean fold failed its own declaration.
+  const text = readFileSync(join(ROOT, FIXTURES, "sweep-selfquote-nonascii-unit-doc.md"), "utf8");
+  const beforeLog = text.slice(0, text.indexOf("## Log\n"));
+  assert.ok(
+    Buffer.byteLength(beforeLog, "utf8") > beforeLog.length,
+    "the fixture must really carry the offset drift the defect needs",
+  );
+  const result = coherence([fixture("sweep-selfquote-nonascii-unit-doc.md")]);
+  assert.equal(result.verdict, "PASS", result.lines.join("\n"));
+  const sweep = result.claims.find((claim) => claim.kind === "sweep");
+  assert.equal(sweep.outcome, "pass", "the declaring doc's own log quote is exempt");
+  assert.match(sweep.observed, /^0 matches/);
+});
+
+test("#315 F2: a doc-sourced pattern outside the sweep's bounds is refused before it is compiled", () => {
+  // Both declarations fit the line grammar; one is a quantified group over a
+  // quantified body, the other a 240-character body. Compiled, the first is
+  // the 83-second-per-line reproducer, so the bound answers in shape and size,
+  // never in elapsed time — and the claim is refused, not executed.
+  const started = Date.now();
+  const result = coherence([fixture("sweep-bounds-unit-doc.md")]);
+  const elapsed = Date.now() - started;
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+  const sweeps = result.claims.filter((claim) => claim.kind === "sweep");
+  assert.equal(sweeps.length, 2, "both over-bound declarations are claims, neither is silently dropped");
+  for (const claim of sweeps) assert.equal(claim.outcome, "fail");
+  assert.match(sweeps[0].observed, /catastrophic-backtracking/);
+  assert.match(sweeps[1].observed, /over the sweep bound of 200/);
+  assert.match(sweeps[0].observed, /refused before it ran/);
+  assert.ok(elapsed < 5_000, `the refusal is a bound check, not a timed-out run (${elapsed} ms)`);
+});
+
+test("cycle-2 F15: quantified alternation, a curly group body and adjacent quantifier chains are refused before compile", () => {
+  // The F2 pin watched `(x+)+` only. The measured class is wider: `(a|aa)+$
+  //` costs 66 s on one line, `(a{2,})+` hides its quantifier from a scan for
+  // */+ alone, and `a*a*a*b` overlaps without any group. All three are inside
+  // the line grammar and the 200-char budget; the bound must answer in shape
+  // and size, never in elapsed time — a refused declaration is a red claim.
+  const started = Date.now();
+  const result = coherence([fixture("sweep-redos-unit-doc.md")]);
+  const elapsed = Date.now() - started;
+  assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+  const sweeps = result.claims.filter((claim) => claim.kind === "sweep");
+  assert.equal(sweeps.length, 3, "all three evading declarations are claims, none is silently dropped");
+  for (const claim of sweeps) {
+    assert.equal(claim.outcome, "fail");
+    assert.match(claim.observed, /refused before it ran/);
+    assert.match(claim.observed, /catastrophic-backtracking/);
+  }
+  assert.ok(elapsed < 5_000, `the bound answers in shape, not in a timed-out run (${elapsed} ms)`);
+});
+
+test("#315 F7: the walk honours its file ceiling instead of overshooting it", () => {
+  const dir = join(ROOT, "scripts", "fixtures", "promise-coherence");
+  const all = sweepFiles(dir, "*.md");
+  assert.ok(all.length > 3, `the corpus needs more than three files to prove the bound (${all.length})`);
+  for (const max of [1, 2, 3]) {
+    assert.equal(sweepFiles(dir, "*.md", max).length, max, `a ceiling of ${max} returns exactly ${max}`);
+  }
+  assert.equal(sweepFiles(dir, "*.md", 0).length, 0, "a ceiling of zero walks nothing");
+  assert.equal(sweepFiles(dir, "*.md").length, all.length, "the default ceiling is not the one in play here");
+});
+
+test("#315 F12: a report-validator claim is re-run instead of skipped, and each refusal names itself", () => {
+  // The vacuity: every `(validator: …)` cell of a unit doc named a form this
+  // pass could not run, so the document passed having checked nothing. Now the
+  // bounded class is executed argv-style, and the refusals are specific enough
+  // to read as a policy, not an oversight.
+  const result = coherence([fixture("validator-runner-unit-doc.md")]);
+  const claims = result.claims.filter((claim) => claim.kind === "validator");
+  const byCommand = (needle) => claims.find((claim) => claim.claim.includes(needle));
+
+  const checked = byCommand("vocabulary-probe.mjs --root");
+  assert.equal(checked?.outcome, "pass", "a committed report validator is re-run, not skipped");
+  assert.equal(checked?.observed, "exit 1", "the report validator's real verdict is what the claim promised");
+
+  assert.match(byCommand("node --test")?.skip, /suite runner — this pass never executes the suite/);
+  assert.match(byCommand("promise-coherence.mjs")?.skip, /this gate itself/);
+  assert.equal(byCommand("unit-route.mjs")?.skip, "command outside the reader allowlist", "not every committed script is a report validator");
+  assert.match(result.lines.at(-1), /^claims: 1 checked · 3 skipped$/, "the tally counts what was actually run");
+});
+
+// ---------------------------------------------------------------------------
+// cycle-2 · F14 / F17 — the doc-sourced execution surface is lexically bounded
+// ---------------------------------------------------------------------------
+
+test("F14/F17: a piped interpreter, an expansion, and an escaping validator root are refused by name and never executed", () => {
+  // The reader path executed any command whose head was a reader as long as
+  // the raw scan missed `;`/`&&`/`||`/`$( `/`>`/`<` — a single `|` into `node`,
+  // an unquoted `$HOME`, and a quoted `$$` all reached a shell. The runner
+  // class allowlisted the script but not its arguments, so `--root /home`
+  // pointed a report validator at arbitrary tree content. Refusals name
+  // themselves; the controls prove the bound is lexical, not scorched-earth:
+  // quoted alternation, a reader→reader pipeline, and a plain `test` keep
+  // running exactly as before.
+  const marker = join(ROOT, FIXTURES, ".f14-marker");
+  rmSync(marker, { force: true });
+  try {
+    const result = coherence([fixture("shell-and-args-unit-doc.md")]);
+    const claims = result.claims.filter((claim) => claim.kind === "validator");
+    const byCommand = (needle) => claims.find((claim) => claim.claim.includes(needle));
+
+    assert.match(byCommand("cat README.md | node")?.skip ?? "", /pipeline stage is outside the reader allowlist \(node\)/);
+    assert.match(byCommand("grep -c $HOME")?.skip ?? "", /shell expansion/);
+    assert.match(byCommand("a$$b")?.skip ?? "", /shell expansion/);
+    assert.equal(byCommand("--root /home")?.outcome, null, "the absolute validator root is not executed");
+    assert.match(byCommand("--root /home")?.skip ?? "", /resolves outside the repository/);
+    assert.match(byCommand("--root ../..")?.skip ?? "", /resolves outside the repository/);
+    assert.ok(!existsSync(marker), "the refused piped command never reached a shell");
+
+    assert.equal(byCommand("agentic|workflow")?.outcome, "pass", "a quoted alternation is a literal argument");
+    assert.equal(byCommand("ls scripts | wc -l")?.outcome, "pass", "a reader→reader pipeline still runs");
+    assert.equal(byCommand("test -f README.md")?.outcome, "pass", "a plain test still runs");
+  } finally {
+    rmSync(marker, { force: true });
+  }
+});
+
 test("#305 the CLI prints the block and exits 1 on a failure, 0 on the head", () => {
   const failing = spawnSync(process.execPath, [path.join(ROOT, "scripts/promise-coherence.mjs"), fixture("unit-doc-count.md")], {
     cwd: ROOT,
@@ -325,5 +492,71 @@ test("#305 the fold and implement steps state the batch as the change plus its d
   }
   for (const file of ["skills/execute-phase/references/FOLDING.md", "skills/unit-lane/references/IMPLEMENT.md"]) {
     assert.match(readFileSync(path.join(ROOT, file), "utf8"), /bun scripts\/promise-coherence\.mjs/, `${file} runs the guard`);
+  }
+});
+
+test("F20: the in-flight corpus rule lives in one owner, not two copies", () => {
+  // Two gates each kept a byte-similar copy of the roadmap + fix-index row
+  // grammar and the dated-progress filter; either could be edited and silently
+  // disagree about which docs are live. The shared reader owns the rule now —
+  // the pin refuses a re-implementation in either consumer and requires the
+  // one owner to actually hold it.
+  for (const file of ["scripts/promise-coherence.mjs", "scripts/vocabulary-probe.mjs"]) {
+    const text = readFileSync(path.join(ROOT, file), "utf8");
+    assert.ok(
+      !text.includes("docs/features/ROADMAP.md"),
+      `${file} must not re-implement the corpus rule — scripts/unit-doc-phases.mjs owns it`,
+    );
+  }
+  const shared = readFileSync(path.join(ROOT, "scripts/unit-doc-phases.mjs"), "utf8");
+  assert.match(shared, /docs\/features\/ROADMAP\.md/, "the shared reader is the one owner");
+  assert.match(shared, /docs\/fix\/README\.md/, "the shared reader owns both indexes");
+});
+
+test("F19: the sweep walk bounds entries visited, not only files pushed", () => {
+  // The F7 fix capped how many files a declaration may collect; nothing
+  // bounded how many entries the walk below that ceiling still had to visit
+  // and stat. The ceiling is now an entry budget, checked the same way the
+  // file cap is — before any work on the entry, at every recursion level.
+  const dir = mkdtempSync(join(tmpdir(), "sweep-cap-"));
+  try {
+    for (const name of ["a.md", "b.md", "c.md", "d.md", "e.md", "f.md"]) {
+      writeFileSync(join(dir, name), "# x\n");
+    }
+    assert.equal(sweepFiles(dir, "*.md").length, 6, "the default ceilings are not the ones in play here");
+    assert.equal(sweepFiles(dir, "*.md", 500, 2).length, 2, "a two-entry ceiling visits two entries");
+    assert.equal(sweepFiles(dir, "*.md", 500, 0).length, 0, "a zero-entry ceiling walks nothing");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("F18: an unreadable corpus file fails the sweep declaration closed, never a silent zero-match pass", () => {
+  // The defect: `found ?? []` folded read failures into zero matches, so
+  // `expected 0` passed over a file the scan never examined. The unreadable
+  // surface is built under `.agentic-workflow/tmp/` — its tracked rule file
+  // ignores the whole directory, so no repo scan ever lists it, and it is
+  // removed the moment the claim answers. A symlink to a directory is
+  // deterministic everywhere: `statSync` follows it into the corpus, and
+  // `readFileSync` throws `EISDIR` for every user, root included.
+  const scratch = path.join(ROOT, ".agentic-workflow", "tmp", `f18-corpus-${process.pid}`);
+  const relScratch = path.relative(ROOT, scratch).split(path.sep).join("/");
+  try {
+    mkdirSync(path.join(scratch, "target"), { recursive: true });
+    writeFileSync(path.join(scratch, "target", "note.txt"), "the symlink target\n");
+    symlinkSync("target", path.join(scratch, "stale.md"));
+    writeFileSync(
+      path.join(scratch, "unit-doc.md"),
+      ["# f18 scratch doc", "", "## Log", "", "- **F1** — 2026-10-28, seeded an unreadable corpus member → deadbeef",
+       `  swept: /NO-SURVIVOR-FORM-F18/ → expected 0 in ${relScratch}/*`, ""].join("\n"),
+    );
+    const result = coherence([path.join(scratch, "unit-doc.md")]);
+    assert.equal(result.verdict, "BLOCKED: sweep-mismatch", result.lines.join("\n"));
+    const sweep = result.claims.find((claim) => claim.kind === "sweep");
+    assert.equal(sweep.outcome, "fail", "an unexamined file is never a zero-match pass");
+    assert.match(sweep.observed, /stale\.md/);
+    assert.match(sweep.observed, /could not be read/);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
   }
 });

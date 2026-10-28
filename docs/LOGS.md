@@ -3522,3 +3522,42 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-docs: applied --fix on main — roadmap status settle (5 folded rows → folded/declined), 7 new rows registered (#269/#284/#294/#307/#315/#318/#319), fix index cleared (#316); fold-findings: folded 76-F25 (PR #328 merged), disputed 36 stale flags, identified 2 replans (55-F4, 69-F36) and 1 blocked (69-F34)
 - **Decisions:** Owner authorized direct --fix on main (override of the one-PR-per-unit rule): no PR for roadmap/fix-index changes; folded F25 with a two-class pin in review-loop-discipline.test.mjs and FOLD_PROCESS.md because the previous table-only pin did not catch emitted-branch mutations; 36 DISPUTED rows flagged as resolved-at-HEAD but stale-in-ledger (squash-merge orphaned the fold commit)
 - **Next:** /triage-issue #315 to investigate the 11 done-units with open ledger rows (audit-docs finding #4); /audit-docs re-run to confirm PASS on the settled state
+
+## 2026-10-28T08:45:17Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 18 (`1a62e2c1…fe08f2af`)
+- **Files:** 46 files (AGENTS.md, CHANGELOG.md, README.md, unit-doc SPEC/decisions/planning/ROADMAP, schema package src+test, scripts/promise-coherence+probe+parity+pins, skills/execute-phase+FOLDING+fold-findings+review-code+pre-execution/LEDGERS, workflow-status, unit-doc fixtures)
+- **Summary:** Closed all 7 execution phases of feature 84 `published-vocabulary-sweep-gate` (issue #315). S1: schema package 4.9.0 publishes 5 canonical vocabularies (FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, LOG_KIND_TOKENS, SWEEP_CLAIM_KINDS, SWEEP_MISMATCH_REASONS), parity test + vocabulary-probe validator. S2: `sweep` claim kind in promise-coherence — a fold's `swept:` declaration re-runs as fence-aware grep, fails closed with `sweep-mismatch`. S3: structural sibling pins (heading-search allowlist, flatten coverage) with fixture corpus; went RED on 4 live F39 siblings, all refactored onto `sectionBounds`. S4: inventory backfill. All 7 phases executed. Root 951/951, schema 721/721, runner 254/254. One root failure the P6 sweep caught: `review-loop-discipline`'s `fold-findings` version pin — re-pointed 1.9.2→1.10.0 exactly as its own comment orders. PR #330 open on main.
+- **Decisions:** (1) A concurrent writer landed commit `ba49d63c` in the workspace between my commits — it contained my skill edits plus extra work (promise-coherence Log-exemption fix + fixture). Verified coherent and green; kept it rather than resetting. (2) The sweep gate's declaring doc must stay IN the corpus — the true F35 shape is a stale copy in a *sibling section of the same doc*. (3) `sectionBounds` never advanced past a scanned line → quadratic on a 50k-char log line (2.2s); the shared reader itself carried the F7 class. (4) `roadmap rowUpsert` has no partial-update mode: always re-emit all 4 cells. (5) Off-vocabulary probe corpus excludes closed units (decision D3) — append-only evidence holds.
+- **Next:** /review-change on the accumulated diff — the mandatory end review on PR #330. After review → /audit-pr → human merge.
+
+## 2026-10-28T08:46:06Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 18 (`1a62e2c1…fe08f2af`)
+- **Files:** 46 files
+- **Summary:** PR #330 pin fix and publish ordering design — reverted
+- **Decisions:** Owner deliberadamente mergeará PR #330 con pin 4.9.0 dejando CI rojo (dependency-pin-gate job): no es un problema pendiente. Publicación en cascada delegada a feature 40 (#180) que ya tiene SPEC definido (PR #235). La cascada única que implementé y fue aceptada fue revertida por completo por petición del owner.
+- **Next:** Mergear PR #330; cuando se trabaje la feature 40 decidir entre cascada única (con re-registro de los tres Trusted Publishers en npmjs.com) o workflows separados con precondición de orden
+
+## 2026-10-28T08:46:22Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 18 (`1a62e2c1…fe08f2af`)
+- **Files:** 46 files
+- **Summary:** Unit 84: published-vocabulary-sweep-gate — fold survivors-sweep from prose to machine bytes (issue #315). Four deliverables: (1) vocabulary probe scans open units and fixtures for non-published Future/Findings tokens; (2) schema package publishes 4.9.0 with canonical consts (FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, LOG_KIND_TOKENS, SWEEP_CLAIM_KINDS, SWEEP_MISMATCH_REASONS); (3) promise-coherence gate adds `sweep` claim kind — folds must declare survivors via `swept: /pattern/<flags> → expected <n> in <glob>`, gate re-runs greps; (4) structural-sibling-pins refactors all fence-blind `## -anchored regex` readers to share `sectionBounds` from `unit-doc-phases.mjs`, fixes quadratic bug in `sectionBounds` itself (F7).
+- **Decisions:** D1 allowlist fenced-quote-only (byte-identical copies cannot hide behind allowlist row); D2 schema consts canonical at `packages/agentic-workflow-schema/src/vocabularies.ts`; D3 corpus = open units + fixtures only (closed units carry recorded debt, must not retroactively fail); F35 fix — declaring doc's Log exemption was leaking to all scanned files, not just the declaring doc itself; F7 quadratic bug in `sectionBounds` fixed by advancing offset past scanned line.
+- **Next:** git push origin feature/84-published-vocabulary-sweep-gate and open PR toward main
+
+## 2026-10-28T09:02:18Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 21 (`1a62e2c1…d3111076`)
+- **Files:** 47 files
+- **Summary:** Unit 84 verification: external verify of fold-survivors-sweep changes against base #330 (e835f158), covering F1-F8/F12 review findings, all suites green
+- **Next:** Review the external-verify verdict; if VERIFIED, proceed to /review-change on this branch
+
+## 2026-10-28T10:53:18Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 29 (`1a62e2c1…295a36f3`)
+- **Files:** 49 files
+- **Summary:** Cycle-2 re-review + fold of PR #330 (unit 84, published-vocabulary-sweep-gate)
+- **Decisions:** Escalated delta to full pass (width/size triggers fired); F14 (single pipe bypass + shell expansion in reader commands) and F17 (in-repo validator args) implemented as lexical, quote-aware bound before execution; F15 (evadable nested-quantifier) extended to cover alternation and chained quantifiers; F16 (stale bun.lock) BLOCKED pre-merge because schema 4.9.0 is unpublished — parity gate forces pin = local 4.9.0, bun install cannot resolve
+- **Next:** /review-change for cycle-3 delta re-review (requires explicit user instruction — two-cycle cap); F16: merge then bun install + fix(deps) to refresh lock, or issue #180 for structural fix
+
+## 2026-10-28T105343Z — feature/84-published-vocabulary-sweep-gate — manual
+- **Commits:** 29 (`1a62e2c1…295a36f3`)
+- **Files:** 49 files
+- **Summary:** Verify AGENTS.md structure, plan and open setup tooling and AGENTS.md split issues (#331, #332) without implementation

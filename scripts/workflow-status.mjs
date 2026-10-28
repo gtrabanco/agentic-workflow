@@ -41,7 +41,7 @@ import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } fr
 // sensor reads `## Log` through `parseLog`, never through its own line grammar
 // (#308 cycle-3 F37/F39: the inline copies had drifted — one unanchored, one
 // fence-blind — while the shared reader was already both).
-import { sectionBounds, parseLog } from "./unit-doc-phases.mjs";
+import { openFence, closesFence, sectionBounds, parseLog } from "./unit-doc-phases.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -613,16 +613,55 @@ function recommendedFor(label, unit) {
 function readPhaseProgress(unitDir) {
   const tasks = readProject(path.join(unitDir, "TASKS.md")) ?? readProject(path.join(unitDir, "SPEC.md"));
   if (!tasks) return null;
-  const phases = [...tasks.matchAll(/^##\s+(P\d+)\s+—/gm)].map((match) => match[1]);
-  if (phases.length === 0) return null;
-  const boxes = [...tasks.matchAll(/^\s*-\s*\[( |x|X)\]/gm)].map((match) => match[1].toLowerCase() === "x");
+  // Fence-aware phase reader (unit 84, issue #315 S3 pin): a fenced block
+  // inside a phase body never truncates it and never counts a checkbox — the
+  // fence-blind level-2 splits this replaces are the F37/F38/F39 class.
+  const lines = tasks.split(/\r?\n/);
+  const fenced = new Array(lines.length).fill(false);
+  const boundaries = [];
+  const phaseStarts = [];
+  let fence = null;
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    const opened = openFence(trimmed);
+    if (fence !== null) {
+      if (closesFence(trimmed, fence)) fence = null;
+      fenced[index] = true;
+      return;
+    }
+    if (opened !== null) {
+      fence = opened;
+      fenced[index] = true;
+      return;
+    }
+    if (/^##\s+/.test(line)) boundaries.push(index);
+    const heading = /^##\s+(P\d+)\s+—/.exec(line);
+    if (heading !== null) phaseStarts.push({ phase: heading[1], index });
+  });
+  if (phaseStarts.length === 0) return null;
+  const boxes = [];
+  lines.forEach((line, index) => {
+    if (fenced[index]) return;
+    const box = /^\s*-\s*\[( |x|X)\]/.exec(line);
+    if (box !== null) boxes.push(box[1].toLowerCase() === "x");
+  });
   const done = boxes.filter(Boolean).length;
-  const sectionOf = (phase) => tasks.split(new RegExp(`^##\\s+${phase}\\s+—`, "m"))[1]?.split(/^##\s+/m)[0] ?? "";
-  const current = phases.find((phase) => /^\s*-\s*\[ \]/m.test(sectionOf(phase))) ?? phases.at(-1);
+  const sectionOf = (phase) => {
+    const start = phaseStarts.find((entry) => entry.phase === phase);
+    if (start === undefined) return "";
+    const next = boundaries.find((index) => index > start.index);
+    const end = next === undefined ? lines.length : next;
+    const body = [];
+    for (let index = start.index + 1; index < end; index += 1) {
+      if (!fenced[index]) body.push(lines[index]);
+    }
+    return body.join("\n");
+  };
+  const current = phaseStarts.map((entry) => entry.phase).find((phase) => /^\s*-\s*\[ \]/m.test(sectionOf(phase))) ?? phaseStarts.at(-1).phase;
   // `tasks_from_boundary`: the unticked boxes left in the current phase — the fact
   // `detail.urgent.interruptibility` publishes as a count, never as `null`.
   const remaining = [...sectionOf(current).matchAll(/^\s*-\s*\[ \]/gm)].length;
-  return { current, total: phases.length, completed: done, remaining };
+  return { current, total: phaseStarts.length, completed: done, remaining };
 }
 
 /**
