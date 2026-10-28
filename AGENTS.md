@@ -412,13 +412,7 @@ hoists.
   file per package, because npm Trusted Publisher records pin the workflow
   filename; a rename would break the npm-side record until re-registered by
   hand).
-- **Changesets: deliberately not adopted** (decided 2026-08-30). The curated
-  changelog tables above are the release-notes surface; changesets
-  would fork them into per-package English-only `CHANGELOG.md` files,
-  require re-binding both packages' npm Trusted Publisher records to a new
-  release workflow, and add a version-PR loop for exactly two independent
-  packages with no cross-dependencies. Revisit when a third package lands or
-  per-package beta/snapshot channels are needed.
+- **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>": patch|minor|major` + a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring the Pi package satisfies the version-parity gate's content half in place of a manual package.json bump; the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 
 ---
 

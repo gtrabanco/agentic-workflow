@@ -67,7 +67,18 @@ on:
     paths:
       - "packages/pi-agentic-workflow/**"
       - ".github/workflows/publish-pi-package.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    # Release channel for this run (feature 40, issue #180): `latest` (the
+    # default — push-triggered runs behave exactly as before), or a prerelease
+    # dist-tag (`canary` / `alpha` / `beta` / `rc`) for a manual promotion.
+    # Only `latest` moves the latest dist-tag; every other channel publishes
+    # under its own tag and never touches latest.
+    inputs:
+      channel:
+        description: "npm dist-tag for this publish (latest | canary | alpha | beta | rc)"
+        type: string
+        required: false
+        default: latest
 
 permissions:
   contents: read
@@ -195,7 +206,7 @@ jobs:
       - name: Publish to npm (Trusted Publishing — no token)
         id: publish
         if: steps.version.outputs.publish == 'true'
-        run: npm publish --access public --provenance
+        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
 
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'

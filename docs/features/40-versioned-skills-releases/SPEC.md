@@ -70,6 +70,13 @@ This repo has two npm packages published today (`@gtrabanco/agentic-workflow-sch
 (tracking `main`). Releases are manual per-package: bump version → commit → push →
 CI detects version change → publishes via OIDC Trusted Publishing. There is:
 
+> **[Drift correction 2026-10-28, cut at plan time — see "Drift corrections" at the
+> end of this document.]** At implementation the three packages are published
+> (schema 4.9.0, pi 0.36.0, agentic-workflow 0.5.0) and the repo is English-only
+> permanent (owner decision 2026-10-27, issue #232): no `CHANGELOG.es.md`, and the
+> guide is `AGENTS.md` (no `CLAUDE.md`). Every EN+ES/CLAUDE.md statement below
+> reads as corrected by that section.
+
 - **No unified version number** across skills + npm packages.
 - **No canary channel** for skills (only `#main`, `#claude`, `#inheritance` refs).
 - **No npm dist-tags** beyond `latest` (no `canary`, `beta`, `rc`, `alpha`).
@@ -130,7 +137,7 @@ changes in the repo.
    `#vX.Y.Z` tags (hard pin), `#main` (canary-equivalent).
 8. **UPDATE ROADMAP** — update the dependencies field of row 40 from
    `30 31 32 37 38` to `—` (the stale coupling removed in this design).
-9. **UPDATE CLAUDE.md** — update the "Changesets: deliberately not adopted"
+9. **UPDATE AGENTS.md** *(was CLAUDE.md — renamed; drift correction 2026-10-28)* — update the "Changesets: deliberately not adopted"
    decision note (2026-08-30) with the reopening rationale (third package now
    exists, beta channels now needed — both triggers fired by this design).
 
@@ -147,9 +154,10 @@ changes in the repo.
   adds `--tag` for dist-tag. No Trusted Publisher re-binding needed.
 - **No skills.sh registry changes** — skills.sh has no version registry
   (it's install-derived only). Channels via git refs only.
-- **No automatic release notes generation** — changelog tables in
-  `CHANGELOG.md`/`CHANGELOG.es.md` stay as the release-notes surface (bilingual,
-  curated). Changeset PR bodies become GitHub Release notes (English-only).
+- **No automatic release notes generation** — the curated `CHANGELOG.md`
+  tables stay as the release-notes surface *(English-only since 2026-09-15 —
+  `CHANGELOG.es.md` no longer exists; drift correction 2026-10-28)*.
+  Changeset PR bodies become GitHub Release notes (English-only).
 - **No changes to the existing publish gate** — "version ≠ registry" still
   applies; `--version OVERRIDE` can create an artificial version bump, but the
   publish gate still checks.
@@ -295,9 +303,11 @@ Objective, verifiable conditions for "done".
 - **AC-13** (`rollback via stable`): If a stable release is broken, the
   `stable` branch can be fast-forwarded back to a previous good commit.
   Verified: `git push --force origin stable@{upstream}` → next `npx skills add ...@#stable` resolves to old version.
-- **AC-14** (`changelog sync`): Stable release updates CHANGELOG EN+ES in
-  same commit (same version row, both present).
-  Verified: `git log --oneline` → last commit touches both `CHANGELOG.md` and `CHANGELOG.es.md` with matching version row.
+- **AC-14** (`changelog sync`): Stable release updates the CHANGELOG companion
+  rows in the same run *(English-only — the EN+ES pairing is retired;
+  drift correction 2026-10-28).*
+  Verified: `grep -c "| <train-version> | <date> |" CHANGELOG.md` matches 3 (one
+  row per package table, written by `scripts/release.mjs apply`).
 - **AC-15** (`contributor list`): GitHub Release includes a "Contributors"
   section with names from PR authors (not commits).
   Verified: `gh release view X.Y.Z --json body` → `body` contains contributor names.
@@ -409,6 +419,35 @@ boxes all tick. Awaiting independent review by `review-spec`.
 - `### Post-merge next feature`
 
 ---
+
+## Drift corrections (2026-10-28, cut at plan time per S7)
+
+The Product half was designed 2026-09-16. These repository facts changed under
+it; each correction is named once here and every stale statement above reads
+as corrected:
+
+1. **English-only permanent** (owner decision 2026-10-27, issue #232): no
+   `.es.md` siblings exist. `CHANGELOG.es.md` is gone — every "EN+ES", "both
+   EN and ES" or "bilingual" statement about the changelog tables reads as
+   "the single English `CHANGELOG.md`". GitHub Release notes stay English-only
+   (unchanged).
+2. **The guide is `AGENTS.md`** — `CLAUDE.md` no longer exists (renamed). The
+   "UPDATE CLAUDE.md" in-scope bullet reads "UPDATE AGENTS.md" and shipped in
+   this unit (the changesets note is amended, not retired).
+3. **Package facts**: all three npm packages are published today (schema
+   4.9.0, pi 0.36.0, agentic-workflow 0.5.0) and there are **three** publish
+   workflows (`publish-schema.yml`, `publish-pi-package.yml`,
+   `publish-agentic-workflow.yml`). The version-parity gate (feature 75,
+   issue #292) now enforces the manual bump rule in CI — the changeset route
+   extends it (a valid intent file declaring the Pi package satisfies the
+   content half).
+4. **ROADMAP row 40's dependency cell is already `—`** (corrected in PR #235);
+   verifying it is all that remains of the in-scope bullet 8.
+5. **`scripts/release.mjs` is not an npm publisher** — it plans the release
+   and prints the exact commands (tag, push, `gh release create`, per-package
+   `npm publish --tag`); the existing publish workflows execute the npm side,
+   keeping the Trusted Publisher records (bound to the workflow filenames)
+   untouched.
 
 ## Frozen request (verbatim)
 
