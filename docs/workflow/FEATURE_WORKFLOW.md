@@ -112,11 +112,15 @@ skipped by triage.
 
 Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 
-1. **In the PR** — add a changeset intent file `.changeset/<name>.md`
-   (YAML frontmatter mapping `"@gtrabanco/<package>"` or `"<skill-name>"`:
-   patch|minor|major + a release-note body; add as many files as the change
-   needs — the highest severity wins the train and every change lands in the
-   changelog at cut time). `scripts/lint-changeset.mjs`
+1. **In the PR** — create the changeset intent file by running
+   `node scripts/changeset-create.mjs` (it derives the affected packages and
+   skills from the modified files, the semver from the conventional commit
+   title, and the file name PR-first). One file per PR, as many entries as
+   the change needs — the highest severity wins the train and each change
+   lands in the changelog's right section at cut time. `scripts/lint-changeset.mjs`
+   lints intent files in CI; a valid intent file declaring a package
+   satisfies the version-parity gate's content half in place of a manual
+   package.json bump. `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
    package.json bump. The `skill-lint` helper lints the authoring rules

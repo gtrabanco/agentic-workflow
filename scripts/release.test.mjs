@@ -155,15 +155,23 @@ test("apply writes one companion changelog row per package (AC-14, English-only)
   }
 });
 
-test("the changelog row summary is built from the changeset bodies (the changeset IS the release note)", () => {
+test("the changelog row summary is built from the changeset bodies, attributed per package (D-40-16)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
   const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
-  const section = changelog.slice(changelog.indexOf(`#### [\`${PACKAGES[0]}\`]`));
-  assert.match(section, /Change number 1 body line\. · Change number 2 body line\./,
-    "the row summary must carry the changeset bodies, not a generic line");
-  assert.doesNotMatch(section, /Release 1\.0\.1/);
+  const tableOf = (name) => {
+    const start = changelog.indexOf(`#### [\`${name}\`]`);
+    return changelog.slice(start, changelog.indexOf("\n#### ", start));
+  };
+  const piSection = tableOf(PACKAGES[0]);
+  const schemaSection = tableOf(PACKAGES[1]);
+  assert.match(piSection, /Change number 1 body line\./,
+    "the pi row carries the changeset that declares pi, not a generic line");
+  assert.doesNotMatch(piSection, /Change number 2 body line\./);
+  assert.match(schemaSection, /Change number 2 body line\./);
+  assert.doesNotMatch(schemaSection, /Change number 1 body line\./);
+  assert.doesNotMatch(piSection, /Release 1\.0\.1/);
 });
 
 // --summary still wins when the operator names one explicitly.
@@ -518,4 +526,28 @@ test("the .changeset directory survives a cut that consumes every intent file", 
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(fs.existsSync(path.join(root, ".changeset", ".gitkeep")), true, ".gitkeep keeps the empty dir alive");
   assert.equal(fs.existsSync(path.join(root, ".changeset", "a.md")), false);
+});
+
+// D-40-16: a changeset declaring several packages routes each body to its own
+// section; skill-declaring changesets ride the skills-content package's row;
+// a train-bumped package with nothing declared says so — never a mis-attributed
+// or empty section.
+test("each change lands in its own package's section, skills ride pi, undeclared packages say so", () => {
+  const root = fixture({ changesets: {} });
+  fs.writeFileSync(path.join(root, ".changeset", "schema.md"),
+    '---\n"@gtrabanco/agentic-workflow-schema": minor\n---\n\nSchema-only body.\n');
+  fs.writeFileSync(path.join(root, ".changeset", "lane.md"),
+    '---\n"@gtrabanco/pi-agentic-workflow": patch\n"unit-lane": patch\n---\n\nLane body.\n');
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+  const sectionOf = (name) => changelog.slice(changelog.indexOf(`#### [\`${name}\`]`));
+  const schemaRow = sectionOf("@gtrabanco/agentic-workflow-schema").split("\n").find((l) => l.startsWith("| 1.1.0 |"));
+  const piRow = sectionOf("@gtrabanco/pi-agentic-workflow").split("\n").find((l) => l.startsWith("| 1.1.0 |"));
+  const crateRow = sectionOf("@gtrabanco/agentic-workflow").split("\n").find((l) => l.startsWith("| 1.1.0 |"));
+  assert.match(schemaRow, /Schema-only body\./);
+  assert.doesNotMatch(schemaRow, /Lane body\./, "the schema section does not carry pi's change");
+  assert.match(piRow, /Lane body\. \(skills: unit-lane\)/);
+  assert.doesNotMatch(piRow, /Schema-only body\./, "the pi section does not carry schema's change");
+  assert.match(crateRow, /Unified train bump/, "a package with nothing declared says so explicitly");
 });

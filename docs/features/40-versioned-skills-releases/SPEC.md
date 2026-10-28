@@ -473,6 +473,8 @@ created | scripts/lint-changeset.test.mjs | the RED corpus frozen at plan cut (O
 created | scripts/release-workflows.test.mjs | the workflow-contract corpus frozen at plan cut; every fold extends, never weakens
 created | skills/bump-skill/scripts/bump-skill.mjs | the skill's bundled writer (D-40-8) — its release-history writes are owned by the skill's prose contract, not by the ledger-ownership map
 created | .github/workflows/publish.yml | the single release entry point (D-40-13) — the npm Trusted Publisher filename binding
+created | scripts/changeset-create.mjs | the intent-file creator (D-40-16) — writes only .changeset/ intent files, ephemeral inputs consumed at cut, never a ledger
+created | scripts/changeset-create.test.mjs | the creator's corpus (D-40-16); every fold extends, never weakens
 ```
 
 ## Frozen request (verbatim)
