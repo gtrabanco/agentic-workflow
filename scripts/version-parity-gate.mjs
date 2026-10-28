@@ -14,7 +14,7 @@
  *               This is the #164 option-4 gate, extended with the trigger set
  *               #164 missed: root skills/ is the package's content source but
  *               lives outside the package tree, so a skills-only merge bumps
- *               nothing, publish-pi-package.yml never triggers, and npm ships
+ *               nothing, the old per-package publish workflows never triggered, and npm ships
  *               stale skills (live 2026-10-15: registry 0.19.1's bundle 5 files
  *               behind main's skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
