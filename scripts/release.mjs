@@ -394,8 +394,14 @@ function main() {
   if (args.channel === "latest") {
     // The changelog row summary IS the release note: the accumulated changeset
     // bodies (first line each, file order), unless the operator names one.
+    // Each change lands in the right section: the package's companion row
+    // carries every accumulated body, and a skill-declaring changeset names
+    // its skills from the frontmatter entries (D-40-15), never from prose.
     const summary = args.summary ?? (changesets.length > 0
-      ? changesets.map((c) => c.body[0]).join(" · ")
+      ? changesets.map((c) => {
+          const skills = c.entries.filter((e) => e.kind === "skill").map((e) => e.pkg);
+          return skills.length ? `${c.body[0]} (skills: ${skills.join(", ")})` : c.body[0];
+        }).join(" · ")
       : `Release ${version}`);
     console.log(`train version: ${version} (highest bump: ${level ?? "n/a — forced"}); unified train: all packages carry it`);
     for (const pkg of packages) {

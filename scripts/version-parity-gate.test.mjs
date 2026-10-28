@@ -545,3 +545,23 @@ test("pins: a dependency with no local sibling keeps the registry-only rule", ()
   assert.equal(r.violations.length, 1);
   assert.match(r.violations[0].message, /registry published 1\.1\.0/);
 });
+
+// D-40-15: skills are the Pi package's shipped content — a changeset
+// declaring a SKILL satisfies the Pi package's content half (and nothing else's).
+test("content-all: a skill-declaring changeset satisfies the Pi package, not its siblings", () => {
+  const intent = [{ file: ".changeset/skill.md", ok: true, entries: [{ pkg: "unit-lane", level: "patch", kind: "skill" }], error: null }];
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["skills/unit-lane/SKILL.md", ".changeset/skill.md"],
+    changesetIntent: intent,
+  });
+  assert.equal(r.ok, true, JSON.stringify(r.results.map((x) => [x.packageName, x.code])));
+  assert.equal(failing(r, PKG).code, "changeset-intent");
+  assert.equal(failing(r, SCHEMA).code, "no-triggered-change");
+  const schemaOnly = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["packages/agentic-workflow-schema/src/index.ts", ".changeset/skill.md"],
+    changesetIntent: intent,
+  });
+  assert.equal(schemaOnly.ok, false, "a skill entry does not cover a schema-only change");
+});
