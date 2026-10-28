@@ -5,8 +5,14 @@
  * This module owns the shared grammar that both `phase-lint.mjs` (the linter)
  * and `scripts/unit-route.mjs` (the router) need.  Keeping it separate prevents
  * the 1 000+ line linter from being pulled into every router invocation
- * (issue #291 / unit 73 F3).
+ * (issue #291 / unit 73 F3). It also owns the one in-flight unit-doc corpus
+ * rule (cycle-2 review F20): the roadmap + fix-index row grammar and the
+ * dated-progress filter that `promise-coherence` and `vocabulary-probe` used
+ * to keep as byte-similar copies that could silently disagree.
  */
+
+import fs from "node:fs";
+import path from "node:path";
 
 /** A fence the line opens, or null: three-or-more backticks/tildes. */
 export const FENCE_OPEN = /^(`{3,}|~{3,})/;
@@ -361,4 +367,58 @@ export function sectionBounds(text, name) {
     offset = lineEnd;
   }
   return start === null ? null : [start, text.length];
+}
+
+/* ------------------------------------------------------- in-flight corpus */
+
+/** A roadmap row: `| NN | `slug` | status |`. */
+const ROADMAP_ROW = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/;
+/** A fix-index row: `| [#N](url) | slug | status |`. */
+const FIX_ROW = /^\|\s*\[#(\d+)\]\([^)]*\)\s*\|\s*([a-z0-9-]+)\s*\|\s*`?([a-z-]+)`?/;
+/** The dated progress entry that makes a plan a unit in flight. */
+const IN_FLIGHT_PROGRESS = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
+
+function readLinesUnder(root, relative) {
+  try {
+    return fs.readFileSync(path.join(root, relative), "utf8").split(/\r?\n/);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The unit docs the roadmap and the fix index still call in flight, read
+ * once: `{ file, lines }` pairs, `file` repository-relative. A plan that was
+ * never started is a plan, not a promise — a dated progress entry makes it
+ * live. The one owner of this rule (cycle-2 review F20): both gates consume
+ * it, so the corpus they examine cannot drift apart in silence.
+ */
+export function inFlightUnitDocs(root) {
+  const out = [];
+  const roadmap = readLinesUnder(root, "docs/features/ROADMAP.md");
+  if (roadmap !== null) {
+    for (const line of roadmap) {
+      const row = ROADMAP_ROW.exec(line);
+      if (row === null) continue;
+      if (/done|discarded|superseded/i.test(row[3])) continue;
+      out.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
+    }
+  }
+  const fixes = readLinesUnder(root, "docs/fix/README.md");
+  if (fixes !== null) {
+    for (const line of fixes) {
+      const row = FIX_ROW.exec(line);
+      if (row === null) continue;
+      if (/done/i.test(row[3])) continue;
+      out.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);
+    }
+  }
+  // In flight = the Progress log carries a dated entry (the same rule both
+  // consumers stated before it was unified here).
+  const docs = [];
+  for (const file of out) {
+    const lines = readLinesUnder(root, file);
+    if (lines !== null && IN_FLIGHT_PROGRESS.test(lines.join("\n"))) docs.push({ file, lines });
+  }
+  return docs;
 }

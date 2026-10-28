@@ -31,12 +31,11 @@
  * Read-only, no dependencies beyond the built schema runtime.
  */
 
-import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { schemaRuntimePath } from "./schema-runtime.mjs";
-import { sectionBounds, openFence, closesFence } from "./unit-doc-phases.mjs";
+import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "./unit-doc-phases.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -44,9 +43,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const { FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, PRE_EXECUTION_FINDING_CLASSES } = await import(
   schemaRuntimePath
 );
-
-/** The dated progress entry that makes a plan a unit in flight. */
-const IN_FLIGHT = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
 
 /** A `## Future` bullet: `- `status` — …`. */
 const FUTURE_BULLET = /^\s*[-*+]\s+(.*)$/;
@@ -142,48 +138,16 @@ function documentViolations(doc) {
   return violations;
 }
 
-/** The unit docs the roadmap and the fix index still call in flight, read once:
- *  `{ file, lines }` pairs the probe consumes directly (review F5 — the corpus
- *  was read twice per run, once to filter and once to scan).
- *  Exported so the suite can assert the corpus rule itself, not only the
+/** The unit docs the roadmap and the fix index still call in flight, as
+ *  `{ file, lines }` pairs read once (review F5). The rule itself belongs to
+ *  the shared reader — `inFlightUnitDocs` in `scripts/unit-doc-phases.mjs` is
+ *  the one owner (cycle-2 review F20: two gates kept byte-similar copies here
+ *  and could silently disagree about which docs are live). This stays
+ *  exported so the suite can assert the corpus rule itself, not only the
  *  violations it finds: a settled head legitimately scans nothing, and that
  *  must not be confused with a corpus rule that stopped matching. */
 export function inFlightDocs(root) {
-  const out = [];
-  const roadmap = readLines(root, "docs/features/ROADMAP.md");
-  if (roadmap !== null) {
-    for (const line of roadmap) {
-      const row = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/.exec(line);
-      if (row === null) continue;
-      if (/done|discarded|superseded/i.test(row[3])) continue;
-      out.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
-    }
-  }
-  const fixes = readLines(root, "docs/fix/README.md");
-  if (fixes !== null) {
-    for (const line of fixes) {
-      const row = /^\|\s*\[#(\d+)\]\([^)]*\)\s*\|\s*([a-z0-9-]+)\s*\|\s*`?([a-z-]+)`?/.exec(line);
-      if (row === null) continue;
-      if (/done/i.test(row[3])) continue;
-      out.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);
-    }
-  }
-  // A plan that was never started is a plan, not a promise (the same rule the
-  // promise-coherence gate applies): a dated progress entry makes it live.
-  const docs = [];
-  for (const file of out) {
-    const lines = readLines(root, file);
-    if (lines !== null && IN_FLIGHT.test(lines.join("\n"))) docs.push({ file, lines });
-  }
-  return docs;
-}
-
-function readLines(root, relative) {
-  try {
-    return fs.readFileSync(path.join(root, relative), "utf8").split(/\r?\n/);
-  } catch {
-    return null;
-  }
+  return inFlightUnitDocs(root);
 }
 
 /**

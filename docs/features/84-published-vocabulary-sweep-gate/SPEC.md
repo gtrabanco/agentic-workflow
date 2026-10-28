@@ -126,7 +126,6 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
 | F16 | packages/pi-agentic-workflow/bun.lock | workflow | med | source | fold |
-| F20 | scripts/vocabulary-probe.mjs:151 | code | med | source | fold |
 
 ## Triaged steps
 

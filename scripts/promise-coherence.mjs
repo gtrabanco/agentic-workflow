@@ -100,7 +100,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseUnitDocPhases, sectionBounds } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, sectionBounds, inFlightUnitDocs as sharedInFlightUnitDocs } from "./unit-doc-phases.mjs";
 import { PREREQUISITES } from "./needs-input.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -1287,34 +1287,12 @@ function turnContractClaims(doc, claims) {
 
 /* ------------------------------------------------------------ default set */
 
-/** Unit folder → the doc, for the units the indexes still call in-flight. */
+/** Unit folder → the doc path, for the units the indexes still call in-flight.
+ *  The rule itself belongs to the shared reader — one owner for the corpus
+ *  both gates examine (cycle-2 review F20: two byte-similar copies could
+ *  silently disagree about which docs are live). */
 function inFlightUnitDocs() {
-  const out = [];
-  const roadmap = documentOf("docs/features/ROADMAP.md");
-  if (roadmap !== null) {
-    for (const line of roadmap.lines) {
-      const row = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/.exec(line);
-      if (row === null) continue;
-      if (/done|discarded|superseded/i.test(row[3])) continue;
-      out.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
-    }
-  }
-  const fixes = documentOf("docs/fix/README.md");
-  if (fixes !== null) {
-    for (const line of fixes.lines) {
-      const row = /^\|\s*\[#(\d+)\]\([^)]*\)\s*\|\s*([a-z0-9-]+)\s*\|\s*`?([a-z-]+)`?/.exec(line);
-      if (row === null) continue;
-      if (/done/i.test(row[3])) continue;
-      out.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);
-    }
-  }
-  // A plan that was never started is a plan, not a promise: its path list may
-  // name a tree the unit has not created yet. In flight = the Progress log
-  // carries a dated entry.
-  return out.filter((file) => {
-    const doc = documentOf(file);
-    return doc !== null && /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /.test(doc.text);
-  });
+  return sharedInFlightUnitDocs(ROOT).map((doc) => doc.file);
 }
 
 /** Every skill whose Turn contract carries a fenced box. */
