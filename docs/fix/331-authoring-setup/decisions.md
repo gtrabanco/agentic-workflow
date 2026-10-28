@@ -1,0 +1,16 @@
+# Decisions — fix/331-authoring-setup
+
+Append-only decision ledger for the unit. The issue's open questions are
+resolved as `D1`/`D2` in the unit doc's `## Log` (with their evidence rows in
+`planning-evidence.md`); this file carries the ledger rows the machine gates
+read.
+
+## Justifications
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/setup-env.test.mjs | P2 | 2026-10-28 | execute-phase | S2/S6/S7's owning suite: one RED test per requested rule plus the AC3 .engram byte-identity guard — the tests are new files, authored before the implementation they pin
+justification | scripts/update-tools.test.mjs | P4 | 2026-10-28 | execute-phase | S3's owning suite: pin-watch reuse-by-identity, dry-run no-spawn, and the exact upgrade commands; authored RED before scripts/update-tools.mjs exists, with two wrong first-draft expectations (degraded:false vs undefined, DRIFT case) corrected before first green — no gate test weakened
+justification | scripts/update-tools.mjs | P4 | 2026-10-28 | execute-phase | S3's implementation: a new script reusing pin-watch exports by identity; touches no existing command's code path
+```
