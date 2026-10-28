@@ -457,6 +457,25 @@ as corrected:
    keeping the Trusted Publisher records (bound to the workflow filenames)
    untouched.
 
+The unit has been maintaining `path-protection-records@1` escape rows since P2
+but never declared its plan, so the path-guard fails closed on this unit with
+`malformed-declaration` (a records block without a plan declaration). Declared
+now — the created durable surfaces, frozen:
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | scripts/release.mjs | the deterministic release train — its write surfaces (package versions, companion rows, pins, changeset consumption) are release history
+created | scripts/lint-changeset.mjs | the intent-file gate — the fail-closed structure owner shared with the parity gate
+created | scripts/release.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
+created | scripts/lint-changeset.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
+created | scripts/release-workflows.test.mjs | the workflow-contract corpus frozen at plan cut; every fold extends, never weakens
+created | scripts/bump-skill.test.mjs | the bump-writer RED corpus frozen at plan cut; every fold extends, never weakens
+created | skills/bump-skill/scripts/bump-skill.mjs | the skill's bundled writer (D-40-8) — its release-history writes are owned by the skill's prose contract, not by the ledger-ownership map
+created | .github/workflows/publish.yml | the single release entry point (D-40-13) — the npm Trusted Publisher filename binding
+```
+
 ## Frozen request (verbatim)
 
 The requester's words, quoted verbatim from issue #180 and the owner's scope
