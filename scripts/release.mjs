@@ -64,7 +64,7 @@ function parseArgs(argv) {
   const args = { mode: "plan", channel: "latest", version: null, base: null, date: null, summary: null, root: DEFAULT_ROOT };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "plan" || a === "apply" || a === "release-notes") args.mode = a;
+    if (a === "plan" || a === "apply" || a === "release-notes" || a === "publish-plan") args.mode = a;
     else if (a === "--channel") args.channel = argv[++i];
     else if (a === "--version") args.version = argv[++i];
     else if (a === "--base") args.base = argv[++i];
@@ -236,6 +236,9 @@ function main() {
   if (!CHANNELS.includes(args.channel)) {
     fail(`--channel must be one of ${CHANNELS.join(", ")}`);
   }
+  if (args.mode === "publish-plan" && args.channel === "latest") {
+    fail("publish-plan is for prerelease channels — channel latest cuts the train with apply");
+  }
   const root = args.root;
   const date = args.date ?? new Date().toISOString().slice(0, 10);
   const stamp = date.replaceAll("-", "");
@@ -292,26 +295,29 @@ function main() {
   if (!SEMVER_RE.test(base)) fail(`base must be a stable X.Y.Z version, got: ${base}`);
 
   let version;
-  let level = highestLevel(changesets);
-  if (forced) {
-    if (!SEMVER_RE.test(args.version)) fail(`--version must be a stable X.Y.Z version, got: ${args.version}`);
-    version = args.version;
-    if (gitRepo && stableTags(root).includes(`v${version}`)) {
-      fail(`version ${version} collides with the existing tag v${version} — versions are immutable`);
+  const level = highestLevel(changesets);
+  if (args.channel === "latest") {
+    if (forced) {
+      if (!SEMVER_RE.test(args.version)) fail(`--version must be a stable X.Y.Z version, got: ${args.version}`);
+      version = args.version;
+      if (gitRepo && stableTags(root).includes(`v${version}`)) {
+        fail(`version ${version} collides with the existing tag v${version} — versions are immutable`);
+      }
+    } else {
+      if (changesets.length === 0) {
+        fail(`no changeset intent in ${path.join(root, ".changeset")} and no --version override — no release intent`);
+      }
+      version = bumpVersion(base, level);
     }
-  } else {
-    if (changesets.length === 0) {
-      fail(`no changeset intent in ${path.join(root, ".changeset")} and no --version override — no release intent`);
-    }
-    version = bumpVersion(base, level);
   }
 
-  console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${base}${baseNote}, date: ${date}`);
+  const human = args.mode !== "publish-plan"; // machine modes print TSV only
+  if (human) console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${base}${baseNote}, date: ${date}`);
   if (forced) console.log(`Version forced by operator: ${version}`);
 
   // Per-channel version + commands.
   const notesBodies = changesets.map((c) => c.body.join("\n"));
-  if (changesets.length > 0) {
+  if (changesets.length > 0 && human) {
     console.log(`changesets (${changesets.length}):`);
     for (const c of changesets) {
       for (const e of c.entries) {
@@ -353,8 +359,16 @@ function main() {
     // canary / alpha / beta / rc — prerelease of the base, never touching latest.
     const n = gitRepo ? channelTagCounter(root, base, stamp, args.channel) + 1 : 1;
     const prerelease = `${base}-${args.channel}.${args.channel === "canary" ? `${stamp}.${n}` : n}`;
-    console.log(`version: ${prerelease}`);
     const listed = packages.filter((p) => declared.has(p.name));
+    // Machine-readable plan for the publish workflow's channel job: one TSV
+    // line per declared package (name, dir, version, dist-tag).
+    if (args.mode === "publish-plan") {
+      for (const pkg of listed) {
+        console.log(`${pkg.name}\t${pkg.dirName}\t${prerelease}\t${args.channel}`);
+      }
+      process.exit(0);
+    }
+    console.log(`version: ${prerelease}`);
     for (const pkg of listed) {
       console.log(`${pkg.name}: ${pkg.version} → ${prerelease} (packages/${pkg.dirName}/)`);
     }

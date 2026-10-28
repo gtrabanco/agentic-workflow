@@ -1,41 +1,42 @@
 name: Publish packages
 
-# Publishes the three npm packages — @gtrabanco/agentic-workflow-schema,
-# @gtrabanco/agentic-workflow (the runner crate) and
-# @gtrabanco/pi-agentic-workflow — in ONE workflow with the dependency order
-# as `needs:` (feature 40, issue #180; D-40-12 consolidated the former
-# one-file-per-package trio):
+# THE single release entry point (feature 40, issue #180; D-40-13). One
+# workflow, three things it can do, always via scripts/release.mjs running in
+# CI — nothing about a release is done by hand:
 #
-#   schema ─┐
-#   crate  ─┴─▶ pi (its exact pins on the crate + schema must already be on
-#                the registry when its gate installs)
+#   Launch with mode: suggest  → READ-ONLY. Runs `release.mjs plan` for the
+#       stable train AND the canary, plus every changeset with its semver
+#       annotation and body, into the run summary. Publishes nothing.
+#   Launch with mode: cut + channel: latest → applies the unified train
+#       (all package versions + the exact local pins + CHANGELOG rows built
+#       from the changeset bodies), refreshes the lockfiles, adds exactly ONE
+#       release commit, pushes it, tags vX.Y.Z, fast-forwards `stable` and
+#       opens the GitHub Release. `version` forces the train (D-40-4; the
+#       notes are marked "Version forced by operator"). The push fires the
+#       publish jobs of a second run of this same workflow.
+#   Launch with mode: cut + channel: canary | alpha | beta | rc → publishes
+#       ONLY the packages declared in the accumulated changesets, at that
+#       channel's version (`<base>-canary.<date>.<n>` for canary — floats
+#       above the last stable until the next stable cuts), under that
+#       dist-tag. The repo is untouched (temp version per package, restored
+#       after); the cut is recorded as a git tag. Canaries are grouped by you
+#       — changesets accumulate until you decide to cut.
 #
-# Each publish job is independently idempotent: the version gate skips an
-# already-published exact version, so a chain walk (or a re-run) is a safe
-# no-op for packages whose version did not move.
+#   A push to main touching a package tree (the train's release commit, or a
+#   direct bump) publishes the committed versions as `latest` through the
+#   publish jobs below — in dependency order, each idempotent: the exact-
+#   version gate skips what the registry already has.
 #
-# Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
-# exchanges the job's GitHub OIDC token (id-token: write) for a short-lived
-# publish token at publish time, scoped to exactly this repo + workflow file.
+# npm publishing happens ONLY in this workflow's publish/cut-prerelease jobs:
+# the npm Trusted Publisher records for the three packages are bound to this
+# filename (re-registered 2026-10-28 from the retired publish-schema.yml /
+# publish-agentic-workflow.yml / publish-pi-package.yml — see D-40-12). If a
+# publish fails with E403/OIDC, verify npmjs.com → package → Settings →
+# Trusted Publisher → Workflow filename: publish.yml.
 #
-# ⚠ ONE-TIME MIGRATION (D-40-12 — owner-approved consolidation, 2026-10-28):
-# the npm-side Trusted Publisher records previously bound
-# publish-schema.yml / publish-agentic-workflow.yml / publish-pi-package.yml.
-# Until each package's record names THIS file, its publish fails with
-# E403/OIDC. Re-register on npmjs.com → package → Settings → Trusted
-# Publisher → GitHub Actions → Organization or user: gtrabanco → Repository:
-# agentic-workflow → Workflow filename: publish.yml → (Environment blank) →
-# Add. Do it for all three packages; then the old records can be deleted.
-#
-# Troubleshooting — "npm error 403 … OIDC permission denied for this action":
-# the record is missing or a field doesn't match (diagnose: gh run view
-# --log-failed <run-id>; verify the record as above).
-#
-# Release channel: the `channel` dispatch input (`latest` default — push runs
-# behave exactly as before) or a prerelease dist-tag (`canary` / `alpha` /
-# `beta` / `rc`); only `latest` moves the latest dist-tag. Bun installs deps
-# and runs the gates (bun.lock is the sole lockfile); npm does the publish
-# step (Trusted Publishing + --provenance are npm-CLI-specific).
+# Dependency order: pi-agentic-workflow pins the runner crate and the schema
+# exactly, so its install must run after both are on the registry —
+# `needs:` chains schema-publish / crate-publish → pi-publish.
 
 on:
   push:
@@ -47,14 +48,27 @@ on:
       - ".github/workflows/publish.yml"
   workflow_dispatch:
     inputs:
+      mode:
+        description: "suggest = read-only preview; cut = release now"
+        type: choice
+        required: true
+        default: suggest
+        options:
+          - suggest
+          - cut
       channel:
-        description: "npm dist-tag for this publish (latest | canary | alpha | beta | rc)"
+        description: "cut: latest applies the train; canary/alpha/beta/rc publishes that dist-tag for the declared packages"
         type: string
         required: false
         default: latest
+      version:
+        description: "cut + latest only: force this exact train version (X.Y.Z, optional)"
+        type: string
+        required: false
+        default: ""
 
 permissions:
-  contents: read
+  contents: write # the release commit, the tags, the stable branch, the release
   id-token: write # required for npm Trusted Publishing + --provenance
 
 concurrency:
@@ -62,11 +76,188 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # ---------------------------------------------------------------- schema --
-  # The fallback guarantee (#197): the package must pass under plain node when
-  # bun is absent. Publish jobs run the bun-first gate; node-compat jobs run
-  # the same suite through the test:node variant on the setup-node toolchain.
+  # ─────────────────────────────────────────────────────────── suggest ────
+  suggest:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'suggest'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history — the base is the last stable v-tag)
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Stable suggestion (the train version from the accumulated changesets)
+        env:
+          FORCE_VERSION: ${{ inputs.version }}
+        run: |
+          ARGS=""
+          if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
+          node scripts/release.mjs plan $ARGS | tee plan-stable.txt
+
+      - name: Canary suggestion (floats above the last stable)
+        run: node scripts/release.mjs plan --channel canary --date "$(date +%F)" | tee plan-canary.txt
+
+      - name: Run summary
+        if: always()
+        run: |
+          {
+            echo "## Release plan"
+            echo ""
+            echo "Cut with **mode: cut** — \`channel: latest\` applies the train (one commit +"
+            echo "tag + stable + release, then the packages publish); \`channel: canary\` publishes the"
+            echo "declared packages under the canary dist-tag without touching the repo."
+            echo ""
+            echo "### Stable (latest) suggestion"
+            echo ""
+            echo '```'
+            cat plan-stable.txt 2>/dev/null || echo "(plan failed — see the log; usually no changesets and no forced version)"
+            echo '```'
+            echo ""
+            echo "### Canary suggestion"
+            echo ""
+            echo '```'
+            cat plan-canary.txt 2>/dev/null || echo "(plan failed — see the log)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ─────────────────────────────────────── cut + latest (the train) ────────
+  cut:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel == 'latest'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history — the base is the last stable v-tag)
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+      - name: Setup Bun (lockfiles are bun.lock — kept in lockstep with CI)
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+
+      - name: Apply the train (versions + pins + changelog rows)
+        env:
+          FORCE_VERSION: ${{ inputs.version }}
+        run: |
+          ARGS=""
+          if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
+          node scripts/release.mjs apply $ARGS
+
+      - name: Refresh lockfiles (the pins moved with the train)
+        run: |
+          for d in packages/*/; do
+            if [ -f "$d/bun.lock" ]; then
+              echo "::group::bun install $d"
+              (cd "$d" && bun install)
+              echo "::endgroup::"
+            fi
+          done
+
+      - name: Commit the release
+        run: |
+          if git diff --quiet; then
+            echo "::error::nothing to commit — the train at HEAD already carries this release (already applied? no changesets?)"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(release): cut the version train"
+          echo "VERSION=$(node -p "require('./packages/agentic-workflow-schema/package.json').version")" >> "$GITHUB_ENV"
+
+      - name: Push the release commit (fires the publish jobs on a second run)
+        run: git push
+
+      - name: Tag, fast-forward stable, open the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/release.mjs release-notes > release-notes.txt
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          git push origin "HEAD:refs/heads/stable"
+          gh release create "v$VERSION" --generate-notes --title "v$VERSION" --notes-file release-notes.txt
+
+  # ───────────────────────────── cut + canary/alpha/beta/rc ────────────────
+  cut-prerelease:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel != 'latest'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history — the canary counter counts the channel tags)
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+
+      - name: Resolve the declared packages and their channel version
+        env:
+          CHANNEL: ${{ inputs.channel }}
+        run: node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$(date +%F)" | tee publish-plan.tsv
+
+      # Per declared package: temp-write the channel version, run the exact-
+      # version gate (a canary already on the registry skips), publish under
+      # the channel dist-tag, restore the repo — the commit state never moves.
+      - name: Publish the channel
+        env:
+          CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r name dir version tag; do
+            [ -n "$name" ] || continue
+            echo "::group::$name@$version ($tag)"
+            (
+              cd "packages/$dir"
+              npm version "$version" --no-git-tag-version --allow-same-version >/dev/null
+              if node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" | grep -q "^publish=true"; then
+                npm publish --access public --provenance --tag "$tag"
+                echo "published $name@$version ($tag)"
+              else
+                echo "skip: $name@$version is already on the registry"
+              fi
+              git checkout -- package.json
+            )
+            echo "::endgroup::"
+          done < publish-plan.tsv
+
+      # The cut is recorded as a git tag — that tag IS the canary counter's
+      # input (v<base>-canary.<date>.*), so the next cut increments. Prerelease
+      # tags never pollute the stable base (the base only counts bare vX.Y.Z).
+      - name: Record the cut as a tag
+        if: hashFiles('publish-plan.tsv') != ''
+        env:
+          CHANNEL: ${{ inputs.channel }}
+        run: |
+          if [ -s publish-plan.tsv ]; then
+            V=$(awk -F'\t' '{print $3; exit}' publish-plan.tsv)
+            git tag "v$V"
+            git push origin "v$V"
+            echo "recorded cut v$V ($CHANNEL)"
+          else
+            echo "nothing declared — no tag"
+          fi
+
+  # ────────────────────────────── publish jobs (push only) ─────────────────
+  # These run on push events — the release train's commit, or a direct bump —
+  # and publish the COMMITTED versions. A dispatch run never publishes stale
+  # checkouts: suggest/cut own the dispatch side, the push owns this side.
+
   schema-node-compat:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -87,6 +278,7 @@ jobs:
         run: bun run test:node
 
   schema-publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -123,13 +315,13 @@ jobs:
       - name: Publish to npm (Trusted Publishing — no token)
         id: publish
         if: steps.version.outputs.publish == 'true'
-        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+        run: npm publish --access public --provenance --tag "latest"
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
 
-  # ----------------------------------------------------------------- crate --
   crate-node-compat:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -151,6 +343,7 @@ jobs:
         run: node --test
 
   crate-publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -187,13 +380,13 @@ jobs:
       - name: Publish to npm (Trusted Publishing — no token)
         id: publish
         if: steps.version.outputs.publish == 'true'
-        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+        run: npm publish --access public --provenance --tag "latest"
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
 
-  # -------------------------------------------------------------------- pi --
   pi-node-compat:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -214,6 +407,7 @@ jobs:
         run: bun run test:node
 
   pi-publish:
+    if: github.event_name == 'push'
     needs: [schema-publish, crate-publish] # dependency order: pi's install resolves its exact crate+schema pins from the registry — both published first
     runs-on: ubuntu-latest
     defaults:
@@ -278,7 +472,7 @@ jobs:
       - name: Publish to npm (Trusted Publishing — no token)
         id: publish
         if: steps.version.outputs.publish == 'true'
-        run: npm publish --access public --provenance --tag "${{ inputs.channel || 'latest' }}"
+        run: npm publish --access public --provenance --tag "latest"
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
