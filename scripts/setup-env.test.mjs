@@ -31,6 +31,7 @@ import {
   probeEnvironment,
   runProvision,
   augmentPath,
+  versionAtLeast,
 } from "./setup-env.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -55,6 +56,7 @@ function fullState(overrides = {}) {
     schemaDistPresent: true,
     piCrateModulesPresent: true,
     engramConfigValid: true,
+    serenaLocalOverridePresent: true,
     ...overrides,
   };
 }
@@ -247,8 +249,8 @@ describe("Windows is refused — WSL-only (S7, AC9)", () => {
 });
 
 describe("the .engram/ protection (AC3) — guarded by a test, not prose", () => {
-  it("no plan step on any platform may target .engram/, run `engram setup`, `pi-engram init`, `serena init`, or write .serena/", () => {
-    const forbidden = [/\.engram/, /engram\s+setup/, /pi-engram\s+init/, /serena\s+init/, /\.serena\/(?!project\.yml)/];
+  it("no plan step on any platform may target .engram/, run `engram setup`, `pi-engram init`, `serena init`, or rewrite committed .serena/project.yml", () => {
+    const forbidden = [/\.engram/, /engram\s+setup/, /pi-engram\s+init/, /serena\s+init/];
     const states = [
       fullState(),
       fullState({ bun: { present: false, version: null }, uv: { present: false, version: null }, serena: { present: false, version: null } }),
@@ -260,6 +262,16 @@ describe("the .engram/ protection (AC3) — guarded by a test, not prose", () =>
       const text = planCommands(planSetup(state));
       for (const pattern of forbidden) {
         assert.doesNotMatch(text, pattern, `plan for platform=${state.platform} matches forbidden pattern ${pattern}`);
+      }
+      // The only .serena/ path a plan may write is the machine-local override
+      // (S10); the committed project.yml is never a write target.
+      const plan = planSetup(state);
+      for (const step of plan.steps) {
+        const written = [step.target, step.command].filter(Boolean).join(" ");
+        assert.doesNotMatch(written, /project\.local\.yml.*>|>.*project\.yml/, "no step redirects into the committed project.yml");
+        if (step.tool !== "serena-local-override") {
+          assert.doesNotMatch(written, /\.serena\//, `${step.tool} must not touch .serena/`);
+        }
       }
     }
   });
@@ -409,6 +421,7 @@ describe(".github/workflows/setup-check.yml runs the check on macos + linux (S4,
 function worktreeState(overrides = {}) {
   return fullState({
     cachePresent: false,
+    serenaLocalOverridePresent: false,
     schemaDistPresent: false,
     piCrateModulesPresent: false,
     engramConfigValid: true,
@@ -581,17 +594,13 @@ describe("docs/workflow/SETUP.md documents the amendment (S1/S8/S9)", () => {
 // ---------------------------------------------------------------------------
 
 describe("bun pinned via .bun-version (S2a, AC13)", () => {
-  it("verifies bun exactly against the pin — drift is a MISS row", () => {
-    const drifted = verify(fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" }));
-    const bun = drifted.results.find((r) => r.tool === "bun");
-    assert.equal(bun.ok, false);
-    assert.match(bun.detail, /\.bun-version/);
-    assert.match(bun.detail, /1\.4\.0/);
-  });
-
-  it("accepts an exact match", () => {
-    const ok = verify(fullState({ bun: { present: true, version: "1.4.0" }, bunPinned: "1.4.0" }));
-    assert.equal(ok.results.find((r) => r.tool === "bun").ok, true);
+  it("a newer bun satisfies the pin; the pin itself verifies clean (S2b minimum)", () => {
+    for (const installed of ["1.4.0", "1.4.4"]) {
+      const result = verify(fullState({ bun: { present: true, version: installed }, bunPinned: "1.4.0" }));
+      const bun = result.results.find((r) => r.tool === "bun");
+      assert.equal(bun.ok, true, installed);
+      assert.match(bun.detail, /\.bun-version/);
+    }
   });
 
   it("plans the pinned install when bun is missing", () => {
@@ -602,11 +611,9 @@ describe("bun pinned via .bun-version (S2a, AC13)", () => {
     assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
   });
 
-  it("plans a repair install at the pinned version when the installed bun drifted", () => {
+  it("plans no bun step when the installed bun satisfies the pin (S2b)", () => {
     const plan = planSetup(fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" }));
-    const step = plan.steps.find((s) => s.tool === "bun");
-    assert.ok(step);
-    assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
+    assert.equal(plan.steps.find((s) => s.tool === "bun"), undefined);
   });
 
   it("falls back to the latest installer when no .bun-version exists", () => {
@@ -639,5 +646,120 @@ describe("bun pinned via .bun-version (S2a, AC13)", () => {
     const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
     assert.ok(text.includes(".bun-version"), "SETUP.md must mention .bun-version");
     assert.ok(text.includes("bun-v"), "SETUP.md must name the versioned installer argument");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Owner correction S2b (2026-10-28): the .bun-version pin is a MINIMUM —
+// bun >= pin verifies (a newer bun is accepted, like node's >=-major rule);
+// only missing-or-behind installs/repairs at the pin. Supersedes the exact
+// reading tested above (those fixtures keep pin == version, still valid).
+// ---------------------------------------------------------------------------
+
+describe(".bun-version is a minimum (S2b)", () => {
+  it("versionAtLeast compares numerically, not lexicographically", () => {
+    assert.equal(versionAtLeast("1.4.4", "1.4.0"), true);
+    assert.equal(versionAtLeast("1.4.0", "1.4.0"), true);
+    assert.equal(versionAtLeast("1.10.0", "1.4.0"), true, "10 > 4 numerically");
+    assert.equal(versionAtLeast("1.3.9", "1.4.0"), false);
+    assert.equal(versionAtLeast(null, "1.4.0"), false);
+  });
+
+  it("a newer bun satisfies the pin — no MISS, no repair step", () => {
+    const state = fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" });
+    const result = verify(state);
+    const bun = result.results.find((r) => r.tool === "bun");
+    assert.equal(bun.ok, true);
+    assert.match(bun.detail, /\.bun-version/);
+    const plan = planSetup(state);
+    assert.equal(plan.steps.find((s) => s.tool === "bun"), undefined);
+  });
+
+  it("bun behind the pin is a MISS row naming .bun-version", () => {
+    const result = verify(fullState({ bun: { present: true, version: "1.3.9" }, bunPinned: "1.4.0" }));
+    const bun = result.results.find((r) => r.tool === "bun");
+    assert.equal(bun.ok, false);
+    assert.match(bun.detail, /\.bun-version/);
+    assert.match(bun.detail, /1\.4\.0/);
+  });
+
+  it("bun behind the pin plans a repair at the pinned version; newer plans nothing", () => {
+    const behind = planSetup(fullState({ bun: { present: true, version: "1.3.9" }, bunPinned: "1.4.0" }));
+    const step = behind.steps.find((s) => s.tool === "bun");
+    assert.ok(step);
+    assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
+    const current = planSetup(fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" }));
+    assert.equal(current.steps.find((s) => s.tool === "bun"), undefined);
+  });
+
+  it("SETUP.md describes the pin as a minimum", () => {
+    const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
+    assert.match(text, /≥|>=|minimum/i);
+    assert.ok(text.includes(".bun-version"));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Owner amendment S10 (2026-10-28): PE-010 fixed at its reproduced root cause.
+// The machine-local .serena/project.local.yml override (markdown deliberately
+// absent — marksman crashes on this machine, and one failing LS kills the
+// whole manager) is local state a fresh worktree lacks; setup-env creates it.
+// ---------------------------------------------------------------------------
+
+describe("the serena local override (S10, AC14)", () => {
+  it("a checkout without the override is a MISS row in verification", () => {
+    const result = verify(fullState({ serenaLocalOverridePresent: false }));
+    const row = result.results.find((r) => r.tool === "serena-local-override");
+    assert.equal(row.ok, false);
+    assert.match(row.detail, /project\.local\.yml/);
+  });
+
+  it("plans the override creation when it is missing — with the safe language-server list", () => {
+    const plan = planSetup(fullState({ serenaLocalOverridePresent: false }));
+    const step = plan.steps.find((s) => s.tool === "serena-local-override");
+    assert.ok(step);
+    assert.equal(step.action, "fix");
+    assert.equal(step.kind, "write-local-override");
+    const listed = String(step.content)
+      .split("\n")
+      .filter((line) => /^\s*-\s/u.test(line))
+      .map((line) => line.replace(/^\s*-\s/u, "").trim());
+    assert.deepEqual(listed, ["typescript", "bash", "json", "yaml"]);
+    assert.ok(!listed.includes("markdown"), "markdown must be deliberately absent (marksman crashes, PE-014)");
+  });
+
+  it("plans nothing when the override already exists — never overwrites a local file", () => {
+    const plan = planSetup(fullState({ serenaLocalOverridePresent: true }));
+    assert.equal(plan.steps.find((s) => s.tool === "serena-local-override"), undefined);
+  });
+
+  it("the committed .serena/project.yml is never a write target even in a bare worktree state", () => {
+    const plan = planSetup(worktreeState());
+    for (const step of plan.steps) {
+      // Writes happen through `target` (mkdir/write kinds) or shell `command`;
+      // a step's comment content may mention the committed file without
+      // writing it.
+      const text = [step.command, step.target].filter(Boolean).join(" ");
+      assert.doesNotMatch(text, /\bproject\.yml\b/, `${step.tool} must not touch the committed project.yml`);
+    }
+  });
+
+  it("probeEnvironment reports the override's presence", () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "setup-env-override-"));
+    try {
+      fs.mkdirSync(path.join(tmp, ".serena"), { recursive: true });
+      const absent = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+      assert.equal(absent.serenaLocalOverridePresent, false);
+      fs.writeFileSync(path.join(tmp, ".serena", "project.local.yml"), "language_servers: [typescript]\n");
+      const present = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+      assert.equal(present.serenaLocalOverridePresent, true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("SETUP.md documents the override row", () => {
+    const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
+    assert.ok(text.includes("project.local.yml"), "SETUP.md must mention the machine-local override");
   });
 });
