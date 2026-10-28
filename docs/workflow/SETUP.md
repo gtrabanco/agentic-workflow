@@ -37,7 +37,7 @@ prerequisite is unresolvable. These are the exact commands it runs, per tool:
 
 | Tool | Install route (binaries first) | Script step |
 |---|---|---|
-| bun | official installer: `curl -fsSL https://bun.sh/install \| bash` | runs it when `bun` is absent |
+| bun | official installer, at the exact version the committed `.bun-version` pins (`curl -fsSL https://bun.sh/install \| bash -s "bun-v1.4.0"`); a drifted install is repaired at the pinned version | runs it when `bun` is absent or off the pin |
 | uv | official installer: `curl -LsSf https://astral.sh/uv/install.sh \| sh` | runs it when `uv` is absent |
 | serena-agent | `uv tool install -p 3.13 serena-agent` (the repo's canonical route; the committed `.serena/project.yml` is the project config, verified in every mode) | runs it when the `serena` binary is absent |
 | engram | macOS with Homebrew: `brew install gentleman-programming/tap/engram` · otherwise the GitHub release tarball `engram_<version>_<os>_<arch>.tar.gz` extracted into `~/.local/bin` (from [releases](https://github.com/Gentleman-Programming/engram/releases)) | picks the route per platform; it is a Go binary — not a uv tool, not an npm package |
@@ -103,6 +103,7 @@ ln -sfn ../skills .claude/skills
 Committed shared state — the scripts verify it, they never rewrite it:
 
 - `.node-version` — the Node major CI runs.
+- `.bun-version` — the exact bun version CI pins (1.4.0); the script verifies the installed bun matches it and repairs the install when it drifts.
 - `.serena/project.yml` — the Serena project config (verified present and
   non-empty in every `setup-env.mjs` mode).
 - `.serena/memories/` — Serena's project memories.
