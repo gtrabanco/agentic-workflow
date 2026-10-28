@@ -410,6 +410,49 @@ boxes all tick. Awaiting independent review by `review-spec`.
 
 ---
 
+## Frozen request (verbatim)
+
+The requester's words, quoted verbatim from issue #180 and the owner's scope
+instruction (2026-10-28). Grammar `spec-requirement@1`.
+
+**S1 — Ship versioned skills releases (two-piece scope).**
+> "Ship versioned skills releases: automatic version bump when skills change and a stable tag per release for downstream pinning. This closes two open issues that address the same release pipeline gap: **#156**: publish a stable ref (tag) per skills release so downstream tools can pin the verified snapshot […] **#164**: automate companion-package release bumps so a skills change can never ship unversioned."
+
+**S2 — Auto version bump (prose form, superseded by S2a).**
+> "**Auto version bump** (`bump-skill` extension): when any `SKILL.md` changes in a unit, bump the companion-package semver version automatically (major/minor/patch determined by change scope: breaking change → major, new skill → minor, wording-only → patch). The bump happens before the PR, not after."
+
+**S2a — Amendment: the auto bump is a deterministic script, the skill slims to a wrapper.**
+> "the 'bump-skill extension' piece of this issue should be a **script** (`scripts/bump-skill.mjs` or package script), not more skill prose […] the script takes the level as an argument (defaulting to the inferred one, printed with its derivation) and applies every mechanical surface atomically: `version:`, both CHANGELOG tables, README skills + model tables, argument-hint changes, `npm run bundle:skills` reminder." · "`bump-skill/SKILL.md` slims to: classify the change (the only judgment left), run the script, paste its diff summary, handle major-bump migration notes." · "Deterministic edits, testable: red-first fixtures (a wording change must produce exactly one patch row per table; a rename must produce the migration-note requirement)."
+
+**S3 — Stable tag.**
+> "**Stable tag**: publish one git tag per skills release (`v<major>.<minor>.<patch>`) at the same commit that publishes the package. Downstream tools pin to this tag instead of branch names, avoiding snapshot drift."
+
+**S4 — Non-goals.**
+> "No redesign of the npm publish flow or OIDC provider (that's the publishing mechanism, not versioning) […] No change to the roadmap status machine or feature pipeline […] No manual version bump as default — the automation is the path; manual is an escape hatch […] No change to downstream package pinning semantics (existing tools consume tags as before, just now there's a stable one)."
+
+**S5 — Tests first.**
+> "Automated bump on skill change → version field updated in package.json […] Stable tag created at the same commit as the bump […] Downstream pinning works with the new tag (smoke test) […] Patch bump for wording-only changes; minor for new skills; major for breaking changes."
+
+**S6 — Amendment: scope correction (#165 dropped, cross-references re-synced).**
+> "**#165 removed from scope.** It is already closed […]" · "Cross-references re-synced against `docs/features/ROADMAP.md` […]" · "with #165 dropped, the original reason for depending on 30+31+32 ("same skill tooling: `fold-findings`, `bump-skill`, workflow docs") shrinks to workflow-docs/skill-bookkeeping churn — re-weigh at planning."
+
+**S7 — Owner scope decision (2026-10-28): the SPEC pipeline is in scope, with drift corrected.**
+> "The issue body's two pieces PLUS the SPEC's release pipeline (scripts/release.mjs, .changeset/ format, unified train across 3 packages, dist-tags, force-version, GitHub Releases, stable branch) — L-size, many slices, SPEC drift (es.md, CLAUDE.md, package versions) corrected in the SPEC as part of the work."
+
+## Acceptance criteria
+
+One observable, testable criterion per requirement, frozen at plan cut.
+
+| S# | Criterion | Check that proves it |
+|---|---|---|
+| S1 | The release pipeline exists: accumulated `.changeset/` intent files drive a deterministic release that bumps the declared packages and cuts the `vX.Y.Z` tag | `node --test scripts/release.test.mjs` exits 0 |
+| S2/S2a | `node scripts/bump-skill.mjs` applies `version:` + CHANGELOG row from an inferred (or `--level`) classification, printing the derivation | `node --test scripts/bump-skill.test.mjs` exits 0 |
+| S3 | A stable release plans `git tag vX.Y.Z` and the `stable` branch push at the release commit | test `stable release plans the vX.Y.Z tag and stable branch push` |
+| S4 | Non-goals hold: publish workflow filenames unchanged, OIDC/npm-publish steps untouched, roadmap machine untouched | `ls .github/workflows/publish-schema.yml .github/workflows/publish-pi-package.yml .github/workflows/publish-agentic-workflow.yml` exits 0 + diff inspection |
+| S5 | The four tests-first bullets each have a named test | test names in `scripts/bump-skill.test.mjs` / `scripts/release.test.mjs` |
+| S6 | ROADMAP row 40 dependency cell is `—`; SPEC drift (es.md/CLAUDE.md/package versions) corrected in this unit | `grep -n "versioned-skills-releases" docs/features/ROADMAP.md` shows the `—` cell |
+| S7 | The SPEC pipeline criteria AC-01..AC-16 that are implementable offline are covered by the obligations ledger; the es.md/CLAUDE.md drift rows are corrected in this unit | obligations ledger all `verified`/`n/a` with evidence |
+
 ## Artifacts that still need to be created by plan-feature
 
 <!-- These are the files that the Engineering half (plan-feature-scaffold) will create: -->
