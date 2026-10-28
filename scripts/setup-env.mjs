@@ -13,10 +13,15 @@
  *
  * What it installs (binaries first, S7 — never a package manager as the only
  * route):
- *   node        verified only — never installed. Major must be ≥ the
- *               `.node-version` major (exact equality not required; a newer
- *               toolchain is accepted — planning evidence PE-006).
- *   bun         the official installer (https://bun.sh/install) when absent.
+ *   bun         OPT-IN (S11): the user brings their own JS runtime — node is a
+ *               human prerequisite (pi installs through npm, so the user has it
+ *               already). When bun is absent the script ASKS before installing
+ *               it, because bun is this repo's preferred package manager
+ *               (performance); a non-interactive run is never asked and never
+ *               installs — it prints how to opt in later. When installed (or
+ *               when the installed bun is behind the pin) the official
+ *               installer runs at the committed `.bun-version` minimum
+ *               (`| bash -s "bun-v<version>"`).
  *   uv          the official installer (https://astral.sh/uv/install.sh) when
  *               absent.
  *   serena      `uv tool install -p 3.13 serena-agent` (the repo's canonical
@@ -32,8 +37,10 @@
  *               a machine without pi is an unresolvable prerequisite and fails
  *               with a message naming it.
  *
- * What it never does: initialize, wipe or rewrite `.engram/` (committed shared
- * state — guarded by `setup-env.test.mjs`'s byte-identity test, not prose),
+ * What it never does: install or verify node (S11 — the user's prerequisite;
+ * they need it for pi anyway), install bun without the user's yes (S11),
+ * initialize, wipe or rewrite `.engram/` (committed shared state — guarded by
+ * `setup-env.test.mjs`'s byte-identity test, not prose),
  * run `engram setup`, `pi-engram init` or `serena init` (all three write
  * config the repo owns), or create a root `package.json` (two-islands rule).
  *
@@ -42,8 +49,9 @@
  * exported and take injected state/probes — the offline suite never touches
  * the network or the real toolchain.
  *
- * Exit codes: 0 = provisioned or verified; 1 = missing/unresolvable
- * prerequisite (check mode) or a failed install; 2 = usage error.
+ * Exit codes: 0 = provisioned or verified (warning rows never fail — bun is
+ * optional, S11); 1 = a missing/unresolvable prerequisite (check mode) or a
+ * failed install; 2 = usage error.
  *
  * Usage:
  *   node scripts/setup-env.mjs [--check]
@@ -54,6 +62,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -125,10 +134,31 @@ export function platformGuard(platform) {
   return { ok: true, message: "" };
 }
 
-/** The major version a `.node-version` pins, or null when unreadable. */
+/** The major version a `.node-version` pins, or null when unreadable. Kept for
+ * the repo's CI workflows (setup-node reads the file directly); the setup
+ * script itself no longer verifies node — it is the user's prerequisite (S11). */
 export function parseNodeMajor(text) {
   const match = /^v?(\d+)/u.exec(String(text ?? "").trim());
   return match ? Number(match[1]) : null;
+}
+
+/**
+ * Yes/No answers for the bun opt-in question (S11). Only an explicit yes
+ * installs — an empty answer, anything else, or EOF declines. Exported so the
+ * suite pins the accepted vocabulary.
+ */
+export function parseYesNo(answer) {
+  return /^y(?:es)?$/iu.test(String(answer ?? "").trim());
+}
+
+/**
+ * The message a non-interactive (or declined) run prints instead of asking to
+ * install bun (S11): bun is optional, node stays the runtime fallback, and the
+ * pinned installer command is named so opting in later is one paste.
+ */
+export function bunOptInNote({ bunPinned } = {}) {
+  const installer = bunInstallCommand(bunPinned);
+  return `bun is not installed — it is optional (node is the runtime fallback). To use it later: ${installer}, or re-run node scripts/setup-env.mjs in a terminal to be asked.`;
 }
 
 /**
@@ -195,7 +225,6 @@ export function readPiPackageVersion({ env = {}, home = "", fsMod = fs } = {}) {
  * machine probes cleanly into all-absent — it never throws.
  */
 export function probeEnvironment({ root = REPO_ROOT, platform = process.platform, home = os.homedir(), env = process.env, probe = spawnProbe, readPiPackageVersion: readPiPkg = readPiPackageVersion } = {}) {
-  const nodeOut = probe("node", ["--version"]);
   const bunOut = probe("bun", ["--version"]);
   const uvOut = probe("uv", ["--version"]);
   const serenaOut = probe("serena", ["--version"]);
@@ -241,26 +270,17 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     engramConfigValid = false;
   }
 
-  let requiredNodeMajor = null;
-  try {
-    requiredNodeMajor = parseNodeMajor(fs.readFileSync(path.join(root, ".node-version"), "utf8"));
-  } catch {
-    // no .node-version → no node gate
-  }
-
   let bunPinned = null;
   try {
     const text = String(fs.readFileSync(path.join(root, ".bun-version"), "utf8")).trim();
     bunPinned = text ? text.replace(/^v/u, "") : null;
   } catch {
-    // no .bun-version → bun installs latest
+    // no .bun-version → an accepted bun opt-in installs latest
   }
 
   return {
     platform,
     home,
-    nodeMajor: versionToken(nodeOut) ? Number(versionToken(nodeOut).split(".")[0]) : null,
-    requiredNodeMajor,
     bun: { present: bunOut !== null, version: versionToken(bunOut) },
     bunPinned,
     uv: { present: uvOut !== null, version: versionToken(uvOut) },
@@ -280,34 +300,36 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
 
 /**
  * The check-mode verdict (AC2): every tool verified in place, nothing
- * installed, nothing written. `ok` is the exit-code mapping — true → 0,
- * false → 1 — and every row names the tool and what was checked.
+ * installed, nothing written. `ok` is the exit-code mapping — a row without
+ * `warn` must be ok for exit 0, and every row names the tool and what was
+ * checked. Warning rows (bun optional — S11) never fail the verdict.
  */
 export function verify(state) {
   const results = [];
 
-  if (state.nodeMajor === null) {
-    results.push({ tool: "node", ok: false, detail: "node is not on PATH — install Node.js (see docs/workflow/SETUP.md); this script never installs node" });
-  } else if (state.requiredNodeMajor !== null && state.nodeMajor < state.requiredNodeMajor) {
-    results.push({ tool: "node", ok: false, detail: `node v${state.nodeMajor} is behind the major the repo's .node-version pins (${state.requiredNodeMajor})` });
+  // bun is opt-in (S11): the user brings their own JS runtime. Absent is a
+  // warning, never a failure; present-but-behind the .bun-version pin stays a
+  // failure (an old bun cannot parse the repo's lockfiles) and provision
+  // repairs it (S2b).
+  if (state.bun.present) {
+    if (state.bunPinned !== null && !versionAtLeast(state.bun.version, state.bunPinned)) {
+      results.push({ tool: "bun", ok: false, detail: `bun ${state.bun.version} is behind the minimum .bun-version pins (${state.bunPinned}) — run without --check to repair` });
+    } else {
+      results.push({ tool: "bun", ok: true, detail: `bun ${state.bun.version ?? "(version unreadable)"}${state.bunPinned !== null ? " (≥ .bun-version)" : ""}` });
+    }
   } else {
-    results.push({ tool: "node", ok: true, detail: `node v${state.nodeMajor}${state.requiredNodeMajor !== null ? ` (≥ .node-version major ${state.requiredNodeMajor})` : ""}` });
+    results.push({ tool: "bun", ok: true, warn: true, detail: "bun is not installed — optional (node is the runtime fallback); run without --check to be asked to install it" });
   }
 
   const tools = [
-    ["bun", state.bun, "bun"],
     ["uv", state.uv, "uv"],
     ["serena", state.serena, "serena (serena-agent via uv tool)"],
     ["engram", state.engram, "engram"],
   ];
   for (const [tool, entry, label] of tools) {
-    if (tool === "bun" && entry.present && state.bunPinned && !versionAtLeast(entry.version, state.bunPinned)) {
-      results.push({ tool, ok: false, detail: `bun ${entry.version} is behind the minimum .bun-version pins (${state.bunPinned}) — run without --check to repair` });
-      continue;
-    }
     results.push(
       entry.present
-        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}${tool === "bun" && state.bunPinned ? " (≥ .bun-version)" : ""}` }
+        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}` }
         : { tool, ok: false, detail: `${label} is not installed` },
     );
   }
@@ -346,49 +368,61 @@ export function verify(state) {
   results.push(
     state.schemaDistPresent
       ? { tool: "schema-dist", ok: true, detail: "packages/agentic-workflow-schema/dist built" }
-      : { tool: "schema-dist", ok: false, detail: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — run without --check to build it" },
+      : state.bun.present
+        ? { tool: "schema-dist", ok: false, detail: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — run without --check to build it" }
+        : { tool: "schema-dist", ok: true, warn: true, detail: "packages/agentic-workflow-schema/dist is missing — building it needs bun, which is not installed (optional, S11); install bun and re-run to build it" },
   );
   results.push(
     state.piCrateModulesPresent
       ? { tool: "pi-crate-modules", ok: true, detail: "packages/pi-agentic-workflow/node_modules installed" }
-      : { tool: "pi-crate-modules", ok: false, detail: "packages/pi-agentic-workflow/node_modules is missing — run without --check to install" },
+      : state.bun.present
+        ? { tool: "pi-crate-modules", ok: false, detail: "packages/pi-agentic-workflow/node_modules is missing — run without --check to install" }
+        : { tool: "pi-crate-modules", ok: true, warn: true, detail: "packages/pi-agentic-workflow/node_modules is missing — installing it needs bun, which is not installed (optional, S11); install bun and re-run" },
   );
 
-  return { ok: results.every((row) => row.ok), results };
+  return { ok: results.every((row) => row.warn === true || row.ok), results };
 }
 
 /**
  * The install plan (AC1): one step per missing tool, in dependency order, and
  * a `fail` step (never an install) for an unresolvable prerequisite. A fully
  * provisioned machine plans zero install steps — that is the idempotency
- * contract. Every step's command is the documented route; nothing here
- * targets `.engram/` or `.serena/` or runs any `* init` subcommand (AC3).
+ * contract. Bun is opt-in (S11): when absent it is only planned when the user
+ * answered yes (`bunOptIn`), never unasked — and the bun-built local steps are
+ * only planned while bun is present or being installed. Every step's command
+ * is the documented route; nothing here targets `.engram/` or `.serena/`
+ * committed state or runs any `* init` subcommand (AC3).
  */
-export function planSetup(state) {
+export function planSetup(state, { bunOptIn = false } = {}) {
   const steps = [];
   let ok = true;
 
-  if (state.nodeMajor === null) {
-    steps.push({ tool: "node", action: "fail", reason: "node is not on PATH — install Node.js first (see docs/workflow/SETUP.md); this script never installs node" });
-    ok = false;
-  } else if (state.requiredNodeMajor !== null && state.nodeMajor < state.requiredNodeMajor) {
-    steps.push({ tool: "node", action: "fail", reason: `node v${state.nodeMajor} is behind the .node-version major (${state.requiredNodeMajor}) — upgrade node first` });
-    ok = false;
-  }
-
-  if (!state.bun.present || (state.bunPinned !== null && !versionAtLeast(state.bun.version, state.bunPinned))) {
+  // Bun is opt-in (S11): absence never plans a step and never fails. A bun
+  // behind the pin is still repaired at the pin (S2b — an old bun cannot parse
+  // the repo's lockfiles).
+  if (!state.bun.present) {
+    if (bunOptIn === true) {
+      steps.push({
+        tool: "bun",
+        action: "install",
+        command: bunInstallCommand(state.bunPinned),
+        kind: "shell",
+        reason: state.bunPinned
+          ? `bun is not installed — installing the .bun-version minimum (${state.bunPinned}) (your opt-in)`
+          : "bun is not installed — running the official installer (your opt-in)",
+      });
+    }
+  } else if (state.bunPinned !== null && !versionAtLeast(state.bun.version, state.bunPinned)) {
     steps.push({
       tool: "bun",
       action: "install",
       command: bunInstallCommand(state.bunPinned),
       kind: "shell",
-      reason: state.bunPinned
-        ? state.bun.present
-          ? `bun ${state.bun.version} is behind the .bun-version minimum (${state.bunPinned}) — repairing at the pinned version`
-          : `bun is not installed — installing the .bun-version minimum (${state.bunPinned})`
-        : "bun is not installed — running the official installer",
+      reason: `bun ${state.bun.version} is behind the .bun-version minimum (${state.bunPinned}) — repairing at the pinned version`,
     });
   }
+
+  const bunUsable = state.bun.present || bunOptIn === true;
 
   if (!state.uv.present) {
     steps.push({ tool: "uv", action: "install", command: UV_INSTALL, kind: "shell", reason: "uv is not installed — running the official installer" });
@@ -437,10 +471,10 @@ export function planSetup(state) {
       reason: ".serena/project.local.yml is missing — without it serena starts the committed markdown server (marksman) and dies (PE-010); writing the known-good override (markdown deliberately absent)",
     });
   }
-  if (!state.schemaDistPresent) {
+  if (bunUsable && !state.schemaDistPresent) {
     steps.push({ tool: "schema-dist", action: "fix", kind: "shell", command: "cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build", reason: "packages/agentic-workflow-schema/dist is missing (gitignored build output the root suites require) — installing and building" });
   }
-  if (!state.piCrateModulesPresent) {
+  if (bunUsable && !state.piCrateModulesPresent) {
     steps.push({ tool: "pi-crate-modules", action: "fix", kind: "shell", command: "cd packages/pi-agentic-workflow && bun install --frozen-lockfile", reason: "packages/pi-agentic-workflow/node_modules is missing — installing with a frozen lockfile" });
   }
   if (!state.engramConfigValid) {
@@ -504,12 +538,12 @@ function runShell(command, { root = REPO_ROOT } = {}) {
  * Bounded by `maxPasses` (default 3): a run that never converges ends exit 1
  * with VERDICT: FAIL instead of looping forever.
  */
-export function runProvision({ state, execute, verifyAfterPass, advance = () => state, maxPasses = 3 }) {
+export function runProvision({ state, execute, verifyAfterPass, advance = () => state, maxPasses = 3, bunOptIn = false }) {
   const output = [];
   let current = state;
   let executed = 0;
   for (let pass = 1; pass <= maxPasses; pass++) {
-    const plan = planSetup(current);
+    const plan = planSetup(current, { bunOptIn });
     const fails = plan.steps.filter((step) => step.action === "fail");
     if (fails.length > 0) {
       for (const step of fails) output.push(`✗ ${step.tool}: ${step.reason}`);
@@ -549,12 +583,14 @@ export function runProvision({ state, execute, verifyAfterPass, advance = () => 
 /** The fixed human report header/footer shared by both modes. */
 function renderCheck(result) {
   const lines = ["SETUP-CHECK — authoring toolchain (issue #331)"];
-  for (const row of result.results) lines.push(`${row.ok ? "ok  " : "MISS"} ${row.tool}: ${row.detail}`);
+  for (const row of result.results) {
+    lines.push(`${row.warn === true ? "warn" : row.ok ? "ok  " : "MISS"} ${row.tool}: ${row.detail}`);
+  }
   lines.push(result.ok ? "VERDICT: PASS" : "VERDICT: FAIL — run `node scripts/setup-env.mjs` to provision, or install the missing tools (docs/workflow/SETUP.md)");
   return lines.join("\n");
 }
 
-function main(argv) {
+async function main(argv) {
   const check = argv.includes("--check");
   const unknown = argv.filter((arg) => arg !== "--check");
   if (unknown.length > 0) {
@@ -576,13 +612,31 @@ function main(argv) {
     return result.ok ? 0 : 1;
   }
 
+  // Bun is opt-in (S11): the user brings their own JS runtime (they need node
+  // for pi anyway). Ask only in an interactive terminal — a piped or
+  // non-TTY run (agent sessions, scripts) is never asked and never installs;
+  // it prints how to opt in later. The decision sticks for every pass.
+  let bunOptIn = false;
+  if (!state.bun.present) {
+    if (process.stdin.isTTY && process.stdout.isTTY) {
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      const pin = state.bunPinned ? ` ${state.bunPinned}` : "";
+      const answer = await rl.question(`bun is not installed. Install bun${pin}? It is this repo's preferred package manager (performance) [y/N] `);
+      rl.close();
+      bunOptIn = parseYesNo(answer);
+      if (!bunOptIn) process.stdout.write(bunOptInNote(state) + "\n");
+    } else {
+      process.stdout.write(bunOptInNote(state) + "\n");
+    }
+  }
+
   // Progressive verify→fix→next (S8): every pass re-probes the machine, so a
   // pass that installs bun/uv finds them (and what they unlock) on the next
   // one. Bounded at 3 passes; a still-red run reports the remaining rows.
   const maxPasses = 3;
   for (let pass = 1; pass <= maxPasses; pass++) {
     const current = probeEnvironment();
-    const plan = planSetup(current);
+    const plan = planSetup(current, { bunOptIn });
     if (!plan.ok) {
       process.stdout.write("SETUP — unresolvable prerequisites:\n");
       for (const step of plan.steps.filter((s) => s.action === "fail")) process.stdout.write(`  ✗ ${step.tool}: ${step.reason}\n`);
@@ -650,5 +704,5 @@ function main(argv) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then((code) => process.exit(code));
 }

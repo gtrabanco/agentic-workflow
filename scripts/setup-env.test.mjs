@@ -23,9 +23,10 @@ import {
   SERENA_INSTALL,
   PI_ENGRAM_INSTALL,
   BREW_ENGRAM_INSTALL,
-  parseNodeMajor,
   engramAssetName,
   platformGuard,
+  parseYesNo,
+  bunOptInNote,
   planSetup,
   verify,
   probeEnvironment,
@@ -41,8 +42,6 @@ function fullState(overrides = {}) {
   return {
     platform: "linux",
     home: "/home/tester",
-    nodeMajor: 24,
-    requiredNodeMajor: 24,
     bun: { present: true, version: "1.4.0" },
     bunPinned: "1.4.0",
     uv: { present: true, version: "0.12.4" },
@@ -69,44 +68,46 @@ function planCommands(plan) {
 /** The only plan tools allowed to name a path under .serena/ — both local, both gitignored. */
 const LOCAL_SERENA_WRITES = new Set(["serena-cache", "serena-local-override"]);
 
-describe("node verification against .node-version (S2, PE-006)", () => {
-  it("parses the pinned major from a bare and a v-prefixed .node-version", () => {
-    assert.equal(parseNodeMajor("24.21.0"), 24);
-    assert.equal(parseNodeMajor("v24.21.0"), 24);
-    assert.equal(parseNodeMajor("24"), 24);
-    assert.equal(parseNodeMajor("garbage"), null);
-    assert.equal(parseNodeMajor(""), null);
+describe("node and bun are the user's prerequisites — never managed (S11)", () => {
+  it("node is never a verify row and never a plan step on any state", () => {
+    for (const state of [fullState(), fullState({ engram: { present: false, version: null } }), worktreeState()]) {
+      assert.equal(verify(state).results.find((r) => r.tool === "node"), undefined);
+      assert.equal(planSetup(state).steps.find((s) => s.tool === "node"), undefined);
+    }
   });
 
-  it("fails verification when node is absent, naming the prerequisite", () => {
-    const result = verify(fullState({ nodeMajor: null }));
-    const node = result.results.find((r) => r.tool === "node");
-    assert.equal(node.ok, false);
-    assert.match(node.detail, /node/);
-    assert.equal(result.ok, false);
+  it("an absent node never fails the plan — the pi gate is the only unresolvable prerequisite left", () => {
+    const plan = planSetup(fullState());
+    assert.equal(plan.ok, true);
+    assert.deepEqual(plan.steps.filter((s) => s.action === "fail"), []);
   });
 
-  it("fails verification when node is behind the pinned major, naming .node-version", () => {
-    const result = verify(fullState({ nodeMajor: 20, requiredNodeMajor: 24 }));
-    const node = result.results.find((r) => r.tool === "node");
-    assert.equal(node.ok, false);
-    assert.match(node.detail, /\.node-version/);
-    assert.match(node.detail, /24/);
+  it("parseYesNo accepts only an explicit yes — empty or anything else declines", () => {
+    for (const yes of ["y", "Y", "yes", "YES", " Yes "]) assert.equal(parseYesNo(yes), true);
+    for (const no of ["", "n", "no", "nope", "yees", "1", null, undefined]) assert.equal(parseYesNo(no), false);
   });
 
-  it("accepts a newer node major than pinned (exact equality not required)", () => {
-    const result = verify(fullState({ nodeMajor: 26, requiredNodeMajor: 24 }));
-    const node = result.results.find((r) => r.tool === "node");
-    assert.equal(node.ok, true);
+  it("the skip note names bun as optional, node as the fallback and the pinned installer", () => {
+    const note = bunOptInNote({ bunPinned: "1.4.0" });
+    assert.match(note, /optional/);
+    assert.match(note, /node is the runtime fallback/);
+    assert.match(note, /bash -s "bun-v1\.4\.0"/);
   });
 });
 
-describe("bun install when absent (S2)", () => {
-  it("plans the official bun installer when bun is missing", () => {
+describe("bun is opt-in (S11, S2a/S2b)", () => {
+  it("plans NO bun install when bun is missing and the user has not opted in", () => {
     const plan = planSetup(fullState({ bun: { present: false, version: null } }));
+    assert.equal(plan.steps.find((s) => s.tool === "bun"), undefined);
+    assert.equal(plan.ok, true, "a bun-less machine is not a failure");
+  });
+
+  it("plans the pinned install when bun is missing and the user opted in", () => {
+    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: "1.4.0" }), { bunOptIn: true });
     const step = plan.steps.find((s) => s.tool === "bun");
-    assert.ok(step, "bun install step planned");
+    assert.ok(step, "bun install step planned after the user's yes");
     assert.match(String(step.command), /bun\.sh\/install/);
+    assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
   });
 
   it("plans nothing for a present bun (idempotent)", () => {
@@ -232,9 +233,9 @@ describe("idempotency (AC1)", () => {
     assert.equal(plan.ok, true);
   });
 
-  it("an unresolvable node is a failure state, never an install", () => {
-    const plan = planSetup(fullState({ nodeMajor: null }));
-    assert.equal(plan.ok, false);
+  it("an opt-in declined machine plans zero installs and stays ok (S11)", () => {
+    const plan = planSetup(fullState({ bun: { present: false, version: null } }));
+    assert.equal(plan.ok, true);
     assert.equal(plan.steps.filter((s) => s.action === "install").length, 0);
   });
 });
@@ -265,6 +266,32 @@ describe("check mode is read-only with 0/1 exits (AC2)", () => {
     assert.equal(result.ok, false);
     const missing = result.results.filter((r) => !r.ok).map((r) => r.tool);
     assert.deepEqual(missing, ["engram"]);
+  });
+
+  it("an absent bun is a warning row that never fails the verdict (S11)", () => {
+    const result = verify(fullState({ bun: { present: false, version: null } }));
+    const bun = result.results.find((r) => r.tool === "bun");
+    assert.equal(bun.warn, true);
+    assert.equal(bun.ok, true);
+    assert.match(bun.detail, /optional/);
+    assert.match(bun.detail, /node is the runtime fallback/);
+    assert.equal(result.ok, true);
+  });
+
+  it("the bun-built local rows warn instead of failing while bun is absent (S11)", () => {
+    const result = verify(worktreeState({ bun: { present: false, version: null } }));
+    for (const tool of ["schema-dist", "pi-crate-modules"]) {
+      const row = result.results.find((r) => r.tool === tool);
+      assert.equal(row.warn, true, tool);
+      assert.equal(row.ok, true, tool);
+      assert.match(row.detail, /bun/, tool);
+    }
+    assert.equal(result.ok, false, "the serena-cache/override misses still fail");
+  });
+
+  it("bun behind the pin stays a failing MISS even under S11 (old bun cannot parse lockfiles)", () => {
+    const result = verify(fullState({ bun: { present: true, version: "1.3.9" }, bunPinned: "1.4.0" }));
+    assert.equal(result.ok, false);
   });
 });
 
@@ -360,7 +387,7 @@ describe("the .engram/ protection (AC3) — guarded by a test, not prose", () =>
 });
 
 describe("the committed install commands are the documented ones (S2/S7 constants)", () => {
-  it("exposes the exact installer commands the doc and CI rely on", () => {
+  it("exposes the exact installer commands the doc relies on", () => {
     assert.match(BUN_INSTALL, /bun\.sh\/install/);
     assert.match(UV_INSTALL, /astral\.sh\/uv\/install\.sh/);
     assert.equal(SERENA_INSTALL, "uv tool install -p 3.13 serena-agent");
@@ -373,13 +400,12 @@ describe("probeEnvironment reads the real inputs through injectable fakes", () =
   let tmp;
   before(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), "setup-env-fixture-"));
-    fs.writeFileSync(path.join(tmp, ".node-version"), "v24.21.0\n");
     fs.mkdirSync(path.join(tmp, ".serena"), { recursive: true });
     fs.writeFileSync(path.join(tmp, ".serena", "project.yml"), "project_name: fixture\n");
   });
   after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
-  it("reads .node-version, probes each tool, and finds the committed project.yml", () => {
+  it("reads .bun-version, probes each tool, and finds the committed project.yml", () => {
     const state = probeEnvironment({
       root: tmp,
       platform: "linux",
@@ -395,7 +421,6 @@ describe("probeEnvironment reads the real inputs through injectable fakes", () =
       },
       readPiPackageVersion: () => "0.4.2",
     });
-    assert.equal(state.requiredNodeMajor, 24);
     assert.equal(state.bun.present, true);
     assert.equal(state.serena.version, "2.1.0");
     assert.equal(state.engram.version, "3.6.0");
@@ -415,8 +440,6 @@ describe("probeEnvironment reads the real inputs through injectable fakes", () =
     for (const tool of ["bun", "uv", "serena", "engram", "pi", "gentleEngram"]) {
       assert.equal(state[tool].present, false, tool);
     }
-    assert.equal(state.nodeMajor, process.versions.node.split(".")[0] * 1 >= 0 ? state.nodeMajor : null);
-    assert.equal(typeof state.nodeMajor === "number" || state.nodeMajor === null, true);
   });
 });
 
@@ -448,43 +471,15 @@ describe("docs/workflow/SETUP.md covers every automated step (S1, AC6)", () => {
   });
 });
 
-describe(".github/workflows/setup-check.yml runs the check on macos + linux (S4, AC5)", () => {
-  const workflow = () => fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "setup-check.yml"), "utf8");
-
-  it("matrices ubuntu-latest and macos-latest and runs provision then --check", () => {
-    const text = workflow();
-    assert.match(text, /ubuntu-latest/);
-    assert.match(text, /macos-latest/);
-    assert.match(text, /node scripts\/setup-env\.mjs\n/);
-    assert.match(text, /node scripts\/setup-env\.mjs --check/);
-  });
-
-  it("installs the pi CLI before provisioning (setup-env refuses to install it)", () => {
-    const text = workflow();
-    const piAt = text.indexOf("pi-coding-agent");
-    const provisionAt = text.indexOf("node scripts/setup-env.mjs\n");
-    assert.ok(piAt !== -1, "the workflow must install the pi CLI");
-    assert.ok(provisionAt !== -1);
-    assert.ok(piAt < provisionAt, "pi must be installed before the provision step");
-  });
-
-  it("publishes the installer bin dirs between the provision and the --check step", () => {
-    // The installers only mutate the shell profile: bun lands in ~/.bun/bin and
-    // uv/engram in ~/.local/bin. setup-env prepends them for its own process, so
-    // its verify→fix loop converges — but a later workflow step starts from the
-    // runner's default PATH. Without this hand-off the --check reports
-    // `MISS bun` on a machine that installed it seconds earlier (observed on
-    // both runners before this step existed).
-    const text = workflow();
-    const provisionAt = text.indexOf("node scripts/setup-env.mjs\n");
-    const checkAt = text.indexOf("node scripts/setup-env.mjs --check");
-    const publishAt = text.indexOf("GITHUB_PATH");
-    assert.ok(provisionAt !== -1 && checkAt !== -1, "the workflow runs provision then --check");
-    assert.ok(publishAt !== -1, "the workflow must publish the installer bin dirs to later steps");
-    assert.ok(provisionAt < publishAt, "the dirs are published after the installers ran");
-    assert.ok(publishAt < checkAt, "the dirs are published before the --check reads them");
-    assert.match(text, /echo "\$HOME\/\.bun\/bin" >> "\$GITHUB_PATH"/);
-    assert.match(text, /echo "\$HOME\/\.local\/bin" >> "\$GITHUB_PATH"/);
+describe("no setup CI — removed by owner decision (S12, D8)", () => {
+  it("no workflow file runs setup-env, and setup-check.yml is gone", () => {
+    const dir = path.join(REPO_ROOT, ".github", "workflows");
+    const offenders = fs
+      .readdirSync(dir)
+      .filter((f) => /\.ya?ml$/u.test(f))
+      .filter((f) => fs.readFileSync(path.join(dir, f), "utf8").includes("setup-env"));
+    assert.deepEqual(offenders, [], "no GitHub Actions workflow may run setup-env");
+    assert.equal(fs.existsSync(path.join(dir, "setup-check.yml")), false);
   });
 });
 
@@ -536,6 +531,15 @@ describe("config verification (S8, AC11)", () => {
     assert.ok(step);
     assert.match(String(step.command), /packages\/pi-agentic-workflow/);
     assert.match(String(step.command), /--frozen-lockfile/);
+  });
+
+  it("skips the bun-built local steps while bun is absent and declined (S11) — never a failure", () => {
+    const plan = planSetup(worktreeState({ bun: { present: false, version: null } }));
+    assert.equal(plan.steps.find((s) => s.tool === "schema-dist"), undefined);
+    assert.equal(plan.steps.find((s) => s.tool === "pi-crate-modules"), undefined);
+    assert.ok(plan.steps.find((s) => s.tool === "serena-cache"), "cache and override are not bun-dependent");
+    assert.ok(plan.steps.find((s) => s.tool === "serena-local-override"));
+    assert.equal(plan.ok, true);
   });
 
   it("never plans a fix for committed state — invalid .engram/config.json is a failure, not a rewrite", () => {
@@ -613,9 +617,26 @@ describe("the verify→fix loop converges (S8, AC10)", () => {
       },
       verifyAfterPass: (pass) => pass >= 2,
       advance: () => fullState(),
+      bunOptIn: true,
     });
     assert.equal(result.code, 0);
     assert.deepEqual(executed, ["bun", "uv", "serena"]);
+    assert.equal(result.passes, 2);
+  });
+
+  it("a declined bun never plans an install — only uv/serena run (S11)", () => {
+    const executed = [];
+    const result = runProvision({
+      state: fullState({ bun: { present: false, version: null }, uv: { present: false, version: null }, serena: { present: false, version: null } }),
+      execute: (step) => {
+        executed.push(step.tool);
+        return { ok: true, message: `installed ${step.tool}` };
+      },
+      verifyAfterPass: (pass) => pass >= 2,
+      advance: () => fullState({ bun: { present: false, version: null } }),
+    });
+    assert.equal(result.code, 0);
+    assert.deepEqual(executed, ["uv", "serena"]);
     assert.equal(result.passes, 2);
   });
 
@@ -623,6 +644,7 @@ describe("the verify→fix loop converges (S8, AC10)", () => {
     const executed = [];
     const result = runProvision({
       state: worktreeState({ bun: { present: false, version: null } }),
+      bunOptIn: true,
       execute: (step) => {
         executed.push(step.tool);
         return step.tool === "bun" ? { ok: false, message: "network unreachable" } : { ok: true, message: "fixed" };
@@ -724,8 +746,8 @@ describe("bun pinned via .bun-version (S2a, AC13)", () => {
     }
   });
 
-  it("plans the pinned install when bun is missing", () => {
-    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: "1.4.0" }));
+  it("plans the pinned install when bun is missing and the user opted in", () => {
+    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: "1.4.0" }), { bunOptIn: true });
     const step = plan.steps.find((s) => s.tool === "bun");
     assert.ok(step);
     assert.match(String(step.command), /bun\.sh\/install/);
@@ -738,7 +760,7 @@ describe("bun pinned via .bun-version (S2a, AC13)", () => {
   });
 
   it("falls back to the latest installer when no .bun-version exists", () => {
-    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: null }));
+    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: null }), { bunOptIn: true });
     const step = plan.steps.find((s) => s.tool === "bun");
     assert.ok(step);
     assert.match(String(step.command), /bun\.sh\/install/);

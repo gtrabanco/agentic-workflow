@@ -15,6 +15,10 @@ Q1 | 2026-10-28 | open-question | Owner amendment S8/S9: when verification finds
 
 Resolution: **A — local-only**, the owner's verbatim reply "Solo estado local" (2026-10-28, via the workflow's §1 single focused question).
 
+## Decisions
+
+- **D8** (2026-10-28, owner): the setup CI leg is removed — `.github/workflows/setup-check.yml` (S4's macos + ubuntu matrix) is deleted, and no GitHub Actions workflow may run `setup-env` (asserted by the suite). Operating rule stated by the owner alongside it: CI is never created or modified without explicit permission — what is not explicitly permitted is asked first, because GHA minutes and red PRs are real costs. S4/AC5/O11/PE-009 are superseded by this decision; `--check` remains a local verification tool. Amends the L7 verbatim instruction ("quitar los dos ci de las gha" — the two matrix legs of the one workflow).
+
 ## Justifications
 
 ```text
