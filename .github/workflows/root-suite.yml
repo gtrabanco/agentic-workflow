@@ -137,8 +137,10 @@ jobs:
   # online half of the gate and deliberately a separate job: when the registry
   # cannot be reached it degrades to a visible ::warning:: and exits 0 (AC3) —
   # a network blip must never redden a PR no commit caused. Both jobs of this
-  # gate share scripts/version-parity-gate.mjs; the trigger set is closed:
-  # skills/** + packages/pi-agentic-workflow/** + the pinned dependency versions.
+  # gate share scripts/version-parity-gate.mjs; the pins half watches the
+  # exact dependency versions; the content half's trigger set is derived from
+  # the tree (every package under packages/ + skills/ as the Pi package's
+  # content source).
   dependency-pin-gate:
     runs-on: ubuntu-latest
     steps:

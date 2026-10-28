@@ -390,16 +390,23 @@ hoists.
   CLI is still used for the publish step only (Trusted Publishing +
   `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
 - **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
-- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292).**
+- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292; trigger set extended to every package in feature 40).**
   Bump `version:` in the touched package's `package.json` and add a row to the
-  "Companion npm packages" table in `CHANGELOG.md` in the same PR. The rule is
-  no longer prose-only: `root-suite.yml` runs `scripts/version-parity-gate.mjs`
-  on every PR with two halves — the **content** half (offline, deterministic)
-  fails any change under the trigger set **`skills/**` +
-  `packages/pi-agentic-workflow/**`** that does not bump the Pi package's
-  version + add its CHANGELOG companion row (root `skills/` is the Pi package's
-  shipped content, which is exactly why a skills-only merge used to publish
-  nothing); the **registry** half (a separate job, clearly-degraded-when-
+  "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
+  feature 40, ship a valid `.changeset/*.md` declaring the package (the
+  release train applies it at cut time). The rule is no longer prose-only:
+  `root-suite.yml` runs `scripts/version-parity-gate.mjs` on every PR with two
+  halves — the **content** half (offline, deterministic) fails any change
+  under the trigger set of **every package under `packages/` (derived from the
+  tree at runtime — a new package inherits the gate by existing; nothing to
+  extend)** plus **`skills/**`** as the Pi package's shipped content, unless
+  each triggered package is bumped + has its CHANGELOG companion row or is
+  declared by a changeset (root `skills/` is the Pi package's staged content,
+  which is exactly why a skills-only merge used to publish nothing; the
+  skills-content-source mapping is the gate's only declared constant — extend
+  it if a new package ever becomes a `skills/` content source, and audit the
+  gate if packages ever ship outside `packages/`); the **registry** half (a
+  separate job, clearly-degraded-when-
   unreachable) fails an exact pin whose target has published a newer version,
   and — for pins whose target is a local package under `packages/` — a pin that
   does not equal the **local package version** (the one the merge publishes;
@@ -417,7 +424,7 @@ hoists.
   (`channel: latest` = train + publish; `channel: canary|alpha|beta|rc` =
   prerelease cut for the declared packages) — `mode: suggest` previews the
   versions read-only; everything runs `scripts/release.mjs` in CI.
-- **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>": patch|minor|major` + a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring the Pi package satisfies the version-parity gate's content half in place of a manual package.json bump; the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
+- **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>": patch|minor|major` + a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 
 ---
 
