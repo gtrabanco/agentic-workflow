@@ -114,17 +114,18 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 
 1. **In the PR** — add a changeset intent file `.changeset/<name>.md`
    (YAML frontmatter mapping `"@gtrabanco/<package>": patch|minor|major` + a
-   release-note body) or let the repo's skills bump per-skill versions via
-   the bundled `skills/bump-skill/scripts/bump-skill.mjs`. `scripts/lint-changeset.mjs`
+   release-note body). `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
-   package.json bump.
-2. **Skill edits** — `bump-skill` classifies the change, runs its bundled
-   writer, and pastes the summary; the writer applies the `version:` line and
-   the CHANGELOG row atomically.
+   package.json bump. The `skill-lint` helper lints the authoring rules
+   before committing.
+2. **Skill edits** — no per-skill bookkeeping: the changeset IS the change
+   record. Skills carry the unified train version, stamped by
+   `scripts/release.mjs apply` at cut time (D-40-14).
 3. **At release time** — launch **`publish.yml`** with `mode: cut`:
    `channel: latest` applies the train (all package.json versions + the exact
-   local pins, CHANGELOG rows from the changeset bodies, lockfiles), pushes
+   local pins, CHANGELOG rows from the changeset bodies, the skills' stamped
+   `version:` lines, lockfiles), pushes
    ONE release commit, tags `vX.Y.Z`, fast-forwards `stable`, opens the
    GitHub Release, and the push fires the publish jobs (schema → crate → pi)
    that publish npm. `channel: canary` (or alpha/beta/rc) instead publishes

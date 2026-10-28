@@ -471,7 +471,6 @@ created | scripts/lint-changeset.mjs | the intent-file gate — the fail-closed 
 created | scripts/release.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
 created | scripts/lint-changeset.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
 created | scripts/release-workflows.test.mjs | the workflow-contract corpus frozen at plan cut; every fold extends, never weakens
-created | scripts/bump-skill.test.mjs | the bump-writer RED corpus frozen at plan cut; every fold extends, never weakens
 created | skills/bump-skill/scripts/bump-skill.mjs | the skill's bundled writer (D-40-8) — its release-history writes are owned by the skill's prose contract, not by the ledger-ownership map
 created | .github/workflows/publish.yml | the single release entry point (D-40-13) — the npm Trusted Publisher filename binding
 ```

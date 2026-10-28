@@ -871,3 +871,14 @@ npx skills list
 If the docs in a project you set up earlier still reference the old names, re-run
 `init-workspace` (or `audit-docs`) to bring that project's `docs/workflow/` copy in
 line with the v2 set.
+
+## 2026-10-28 — `bump-skill` renamed to `skill-lint`; per-skill versioning retired (D-40-14)
+
+- The repo-maintenance skill `bump-skill` is now `skill-lint`: it only lints
+  the authoring rules and reports. Its bundled writer (`skills/bump-skill/
+  scripts/bump-skill.mjs`) is deleted.
+- Skills no longer carry independent per-skill semver: `version:` in every
+  SKILL.md frontmatter is the unified train version, stamped by
+  `scripts/release.mjs apply` at cut time from the accumulated changesets.
+- The per-skill tables in `CHANGELOG.md` are a frozen archive; nothing is
+  appended. A skill change ships via a `.changeset/*.md` intent file.

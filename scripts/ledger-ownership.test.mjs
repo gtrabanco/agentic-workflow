@@ -369,6 +369,13 @@ function resolvedLiterals(expression, bindings, depth = 0) {
  * @param patterns  ledger pattern → map row, from the ownership map
  * @param blocked   names on the map's `no-script-writer` directive
  */
+// D-40-14 + D-40-8: the SKILL.md frontmatter `version:` line is no longer a
+// per-skill history ledger — it is a rendered mirror of the unified train
+// version, and its only writer is the release stamp (D-40-8 recorded the
+// approval for a widened extraction). The exemption is narrow: any OTHER
+// script writing SKILL.md still fails, and the pair is pinned by name.
+const DECISION_BACKED_WRITERS = new Map([["SKILL.md", "scripts/release.mjs"]]);
+
 function writePathScan({ patterns, blocked, sources, label }) {
   const failures = [];
   const writers = new Set();
@@ -396,6 +403,10 @@ function writePathScan({ patterns, blocked, sources, label }) {
       }
       const entry = matchLedger(target);
       if (!entry) {
+        if (DECISION_BACKED_WRITERS.get(target) === rel) {
+          writers.add(`${rel} → ${basename(target)}`);
+          continue;
+        }
         failures.push(`${label}: ${rel} writes "${target}", a durable ledger absent from the ownership map`);
         continue;
       }
@@ -646,8 +657,8 @@ test("scan 2 passes the real tree and still recognises its declared annotator", 
   assert.deepEqual(written.failures, [], written.failures.join(" | "));
   assert.deepEqual(
     written.writers,
-    [`${PROVENANCE_REL} → review-findings.md`],
-    "exactly one non-test script may rewrite a durable ledger today, as the map's annotator",
+    [`${PROVENANCE_REL} → review-findings.md`, "scripts/release.mjs → SKILL.md"],
+    "two non-test script writes are sanctioned today: the map's annotator and the D-40-14 train stamp",
   );
 });
 

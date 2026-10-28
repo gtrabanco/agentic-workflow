@@ -87,7 +87,7 @@ A skill is a folder `skills/<name>/SKILL.md` with YAML frontmatter + a body.
 ---
 name: <kebab-case-name>          # must match the directory name
 user-invocable: true             # REQUIRED for it to appear in the agent's /command menu
-version: 1.0.0                   # per-skill semver; bump on every change (see below)
+version: <train>                 # the unified train version — stamped by `scripts/release.mjs apply` at cut time, never bumped by hand
 description: >
   One paragraph with concrete trigger phrases so the agent knows when to load it.
 ---
@@ -184,13 +184,15 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > Claude Code-specific feature, pair it **inline** with the generic fallback — the
 > instruction must be executable by an agent that has never heard of Claude Code.
 
-> **Version every change.** Each skill carries its own `version:` and evolves
-> independently. When you change a skill, bump its `version:` (major = rename or
-> contract/flag change; minor = backward-compatible capability; patch = wording/
-> examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
-> need a note in `docs/workflow/MIGRATION.md`. Until [#176](https://github.com/gtrabanco/agentic-workflow/issues/176)
-> is merged, freeze majors: bump `minor` (or `patch`) only, shipping breaking changes
-> as a `minor` bump with a conventional `BREAKING CHANGE:` footer ([#209](https://github.com/gtrabanco/agentic-workflow/issues/209)).
+> **One version: the unified train (D-40-14).** Skills carry the ecosystem
+> version — the same number as the npm packages and the `vX.Y.Z` tag. It is
+> stamped by code: `scripts/release.mjs apply` writes every `version:` line at
+> cut time from the accumulated changesets, and the per-skill bump ledger
+> (per-skill semver, per-skill CHANGELOG rows) is retired — the per-skill
+> tables in [`CHANGELOG.md`](CHANGELOG.md) are a frozen archive. A change to a
+> skill ships with a `.changeset/*.md` intent file (or the parity gate fails
+> the PR); renames and other breaking surfaces still need a note in
+> `docs/workflow/MIGRATION.md`.
 
 > **Smoke-test wording changes to executor-path skills.** After editing
 > `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
@@ -286,7 +288,7 @@ block and refuses the schedule if a mutating step is ever re-marked as a tail st
 ```text
 normalizer-inventory@1
 step | kind | side
-bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, the CHANGELOG table, README/SKILLS cells) | before
+skill-lint | the authoring lint — reports, never repairs (the train stamps versions; there is no bump writer) | n/a
 bun run bundle:skills | generator (stages the pack-time skill bundle at `packages/pi-agentic-workflow/skills/`; gitignored and removed by `postpack`, so it is build output, never a committed mirror) | before
 bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
@@ -353,7 +355,7 @@ Where prose repeats a version, a count, or a contract id, the machine is
 authoritative and the prose is the defect (AC15). A regex over sentences cannot
 find those, so each restatement is declared once here and the test **recomputes**
 the value: `claim` is a fixed form (`literal:<exact text>`, `version-tables`,
-`package-versions`), `machine` names the publisher, `+` joins surfaces that each
+`package-versions`; `version-tables` is retired with the per-skill ledger — D-40-14), `machine` names the publisher, `+` joins surfaces that each
 carry the same fact. `literal:` compares the number or id inside the quoted text;
 the table kinds compare every row the same way. A restatement found in review but
 not pinned here is a known-issue with its re-trigger condition, never a silent gap.
@@ -362,7 +364,6 @@ not pinned here is a known-issue with its re-trigger condition, never a silent g
 rendered-facts@1
 surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
-CHANGELOG.md | version-tables | frontmatter:version | equals-each
 CHANGELOG.md | package-versions | package:version | equals-each
 
 ```
@@ -448,11 +449,12 @@ reusable operational knowledge as a skill under `skills/`.
 
 **Repo maintenance skill (specific to this repo):**
 
-- **`bump-skill`** — after editing any SKILL.md, run this before committing.
-  It bumps `version:`, adds changelog rows to `CHANGELOG.md`, and updates the
-  skills and model tables in `README.md`.
-  This is the mechanical enforcement of the "Version every change" rule above.
-  `bump-skill` itself is `user-invocable: false` — invoke it via the Skill
+- **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
+  retired, D-40-14) — after editing any SKILL.md, run this before committing.
+  It lints the repo's authoring rules and reports; it repairs nothing and
+  bumps nothing — the train version is stamped by `scripts/release.mjs apply`
+  at cut time, and a skill change ships via a `.changeset/` intent file.
+  `skill-lint` is `user-invocable: false` — invoke it via the Skill
   tool / by following its `SKILL.md` directly, not the slash-command menu.
   It also carries `metadata.internal: true`, the `skills` CLI's own gate
   that keeps `npx skills add` from discovering/offering repo-internal

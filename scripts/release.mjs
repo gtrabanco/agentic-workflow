@@ -22,8 +22,9 @@
  *
  * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias) and
  * `apply` (writes package.json versions + CHANGELOG companion rows for the
- * latest channel, then deletes the consumed `.changeset/*.md` files so the
- * next cut carries only new intent). `--version` forces the LATEST train
+ * latest channel, stamps every skill's SKILL.md frontmatter with the
+ * train version (D-40-14), then deletes the consumed `.changeset/*.md` files
+ * so the next cut carries only new intent). `--version` forces the LATEST train
  * only — prerelease channels compute their own version and reject it. git/npm/gh
  * commands are always PRINTED, never executed — an operator or workflow runs
  * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
@@ -136,6 +137,33 @@ function channelTagCounter(root, base, stamp, channel) {
     .map((t) => Number(t.split(".").pop()))
     .filter(Number.isFinite);
   return counters.length > 0 ? Math.max(...counters) : 0;
+}
+
+/**
+ * Skills carry the train version (D-40-14): every `skills/<name>/SKILL.md`
+ * frontmatter is stamped with it at apply time — by code, from the
+ * accumulated changesets, never by a per-skill prose bump. A skill without
+ * a `version:` line gains one right after the opening fence. Returns the
+ * number of files stamped.
+ */
+function stampSkillVersions(root, version) {
+  const dir = path.join(root, "skills");
+  if (!fs.existsSync(dir)) return 0;
+  let stamped = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const skillPath = path.join(dir, entry.name, "SKILL.md");
+    if (!fs.existsSync(skillPath)) continue;
+    const content = fs.readFileSync(skillPath, "utf8");
+    const updated = /^version: \d+\.\d+\.\d+$/m.test(content)
+      ? content.replace(/^version: \d+\.\d+\.\d+$/m, `version: ${version}`)
+      : content.replace(/^---\n/, `---\nversion: ${version}\n`);
+    if (updated !== content) {
+      fs.writeFileSync(skillPath, updated);
+      stamped += 1;
+    }
+  }
+  return stamped;
 }
 
 /** Highest stable v-tag, or null when the repo has none / is not a repo. */
@@ -386,6 +414,8 @@ function main() {
         });
       }
       rewriteLocalPins(root, packages, version);
+      const stamped = stampSkillVersions(root, version);
+      console.log(`skills: ${stamped} SKILL.md frontmatter(s) stamped with the train version (D-40-14 — the skill version IS the ecosystem version)`);
       // Consume the intent that was just applied — the changesets-tool
       // behavior this format adopted. Without the deletion the files ride
       // into the next cut, whose bump level and notes then re-apply stale
