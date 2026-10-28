@@ -131,6 +131,22 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 
 - **L1** — 2026-10-28, the issue, verbatim:
   ```
+- **E1** — 2026-10-28, `node scripts/setup-env.mjs` · exit 0 · twice: "SETUP — everything is already provisioned; nothing to do (idempotent re-run)" both times (AC1 idempotency on the authoring machine).
+- **E2** — 2026-10-28, `node scripts/setup-env.mjs --check` · exit 0 · all 8 rows ok (node v26 ≥ 24, bun 1.4.4, uv 0.12.4, serena 2.1.0, engram 3.6.0, pi 1.4.0, gentle-engram 0.4.2, project.yml 10993 bytes).
+- **E3** — 2026-10-28, `node scripts/update-tools.mjs --dry-run` · exit 0 · serena-agent 2.1.0/2.1.0 current, gentle-engram 0.4.2/0.4.2 current, nothing changed.
+- **E4** — 2026-10-28, `node --test scripts/setup-env.test.mjs` · exit 0 · 34/34, including the `.engram/` byte-identity guard (sha256 before/after a repo-root `--check` subprocess) and the /tmp fixture run that caught the missing `os` import before any real-tree run.
+- **G1** — 2026-10-28, `node --test scripts/*.test.mjs` · exit 0 · 1008/1008 pass (full root gate; includes pin-watch 35/35 — previous behavior holds, S3 differential).
+- **G2** — 2026-10-28, `bun scripts/check-skill-context.mjs --routes` · exit 0 · "PASS route budgets: 14 routes".
+- **G3** — 2026-10-28, `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` · exit 0 · verdict PASS, fingerprint 4b073c2c…
+- **G4** — 2026-10-28, `grep -n "docs/workflow/SETUP.md" README.md` · exit 0 · README.md:78; `test ! -e package.json` · exit 0.
+- **P1** — 2026-10-28, ledgers frozen (SPEC + evidence + obligations + fix-index row) · 883ea2cd.
+- **P2** — 2026-10-28, setup-env RED tests + /tmp fixture validation (bare machine exit 1, all-present exit 0 no-op, unresolvable node exit 1, .engram byte-identical; the fixture caught the missing `os` import the injected-probe suite masked) · c4a03239.
+- **P3** — 2026-10-28, setup-env.mjs implemented, 30 tests green · c4a03239.
+- **P4** — 2026-10-28, update-tools RED tests then implementation; pin-watch reuse-by-identity pinned; 10 tests green · d9f6bc20.
+- **P5** — 2026-10-28, docs/workflow/SETUP.md + doc-coverage assertions · 075d0a25.
+- **P6** — 2026-10-28, README Setup-area pointer · 075d0a25.
+- **P7** — 2026-10-28, .github/workflows/setup-check.yml + workflow assertions · dfdc2106.
+- **P8** — 2026-10-28, whole-unit verification (G1–G4, E1–E4) and the obligations ledger closed (15/15 verified) · this commit.
   ## Goal
 
   A developer (or agent session) that clones this repository has **no documented or automated path** to provision the authoring toolchain. `init-workspace` provisions Serena and Engram for *target projects* (consumers of `template/`); the authoring side never got the counterpart when feature 66 adopted them. Today the prerequisites — bun + `.node-version` (v24), `uv tool install -p 3.13 serena-agent` with the committed `.serena/project.yml`, the `engram` binary plus the `pi install npm:gentle-engram@latest` package, and the opt-in dogfooding symlink (`ln -sfn ../skills .claude/skills`) — are discoverable only by reading logs and AGENTS.md side notes.
@@ -179,7 +195,7 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 
 ## Next
 
-Implement P2 (RED tests for setup-env), then P3–P8 in order.
+Hand the diff to the owner for the external verdict (workflow §7): the PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) is the owner's to open/merge; CI green (AC5/PE-009) is observable only after push.
 
 ## References
 
