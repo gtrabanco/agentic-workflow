@@ -213,15 +213,28 @@ function rewriteLocalPins(root, packages, version) {
 
 function insertCompanionRow(changelogPath, { name, dirName, version, date, level, summary }) {
   const changelog = fs.readFileSync(changelogPath, "utf8");
+  const rowStart = companionRowStart(changelog, { name, dirName });
+  const row = `| ${version} | ${date} | ${level} | ${summary} |`;
+  fs.writeFileSync(changelogPath, changelog.slice(0, rowStart) + row + "\n" + changelog.slice(rowStart));
+}
+
+/**
+ * Locate the insert position for a package's companion row — the first line
+ * under the package's table grid (newest row first). Fails closed: a missing
+ * anchor or a grid-less table must never be written into (an indexOf(-1)
+ * once landed the row at offset 1, silently corrupting the file).
+ */
+function companionRowStart(changelog, { name, dirName }) {
   const anchor = `#### [\`${name}\`](packages/${dirName}/)`;
   const idx = changelog.indexOf(anchor);
   if (idx === -1) {
     fail(`CHANGELOG.md has no "Companion npm packages" table for ${name} (expected ${anchor})`);
   }
   const headerIdx = changelog.indexOf("|---|", idx);
-  const rowStart = changelog.indexOf("\n", headerIdx) + 1; // newest row first
-  const row = `| ${version} | ${date} | ${level} | ${summary} |`;
-  fs.writeFileSync(changelogPath, changelog.slice(0, rowStart) + row + "\n" + changelog.slice(rowStart));
+  if (headerIdx === -1) {
+    fail(`CHANGELOG.md companion table for ${name} has no "|---|" grid under its heading — repair the table before applying`);
+  }
+  return changelog.indexOf("\n", headerIdx) + 1; // newest row first
 }
 
 // --- main ---------------------------------------------------------------------
@@ -350,6 +363,10 @@ function main() {
       console.log(`${pkg.name}: ${pkg.version} → ${version} (packages/${pkg.dirName}/)`);
     }
     if (args.mode === "apply") {
+      // Pre-flight before ANY write: every package's companion table must
+      // carry its anchor + grid — a failed apply leaves zero writes.
+      const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
+      for (const pkg of packages) companionRowStart(changelog, { name: pkg.name, dirName: pkg.dirName });
       for (const pkg of packages) {
         setPackageVersion(pkg.path, version);
         insertCompanionRow(path.join(root, "CHANGELOG.md"), {
