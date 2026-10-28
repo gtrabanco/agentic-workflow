@@ -49,5 +49,17 @@ jobs:
       - name: Provision the toolchain
         run: node scripts/setup-env.mjs
 
+      # The busy installers only mutate the shell profile, so the binaries land in
+      # `~/.bun/bin` and `~/.local/bin` — dirs a fresh runner step does not have on
+      # PATH. `setup-env.mjs` prepends them for its own process (that is how its
+      # verify→fix loop finds what pass 1 installed); a later step starts from the
+      # runner's default PATH, so the two dirs are published here or the --check
+      # below reports `MISS bun` on a machine that just installed it.
+      - name: Publish the installer bin directories to later steps
+        run: |
+          mkdir -p "$HOME/.bun/bin" "$HOME/.local/bin"
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Verify with the read-only check (S4)
         run: node scripts/setup-env.mjs --check

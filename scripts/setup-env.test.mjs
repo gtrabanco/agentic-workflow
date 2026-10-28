@@ -467,6 +467,25 @@ describe(".github/workflows/setup-check.yml runs the check on macos + linux (S4,
     assert.ok(provisionAt !== -1);
     assert.ok(piAt < provisionAt, "pi must be installed before the provision step");
   });
+
+  it("publishes the installer bin dirs between the provision and the --check step", () => {
+    // The installers only mutate the shell profile: bun lands in ~/.bun/bin and
+    // uv/engram in ~/.local/bin. setup-env prepends them for its own process, so
+    // its verify→fix loop converges — but a later workflow step starts from the
+    // runner's default PATH. Without this hand-off the --check reports
+    // `MISS bun` on a machine that installed it seconds earlier (observed on
+    // both runners before this step existed).
+    const text = workflow();
+    const provisionAt = text.indexOf("node scripts/setup-env.mjs\n");
+    const checkAt = text.indexOf("node scripts/setup-env.mjs --check");
+    const publishAt = text.indexOf("GITHUB_PATH");
+    assert.ok(provisionAt !== -1 && checkAt !== -1, "the workflow runs provision then --check");
+    assert.ok(publishAt !== -1, "the workflow must publish the installer bin dirs to later steps");
+    assert.ok(provisionAt < publishAt, "the dirs are published after the installers ran");
+    assert.ok(publishAt < checkAt, "the dirs are published before the --check reads them");
+    assert.match(text, /echo "\$HOME\/\.bun\/bin" >> "\$GITHUB_PATH"/);
+    assert.match(text, /echo "\$HOME\/\.local\/bin" >> "\$GITHUB_PATH"/);
+  });
 });
 
 // ---------------------------------------------------------------------------
