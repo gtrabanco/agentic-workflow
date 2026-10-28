@@ -18,6 +18,7 @@ import { after, before, describe, it } from "node:test";
 
 import {
   BUN_INSTALL,
+  bunInstallCommand,
   UV_INSTALL,
   SERENA_INSTALL,
   PI_ENGRAM_INSTALL,
@@ -41,7 +42,8 @@ function fullState(overrides = {}) {
     home: "/home/tester",
     nodeMajor: 24,
     requiredNodeMajor: 24,
-    bun: { present: true, version: "1.4.4" },
+    bun: { present: true, version: "1.4.0" },
+    bunPinned: "1.4.0",
     uv: { present: true, version: "0.12.4" },
     serena: { present: true, version: "2.1.0" },
     engram: { present: true, version: "3.6.0" },
@@ -569,5 +571,73 @@ describe("docs/workflow/SETUP.md documents the amendment (S1/S8/S9)", () => {
     ]) {
       assert.ok(text.includes(needle), `SETUP.md must mention ${needle}`);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Owner correction S2a (2026-10-28): bun pinned by the committed .bun-version
+// (exact match — the convention bun's ecosystem honors), symmetric with
+// .node-version for node. Evidence PE-013; supersedes the PE-006 reading.
+// ---------------------------------------------------------------------------
+
+describe("bun pinned via .bun-version (S2a, AC13)", () => {
+  it("verifies bun exactly against the pin — drift is a MISS row", () => {
+    const drifted = verify(fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" }));
+    const bun = drifted.results.find((r) => r.tool === "bun");
+    assert.equal(bun.ok, false);
+    assert.match(bun.detail, /\.bun-version/);
+    assert.match(bun.detail, /1\.4\.0/);
+  });
+
+  it("accepts an exact match", () => {
+    const ok = verify(fullState({ bun: { present: true, version: "1.4.0" }, bunPinned: "1.4.0" }));
+    assert.equal(ok.results.find((r) => r.tool === "bun").ok, true);
+  });
+
+  it("plans the pinned install when bun is missing", () => {
+    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: "1.4.0" }));
+    const step = plan.steps.find((s) => s.tool === "bun");
+    assert.ok(step);
+    assert.match(String(step.command), /bun\.sh\/install/);
+    assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
+  });
+
+  it("plans a repair install at the pinned version when the installed bun drifted", () => {
+    const plan = planSetup(fullState({ bun: { present: true, version: "1.4.4" }, bunPinned: "1.4.0" }));
+    const step = plan.steps.find((s) => s.tool === "bun");
+    assert.ok(step);
+    assert.match(String(step.command), /bash -s "bun-v1\.4\.0"/);
+  });
+
+  it("falls back to the latest installer when no .bun-version exists", () => {
+    const plan = planSetup(fullState({ bun: { present: false, version: null }, bunPinned: null }));
+    const step = plan.steps.find((s) => s.tool === "bun");
+    assert.ok(step);
+    assert.match(String(step.command), /bun\.sh\/install/);
+    assert.doesNotMatch(String(step.command), /bun-v/);
+  });
+
+  it("bunInstallCommand builds the documented versioned installer", () => {
+    assert.equal(bunInstallCommand("1.4.0"), 'curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.0"');
+    assert.equal(bunInstallCommand(null), BUN_INSTALL);
+  });
+
+  it("probeEnvironment reads .bun-version", () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "setup-env-bunver-"));
+    try {
+      fs.writeFileSync(path.join(tmp, ".bun-version"), "1.4.0\n");
+      const state = probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null });
+      assert.equal(state.bunPinned, "1.4.0");
+      fs.writeFileSync(path.join(tmp, ".bun-version"), "v1.3.3\n");
+      assert.equal(probeEnvironment({ root: tmp, platform: "linux", home: tmp, env: {}, probe: () => null }).bunPinned, "1.3.3");
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("SETUP.md documents the pin and the committed file", () => {
+    const text = fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
+    assert.ok(text.includes(".bun-version"), "SETUP.md must mention .bun-version");
+    assert.ok(text.includes("bun-v"), "SETUP.md must name the versioned installer argument");
   });
 });

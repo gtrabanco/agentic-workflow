@@ -59,6 +59,14 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const BUN_INSTALL = "curl -fsSL https://bun.sh/install | bash";
+/**
+ * The bun installer pinned to an exact version (S2a, PE-013): the official
+ * installer accepts a git tag argument — `bash -s "bun-v<version>"`. With no
+ * pin it falls back to latest.
+ */
+export function bunInstallCommand(pinnedVersion) {
+  return pinnedVersion ? `${BUN_INSTALL} -s "bun-v${pinnedVersion}"` : BUN_INSTALL;
+}
 export const UV_INSTALL = "curl -LsSf https://astral.sh/uv/install.sh | sh";
 export const SERENA_INSTALL = "uv tool install -p 3.13 serena-agent";
 export const PI_ENGRAM_INSTALL = "pi install npm:gentle-engram@latest";
@@ -192,12 +200,21 @@ export function probeEnvironment({ root = REPO_ROOT, platform = process.platform
     // no .node-version → no node gate
   }
 
+  let bunPinned = null;
+  try {
+    const text = String(fs.readFileSync(path.join(root, ".bun-version"), "utf8")).trim();
+    bunPinned = text ? text.replace(/^v/u, "") : null;
+  } catch {
+    // no .bun-version → bun installs latest
+  }
+
   return {
     platform,
     home,
     nodeMajor: versionToken(nodeOut) ? Number(versionToken(nodeOut).split(".")[0]) : null,
     requiredNodeMajor,
     bun: { present: bunOut !== null, version: versionToken(bunOut) },
+    bunPinned,
     uv: { present: uvOut !== null, version: versionToken(uvOut) },
     serena: { present: serenaOut !== null, version: versionToken(serenaOut) },
     engram: { present: engramOut !== null, version: versionToken(engramOut) },
@@ -235,9 +252,13 @@ export function verify(state) {
     ["engram", state.engram, "engram"],
   ];
   for (const [tool, entry, label] of tools) {
+    if (tool === "bun" && entry.present && state.bunPinned && entry.version !== state.bunPinned) {
+      results.push({ tool, ok: false, detail: `bun ${entry.version} does not match the version .bun-version pins (${state.bunPinned}) — run without --check to repair` });
+      continue;
+    }
     results.push(
       entry.present
-        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}` }
+        ? { tool, ok: true, detail: `${label} ${entry.version ?? "(version unreadable)"}${tool === "bun" && state.bunPinned ? " (== .bun-version)" : ""}` }
         : { tool, ok: false, detail: `${label} is not installed` },
     );
   }
@@ -301,8 +322,18 @@ export function planSetup(state) {
     ok = false;
   }
 
-  if (!state.bun.present) {
-    steps.push({ tool: "bun", action: "install", command: BUN_INSTALL, kind: "shell", reason: "bun is not installed — running the official installer" });
+  if (!state.bun.present || (state.bunPinned !== null && state.bun.version !== state.bunPinned)) {
+    steps.push({
+      tool: "bun",
+      action: "install",
+      command: bunInstallCommand(state.bunPinned),
+      kind: "shell",
+      reason: state.bunPinned
+        ? state.bun.present
+          ? `bun ${state.bun.version} does not match .bun-version (${state.bunPinned}) — repairing at the pinned version`
+          : `bun is not installed — installing the .bun-version pin (${state.bunPinned})`
+        : "bun is not installed — running the official installer",
+    });
   }
 
   if (!state.uv.present) {

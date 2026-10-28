@@ -34,6 +34,9 @@ issue states them.
 **S8 — progressive verify-fix-next pipeline (owner amendment, 2026-10-28).**
 > Al crear worktrees del repo a veces falla serena por lo que el setup debe verificar si las tools están instaladas, si no lo están instalarlas antes de pasar al siguiente paso. Lo siguiente verificar config y  que esta config está actualizada, si no lo está hacerlo y pasar al siguiente paso. Y así hasta que todo se queda bien instalado
 
+**S2a — bun pinned by its own .bun-version (owner correction of S2's interpretation, 2026-10-28).**
+> .node-version para node y .bun-version para bun si es que bun lo soporta
+
 **S9 — worktree quick resetup (owner amendment, 2026-10-28).**
 > esto permite algo progresivo y rápido y por ejemplo corregir defectos que surgen al, por ejemplo crear un worktree porque entiendo que habrá archivos que viven en el directorio pero están en el gitignore y así al crear un worktree se puede hacer un resetup rápido si es necesario.
 
@@ -68,6 +71,7 @@ One observable, testable criterion per requirement; the check that proves each i
 - **AC9 (S7)** — installs go through binaries first (bun.sh installer, astral.sh uv installer, Homebrew tap / GitHub-Releases tarball for engram); `win32` is refused with the WSL note. Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC10 (S8)** — the provision run is a progressive verify→fix→next pipeline: tools are installed before the next step runs, a failed step stops the pipeline with the tool named, and the run loops verify→fix (bounded, max 3 passes) until everything verifies or the unfixable rows are reported with exit 1. Check: `node --test scripts/setup-env.test.mjs` exits 0 (pipeline/stop/convergence tests) + the foreground run in the `## Log`.
 - **AC11 (S8)** — config verification covers committed state read-only (`.serena/project.yml` non-empty; `.engram/config.json` valid JSON with `project_name` — never rewritten, never initialized) and local gitignored state, which the script creates or rebuilds: `.serena/cache`, `packages/agentic-workflow-schema/dist/` (bun install + build), `packages/pi-agentic-workflow/node_modules`. `--check` reports all of it without writing. Check: `node --test scripts/setup-env.test.mjs` exits 0.
+- **AC13 (S2a)** — the repo commits `.bun-version` (matching the CI setup-bun pin, 1.4.0); setup-env reads it, verifies the installed bun matches **exactly** (the convention is exact, unlike node's major rule), and provision installs/repairs bun at the pinned version via the official installer's version argument (`| bash -s "bun-v<version>"`). Check: `node --test scripts/setup-env.test.mjs` exits 0.
 - **AC12 (S9)** — the same command run inside a fresh worktree (gitignored local state absent, committed config present) converges to exit 0, so a worktree can be re-setup quickly. Check: `node --test scripts/setup-env.test.mjs` exits 0 (worktree-shaped fixture: committed files present, local state absent).
 
 ## Future
@@ -166,6 +170,15 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
   Y así hasta que todo se queda bien instalado esto permite algo progresivo y rápido y por ejemplo corregir defectos que surgen al, por ejemplo crear un worktree porque entiendo que habrá archivos que viven en el directorio pero están en el gitignore y así al crear un worktree se puede hacer un resetup rápido si es necesario.
   ```
 - **D3** — 2026-10-28, owner decision on the §1 single focused question: **"Solo estado local"** — config repair is local-only; the script rebuilds gitignored local state and verifies committed config read-only, never rewrites or regenerates committed config (no `serena init`). Recorded as Q1 in decisions.md; evidence row PE-012.
+- **L3** — 2026-10-28, owner correction, verbatim:
+  ```
+  .node-version para node y .bun-version para bun si es que bun lo soporta
+  ```
+- **D4** — 2026-10-28, owner decision resolving PE-006: bun is pinned by a committed `.bun-version` (exact match — the convention bun's ecosystem honors, PE-013), symmetric with `.node-version` for node. The S2 interpretation "bun respects `.node-version`" is superseded.
+- **E8** — 2026-10-28, `node scripts/setup-env.mjs` on this machine · exit 0 · pass 1 repaired bun 1.4.4 → 1.4.0 via the pinned installer (`bash -s "bun-v1.4.0"`), pass 2 clean; `--check` VERDICT: PASS afterwards; `bun --version` → 1.4.0; `bun scripts/check-skill-context.mjs --routes` exit 0 under the pinned bun; `node --test scripts/*.test.mjs` exit 0 · 1030/1030 (56/56 in the setup-env suite); fixture /tmp/setup-env-bunpin: drifted `--check` exit 1 naming the pin, real-installer repair converged in an isolated HOME.
+- **P13** — 2026-10-28, bun-pin RED tests (8) · this commit.
+- **P14** — 2026-10-28, `.bun-version` (1.4.0) committed + pin implemented in setup-env.mjs · this commit.
+- **P15** — 2026-10-28, SETUP.md pin rows, whole-unit re-verification, ledger 20/20 verified · this commit.
 - **E5** — 2026-10-28, live evidence for S9: this workspace is itself a git worktree (`git worktree list` → /home/agent/projects/agentic-workflow-331) and shows the exact shape — committed `.serena/project.yml` present, gitignored `.serena/cache` and `packages/pi-agentic-workflow/node_modules` absent, `dist/` present only because it was built during G1.
 - **P1** — 2026-10-28, ledgers frozen (SPEC + evidence + obligations + fix-index row) · 883ea2cd.
 - **P2** — 2026-10-28, setup-env RED tests + /tmp fixture validation (bare machine exit 1, all-present exit 0 no-op, unresolvable node exit 1, .engram byte-identical; the fixture caught the missing `os` import the injected-probe suite masked) · c4a03239.
@@ -227,9 +240,18 @@ OPEN rows only, appended by `review-change` and `triage-issue`.
 - **D1** — 2026-10-28, implementer (the issue's first open question, resolved at design time with evidence `planning-evidence.md` PE-001/PE-005): the `engram` binary is neither a uv tool nor an npm package — it is a Go binary distributed via the Homebrew tap `gentleman-programming/tap/engram` (macOS/Linux) and GitHub-Releases tarballs `engram_<version>_<os>_<arch>.tar.gz`. `setup-env.mjs` installs: brew on macOS when Homebrew is present, the release tarball into `~/.local/bin` otherwise.
 - **D2** — 2026-10-28, implementer (S4 on a fresh runner): `--check` alone on a pristine runner fails by design (nothing is installed yet), so the CI job **provisions first** (`node scripts/setup-env.mjs`) and then runs the `--check` demanded by S4 as the verification step. The issue's degraded-mode risk is answered the same way the registry-half gates answer it: the job tolerates upstream installer breakage by failing visibly, never by silently skipping.
 
+- P13 — RED tests for the bun pin: `.bun-version` read, exact-match verification, pinned install/repair command, doc-coverage (validator: `node --test scripts/setup-env.test.mjs` fails RED before P14, exits 0 after)
+  (Implements: S2a)
+  Relevant files: scripts/setup-env.test.mjs
+- P14 — Implement the bun pin in `scripts/setup-env.mjs` + commit `.bun-version` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+  (Implements: S2a)
+  Relevant files: scripts/setup-env.mjs, .bun-version
+- P15 — Update `docs/workflow/SETUP.md` (.bun-version in the tool table and the committed-state list), re-verify and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S2a, S1)
+
 ## Next
 
-Owner amendment S8/S9 received 2026-10-28 (decision: local-only authority). Implement P9–P12, then hand the amended diff back for the external verdict; the PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) stays the owner's to open/merge.
+Owner correction S2a received 2026-10-28 (resolves PE-006: bun pins via its own `.bun-version`, exact match). Implement P13–P15, then hand the amended diff back for the external verdict; the PR (branch `feature/331-authoring-repo-setup`, base `main`, `Closes #331`) stays the owner's to open/merge.
 
 ## References
 
