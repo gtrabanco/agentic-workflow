@@ -52,3 +52,17 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
 - **Why**: skills.sh has no version registry (it's install-derived only). Git refs are the only channel surface. npm packages use dist-tags (`latest`, `canary`, `beta`, `rc`, `alpha`).
 - **Authority**: user instruction (2026-09-16, design interview).
 - **Verification**: `npx skills add gtrabanco/agentic-workflow@#stable` resolves to the stable branch ref. `npx skills add gtrabanco/agentic-workflow@#v4.2.0` hard-pins to the tag.
+## 2026-10-28 — Path-protection justification (P2, applied inline per the owner's local workflow)
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/bump-skill.test.mjs | P2 | 2026-10-28 | execute-phase | The RED fixture mirrored a per-skill Internal table; the real CHANGELOG.md Internal section uses the combined 5-column row shape, and the first implementation's created-anchor path mis-attributed that table's rows (normative-drift pin caught it). Fixture corrected to the real grammar plus a combined-row insertion test — a differential finding, not a weakened assertion.
+```
+
+## 2026-10-28 — D-40-8: the bump writer is the skill's bundled tool, not a repo script
+
+- **What**: The mechanical writer lives at `skills/bump-skill/scripts/bump-skill.mjs` (skill-bundled), not `scripts/bump-skill.mjs`. CLI is unchanged apart from the path.
+- **Why**: The durable-ledger ownership gate (AC16 scan 2, `scripts/ledger-ownership.test.mjs`) closes `scripts/*.mjs` to writers of mapped ledgers, and the `ledger-ownership@1` map is closed to exactly the seven AC16 truth classes — `CHANGELOG.md` version rows and the per-skill `SKILL.md` version line are release-history records no truth class can host, and the map's owner vocabulary is skills-only (`skill:entry`), so a repo-level script can never be declared. The map's own text resolves this class of record: "their writers are the phases that already order them". The skill that orders the bump is `bump-skill`; its bundled script is that skill's mechanical hand, owned by the skill's prose contract (AGENTS.md "Version every change" + `bump-skill/SKILL.md`), exactly as the map expresses ownership for non-ledger durable records. The issue amendment's literal suggestion (`scripts/bump-skill.mjs` "or package script") predates the gate's current strictness; both suggested homes are inside the scanned surface.
+- **Consequence**: `scripts/release.mjs` stays in `scripts/` — its `apply` mode writes the same release-history surfaces and currently passes the scan only because its write paths are call-site-inline (not const-bound), so the extractor resolves nothing. That is accidental compliance, disclosed here; the ownership surface for release writes is this decision and the release workflow's prose contract, and a future gate that widens extraction will need this decision as the recorded approval.
+- **Flagged for the external verifier**: this relocation is this unit's own interpretation of the ownership ontology; veto here if the owner prefers widening the ownership map instead.

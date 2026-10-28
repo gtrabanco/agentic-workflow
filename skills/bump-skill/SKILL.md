@@ -14,7 +14,7 @@ description: >
 ## Turn contract — verify before ending the turn
 
 ```
-✓ Every changed skill's version: was bumped (by scripts/bump-skill.mjs) and
+✓ Every changed skill's version: was bumped (by its bundled scripts/bump-skill.mjs) and
   the per-skill CHANGELOG table got its row
 ✓ The lint results (all 7 authoring rules, including the two machine-surface
   parity/ordering checks and the internal-skill discovery-exclusion check)
@@ -59,13 +59,15 @@ derivation and you verify it.
 ### 2. Run the script
 
 ```sh
-node scripts/bump-skill.mjs <skill>... --level <patch|minor|major> --summary "<one sentence>"
+node skills/bump-skill/scripts/bump-skill.mjs <skill>... --level <patch|minor|major> --summary "<one sentence>"
 ```
 
 The script applies every mechanical surface atomically: the `version:` line in
 each SKILL.md (and nothing else there) and the newest-first row in the skill's
 `CHANGELOG.md` table (creating the table in the matching User-facing/Internal
-section for a new skill). Dry-run first with `--dry-run` if unsure. It also
+section for a new skill). The surfaces and table grammar it mechanizes are
+documented in [version and documentation sync](references/VERSION_AND_DOCS.md).
+Dry-run first with `--dry-run` if unsure. It also
 prints judgment notes — handle every one:
 
 - **README cells** (minor/major): update the affected Skills-table cell in
@@ -119,7 +121,7 @@ be worked on from any agent:
 - Run after any manual edit to a skill or after `execute-phase` touches a
   skill file, and before the commit.
 - `AGENTS.md` section "Version every change" is the policy this skill enforces
-  mechanically (via `scripts/bump-skill.mjs`).
+  mechanically (via the bundled `scripts/bump-skill.mjs`).
 - The version-parity gate (`scripts/version-parity-gate.mjs`) is the CI half:
   a skills change must ship with a package version bump + companion row (or a
   `.changeset/` intent file).

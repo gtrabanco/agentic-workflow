@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * RED-first corpus for scripts/bump-skill.mjs (feature 40, issue #180).
+ * RED-first corpus for skills/bump-skill/scripts/bump-skill.mjs (feature 40, issue #180).
  *
  * Covers the issue's "Tests first" bullets:
  *   - Automated bump on skill change (version applied mechanically)
@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const script = path.join(repoRoot, "scripts/bump-skill.mjs");
+const script = path.join(repoRoot, "skills/bump-skill/scripts/bump-skill.mjs");
 
 const run = (args, cwd = repoRoot) =>
   spawnSync(process.execPath, [script, ...args], { cwd, encoding: "utf8" });
@@ -79,10 +79,9 @@ function fixture({ skill = "alpha", version = "1.2.3", internal = true } = {}) {
     "",
     "### Internal (`user-invocable: false`)",
     "",
-    `#### \`${skill}\``,
-    "| Version | Date | Type | What changed |",
-    "|---|---|---|---|",
-    `| ${version} | 2026-01-01 | — | First versioned release |`,
+    "| Skill | Version | Date | Type | What changed |",
+    "|---|---|---|---|---|",
+    `| \`${skill}\` | ${version} | 2026-01-01 | — | First versioned release |`,
     "",
   ].join("\n");
   fs.writeFileSync(path.join(root, "CHANGELOG.md"), changelog);
@@ -99,12 +98,11 @@ test("bump-skill applies a patch bump to version + one changelog row", () => {
   const changelog = read(root, "CHANGELOG.md");
   const rows = changelog
     .split("\n")
-    .filter((line) => line.startsWith("| 1.2.4 "));
-  assert.equal(rows.length, 1, `expected exactly one 1.2.4 row, got: ${rows}`);
-  assert.match(rows[0], /\| 1\.2\.4 \| 2026-10-28 \| patch \|/);
-  // newest row first inside the alpha table
-  const table = changelog.slice(changelog.indexOf("#### `alpha`"));
-  assert.ok(table.indexOf("| 1.2.4 |") < table.indexOf("| 1.2.3 |"));
+    .filter((line) => line.startsWith("| `alpha` | 1.2.4 "));
+  assert.equal(rows.length, 1, `expected exactly one alpha 1.2.4 row, got: ${rows}`);
+  assert.match(rows[0], /\| `alpha` \| 1\.2\.4 \| 2026-10-28 \| patch \|/);
+  // newest row first inside the combined internal table
+  assert.ok(changelog.indexOf("| `alpha` | 1.2.4 |") < changelog.indexOf("| `alpha` | 1.2.3 |"));
   assert.match(result.stdout, /1\.2\.3 → 1\.2\.4/);
 });
 
@@ -215,7 +213,7 @@ test("dry-run writes nothing", () => {
   assert.match(result.stdout, /dry-run/);
 });
 
-test("a new skill creates its table in the matching section (internal)", () => {
+test("a new internal skill joins the combined internal table (no anchor before it)", () => {
   const root = fixture();
   const skillDir = path.join(root, "skills", "gamma");
   fs.mkdirSync(skillDir, { recursive: true });
@@ -228,9 +226,27 @@ test("a new skill creates its table in the matching section (internal)", () => {
   const changelog = read(root, "CHANGELOG.md");
   const internal = changelog.slice(changelog.indexOf("### Internal"));
   const userFacing = changelog.slice(changelog.indexOf("### User-facing"), changelog.indexOf("### Internal"));
-  assert.match(internal, /#### `gamma`/);
-  assert.doesNotMatch(userFacing, /#### `gamma`/);
-  assert.match(internal, /\| 0\.2\.0 \| 2026-10-28 \| minor \|/);
+  // a named row inside the combined table — never a `#### gamma` anchor that
+  // would mis-attribute the combined table's rows that follow it
+  assert.match(internal, /^\| `gamma` \| 0\.2\.0 \| 2026-10-28 \| minor \|/m);
+  assert.doesNotMatch(changelog, /#### `gamma`/);
+  assert.doesNotMatch(userFacing, /`gamma`/);
+});
+
+test("a new user-facing skill creates its per-skill table under User-facing", () => {
+  const root = fixture();
+  const skillDir = path.join(root, "skills", "delta");
+  fs.mkdirSync(skillDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(skillDir, "SKILL.md"),
+    "---\nname: delta\nuser-invocable: true\nversion: 0.1.0\ndescription: >\n  New user-facing fixture skill.\n---\n\nbody\n",
+  );
+  const result = run(["delta", "--level", "minor", "--date", "2026-10-28", "--root", root]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const changelog = read(root, "CHANGELOG.md");
+  const userFacing = changelog.slice(changelog.indexOf("### User-facing"), changelog.indexOf("### Internal"));
+  assert.match(userFacing, /#### `delta`/);
+  assert.match(userFacing, /\| 0\.2\.0 \| 2026-10-28 \| minor \|/);
 });
 
 test("an argument-hint change is detected and reported", () => {
