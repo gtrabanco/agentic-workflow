@@ -3561,3 +3561,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 29 (`1a62e2c1…295a36f3`)
 - **Files:** 49 files
 - **Summary:** Verify AGENTS.md structure, plan and open setup tooling and AGENTS.md split issues (#331, #332) without implementation
+
+## 2026-10-28T21:05:07Z — feature/180-versioned-skills-releases — manual
+- **Commits:** 17 (`ce40e4ef…64dfe129`)
+- **Files:** 29 files (2022 additions, 624 deletions)
+- **Summary:** Consolidated the release pipeline into a single entry point: `publish.yml` is the one GHA that owns suggest (read-only preview), cut+latest (train apply + push → publish jobs), cut+channel=prerelease (real canary GHA cut), and push-triggered npm publish. `release-plan.yml` and `release-train.yml` deleted. `scripts/release.mjs` gained `publish-plan` mode (TSV output) feeding the channel job. Canary cut moved from local commands to a real GHA cut with Bun-style version shape (`base-canary.<date>.<n>`). All 28 planning obligations verified (O27 re-cut at D-40-13, O28 added); 1029/1029 root tests green.
+- **Decisions:** Owner rejected the 3-workflow split (plan/train/publish) as 'salvar los muebles'. Consolidated everything into one `publish.yml` with modes: `suggest` = read-only plan (stable + canary + every changeset's semver annotation and body → run summary); `cut` + `channel: latest` = apply the train (versions + exact local pins + CHANGELOG rows from changeset bodies + lockfiles), ONE release commit, push (fires the publish jobs schema→crate→pi), tag vX.Y.Z, stable branch, gh release --generate-notes; `cut` + `channel: canary|alpha|beta|rc` = per-declared-package channel publish (temp version, exact-version gate, npm publish --tag, repo restored, cut as git tag — the tag IS the canary counter's input). npm publish ONLY inside `publish.yml` (Trusted Publisher). Push jobs run ONLY on push events (a dispatch run never publishes stale checkouts). `scripts/release.mjs` always runs in CI.
+- **Next:** /review-change on the final diff; create PR against main once npmjs.com Trusted Publisher records are confirmed working
+
