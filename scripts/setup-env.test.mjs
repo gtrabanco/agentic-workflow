@@ -341,3 +341,31 @@ describe("probeEnvironment reads the real inputs through injectable fakes", () =
     assert.equal(typeof state.nodeMajor === "number" || state.nodeMajor === null, true);
   });
 });
+
+describe("docs/workflow/SETUP.md covers every automated step (S1, AC6)", () => {
+  const doc = () => fs.readFileSync(path.join(REPO_ROOT, "docs", "workflow", "SETUP.md"), "utf8");
+
+  it("documents each install command the scripts run, verbatim", () => {
+    const text = doc();
+    for (const [name, needle] of [
+      ["bun installer", "https://bun.sh/install \\| bash"],
+      ["uv installer", "https://astral.sh/uv/install.sh \\| sh"],
+      ["serena install", "uv tool install -p 3.13 serena-agent"],
+      ["brew engram tap", "brew install gentleman-programming/tap/engram"],
+      ["pi gentle-engram install", "pi install npm:gentle-engram@latest"],
+      ["release tarball layout", "engram_<version>_<os>_<arch>.tar.gz"],
+      ["setup usage", "node scripts/setup-env.mjs"],
+      ["check usage", "node scripts/setup-env.mjs --check"],
+      ["update-tools dry-run", "node scripts/update-tools.mjs --dry-run"],
+    ]) {
+      assert.ok(text.includes(needle), `SETUP.md must name the ${name} (${needle})`);
+    }
+  });
+
+  it("documents the committed-vs-local split and the WSL note (S1/S7)", () => {
+    const text = doc();
+    for (const needle of [".serena/project.yml", ".engram/", ".serena/memories/", "WSL", ".node-version"]) {
+      assert.ok(text.includes(needle), `SETUP.md must mention ${needle}`);
+    }
+  });
+});
