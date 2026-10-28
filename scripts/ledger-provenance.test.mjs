@@ -248,6 +248,10 @@ test("a row whose cell escapes a pipe is counted, checked and annotated like any
   gitRun("init", "-q", "-b", "main");
   gitRun("config", "user.email", "fixture@example.invalid");
   gitRun("config", "user.name", "Fixture");
+  // A fixture repository never signs: the host's `commit.gpgsign=true` would send
+  // every fixture commit to a pinentry that has no tty, so the suite failed under
+  // load instead of on its assertion.
+  gitRun("config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   const escaped = "src/index.ts:1 (the `REVIEW-RAN \\| HEAD <40-hex sha>` row)";
@@ -292,6 +296,7 @@ test("a row the 7-column schema refuses is counted, reported and refused — nev
   gitRun("init", "-q", "-b", "main");
   gitRun("config", "user.email", "fixture@example.invalid");
   gitRun("config", "user.name", "Fixture");
+  gitRun("config", "commit.gpgsign", "false");
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "docs"), { recursive: true });
   const malformed = "| F2 | src/index.ts:1 | code | high | fix-now | fold into current unit | yes | shifted ninth cell |";
