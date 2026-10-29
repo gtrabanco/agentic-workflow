@@ -144,9 +144,9 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
   (Implements: S1)
   Relevant files: skills/fold-findings/SKILL.md
 
-- P3 — Forward closure: design-feature gains document-or-don't-coin checklist item; plan-feature turns every promise into a task (validator: `bun scripts/pre-execution-quality.test.mjs` exits 0 on the updated skill)
+- P3 — Forward closure: the design/plan steps carry document-or-don't-coin and turn every promise into a task (validator: `grep -c "document-or-don't-coin" skills/unit-lane/SKILL.md` → 1 and `grep -c 'Three-direction closure' skills/unit-lane/SKILL.md` → 1)
   (Implements: S2, S6)
-  Relevant files: skills/design-feature/SKILL.md, skills/unit-lane/SKILL.md
+  Relevant files: skills/unit-lane/SKILL.md (design-feature and plan-feature were retired into the lane by feature 61 — 4b2e0759)
 
 - P4 — PR template: generated render of unit evidence (acceptance criteria → proof → why → resolved ask-gates); two audience layers (human + technical) (validator: `node --test scripts/unit-route.test.mjs` exits 0 on the template)
   (Implements: S3, S7)
@@ -168,9 +168,9 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
   (Implements: S3, S7)
   Relevant files: skills/audit-pr/SKILL.md
 
-- P9 — Deletion mandate: design-feature checklist item for retirements; review-code checklist for "is deleting the surface the complete fix?" (validator: `bun scripts/pre-execution-quality.test.mjs` exits 0 on affected skills)
+- P9 — Deletion mandate: the design step's retirement declaration; review-code checklist for "is deleting the surface the complete fix?" (validator: `grep -c 'Retirements (S8)' skills/unit-lane/SKILL.md` → 1 and `grep -c 'Is deleting the surface the complete fix' skills/review-code/SKILL.md` → 1)
   (Implements: S8)
-  Relevant files: skills/design-feature/SKILL.md, skills/review-code/SKILL.md, skills/review-debt/SKILL.md
+  Relevant files: skills/unit-lane/SKILL.md (design-feature retired into the lane by feature 61), skills/review-code/SKILL.md, skills/review-debt/SKILL.md
 
 - P10 — Additional improvements: LOGS.md append-only rule; docs-only re-review skip default inversion; test-route map; reader-inventory classification; unit-route prints review cycles count; persist self-audit box (validator: `node --test scripts/workflow-status-sensor.test.mjs` exits 0; `node --test scripts/unit-route.test.mjs` exits 0)
   (Implements: S9, S10)
