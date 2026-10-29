@@ -36,12 +36,12 @@ test("#318 S12: the verdict vocabulary is closed and publishes the pass mark", (
 });
 
 test("#318 S12: a complete row validates and parses back to its cells", () => {
-  const row = "| the fold removed 12 lines | `git diff --numstat` | `12\t0\tskills/x.md` | ✓ |";
+  const row = "| the fold removed 4 lines | `git diff --numstat` | `4\t0\tskills/x.md` | ✓ |";
   const parsed = parseEvidenceRow(row);
   assert.equal(parsed.ok, true, parsed.violations.join("; "));
-  assert.equal(parsed.cells.claim, "the fold removed 12 lines");
+  assert.equal(parsed.cells.claim, "the fold removed 4 lines");
   assert.equal(parsed.cells.command, "git diff --numstat");
-  assert.equal(parsed.cells.output, "12\t0\tskills/x.md");
+  assert.equal(parsed.cells.output, "4\t0\tskills/x.md");
   assert.equal(parsed.cells.status, "✓");
   assert.deepEqual(parsed.violations, []);
 });
