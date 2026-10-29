@@ -12,6 +12,8 @@
  */
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,9 +22,13 @@ import { test } from "node:test";
 import {
   changedFilesSince,
   evaluateContent,
+  evaluateContentAll,
   evaluatePins,
   isExactSemver,
   semverGt,
+  changelogRowCount,
+  contentTriggerPrefixes,
+  packageDirs,
   PACKAGE_DIR,
   TRIGGER_PREFIXES,
 } from "./version-parity-gate.mjs";
@@ -131,6 +137,54 @@ test("content: skills change with a version bump and no CHANGELOG row fails on t
 test("content: skills change + version bump + CHANGELOG row passes", () => {
   const r = content(["skills/audit-pr/SKILL.md"], "0.20.0", 1);
   assert.equal(r.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// changeset route (feature 40, issue #180 / O23)
+// ---------------------------------------------------------------------------
+
+const INTENT = { file: ".changeset/the-change.md", ok: true, entries: [{ pkg: PKG, level: "minor" }], error: null };
+
+function contentWithIntent(changedFiles, intent) {
+  return evaluateContent({
+    packageName: PKG,
+    packageJsonPath: "packages/pi-agentic-workflow/package.json",
+    triggerPrefixes: TRIGGER_PREFIXES,
+    changedFiles,
+    baseVersion: BASE_VERSION,
+    headVersion: BASE_VERSION,
+    changelogRowCount: 0,
+    changesetIntent: intent,
+  });
+}
+
+test("content: a changeset file declaring the package satisfies the content half (feature 40)", () => {
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/the-change.md"], [INTENT]);
+  assert.equal(r.ok, true);
+  assert.equal(r.code, "changeset-intent");
+  assert.match(r.message, /release\.mjs/);
+});
+
+test("content: a changeset file declaring a different package does NOT satisfy the gate", () => {
+  const other = { ...INTENT, entries: [{ pkg: "@gtrabanco/agentic-workflow-schema", level: "patch" }] };
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/the-change.md"], [other]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "shipped-content-version");
+});
+
+test("content: a malformed changeset file fails closed (AC-16)", () => {
+  const bad = { file: ".changeset/bad.md", ok: false, entries: [], error: "empty body — a release note needs words" };
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md", ".changeset/bad.md"], [bad]);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "changeset-invalid");
+  assert.match(r.message, /bad\.md/);
+});
+
+test("content: no changeset intent keeps the historical rejection verbatim", () => {
+  const r = contentWithIntent(["skills/unit-lane/SKILL.md"], []);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, "shipped-content-version");
+  assert.match(r.message, /Companion npm packages/);
 });
 
 test("content: version bump with no triggered change passes without demanding a row", () => {
@@ -274,9 +328,140 @@ test("pins: an empty dependencies map passes", () => {
 // wiring constants
 // ---------------------------------------------------------------------------
 
-test("the trigger set is the closed AC2 list and the package dir is the Pi package", () => {
+test("the trigger set names the skills content source and the wiring constants stay pinned", () => {
   assert.deepEqual(TRIGGER_PREFIXES, ["skills/", "packages/pi-agentic-workflow/"]);
   assert.equal(PACKAGE_DIR, "packages/pi-agentic-workflow");
+});
+
+// ---------------------------------------------------------------------------
+// multi-package content half — the gate covers EVERY package under packages/
+// (derived from the tree at runtime, so a new package inherits the gate by
+// existing); root skills/ is the content source of the Pi package only.
+// ---------------------------------------------------------------------------
+
+const SCHEMA = "@gtrabanco/agentic-workflow-schema";
+const CRATE = "@gtrabanco/agentic-workflow";
+
+function threePackages({ schema = {}, crate = {}, pi = {} } = {}) {
+  const def = (name, dir, o) => ({
+    packageName: name,
+    packageJsonPath: `packages/${dir}/package.json`,
+    triggerPrefixes: contentTriggerPrefixes(`packages/${dir}`),
+    baseVersion: "1.0.0",
+    headVersion: o.head ?? "1.0.0",
+    changelogRowCount: o.rows ?? 0,
+  });
+  return [def(CRATE, "agentic-workflow", crate), def(SCHEMA, "agentic-workflow-schema", schema), def(PKG, "pi-agentic-workflow", pi)];
+}
+
+const declaring = (name, file = ".changeset/the-change.md") => ({
+  file,
+  ok: true,
+  entries: [{ pkg: name, level: "patch" }],
+  error: null,
+});
+
+function failing(r, name) {
+  return r.results.find((x) => x.packageName === name);
+}
+
+test("content-all: a schema-only change without bump or changeset fails — the gate covers every package", () => {
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["packages/agentic-workflow-schema/src/index.ts"],
+    changesetIntent: [],
+  });
+  assert.equal(r.ok, false);
+  const schema = failing(r, SCHEMA);
+  assert.equal(schema.code, "shipped-content-version");
+  assert.match(schema.message, new RegExp(SCHEMA.replaceAll(".", "\\.")));
+  assert.equal(failing(r, PKG).code, "no-triggered-change");
+  assert.equal(failing(r, CRATE).code, "no-triggered-change");
+});
+
+test("content-all: a schema-only change with a changeset declaring schema passes", () => {
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["packages/agentic-workflow-schema/src/index.ts", ".changeset/schema.md"],
+    changesetIntent: [declaring(SCHEMA, ".changeset/schema.md")],
+  });
+  assert.equal(r.ok, true);
+  assert.equal(failing(r, SCHEMA).code, "changeset-intent");
+});
+
+test("content-all: skills trigger only the Pi package — a changeset declaring schema does not cover a skills change", () => {
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["skills/unit-lane/SKILL.md", ".changeset/schema.md"],
+    changesetIntent: [declaring(SCHEMA, ".changeset/schema.md")],
+  });
+  assert.equal(r.ok, false);
+  assert.equal(failing(r, PKG).code, "shipped-content-version");
+  assert.equal(failing(r, SCHEMA).code, "no-triggered-change");
+});
+
+test("content-all: each package is judged independently — one bumped, one declared, one untouched passes", () => {
+  const r = evaluateContentAll({
+    packages: threePackages({ pi: { head: "1.1.0", rows: 1 } }),
+    changedFiles: ["packages/pi-agentic-workflow/src/x.ts", "packages/agentic-workflow-schema/src/y.ts", ".changeset/schema.md"],
+    changesetIntent: [declaring(SCHEMA, ".changeset/schema.md")],
+  });
+  assert.equal(r.ok, true, JSON.stringify(r.results.map((x) => [x.packageName, x.code])));
+});
+
+test("content-all: one failing package fails the whole gate", () => {
+  const r = evaluateContentAll({
+    packages: threePackages({ pi: { head: "1.1.0", rows: 1 } }),
+    changedFiles: ["packages/agentic-workflow/src/index.ts", "packages/pi-agentic-workflow/src/x.ts"],
+    changesetIntent: [],
+  });
+  assert.equal(r.ok, false);
+  assert.equal(failing(r, CRATE).code, "shipped-content-version");
+});
+
+test("content-all: a malformed changeset fails closed even when it declares another package", () => {
+  const bad = { file: ".changeset/bad.md", ok: false, entries: [], error: "empty body — a release note needs words" };
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["packages/agentic-workflow-schema/src/index.ts", ".changeset/bad.md"],
+    changesetIntent: [bad],
+  });
+  assert.equal(r.ok, false);
+  assert.equal(failing(r, SCHEMA).code, "changeset-invalid");
+});
+
+test("content-all: nothing triggered anywhere passes", () => {
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["docs/workflow/FEATURE_WORKFLOW.md"],
+    changesetIntent: [],
+  });
+  assert.equal(r.ok, true);
+  assert.equal(r.code, "no-triggered-change");
+});
+
+test("packageDirs derives every package under packages/ — a new package inherits the gate by existing", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "gate-dirs-"));
+  fs.mkdirSync(path.join(root, "packages/with-manifest"), { recursive: true });
+  fs.writeFileSync(path.join(root, "packages/with-manifest/package.json"), "{}\n");
+  fs.mkdirSync(path.join(root, "packages/without-manifest"), { recursive: true });
+  fs.writeFileSync(path.join(root, "packages/loose-file.txt"), "x");
+  assert.deepEqual(packageDirs(root), ["packages/with-manifest"]);
+});
+
+test("contentTriggerPrefixes: skills/ belongs only to the skills content source (the Pi package)", () => {
+  assert.deepEqual(contentTriggerPrefixes("packages/pi-agentic-workflow"), ["skills/", "packages/pi-agentic-workflow/"]);
+  assert.deepEqual(contentTriggerPrefixes("packages/agentic-workflow-schema"), ["packages/agentic-workflow-schema/"]);
+  assert.deepEqual(contentTriggerPrefixes("packages/agentic-workflow"), ["packages/agentic-workflow/"]);
+});
+
+// The row count's heading must be scoped per package: "agentic-workflow" is a
+// substring of both sibling package names, so a basename heading counts rows
+// across all three companion tables.
+test("changelogRowCount: the crate heading never counts the schema or pi tables", () => {
+  assert.equal(changelogRowCount("4.8.0", "packages/agentic-workflow", CRATE), 0);
+  assert.ok(changelogRowCount("4.8.0", "packages/agentic-workflow-schema", SCHEMA) >= 1);
+  assert.equal(changelogRowCount("0.37.0", "packages/pi-agentic-workflow", PKG), 1);
 });
 
 // --- local-authority rule (the registry-vs-local bind): a pin whose target has
@@ -359,4 +544,24 @@ test("pins: a dependency with no local sibling keeps the registry-only rule", ()
   );
   assert.equal(r.violations.length, 1);
   assert.match(r.violations[0].message, /registry published 1\.1\.0/);
+});
+
+// D-40-15: skills are the Pi package's shipped content — a changeset
+// declaring a SKILL satisfies the Pi package's content half (and nothing else's).
+test("content-all: a skill-declaring changeset satisfies the Pi package, not its siblings", () => {
+  const intent = [{ file: ".changeset/skill.md", ok: true, entries: [{ pkg: "unit-lane", level: "patch", kind: "skill" }], error: null }];
+  const r = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["skills/unit-lane/SKILL.md", ".changeset/skill.md"],
+    changesetIntent: intent,
+  });
+  assert.equal(r.ok, true, JSON.stringify(r.results.map((x) => [x.packageName, x.code])));
+  assert.equal(failing(r, PKG).code, "changeset-intent");
+  assert.equal(failing(r, SCHEMA).code, "no-triggered-change");
+  const schemaOnly = evaluateContentAll({
+    packages: threePackages(),
+    changedFiles: ["packages/agentic-workflow-schema/src/index.ts", ".changeset/skill.md"],
+    changesetIntent: intent,
+  });
+  assert.equal(schemaOnly.ok, false, "a skill entry does not cover a schema-only change");
 });
