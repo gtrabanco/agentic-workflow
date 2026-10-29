@@ -196,10 +196,10 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 >
 > **Create the intent file by running code, not by hand:**
 > `node scripts/changeset-create.mjs` derives the affected packages and skills
-> from the modified files, the semver from the conventional commit title
-> (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; `--level`
-> overrides), and the file name PR-first (`<pr|branch>-<title>.md`) so names
-> stay unique. One file per PR, as many entries as the change needs; it never
+> from the modified files (committed range and working tree), the semver from the
+> branch's conventional commits (any `!`/`BREAKING CHANGE` → major, any `feat` →
+> minor, anything else → patch; `--level` overrides), and the file name PR-first
+> (`<pr|branch>-<title>.md`) so names stay unique. One file per PR, as many entries as the change needs; it never
 > overwrites. At cut time each change lands in the changelog's right section:
 > the scoped key routes the row to that package's own table, skill entries
 > ride the skills-content package's row named as `(skills: …)`, and a package

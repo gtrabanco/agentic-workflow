@@ -2,7 +2,8 @@
 /**
  * Corpus for scripts/changeset-create.mjs (D-40-16): the changeset intent
  * file is created by code — affected packages/skills derived from the
- * modified files, the semver from the conventional commit title, the file
+ * modified files (range + working tree), the semver from the branch's
+ * conventional commits, the file
  * name PR-first (unique), several packages and skills in ONE file.
  */
 
@@ -70,6 +71,63 @@ test("fix title infers patch; a breaking title infers major", () => {
   const breaking = fixture({ commits: [["feat(pi)!: new contract", "packages/pi-agentic-workflow/src/x.ts"]] });
   assert.equal(run([], breaking).status, 0);
   assert.match(changesetFile(breaking).content, /"@gtrabanco\/pi-agentic-workflow": major/);
+});
+
+test("the working tree counts: an untracked file under a skill is declared", () => {
+  // F1: the committed range alone is blind to an uncommitted edit. A porcelain
+  // `?? <path>` record's 2-char status has no leading space to lose, so a
+  // status strip that eats characters from the path corrupts it — the file then
+  // matches neither `packages/` nor `skills/` and is silently dropped.
+  const root = fixture({ commits: [["docs: a note", "docs/notes.md"]] });
+  fs.mkdirSync(path.join(root, "skills/unit-lane/references"), { recursive: true });
+  fs.writeFileSync(path.join(root, "skills/unit-lane/references/NEW.md"), "fresh\n");
+  const result = run(["--message", "docs: a note", "--level", "patch"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(changesetFile(root).content, /"unit-lane": patch/, "the untracked skill file is in the set");
+});
+
+test("the working tree counts: a staged (added) file under a package is declared", () => {
+  // The same defect on a porcelain `A  <path>` record: staged work is what the
+  // PR is about, and it must reach the intent file before the commit exists.
+  const root = fixture({ commits: [["docs: a note", "docs/notes.md"]] });
+  fs.mkdirSync(path.join(root, "packages/pi-agentic-workflow/src"), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, "packages/pi-agentic-workflow/src/staged.ts"),
+    "export const staged = 1;\n",
+  );
+  execFileSync("git", [...GIT, "-C", root, "add", "packages/pi-agentic-workflow/src/staged.ts"]);
+  const result = run(["--message", "docs: a note", "--level", "patch"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(
+    changesetFile(root).content,
+    /"@gtrabanco\/pi-agentic-workflow": patch/,
+    "the staged package file is in the set",
+  );
+});
+
+test("the level reads EVERY commit on the branch, not only the last", () => {
+  // F2: the documented rule is "any `!` or BREAKING CHANGE → major, any feat →
+  // minor" across the branch's commits. A feat commit followed by a review-fold
+  // fix commit is still a feature; inferring from the tip alone ships a patch.
+  const featThenFix = fixture({
+    commits: [
+      ["feat(pi): the lane contract gains a flag", "skills/unit-lane/SKILL.md", "---\nname: unit-lane\n---\n\nwith the flag\n"],
+      ["fix(pi): correct the flag default", "skills/unit-lane/SKILL.md", "---\nname: unit-lane\n---\n\nwith the flag corrected\n"],
+    ],
+  });
+  const minor = run([], featThenFix);
+  assert.equal(minor.status, 0, minor.stderr || minor.stdout);
+  assert.match(changesetFile(featThenFix).content, /"unit-lane": minor/, "a feat anywhere in the range is minor");
+
+  const fixThenBreaking = fixture({
+    commits: [
+      ["feat(pi)!: a contract changes shape", "packages/pi-agentic-workflow/src/x.ts", "export const a = 1;\n"],
+      ["fix(pi): correct the default", "packages/pi-agentic-workflow/src/x.ts", "export const a = 2;\n"],
+    ],
+  });
+  const major = run([], fixThenBreaking);
+  assert.equal(major.status, 0, major.stderr || major.stdout);
+  assert.match(changesetFile(fixThenBreaking).content, /"@gtrabanco\/pi-agentic-workflow": major/, "a breaking commit anywhere in the range is major");
 });
 
 test("--level overrides the inference and --pr leads the file name", () => {
