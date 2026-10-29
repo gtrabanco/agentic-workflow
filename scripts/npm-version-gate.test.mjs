@@ -35,11 +35,7 @@ import { decidePublish } from "./npm-version-gate.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(repoRoot, "scripts", "npm-version-gate.mjs");
-const WORKFLOWS = [
-  "publish-pi-package.yml",
-  "publish-schema.yml",
-  "publish-agentic-workflow.yml",
-].map((f) => path.join(repoRoot, ".github", "workflows", f));
+const WORKFLOWS = ["publish.yml"].map((f) => path.join(repoRoot, ".github", "workflows", f));
 
 const run = (args, { cwd = repoRoot } = {}) =>
   spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8", cwd });

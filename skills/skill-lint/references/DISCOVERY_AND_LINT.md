@@ -6,7 +6,7 @@ Union modified `skills/*/SKILL.md` paths from `git diff --name-only HEAD` and
 `git diff --cached --name-only`. Explicitly named skills override that set after
 their files are verified. Empty set → report and stop.
 
-### 2. Choose each bump from its diff
+### 2. Read the change, choose what to report
 
 Read `git diff HEAD -- skills/<name>/SKILL.md` (plus `--cached` when staged):
 
@@ -14,11 +14,11 @@ Read `git diff HEAD -- skills/<name>/SKILL.md` (plus `--cached` when staged):
 - **minor** — backward-compatible capability, flag, section, or route;
 - **patch** — wording, example, formatting, or internal clarification.
 
-Ask one consolidated question only when a bump remains genuinely ambiguous.
+Ask one consolidated question only when a rule's applicability remains genuinely ambiguous.
 
 ### 3. Lint, warn, never repair
 
-Check all seven `AGENTS.md` invariants. This skill may edit only `version:` in a
+Check all seven `AGENTS.md` invariants. This skill edits nothing — it reports. A
 SKILL.md, so report violations without fixing them:
 
 1. User-facing entrypoint contains a visible closing `→ Next:` block.
@@ -34,4 +34,4 @@ SKILL.md, so report violations without fixing them:
    are exempt. Check only between the first two `---` lines; body prose does not
    satisfy the rule.
 
-Report every result in the summary; lint warnings do not block the bump.
+Report every result in the summary; lint warnings do not block the commit.

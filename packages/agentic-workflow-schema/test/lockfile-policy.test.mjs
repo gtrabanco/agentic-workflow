@@ -1,7 +1,7 @@
 // lockfile-policy.test.mjs — this package is bun-managed
 //
 // bun.lock is the sole lockfile and stays committed; CI installs with
-// `bun install --frozen-lockfile` (publish-schema.yml) and uses the npm CLI
+// `bun install --frozen-lockfile` (the publish workflow) and uses the npm CLI
 // only for the publish step (Trusted Publishing + --provenance are
 // npm-CLI-specific). The npm package-lock.json was dropped at 1.0.1,
 // resurrected once (feature 26's F70 dual-lock sync, superseded on

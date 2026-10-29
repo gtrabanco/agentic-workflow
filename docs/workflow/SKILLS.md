@@ -18,7 +18,7 @@ issue triage, session logging, and workflow status. The former fixed pipeline
 (`design-feature` → `review-spec` → `plan-feature` → `review-plan`) and the
 autopilot role (`ship-roadmap`) are retired (feature 61): their work lives in
 `unit-lane`'s catalog steps and the companion pi package's deterministic
-`advance` conductor. **bump-skill** is a repo-only maintenance tool (not a
+`advance` conductor. **skill-lint** is a repo-only maintenance tool (not a
 workflow skill) and is excluded from the workflow skill index entirely.
 
 ## Context budget and progressive loading
@@ -146,7 +146,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 
 | Skill | Role |
 |---|---|
-| `bump-skill` | After editing a SKILL.md: bump `version:`, add CHANGELOG.md rows, update the README skill/model tables. Repo-only — its description keeps it from triggering in other projects |
+| `skill-lint` | After editing a SKILL.md: lints the authoring rules and the machine-surface registration rules. Repo-only — reports, never repairs; the train version is stamped by `scripts/release.mjs apply` (D-40-14) |
 
 ## Invocation & arguments reference
 
