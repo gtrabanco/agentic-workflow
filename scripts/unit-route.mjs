@@ -426,9 +426,11 @@ or roadmap row was removed after the merge),
 plan-from-issue (a tracked issue with no unit folder yet: a fix-index number or a
 roadmap row's own issue number).
 
-The routed block goes to stdout: unit, status, open-rows, route, next, rows,
-read-set (at most ${READ_SET_MAX} paths, then an explicit remainder line),
-fingerprint.
+The routed block goes to stdout: unit, status, open-rows, review-cycles (the
+Log R<n> rows the unit's record carries), ledger-size (the bytes of the findings
+carrier the fold queue reads — the unit doc for a migrated unit, the legacy
+review-findings.md otherwise), route, next, rows, read-set (at most
+${READ_SET_MAX} paths, then an explicit remainder line), fingerprint.
 
 Exit codes: 0 a route was printed; 1 an unknown unit or an argument count other
 than one; 2 an ambiguous unit token (a number matching both a feature and a fix
@@ -895,32 +897,25 @@ function main(argv) {
     }
   }
 
-  const base = route === "replan" || route === "decision" || route === "product" || route === "fold"
-    ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
-    : ["SPEC.md", "progress.md"];
+  // A doc that owns its open rows (`## Findings` present, #308) also owns the
+  // review-cycle record, so both carriers are in the read set beside it; a
+  // legacy unit still reads its side ledger and its progress log.
+  const docOwnsLedger = sectionText(doc, "Findings") !== null;
+  const base = docOwnsLedger
+    ? ["SPEC.md"]
+    : route === "replan" || route === "decision" || route === "product" || route === "fold"
+      ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
+      : ["SPEC.md", "progress.md"];
   const readSet = readSetFor(unit.dir, selected, base);
 
   const rowIds = rows.map((row) => row.id);
-  // review-cycles: count R log lines (S9 b)
-  const reviewCycles = (function() {
-    try {
-      const content = readUnit(unit.dir, "SPEC.md");
-      if (!content) return 0;
-      const matches = content.match(/^\s*\*\*\s*R\d+\s*\*\*/gm);
-      return matches ? matches.length : 0;
-    } catch {
-      return 0;
-    }
-  })();
-  // ledger-size: byte size of review-findings.md if present (S9 5)
-  const ledgerSize = (function() {
-    try {
-      const stats = fs.statSync(`${unit.dir}/review-findings.md`);
-      return stats.size;
-    } catch {
-      return 0;
-    }
-  })();
+  // Review cycles (S9 b): the `## Log` `R<n>` lines the unit's own record
+  // carries (`- **R1** — …`, the `log-kind@1` receipt row). Cycle count is
+  // context for an informed override, never the health metric (#318 S4).
+  const reviewCycles = (doc.match(/^\s*[-*]\s*\*\*R\d+\*\*/gm) ?? []).length;
+  // Ledger size (S9 5): the carrier the fold queue actually reads — the doc
+  // itself for a migrated unit, the legacy side ledger otherwise.
+  const ledgerSize = Buffer.byteLength(docOwnsLedger || !exists(ledgerPath) ? doc : ledger, "utf8");
   print({
     unit: unit.slug,
     status,

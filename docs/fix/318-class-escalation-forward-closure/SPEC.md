@@ -260,6 +260,16 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   Issue #318: class escalation + forward closure + generated PR evidence pack + remove the narration surface (complements #315 — F49→F50→F51, one class, eleven cycles)
   ```
 
+- **R1** — 2026-10-29, external verify against base `55aefa3f` (head `45552ced`), verdict **NEEDS-DECISION**: 4 blockers (obligations all `planned`; the budget manifest's five formula claims contradicted their own tool and derive; `review-cycles` hard-wired to 0 by an undefined `readUnit` reader; `ledger-size` blind to the post-#308 carrier) + 5 advisories.
+- **F1** — obligations ledger closed: 40 rows now 33 `verified` (each with a re-run command) + 7 evidenced `n/a` (O12, O23, O26, O30, O35, O36, O39 — the S# never shipped by this unit, recorded open instead of claimed). Verified by re-running every validator in the table; `grep -c '| planned |' planning-obligations.md` → 0.
+- **F2** — budget manifest made coherent: `fold-findings` 5948→5944 (exact `ceil(5403 × 1.10)`; the narration's `ceil(5410 × 1.10) = 5952` was the float answer for a size the tool never measured), `execute-phase` 4693/369 kept and its narrative corrected to the measured 4266/335, `review-change` 3457 verified; all 14 route ceilings re-based to exact `ceil(measured × 1.10)` at the final tree. `node scripts/promise-coherence.mjs` → PASS (27 claims).
+- **F3** — `unit-route.mjs` `review-cycles` reads the doc through the existing `readProject` and counts `- **R<n>**` log rows: `node scripts/unit-route.mjs 316-roadmap-settle` → `review-cycles: 3` (was 0). Pinned by 5 new cases in `scripts/unit-route.test.mjs` (red on the pre-fix router).
+- **F4** — `unit-route.mjs` `ledger-size` measures the carrier the fold queue reads (the unit doc for a migrated unit, `review-findings.md` otherwise) and the read set no longer names a side ledger a migrated unit does not have: `318` → `ledger-size: 27876 bytes`. The `--help` block lists both new fields.
+- **F5** — sibling half of the review: `verification-contract` requires every AC to name its demonstrating command (S5/O6), and both shipped PR templates carry the generated evidence pack with its human + technical layers (S3/S7, O7/O10), pinned by `scripts/pr-evidence-pack.test.mjs` (5 cases, red on the base templates).
+- **G1** — `node scripts/run-root-suite.mjs` → 1152 tests, 1152 pass, 0 fail at the folded head (base `55aefa3f` was 903/844 pass, 59 fail).
+- **G2** — `bun run test` in `packages/agentic-workflow-schema` → 721 pass / 0 fail; in `packages/pi-agentic-workflow` → 471 pass / 0 fail.
+- **G3** — `node scripts/check-skill-context.mjs` → PASS (28 skills); `--routes` → PASS (14 routes); `node scripts/promise-coherence.mjs` → PASS (27 claims).
+
 ## Next
 
 Plan the unit: review the spec, cut planning evidence and obligations, then proceed to P1.

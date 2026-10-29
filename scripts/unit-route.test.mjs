@@ -878,3 +878,68 @@ test("#308 the legacy shape is untouched: no ## Log, no ## Findings, same routes
   const triage = routeSpecRef(["--triage", "20-legacy-shape"]);
   assert.equal(triage.status, 0, triage.stderr);
 });
+
+// ---------------------------------------------------------------------------
+// #318 S9 — review cycles and ledger size are measured, never stubbed
+//
+// `review-cycles` counts the `## Log` `R<n>` receipt rows the unit's record
+// carries (`- **R1** — …`, `log-kind@1`); `ledger-size` is the byte count of the
+// carrier the fold queue actually reads — the unit doc for a migrated unit, the
+// legacy `review-findings.md` otherwise. Both are context for an informed
+// override, so a silent 0 on a unit that has review runs is the defect pinned
+// here (the whole field was once wired to an undefined reader and always 0).
+// ---------------------------------------------------------------------------
+const field = (stdout, name) => new RegExp(`^${name}: (.+)$`, "m").exec(stdout)?.[1] ?? null;
+
+test("#318 S9: review-cycles counts the `## Log` R<n> rows, not a constant", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-cycles-"));
+  fs.cpSync(SPEC_REF_FIXTURE, root, { recursive: true });
+  const dir = path.join(root, "docs", "features", "21-migrated-shape");
+  const doc = fs.readFileSync(path.join(dir, "SPEC.md"), "utf8");
+  const log = "## Log\n" + [
+    "- **R1** — 2026-10-01, review run — `HEAD abc1234`, verdict **FAIL**, cycle 1.",
+    "- **R2** — 2026-10-02, review run — `HEAD def5678`, verdict **PASS**, cycle 2.",
+    // A quoted R line inside the log is still a logged receipt; a bare mention
+    // in prose is not (`- **E1**` naming `R7` must not count).
+    "- **E1** — 2026-10-02, `grep -c '^- \\*\\*R7\\*\\*' x` · exit 0 · 0.",
+  ].join("\n");
+  fs.writeFileSync(path.join(dir, "SPEC.md"), doc.replace("## Log", log));
+
+  const result = run(["21-migrated-shape"], { root });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(field(result.stdout, "review-cycles"), "2", result.stdout);
+});
+
+test("#318 S9: review-cycles is 0 for a unit whose record carries no R row", () => {
+  const result = run(["21-migrated-shape"], { root: SPEC_REF_FIXTURE });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(field(result.stdout, "review-cycles"), "0", result.stdout);
+});
+
+test("#318 S9: ledger-size measures the migrated unit's own doc, not the absent side ledger", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-size-"));
+  fs.cpSync(SPEC_REF_FIXTURE, root, { recursive: true });
+  const dir = path.join(root, "docs", "features", "21-migrated-shape");
+  assert.ok(!fs.existsSync(path.join(dir, "review-findings.md")), "the fixture is a migrated unit: no side ledger");
+
+  const result = run(["21-migrated-shape"], { root });
+  assert.equal(result.status, 0, result.stderr);
+  const expected = Buffer.byteLength(fs.readFileSync(path.join(dir, "SPEC.md")), "utf8");
+  assert.equal(field(result.stdout, "ledger-size"), `${expected} bytes`, "the doc is the carrier the fold queue reads");
+});
+
+test("#318 S9: ledger-size still measures a legacy unit's side ledger", () => {
+  const result = run(["10-replan-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  const expected = fs.statSync(path.join(FIXTURE, "docs", "features", "10-replan-unit", "review-findings.md")).size;
+  assert.equal(field(result.stdout, "ledger-size"), `${expected} bytes`, result.stdout);
+});
+
+test("#318 S9: the read set names the one carrier the unit actually owns", () => {
+  const migrated = readSet(run(["21-migrated-shape"], { root: SPEC_REF_FIXTURE }).stdout);
+  assert.deepEqual(migrated.entries, ["docs/features/21-migrated-shape/SPEC.md"],
+    "a migrated unit reads its doc, never a side ledger it does not have");
+  const legacy = readSet(run(["10-replan-unit"]).stdout);
+  assert.ok(legacy.entries.includes("docs/features/10-replan-unit/review-findings.md"),
+    "a legacy unit still reads its side ledger");
+});
