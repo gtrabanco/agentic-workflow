@@ -117,6 +117,27 @@ set, written from the planner's own discovery, and a file that is missing from
 it is never out of scope for the executor.
 <!-- tasks:end -->
 
+<!-- retirements:start -->
+Every retirement the design step declared (S8) becomes **its own task**: a
+deliberate deletion gets the same rigor as a deliberate construction — task,
+validator, evidence row — because an ad-hoc deletion skips evidence and a
+planned one cannot. Three pieces per retirement task:
+
+- **the negative-capability pin** — the test proving the removed thing cannot
+  return (`grep -c '<removed name>' <scope>` → 0, or a suite that fails if the
+  surface reappears). This is the task's `(validator: …)`, never prose.
+- **the sweep grep** — the pattern that found the remaining references, with its
+  scope, so a reviewer re-runs the same command.
+- **the surviving-reference count** — before and after, so the deletion is
+  measured rather than asserted.
+
+No declared retirements → write exactly
+``none — the design states why nothing can be removed``. The anti-gaming rule
+(“never shrink a diff by deleting comments, blank lines, docs or tests”) gains
+its complement: verified shrinkage is legitimate work, only unverified
+shrinkage is suspect.
+<!-- retirements:end -->
+
 <!-- sources:start -->
 `sources.md` — every `CLAIM-*` row with a source or an owner answer. A claim row
 whose source is empty, `—`, or `n/a` is a **defect**: find the source in the
@@ -167,6 +188,7 @@ name those files instead.
 - [ ] Every claim was swept against the candidate sources; each `contradicts` hit is resolved or asked
 - [ ] Every question asked was recorded in `decisions.md` with its resolution (or the questions pane says `none`)
 - [ ] Every AC maps to at least one task, and no task re-decides an AC
+- [ ] Every retirement the design declared is its own task, carrying the negative-capability pin as its validator plus the sweep grep and the before/after reference count — or the plan states why nothing can be removed
 - [ ] Tasks are ordered smallest first
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
 - [ ] Final task is verification (proves the whole unit works); a unit that

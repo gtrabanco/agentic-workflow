@@ -123,17 +123,21 @@
       }
     },
     "unit-lane": {
-      "mainEstimateMax": 4396,
-      "mainLinesMax": 335,
+      "mainEstimateMax": 4135,
+      "mainLinesMax": 319,
       "mainSources": {
         "fix/258 harden-needs-input": "the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and the no-silent-feature-default rule has one home — measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424 / ceil(246 x 1.10) = 271 (down from 3464/280, the body shrank)",
         "fix #303 (investigate → orient → ask → decide)": "the design and plan steps are restated positively (investigate search + `sources.md` citation ledger, orient tiers 0/1/2, ask, decide) and each fixed output contract gains the questions pane; measured DESIGN.md 2529 est / 196 lines and PLAN.md 2377 est / 187 lines, so the skill-level reference ceilings are re-based to ceil(2529 x 1.10) = 2782 and ceil(196 x 1.10) = 216 (the tighter of the two files' lines that still bounds both); the main-entry ceilings (3424 / 271) are unchanged and the two new turn-contract boxes fit inside them (measured 3277 est / 255 lines)",
         "feature 66 P2 (memory protocol)": "the Engram memory protocol lands as skills/unit-lane/references/MEMORY.md with a thin instruction in SKILL.md — one turn-contract box, the §5b boundary step and the reference link; measured 3492 est / 270 lines, so the estimate ceiling re-bases to ceil(3492 x 1.10) = 3842 while the line ceiling stays 271 (the prose was tightened to fit it: an earlier cut measured 278 lines and was reduced rather than re-based)",
         "feature 79 re-basis (spec-by-reference carrier)": "the carrier box names both accepted unit-doc shapes beside `main`'s memory-boundary box, and the plan step's positive spec-by-reference checklist lands in references/PLAN.md; measured 3534 est / 272 lines at the re-base, ceilings re-based to ceil(3534 x 1.10) = 3888 and ceil(272 x 1.10) = 300. Growth source: the F11 carrier sentence plus the memory boundary in one turn-contract box, and the plan checklist's six items.",
-        "fix 318 (three-direction closure + retirements)": "unit-lane gains: three-direction closure step (backward + sideways + forward), ask-don't-infer gate, document-or-don't-coin gate, retirements checklist item. Measured at this re-basis: 3996 est / 304 lines; ceiling re-based to ceil(3996 × 1.10) = 4396 / ceil(304 × 1.10) = 335"
+        "fix 318 (three-direction closure + retirements)": "unit-lane gains: the conductor's §3 states where the closure lives (design and plan step references) and the two steps carry it themselves. Measured by `scripts/check-skill-context.mjs` at this re-basis: 3759 est / 290 lines; ceiling re-based to exact ceil(3759 × 1.10) = 4135 / ceil(290 × 1.10) = 319"
       },
-      "referenceEstimateMax": 2782,
-      "referenceLinesMax": 216
+      "referenceEstimateMax": 3319,
+      "referenceLinesMax": 249,
+      "referenceSources": {
+        "fix #303 (investigate → orient → ask → decide)": "the design and plan steps restated positively (investigate search + sources.md citation ledger, orient tiers 0/1/2, ask, decide) — measured DESIGN.md 2529 est / 196 lines, ceiling ceil(2529 x 1.10) = 2782 / ceil(196 x 1.10) = 216",
+        "fix 318 (closure lives with the step that executes it)": "S2/S6/S8's three-direction closure, ask-don't-infer, document-or-don't-coin and retirements moved from the conductor's own §3 into the reference each step actually reads: DESIGN.md gains §Three-direction closure plus its checklist items, PLAN.md gains the retirements output contract plus its checklist item, and the conductor keeps only a pointer. The rule now lives where a model running `design` reads it, instead of in a section the step never opens. Measured at this re-basis: DESIGN.md 3004 est / 225 lines and PLAN.md 3017 est / 226 lines (the larger of the two), so the per-skill reference ceilings re-base to exact ceil(3017 × 1.10) = 3319 / ceil(226 × 1.10) = 249"
+      }
     }
   },
   "routes": {

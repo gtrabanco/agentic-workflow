@@ -119,34 +119,20 @@ re-derives, reorders, or invents steps — it executes only what the catalog say
 
 ### 3. Forward closure + retirements (design/plan steps)
 
-Three-direction closure with explicit gates (S2, S6, S8):
+The two steps that own this are their reference files, not this conductor —
+§4 below links both. The rule is duplicated here for nobody:
 
-**Backward — constraints.** Read the sibling surfaces. Does a design system
-exist? → use its tokens/components (evidence: the design doc); if none, match
-precedent — read the sibling components, never invent what is already written.
+- the **design** step carries the three-direction closure (backward: the
+  constraints in force; sideways: callers and consumers of what changes;
+  forward: every promise coined, behind the **ask-don't-infer** and
+  **document-or-don't-coin** gates) and the **retirements** the unit declares.
+- the **plan** step turns every declared retirement into its own task carrying
+  the negative-capability pin, the sweep grep and the before/after reference
+  count.
 
-**Sideways — sibling surfaces of the same mechanism.** When what a piece
-receives changes, find its callers; when what it delivers changes, find its
-consumers; when something is removed, check what still uses it and ask before
-breaking it. (Same as fold-findings' sweep.)
-
-**Forward — promises.** Every name, field, or endpoint the implementer coins is
-a **node others will reference**. Two explicit gates:
-- **ask-don't-infer**: when the expectation is in neither the tree nor the
-  user's words, asking the user is a legitimate flow state (decision-required),
-  never silent invention. A coined field name without asking is tomorrow's
-  finding: a claim with no source.
-- **document-or-don't-coin**: a new externally-visible contract lands with its
-  consumer-facing documentation in the same change, recorded where its consumer
-  will look (the promise registry renders into the design/plan output and the PR).
-
-**Retirements (S8).** The design states what this change makes obsolete:
-every surface, token, pane, helper or contract this unit retires, each with its
-replacement or its no-consumer evidence. A design whose answer is empty must
-say *why nothing can be removed* (a design that only adds is the exceptional
-case, not the default). The plan turns every retirement into a planned task
-with its evidence: the negative-capability pin (the test proving the removed
-thing cannot return), the sweep grep, the surviving-reference count.
+This section states only that the two steps carry it. The text lives with the
+step that executes it, so a model running `design` reads the rule instead of a
+copy of it — and cannot read a stale copy.
 
 ### 4. Execute triaged steps in order
 

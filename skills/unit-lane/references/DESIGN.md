@@ -48,7 +48,6 @@ repository has been asked.
    and cites the scenario or owner answer it came from.
 4. **Close boundaries**: entities and their roles, actors, accepted and rejected
    inputs (the expectation sweep), deferrals (→ `## Future`).
-
 Pass only if: ✓ the provenance search ran and its receipt is recorded ✓ every
 claim is a `sources.md` row ✓ every AC is induced from a user scenario.
 
@@ -76,6 +75,32 @@ The tier-2 backlog is then filtered by cost of being wrong — expensive to undo
 Pass only if: ✓ every `INV-*` row carries a tier and a cost verdict ✓ every
 tier-0 row names the source that settled it ✓ no claim was researched or asked
 before the provenance tier ran.
+
+### Three-direction closure (S2, S6, S8)
+
+The provenance tier answers *what exists*; closure answers *what this change
+touches*, and each direction decides whether a question is left to ask.
+
+**Backward — constraints in force.** A design system's tokens/components with
+their `sources.md` evidence; with none, the precedent read from siblings.
+
+**Sideways — siblings of the mechanism.** What it receives changes → its
+callers. What it delivers changes → its consumers. Something is removed → what
+still uses it, asked before breaking (the sweep `fold-findings` runs on a defect).
+
+**Forward — promises coined.** Every name, field, endpoint or file is a
+`sources.md` row and a node another party references, behind two gates:
+
+- **ask-don't-infer** — an expectation in neither the tree nor the user's words
+  is a stage-3 question; a coined name with no owner answer is already a defect.
+- **document-or-don't-coin** — a new contract lands with the consumer-facing doc
+  its consumer will look for (the promise registry renders into this step's
+  output and the PR).
+
+**Retirements.** Every surface, token, pane, helper or contract this unit
+**retires**, with its replacement or no-consumer evidence; an empty answer says
+*why nothing can be removed*. Retirements are a design deliverable, not a
+review-time discovery — the plan step turns each into a planned task.
 
 ## Stage 3 — ask
 
@@ -176,6 +201,8 @@ The unit doc's **Acceptance criteria** section, numbered and command-verified.
 - [ ] Entity closure: every entity mentioned has its role in the unit stated
 - [ ] Role closure: every actor/role that interacts with the unit is listed
 - [ ] Expectation sweep: user's accepted and rejected inputs are bounded
+- [ ] The three-direction closure (§ Stage 2) ran: backward, sideways, forward — each with its evidence
+- [ ] Retirements stated: each retired surface carries its replacement or no-consumer evidence, or the answer says why nothing can be removed
 - [ ] Deferrals landed in `## Future`, not in scope
 
 ## Forbidden
@@ -192,5 +219,7 @@ The unit doc's **Acceptance criteria** section, numbered and command-verified.
 - Do not implement, spec, or task anything from `## Future`
 - Do not install a missing tool without explicit user consent
 - Do not build a separate DESIGN.md — one SPEC, all in the unit doc
+- Do not coin a name, field or endpoint without an owner answer and a named place its consumer will read it
+- Do not answer the retirement question with silence: “nothing can be removed” is a stated reason, not an omission
 - Do not pre-fill engineering content (phases, tests, architecture)
 - Do not stamp "designed" with an incomplete closure row
