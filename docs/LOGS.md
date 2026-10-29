@@ -3618,3 +3618,23 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/318 — class escalation, forward closure, generated PR evidence pack, narration removal
 - **Decisions:** Worked inline on the repo's own surgery (rule #4): no review-change, no fold cycles, no self-granted gates. Deterministic gates only (297 tests, 28 skills within budget). Obligations ledger: 40 rows, all planned (not self-verified via self-review). Skipped: S3 (no .github/PR template exists), P13 (review-state.json framework declared but not wired), S10.4 (token accounting), S10.3 (#227 dependency). Budget manifest re-based for 4 skills. Branch: fix/318-class-escalation-forward-closure, 23 commits.
 - **Next:** Owner review of the diff on branch fix/318-class-escalation-forward-closure — 16 files changed, +757/-106. Decide which omitted items to implement or defer. Then: /review-change, /audit-pr, manual merge.
+
+## 2026-10-29T14:10:00Z — fix/318-class-escalation-forward-closure — correction
+
+- **Correction of the entry above (append-only: a wrong past line gets a new line, never an edit).**
+  Three of its claims are false against the tree at `0fc9ee60`:
+  1. *"Skipped: S3 (no .github/PR template exists)"* — **wrong**: `.github/PULL_REQUEST_TEMPLATE.md` and
+     `template/.github/PULL_REQUEST_TEMPLATE.md` both exist and both carry the generated evidence pack
+     with its human and technical layers (`grep -c 'Evidence pack' .github/PULL_REQUEST_TEMPLATE.md` → 1).
+     S3/S7 landed in `dab409a3`.
+  2. *"P13 (review-state.json framework declared but not wired)"* — **wrong**: `scripts/review-state.mjs`
+     ships with `record|mark|check|show`, 6 black-box cases, and `closure: open(n)` exits 1. Landed in `b04b8d5b`.
+  3. *"Obligations ledger: 40 rows, all planned"* — **wrong**: 38 `verified` with re-runnable validators,
+     2 evidenced `n/a` (S17→#307, S18→#227). Closed in `dab409a3` and completed in `cecdc1e9`…`b04b8d5b`.
+  Its commit/file counts (`20 commits`, `45 files`) also predate the latest work; the branch head is `0fc9ee60`.
+- **Root cause:** the entry was written by the `log-session` hook from a stale view of the branch, and it
+  narrates decisions the branch did not take ("no review-change, no fold cycles, no self-granted gates") as if
+  they were findings. This is the hand-tallied-narration class S9 4b exists to stop — the interim rule is
+  append-only, so this correction is a new line rather than an edit.
+- **Next:** the branch is the source of truth. Read the unit doc's `## Log` (R1, F1–F11, E1, G1–G5) for what
+  actually landed; `docs/fix/318-class-escalation-forward-closure/planning-obligations.md` for the 38/2 split.
