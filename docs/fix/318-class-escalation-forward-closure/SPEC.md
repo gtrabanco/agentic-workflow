@@ -269,6 +269,8 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **G1** — `node scripts/run-root-suite.mjs` → 1152 tests, 1152 pass, 0 fail at the folded head (base `55aefa3f` was 903/844 pass, 59 fail).
 - **G2** — `bun run test` in `packages/agentic-workflow-schema` → 721 pass / 0 fail; in `packages/pi-agentic-workflow` → 471 pass / 0 fail.
 - **G3** — `node scripts/check-skill-context.mjs` → PASS (28 skills); `--routes` → PASS (14 routes); `node scripts/promise-coherence.mjs` → PASS (27 claims).
+- **F6** — the S2/S6/S8 rule moved from the conductor to the step that executes it. `unit-lane/SKILL.md` §3 stated the three-direction closure and the retirements, but §4 sends a model running `design` to `references/DESIGN.md` and one running `plan` to `references/PLAN.md` — neither of which carried the rule (0 matches for `document-or-don't-coin`, `three-direction`, `retirement`). The rule now lives in each step's own reference (DESIGN §Three-direction closure + 2 checklist items; PLAN §retirements output contract + its checklist item iso the negative-capability pin, the sweep grep and the before/after count) and the conductor keeps only a pointer. Pinned by 3 new cases in `scripts/lane-era-lineage.test.mjs`, all red against the pre-move bytes.
+- **G4** — `node scripts/run-root-suite.mjs` → 1155 tests, 1155 pass, 0 fail; `check-skill-context` PASS (28 skills), `--routes` PASS (14 routes), `promise-coherence` PASS (28 claims).
 
 ## Next
 
