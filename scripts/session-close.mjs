@@ -146,6 +146,51 @@ function sessionFacts(base) {
   };
 }
 
+
+/**
+ * Prose that claims a path is absent, contradicted by the tree (#318 S9 4b).
+ *
+ * The entry's facts are computed here, but `Summary`/`Decisions`/`Next` are prose
+ * a model supplies, and prose is where a stale view of the branch becomes a claim
+ * nobody re-derives. The first session on this feature logged "Skipped: S3 (no
+ * .github/PR template exists)" while both templates sat on disk carrying the very
+ * section, and "40 rows, all planned" against a ledger at 38 verified — a log that
+ * lies is worse than no log, because the next reader trusts it.
+ *
+ * A model may not assert that something does not exist without the check that
+ * settles it, so any path a narrative names with an absence verb must actually be
+ * absent, and any path it names with an existence verb must actually exist. The
+ * test is deliberately narrow: it reads paths, never opinions, because a sentence
+ * about design has nothing to verify and an opinion is not a claim.
+ *
+ * @param {string} text — the prose cells of one entry
+ * @param {string} root — the repository root paths resolve against
+ * @returns {Array<{claim: string, path: string, reason: string}>}
+ */
+export function unsupportedFileClaims(text, root) {
+  const prose = String(text ?? "");
+  const pathPattern = /`([\w./-]+\.(?:md|mjs|js|ts|json|yml|yaml)|[\w-]+\/[\w./-]+)`/g;
+  const absentVerb = /\b(?:no|not|without|missing|absent|does not exist|doesn't exist)\b/i;
+  const presentVerb = /\b(?:exists|present|carries|ships|landed|is there)\b/i;
+  const found = [];
+  for (const line of prose.split("\n")) {
+    for (const match of line.matchAll(pathPattern)) {
+      const candidate = match[1];
+      if (!candidate.includes("/") && !candidate.endsWith(".md") && !candidate.endsWith(".mjs")) continue;
+      const exists = fs.existsSync(path.join(root, candidate));
+      // The verb must be near the path, not anywhere in the line: a line listing
+      // several paths says different things about each.
+      const around = line.slice(Math.max(0, match.index - 60), match.index + candidate.length + 60);
+      if (absentVerb.test(around) && exists) {
+        found.push({ claim: line.trim(), path: candidate, reason: "claimed absent but it exists" });
+      } else if (presentVerb.test(line) && !absentVerb.test(around) && !exists) {
+        found.push({ claim: line.trim(), path: candidate, reason: "claimed present but it does not exist" });
+      }
+    }
+  }
+  return found;
+}
+
 const USAGE = `usage: session-close <command> [options]
 
   render  --summary <text|@file|-> [--decisions <text>] [--next <text>]
@@ -228,6 +273,17 @@ function main() {
     const kind = opts.kind ?? "manual";
     if (kind === "manual" && !String(summary ?? "").trim()) {
       throw new Error("--summary is required: the facts are computed here, but the narrative is yours");
+    }
+    // #318 S9 4b: the narrative may not assert the tree's state without the check
+    // that settles it. A path the prose calls absent must be absent; one it calls
+    // present must exist. Refusing here keeps a false claim out of the log, which
+    // is the only place it can no longer be corrected in place.
+    const claims = unsupportedFileClaims([summary, opts.decisions, opts.next].filter(Boolean).join("\n"), process.cwd());
+    if (claims.length > 0) {
+      const lines = claims.map((claim) => `  ${claim.path} — ${claim.reason}\n    in: ${claim.claim}`);
+      throw new Error(
+        `the narrative contradicts the tree (${claims.length} claim(s)) — re-derive it before logging:\n${lines.join("\n")}`,
+      );
     }
     const facts = sessionFacts(resolveBase(opts.base));
     const branch = mustGit(["branch", "--show-current"]).trim() || "detached";
