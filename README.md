@@ -26,7 +26,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  28 source skills (13 user-facing + 14 workflow internals + 1 metadata-internal; 27 discoverable — bump-skill is repo-only)
+skills/                  28 source skills (13 user-facing + 14 workflow internals + 1 metadata-internal; 27 discoverable — skill-lint is repo-only)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -64,7 +64,7 @@ for you: the lane's triage-driven step selection (`unit-lane`), the executor
 `review-verify`, `review-debt`, `review-design`, `review-a11y`, `review-brand`,
 `review-perf`, `review-seo`), the workflow's own pre-execution evidence owner
 (`pre-execution-review`), the `orchestration-envelope` contract, and the repo-only
-`bump-skill` maintenance helper (excluded from installation) — so **no external
+`skill-lint` maintenance helper (excluded from installation) — so **no external
 review skill is ever required**, on any agent, with any model. One disciplined
 path: **triage → catalog steps (design, implement, tests, evidence, review) →
 review the change → audit → merge.**
@@ -132,7 +132,7 @@ as a `workflow_observations` note instead of silently repeating it. The resolved
 
 | Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md, and updates the skill table in README.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array stays alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
+| `skill-lint` | After editing a SKILL.md in this repo: lints the authoring rules (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the machine-surface registration rules (every `user-invocable: true` skill has a matching alphabetical entry in `.claude-plugin/plugin.json`; internal skills carry `metadata.internal: true` to stay out of `npx skills add` discovery). Reports, never repairs — skills carry the unified train version, stamped by `scripts/release.mjs apply` at cut time (D-40-14), and a skill change ships via a `.changeset/` intent file. Was `bump-skill` (its per-skill bump ledger retired). Run before every commit that touches a skill. |
 
 The review axes are **self-contained**: the bundled internal review pack covers
 code, security, verify, debt, design, a11y, brand, perf and SEO on any agent.
@@ -282,7 +282,7 @@ requires the GLM 5.3 membership — without it, use the basic-plan ladder):
 | **Merge gates** | `audit-pr`, `product-audit` | glm5.3, High (Max for `product-audit`) | 1. **mimo-v2.6-flash** (reasoning always on; current Xiaomi generation — supersedes mimo-v2.5) → 2. **deepseek-v4-flash** (floor) → else **defer to the human** | qwen3.6, qwen3.8-flash, gemma4 |
 | **Product definition** | `unit-lane` catalog step (`design`) | glm5.3, High | 1. **mimo-v2.6-flash** (reasoning always on; a different family from the executor adds independence; supersedes mimo-v2.5) → 2. **deepseek-v4-flash** → 3. **glm5.3-flash** (only for XS/S or derivative features — cheaper, still function-calling) | gemma4; qwen3.6/qwen3.8-flash for agentic runs (XML tools) |
 | **Planning / routing / triage** | `unit-lane`, `init-workspace`, `triage-issue`, `review-change` | glm5.3, High | 1. **glm5.3-flash** → 2. **deepseek-v4-flash** → 3. **qwen3.8-flash** (quota-saver) | — |
-| **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | deepseek-v4-flash | 1. **deepseek-v4-flash** → 2. **glm5.3-flash** → 3. **qwen3.8-flash** (only through an XML-aware harness) | mimo-v2.5 / mimo-v2.6-flash (reasoning can't be turned off — burns the capped budget) |
+| **Execution / mechanical** | `execute-phase`, `audit-docs`, `skill-lint`, `workflow-status` | deepseek-v4-flash | 1. **deepseek-v4-flash** → 2. **glm5.3-flash** → 3. **qwen3.8-flash** (only through an XML-aware harness) | mimo-v2.5 / mimo-v2.6-flash (reasoning can't be turned off — burns the capped budget) |
 | **Cheap** | `log-session`, evidence gathering | **qwen3.6** — glm5.3's 400M/4h window and deepseek's 3B are both wasted on a log line | 1. **qwen3.6** (no token counter → unlimited; set `reasoning_config: none` so the append pays zero thinking tokens; its OpenAI-`tools` smoke is recorded in [`GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md)) → 2. **qwen3.8-flash** (500M/mo cap) → 3. **deepseek-v4-flash** (only where the harness can't reach qwen3.6) | mimo-v2.5, mimo-v2.6-flash (reasoning can't be turned off) |
 | **Folding `review-change`/`audit-pr` findings** | `fold-findings` (primary); `execute-phase`'s embedded fold cycle (in-context/portability fallback) | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
 | **Adversarial review (`review-change --adversarial N` / `--synthesize`)** | `review-change` | glm5.3 × N, High | reviewers never weaker than the model that authored the diff; worked example: a deepseek-v4-flash-authored change → `--adversarial 2` with **mimo-v2.6-flash** + **glm5.3-flash** — two families neither of which is the executor, free decorrelation already sitting in this fleet; the orchestrating/merge conversation runs per the Planning/routing ladder | a reviewer weaker than the authoring model |
@@ -530,7 +530,7 @@ without selecting skills interactively, pass all published skill names to one
 
 ```sh
 npx skills remove --yes \
-  audit-docs audit-pr bump-skill discover-repository-state \
+  audit-docs audit-pr skill-lint discover-repository-state \
   execute-phase fold-findings init-workspace log-session \
   orchestration-envelope phase-contract product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \

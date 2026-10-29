@@ -39,7 +39,7 @@ The installable set is **13 user-facing + 14 internal** (27 total):
   `review-security`, `review-verify`, `review-debt`, `review-design`,
   `review-a11y`, `review-brand`, `review-perf`, and `review-seo`. These are
   hidden from the menu and dispatched by the user-facing workflow routers.
-  The repo-only `bump-skill` helper is excluded from the installable count.
+  The repo-only `skill-lint` helper is excluded from the installable count.
 
 > **Versioning.** Each skill carries its own `version:` (semver) in frontmatter;
 > changes are logged in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an
