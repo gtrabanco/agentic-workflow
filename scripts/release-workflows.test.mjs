@@ -171,3 +171,23 @@ test("least privilege: each job elevates only the permissions it needs", () => {
   }
 });
 
+
+test("the dispatch version input is shape-checked and never expanded unquoted into the shell", () => {
+  // F12: the operator-supplied `version` input reached the command line through
+  // an intermediate string variable (`ARGS="--version $FORCE_VERSION"` then
+  // `... $ARGS`), so the shell split/globbed it BEFORE release.mjs's own
+  // semver check ran. The contract now: validate the shape in the job, and pass
+  // the value as one quoted argument.
+  const text = read(PUBLISH);
+  for (const job of ["suggest", "cut"]) {
+    const block = jobBlock(text, job);
+    assert.match(
+      block,
+      /\[\[ ! "\$FORCE_VERSION" =~ \^\[0-9\]\+\\.\[0-9\]\+\\.\[0-9\]\+\$ \]\]/,
+      `${job} checks the version shape before running the script`,
+    );
+    assert.doesNotMatch(block, /ARGS="--version \$FORCE_VERSION"/, `${job} builds no interpolated argument string`);
+    assert.doesNotMatch(block, /release\.mjs \w+ \$ARGS/, `${job} never expands an argument string unquoted`);
+    assert.match(block, /--version "\$FORCE_VERSION"/, `${job} passes the value as one quoted argument`);
+  }
+});
