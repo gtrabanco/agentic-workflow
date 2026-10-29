@@ -85,6 +85,28 @@
 
 > Combined with the closure set and class escalation, each fold now **strictly decreases** the defect surface (it closes the set, deletes orphans, and narration is machine-born) — convergence by construction, not by discipline; the cap + CONVERGENCE-ANOMALY revert to meaning "the design did not know the chain" → replan, not "one more fold".
 
+**S12 — The evidence row is versioned grammar the schema publishes, not prose the model is trusted to follow.**
+
+> The `claim | command | output | ✓` rows S5 mandates are validated where every other published shape is validated: as an export of `@gtrabanco/agentic-workflow-schema`, mirrored into the orchestration envelope so a driver can reject a receipt that cannot demonstrate itself. A row that omits its command, its observed output or its verdict is a shape violation, not a style nit. Demonstrator: `grep -c 'EVIDENCE_ROW_COLUMNS' packages/agentic-workflow-schema/src/file-schemas.ts` → 1 and `bun run test` in that package exits 0.
+
+**S13 — A committed test-route map turns the all-or-nothing gate into a bounded one.**
+
+> S9 2's map, committed and versioned: path glob → the minimal sufficient suite, so an intermediate checkpoint runs seconds instead of the full 132 s. The full suite stays where it matters — the merge gate and CI. Demonstrator: `node scripts/test-route.mjs --check <changed path>` prints the route its glob selects and exits 0; `node --test scripts/test-route.test.mjs` exits 0.
+
+**S14 — An unmatched path fails closed to the full suite, never to fewer tests.**
+
+> The map's safety property, and the only reason it may exist: a path no glob matches runs *everything*, and a map entry that cannot be resolved is a hard error rather than a silent skip. Fewer tests than the full suite is reachable only through a matched, committed glob. Demonstrator: `node scripts/test-route.mjs --check <path with no glob>` prints `full-suite` and exits 0; a deliberately broken map entry exits non-zero, pinned in `scripts/test-route.test.mjs`.
+
+**S15 — Every unit doc declares what it retires, in the template every unit is cut from.**
+
+> S10 2's retirement obligation, carried by the shared unit-doc template rather than remembered by the author: a `## Retirements` section (or its re-cut equivalent) stating each retired surface with its replacement or its no-consumer evidence, present and required in both accepted shapes. Demonstrator: `grep -c '^## Retirements' docs/fix/_TEMPLATE/SPEC.md docs/features/_TEMPLATE/SPEC.md` → 1 each, and `node --test scripts/unit-doc-contract.test.mjs` exits 0 with the section in the published list.
+
+**S16 — Per-file review state is script-written, so a review cannot re-litigate a file it never re-read.**
+
+> S10 6's `review-state.json` per unit: the single writer is a script, model passes are read-only, each affecting-path file ends a cycle `reviewed@<sha>` or `skipped@<sha>` with a reason, and a skip auto-invalidates when a later diff touches the file. Coverage closure `inventory − reviewed − skipped = 0` is a mechanical receipt check. Demonstrator: `node scripts/review-state.mjs record|check <unit>` writes and verifies the file; `node --test scripts/review-state.test.mjs` exits 0.
+
+> **S17 and S18 are deferred, not dropped.** They carry named owners and land with them: S17 with #307 (the measurement tier that owns token accounting), S18 with #227 (the emitters a machine-born pane must render from). `## Future` names both.
+
 ## Impact
 
 What the fix touches beyond its own lines: every workflow skill that writes narration, folds findings, gates verification, or generates PR content. The affected skill surfaces are: `fold-findings`, `execute-phase`, `verification-contract`, `review-change`, `review-verify`, `audit-pr`, `unit-lane`, `pre-execution-review`, `review-code`, `review-debt`, `triage-issue`, `workflow-status`, `skill-lint`, and the shared references (`LEDGERS.md`, `POLICY.md`, `PREFLIGHT.md`). The PR template (.github/) may need a generated body section. The test route map is a new normative surface. The existing golden fixture and unit docs must pass against changes.
@@ -103,6 +125,8 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
 - #295 (project's upcoming web layer) will own the rendering of bilingual prompts and the web-facing PR evidence pack presentation.
 - Feature 41's `autoLogSession: mechanical` fully replaces the LOGS.md append-only interim rule.
 - #227 (emitters for pane/row renders) fully replaces hand-rendered panes/rows.
+- **S17 (O36) — permanent token accounting** is deferred to **#307** (the measurement tier that owns the standing metrics). It cannot land here without duplicating that tier's owner: #307 defines what a token delta even means, and this unit has no standing-metric surface to hang it on.
+- **S18 (O39) — panes become a machine-born render** is deferred to **#227** (roadmap row 53, `deterministic-artifact-emitters`, still `idea`). The rule cannot be satisfied before the emitters exist: a pane rendered by hand from a record is exactly what S18 forbids, and there is nothing yet to render it from.
 
 ## Future cost
 
@@ -136,8 +160,8 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
 
 ## Tasks
 
-- P1 — Freeze the unit doc from the template and register it in docs/fix/README.md (validator: `node --test scripts/unit-doc-contract.test.mjs docs/fix/318-class-escalation-forward-closure/SPEC.md` exits 0)
-  (Implements: all S#)
+- P1 — Freeze the unit doc from the template and register it in docs/fix/README.md (validator: `node --test scripts/unit-doc-contract.test.mjs` exits 0)
+  (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11)
   Relevant files: docs/fix/318-class-escalation-forward-closure/SPEC.md, docs/fix/README.md
 
 - P2 — Class escalation: fold-findings gains ≥ 2 rows sharing mechanism+axis ⇒ one class-level fix-now finding (validator: `bun scripts/pre-execution-quality.test.mjs` exits 0 on the updated fold-findings SKILL.md)
@@ -193,7 +217,31 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
   Relevant files: skills/fold-findings/SKILL.md
 
 - P15 — Verification: run the full test suite against the change (validator: `node --test scripts/*.test.mjs` exits 0)
-  (Implements: all S#)
+  (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11)
+  Relevant files: (all)
+
+- P16 — Evidence-row grammar: publish `EVIDENCE_ROW_COLUMNS` + the row validator in the schema package, mirror it in the envelope, bump the package (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0 and `grep -c 'EVIDENCE_ROW_COLUMNS' packages/agentic-workflow-schema/src/file-schemas.ts` → 1)
+  (Implements: S12)
+  Relevant files: packages/agentic-workflow-schema/src/file-schemas.ts, packages/agentic-workflow-schema/src/index.ts, skills/orchestration-envelope/SKILL.md
+
+- P17 — Test-route map: the committed glob → minimal-suite map plus its CLI, failing closed on an unmatched path (validator: `node --test scripts/test-route.test.mjs` exits 0)
+  (Implements: S13, S14)
+  Relevant files: scripts/test-route.mjs, scripts/test-route-map.json, scripts/test-route.test.mjs
+
+- P18 — Retirement obligation in the template: both accepted unit-doc shapes carry `## Retirements`, and the section contract publishes it (validator: `node --test scripts/unit-doc-contract.test.mjs` exits 0 and `grep -c '^## Retirements' docs/fix/_TEMPLATE/SPEC.md` → 1)
+  (Implements: S15)
+  Relevant files: docs/fix/_TEMPLATE/SPEC.md, docs/features/_TEMPLATE/SPEC.md, packages/agentic-workflow-schema/src/pre-execution.ts
+
+- P19 — Per-file review state: the script that owns `review-state.json`, with coverage closure and skip invalidation (validator: `node --test scripts/review-state.test.mjs` exits 0)
+  (Implements: S16)
+  Relevant files: scripts/review-state.mjs, scripts/review-state.test.mjs
+
+- P20 — Wire the new surfaces into the skills that consume them (validator: `node scripts/check-skill-context.mjs` exits 0 and `node scripts/promise-coherence.mjs` exits 0)
+  (Implements: S12, S13, S15, S16)
+  Relevant files: skills/fold-findings/SKILL.md, skills/execute-phase/SKILL.md, skills/review-change/SKILL.md
+
+- P21 — Verification: run the full test suite against the change (validator: `node --test scripts/*.test.mjs` exits 0)
+  (Implements: S12, S13, S14, S15, S16)
   Relevant files: (all)
 
 ### Planning evidence
@@ -271,6 +319,8 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **G3** — `node scripts/check-skill-context.mjs` → PASS (28 skills); `--routes` → PASS (14 routes); `node scripts/promise-coherence.mjs` → PASS (27 claims).
 - **F6** — the S2/S6/S8 rule moved from the conductor to the step that executes it. `unit-lane/SKILL.md` §3 stated the three-direction closure and the retirements, but §4 sends a model running `design` to `references/DESIGN.md` and one running `plan` to `references/PLAN.md` — neither of which carried the rule (0 matches for `document-or-don't-coin`, `three-direction`, `retirement`). The rule now lives in each step's own reference (DESIGN §Three-direction closure + 2 checklist items; PLAN §retirements output contract + its checklist item iso the negative-capability pin, the sweep grep and the before/after count) and the conductor keeps only a pointer. Pinned by 3 new cases in `scripts/lane-era-lineage.test.mjs`, all red against the pre-move bytes.
 - **G4** — `node scripts/run-root-suite.mjs` → 1155 tests, 1155 pass, 0 fail; `check-skill-context` PASS (28 skills), `--routes` PASS (14 routes), `promise-coherence` PASS (28 claims).
+- **F7 (S12/O23)** — the evidence-row grammar is published instead of described: `EVIDENCE_ROW_COLUMNS` (`claim | command | output | status`), the closed `EVIDENCE_ROW_VERDICTS` set, and `parseEvidenceRow`/`validateEvidenceRow` in `packages/agentic-workflow-schema/src/file-schemas.ts`, exported from the package index. A row missing its claim, a backticked command, a backticked output or a ✓/✗ verdict fails closed naming the cell. 8 cases in `test/evidence-row-grammar.test.mjs`, red before the export.
+- **E1** — `cd packages/agentic-workflow-schema && bun run test` → 728 pass, 1 fail. The single failure (`AC2 & F4: the frozen table drives the inventory…`) is **pre-existing**: the same suite on `3bdf6e0f` fails 2 of 5 in `release-contract.test.mjs`; this change leaves it at 1. Not caused, not silently fixed.
 
 ## Next
 
