@@ -36,12 +36,18 @@ workarounds pinned to upstream fixes) into explicit, payable debt items:
 ✓ Attribute it to the axis already recorded in the table — never re-litigate ownership
 ✓ Confirm every debt item carries a TRIGGER: the condition under which it must be
   paid (e.g. "3rd consumer appears", ">100k rows") — a debt item without a
-  trigger is itself a finding
+  trigger is itself a finding. Scheduled deletions carry their trigger as the
+  removal condition (S8: review-debt items become *scheduled deletions* whose
+  TRIGGER names the removal — executable by a fold batch, not archival prose).
 ✓ Verify no current-unit debt was mislabeled non-blocking: current-unit work
   cannot be `postpone`/`tradeoff`/`wontfix` — a table showing one is flagged back
   to the classifier, never reclassified here
 ✓ Honor the dead-code exception: staged/planned code cross-checked against the
   roadmap/SPEC/TASKS is not dead code — mark *verify* when unsure, never assert
+✓ **Deletion route.** A debt item that proposes removal of a surface carries
+  `route: fix-now (delete)`, not `route: fix-now (repair)`. The TRIGGER
+  specifies what proves the surface is safe to remove (e.g. "no consumer in
+  grep <scope> returns >0").
 
 ## Return exactly
 
