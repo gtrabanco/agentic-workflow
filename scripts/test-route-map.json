@@ -3,6 +3,16 @@
   "description": "Path glob -> the minimal sufficient suite. An unmatched path runs the full gate (S14). Regenerate the glob set deliberately when a new file pattern lands: this map is a normative surface, and a stale entry costs coverage.",
   "routes": [
     {
+      "name": "review-state",
+      "globs": [
+        "scripts/review-state.mjs",
+        "scripts/review-state.test.mjs"
+      ],
+      "suites": [
+        "scripts/review-state.test.mjs"
+      ]
+    },
+    {
       "name": "unit-route",
       "globs": [
         "scripts/unit-route.mjs",
