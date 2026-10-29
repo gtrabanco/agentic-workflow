@@ -49,6 +49,15 @@ consumers of what it delivers, the mentions that stop being true when it lands
 touching something live on the other side. Cut at plan time; the fix sweeps
 this surface, it is not rediscovered at review.
 
+## Retirements
+
+What this fix makes obsolete: every surface, token, pane, helper, contract or
+narrative this unit **retires**, each with its replacement or its no-consumer
+evidence (`grep -rc '<the removed name>' <scope>` → 0). A fix that only adds is
+the exceptional case: an empty answer states *why nothing can be removed*, so
+the omission is a reason rather than a gap. Cut at plan time — a retirement is a
+planned task with its negative-capability pin, never a review-time discovery.
+
 ## Non-goals
 
 What this fix is NOT. Regression scope is declared below; findings discovered
