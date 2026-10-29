@@ -3417,6 +3417,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 3 (dff48f88…5e752124)
 - **Files:** 2 (SPEC.md, review-findings.md)
 - **Summary:** /review-change cycle 10 delta over the F49 fold: 46/46 folded rows fixed, one new med finding F50 (verdict pane miscounted audit passes); /fold-findings closed the ledger (open-rows 0, route close-out). Unit 79 is now ready for the receipt post and /audit-pr.
+
 ## 2026-10-26T18:43:35Z — feat/308-spec-by-reference — manual
 - **Commits:** 81 (`1c68fcf4…37830bcb`)
 - **Files:** 76 files
@@ -3610,3 +3611,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Evaluation session for the runner path: reviewed Kanvas (rejected as state layer; patterns recorded), pi-extensible-workflows and pi-durable; sanitized #284/#260 threads (obsolete info mapped, body of #260 amended to #307 two-axis, owner decisions recorded) and executed the approved piew spike: session-hosted manager with injected notify/onStatus hooks, driver nan/qwen3.6 — full lifecycle (run→steer→completed), crash reconcile confirmed (plus finding: reconcile is not broadcast at startup; runner needs a startup sweep). Verdict recorded in #260: core-package dependency becomes primary substrate candidate, pi-native+own records fallback, vendoring last resort. Zero repo commits — all work was forge-side (dated comments on #284/#260, #260 body PATCH) and ephemeral sandboxes (cleaned).
 - **Decisions:** 1) #284 stays open, P2 verdict deferred to feature execution, pi/pi-durable drift sweep instruction reaffirmed. 2) #260 body rewritten NOW under #307 two-axis contract (size→tracking, risk→verification depth, review informational). 3) Subagent execution layer stays in @gtrabanco/pi-agentic-workflow (not the future runtime platform). 4) New #260 requirement: optional resource-limit config (RAM/CPU/parallelism caps, default automatic self-detection); feasibility: hard limits via cgroups v2/Job Objects per host, soft observe+throttle portable, enforcement level recorded in Evidence. 5) No upstream ./subagents export issue filed — file-path workaround accepted. 6) Substrate: (b) core-package dependency primary after spike, (a) fallback, vendoring last resort; pi-durable upgrade path per #284 P2. 7) MQTT/event-bus vision split: AW keeps event vocabulary+emitter+inbox; runtime platform is a separate future project.
 - **Next:** At #260 planning time: owner makes the final substrate call (recommendation and spike data recorded in-thread); before that, if pi ships new versions, the drift sweep instruction applies. #284 P2 spike must re-derive the pi-durable checkpoint-resume contradiction against the then-current version when picked up.
+
+## 2026-10-29T13:52:39Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 20 (`f77d3e87…a71d90d7`)
+- **Files:** 45 files
+- **Summary:** fix/318 — class escalation, forward closure, generated PR evidence pack, narration removal
+- **Decisions:** Worked inline on the repo's own surgery (rule #4): no review-change, no fold cycles, no self-granted gates. Deterministic gates only (297 tests, 28 skills within budget). Obligations ledger: 40 rows, all planned (not self-verified via self-review). Skipped: S3 (no .github/PR template exists), P13 (review-state.json framework declared but not wired), S10.4 (token accounting), S10.3 (#227 dependency). Budget manifest re-based for 4 skills. Branch: fix/318-class-escalation-forward-closure, 23 commits.
+- **Next:** Owner review of the diff on branch fix/318-class-escalation-forward-closure — 16 files changed, +757/-106. Decide which omitted items to implement or defer. Then: /review-change, /audit-pr, manual merge.
