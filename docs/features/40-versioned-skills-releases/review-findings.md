@@ -40,12 +40,17 @@ The stale forms these folds retire, with the survivor count each expects
 outside the allowlist (this unit is legacy-shape: no `## Progress log` in the
 SPEC, so the declarations ride the fold ledger beside their rows):
 
-- swept: /semver from the conventional commit title/ → expected 0 in AGENTS.md
-- swept: /the semver from the conventional commit/ → expected 0 in docs/workflow/FEATURE_WORKFLOW.md
-- swept: /run its bundled/ → expected 0 in .changeset/*.md
-- swept: /run its bundled/ → expected 0 in CHANGELOG.md
-- swept: /Each skill carries its own/ → expected 0 in docs/workflow/REPLICATE.md
-- swept: /^\| `bump-skill` \| 2\.4\./ → expected 0 in CHANGELOG.md
+- swept: /semver from the conventional commit title/ → expected 0 in AGENTS.md · observed 0
+- swept: /the semver from the conventional commit/ → expected 0 in docs/workflow/FEATURE_WORKFLOW.md · observed 0
+- swept: /run its bundled/ → expected 0 in .changeset/*.md · observed 0
+- swept: /run its bundled/ → expected 0 in CHANGELOG.md · observed 0
+- swept: /Each skill carries its own/ → expected 0 in docs/workflow/REPLICATE.md · observed 0
+- swept: /^\| `bump-skill` \| 2\.4\./ → expected 0 in CHANGELOG.md · observed 0
+
+Counts were run by hand (`grep -c`): this unit is legacy-shape and its SPEC
+carries no `## Progress log`, so `scripts/promise-coherence.mjs` does not scan
+it and re-runs nothing from this file — the observations are the receipt, not a
+gate re-run. `## Fold 1` is the fold's log entry for these rows.
 
 Allowlist (legitimate survivors, outside the globs above): the ledger's own
 quote of each finding, `docs/features/40-versioned-skills-releases/decisions.md`
