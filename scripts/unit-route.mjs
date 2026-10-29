@@ -800,14 +800,14 @@ function main(argv) {
     const numeric = /^\d+$/.test(clean);
     if (numeric && fixIndexIssues().has(clean)) {
       const command = `/unit-lane --fix ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]) });
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]), reviewCycles: 0, ledgerSize: 0 });
       return;
     }
     // A roadmap row's own issue number is the other tracked-issue surface this
     // command documents, so it resolves instead of dead-ending (F34).
     if (numeric && roadmapIssues().has(clean)) {
       const command = `/unit-lane --from-issue ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]) });
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]), reviewCycles: 0, ledgerSize: 0 });
       return;
     }
     fail(1, `unknown unit: ${sanitize(clean)}`);
@@ -901,6 +901,26 @@ function main(argv) {
   const readSet = readSetFor(unit.dir, selected, base);
 
   const rowIds = rows.map((row) => row.id);
+  // review-cycles: count R log lines (S9 b)
+  const reviewCycles = (function() {
+    try {
+      const content = readUnit(unit.dir, "SPEC.md");
+      if (!content) return 0;
+      const matches = content.match(/^\s*\*\*\s*R\d+\s*\*\*/gm);
+      return matches ? matches.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+  // ledger-size: byte size of review-findings.md if present (S9 5)
+  const ledgerSize = (function() {
+    try {
+      const stats = fs.statSync(`${unit.dir}/review-findings.md`);
+      return stats.size;
+    } catch {
+      return 0;
+    }
+  })();
   print({
     unit: unit.slug,
     status,
@@ -909,10 +929,12 @@ function main(argv) {
     openCount: rows.length,
     rows: rowIds,
     readSet,
+    reviewCycles,
+    ledgerSize,
   });
 }
 
-function print({ unit, status, route, command, openCount, rows, readSet }) {
+function print({ unit, status, route, command, openCount, rows, readSet, reviewCycles, ledgerSize }) {
   if (!ROUTES.includes(route)) fail(1, `internal error: unknown route ${sanitize(route)}`);
   const shown = readSet.slice(0, READ_SET_MAX);
   const remainder = readSet.length - shown.length;
@@ -922,6 +944,8 @@ function print({ unit, status, route, command, openCount, rows, readSet }) {
     `unit: ${sanitize(unit)}`,
     `status: ${sanitize(status)}`,
     `open-rows: ${openCount}`,
+    `review-cycles: ${reviewCycles ?? "n/a"}`,
+    `ledger-size: ${ledgerSize ?? "n/a"} bytes`,
     `route: ${route}`,
     `next: ${sanitize(command)}`,
     `rows: ${rows.length ? rows.map((id) => sanitize(id)).join(" ") : "none"}`,
