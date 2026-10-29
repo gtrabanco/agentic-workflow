@@ -163,6 +163,16 @@ Output:
 | <claim> | `<command>` | `<observed output>` | ✓ |
 ```
 
+The row shape is published grammar (`evidence-row@1` in
+`@gtrabanco/agentic-workflow-schema`), so a row missing its command, its
+observed output or a ✓/✗ verdict is a shape violation rather than a style nit.
+
+**Bounded checkpoint (S13/S14).** The claim-evidence loop is only paid if it is
+cheap: `node scripts/test-route.mjs --check <changed path>` names the minimal
+suite a path needs, so an intermediate verification costs seconds instead of the
+full gate. An unmatched path answers `route: full-suite` — never fewer tests —
+and the full gate stays what the merge gate and CI run.
+
 ### 6. Post-step
 
 1. **Diff guard** (implement steps only): run `bun scripts/diff-guard.mjs --base

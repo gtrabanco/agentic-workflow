@@ -144,6 +144,14 @@ Output the claim table as:
 All rows must have `status: ✓`. A `status: ✗` row means the turn is not done
 — repair and re-run the claim.
 
+The row shape is published grammar, not convention (`evidence-row@1` in
+`@gtrabanco/agentic-workflow-schema`: `EVIDENCE_ROW_COLUMNS`,
+`EVIDENCE_ROW_VERDICTS`, `validateEvidenceRow`). A row whose claim is empty, whose
+command or output is not a backticked command/observation, or whose verdict is
+outside `✓ | ✗` is a shape violation — prose in the command cell is refused
+exactly like an empty one, because a typed expectation is the defect the shape
+exists to stop.
+
 ## Closure status (S4, S11)
 
 At the end of the fold, print the closure status:
@@ -284,11 +292,14 @@ folding, group by mechanism+axis, not by file:line+axis. The same bug surfacing
 as F49, then F50, then F51 costs a full review cycle each time when grouped by
 file:line; grouped by mechanism, one class escalation fixes all three.
 
-**Per-file review state (S10 6, from #218).** `review-state.json` per unit,
-single writer = script, model passes read-only: each file in the affecting-path
-inventory ends a cycle `reviewed@<sha>` or `skipped@<sha>` with a concrete
-reason; skips auto-invalidate when a later diff touches the file; coverage
-closure `inventory − reviewed − skipped = 0` is a mechanical receipt check.
+**Per-file review state (S10 6, from #218; shipped as S16).** `review-state.json`
+per unit, single writer = `scripts/review-state.mjs`, model passes read-only: each
+file in the affecting-path inventory ends a cycle `reviewed@<sha>` or
+`skipped@<sha>` with a concrete reason; skips auto-invalidate when a later diff
+touches the file; coverage closure `inventory − reviewed − skipped = 0` is a
+mechanical receipt check. Run `node scripts/review-state.mjs check --unit <slug>`
+and paste the block — `closure: complete` exits 0, `closure: open(n)` exits 1 and
+is a blocker, never a note.
 
 ## Portability (agents other than Claude Code)
 
