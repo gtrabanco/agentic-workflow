@@ -17,10 +17,25 @@ Notion ("Agentic Workflow").
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
 | [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to review — `review-change` (the right reviews per platform) and its `review-implementation` engine (find → classified decision table) |
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
-| [REPLICATE.md](REPLICATE.md) | `npx skills` install + portable prompt to set this up in any project |
+| [REPLICATE.md](REPLICATE.md) | `npx skills` install — replicate the skill system in another project |
+| [PORTABLE_PROMPT.md](PORTABLE_PROMPT.md) | The self-contained prompt that regenerates the whole system inside a target repository, adapted to that project's stack — the bootstrap `REPLICATE.md` points at |
+| [SETUP.md](SETUP.md) | Provisioning **this repo's** own authoring toolchain: `node scripts/setup-env.mjs`, the `--check` verification, committed vs local state, the worktree resetup, and the Windows-via-WSL note |
 | [MIGRATION.md](MIGRATION.md) | Upgrading an existing install from the previous skill set — what was renamed, what to delete |
+| [ORCHESTRATION.md](ORCHESTRATION.md) | Programmatic orchestration: the machine envelope and `workflow-status` result an external driver reads at the invocation boundary, and how it composes with the repository documents |
+| [REPOSITORY_STATE.md](REPOSITORY_STATE.md) | The frozen Normalized Repository State — the evidence-backed snapshot of observed truth that `discover-repository-state` writes and `resolve-repository-state` alone may replace |
 | [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Golden fixture: the manual judgment protocol (run a changed executor-path skill against the committed toy fixture with the weakest fleet model) plus the executable `scripts/golden-fixture.test.mjs` suite that asserts its deterministic half |
 | [WORKFLOW_INVARIANTS.md](WORKFLOW_INVARIANTS.md) | Portable contract for optional project architectural invariants and their evidence-based evaluation |
+
+## Data
+
+Not pages — files this directory carries as machine input. Nothing here is a
+reading surface, and `scripts/workflow-docs-index.test.mjs` keeps the split
+exact: every other file in this directory must have a row above, and this one
+must not have one.
+
+| File | Consumed by |
+|---|---|
+| `SKILL_CONTEXT_BUDGETS.json` | `scripts/check-skill-context.mjs` (the enforced per-skill line/token budgets and route budgets) — read by the gate, never by a human, and cited as a claim source by `scripts/promise-coherence.mjs` |
 
 ## Core principles
 

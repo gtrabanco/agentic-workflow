@@ -3457,7 +3457,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fix CI red on origin/main after PR #311 merge. Three root causes diagnosed and repaired in two commits pushed directly to main (user authorization). 1) Stale route-budget ceilings: PR #311 merged feature 79 (spec-by-reference) × feature 66 (memory boundary), each branch independently re-based its own ceilings; the merged tree measured above either parent's on 11 execute-phase/review-change routes and review-implementation/CLASSIFY.md. All ceilings re-based on the shipped tree to ceil(measured × 1.10), policy.declared gained re-basis #10 with named growth sources, CHANGELOG release-log row added. 2) publish-agentic-workflow.yml missing install step: the `publish` job ran `bun test test/` without `bun install --frozen-lockfile`, so lazy typebox import failed and the crate hadn't published since 2026-10-05. Step added. 3) Schema pin drift: pi package pinned @gtrabanco/agentic-workflow-schema 4.7.0 while 4.8.0 was published 2026-10-23, causing dependency-pin-gate E404 rejection on every push. Pin bumped 4.8.0, version 0.34.0→0.34.1, bun.lock regenerated, companion row in CHANGELOG. All suites green locally (root-suite, version-parity, pins, promise-coherence, 471 tests bun+node). One residual not fixable from code: publish-agentic-workflow.yml npm publish E404 — the npm Trusted Publisher record for that workflow filename is missing, owner action at npmjs.com → package Settings → Trusted Publisher.
 - **Next:** When @gtrabanco/agentic-workflow 0.4.0 publishes to npm, fix(deps) bump pin 0.2.0→0.4.0 + version bump in packages/pi-agentic-workflow; otherwise run /workflow-status to discover next startable unit
 
-
 ## 2026-10-26T22:13:52Z — Serena v2.x compatibility audit — manual
 - **Commits:** 0 (audit session only — no code changes)
 - **Files:** docs/LOGS.md (this entry only), docs/features/321-serena-native-mcp/SPEC.md (uncommitted issue body)
@@ -3478,24 +3477,28 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Replace the @bacnh85/pi-serena bridge with native Serena MCP registration (#321)
 - **Decisions:** Replaced the @bacnh85/pi-serena bridge (which coupled pi to Serena's internal Python APIs and predates v2.0.0) with pi's native MCP support (pi mcp add serena -- serena start-mcp-server --context claude-code). The installed version chain was reworked to read from the tool itself (serena --version -> uv tool list -> pip show fallback) because pip show cannot see the uv tool install route documented by the repo. PyPI fetch moved to curl against PyPI's JSON API (pip index versions fallback). External verification blocked the PyPI half on realistic input and the fix was applied in a correction batch.
 - **Next:** PR #324 is open (fix-serena-mcp -> main) awaiting CI green and human merge. Pending by design: AC2 live tool-reachability in a session (consent-gated, closes with the first real /init-workspace run with Serena).
+
 ## 2026-10-27T09:31:40Z — fix-316-roadmap-writer-call-sites — manual
 - **Commits:** 12 (`8aaf102f…a2f0d096`)
 - **Files:** 30 files
 - **Summary:** /audit-pr on PR #323 (unit 316: roadmap settle is code) — BLOCKED with 6 blockers (merge conflict, CI missing, Closes #316, receipt stale, missing ledger, call sites executable); cleared all blockers: fixed roadmap CLI bare-subcommand resolution, unified unit-cycle settle grader, added --root usage guard, wrote obligation ledger + planning evidence, re-cut pi package to 0.35.1, resolved rebase, fixed subsectionBody section-boundary defect in unit-lineage, re-based skill-context budgets, Closes #316 in PR body, pushed, CI green -- receipt stale --
 - **Decisions:** roadmap rowUpsert bare subcommand resolved the word as table path (ENOENT) -- fixed with usage-error guard; bare rowUpsert/annotate now exits 2 with usage line; unit-cycle settled through checkUnitDoc instead of own weaker grader; segment body closed at nearest ##/### instead of first ### anywhere (defect that would have blocked every unit with a findings table) -- learned the working form and the kind boundary (rowUpsert only speaks roadmap-table@1 with NN header, so fix indexes use status-cell edit instead)
 - **Next:** /review-change 316-roadmap-settle — receipt is stale (moved head past the marker); /audit-pr 323 after review passes
+
 ## 2026-10-27T09:32:07Z — fix-316-roadmap-writer-call-sites — manual
 - **Commits:** 13 (`8aaf102f…9bc57997`)
 - **Files:** 31 files
 - **Summary:** Unit 316 resumed. Retrospective unit doc created and index registered. Triage ran (plan implement tests evidence review docs). Evidence verified: roadmap-check 17 pass, roadmap-settle 7 pass, unit-cycle 45 pass, live gate PASS 0 violations, budgets 28 skills pass, root suite 905 pass. Review cycle 1: FAIL with F1 (high) unit-cycle settle commit argv bug and F2 (low) row 244 rename undocumented. Fold 523a95e2: settleCommitArgs() pure builder fixing the argv bug. Cycle 2: PASS. Receipt stage: review-receipt verify --pr 323 exit 3 missing-review-receipt.
 - **Decisions:** Tree: user chose fix tree for #316 (D-Q1). Diff-guard BREACH recorded as exception (D2). Row 244 rename resolved by documentation (D3).
 - **Next:** Close-out blocked on receipt: /review-change 316-roadmap-settle to post the SHA-bound review-change:pass on PR #323; once receipt current /audit-pr PR #323 for merge
+
 ## 2026-10-27T09:32:48Z — fix-316-roadmap-writer-call-sites — manual
 - **Commits:** 14 (`8aaf102f…7c3f23cb`)
 - **Files:** 31 files
 - **Summary:** /review-change on unit 316 — delta-scoped cycle 3 review: all folded rows re-verified fixed, all gates green at reviewed head, SHA-bound receipt posted and current at PR #323
 - **Decisions:** Cycle 3 ran delta-scoped (the post-PASS record commits fc36bfe3+783b57f1 — unit-doc only) rather than re-running the full-pack on the whole diff; the review appended R3+G4 marks to the unit doc, committed, pushed, and emitted the SHA-bound receipt at the new head using --scope-base main to derive the affecting-path manifest so later foreign-only commits don't void it
 - **Next:** Merge PR #323 (unit 316 roadmap-settle): receipt is current, review is clean. The fix-index unit 258 (gate evidence) and unit 261 (settle call sites execute) are separate units on the same branch — each will need its own /review-change + /audit-pr cycle before the branch is mergeable as a whole.
+
 ## 2026-10-27T09:32:53Z — fix-316-roadmap-writer-call-sites — manual
 - **Commits:** 15 (`8aaf102f…3b007036`)
 - **Files:** 31 files
@@ -3562,13 +3565,26 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 49 files
 - **Summary:** Verify AGENTS.md structure, plan and open setup tooling and AGENTS.md split issues (#331, #332) without implementation
 
+## 2026-10-28T22:21:16Z — feature/331-authoring-repo-setup — manual
+- **Commits:** 14 (`e685d7fe…7782a081`)
+- **Files:** 14 files
+- **Summary:** Apply issue #331 (authoring-repo setup doc + scripts + CI) via the /aw-local-apply workflow: unit fix/331-authoring-setup cut verbatim S1-S9 (plus S2a/S2b/S8/S9/S10 amendments), ledgers frozen, RED tests first, fixtures in /tmp, gates green (1040/1040). Owner correction S2a/S2b: .bun-version pin semantics evolved from exact-match to minimum (>=1.4.0). PE-010 fixed at root cause (serena die in worktrees: marksman/libicu crash, override created local-only). PE-009 blocked by #180.
+- **Decisions:** 1) Bun pin: exact match (S2a) → minimum (S2b), per owner. 2) Config-repair: local-only authority (S8, 'Solo estado local'). 3) PE-010: marksman/libicu crash kills serena in worktrees; fix is machine-local override written by setup-env, never rewriting committed config. 4) PE-009: CI green blocked by #180 (versioned skills release, pin error); no CI-side attempt. 5) bun pin exactness: the repo commits .bun-version@1.4.0 matching CI's setup-bun pin (1.4.0 writes lockfile v2).
+- **Next:** Open PR #334 on https://github.com/gtrabanco/agentic-workflow/pull/334; review commit 7782a081 (latest) for the full scope.
+
+## 2026-10-28T22:21:58Z — feature/331-authoring-repo-setup — manual
+- **Commits:** 15 (`e685d7fe…d8cf81b8`)
+- **Files:** 15 files
+- **Summary:** S11 + S12 amendments: node/bun user prerequisites, bun opt-in, setup CI deleted
+- **Decisions:** S11: script no longer verifies node (user prerequisite for pi) and never installs bun unasked — opt-in question in TTY (y/yes installs pinned version), non-TTY prints note and stays ok, warn rows never fail --check; bun behind pin still auto-repaired. S12: setup-check.yml deleted (owner: quita los dos ci de las gha); D8 operating rule recorded in decisions.md (CI never without explicit permission). catalog.test.mjs and unit-route.mjs left uncommitted (parallel session).
+- **Next:** git push origin feature/331-authoring-repo-setup and open PR
+
 ## 2026-10-28T21:05:07Z — feature/180-versioned-skills-releases — manual
 - **Commits:** 17 (`ce40e4ef…64dfe129`)
 - **Files:** 29 files (2022 additions, 624 deletions)
 - **Summary:** Consolidated the release pipeline into a single entry point: `publish.yml` is the one GHA that owns suggest (read-only preview), cut+latest (train apply + push → publish jobs), cut+channel=prerelease (real canary GHA cut), and push-triggered npm publish. `release-plan.yml` and `release-train.yml` deleted. `scripts/release.mjs` gained `publish-plan` mode (TSV output) feeding the channel job. Canary cut moved from local commands to a real GHA cut with Bun-style version shape (`base-canary.<date>.<n>`). All 28 planning obligations verified (O27 re-cut at D-40-13, O28 added); 1029/1029 root tests green.
 - **Decisions:** Owner rejected the 3-workflow split (plan/train/publish) as 'salvar los muebles'. Consolidated everything into one `publish.yml` with modes: `suggest` = read-only plan (stable + canary + every changeset's semver annotation and body → run summary); `cut` + `channel: latest` = apply the train (versions + exact local pins + CHANGELOG rows from changeset bodies + lockfiles), ONE release commit, push (fires the publish jobs schema→crate→pi), tag vX.Y.Z, stable branch, gh release --generate-notes; `cut` + `channel: canary|alpha|beta|rc` = per-declared-package channel publish (temp version, exact-version gate, npm publish --tag, repo restored, cut as git tag — the tag IS the canary counter's input). npm publish ONLY inside `publish.yml` (Trusted Publisher). Push jobs run ONLY on push events (a dispatch run never publishes stale checkouts). `scripts/release.mjs` always runs in CI.
 - **Next:** /review-change on the final diff; create PR against main once npmjs.com Trusted Publisher records are confirmed working
-
 
 ## 2026-10-28T21:52:47Z — feature/180-versioned-skills-releases — manual
 - **Summary:** Feature 40 — D-40-14: unified train stamps every skill's frontmatter at apply time, and prunable skill-lint remains as authoring lint only

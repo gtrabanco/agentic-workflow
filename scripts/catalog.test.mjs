@@ -17,20 +17,48 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { test } from "node:test";
+import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SCRIPT = path.join(repoRoot, "scripts", "unit-route.mjs");
-const CATALOG_PATH = path.join(repoRoot, "scripts", "catalog.json");
-const CATALOG_FIXTURE = path.join(repoRoot, "scripts", "fixtures", "catalog");
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SCRIPT = path.join(REPO_ROOT, "scripts", "unit-route.mjs");
+const CATALOG_PATH = path.join(REPO_ROOT, "scripts", "catalog.json");
+const CATALOG_FIXTURE = path.join(REPO_ROOT, "scripts", "fixtures", "catalog");
 
-const run = (args, { root = CATALOG_FIXTURE } = {}) => spawnSync(
+/** The sandbox a test gets: the fixture tree plus its own copy of the catalog. */
+let sandbox;
+let copies = 0;
+
+/**
+ * One triage run against a root. `UNIT_ROUTE_REPO` re-points the routing at the
+ * fixture tree; `UNIT_ROUTE_CATALOG` re-points the catalog at the sandbox copy,
+ * so a validation test mutates its own bytes and never the tracked
+ * `scripts/catalog.json`.
+ */
+const run = (args, { root = CATALOG_FIXTURE, catalog = CATALOG_PATH } = {}) => spawnSync(
   process.execPath,
   [SCRIPT, ...args],
-  { encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: root } },
+  { encoding: "utf8", env: { ...process.env, UNIT_ROUTE_REPO: root, ...(catalog ? { UNIT_ROUTE_CATALOG: catalog } : {}) } },
 );
+
+/**
+ * Mutate a throwaway copy of the catalog, run triage against it, let the caller
+ * assert, then drop the copy. Serialized bytes the same way `catalog.json` ships
+ * them, so a failure diff reads like the real file.
+ */
+function withCatalog(mutate, assertions) {
+  const copy = path.join(sandbox, `catalog-${++copies}.json`);
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
+  mutate(catalog);
+  fs.writeFileSync(copy, JSON.stringify(catalog, null, 2));
+  try {
+    assertions(run(["--triage", "91-docs-only"], { catalog: copy }));
+  } finally {
+    fs.rmSync(copy, { force: true });
+  }
+}
 
 const parseTextOutput = (stdout) => {
   return {
@@ -46,10 +74,19 @@ const parseTextOutput = (stdout) => {
   };
 };
 
+// Every validation test writes its mutated catalog into a fresh sandbox and
+// drops it again; nothing here ever touches the tracked file.
+before(() => {
+  sandbox = fs.mkdtempSync(path.join(os.tmpdir(), "catalog-test-"));
+});
+
+after(() => {
+  fs.rmSync(sandbox, { recursive: true, force: true });
+});
+
 // ===========================================================================
 // catalog.json structural tests
 // ===========================================================================
-
 test("catalog.json parses and has schemaVersion 1", () => {
   const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
   assert.equal(catalog.schemaVersion, 1);
@@ -203,33 +240,46 @@ test("JSON output has exact shape", () => {
 // ===========================================================================
 
 test("catalog.json rejects unsupported schemaVersion", () => {
-  // Temporarily modify catalog to test validation — restore after
-  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
-  catalog.schemaVersion = 99;
-  fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2));
-  try {
-    const result = run(["--triage", "91-docs-only"]);
-    assert.equal(result.status, 2);
-    assert.ok(result.stderr.includes("unsupported schemaVersion"));
-  } finally {
-    catalog.schemaVersion = 1;
-    fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2));
-  }
+  withCatalog(
+    (catalog) => {
+      catalog.schemaVersion = 99;
+    },
+    (result) => {
+      assert.equal(result.status, 2);
+      assert.ok(result.stderr.includes("unsupported schemaVersion"));
+    },
+  );
 });
 
 test("catalog.json rejects unknown step names", () => {
-  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
-  catalog.steps.push("imaginary-step");
-  fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2));
-  try {
-    const result = run(["--triage", "91-docs-only"]);
-    assert.equal(result.status, 2);
-    assert.ok(result.stderr.includes("must have exactly 9 steps"),
-      `stderr should mention step count, got: ${JSON.stringify(result.stderr)}`);
-  } finally {
-    catalog.steps.pop();
-    fs.writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2));
-  }
+  withCatalog(
+    (catalog) => {
+      catalog.steps.push("imaginary-step");
+    },
+    (result) => {
+      assert.equal(result.status, 2);
+      assert.ok(result.stderr.includes("must have exactly 9 steps"),
+        `stderr should mention step count, got: ${JSON.stringify(result.stderr)}`);
+    },
+  );
+});
+
+test("the tracked catalog is byte-identical after the validation tests ran", () => {
+  // The defect these tests used to carry: they wrote the real catalog in place
+  // and restored it in a `finally`, so any suite reading the file across that
+  // window — the parallel root gate included — saw `schemaVersion: 99` or ten
+  // steps. A validation test that mutates shared state is not testing the
+  // validator, it is racing it.
+  const before = fs.readFileSync(CATALOG_PATH, "utf8");
+  withCatalog(
+    (catalog) => {
+      catalog.schemaVersion = 99;
+      catalog.steps.push("imaginary-step");
+    },
+    () => {},
+  );
+  assert.equal(fs.readFileSync(CATALOG_PATH, "utf8"), before,
+    "a catalog validation test must not touch the tracked scripts/catalog.json");
 });
 
 // ===========================================================================

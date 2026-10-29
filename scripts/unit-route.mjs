@@ -479,7 +479,13 @@ function triageFail(code, message) {
 }
 
 function loadCatalog() {
-  const catalog = JSON.parse(fs.readFileSync(new URL("./catalog.json", import.meta.url), "utf8"));
+  // `UNIT_ROUTE_CATALOG` re-points the catalog at a copy, so a validation test
+  // mutates its own bytes instead of the tracked `scripts/catalog.json` — the
+  // file the parallel root gate reads. Absent, the shipped catalog is used.
+  const catalogPath = process.env.UNIT_ROUTE_CATALOG
+    ? path.resolve(process.env.UNIT_ROUTE_CATALOG)
+    : new URL("./catalog.json", import.meta.url);
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
   if (catalog.schemaVersion !== 1) {
     triageFail(2, `unsupported schemaVersion: ${catalog.schemaVersion} (expected 1)`);
   }

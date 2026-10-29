@@ -14,7 +14,7 @@ table — history lives in git log + closed issues.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| none | — | — | No fix is in flight. A fix gets its row when `/unit-lane --fix <n>` opens its unit doc, and the row is removed after its PR merges. |
+| [#331](https://github.com/gtrabanco/agentic-workflow/issues/331) | authoring-setup | in-progress | Authoring-repo initial setup — `docs/workflow/SETUP.md`, `scripts/setup-env.mjs` (`--check`), `scripts/update-tools.mjs` (`--dry-run`), CI check job; branch `feature/331-authoring-repo-setup` |
 
 Historical artifacts remain under `docs/fix/`; merged and closed work is
 intentionally absent from this index.
