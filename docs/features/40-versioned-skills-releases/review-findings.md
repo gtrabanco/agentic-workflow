@@ -20,7 +20,7 @@ acceptance-criteria findings first (F1, F2, F12, F3), doc-surface rows after.
 | F7 | docs/workflow/REPLICATE.md:44-46 | brand | med | fix-now | fold | yes |
 | F8 | docs/workflow/FEATURE_WORKFLOW.md:120-125 | code,brand | med | fix-now | fold | yes |
 | F9 | skills/skill-lint/references/DISCOVERY_AND_LINT.md:21-22 | brand | med | fix-now | fold | yes |
-| F12 | .github/workflows/publish.yml:98-100,155-157 | security | med | fix-now | fold | no |
+| F12 | .github/workflows/publish.yml:98-100,155-157 | security | med | fix-now | fold | yes |
 | VF-1 | scripts/changeset-create.mjs:89 · reviewer review-change · HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c · recheck failing reproducer run against unchanged code: dirty entry `"?? scripts/bar.mjs"` parses to `"ripts/bar.mjs"` (`.slice(2)` after the status strip) | code | confirmed | finding-mark | n/a | n/a |
 | VF-2 | scripts/changeset-create.mjs:94 · reviewer review-change · HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c · recheck direct read: `git log -1` over the branch while the header (:9-10) and FEATURE_WORKFLOW.md promise "any `!`/feat over the branch's commits"; test fixtures only place the decisive commit last | code | confirmed | finding-mark | n/a | n/a |
 | VF-3 | docs/features/40-versioned-skills-releases/SPEC.md:516 · reviewer review-change · HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c · recheck direct read + run: `node --test scripts/bump-skill.test.mjs` exits 2 (file deleted by D-40-14, commit c08555f1); `find` shows no `bump-skill.mjs`; no `## Amendments` in SPEC | workflow | confirmed | finding-mark | n/a | n/a |
