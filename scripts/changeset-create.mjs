@@ -2,8 +2,9 @@
 /**
  * changeset-create.mjs — creates the PR's changeset intent file by code
  * (D-40-16): the affected packages and skills are derived from the modified
- * files, the semver from the conventional commit title, and the file name is
- * PR-first so names stay unique across branches.
+ * files (the committed range and the working tree), the semver from the
+ * branch's conventional commits, and the file name is PR-first so names stay
+ * unique across branches.
  *
  *   level   --level patch|minor|major overrides; otherwise inferred from the
  *           branch's conventional commits: any `!` or BREAKING CHANGE → major,
@@ -12,13 +13,14 @@
  *           PR exists; the branch slug leads otherwise. --name overrides.
  *   entries ONE file per PR: every affected package (`"@gtrabanco/<name>"`)
  *           and skill (`"<skill-name>"`) becomes an entry with the change's
- *           intention; the body is the commit title (or --message).
+ *           intention; the body is the newest commit's title (or --message).
  *
  * The file is never overwritten: a second run on the same branch fails and
  * names the existing file. A change that touches no package or skill is
  * refused — an empty changeset would be silent intent.
  *
- * Dependency-free (node: builtins only). Usage:
+ * No third-party dependencies (node builtins plus this repo's shared porcelain
+ * status parser). Usage:
  *
  *   node scripts/changeset-create.mjs [--level patch|minor|major]
  *        [--message "..."] [--name <stem>] [--pr <number>] [--base <ref>]
@@ -32,6 +34,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { porcelainPaths } from "./version-parity-gate.mjs";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LEVELS = ["patch", "minor", "major"];
@@ -74,6 +77,13 @@ function git(root, args) {
   return r.status === 0 ? r.stdout.trim() : null;
 }
 
+/** Untrimmed read — a porcelain `-z` record's status starts with a space (` M path`),
+ *  which a trim would eat before the 2-char status is even parsed. */
+function gitRaw(root, args) {
+  const r = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  return r.status === 0 ? r.stdout : null;
+}
+
 function slug(text) {
   const s = String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return s || "changeset";
@@ -82,26 +92,38 @@ function slug(text) {
 /** The changed paths: committed range vs base unioned with the working tree. */
 function changedFiles(root, base) {
   const committed = git(root, ["diff", "--name-only", `${base}...HEAD`]) ?? "";
-  const dirty = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]) ?? "";
+  const dirty = gitRaw(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]) ?? "";
   const files = new Set(committed.split("\n").filter(Boolean));
-  for (const entry of dirty.split("\0")) {
-    if (entry.length < 4) continue;
-    files.add(entry.replace(/^(.{2}) /, "").slice(2));
-  }
+  for (const file of porcelainPaths(dirty)) files.add(file);
   return [...files];
 }
 
-function inferLevel(root) {
-  const message = git(root, ["log", "-1", "--pretty=%s%n%n%b"]) ?? "";
-  const subject = message.split("\n")[0] ?? "";
-  const breaking = /\bBREAKING[- ]CHANGE\b/.test(message) || /^.\w+(\([\w./-]+\))?!:/.test(subject);
-  const feat = /^feat(\(|:|!)/.test(subject);
+/**
+ * The level and the title. The level reads EVERY commit the branch adds over
+ * base — the contract this script's own header states ("any `!` or BREAKING
+ * CHANGE → major, any feat → minor"): inferring from the tip alone shipped a
+ * patch for a feat commit a review-fold `fix` commit followed, under-declaring
+ * the train. The title stays the branch's newest commit, which is what the
+ * file name and the release-note body carry.
+ */
+function inferLevel(root, base) {
+  const log = gitRaw(root, ["log", "--pretty=%s%n%b%x1e", `${base}..HEAD`]) ?? "";
+  const commits = log.split("\x1e").map((c) => c.trim()).filter(Boolean);
+  const subjectOf = (c) => c.split("\n")[0] ?? "";
+  const subject = commits.length
+    ? subjectOf(commits[0])
+    : git(root, ["log", "-1", "--pretty=%s"]) ?? "";
+  const breaking = commits.find(
+    (c) => /\bBREAKING[- ]CHANGE\b/.test(c) || /^.\w+(\([\w./-]+\))?!:/.test(subjectOf(c)),
+  );
+  const feat = commits.find((c) => /^feat(\(|:|!)/.test(subjectOf(c)));
   const level = breaking ? "major" : feat ? "minor" : "patch";
+  const scope = commits.length ? `${commits.length} commit(s) over ${base}` : "no commit over base";
   const why = breaking
-    ? "breaking: the title carries ! or a BREAKING CHANGE footer"
+    ? `breaking: ${scope} — a title carries ! or the body a BREAKING CHANGE`
     : feat
-      ? "feat: a feature commit leads the branch"
-      : "no feat and no breaking marker: patch";
+      ? `feat: ${scope} — a feature commit is in the range`
+      : `no feat and no breaking marker in ${scope}: patch`;
   return { level, why, subject };
 }
 
@@ -166,10 +188,11 @@ function main() {
     fail(`no package or skill is touched by the ${files.length} changed file(s) vs ${base} — nothing to declare`);
   }
 
+  const inferred = inferLevel(args.root, base);
+
   let level = args.level;
   let derivation = "level overridden (--level)";
   if (level === null) {
-    const inferred = inferLevel(args.root);
     level = inferred.level;
     derivation = inferred.why;
   }
@@ -179,7 +202,7 @@ function main() {
     ...[...affectedPackages.keys()].sort().map((name) => `"${name}": ${level}`),
     ...[...affectedSkills].sort().map((name) => `"${name}": ${level}`),
   ];
-  const message = args.message ?? inferLevel(args.root).subject;
+  const message = args.message ?? inferred.subject;
   const content = ["---", ...entryLines, "---", "", message.trim(), ""].join("\n");
 
   let stem;
@@ -187,7 +210,7 @@ function main() {
   else {
     const branch = slug(git(args.root, ["rev-parse", "--abbrev-ref", "HEAD"]) ?? "branch");
     const pr = args.pr !== null ? String(args.pr) : branch;
-    const title = slug(inferLevel(args.root).subject);
+    const title = slug(inferred.subject);
     stem = [pr, title].filter(Boolean).join("-");
   }
 

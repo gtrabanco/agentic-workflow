@@ -11,14 +11,14 @@ acceptance-criteria findings first (F1, F2, F12, F3), doc-surface rows after.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F1 | scripts/changeset-create.mjs:89 | code | high | fix-now | fold | no |
-| F2 | scripts/changeset-create.mjs:9-10,94-107 | code | med | fix-now | fold | no |
+| F1 | scripts/changeset-create.mjs:89 | code | high | fix-now | fold | yes |
+| F2 | scripts/changeset-create.mjs:9-10,94-107 | code | med | fix-now | fold | yes |
 | F3 | docs/features/40-versioned-skills-releases/SPEC.md:474,516,519 + planning-obligations.md O1–O4,O21 | workflow | med | fix-now | replan-in-unit | no |
-| F4 | CHANGELOG.md:119-120 | code,brand | med | fix-now | fold | no |
-| F5 | CHANGELOG.md:815-817 | code | med | fix-now | fold | no |
-| F6 | .changeset/versioned-skills-releases.md:5 (+ CHANGELOG.md 0.37.0 row body) | code,brand | med | fix-now | fold | no |
+| F4 | CHANGELOG.md:119-120 | code,brand | med | fix-now | fold | yes |
+| F5 | CHANGELOG.md:815-817 | code | med | fix-now | fold | yes |
+| F6 | .changeset/versioned-skills-releases.md:5 (+ CHANGELOG.md 0.37.0 row body) | code,brand | med | fix-now | fold | yes |
 | F7 | docs/workflow/REPLICATE.md:44-46 | brand | med | fix-now | fold | no |
-| F8 | docs/workflow/FEATURE_WORKFLOW.md:120-125 | code,brand | med | fix-now | fold | no |
+| F8 | docs/workflow/FEATURE_WORKFLOW.md:120-125 | code,brand | med | fix-now | fold | yes |
 | F9 | skills/skill-lint/references/DISCOVERY_AND_LINT.md:21-22 | brand | med | fix-now | fold | no |
 | F12 | .github/workflows/publish.yml:98-100,155-157 | security | med | fix-now | fold | no |
 | VF-1 | scripts/changeset-create.mjs:89 · reviewer review-change · HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c · recheck failing reproducer run against unchanged code: dirty entry `"?? scripts/bar.mjs"` parses to `"ripts/bar.mjs"` (`.slice(2)` after the status strip) | code | confirmed | finding-mark | n/a | n/a |
@@ -33,6 +33,25 @@ acceptance-criteria findings first (F1, F2, F12, F3), doc-surface rows after.
 | VF-12 | .github/workflows/publish.yml:98-100,155-157 · reviewer review-change · HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c · recheck direct read: dispatch input `version` → `ARGS="--version $FORCE_VERSION"` expanded unquoted (`node scripts/release.mjs apply $ARGS`) — shell word-splitting/injection before release.mjs's own semver validation; reachable only with workflow_dispatch (write) rights | security | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c | n/a | n/a | review-mark | n/a | n/a |
 | GATE-RAN | HEAD 28dd594ac6fccfda871088d00d0e28dd6224374c | node --test scripts/*.test.mjs | exit 0 (1050 pass / 0 fail) | gate-mark | n/a | n/a |
+
+## Fold 1 — sweep declarations
+
+The stale forms these folds retire, with the survivor count each expects
+outside the allowlist (this unit is legacy-shape: no `## Progress log` in the
+SPEC, so the declarations ride the fold ledger beside their rows):
+
+- swept: /semver from the conventional commit title/ → expected 0 in AGENTS.md
+- swept: /the semver from the conventional commit/ → expected 0 in docs/workflow/FEATURE_WORKFLOW.md
+- swept: /run its bundled/ → expected 0 in .changeset/*.md
+- swept: /run its bundled/ → expected 0 in CHANGELOG.md
+- swept: /Each skill carries its own/ → expected 0 in docs/workflow/REPLICATE.md
+- swept: /^\| `bump-skill` \| 2\.4\./ → expected 0 in CHANGELOG.md
+
+Allowlist (legitimate survivors, outside the globs above): the ledger's own
+quote of each finding, `docs/features/40-versioned-skills-releases/decisions.md`
+(D-40-14/16 history), `docs/LOGS.md` session entries, and
+`docs/workflow/MIGRATION.md:878`, which names the deleted writer to say it was
+deleted.
 
 ## Refuted (never a row)
 

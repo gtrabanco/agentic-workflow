@@ -315,7 +315,7 @@ export function changedFilesSince(base) {
 }
 
 /** The target paths of a porcelain v1 `-z` status listing (renames keep both sides). */
-function porcelainPaths(raw) {
+export function porcelainPaths(raw) {
   const paths = [];
   const entries = raw.split("\0");
   for (let index = 0; index < entries.length; index += 1) {
