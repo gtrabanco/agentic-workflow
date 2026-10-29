@@ -60,6 +60,11 @@ first on purpose).
 
 ## Step 0 — Discover the project (always first)
 
+**Backlog-sweep citation (S9 c, from #218).** Every newly opened issue must
+cite its backlog-sweep `Checked:` line in the body — procedural, auditable
+after the fact. When triaging a new issue on behalf of the user, the body
+includes a `Checked: <what was searched>` line.
+
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
 template, and the roadmap. **Retrieval aid (optional, never authoritative):**
