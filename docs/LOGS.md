@@ -1,5 +1,10 @@
 # Session log
 
+> **Append-only rule (S9 4b, fix/318):** LOGS.md is pure code output — no
+> model writes it. The interim rule (until feature 41's `autoLogSession:
+> mechanical`): a wrong past line gets a *new correcting line*, never an edit.
+> Machine-authored git-facts entries kill the "hand-tallied figure" class.
+
 Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
