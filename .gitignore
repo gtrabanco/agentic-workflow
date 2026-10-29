@@ -37,3 +37,6 @@ tmp/
 # probes and reads as an accidental exclusion).
 .agentic-workflow/index/
 **/.agentic-workflow/index/
+
+# Derived review state (rebuildable from git; #318 S16)
+.review-state/
