@@ -78,7 +78,7 @@ hard-wrapped across several lines, never joined into one prose line.
 ## REPAIR-RECEIPT — fixed printed block (verbatim copy)
 
 Printed after the per-finding table and tally, as part of the ABSOLUTE-last
-output together with the branching `→ Next:` block. Six fields, always
+output together with the branching `→ Next:` block. Seven fields, always
 present:
 
 ```text
@@ -87,6 +87,12 @@ present:
 - Refuted/open: <F-ids joined ` + `, or `none`>
 - Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
 - Batch class: <all-repair-in-place | frozen (replan present) | frozen (product owner present) | none>
+- Closure: <complete | open(n)> · open names the blocker ids
 - Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
 - Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE | PRODUCT-ROUTE>
 ```
+
+The claim-evidence table the fold prints before this block (§ Claim-evidence
+loop in SKILL.md) is what makes `Closure:` a receipt rather than a claim: a row
+with `status: ✗` means the fold is not closed, and `Closure: complete` is only
+printable once every row reads ✓.
