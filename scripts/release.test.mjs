@@ -468,6 +468,35 @@ test("--version with a prerelease channel is rejected, never silently ignored", 
   }
 });
 
+// F4: the locator read the first "|---|" ANYWHERE after the heading, so a grid
+// belonging to a LATER table (or a "|---|" inside a row's prose) anchored this
+// package's row and it landed in the wrong table. The grid must be the line
+// directly under this table's own header row, or apply refuses.
+test("apply refuses to anchor a companion row on another table's grid", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const changelogPath = path.join(root, "CHANGELOG.md");
+  const text = fs.readFileSync(changelogPath, "utf8");
+  // Remove ONLY the first (pi) table's grid; the others keep theirs.
+  const stripped = text.replace("| Version | Date | Type | What changed |\n|---|---|---|---|\n", "| Version | Date | Type | What changed |\n");
+  assert.notEqual(stripped, text, "the fixture carries a grid to strip");
+  fs.writeFileSync(changelogPath, stripped);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 1, "a grid-less table never borrows a neighbour's grid");
+  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0", "nothing is written when the anchor is missing");
+});
+
+test("apply refuses to anchor a companion row on a |---| inside row prose", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const changelogPath = path.join(root, "CHANGELOG.md");
+  const text = fs.readFileSync(changelogPath, "utf8");
+  const stripped = text
+    .replace("| Version | Date | Type | What changed |\n|---|---|---|---|\n", "| Version | Date | Type | What changed |\n")
+    .replace("| 1.0.0 | 2026-01-01 | — | First versioned release |", "| 1.0.0 | 2026-01-01 | — | The literal |---| in prose is not a grid |");
+  fs.writeFileSync(changelogPath, stripped);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  assert.equal(result.status, 1, "prose cannot satisfy the grid requirement");
+});
+
 // A companion table without its |---| grid used to corrupt the CHANGELOG
 // silently: indexOf("|---|", idx) returned -1 and the row landed at offset 1.
 test("apply fails closed on a companion table missing its grid — nothing is written", () => {
