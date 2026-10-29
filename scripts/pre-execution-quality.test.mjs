@@ -1533,7 +1533,7 @@ const inventorySchedule = (rows) => {
 test("normalizer order: a mutating step scheduled after the freeze row is refused by name", () => {
   const legal = [
     { name: "edit the skill reference", mutates: true },
-    { name: "bump-skill", mutates: true },
+    { name: "rewrite the affected skill surfaces", mutates: true },
     { name: "npm run bundle:skills", mutates: true },
     { name: "generate-pre-execution-schemas.mjs", mutates: true },
     { name: "freeze (artifact snapshot / acceptance manifest)", mutates: false },
@@ -1551,10 +1551,10 @@ test("normalizer order: a mutating step scheduled after the freeze row is refuse
   const twoLate = [
     { name: "edit", mutates: true },
     { name: "freeze", mutates: false },
-    { name: "bump-skill", mutates: true },
+    { name: "rewrite the affected skill surfaces", mutates: true },
   ];
   assert.deepEqual(scheduleVerdict({ steps: twoLate, freezeAt: 1 }),
-    { ok: false, offenders: ["bump-skill"] });
+    { ok: false, offenders: ["rewrite the affected skill surfaces"] });
   // the freeze row itself is not a write, and a check-only tail is always legal
   assert.equal(scheduleVerdict({ steps: legal, freezeAt: 4 }).ok, true);
   // rule placement: stated once, in the gate that owns the fixed pre-flight order
@@ -1591,7 +1591,7 @@ test("normalizer inventory: one home, and every entry names its side of the free
   assert.equal(byStep.size, rows.length, "no step is listed twice");
   // the categories AC19 names, closed against this repository's real surfaces
   for (const [step, side] of [
-    ["bump-skill", "before"], ["bun run bundle:skills", "before"],
+    ["skill-lint", "n/a"], ["bun run bundle:skills", "before"],
     ["bun run build (packages/agentic-workflow-schema)", "before"],
     ["generate-pre-execution-schemas.mjs", "before"],
     ["generate-verification-schemas.mjs", "before"],

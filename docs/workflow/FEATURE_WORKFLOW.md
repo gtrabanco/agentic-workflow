@@ -108,6 +108,69 @@ For medium+ features, the release step handles version bumps, changelog entries,
 migration notes, and deprecation notices. For XS/small units, this step is
 skipped by triage.
 
+### The release pipeline (feature 40, issue #180)
+
+Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
+
+1. **In the PR** — create the changeset intent file by running
+   `node scripts/changeset-create.mjs` (it derives the affected packages and
+   skills from the modified files, the semver from the conventional commit
+   title, and the file name PR-first). One file per PR, as many entries as
+   the change needs — the highest severity wins the train and each change
+   lands in the changelog's right section at cut time. `scripts/lint-changeset.mjs`
+   lints intent files in CI; a valid intent file declaring a package
+   satisfies the version-parity gate's content half in place of a manual
+   package.json bump. `scripts/lint-changeset.mjs`
+   lints intent files in CI; a valid intent file declaring a package
+   satisfies the version-parity gate's content half in place of a manual
+   package.json bump. The `skill-lint` helper lints the authoring rules
+   before committing.
+2. **Skill edits** — no per-skill bookkeeping: the changeset IS the change
+   record. Skills carry the unified train version, stamped by
+   `scripts/release.mjs apply` at cut time (D-40-14).
+3. **At release time** — launch **`publish.yml`** with `mode: cut`:
+   `channel: latest` applies the train (all package.json versions + the exact
+   local pins, CHANGELOG rows from the changeset bodies, the skills' stamped
+   `version:` lines, lockfiles), pushes
+   ONE release commit, tags `vX.Y.Z`, fast-forwards `stable`, opens the
+   GitHub Release, and the push fires the publish jobs (schema → crate → pi)
+   that publish npm. `channel: canary` (or alpha/beta/rc) instead publishes
+   only the declared packages under that dist-tag — the repo is untouched,
+   and canaries are grouped by you. `mode: suggest` is the read-only preview
+   (stable + canary suggestions + every changeset's semver annotation).
+4. **Channels** — npm dist-tags via the publish workflows' `channel` dispatch
+   input (`latest` default; `canary` / `alpha` / `beta` / `rc` never move
+   `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
+   (deterministic per state). Skills install via git refs: `#main`
+   (canary-equivalent), `#stable`, `#vX.Y.Z` (hard pin).
+5. **Dependency closure and publish order (D-40-10)** — pi-agentic-workflow
+   pins the runner crate and the schema exactly, so `apply` rewrites those
+   pins to the train version (run `bun install` in each touched package
+   before committing — apply reminds you), and the publish workflow runs in
+   dependency order: schema → runner crate → pi, chained with `needs:`
+   (`pi-publish` waits for both upstream publish jobs) so a pin never
+   resolves to an unpublished version. Nothing publishes
+   "alone": every train release moves the three packages together.
+6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
+   whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`
+   (latest = train cut; canary/alpha/beta/rc = prerelease cut for the
+   declared packages), `version` input for the forced override, and the
+   push-triggered publish jobs. `scripts/release.mjs` always runs in CI —
+   no release step is done by hand.
+7. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
+   overrides the computation for marketing campaigns (latest train only —
+   prerelease channels compute their own version and reject `--version`);
+   the release body is marked `Version forced by operator: X.Y.Z`. A cut
+   consumes the changesets it applied, so the next cut carries only new
+   intent.
+
+**Rollback (AC-13):** a broken stable release is rolled back by
+fast-forwarding the `stable` branch back to the last good commit
+(`git push --force origin <good-sha>:refs/heads/stable`) — the next
+`npx skills add gtrabanco/agentic-workflow#stable` resolves to the old
+version. npm versions are immutable; republish a fixed version instead of
+un-publishing.
+
 ## Diff-size guard bite example
 
 If a phase produces a 200-line diff against a 50-line budget:

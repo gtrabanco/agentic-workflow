@@ -87,7 +87,7 @@ A skill is a folder `skills/<name>/SKILL.md` with YAML frontmatter + a body.
 ---
 name: <kebab-case-name>          # must match the directory name
 user-invocable: true             # REQUIRED for it to appear in the agent's /command menu
-version: 1.0.0                   # per-skill semver; bump on every change (see below)
+version: <train>                 # the unified train version — stamped by `scripts/release.mjs apply` at cut time, never bumped by hand
 description: >
   One paragraph with concrete trigger phrases so the agent knows when to load it.
 ---
@@ -184,13 +184,26 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > Claude Code-specific feature, pair it **inline** with the generic fallback — the
 > instruction must be executable by an agent that has never heard of Claude Code.
 
-> **Version every change.** Each skill carries its own `version:` and evolves
-> independently. When you change a skill, bump its `version:` (major = rename or
-> contract/flag change; minor = backward-compatible capability; patch = wording/
-> examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
-> need a note in `docs/workflow/MIGRATION.md`. Until [#176](https://github.com/gtrabanco/agentic-workflow/issues/176)
-> is merged, freeze majors: bump `minor` (or `patch`) only, shipping breaking changes
-> as a `minor` bump with a conventional `BREAKING CHANGE:` footer ([#209](https://github.com/gtrabanco/agentic-workflow/issues/209)).
+> **One version: the unified train (D-40-14).** Skills carry the ecosystem
+> version — the same number as the npm packages and the `vX.Y.Z` tag. It is
+> stamped by code: `scripts/release.mjs apply` writes every `version:` line at
+> cut time from the accumulated changesets, and the per-skill bump ledger
+> (per-skill semver, per-skill CHANGELOG rows) is retired — the per-skill
+> tables in [`CHANGELOG.md`](CHANGELOG.md) are a frozen archive. A change to a
+> skill ships with a `.changeset/*.md` intent file (or the parity gate fails
+> the PR); renames and other breaking surfaces still need a note in
+> `docs/workflow/MIGRATION.md`.
+>
+> **Create the intent file by running code, not by hand:**
+> `node scripts/changeset-create.mjs` derives the affected packages and skills
+> from the modified files, the semver from the conventional commit title
+> (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; `--level`
+> overrides), and the file name PR-first (`<pr|branch>-<title>.md`) so names
+> stay unique. One file per PR, as many entries as the change needs; it never
+> overwrites. At cut time each change lands in the changelog's right section:
+> the scoped key routes the row to that package's own table, skill entries
+> ride the skills-content package's row named as `(skills: …)`, and a package
+> bumped by the train with nothing declared says so explicitly.
 
 > **Smoke-test wording changes to executor-path skills.** After editing
 > `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
@@ -290,7 +303,7 @@ block and refuses the schedule if a mutating step is ever re-marked as a tail st
 ```text
 normalizer-inventory@1
 step | kind | side
-bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, the CHANGELOG table, README/SKILLS cells) | before
+skill-lint | the authoring lint — reports, never repairs (the train stamps versions; there is no bump writer) | n/a
 bun run bundle:skills | generator (stages the pack-time skill bundle at `packages/pi-agentic-workflow/skills/`; gitignored and removed by `postpack`, so it is build output, never a committed mirror) | before
 bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
@@ -357,7 +370,7 @@ Where prose repeats a version, a count, or a contract id, the machine is
 authoritative and the prose is the defect (AC15). A regex over sentences cannot
 find those, so each restatement is declared once here and the test **recomputes**
 the value: `claim` is a fixed form (`literal:<exact text>`, `version-tables`,
-`package-versions`), `machine` names the publisher, `+` joins surfaces that each
+`package-versions`; `version-tables` is retired with the per-skill ledger — D-40-14), `machine` names the publisher, `+` joins surfaces that each
 carry the same fact. `literal:` compares the number or id inside the quoted text;
 the table kinds compare every row the same way. A restatement found in review but
 not pinned here is a known-issue with its re-trigger condition, never a silent gap.
@@ -366,7 +379,6 @@ not pinned here is a known-issue with its re-trigger condition, never a silent g
 rendered-facts@1
 surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
-CHANGELOG.md | version-tables | frontmatter:version | equals-each
 CHANGELOG.md | package-versions | package:version | equals-each
 
 ```
@@ -394,16 +406,23 @@ hoists.
   CLI is still used for the publish step only (Trusted Publishing +
   `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
 - **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
-- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292).**
+- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292; trigger set extended to every package in feature 40).**
   Bump `version:` in the touched package's `package.json` and add a row to the
-  "Companion npm packages" table in `CHANGELOG.md` in the same PR. The rule is
-  no longer prose-only: `root-suite.yml` runs `scripts/version-parity-gate.mjs`
-  on every PR with two halves — the **content** half (offline, deterministic)
-  fails any change under the trigger set **`skills/**` +
-  `packages/pi-agentic-workflow/**`** that does not bump the Pi package's
-  version + add its CHANGELOG companion row (root `skills/` is the Pi package's
-  shipped content, which is exactly why a skills-only merge used to publish
-  nothing); the **registry** half (a separate job, clearly-degraded-when-
+  "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
+  feature 40, ship a valid `.changeset/*.md` declaring the package (the
+  release train applies it at cut time). The rule is no longer prose-only:
+  `root-suite.yml` runs `scripts/version-parity-gate.mjs` on every PR with two
+  halves — the **content** half (offline, deterministic) fails any change
+  under the trigger set of **every package under `packages/` (derived from the
+  tree at runtime — a new package inherits the gate by existing; nothing to
+  extend)** plus **`skills/**`** as the Pi package's shipped content, unless
+  each triggered package is bumped + has its CHANGELOG companion row or is
+  declared by a changeset (root `skills/` is the Pi package's staged content,
+  which is exactly why a skills-only merge used to publish nothing; the
+  skills-content-source mapping is the gate's only declared constant — extend
+  it if a new package ever becomes a `skills/` content source, and audit the
+  gate if packages ever ship outside `packages/`); the **registry** half (a
+  separate job, clearly-degraded-when-
   unreachable) fails an exact pin whose target has published a newer version,
   and — for pins whose target is a local package under `packages/` — a pin that
   does not equal the **local package version** (the one the merge publishes;
@@ -412,17 +431,16 @@ hoists.
   version that will never exist — fix: bump the pin + the package version in
   the same PR. CI publishes on merge
   to `main` when the version differs
-  from the registry (`publish-schema.yml`, `publish-pi-package.yml` — one
-  file per package, because npm Trusted Publisher records pin the workflow
-  filename; a rename would break the npm-side record until re-registered by
-  hand).
-- **Changesets: deliberately not adopted** (decided 2026-08-30). The curated
-  changelog tables above are the release-notes surface; changesets
-  would fork them into per-package English-only `CHANGELOG.md` files,
-  require re-binding both packages' npm Trusted Publisher records to a new
-  release workflow, and add a version-PR loop for exactly two independent
-  packages with no cross-dependencies. Revisit when a third package lands or
-  per-package beta/snapshot channels are needed.
+  from the registry — one consolidated workflow since 2026-10-28
+  (`.github/workflows/publish.yml`, three jobs chained schema → crate → pi;
+  D-40-12): npm Trusted Publisher records pin the workflow filename, so the
+  consolidation required re-registering the three packages' records to
+  `publish.yml` on npmjs.com (owner one-time step; until then a publish
+  fails E403). Releases are cut by dispatching `publish.yml` with `mode: cut`
+  (`channel: latest` = train + publish; `channel: canary|alpha|beta|rc` =
+  prerelease cut for the declared packages) — `mode: suggest` previews the
+  versions read-only; everything runs `scripts/release.mjs` in CI.
+- **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>"` or `"<skill-name>"`: patch|minor|major — the highest severity in the set always wins the train (D-40-15) — plus a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 
 ---
 
@@ -446,11 +464,12 @@ reusable operational knowledge as a skill under `skills/`.
 
 **Repo maintenance skill (specific to this repo):**
 
-- **`bump-skill`** — after editing any SKILL.md, run this before committing.
-  It bumps `version:`, adds changelog rows to `CHANGELOG.md`, and updates the
-  skills and model tables in `README.md`.
-  This is the mechanical enforcement of the "Version every change" rule above.
-  `bump-skill` itself is `user-invocable: false` — invoke it via the Skill
+- **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
+  retired, D-40-14) — after editing any SKILL.md, run this before committing.
+  It lints the repo's authoring rules and reports; it repairs nothing and
+  bumps nothing — the train version is stamped by `scripts/release.mjs apply`
+  at cut time, and a skill change ships via a `.changeset/` intent file.
+  `skill-lint` is `user-invocable: false` — invoke it via the Skill
   tool / by following its `SKILL.md` directly, not the slash-command menu.
   It also carries `metadata.internal: true`, the `skills` CLI's own gate
   that keeps `npx skills add` from discovering/offering repo-internal

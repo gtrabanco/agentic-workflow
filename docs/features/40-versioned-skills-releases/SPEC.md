@@ -70,6 +70,13 @@ This repo has two npm packages published today (`@gtrabanco/agentic-workflow-sch
 (tracking `main`). Releases are manual per-package: bump version → commit → push →
 CI detects version change → publishes via OIDC Trusted Publishing. There is:
 
+> **[Drift correction 2026-10-28, cut at plan time — see "Drift corrections" at the
+> end of this document.]** At implementation the three packages are published
+> (schema 4.9.0, pi 0.36.0, agentic-workflow 0.5.0) and the repo is English-only
+> permanent (owner decision 2026-10-27, issue #232): no `CHANGELOG.es.md`, and the
+> guide is `AGENTS.md` (no `CLAUDE.md`). Every EN+ES/CLAUDE.md statement below
+> reads as corrected by that section.
+
 - **No unified version number** across skills + npm packages.
 - **No canary channel** for skills (only `#main`, `#claude`, `#inheritance` refs).
 - **No npm dist-tags** beyond `latest` (no `canary`, `beta`, `rc`, `alpha`).
@@ -130,7 +137,7 @@ changes in the repo.
    `#vX.Y.Z` tags (hard pin), `#main` (canary-equivalent).
 8. **UPDATE ROADMAP** — update the dependencies field of row 40 from
    `30 31 32 37 38` to `—` (the stale coupling removed in this design).
-9. **UPDATE CLAUDE.md** — update the "Changesets: deliberately not adopted"
+9. **UPDATE AGENTS.md** *(was CLAUDE.md — renamed; drift correction 2026-10-28)* — update the "Changesets: deliberately not adopted"
    decision note (2026-08-30) with the reopening rationale (third package now
    exists, beta channels now needed — both triggers fired by this design).
 
@@ -142,14 +149,18 @@ changes in the repo.
 - **No CI automation** — stable release is always manual via `workflow_dispatch`;
   canary is auto-on-merge but gated by version ≠ registry (same as current
   publish workflows).
-- **No changes to npm OIDC publishing** — the existing publish workflows
-  (`publish-schema.yml`, `publish-pi-package.yml`) stay; dispatch input
-  adds `--tag` for dist-tag. No Trusted Publisher re-binding needed.
+- **No changes to npm OIDC publishing** — the consolidated publish workflow
+  (`publish.yml`) handles all three packages; dispatch input adds `--tag`
+  for dist-tag. D-40-12 consolidated the former per-package trio (`publish-schema.yml`,
+  `publish-agentic-workflow.yml`, `publish-pi-package.yml`) into one file;
+  the Trusted Publisher records are bound to the new filename (re-registered
+  on npmjs.com per D-40-12).
 - **No skills.sh registry changes** — skills.sh has no version registry
   (it's install-derived only). Channels via git refs only.
-- **No automatic release notes generation** — changelog tables in
-  `CHANGELOG.md`/`CHANGELOG.es.md` stay as the release-notes surface (bilingual,
-  curated). Changeset PR bodies become GitHub Release notes (English-only).
+- **No automatic release notes generation** — the curated `CHANGELOG.md`
+  tables stay as the release-notes surface *(English-only since 2026-09-15 —
+  `CHANGELOG.es.md` no longer exists; drift correction 2026-10-28)*.
+  Changeset PR bodies become GitHub Release notes (English-only).
 - **No changes to the existing publish gate** — "version ≠ registry" still
   applies; `--version OVERRIDE` can create an artificial version bump, but the
   publish gate still checks.
@@ -259,12 +270,15 @@ Objective, verifiable conditions for "done".
   file doesn't parse (YAML frontmatter + body): `node scripts/lint-changeset.mjs` →
   exit 0 on valid, exit 1 on malformed.
 - **AC-03** (`version compute`): `scripts/release.mjs --version 4.2.0` bumps
-  package versions (schema, pi, agentic-workflow), CHANGELOG tables (EN+ES),
-  README skills table, model-routing.yml, and prints the diff. Verified:
+  package versions (schema, pi, agentic-workflow), CHANGELOG rows, and prints
+  the diff. Verified:
   `grep '"version"' packages/*/package.json` returns `4.2.0` for all.
-- **AC-04** (`npm publish --tag canary`): On merge to main, `publish-*.yml`
-  adds `--tag canary` dispatch input variant. Verified:
-  `grep '"canary"' .github/workflows/publish-*.yml` returns a dispatch input row.
+- **AC-04** (`npm publish --tag canary`): The consolidated publish workflow
+  (`publish.yml`) exposes a `channel` dispatch input; `canary` is one valid
+  value. Verified:
+  `grep 'channel:' .github/workflows/publish.yml` returns a dispatch input
+  definition, and `grep 'canary' .github/workflows/publish.yml` matches
+  one of its values.
 - **AC-05** (`npm publish --tag latest`): On stable release dispatch,
   `--tag latest` publishes the stable version. Verified:
   `npm view <pkg> dist-tags --json` returns `latest` after dispatch.
@@ -295,9 +309,11 @@ Objective, verifiable conditions for "done".
 - **AC-13** (`rollback via stable`): If a stable release is broken, the
   `stable` branch can be fast-forwarded back to a previous good commit.
   Verified: `git push --force origin stable@{upstream}` → next `npx skills add ...@#stable` resolves to old version.
-- **AC-14** (`changelog sync`): Stable release updates CHANGELOG EN+ES in
-  same commit (same version row, both present).
-  Verified: `git log --oneline` → last commit touches both `CHANGELOG.md` and `CHANGELOG.es.md` with matching version row.
+- **AC-14** (`changelog sync`): Stable release updates the CHANGELOG companion
+  rows in the same run *(English-only — the EN+ES pairing is retired;
+  drift correction 2026-10-28).*
+  Verified: `grep -c "| <train-version> | <date> |" CHANGELOG.md` matches 3 (one
+  row per package table, written by `scripts/release.mjs apply`).
 - **AC-15** (`contributor list`): GitHub Release includes a "Contributors"
   section with names from PR authors (not commits).
   Verified: `gh release view X.Y.Z --json body` → `body` contains contributor names.
@@ -409,6 +425,100 @@ boxes all tick. Awaiting independent review by `review-spec`.
 - `### Post-merge next feature`
 
 ---
+
+## Drift corrections (2026-10-28, cut at plan time per S7)
+
+The Product half was designed 2026-09-16. These repository facts changed under
+it; each correction is named once here and every stale statement above reads
+as corrected:
+
+1. **English-only permanent** (owner decision 2026-10-27, issue #232): no
+   `.es.md` siblings exist. `CHANGELOG.es.md` is gone — every "EN+ES", "both
+   EN and ES" or "bilingual" statement about the changelog tables reads as
+   "the single English `CHANGELOG.md`". GitHub Release notes stay English-only
+   (unchanged).
+2. **The guide is `AGENTS.md`** — `CLAUDE.md` no longer exists (renamed). The
+   "UPDATE CLAUDE.md" in-scope bullet reads "UPDATE AGENTS.md" and shipped in
+   this unit (the changesets note is amended, not retired).
+3. **Package facts**: all three npm packages are published today (schema
+   4.9.0, pi 0.36.0, agentic-workflow 0.5.0). The version-parity gate
+   (feature 75, issue #292) enforces the bump rule in CI — the changeset
+   route extends it (a valid intent file declaring the Pi package satisfies
+   the content half). **Correction 2026-10-28 (D-40-12, owner-directed)**:
+   the three per-package publish workflows are consolidated into ONE
+   `.github/workflows/publish.yml` (jobs chained schema → crate → pi);
+   re-registering the npm Trusted Publisher records to `publish.yml` is the
+   owner's one-time step.
+4. **ROADMAP row 40's dependency cell is already `—`** (corrected in PR #235);
+   verifying it is all that remains of the in-scope bullet 8.
+5. **`scripts/release.mjs` is not an npm publisher** — it plans the release
+   and prints the exact commands (tag, push, `gh release create`, per-package
+   `npm publish --tag`); the existing publish workflows execute the npm side,
+   keeping the Trusted Publisher records (bound to the workflow filenames)
+   untouched.
+
+The unit has been maintaining `path-protection-records@1` escape rows since P2
+but never declared its plan, so the path-guard fails closed on this unit with
+`malformed-declaration` (a records block without a plan declaration). Declared
+now — the created durable surfaces, frozen:
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | scripts/release.mjs | the deterministic release train — its write surfaces (package versions, companion rows, pins, changeset consumption) are release history
+created | scripts/lint-changeset.mjs | the intent-file gate — the fail-closed structure owner shared with the parity gate
+created | scripts/release.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
+created | scripts/lint-changeset.test.mjs | the RED corpus frozen at plan cut (O21); every fold extends, never weakens
+created | scripts/release-workflows.test.mjs | the workflow-contract corpus frozen at plan cut; every fold extends, never weakens
+created | skills/bump-skill/scripts/bump-skill.mjs | the skill's bundled writer (D-40-8) — its release-history writes are owned by the skill's prose contract, not by the ledger-ownership map
+created | .github/workflows/publish.yml | the single release entry point (D-40-13) — the npm Trusted Publisher filename binding
+created | scripts/changeset-create.mjs | the intent-file creator (D-40-16) — writes only .changeset/ intent files, ephemeral inputs consumed at cut, never a ledger
+created | scripts/changeset-create.test.mjs | the creator's corpus (D-40-16); every fold extends, never weakens
+```
+
+## Frozen request (verbatim)
+
+The requester's words, quoted verbatim from issue #180 and the owner's scope
+instruction (2026-10-28). Grammar `spec-requirement@1`.
+
+**S1 — Ship versioned skills releases (two-piece scope).**
+> "Ship versioned skills releases: automatic version bump when skills change and a stable tag per release for downstream pinning. This closes two open issues that address the same release pipeline gap: **#156**: publish a stable ref (tag) per skills release so downstream tools can pin the verified snapshot […] **#164**: automate companion-package release bumps so a skills change can never ship unversioned."
+
+**S2 — Auto version bump (prose form, superseded by S2a).**
+> "**Auto version bump** (`bump-skill` extension): when any `SKILL.md` changes in a unit, bump the companion-package semver version automatically (major/minor/patch determined by change scope: breaking change → major, new skill → minor, wording-only → patch). The bump happens before the PR, not after."
+
+**S2a — Amendment: the auto bump is a deterministic script, the skill slims to a wrapper.**
+> "the 'bump-skill extension' piece of this issue should be a **script** (`scripts/bump-skill.mjs` or package script), not more skill prose […] the script takes the level as an argument (defaulting to the inferred one, printed with its derivation) and applies every mechanical surface atomically: `version:`, both CHANGELOG tables, README skills + model tables, argument-hint changes, `npm run bundle:skills` reminder." · "`bump-skill/SKILL.md` slims to: classify the change (the only judgment left), run the script, paste its diff summary, handle major-bump migration notes." · "Deterministic edits, testable: red-first fixtures (a wording change must produce exactly one patch row per table; a rename must produce the migration-note requirement)."
+
+**S3 — Stable tag.**
+> "**Stable tag**: publish one git tag per skills release (`v<major>.<minor>.<patch>`) at the same commit that publishes the package. Downstream tools pin to this tag instead of branch names, avoiding snapshot drift."
+
+**S4 — Non-goals.**
+> "No redesign of the npm publish flow or OIDC provider (that's the publishing mechanism, not versioning) […] No change to the roadmap status machine or feature pipeline […] No manual version bump as default — the automation is the path; manual is an escape hatch […] No change to downstream package pinning semantics (existing tools consume tags as before, just now there's a stable one)."
+
+**S5 — Tests first.**
+> "Automated bump on skill change → version field updated in package.json […] Stable tag created at the same commit as the bump […] Downstream pinning works with the new tag (smoke test) […] Patch bump for wording-only changes; minor for new skills; major for breaking changes."
+
+**S6 — Amendment: scope correction (#165 dropped, cross-references re-synced).**
+> "**#165 removed from scope.** It is already closed […]" · "Cross-references re-synced against `docs/features/ROADMAP.md` […]" · "with #165 dropped, the original reason for depending on 30+31+32 ("same skill tooling: `fold-findings`, `bump-skill`, workflow docs") shrinks to workflow-docs/skill-bookkeeping churn — re-weigh at planning."
+
+**S7 — Owner scope decision (2026-10-28): the SPEC pipeline is in scope, with drift corrected.**
+> "The issue body's two pieces PLUS the SPEC's release pipeline (scripts/release.mjs, .changeset/ format, unified train across 3 packages, dist-tags, force-version, GitHub Releases, stable branch) — L-size, many slices, SPEC drift (es.md, CLAUDE.md, package versions) corrected in the SPEC as part of the work."
+
+## Acceptance criteria
+
+One observable, testable criterion per requirement, frozen at plan cut.
+
+| S# | Criterion | Check that proves it |
+|---|---|---|
+| S1 | The release pipeline exists: accumulated `.changeset/` intent files drive a deterministic release that bumps the declared packages and cuts the `vX.Y.Z` tag | `node --test scripts/release.test.mjs` exits 0 |
+| S2/S2a | `node skills/bump-skill/scripts/bump-skill.mjs` applies `version:` + CHANGELOG row from an inferred (or `--level`) classification, printing the derivation | `node --test scripts/bump-skill.test.mjs` exits 0 |
+| S3 | A stable release plans `git tag vX.Y.Z` and the `stable` branch push at the release commit | test `stable release plans the vX.Y.Z tag and stable branch push` |
+| S4 | Non-goals hold: npm publish + OIDC stay in the publish workflow (consolidated into `publish.yml` per D-40-12), the release train never publishes, roadmap machine untouched | `ls .github/workflows/publish.yml` exits 0 + `ls .github/workflows/publish-schema.yml .github/workflows/publish-agentic-workflow.yml .github/workflows/publish-pi-package.yml` exits 2 (files deleted) |
+| S5 | The four tests-first bullets each have a named test | test names in `scripts/bump-skill.test.mjs` / `scripts/release.test.mjs` |
+| S6 | ROADMAP row 40 dependency cell is `—`; SPEC drift (es.md/CLAUDE.md/package versions) corrected in this unit (see Drift corrections §2026-10-28) | `grep -n "versioned-skills-releases" docs/features/ROADMAP.md` shows the `—` cell |
+| S7 | The SPEC pipeline criteria AC-01..AC-16 that are implementable offline are covered by the obligations ledger; the es.md/CLAUDE.md drift rows are corrected in this unit | obligations ledger all `verified`/`n/a` with evidence |
 
 ## Artifacts that still need to be created by plan-feature
 
