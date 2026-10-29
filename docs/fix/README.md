@@ -15,6 +15,7 @@ table — history lives in git log + closed issues.
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
 | [#331](https://github.com/gtrabanco/agentic-workflow/issues/331) | authoring-setup | in-progress | Authoring-repo initial setup — `docs/workflow/SETUP.md`, `scripts/setup-env.mjs` (`--check`), `scripts/update-tools.mjs` (`--dry-run`), CI check job; branch `feature/331-authoring-repo-setup` |
+| [#318](https://github.com/gtrabanco/agentic-workflow/issues/318) | class-escalation-forward-closure | in-progress | Class escalation + forward closure + generated PR evidence pack + remove narration surface (complements #315); branch `fix/318-class-escalation-forward-closure` |
 
 Historical artifacts remain under `docs/fix/`; merged and closed work is
 intentionally absent from this index.
