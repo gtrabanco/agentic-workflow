@@ -219,6 +219,29 @@ test("#308 the re-cut shape keeps every section the two shapes share", () => {
     "Known pre-existing issues", "Tasks", "Next", "References"], "the shared tail is identical in both shapes");
 });
 
+test("#318 S15: both templates declare what the unit retires", () => {
+  // S10 2's retirement obligation, carried by the template every unit is cut
+  // from. It sits outside the required-section lists on purpose: publishing it
+  // as required would invalidate the 114 units already closed against the
+  // selector, and a migration nobody asked for is not this unit's to force.
+  // The template carries it, so a NEW unit answers it at cut time.
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    const found = headings(read(template));
+    assert.ok(found.includes("Retirements"), `${template} must carry ## Retirements`);
+  }
+});
+
+test("#318 S15: the retirement section asks for the replacement or the no-consumer evidence", () => {
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    const text = read(template);
+    const start = text.indexOf("## Retirements");
+    const body = text.slice(start, text.indexOf("\n## ", start + 1));
+    assert.match(body, /replacement|no-consumer/, `${template} must name what a retirement owes`);
+    assert.match(body, /why nothing can be removed/,
+      `${template} must make an empty answer a stated reason, never a gap`);
+  }
+});
+
 test("#308 both templates carry the re-cut shape's section set", () => {
   for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
     const found = headings(read(template));

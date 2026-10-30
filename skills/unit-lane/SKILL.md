@@ -117,7 +117,24 @@ its stdout block **verbatim** into the unit doc's Evidence section header under
 a `## Triaged steps` heading. This block is authoritative. The model never
 re-derives, reorders, or invents steps — it executes only what the catalog says.
 
-### 3. Execute triaged steps in order
+### 3. Forward closure + retirements (design/plan steps)
+
+The two steps that own this are their reference files, not this conductor —
+§4 below links both. The rule is duplicated here for nobody:
+
+- the **design** step carries the three-direction closure (backward: the
+  constraints in force; sideways: callers and consumers of what changes;
+  forward: every promise coined, behind the **ask-don't-infer** and
+  **document-or-don't-coin** gates) and the **retirements** the unit declares.
+- the **plan** step turns every declared retirement into its own task carrying
+  the negative-capability pin, the sweep grep and the before/after reference
+  count.
+
+This section states only that the two steps carry it. The text lives with the
+step that executes it, so a model running `design` reads the rule instead of a
+copy of it — and cannot read a stale copy.
+
+### 4. Execute triaged steps in order
 
 For each step the triage returned, follow its reference file. Judgment steps
 (research, design, plan, evidence, docs, review) run inline, **one step per
@@ -155,14 +172,14 @@ survives only as an explicit operator choice. When the last phase's turn
 closes, `execute-phase` resumes the lane and the remaining judgment steps
 (evidence, review, docs, release) run here.
 
-### 4. Diff-size guard (after each implement step)
+### 5. Diff-size guard (after each implement step)
 
 Run `bun scripts/diff-guard.mjs --base <last-reviewed-ref> --unit <NN>`. Paste
 the output verbatim. On **BREACH**: stop, re-triage the unit, or record an
 exception. **Anti-gaming: NEVER shrink a diff by deleting comments, blank lines,
 docs or tests.** If the unit cannot fit the budget, record the exception and stop.
 
-### 5. Update evidence and progress
+### 6. Update evidence and progress
 
 Before every commit:
 
@@ -171,7 +188,7 @@ Before every commit:
 - **Progress log**: `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next:
   <what is next>`
 
-### 5b. Memory boundaries
+### 7. Memory boundaries
 
 Engram is the required memory substrate; a down layer never blocks a unit —
 follow [the memory protocol](references/MEMORY.md).
@@ -185,7 +202,7 @@ follow [the memory protocol](references/MEMORY.md).
   retry → `mem_get_observation` → the unit doc wins. A miss is keyword-bound,
   never proof nothing was saved; an unavailable mirror is marked pending.
 
-### 6. Close the unit — the close-out ladder
+### 8. Close the unit — the close-out ladder
 
 When all triaged steps are done, in order:
 

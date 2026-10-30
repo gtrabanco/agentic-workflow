@@ -43,11 +43,16 @@ if bun is not installed) and the
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
 ✓ Evidence rows updated (command → exit/digest → output → verified-by)
+  — each row carries the command, observed output (reproduced, not typed by
+  hand), and the verifying-by credit. (S5 — claim-evidence loop: mandatory
+  reproduction, loop-until-green inside the same turn)
 ✓ Progress log updated with a dated `YYYY-MM-DD HH:MM` entry that names the
   phase id (what, commit, next)
 ✓ Memory boundary ran — the phase's outcome saved under `unit/<NN-slug>/doc`,
   or the mirror marked pending when the layer is degraded
 ✓ Diff guard passed (on implement steps) — see `diff-guard` in PREFLIGHT.md
+✓ Self-audit box (S9 d): every claim the persist introduces was re-derived
+  with pasted output before the commit lands.
 ✓ → Next: block printed as the absolute last output
 ```
 
@@ -133,14 +138,51 @@ work. For `implement` steps: write tests-first where they pay (core/domain,
 orchestration — record the failing red run's command, exit, and failing test
 names before implementation), then green. UI/adapter glue may test after.
 
-### 5. Post-step
+### 5. Claim-evidence loop (S5 — before post-step)
+
+Before running post-step, verify every claim the step's repair introduces. This
+is the repairer-owned verification that prevents the unit 79 F50-class failure
+(closed gate-green with an unreproduced figure "170" without re-deriving via
+`git diff --numstat`).
+
+1. **Claim ledger.** Enumerate every claim: each new figure, cross-reference,
+   "X is now Y"; in code: each behavior the step declares.
+2. **Mandatory reproduction.** Re-derive the figure with the command, resolve
+   the reference with grep, reproduce the behavior. Paste command + observed
+   output into the claim table — never type the expected result by hand.
+3. **Loop until green.** red → repair → re-run, *inside the same turn*, until
+   every claim verifies.
+4. **Admission rule.** If no command can verify the sentence, it is not a
+   claim, it is an opinion, and it does not get written.
+
+Output:
+
+```
+| claim | command | output | status |
+|---|---|---|---|
+| <claim> | `<command>` | `<observed output>` | ✓ |
+```
+
+The row shape is published grammar (`evidence-row@1` in
+`@gtrabanco/agentic-workflow-schema`), so a row missing its command, its
+observed output or a ✓/✗ verdict is a shape violation rather than a style nit.
+
+**Bounded checkpoint (S13/S14).** The claim-evidence loop is only paid if it is
+cheap: `node scripts/test-route.mjs --check <changed path>` names the minimal
+suite a path needs, so an intermediate verification costs seconds instead of the
+full gate. An unmatched path answers `route: full-suite` — never fewer tests —
+and the full gate stays what the merge gate and CI run.
+
+### 6. Post-step
 
 1. **Diff guard** (implement steps only): run `bun scripts/diff-guard.mjs --base
    <last-step-commit> --unit <unit>` — paste the block verbatim. **BREACH → STOP**
    (re-triage or record exception). Anti-gaming: **NEVER shrink a diff by deleting
    comments, blank lines, docs or tests.**
 2. **Evidence rows**: one row per AC satisfied — `| AC | command | exit/digest |
-   output (≤2 lines) | verified-by |`. Append to the Evidence section.
+   output (≤2 lines, reproduced via command, not typed by hand) | verified-by |`
+   — append to the Evidence section. The evidence row is a *reproduced receipt*,
+   not an assertion (S5: mandatory reproduction extends to doc artifacts).
 3. **Progress log**: append a dated entry —
    `YYYY-MM-DD HH:MM — <what was done> → <commit sha> — next: <what is next>`.
 4. **Memory boundary** — this step is a phase transition. Follow
@@ -153,7 +195,7 @@ names before implementation), then green. UI/adapter glue may test after.
 5. **Commit**: `git add <changed files>` then `git commit -m "<type>(<scope>):
    <step-summary>"` — run it, paste the SHA.
 
-### 6. Red gate (repair loop)
+### 7. Red gate (repair loop)
 
 After each step: run the project's verification gate (type-check + tests + build).
 
@@ -173,7 +215,7 @@ After each step: run the project's verification gate (type-check + tests + build
     · continue atomically → /execute-phase <unit> <P<k>>
   ```
 
-### 7. Whole-unit mode
+### 8. Whole-unit mode
 
 When invoked as `<NN-slug>` with no step: loop all remaining steps, one commit
 each. This is an **explicit operator choice only** — the lane's hand-offs
@@ -200,7 +242,7 @@ PR: <url>
   · merge gate after REVIEW-PASS → /audit-pr
 ```
 
-### 8. Descope guard
+### 9. Descope guard
 
 Before creating **any** issue while executing: classify with the descope test.
 A descope (moving an acceptance criterion or task out of scope) requires
@@ -235,6 +277,14 @@ These files must be loaded when their topic is active:
   keep assertions at least as strong.
 - Never execute a step the triage skipped — the catalog is authoritative.
 - Never edit the unit doc's Acceptance criteria (that is re-triage with user consent).
+- Never write to `docs/LOGS.md` (S9 4b): LOGS.md must be pure code output —
+  no model writes it. The interim rule (until feature 41's
+  `autoLogSession: mechanical`) is append-only: a wrong past line gets a *new
+  correcting line*, never an edit. Machine-authored git-facts entries also
+  kill the "hand-tallied figure" class.
+- Self-audit box (S9 d): before committing, re-derive every claim the step's
+  persist introduces with pasted output. The turn does not end with unreproduced
+  claims.
 - Never expand scope beyond what Non-goals define — findings discovered during
   implementation never widen the unit.
 - Never invent an acceptance criterion — ask the user with concrete options.

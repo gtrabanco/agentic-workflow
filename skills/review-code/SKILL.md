@@ -51,6 +51,11 @@ default branch. State the scope at the top of the returned table.
   `sweep-mismatch`
 ✓ Edge cases the SPEC's dev scenarios name are actually handled in code, not
   just in tests
+✓ **Is deleting the surface the complete fix? (S8)** — before any edit is
+  proposed, check: does removing the surface entirely achieve the goal more
+  reliably than repairing it? If yes → route `fix-now (delete)`, not
+  `fix-now (repair)`. This is the deletion mandate: design and plan produce
+  retirements as first-class deliverables.
 
 ## Materiality bar
 

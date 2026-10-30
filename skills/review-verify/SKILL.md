@@ -18,6 +18,12 @@ Composed by `review-change` / `product-audit` within their conversation — on a
 agent, follow this file inline as the routed step. **Findings only; never edits,
 never refactors.**
 
+**Shift from discoverer to auditor of recorded evidence (S5).** The implementer's
+claim-evidence loop is the primary verification. This review *audits* the
+recorded evidence: re-runs a sample of the recorded commands instead of
+re-deriving the whole change. This is the cost-scaling invariant — reviewers
+dig into code only when evidence is absent or contradicts.
+
 ## Scope
 
 The diff or path/glob the caller passes; default the current change vs the
@@ -25,10 +31,21 @@ default branch. State the scope at the top of the returned table.
 
 ## Checklist (evaluate EVERY item — none is optional; n/a must be stated)
 
+✓ **Evidence audit.** Sample the unit doc's Evidence rows: re-run ≥ 3 of the
+  recorded commands and compare observed output against what the implementer
+  recorded. Mismatch → finding: "evidence contradicts observation at <file:line>".
+✓ **Claim-evidence loop verification.** Check the fold's claim table (if
+  present): every row has `status: ✓`. Any `✗` row means the implementer's
+  turn did not complete its claim-evidence loop.
+✓ **Unit-route triage currency.** Re-run `bun scripts/unit-route.mjs --triage
+  <slug>` and compare the `Steps:` line against the unit doc's Evidence section.
+  Mismatch → stale triage.
 ✓ The project's verification gate ran in THIS review (type-check, tests, build
   per the project's declared commands) — paste exit status per command
 ✓ The change's primary claimed behavior was exercised for real (run the
-  CLI/endpoint/function; paste the actual observed output)
+  CLI/endpoint/function; paste the actual observed output) — *in addition to*
+  the evidence audit, verify at least one behavioral claim not covered by
+  recorded evidence
 ✓ At least one failure-mode from the SPEC's dev scenarios was reproduced (bad
   input, missing file, error path) and behaved as specified
 ✓ New/changed tests actually fail when the implementation is reverted or

@@ -1,5 +1,10 @@
 # Session log
 
+> **Append-only rule (S9 4b, fix/318):** LOGS.md is pure code output — no
+> model writes it. The interim rule (until feature 41's `autoLogSession:
+> mechanical`): a wrong past line gets a *new correcting line*, never an edit.
+> Machine-authored git-facts entries kill the "hand-tallied figure" class.
+
 Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
@@ -3412,6 +3417,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 3 (dff48f88…5e752124)
 - **Files:** 2 (SPEC.md, review-findings.md)
 - **Summary:** /review-change cycle 10 delta over the F49 fold: 46/46 folded rows fixed, one new med finding F50 (verdict pane miscounted audit passes); /fold-findings closed the ledger (open-rows 0, route close-out). Unit 79 is now ready for the receipt post and /audit-pr.
+
 ## 2026-10-26T18:43:35Z — feat/308-spec-by-reference — manual
 - **Commits:** 81 (`1c68fcf4…37830bcb`)
 - **Files:** 76 files
@@ -3606,6 +3612,53 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) #284 stays open, P2 verdict deferred to feature execution, pi/pi-durable drift sweep instruction reaffirmed. 2) #260 body rewritten NOW under #307 two-axis contract (size→tracking, risk→verification depth, review informational). 3) Subagent execution layer stays in @gtrabanco/pi-agentic-workflow (not the future runtime platform). 4) New #260 requirement: optional resource-limit config (RAM/CPU/parallelism caps, default automatic self-detection); feasibility: hard limits via cgroups v2/Job Objects per host, soft observe+throttle portable, enforcement level recorded in Evidence. 5) No upstream ./subagents export issue filed — file-path workaround accepted. 6) Substrate: (b) core-package dependency primary after spike, (a) fallback, vendoring last resort; pi-durable upgrade path per #284 P2. 7) MQTT/event-bus vision split: AW keeps event vocabulary+emitter+inbox; runtime platform is a separate future project.
 - **Next:** At #260 planning time: owner makes the final substrate call (recommendation and spike data recorded in-thread); before that, if pi ships new versions, the drift sweep instruction applies. #284 P2 spike must re-derive the pi-durable checkpoint-resume contradiction against the then-current version when picked up.
 
+## 2026-10-29T13:52:39Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 20 (`f77d3e87…a71d90d7`)
+- **Files:** 45 files
+- **Summary:** fix/318 — class escalation, forward closure, generated PR evidence pack, narration removal
+- **Decisions:** Worked inline on the repo's own surgery (rule #4): no review-change, no fold cycles, no self-granted gates. Deterministic gates only (297 tests, 28 skills within budget). Obligations ledger: 40 rows, all planned (not self-verified via self-review). Skipped: S3 (no .github/PR template exists), P13 (review-state.json framework declared but not wired), S10.4 (token accounting), S10.3 (#227 dependency). Budget manifest re-based for 4 skills. Branch: fix/318-class-escalation-forward-closure, 23 commits.
+- **Next:** Owner review of the diff on branch fix/318-class-escalation-forward-closure — 16 files changed, +757/-106. Decide which omitted items to implement or defer. Then: /review-change, /audit-pr, manual merge.
+
+## 2026-10-29T14:10:00Z — fix/318-class-escalation-forward-closure — correction
+
+- **Correction of the entry above (append-only: a wrong past line gets a new line, never an edit).**
+  Three of its claims are false against the tree at `0fc9ee60`:
+  1. *"Skipped: S3 (no .github/PR template exists)"* — **wrong**: `.github/PULL_REQUEST_TEMPLATE.md` and
+     `template/.github/PULL_REQUEST_TEMPLATE.md` both exist and both carry the generated evidence pack
+     with its human and technical layers (`grep -c 'Evidence pack' .github/PULL_REQUEST_TEMPLATE.md` → 1).
+     S3/S7 landed in `dab409a3`.
+  2. *"P13 (review-state.json framework declared but not wired)"* — **wrong**: `scripts/review-state.mjs`
+     ships with `record|mark|check|show`, 6 black-box cases, and `closure: open(n)` exits 1. Landed in `b04b8d5b`.
+  3. *"Obligations ledger: 40 rows, all planned"* — **wrong**: 38 `verified` with re-runnable validators,
+     2 evidenced `n/a` (S17→#307, S18→#227). Closed in `dab409a3` and completed in `cecdc1e9`…`b04b8d5b`.
+  Its commit/file counts (`20 commits`, `45 files`) also predate the latest work; the branch head is `0fc9ee60`.
+- **Root cause:** the entry was written by the `log-session` hook from a stale view of the branch, and it
+  narrates decisions the branch did not take ("no review-change, no fold cycles, no self-granted gates") as if
+  they were findings. This is the hand-tallied-narration class S9 4b exists to stop — the interim rule is
+  append-only, so this correction is a new line rather than an edit.
+- **Next:** the branch is the source of truth. Read the unit doc's `## Log` (R1, F1–F11, E1, G1–G5) for what
+  actually landed; `docs/fix/318-class-escalation-forward-closure/planning-obligations.md` for the 38/2 split.
+## 2026-10-30T09:41:47Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 25 (`f77d3e87…4d897a6c`)
+- **Files:** 48 files
+- **Summary:** External verify of fix/318-class-escalation-forward-closure against base 55aefa3f — VERIFIED, 0 blockers
+- **Decisions:** External verify ran full byte-level audit: all 40 obligations verified (38 verified + 2 n/a deferred), all tests pass (1176 root suite, 729 schema, 471 pi package), promise-coherence PASS 28 claims, skill context PASS 28 skills/14 routes, sibling sweep clean. No fixer — read-only verifier. Post-verify follow-up commit fixed turn-contract box 6 column name from literal checkmark to status to match published grammar.
+- **Next:** PR #318 ready for merge gate
+
+---
+
+## 2026-10-30T09:41:41Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 2 (`60dd9a0c..4d897a6c`)
+- **Files:** 2 modified/added (skills/fold-findings/SKILL.md, .changeset/fix-318-…md) + uncommitted (AGENTS.md, skills/triage-issue/references/LABELS.md — pre-existing dirty from the branch's own sessions)
+- **Summary:** External verification of fix/318-class-escalation-forward-closure (head 60dd9a0c). Three blockers found: all one class — `verified` obligation rows whose demonstrator figures do not reproduce at head (O25: `ledger-size: 27876` vs 41378 actual; O23: `grep → 1` vs 3 actual; O20: "37 matches" no reading reproduces). Advisory fixed: fold-findings line 39 still used pre-F7 spelling (`✓` column name) vs published grammar (`status`); committed as `4d897a6c fix(skills): fold-findings turn-contract box 6 cites the published evidence-row column set (S12)`, changeset auto-generated by `scripts/changeset-create.mjs`, linted and committed. Issue #340 created for product-audit residue dimensions (duplicate content, unused code, obsolete/missing docs, reuse-first, no-assumption rule) — no solape en 19 issues abiertas.
+- **Decisions:** 1) The three blockers are documentation-only — no code/skill behavior changes, only stale figures in the obligations ledger. 2) "No assumption" rule applied to open question: searched #260 for cited "piew" example — not found in body or comments; flagged as open question for triage rather than guessing. 3) Issue #340 does not solap with any existing open issue or roadmap row; created as `enhancement+needs-triage` (repo label `feature` was missing — created it before the issue). 4) Branch reset mid-verify by implementer context (`c5d58e77` → `origin`'s `60dd9a0c`): verified the actual head, not the one that was reset away.
+- **Next:** #339 blockers must be closed (O20/O23/O25 re-derived and re-pinned) + recheck → merge → /triage-issue 340 → promote → fila en ROADMAP → /plan-feature 340
+## 2026-10-30T10:30:11Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 29 (`f77d3e87…1e843c36`)
+- **Files:** 51 files
+- **Summary:** Human-revision-needed label applied to PR #339 and issue #332, scope-corrected AGENTS.md drift report, template/AGENTS.md defect audit
+- **Decisions:** 1) human-revision-needed applied to #339 via gh API (gh pr edit --add-label is a no-op on this repo — read back confirmed empty, REST labels endpoint used). 2) Template/AGENTS.md scope boundary fixed: it is init-workspace substrate (decision-free, interviewed), never a parity target; earlier draft had wrong 'scaffold parity' item replaced by P10. 3) Scaffold defects T4/T5 found: template feature/fix SPEC templates still ship legacy 14-section shape while template/AGENTS.md declares spec-by-reference (S#/## Log) as 'the template shape' — gate never scans template/** so it can't catch it.
+- **Next:** #332 await human review of drift report + T4/T5 defects (template shape mismatch, precedence ladder, runtime split, documentation map, layout stale, duplicate collapse, testing line, LOGS/LOGS.md handoff); P9 rule: 'a restatement must name its owner' to prevent drift growth
 ## 2026-10-30T17:06:57Z — feat/pin-watch-partial-specs — manual
 - **Commits:** 1 (`6942321a…6942321a`)
 - **Files:** .github/workflows/pin-watch.yml, scripts/pin-watch.mjs, scripts/pin-watch.test.mjs, scripts/version-parity-gate.mjs, scripts/version-parity-gate.test.mjs

@@ -249,6 +249,14 @@ assert.match(foldSkill, /decision-required/);
 assert.match(foldProcess, /no `folded: yes` flips/);
 assert.match(foldProcess, /REPLAN-ROUTE/);
 
+// 10e-bis/#318 S4. The closure field is part of the receipt — the contract the
+// SKILL's turn-contract box 11 demands has to exist in the printed block too,
+// or the box asks for output the reference never emits.
+assert.match(foldProcess, /- Closure: <complete \| open\(n\)>/);
+assert.match(foldProcess, /## REPAIR-RECEIPT[\s\S]*?- Closure: [\s\S]*?- Branch: /,
+  "Closure sits inside the printed block, before the branch line");
+assert.match(foldSkill, /closure: complete \| open\(n\)/i);
+
 // 10f/#293 AC2. Freeze-batch recognizes a product-owned row: a fix-now row
 // whose Route cell begins `product owner` states its class in the table
 // explicitly and freezes the batch (the loop repairs source, never authority —

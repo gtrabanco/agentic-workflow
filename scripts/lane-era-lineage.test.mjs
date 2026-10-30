@@ -255,6 +255,49 @@ test("the producer writes the ledgers: templates and unit-lane plan step (AC4)",
   assert.match(plan, /LEDGERS\.md/, "the sizing rule (embedded XS/S, separate files M/L) stays owned by LEDGERS.md");
 });
 
+// #318 S2/S6/S8 — the closure rule lives with the step that executes it.
+//
+// The three-direction closure, the two gates and the retirement declaration were
+// first written into the conductor's own §3. But the conductor's §4 sends a model
+// running `design` to references/DESIGN.md and a model running `plan` to
+// references/PLAN.md — a rule that only exists in the conductor is a rule the
+// step never reads, and this repo has already paid for that class (F49→F51).
+// These pins hold the rule at the step, and hold the conductor to a pointer.
+test("#318 S8: the design step carries the closure and the retirement declaration", () => {
+  const design = read("skills/unit-lane/references/DESIGN.md");
+  assert.match(design, /### Three-direction closure/, "the design step states the closure itself");
+  assert.match(design, /Backward/, "backward closure (the constraints in force)");
+  assert.match(design, /Sideways/, "sideways closure (callers and consumers of what changes)");
+  assert.match(design, /Forward/, "forward closure (the promises this unit coins)");
+  assert.match(design, /ask-don't-infer/, "the ask-don't-infer gate");
+  assert.match(design, /document-or-don't-coin/, "the document-or-don't-coin gate");
+  assert.match(design, /Retirements/, "the retirement declaration");
+  assert.match(design, /why nothing can be removed/,
+    "an empty retirement answer is a stated reason, not an omission");
+  assert.match(design, /Retirements stated/,
+    "the pass-only-if checklist asks it, so the step cannot pass without answering");
+});
+
+test("#318 S8: the plan step turns each retirement into a task with its evidence", () => {
+  const planStep = read("skills/unit-lane/references/PLAN.md");
+  assert.match(planStep, /retirement[\s\S]{0,200}its own task/i,
+    "each declared retirement becomes its own task");
+  assert.match(planStep, /negative-capability pin/, "the pin is the task's validator");
+  assert.match(planStep, /sweep grep/, "the sweep grep names the command to re-run");
+  assert.match(planStep, /surviving-reference count/, "the count makes the deletion measured");
+  assert.match(planStep, /retirement the design declared[\s\S]*?its own task/i,
+    "the plan checklist requires every declared retirement to land as a task");
+});
+
+test("#318 the conductor points at the step instead of keeping a second copy", () => {
+  const conductor = read("skills/unit-lane/SKILL.md");
+  // One owner per rule: the conductor says where it lives, the step says what it is.
+  assert.match(conductor, /references\/DESIGN\.md/);
+  assert.match(conductor, /references\/PLAN\.md/);
+  assert.doesNotMatch(conductor, /\*\*Retirements \(S8\)\.\*\*/,
+    "the retirement text has one home — the design step — never a stale conductor copy");
+});
+
 // ── unit-lineage: the machine surface of audit-pr gate 1 (fold F9–F13) ──────
 
 /** Run the lineage check over a fixture repo. */
