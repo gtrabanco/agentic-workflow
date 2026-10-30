@@ -11,6 +11,9 @@
  * that declares exact pins, and when one has drifted it files **one issue** —
  * naming the package, the pinned version and the published version — so the
  * upgrade lands as a deliberate human `fix(deps)` PR and never as a side effect.
+ * A pin whose target is a local package under `packages/` is judged against
+ * that package's own version, read from the manifest: the same rule and the same
+ * evaluator the PR gate applies, so the watch cannot disagree with the gate.
  *
  * A second half (issue #321) watches `serena-agent` on PyPI — installed vs
  * published — and files the same kind of drift issue. `serena-agent` is a tool
@@ -49,20 +52,20 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { evaluatePins } from "./version-parity-gate.mjs";
+import { evaluatePins, localPackageVersions, packageDirs } from "./version-parity-gate.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "gtrabanco/agentic-workflow";
 
 /**
- * The packages whose exact `dependencies` pins are watched. Both are the ones
- * that declare any (PE-012): the Pi package (three pins after P1) and the
- * runner (typebox). A package with no exact pin contributes nothing rather
- * than erroring.
+ * The packages whose exact `dependencies` pins are watched: every package under
+ * `packages/`, derived from the tree — the same census the PR gate takes, so a
+ * new package is watched by existing. A package that declares no exact pin
+ * contributes nothing rather than erroring.
  */
 export function watchedPackages({ root = REPO_ROOT } = {}) {
   const packages = [];
-  for (const dir of ["packages/pi-agentic-workflow", "packages/agentic-workflow"]) {
+  for (const dir of packageDirs(root)) {
     const manifest = path.join(root, dir, "package.json");
     let parsed;
     try {
@@ -96,12 +99,15 @@ export function watchedPyPI() {
 /**
  * Collect drift across every watched package. `fetchLatest(name)` returns the
  * registry's latest version or throws (the CLI wires it to `npm view`; the
- * suite injects fakes, so no test touches the network).
+ * suite injects fakes, so no test touches the network). `localVersions` is the
+ * local sibling census the CLI reads from the tree: a pin on a package that
+ * lives in this repository is judged against that package's own version, the
+ * same rule and the same evaluator the PR gate applies.
  *
  * The per-package decision is `evaluatePins` — the PR gate's own evaluator, not
  * a second implementation of the same rule.
  */
-export function collectDrift({ packages, fetchLatest }) {
+export function collectDrift({ packages, fetchLatest, localVersions = {} }) {
   const findings = [];
   const degraded = [];
   const skipped = [];
@@ -112,6 +118,7 @@ export function collectDrift({ packages, fetchLatest }) {
       packageName: pkg.name,
       dependencies: pkg.dependencies ?? {},
       fetchLatest,
+      localVersions,
     });
     checked += Object.keys(pkg.dependencies ?? {}).length - result.skipped.length;
     skipped.push(...result.skipped.map((entry) => ({ ...entry, package: pkg.name, dir: pkg.dir })));
@@ -123,6 +130,7 @@ export function collectDrift({ packages, fetchLatest }) {
         dependency: violation.name,
         pin: violation.pin,
         latest: violation.latest,
+        localVersion: violation.localVersion,
       });
     }
   }
@@ -170,7 +178,9 @@ export function issueFor(finding, { repo = REPO } = {}) {
     title: `chore(deps): pin drift in ${marker}`,
     body: [
       `\`${finding.package}\` pins \`${finding.dependency}\` at **${finding.pin}**,`,
-      `but the registry published **${finding.latest}**.`,
+      finding.localVersion
+        ? `but the local package in this repository carries **${finding.localVersion}**.`
+        : `but the registry published **${finding.latest}**.`,
       "",
       "Reported by the scheduled pin watch (`scripts/pin-watch.mjs`, feature 67",
       "AC2 / issue #219). The PR-time `version-parity-gate.mjs --pins` half fails",
@@ -215,16 +225,22 @@ export function renderReport(result, { repo = REPO } = {}) {
   for (const finding of result.findings) {
     if (finding.registry === "pypi.org") {
       lines.push(`drift: ${finding.name} ${finding.installed} → ${finding.latest} (pypi.org)`);
+    } else if (finding.localVersion) {
+      lines.push(
+        `drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.localVersion} (local package version)`,
+      );
     } else {
       lines.push(`drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.latest}`);
     }
   }
   if (result.findings.length === 0) {
-    lines.push(`no drift — every exact pin matches the registry's latest (+${plural(result.degraded.length, "degraded entry", "degraded entries")})`);
+    lines.push(
+      `no drift — every exact pin matches the registry's latest and every local pin matches its package (+${plural(result.degraded.length, "degraded entry", "degraded entries")})`,
+    );
     lines.push(`VERDICT: PASS${result.degraded.length > 0 ? " (degraded)" : ""}`);
   } else {
     lines.push(
-      `drift: ${plural(result.findings.length, "pin")} behind the registry — ` +
+      `drift: ${plural(result.findings.length, "pin")} out of parity — ` +
         `fix with a deliberate \`fix(deps)\` PR (bump the pin + the package version + its CHANGELOG row)`,
     );
     lines.push("VERDICT: DRIFT");
@@ -443,7 +459,11 @@ function main(argv) {
     return 2;
   }
 
-  const npmResult = collectDrift({ packages: watchedPackages(), fetchLatest: npmLatest });
+  const npmResult = collectDrift({
+    packages: watchedPackages(),
+    fetchLatest: npmLatest,
+    localVersions: localPackageVersions(),
+  });
   const pypiResult = collectPyPIDrift({ packages: watchedPyPI(), fetchLatest: pypiLatest });
   // Merge: both must pass for overall clean
   const allFindings = [...npmResult.findings, ...pypiResult.findings];
