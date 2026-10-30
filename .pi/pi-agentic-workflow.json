@@ -1,18 +1,1 @@
-{
-  "guards": {
-    "merge": true,
-    "history": true,
-    "ci": {
-      "create": true,
-      "run": true
-    },
-    "expensiveTests": {
-      "maxTokens": 100000,
-      "patterns": [
-        { "match": "\\bbun run mutation\\b", "tokens": 120000 },
-        { "match": "\\bbun scripts/mutation-check\\.mjs\\b", "tokens": 120000 },
-        { "match": "\\bpi\\s+-p\\b", "tokens": 50000 }
-      ]
-    }
-  }
-}
+{}
