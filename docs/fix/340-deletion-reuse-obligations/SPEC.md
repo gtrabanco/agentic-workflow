@@ -285,10 +285,6 @@ OPEN rows only.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F1 | `.pi/pi-agentic-workflow.json.staged:1` (untracked) | verify | high | source | fold — `node scripts/audit-pr-gate.mjs hygiene` tree-clean blocker; delete the stray duplicate of the tracked `.pi/pi-agentic-workflow.json` |
-| F2 | S1–S10 · docs/fix/340-deletion-reuse-obligations/SPEC.md:117 | docs | high | source | fold — AC-Gate (SPEC.md:117), the P6 validator (SPEC.md:257) and O14 state `run-root-suite.mjs` exits 0 while a known test is red; observed exit 1 · 1214/1213/1. G1 claims the re-base fixed both E1 failures; only `check-skill-context.test.mjs` flipped |
-| F3 | S3 · scripts/product-audit-residue-fixture.mjs:44 | code | high | source | fold — the clean twin exports `main` with no consumer (`:44` seeded, `:50` clean), so the shipped unused-code sweep yields 1 finding on `clean/` and 5 on `seeded/`, contradicting AC-Fixture and O6 |
-| F4 | S10 · docs/fix/340-deletion-reuse-obligations/SPEC.md:159 | docs | med | source | fold — Retirements before-count says 1 restating paragraph; the unit's own pin computes 3 at base (`skills/review-change/SKILL.md:98`, `skills/unit-lane/SKILL.md:105`, `skills/unit-lane/SKILL.md:127`) |
 
 ## Log
 
@@ -366,6 +362,59 @@ OPEN rows only.
   before-count are corrected in place — they are claims, not history. `G1` and
   `E6` stand exactly as written: `G1` is answered by F2's line, `E6` by F3's,
   and those `F` lines are the append-only correction.
+- **E8** — 2026-10-30, RED-before-fix `node --test scripts/residue-dimensions.test.mjs`
+  · exit 1 · 24 tests / 23 pass / 1 fail — the new twin-bound pin fails with the
+  verifier's own reproducer: `the clean twin carries residue: clean/lib/main.js:main`.
+  The pin was written first and left red until the fixture changed; no existing
+  expectation was touched.
+- **G5** — 2026-10-30, fold gates at head `e9aecce8`:
+  `node --test scripts/residue-dimensions.test.mjs` · exit 0 · 24 pass / 0 fail;
+  `node --test scripts/normative-drift.test.mjs` · exit 0 · 20 pass;
+  `node --test scripts/lint-changeset.test.mjs` · exit 0 · 11 pass;
+  `node scripts/check-skill-context.mjs --routes --budgets` · exit 0 · PASS;
+  `node scripts/version-parity-gate.mjs --content --base 5824aab6` · exit 0 ·
+  VERDICT: PASS.
+- **G6** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 1 · **1215
+  tests / 1214 pass / 1 fail** — the one failure is still the recorded
+  pre-existing `review-loop-discipline` version pin (the +1 test is E8's new
+  pin); packages `agentic-workflow-schema` 726 / 0 and `pi-agentic-workflow`
+  504 / 0, both exit 0.
+- **F1** — 2026-10-30, folded — the untracked `.pi/pi-agentic-workflow.json.staged`,
+  a byte-identical duplicate of the tracked `.pi/pi-agentic-workflow.json`, is
+  removed: the repo's own merge hygiene blocks any untracked path, and the
+  duplicate was exactly the residue this unit's sweeps hunt. Nothing git-visible
+  changed (an untracked file has no diff), so the proof is the gate: `node
+  scripts/audit-pr-gate.mjs hygiene` went `tree-clean: fail`, naming
+  `?? .pi/pi-agentic-workflow.json.staged`, to `tree-clean: pass` — the two
+  remaining blockers are the unpushed branch and the absent PR, both expected
+  before the PR exists. The tracked config's bytes were re-verified against HEAD
+  after a concurrent process cleared `.pi/` mid-fold; `git status` is clean.
+- **F2** — 2026-10-30, folded — the AC-Gate check, the P6 validator and O14's
+  validator cell claimed `run-root-suite.mjs` exits 0 while a recorded test stays
+  red, which is unsatisfiable; they now state the outcome G5/G6 observe (exit 1,
+  one failing file). `G1`'s overstatement — the re-base fixed *one* of E1's two
+  failures, `check-skill-context.test.mjs`; `review-loop-discipline` fails
+  identically at base and head on the same `/version: 1\.11\.0/` assertion — is
+  answered here rather than edited, because a Log line is history. · commit 1c3884ee
+  swept: /exits 0 with only/ → expected 0 in docs/fix/340-deletion-reuse-obligations/*.md
+- **F3** — 2026-10-30, folded — the seeded fixture was its own fifth finding: both
+  twins exported `main` with no consumer, so the unused-code sweep reported 1 on
+  `clean/` and 5 on `seeded/` against the bound of 0 and 4. `lib/main.js` is now
+  an entry point that runs and imports `residueApi` (seed (d) unchanged), and the
+  rule's single owner — `CLASSIFY.md`, which `AUDIT_DIMENSIONS.md` and
+  `review-code` already point at — states what *consumes* means, so a path
+  mention and a runtime entry point are not residue. New pin per E8: `clean/` →
+  no unconsumed surface, `seeded/` → exactly seed (b). The bound's four added
+  lines re-based the four `review-change:*` route ceilings (declared re-basis
+  #11 in the manifest). · commit e9aecce8
+  swept: /export function main\b/ → expected 0 in scripts/product-audit-residue-fixture.mjs
+- **F4** — 2026-10-30, folded — the Retirements before-count is the machine's
+  number, not an impression: 3 unpointed occurrences over `5824aab6`
+  (`skills/review-change/SKILL.md:98` plus `skills/unit-lane/SKILL.md:105` and
+  `:127`), all three since rewritten into owner-pointer lines, so the after-count
+  of 0 stands and the negative-capability pin's power is now stated at its true
+  size. · commit 1c3884ee
+  swept: /Before-count: 1/ → expected 0 in docs/fix/340-deletion-reuse-obligations/SPEC.md
 
 ## Next
 
