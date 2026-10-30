@@ -207,10 +207,16 @@ none — nothing was deferred.
   `node --test scripts/lint-changeset.test.mjs`; skill-lint over edited skills.
 - Packages: untouched — no schema or pi-package surface changes.
 
+## Known pre-existing issues
+
+none — both baseline failures are repaired in this unit, each under the
+validator of the task that touches it (see § Pre-existing failures repaired
+in-unit, below).
+
 ## Pre-existing failures repaired in-unit
 
 Both failures recorded at the baseline (`E1`) are fixed here, each under its own
-own validator — the gate that was red at base is green at head:
+validator — the gate that was red at base is green at head:
 
 - `scripts/check-skill-context.test.mjs` — route budget ceilings stale by
   exactly one rounding unit (`audit-pr:feature|fix` 11079 < 11080;
@@ -222,12 +228,6 @@ own validator — the gate that was red at base is green at head:
   established — every `skills/*/SKILL.md` frontmatter carries the train version,
   the same number as the shipped npm packages — which is strictly stronger than
   the retired literal, not a weakened pin.
-
-## Known pre-existing issues
-
-none — both baseline failures are repaired in this unit's `## Tasks`,
-under the ownership of the tasks that touch them (see
-[the section above](#pre-existing-failures-repaired-in-unit)).
 
 ## Tasks
 
@@ -424,6 +424,23 @@ OPEN rows only.
   of 0 stands and the negative-capability pin's power is now stated at its true
   size. · commit 1c3884ee
   swept: /Before-count: 1/ → expected 0 in docs/fix/340-deletion-reuse-obligations/SPEC.md
+- **F5** — 2026-10-30, folded (external verify round 2) — two rows.
+  *The blocker:* `O14`'s validator cell and `AC-Gate` still stated the
+  root-suite outcome as "1214 tests · 1213 pass · 1 fail", a count from before
+  E8 added a test; both now state the observed `exits 0 · 1215 · 1215 · 0`.
+  *The advisory:* `scripts/review-loop-discipline.test.mjs` pinned fold-findings'
+  per-skill `version: 1.11.0`, a value D-40-14 retired — it was the second
+  baseline failure, recorded as known and left unrepaired. A literal per-skill
+  pin cannot survive a release cut, so the pin is re-pointed at the invariant
+  that decision established: every `skills/*/SKILL.md` frontmatter carries the
+  train version, the same number as the shipped npm package. That is stronger
+  than the retired literal, not a weakened pin — proven by mutate-and-revert
+  (fold-findings set to 4.9.0 → the pin fails naming `fold-findings carries the
+  train version (D-40-14)`; restored → green). `AC-Gate`, `P6`, `O14` and the
+  Known-issues section now record the repaired outcome, so the unit no longer
+  ships a red gate it calls pre-existing. · commit 365996bb
+  swept: /1214 tests · 1213 pass/ → expected 0 in docs/fix/340-deletion-reuse-obligations/*.md
+  swept: /foldSkill, .version: \d/ → expected 0 in scripts/review-loop-discipline.test.mjs
 
 ## Next
 
