@@ -112,13 +112,12 @@ One observable, testable criterion per S#; each names the check that proves it.
   the clean tree. Check: generator deterministic
   (`node scripts/product-audit-residue-fixture.mjs <dir>` exits 0, pinned by
   the suite); the sweep run itself is model-executed and recorded in `## Log`.
-- **AC-Gate (issue AC7)** — all existing suites stay green except the two
-  recorded pre-existing failures; context budgets re-based and PASS. Check:
-  `node scripts/run-root-suite.mjs` reports exactly one failing file — the
-  recorded pre-existing `review-loop-discipline` version pin — and therefore
-  exits **1** on it (1214 tests · 1213 pass · 1 fail; a red test and an
-  `exits 0` cannot both hold, so the gate's stated outcome is the exit-1
-  single-failure result); both package suites pass;
+- **AC-Gate (issue AC7)** — every suite is green: the two pre-existing
+  failures recorded at the baseline are both repaired inside this unit (the
+  budget re-base fixes the stale route ceilings; the stale per-skill version
+  pin is re-pointed at the unified train's invariant), and the context budgets
+  are re-based and PASS. Check: `node scripts/run-root-suite.mjs` exits **0**
+  with **1215 tests · 1215 pass · 0 fail**; both package suites pass;
   `node scripts/check-skill-context.mjs --routes --budgets` exits 0.
 
 ## Impact
@@ -208,18 +207,27 @@ none — nothing was deferred.
   `node --test scripts/lint-changeset.test.mjs`; skill-lint over edited skills.
 - Packages: untouched — no schema or pi-package surface changes.
 
+## Pre-existing failures repaired in-unit
+
+Both failures recorded at the baseline (`E1`) are fixed here, each under its own
+own validator — the gate that was red at base is green at head:
+
+- `scripts/check-skill-context.test.mjs` — route budget ceilings stale by
+  exactly one rounding unit (`audit-pr:feature|fix` 11079 < 11080;
+  `execute-phase:*` 14324 < 14325, 15039 < 15040). The P6 re-base fixes it,
+  naming the pre-existing drift as the growth source.
+- `scripts/review-loop-discipline.test.mjs` — it pinned fold-findings' per-skill
+  `version: 1.11.0`, a value the unified train retired (D-40-14; the skill now
+  carries the train version 4.10.0). Re-pointed at the invariant that decision
+  established — every `skills/*/SKILL.md` frontmatter carries the train version,
+  the same number as the shipped npm packages — which is strictly stronger than
+  the retired literal, not a weakened pin.
+
 ## Known pre-existing issues
 
-- `scripts/review-loop-discipline.test.mjs` fails on `main` — it pins
-  fold-findings' per-skill `version: 1.11.0`
-  (`scripts/review-loop-discipline.test.mjs:356`), retired by the unified
-  train (D-40-14; the skill now carries 4.10.0). **Does-not-affect** this
-  unit: the test is not touched and the failure predates the branch.
-- `scripts/check-skill-context.test.mjs` fails on `main` — route budget
-  ceilings stale by exactly one rounding unit
-  (`audit-pr:feature|fix` 11079 < 11080; `execute-phase:*` 14324 < 14325,
-  15039 < 15040). **Affects** this unit's AC-Gate: the re-base task fixes it,
-  naming the pre-existing drift as the growth source.
+none — both baseline failures are repaired in this unit's `## Tasks`,
+under the ownership of the tasks that touch them (see
+[the section above](#pre-existing-failures-repaired-in-unit)).
 
 ## Tasks
 
@@ -262,12 +270,13 @@ none — nothing was deferred.
   budgets (pre-existing drift + this change's growth, each named), run
   skill-lint, cut the changeset, run the residue sweeps over the seeded and
   clean fixtures and record the findings (validator:
-  `node scripts/run-root-suite.mjs` reports exactly one failing file — the
-  recorded pre-existing `review-loop-discipline` pin — and exits 1 on it;
+  `node scripts/run-root-suite.mjs` exits 0 with 1215 tests · 1215 pass ·
+  0 fail — both baseline failures repaired in-unit;
   `node scripts/check-skill-context.mjs --routes --budgets`
   exits 0; `node --test scripts/lint-changeset.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
-  Relevant files: docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/
+  Relevant files: docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/,
+  scripts/review-loop-discipline.test.mjs
 
 ### Planning evidence
 
