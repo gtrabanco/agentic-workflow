@@ -343,6 +343,44 @@ test("the generator refuses to run without a target", () => {
   assert.match(`${r.stdout}\n${r.stderr}`, /usage:/);
 });
 
+// AC-Fixture's deterministic half: "one finding per seed and zero on the clean
+// tree" is only a claim if the twin itself holds no residue. The clean tree must
+// therefore carry NO unconsumed surface of its own — otherwise the sweep the
+// fixture demonstrates finds the fixture.
+test("the fixture's clean twin carries zero residue of its own; seeded carries exactly the four seeds", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "residue-twin-bound-"));
+  const run = spawnSync(process.execPath, [generatorFile, dir], { encoding: "utf8" });
+  assert.equal(run.status, 0, run.stderr);
+  try {
+    /** Symbols each tree defines or exports, and the files that name them. */
+    const unconsumed = (tree) => {
+      const base = path.join(dir, tree);
+      const files = fs
+        .readdirSync(base, { recursive: true, encoding: "utf8" })
+        .filter((entry) => fs.statSync(path.join(base, entry)).isFile());
+      const text = Object.fromEntries(files.map((entry) => [entry, fs.readFileSync(path.join(base, entry), "utf8")]));
+      const declared = [];
+      for (const [entry, body] of Object.entries(text)) {
+        for (const m of body.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|let|var)\s+(\w+)/gm)) {
+          declared.push({ name: m[1], file: entry });
+        }
+      }
+      // A declared name is consumed when a surface OTHER than its own definition
+      // names it as an identifier — an import, a call, or the doc that orders it
+      // to exist. A path mention (`lib/main.js`) is not a call site.
+      const callSite = (name, body) =>
+        new RegExp(`(?<![\\w./-])${name}(?![\\w-])`).test(body);
+      return declared
+        .filter(({ name, file }) => !Object.entries(text).some(([other, body]) => other !== file && callSite(name, body)))
+        .map((d) => `${tree}/${d.file}:${d.name}`);
+    };
+    assert.deepEqual(unconsumed("clean"), [], `the clean twin carries residue: ${unconsumed("clean").join(", ")}`);
+    assert.deepEqual(unconsumed("seeded"), ["seeded/lib/orphan.js:orphanResidueFormatter"], `seeded must hold exactly seed (b): ${unconsumed("seeded").join(", ")}`);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // Smoke: the suite itself runs under the test runner in a child repo too.
 if (!isChildRun) {
   test("self-check: this file is the declared validator of the unit's obligations", () => {
