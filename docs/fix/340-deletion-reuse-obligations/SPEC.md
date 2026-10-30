@@ -276,6 +276,10 @@ OPEN rows only.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F1 | `.pi/pi-agentic-workflow.json.staged:1` (untracked) | verify | high | source | fold — `node scripts/audit-pr-gate.mjs hygiene` tree-clean blocker; delete the stray duplicate of the tracked `.pi/pi-agentic-workflow.json` |
+| F2 | S1–S10 · docs/fix/340-deletion-reuse-obligations/SPEC.md:117 | docs | high | source | fold — AC-Gate (SPEC.md:117), the P6 validator (SPEC.md:257) and O14 state `run-root-suite.mjs` exits 0 while a known test is red; observed exit 1 · 1214/1213/1. G1 claims the re-base fixed both E1 failures; only `check-skill-context.test.mjs` flipped |
+| F3 | S3 · scripts/product-audit-residue-fixture.mjs:44 | code | high | source | fold — the clean twin exports `main` with no consumer (`:44` seeded, `:50` clean), so the shipped unused-code sweep yields 1 finding on `clean/` and 5 on `seeded/`, contradicting AC-Fixture and O6 |
+| F4 | S10 · docs/fix/340-deletion-reuse-obligations/SPEC.md:159 | docs | med | source | fold — Retirements before-count says 1 restating paragraph; the unit's own pin computes 3 at base (`skills/review-change/SKILL.md:98`, `skills/unit-lane/SKILL.md:105`, `skills/unit-lane/SKILL.md:127`) |
 
 ## Log
 
