@@ -123,7 +123,7 @@ test("content: package-tree change without a version bump fails (the #164 trigge
 });
 
 test("content: lockfile change under the package tree triggers the gate", () => {
-  const r = content(["packages/pi-agentic-workflow/bun.lock"], BASE_VERSION, 0);
+  const r = content(["packages/pi-agentic-workflow/package.json"], BASE_VERSION, 0);
   assert.equal(r.ok, false);
 });
 

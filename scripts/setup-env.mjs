@@ -42,7 +42,8 @@
  * initialize, wipe or rewrite `.engram/` (committed shared state — guarded by
  * `setup-env.test.mjs`'s byte-identity test, not prose),
  * run `engram setup`, `pi-engram init` or `serena init` (all three write
- * config the repo owns), or create a root `package.json` (two-islands rule).
+ * config the repo owns), or rewrite the workspace root `package.json` (its
+ * `workspaces` field is what links the packages; provisioning owns no version).
  *
  * Idempotent by construction: every step is decided from a probe of the
  * machine, so a second run plans zero installs. All decision functions are
