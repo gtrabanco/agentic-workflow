@@ -3638,3 +3638,9 @@ out to do, what was decided and *why*, and where to resume.
   append-only, so this correction is a new line rather than an edit.
 - **Next:** the branch is the source of truth. Read the unit doc's `## Log` (R1, F1–F11, E1, G1–G5) for what
   actually landed; `docs/fix/318-class-escalation-forward-closure/planning-obligations.md` for the 38/2 split.
+## 2026-10-30T09:41:47Z — fix/318-class-escalation-forward-closure — manual
+- **Commits:** 25 (`f77d3e87…4d897a6c`)
+- **Files:** 48 files
+- **Summary:** External verify of fix/318-class-escalation-forward-closure against base 55aefa3f — VERIFIED, 0 blockers
+- **Decisions:** External verify ran full byte-level audit: all 40 obligations verified (38 verified + 2 n/a deferred), all tests pass (1176 root suite, 729 schema, 471 pi package), promise-coherence PASS 28 claims, skill context PASS 28 skills/14 routes, sibling sweep clean. No fixer — read-only verifier. Post-verify follow-up commit fixed turn-contract box 6 column name from literal checkmark to status to match published grammar.
+- **Next:** PR #318 ready for merge gate
