@@ -25,6 +25,9 @@ import {
   evaluateContentAll,
   evaluatePins,
   isExactSemver,
+  specKind,
+  matchesSpec,
+  newestMatching,
   semverGt,
   changelogRowCount,
   contentTriggerPrefixes,
@@ -599,4 +602,32 @@ test("content-all: a skill-declaring changeset satisfies the Pi package, not its
     changesetIntent: intent,
   });
   assert.equal(schemaOnly.ok, false, "a skill entry does not cover a schema-only change");
+});
+
+// ---------------------------------------------------------------------------
+// spec kinds — what a manifest spec says about the versions it accepts
+// ---------------------------------------------------------------------------
+
+test("specKind separates an exact pin, a deliberate partial pin and a floating spec", () => {
+  for (const spec of ["6.0.3", "7.0.2-rc.1"]) assert.equal(specKind(spec), "exact", spec);
+  for (const spec of ["6", "7", "7.0"]) assert.equal(specKind(spec), "partial", spec);
+  for (const spec of ["^6.0.3", "~7", "*", "latest", "7.x", "file:../x", "workspace:*", "git+https://x"]) {
+    assert.equal(specKind(spec), "floating", spec);
+  }
+});
+
+test("matchesSpec answers inside the range a partial pin accepts, and newestMatching picks from it", () => {
+  assert.ok(matchesSpec("7", "7.4.1"));
+  assert.ok(!matchesSpec("7", "8.0.0"));
+  assert.ok(matchesSpec("7.0", "7.0.9"));
+  assert.ok(!matchesSpec("7.0", "7.1.0"), "a major.minor partial pin does not accept the next minor");
+  assert.ok(matchesSpec("6.0.3", "6.0.3"));
+  assert.ok(!matchesSpec("6.0.3", "6.0.4"));
+  assert.ok(!matchesSpec("^7", "7.1.0"), "a floating spec matches nothing");
+
+  const versions = ["6.0.3", "7.0.0", "7.1.0", "7.1.0-rc.1", "8.0.0"];
+  assert.equal(newestMatching(versions, "7"), "7.1.0", "a prerelease never outranks its release");
+  assert.equal(newestMatching(versions, "7.0"), "7.0.0");
+  assert.equal(newestMatching(versions, "6"), "6.0.3");
+  assert.equal(newestMatching(versions, "9"), null);
 });
