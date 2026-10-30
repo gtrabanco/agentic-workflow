@@ -40,3 +40,6 @@ tmp/
 
 # Derived review state (rebuildable from git; #318 S16)
 .review-state/
+
+# Workspace install output (bun workspaces: one lock at the root)
+node_modules/

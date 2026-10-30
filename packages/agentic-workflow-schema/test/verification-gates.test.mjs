@@ -11,7 +11,12 @@ import { readFileSync } from "node:fs";
 
 const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const manifest = JSON.parse(read("../package.json"));
-const bunLockText = read("../bun.lock");
+const bunLockText = read("../../../bun.lock");
+/** The root lock is JSONC (trailing commas); this member's block is what carries
+ *  its registry devDependencies — the workspace root owns the only lockfile
+ *  (scripts/workspace-lock-policy.test.mjs), and a sibling member's entries in
+ *  the same file are none of this package's business. */
+const bunLockMember = JSON.parse(bunLockText.replace(/,(\s*[}\]])/g, "$1")).workspaces["packages/agentic-workflow-schema"];
 const benchSource = read("../scripts/bench-verification.mjs");
 
 /** Commands ACCEPTANCE v2 names as the finish line (AC7/AC9/AC10 + P13/P14). */
@@ -68,14 +73,19 @@ test("the package declares no unused Node typings (F70)", () => {
   assert.equal(manifest.devDependencies["@types/node"], undefined, "@types/node must not be a dependency");
   const tsconfig = JSON.parse(read("../tsconfig.json").replace(/\/\/.*$/gm, ""));
   assert.equal(tsconfig.compilerOptions.types, undefined, 'tsconfig must not pin "types": ["node"]');
-  assert.ok(!bunLockText.includes("@types/node"), "the Bun lock must not resolve @types/node");
+  assert.equal(
+    bunLockMember.devDependencies?.["@types/node"],
+    undefined,
+    "this package's block of the workspace lock must not resolve @types/node",
+  );
 });
 
-test("the Bun lock agrees with the manifest dependency ranges", () => {
-  const declared = manifest.devDependencies;
-  // bun.lock is JSONC (trailing commas): compare the workspace block it declares.
-  const bun = JSON.parse(bunLockText.replace(/,(\s*[}\]])/g, "$1"));
-  assert.deepEqual(bun.workspaces[""].devDependencies, declared, "Bun lock drifts from package.json");
+test("the workspace lock agrees with the manifest dependency ranges", () => {
+  assert.deepEqual(
+    bunLockMember.devDependencies,
+    manifest.devDependencies,
+    "the workspace lock drifts from package.json — run `bun install` at the repository root and commit bun.lock",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -110,13 +120,6 @@ test("files and exports agree on the shipped schema documents", () => {
       included.includes("verification-receipt.schema.json"),
     "both feature-26 projections must ship",
   );
-});
-
-test("the package version matches the AC7 release contract", () => {
-  // Feature 31 bumped the additive finding-record `reproducer` minor: 4.2.0 → 4.3.0.
-  // Issue #308 shipped the dual-shape selector as the next additive minor: 4.7.0 → 4.8.0.
-  // Issue #318 S12 publishes the evidence-row grammar as the next additive minor at release time (4.9.0 → train).
-  assert.equal(manifest.version, "4.9.0");
 });
 
 // ---------------------------------------------------------------------------

@@ -1,13 +1,21 @@
-// lockfile-policy.test.mjs — this package is bun-managed
+// lockfile-policy.test.mjs — every published spec must resolve outside this repo
 //
-// bun.lock is the sole lockfile and stays committed; CI installs with
-// `bun install --frozen-lockfile` and uses the npm CLI only for the publish
-// step (Trusted Publishing + --provenance are npm-CLI-specific). An npm
-// package-lock.json on disk is drift: it rots silently next to bun.lock, and
-// this exact file resurrected on main once already (the #150 merge) despite
-// the schema package dropping its own at 1.0.1. The policy lives in
-// AGENTS.md → Packages; the .gitignore rejects the file; this test fails the
-// suite if one ever appears again.
+// The workspace keeps ONE lockfile at the repository root (scripts/
+// workspace-lock-policy.test.mjs owns its location and membership), so this
+// file keeps the two policies that are still per-package: no npm
+// package-lock.json on disk, and no local-only or floating spec in the manifest
+// that npm ships verbatim.
+//
+// A `file:`/`link:`/`git+`/`workspace:` spec is a local-dev choice that cannot
+// resolve outside this repository: every consumer's install fails on it (pi
+// 0.15.0 shipped `@gtrabanco/agentic-workflow: file:../agentic-workflow` and
+// broke every `pi update --all`). The workspace links the local package WITHOUT
+// changing the spec — `npm publish` does not rewrite the `workspace:` protocol
+// either — so the version below is both what CI installs locally and what every
+// consumer receives. A partial pin (`6`, `6.0`) is allowed and is a decision a
+// reviewer weighs; `^`, `~`, `*`, `latest`, dist-tags and `x` ranges are not,
+// because they let a fresh resolution install code nobody reviewed
+// (AGENTS.md → Packages).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -17,67 +25,46 @@ import { fileURLToPath } from "node:url";
 
 const PKG_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 
-test("bun.lock is committed and names this package", () => {
-  const lock = join(PKG_DIR, "bun.lock");
-  assert.equal(existsSync(lock), true, "bun.lock missing — run `bun install` and commit it");
-  const text = readFileSync(lock, "utf8");
-  assert.match(
-    text,
-    /"@gtrabanco\/pi-agentic-workflow"/,
-    "bun.lock does not declare this package's workspace",
-  );
-});
+/** A full release or a deliberate partial pin (`6`, `6.0`). */
+const PINNED_SPEC = /^\d+(?:\.\d+){0,2}(?:[-+][0-9A-Za-z.-]+)?$/;
 
 test("package-lock.json must not exist (bun is the sole package manager)", () => {
   assert.equal(
     existsSync(join(PKG_DIR, "package-lock.json")),
     false,
-    "package-lock.json resurrected — delete it; bun.lock is the sole lockfile (AGENTS.md → Packages)",
+    "package-lock.json resurrected — delete it; bun is the only package manager (AGENTS.md → Packages)",
   );
 });
 
-// The published package.json ships verbatim. A `file:`/`workspace:`/range spec
-// in dependencies or devDependencies is a local-dev choice that cannot resolve
-// outside this repository: every consumer's install fails on it (pi 0.15.0
-// shipped `@gtrabanco/agentic-workflow: file:../agentic-workflow` and broke
-// every `pi update --all`). peerDependencies are excluded — they stay ranges
-// by nature (AGENTS.md → Packages).
-test("dependency specs are exact registry versions (publish-safe)", () => {
+test("dependency specs are pinned registry versions (publish-safe)", () => {
   const pkg = JSON.parse(readFileSync(join(PKG_DIR, "package.json"), "utf8"));
+  // A full release or a deliberate partial pin (`6`, `6.0`) resolves anywhere;
+  // a floating spec (`^`, `~`, `*`, `latest`, `6.x`) or a local protocol ships
+  // verbatim and either breaks a consumer or installs unreviewed bytes.
   const offenders = [];
   for (const section of ["dependencies", "devDependencies"]) {
     for (const [name, spec] of Object.entries(pkg[section] ?? {})) {
-      if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(spec)) {
-        offenders.push(`${name}: ${spec} (${section})`);
-      }
+      if (!PINNED_SPEC.test(spec)) offenders.push(`${name}: ${spec} (${section})`);
     }
   }
+  assert.ok(
+    Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).length > 0,
+    "the manifest declares no dependency — the assertion above would pass vacuously",
+  );
   assert.deepEqual(
     offenders,
     [],
-    "non-registry or non-exact specs reach npm verbatim and break every consumer's install — " +
-      "pin the exact registry version; the file:/workspace:/range form must never ship in " +
-      "dependencies or devDependencies (AGENTS.md → Packages: versions are pinned)",
+    "floating and local-only specs reach npm verbatim — pin a full release or a deliberate partial " +
+      "pin with its reason in review; `^`/`~`/`*`/`latest`/`x`/`file:`/`link:`/`workspace:`/`git+` " +
+      "never ship in dependencies or devDependencies (AGENTS.md → Packages: versions are pinned)",
   );
 });
 
-// F23: the workspace pins declared in bun.lock must match package.json exactly.
-// Bumping a dep in package.json without regenerating the lock leaves every
-// `bun install --frozen-lockfile` (both CI jobs of publish.yml)
-// unable to resolve — the lock is the install contract, not a cache.
-test("bun.lock workspace pins match package.json dependencies (no drift)", () => {
-  const pkg = JSON.parse(readFileSync(join(PKG_DIR, "package.json"), "utf8"));
-  const lock = readFileSync(join(PKG_DIR, "bun.lock"), "utf8");
-  const drifted = [];
-  for (const section of ["dependencies", "devDependencies"]) {
-    for (const [name, spec] of Object.entries(pkg[section] ?? {})) {
-      if (!lock.includes(`"${name}": "${spec}"`)) drifted.push(`${name}: package.json ${spec}`);
-    }
+test("the pinned-spec rule separates deliberate pins from floating and local ones", () => {
+  for (const spec of ["6", "6.0", "6.0.3", "6.0.3-rc.1"]) {
+    assert.ok(PINNED_SPEC.test(spec), `refused a deliberate pin: ${spec}`);
   }
-  assert.deepEqual(
-    drifted,
-    [],
-    "bun.lock drifted from package.json — run `bun install` in this directory and commit the lock " +
-      "(a stale lock makes `bun install --frozen-lockfile` fail in CI and in every consumer install)",
-  );
+  for (const spec of ["^6.0.3", "~6.0.3", "*", "latest", "next", "6.x", "file:../crate", "workspace:*", "link:../x", "git+https://example/x"]) {
+    assert.ok(!PINNED_SPEC.test(spec), `accepted a floating or local spec: ${spec}`);
+  }
 });

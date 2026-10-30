@@ -92,6 +92,17 @@ test("an existing changeset file is never overwritten", () => {
   assert.equal(changesetFile(root).file, file, "the first file is untouched");
 });
 
+test("a change that still lives in the working tree declares its package", () => {
+  // The intent file is created BEFORE the commit that ships the change, so the
+  // dirty half of the census is the normal case, not an edge: the porcelain
+  // parse used to strip two characters too many and read every dirty path as
+  // "nothing to declare".
+  const root = fixture({ dirty: [["packages/pi-agentic-workflow/test/scratch.test.mjs", "// draft\n"]] });
+  const result = run(["--level", "patch", "--name", "dirty-only"], root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(changesetFile(root).content, /"@gtrabanco\/pi-agentic-workflow": patch/);
+});
+
 test("a change that touches no package or skill is refused, not silently ignored", () => {
   const root = fixture({ commits: [["docs: prose", "docs/notes.md"]] });
   const result = run([], root);

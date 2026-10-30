@@ -25,16 +25,21 @@ import {
   evaluateContentAll,
   evaluatePins,
   isExactSemver,
+  specKind,
+  matchesSpec,
+  newestMatching,
   semverGt,
   changelogRowCount,
   contentTriggerPrefixes,
   packageDirs,
+  localPackageVersions,
   PACKAGE_DIR,
   TRIGGER_PREFIXES,
 } from "./version-parity-gate.mjs";
 
 const PKG = "@gtrabanco/pi-agentic-workflow";
 const REPO_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const REPO_DIR = path.resolve(REPO_ROOT, "..");
 
 /** `git status --porcelain` entries of this repository — the dirty-tree fixture. */
 function gitPorcelain() {
@@ -123,7 +128,7 @@ test("content: package-tree change without a version bump fails (the #164 trigge
 });
 
 test("content: lockfile change under the package tree triggers the gate", () => {
-  const r = content(["packages/pi-agentic-workflow/bun.lock"], BASE_VERSION, 0);
+  const r = content(["packages/pi-agentic-workflow/package.json"], BASE_VERSION, 0);
   assert.equal(r.ok, false);
 });
 
@@ -546,6 +551,39 @@ test("pins: a dependency with no local sibling keeps the registry-only rule", ()
   assert.match(r.violations[0].message, /registry published 1\.1\.0/);
 });
 
+// The rule is about the two manifests that actually ship, so the suite reads
+// both sides from them: every exact pin a package under `packages/` declares on
+// a sibling must name the version that sibling carries right now. A version
+// typed into a test pins today's value and disagrees with the tree after the
+// next release; this cannot, because it reads the manifests at run time.
+test("pins: every exact pin on a local sibling names that sibling's current version", () => {
+  const localVersions = localPackageVersions();
+  assert.ok(Object.keys(localVersions).length > 0, "no package manifest was readable under packages/");
+  // The registry is not this assertion's authority: a throwing fetcher keeps the
+  // suite offline and pins the local half as the one under test (AC3's shape).
+  const offline = () => {
+    throw new Error("registry not consulted by this suite");
+  };
+  const results = packageDirs().map((dir) => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPO_DIR, dir, "package.json"), "utf8"));
+    return evaluatePins({
+      packageName: manifest.name ?? dir,
+      dependencies: manifest.dependencies ?? {},
+      fetchLatest: offline,
+      localVersions,
+    });
+  });
+  assert.deepEqual(
+    results.flatMap((r) => r.violations).map((v) => `${v.name}: pin ${v.pin} != local ${v.localVersion}`),
+    [],
+    "a shipped package pins a sibling at a version that package does not carry",
+  );
+  assert.ok(
+    results.flatMap((r) => r.notices).length > 0,
+    "no exact pin points at a local sibling — the assertion above would pass vacuously",
+  );
+});
+
 // D-40-15: skills are the Pi package's shipped content — a changeset
 // declaring a SKILL satisfies the Pi package's content half (and nothing else's).
 test("content-all: a skill-declaring changeset satisfies the Pi package, not its siblings", () => {
@@ -564,4 +602,32 @@ test("content-all: a skill-declaring changeset satisfies the Pi package, not its
     changesetIntent: intent,
   });
   assert.equal(schemaOnly.ok, false, "a skill entry does not cover a schema-only change");
+});
+
+// ---------------------------------------------------------------------------
+// spec kinds — what a manifest spec says about the versions it accepts
+// ---------------------------------------------------------------------------
+
+test("specKind separates an exact pin, a deliberate partial pin and a floating spec", () => {
+  for (const spec of ["6.0.3", "7.0.2-rc.1"]) assert.equal(specKind(spec), "exact", spec);
+  for (const spec of ["6", "7", "7.0"]) assert.equal(specKind(spec), "partial", spec);
+  for (const spec of ["^6.0.3", "~7", "*", "latest", "7.x", "file:../x", "workspace:*", "git+https://x"]) {
+    assert.equal(specKind(spec), "floating", spec);
+  }
+});
+
+test("matchesSpec answers inside the range a partial pin accepts, and newestMatching picks from it", () => {
+  assert.ok(matchesSpec("7", "7.4.1"));
+  assert.ok(!matchesSpec("7", "8.0.0"));
+  assert.ok(matchesSpec("7.0", "7.0.9"));
+  assert.ok(!matchesSpec("7.0", "7.1.0"), "a major.minor partial pin does not accept the next minor");
+  assert.ok(matchesSpec("6.0.3", "6.0.3"));
+  assert.ok(!matchesSpec("6.0.3", "6.0.4"));
+  assert.ok(!matchesSpec("^7", "7.1.0"), "a floating spec matches nothing");
+
+  const versions = ["6.0.3", "7.0.0", "7.1.0", "7.1.0-rc.1", "8.0.0"];
+  assert.equal(newestMatching(versions, "7"), "7.1.0", "a prerelease never outranks its release");
+  assert.equal(newestMatching(versions, "7.0"), "7.0.0");
+  assert.equal(newestMatching(versions, "6"), "6.0.3");
+  assert.equal(newestMatching(versions, "9"), null);
 });
