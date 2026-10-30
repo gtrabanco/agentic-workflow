@@ -22,7 +22,7 @@ import {
   EVIDENCE_ROW_VERDICTS,
   validateEvidenceRow,
   parseEvidenceRow,
-} from "../src/index.js";
+} from "../dist/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(here, "..");
