@@ -294,6 +294,52 @@ OPEN rows only.
   open findings rows in any active unit — the frozen-failure corpus is empty;
   no reproducer exists to extract (the #339 stale-figure failures were
   repaired inside #339).
+- **E3** — 2026-10-30, RED run `node --test scripts/residue-dimensions.test.mjs`
+  · exit 1 · 16 fail / 7 pass: the 16 failures are exactly the new-rule pins
+  (S1–S10); the 7 passes are the regression pins (severity table, retirement
+  machinery, S8 mandate, sweep declaration) plus the generator mechanics.
+  Two just-written-test defects were repaired before implementation (seed-(d)
+  docs assertion, seed-(a) block-identity assertion) — justification rows in
+  `decisions.md`.
+- **E4** — 2026-10-30, fixture-first validation: the full implementation
+  patch applied to a throwaway copy (`mktemp -d /tmp/aw340-scratch-*`, removed
+  after) — `RESIDUE_DIMENSIONS_REPO=<scratch> node --test
+  scripts/residue-dimensions.test.mjs` · 22 pass / 0 fail (child mode);
+  `NORMATIVE_DRIFT_REPO=<scratch> node --test scripts/normative-drift.test.mjs`
+  · 19 pass / 0 fail; route-budget failures on the scratch = the same 10
+  pre-existing ones, no new growth. Only then were the real files changed.
+- **E5** — 2026-10-30, GREEN `node --test scripts/residue-dimensions.test.mjs`
+  · exit 0 · 23 pass / 0 fail (at HEAD of this branch).
+- **E6** — 2026-10-30, model-executed residue-sweep run over the generated
+  fixture (`mktemp -d /tmp/aw340-fixture-*`, removed after): seeded → exactly
+  4 findings, one per seed (duplicated grammar copy in `docs/grammar-copy.md`;
+  `orphanResidueFormatter` exported, 0 references; `--legacy-residue-flag`
+  documented but absent from the tree; `residueApi` live, consumed by
+  `main.js`, absent from `docs/`); clean twin → 0 findings.
+- **E7** — 2026-10-30, differential check base `5824aab6` vs change:
+  `check-skill-context.mjs --routes --json` route set identical (14 routes);
+  only `execute-phase:*` and `review-change:*` measured values grew (the
+  skills this unit touched — growth named in the re-base notes);
+  `audit-pr:*` measured unchanged; `needs-input.mjs` / `unit-route.mjs`
+  usage outputs unchanged.
+- **G1** — 2026-10-30, `node scripts/check-skill-context.mjs --routes --budgets`
+  · exit 0 · PASS (after the declared re-base: exact ceils + growth sources
+  named; also fixes the two pre-existing failures recorded in E1).
+- **G2** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 1 · **1213
+  pass / 1 fail** — the single failure is the recorded pre-existing
+  `review-loop-discipline` stale version pin (E1); no new failures.
+- **G3** — 2026-10-30, packages: `packages/agentic-workflow-schema` 726 pass
+  / 0 fail; `packages/pi-agentic-workflow` 504 pass / 0 fail.
+- **G4** — 2026-10-30, `node --test scripts/lint-changeset.test.mjs` · exit 0
+  · 11 pass — changeset `.changeset/fix-340-deletion-reuse-obligations-*.md`
+  valid (8 skills, minor).
+- **P1** — 2026-10-30, ledgers frozen (SPEC + planning-obligations.md +
+  planning-evidence.md + fix-index row) · commit `fix(340): freeze planning
+  ledgers…`.
+- **P2** — 2026-10-30, P1–P5 implemented in one atomic commit (reason stated
+  in its message): residue dimensions, two-way classification, review-code
+  items, plan gates, design items + owner block, stage references, budgets
+  re-base · see `git log`.
 
 ## Next
 
