@@ -1,0 +1,9 @@
+{
+  "name": "agentic-workflow-repo",
+  "private": true,
+  "description": "Workspace root for the published packages under packages/. Members link each other from the folder, so a sibling pin can name the version the same commit ships instead of waiting for a publish. Nothing here is published.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ]
+}

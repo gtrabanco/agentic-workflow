@@ -75,6 +75,6 @@
   },
   "devDependencies": {
     "ajv": "8.20.0",
-    "typescript": "6"
+    "typescript": "7"
   }
 }
