@@ -3880,6 +3880,10 @@ export type { ContinuationCanonicalVector } from "./continuation-vectors.js";
 // UNIT_DOC_REQUIRED_SECTIONS is already exported from pre-execution.ts (P8).
 export {
   EVIDENCE_COLUMNS,
+  EVIDENCE_ROW_COLUMNS,
+  EVIDENCE_ROW_VERDICTS,
+  parseEvidenceRow,
+  validateEvidenceRow,
   PROGRESS_ENTRY_PATTERN,
   ROADMAP_COLUMNS,
   CHANGELOG_SECTION_PATTERN,

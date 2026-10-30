@@ -50,6 +50,12 @@ independently evaluates only the delivery gates below.
   this skill and cannot be inherited from docs or an earlier session
 ✓ No review pass was composed or reconstructed: a missing/stale receipt is a
   blocker, never a prompt to re-run review axes from this skill
+✓ **Every AC links a demonstration artifact (S3, S7).** Read the unit doc's
+  `## Acceptance criteria` (or `## Specs` S# + `## Acceptance criteria` in
+  the re-cut shape). For each AC, verify it links a demonstration:
+  a passing test with output, a UI capture, a reproduced command output.
+  An AC without a demonstration is a **BLOCKER** — the PR's body must render
+  it. A PR whose ACs lack demonstrations never reaches the merge gate.
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
   blocker / n-a (fix-governed PRs are always n-a; never skipped
   silently)
@@ -76,6 +82,11 @@ first on purpose).
 `audit-pr` consumes that receipt and audits the *PR as a unit of delivery* — that
 everything the SPEC promised is present, traceable, and green. A missing or stale
 receipt is a blocker routed back to `/review-change`, never re-litigated here.
+
+**Cost-scaling invariant (S7).** Reviewers dig into code only when evidence is
+absent or contradicts — so review cost scales with the change, not the project.
+The non-technical approver (human layer) validates demonstrations; the merge
+gate (technical layer) validates evidence linkage. Same evidence, two readings.
 
 ## Scope
 

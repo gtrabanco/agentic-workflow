@@ -182,6 +182,19 @@ Architectural invariants rules.
 Resources are one hop from this file. Fixed reviewer/synthesis/output contracts are
 literal. Missing required resource → stop; never approximate a review contract.
 
+## Reviewer anti-invention rule (S10, from #205)
+
+After cycle 1, a *new* finding is admissible only when grounded in:
+1. **Provably-changed bytes** (git-computed diff between the reviewed state
+   and the base), or
+2. A **mis-run cited check** (the cited validator's own output contradicts it).
+
+A finding without changed-bytes grounding is a report-note, never fix-now.
+This is narrower and stronger than the delta-mode "genuinely new" admission:
+it bounds what a reviewer may invent at all, not only where it may re-report.
+The classifier routes `fix-now (delete)` for genuine findings; report-notes
+route to `info` severity and do not block.
+
 ## Portability
 
 Keep reviewer contexts isolated. Use [portability](references/PORTABILITY.md) for

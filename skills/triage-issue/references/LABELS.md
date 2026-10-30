@@ -81,3 +81,25 @@ verdict — never a separate, silent step:
 A **fix-now** verdict is unchanged by this section — it gets no disposition
 label (it is tracked via the fix index + its route, and its high-severity
 case already gets the urgency label above).
+
+## Review-gate label vocabulary (human-owned)
+
+Not a verdict this skill reaches: this label is a **human's hold**, applied when
+an agent's plan, report or change set needs a look before more work builds on top
+of it. Issues, unit docs and PRs are held equally.
+
+| Label | Color | Meaning |
+|---|---|---|
+| `human-revision-needed` | `#FBCA04` | Hold — a human reviews before anything else is planned, implemented or merged. |
+
+**Ownership is inverted here, and that inversion is the invariant.**
+`triage-issue` neither applies nor clears it, because the label's whole value is
+"a machine may not declare its own work reviewed". An agent **may** apply it (and
+must then stop) with the same create-if-missing call as above:
+
+1. `gh label create human-revision-needed --color FBCA04 --description "<one-line meaning>"` — an "already exists" error is success.
+2. `gh issue edit <N> --add-label human-revision-needed` (or `gh pr edit <N> --add-label …`).
+
+No skill and no agent ever removes it: `--remove-label human-revision-needed` is
+a human's act only. A verdict comment never substitutes for the label — presence
+is the signal, and the absence a human creates is what releases the hold.

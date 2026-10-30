@@ -27,6 +27,7 @@ import {
   parsePorcelain,
   renderEntry,
   summaries,
+  unsupportedFileClaims,
 } from "./session-close.mjs";
 
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), "session-close.mjs");
@@ -243,4 +244,48 @@ test("end to end: an unresolvable HEAD fails the baseline closed, never an empty
   assert.match(result.stderr, /HEAD does not resolve/);
 });
 
+// ---------------------------------------------------------------------------
+// #318 S9 4b — the narrative may not lie about the tree
+//
+// `render` computes the facts (commits, files, branch). Summary/Decisions/Next
+// are prose a model supplies, and prose is where a stale view of the branch
+// becomes a claim nobody re-derives: this feature's first session logged
+// "Skipped: S3 (no `.github/PULL_REQUEST_TEMPLATE.md` exists)" while both
+// templates sat on disk carrying that exact section, and "40 rows, all planned"
+// against a ledger at 38 verified. A log that lies is worse than no log.
+// ---------------------------------------------------------------------------
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("#318: a path called absent while it exists is a contradiction", () => {
+  const claims = unsupportedFileClaims("Skipped: S3 (no `.github/PULL_REQUEST_TEMPLATE.md` exists)", repoRoot);
+  assert.equal(claims.length, 1);
+  assert.equal(claims[0].path, ".github/PULL_REQUEST_TEMPLATE.md");
+  assert.match(claims[0].reason, /claimed absent but it exists/);
+});
+
+test("#318: a path called present while it is missing is a contradiction", () => {
+  const claims = unsupportedFileClaims("the fix landed in `scripts/this-was-never-written.mjs`", repoRoot);
+  assert.equal(claims.length, 1);
+  assert.match(claims[0].reason, /claimed present but it does not exist/);
+});
+
+test("#318: prose the tree supports passes untouched", () => {
+  assert.deepEqual(unsupportedFileClaims("landed in `scripts/session-close.mjs`", repoRoot), []);
+  assert.deepEqual(unsupportedFileClaims("no design opinion was recorded", repoRoot), [],
+    "a sentence with no path is an opinion, not a claim");
+});
+
+test("#318: the render refuses a contradicted narrative, and prints why", () => {
+  const result = spawnSync(
+    process.execPath,
+    [script, "render", "--summary", "Skipped S3: no `.github/PULL_REQUEST_TEMPLATE.md` exists"],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  assert.notEqual(result.status, 0, "a false claim must not reach the log");
+  assert.match(result.stderr, /contradicts the tree/);
+  assert.match(result.stderr, /PULL_REQUEST_TEMPLATE\.md/);
+});
+
 console.log("PASS session-close: facts computed, entry committed alone, leftovers named not swept");
+

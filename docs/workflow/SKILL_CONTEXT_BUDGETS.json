@@ -14,13 +14,14 @@
       "descriptionEstimateMax": 240
     },
     "fold-findings": {
-      "mainEstimateMax": 4288,
+      "mainEstimateMax": 5944,
       "mainSources": {
         "issue #293 (unit 76)": "the freeze-batch contract gains the product-owner class — the Batch-class and Branch receipt lines carry the new vocabulary and the SKILL.md states the freeze-batch (product owner present) rule beside the FOLD_PROCESS.md table; unit 76's review folds then grew SKILL.md from 221 to 225 lines (87decb95), re-measured at 3105; ceiling re-based to ceil(3105 x 1.10) = 3416, reason declared (issue #293 + unit 76 review folds)",
         "issue #308 (unit 79 review fold)": "Step 0 now states both findings carriers' own row schemas — the legacy 7-column row with the folded flip, and the migrated 6-column `findings-table@1` row whose rows are open by definition and close by leaving for a `## Log` F line (F2's fold: one block for two grammars sent the fold queue to flip a column a migrated unit does not have). Grew SKILL.md from 225 lines / 3105 to 245 lines / 3499; ceilings re-based to ceil(3499 × 1.10) = 3849 and ceil(245 × 1.10) = 270, reason declared.",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): the `swept:` guardrail states the bounds the gate enforces on a sweep declaration and the report-validator class it re-runs. Measured 3898 est / 270 lines at this re-basis; ceiling = ceil(3898 x 1.10) = 4288 / ceil(270 x 1.10) = 297"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): the `swept:` guardrail states the bounds the gate enforces on a sweep declaration and the report-validator class it re-runs. Measured 3898 est / 270 lines at this re-basis; ceiling = ceil(3898 x 1.10) = 4288 / ceil(270 x 1.10) = 297",
+        "fix 318 (class escalation + claim-evidence + evidence-bound + re-review skip)": "fold-findings gains: class escalation (≥2 rows → class-level finding), claim-evidence loop (mandatory reproduction, loop-until-green), evidence-bound check (citation verification), reviewer anti-invention (provably-changed bytes), re-review skip default (docs-only + sweep green), defect identity (mechanism not file:line), per-file review state, net narration diff ≤ 0, closure status output. Measured by `scripts/check-skill-context.mjs` at this re-basis: 5403 est / 373 lines; ceiling re-based to exact ceil(5403 × 1.10) = 5944 / ceil(373 × 1.10) = 411"
       },
-      "mainLinesMax": 297
+      "mainLinesMax": 411
     },
     "init-workspace": {
       "mainEstimateMax": 3663,
@@ -80,9 +81,10 @@
       }
     },
     "review-change": {
-      "mainEstimateMax": 3133,
+      "mainEstimateMax": 3457,
       "mainSources": {
-        "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)"
+        "unit 65 P8 (AC20/AC21)": "the Step 0 retrieval-aid discovery bullet grew SKILL.md to measured 2848; ceiling re-based to ceil(2848 x 1.10) = 3133, reason declared (allowlisted discovery wording)",
+        "fix 318 (reviewer anti-invention rule)": "review-change gains: reviewer anti-invention rule — new findings must be grounded in provably-changed bytes or mis-run cited check. Measured by `scripts/check-skill-context.mjs` at this re-basis: 3142 est; ceiling re-based to exact ceil(3142 × 1.10) = 3457"
       },
       "referenceEstimateMax": 3079,
       "referenceSources": {
@@ -91,13 +93,14 @@
       }
     },
     "execute-phase": {
-      "mainEstimateMax": 4119,
-      "mainLinesMax": 324,
+      "mainEstimateMax": 4693,
+      "mainLinesMax": 369,
       "mainSources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the lane's per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew SKILL.md to 2929 est; ceiling re-based to ceil(2929 x 1.10) = 3222; the golden-fixture-driven two-block closing contract (weak-model smoke caught a last-phase P<k+1> naming a nonexistent phase) then measured 253 lines / 2953 est — line ceiling ceil(253 x 1.10) = 279",
         "fix 258 / #258 harden-needs-input": "the needs-input contract moved to code: the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and `re-ask once`/`Confirmed phase`/`Confirmed file targets` are gone (F33-D/F34-D) — measured 3379 est / 275 lines; ceiling re-based to ceil(3379 x 1.10) = 3717 / ceil(275 x 1.10) = 303 (down from 3807/315, the body shrank)",
         "feature 66 P2 (memory boundary)": "the executor's phase-transition memory boundary: one turn-contract box plus a Post-step item pointing at skills/unit-lane/references/MEMORY.md (never restated); measured 3548 est / 285 lines against the existing 3717 / 303 ceilings, so no re-base was needed",
-        "issue #316 (roadmap settle in the close-out)": "the whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs` (issue #316); measured 3744 est / 294 lines, so the ceiling re-bases to ceil(3744 x 1.10) = 4119 and the line ceiling to ceil(294 x 1.10) = 324"
+        "issue #316 (roadmap settle in the close-out)": "the whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs` (issue #316); measured 3744 est / 294 lines, so the ceiling re-bases to ceil(3744 x 1.10) = 4119 and the line ceiling to ceil(294 x 1.10) = 324",
+        "fix 318 (claim-evidence loop + self-audit + LOGS.md)": "execute-phase gains: claim-evidence loop step (mandatory reproduction before post-step, loop-until-green), Evidence rows require command + observed output (reproduced receipt), LOGS.md append-only rule (S9 4b), persist self-audit box. Measured by `scripts/check-skill-context.mjs` at this re-basis: 4266 est / 335 lines; ceiling re-based to exact ceil(4266 × 1.10) = 4693 / ceil(335 × 1.10) = 369"
       },
       "referenceEstimateMax": 3232,
       "referenceSources": {
@@ -120,16 +123,21 @@
       }
     },
     "unit-lane": {
-      "mainEstimateMax": 3888,
-      "mainLinesMax": 300,
+      "mainEstimateMax": 4135,
+      "mainLinesMax": 319,
       "mainSources": {
         "fix/258 harden-needs-input": "the hand-written guard is replaced by the three-tier dispatch and a pointer to scripts/needs-input.mjs, and the no-silent-feature-default rule has one home — measured 3112 est / 246 lines; ceiling ceil(3112 x 1.10) = 3424 / ceil(246 x 1.10) = 271 (down from 3464/280, the body shrank)",
         "fix #303 (investigate → orient → ask → decide)": "the design and plan steps are restated positively (investigate search + `sources.md` citation ledger, orient tiers 0/1/2, ask, decide) and each fixed output contract gains the questions pane; measured DESIGN.md 2529 est / 196 lines and PLAN.md 2377 est / 187 lines, so the skill-level reference ceilings are re-based to ceil(2529 x 1.10) = 2782 and ceil(196 x 1.10) = 216 (the tighter of the two files' lines that still bounds both); the main-entry ceilings (3424 / 271) are unchanged and the two new turn-contract boxes fit inside them (measured 3277 est / 255 lines)",
         "feature 66 P2 (memory protocol)": "the Engram memory protocol lands as skills/unit-lane/references/MEMORY.md with a thin instruction in SKILL.md — one turn-contract box, the §5b boundary step and the reference link; measured 3492 est / 270 lines, so the estimate ceiling re-bases to ceil(3492 x 1.10) = 3842 while the line ceiling stays 271 (the prose was tightened to fit it: an earlier cut measured 278 lines and was reduced rather than re-based)",
-        "feature 79 re-basis (spec-by-reference carrier)": "the carrier box names both accepted unit-doc shapes beside `main`'s memory-boundary box, and the plan step's positive spec-by-reference checklist lands in references/PLAN.md; measured 3534 est / 272 lines at the re-base, ceilings re-based to ceil(3534 x 1.10) = 3888 and ceil(272 x 1.10) = 300. Growth source: the F11 carrier sentence plus the memory boundary in one turn-contract box, and the plan checklist's six items."
+        "feature 79 re-basis (spec-by-reference carrier)": "the carrier box names both accepted unit-doc shapes beside `main`'s memory-boundary box, and the plan step's positive spec-by-reference checklist lands in references/PLAN.md; measured 3534 est / 272 lines at the re-base, ceilings re-based to ceil(3534 x 1.10) = 3888 and ceil(272 x 1.10) = 300. Growth source: the F11 carrier sentence plus the memory boundary in one turn-contract box, and the plan checklist's six items.",
+        "fix 318 (three-direction closure + retirements)": "unit-lane gains: the conductor's §3 states where the closure lives (design and plan step references) and the two steps carry it themselves. Measured by `scripts/check-skill-context.mjs` at this re-basis: 3759 est / 290 lines; ceiling re-based to exact ceil(3759 × 1.10) = 4135 / ceil(290 × 1.10) = 319"
       },
-      "referenceEstimateMax": 2782,
-      "referenceLinesMax": 216
+      "referenceEstimateMax": 3319,
+      "referenceLinesMax": 249,
+      "referenceSources": {
+        "fix #303 (investigate → orient → ask → decide)": "the design and plan steps restated positively (investigate search + sources.md citation ledger, orient tiers 0/1/2, ask, decide) — measured DESIGN.md 2529 est / 196 lines, ceiling ceil(2529 x 1.10) = 2782 / ceil(196 x 1.10) = 216",
+        "fix 318 (closure lives with the step that executes it)": "S2/S6/S8's three-direction closure, ask-don't-infer, document-or-don't-coin and retirements moved from the conductor's own §3 into the reference each step actually reads: DESIGN.md gains §Three-direction closure plus its checklist items, PLAN.md gains the retirements output contract plus its checklist item, and the conductor keeps only a pointer. The rule now lives where a model running `design` reads it, instead of in a section the step never opens. Measured at this re-basis: DESIGN.md 3004 est / 225 lines and PLAN.md 3017 est / 226 lines (the larger of the two), so the per-skill reference ceilings re-base to exact ceil(3017 × 1.10) = 3319 / ceil(226 × 1.10) = 249"
+      }
     }
   },
   "routes": {
@@ -138,8 +146,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10870,
-      "routeLinesMax": 669,
+      "routeEstimateMax": 11079,
+      "routeLinesMax": 681,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -150,7 +158,8 @@
         "feature 36 fold: F21 reference wording bump (02_CLOSURE_AND_SCOPE_GATES.md) + audit-pr 5.6.0→5.6.1 frontmatter": "audit-pr reference wording corrected (F21 fold) — 02_CLOSURE_AND_SCOPE_GATES.md era label migration from \"lane-era\" to \"legacy (pre-feature 61)\"; bump audit-pr 5.6.0→5.6.1; ceiling re-based at ceil(measured×1.10)",
         "feature 60 P3": "path-protection checkpoint adoption: skills/verification-contract/SKILL.md grew to 1459 est / 116 lines; pre-re-basis route measured 9850 est / 607 lines; ceiling re-based to ceil(9850 x 1.10) = 10835 est, growth source skills/verification-contract/SKILL.md",
         "unit 79 / feature #308 (findings-carrier collapse)": "P5 states the collapsed carrier in this route's step docs (the unit doc's ## Findings section with the marks as ## Log lines, probe-first with the legacy file as fallback); route measured 9881 est / 608 lines; ceiling = ceil(measured x 1.10) = 10870 est and 669 lines",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions."
       }
     },
     "audit-pr:fix": {
@@ -158,8 +167,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 10870,
-      "routeLinesMax": 669,
+      "routeEstimateMax": 11079,
+      "routeLinesMax": 681,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -170,7 +179,8 @@
         "feature 36 fold: F21 reference wording bump (02_CLOSURE_AND_SCOPE_GATES.md) + audit-pr 5.6.0→5.6.1 frontmatter": "audit-pr reference wording corrected (F21 fold) — 02_CLOSURE_AND_SCOPE_GATES.md era label migration from \"lane-era\" to \"legacy (pre-feature 61)\"; bump audit-pr 5.6.0→5.6.1; ceiling re-based at ceil(measured×1.10)",
         "feature 60 P3": "path-protection checkpoint adoption: skills/verification-contract/SKILL.md grew to 1459 est / 116 lines; pre-re-basis route measured 9850 est / 607 lines; ceiling re-based to ceil(9850 x 1.10) = 10835 est, growth source skills/verification-contract/SKILL.md",
         "unit 79 / feature #308 (findings-carrier collapse)": "P5 states the collapsed carrier in this route's step docs (the unit doc's ## Findings section with the marks as ## Log lines, probe-first with the legacy file as fallback); route measured 9881 est / 608 lines; ceiling = ceil(measured x 1.10) = 10870 est and 669 lines",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions."
       }
     },
     "execute-phase:descope": {
@@ -188,8 +198,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14173,
-      "routeLinesMax": 1075,
+      "routeEstimateMax": 15039,
+      "routeLinesMax": 1139,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -204,7 +214,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12259 est / 935 lines, ceiling re-based to ceil(12259 x 1.10) = 13485 / ceil(935 x 1.10) = 1029",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 12269, lines 936; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12884 est / 977 lines at this re-basis; ceiling = ceil(12884 x 1.10) = 14173 / ceil(977 x 1.10) = 1075"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12884 est / 977 lines at this re-basis; ceiling = ceil(12884 x 1.10) = 14173 / ceil(977 x 1.10) = 1075",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 13396 est / 1017 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13671 est / 1035 lines."
       }
     },
     "execute-phase:feature": {
@@ -221,8 +233,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -236,7 +248,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "execute-phase:final-pr": {
@@ -254,8 +268,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14022,
-      "routeLinesMax": 1052,
+      "routeEstimateMax": 14888,
+      "routeLinesMax": 1116,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -270,7 +284,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 12122 est / 914 lines, ceiling re-based to ceil(12122 x 1.10) = 13335 / ceil(914 x 1.10) = 1006",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 12132, lines 915; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12747 est / 956 lines at this re-basis; ceiling = ceil(12747 x 1.10) = 14022 / ceil(956 x 1.10) = 1052"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12747 est / 956 lines at this re-basis; ceiling = ceil(12747 x 1.10) = 14022 / ceil(956 x 1.10) = 1052",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 13259 est / 996 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13534 est / 1014 lines."
       }
     },
     "execute-phase:finding": {
@@ -287,8 +303,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -301,7 +317,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "execute-phase:fix": {
@@ -318,8 +336,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -332,7 +350,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "execute-phase:legacy": {
@@ -349,8 +369,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -363,7 +383,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "execute-phase:small": {
@@ -380,8 +402,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -395,7 +417,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "execute-phase:unit-loop": {
@@ -412,8 +436,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13458,
-      "routeLinesMax": 1026,
+      "routeEstimateMax": 14324,
+      "routeLinesMax": 1089,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -424,7 +448,9 @@
         "issue #316 (roadmap settle in the close-out)": "issue #316 (roadmap settle in the close-out): SKILL.md's whole-unit close-out gains the deterministic roadmap settle — `agentic-workflow roadmap rowUpsert` writing `done · [#N](<pr-url>)` with the other cells preserved, validated by `bun scripts/roadmap-settle.mjs`; measured 11609 est / 890 lines, ceiling re-based to ceil(11609 x 1.10) = 12770 / ceil(890 x 1.10) = 979",
         "fix #316 (roadmap settle call sites)": "the whole-unit close-out names the executable settle form and its kind boundary (review F4: a bare `roadmap rowUpsert` resolved the subcommand word as the table path); route measured estimate 11619, lines 891; ceiling = ceil(measured x 1.10)",
         "unit 84 (sweep declaration in FOLDING.md)": "unit 84 (issue #315 S2): `references/FOLDING.md` gains the sweep-declaration box — the fixed `swept: /<pattern>/<flags> → expected <n> in <glob>` grammar, its allowlist reasoning and the bounded scope — plus the `promise-coherence` box now requiring every declared sweep to re-run to its expected count. FOLDING.md is loaded by every execute-phase:* route, so each re-measures; estimate and line ceilings re-set to ceil(measured x 1.10).",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 12234 est / 932 lines at this re-basis; ceiling = ceil(12234 x 1.10) = 13458 / ceil(932 x 1.10) = 1026",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
+        "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines."
       }
     },
     "review-change:adversarial": {
@@ -444,8 +470,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 21903,
-      "routeLinesMax": 1549,
+      "routeEstimateMax": 22348,
+      "routeLinesMax": 1579,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -463,7 +489,8 @@
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate": "re-based in this PR",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 19911 est / 1408 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 19911 est / 1408 lines at this re-basis; ceiling = ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 19911 est / 1408 lines at this re-basis; ceiling = ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 20189 est / 1427 lines at this re-basis; growth source = fix 318's skill additions."
       }
     },
     "review-change:default-backend": {
@@ -482,8 +509,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20084,
-      "routeLinesMax": 1430,
+      "routeEstimateMax": 20530,
+      "routeLinesMax": 1460,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -501,7 +528,8 @@
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18258 est / 1300 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1430",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions."
       }
     },
     "review-change:default-web": {
@@ -520,8 +548,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20084,
-      "routeLinesMax": 1430,
+      "routeEstimateMax": 20530,
+      "routeLinesMax": 1460,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -539,7 +567,8 @@
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18258 est / 1300 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1430",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions."
       }
     },
     "review-change:synthesize": {
@@ -558,8 +587,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 20600,
-      "routeLinesMax": 1455,
+      "routeEstimateMax": 21046,
+      "routeLinesMax": 1484,
       "sources": {
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -577,7 +606,8 @@
         "issue #308 (unit 79 review fold)": "issue #308 (unit 79 review fold, F11): the executor's Step 0 readiness, its Evidence-row gate, EXECUTION_CONTRACT's completion boxes, FOLDING's close rule and verification-contract's receipt sentence now name both accepted unit-doc shapes (legacy `## Evidence`/`## Progress log` rows; re-cut `## Log` E/G/P lines), because the shipped readiness check stopped every unit created from the re-cut template. Ceilings re-based to ceil(measured × 1.10) from the checker's own measured route, reason declared.",
         "#308 review F34 — the two-cycle cap's LOOP CAP block stops and hands the decision back instead of auto-routing, and the escape states its size gate; the paragraph that used to emit `/triage-issue --prioritize-now` as the default route now explains why no route is auto-selected": "re-based in this PR",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18727 est / 1322 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455",
-        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18727 est / 1322 lines at this re-basis; ceiling = ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455"
+        "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18727 est / 1322 lines at this re-basis; ceiling = ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455",
+        "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 19005 est / 1341 lines at this re-basis; growth source = fix 318's skill additions."
       }
     }
   },

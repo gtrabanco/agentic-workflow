@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "description": "Path glob -> the minimal sufficient suite. An unmatched path runs the full gate (S14). Regenerate the glob set deliberately when a new file pattern lands: this map is a normative surface, and a stale entry costs coverage.",
+  "routes": [
+    {
+      "name": "review-state",
+      "globs": [
+        "scripts/review-state.mjs",
+        "scripts/review-state.test.mjs"
+      ],
+      "suites": [
+        "scripts/review-state.test.mjs"
+      ]
+    },
+    {
+      "name": "unit-route",
+      "globs": [
+        "scripts/unit-route.mjs",
+        "scripts/unit-route.test.mjs"
+      ],
+      "suites": [
+        "scripts/unit-route.test.mjs",
+        "scripts/next-recommendations.test.mjs"
+      ]
+    },
+    {
+      "name": "test-route",
+      "globs": [
+        "scripts/test-route.mjs",
+        "scripts/test-route.test.mjs",
+        "scripts/test-route-map.json"
+      ],
+      "suites": [
+        "scripts/test-route.test.mjs"
+      ]
+    },
+    {
+      "name": "skill-context",
+      "globs": [
+        "scripts/check-skill-context.mjs",
+        "scripts/check-skill-context.test.mjs",
+        "docs/workflow/SKILL_CONTEXT_BUDGETS.json"
+      ],
+      "suites": [
+        "scripts/check-skill-context.test.mjs",
+        "scripts/promise-coherence.test.mjs"
+      ]
+    },
+    {
+      "name": "promise-coherence",
+      "globs": [
+        "scripts/promise-coherence.mjs",
+        "scripts/promise-coherence.test.mjs"
+      ],
+      "suites": [
+        "scripts/promise-coherence.test.mjs"
+      ]
+    },
+    {
+      "name": "phase-contract",
+      "globs": [
+        "scripts/phase-lint.mjs",
+        "scripts/phase-lint.test.mjs",
+        "scripts/unit-doc-phases.mjs"
+      ],
+      "suites": [
+        "scripts/phase-lint.test.mjs",
+        "scripts/unit-doc-contract.test.mjs"
+      ]
+    },
+    {
+      "name": "unit-doc",
+      "globs": [
+        "scripts/unit-doc-contract.test.mjs",
+        "docs/fix/_TEMPLATE/SPEC.md",
+        "docs/features/_TEMPLATE/SPEC.md"
+      ],
+      "suites": [
+        "scripts/unit-doc-contract.test.mjs",
+        "scripts/phase-lint.test.mjs",
+        "scripts/golden-fixture.test.mjs"
+      ]
+    },
+    {
+      "name": "schema-package",
+      "globs": [
+        "packages/agentic-workflow-schema/**",
+        "scripts/vocabulary-*.test.mjs",
+        "scripts/normative-drift.test.mjs"
+      ],
+      "suites": [
+        "scripts/normative-drift.test.mjs",
+        "scripts/vocabulary-parity.test.mjs",
+        "scripts/vocabulary-probe.test.mjs"
+      ]
+    },
+    {
+      "name": "pi-package",
+      "globs": [
+        "packages/pi-agentic-workflow/**",
+        "packages/agentic-workflow/**"
+      ],
+      "suites": [
+        "scripts/pin-watch.test.mjs",
+        "scripts/npm-version-gate.test.mjs"
+      ]
+    },
+    {
+      "name": "skills-content",
+      "globs": [
+        "skills/**"
+      ],
+      "suites": [
+        "scripts/check-skill-context.test.mjs",
+        "scripts/promise-coherence.test.mjs",
+        "scripts/normative-drift.test.mjs",
+        "scripts/continuation-discipline.test.mjs",
+        "scripts/review-loop-discipline.test.mjs"
+      ]
+    },
+    {
+      "name": "workflow-sensor",
+      "globs": [
+        "scripts/workflow-status*.mjs",
+        "skills/workflow-status/**"
+      ],
+      "suites": [
+        "scripts/workflow-status-sensor.test.mjs",
+        "scripts/workflow-status-compact.test.mjs"
+      ]
+    },
+    {
+      "name": "ledgers",
+      "globs": [
+        "scripts/ledger-*.mjs",
+        "scripts/ledger-*.test.mjs",
+        "skills/pre-execution-review/**"
+      ],
+      "suites": [
+        "scripts/ledger-ownership.test.mjs",
+        "scripts/ledger-provenance.test.mjs",
+        "scripts/pre-execution-quality.test.mjs"
+      ]
+    },
+    {
+      "name": "pre-execution",
+      "globs": [
+        "scripts/pre-execution-*.mjs",
+        "scripts/pre-execution-*.test.mjs",
+        "scripts/pre-execution-*.schema.json"
+      ],
+      "suites": [
+        "scripts/pre-execution-quality.test.mjs",
+        "scripts/pre-execution-sensor.test.mjs",
+        "scripts/pre-execution-attribution.test.mjs",
+        "scripts/pre-execution-timeline.test.mjs",
+        "scripts/pre-execution-wording-only-manifest.test.mjs",
+        "scripts/pre-execution-receipt-parent.test.mjs"
+      ]
+    },
+    {
+      "name": "changesets",
+      "globs": [
+        "scripts/changeset-*.mjs",
+        "scripts/lint-changeset*.mjs",
+        "scripts/release.mjs",
+        ".changeset/**"
+      ],
+      "suites": [
+        "scripts/changeset-create.test.mjs",
+        "scripts/lint-changeset.test.mjs",
+        "scripts/version-parity-gate.test.mjs"
+      ]
+    },
+    {
+      "name": "packaging",
+      "globs": [
+        "package.json",
+        "packages/*/package.json",
+        "bun.lock",
+        "**/bun.lock"
+      ],
+      "suites": [
+        "scripts/npm-version-gate.test.mjs",
+        "scripts/pin-watch.test.mjs"
+      ]
+    }
+  ]
+}

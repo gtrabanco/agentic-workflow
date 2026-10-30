@@ -34,6 +34,18 @@ skill fixes each root cause, never relabeling, deferring, or weakening its check
 ✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally
      and outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
      Every affected finding ID is named in that block, joined with ` + `.
+✓ 6. Claim-evidence loop ran: before committing, every claim the repair
+     introduces was reproduced with the command and observed output pasted
+     into the claim table (`claim | command | output | status`). Loop ran until
+     green inside the same turn. (S5)
+✓ 7. Class escalation checked: ≥ 2 folded rows sharing mechanism+axis
+     were escalated to one class-level fix-now finding. (S1)
+✓ 8. Evidence-bound check: every finding citation was verified — the cited
+     file:line exists and the snippet matches the working tree verbatim. (S10)
+✓ 9. Reviewer anti-invention check: new findings are grounded in
+     provably-changed bytes (git-computed) or a mis-run cited check. (S10)
+✓ 10. Net narration diff ≤ 0 per fold: lines deleted, not moved. (S10)
+✓ 11. Closure status printed: `closure: complete | open(n)`. (S4)
 ```
 
 Any unchecked box means the turn is not done.
@@ -73,8 +85,22 @@ Per Workflow conventions, read:
 2. Queue the carrier's open rows — a legacy `folded: no` row, a migrated row of
    `## Findings` (all of them are open); explicit IDs restrict the queue and leave
    other rows untouched. Group by root cause, verifier and rollback boundary.
-3. The project's verification gate and forge CLI (use the declared forge).
-4. Whether the branch has an open PR; this decides immediate push after commit.
+3. **Class escalation (S1).** After grouping: ≥ 2 folded rows sharing
+   mechanism+axis ⇒ one class-level fix-now finding whose repair targets the
+   *mechanism*, not a repeated instance. The two-cycle cap then means what it
+   was built to mean: a class the loop refuses to repair is a planning defect,
+   not more folds. Document the escalation as `F<next> (class: <mechanism>,
+   replaces F<a> + F<b> + …)` in the ledger.
+4. **Evidence-bound check (S10, from #218).** Before processing, verify every
+   finding's citation: the cited `file:line` exists and the snippet matches the
+   working tree verbatim. Wrong-citation and position-drift findings are
+   discarded mechanically — `refuted` with evidence, no cycle consumed.
+5. **Reviewer anti-invention check (S10, from #205).** Any new finding surfaced
+   during fold must be grounded in **provably-changed bytes** (git-computed) or
+   a **mis-run cited check** (the cited validator's own output contradicts it).
+   A finding without changed-bytes grounding is a report-note, never fix-now.
+6. The project's verification gate and forge CLI (use the declared forge).
+7. Whether the branch has an open PR; this decides immediate push after commit.
 
 ## Progressive loading — fold queue
 
@@ -86,6 +112,58 @@ code or the ledger:
 
 Both are normative and one hop from this file. Missing resource → stop; never
 infer a classification or fold procedure.
+
+## Claim-evidence loop (S5 — mandatory before commit)
+
+Before committing the fold fix, run the claim-evidence loop. This is not optional;
+a turn that writes without verifying its own claims is the exact failure class
+that produced unit 79's F49→F50→F51.
+
+1. **Claim ledger.** Enumerate every claim the repair introduces: each new
+   figure, cross-reference, "X is now Y"; in code: each behavior the fix
+   declares. Write one row per claim.
+2. **Mandatory reproduction.** Every claim is executed, never asserted:
+   re-derive the figure with the command, resolve the reference with grep,
+   reproduce the behavior. Paste command + observed output into the claim
+   table — never type the expected result by hand.
+3. **Loop until green.** red → repair → re-run, *inside the same turn*, until
+   every claim in the closure set verifies. The repairer's turn does not end
+   with unreproduced claims.
+4. **Admission rule.** If no command can verify the sentence, it is not a
+   claim, it is an opinion, and it does not get written. This extends the
+   repo's own tests-first rule to documentation artifacts.
+
+Output the claim table as:
+
+```
+## Claim-evidence table
+| claim | command | output | status |
+|---|---|---|---|
+| <claim text> | `<command>` | `<observed output>` | ✓ |```
+
+All rows must have `status: ✓`. A `status: ✗` row means the turn is not done
+— repair and re-run the claim.
+
+The row shape is published grammar, not convention (`evidence-row@1` in
+`@gtrabanco/agentic-workflow-schema`: `EVIDENCE_ROW_COLUMNS`,
+`EVIDENCE_ROW_VERDICTS`, `validateEvidenceRow`). A row whose claim is empty, whose
+command or output is not a backticked command/observation, or whose verdict is
+outside `✓ | ✗` is a shape violation — prose in the command cell is refused
+exactly like an empty one, because a typed expectation is the defect the shape
+exists to stop.
+
+## Closure status (S4, S11)
+
+At the end of the fold, print the closure status:
+
+```
+closure: complete | open(n)
+```
+
+- `complete` — all findings in the queue are resolved (folded, refuted, disputed, or replanned).
+- `open(n)` — n findings remain open (blockers that need user input). Print the count and the blocker IDs.
+
+Cycle-count stops being the health metric; closure is the invariant.
 
 ## Report — return exactly this structure (fixed output contract)
 
@@ -193,6 +271,36 @@ every declared grep and fails closed with `sweep-mismatch`, naming
 `file:line`, the regex and the observed count. A fold that changes such a
 surface and emits no declaration is a `workflow` finding at review.
 
+**Re-review skip default inversion (S9, feature 30).** The `RE-REVIEW-OPTIONAL/SKIPPED`
+branch shipped in feature 30 was never exercised once (11 cycles on docs-only
+changes). Fix: for docs-only batches with a green sweep declaration
+(#315's claim kind), **skip becomes the machine-decided default** — re-review
+requires recorded justification. Why safe *now*: the residual risk the default
+hedged (stale survivors) becomes a pre-commit failure once #315's sweep kind
+exists. The decision moves from human inertia (always yes) to machine rule
+(batch class + sweep green ⇒ skip).
+
+**Net narration diff ≤ 0 (S10 1).** Each fold must strictly decrease the defect
+surface. Add a computed check: the net narration diff per fold must be ≤ 0 —
+lines deleted, not moved. Measured by `git diff --numstat` over the fold's
+commit. This is the arithmetic that makes #307's "deterministic gates converge"
+possible.
+
+**Defect identity: mechanism, not file:line (S4).** Defect identity in the ledger
+moves from `file:line` to the *mechanism* (the site stays as evidence). When
+folding, group by mechanism+axis, not by file:line+axis. The same bug surfacing
+as F49, then F50, then F51 costs a full review cycle each time when grouped by
+file:line; grouped by mechanism, one class escalation fixes all three.
+
+**Per-file review state (S10 6, from #218; shipped as S16).** `review-state.json`
+per unit, single writer = `scripts/review-state.mjs`, model passes read-only: each
+file in the affecting-path inventory ends a cycle `reviewed@<sha>` or
+`skipped@<sha>` with a concrete reason; skips auto-invalidate when a later diff
+touches the file; coverage closure `inventory − reviewed − skipped = 0` is a
+mechanical receipt check. Run `node scripts/review-state.mjs check --unit <slug>`
+and paste the block — `closure: complete` exits 0, `closure: open(n)` exits 1 and
+is a blocker, never a note.
+
 ## Portability (agents other than Claude Code)
 
 Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files in
@@ -251,8 +359,9 @@ decision to skip.
 |---|---|---|
 | freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
 | freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
-| `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
-| `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
+| `all-repair-in-place` + docs-only + green sweep declaration + no folded row severity `high` | `RE-REVIEW-SKIPPED` | skip — green sweep (#315) + docs-only ⇒ skip is default (S9); re-review requires recorded justification |
+| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
+| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |
 | anything else (behavioral surface or any folded row `high`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
 
@@ -264,7 +373,12 @@ decision to skip.
 - **Frozen-severity-`high` override.** A folded row whose frozen severity is
   `high` forces `RE-REVIEW-REQUIRED (delta)` even on a docs-only diff. Frozen
   fields are never edited to reach a branch.
-- **SKIPPED requires prior consumer decision (E-D2).** `RE-REVIEW-SKIPPED`
-  is printed only by a turn carrying an explicit prior consumer decision to
-  skip. A turn with no recorded prior consumer decision prints
+- **SKIPPED with sweep (S9).** `RE-REVIEW-SKIPPED` is printed when the batch
+  is docs-only + has a green sweep declaration (#315's claim kind), even
+  without a prior consumer decision. This is the default inversion: skip is
+  the machine-decided default for docs-only + sweep green. Prior consumer
+  decision is still accepted (backwards-compatible).
+- **SKIPPED without sweep (E-D2).** `RE-REVIEW-SKIPPED` requires an explicit
+  prior consumer decision when the batch is docs-only but has no sweep
+  declaration. A turn with no recorded prior consumer decision prints
   `RE-REVIEW-OPTIONAL` + the re-review default, **never** `RE-REVIEW-SKIPPED`.

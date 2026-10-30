@@ -426,9 +426,11 @@ or roadmap row was removed after the merge),
 plan-from-issue (a tracked issue with no unit folder yet: a fix-index number or a
 roadmap row's own issue number).
 
-The routed block goes to stdout: unit, status, open-rows, route, next, rows,
-read-set (at most ${READ_SET_MAX} paths, then an explicit remainder line),
-fingerprint.
+The routed block goes to stdout: unit, status, open-rows, review-cycles (the
+Log R<n> rows the unit's record carries), ledger-size (the bytes of the findings
+carrier the fold queue reads — the unit doc for a migrated unit, the legacy
+review-findings.md otherwise), route, next, rows, read-set (at most
+${READ_SET_MAX} paths, then an explicit remainder line), fingerprint.
 
 Exit codes: 0 a route was printed; 1 an unknown unit or an argument count other
 than one; 2 an ambiguous unit token (a number matching both a feature and a fix
@@ -800,14 +802,14 @@ function main(argv) {
     const numeric = /^\d+$/.test(clean);
     if (numeric && fixIndexIssues().has(clean)) {
       const command = `/unit-lane --fix ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]) });
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]), reviewCycles: 0, ledgerSize: 0 });
       return;
     }
     // A roadmap row's own issue number is the other tracked-issue surface this
     // command documents, so it resolves instead of dead-ending (F34).
     if (numeric && roadmapIssues().has(clean)) {
       const command = `/unit-lane --from-issue ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]) });
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]), reviewCycles: 0, ledgerSize: 0 });
       return;
     }
     fail(1, `unknown unit: ${sanitize(clean)}`);
@@ -895,12 +897,25 @@ function main(argv) {
     }
   }
 
-  const base = route === "replan" || route === "decision" || route === "product" || route === "fold"
-    ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
-    : ["SPEC.md", "progress.md"];
+  // A doc that owns its open rows (`## Findings` present, #308) also owns the
+  // review-cycle record, so both carriers are in the read set beside it; a
+  // legacy unit still reads its side ledger and its progress log.
+  const docOwnsLedger = sectionText(doc, "Findings") !== null;
+  const base = docOwnsLedger
+    ? ["SPEC.md"]
+    : route === "replan" || route === "decision" || route === "product" || route === "fold"
+      ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
+      : ["SPEC.md", "progress.md"];
   const readSet = readSetFor(unit.dir, selected, base);
 
   const rowIds = rows.map((row) => row.id);
+  // Review cycles (S9 b): the `## Log` `R<n>` lines the unit's own record
+  // carries (`- **R1** — …`, the `log-kind@1` receipt row). Cycle count is
+  // context for an informed override, never the health metric (#318 S4).
+  const reviewCycles = (doc.match(/^\s*[-*]\s*\*\*R\d+\*\*/gm) ?? []).length;
+  // Ledger size (S9 5): the carrier the fold queue actually reads — the doc
+  // itself for a migrated unit, the legacy side ledger otherwise.
+  const ledgerSize = Buffer.byteLength(docOwnsLedger || !exists(ledgerPath) ? doc : ledger, "utf8");
   print({
     unit: unit.slug,
     status,
@@ -909,10 +924,12 @@ function main(argv) {
     openCount: rows.length,
     rows: rowIds,
     readSet,
+    reviewCycles,
+    ledgerSize,
   });
 }
 
-function print({ unit, status, route, command, openCount, rows, readSet }) {
+function print({ unit, status, route, command, openCount, rows, readSet, reviewCycles, ledgerSize }) {
   if (!ROUTES.includes(route)) fail(1, `internal error: unknown route ${sanitize(route)}`);
   const shown = readSet.slice(0, READ_SET_MAX);
   const remainder = readSet.length - shown.length;
@@ -922,6 +939,8 @@ function print({ unit, status, route, command, openCount, rows, readSet }) {
     `unit: ${sanitize(unit)}`,
     `status: ${sanitize(status)}`,
     `open-rows: ${openCount}`,
+    `review-cycles: ${reviewCycles ?? "n/a"}`,
+    `ledger-size: ${ledgerSize ?? "n/a"} bytes`,
     `route: ${route}`,
     `next: ${sanitize(command)}`,
     `rows: ${rows.length ? rows.map((id) => sanitize(id)).join(" ") : "none"}`,

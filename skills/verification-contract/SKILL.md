@@ -43,6 +43,14 @@ canonical acceptance source. Criteria are numbered, each induced from a concrete
 user scenario, and command-verified where possible (label `read-verified` for
 prose-only checks). Unlabelled prose is invalid.
 
+**Every criterion names its demonstrating command (S5).** A criterion that a
+command can settle carries that command — ``<cmd> exits 0``, ``<cmd> matches
+<N>`` — so a reviewer re-runs it instead of re-deriving the change, and `audit-pr`
+can demand a demonstration for every AC. A criterion only a human can settle
+keeps an explicit `manual:` label with the exact observation; a criterion with
+neither fails closed at review (the `no command, no claim` admission rule
+applied to the acceptance surface).
+
 **Validator stability.** A validator must never gate on a surface other workflow
 actors mutate — the branch diff as a whole, the session log, progress entries,
 review ledgers, or forge state — because any out-of-unit commit (a session-log
