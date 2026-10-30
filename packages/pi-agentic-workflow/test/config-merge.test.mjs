@@ -234,3 +234,57 @@ test("AC12 loader leg: an invalid file carries no config, so nothing can merge i
   assert.equal(invalid.ok, false);
   assert.equal("config" in invalid, false, "a rejected file must not hand merge a usable config");
 });
+
+// --- guards (config-gated tool guards; everything absent stays off) --------
+
+test("guards default to all-off, and an empty file keeps them off", () => {
+  assert.deepEqual(DEFAULT_CONFIG.guards, {
+    merge: false,
+    history: false,
+    ci: { create: false, run: false },
+    expensiveTests: { maxTokens: 0, patterns: [] },
+  });
+  const cfg = valid("{}", "empty");
+  assert.equal(cfg.guards, undefined, "an operator file declares nothing — nothing to merge");
+});
+
+test("guards: project wins per knob, unmentioned knobs stay off", () => {
+  const globalCfg = valid('{"guards":{"merge":true,"ci":{"run":true}}}', "global");
+  const projectCfg = valid('{"guards":{"history":true}}', "project");
+  const merged = mergeConfigs(globalCfg, projectCfg).guards;
+  assert.deepEqual(merged, {
+    merge: true,
+    history: true,
+    ci: { create: false, run: true },
+    expensiveTests: { maxTokens: 0, patterns: [] },
+  });
+});
+
+test("guards: expensiveTests resolves field-by-field, patterns replaced not concatenated", () => {
+  const globalCfg = valid(
+    '{"guards":{"expensiveTests":{"maxTokens":1000,"patterns":[{"match":"a","tokens":5}]}}}',
+    "global",
+  );
+  const projectCfg = valid(
+    '{"guards":{"expensiveTests":{"patterns":[{"match":"b","tokens":7}]}}}',
+    "project",
+  );
+  assert.deepEqual(mergeConfigs(globalCfg, projectCfg).guards.expensiveTests, {
+    maxTokens: 1000,
+    patterns: [{ match: "b", tokens: 7 }],
+  });
+});
+
+test("guards: strict validation rejects unknown keys and bad values", () => {
+  for (const [json, path] of [
+    ['{"guards":{"nope":true}}', "$.guards.nope"],
+    ['{"guards":{"merge":"yes"}}', "$.guards.merge"],
+    ['{"guards":{"ci":{"nope":true}}}', "$.guards.ci.nope"],
+    ['{"guards":{"expensiveTests":{"maxTokens":-1}}}', "$.guards.expensiveTests.maxTokens"],
+    ['{"guards":{"expensiveTests":{"patterns":[{"match":"[","tokens":1}]}}}', "$.guards.expensiveTests.patterns[0].match"],
+  ]) {
+    const result = parseConfigFile(json);
+    assert.equal(result.ok, false, json);
+    assert.equal(result.issues[0].path, path, json);
+  }
+});
