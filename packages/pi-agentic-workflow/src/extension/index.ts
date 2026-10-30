@@ -327,14 +327,27 @@ export default function extension(pi: ExtensionAPI): void {
   // itself filters to `bash`, so every tool call is checked — nesting it under
   // one tool name would make the block unreachable for the calls it exists for.
   //
-  // Merges are owner-only (issue #278): `gh pr merge`, the `gh api` merge
-  // endpoints, and `git merge` are blocked before anything else runs — a
-  // review waiver is not merge authorization. Read-only git (`merge-tree`,
-  // `merge-base`) and rebases pass; the reason hands the PR URL to the owner.
+  // Owner-gated tool guards, all config-driven (`guards` in the config files;
+  // every guard ships OFF — a project opts in per guard):
+  //   merge    `git merge`, `gh pr merge`, `git pull`'s merge form (issue #278).
+  //   history  pushes decided by git itself (`git push --dry-run`): a forced
+  //            update, a ref delete or a push to `main` is declined.
+  //   ci       writing workflow definitions and triggering workflow runs.
+  //   cost     commands estimated above the configured token budget.
+  // The only way through any of them is the explicit per-command token
+  // (`AW_ALLOW=merge|force|ci|cost`) after an owner instruction in the turn.
   pi.on("tool_call", (event, ctx) => {
     const command = "command" in event.input && typeof event.input.command === "string" ? event.input.command : undefined;
-    const merge = guards.mergeGuard({ toolName: event.toolName, command });
+    const inputPath = "path" in event.input && typeof event.input.path === "string" ? event.input.path : undefined;
+    const { guards: policy } = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() }).config;
+    const merge = guards.mergeGuard({ toolName: event.toolName, command }, policy.merge);
     if (merge.block) return merge;
+    const history = guards.historyGuard({ toolName: event.toolName, command }, policy.history, { cwd: ctx.cwd });
+    if (history.block) return history;
+    const ci = guards.ciGuard({ toolName: event.toolName, command, path: inputPath }, policy.ci);
+    if (ci.block) return ci;
+    const cost = guards.costGuard({ toolName: event.toolName, command }, policy.expensiveTests);
+    if (cost.block) return cost;
     const receipt = guards.receiptGuard({ toolName: event.toolName, command });
     if (receipt.block) return receipt;
     // Tier 2 path prevention (feature 60): block a write/edit to an existing

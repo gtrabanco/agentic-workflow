@@ -74,6 +74,27 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   "the project's verification gate") is the rule.
 - **One PR per unit of work, always against `main`.** Never work on `main`
   directly; never stack PRs (a PR's base is always `main`).
+- **Published history is owner-written.** Work in short branches off `main`;
+  `main` only advances through a PR. When `main` moves and the PR conflicts, the
+  branch is brought up to date by integrating `main` and resolving the conflicted
+  files on the branch: the agent resolves the files and hands the branch back,
+  and the owner runs the integration. Commits already pushed are a shared
+  surface — a reviewer's checkout, another session, a CI artifact — so the owner
+  rewrites them when a rewrite is genuinely needed, and the PR then notes why the
+  hashes changed. The guards make that arrangement mechanical in agent
+  sessions, config-driven in `.pi/pi-agentic-workflow.json` → `guards` (every
+  guard ships OFF — other projects get none of this unless they opt in):
+  `merge` blocks every direct merge route (`git merge`, `gh pr merge`, the
+  `gh api` merge endpoints/mutations, `git pull`'s merge form), and `history`
+  decides pushes by asking git itself — the push runs as `git push --dry-run`
+  first, and git's outcome (forced update, ref delete, destination `main`)
+  declines it, so no flag spelling needs enumerating. `ci` gates writing
+  workflow definitions and triggering runs; `expensiveTests` gates commands
+  whose estimated token cost exceeds the budget. The only way through any of
+  them is an explicit owner instruction in the same turn, carried as the
+  command's first word: `AW_ALLOW=merge` ("Sí, mergea la PR" / "Mergea rama B
+  en rama A"), `AW_ALLOW=force` ("Sí, usa force" — never enables a push to
+  `main`), `AW_ALLOW=ci`, or `AW_ALLOW=cost`.
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
