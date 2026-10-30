@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.12.0
+version: 4.10.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"

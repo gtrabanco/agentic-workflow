@@ -1,7 +1,7 @@
 ---
 name: review-seo
 user-invocable: false
-version: 1.1.0
+version: 4.10.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
