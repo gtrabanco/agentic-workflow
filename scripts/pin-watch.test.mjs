@@ -76,6 +76,25 @@ test("drift: a published version above the pin is a finding naming both versions
   assert.equal(result.ok, false, "a drift fails the run");
 });
 
+test("drift: a pin on a local sibling that lags its package is a finding naming the local version", () => {
+  // A pin whose target lives in this repository is judged against that
+  // package's own version, not against the registry alone: the merge publishes
+  // the local one, so a pin behind it is the drift that reddens the next PR.
+  const result = collectDrift({
+    packages: [{ name: PI, dir: "packages/pi-agentic-workflow", dependencies: { [RUNNER]: "0.4.0" } }],
+    fetchLatest: registry({ [RUNNER]: "0.4.0" }),
+    localVersions: { [RUNNER]: "0.5.0" },
+  });
+
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].localVersion, "0.5.0");
+  assert.match(
+    renderReport(result),
+    /0\.4\.0 → 0\.5\.0 \(local package version\)/u,
+    "the report names the local version the pin should carry",
+  );
+});
+
 test("drift: every package that declares exact pins is watched, not just the first", () => {
   const result = collectDrift({
     packages: packages(),

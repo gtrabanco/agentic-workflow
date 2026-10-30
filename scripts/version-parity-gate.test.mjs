@@ -29,12 +29,14 @@ import {
   changelogRowCount,
   contentTriggerPrefixes,
   packageDirs,
+  localPackageVersions,
   PACKAGE_DIR,
   TRIGGER_PREFIXES,
 } from "./version-parity-gate.mjs";
 
 const PKG = "@gtrabanco/pi-agentic-workflow";
 const REPO_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const REPO_DIR = path.resolve(REPO_ROOT, "..");
 
 /** `git status --porcelain` entries of this repository — the dirty-tree fixture. */
 function gitPorcelain() {
@@ -544,6 +546,39 @@ test("pins: a dependency with no local sibling keeps the registry-only rule", ()
   );
   assert.equal(r.violations.length, 1);
   assert.match(r.violations[0].message, /registry published 1\.1\.0/);
+});
+
+// The rule is about the two manifests that actually ship, so the suite reads
+// both sides from them: every exact pin a package under `packages/` declares on
+// a sibling must name the version that sibling carries right now. A version
+// typed into a test pins today's value and disagrees with the tree after the
+// next release; this cannot, because it reads the manifests at run time.
+test("pins: every exact pin on a local sibling names that sibling's current version", () => {
+  const localVersions = localPackageVersions();
+  assert.ok(Object.keys(localVersions).length > 0, "no package manifest was readable under packages/");
+  // The registry is not this assertion's authority: a throwing fetcher keeps the
+  // suite offline and pins the local half as the one under test (AC3's shape).
+  const offline = () => {
+    throw new Error("registry not consulted by this suite");
+  };
+  const results = packageDirs().map((dir) => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(REPO_DIR, dir, "package.json"), "utf8"));
+    return evaluatePins({
+      packageName: manifest.name ?? dir,
+      dependencies: manifest.dependencies ?? {},
+      fetchLatest: offline,
+      localVersions,
+    });
+  });
+  assert.deepEqual(
+    results.flatMap((r) => r.violations).map((v) => `${v.name}: pin ${v.pin} != local ${v.localVersion}`),
+    [],
+    "a shipped package pins a sibling at a version that package does not carry",
+  );
+  assert.ok(
+    results.flatMap((r) => r.notices).length > 0,
+    "no exact pin points at a local sibling — the assertion above would pass vacuously",
+  );
 });
 
 // D-40-15: skills are the Pi package's shipped content — a changeset
