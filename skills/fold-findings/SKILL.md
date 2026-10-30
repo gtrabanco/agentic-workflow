@@ -36,7 +36,7 @@ skill fixes each root cause, never relabeling, deferring, or weakening its check
      Every affected finding ID is named in that block, joined with ` + `.
 ✓ 6. Claim-evidence loop ran: before committing, every claim the repair
      introduces was reproduced with the command and observed output pasted
-     into the claim table (`claim | command | output | ✓`). Loop ran until
+     into the claim table (`claim | command | output | status`). Loop ran until
      green inside the same turn. (S5)
 ✓ 7. Class escalation checked: ≥ 2 folded rows sharing mechanism+axis
      were escalated to one class-level fix-now finding. (S1)
