@@ -393,19 +393,34 @@ hand. No script or skill may keep a second copy of this list.
 
 ## Packages
 
-The two npm packages under `packages/` are independent bun-managed islands,
-not a workspaces monorepo — there is no root `package.json` and nothing
-hoists.
+The packages under `packages/` are members of a **bun workspace**: a private
+root `package.json` declares `workspaces: ["packages/*"]` and carries no
+identity of its own. Members link each other **from the folder**, so a package
+that pins a sibling installs that sibling's working copy — not a published
+tarball — while the manifest keeps the exact version every consumer receives
+(`npm publish` does not rewrite a `workspace:` spec, so the exact version is
+what ships and the protocol is never used).
 
-- **bun is the package manager, everywhere.** `bun.lock` (committed) is the
-  sole lockfile: install with `bun install --frozen-lockfile`, run scripts
-  with `bun run <script>`. A `package-lock.json` inside any package is drift
-  — each package's `.gitignore` rejects it and
-  `test/lockfile-policy.test.mjs` fails the suite if one appears (both npm
-  lockfiles resurrected once, on main, and had to be removed again). The npm
-  CLI is still used for the publish step only (Trusted Publishing +
-  `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
-- **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
+The reason is not convenience: a sibling pin used to name a version that only
+existed **after** the merge that changed it, so a bump and its pin move could
+never share a commit — the pin named an unpublished version (uninstallable) and
+the lockfile could not be regenerated before the publish `--frozen-lockfile`
+requires. The workspace removes that ordering trap; the pin rule below is still
+enforced, and install itself enforces it (a pin that does not match the
+member's version resolves from the registry and fails).
+
+- **bun is the package manager, everywhere, with ONE lockfile.** `bun.lock` at
+  the repository root (committed) is the sole lockfile for every member:
+  install at the root with `bun install --frozen-lockfile`, or from a member
+  directory (bun resolves the workspace root and installs the whole graph);
+  run scripts with `bun run <script>`. A `bun.lock` or `package-lock.json`
+  inside a package is drift — it would resolve that package's siblings from the
+  registry instead of from the folder — and `scripts/workspace-lock-policy.test.mjs`
+  fails the suite if one appears (both npm lockfiles resurrected once, on main,
+  and had to be removed again). The npm CLI is still used for the publish step
+  only (Trusted Publishing + `--provenance` are npm-CLI-specific tooling Bun
+  doesn't replicate).
+- **Dependency versions are pinned; floating specs are not.** Every `dependencies`/`devDependencies` entry names a version a fresh resolution may install: a full release (`6.0.3`) or a **deliberate partial pin** (`6`, `7`, `6.0`). A partial pin is a claim about the dependency, and it always carries its reason — the compiler is the standing example: TypeScript **honours semver** and is a well-maintained project, so a major-only pin still receives the fixes and the performance work of every 7.x release without a manifest edit, and this repository wants the speed of the native compiler. Refused, with no exception: `^`, `~`, `*`, `latest`, any other dist-tag, `x` ranges, and the local-only protocols `file:`, `link:`, `workspace:`, `git+` — each lets an install resolve to bytes nobody reviewed without the dependency having earned that trust. The committed `bun.lock` still records the exact resolution for every pin, partial or full, so byte-for-byte reproducibility does not depend on how precise the manifest specifier is. A partial pin is invisible to the `--pins` half of the parity gate (it verifies exact pins only), so it moves on the owner's deliberate `fix(deps)` cadence, not on a gate's nudge. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
 - **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292; trigger set extended to every package in feature 40).**
   Bump `version:` in the touched package's `package.json` and add a row to the
   "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
@@ -429,7 +444,12 @@ hoists.
   verified offline even when the registry is unreachable): a pin behind it
   recreates the post-publish red window, a pin ahead of everything points at a
   version that will never exist — fix: bump the pin + the package version in
-  the same PR. CI publishes on merge
+  the same PR. The workspace is what makes that instruction executable: the
+  member resolves its sibling from the folder, so the pin may name a version
+  the merge has not published yet, and the root lock stays installable with
+  `--frozen-lockfile` (before the workspace, that same instruction was
+  unsatisfiable — an unpublished pin did not resolve, and a stale lock failed
+  the install — so the pin could only chase a publish). CI publishes on merge
   to `main` when the version differs
   from the registry — one consolidated workflow since 2026-10-28
   (`.github/workflows/publish.yml`, three jobs chained schema → crate → pi;

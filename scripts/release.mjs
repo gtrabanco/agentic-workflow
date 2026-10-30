@@ -438,7 +438,7 @@ function main() {
       // intent. The release commit (git add -A in the cut job) records it.
       for (const c of changesets) fs.unlinkSync(path.join(root, ".changeset", c.file));
       console.log(`consumed: removed ${changesets.length} applied changeset file(s) from .changeset/`);
-      console.log("note: exact pins moved with the train — run `bun install` in each touched package to refresh its lockfile before committing");
+      console.log("note: exact pins moved with the train — run `bun install` at the repository root to refresh the workspace lock before committing");
       console.log(`applied: ${packages.length} package.json version(s) + ${packages.length} CHANGELOG companion row(s)`);
     }
     const body = [...notesBodies];
