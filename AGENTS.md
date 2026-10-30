@@ -76,6 +76,13 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   directly; never stack PRs (a PR's base is always `main`).
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
+- **`human-revision-needed` blocks development.** An issue or PR carrying that
+  label is on hold: nothing is planned, implemented, committed or merged for it
+  until a human removes the label. It means "a plan is waiting for human review",
+  so an agent may apply it — and must then stop — but may never remove it, not
+  even when its own work looks finished. Vocabulary and semantics are owned by
+  `skills/triage-issue/references/LABELS.md`; this guide is the only place that
+  states the hold, and every skill honors it before acting.
 
 ---
 
