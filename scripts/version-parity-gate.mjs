@@ -155,6 +155,52 @@ export function isExactSemver(spec) {
   return SEMVER_RE.test(String(spec ?? "").trim());
 }
 
+/**
+ * What a manifest dependency spec says about the versions it accepts:
+ *
+ *   exact    `6.0.3` — one version, and the `--pins` half can verify it.
+ *   partial  `7` / `7.0` — a deliberate partial pin (AGENTS.md → Packages):
+ *            every patch of that major (or major.minor) is accepted, so the
+ *            spec names a range the lock resolves and the registry may move
+ *            inside. Nothing in the PR gate watches it; the scheduled watch
+ *            does, by comparing the registry's newest in-range release with
+ *            the version the committed lock resolves.
+ *   floating `^7.0.3`, `~7`, `*`, `latest`, `7.x`, `file:`, `workspace:`
+ *            — not a pin at all. The manifest tests refuse these for a
+ *            published package; the watch reports them instead of skipping
+ *            them silently, so one cannot hide in a package that has no such
+ *            test.
+ */
+export function specKind(spec) {
+  const value = String(spec ?? "").trim();
+  if (SEMVER_RE.test(value)) return "exact";
+  if (/^\d+$/u.test(value) || /^\d+\.\d+$/u.test(value)) return "partial";
+  return "floating";
+}
+
+/** True when `version` falls inside the range `spec` accepts (exact or partial). */
+export function matchesSpec(spec, version) {
+  const wanted = parseSemver(version);
+  if (!wanted) return false;
+  const value = String(spec ?? "").trim();
+  const kind = specKind(value);
+  if (kind === "exact") return value === String(version).trim();
+  if (kind !== "partial") return false;
+  const [major, minor] = value.split(".");
+  if (wanted.major !== Number(major)) return false;
+  return minor === undefined || wanted.minor === Number(minor);
+}
+
+/** The newest version of `versions` that `spec` accepts, or null. */
+export function newestMatching(versions, spec) {
+  let best = null;
+  for (const version of versions ?? []) {
+    if (!matchesSpec(spec, version)) continue;
+    if (best === null || semverGt(version, best)) best = version;
+  }
+  return best;
+}
+
 // ---------------------------------------------------------------------------
 // content mode (offline, deterministic)
 // ---------------------------------------------------------------------------
