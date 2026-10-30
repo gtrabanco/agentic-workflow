@@ -6,6 +6,9 @@ import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
 import { dirtyWorktreeWarning, receiptGuard } from "./receipt-guard.js";
 import { mergeGuard } from "./merge-guard.js";
+import { historyGuard } from "./history-guard.js";
+import { ciGuard } from "./ci-guard.js";
+import { costGuard } from "./cost-guard.js";
 import { ADVANCE_COMMAND, SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
 import { registerAdvanceCommand } from "./conductor-command.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
@@ -69,14 +72,18 @@ export interface ExtensionHandle<M extends ModelRef = ModelRef> {
   catalogue: Catalogue;
   /**
    * The Pi-free predicates the adapter (`index.ts`) binds to Pi's lifecycle
-   * events: the inline-receipt block guard, the merge guard (owner-only
-   * merges, issue #278), and the dirty-worktree notice. They travel with the
-   * handle so the entry stays a thin translation layer and the decisions are
-   * unit-tested with no session (issues #182, #278).
+   * events: the inline-receipt block guard, the owner-gated tool guards (merge,
+   * history, CI, cost — all config-gated, all off unless a project enables
+   * them), and the dirty-worktree notice. They travel with the handle so the
+   * entry stays a thin translation layer and the decisions are unit-tested with
+   * no session (issues #182, #278).
    */
   guards: {
     receiptGuard: typeof receiptGuard;
     mergeGuard: typeof mergeGuard;
+    historyGuard: typeof historyGuard;
+    ciGuard: typeof ciGuard;
+    costGuard: typeof costGuard;
     dirtyWorktreeWarning: typeof dirtyWorktreeWarning;
   };
 }
@@ -161,5 +168,5 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     handler: settingsHandler,
   });
 
-  return { router, catalogue, guards: { receiptGuard, mergeGuard, dirtyWorktreeWarning } };
+  return { router, catalogue, guards: { receiptGuard, mergeGuard, historyGuard, ciGuard, costGuard, dirtyWorktreeWarning } };
 }

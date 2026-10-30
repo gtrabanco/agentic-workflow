@@ -54,6 +54,14 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Feature 66 — the memory substrate is ask-first: nothing is provisioned
     // until the operator opts in.
     memory: { engram: false },
+    // Tool-call guards ship all-off: this repository's working rules, not a
+    // package opinion — a project opts in per guard in its config file.
+    guards: {
+      merge: false,
+      history: false,
+      ci: { create: false, run: false },
+      expensiveTests: { maxTokens: 0, patterns: [] },
+    },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });
