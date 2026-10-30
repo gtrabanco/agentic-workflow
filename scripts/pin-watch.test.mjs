@@ -13,7 +13,9 @@
  */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 
 import {
@@ -289,6 +291,132 @@ test("dedupe: the plan never mutates a manifest — it is issues only", () => {
   assert.deepEqual(Object.keys(plan).sort(), ["open", "reuse"]);
   for (const entry of plan.open) assert.deepEqual(Object.keys(entry).sort(), ["body", "dependency", "latest", "package", "pin", "title"]);
   assert.doesNotMatch(JSON.stringify(plan), /"version"\s*:/u, "no package.json payload — the watch reports, it never bumps (PE-005)");
+});
+
+// ---------------------------------------------------------------------------
+// partial pins (`7`, `7.0`) — a range the lock resolves and the registry moves
+// inside, so "behind" means the lock fell out of date, not that a major exists
+// ---------------------------------------------------------------------------
+
+const partialPackage = (spec = "7") => [
+  { name: PI, dir: "packages/pi-agentic-workflow", dependencies: { typescript: spec } },
+];
+
+test("partial pin: a lock behind the registry's newest in range is a finding naming both versions", () => {
+  const result = collectDrift({
+    packages: partialPackage("7"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => ["6.0.3", "7.0.0", "7.0.2", "7.1.0"],
+    resolveVersion: () => "7.0.2",
+  });
+
+  assert.equal(result.findings.length, 1);
+  const [finding] = result.findings;
+  assert.equal(finding.kind, "partial");
+  assert.equal(finding.pin, "7");
+  assert.equal(finding.resolved, "7.0.2");
+  assert.equal(finding.latest, "7.1.0", "the newest release INSIDE the pin's range, not the registry's latest");
+  assert.match(renderReport(result), /7\.0\.2 → 7\.1\.0 \(inside the partial pin `7`/u);
+  assert.match(planIssues({ findings: result.findings, openIssues: [] }).open[0].body, /partial pin \*\*7\*\*[\s\S]*7\.0\.2[\s\S]*7\.1\.0/u);
+});
+
+test("partial pin: the current lock is clean, and the watch says so instead of skipping", () => {
+  const result = collectDrift({
+    packages: partialPackage("7"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => ["7.0.0", "7.0.2"],
+    resolveVersion: () => "7.0.2",
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.checked, 1, "a partial pin is checked, not skipped");
+  assert.ok(result.notices.some((n) => /partial pin "7" is current \(lock 7\.0\.2/u.test(n.message)));
+});
+
+test("partial pin: a newer major outside the range is a notice, never drift", () => {
+  const result = collectDrift({
+    packages: partialPackage("6"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => ["6.0.3", "7.0.2"],
+    resolveVersion: () => "6.0.3",
+  });
+
+  assert.equal(result.findings.length, 0, "taking a new major is an owner decision, not drift");
+  assert.ok(
+    result.notices.some((n) => /7\.0\.2 is published outside the partial pin "6"/u.test(n.message)),
+    JSON.stringify(result.notices),
+  );
+  assert.equal(result.checked, 1);
+});
+
+test("partial pin: no resolved version in the lock is a notice — the watch cannot tell, so it does not pass", () => {
+  const result = collectDrift({
+    packages: partialPackage("7"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => ["7.0.2"],
+    resolveVersion: () => null,
+  });
+
+  assert.equal(result.findings.length, 0);
+  assert.ok(result.notices.some((n) => /lock carries no resolved version/u.test(n.message)));
+});
+
+test("partial pin: an unreachable registry degrades the entry, never fails it", () => {
+  const result = collectDrift({
+    packages: partialPackage("7"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => {
+      throw new Error("ECONNREFUSED");
+    },
+    resolveVersion: () => "7.0.2",
+  });
+
+  assert.equal(result.findings.length, 0, "a network blip must not redden a scheduled run");
+  assert.equal(result.degraded.length, 1);
+});
+
+test("a floating spec is never drift, and the report still names it", () => {
+  const result = collectDrift({
+    packages: [{ name: RUNNER, dir: "packages/agentic-workflow", dependencies: { typebox: "^1.4.3" } }],
+    fetchLatest: () => "1.4.3",
+    fetchVersions: () => ["1.4.3"],
+    resolveVersion: () => "1.4.3",
+  });
+
+  assert.equal(result.findings.length, 0, "a range is not a pin, so it cannot drift");
+  assert.equal(result.skipped.length, 1, "it is reported as skipped, with its reason");
+  assert.match(renderReport(result), /notice: .*typebox: "\^1\.4\.3" is not an exact pin/u);
+});
+
+test("the watch covers development pins, not just runtime ones", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "pin-watch-census-"));
+  try {
+    const manifest = (name, body) => {
+      mkdirSync(path.join(root, "packages", name), { recursive: true });
+      writeFileSync(path.join(root, "packages", name, "package.json"), JSON.stringify({ name, version: "1.0.0", ...body }, null, 2));
+    };
+    manifest("a", { dependencies: { runtime: "1.0.0" }, devDependencies: { compiler: "7" }, peerDependencies: { host: "*" } });
+    manifest("b", {});
+    const [pkgA] = watchedPackages({ root });
+    assert.deepEqual(Object.keys(pkgA.dependencies).sort(), ["compiler", "runtime"], "the compiler is a devDependency and must be watched");
+    assert.ok(!("host" in pkgA.dependencies), "peer ranges resolve against the host, not here");
+    assert.equal(watchedPackages({ root }).length, 2, "a new package is watched by existing");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a nightly outside the partial pin is not the news the report carries", () => {
+  const result = collectDrift({
+    packages: partialPackage("6"),
+    fetchLatest: () => "7.0.2",
+    fetchVersions: () => ["6.0.3", "7.0.2", "7.1.0-dev.20261030.1"],
+    resolveVersion: () => "6.0.3",
+  });
+
+  assert.equal(result.findings.length, 0);
+  const outside = result.notices.find((n) => /outside the partial pin/u.test(n.message));
+  assert.match(outside.message, /7\.0\.2 is published outside/u, "the stable release, not the nightly");
 });
 
 // ---------------------------------------------------------------------------
