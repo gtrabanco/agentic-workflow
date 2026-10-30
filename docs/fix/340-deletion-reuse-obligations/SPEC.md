@@ -114,8 +114,11 @@ One observable, testable criterion per S#; each names the check that proves it.
   the suite); the sweep run itself is model-executed and recorded in `## Log`.
 - **AC-Gate (issue AC7)** — all existing suites stay green except the two
   recorded pre-existing failures; context budgets re-based and PASS. Check:
-  `node scripts/run-root-suite.mjs` exits 0 with only the
-  `review-loop-discipline` pre-existing failure; both package suites pass;
+  `node scripts/run-root-suite.mjs` reports exactly one failing file — the
+  recorded pre-existing `review-loop-discipline` version pin — and therefore
+  exits **1** on it (1214 tests · 1213 pass · 1 fail; a red test and an
+  `exits 0` cannot both hold, so the gate's stated outcome is the exit-1
+  single-failure result); both package suites pass;
   `node scripts/check-skill-context.mjs --routes --budgets` exits 0.
 
 ## Impact
@@ -156,8 +159,13 @@ skills and gates.
   `skills/unit-lane/references/DESIGN.md`). Negative-capability pin: the
   single-owner assertions in `scripts/residue-dimensions.test.mjs` fail if a
   restatement (rule-name occurrence without an owner pointer) reappears
-  outside the owner file. Before-count: 1 restating paragraph
-  (`skills/review-change/SKILL.md` § Review charter). After-count target: 0.
+  outside the owner file. Before-count: **3** rule-name occurrences with no
+  owner pointer over the base tree `5824aab6`, as this unit's own pin reports
+  them — the restating paragraph (`skills/review-change/SKILL.md:98`
+  § Review charter) plus two unpointed mentions in
+  `skills/unit-lane/SKILL.md:105` and `skills/unit-lane/SKILL.md:127`. All
+  three were rewritten into owner-pointer lines; after-count: **0** (observed
+  at this head).
 
 No other surface is retired: the residue dimensions are additive and the
 existing `audit-docs` axes and `review-code` checklist items are composed, not
@@ -254,8 +262,9 @@ none — nothing was deferred.
   budgets (pre-existing drift + this change's growth, each named), run
   skill-lint, cut the changeset, run the residue sweeps over the seeded and
   clean fixtures and record the findings (validator:
-  `node scripts/run-root-suite.mjs` exits 0 with only the recorded
-  pre-existing failure; `node scripts/check-skill-context.mjs --routes --budgets`
+  `node scripts/run-root-suite.mjs` reports exactly one failing file — the
+  recorded pre-existing `review-loop-discipline` pin — and exits 1 on it;
+  `node scripts/check-skill-context.mjs --routes --budgets`
   exits 0; `node --test scripts/lint-changeset.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
   Relevant files: docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/
@@ -344,6 +353,19 @@ OPEN rows only.
   in its message): residue dimensions, two-way classification, review-code
   items, plan gates, design items + owner block, stage references, budgets
   re-base · see `git log`.
+- **L2** — 2026-10-30, correction — the external verifier's verdict, verbatim:
+  ```
+  Blockers: 4
+    B1 .pi/pi-agentic-workflow.json.staged:1 (untracked) — `audit-pr-gate.mjs hygiene` → `tree-clean: fail`, blocker names `?? .pi/pi-agentic-workflow.json.staged`
+    B2 planning-obligations.md:24 (O14) + SPEC.md:117 (AC-Gate) + SPEC.md:257 (P6 validator) — validator states `run-root-suite.mjs` "exits 0 with only the recorded review-loop-discipline failure"; observed exit 1 · 1214/1213/1. G1 claims the re-base fixed both E1 failures; only `check-skill-context.test.mjs` flipped
+    B3 planning-obligations.md:16 (O6) + SPEC.md:110/318 (AC-Fixture, E6) — "clean twin → 0 findings, seeded → exactly 4" does not reproduce: the fixture's `lib/main.js` exports `main` with zero consumers in both twins
+    B4 SPEC.md:159 (Retirements before-count, the required evidence of O13) — states "Before-count: 1"; the unit's own pin computes 3 offenders at base
+  Verdict: NEEDS-DECISION (4 open blockers)
+  ```
+  The AC-Gate check, the P6 validator, O14's validator cell and the Retirements
+  before-count are corrected in place — they are claims, not history. `G1` and
+  `E6` stand exactly as written: `G1` is answered by F2's line, `E6` by F3's,
+  and those `F` lines are the append-only correction.
 
 ## Next
 
