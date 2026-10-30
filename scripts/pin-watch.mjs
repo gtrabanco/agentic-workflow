@@ -8,9 +8,20 @@
  * PR-time `--pins` half of `version-parity-gate.mjs` already fails a pin whose
  * registry target has published a newer version. That gate only sees a PR.
  * This is the scheduled early warning in front of it: it looks at every package
- * that declares exact pins, and when one has drifted it files **one issue** —
- * naming the package, the pinned version and the published version — so the
- * upgrade lands as a deliberate human `fix(deps)` PR and never as a side effect.
+ * under `packages/` — runtime AND development pins, because the compiler and the
+ * typings are devDependencies and their majors are exactly what a weekly watch
+ * is for — and when one has drifted it files **one issue** naming the package and
+ * both versions, so the upgrade lands as a deliberate human `fix(deps)` PR and
+ * never as a side effect. A pin whose target is a local package under
+ * `packages/` is judged against that package's own version, read from the
+ * manifest: the same rule and the same evaluator the PR gate applies, so the
+ * watch cannot disagree with the gate.
+ *
+ * A **partial** pin (`7`, `7.0`) names a range the committed lock resolves and
+ * the registry moves inside, so the PR gate has nothing to compare: drift there
+ * means the lock fell behind the newest release inside that range. A newer major
+ * outside the range is a notice, never drift — taking a major is an owner
+ * decision. Nightlies are never news.
  *
  * A second half (issue #321) watches `serena-agent` on PyPI — installed vs
  * published — and files the same kind of drift issue. `serena-agent` is a tool
@@ -49,20 +60,29 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import { evaluatePins } from "./version-parity-gate.mjs";
+import {
+  evaluatePins,
+  localPackageVersions,
+  newestMatching,
+  packageDirs,
+  semverGt,
+  specKind,
+} from "./version-parity-gate.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "gtrabanco/agentic-workflow";
 
 /**
- * The packages whose exact `dependencies` pins are watched. Both are the ones
- * that declare any (PE-012): the Pi package (three pins after P1) and the
- * runner (typebox). A package with no exact pin contributes nothing rather
- * than erroring.
+ * The packages whose pins are watched: every package under `packages/`, derived
+ * from the tree — the same census the PR gate takes, so a new package is watched
+ * by existing. A package that declares no pin contributes nothing rather than
+ * erroring.
  */
 export function watchedPackages({ root = REPO_ROOT } = {}) {
   const packages = [];
-  for (const dir of ["packages/pi-agentic-workflow", "packages/agentic-workflow"]) {
+  // Derived from the tree: a new package is watched by existing, and a package
+  // the census forgets is exactly where a stale pin hides.
+  for (const dir of packageDirs(root)) {
     const manifest = path.join(root, dir, "package.json");
     let parsed;
     try {
@@ -70,7 +90,19 @@ export function watchedPackages({ root = REPO_ROOT } = {}) {
     } catch {
       continue; // A package that is not there is not this script's problem to report.
     }
-    packages.push({ name: parsed.name ?? dir, dir, dependencies: parsed.dependencies ?? {} });
+    // Runtime AND development pins: the compiler and the typings are
+    // devDependencies, and their versions are exactly what a weekly watch is
+    // for (a major that shows up outside a partial pin is news, not drift).
+    // peerDependencies stay out: they are ranges the host resolves.
+    packages.push({
+      name: parsed.name ?? dir,
+      dir,
+      dependencies: {
+        ...(parsed.dependencies ?? {}),
+        ...(parsed.optionalDependencies ?? {}),
+        ...(parsed.devDependencies ?? {}),
+      },
+    });
   }
   return packages;
 }
@@ -93,28 +125,106 @@ export function watchedPyPI() {
   ];
 }
 
+/** The committed lock, parsed. `bun.lock` is JSONC (trailing commas). */
+export function parseLock(text) {
+  return JSON.parse(String(text).replace(/,(\s*[}\]])/g, "$1"));
+}
+
 /**
- * Collect drift across every watched package. `fetchLatest(name)` returns the
- * registry's latest version or throws (the CLI wires it to `npm view`; the
- * suite injects fakes, so no test touches the network).
- *
- * The per-package decision is `evaluatePins` — the PR gate's own evaluator, not
- * a second implementation of the same rule.
+ * The lock that governs `dir`: the workspace root's — scripts/
+ * workspace-lock-policy.test.mjs owns that location, one lock for every member
+ * — or the package's own in a repository that has no workspace root.
  */
-export function collectDrift({ packages, fetchLatest }) {
+export function lockFileFor({ root = REPO_ROOT, dir }) {
+  for (const candidate of [path.join(root, "bun.lock"), path.join(root, dir, "bun.lock")]) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+/**
+ * The version the committed lock resolved for `dependency` in `dir`, or null.
+ * A workspace link (`name@workspace:packages/x`) is not a version, and a
+ * dependency the lock does not carry is not a silent pass either: the caller
+ * reports that the watch cannot tell whether the pin has moved.
+ */
+export function resolvedVersion({ root = REPO_ROOT, dir, dependency }) {
+  const file = lockFileFor({ root, dir });
+  if (!file) return null;
+  const entry = parseLock(fs.readFileSync(file, "utf8")).packages?.[dependency];
+  const spec = Array.isArray(entry) ? String(entry[0] ?? "") : "";
+  const version = spec.slice(spec.lastIndexOf("@") + 1);
+  return /^\d/u.test(version) ? version : null;
+}
+
+/** The newest of a version list, or null. */
+function newestOf(versions) {
+  let best = null;
+  for (const version of versions ?? []) if (best === null || semverGt(version, best)) best = version;
+  return best;
+}
+
+/** Releases only: a nightly is not the news a weekly watch reports. */
+const stableOnly = (versions) => (versions ?? []).filter((v) => !String(v).includes("-"));
+
+/**
+ * Collect drift across every watched package.
+ *
+ * `fetchLatest(name)` returns the registry's latest version or throws (the CLI
+ * wires it to `npm view`; the suite injects fakes, so no test touches the
+ * network), and `fetchVersions(name)` returns every published version — the
+ * input a partial pin needs. `localVersions` is the local sibling census the
+ * CLI reads from the tree: a pin on a package that lives in this repository is
+ * judged against that package's own version, the same rule the PR gate applies.
+ *
+ * An **exact** pin is decided by `evaluatePins` — the PR gate's own evaluator,
+ * not a second implementation of the same rule. A **partial** pin (`7`, `7.0`)
+ * is judged against the registry's newest release *inside the range it
+ * accepts*, compared with the version the committed lock resolves — the spec
+ * names a range, so "behind" means the lock has fallen out of date, not that a
+ * new major exists. A newer major outside the range is a notice, never drift:
+ * taking it is an owner decision. A spec that is not a pin at all is reported,
+ * not skipped, so one cannot hide in a package with no manifest test.
+ */
+export function collectDrift({
+  packages,
+  fetchLatest,
+  fetchVersions,
+  localVersions = {},
+  resolveVersion = resolvedVersion,
+  root = REPO_ROOT,
+}) {
   const findings = [];
   const degraded = [];
   const skipped = [];
   let checked = 0;
 
+  const notices = [];
+
   for (const pkg of packages ?? []) {
+    const exact = {};
+    const partial = [];
+    for (const [name, spec] of Object.entries(pkg.dependencies ?? {})) {
+      const kind = specKind(spec);
+      if (kind === "exact") exact[name] = spec;
+      else if (kind === "partial") partial.push([name, spec]);
+      // A floating spec is not a pin: the evaluator reports it as skipped with
+      // its reason, and the report prints every skipped entry as a notice.
+    }
+
     const result = evaluatePins({
       packageName: pkg.name,
       dependencies: pkg.dependencies ?? {},
       fetchLatest,
+      localVersions,
     });
-    checked += Object.keys(pkg.dependencies ?? {}).length - result.skipped.length;
-    skipped.push(...result.skipped.map((entry) => ({ ...entry, package: pkg.name, dir: pkg.dir })));
+    checked += Object.keys(exact).length;
+    const partialNames = new Set(partial.map(([name]) => name));
+    skipped.push(
+      ...result.skipped
+        .filter((entry) => !partialNames.has(entry.name))
+        .map((entry) => ({ ...entry, package: pkg.name, dir: pkg.dir })),
+    );
     degraded.push(...result.degraded.map((entry) => ({ ...entry, package: pkg.name })));
     for (const violation of result.violations) {
       findings.push({
@@ -123,11 +233,52 @@ export function collectDrift({ packages, fetchLatest }) {
         dependency: violation.name,
         pin: violation.pin,
         latest: violation.latest,
+        localVersion: violation.localVersion,
       });
+    }
+
+    for (const [name, spec] of partial) {
+      let versions;
+      try {
+        versions = fetchVersions(name);
+      } catch (err) {
+        degraded.push({ package: pkg.name, name, message: `registry unreachable for ${name}: ${String(err?.message ?? err).split("\n")[0]}` });
+        continue;
+      }
+      checked += 1;
+      const stable = stableOnly(versions);
+      const newest = newestMatching(stable, spec);
+      const resolved = resolveVersion({ root, dir: pkg.dir, dependency: name });
+      if (newest === null) {
+        degraded.push({ package: pkg.name, name, message: `the registry lists no ${name} release inside the partial pin "${spec}" — nothing to compare` });
+        continue;
+      }
+      if (resolved === null) {
+        notices.push({
+          package: pkg.name,
+          message: `${name}: partial pin "${spec}" but the lock carries no resolved version — the watch cannot tell whether the pin has moved (run bun install and commit the lock)`,
+        });
+        continue;
+      }
+      if (semverGt(newest, resolved)) {
+        findings.push({ package: pkg.name, dir: pkg.dir, dependency: name, pin: spec, resolved, latest: newest, kind: "partial" });
+      } else {
+        notices.push({
+          package: pkg.name,
+          message: `${name}: partial pin "${spec}" is current (lock ${resolved}; newest in range ${newest})`,
+        });
+      }
+      const newestOverall = newestOf(stable);
+      if (newestOverall !== null && semverGt(newestOverall, newest)) {
+        notices.push({
+          package: pkg.name,
+          message: `${name}: ${newestOverall} is published outside the partial pin "${spec}" — a major upgrade is an owner decision, not drift`,
+        });
+      }
     }
   }
 
-  return { ok: findings.length === 0, findings, degraded, skipped, checked };
+  return { ok: findings.length === 0, findings, degraded, skipped, notices, checked };
 }
 
 /** The stable token an issue title carries, so a later run recognises its own issue. */
@@ -169,8 +320,14 @@ export function issueFor(finding, { repo = REPO } = {}) {
     latest: finding.latest,
     title: `chore(deps): pin drift in ${marker}`,
     body: [
-      `\`${finding.package}\` pins \`${finding.dependency}\` at **${finding.pin}**,`,
-      `but the registry published **${finding.latest}**.`,
+      finding.kind === "partial"
+        ? `\`${finding.package}\` pins \`${finding.dependency}\` with the deliberate partial pin **${finding.pin}**;`
+        : `\`${finding.package}\` pins \`${finding.dependency}\` at **${finding.pin}**,`,
+      finding.kind === "partial"
+        ? `the committed lock resolves **${finding.resolved}**, and the registry has **${finding.latest}** inside that range.`
+        : finding.localVersion
+          ? `but the local package in this repository carries **${finding.localVersion}**.`
+          : `but the registry published **${finding.latest}**.`,
       "",
       "Reported by the scheduled pin watch (`scripts/pin-watch.mjs`, feature 67",
       "AC2 / issue #219). The PR-time `version-parity-gate.mjs --pins` half fails",
@@ -181,10 +338,17 @@ export function issueFor(finding, { repo = REPO } = {}) {
       "Nothing is bumped automatically — dependency upgrades are never side effects",
       "of other work.",
       "",
+      finding.repoUrl ? `Release notes: ${finding.repoUrl}` : null,
+      "Read the release notes that cover this window before bumping, and record in",
+      "the PR which changes matter here and which do not: the watch names the",
+      "version that moved, not what it changed.",
+      "",
       `Watched manifest: \`${finding.dir}/package.json\``,
       `Resolve by closing this issue from that PR (a \`Closes\` footer keeps the trace).`,
       `Repository: ${repo}`,
-    ].join("\n"),
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
   };
 }
 
@@ -209,22 +373,36 @@ const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one :
 
 /** The fixed human report. */
 export function renderReport(result, { repo = REPO } = {}) {
-  const lines = [`PIN-WATCH — ${repo}`, `exact pins checked: ${result.checked}`];
+  const lines = [`PIN-WATCH — ${repo}`, `pins checked: ${result.checked}`];
   for (const entry of result.skipped) lines.push(`notice: ${entry.package ?? entry.name}: ${entry.message}`);
+  for (const entry of result.notices ?? []) lines.push(`notice: ${entry.package ? `${entry.package}: ` : ""}${entry.message}`);
   for (const entry of result.degraded) lines.push(`::warning::${entry.message} — watch degraded, not failed`);
   for (const finding of result.findings) {
     if (finding.registry === "pypi.org") {
       lines.push(`drift: ${finding.name} ${finding.installed} → ${finding.latest} (pypi.org)`);
+    } else if (finding.kind === "partial") {
+      lines.push(
+        `drift: ${finding.package} · ${finding.dependency} ${finding.resolved} → ${finding.latest} ` +
+          `(inside the partial pin \`${finding.pin}\`; the lock has fallen behind the range)`,
+      );
+    } else if (finding.localVersion) {
+      lines.push(
+        `drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.localVersion} (local package version)`,
+      );
     } else {
       lines.push(`drift: ${finding.package} · ${finding.dependency} ${finding.pin} → ${finding.latest}`);
     }
   }
   if (result.findings.length === 0) {
-    lines.push(`no drift — every exact pin matches the registry's latest (+${plural(result.degraded.length, "degraded entry", "degraded entries")})`);
+    lines.push(
+      `no drift — every exact pin matches the registry's latest or its local package version, ` +
+        `and every partial pin matches the newest release in its range ` +
+        `(+${plural(result.degraded.length, "degraded entry", "degraded entries")})`,
+    );
     lines.push(`VERDICT: PASS${result.degraded.length > 0 ? " (degraded)" : ""}`);
   } else {
     lines.push(
-      `drift: ${plural(result.findings.length, "pin")} behind the registry — ` +
+      `drift: ${plural(result.findings.length, "pin")} out of parity — ` +
         `fix with a deliberate \`fix(deps)\` PR (bump the pin + the package version + its CHANGELOG row)`,
     );
     lines.push("VERDICT: DRIFT");
@@ -382,6 +560,41 @@ export function collectPyPIDrift({ packages, fetchLatest, readInstalled = instal
   return { ok: findings.length === 0, findings, degraded, skipped, checked };
 }
 
+/** The repository URL a finding's release notes live under, or null. */
+function npmRepoUrl(name) {
+  const r = spawnSync("npm", ["view", name, "repository.url", "homepage", "--json"], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (r.status !== 0 || r.error) return null;
+  try {
+    const info = JSON.parse(r.stdout);
+    const repo = typeof info?.["repository.url"] === "string" ? info["repository.url"] : "";
+    const url = repo.replace(/^git\+/u, "").replace(/\.git$/u, "");
+    if (/^https?:\/\//u.test(url)) return `${url}/releases`;
+    return typeof info?.homepage === "string" && info.homepage !== "" ? info.homepage : null;
+  } catch {
+    return null;
+  }
+}
+
+/** `npm view <name> versions --json` as the in-range fetcher; throws on failure. */
+function npmVersions(name) {
+  const r = spawnSync("npm", ["view", name, "versions", "--json"], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+    timeout: 30_000,
+  });
+  if (r.status !== 0 || r.error) {
+    throw new Error((r.stderr || r.error?.message || "npm view versions failed").trim().split("\n")[0]);
+  }
+  const parsed = JSON.parse(r.stdout);
+  return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+}
+
 /** npm view as the registry fetcher; throws on any failure (the degraded path). */
 export function npmLatest(name) {
   const result = spawnSync("npm", ["view", name, "version"], {
@@ -443,18 +656,33 @@ function main(argv) {
     return 2;
   }
 
-  const npmResult = collectDrift({ packages: watchedPackages(), fetchLatest: npmLatest });
+  const npmResult = collectDrift({
+    packages: watchedPackages(),
+    fetchLatest: npmLatest,
+    fetchVersions: npmVersions,
+    localVersions: localPackageVersions(),
+  });
   const pypiResult = collectPyPIDrift({ packages: watchedPyPI(), fetchLatest: pypiLatest });
   // Merge: both must pass for overall clean
   const allFindings = [...npmResult.findings, ...pypiResult.findings];
   const allDegraded = [...npmResult.degraded, ...pypiResult.degraded];
   const allSkipped = [...npmResult.skipped, ...pypiResult.skipped];
   const checked = npmResult.checked + pypiResult.checked;
-  const result = { ok: allFindings.length === 0, findings: allFindings, degraded: allDegraded, skipped: allSkipped, checked };
+  const allNotices = [...(npmResult.notices ?? []), ...(pypiResult.notices ?? [])];
+  const result = { ok: allFindings.length === 0, findings: allFindings, degraded: allDegraded, skipped: allSkipped, notices: allNotices, checked };
   if (json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   else process.stdout.write(`${renderReport(result, { repo })}\n`);
 
   if (!fileIssues) return result.ok ? 0 : 1;
+
+  // A finding names the version that moved; where it moved from is what the
+  // reader needs next, so the issue carries the release-notes URL when the
+  // registry knows one. Best effort: an unreachable registry leaves it out.
+  for (const finding of result.findings) {
+    if (finding.registry !== "pypi.org" && finding.repoUrl === undefined) {
+      finding.repoUrl = npmRepoUrl(finding.dependency);
+    }
+  }
 
   if (result.findings.length === 0 && pypiResult.findings.length === 0) return 0;
 

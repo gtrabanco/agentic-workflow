@@ -11,12 +11,13 @@ name: Root suite
 # which cannot see a repository-wide drift gate. This job runs on every change
 # to any path, because the suites read the whole tree.
 #
-# No `bun install` at the repository root: there is no root package. The one
-# prerequisite is the schema package's build output, which
-# `scripts/schema-runtime.mjs` resolves as `packages/agentic-workflow-schema/dist`
-# and which is gitignored — the pre-execution fixtures symlink `packages/` into a
-# temp repo and require it, so without the build those suites fail on a missing
-# module rather than on a defect.
+# The workspace root installs once: `packages/*` are members of a private root
+# `package.json`, so a sibling dependency resolves from the folder and no package
+# carries a lock of its own. The one prerequisite beyond that install is the
+# schema package's build output, which `scripts/schema-runtime.mjs` resolves as
+# `packages/agentic-workflow-schema/dist` and which is gitignored — the
+# pre-execution fixtures symlink `packages/` into a temp repo and require it, so
+# without the build those suites fail on a missing module rather than on a defect.
 
 on:
   push:
@@ -92,7 +93,7 @@ jobs:
   # Compatibility guard for @gtrabanco/pi-agentic-workflow (issue #283): the
   # package's own tsc only runs in publish.yml (D-40-12, consolidated from
   # publish-pi-package.yml) — post-merge, and
-  # against the pi version the frozen bun.lock pins — so a pi API change could
+  # against the pi version the frozen workspace lock pins — so a pi API change could
   # reach main unseen. This job type-checks src/ against TWO pi legs, both
   # installed OUTSIDE the lockfile path (temp copy + `npm install --no-save
   # --no-package-lock`; an npm lockfile under packages/ is refused by

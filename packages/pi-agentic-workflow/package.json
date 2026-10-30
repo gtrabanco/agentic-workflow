@@ -43,14 +43,15 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:deps": "bun run --cwd ../agentic-workflow-schema build",
     "bundle:skills": "bun scripts/bundle-skills.mjs",
     "clean:skills": "bun scripts/bundle-skills.mjs --clean",
     "test": "bun run bundle:skills && tsc && bun test test/*.test.mjs",
     "test:node": "bun run bundle:skills && tsc && node --test test/*.test.mjs",
-    "prepublishOnly": "bun run build && bun run bundle:skills && bun run test",
+    "prepublishOnly": "bun run build:deps && bun run build && bun run bundle:skills && bun run test",
     "postpack": "bun run clean:skills",
     "mutation": "bun run bundle:skills && bun scripts/mutation-check.mjs",
-    "prepare": "bun run build && bun run bundle:skills"
+    "prepare": "bun run build:deps && bun run build && bun run bundle:skills"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=0.99.1",
@@ -62,6 +63,6 @@
   },
   "devDependencies": {
     "@types/node": "24.13.3",
-    "typescript": "6.0.3"
+    "typescript": "7"
   }
 }

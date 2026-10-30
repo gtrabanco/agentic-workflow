@@ -3,14 +3,27 @@ name: Pin watch
 # The early warning in front of the PR-time pin gate (feature 67 P3, AC2, issue
 # #219 decision D1's addendum; obligation O3).
 #
-# Every exact `dependencies` pin in this repository must match the registry: a
-# pin is deliberate (AGENTS.md → Packages — a fresh install has to reproduce the
-# lockfile byte-for-byte), and a pin that has fallen behind is invisible until
-# someone opens a PR, because `version-parity-gate.mjs --pins` only runs there.
-# So this job asks the registry on a schedule and, when a pin is behind, files
-# ONE tracking issue naming the package, the pinned version and the published
-# version — reusing the issue already open for that dependency instead of filing
-# a second one.
+# Every pin in this repository — runtime AND development, in every package under
+# `packages/` — is supposed to match what the registry offers, and a pin that has
+# fallen behind is invisible until someone opens a PR: `version-parity-gate.mjs
+# --pins` only runs there, and it verifies exact pins only. So this job asks the
+# registry once a week and, when a pin is behind, files ONE tracking issue naming
+# the package, the version the lock resolved and the version the registry has —
+# reusing the issue already open for that dependency instead of filing a second.
+#
+# Three spec kinds, three answers:
+#   exact (`6.0.3`)   the registry's latest is above the pin  ⇒ drift.
+#   partial (`7`)     the registry's newest release INSIDE the range is above
+#                     the version the committed lock resolves ⇒ drift. A newer
+#                     major outside the range is a NOTICE, never drift: taking a
+#                     major is an owner decision (AGENTS.md → Packages).
+#   floating (`^7`)   reported as skipped with its reason — a range cannot be
+#                     watched, and it must not pass in silence either.
+# Nightlies never count as news: the report compares against released versions.
+#
+# The issue points at the dependency's release notes and asks the reader to
+# record which changes matter here before bumping — the watch names the version
+# that moved, not what it changed.
 #
 # It never bumps anything. Dependency upgrades stay deliberate human
 # `fix(deps)` PRs on a cadence; a bot that edits pins would turn them into side
@@ -57,7 +70,7 @@ jobs:
       # The watch reads each package's manifest directly and spawns `npm view`
       # for the registry and `gh` for the issues — no install step, because it
       # imports nothing outside node builtins (and the pin gate's own evaluator).
-      - name: Watch every exact dependency pin
+      - name: Watch every dependency pin (runtime and development)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/pin-watch.mjs --file-issues
