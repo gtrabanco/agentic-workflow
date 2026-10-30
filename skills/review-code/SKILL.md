@@ -1,7 +1,7 @@
 ---
 name: review-code
 user-invocable: false
-version: 1.3.0
+version: 4.10.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
