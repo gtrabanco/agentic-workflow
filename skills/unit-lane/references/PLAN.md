@@ -121,7 +121,11 @@ it is never out of scope for the executor.
 Every retirement the design step declared (S8) becomes **its own task**: a
 deliberate deletion gets the same rigor as a deliberate construction — task,
 validator, evidence row — because an ad-hoc deletion skips evidence and a
-planned one cannot. Three pieces per retirement task:
+planned one cannot. A replacement is a retirement: a task that supersedes an
+existing part (a feature changed for another, a function/code path that does
+the same or better) declares the superseded part retired, and its deletion
+task follows the same three pieces (#340, replace-implies-delete). Three
+pieces per retirement task:
 
 - **the negative-capability pin** — the test proving the removed thing cannot
   return (`grep -c '<removed name>' <scope>` → 0, or a suite that fails if the
@@ -189,6 +193,9 @@ name those files instead.
 - [ ] Every question asked was recorded in `decisions.md` with its resolution (or the questions pane says `none`)
 - [ ] Every AC maps to at least one task, and no task re-decides an AC
 - [ ] Every retirement the design declared is its own task, carrying the negative-capability pin as its validator plus the sweep grep and the before/after reference count — or the plan states why nothing can be removed
+- [ ] The plan obeys the all-stages no-assumption rule — **ask-don't-infer**, owner `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`); a claim no source settles is asked, never invented
+- [ ] Reuse-first (#340): every task that adds functionality names the pre-existing parts it reuses (functions, scripts, skills, schemas, prose surfaces) — or records why reuse is not possible; a task that re-implements an existing part without saying why does not pass
+- [ ] Replace-implies-delete (#340): every task that changes a feature for another, or adds a function/code path that supersedes an existing one, carries the superseded part's deletion as its own planned task with its evidence — and where no superseded part exists, nothing is deleted: the obligation exists when the case exists, never as a ritual
 - [ ] Tasks are ordered smallest first
 - [ ] Each task names its validator (a backticked command plus its expected outcome)
 - [ ] Final task is verification (proves the whole unit works); a unit that

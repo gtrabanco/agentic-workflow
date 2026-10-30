@@ -16,7 +16,9 @@ description: >
 
 Composed by `review-change` / `product-audit` within their conversation — on any
 agent, follow this file inline as the routed step. **Findings only; never edits,
-never refactors.**
+never refactors.** Questions an unclear expectation raises obey the all-stages
+no-assumption rule — **ask-don't-infer**, owner
+`skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`).
 
 ## Scope
 
@@ -56,6 +58,25 @@ default branch. State the scope at the top of the returned table.
   reliably than repairing it? If yes → route `fix-now (delete)`, not
   `fix-now (repair)`. This is the deletion mandate: design and plan produce
   retirements as first-class deliverables.
+✓ **Unused code routes two ways (#340)** — every unconsumed symbol (or
+  unreferenced prose block) is a deletion candidate routed through the
+  classifier's two-way rule (`review-implementation`, `CLASSIFY.md`):
+  delivered-feature-without-consumer → bug finding; orphaned by a requested
+  replacement/removal → `fix-now (delete)`. The row cites what requested the
+  feature and what replaced it — the two classes are never conflated
+✓ **Duplication is a deletion candidate (#340)** — a duplicated block,
+  checklist or contract (code or prose) proposes its own deletion, or carries
+  the recorded reason the copy must exist; a silent duplicate is a finding
+✓ **Features-preserved-without-it (#340)** — after any proposed deletion
+  (code or skill prose; "code" includes prose), verify every requested
+  feature still works without the removed part before merge; a deletion that
+  breaks a requested feature is a finding, not a cleanup
+✓ **Removal-feature cascade (#340)** — a change whose purpose is to remove a
+  feature deletes the code **and** its documentation **and** every sibling
+  mention the context makes necessary, with one sweep declaration per deleted
+  truth (`swept: /<pattern>/<flags> → expected <n> in <glob>`); when the
+  cascade's extent is unclear, the reviewer researches, understands and
+  contrasts — it does not guess the cascade's extent
 
 ## Materiality bar
 

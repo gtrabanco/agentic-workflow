@@ -95,8 +95,10 @@ survives the attempt, that survival *is* the review outcome. So:
   or the requirement leaves the user's expectation unclear, surface it as a
   question in non-technical terms (a technical user asks for an app; a
   non-technical user asks for “an app to measure my heart rate”) — never as an
-  assumed intent. This extends ask-don't-infer from acceptance criteria to every
-  expectation the change is judged against.
+  assumed intent. This review applies the all-stages no-assumption rule —
+  **ask-don't-infer**, owner `skills/unit-lane/references/DESIGN.md`
+  (`ask-dont-infer@1`) — to every expectation the change is judged against;
+  the rule is owned there, never restated here.
 - **Repo-wide hunting is not this review.** Open-ended bug hunting, security
   research and broken-version investigation *across the repository* belong to
   `product-audit`, where the sweep is scoped and budgeted; this review stays on

@@ -102,7 +102,8 @@ create it from the tree the unit belongs to:
 For `--fix`/`--from-issue`, read the tracked issue in the forge first and keep
 its number; the folder name carries it (`fix/<issue-number>-<topic>`). Fill
 objective, why, user outcome, and non-goals from the invocation (or the issue).
-Acceptance criteria are induced from user scenarios — **ask-don't-infer**; if the
+Acceptance criteria are induced from user scenarios — **ask-don't-infer**
+(owner: `references/DESIGN.md`, block `ask-dont-infer@1`); if the
 request is too vague, STOP and ask the user with concrete options. Open
 decisions that are not acceptance criteria run through the design step's
 **gap interview** — one batched form-turn with recommended options + why,
@@ -124,7 +125,8 @@ The two steps that own this are their reference files, not this conductor —
 
 - the **design** step carries the three-direction closure (backward: the
   constraints in force; sideways: callers and consumers of what changes;
-  forward: every promise coined, behind the **ask-don't-infer** and
+  forward: every promise coined, behind the **ask-don't-infer**
+  (owner: `references/DESIGN.md`, block `ask-dont-infer@1`) and
   **document-or-don't-coin** gates) and the **retirements** the unit declares.
 - the **plan** step turns every declared retirement into its own task carrying
   the negative-capability pin, the sweep grep and the before/after reference

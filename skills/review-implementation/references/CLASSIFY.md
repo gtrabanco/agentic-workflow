@@ -142,6 +142,25 @@ depends on whether the final `Hardening & PR` phase has already run:
 
 The finding is not folded directly; it is folded by the new phase(s).
 
+### Unused code routes two ways, never conflated (#340)
+
+An unused-code finding — code, or skill prose under the same rule, that nothing
+consumes — classifies exactly one way, and the two classes never merge:
+
+- **Delivered feature, no consumer** — the code was written as part of a
+delivered feature and **no functionality invokes it**: the feature was not
+implemented completely → **bug finding**. Class `fix-now`; the missing half
+(the consumer or the delivery) is folded — **deletion is not the fix** for
+this class.
+- **Orphaned by a requested change** — the code lost its consumer because a
+requested change **replaced or removed** that feature or part: **marked for
+deletion** → `fix-now (delete)`, not a bug. The deletion is a planned task
+with its negative-capability pin, sweep grep and surviving-reference count
+(the plan step's retirement shape).
+
+The row cites what requested the original feature and what replaced it; an
+unused-code row without both citations is not classifiable.
+
 ### Decision table
 
 For every finding, give the reasoning columns. Example (generic — your findings,
@@ -152,6 +171,8 @@ your domains):
 | API token committed in a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | fold into phase |
 | New export endpoint has no failure-mode test | tests | med | fix-now | Untested error path | Low | Regression risk | no | fold into phase |
 | Fixing this backend bug pulls in an auth redesign | correctness | high | decision-required | Unavoidable product/architecture decision | — | Blocking | no | surface decision, block |
+| Exported helper of a delivered feature that nothing invokes | residue | med | fix-now | The unit shipped half of what was asked — the consumer was never delivered (bug, not cleanup) | Low (deliver the consumer or fold the missing half) | Feature stays incomplete | no | fold into phase |
+| Module orphaned by the unit's own replacement of its feature | residue | med | fix-now (delete) | Superseded part left behind by a requested change | Low (delete + sweep declaration) | Dead weight grows | no | fold deletion task |
 | Rate limiter reusable across the fleet | architecture | low | proposal | Independent of this unit (D3) | — | — | yes | batch proposal + trigger |
 | Single-caller wrapper around a stdlib call | overengineering | low | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
 

@@ -230,6 +230,10 @@ table: [`FOLD_PROCESS.md`](references/FOLD_PROCESS.md) §Batch classification.
 
 ## Guardrails
 
+- The all-stages no-assumption rule binds fold work — **ask-don't-infer**, owner
+  `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`): a repair the
+  evidence does not settle is researched and asked about, never assumed.
+
 Scope is the ledger (or explicit ID subset); unlisted discoveries are proposals
 for user triage. Batch only when one root-cause correction, validator set and
 rollback boundary own the rows: one commit/push, individual ticks/lines. Split
