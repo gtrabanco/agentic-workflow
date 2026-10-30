@@ -159,6 +159,9 @@ security items to track first").
 
 ## Guardrails
 
+- **The all-stages no-assumption rule binds this audit** — **ask-don't-infer**,
+  owner `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`); an
+  unevidenced expectation is asked, never invented.
 - **Never auto-fixes, never opens issues, never edits the roadmap.** Output is a
   report + proposals; **every action is the user's decision.** The one file this
   skill writes is its own report under `docs/audits/` (plus `mkdir -p

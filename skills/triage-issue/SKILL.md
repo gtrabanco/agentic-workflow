@@ -107,6 +107,9 @@ audit findings and fold ledger.
 
 ## Guardrails
 
+- The all-stages no-assumption rule binds verification work — **ask-don't-infer**,
+  owner `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`): a trigger
+  the tree does not evidence is checked and asked about, never assumed.
 - Don't build deferred work just because asked to "look at" the issue — surface
   that the trigger is unmet and stop.
 - Keep issues, the fix index, and docs in sync with reality.

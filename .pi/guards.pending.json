@@ -1,0 +1,19 @@
+{
+  "_comment": "Stash of the guards block, preserved on 2026-10-30. The installed @gtrabanco/pi-agentic-workflow (0.37.0) does not support the guards config key and its strict validator rejects the whole file when it is present (see issue #346), so this block was moved out of pi-agentic-workflow.json to restore skill dispatch. When the installed package ships guards support (4.10.0 train or later), merge this object back into pi-agentic-workflow.json under the key 'guards' and delete this file.",
+  "guards": {
+    "merge": true,
+    "history": true,
+    "ci": {
+      "create": true,
+      "run": true
+    },
+    "expensiveTests": {
+      "maxTokens": 100000,
+      "patterns": [
+        { "match": "\\bbun run mutation\\b", "tokens": 120000 },
+        { "match": "\\bbun scripts/mutation-check\\.mjs\\b", "tokens": 120000 },
+        { "match": "\\bpi\\s+-p\\b", "tokens": 50000 }
+      ]
+    }
+  }
+}
