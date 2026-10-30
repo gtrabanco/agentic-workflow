@@ -23,19 +23,21 @@
  *               2026-10-15: registry 0.19.1's bundle 5 files behind main's
  *               skills/; schema pin 4.5.0 vs registry 4.6.0).
  *
- *   --pins      Online + offline. For every exact `dependencies` pin whose
- *               target has a local sibling package under `packages/`, the pin
- *               must equal the LOCAL package version (the one this merge
- *               publishes) — a pin behind it recreates the post-publish red
- *               window, a pin ahead of everything points at a version that
- *               will never exist; this check is offline-deterministic and
- *               holds even when the registry is unreachable. Without a local
- *               sibling, the registry's latest is compared against the pin;
- *               registry > pin ⇒ fail with the fix in the message ("bump the
- *               pin + the package version in the same PR"). A registry that
- *               cannot be reached is a clearly-degraded pass (visible
- *               ::warning::, exit 0) — a network blip must never redden a PR
- *               no commit caused (AC3).
+ *   --pins      Online + offline. For EVERY package under `packages/` (not just
+ *               the Pi one) and every exact `dependencies` pin whose target has
+ *               a local sibling package, the pin must equal the LOCAL package
+ *               version (the one this merge publishes) — a pin behind it
+ *               recreates the post-publish red window, a pin ahead of
+ *               everything points at a version that will never exist; this
+ *               check is offline-deterministic and holds even when the
+ *               registry is unreachable. Both sides are read from the two
+ *               manifests, never from a number written in a test or a doc.
+ *               Without a local sibling, the registry's latest is compared
+ *               against the pin; registry > pin ⇒ fail with the fix in the
+ *               message ("bump the pin + the package version in the same PR").
+ *               A registry that cannot be reached is a clearly-degraded pass
+ *               (visible ::warning::, exit 0) — a network blip must never redden
+ *               a PR no commit caused (AC3).
  *               peerDependencies and non-exact specs are skipped with a notice
  *               (peer ranges are ranges by nature; the exact-pin rule for
  *               `dependencies` is the package's own lockfile-policy test's job).
@@ -49,7 +51,9 @@
  *   node scripts/version-parity-gate.mjs --pins   [--package <dir>]
  *
  * --base defaults to origin/main when it resolves, else main. --package
- * defaults to packages/pi-agentic-workflow.
+ * narrows --pins to one package directory; by default every package under
+ * `packages/` is checked, because a pin is a fact about two manifests and the
+ * package a run forgets to name is the one a stale pin hides in.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -532,23 +536,32 @@ export function localPackageVersions() {
 }
 
 function runPins({ packageDir }) {
-  const pkgJsonPath = path.join(packageDir, "package.json");
-  const pkg = JSON.parse(fs.readFileSync(path.resolve(REPO_ROOT, pkgJsonPath), "utf8"));
-  const packageName = pkg.name ?? packageDir;
-  const result = evaluatePins({
-    packageName,
-    dependencies: pkg.dependencies ?? {},
-    fetchLatest: npmLatest,
-    localVersions: localPackageVersions(),
+  const dirs = packageDir ? [packageDir] : packageDirs();
+  if (dirs.length === 0) failUsage(`no package manifests under ${path.join(REPO_ROOT, "packages")}`);
+  const localVersions = localPackageVersions();
+  const results = dirs.map((dir) => {
+    const pkg = JSON.parse(fs.readFileSync(path.resolve(REPO_ROOT, dir, "package.json"), "utf8"));
+    const packageName = pkg.name ?? dir;
+    const dependencies = pkg.dependencies ?? {};
+    return {
+      packageName,
+      dependencies,
+      ...evaluatePins({ packageName, dependencies, fetchLatest: npmLatest, localVersions }),
+    };
   });
-  console.log(`VERSION-PARITY-GATE (pins) — ${packageName}`);
-  console.log(`exact pins checked: ${Object.keys(pkg.dependencies ?? {}).length - result.skipped.length}`);
-  for (const s of result.skipped) console.log(`notice: ${s.message}`);
-  for (const n of result.notices) console.log(`notice: ${n.message}`);
-  for (const d of result.degraded) console.log(`::warning::${d.message} — gate degraded, not failed (AC3)`);
-  for (const v of result.violations) console.log(v.message);
-  console.log(`VERDICT: ${result.violations.length === 0 ? "PASS" : "FAIL"}${result.degraded.length ? " (degraded)" : ""}`);
-  process.exit(result.violations.length === 0 ? 0 : 1);
+  const violations = results.flatMap((r) => r.violations);
+  const degraded = results.flatMap((r) => r.degraded);
+  console.log(`VERSION-PARITY-GATE (pins) — ${results.map((r) => r.packageName).join(", ")}`);
+  console.log(`local packages read from packages/*/package.json: ${Object.entries(localVersions).map(([n, v]) => `${n}@${v}`).join(", ") || "none"}`);
+  for (const r of results) {
+    console.log(`[${r.packageName}] exact pins checked: ${Object.keys(r.dependencies).length - r.skipped.length}`);
+    for (const s of r.skipped) console.log(`notice: ${s.message}`);
+    for (const n of r.notices) console.log(`notice: ${n.message}`);
+    for (const d of r.degraded) console.log(`::warning::${d.message} — gate degraded, not failed (AC3)`);
+    for (const v of r.violations) console.log(v.message);
+  }
+  console.log(`VERDICT: ${violations.length === 0 ? "PASS" : "FAIL"}${degraded.length ? " (degraded)" : ""}`);
+  process.exit(violations.length === 0 ? 0 : 1);
 }
 
 // ---------------------------------------------------------------------------
