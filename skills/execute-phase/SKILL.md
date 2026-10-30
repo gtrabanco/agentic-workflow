@@ -263,6 +263,11 @@ These files must be loaded when their topic is active:
 
 ## Guardrails
 
+- The all-stages no-assumption rule binds every step here — **ask-don't-infer**,
+  owner `skills/unit-lane/references/DESIGN.md` (`ask-dont-infer@1`): an
+  expectation the tree, the docs, or a prior owner decision does not evidence
+  is asked, never invented.
+
 **Allowed:**
 - Only the triaged steps listed by the unit doc's Evidence header
 - Changes scoped to the acceptance criteria and step tasks

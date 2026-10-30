@@ -336,24 +336,29 @@ assert.match(foldPolicy, /BLOCKED/);
 assert.match(foldPolicy, /missing input/);
 assert.match(foldPolicy, /materializ/);
 
-// 10j. Version — fold-findings is bumped for this contract. The exact pin is
-// maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
-// conditional replan destination), fix #244 moved it 1.5.0 → 1.5.1
-// (the freeze-batch consumer contract), feature 32 moved it 1.5.1 → 1.6.0
-// (sole-flipper provenance cited to the ledger-ownership map), the lane
-// reference migration moved it 1.6.0 → 1.7.0 (the #244 consumer now names
-// `/unit-lane`, the lane command the router prints), issue #293 moved it
-// 1.7.0 → 1.8.0 (the freeze-batch gains the product-owner class), and fix
-// #258 moved it 1.8.0 → 1.9.0 (the fold's scope rule: change + dependents,
-// survivors swept in the same batch), and issue #308 moved it 1.9.0 → 1.9.1
-// (the fold ledger read probes the unit doc's carrier first, never both), and the
-// #308 review fold moved it 1.9.1 → 1.9.2 (Step 0 states each carrier's own row
-// schema, so a migrated unit is no longer queued against a `folded` column it does
-// not have), and unit 84 moved it 1.9.2 → 1.10.0 (a token- or claim-shaped change
-// carries its `swept:` declaration, which the promise-coherence gate re-runs) and
-// then 1.10.0 → 1.11.0 (the guardrail states the bounds the gate enforces on that
-// declaration); the assertion is re-pointed, never weakened.
-assert.match(foldSkill, /version: 1\.11\.0/);
+// 10j. Version — the unified train (D-40-14) retired the per-skill semver
+// ledger: `scripts/release.mjs apply` stamps every `skills/<name>/SKILL.md`
+// frontmatter with the ecosystem version at cut time, so a literal per-skill
+// pin here would go stale on every release (it did: the retired ledger's last
+// value, 1.11.0, outlived the mechanism). The pin is the invariant the
+// decision established, which is strictly stronger than one literal: every
+// skill carries the train version — the same number as the shipped npm
+// packages — so fold-findings can drift from neither its siblings nor the
+// package. Re-pointed to the invariant, never weakened.
+const trainVersion = JSON.parse(read("packages/pi-agentic-workflow/package.json")).version;
+const declaredVersions = fs
+  .readdirSync(path.join(root, "skills"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => ({
+    name: entry.name,
+    version: (read(`skills/${entry.name}/SKILL.md`).match(/^version:\s*(\S+)$/m) || [])[1],
+  }));
+assert.ok(declaredVersions.length > 0, "no skill frontmatter versions found");
+for (const { name, version } of declaredVersions) {
+  assert.equal(version, trainVersion, `${name} carries the train version (D-40-14)`);
+}
+assert.match(foldSkill, /^version: \S+$/m);
+assert.match(foldSkill, new RegExp(`^version: ${trainVersion.replace(/\./g, "\\.")}$`, "m"));
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);

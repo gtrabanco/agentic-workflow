@@ -93,6 +93,8 @@ still uses it, asked before breaking (the sweep `fold-findings` runs on a defect
 
 - **ask-don't-infer** — an expectation in neither the tree nor the user's words
   is a stage-3 question; a coined name with no owner answer is already a defect.
+  This is the design/plan case of the all-stages rule below —
+  `ask-dont-infer@1`, whose single normative owner is this file.
 - **document-or-don't-coin** — a new contract lands with the consumer-facing doc
   its consumer will look for (the promise registry renders into this step's
   output and the PR).
@@ -101,6 +103,28 @@ still uses it, asked before breaking (the sweep `fold-findings` runs on a defect
 **retires**, with its replacement or no-consumer evidence; an empty answer says
 *why nothing can be removed*. Retirements are a design deliverable, not a
 review-time discovery — the plan step turns each into a planned task.
+
+### Third-party before homemade (#340)
+
+When the design reaches for code that solves a solved problem, a **widely
+community-supported library is the preferred option** over writing our own
+where a comparable option exists. Own code for a solved problem carries a
+**recorded justification** in the design output — a `sources.md` row (or a
+decision row) stating why no comparable community option fits. Owner-cited
+precedent: the substrate-reuse approach of pi-extensible-workflows.
+
+### The all-stages no-assumption rule (`ask-dont-infer@1`, #340)
+
+This block is the **single normative owner** of the no-assumption rule for
+every stage — development, modification, deletion, planning, design, review,
+audit. Stage skills reference this block; they **never restate** it — a
+restatement is a defect (`scripts/residue-dimensions.test.mjs` counts them).
+
+```text
+ask-dont-infer@1
+stage | when the rule binds | what the stage does
+any (development, modification, deletion, planning, design, review, audit) | an expectation is not evidenced by the tree, the docs, or a prior owner decision | understand the context of the question; research if useful — without leaking data, secrets or project details; propose options; the user decides. Research informs and proposes — it never answers on the user's behalf
+```
 
 ## Stage 3 — ask
 
@@ -203,6 +227,7 @@ The unit doc's **Acceptance criteria** section, numbered and command-verified.
 - [ ] Expectation sweep: user's accepted and rejected inputs are bounded
 - [ ] The three-direction closure (§ Stage 2) ran: backward, sideways, forward — each with its evidence
 - [ ] Retirements stated: each retired surface carries its replacement or no-consumer evidence, or the answer says why nothing can be removed
+- [ ] Third-party before homemade (#340): a solved problem prefers a widely community-supported library; own code for a solved problem carries a recorded justification in the design output
 - [ ] Deferrals landed in `## Future`, not in scope
 
 ## Forbidden
