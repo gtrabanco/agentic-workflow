@@ -1,70 +1,84 @@
 /**
- * The merge guard — owner-only merges, enforced at the `tool_call` gate
- * (issue #278).
+ * The merge guard — owner-only merges at the `tool_call` gate (issue #278).
  *
  * On 2026-09-29 an agent session ran `gh pr merge` after an owner message that
  * waived only the *review* ("No hace falta una review para esto"), not the
- * merge. Merging is owner-only: prose already says so (`audit-pr` "never
- * merges") and prose demonstrably failed once, so the block lives here, in the
- * same Pi-free layer as the inline-receipt guard (issue #182) — a predicate the
- * shipped adapter binds to `tool_call`, unit-tested with no session.
+ * merge. Merging is owner-only, and the direct routes are self-evident — a
+ * command that *is* a merge needs no simulation and no spelling census:
  *
- * Same philosophy as `receipt-guard`: deterministic over clever. A bash command
- * that merely *mentions* `gh pr merge` (a search for the guard's own text) is
- * blocked like an invocation; the reason tells the agent to search `pr merge`
- * instead. This is a guard, not a wall — it covers what routes through Pi's
- * tool pipeline, exactly like the path-protection guard beside it.
+ *   `git merge <ref>`   the command is a merge (read-only forms —
+ *                       `merge-tree`, `merge-base`, `merge-file` — stay out).
+ *   `gh pr merge`       the command merges the PR.
+ *   `gh api` merge      the REST endpoint (`pulls/N/merge`) and the GraphQL
+ *                       mutations (`mergePullRequest`, `mergeBranch`,
+ *                       `enablePullRequestAutoMerge`) — the same merge by
+ *                       other syntax, still self-evident.
+ *   `git pull`          fetch + merge by default; only `--rebase`/`--ff-only`
+ *                       (no merge commit) pass.
  *
- * Pure on purpose: `index.ts` is the only file that imports Pi values, so this
- * predicate compiles and is tested with no session.
+ * The guard is config-gated (`guards.merge`): off by default for every
+ * project, enabled where an operator asks for it. The only way through is an
+ * explicit owner instruction in the same turn, carried as the command's first
+ * word: `AW_ALLOW=merge`.
+ *
+ * What is deliberately out of scope: merges hidden inside scripts or
+ * interpreter one-liners. A text predicate that chased every wrapper would
+ * grow a regex zoo and still miss the file it never read; the direct routes
+ * above are the honest boundary.
  */
 
-/** The narrow slice of a Pi `tool_call` the guard reads. */
-export interface ToolCallLike {
-  toolName: string;
-  command?: string | undefined;
+import { explicitAllow, splitSegments, type GuardDecision, type ToolCallLike } from "./guard-util.js";
+
+/** `git merge` at a word boundary — `merge-tree`/`merge-base`/`merge-file` stay out. */
+const GIT_MERGE_RE = /(?:^|[\s;|&])git\s+(?:-[Cc]\s+\S+\s+)*merge(?![\w-])(?=\s|$)/u;
+
+/** `git pull` — merge by default. */
+const GIT_PULL_RE = /(?:^|[\s;|&])git\s+(?:-[Cc]\s+\S+\s+)*pull(?![\w-])(?=\s|$)/u;
+
+/** pull flags that make it a rebase or a fast-forward-only update: no merge commit. */
+const PULL_NO_MERGE_RE = /(?:^|\s)(?:--rebase(?:=(?!=false)\S*)?|--ff-only|-[a-z]*r[a-z]*)(?=\s|$)/u;
+
+/** pull flags that force the merge form back on. */
+const PULL_MERGE_RE = /(?:^|\s)(?:--no-rebase|--rebase=false)(?=\s|$)/u;
+
+const GH_PR_MERGE_RE = /\bgh\s+pr\s+merge\b/u;
+
+/** The REST endpoint and GraphQL mutations that are a merge by other syntax. */
+const GH_API_MERGE_RE =
+  /\bgh\s+api\b[\s\S]*(?:pulls\/\d+\/merge\b|\b(?:mergePullRequest|mergeBranch|enablePullRequestAutoMerge)\b)/u;
+
+/** The merge shape one command segment carries, or null. */
+function mergeShape(segment: string): string | null {
+  if (GH_PR_MERGE_RE.test(segment)) return "`gh pr merge`";
+  if (GH_API_MERGE_RE.test(segment)) return "a `gh api` merge endpoint or mutation";
+  if (GIT_MERGE_RE.test(segment)) return "`git merge`";
+  if (GIT_PULL_RE.test(segment)) {
+    if (PULL_MERGE_RE.test(segment)) return "`git pull` in its merge form";
+    if (!PULL_NO_MERGE_RE.test(segment)) {
+      return "`git pull` in its merge form (use `git pull --rebase`, `--ff-only`, or `git fetch` + ask)";
+    }
+  }
+  return null;
 }
 
-/** The Pi `tool_call` result shape: `block` plus an actionable `reason`. */
-export interface MergeGuardDecision {
-  block: boolean;
-  reason?: string;
-}
-
-/** `gh pr merge` as an invoked command, not as a quoted string elsewhere in it. */
-const GH_PR_MERGE_RE = /\bgh\s+pr\s+merge\b/;
-/** The REST merge endpoint and the GraphQL mutation, both under `gh api`. */
-const GH_API_MERGE_RE = /\bgh\s+api\b[\s\S]*(?:pulls\/\d+\/merge\b|mergePullRequest\b)/;
-/**
- * `git merge <args>` (optionally after `-C <path>` / `-c <name>`), at a word
- * boundary that is deliberately NOT `-`: `git merge-tree` and `git merge-base`
- * are read-only and the reconciliation flow depends on them (issue #275).
- */
-const GIT_MERGE_RE = /(^|[\s;|&()])git\s+(?:-[Cc]\s+\S+\s+)*merge(?![\w-])(?=\s|$)/;
-
-const GH_MERGE_REASON =
+export const MERGE_REASON =
   "Merging is owner-only (merge guard, issue #278): a merge command from an agent session is blocked — a review waiver is not merge authorization. " +
-  "Open or refresh the PR and hand its URL to the owner (`gh pr view <N> --json url -q .url`); if you were searching text, search `pr merge` instead of `gh pr merge`.";
-
-const GIT_MERGE_REASON =
-  "Merging is owner-only (merge guard, issue #278): `git merge` from an agent session is blocked. " +
-  "Hand the branch to the owner for integration, or use the read-only forms (`git merge-tree`, `git merge-base`) and rebases, which stay allowed.";
+  "Only an explicit owner instruction in this turn (\"Sí, mergea la PR\" / \"Mergea rama B en rama A\") enables it, carried as the command's first word: `AW_ALLOW=merge`. " +
+  "Otherwise: resolve the files, report, and hand the branch to the owner (`gh pr view <N> --json url -q .url`). " +
+  "If you were searching text, search `pr merge` instead of `gh pr merge`.";
 
 /**
  * The `tool_call` gate. Blocks merge shapes on the `bash` tool only — every
- * other tool passes, and every non-merge command passes. Read-only git
- * (`merge-tree`, `merge-base`), rebases, and PR reads (`gh pr view`, checks,
- * comments) are deliberately out of scope; `gh pr comment` receipts remain the
- * receipt guard's domain.
+ * other tool passes, and every non-merge command passes. `enabled` comes from
+ * the config (`guards.merge`); the guard is a no-op while disabled.
  */
-export function mergeGuard({ toolName, command }: ToolCallLike): MergeGuardDecision {
-  if (toolName !== "bash") return { block: false };
+export function mergeGuard({ toolName, command }: ToolCallLike, enabled = true): GuardDecision {
+  if (!enabled || toolName !== "bash") return { block: false };
   const text = command ?? "";
-  if (GH_PR_MERGE_RE.test(text) || GH_API_MERGE_RE.test(text)) {
-    return { block: true, reason: GH_MERGE_REASON };
-  }
-  if (GIT_MERGE_RE.test(text)) {
-    return { block: true, reason: GIT_MERGE_REASON };
+  if (explicitAllow(text).has("merge")) return { block: false };
+  for (const segment of splitSegments(text)) {
+    const shape = mergeShape(segment);
+    if (shape) return { block: true, reason: `${MERGE_REASON} (blocked: ${shape})` };
   }
   return { block: false };
 }

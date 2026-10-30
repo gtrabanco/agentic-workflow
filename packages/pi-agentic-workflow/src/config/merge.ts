@@ -1,7 +1,7 @@
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "./defaults.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy, mergePathProtectionOverrides } from "./path-policy.js";
 import { DEFAULT_ADVANCE_CONFIG, DEFAULT_PROFILE_FALLBACK } from "./types.js";
-import type { AdvanceConfig, ConfigFile, EffectiveConfig, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
+import type { AdvanceConfig, ConfigFile, EffectiveConfig, GuardsConfig, GuardsConfigFile, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -157,6 +157,9 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     memory: {
       engram: pick(false, projectFile.memory?.engram, globalFile.memory?.engram) === true,
     },
+    // Tool-call guards resolve like every other knob: project wins, then
+    // global, then the shipped OFF. A guard no scope mentions stays disabled.
+    guards: mergeGuards(globalFile.guards, projectFile.guards),
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),
@@ -167,6 +170,32 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
   const advance = mergeAdvance(globalFile.advance, projectFile.advance);
   if (advance !== undefined) merged.advance = advance;
   return merged;
+}
+
+/** Guards merge whole-knob: a boolean takes project-then-global, and the
+ *  expensive-tests block resolves field-by-field (patterns are replaced, not
+ *  concatenated, so a project override is predictable — no hidden union). */
+function mergeGuards(globalGuards: GuardsConfigFile | undefined, projectGuards: GuardsConfigFile | undefined): GuardsConfig {
+  return {
+    merge: pick(DEFAULT_CONFIG.guards.merge, projectGuards?.merge, globalGuards?.merge),
+    history: pick(DEFAULT_CONFIG.guards.history, projectGuards?.history, globalGuards?.history),
+    ci: {
+      create: pick(DEFAULT_CONFIG.guards.ci.create, projectGuards?.ci?.create, globalGuards?.ci?.create),
+      run: pick(DEFAULT_CONFIG.guards.ci.run, projectGuards?.ci?.run, globalGuards?.ci?.run),
+    },
+    expensiveTests: {
+      maxTokens: pick(
+        DEFAULT_CONFIG.guards.expensiveTests.maxTokens,
+        projectGuards?.expensiveTests?.maxTokens,
+        globalGuards?.expensiveTests?.maxTokens,
+      ),
+      patterns: pick(
+        DEFAULT_CONFIG.guards.expensiveTests.patterns,
+        projectGuards?.expensiveTests?.patterns,
+        globalGuards?.expensiveTests?.patterns,
+      ),
+    },
+  };
 }
 
 /** Project-over-global merge of the advance (conductor) knobs (feature 62).
