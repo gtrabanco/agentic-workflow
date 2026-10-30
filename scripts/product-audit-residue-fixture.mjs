@@ -41,13 +41,13 @@ const files = {
     "lib/orphan.js": `// Seed (b): exported as part of the delivered feature, invoked by nothing.\nexport function orphanResidueFormatter(value) {\n  return String(value).trim();\n}\n`,
     "docs/legacy-surface.md": `# Legacy surface\n\nPass \`--legacy-residue-flag\` to enable the legacy sweep mode. No such flag\nexists anywhere in this tree — the surface it describes was removed.\n`,
     "lib/api.js": `// Seed (d): a live consumer-facing surface (consumed by main.js) with no doc.\nexport function residueApi(bounds) {\n  return { upper: bounds.upper ?? 0 };\n}\n`,
-    "lib/main.js": `import { residueApi } from "./api.js";\n\nexport function main(bounds) {\n  return residueApi(bounds);\n}\n`,
+    "lib/main.js": `// The tree's entry point: it runs, so it declares no unconsumed surface.\nimport { residueApi } from "./api.js";\n\nconsole.log(residueApi({ upper: 2 }).upper);\n`,
   },
   clean: {
     "lib/grammar.md": `# Demo grammar\n\n${GRAMMAR}`,
     "docs/grammar.md": `# Demo grammar — reference\n\nThe single normative grammar lives in \`lib/grammar.md\`; this doc links it\ninstead of copying it.\n`,
     "lib/api.js": `export function residueApi(bounds) {\n  return { upper: bounds.upper ?? 0 };\n}\n`,
-    "lib/main.js": `import { residueApi } from "./api.js";\n\nexport function main(bounds) {\n  return residueApi(bounds);\n}\n`,
+    "lib/main.js": `// The tree's entry point: it runs, so it declares no unconsumed surface.\nimport { residueApi } from "./api.js";\n\nconsole.log(residueApi({ upper: 2 }).upper);\n`,
     "docs/api.md": `# residueApi\n\n\`residueApi(bounds)\` returns \`{ upper }\`, clamping a missing \`upper\` to 0.\nConsumed by \`lib/main.js\`.\n`,
   },
 };

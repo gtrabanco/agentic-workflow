@@ -145,7 +145,11 @@ The finding is not folded directly; it is folded by the new phase(s).
 ### Unused code routes two ways, never conflated (#340)
 
 An unused-code finding — code, or skill prose under the same rule, that nothing
-consumes — classifies exactly one way, and the two classes never merge:
+consumes — classifies exactly one way, and the two classes never merge.
+*Consumes* means a call site, an import, or the doc that orders the surface to
+exist: a path mention does not consume, and a surface the runtime invokes as the
+tree's entry point is not unconsumed — flagging it would make the sweep find the
+thing it runs on, not the residue it hunts:
 
 - **Delivered feature, no consumer** — the code was written as part of a
 delivered feature and **no functionality invokes it**: the feature was not
