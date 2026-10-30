@@ -115,8 +115,8 @@ test("files and exports agree on the shipped schema documents", () => {
 test("the package version matches the AC7 release contract", () => {
   // Feature 31 bumped the additive finding-record `reproducer` minor: 4.2.0 → 4.3.0.
   // Issue #308 shipped the dual-shape selector as the next additive minor: 4.7.0 → 4.8.0.
-  // Issue #318 S12 published the evidence-row grammar as the next additive minor: 4.9.0 → 4.10.0.
-  assert.equal(manifest.version, "4.10.0");
+  // Issue #318 S12 publishes the evidence-row grammar as the next additive minor at release time (4.9.0 → train).
+  assert.equal(manifest.version, "4.9.0");
 });
 
 // ---------------------------------------------------------------------------
