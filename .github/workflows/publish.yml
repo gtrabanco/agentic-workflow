@@ -140,7 +140,7 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version-file: .node-version
-      - name: Setup Bun (lockfiles are bun.lock — kept in lockstep with CI)
+      - name: Setup Bun (one workspace lock at the root — kept in lockstep with CI)
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
@@ -156,15 +156,14 @@ jobs:
           if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
           node scripts/release.mjs apply $ARGS
 
-      - name: Refresh lockfiles (the pins moved with the train)
-        run: |
-          for d in packages/*/; do
-            if [ -f "$d/bun.lock" ]; then
-              echo "::group::bun install $d"
-              (cd "$d" && bun install)
-              echo "::endgroup::"
-            fi
-          done
+      - name: Refresh the workspace lock (the train moved versions and pins)
+        # One lock at the repository root, and the members link each other from
+        # the folder — so this resolves the pins the train just moved even
+        # though none of those versions is published yet. That is the point of
+        # the workspace layout: before it, this step asked the registry for a
+        # version the same commit was supposed to publish, so a cut that moved a
+        # sibling pin could not produce its own release commit.
+        run: bun install
 
       - name: Commit the release
         run: |
@@ -306,7 +305,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2.2.0
-        # Lockstep with the bun that generates the committed bun.lock files
+        # Lockstep with the bun that generates the committed workspace lock
         # (1.4.0 writes lockfile version 2, which 1.3.14 cannot parse — a
         # skew fails `bun install --frozen-lockfile` before the gate runs).
         with:

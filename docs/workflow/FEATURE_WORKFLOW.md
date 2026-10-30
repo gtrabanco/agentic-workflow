@@ -145,8 +145,10 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    (canary-equivalent), `#stable`, `#vX.Y.Z` (hard pin).
 5. **Dependency closure and publish order (D-40-10)** — pi-agentic-workflow
    pins the runner crate and the schema exactly, so `apply` rewrites those
-   pins to the train version (run `bun install` in each touched package
-   before committing — apply reminds you), and the publish workflow runs in
+   pins to the train version (run `bun install` at the repository root
+   before committing — apply reminds you; one workspace lock, and a member
+   resolves its siblings from the folder, so the pins install before they are
+   published), and the publish workflow runs in
    dependency order: schema → runner crate → pi, chained with `needs:`
    (`pi-publish` waits for both upstream publish jobs) so a pin never
    resolves to an unpublished version. Nothing publishes

@@ -37,3 +37,6 @@ tmp/
 # probes and reads as an accidental exclusion).
 .agentic-workflow/index/
 **/.agentic-workflow/index/
+
+# Workspace install output (bun workspaces: one lock at the root)
+node_modules/

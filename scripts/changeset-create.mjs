@@ -84,9 +84,18 @@ function changedFiles(root, base) {
   const committed = git(root, ["diff", "--name-only", `${base}...HEAD`]) ?? "";
   const dirty = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]) ?? "";
   const files = new Set(committed.split("\n").filter(Boolean));
-  for (const entry of dirty.split("\0")) {
+  // -z entries are `XY <path>\0`; strip the two status characters and the
+  // separator, never the path's own first bytes (the earlier slice(2) after a
+  // replace that already dropped the prefix read every dirty path as
+  // "nothing to declare", so an uncommitted change could not be declared).
+  const entries = dirty.split("\0");
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
     if (entry.length < 4) continue;
-    files.add(entry.replace(/^(.{2}) /, "").slice(2));
+    const status = entry.slice(0, 2);
+    files.add(entry.replace(/^(.{2}) /u, "$1").slice(2));
+    // A rename or copy carries the original path as the next entry.
+    if (status.includes("R") || status.includes("C")) index += 1;
   }
   return [...files];
 }
