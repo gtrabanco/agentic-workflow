@@ -21,14 +21,18 @@
 import process from "node:process";
 import { workspace } from "./ceremony/workspace.mjs";
 import { docs } from "./ceremony/docs.mjs";
+import { findings } from "./ceremony/findings.mjs";
+import { ledger } from "./ceremony/ledger.mjs";
 import { fail, DEFERRED_MODULES } from "./ceremony/lib.mjs";
 
 const REGISTRY = {
   workspace,
   docs,
+  findings,
+  ledger,
 };
 
-const P0_PENDING = ["findings", "ledger", "unit", "plan"];
+const P0_PENDING = ["unit", "plan"];
 
 const [, , object, op, ...rest] = process.argv;
 
