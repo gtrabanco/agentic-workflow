@@ -27,9 +27,9 @@ export function out(obj) {
   process.exit(0);
 }
 
-/** Usage error (bad flags, unknown op, missing slug) → JSON, exit 1. */
+/** Usage error (bad flags, unknown op, missing slug) → JSON on stdout, exit 1 (S6: output is always JSON on stdout). */
 export function fail(error, extra = {}) {
-  process.stderr.write(JSON.stringify({ error, ...extra }, null, 2) + "\n");
+  process.stdout.write(JSON.stringify({ error, ...extra }, null, 2) + "\n");
   process.exit(1);
 }
 
@@ -134,17 +134,18 @@ const SECTION_TOKENS = {
   "progress": ["Progress", "Log"],
 };
 
-/** Replace one `## <heading>` section's body (content up to the next heading of level ≤ its own). */
+/** Replace one `## <heading>` section's body (content up to the next heading of level ≤ its own; `## Tasks` also ends at its `###` ledger embeds). */
 export function replaceSection(md, token, newBody) {
   const headings = SECTION_TOKENS[token];
   if (!headings) fail("unknown-section", { section: token, allowed: Object.keys(SECTION_TOKENS).concat("full") });
   const { lines, sections } = splitSections(md);
   const sec = sections.find((s) => headings.includes(s.heading) && s.level <= 3);
   if (!sec) fail("missing-section", { section: token, headings });
+  const stopLevel = sec.heading === "Tasks" ? sec.level + 1 : sec.level;
   let end = sec.end;
   for (let i = sec.bodyStart; i < lines.length; i++) {
     const m = lines[i].match(/^(#{1,6}) /);
-    if (m && m[1].length <= sec.level) { end = i; break; }
+    if (m && m[1].length <= stopLevel) { end = i; break; }
   }
   const body = newBody.replace(/\s+$/, "");
   const replacement = [...lines.slice(0, sec.bodyStart), "", body, ""];
@@ -158,10 +159,11 @@ export function readSection(md, token) {
   const { lines, sections } = splitSections(md);
   const sec = sections.find((s) => headings.includes(s.heading) && s.level <= 3);
   if (!sec) return null;
+  const stopLevel = sec.heading === "Tasks" ? sec.level + 1 : sec.level;
   let end = sec.end;
   for (let i = sec.bodyStart; i < lines.length; i++) {
     const m = lines[i].match(/^(#{1,6}) /);
-    if (m && m[1].length <= sec.level) { end = i; break; }
+    if (m && m[1].length <= stopLevel) { end = i; break; }
   }
   return lines.slice(sec.bodyStart, end).join("\n").replace(/^\n+|\s+$/g, "");
 }

@@ -16,15 +16,17 @@ import { fileURLToPath } from "node:url";
 
 export const ENTRY = fileURLToPath(new URL("../ceremony.mjs", import.meta.url));
 
-/** Run the ceremony CLI in `cwd` → {code, stdout, json} (json parsed from stdout+stderr). */
+/** Run the ceremony CLI in `cwd` → {code, stdout, json} (json parsed from stdout, stderr kept separate for error text). */
 export function cer(args, cwd) {
   let stdout = "";
+  let stderr = "";
   let code = 0;
   try {
     stdout = execFileSync("node", [ENTRY, ...args], { cwd, encoding: "utf8" });
   } catch (err) {
     code = err.status ?? 1;
-    stdout = (err.stdout ?? "") + (err.stderr ?? "");
+    stdout = err.stdout ?? "";
+    stderr = err.stderr ?? "";
   }
   let json = null;
   try {
@@ -32,7 +34,7 @@ export function cer(args, cwd) {
   } catch {
     /* non-JSON output (only git-backed strings inside JSON are expected) */
   }
-  return { code, stdout, json };
+  return { code, stdout, stderr, json };
 }
 
 /** Create a hermetic temp git repo (branch main, 1 commit) → its path. */
@@ -60,7 +62,7 @@ export function commitFile(dir, file, content, message = "chore: fixture change"
   return { sha: g("rev-parse", "HEAD").trim() };
 }
 
-/** Minimal single-layer unit doc (fixture) with Tasks + Log + Findings. */
+/** Minimal single-layer unit doc (fixture) with Tasks + Log + Findings + ACs. */
 export function unitDoc({ slug = "1-fixture", tasks = "", log = "", findings = "" } = {}) {
   return `# fix/${slug}
 
@@ -72,6 +74,10 @@ export function unitDoc({ slug = "1-fixture", tasks = "", log = "", findings = "
 
 **S1 — fixture.**
 > fixture quote
+
+## Acceptance criteria
+
+- **AC-S1** — the fixture behaves. Check: \`true\` exits 0.
 
 ## Tasks
 
