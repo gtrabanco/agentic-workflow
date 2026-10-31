@@ -129,19 +129,21 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    record. Skills carry the unified train version, stamped by
    `scripts/release.mjs apply` at cut time (D-40-14).
 3. **At release time** — launch **`publish.yml`** with `mode: cut`:
-   `channel: latest` applies the train (all package.json versions + the exact
+   `channel: stable` applies the train (all package.json versions + the exact
    local pins, CHANGELOG rows from the changeset bodies, the skills' stamped
    `version:` lines, lockfiles), pushes
    ONE release commit, tags `vX.Y.Z`, fast-forwards `stable`, opens the
    GitHub Release, and the push fires the publish jobs (schema → crate → pi)
-   that publish npm. `channel: canary` (or alpha/beta/rc) instead publishes
-   only the declared packages under that dist-tag — the repo is untouched,
-   and canaries are grouped by you. `mode: suggest` is the read-only preview
-   (stable + canary suggestions + every changeset's semver annotation).
-4. **Channels** — npm dist-tags via the publish workflows' `channel` dispatch
-   input (`latest` default; `canary` / `alpha` / `beta` / `rc` never move
-   `latest`). Canary versions are `<base>-canary.<yyyymmdd>.<n>`
-   (deterministic per state). Skills install via git refs: `#main`
+   that publish npm (dist-tag `latest`). `channel: canary` instead publishes
+   only the declared packages under the canary dist-tag — the repo is
+   untouched, the changesets are NOT consumed (only the stable train consumes
+   them), and canaries are grouped by you. `mode: suggest` is the read-only
+   preview (stable + canary suggestions + every changeset's semver annotation).
+4. **Channels** — the channel set is CLOSED: `stable` (the train, npm
+   dist-tag `latest`) + `canary` (never moves `latest`; deterministic
+   `<base>-canary.<yyyymmdd>.<n>`). The old `latest` channel name is retired
+   (`stable` replaced it) and the manual promotion channels (alpha/beta/rc)
+   are gone. Skills install via git refs: `#main`
    (canary-equivalent), `#stable`, `#vX.Y.Z` (hard pin).
 5. **Dependency closure and publish order (D-40-10)** — pi-agentic-workflow
    pins the runner crate and the schema exactly, so `apply` rewrites those
@@ -155,13 +157,13 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    "alone": every train release moves the three packages together.
 6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
    whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`
-   (latest = train cut; canary/alpha/beta/rc = prerelease cut for the
-   declared packages), `version` input for the forced override, and the
+   (stable = train cut; canary = prerelease cut for the declared packages),
+   `version` input for the forced override, and the
    push-triggered publish jobs. `scripts/release.mjs` always runs in CI —
    no release step is done by hand.
 7. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
-   overrides the computation for marketing campaigns (latest train only —
-   prerelease channels compute their own version and reject `--version`);
+   overrides the computation for marketing campaigns (stable train only —
+   the canary channel computes its own version and rejects `--version`);
    the release body is marked `Version forced by operator: X.Y.Z`. A cut
    consumes the changesets it applied, so the next cut carries only new
    intent.
