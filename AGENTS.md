@@ -81,20 +81,13 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   and the owner runs the integration. Commits already pushed are a shared
   surface — a reviewer's checkout, another session, a CI artifact — so the owner
   rewrites them when a rewrite is genuinely needed, and the PR then notes why the
-  hashes changed. The guards make that arrangement mechanical in agent
-  sessions, config-driven in `.pi/pi-agentic-workflow.json` → `guards` (every
-  guard ships OFF — other projects get none of this unless they opt in):
-  `merge` blocks every direct merge route (`git merge`, `gh pr merge`, the
-  `gh api` merge endpoints/mutations, `git pull`'s merge form), and `history`
-  decides pushes by asking git itself — the push runs as `git push --dry-run`
-  first, and git's outcome (forced update, ref delete, destination `main`)
-  declines it, so no flag spelling needs enumerating. `ci` gates writing
-  workflow definitions and triggering runs; `expensiveTests` gates commands
-  whose estimated token cost exceeds the budget. The only way through any of
-  them is an explicit owner instruction in the same turn, carried as the
-  command's first word: `AW_ALLOW=merge` ("Sí, mergea la PR" / "Mergea rama B
-  en rama A"), `AW_ALLOW=force` ("Sí, usa force" — never enables a push to
-  `main`), `AW_ALLOW=ci`, or `AW_ALLOW=cost`.
+  hashes changed. Only the owner may rewrite published history: an agent must
+  never run `git push --force` (or any command with the identical result — a
+  rebase/amend of already-pushed commits followed by a push, a ref delete plus
+  re-push, or any force spelling) unless the owner explicitly authorizes it in
+  the same turn and no non-rewriting alternative exists. Soft rule by design:
+  the mechanical enforcement of this line was tried and removed (issue #346) —
+  the discipline lives here, in review and in the owner's merge.
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
