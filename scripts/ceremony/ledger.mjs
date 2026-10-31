@@ -11,8 +11,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  out, fail, block, parseFlags, resolveUnit, splitSections, readSection,
-  replaceSection, parseLog, appendLogLine, today,
+  out, fail, block, onlyFlags, parseFlags, resolveUnit, splitSections, readSection,
+  replaceSection, deleteSection, parseLog, appendLogLine, today,
 } from "./lib.mjs";
 
 const MARK_TO_KIND = {
@@ -68,7 +68,7 @@ function filterLog(c, keep) {
 }
 
 export function ledger(op, argv, cwd = process.cwd()) {
-  const flags = parseFlags(argv, ["slug", "mark", "type", "sha", "detail", "required-mark"], ["slug"]);
+  const flags = parseFlags(argv, ["slug", "mark", "type", "sha", "detail", "required-mark", "section"], ["slug"]);
   const c = ledgerCarrier(flags.slug, cwd);
   const counts = c.carrier === "legacy"
     ? countLegacy(fs.readFileSync(c.legacyPath, "utf8"))
@@ -76,15 +76,18 @@ export function ledger(op, argv, cwd = process.cwd()) {
 
   switch (op) {
     case "read": {
+      onlyFlags(flags, []);
       if (c.carrier === "legacy") {
         out({ slug: flags.slug, carrier: "legacy", path: "review-findings.md", marks: legacyMarks(fs.readFileSync(c.legacyPath, "utf8")) });
       }
       out({ slug: flags.slug, carrier: c.carrier, marks: parseLog(c.md) });
     }
     case "count": {
+      onlyFlags(flags, []);
       out({ slug: flags.slug, carrier: c.carrier, counts });
     }
     case "append": {
+      onlyFlags(flags, ["mark", "sha", "detail"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       if (!flags.mark || !(flags.mark in MARK_TO_KIND)) fail("unknown-mark", { mark: flags.mark, allowed: Object.keys(MARK_TO_KIND) });
       if (!flags.detail) fail("missing-flag", { flag: "--detail" });
@@ -95,10 +98,19 @@ export function ledger(op, argv, cwd = process.cwd()) {
       out({ appended: true, slug: flags.slug, mark: flags.mark, kind });
     }
     case "delete": {
+      onlyFlags(flags, ["mark", "type"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       if (flags.mark) {
+        const marks = parseLog(c.md);
+        if (/^\d+$/.test(String(flags.mark))) {
+          const index = Number(flags.mark);
+          if (index < 1 || index > marks.length) fail("unknown-mark", { mark: flags.mark, expected: `1..${marks.length}` });
+          const target = marks[index - 1];
+          filterLog(c, (kind, n) => !(kind === target.kind && n === target.n));
+          out({ deleted: true, slug: flags.slug, mark: `${target.kind}${target.n}`, index });
+        }
         const m = String(flags.mark).match(/^([A-Z])(\d+)$/);
-        if (!m) fail("unknown-mark", { mark: flags.mark, expected: "<kind><n>, e.g. R3" });
+        if (!m) fail("unknown-mark", { mark: flags.mark, expected: "<kind><n>, e.g. R3, or a 1-based index" });
         filterLog(c, (kind, n) => !(kind === m[1] && n === Number(m[2])));
         out({ deleted: true, slug: flags.slug, mark: flags.mark });
       } else if (flags.type) {
@@ -110,12 +122,21 @@ export function ledger(op, argv, cwd = process.cwd()) {
       }
     }
     case "delete-all": {
+      onlyFlags(flags, []);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       const removed = Object.values(counts).reduce((a, b) => a + b, 0);
       fs.writeFileSync(c.specPath, replaceSection(c.md, "log", "(empty)"));
       out({ deleted: true, slug: flags.slug, "deleted-count": removed });
     }
+    case "delete-section": {
+      onlyFlags(flags, ["section"]);
+      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      if (!flags.section) fail("missing-flag", { flag: "--section" });
+      fs.writeFileSync(c.specPath, deleteSection(c.md, flags.section));
+      out({ deleted: true, slug: flags.slug, section: flags.section });
+    }
     case "verify": {
+      onlyFlags(flags, ["required-mark"]);
       if (!flags["required-mark"]) fail("missing-flag", { flag: "--required-mark" });
       const req = String(flags["required-mark"]);
       const kind = MARK_TO_KIND[req] ?? req;

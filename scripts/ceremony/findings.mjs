@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  out, fail, parseFlags, resolveUnit, splitSections, replaceSection,
+  out, fail, onlyFlags, parseFlags, resolveUnit, splitSections, replaceSection, deleteSection,
   parseFindings, renderFindings, appendLogLine, today,
 } from "./lib.mjs";
 
@@ -47,11 +47,12 @@ function parseLegacyFindings(text) {
 }
 
 export function findings(op, argv, cwd = process.cwd()) {
-  const flags = parseFlags(argv, ["slug", "id", "ids", "file", "line", "target", "axis", "severity", "class", "route", "folded"], ["slug"]);
+  const flags = parseFlags(argv, ["slug", "id", "ids", "file", "line", "target", "axis", "severity", "class", "route", "folded", "section"], ["slug"]);
   const c = findingsCarrier(flags.slug, cwd);
 
   switch (op) {
     case "append": {
+      onlyFlags(flags, ["file", "line", "target", "axis", "severity", "class", "route"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       for (const r of ["axis", "severity", "class", "route"]) {
         if (!flags[r]) fail("missing-flag", { flag: `--${r}` });
@@ -65,31 +66,39 @@ export function findings(op, argv, cwd = process.cwd()) {
       out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier });
     }
     case "read": {
+      onlyFlags(flags, []);
       if (c.carrier === "legacy") {
         out({ slug: flags.slug, carrier: "legacy", path: "review-findings.md", findings: parseLegacyFindings(fs.readFileSync(c.legacyPath, "utf8")) });
       }
       out({ slug: flags.slug, carrier: c.carrier, findings: parseFindings(c.md) });
     }
     case "update": {
+      onlyFlags(flags, ["id", "severity", "class", "route", "folded"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       if (!flags.id) fail("missing-flag", { flag: "--id" });
       const rows = parseFindings(c.md);
       const row = rows.find((r) => r.id === (String(flags.id).match(/^F/) ? flags.id : `F${flags.id}`));
       if (!row) fail("unknown-finding", { id: flags.id, slug: flags.slug });
+      // Every cell flag applies, folded or not: the issue's own example passes
+      // `--severity` and `--folded true` together, so folding after the edit and
+      // echoing both is the contract — never silently dropping one of them.
+      const cells = ["severity", "class", "route"].filter((k) => flags[k]);
+      for (const k of cells) row[k] = flags[k];
+      const applied = Object.fromEntries(cells.map((k) => [k, row[k]]));
       if (flags.folded === "true") {
         let md = replaceSection(c.md, "findings", renderFindings(rows.filter((r) => r !== row)));
-        md = appendLogLine(md, "F", `folded ${row.id} (${row.axis}): ${row.target} — folded: yes`, today());
+        const edited = cells.length ? ` · ${cells.map((k) => `${k}: ${row[k]}`).join(" · ")}` : "";
+        md = appendLogLine(md, "F", `folded ${row.id} (${row.axis}): ${row.target} — folded: yes${edited}`, today());
         fs.writeFileSync(c.specPath, md);
-        out({ updated: true, slug: flags.slug, id: row.id, folded: true, log: "F-line appended" });
+        out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: "F-line appended" });
       }
       if (flags.folded === "false") fail("fold-flip-unsupported", { note: "a folded row left the table; re-append instead (findings-table@1)" });
-      const cells = ["severity", "class", "route"].filter((k) => flags[k]);
       if (!cells.length) fail("missing-flag", { flag: "--severity | --class | --route | --folded true" });
-      for (const k of cells) row[k] = flags[k];
       writeRows(c, rows);
-      out({ updated: true, slug: flags.slug, id: row.id, ...Object.fromEntries(cells.map((k) => [k, row[k]])) });
+      out({ updated: true, slug: flags.slug, id: row.id, ...applied });
     }
     case "delete": {
+      onlyFlags(flags, ["id", "axis", "severity"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       const rows = parseFindings(c.md);
       let kept;
@@ -111,12 +120,21 @@ export function findings(op, argv, cwd = process.cwd()) {
       out({ deleted: true, "deleted-count": removed, slug: flags.slug });
     }
     case "delete-all": {
+      onlyFlags(flags, []);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       const removed = parseFindings(c.md).length;
       writeRows(c, []);
       out({ deleted: true, "deleted-count": removed, slug: flags.slug });
     }
+    case "delete-section": {
+      onlyFlags(flags, ["section"]);
+      if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
+      if (!flags.section) fail("missing-flag", { flag: "--section" });
+      fs.writeFileSync(c.specPath, deleteSection(c.md, flags.section));
+      out({ deleted: true, slug: flags.slug, section: flags.section });
+    }
     case "merge": {
+      onlyFlags(flags, ["ids"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       if (!flags.ids) fail("missing-flag", { flag: "--ids <n,m,o>" });
       const ids = String(flags.ids).split(",").map((s) => s.trim()).map((s) => (s.match(/^F/) ? s : `F${s}`));
@@ -138,6 +156,7 @@ export function findings(op, argv, cwd = process.cwd()) {
       out({ merged: true, slug: flags.slug, "new-id": row.id, finding: row });
     }
     case "summarize": {
+      onlyFlags(flags, []);
       let rows;
       if (c.carrier === "legacy") {
         rows = parseLegacyFindings(fs.readFileSync(c.legacyPath, "utf8"));

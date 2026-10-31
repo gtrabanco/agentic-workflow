@@ -67,11 +67,10 @@ findings + ledger; P1: review, acceptance, refutation, fusion, progress,
 evidence, roadmap; P2: delta, pr, commit; "follow-up PRs extending the CLI" —
 [elided: the full list — verbatim in L1]).
 
-**S10 — The #307 slice (overridden for this unit by owner decision D2).**
-> Issue 307 (partial mechanical verification) should include:
-> 1. **`workspace` module** — all git operations
-> 2. **`docs` module** — all discipline checks
-> 3. **`review` module** — minimum: `create`, `append-axis`, `synthesize`
+S10 of the issue ("What issue #307 should cover") is **not** a requirement of
+this unit: owner decision D2 routes it to the P1 follow-up PR, so it is
+recorded under `## Non-goals` instead of here — a phase must link a spec it
+delivers, and no phase delivers S10.
 
 ## Impact
 
@@ -96,6 +95,15 @@ skills happens in the follow-up PRs the issue itself defers.
 ## Non-goals
 
 - Not rewiring any skill to call the CLI (follow-up PRs per S9).
+- **S10 of the issue — the #307 slice** (owner decision D2, a routing note, not
+  a requirement of this unit):
+  > Issue 307 (partial mechanical verification) should include:
+  > 1. **`workspace` module** — all git operations
+  > 2. **`docs` module** — all discipline checks
+  > 3. **`review` module** — minimum: `create`, `append-axis`, `synthesize`
+
+  Its first two modules ship here (they are the S9 P0 set); the `review`
+  minimum stays with the P1 follow-up PR the issue itself orders.
 - Not implementing the P1/P2 modules (review, acceptance, refutation, fusion,
   delta, pr, progress, evidence, commit, roadmap) — outside the closed set for
   now; they answer the closed-world error (D2, S9).
@@ -763,10 +771,75 @@ All deterministic, all fixed input/output, all verifiable with exit code and JSO
   findings+ledger). S10's smaller slice and its `review` minimum stay with the
   P1 follow-up PR the issue itself orders. S10 is therefore a *routing note*
   for that follow-up, not a requirement of this unit.
+- **D4** — 2026-10-31, owner decisions after the external verification round
+  (base `fc5a8aed`): (a) S7's **section delete is implemented** —
+  `delete-section` on `unit`, `plan`, `findings` and `ledger`, the operation
+  S7's own taxonomy and the issue's delete table name; (b) `findings update`
+  **applies its cell flags together with `--folded true`**, echoing them in the
+  response and the `F` log line (the issue's example passes `--severity` and
+  `--folded true` in one call); (c) every L1 I/O-shape deviation that only
+  *adds* a documented form is repaired — `unit create --template <path>`,
+  `unit update --content` alone as the full edit, `ledger delete --mark <n>` as
+  a 1-based index, `unit read`'s `raw` text — and any flag an operation does not
+  use is now an `unknown-flag` usage error instead of a silent no-op; (d) the
+  deviations in D5 stay deliberate.
+- **E7** — 2026-10-31, the five external-verification blockers, each reproduced
+  before and re-run after the repair: (1) `plan update --tasks
+  '[{"n":2,"label":"…"}]'` dropped `- [x]` and `(Implements: S1)` on untouched
+  tasks → the section now keeps both and `docs check-tasks-ticks` stays exit 0
+  (suite case); (2) `findings update --id 1 --severity critical --folded true`
+  reported success while dropping `--severity` → the response echoes
+  `severity` and the `F` line carries `severity: critical` (suite case);
+  (3) `unit delete-section …` answered `unknown-subcommand` → it now removes the
+  section with its `###` embeds and nothing else (verified on this unit doc's
+  own `## Next`: one removed hunk, L1's 4-backtick fence untouched);
+  (4) `workspace hash-object` without `--path` and `workspace diff-scope
+  HEAD..nope` printed a stack trace with empty stdout → both answer JSON
+  `missing-flag` / `invalid-ref`, exit 1 (suite case); (5) the obligations
+  ledger's counts (O2 `50/50`, O4 `11/11`, O5 `12/12`, O14 `1265`)
+  contradicted G1/G2/G4 and a re-run → those evidence cells now name the
+  validator and the receipt instead of a drifting total.
+- **G5** — 2026-10-31, repair-round gates at the head on top of `fc5a8aed`:
+  `node --test scripts/ceremony.test.mjs scripts/ceremony-workspace.test.mjs
+  scripts/ceremony-docs.test.mjs scripts/ceremony-findings-ledger.test.mjs
+  scripts/ceremony-unit-plan.test.mjs` · exit 0 · 63 tests / 63 pass / 0 fail;
+  `node scripts/run-root-suite.mjs` · exit 0 · 1279 tests / 1279 pass / 0 fail;
+  `node scripts/check-skill-context.mjs --routes` · `PASS route budgets: 14
+  routes`; `node scripts/ceremony.mjs plan lint --slug 338-closed-ceremony-cli`
+  · `verdict PASS` (7 phases, 6/6 each); `node scripts/version-parity-gate.mjs
+  --content --base origin/main` · `VERDICT: PASS` (`.changeset/338-closed-ceremony-cli.md`).
+- **D5** — 2026-10-31, deliberate deviations kept (not repairs): `ledger count`
+  keeps each carrier's own key vocabulary (E6d — the legacy carrier's long mark
+  forms are the frozen R1 contract); `ledger read` reports a mark as
+  `{kind, n, text}` (the `## Log` line is the carrier, so a mark has no
+  independent sha/detail fields to invent); `docs check-all` requires `--slug`
+  (every check it runs is per-unit); `unit list` answers `unregistered` where
+  the fix index has no row (the roadmap is the features' status source and has
+  no reader here yet); `--folded false` stays `fold-flip-unsupported` (a folded
+  row left the table — re-append to revert).
+- **E8** — 2026-10-31, two further defects surfaced while re-running the gates
+  during the repair round (both pre-existing in this branch): (a) `plan lint`
+  on *this* unit doc answered `BLOCKED: no-phases` — the PE-008 tick
+  (`- [x] P<n> — …`) was not part of the unit-doc grammar the shared reader
+  publishes, so `plan execute` wrote a bullet `phase-lint` could not parse. The
+  shared reader (`scripts/unit-doc-phases.mjs`) now accepts an optional `[x]` /
+  `[ ]` mark as state, `skills/phase-contract/SKILL.md` names it in the grammar
+  table, a `phase-lint` case pins it, and the manifest's execute-phase route
+  ceilings are re-based with the growth source declared
+  (`docs/workflow/SKILL_CONTEXT_BUDGETS.json`). (b) With the tasks parsing, the
+  same lint answered `BLOCKED: spec-unlinked — S10 is implemented by no phase`:
+  S10 (the issue's #307 slice) is a routing note per D2, not a requirement of
+  this unit, so it moved from `## Specs` to `## Non-goals` with its verbatim
+  quote kept. `plan lint --slug 338-closed-ceremony-cli` now answers
+  `verdict PASS` (7 phases, 6/6 each) — receipt G5.
 
 ## Next
 
-Owner verdict on the diff (external verification): the unit doc is complete — all 7 phases executed, all 16 obligations `verified`, no open findings. Next concrete step after the verdict: open the PR against `main` (`Closes #338`); the S10/`review`-module minimum lands as the first follow-up PR per the issue's own priority list.
+Owner verdict on the diff: all 7 phases executed, all 16 obligations `verified`,
+and the external-verification blockers repaired in one batch (E7, receipts in
+G5). Next concrete step: a fresh external verification of the repaired head,
+then the PR against `main` (`Closes #338`); the S10/`review`-module minimum
+lands as the first follow-up PR per the issue's own priority list.
 
 ## References
 

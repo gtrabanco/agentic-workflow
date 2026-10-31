@@ -138,6 +138,34 @@ test("O7: read ops are byte-stable — two runs, identical stdout", () => {
   assert.equal(c1, c2);
 });
 
+test("usage errors stay JSON on stdout: missing --path and an unknown ref (S6, O6)", () => {
+  const dir = makeRepo();
+  const noPath = cer(["workspace", "hash-object"], dir);
+  assert.equal(noPath.code, 1);
+  assert.equal(noPath.stderr.trim(), "", "a usage error never prints a stack trace");
+  assert.equal(noPath.json.error, "missing-flag");
+
+  const badRef = cer(["workspace", "diff-scope", "nogit..HEAD"], dir);
+  assert.equal(badRef.code, 1);
+  assert.equal(badRef.stderr.trim(), "", "a bad ref is a usage error, not a git crash");
+  assert.equal(badRef.json.error, "invalid-ref");
+  assert.match(badRef.json.detail, /nogit/);
+
+  const noRange = cer(["workspace", "diff-stat", "HEAD..nope"], dir);
+  assert.equal(noRange.code, 1);
+  assert.equal(noRange.json.error, "invalid-ref");
+});
+
+test("main-check resolves the repo's base branch when it is not named main", () => {
+  const dir = makeRepo();
+  execFileSync("git", ["branch", "-m", "main", "master"], { cwd: dir });
+  execFileSync("git", ["checkout", "-b", "side"], { cwd: dir });
+  commitFile(dir, "side.md", "side\n");
+  const r = cer(["workspace", "main-check", "master..HEAD"], dir);
+  assert.equal(r.code, 0);
+  assert.equal(r.json.clean, true);
+});
+
 test("pr-status parses branch, base, ahead/behind", () => {
   const dir = makeRepo();
   const r = cer(["workspace", "pr-status"], dir);
