@@ -486,8 +486,10 @@ member's version resolves from the registry and fails).
   consolidation required re-registering the three packages' records to
   `publish.yml` on npmjs.com (owner one-time step; until then a publish
   fails E403). Releases are cut by dispatching `publish.yml` with `mode: cut`
-  (`channel: latest` = train + publish; `channel: canary|alpha|beta|rc` =
-  prerelease cut for the declared packages) — `mode: suggest` previews the
+  (`channel: stable` = train + publish, npm dist-tag `latest`;
+  `channel: canary` = prerelease cut for the declared packages — the channel
+  set is closed, and the old `latest` channel name is retired in favour of
+  `stable`) — `mode: suggest` previews the
   versions read-only; everything runs `scripts/release.mjs` in CI.
 - **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>"` or `"<skill-name>"`: patch|minor|major — the highest severity in the set always wins the train (D-40-15) — plus a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
 

