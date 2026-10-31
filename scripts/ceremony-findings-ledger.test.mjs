@@ -145,6 +145,24 @@ test("ledger verify: present mark → exit 0; missing mark → ceremonial block,
   assert.equal(no.json.verified, false);
 });
 
+test("ledger verify over the legacy carrier resolves the carrier's own mark vocabulary (O4)", () => {
+  const dir = makeLegacyUnit();
+  // The long form the legacy ledger itself uses — the mark `ledger count`
+  // reports 23 of (R1/O9) — must verify, never false-negative (S5, O4).
+  const ok = cer(["ledger", "verify", "--slug", "2-legacy", "--required-mark", "REVIEW-RAN"], dir);
+  assert.equal(ok.code, 0);
+  assert.equal(ok.json.verified, true);
+  assert.equal(ok.json.carrier, "legacy");
+  // The single-letter kind is an alias for the same mark on the legacy carrier.
+  const kindAlias = cer(["ledger", "verify", "--slug", "2-legacy", "--required-mark", "R"], dir);
+  assert.equal(kindAlias.code, 0);
+  assert.equal(kindAlias.json.verified, true);
+  // A mark the legacy ledger does not carry stays a ceremonial block.
+  const missing = cer(["ledger", "verify", "--slug", "2-legacy", "--required-mark", "P"], dir);
+  assert.equal(missing.code, 2);
+  assert.equal(missing.json.verified, false);
+});
+
 test("ledger delete by mark and by type on the migrated Log", () => {
   const dir = makeUnit({ log: ["- **R1** — 2026-11-24, one.", "- **R2** — 2026-11-24, two.", "- **G1** — 2026-11-24, gate."].join("\n") });
   const d1 = cer(["ledger", "delete", "--slug", "1-fixture", "--mark", "R1"], dir);

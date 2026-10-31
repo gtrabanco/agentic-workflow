@@ -41,6 +41,9 @@ export function countLegacy(text) {
   };
 }
 
+/** Legacy-count keys are the long mark forms; single-letter kinds alias to them. */
+const KIND_TO_LEGACY_COUNT = { "R": "REVIEW-RAN", "G": "GATE-RAN", "V": "VF" };
+
 function legacyMarks(text) {
   const marks = [];
   for (const line of text.split("\n")) {
@@ -116,7 +119,14 @@ export function ledger(op, argv, cwd = process.cwd()) {
       if (!flags["required-mark"]) fail("missing-flag", { flag: "--required-mark" });
       const req = String(flags["required-mark"]);
       const kind = MARK_TO_KIND[req] ?? req;
-      const verified = (counts[kind] ?? 0) > 0;
+      // Resolve against the carrier's own count vocabulary: the legacy
+      // carrier's counts are keyed by the long mark forms (REVIEW-RAN, VF,
+      // GATE-RAN), the migrated carrier's by kind — the required mark and its
+      // kind alias must both be tried, so verify never false-negatives a mark
+      // `ledger count` reports on the same carrier.
+      const candidates = [req, kind];
+      if (c.carrier === "legacy" && KIND_TO_LEGACY_COUNT[kind]) candidates.push(KIND_TO_LEGACY_COUNT[kind]);
+      const verified = candidates.some((key) => (counts[key] ?? 0) > 0);
       if (!verified) block({ check: "ledger-verify", verified, "required-mark": req, carrier: c.carrier });
       out({ slug: flags.slug, verified, "required-mark": req, carrier: c.carrier });
     }

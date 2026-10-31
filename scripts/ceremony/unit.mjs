@@ -107,8 +107,14 @@ export function unit(op, argv, cwd = process.cwd()) {
     case "route": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
       resolveUnit(flags.slug, cwd);
-      const r = runUnitRoute([flags.slug, "--json"], cwd);
+      // Route mode of unit-route.mjs takes one positional argument and has no
+      // `--json` (PE-001, corrected): only `--triage <unit> [--json]` accepts
+      // the flag. The issue defines route as "same as triage but read-only",
+      // and triage mode is read-only — so route delegates to the same closed
+      // catalog call as `unit triage` and inherits its JSON + exit codes.
+      const r = runUnitRoute(["--triage", flags.slug, "--json"], cwd);
       if (r.json && r.code === 0) out(r.json);
+      if (r.code === 2) block({ check: "unit-route", output: r.stdout });
       fail("route-failed", { slug: flags.slug, code: r.code, output: r.stdout.slice(0, 400) });
     }
     case "select-next": {
