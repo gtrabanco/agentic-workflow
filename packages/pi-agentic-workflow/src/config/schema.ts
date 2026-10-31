@@ -1,5 +1,5 @@
 import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES, PROFILE_FALLBACK_APPLY_TO, PROFILE_FALLBACK_RESUME, } from "./types.js";
-import type { ConfigFile, ConfigIssue, GuardsCiFile, GuardsConfigFile, GuardsCostPattern, GuardsExpensiveTestsFile, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, MemoryConfigFile, } from "./types.js";
+import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, MemoryConfigFile, } from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
@@ -25,7 +25,6 @@ const ROOT_KEYS = new Set([
   "profileOrder",
   "profileFallback",
   "memory",
-  "guards",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -350,7 +349,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback, memory, guards)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback, memory)`,
       });
     }
   }
@@ -424,11 +423,6 @@ function validateConfig(value: unknown): ParseResult {
     if (memory) config.memory = memory;
   }
 
-  if (value.guards !== undefined) {
-    const guards = checkGuards(value.guards, "$.guards", issues);
-    if (guards) config.guards = guards;
-  }
-
   if (value.profiles !== undefined) {
     if (!isRecord(value.profiles)) {
       issues.push({ path: "$.profiles", message: "must be an object mapping profile names to profile definitions" });
@@ -486,98 +480,6 @@ function checkMemory(value: unknown, path: string, issues: ConfigIssue[]): Memor
     }
   }
   return unknown ? undefined : out;
-}
-
-/** Strict validator for the `guards` block. Everything absent stays off. */
-function checkGuards(value: unknown, path: string, issues: ConfigIssue[]): GuardsConfigFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  const out: GuardsConfigFile = {};
-  for (const key of ["merge", "history"] as const) {
-    if (value[key] !== undefined) {
-      if (typeof value[key] !== "boolean") {
-        issues.push({ path: `${path}.${key}`, message: `must be a boolean, got ${describe(value[key])}` });
-      } else {
-        out[key] = value[key];
-      }
-    }
-  }
-  if (value.ci !== undefined) {
-    const ciPath = `${path}.ci`;
-    if (!isRecord(value.ci)) {
-      issues.push({ path: ciPath, message: `must be a JSON object, got ${describe(value.ci)}` });
-    } else {
-      const ci: GuardsCiFile = {};
-      for (const key of ["create", "run"] as const) {
-        if (value.ci[key] !== undefined) {
-          if (typeof value.ci[key] !== "boolean") {
-            issues.push({ path: `${ciPath}.${key}`, message: `must be a boolean, got ${describe(value.ci[key])}` });
-          } else {
-            ci[key] = value.ci[key];
-          }
-        }
-      }
-      for (const key of Object.keys(value.ci)) {
-        if (key !== "create" && key !== "run") {
-          issues.push({ path: `${ciPath}.${displayKey(key)}`, message: `unknown ci key "${key}" (allowed: create, run)` });
-        }
-      }
-      out.ci = ci;
-    }
-  }
-  if (value.expensiveTests !== undefined) {
-    out.expensiveTests = checkExpensiveTests(value.expensiveTests, `${path}.expensiveTests`, issues);
-  }
-  for (const key of Object.keys(value)) {
-    if (key !== "merge" && key !== "history" && key !== "ci" && key !== "expensiveTests") {
-      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown guards key "${key}" (allowed: merge, history, ci, expensiveTests)` });
-    }
-  }
-  return out;
-}
-
-function checkExpensiveTests(value: unknown, path: string, issues: ConfigIssue[]): GuardsExpensiveTestsFile | undefined {
-  if (!isRecord(value)) {
-    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
-    return undefined;
-  }
-  const out: GuardsExpensiveTestsFile = {};
-  if (value.maxTokens !== undefined) {
-    if (typeof value.maxTokens !== "number" || !Number.isInteger(value.maxTokens) || value.maxTokens < 0) {
-      issues.push({ path: `${path}.maxTokens`, message: `must be a non-negative integer, got ${describe(value.maxTokens)}` });
-    } else {
-      out.maxTokens = value.maxTokens;
-    }
-  }
-  if (value.patterns !== undefined) {
-    if (!Array.isArray(value.patterns)) {
-      issues.push({ path: `${path}.patterns`, message: `must be an array, got ${describe(value.patterns)}` });
-    } else {
-      const patterns: GuardsCostPattern[] = [];
-      value.patterns.forEach((entry, index) => {
-        const entryPath = `${path}.patterns[${index}]`;
-        if (!isRecord(entry) || typeof entry.match !== "string" || entry.match === "") {
-          issues.push({ path: entryPath, message: `must be an object with a non-empty string "match", got ${describe(entry)}` });
-          return;
-        }
-        if (typeof entry.tokens !== "number" || !Number.isInteger(entry.tokens) || entry.tokens < 0) {
-          issues.push({ path: `${entryPath}.tokens`, message: `must be a non-negative integer, got ${describe(entry.tokens)}` });
-          return;
-        }
-        try {
-          new RegExp(entry.match, "u");
-        } catch {
-          issues.push({ path: `${entryPath}.match`, message: `not a valid regular expression: ${entry.match}` });
-          return;
-        }
-        patterns.push({ match: entry.match, tokens: entry.tokens });
-      });
-      out.patterns = patterns;
-    }
-  }
-  return out;
 }
 
 export function parseConfigFile(text: string): ParseResult {
