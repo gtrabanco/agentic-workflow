@@ -741,6 +741,7 @@ All deterministic, all fixed input/output, all verifiable with exit code and JSO
   so the scripts stay distributable with the necessary skills; a future
   compiled binary via `bun build` is recorded under Future, not built here.
   Package-vs-scripts resolved: **scripts/**.
+- **E1** — 2026-11-24, RED frozen-failure corpus at pre-CLI head `cf08ccb9` (P2): all five observed failing with `Error: Cannot find module '/home/agent/projects/agentic-workflow/scripts/ceremony.mjs'` — R1 `ledger count --slug 258-harden-needs-input-contracts`; R2 `workspace clean-check`; R3 `docs check-phase-labels`; R4 `findings update --id 1 --folded true`; entry (no args). Corpus is RED as required before implementing.
 - **D2** — 2026-11-24, owner-accepted recommendation resolving the S9/S10
   conflict: this unit delivers the **S9 P0 set** (workspace, docs, unit+plan,
   findings+ledger). S10's smaller slice and its `review` minimum stay with the
