@@ -14,4 +14,6 @@ justification | scripts/ceremony/workspace.mjs | P3 | 2026-11-24 | execute-phase
 justification | scripts/ceremony/docs.mjs | P4 | 2026-11-24 | execute-phase | P4 authors the docs module from scratch (O3, O11)
 justification | scripts/ceremony-docs.test.mjs | P4 | 2026-11-24 | execute-phase | P4 authors the docs suite from scratch as the module's validator (O3, O11); the edit after the initial write fixes the check-all fixture's log coverage
 justification | scripts/ceremony/testing.mjs | P3 | 2026-11-24 | execute-phase | P3 authors the shared fixture helper (temp repos outside the worktree, per the fix command's §3)
+justification | scripts/ceremony-findings-ledger.test.mjs | P5 | 2026-11-24 | execute-phase | P5 authors the findings+ledger suite from scratch as the modules' validator (O4, O9, O12); edits after the initial write fix the fixture carrier shape and the id-numbering expectation the run pinned
+justification | scripts/ceremony/findings.mjs,scripts/ceremony/ledger.mjs,scripts/ceremony.mjs | P5 | 2026-11-24 | execute-phase | P5 authors the findings and ledger modules from scratch and extends the entry registry with them (O4, O9, O12, O13)
 ```
