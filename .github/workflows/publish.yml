@@ -7,20 +7,25 @@ name: Publish packages
 #   Launch with mode: suggest  → READ-ONLY. Runs `release.mjs plan` for the
 #       stable train AND the canary, plus every changeset with its semver
 #       annotation and body, into the run summary. Publishes nothing.
-#   Launch with mode: cut + channel: latest → applies the unified train
+#   Launch with mode: cut + channel: stable → applies the unified train
 #       (all package versions + the exact local pins + CHANGELOG rows built
 #       from the changeset bodies), refreshes the lockfiles, adds exactly ONE
 #       release commit, pushes it, tags vX.Y.Z, fast-forwards `stable` and
-#       opens the GitHub Release. `version` forces the train (D-40-4; the
-#       notes are marked "Version forced by operator"). The push fires the
-#       publish jobs of a second run of this same workflow.
-#   Launch with mode: cut + channel: canary | alpha | beta | rc → publishes
-#       ONLY the packages declared in the accumulated changesets, at that
-#       channel's version (`<base>-canary.<date>.<n>` for canary — floats
-#       above the last stable until the next stable cuts), under that
-#       dist-tag. The repo is untouched (temp version per package, restored
-#       after); the cut is recorded as a git tag. Canaries are grouped by you
-#       — changesets accumulate until you decide to cut.
+#       opens the GitHub Release (npm dist-tag: latest — npm's vocabulary).
+#       `version` forces the train (D-40-4; the notes are marked "Version
+#       forced by operator"). The push fires the publish jobs of a second run
+#       of this same workflow.
+#   Launch with mode: cut + channel: canary → publishes ONLY the packages
+#       declared in the accumulated changesets, at the canary version
+#       (`<base>-canary.<date>.<n>` — floats above the last stable until the
+#       next stable cuts) under the canary dist-tag. The repo is untouched
+#       (temp version per package, restored after); the cut is recorded as a
+#       git tag and the changesets are NOT consumed — only the stable train
+#       consumes them. Canaries are grouped by you — changesets accumulate
+#       until you decide to cut.
+#
+# The channel set is CLOSED: stable + canary (owner decision, post-#180
+# follow-up). The old `latest` channel name is retired — `stable` is the train.
 #
 #   A push to main touching a package tree (the train's release commit, or a
 #   direct bump) publishes the committed versions as `latest` through the
@@ -57,12 +62,15 @@ on:
           - suggest
           - cut
       channel:
-        description: "cut: latest applies the train; canary/alpha/beta/rc publishes that dist-tag for the declared packages"
-        type: string
-        required: false
-        default: latest
+        description: "cut: stable applies the train; canary publishes the declared packages under the canary dist-tag"
+        type: choice
+        required: true
+        default: stable
+        options:
+          - stable
+          - canary
       version:
-        description: "cut + latest only: force this exact train version (X.Y.Z, optional)"
+        description: "cut + stable only: force this exact train version (X.Y.Z, optional)"
         type: string
         required: false
         default: ""
@@ -97,7 +105,7 @@ jobs:
         run: |
           ARGS=""
           if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
-          node scripts/release.mjs plan $ARGS | tee plan-stable.txt
+          node scripts/release.mjs plan --channel stable $ARGS | tee plan-stable.txt
 
       - name: Canary suggestion (floats above the last stable)
         run: node scripts/release.mjs plan --channel canary --date "$(date +%F)" | tee plan-canary.txt
@@ -108,9 +116,10 @@ jobs:
           {
             echo "## Release plan"
             echo ""
-            echo "Cut with **mode: cut** — \`channel: latest\` applies the train (one commit +"
+            echo "Cut with **mode: cut** — \`channel: stable\` applies the train (one commit +"
             echo "tag + stable + release, then the packages publish); \`channel: canary\` publishes the"
-            echo "declared packages under the canary dist-tag without touching the repo."
+            echo "declared packages under the canary dist-tag without touching the repo or the"
+            echo "changesets."
             echo ""
             echo "### Stable (latest) suggestion"
             echo ""
@@ -127,7 +136,7 @@ jobs:
 
   # ─────────────────────────────────────── cut + latest (the train) ────────
   cut:
-    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel == 'latest'
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel == 'stable'
     runs-on: ubuntu-latest
     permissions:
       contents: write # the release commit, the tags, the stable branch, the release
@@ -191,7 +200,7 @@ jobs:
 
   # ───────────────────────────── cut + canary/alpha/beta/rc ────────────────
   cut-prerelease:
-    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel != 'latest'
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'cut' && inputs.channel == 'canary'
     runs-on: ubuntu-latest
     permissions:
       contents: write # the cut is recorded as a git tag

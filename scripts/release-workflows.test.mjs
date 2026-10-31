@@ -5,12 +5,14 @@
  * publish.yml is THE single release entry point (D-40-13, owner-directed):
  * everything runs through scripts/release.mjs in CI —
  *   dispatch mode: suggest → read-only plan (stable + canary) to the summary;
- *   dispatch mode: cut + channel: latest → apply the train, one commit, tag,
+ *   dispatch mode: cut + channel: stable → apply the train, one commit, tag,
  *       stable, GitHub Release (never npm publish — the push fires the jobs);
- *   dispatch mode: cut + channel: canary/alpha/beta/rc → publish the declared
- *       packages at the channel version under that dist-tag (repo untouched);
+ *   dispatch mode: cut + channel: canary → publish the declared packages at
+ *       the canary version under that dist-tag (repo untouched);
  *   push → the publish jobs publish the committed versions as latest, in
  *       dependency order, each idempotent through the exact-version gate.
+ * The channel set is CLOSED: stable + canary — nothing else (owner decision,
+ * post-#180 follow-up; the npm dist-tag for stable remains `latest`).
  * release-plan.yml and release-train.yml are DELETED (folded into modes).
  * The npm Trusted Publisher records are bound to publish.yml (D-40-12).
  */
@@ -49,25 +51,30 @@ test("publish.yml is the single entry point; the mode workflows and the per-pack
   }
 });
 
-test("the dispatch exposes mode (suggest|cut), channel and version inputs", () => {
+test("the dispatch exposes mode (suggest|cut), a CLOSED channel choice and version inputs", () => {
   const text = read(PUBLISH);
   assert.match(text, /mode:\s*\n[\s\S]{0,300}?- suggest\n\s*- cut/);
-  assert.match(text, /channel:/);
+  const channel = text.slice(text.indexOf("      channel:"), text.indexOf("      version:"));
+  assert.match(channel, /type: choice/, "the channel is a closed set, not a free string");
+  assert.match(channel, /- stable/);
+  assert.match(channel, /- canary/);
+  assert.doesNotMatch(channel, /- (latest|alpha|beta|rc)\b/, "no retired or manual channels on the menu");
   assert.match(text, /version:/);
 });
 
 test("the suggest mode is read-only: plan for stable + canary into the run summary", () => {
   const block = jobBlock(read(PUBLISH), "suggest");
-  assert.match(block, /release\.mjs plan/);
+  assert.match(block, /release\.mjs plan( --version)? --channel stable/);
   assert.match(block, /--channel canary/);
   assert.match(block, /GITHUB_STEP_SUMMARY/);
   assert.doesNotMatch(block, /npm publish/);
   assert.doesNotMatch(block, /release\.mjs apply/);
 });
 
-test("cut + latest applies the train, adds one commit, tags and releases — never npm publish", () => {
+test("cut + stable applies the train, adds one commit, tags and releases — never npm publish", () => {
   const block = jobBlock(read(PUBLISH), "cut");
-  assert.match(block, /release\.mjs apply/);
+  assert.match(block, /inputs\.channel == 'stable'/, "the train cuts on the stable channel");
+  assert.match(block, /release\.mjs apply( --version)?/);
   assert.match(block, /bun install/, "lockfiles refresh after the pins moved");
   assert.match(block, /git commit -m "chore\(release\)/);
   assert.match(block, /git tag "v\$VERSION"/);
@@ -76,8 +83,9 @@ test("cut + latest applies the train, adds one commit, tags and releases — nev
   assert.doesNotMatch(block, /npm publish/, "the push fires the publish jobs, this job never touches npm");
 });
 
-test("cut + prerelease publishes the declared packages at the channel version, gated and tagged", () => {
+test("cut + canary publishes the declared packages at the canary version, gated and tagged", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  assert.match(block, /inputs\.channel == 'canary'/, "the canary channel is the only prerelease route");
   assert.match(block, /release\.mjs publish-plan --channel/);
   assert.match(block, /npm-version-gate\.mjs/, "the exact-version gate guards every publish");
   assert.match(block, /npm publish --access public --provenance --tag "\$tag"/);
