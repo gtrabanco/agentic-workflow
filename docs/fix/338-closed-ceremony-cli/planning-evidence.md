@@ -18,5 +18,8 @@
 ## Verification
 
 - All `known` rows were sampled at the cut head (commands in the `source` cell).
-- PE-008 is the only `assumption`; its owner resolves it in P6 by pinning the
-  tick convention in `scripts/ceremony-unit-plan.test.mjs`. No `unknown` rows.
+- **PE-008 resolved at P6**: the `- [x] P<n>` tick convention was pinned by
+  `scripts/ceremony-unit-plan.test.mjs` (`plan execute` / `execute-all` + the
+  `docs check-tasks-ticks` agreement case) — the assumption became a
+  CLI-owned closed convention, deterministic and suite-pinned; no `unknown`
+  rows remain.

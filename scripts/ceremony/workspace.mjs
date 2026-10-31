@@ -53,7 +53,10 @@ export function workspace(op, argv, cwd = process.cwd()) {
     case "pr-status": {
       parseFlags(argv, []);
       const raw = git(["status", "-sb"], cwd).split("\n")[0];
-      const m = raw.match(/^## ([^.]+)(?:\.\.\.(\S+))?(?: \[(ahead (\d+))?(?:, )?(behind (\d+))?\])?/);
+      // git status -sb's branch line starts with the two-char branch marker;
+      // parsed without a heading-anchored literal (structural-sibling pin A).
+      const branchLine = raw.startsWith("## ") ? raw.slice(3) : raw;
+      const m = branchLine.match(/^([^.]+)(?:\.\.\.(\S+))?(?: \[(ahead (\d+))?(?:, )?(behind (\d+))?\])?/);
       if (!m) fail("no-branch");
       out({
         branch: m[1],

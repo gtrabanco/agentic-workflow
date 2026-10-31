@@ -9,6 +9,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cer, makeRepo } from "./ceremony/testing.mjs";
+import { readSection, parseLog, splitSections } from "./ceremony/lib.mjs";
 
 test("no args → usage JSON, exit 1 (S6)", () => {
   const dir = makeRepo();
@@ -56,4 +57,37 @@ test("success output is parseable JSON on stdout, exit 0 (S6, O6)", () => {
   const r = cer(["workspace", "clean-check"], dir);
   assert.equal(r.code, 0);
   assert.equal(r.json.clean, true);
+});
+
+test("section readers are fence-aware: a fenced block with ## lines inside never bounds a section (fix/338's own L1 embeds the issue)", () => {
+  const md = [
+    "# t",
+    "",
+    "## Log",
+    "",
+    "- **L1** — 2026-11-24, the issue, verbatim:",
+    "",
+    "````markdown",
+    "## Tasks",
+    "",
+    "- P1 — embedded, quoted, never a bound",
+    "",
+    "```bash",
+    "## not a heading either",
+    "```",
+    "````",
+    "",
+    "- **P1** — 2026-11-24 12:00, after the fence · abc1234.",
+    "",
+    "## Next",
+    "",
+    "n/a",
+  ].join("\n");
+  const log = readSection(md, "log");
+  assert.ok(log.includes("- **P1** — 2026-11-24 12:00"), "the P line after the fence belongs to Log");
+  assert.ok(log.includes("## Tasks"), "the fenced ## Tasks is quoted text inside Log");
+  const headings = splitSections(md).sections.map((s) => s.heading);
+  assert.deepEqual(headings, ["t", "Log", "Next"], "fenced ## lines are never section bounds");
+  const marks = parseLog(md);
+  assert.deepEqual(marks.map((m) => m.kind), ["L", "P"], "the quoted lines inside the fence are never marks");
 });

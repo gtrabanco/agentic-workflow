@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import process from "node:process";
+import { openFence, closesFence } from "../unit-doc-phases.mjs";
 
 /** Run git in the repo (cwd), args array → trimmed stdout. Throws on failure. */
 export function git(args, cwd = process.cwd()) {
@@ -97,12 +98,23 @@ export function listUnits(cwd = process.cwd()) {
   return units;
 }
 
-/** Split markdown into {preamble, sections:[{heading, level, body, start, end}]} by ATX headings. */
+/** Split markdown into {preamble, sections:[{heading, level, bodyStart, end}]} by ATX headings — fence-aware (a heading inside a ```/~~~ fence, including a longer outer fence around nested shorter ones, is quoted text, never a bound). */
 export function splitSections(md) {
   const lines = md.split("\n");
   const sections = [];
   let current = null;
+  let fence = null;
   for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
     const m = lines[i].match(/^(#{1,6}) (.+?)\s*$/);
     if (m) {
       if (current) current.end = i;
@@ -134,6 +146,23 @@ const SECTION_TOKENS = {
   "progress": ["Progress", "Log"],
 };
 
+/** End index of one section's body: the next heading of level ≤ `stopLevel`, fence-aware. */
+function sectionEnd(lines, sec, stopLevel) {
+  let fence = null;
+  for (let i = sec.bodyStart; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) { fence = opened; continue; }
+    const m = lines[i].match(/^(#{1,6}) /);
+    if (m && m[1].length <= stopLevel) return i;
+  }
+  return sec.end;
+}
+
 /** Replace one `## <heading>` section's body (content up to the next heading of level ≤ its own; `## Tasks` also ends at its `###` ledger embeds). */
 export function replaceSection(md, token, newBody) {
   const headings = SECTION_TOKENS[token];
@@ -142,11 +171,7 @@ export function replaceSection(md, token, newBody) {
   const sec = sections.find((s) => headings.includes(s.heading) && s.level <= 3);
   if (!sec) fail("missing-section", { section: token, headings });
   const stopLevel = sec.heading === "Tasks" ? sec.level + 1 : sec.level;
-  let end = sec.end;
-  for (let i = sec.bodyStart; i < lines.length; i++) {
-    const m = lines[i].match(/^(#{1,6}) /);
-    if (m && m[1].length <= stopLevel) { end = i; break; }
-  }
+  const end = sectionEnd(lines, sec, stopLevel);
   const body = newBody.replace(/\s+$/, "");
   const replacement = [...lines.slice(0, sec.bodyStart), "", body, ""];
   return [...replacement, ...lines.slice(end)].join("\n").replace(/\n{4,}/g, "\n\n\n");
@@ -160,11 +185,7 @@ export function readSection(md, token) {
   const sec = sections.find((s) => headings.includes(s.heading) && s.level <= 3);
   if (!sec) return null;
   const stopLevel = sec.heading === "Tasks" ? sec.level + 1 : sec.level;
-  let end = sec.end;
-  for (let i = sec.bodyStart; i < lines.length; i++) {
-    const m = lines[i].match(/^(#{1,6}) /);
-    if (m && m[1].length <= stopLevel) { end = i; break; }
-  }
+  const end = sectionEnd(lines, sec, stopLevel);
   return lines.slice(sec.bodyStart, end).join("\n").replace(/^\n+|\s+$/g, "");
 }
 

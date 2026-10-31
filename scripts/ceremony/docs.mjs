@@ -9,22 +9,21 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { sectionText } from "../unit-doc-phases.mjs";
 import {
-  git, out, block, fail, parseFlags, resolveUnit, readSection, parseTasks,
+  git, out, block, fail, parseFlags, resolveUnit, parseTasks,
   parseLog, walk, CONVENTIONAL_RE,
 } from "./lib.mjs";
 
-/** Lines of the unit doc's `## Tasks` section with their 1-based line numbers. */
+/** Lines of the unit doc's `## Tasks` section with their 1-based line numbers.
+ *  The section boundary comes from the shared fence-aware reader
+ *  (scripts/unit-doc-phases.mjs — the structural-sibling pin A owns this rule). */
 function taskLines(specPath) {
   const md = fs.readFileSync(specPath, "utf8");
-  const lines = md.split("\n");
-  const start = lines.findIndex((l) => /^## Tasks\s*$/.test(l));
-  if (start === -1) fail("missing-section", { section: "tasks", path: specPath });
-  let end = lines.length;
-  for (let i = start + 1; i < lines.length; i++) {
-    if (/^#{1,2} /.test(lines[i])) { end = i; break; }
-  }
-  return lines.slice(start, end).map((l, i) => ({ line: start + i + 1, text: l }));
+  const body = sectionText(md, "Tasks");
+  if (body == null) fail("missing-section", { section: "tasks", path: specPath });
+  const startLine = md.slice(0, md.indexOf(body)).split("\n").length;
+  return body.split("\n").map((text, i) => ({ line: startLine + i, text }));
 }
 
 function checkPhaseLabels(specPath) {
