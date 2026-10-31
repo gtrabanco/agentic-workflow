@@ -23,14 +23,6 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // Feature 66 — the memory substrate is ask-first: nothing is provisioned
   // until the operator opts in.
   memory: { engram: false },
-  // Tool-call guards ship all-off: they are this repository's working rules,
-  // not a package opinion — a project opts in per guard in its config file.
-  guards: {
-    merge: false,
-    history: false,
-    ci: { create: false, run: false },
-    expensiveTests: { maxTokens: 0, patterns: [] },
-  },
   profiles: {},
   profileOrder: [],
   profileFallback: { ...DEFAULT_PROFILE_FALLBACK },

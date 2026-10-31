@@ -96,9 +96,6 @@ export interface ConfigFile {
   /** Feature 66 (AC3/D3): the memory-substrate consent surface — Engram's MCP
    *  registration is ask-first, so nothing is provisioned unless this says so. */
   memory?: MemoryConfigFile;
-  /** Tool-call guards (owner-gated merges, history, CI, expensive tests).
-   *  Everything absent stays off. */
-  guards?: GuardsConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -129,60 +126,6 @@ export interface MemoryConfigFile {
 /** What the extension READS: every `memory` knob resolved (feature 66). */
 export interface MemoryConfig {
   engram: boolean;
-}
-
-/**
- * One tool-call guard, as an operator WRITES it (this repository's working
- * rules, made mechanical; every other project gets none of it unless it
- * configures it). Each guard ships disabled — an absent key is OFF.
- *
- *   merge           every direct merge route is owner-only: `git merge`,
- *                   `gh pr merge`, and `git pull`'s merge form.
- *   history         pushes are decided by asking git (`git push --dry-run`):
- *                   a forced update, a ref delete or a push to `main` is
- *                   declined — one mechanism covering every flag spelling and
- *                   git alias.
- *   ci              CI is owner-gated: creating workflow files and triggering
- *                   workflow runs are blocked.
- *   expensiveTests  commands matching a configured pattern are estimated in
- *                   tokens; above `maxTokens` they are blocked. `tokens: 0`
- *                   blocks every match regardless of estimate.
- *
- * The only way through a guard is the explicit per-command token — the
- * command's first word — after an owner authorization in the same turn:
- * `AW_ALLOW=merge`, `AW_ALLOW=force`, `AW_ALLOW=ci`, `AW_ALLOW=cost`.
- */
-export interface GuardsConfigFile {
-  merge?: boolean;
-  history?: boolean;
-  ci?: GuardsCiFile;
-  expensiveTests?: GuardsExpensiveTestsFile;
-}
-
-export interface GuardsCiFile {
-  create?: boolean;
-  run?: boolean;
-}
-
-export interface GuardsExpensiveTestsFile {
-  /** Estimated-token ceiling; a match above it is blocked. `0` (default)
-   *  blocks every match regardless of estimate. */
-  maxTokens?: number;
-  /** Command patterns (regex source, `u` flag) and their estimated cost. */
-  patterns?: GuardsCostPattern[];
-}
-
-export interface GuardsCostPattern {
-  match: string;
-  tokens: number;
-}
-
-/** What the extension READS: every guard knob resolved. */
-export interface GuardsConfig {
-  merge: boolean;
-  history: boolean;
-  ci: { create: boolean; run: boolean };
-  expensiveTests: { maxTokens: number; patterns: GuardsCostPattern[] };
 }
 
 export interface ConfigIssue {
@@ -216,8 +159,6 @@ export interface EffectiveConfig {
   profileFallback: ProfileFallbackConfig;
   /** Feature 66: the memory-substrate consent surface. */
   memory: MemoryConfig;
-  /** The effective tool-call guards (all off unless a config file enables them). */
-  guards: GuardsConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }
