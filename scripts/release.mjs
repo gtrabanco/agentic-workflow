@@ -6,26 +6,32 @@
  * FORMAT, not the tool — see scripts/lint-changeset.mjs) and computes one
  * release plan:
  *
- *   latest  — the unified version train: ALL packages carry the train version
+ *   stable  — the unified version train: ALL packages carry the train version
  *             (SPEC AC-03 / D-40-2), companion CHANGELOG rows are written, and
  *             the `vX.Y.Z` git tag + `stable` branch push are planned at the
- *             release commit (#156: downstream tools pin a stable ref).
+ *             release commit (#156: downstream tools pin a stable ref). The
+ *             npm dist-tag stable publishes under stays `latest` — npm's
+ *             vocabulary, not a channel of this pipeline.
  *   canary  — `<base>-canary.<yyyymmdd>.<n>` (Bun-style, D-40-3), deterministic
  *             at the same state (AC-12); only packages declared in the
  *             changesets are listed (AC-08 package filter); never moves
- *             `latest` (PE-003).
- *   alpha|beta|rc — manual promotions, `<base>-<channel>.<n>`, published under
- *             their own dist-tag (AC-06/AC-09).
+ *             `latest` (PE-003) and never consumes the changesets.
+ *
+ * The channel set is CLOSED (owner decision, post-#180 follow-up): stable +
+ * canary, nothing else. The old manual promotion channels (alpha/beta/rc)
+ * were removed, and the former `latest` channel name is retired — `--channel
+ * latest` fails with a pointer to `stable`.
  *   --version OVERRIDE — force the version (marketing override, D-40-4); the
  *             release body is marked "Version forced by operator: X.Y.Z"
  *             (AC-10) and the version must not collide with an existing tag.
  *
  * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias) and
  * `apply` (writes package.json versions + CHANGELOG companion rows for the
- * latest channel, stamps every skill's SKILL.md frontmatter with the
+ * `apply` (writes package.json versions + CHANGELOG companion rows for the
+ * stable channel, stamps every skill's SKILL.md frontmatter with the
  * train version (D-40-14), then deletes the consumed `.changeset/*.md` files
- * so the next cut carries only new intent). `--version` forces the LATEST train
- * only — prerelease channels compute their own version and reject it. git/npm/gh
+ * so the next cut carries only new intent). `--version` forces the STABLE train
+ * only — the canary channel computes its own version and rejects it. git/npm/gh
  * commands are always PRINTED, never executed — an operator or workflow runs
  * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
  * are third-party data, never interpolated into a shell command.
@@ -35,7 +41,7 @@
  * Dependency-free (node: builtins only — the node-compat rule, AC-01).
  *
  * Usage:
- *   node scripts/release.mjs [plan|apply] [--channel latest|canary|alpha|beta|rc]
+ *   node scripts/release.mjs [plan|apply] [--channel stable|canary]
  *        [--version X.Y.Z] [--base X.Y.Z] [--date YYYY-MM-DD] [--summary "..."]
  *        [--root DIR]
  *
@@ -50,25 +56,27 @@ import { fileURLToPath } from "node:url";
 import { parseChangeset } from "./lint-changeset.mjs";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const CHANNELS = ["latest", "canary", "alpha", "beta", "rc"];
+// The channel set is closed: the stable train and canary. `latest` is npm's
+// dist-tag for the stable train, never a channel name here.
+const CHANNELS = ["stable", "canary"];
 const LEVELS = ["patch", "minor", "major"];
 
 function usage() {
   return [
-    "usage: node scripts/release.mjs [plan|apply] [--channel latest|canary|alpha|beta|rc]",
+    "usage: node scripts/release.mjs [plan|apply] [--channel stable|canary]",
     "                     [--version X.Y.Z] [--base X.Y.Z] [--date YYYY-MM-DD]",
     "                     [--summary \"...\"] [--root DIR]",
     "",
     "Deterministic release pipeline for the unified version train (issue #180).",
     "`plan` (default) is read-only; `apply` writes package versions + CHANGELOG",
-    "companion rows for the latest channel and consumes the applied changesets.",
-    "--version forces the latest train only. git/npm/gh commands are printed,",
+    "companion rows for the stable channel and consumes the applied changesets.",
+    "--version forces the stable train only. git/npm/gh commands are printed,",
     "never executed.",
   ].join("\n");
 }
 
 function parseArgs(argv) {
-  const args = { mode: "plan", channel: "latest", version: null, base: null, date: null, summary: null, root: DEFAULT_ROOT };
+  const args = { mode: "plan", channel: "stable", version: null, base: null, date: null, summary: null, root: DEFAULT_ROOT };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "plan" || a === "apply" || a === "release-notes" || a === "publish-plan") args.mode = a;
@@ -216,7 +224,7 @@ function highestLevel(changesets) {
   return null;
 }
 
-// --- apply (latest channel) --------------------------------------------------
+// --- apply (stable channel) -------------------------------------------------
 
 function setPackageVersion(pkgPath, version) {
   const json = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
@@ -291,19 +299,23 @@ function main() {
     process.exit(0);
   }
   if (!CHANNELS.includes(args.channel)) {
-    fail(`--channel must be one of ${CHANNELS.join(", ")}`);
+    fail(
+      args.channel === "latest"
+        ? "--channel must be one of stable, canary — `latest` was renamed `stable` (the npm dist-tag for stable remains latest)"
+        : `--channel must be one of ${CHANNELS.join(", ")} — the channel set is closed`,
+    );
   }
-  if (args.mode === "publish-plan" && args.channel === "latest") {
-    fail("publish-plan is for prerelease channels — channel latest cuts the train with apply");
+  if (args.mode === "publish-plan" && args.channel === "stable") {
+    fail("publish-plan is for canary — channel stable cuts the train with apply");
   }
   if (args.dryRun && args.mode !== "plan") {
     fail("--dry-run plans only — drop it to run apply");
   }
-  if (args.mode !== "release-notes" && args.version !== null && args.channel !== "latest") {
-    // A prerelease channel computes its own version — an operator-supplied
+  if (args.mode !== "release-notes" && args.version !== null && args.channel !== "stable") {
+    // The canary channel computes its own version — an operator-supplied
     // --version there must fail loudly, never be silently ignored (the old
     // behavior printed "Version forced by operator: undefined" and succeeded).
-    fail(`--version forces the latest train only — channel ${args.channel} computes its own prerelease version`);
+    fail(`--version forces the stable train only — channel ${args.channel} computes its own prerelease version`);
   }
   const root = args.root;
   const date = args.date ?? new Date().toISOString().slice(0, 10);
@@ -356,13 +368,13 @@ function main() {
       baseNote = " (highest package version — no stable v-tag)";
     }
   }
-  if (!base && forced && args.channel === "latest") base = args.version;
+  if (!base && forced && args.channel === "stable") base = args.version;
   if (!base) fail("no --base given and neither a stable v* tag nor a package version provides one");
   if (!SEMVER_RE.test(base)) fail(`base must be a stable X.Y.Z version, got: ${base}`);
 
   let version;
   const level = highestLevel(changesets);
-  if (args.channel === "latest") {
+  if (args.channel === "stable") {
     if (forced) {
       if (!SEMVER_RE.test(args.version)) fail(`--version must be a stable X.Y.Z version, got: ${args.version}`);
       version = args.version;
@@ -391,7 +403,7 @@ function main() {
       }
     }
   }
-  if (args.channel === "latest") {
+  if (args.channel === "stable") {
     // The changelog row summary IS the release note: the accumulated changeset
     // bodies (first line each, file order), unless the operator names one.
     const SKILLS_CONTENT_PACKAGE = "@gtrabanco/pi-agentic-workflow"; // skills ship only inside the pi bundle (D-40-8/D-40-14)
@@ -456,9 +468,10 @@ function main() {
     console.log(`  git push origin HEAD:refs/heads/stable`);
     console.log(`  gh release create v${version} --generate-notes --title "v${version}" --notes-file release-notes.txt`);
   } else {
-    // canary / alpha / beta / rc — prerelease of the base, never touching latest.
+    // canary — the only prerelease channel: a prerelease of the base that
+    // never touches the latest dist-tag and never consumes the changesets.
     const n = gitRepo ? channelTagCounter(root, base, stamp, args.channel) + 1 : 1;
-    const prerelease = `${base}-${args.channel}.${args.channel === "canary" ? `${stamp}.${n}` : n}`;
+    const prerelease = `${base}-canary.${stamp}.${n}`;
     const listed = packages.filter((p) => declared.has(p.name));
     // Machine-readable plan for the publish workflow's channel job: one TSV
     // line per declared package (name, dir, version, dist-tag).
@@ -477,7 +490,7 @@ function main() {
     for (const pkg of listed) {
       console.log(`  cd packages/${pkg.dirName} && npm version ${prerelease} --no-git-tag-version && npm publish --tag ${args.channel} && git checkout -- package.json`);
     }
-    console.log(`note: ${args.channel} never moves the latest dist-tag; publish it with the workflow's channel input or by hand`);
+    console.log(`note: canary never moves the latest dist-tag; publish it with the workflow's channel input or by hand`);
   }
 
   if (args.mode === "plan") console.log("plan only — nothing written");
