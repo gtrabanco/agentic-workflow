@@ -11,11 +11,11 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import {
-  git, out, fail, block, parseFlags, cleanCheck, walk, globToRe,
+  git, gitOrFail, out, fail, block, parseFlags, cleanCheck, walk, globToRe,
 } from "./lib.mjs";
 
 function diffRange(from, to, cwd) {
-  const numstat = git(["diff", "--numstat", `${from}..${to}`], cwd).split("\n").filter(Boolean);
+  const numstat = gitOrFail(["diff", "--numstat", `${from}..${to}`], cwd, "invalid-ref").split("\n").filter(Boolean);
   const files = numstat.map((l) => {
     const [added, deleted, file] = l.split("\t");
     return { file, added: added === "-" ? 0 : Number(added), deleted: deleted === "-" ? 0 : Number(deleted), binary: added === "-" };
@@ -34,11 +34,26 @@ function rangeArgs(flags, cwd) {
   fail("missing-flag", { flag: "<from>..<to>" });
 }
 
+/** The repo's base branch: main, else master, else origin's default (a git failure is a JSON error, never a crash). */
+function baseBranch(cwd) {
+  for (const name of ["main", "master"]) {
+    try {
+      git(["rev-parse", "--verify", `${name}^{commit}`], cwd);
+      return name;
+    } catch { /* try the next candidate */ }
+  }
+  try {
+    return git(["symbolic-ref", "--short", "refs/remotes/origin/HEAD"], cwd).replace(/^origin\//, "");
+  } catch {
+    fail("no-base-branch", { tried: ["main", "master", "origin/HEAD"] });
+  }
+}
+
 export function workspace(op, argv, cwd = process.cwd()) {
   switch (op) {
     case "status": {
       parseFlags(argv, []);
-      const rows = git(["status", "--porcelain=v1"], cwd).split("\n").filter(Boolean).map((l) => ({
+      const rows = gitOrFail(["status", "--porcelain=v1"], cwd).split("\n").filter(Boolean).map((l) => ({
         file: l.slice(3),
         index: l[0],
         working: l[1],
@@ -52,7 +67,7 @@ export function workspace(op, argv, cwd = process.cwd()) {
     }
     case "pr-status": {
       parseFlags(argv, []);
-      const raw = git(["status", "-sb"], cwd).split("\n")[0];
+      const raw = gitOrFail(["status", "-sb"], cwd).split("\n")[0];
       // git status -sb's branch line starts with the two-char branch marker;
       // parsed without a heading-anchored literal (structural-sibling pin A).
       const branchLine = raw.startsWith("## ") ? raw.slice(3) : raw;
@@ -76,24 +91,25 @@ export function workspace(op, argv, cwd = process.cwd()) {
     case "diff-stat": {
       const [from, to] = rangeArgs(parseFlags(argv, []), cwd);
       out({
-        stat: git(["diff", "--stat", `${from}..${to}`], cwd),
-        shortstat: git(["diff", "--shortstat", `${from}..${to}`], cwd),
+        stat: gitOrFail(["diff", "--stat", `${from}..${to}`], cwd, "invalid-ref"),
+        shortstat: gitOrFail(["diff", "--shortstat", `${from}..${to}`], cwd, "invalid-ref"),
       });
     }
     case "main-check": {
       const [from, to] = rangeArgs(parseFlags(argv, []), cwd);
-      const commits = git(["log", "--format=%H %s", `${from}..${to}`], cwd).split("\n").filter(Boolean)
+      const commits = gitOrFail(["log", "--format=%H %s", `${from}..${to}`], cwd, "invalid-ref").split("\n").filter(Boolean)
         .map((l) => ({ sha: l.slice(0, 40), message: l.slice(41) }));
-      const onMain = new Set(git(["rev-list", "main"], cwd).split("\n"));
+      const base = baseBranch(cwd);
+      const onMain = new Set(gitOrFail(["rev-list", base], cwd).split("\n"));
       const commitsOnMain = commits.filter((c) => onMain.has(c.sha));
-      if (commitsOnMain.length) block({ check: "main-check", clean: false, "commits-on-main": commitsOnMain });
-      out({ check: "main-check", clean: true, "commits-on-main": [] });
+      if (commitsOnMain.length) block({ check: "main-check", "base-branch": base, clean: false, "commits-on-main": commitsOnMain });
+      out({ check: "main-check", "base-branch": base, clean: true, "commits-on-main": [] });
     }
     case "hash-object": {
-      const flags = parseFlags(argv, ["path"]);
+      const flags = parseFlags(argv, ["path"], ["path"]);
       const p = path.join(cwd, flags.path);
       if (!fs.existsSync(p)) fail("missing-file", { path: flags.path });
-      out({ path: flags.path, sha: git(["hash-object", p], cwd) });
+      out({ path: flags.path, sha: gitOrFail(["hash-object", p], cwd) });
     }
     case "file-content": {
       const flags = parseFlags(argv, ["sha", "path"]);

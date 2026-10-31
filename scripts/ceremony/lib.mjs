@@ -12,14 +12,24 @@ import { execFileSync } from "node:child_process";
 import process from "node:process";
 import { openFence, closesFence } from "../unit-doc-phases.mjs";
 
-/** Run git in the repo (cwd), args array → trimmed stdout. Throws on failure. */
+/** Run git in the repo (cwd), args array → trimmed stdout. Throws on failure (stderr captured, never echoed). */
 export function git(args, cwd = process.cwd()) {
-  return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
 
 /** Quiet git — stdout suppressed (for writes like hash-object -w). */
 export function gitQuiet(args, cwd = process.cwd()) {
-  return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+  return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+}
+
+/** Run git; a git failure is a JSON usage error, never a stack trace (S6: stdout is always JSON). */
+export function gitOrFail(args, cwd = process.cwd(), code = "git-error") {
+  try {
+    return git(args, cwd);
+  } catch (err) {
+    const text = String(err.stderr ?? err.message ?? "").trim().split("\n").filter(Boolean);
+    fail(code, { args: args.join(" "), detail: text[0] ?? "git command failed" });
+  }
 }
 
 /** JSON success → stdout, exit 0. */
@@ -61,6 +71,12 @@ export function parseFlags(argv, allowed, required = []) {
     if (!(r in flags)) fail("missing-flag", { flag: `--${r}` });
   }
   return flags;
+}
+
+/** Reject flags the calling operation does not use (S6/S8: an option is either honoured or an error, never silently swallowed). */
+export function onlyFlags(flags, allowed) {
+  const extra = Object.keys(flags).filter((k) => k !== "_" && k !== "slug" && !allowed.includes(k));
+  if (extra.length) fail("unknown-flag", { flag: `--${extra[0]}`, allowed: ["slug", ...allowed] });
 }
 
 /** Known P1/P2 modules — outside the closed set until their follow-up PRs (issue #338 priority). */
@@ -163,6 +179,21 @@ function sectionEnd(lines, sec, stopLevel) {
   return sec.end;
 }
 
+/** Remove one section entirely — its heading, body and deeper `###` embeds — keeping every other byte. */
+export function deleteSection(md, token) {
+  const headings = SECTION_TOKENS[token];
+  if (!headings) fail("unknown-section", { section: token, allowed: Object.keys(SECTION_TOKENS).concat("full") });
+  const { lines, sections } = splitSections(md);
+  const sec = sections.find((s) => headings.includes(s.heading) && s.level <= 3);
+  if (!sec) fail("missing-section", { section: token, headings });
+  const end = sectionEnd(lines, sec, sec.level);
+  const head = lines.slice(0, sec.bodyStart - 1);
+  const tail = lines.slice(end);
+  while (head.length && head[head.length - 1].trim() === "") head.pop();
+  while (tail.length && tail[0].trim() === "") tail.shift();
+  return [...head, ...(tail.length ? [""] : []), ...tail].join("\n").replace(/\s+$/, "\n");
+}
+
 /** Replace one `## <heading>` section's body (content up to the next heading of level ≤ its own; `## Tasks` also ends at its `###` ledger embeds). */
 export function replaceSection(md, token, newBody) {
   const headings = SECTION_TOKENS[token];
@@ -231,13 +262,23 @@ export function appendLogLine(md, kind, text, today) {
   return replaceSection(md, "log", `${body.replace(/\s+$/, "")}\n${line}`);
 }
 
-/** Parse `## Tasks` bullets → [{n, ticked, label}] (unit-doc grammar: `- [x] P<n> — label`). */
+/** Parse `## Tasks` bullets → [{n, ticked, label, spec?, files?}] (unit-doc grammar: `- [x] P<n> — label` plus its indented `(Implements: …)` / `Relevant files: …` lines). */
 export function parseTasks(md) {
   const body = readSection(md, "tasks") ?? "";
   const tasks = [];
+  let current = null;
   for (const line of body.split("\n")) {
     const m = line.match(/^- (?:\[([ xX])\] )?P(\d+) — /);
-    if (m) tasks.push({ n: Number(m[2]), ticked: Boolean(m[1] && m[1] !== " "), label: line.replace(/^- (?:\[.\] )?P\d+ — /, "") });
+    if (m) {
+      current = { n: Number(m[2]), ticked: Boolean(m[1] && m[1] !== " "), label: line.replace(/^- (?:\[.\] )?P\d+ — /, "") };
+      tasks.push(current);
+      continue;
+    }
+    if (!current) continue;
+    const spec = line.match(/^ {2}\(Implements: (.+)\)\s*$/);
+    const files = line.match(/^ {2}Relevant files: (.+?)\s*$/);
+    if (spec) current.spec = spec[1];
+    else if (files) current.files = files[1];
   }
   return tasks;
 }
@@ -259,7 +300,7 @@ export function setTaskTick(md, n, ticked) {
 
 /** Workspace cleanliness → {clean, dirty-files}. */
 export function cleanCheck(cwd = process.cwd()) {
-  const raw = git(["status", "--porcelain=v1"], cwd);
+  const raw = gitOrFail(["status", "--porcelain=v1"], cwd);
   const dirty = raw.split("\n").filter(Boolean).map((l) => ({ index: l[0], working: l[1], file: l.slice(3) }));
   return { clean: dirty.length === 0, "dirty-files": dirty.map((d) => d.file) };
 }

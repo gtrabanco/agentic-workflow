@@ -119,6 +119,68 @@ test("unit descope records the approved descope line in Acceptance criteria (S5)
   assert.match(md, /- \*\*AC-S2 descope\*\* — approved-by owner · \d{4}-\d{2}-\d{2} · descope-recorded/);
 });
 
+test("plan update --tasks is a real partial edit: untouched tasks keep tick, spec and files (S7)", () => {
+  const dir = makeUnit({
+    tasks: "- [x] P1 — first (validator: `true` exits 0)\n  (Implements: S1)\n  Relevant files: docs/fix/1-fixture/SPEC.md\n- [x] P2 — second (validator: `true` exits 0)\n  (Implements: S1)",
+    log: "- **P1** — 2026-11-24 10:00, a.\n- **P2** — 2026-11-24 10:05, b.",
+  });
+  assert.equal(cer(["docs", "check-tasks-ticks", "--slug", "1-fixture"], dir).code, 0);
+  const r = cer(["plan", "update", "--slug", "1-fixture", "--tasks", JSON.stringify([{ n: 2, label: "second renamed" }])], dir);
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.json["tasks-added"], []);
+  assert.deepEqual(r.json["tasks-removed"], []);
+  const tasks = cer(["plan", "read", "--slug", "1-fixture"], dir).json.tasks;
+  assert.deepEqual(tasks.map((t) => t.ticked), [true, true], "untouched ticks survive");
+  assert.equal(tasks[0].spec, "S1", "untouched S# link survives");
+  assert.equal(tasks[0].files, "docs/fix/1-fixture/SPEC.md", "untouched files link survives");
+  assert.equal(tasks[1].label, "second renamed");
+  assert.equal(tasks[1].spec, "S1");
+  assert.equal(cer(["docs", "check-tasks-ticks", "--slug", "1-fixture"], dir).code, 0, "the partial edit leaves the tick check green");
+  const add = cer(["plan", "update", "--slug", "1-fixture", "--tasks", JSON.stringify([{ n: 3, label: "third" }])], dir);
+  assert.deepEqual(add.json["tasks-added"], ["P3"]);
+  assert.equal(cer(["plan", "read", "--slug", "1-fixture"], dir).json.tasks.length, 3);
+});
+
+test("unit/plan delete-section removes the section and its ### embeds, keeping the rest (S7)", () => {
+  const dir = makeUnit({ tasks: GOOD_TASKS });
+  const specPath = path.join(dir, "docs/fix/1-fixture/SPEC.md");
+  fs.writeFileSync(specPath, fs.readFileSync(specPath, "utf8")
+    .replace("## Findings", "### Planning evidence\n\n| id |\n|---|\n\n## Findings"));
+  const r = cer(["plan", "delete-section", "--slug", "1-fixture", "--section", "tasks"], dir);
+  assert.equal(r.code, 0);
+  const md = fs.readFileSync(specPath, "utf8");
+  assert.ok(!md.includes("## Tasks"), "the Tasks section is gone");
+  assert.ok(!md.includes("### Planning evidence"), "its ### embed went with it");
+  assert.match(md, /## Findings/, "the next section survives");
+  assert.match(md, /## Specs/, "a previous section survives");
+  const u = cer(["unit", "delete-section", "--slug", "1-fixture", "--section", "findings"], dir);
+  assert.equal(u.code, 0);
+  assert.ok(!fs.readFileSync(specPath, "utf8").includes("## Findings"));
+  assert.equal(cer(["unit", "delete-section", "--slug", "1-fixture", "--section", "bogus"], dir).json.error, "unknown-section");
+  assert.equal(cer(["unit", "delete-section", "--slug", "1-fixture", "--section", "evidence"], dir).json.error, "missing-section");
+});
+
+test("unit create --template <path> uses the given template (S5)", () => {
+  const dir = makeRepo();
+  fs.mkdirSync(path.join(dir, "tpl"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "tpl/custom.md"), "# custom unit body\n\n## Specs\n\nn/a\n");
+  const r = cer(["unit", "create", "--slug", "7-custom", "--type", "fix", "--template", "tpl/custom.md"], dir);
+  assert.equal(r.code, 0);
+  assert.match(fs.readFileSync(path.join(dir, "docs/fix/7-custom/SPEC.md"), "utf8"), /custom unit body/);
+});
+
+test("unit update --content alone is the full edit; unit read exposes the raw text (S7)", () => {
+  const dir = makeUnit({ tasks: GOOD_TASKS });
+  const full = cer(["unit", "update", "--slug", "1-fixture", "--content", "# fix/1-fixture\n\n## Next\n\nrewritten"], dir);
+  assert.equal(full.code, 0);
+  assert.equal(full.json.section, "full");
+  const md = fs.readFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), "utf8");
+  assert.match(md, /^# fix\/1-fixture\n\n## Next\n\nrewritten/);
+  const read = cer(["unit", "read", "--slug", "1-fixture"], dir);
+  assert.equal(read.code, 0);
+  assert.equal(read.json.raw, md, "unit read returns the raw text verbatim");
+});
+
 test("unit triage delegates to unit-route.mjs and propagates its exit codes (O5, PE-001)", () => {
   const dir = makeUnit({ tasks: GOOD_TASKS });
   execFileSync("git", ["add", "."], { cwd: dir });

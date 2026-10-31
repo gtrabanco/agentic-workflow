@@ -12,8 +12,8 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  git, out, fail, block, parseFlags, resolveUnit, listUnits, replaceSection,
-  readSection, splitSections, parseFindings, parseLog, parseTasks, today,
+  gitOrFail, out, fail, block, onlyFlags, parseFlags, resolveUnit, listUnits, replaceSection,
+  deleteSection, readSection, splitSections, parseFindings, parseLog, parseTasks, today,
 } from "./lib.mjs";
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -37,11 +37,12 @@ function runUnitRoute(args, cwd) {
 export function unit(op, argv, cwd = process.cwd()) {
   switch (op) {
     case "create": {
-      const flags = parseFlags(argv, ["slug", "type", "issue"], ["slug", "type"]);
+      const flags = parseFlags(argv, ["slug", "type", "issue", "template"], ["slug", "type"]);
       if (!SLUG_RE.test(flags.slug)) fail("invalid-slug", { slug: flags.slug, expected: "kebab-case" });
       if (!TEMPLATES[flags.type]) fail("invalid-type", { type: flags.type, allowed: Object.keys(TEMPLATES) });
-      const template = path.join(cwd, TEMPLATES[flags.type]);
-      if (!fs.existsSync(template)) fail("missing-template", { path: TEMPLATES[flags.type] });
+      const relative = flags.template ?? TEMPLATES[flags.type];
+      const template = path.join(cwd, relative);
+      if (!fs.existsSync(template)) fail("missing-template", { path: relative });
       const dir = path.join(cwd, flags.type === "fix" ? "docs/fix" : "docs/features", flags.slug);
       if (fs.existsSync(dir)) fail("unit-exists", { slug: flags.slug, path: dir });
       fs.mkdirSync(dir, { recursive: true });
@@ -50,37 +51,49 @@ export function unit(op, argv, cwd = process.cwd()) {
       if (flags.issue) md = md.replace(/`#<n>`/, `\`#${flags.issue}\``);
       const specPath = path.join(dir, "SPEC.md");
       fs.writeFileSync(specPath, md);
-      out({ created: true, slug: flags.slug, type: flags.type, path: flags.type === "fix" ? `docs/fix/${flags.slug}` : `docs/features/${flags.slug}`, sha: git(["hash-object", specPath], cwd) });
+      out({ created: true, slug: flags.slug, type: flags.type, template: relative, path: flags.type === "fix" ? `docs/fix/${flags.slug}` : `docs/features/${flags.slug}`, sha: gitOrFail(["hash-object", specPath], cwd) });
     }
     case "read": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
+      onlyFlags(flags, []);
       const u = resolveUnit(flags.slug, cwd);
       const md = fs.readFileSync(u.specPath, "utf8");
       out({
         slug: flags.slug,
         type: u.type,
         path: u.specPath.slice(cwd.length + 1),
-        sha: git(["hash-object", u.specPath], cwd),
+        sha: gitOrFail(["hash-object", u.specPath], cwd),
         sections: splitSections(md).sections.filter((s) => s.level <= 2).map((s) => s.heading),
         counts: { findings: parseFindings(md).length, tasks: parseTasks(md).length, log: parseLog(md).length },
+        raw: md,
       });
     }
     case "update": {
-      const flags = parseFlags(argv, ["slug", "section", "content"], ["slug", "section", "content"]);
+      const flags = parseFlags(argv, ["slug", "section", "content"], ["slug", "content"]);
+      onlyFlags(flags, ["section", "content"]);
+      const section = flags.section ?? "full";
       const u = resolveUnit(flags.slug, cwd);
       const md = fs.readFileSync(u.specPath, "utf8");
-      const next = flags.section === "full" ? flags.content : replaceSection(md, flags.section, flags.content);
+      const next = section === "full" ? flags.content : replaceSection(md, section, flags.content);
       fs.writeFileSync(u.specPath, next);
-      out({ updated: true, slug: flags.slug, section: flags.section, sha: git(["hash-object", u.specPath], cwd) });
+      out({ updated: true, slug: flags.slug, section, sha: gitOrFail(["hash-object", u.specPath], cwd) });
+    }
+    case "delete-section": {
+      const flags = parseFlags(argv, ["slug", "section"], ["slug", "section"]);
+      const u = resolveUnit(flags.slug, cwd);
+      fs.writeFileSync(u.specPath, deleteSection(fs.readFileSync(u.specPath, "utf8"), flags.section));
+      out({ deleted: true, slug: flags.slug, section: flags.section, sha: gitOrFail(["hash-object", u.specPath], cwd) });
     }
     case "delete": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
+      onlyFlags(flags, []);
       const u = resolveUnit(flags.slug, cwd);
       fs.rmSync(u.dir, { recursive: true, force: true });
       out({ deleted: true, slug: flags.slug, path: u.dir.slice(cwd.length + 1) });
     }
     case "list": {
-      parseFlags(argv, []);
+      const listFlags = parseFlags(argv, []);
+      onlyFlags(listFlags, []);
       const readme = path.join(cwd, "docs/fix/README.md");
       const statuses = new Map();
       if (fs.existsSync(readme)) {
@@ -94,6 +107,7 @@ export function unit(op, argv, cwd = process.cwd()) {
     }
     case "triage": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
+      onlyFlags(flags, []);
       resolveUnit(flags.slug, cwd);
       const r = runUnitRoute(["--triage", flags.slug, "--json"], cwd);
       if (r.json) {
@@ -106,6 +120,7 @@ export function unit(op, argv, cwd = process.cwd()) {
     }
     case "route": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
+      onlyFlags(flags, []);
       resolveUnit(flags.slug, cwd);
       // Route mode of unit-route.mjs takes one positional argument and has no
       // `--json` (PE-001, corrected): only `--triage <unit> [--json]` accepts
@@ -119,6 +134,7 @@ export function unit(op, argv, cwd = process.cwd()) {
     }
     case "select-next": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
+      onlyFlags(flags, []);
       const u = resolveUnit(flags.slug, cwd);
       const md = fs.readFileSync(u.specPath, "utf8");
       const logged = new Set(parseLog(md).filter((m) => m.kind === "P").map((m) => m.n));
@@ -127,6 +143,7 @@ export function unit(op, argv, cwd = process.cwd()) {
     }
     case "descope": {
       const flags = parseFlags(argv, ["slug", "criterion", "approved-by"], ["slug", "criterion", "approved-by"]);
+      onlyFlags(flags, ["criterion", "approved-by"]);
       const u = resolveUnit(flags.slug, cwd);
       const md = fs.readFileSync(u.specPath, "utf8");
       const body = readSection(md, "acceptance");

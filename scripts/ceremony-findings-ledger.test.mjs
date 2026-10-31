@@ -69,6 +69,58 @@ test("R4 reproducer: `findings update --folded true` removes the row and appends
   // no `sed -i` in sight: the flip was one closed operation
 });
 
+test("findings update applies its cell flags together with --folded true (S7)", () => {
+  const dir = makeUnit({ findingsRows: ROW("F1") });
+  const r = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--severity", "critical", "--class", "replan-in-unit", "--folded", "true"], dir);
+  assert.equal(r.code, 0);
+  assert.equal(r.json.folded, true);
+  assert.equal(r.json.severity, "critical");
+  assert.equal(r.json.class, "replan-in-unit");
+  assert.deepEqual(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings, []);
+  const fLine = cer(["ledger", "read", "--slug", "1-fixture"], dir).json.marks.find((m) => m.kind === "F");
+  assert.match(fLine.text, /folded F1 \(code\)/);
+  assert.match(fLine.text, /severity: critical/);
+});
+
+test("findings/ledger delete-section removes one section; legacy carrier stays read-only (S7)", () => {
+  const dir = makeUnit({ findingsRows: ROW("F1"), log: "- **P1** — 2026-11-24, did it." });
+  const r = cer(["findings", "delete-section", "--slug", "1-fixture", "--section", "findings"], dir);
+  assert.equal(r.code, 0);
+  const md = fs.readFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), "utf8");
+  assert.ok(!md.includes("## Findings"), "the Findings section is gone");
+  assert.match(md, /## Tasks/, "sibling sections survive");
+  assert.match(md, /## Log/, "a later section survives");
+  assert.equal(cer(["findings", "delete-section", "--slug", "1-fixture", "--section", "bogus"], dir).json.error, "unknown-section");
+  assert.equal(cer(["ledger", "delete-section", "--slug", "1-fixture", "--section", "log"], dir).code, 0);
+  const after = fs.readFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), "utf8");
+  assert.ok(!after.includes("## Log"));
+  assert.match(after, /## Next/, "the section after Log survives");
+  const legacy = cer(["ledger", "delete-section", "--slug", "2-legacy", "--section", "log"], makeLegacyUnit());
+  assert.equal(legacy.code, 1);
+  assert.equal(legacy.json.error, "legacy-carrier-readonly");
+});
+
+test("a flag the operation does not use is a usage error, never silently ignored (S6, S8)", () => {
+  const dir = makeUnit({ findingsRows: ROW("F1") });
+  assert.equal(cer(["findings", "read", "--slug", "1-fixture", "--severity", "high"], dir).json.error, "unknown-flag");
+  const appended = cer(["findings", "append", "--slug", "1-fixture", "--file", "a.ts", "--axis", "code", "--severity", "low", "--class", "c", "--route", "r", "--folded", "true"], dir);
+  assert.equal(appended.code, 1);
+  assert.equal(appended.json.error, "unknown-flag");
+  assert.equal(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings.length, 1, "the rejected call wrote nothing");
+  assert.equal(cer(["ledger", "count", "--slug", "1-fixture", "--mark", "R1"], dir).json.error, "unknown-flag");
+  assert.equal(cer(["ledger", "read", "--slug", "1-fixture", "--type", "R"], dir).json.error, "unknown-flag");
+});
+
+test("ledger delete --mark accepts the issue's numeric index form (S5)", () => {
+  const dir = makeUnit({ log: ["- **R1** — 2026-11-24, one.", "- **R2** — 2026-11-24, two.", "- **G1** — 2026-11-24, gate."].join("\n") });
+  const r = cer(["ledger", "delete", "--slug", "1-fixture", "--mark", "2"], dir);
+  assert.equal(r.code, 0);
+  assert.deepEqual(cer(["ledger", "read", "--slug", "1-fixture"], dir).json.marks.map((m) => `${m.kind}${m.n}`), ["R1", "G1"]);
+  const outOfRange = cer(["ledger", "delete", "--slug", "1-fixture", "--mark", "9"], dir);
+  assert.equal(outOfRange.code, 1);
+  assert.equal(outOfRange.json.error, "unknown-mark");
+});
+
 test("folded flip on a migrated carrier: --folded false is a usage error", () => {
   const dir = makeUnit({ findingsRows: ROW("F1") });
   const r = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--folded", "false"], dir);

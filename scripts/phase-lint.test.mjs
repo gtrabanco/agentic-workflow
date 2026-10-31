@@ -2332,6 +2332,20 @@ test("a unit doc with P<n> bullets lints to PASS with a unit-doc fingerprint", (
   assert.doesNotMatch(stdout, /no-phases/);
 });
 
+test("an executed-phase tick mark on a bullet is the same phase, not no-phases", () => {
+  const ticked = UNIT_DOC.replace("- P1 — Add the tokenizer", "- [x] P1 — Add the tokenizer");
+  const file = fixture("unit-doc-ticked.md", ticked);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(6\/6\) · fingerprint P1:unit-doc:1:add-tokenizer$/m);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(6\/6\) · fingerprint P2:unit-doc:1:document-tokenizer$/m);
+  assert.doesNotMatch(stdout, /no-phases/);
+  const unticked = fixture("unit-doc-unticked.md", UNIT_DOC.replace("- P1 — Add the tokenizer", "- [ ] P1 — Add the tokenizer"));
+  const open = nodeRun(unticked);
+  assert.equal(open.status, 0, open.stdout);
+  assert.match(open.stdout, /^P1 Phase-lint: PASS \(6\/6\)/m);
+});
+
 test("the unit-doc fingerprint is byte-identical across runs", () => {
   const file = fixture("unit-doc-repeat.md", UNIT_DOC);
   const first = nodeRun(file);

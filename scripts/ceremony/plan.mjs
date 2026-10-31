@@ -13,12 +13,14 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  git, out, fail, block, parseFlags, resolveUnit, replaceSection, parseTasks, setTaskTick,
+  gitOrFail, out, fail, block, onlyFlags, parseFlags, resolveUnit, replaceSection, deleteSection,
+  parseTasks, setTaskTick,
 } from "./lib.mjs";
 
+/** Render the `## Tasks` body: one bullet per task plus its indented spec/files links. */
 function renderTasks(tasks) {
   return tasks.map((t) => {
-    const lines = [`- P${t.n} — ${t.label}`];
+    const lines = [`- ${t.ticked ? "[x] " : ""}P${t.n} — ${t.label}`];
     if (t.spec) lines.push(`  (Implements: ${t.spec})`);
     if (t.files) lines.push(`  Relevant files: ${t.files}`);
     return lines.join("\n");
@@ -26,23 +28,26 @@ function renderTasks(tasks) {
 }
 
 export function plan(op, argv, cwd = process.cwd()) {
-  const flags = parseFlags(argv, ["slug", "tasks", "task", "label", "content", "step", "spec", "files", "delete"], ["slug"]);
+  const flags = parseFlags(argv, ["slug", "tasks", "task", "label", "content", "step", "delete", "section"], ["slug"]);
   const u = resolveUnit(flags.slug, cwd);
   const readMd = () => fs.readFileSync(u.specPath, "utf8");
   const writeMd = (md) => fs.writeFileSync(u.specPath, md);
 
   switch (op) {
     case "create": {
+      onlyFlags(flags, ["tasks"]);
       if (!flags.tasks) fail("missing-flag", { flag: "--tasks <json array>" });
       let tasks;
       try { tasks = JSON.parse(flags.tasks); } catch { fail("invalid-json", { flag: "--tasks" }); }
       writeMd(replaceSection(readMd(), "tasks", renderTasks(tasks)));
-      out({ created: true, slug: flags.slug, tasks: tasks.length, sha: git(["hash-object", u.specPath], cwd) });
+      out({ created: true, slug: flags.slug, tasks: tasks.length, sha: gitOrFail(["hash-object", u.specPath], cwd) });
     }
     case "read": {
+      onlyFlags(flags, []);
       out({ slug: flags.slug, tasks: parseTasks(readMd()) });
     }
     case "update": {
+      onlyFlags(flags, ["content", "tasks", "task", "label", "delete"]);
       const md = readMd();
       if (flags.content) {
         writeMd(replaceSection(md, "tasks", flags.content));
@@ -50,10 +55,14 @@ export function plan(op, argv, cwd = process.cwd()) {
       } else if (flags.tasks) {
         let incoming;
         try { incoming = JSON.parse(flags.tasks); } catch { fail("invalid-json", { flag: "--tasks" }); }
+        if (!Array.isArray(incoming)) fail("invalid-json", { flag: "--tasks", expected: "array of {n, label, spec?, files?, ticked?}" });
         const current = new Map(parseTasks(md).map((t) => [t.n, t]));
+        // Partial edit: an incoming task carries only the fields it changes, so
+        // an untouched tick or `(Implements: …)` link survives the rewrite.
+        const added = incoming.filter((t) => !current.has(t.n)).map((t) => `P${t.n}`);
         for (const t of incoming) current.set(t.n, { ...current.get(t.n), ...t });
         writeMd(replaceSection(md, "tasks", renderTasks([...current.values()].sort((a, b) => a.n - b.n))));
-        out({ updated: true, slug: flags.slug, mode: "tasks" });
+        out({ updated: true, slug: flags.slug, mode: "tasks", "tasks-added": added, "tasks-removed": [] });
       } else if (flags.task) {
         const n = Number(flags.task);
         const tasks = parseTasks(md);
@@ -72,26 +81,36 @@ export function plan(op, argv, cwd = process.cwd()) {
       }
     }
     case "delete": {
+      onlyFlags(flags, []);
       writeMd(replaceSection(readMd(), "tasks", "(none)"));
       out({ deleted: true, slug: flags.slug });
     }
+    case "delete-section": {
+      onlyFlags(flags, ["section"]);
+      if (!flags.section) fail("missing-flag", { flag: "--section" });
+      writeMd(deleteSection(readMd(), flags.section));
+      out({ deleted: true, slug: flags.slug, section: flags.section });
+    }
     case "execute": {
+      onlyFlags(flags, ["step"]);
       if (!flags.step) fail("missing-flag", { flag: "--step <n>" });
       const next = setTaskTick(readMd(), Number(flags.step), true);
       if (!next) fail("unknown-task", { task: `P${flags.step}`, slug: flags.slug });
       writeMd(next);
-      out({ "step-complete": true, slug: flags.slug, step: `P${flags.step}`, sha: git(["hash-object", u.specPath], cwd) });
+      out({ "step-complete": true, slug: flags.slug, step: `P${flags.step}`, sha: gitOrFail(["hash-object", u.specPath], cwd) });
     }
     case "execute-all": {
+      onlyFlags(flags, []);
       let md = readMd();
       for (const t of parseTasks(md)) {
         const next = setTaskTick(md, t.n, true);
         if (next) md = next;
       }
       writeMd(md);
-      out({ "steps-complete": true, slug: flags.slug, tasks: parseTasks(md).length, sha: git(["hash-object", u.specPath], cwd) });
+      out({ "steps-complete": true, slug: flags.slug, tasks: parseTasks(md).length, sha: gitOrFail(["hash-object", u.specPath], cwd) });
     }
     case "lint": {
+      onlyFlags(flags, []);
       const specPath = path.relative(cwd, u.specPath);
       const PHASE_LINT = fileURLToPath(new URL("../phase-lint.mjs", import.meta.url));
       let stdout = "";
