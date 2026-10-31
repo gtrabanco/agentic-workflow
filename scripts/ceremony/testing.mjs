@@ -16,6 +16,15 @@ import { fileURLToPath } from "node:url";
 
 export const ENTRY = fileURLToPath(new URL("../ceremony.mjs", import.meta.url));
 
+/** Fixture repos created by makeRepo() — removed at process exit so suite
+ *  runs never leak `ceremony-*` dirs into the temp directory. */
+const LIVE_FIXTURES = [];
+process.on("exit", () => {
+  for (const dir of LIVE_FIXTURES) {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* best effort */ }
+  }
+});
+
 /** Run the ceremony CLI in `cwd` → {code, stdout, json} (json parsed from stdout, stderr kept separate for error text). */
 export function cer(args, cwd) {
   let stdout = "";
@@ -40,6 +49,7 @@ export function cer(args, cwd) {
 /** Create a hermetic temp git repo (branch main, 1 commit) → its path. */
 export function makeRepo() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ceremony-"));
+  LIVE_FIXTURES.push(dir);
   const g = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8" });
   g("init", "-b", "main");
   g("config", "commit.gpgsign", "false");

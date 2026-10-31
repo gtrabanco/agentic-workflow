@@ -4,7 +4,7 @@
  * Fixtures: hermetic temp repos seeded with the repo's own templates
  * (PE-005). Pins unit CRUD + list + select-next + descope, plan ops over the
  * `## Tasks` section (tick convention PE-008), and the delegation contracts:
- * `unit triage`/`route` → unit-route.mjs (PE-001), `plan lint` →
+ * `unit triage`/`route` → unit-route.mjs triage mode (PE-001), `plan lint` →
  * phase-lint.mjs (PE-002).
  */
 
@@ -130,6 +130,23 @@ test("unit triage delegates to unit-route.mjs and propagates its exit codes (O5,
   assert.equal(blocked.json.blocked, true);
   assert.match(blocked.json.output, /TRIAGE ERROR/);
   const unknown = cer(["unit", "triage", "--slug", "nope"], dir);
+  assert.equal(unknown.code, 1);
+});
+
+test("unit route delegates to unit-route.mjs triage mode (read-only) and propagates its exit codes (O5, PE-001)", () => {
+  const dir = makeUnit({ tasks: GOOD_TASKS });
+  execFileSync("git", ["add", "."], { cwd: dir });
+  execFileSync("git", ["commit", "-m", "docs: fixture unit"], { cwd: dir });
+  // The minimal fixture lacks unit-route's mandatory sections → unit-route's
+  // own TRIAGE ERROR, propagated as the exit-2 ceremonial block (S6). The
+  // regression this pins: route must reach unit-route's closed catalog, never
+  // die on unit-route's own usage error ("expected exactly one argument").
+  const blocked = cer(["unit", "route", "--slug", "1-fixture"], dir);
+  assert.equal(blocked.code, 2);
+  assert.equal(blocked.json.blocked, true);
+  assert.match(blocked.json.output, /TRIAGE ERROR/);
+  assert.doesNotMatch(blocked.json.output, /exactly one argument/);
+  const unknown = cer(["unit", "route", "--slug", "nope"], dir);
   assert.equal(unknown.code, 1);
 });
 
