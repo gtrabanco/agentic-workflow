@@ -209,7 +209,7 @@ proves it.
 | S1 | `docs/ROADMAP.md` carries one `## Features` table, one `## Fixes` table, the status machine and the conventions; `docs/features/ROADMAP.md` no longer exists | `test ! -e docs/features/ROADMAP.md` exits 0 and `rg -c '^## (Features|Fixes|Status legend|Conventions)$' docs/ROADMAP.md` → 4 |
 | S2 | one index is the read point: the sensor and the router resolve both features and fixes from `docs/ROADMAP.md` | `node --test scripts/index-document.test.mjs` exits 0 |
 | S3 | the hard dependency is satisfied at cut time (#316, #315, #318 merged) | `git log --oneline -1` on `main` contains the #316 merge; recorded in the unit Log |
-| S4 | no closed unit folder is touched | `git diff --name-only main...HEAD -- docs/features docs/fix` matches only `docs/fix/319-location-index-consolidation/*` |
+| S4 | no closed unit folder is touched | `git diff --name-only main...HEAD -- docs/features docs/fix` → the moved index, the stub and `docs/fix/319-location-index-consolidation/*`, and no `docs/{features,fix}/<NN>-<slug>/` folder |
 | S5 | the fix conventions (removed-after-merge lifecycle + status legend) live in the consolidated doc, and `docs/fix/README.md` is a one-line stub pointing at `docs/ROADMAP.md#fixes` | `wc -l < docs/fix/README.md` → 1 and `rg -c 'docs/ROADMAP.md#fixes' docs/fix/README.md` → 1 |
 | S6 | both paths are accepted during the window with identical results, and the closed window refuses the old path with a `moved` pointer instead of an empty parse | `node --test scripts/index-document.test.mjs` exits 0 (alias-equivalence + closed-window cases) and `node scripts/index-document.test.mjs --demo moved` prints `roadmap-moved` |
 | S7 | the legacy path literal survives in exactly one place in code, and the crate and schema constants agree | `grep -rn "docs/features/ROADMAP" --include=*.mjs --include=*.ts scripts packages` → 1 line; `node --test scripts/index-document.test.mjs` exits 0 (parity case) |
@@ -228,7 +228,7 @@ proves it.
 
 - **L1** — 2026-10-30, the issue, verbatim:
 
-  ```
+  ```text
   # NEW FEATURE (BREAKING): consolidate the location indexes — docs/features/ROADMAP.md moves to docs/ROADMAP.md as the single Features+Fixes index
   ```
 
@@ -237,25 +237,51 @@ proves it.
   Open questions · Non-goals). The only elisions are the blast-radius layer
   table and the sequencing bullets' detail, both marked in S3/S4; read them from
   the forge with `gh issue view 319 --json body --jq .body`.
-
 - **D1** — 2026-10-30, issue S11's first open question, decided as the issue
   recommends: `## Fixes` keeps the fix index's "row removed after merge"
   lifecycle verbatim. Lifecycle unification is not part of this unit.
-- **D3** — 2026-10-30, S9's criterion counts measured at P6, not assumed: the
-  planning cut guessed `3`/`≥1` mentions; the delivered substrate names the
-  path 6 times in `template/AGENTS.md` and twice in `UPGRADE.md`, so the frozen
-  criterion carries the measured values. No behaviour changed — the criterion
-  was unverifiable as written.
 - **D2** — 2026-10-30, issue S11's second open question, decided: the alias
   window stays open for one release train (`ROADMAP_LEGACY_READ = true`), with
   the fail-closed `roadmap-moved` path implemented and tested now. Closing the
   window is a one-constant flip plus the legacy branch's deletion, owned by the
   next release cut (see `## Future cost`).
+- **D3** — 2026-10-30, S9's criterion counts measured at P6, not assumed: the
+  planning cut guessed `3`/`≥1` mentions; the delivered substrate names the path
+  6 times in `template/AGENTS.md` and twice in `UPGRADE.md`, so the frozen
+  criterion carries the measured values. No behaviour changed — the criterion
+  was unverifiable as written.
+- **E1** — 2026-10-30, `node --test scripts/index-document.test.mjs` · exit 0 ·
+  8/8 pass (O1, O4, O5, O6, O7, O8, O9).
+- **E2** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 0 · 1292 pass,
+  0 fail (O8, O10, O13).
+- **E3** — 2026-10-30, `cd packages/agentic-workflow && bun run test` · exit 0 ·
+  254 pass, `cd packages/agentic-workflow-schema && bun run test` · exit 0 ·
+  726 pass, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 454 pass.
+- **E4** — 2026-10-30, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`.
+- **E5** — 2026-10-30, `node scripts/version-parity-gate.mjs --content --base main`
+  · exit 0 · PASS (changeset route for all three packages);
+  `--pins` · exit 0 · PASS (both local pins match).
+- **E6** — 2026-10-30, `grep -rn "docs/features/ROADMAP" --include=*.mjs
+  --include=*.ts scripts packages` · 1 line · the alias constant in
+  `packages/agentic-workflow/src/index-document.mjs` (R1).
+- **P1** — 2026-10-30, cut the unit doc, the two ledgers and the index
+  registration · `5b2a2d27`.
+- **P2** — 2026-10-30, published the constants in the crate, migrated the eight
+  live consumers, added the schema mirror and scoped both tables; the vector
+  whose fixture cited the pre-move path is re-blessed · `ec64bb4f`.
+- **P4** — 2026-10-30, moved and consolidated the index; the fix index is the
+  one-line stub · `67f2e3a8`.
+- **P5** — 2026-10-30, re-pinned the six fixture trees and the golden fixture ·
+  `5d5e360a`.
+- **P6** — 2026-10-30, migrated the skills, `template/`, and the live
+  `docs/workflow/` pages; `init-workspace` upgrade step 4 offers the move
+  additively · `5e7cfa5f`.
 
 ## Next
 
-Hand the diff to the requester for external verification (S10's Validators
-block first, then the reviewer's verdict).
+External verification — the requester is the verifier. The verdict is theirs;
+nothing here self-approves.
 
 ## References
 

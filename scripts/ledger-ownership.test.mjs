@@ -66,6 +66,18 @@ const TEMPLATE_COLUMNS = ["ledger", "owner", "annotator"];
 const NONE = "none";
 
 /** The frozen requirement: ACCEPTANCE.md AC16 (F2) names exactly these seven. */
+/**
+ * Where a declared ledger may live: the two unit-doc trees, plus the
+ * consolidated location index (issue #319) — the roadmap and the fix index are
+ * one document, so its `## Features` / `## Fixes` tables are the ledger the map
+ * names. A tree or file outside this list is still refused.
+ */
+const DURABLE_LEDGER_TREES = Object.freeze(["docs/features/", "docs/fix/", "docs/ROADMAP.md"]);
+
+function insideDurableLedgerSurface(pattern) {
+  return DURABLE_LEDGER_TREES.some((entry) => (entry.endsWith("/") ? pattern.startsWith(entry) : pattern === entry));
+}
+
 const TRUTH_CLASSES = [
   "review-findings",
   "planning-findings",
@@ -176,7 +188,7 @@ function declaredOwnerScan({ mapText, templates, knownSkills, annotatorSources, 
       if (patterns.has(pattern)) failures.push(`${who}: ledger "${pattern}" is already declared by "${patterns.get(pattern)["truth-class"]}"`);
       else patterns.set(pattern, row);
       if (!pattern.endsWith(".md")) failures.push(`${who}: ledger "${pattern}" is not a markdown ledger`);
-      if (!pattern.startsWith("docs/features/") && !pattern.startsWith("docs/fix/")) {
+      if (!insideDurableLedgerSurface(pattern)) {
         failures.push(`${who}: ledger "${pattern}" is outside the durable ledger trees`);
       }
     }
