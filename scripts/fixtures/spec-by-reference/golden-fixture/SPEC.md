@@ -69,7 +69,7 @@ none recorded.
   and open the PR with its URL printed.
   (Implements: S1)
   (validator: `git status --porcelain -- docs/` is empty)
-  Relevant files: docs/features/ROADMAP.md
+  Relevant files: docs/ROADMAP.md
 
 ### Planning evidence
 
