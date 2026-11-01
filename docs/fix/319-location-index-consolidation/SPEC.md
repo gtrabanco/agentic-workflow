@@ -291,6 +291,10 @@ proves it.
 - **P2** — 2026-10-30, published the constants in the crate, migrated the eight
   live consumers, added the schema mirror and scoped both tables; the vector
   whose fixture cited the pre-move path is re-blessed · `ec64bb4f`.
+- **P3** — 2026-10-30, mirrored the constants in the schema package
+  (`src/paths.ts`, re-exported from the package root) and made
+  `compileWorkflowSnapshot` read the consolidated document through them;
+  `cd packages/agentic-workflow-schema && bun run test` · 727 pass · `ec64bb4f`.
 - **P4** — 2026-10-30, moved and consolidated the index; the fix index is the
   one-line stub · `67f2e3a8`.
 - **P5** — 2026-10-30, re-pinned the six fixture trees and the golden fixture ·
@@ -298,6 +302,13 @@ proves it.
 - **P6** — 2026-10-30, migrated the skills, `template/`, and the live
   `docs/workflow/` pages; `init-workspace` upgrade step 4 offers the move
   additively · `5e7cfa5f`.
+- **P7** — 2026-11-01, verification: declared the S10 criteria against the
+  close-out receipt and wrote the `.changeset` intent (both packages major, and
+  the six affected skills — `execute-phase`, `init-workspace`,
+  `pre-execution-review`, `triage-issue`, `unit-lane`, `workflow-status` — major);
+  `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass,
+  `bun scripts/check-skill-context.mjs` · PASS · 28 skills,
+  `node scripts/version-parity-gate.mjs --content --base main` · PASS · `5e7cfa5f`.
 - **V1** — 2026-11-01, external verification of `main...HEAD` at `63793b5e`: one
   blocker and four ledger advisories, all corrected here without changing
   behaviour. **Blocker** — `packages/agentic-workflow-schema/README.md` still
