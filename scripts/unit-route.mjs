@@ -314,7 +314,14 @@ const ROADMAP_FILE = ROADMAP_DOCUMENT.slice(ROADMAP_DOCUMENT.lastIndexOf("/") + 
  * path comes from the published constant, never a literal.
  */
 function roadmapIndexText() {
-  const source = resolveRoadmapSource({ exists: (relative) => readProject(relative) !== null });
+  let source;
+  try {
+    source = resolveRoadmapSource({ exists: (relative) => readProject(relative) !== null });
+  } catch (error) {
+    // Fail closed with the pointer at the new home: a router that silently read
+    // an empty index would route every unit to `historical`.
+    fail(1, sanitize(error.message));
+  }
   return source === null ? null : readProject(source.path);
 }
 

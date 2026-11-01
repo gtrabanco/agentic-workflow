@@ -19,19 +19,26 @@ docs are record, not code: no closed unit folder was rewritten.
 `@gtrabanco/agentic-workflow` exports `ROADMAP_DOCUMENT` /
 `FIX_INDEX_DOCUMENT` and the two table headings from
 `src/index-document.mjs`, and `@gtrabanco/agentic-workflow-schema` publishes the
-same values from `src/paths.ts`. Readers accept the pre-move path while the
-window is open (decision D2: one release train) and **prefer** the consolidated
-document when both exist; writers only ever write `docs/ROADMAP.md`. When the
-window closes, a repository that still carries only the pre-move path is refused
-with a `roadmap-moved` pointer at its new home — never a silent empty parse.
+same values from `src/paths.ts`. **The migration window is closed** (decision
+D4, 2026-10-30 — it supersedes D2's "one release train"): every reader resolves
+`docs/ROADMAP.md` only, and a repository that still carries only the pre-move
+path is refused with a `roadmap-moved` pointer at its new home — never a silent
+empty parse, never an empty index. The refusal is a clean diagnostic on every
+deterministic consumer (router, sensor, unit cycle, verbose probe, settle
+validator, ceremony CLI, crate `roadmap check`, schema snapshot), pinned by
+`scripts/roadmap-moved.test.mjs`. `ROADMAP_LEGACY_READ` stays as the documented
+rollback lever: flipping it back to `true` re-opens the alias for an emergency,
+it is not a normal operating mode.
 
 **What you have to do:**
 
 - **Target project bootstrapped from `template/`?** Move `docs/features/ROADMAP.md`
-  to `docs/ROADMAP.md` and fold your fix index into a `## Fixes` table there;
-  `init-workspace`'s upgrade mode offers exactly that move as an additive block
-  (it never clobbers an edited roadmap). `docs/fix/README.md` keeps working as a
-  standalone index during the window, so the move can wait one release.
+  to `docs/ROADMAP.md` and fold your fix index into a `## Fixes` table there
+  **before** running the lane again; `init-workspace`'s upgrade mode offers
+  exactly that move as an additive block (it never clobbers an edited roadmap).
+  A half-migrated tree — canonical roadmap without a `## Fixes` table plus a
+  standalone `docs/fix/README.md` — still reads its fix rows, so the fix table
+  can be folded in a second pass.
 - **Scripts or automation reading the old path?** Import the published constant
   instead of the path: the next move will not touch your code.
 

@@ -21,6 +21,7 @@
 | PE-010 | assumption | Closing the alias window later is a one-constant change because the closed path is implemented and tested now (`ROADMAP_LEGACY_READ = false` → `roadmap-moved`), so D2's "one release train" needs no follow-up code | owner: this unit (P2); basis: the closed-window case in `scripts/index-document.test.mjs` | current | O5 |
 | PE-011 | known | The two audit-facing prose surfaces that describe where a unit registers (`template/AGENTS.md`, `skills/unit-lane/SKILL.md`) are the only live docs naming the fix index as a separate file besides the skills the issue lists | `rg -n 'docs/fix/README' skills template docs/workflow` | current | O11 |
 | PE-012 | known | The version-parity gate triggers on any `skills/**` or `packages/**` change and accepts a `.changeset/*.md` intent file in place of a manual bump | AGENTS.md §Packages (feature 40/75); `scripts/version-parity-gate.mjs` | current | O13 |
+| PE-013 | known | `promise-coherence` is a repo-local gate over its own checkout (`const ROOT = …import.meta.url`) with no `--root`, and `unit-route --triage` routes a document by its own sections, so neither can be pointed at a pre-move tree; the refusal suite pins the consumers that do accept a target and says so in its header instead of faking a case | `scripts/promise-coherence.mjs:106,1294`, `scripts/unit-route.mjs` triage mode; `node scripts/promise-coherence.mjs` on a pre-move tree prints its own checkouts's verdict | current | O14 |
 
 ## Verification
 

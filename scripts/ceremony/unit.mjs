@@ -40,7 +40,14 @@ function statusToken(cell) {
  */
 function statusIndex(cwd) {
   const statuses = new Map();
-  const index = readRoadmapIndex(cwd);
+  let index;
+  try {
+    index = readRoadmapIndex(cwd);
+  } catch (error) {
+    // Exit 2 is the ceremony's "blocked, fix the workspace" class: the index
+    // moved, so no unit status can be derived and nothing is guessed.
+    block({ error: "roadmap-moved", detail: error.message });
+  }
   const features = index === null ? "" : roadmapSection(index.text, ROADMAP_FEATURES_HEADING) ?? index.text;
   for (const line of features.split("\n")) {
     const m = line.match(/^\|\s*(\d+)\s*\|\s*`?([^`|]+?)`?\s*\|\s*([^|]+?)\s*\|/);

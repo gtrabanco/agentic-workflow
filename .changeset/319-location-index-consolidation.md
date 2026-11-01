@@ -23,10 +23,15 @@ The path is published instead of hardcoded: `@gtrabanco/agentic-workflow` export
 `ROADMAP_DOCUMENT`, `FIX_INDEX_DOCUMENT`, the two table headings, the tolerant
 document suffix and the alias flag from `src/index-document.mjs`, and
 `@gtrabanco/agentic-workflow-schema` publishes the same values from
-`src/paths.ts` (re-exported from the package root). Readers accept the pre-move
-path for one release train and prefer the consolidated document; writers only
-write `docs/ROADMAP.md`. When the window closes the pre-move path is refused with
-a `roadmap-moved` pointer at its new home — never a silent empty parse.
+`src/paths.ts` (re-exported from the package root). **The migration window is
+closed** (decision D4): every reader resolves the published path only and
+refuses a repository still carrying the pre-move one with a `roadmap-moved`
+pointer at its new home — never a silent empty parse, never an empty index.
+`ROADMAP_LEGACY_READ` remains as the documented rollback lever. The refusal is a
+clean diagnostic on every deterministic consumer (the `agwo` CLI's `roadmap
+check`, the router, the sensor, the unit cycle, the vocabulary probe, the settle
+validator, the ceremony CLI and the schema snapshot), pinned by
+`scripts/roadmap-moved.test.mjs`.
 
 The schema package's published canonical vectors are re-blessed for the one
 fixture payload that cited the pre-move path (plan-stage receipt, finding F-1's

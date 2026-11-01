@@ -12,11 +12,13 @@
  * The pre-move path is spelled exactly once in the tree, in this file: the
  * alias below.
  *
- * Read alias, single write path (the migration window, decision D2 of unit
- * 319): a reader accepts the pre-move path while `ROADMAP_LEGACY_READ` is true,
- * **prefers** the canonical path when both exist, and never writes the legacy
- * one. When the window closes the pre-move path is refused with a
- * `roadmap-moved` pointer at its new home — never a silent empty parse.
+ * The migration window is CLOSED (owner decision D4, 2026-10-30; it supersedes
+ * unit 319's D2): every reader resolves {@link ROADMAP_DOCUMENT} only. A
+ * repository that still carries the pre-move path is refused with a
+ * `roadmap-moved` pointer at its new home — never a silent empty parse, and
+ * never an empty index. `ROADMAP_LEGACY_READ` stays as the documented
+ * rollback lever: flipping it back to `true` re-opens the alias for an
+ * emergency, it is not a normal operating mode.
  */
 
 import fs from "node:fs";
@@ -24,7 +26,7 @@ import path from "node:path";
 
 /** The consolidated index. */
 export const ROADMAP_DOCUMENT = "docs/ROADMAP.md";
-/** The pre-move path: read-only alias, one declaration, never written. */
+/** The pre-move path: detected only, so the refusal can name it. Never read. */
 export const ROADMAP_LEGACY_DOCUMENT = "docs/features/ROADMAP.md";
 /** The fix index file. Before unit 319 it was the index itself; now it is a stub. */
 export const FIX_INDEX_DOCUMENT = "docs/fix/README.md";
@@ -33,13 +35,11 @@ export const ROADMAP_FEATURES_HEADING = "Features";
 /** The fixes table's heading in the consolidated index. */
 export const ROADMAP_FIXES_HEADING = "Fixes";
 /**
- * Both index documents end with this basename, which is how a consumer that is
- * handed documents by its caller (the schema package's snapshot compiler)
- * recognises the index without spelling either path.
+ * D4: the read alias is closed. Kept as an explicit, tested rollback lever:
+ * `true` re-opens the pre-move path for an emergency, and every consumer reads
+ * it through this one value.
  */
-export const ROADMAP_DOCUMENT_SUFFIX = "ROADMAP.md";
-/** D2: the read alias stays open for one release train. Closing it is this flag. */
-export const ROADMAP_LEGACY_READ = true;
+export const ROADMAP_LEGACY_READ = false;
 /** The closed code a closed window refuses the pre-move path with. */
 export const ROADMAP_MOVED_CODE = "roadmap-moved";
 
@@ -50,7 +50,7 @@ export const ROADMAP_MOVED_CODE = "roadmap-moved";
  */
 export class RoadmapMovedError extends Error {
   constructor(from = ROADMAP_LEGACY_DOCUMENT, to = ROADMAP_DOCUMENT) {
-    super(`moved: ${from} is now ${to} — read ${to}`);
+    super(`${ROADMAP_MOVED_CODE}: ${from} has moved to ${to} — read ${to}`);
     this.name = "RoadmapMovedError";
     this.code = ROADMAP_MOVED_CODE;
     this.from = from;
@@ -60,7 +60,9 @@ export class RoadmapMovedError extends Error {
 
 /**
  * Which index a repository carries, without reading it: `{ path, source }`
- * where `source` is `"canonical"` or `"legacy"`, or `null` when neither exists.
+ * where `source` is `"canonical"`, or `"legacy"` only while the rollback lever
+ * is on; `null` when neither exists. A repository that carries only the
+ * pre-move path and no rollback is refused here, before any read.
  *
  * `exists` is the caller's own existence check, so a consumer that confines
  * reads to its project root (the sensor) keeps its confinement instead of
@@ -204,7 +206,7 @@ export function readFixIndexTable(rootDir, { legacy = ROADMAP_LEGACY_READ } = {}
   }
 }
 
-/** Whether a caller-supplied document path is the (consolidated or pre-move) index. */
+/** Whether a caller-supplied document path is the consolidated index. */
 export function isRoadmapDocument(documentPath) {
-  return typeof documentPath === "string" && documentPath.endsWith(ROADMAP_DOCUMENT_SUFFIX);
+  return typeof documentPath === "string" && (documentPath === ROADMAP_DOCUMENT || documentPath.endsWith(`/${ROADMAP_DOCUMENT}`));
 }

@@ -83,7 +83,12 @@ export function settle(rootDir) {
   // One index (issue #319): the consolidated document carries both tables. A
   // pre-319 tree keeps them in two files, which the read alias accepts until
   // the migration window closes.
-  const index = readRoadmapIndex(rootDir);
+  let index;
+  try {
+    index = readRoadmapIndex(rootDir);
+  } catch (error) {
+    return { usage: error.message };
+  }
   if (index === null) {
     return { usage: `no roadmap at ${path.join(rootDir, ROADMAP_DOCUMENT)}` };
   }
