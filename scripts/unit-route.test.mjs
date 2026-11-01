@@ -12,6 +12,7 @@
  */
 
 import assert from "node:assert/strict";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 // The router's own classifiers, imported so the collapsed carrier's column vocabularies are
 // pinned against the code the CLI runs, not against a paraphrase of it.
@@ -362,7 +363,7 @@ test("F31/P6: a `defined` unit with all phases recorded refuses with exit 1 — 
   const fixture = path.join(tmpDir, `unit-route-f31-p6-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // Set the roadmap row for unit 13 to `defined` (not `done`).
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(
     roadmapPath,
@@ -428,7 +429,7 @@ test("F31/P6: a `done` unit with all phases recorded still routes to close-out",
   const fixture = path.join(tmpDir, `unit-route-f31-done-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // Set the roadmap row for unit 13 to `done`.
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(
     roadmapPath,
@@ -625,7 +626,7 @@ test("#291 F8: `— P<n> — implemented` records the phase (formal shape)", () 
   const fixture = path.join(tmpDir, `unit-route-f8-formal-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // P6: close-out requires status === "done"; set the roadmap accordingly.
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
@@ -657,7 +658,7 @@ test("#291 F8: `— P<n> implemented` (no second dash) records the phase", () =>
   const tmpDir = os.tmpdir();
   const fixture = path.join(tmpDir, `unit-route-f8-simple-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
@@ -689,7 +690,7 @@ test("#291 F8: `— implement P2: ...` (action word before P) records the phase"
   const tmpDir = os.tmpdir();
   const fixture = path.join(tmpDir, `unit-route-f8-action-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
