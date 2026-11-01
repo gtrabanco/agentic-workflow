@@ -44,15 +44,46 @@ export function countLegacy(text) {
 /** Legacy-count keys are the long mark forms; single-letter kinds alias to them. */
 const KIND_TO_LEGACY_COUNT = { "R": "REVIEW-RAN", "G": "GATE-RAN", "V": "VF" };
 
+/** The issue's `ledger count` key set, resolved against the carrier's own vocabulary (§S5); a mark the carrier cannot carry is `null`, never a zero it never measured. */
+const DOCUMENTED_COUNT_KEYS = ["REVIEW-RAN", "VF", "GATE-RAN", "F", "R", "V", "E"];
+
+function documentedCounts(counts) {
+  const merged = {};
+  for (const [key, value] of Object.entries(counts)) {
+    const canonical = KIND_TO_LEGACY_COUNT[key] ?? key;
+    merged[canonical] = (merged[canonical] ?? 0) + value;
+  }
+  return Object.fromEntries(DOCUMENTED_COUNT_KEYS.map((key) => [key, merged[KIND_TO_LEGACY_COUNT[key] ?? key] ?? null]));
+}
+
+/** A migrated `## Log` mark → the issue's mark fields (`type`, `sha`, `detail`, `date`), keeping `kind`/`n`/`text`. */
+function logMark(m) {
+  const head = m.body.match(/^([A-Z][A-Z-]+)\s*·\s*(?:HEAD\s+([0-9a-f]{7,40})\s*·\s*)?([\s\S]*)$/);
+  return {
+    type: head ? head[1] : KIND_TO_LEGACY_COUNT[m.kind] ?? m.kind,
+    kind: m.kind,
+    n: m.n,
+    date: m.date,
+    sha: head?.[2] ?? null,
+    detail: head ? head[3] : m.body,
+    text: m.text,
+  };
+}
+
 function legacyMarks(text) {
   const marks = [];
   for (const line of text.split("\n")) {
-    const vf = line.match(/^\s*\| (VF-\d+)/);
-    if (/^\s*\| REVIEW-RAN/.test(line)) marks.push({ type: "REVIEW-RAN", text: line.trim().slice(0, 160) });
-    else if (vf) marks.push({ type: "VF", n: Number(vf[1].split("-")[1]), text: line.trim().slice(0, 160) });
-    else if (/^\s*\| GATE-RAN/.test(line)) marks.push({ type: "GATE-RAN", text: line.trim().slice(0, 160) });
-    else if (/^- \*\*D-/.test(line)) marks.push({ type: "D", text: line.trim().slice(0, 160) });
-    else if (/^\s*\| F\d+\s*\|/.test(line)) marks.push({ type: "F", text: line.trim().slice(0, 160) });
+    const cells = line.split("|").map((s) => s.trim());
+    const head = cells[1] ?? "";
+    const shaCell = cells.findIndex((cell, index) => index > 1 && /^HEAD [0-9a-f]{7,40}$/.test(cell));
+    const sha = shaCell === -1 ? null : cells[shaCell].split(" ")[1];
+    const detail = shaCell === -1 ? null : cells.slice(shaCell + 1).filter((cell) => cell !== "").join(" · ") || null;
+    const mark = { type: head, n: null, date: null, sha, detail, text: line.trim().slice(0, 160) };
+    if (/^REVIEW-RAN/.test(head)) marks.push(mark);
+    else if (/^VF-\d+/.test(head)) marks.push({ ...mark, n: Number(head.split("-")[1]), type: "VF" });
+    else if (/^GATE-RAN/.test(head)) marks.push(mark);
+    else if (/^- \*\*D-/.test(line)) marks.push({ ...mark, type: "D" });
+    else if (/^F\d+$/.test(head)) marks.push({ ...mark, type: "F" });
   }
   return marks;
 }
@@ -80,11 +111,11 @@ export function ledger(op, argv, cwd = process.cwd()) {
       if (c.carrier === "legacy") {
         out({ slug: flags.slug, carrier: "legacy", path: "review-findings.md", marks: legacyMarks(fs.readFileSync(c.legacyPath, "utf8")) });
       }
-      out({ slug: flags.slug, carrier: c.carrier, marks: parseLog(c.md) });
+      out({ slug: flags.slug, carrier: c.carrier, marks: parseLog(c.md).map(logMark) });
     }
     case "count": {
       onlyFlags(flags, []);
-      out({ slug: flags.slug, carrier: c.carrier, counts });
+      out({ slug: flags.slug, carrier: c.carrier, counts, documented: documentedCounts(counts) });
     }
     case "append": {
       onlyFlags(flags, ["mark", "sha", "detail"]);

@@ -29,6 +29,29 @@ const GOOD_TASKS = `- P1 — do the thing (validator: \`true\` exits 0)
 - P2 — do the other thing (validator: \`true\` exits 0)
   (Implements: S1)`;
 
+test("check-phase-labels reports repo-relative paths, byte-stable across runs", () => {
+  const dir = makeUnitRepo({ tasks: `- Step 1 — bad label (validator: \`true\` exits 0)` });
+  const one = cer(["docs", "check-phase-labels", "--slug", "1-fixture"], dir);
+  const two = cer(["docs", "check-phase-labels", "--slug", "1-fixture"], dir);
+  assert.equal(one.code, 2);
+  assert.equal(one.json.invalid[0].file, "docs/fix/1-fixture/SPEC.md", "a repo-relative path, never a machine path");
+  assert.equal(one.stdout, two.stdout);
+});
+
+test("check-all resolves the unit from the branch when --slug is omitted (S5)", () => {
+  const dir = makeUnitRepo({
+    tasks: `- [x] P1 — do the thing (validator: \`true\` exits 0)\n  (Implements: S1)`,
+    log: `- **P1** — 2026-11-24 10:00, a · abc1234.`,
+  });
+  execFileSync("git", ["checkout", "-b", "fix/1-fixture"], { cwd: dir });
+  const r = cer(["docs", "check-all", "--from", "main"], dir);
+  assert.equal(r.code, 0);
+  assert.equal(r.json.overall, "PASS");
+  const nowhere = cer(["docs", "check-all"], makeUnitRepo({ tasks: GOOD_TASKS }));
+  assert.equal(nowhere.code, 1);
+  assert.equal(nowhere.json.error, "missing-flag");
+});
+
 test("R3 reproducer: a `Step 1` task label is detected, exit 2 (O11)", () => {
   const dir = makeUnitRepo({ tasks: `- Step 1 — bad label (validator: \`true\` exits 0)\n- P2 — fine\n  (Implements: S1)` });
   const r = cer(["docs", "check-phase-labels", "--slug", "1-fixture"], dir);

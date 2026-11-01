@@ -89,6 +89,30 @@ test("unit update --section tasks preserves the ### ledger embeds", () => {
   assert.ok(md.indexOf("### Planning evidence") < md.indexOf("## Findings"));
 });
 
+test("unit list reads the fix index and the roadmap for status (S4)", () => {
+  const dir = makeRepo();
+  fs.mkdirSync(path.join(dir, "docs/fix/1-fixture"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), unitDoc({ tasks: GOOD_TASKS }));
+  fs.writeFileSync(path.join(dir, "docs/fix/README.md"), [
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    "| [#1](https://example.test/1) | fixture | in-progress | branch `fix/1-fixture` |",
+    "",
+  ].join("\n"));
+  fs.mkdirSync(path.join(dir, "docs/features/07-shipped"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "docs/features/07-shipped/SPEC.md"), "# 07 — shipped\n");
+  fs.writeFileSync(path.join(dir, "docs/features/ROADMAP.md"), [
+    "| NN | Slug | Status | Depends on | Summary |",
+    "|----|------|--------|------------|---------|",
+    "| 07 | `shipped` | done · [#12](https://example.test/12) | — | fixture |",
+    "",
+  ].join("\n"));
+  const list = cer(["unit", "list"], dir);
+  assert.equal(list.code, 0);
+  assert.equal(list.json.units.find((u) => u.slug === "1-fixture").status, "in-progress");
+  assert.equal(list.json.units.find((u) => u.slug === "07-shipped").status, "done");
+});
+
 test("unit delete removes the unit dir; unit list reports type + registration status", () => {
   const dir = makeUnit({ tasks: GOOD_TASKS });
   const list = cer(["unit", "list"], dir);

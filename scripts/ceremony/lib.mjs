@@ -241,13 +241,21 @@ export function renderFindings(rows) {
 
 const LOG_KINDS = ["L", "E", "G", "F", "D", "P", "R", "V"];
 
-/** Parse `## Log` lines → [{kind, n, text}] (log-kind@1: `- **R3** — 2026-…, text`). */
+/** Parse `## Log` lines → [{kind, n, date, body, text}] (log-kind@1: `- **R3** — 2026-…, text`). */
 export function parseLog(md) {
   const body = readSection(md, "log") ?? "";
   const marks = [];
   for (const line of body.split("\n")) {
     const m = line.match(/^- \*\*([A-Z])(\d+)([a-z]?)\*\* — (.*)$/);
-    if (m && LOG_KINDS.includes(m[1])) marks.push({ kind: m[1], n: Number(m[2]), text: m[4] });
+    if (!m || !LOG_KINDS.includes(m[1])) continue;
+    const dated = m[4].match(/^(\d{4}-\d{2}-\d{2}),?\s+([\s\S]*)$/);
+    marks.push({
+      kind: m[1],
+      n: Number(m[2]),
+      text: m[4],
+      date: dated ? dated[1] : null,
+      body: dated ? dated[2] : m[4],
+    });
   }
   return marks;
 }

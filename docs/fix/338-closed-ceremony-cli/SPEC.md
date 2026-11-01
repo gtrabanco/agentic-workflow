@@ -79,9 +79,13 @@ Callers and consumers: this repo's own ceremony operators — `review-change`,
 ad-hoc `git status --porcelain`, `grep -c`, `sed -i`, `git hash-object`
 commands (the issue's "What this CLI covers that isn't covered now" table).
 This unit ships the CLI; **no skill is rewired in this unit** (that is the
-follow-up the issue itself orders: "follow-up PRs extending the CLI"), so no
-committed narration stops being true when it lands. The mentions that change
-are this unit's own files plus the `docs/fix/README.md` index row.
+follow-up the issue itself orders: "follow-up PRs extending the CLI"). The
+committed mentions that change are this unit's own files, the
+`docs/fix/README.md` index row, the unit-doc grammar row in
+`skills/phase-contract/SKILL.md` (the executed-phase tick the CLI writes,
+E8a) with its execute-phase route ceilings re-based in
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json`, and the `.changeset` intent file
+the skills-content rule requires.
 
 ## Retirements
 
@@ -176,7 +180,7 @@ not applicable, the corpus and module suites above are the unit's tests.
 - [x] P1 — Freeze the planning ledgers (this commit): unit doc + `planning-evidence.md` + `planning-obligations.md` + index row, before the first line of code (validator: `grep -c '338-closed-ceremony-cli' docs/fix/README.md` matches 1)
   (Implements: S1)
   Relevant files: docs/fix/338-closed-ceremony-cli/
-- [x] P2 — RED frozen-failure corpus: run R1–R4 and the entry-contract checks, observe each fail at the pre-CLI head, record the observed failures as E-lines (validator: the four `node scripts/ceremony.mjs …` commands exit 1 with `unknown-command` before P3 lands)
+- [x] P2 — RED frozen-failure corpus: run R1–R4 and the entry-contract checks, observe each fail at the pre-CLI head, record the observed failures as E-lines (validator: the four `node scripts/ceremony.mjs …` commands exit 1 at the pre-CLI head — the module is absent, per E1)
   (Implements: S1, S8)
   Relevant files: docs/fix/338-closed-ceremony-cli/SPEC.md
 - [x] P3 — Ship the CLI entry + closed-world dispatcher (exit 0/1/2 contract, JSON output, closed op registry) and the `workspace` module, with their suites (validator: `node --test scripts/ceremony.test.mjs scripts/ceremony-workspace.test.mjs` exits 0)
@@ -808,15 +812,13 @@ All deterministic, all fixed input/output, all verifiable with exit code and JSO
   routes`; `node scripts/ceremony.mjs plan lint --slug 338-closed-ceremony-cli`
   · `verdict PASS` (7 phases, 6/6 each); `node scripts/version-parity-gate.mjs
   --content --base origin/main` · `VERDICT: PASS` (`.changeset/338-closed-ceremony-cli.md`).
-- **D5** — 2026-10-31, deliberate deviations kept (not repairs): `ledger count`
-  keeps each carrier's own key vocabulary (E6d — the legacy carrier's long mark
-  forms are the frozen R1 contract); `ledger read` reports a mark as
-  `{kind, n, text}` (the `## Log` line is the carrier, so a mark has no
-  independent sha/detail fields to invent); `docs check-all` requires `--slug`
-  (every check it runs is per-unit); `unit list` answers `unregistered` where
-  the fix index has no row (the roadmap is the features' status source and has
-  no reader here yet); `--folded false` stays `fold-flip-unsupported` (a folded
-  row left the table — re-append to revert).
+- **D5** — 2026-10-31, the single deviation still deliberate after the second
+  repair round: `findings update --folded false` stays `fold-flip-unsupported`
+  — a folded row leaves the `findings-table@1` carrier (six columns, no folded
+  column), so reverting a fold is a re-append, not a flip, and the error says
+  so. The other deviations this row used to list were repaired in E9
+  (`ledger read` fields, `ledger count` key set, `docs check-all` input,
+  `unit list` status).
 - **E8** — 2026-10-31, two further defects surfaced while re-running the gates
   during the repair round (both pre-existing in this branch): (a) `plan lint`
   on *this* unit doc answered `BLOCKED: no-phases` — the PE-008 tick
@@ -832,6 +834,30 @@ All deterministic, all fixed input/output, all verifiable with exit code and JSO
   this unit, so it moved from `## Specs` to `## Non-goals` with its verbatim
   quote kept. `plan lint --slug 338-closed-ceremony-cli` now answers
   `verdict PASS` (7 phases, 6/6 each) — receipt G5.
+- **E9** — 2026-10-31, second repair round (the advisories the external
+  verification left open), each one re-run after its fix: (a)
+  `docs check-phase-labels` / `check-all` returned absolute machine paths
+  (`file: /tmp/…/SPEC.md`), so their output was not byte-stable across
+  checkouts — both now report repo-relative paths and a suite case asserts two
+  runs are byte-identical; (b) `docs check-all` required `--slug` where the
+  issue's table takes no input — the slug now derives from the branch
+  (`fix/<n>-<slug>`, `feat/…`, `feature/…`) and the flag stays as the override,
+  an unmappable branch being a usage error naming both forms; (c) `unit list`
+  answered `unregistered` for every unit the fix index did not carry — the
+  feature roadmap is read too, so `01-generate-docs` reports `done` and only a
+  unit with no row in either registry stays `unregistered` (62/115 here, all
+  genuinely row-less); (d) `ledger read` returned `{kind, n, text}` only — it
+  now also carries the issue's `type`, `date`, `sha` and `detail` (`null` where
+  the carrier does not carry them, never invented), and `ledger count` adds the
+  issue's documented key set beside the carrier-native `counts` with `null` for
+  a mark the carrier cannot carry (the frozen R1 `counts["REVIEW-RAN"]` = 23 is
+  unchanged); (e) this unit's P2 validator row claimed the pre-CLI reproducers
+  exited 1 with `unknown-command` while E1 records the module-absent failure —
+  the row now names E1's observation.
+- **G6** — 2026-10-31, second-repair-round gates: five ceremony suites · exit 0
+  · 68 tests / 68 pass / 0 fail; `node scripts/run-root-suite.mjs` · exit 0 ·
+  1284 tests / 1284 pass / 0 fail; `plan lint --slug 338-closed-ceremony-cli` ·
+  PASS; `node scripts/check-skill-context.mjs --routes` · PASS.
 
 ## Next
 

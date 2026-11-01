@@ -18,19 +18,32 @@ import {
 /** Lines of the unit doc's `## Tasks` section with their 1-based line numbers.
  *  The section boundary comes from the shared fence-aware reader
  *  (scripts/unit-doc-phases.mjs — the structural-sibling pin A owns this rule). */
-function taskLines(specPath) {
+function taskLines(specPath, displayPath) {
   const md = fs.readFileSync(specPath, "utf8");
   const body = sectionText(md, "Tasks");
-  if (body == null) fail("missing-section", { section: "tasks", path: specPath });
+  if (body == null) fail("missing-section", { section: "tasks", path: displayPath });
   const startLine = md.slice(0, md.indexOf(body)).split("\n").length;
   return body.split("\n").map((text, i) => ({ line: startLine + i, text }));
 }
 
-function checkPhaseLabels(specPath) {
-  const invalid = taskLines(specPath)
+function checkPhaseLabels(specPath, displayPath) {
+  const invalid = taskLines(specPath, displayPath)
     .filter((l) => /^- (?:\[.\] )?(?:Step \d+|S\d+\b)/.test(l.text.trim()))
-    .map((l) => ({ file: specPath, line: l.line, content: l.text.trim() }));
+    .map((l) => ({ file: displayPath, line: l.line, content: l.text.trim() }));
   return { valid: invalid.length === 0, invalid };
+}
+
+/** The unit slug this branch works on (`fix/<n>-<slug>`, `feat/…`, `feature/…`), for the no-argument form of `check-all`. */
+function branchSlug(cwd) {
+  let branch = "";
+  try {
+    branch = git(["rev-parse", "--abbrev-ref", "HEAD"], cwd);
+  } catch {
+    fail("missing-flag", { flag: "--slug", note: "not a git checkout — name the unit explicitly" });
+  }
+  const match = branch.match(/^(?:fix|feat|feature)\/(.+)$/);
+  if (!match) fail("missing-flag", { flag: "--slug", branch, note: "this branch names no unit — pass --slug" });
+  return match[1];
 }
 
 function checkTasksTicks(specPath) {
@@ -77,7 +90,8 @@ export function docs(op, argv, cwd = process.cwd()) {
     }
     case "check-phase-labels": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
-      const result = checkPhaseLabels(resolveUnit(flags.slug, cwd).specPath);
+      const unit = resolveUnit(flags.slug, cwd);
+      const result = checkPhaseLabels(unit.specPath, path.relative(cwd, unit.specPath));
       if (!result.valid) block({ check: "check-phase-labels", ...result });
       out(result);
     }
@@ -100,11 +114,12 @@ export function docs(op, argv, cwd = process.cwd()) {
       out(result);
     }
     case "check-all": {
-      const flags = parseFlags(argv, ["slug", "from"], ["slug"]);
-      const unit = resolveUnit(flags.slug, cwd);
+      const flags = parseFlags(argv, ["slug", "from"]);
+      const unit = resolveUnit(flags.slug ?? branchSlug(cwd), cwd);
+      const displayPath = path.relative(cwd, unit.specPath);
       const from = flags.from ?? "main";
       const commitFormat = checkCommitFormat(`${from}..HEAD`, cwd);
-      const phaseLabels = checkPhaseLabels(unit.specPath);
+      const phaseLabels = checkPhaseLabels(unit.specPath, displayPath);
       const tasksTicks = checkTasksTicks(unit.specPath);
       const docsLanguage = checkDocsLanguage(cwd);
       const progress = checkProgressEntry(unit.specPath);
