@@ -39,9 +39,10 @@ live evidence against a frozen ledger remains a contradiction candidate.
    — it never decides pause-vs-finish (that is the consumer's bounded judge,
    canonical in `docs/workflow/ORCHESTRATION.md`); urgency may only *inform*
    `next.recommended`, never silently override it.
-4. **Roadmap + fix index.** Parse every row: id, slug, status — the
-   five-state machine `idea / defined / planned / in-progress / done` (see
-   `docs/features/ROADMAP.md` → Status legend) — depends-on, linked PR. A
+4. **Location index.** Parse the `## Features` and `## Fixes` tables of
+   `docs/ROADMAP.md` — two tables, one document, never mixed: id, slug, status —
+   the five-state machine `idea / defined / planned / in-progress / done` (see
+   that document's Status legend) — depends-on, linked PR. A
    legacy row reading a plain `planned` with no five-state history: check its
    `SPEC.md` product half; complete (`## Design status: designed`) → treat as
    `defined`+`planned` (no redirect, per `docs/workflow/MIGRATION.md`);

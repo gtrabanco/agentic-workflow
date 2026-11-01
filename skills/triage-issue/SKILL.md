@@ -66,8 +66,9 @@ after the fact. When triaging a new issue on behalf of the user, the body
 includes a `Checked: <what was searched>` line.
 
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
-what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
-template, and the roadmap. **Retrieval aid (optional, never authoritative):**
+what THIS skill needs: the location index (e.g. `docs/ROADMAP.md`, whose
+`## Fixes` table is the fix index) and fix SPEC template, and the roadmap
+tables. **Retrieval aid (optional, never authoritative):**
 when the index entry point exists, run it once before the forge read —
 `agentic-workflow doc --query "<topic terms>" --json-only` — to surface prior
 findings, decisions and session-log entries on this topic. It is a fast path

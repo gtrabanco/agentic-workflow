@@ -13,7 +13,7 @@ summary table.
 ## Stage 0 — Read the issue and the project
 
 `triage-issue` reads the agent guide + documentation map, the fix index
-(`docs/fix/README.md`) and fix SPEC template, the roadmap, and then the issue
+(the index's `## Fixes` table) and fix SPEC template, the roadmap, and then the issue
 itself in full (body, labels, comments):
 
 ```sh
@@ -69,7 +69,7 @@ issue resolves on the **already-open** unit's own branch, never through a new
 6. Runs the mandatory manual review→fold path: `/fold-findings`, then re-run
    `/review-change`. Unresolved findings go to `/triage-issue --prioritize-now`.
 7. Then `/audit-pr` acts as the merge gate.
-8. **Only after merge:** removes the entry from `docs/fix/README.md`.
+8. **Only after merge:** removes the row from `## Fixes` in `docs/ROADMAP.md`.
 
 ## Stage 5 — Report and keep docs coherent
 

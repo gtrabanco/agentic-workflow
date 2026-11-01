@@ -27,9 +27,9 @@ your domains.
 | Task | Required docs |
 |---|---|
 | Any code change | `docs/architecture/ARCHITECTURE.md` |
-| New feature / planning / sequencing | `docs/features/ROADMAP.md`, `docs/features/_TEMPLATE/SPEC.md` |
+| New feature / planning / sequencing | `docs/ROADMAP.md` (§ Features), `docs/features/_TEMPLATE/SPEC.md` |
 | Feature design — capability & integration closure | `docs/CAPABILITIES.md` *(the capability inventory: roles + cross-cutting subsystems; extended whenever a feature introduces one)* |
-| A fix | `docs/fix/_TEMPLATE/SPEC.md`, `docs/fix/README.md` |
+| A fix | `docs/fix/_TEMPLATE/SPEC.md`, `docs/ROADMAP.md` (§ Fixes) |
 | Integrating an external provider | `docs/providers/<provider>.md` |
 | SEO / metadata / structured data | `docs/frontend/SEO.md` *(optional)* |
 | i18n / translations / locales | `docs/frontend/I18N.md` *(optional)* |
@@ -64,7 +64,8 @@ The single source of truth for what every agentic-workflow skill does first and
 always honors — **referenced** by the skills instead of restated in each one.
 
 **Discovery (always first).** Before acting, read: this guide + the **documentation
-map** above, the **roadmap** (`docs/features/ROADMAP.md`), and the template(s) or
+map** above, the **roadmap** (`docs/ROADMAP.md` — its `## Features` and `## Fixes`
+tables), and the template(s) or
 recent artifacts for the task at hand. Never assume paths or formats; if a doc is
 missing, say so and fall back to these conventions rather than guessing.
 
@@ -311,7 +312,7 @@ required test layer for a change in its SPEC.
 ## Feature workflow
 
 Features produce one `SPEC.md` (from `docs/features/_TEMPLATE/SPEC.md`),
-registered in `docs/features/ROADMAP.md`. The lane flow:
+registered in the `## Features` table of `docs/ROADMAP.md`. The lane flow:
 
 1. **Unit doc** — create `docs/features/<NN>-<slug>/SPEC.md` from the template
 2. **Triage** — the lane conductor (`/unit-lane` / `workflow-status`) returns a
@@ -349,7 +350,8 @@ never both.
 ## Fix workflow
 
 Every NEW fix produces one `SPEC.md` under `docs/fix/<N>-<topic>/` (from
-`docs/fix/_TEMPLATE/SPEC.md`), registered in `docs/fix/README.md`. The flow:
+`docs/fix/_TEMPLATE/SPEC.md`), registered in the `## Fixes` table of
+`docs/ROADMAP.md`. The flow:
 
 1. **Unit doc** — create `docs/fix/<N>-<topic>/SPEC.md` from the template
 2. **Triage** — the lane conductor returns a lightweight step list
@@ -363,7 +365,7 @@ Every NEW fix produces one `SPEC.md` under `docs/fix/<N>-<topic>/` (from
 doc's `## Findings` for a `spec-by-reference` unit, `review-findings.md` for a
 legacy one.
 
-After merge: remove the entry from `docs/fix/README.md`.
+After merge: remove the row from `## Fixes` in `docs/ROADMAP.md`.
 
 ---
 

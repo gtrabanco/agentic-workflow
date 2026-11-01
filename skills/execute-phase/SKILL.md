@@ -227,8 +227,8 @@ the full accumulated diff. On gate red at any step: repair that step (up to
 `--max-attempts`), then continue the loop. The close-out is part of the last
 step's completion: open the PR on `main` with `Closes #N`, write `- PR: <url>`
 into References, and settle the index row with `agentic-workflow roadmap
-<index> rowUpsert '<json>'` (`docs/features/ROADMAP.md`; a fix unit edits its
-`docs/fix/README.md` status cell — no `NN` column, no `rowUpsert`).
+<index> rowUpsert '<json>'` (`docs/ROADMAP.md`; a fix unit edits its row in that
+document's `## Fixes` table — no `NN` column, no `rowUpsert`).
 `bun scripts/roadmap-settle.mjs` exits 0 (#316).
 Terminal:
 
