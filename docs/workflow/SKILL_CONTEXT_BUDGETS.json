@@ -205,7 +205,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15112,
+      "routeEstimateMax": 15143,
       "routeLinesMax": 1144,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
@@ -225,7 +225,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 13396 est / 1017 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13671 est / 1035 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13766 est at this re-basis; ceiling re-based to ceil(13766 × 1.10) = 15143"
       }
     },
     "execute-phase:feature": {
@@ -242,7 +243,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -261,7 +262,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "execute-phase:final-pr": {
@@ -279,7 +281,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14962,
+      "routeEstimateMax": 14992,
       "routeLinesMax": 1121,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
@@ -299,7 +301,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 13259 est / 996 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13534 est / 1014 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13629 est at this re-basis; ceiling re-based to ceil(13629 × 1.10) = 14992"
       }
     },
     "execute-phase:finding": {
@@ -316,7 +319,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -334,7 +337,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "execute-phase:fix": {
@@ -351,7 +355,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -369,7 +373,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "execute-phase:legacy": {
@@ -386,7 +391,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
@@ -404,7 +409,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "execute-phase:small": {
@@ -421,7 +427,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
@@ -440,7 +446,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "execute-phase:unit-loop": {
@@ -457,7 +464,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14397,
+      "routeEstimateMax": 14428,
       "routeLinesMax": 1095,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -473,7 +480,8 @@
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 12746 est / 972 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 318 S12-S16": "fix 318 S12-S16 (evidence-row grammar, bounded checkpoint, retirements, review state): the claim-table shape is now published grammar and the checkpoint planner is named in the executor, so these routes re-base to exact ceil(measured x 1.10). Measured 13021 est / 990 lines.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428"
       }
     },
     "review-change:adversarial": {

@@ -18,8 +18,8 @@ import path from "node:path";
 export const FENCE_OPEN = /^(`{3,}|~{3,})/;
 /** A closing fence: same character at equal-or-greater length. */
 export const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
-/** A `P<n> —` task bullet. */
-const UNIT_DOC_BULLET = /^ {0,3}[-*+] P(\d+)\s*[—-]\s+(\S.*)$/;
+/** A `P<n> —` task bullet, optionally carrying the executed-phase tick mark. */
+const UNIT_DOC_BULLET = /^ {0,3}[-*+] (?:\[[ xX]\] )?P(\d+)\s*[—-]\s+(\S.*)$/;
 /** The `(Implements: S1, S2)` link line a re-cut task bullet carries. Anchored like
  *  `Relevant files:` — the link is metadata on its own line, so a sentence that
  *  quotes the shape inside a task's prose is task text, never the phase's link. */

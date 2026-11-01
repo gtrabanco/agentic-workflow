@@ -72,7 +72,7 @@ split and never carries a second copy of the semantics:
 | grammar | where | shape |
 |---|---|---|
 | **plan** | a plan file, or any `##/###/#### P<n> — <Title>` heading | heading + `Layer: <enum>` + `- [ ]` tasks + `Done-when:` |
-| **unit doc** | the unit doc's `## Tasks` section | one `P<n> — <task> (validator: <command> <outcome>)` bullet per phase, wrapped lines joining the bullet, plus an optional nested `- Relevant files: <path, path…>` line |
+| **unit doc** | the unit doc's `## Tasks` section | one `P<n> — <task> (validator: <command> <outcome>)` bullet per phase, optionally carrying the executed-phase tick mark (`- [x] P<n> — …`; the tick is state, never a second phase), wrapped lines joining the bullet, plus an optional nested `- Relevant files: <path, path…>` line |
 
 Precedence is fail-closed and one-way: **if a document carries any plan-style
 phase heading, the plan grammar governs it**; only when it carries none does
