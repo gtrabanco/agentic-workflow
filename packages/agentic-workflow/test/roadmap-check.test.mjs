@@ -23,6 +23,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkUnitDoc, findRow, ROADMAP_CHECK_CODES, rowUpsert } from "../src/edit/Roadmap.mjs";
+import { ROADMAP_DOCUMENT } from "../src/index-document.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "bin", "agentic-workflow.mjs");
@@ -199,7 +200,7 @@ describe("roadmap check — CLI exit contract", () => {
     const docDir = join(tmpDir, "docs", "features", "77-cli-unit");
     mkdirSync(docDir, { recursive: true });
     writeFileSync(join(docDir, "SPEC.md"), "# 77 — cli-unit\n## Next\n\nPR #309 (`" + OWNER + "/pull/309`).\n", "utf8");
-    const table = write("docs/features/ROADMAP.md", roadmapTable(["| 77 | `cli-unit` | in-progress | — | work |"]));
+    const table = write(ROADMAP_DOCUMENT, roadmapTable(["| 77 | `cli-unit` | in-progress | — | work |"]));
 
     const failing = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md"), "--roadmap", table], { encoding: "utf8" });
     strictEqual(failing.status, 1);

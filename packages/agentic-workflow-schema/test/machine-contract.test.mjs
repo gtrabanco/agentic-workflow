@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import {
   compileWorkflowSnapshot,
+  ROADMAP_DOCUMENT,
   parseTurn,
   renderOutputInstruction,
   validateEnvelopeV2Strict,
@@ -280,7 +281,7 @@ test("compileWorkflowSnapshot reports deterministic phase state and provenance",
         content: "# Repository state\n\nStatus: frozen\n",
       },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content:
           "| # | Slug | Status | Depends on | Title |\n| - | - | - | - | - |\n| 12 | skill-lockfile | in-progress | — | Machine contract |\n",
       },
@@ -320,7 +321,7 @@ test("compileWorkflowSnapshot refuses to infer a phase from ambiguous progress",
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content: "| 12 | skill-lockfile | in-progress | — | Machine contract |\n",
       },
       {
@@ -343,7 +344,7 @@ test("compileWorkflowSnapshot records missing phase documents for the active uni
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content: "| 22 | `machine-contract` | in-progress · [#134](https://example.test/pr/134) | — | Machine contract |\n",
       },
     ],
@@ -397,7 +398,7 @@ test("compileWorkflowSnapshot falls back to the active fix index when no feature
     repository: { branch: "fix/134-machine-contract", headSha: "abcdef012345", dirty: false },
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
-      { path: "docs/features/ROADMAP.md", content: "| 12 | skill-lockfile | done | — | Machine contract |\n" },
+      { path: ROADMAP_DOCUMENT, content: "| 12 | skill-lockfile | done | — | Machine contract |\n" },
       {
         path: "docs/fix/README.md",
         content:

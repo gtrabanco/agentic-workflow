@@ -28,6 +28,7 @@ const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 
 /** The built schema runtime — the same loader the script must consume (A:8). */
 const { loadSchemaRuntime } = await import("./schema-runtime.mjs");
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 const { validateEnvelope, sha256HexSync } = await loadSchemaRuntime();
 
 // ---------------------------------------------------------------------------
@@ -94,7 +95,7 @@ function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = 
     fs.writeFileSync(abs, content);
   };
 
-  write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
+  write(ROADMAP_DOCUMENT, `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
   write("docs/fix/README.md", `${FIX_INDEX}\n`);
   if (nrs !== null) write("docs/workflow/REPOSITORY_STATE.md", nrs);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);
@@ -327,6 +328,13 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
+  // Issue #319 put the published index paths on that graph (scripts → the
+  // crate's `src/index-document.mjs`), so the sandbox mirrors the module too.
+  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
+  fs.copyFileSync(
+    path.join(repoRoot, "packages", "agentic-workflow", "src", "index-document.mjs"),
+    path.join(tmp, "packages", "agentic-workflow", "src", "index-document.mjs"),
+  );
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -355,6 +363,13 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
+  // Issue #319 put the published index paths on that graph (scripts → the
+  // crate's `src/index-document.mjs`), so the sandbox mirrors the module too.
+  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
+  fs.copyFileSync(
+    path.join(repoRoot, "packages", "agentic-workflow", "src", "index-document.mjs"),
+    path.join(tmp, "packages", "agentic-workflow", "src", "index-document.mjs"),
+  );
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",

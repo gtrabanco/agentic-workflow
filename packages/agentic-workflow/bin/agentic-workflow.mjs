@@ -27,6 +27,7 @@ import { join, resolve, basename, dirname } from "node:path";
 // Import SDK modules
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
 import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
+import { ROADMAP_DOCUMENT, ROADMAP_LEGACY_DOCUMENT } from "../src/index-document.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
@@ -69,9 +70,14 @@ function refuse(reason) {
 }
 
 /**
- * Walk up from a unit doc to the repo root until the default index (e.g.
- * `docs/features/ROADMAP.md`) exists; null when no ancestor carries it.
+ * Walk up from a unit doc to the repo root until the default index exists; null
+ * when no ancestor carries it.
  */
+/** Strip the docs root from a published index path (`docs/X/Y.md` → `X/Y.md`). */
+function relativeToDocs(index) {
+  return index.replace(/^docs\//, "");
+}
+
 function findUpIndex(docPath, relativeIndex) {
   let dir = dirname(docPath);
   for (;;) {
@@ -278,11 +284,17 @@ switch (command) {
         // contradiction).
         const parts = docPath.split("/");
         const isFix = parts.includes("docs") && parts[parts.indexOf("docs") + 1] === "fix";
-        const defaultIndex = isFix ? "docs/fix/README.md" : "docs/features/ROADMAP.md";
+        // One index (issue #319): a feature row and a fix row are two tables of
+        // the same document, so both kinds default to it and `checkUnitDoc`
+        // reads its own table there. A pre-319 tree still has the pre-move
+        // roadmap and the standalone fix index under the alias.
         const indexArg = flag("--roadmap") ?? flag("--index");
+        // The alias is a read: a pre-319 tree carries the index under
+        // `docs/features/`, and the walk finds whichever layout the repo has.
         const indexPath = indexArg
           ? resolve(indexArg)
-          : findUpIndex(docPath, defaultIndex.split("/").pop());
+          : findUpIndex(docPath, relativeToDocs(ROADMAP_DOCUMENT))
+            ?? findUpIndex(docPath, relativeToDocs(ROADMAP_LEGACY_DOCUMENT));
         if (!indexPath) {
           refuse(`index not found for ${docArg} — pass --roadmap <file>`);
         }

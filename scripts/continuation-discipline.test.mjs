@@ -38,6 +38,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { loadSchemaRuntime } from "./schema-runtime.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SENSOR = path.join(repoRoot, "scripts", "workflow-status.mjs");
@@ -136,7 +137,7 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   };
   const unitDir = `docs/features/${unit}`;
 
-  write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n| ${unit.slice(0, 2)} | \`${unit.slice(3)}\` | ${status} | — | a unit |\n`);
+  write(ROADMAP_DOCUMENT, `${ROADMAP_HEADER}\n| ${unit.slice(0, 2)} | \`${unit.slice(3)}\` | ${status} | — | a unit |\n`);
   write("docs/fix/README.md", `${FIX_INDEX}\n`);
   write("docs/workflow/REPOSITORY_STATE.md", `${FROZEN_NRS}\n`);
   write("AGENTS.md", GUIDE);

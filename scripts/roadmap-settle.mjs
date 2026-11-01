@@ -40,6 +40,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkUnitDoc, ROADMAP_CHECK_CODES } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
+import { FIX_INDEX_DOCUMENT, ROADMAP_DOCUMENT, readFixIndexTable, readRoadmapIndex } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
@@ -79,13 +80,16 @@ function unitDocs(docsDir) {
 export function settle(rootDir) {
   const featuresDir = path.join(rootDir, "docs", "features");
   const fixDir = path.join(rootDir, "docs", "fix");
-  const roadmapPath = path.join(featuresDir, "ROADMAP.md");
-  const fixIndexPath = path.join(fixDir, "README.md");
-  if (!fs.existsSync(roadmapPath)) {
-    return { usage: `no roadmap at ${roadmapPath}` };
+  // One index (issue #319): the consolidated document carries both tables. A
+  // pre-319 tree keeps them in two files, which the read alias accepts until
+  // the migration window closes.
+  const index = readRoadmapIndex(rootDir);
+  if (index === null) {
+    return { usage: `no roadmap at ${path.join(rootDir, ROADMAP_DOCUMENT)}` };
   }
-  const roadmapText = fs.readFileSync(roadmapPath, "utf8");
-  const fixIndexText = fs.existsSync(fixIndexPath) ? fs.readFileSync(fixIndexPath, "utf8") : null;
+  const roadmapText = index.text;
+  const fixIndex = readFixIndexTable(rootDir);
+  const fixIndexText = fixIndex === null ? null : fixIndex.text;
 
   const violations = [];
   let checked = 0;
