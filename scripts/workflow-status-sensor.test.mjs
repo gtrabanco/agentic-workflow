@@ -44,14 +44,15 @@ const ROADMAP_HEADER = [
   "|----|------|--------|------------|---------|",
 ].join("\n");
 
-const FIX_INDEX = [
-  "# Active fixes",
-  "",
-  "## Active",
-  "",
-  "| Issue | Topic | Status | Notes |",
-  "|---|---|---|---|",
-].join("\n");
+/**
+ * The index as the workflow ships it (issue #319): one document, two tables.
+ * `fixRows` go under `## Fixes`; the standalone `docs/fix/README.md` is only
+ * written by the alias test, which proves the migration window still reads it.
+ */
+const FIX_SECTION = ["## Fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|"].join("\n");
+
+const indexDocument = (featureRows, fixRows) =>
+  [ROADMAP_HEADER, ...featureRows, "", FIX_SECTION, ...fixRows, ""].join("\n");
 
 const FROZEN_NRS = [
   "# Normalized repository state",
@@ -84,7 +85,7 @@ after(() => {
  * A throwaway git repository with the substrate the sensor reads, plus a `gh`
  * shim whose canned JSON is controlled per test. Returns `{dir, binDir, run}`.
  */
-function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = [], nrs = FROZEN_NRS, extraFiles = {}, ghMode = "ok", branch = "main", dirty = null, pathWithoutGit = false } = {}) {
+function makeFixture({ roadmapRows = [], fixRows = [], issues = [], openPrs = [], mergedPrs = [], nrs = FROZEN_NRS, extraFiles = {}, ghMode = "ok", branch = "main", dirty = null, pathWithoutGit = false } = {}) {
   const dir = mkTmp("workflow-status-fixture-");
   const binDir = path.join(dir, "bin");
   fs.mkdirSync(binDir, { recursive: true });
@@ -95,8 +96,7 @@ function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = 
     fs.writeFileSync(abs, content);
   };
 
-  write(ROADMAP_DOCUMENT, `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
-  write("docs/fix/README.md", `${FIX_INDEX}\n`);
+  write(ROADMAP_DOCUMENT, indexDocument(roadmapRows, fixRows));
   if (nrs !== null) write("docs/workflow/REPOSITORY_STATE.md", nrs);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);
 
@@ -671,8 +671,8 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
   // #293: a fix-unit product row projects `/unit-lane --fix <n>`, not /unit-lane fix-<n>.
   // The fix-293 sensor pin (above) covers only the feature case; this is the fix case.
   const productFix = makeFixture({
+    fixRows: ["| [#88](https://example.invalid/issues/88) | `beta` | in-progress | x |"],
     extraFiles: {
-      "docs/fix/README.md": ["# Active fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|", "| [#88](https://example.invalid/issues/88) | `beta` | in-progress | x |"].join("\n") + "\n",
       "docs/fix/88-beta/review-findings.md": `${ledger("product owner — repair via lane")}\n`,
     },
   }).run();
@@ -684,16 +684,9 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
   }]);
 
   // Feature 61 P8b: plan-fix absorbed into unit-lane for fix units.
-  const fixIndex = [
-    "# Active fixes",
-    "",
-    "| Issue | Topic | Status | Notes |",
-    "|---|---|---|---|",
-    "| [#91](https://example.invalid/issues/91) | `alpha` | in-progress | x |",
-  ].join("\n");
   const fix = makeFixture({
+    fixRows: ["| [#91](https://example.invalid/issues/91) | `alpha` | in-progress | x |"],
     extraFiles: {
-      "docs/fix/README.md": `${fixIndex}\n`,
       "docs/fix/91-alpha/review-findings.md": `${ledger("replan-in-unit: plan owner re-cuts the phase")}\n`,
     },
   }).run();
@@ -1081,19 +1074,9 @@ test("#221: [retired] fix-unit plan receipt sensing deleted by P8b (#221)", () =
   const unitSlug = "sensor-null-parent-receipt";
   const unitDir = `docs/fix/221-${unitSlug}`;
   const unit = "fix-221";
-  const fixIndex = [
-    "# Active fixes",
-    "",
-    "## Active",
-    "",
-    "| Issue | Topic | Status | Notes |",
-    "|---|---|---|---|",
-    `| [221](https://github.com/gtrabanco/agentic-workflow/issues/221) | \`${unitSlug}\` | \`in-progress\` | a fix-unit receipt must sense current |`,
-  ].join("\n");
-
   const fixture = makeFixture({
+    fixRows: [`| [221](https://github.com/gtrabanco/agentic-workflow/issues/221) | \`${unitSlug}\` | \`in-progress\` | a fix-unit receipt must sense current |`],
     extraFiles: {
-      "docs/fix/README.md": fixIndex,
       [`${unitDir}/SPEC.md`]: [
         "# fix/221-sensor-null-parent-receipt",
         "",
@@ -1113,6 +1096,33 @@ test("#221: [retired] fix-unit plan receipt sensing deleted by P8b (#221)", () =
   assert.ok(row, `the sensor must emit a lane row for fix-221: ${JSON.stringify(envelope.detail.pre_execution)}`);
   assert.equal(row.stage, "lane", "the fix unit is sensed at the lane stage");
   assert.equal(row.boundDigest, null, "lane rows carry boundDigest: null");
+});
+
+// Issue #319 — the migration window, tested on purpose instead of incidentally:
+// a pre-319 tree keeps the roadmap under docs/features and the fixes in a
+// standalone docs/fix/README.md, and the alias must read both exactly as the
+// consolidated document reads them.
+test("#319: a pre-319 tree (pre-move roadmap path + standalone fix index) still senses both tables", () => {
+  const legacy = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] });
+  fs.mkdirSync(path.join(legacy.dir, "docs", "features"), { recursive: true });
+  // The pre-319 roadmap carries no `## Fixes` section at all — that is what
+  // makes the standalone fix index the only place the fix rows live.
+  fs.writeFileSync(
+    path.join(legacy.dir, "docs", "features", "ROADMAP.md"),
+    [ROADMAP_HEADER, "| 90 | `alpha` | in-progress | — | a unit |", ""].join("\n"),
+  );
+  fs.rmSync(path.join(legacy.dir, ROADMAP_DOCUMENT));
+  fs.mkdirSync(path.join(legacy.dir, "docs", "fix"), { recursive: true });
+  fs.writeFileSync(
+    path.join(legacy.dir, "docs", "fix", "README.md"),
+    ["# Active fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|",
+      "| [#91](https://example.invalid/issues/91) | `alpha` | in-progress | x |", ""].join("\n"),
+  );
+  const result = legacy.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.detail.features.map((unit) => unit.id), ["90-alpha"], "the pre-move roadmap is read through the alias");
+  assert.deepEqual(envelope.detail.fixes.map((unit) => unit.id), ["fix-91"], "the standalone fix index is read through the alias");
 });
 
 

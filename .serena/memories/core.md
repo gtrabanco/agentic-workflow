@@ -3,7 +3,7 @@
 - The layout carries no working-copy activation surface (`ln -sfn ../skills .claude/skills` is gitignored); repo sessions use the installed release. Authoring sessions opt in with the local mount or per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
 - Project rules and authoritative commands: `CLAUDE.md`.
 - Public machine-contract package: `packages/agentic-workflow-schema/`; read `mem:tech_stack` for package details.
-- Delivery is document-driven: feature units under `docs/features/<NN>-<slug>/`, fixes under `docs/fix/<n>-<topic>/`, roadmap in `docs/features/ROADMAP.md`.
+- Delivery is document-driven: feature units under `docs/features/<NN>-<slug>/`, fixes under `docs/fix/<n>-<topic>/`. The roadmap + fix index is ONE document (`## Features` + `## Fixes`); never hardcode its path — read the constant `ROADMAP_DOCUMENT` (or `readRoadmapIndex()`/`roadmapTableRows()` for its tables) in `packages/agentic-workflow/src/index-document.mjs`, mirrored by `@gtrabanco/agentic-workflow-schema` (`src/paths.ts`).
 - One PR per unit, always based on `main`; never work directly on `main` or stack PRs.
 - Docs language is English. Human-readable docs with existing `.es.md` siblings must update EN+ES in the same change; SPEC/process artifacts remain English-only.
 - Read `mem:conventions` for authoring invariants and `mem:task_completion` for gates.

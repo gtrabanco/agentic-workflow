@@ -50,14 +50,16 @@ const ROADMAP_HEADER = [
   "|----|------|--------|------------|---------|",
 ].join("\n");
 
-const FIX_INDEX = [
-  "# Active fixes",
-  "",
-  "## Active",
-  "",
-  "| Issue | Topic | Status | Notes |",
-  "|---|---|---|---|",
-].join("\n");
+/**
+ * The index as the workflow ships it (issue #319): one document, two tables. A
+ * fixture that wants fix rows appends them under `## Fixes`; the standalone
+ * `docs/fix/README.md` is no longer where the sensor reads them.
+ */
+const FIX_SECTION_HEADER = "## Fixes\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|";
+
+const indexDocument = (featureRows, fixRows) =>
+  [ROADMAP_HEADER, ...featureRows, "", FIX_SECTION_HEADER, ...fixRows, ""].join("\n");
+const FIX_ROWS = [];
 
 const FROZEN_NRS = ["# Normalized repository state", "", "Status: frozen", "", "Snapshot: compact-1"].join("\n");
 
@@ -91,8 +93,7 @@ function makeFixture({ roadmapRows = [], openPrs = [], mergedPrs = [], issues = 
     fs.writeFileSync(abs, content);
   };
 
-  write(ROADMAP_DOCUMENT, `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
-  write("docs/fix/README.md", `${FIX_INDEX}\n`);
+  write(ROADMAP_DOCUMENT, indexDocument(roadmapRows, FIX_ROWS));
   write("docs/workflow/REPOSITORY_STATE.md", FROZEN_NRS);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);
 
