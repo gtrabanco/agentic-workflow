@@ -874,7 +874,7 @@ External verification of the repaired head ran (base `4939b5fe` → head
 as proposals for owner triage — E9c's `62/115` arithmetic, `plan update --tasks`'
 always-empty `tasks-removed`, `branchSlug()`'s note on a commit-less checkout,
 and one unreproducible suite flake observed while the branch was being edited
-concurrently. Next concrete step: the PR against `main` (`Closes #338`); the
+concurrently. The PR against `main` is open (`Closes #338`, #350) and the
 S10/`review`-module minimum lands as the first follow-up PR per the issue's own
 priority list.
 
