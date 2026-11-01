@@ -1,8 +1,15 @@
 # Roadmap
 
-The single source of truth for feature **numbering, ordering, and dependencies**.
-Every feature folder under `docs/features/<NN>-<slug>/` must have a row here, and
-every row must have a folder (or be explicitly marked "scheduled").
+The workflow's **single location index**, in one document: `## Features` orders
+the feature units (feature **numbering, ordering, and dependencies**), `## Fixes`
+carries the active fixes, and the sections below the tables are the status
+machine and the conventions both tables follow. One index, one writer — the same
+"single surface, single owner" rule the repo applies to unit docs.
+
+Every feature folder under `docs/features/<NN>-<slug>/` must have a row in
+`## Features`, and every row must have a folder (or be explicitly marked
+"scheduled"). Every fix folder under `docs/fix/<issue-number>-<topic>/` is
+registered in `## Fixes` while its work is open.
 
 ## Features
 
@@ -98,10 +105,36 @@ every row must have a folder (or be explicitly marked "scheduled").
 
 
 
+## Fixes
+
+The active-fixes index, relocated here from `docs/fix/README.md` (issue #319).
+A fix has its own unit folder `docs/fix/<issue-number>-<topic>/`; while its work
+is open it is registered in this table, and the row is removed only **after** the
+PR merges — history lives in git log + the closed issue, never in this table.
+
+### Fix status legend
+
+- `pending` — SPEC drafted, branch not yet open
+- `in-progress` — branch open, work ongoing
+- `done` — built, PR open, awaiting merge (merge state lives in the forge — the
+  same meaning as the features table's `done`); the row is removed only **after**
+  the PR merges
+
+### Active
+
+| Issue | Topic | Status | Notes |
+|---|---|---|---|
+| [#331](https://github.com/gtrabanco/agentic-workflow/issues/331) | authoring-setup | in-progress | Authoring-repo initial setup — `docs/workflow/SETUP.md`, `scripts/setup-env.mjs` (`--check`), `scripts/update-tools.mjs` (`--dry-run`), CI check job; branch `feature/331-authoring-repo-setup` |
+| [#318](https://github.com/gtrabanco/agentic-workflow/issues/318) | class-escalation-forward-closure | in-progress | Class escalation + forward closure + generated PR evidence pack + remove narration surface (complements #315); branch `fix/318-class-escalation-forward-closure` |
+| [#340](https://github.com/gtrabanco/agentic-workflow/issues/340) | deletion-reuse-obligations | in-progress | product-audit residue dimensions (duplicate content, unused code, obsolete/missing docs) + reuse-first/replace-implies-delete + all-stages ask-don't-infer; branch `fix/340-deletion-reuse-obligations` |
+| [#338](https://github.com/gtrabanco/agentic-workflow/issues/338) | closed-ceremony-cli | in-progress | Closed deterministic ceremony CLI — `scripts/ceremony.mjs` with the P0 modules (workspace, docs, unit+plan, findings+ledger); branch `fix/338-closed-ceremony-cli` |
+| [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | in-progress | One index: this document (`## Features` + `## Fixes`), published path constant, alias window; branch `fix/319-location-index-consolidation` |
+
+
 ## Bureaucracy-reduction execution order (2026-09-15)
 
 Owner-approved ordering by expected token/time savings, dependencies respected.
-Fixes carry no feature number (fix #224 is tracked in the fix index). Each entry:
+Fixes carry no feature number (fix #224 is tracked in the `## Fixes` table). Each entry:
 feature NN (issue #NNN).
 
 - **Phase 0 — quick wins (no dependencies):** fix #224 · 52 (#226) · 59 (#215+231, absorbs 48/56) · 55 (#230)
@@ -175,3 +208,11 @@ inferred, and no second skill writes the same edge.
   `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.
 - Keep this table consistent with the feature folders (the `audit-docs` skill
   checks for drift).
+- **Fixes** live in `docs/fix/<issue-number>-<topic>/` on branch
+  `fix/<issue-number>-<topic>`, with a tracked issue in the project's forge that
+  the PR closes via `Closes #<n>` (or the forge's auto-close convention). The row
+  is removed from `## Fixes` only **after** the PR merges — do not maintain
+  history there.
+- `docs/fix/README.md` is a pointer stub: the index it used to hold is the
+  `## Fixes` table above, and `docs/fix/_TEMPLATE/SPEC.md` is still the fix SPEC
+  format.
