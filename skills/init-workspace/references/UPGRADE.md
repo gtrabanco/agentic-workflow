@@ -41,9 +41,13 @@ lacks**. Ten ordered steps:
    after the new file is in place**, and the fix README reduced to the one-line
    pointer stub the template ships. Never rewrite an edited roadmap: if the
    project's table differs from the template's, carry the project's rows
-   verbatim and list the differences as residuals. A project that prefers to wait
-   keeps the old path working — the readers accept it for one release train
-   (`docs/workflow/MIGRATION.md`, 2026-10-30).
+   verbatim and list the differences as residuals. **The read window is closed**
+   (`docs/workflow/MIGRATION.md`, 2026-10-30, decision D4): the old path is only
+   *detected* so this step can offer the move — a repository that still runs the
+   lane against it is refused with a `roadmap-moved` pointer, so propose the move
+   as the first thing to fix, never as an optional cleanup. A half-migrated tree
+   (canonical roadmap without a `## Fixes` table) still reads its standalone fix
+   index, so the fix table can be folded in a second pass.
 
 5. **Propose the adaptive lane conventions (feature 61 P11).** For pre-lane
    installs (before the fixed pipeline was retired), propose these missing

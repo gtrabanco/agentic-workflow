@@ -1098,31 +1098,41 @@ test("#221: [retired] fix-unit plan receipt sensing deleted by P8b (#221)", () =
   assert.equal(row.boundDigest, null, "lane rows carry boundDigest: null");
 });
 
-// Issue #319 — the migration window, tested on purpose instead of incidentally:
-// a pre-319 tree keeps the roadmap under docs/features and the fixes in a
-// standalone docs/fix/README.md, and the alias must read both exactly as the
-// consolidated document reads them.
-test("#319: a pre-319 tree (pre-move roadmap path + standalone fix index) still senses both tables", () => {
+// Issue #319 — the migration window is closed (D4). A pre-319 tree is refused
+// with the pointer at the new home, never sensed as an empty index; the fix
+// table's own fallback (an un-folded standalone fix index next to a canonical
+// roadmap that has no `## Fixes` table) still reads, because that is a
+// half-migrated tree, not a moved one.
+test("#319: a pre-319 tree is refused with roadmap-moved, never sensed as empty", () => {
   const legacy = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] });
   fs.mkdirSync(path.join(legacy.dir, "docs", "features"), { recursive: true });
-  // The pre-319 roadmap carries no `## Fixes` section at all — that is what
-  // makes the standalone fix index the only place the fix rows live.
   fs.writeFileSync(
     path.join(legacy.dir, "docs", "features", "ROADMAP.md"),
     [ROADMAP_HEADER, "| 90 | `alpha` | in-progress | — | a unit |", ""].join("\n"),
   );
   fs.rmSync(path.join(legacy.dir, ROADMAP_DOCUMENT));
-  fs.mkdirSync(path.join(legacy.dir, "docs", "fix"), { recursive: true });
-  fs.writeFileSync(
-    path.join(legacy.dir, "docs", "fix", "README.md"),
-    ["# Active fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|",
-      "| [#91](https://example.invalid/issues/91) | `alpha` | in-progress | x |", ""].join("\n"),
-  );
   const result = legacy.run();
+  assert.notEqual(result.status, 0, "the sensor refuses the pre-move index");
+  assert.match(result.stderr, /roadmap-moved/);
+  assert.equal(result.stdout.trim(), "", "no envelope is printed");
+});
+
+test("#319: a half-migrated tree still reads the standalone fix index", () => {
+  const halfMigrated = makeFixture();
+  // A half-migrated tree: the roadmap is at the canonical path but the fix
+  // table has not been folded into it yet, so there is no `## Fixes` section.
+  fs.writeFileSync(path.join(halfMigrated.dir, ROADMAP_DOCUMENT), `${ROADMAP_HEADER}\n`);
+  fs.mkdirSync(path.join(halfMigrated.dir, "docs", "fix"), { recursive: true });
+  fs.writeFileSync(
+    path.join(halfMigrated.dir, "docs", "fix", "README.md"),
+    ["# Active fixes", "", "| Issue | Topic | Status | Notes |", "|---|---|---|---|",
+      "| [#91](https://example.invalid/issues/91) | `beta` | in-progress | x |", ""].join("\n"),
+  );
+  const result = halfMigrated.run();
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
-  assert.deepEqual(envelope.detail.features.map((unit) => unit.id), ["90-alpha"], "the pre-move roadmap is read through the alias");
-  assert.deepEqual(envelope.detail.fixes.map((unit) => unit.id), ["fix-91"], "the standalone fix index is read through the alias");
+  assert.deepEqual(envelope.detail.fixes.map((unit) => unit.id), ["fix-91"], "the standalone fix table is read");
+  assert.deepEqual(envelope.detail.features, [], "the canonical roadmap has no feature rows in this fixture");
 });
 
 

@@ -1384,7 +1384,13 @@ export function coherence(paths) {
 
 /** CLI: zero or more explicit paths. */
 function main(argv) {
-  return coherence(argv);
+  try {
+    return coherence(argv);
+  } catch (error) {
+    // A repository whose index moved is refused, never reported coherent.
+    process.stderr.write(`promise-coherence: ${error?.message ?? error}\n`);
+    return { lines: [], exitCode: 1 };
+  }
 }
 
 const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;

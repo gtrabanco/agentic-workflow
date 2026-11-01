@@ -191,7 +191,14 @@ function main(argv) {
     process.stderr.write("usage: node scripts/vocabulary-probe.mjs [--root <dir>]\n");
     return 2;
   }
-  const result = runProbe(root);
+  let result;
+  try {
+    result = runProbe(root);
+  } catch (error) {
+    // A repository whose index moved is refused, never probed as empty.
+    process.stderr.write(`vocabulary-probe: ${error?.message ?? error}\n`);
+    return 1;
+  }
   process.stdout.write(`${result.lines.join("\n")}\n`);
   return result.exitCode;
 }

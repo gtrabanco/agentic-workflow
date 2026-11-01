@@ -12,8 +12,8 @@
  *   O7     the crate and the schema package publish the same constants
  *   O1/R2  the consolidated document carries the four sections; the old file is gone
  *   O2/R3  `docs/fix/README.md` is a one-line stub pointing at the `## Fixes` section
- *   O4     alias equivalence: canonical-only and legacy-only trees parse identically
- *   O5/R4  a closed window refuses the pre-move path with `roadmap-moved`, never an empty parse
+ *   O4     the rollback lever: an explicit `{ legacy: true }` still reads the pre-move tree
+ *   O5/R4  the closed window (the default) refuses the pre-move path with `roadmap-moved`
  *   O9/R5  the two tables never leak into each other's parsers
  *   O8     every live reader/writer goes through the constant, not a literal
  *
@@ -100,25 +100,27 @@ test("O6/R1: the pre-move path is written in exactly one place in live code", ()
 test("O7: the crate's constants and the schema package's published constants agree", async () => {
   const source = read(SCHEMA_MODULE);
   const declared = (name) => {
-    const match = new RegExp(`export const ${name}\\s*=\\s*"([^"]*)"`).exec(source);
+    const match = new RegExp(`export const ${name}\\s*=\\s*("([^"]*)"|true|false)`).exec(source);
     assert.ok(match, `${SCHEMA_MODULE} publishes ${name}`);
-    return match[1];
+    return match[1].replace(/^"|"$/g, "");
   };
   const shared = [
     "ROADMAP_DOCUMENT",
     "FIX_INDEX_DOCUMENT",
     "ROADMAP_FEATURES_HEADING",
     "ROADMAP_FIXES_HEADING",
-    "ROADMAP_DOCUMENT_SUFFIX",
+    "ROADMAP_LEGACY_READ",
   ];
   for (const name of shared) {
     const value = await crate(name);
-    assert.equal(typeof value, "string", `${CRATE_MODULE} publishes ${name}`);
-    assert.equal(value, declared(name), `${name} is the same value in both packages`);
+    const kind = /^(true|false)$/.test(declared(name)) ? "boolean" : "string";
+    assert.equal(typeof value, kind, `${CRATE_MODULE} publishes ${name} as a ${kind}`);
+    assert.equal(String(value), declared(name), `${name} is the same value in both packages`);
   }
   assert.match(read("packages/agentic-workflow-schema/src/index.ts"), /from "\.\/paths\.js"/, "the schema package re-exports the constants");
   assert.equal(await crate("ROADMAP_DOCUMENT"), CANONICAL);
-  assert.ok((await crate("ROADMAP_LEGACY_DOCUMENT")).endsWith(await crate("ROADMAP_DOCUMENT_SUFFIX")), "the alias names a document the tolerant suffix still recognises");
+  assert.equal(await crate("ROADMAP_LEGACY_READ"), false, "the migration window is closed (D4)");
+  assert.equal(await crate("ROADMAP_LEGACY_DOCUMENT"), LEGACY, "the pre-move path is still named so the refusal can point at it");
 });
 
 test("O1/R2: the consolidated index carries the four sections, and the old file is gone", () => {
@@ -136,14 +138,14 @@ test("O2/R3: the fix index is a one-line stub that points at the Fixes section",
   assert.match(stub, /docs\/ROADMAP\.md#fixes/, "the stub points at the consolidated Fixes section");
 });
 
-test("O4: a canonical tree and a legacy tree parse identically, and the canonical path wins", async () => {
+test("O4: the rollback lever reads a pre-319 tree identically, and the canonical path wins", async () => {
   const readIndex = await crate("readRoadmapIndex");
   const roadmapTableRows = await crate("roadmapTableRows");
 
   const canonicalTree = tree({ [CANONICAL]: CONSOLIDATED });
   const legacyTree = tree({ [LEGACY]: CONSOLIDATED });
   const canonical = readIndex(canonicalTree);
-  const legacy = readIndex(legacyTree);
+  const legacy = readIndex(legacyTree, { legacy: true });
   assert.equal(canonical.path, CANONICAL);
   assert.equal(canonical.source, "canonical");
   assert.equal(legacy.path, LEGACY);
@@ -151,18 +153,18 @@ test("O4: a canonical tree and a legacy tree parse identically, and the canonica
   assert.deepEqual(unitRows(roadmapTableRows(legacy.text, "fix")), unitRows(roadmapTableRows(canonical.text, "fix")), "the same document reads the same either way");
 
   const both = tree({ [CANONICAL]: CONSOLIDATED, [LEGACY]: "# Roadmap\n\n| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 01 | `stale` | idea | — | stale copy |\n" });
-  const preferred = readIndex(both);
+  const preferred = readIndex(both, { legacy: true });
   assert.equal(preferred.source, "canonical", "the canonical path wins when both exist");
   assert.equal(unitRows(roadmapTableRows(preferred.text, "feature")).length, 1, "the stale copy is never read");
 
   assert.equal(readIndex(tree({})), null, "no index at all is an absent index, not a refusal");
 });
 
-test("O5/R4: a closed window refuses the pre-move path with a moved pointer, never an empty parse", async () => {
+test("O5/R4: the closed window refuses the pre-move path with a moved pointer, never an empty parse", async () => {
   const readIndex = await crate("readRoadmapIndex");
   const legacyTree = tree({ [LEGACY]: CONSOLIDATED });
   assert.throws(
-    () => readIndex(legacyTree, { legacy: false }),
+    () => readIndex(legacyTree),
     (error) => {
       assert.equal(error.code, "roadmap-moved", "the refusal carries the closed code");
       assert.equal(error.from, LEGACY);
@@ -170,7 +172,7 @@ test("O5/R4: a closed window refuses the pre-move path with a moved pointer, nev
       return true;
     },
   );
-  assert.doesNotThrow(() => readIndex(legacyTree, { legacy: true }), "the open window still reads the pre-move path");
+  assert.doesNotThrow(() => readIndex(legacyTree, { legacy: true }), "the rollback lever still reads the pre-move path");
 });
 
 test("O9/R5: the two tables never leak into each other's parsers", async () => {
@@ -216,6 +218,6 @@ if (demoIndex !== -1 && process.argv[demoIndex + 1] === "moved") {
     process.stdout.write("no refusal — the closed window read the pre-move path\n");
     process.exitCode = 1;
   } catch (error) {
-    process.stdout.write(`${error.code}: ${error.message}\n`);
+    process.stdout.write(`${error.message}\n`);
   }
 }

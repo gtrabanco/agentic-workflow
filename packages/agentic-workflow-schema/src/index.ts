@@ -19,7 +19,6 @@ import { sha256Hex } from "./sha256.js";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
-  ROADMAP_DOCUMENT_SUFFIX,
   ROADMAP_FEATURES_HEADING,
   ROADMAP_FIXES_HEADING,
 } from "./paths.js";
@@ -2066,13 +2065,14 @@ function documentFor(documents: readonly WorkflowDocument[], suffix: string): Wo
 }
 
 /**
- * The consolidated index among the caller's documents (issue #319). The
- * canonical path wins over the pre-move one, and either is recognised by the
- * published suffix, so this package never spells the legacy path.
+ * The consolidated index among the caller's documents (issue #319). Only the
+ * published path matches: the migration window is closed (D4), so a document
+ * list still carrying the pre-move path answers "no index" instead of being
+ * read as one — the snapshot then reports the unit as unknown rather than
+ * deriving a unit from a file that moved.
  */
 function indexDocument(documents: readonly WorkflowDocument[]): WorkflowDocument | undefined {
-  return documents.find((document) => document.path === ROADMAP_DOCUMENT || document.path.endsWith(`/${ROADMAP_DOCUMENT}`))
-    ?? documentFor(documents, ROADMAP_DOCUMENT_SUFFIX);
+  return documentFor(documents, ROADMAP_DOCUMENT);
 }
 
 /**
@@ -3950,7 +3950,6 @@ export {
   FIX_INDEX_DOCUMENT,
   ROADMAP_FEATURES_HEADING,
   ROADMAP_FIXES_HEADING,
-  ROADMAP_DOCUMENT_SUFFIX,
   ROADMAP_LEGACY_READ,
 } from "./paths.js";
 

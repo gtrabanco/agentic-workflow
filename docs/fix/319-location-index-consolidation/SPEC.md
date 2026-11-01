@@ -42,6 +42,9 @@ substrate/docs — [elided: the full table — verbatim in L1]).
 **S6 — Read alias, single write path.**
 > 2. **Read alias, single write path**: sensors/router read the old path tolerantly during a migration window (accept both, write only the new); after the window, reading the old path fails closed with a `moved` pointer — never a silent empty parse.
 
+**S6a — the window is closed now (requester correction, 2026-10-30).**
+> Si ya tenemos la nueva versión de ROADMAP.md en docs con issues y features resuelve lo de ROADMAP_LEGACY_READ = true, asegurate de que los scripts y todo el código determinista que apunta al roadmap lo resuelve correctamente y que toda la maquinaria de ceremonia que implique el roadmap esté actualizada. Comprobar si la issue 332 necesita algún apunte o corrección.
+
 **S7 — Constant change once.**
 > 3. **Constant change once**: the crate and schema package expose the path as a published constant; consumers import it instead of hardcoding (kills the 15-file recurrence for any future move).
 
@@ -64,9 +67,8 @@ substrate/docs — [elided: the full table — verbatim in L1]).
 
 Both are declared "for design, not blockers", so this unit decides them and
 records the decision rather than guessing: **D1** keeps the fix lifecycle
-verbatim (the issue's own recommendation); **D2** keeps the alias window open for
-one release train, with the fail-closed path implemented and tested now so
-closing the window is a one-constant change, not a new implementation.
+verbatim (the issue's own recommendation); **D2** kept the alias window open for
+one release train — **superseded by D4** (S6a closes it in this unit).
 
 **S12 — Non-goals.**
 > - No rewrite of historical unit/fix docs.
@@ -191,6 +193,10 @@ R1–R5 are O1, O2, O5, O6, O9's validators below.
   (Implements: S4, S10, S12)
   Relevant files: .changeset
 
+- P8 — Close the migration window: every deterministic consumer resolves the published path only and refuses a pre-move tree with a `roadmap-moved` pointer.
+  (validator: `node --test scripts/roadmap-moved.test.mjs` exits 0)
+  (Implements: S6a)
+  Relevant files: scripts/roadmap-moved.test.mjs
 ### Planning evidence
 
 The ledger lives beside this doc as `planning-evidence.md` (M unit).
@@ -212,6 +218,7 @@ proves it.
 | S4 | no closed unit folder is touched | `git diff --name-only main...HEAD -- docs/features docs/fix` → the moved index, the stub and `docs/fix/319-location-index-consolidation/*`, and no `docs/{features,fix}/<NN>-<slug>/` folder |
 | S5 | the fix conventions (removed-after-merge lifecycle + status legend) live in the consolidated doc, and `docs/fix/README.md` is a one-line stub pointing at `docs/ROADMAP.md#fixes` | `wc -l < docs/fix/README.md` → 1 and `rg -c 'docs/ROADMAP.md#fixes' docs/fix/README.md` → 1 |
 | S6 | both paths are accepted during the window with identical results, and the closed window refuses the old path with a `moved` pointer instead of an empty parse | `node --test scripts/index-document.test.mjs` exits 0 (alias-equivalence + closed-window cases) and `node scripts/index-document.test.mjs --demo moved` prints `roadmap-moved` |
+| S6a | the window is closed: every deterministic consumer (router, sensor, unit cycle, vocabulary probe, settle validator, ceremony CLI, crate `roadmap check`, schema snapshot) refuses a pre-move tree with `roadmap-moved` and no index-derived output, while the documented rollback lever still reads it | `node --test scripts/roadmap-moved.test.mjs scripts/index-document.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0 (the #319 snapshot case) |
 | S7 | the legacy path literal survives in exactly one place in code, and the crate and schema constants agree | `grep -rn "docs/features/ROADMAP" --include=*.mjs --include=*.ts scripts packages` → 1 line; `node --test scripts/index-document.test.mjs` exits 0 (parity case) |
 | S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 0 |
 | S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 6 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → 2 |
@@ -262,6 +269,20 @@ proves it.
 - **E5** — 2026-10-30, `node scripts/version-parity-gate.mjs --content --base main`
   · exit 0 · PASS (changeset route for all three packages);
   `--pins` · exit 0 · PASS (both local pins match).
+- **D4** — 2026-10-30, owner instruction quoted as S6a: the migration window is
+  **closed now**, not at a later release cut. D2's "one release train" is
+  superseded. `ROADMAP_LEGACY_READ` is `false` in both published constants
+  modules; it stays as the documented rollback lever, and closing the window is
+  pinned per consumer by `scripts/roadmap-moved.test.mjs`.
+- **D5** — 2026-10-30, issue `#332` (split `AGENTS.md` into a core guide plus
+  progressive references) needs **no correction from this unit**: it pins
+  `scripts/normative-drift.test.mjs`'s `GUIDE_REL`, the `homes` assertion in
+  `scripts/pre-execution-quality.test.mjs` and an inventory of `AGENTS.md`
+  readers, none of which this change touched (`git diff --name-only
+  main...HEAD -- AGENTS.md scripts/normative-drift.test.mjs
+  scripts/pre-execution-quality.test.mjs` is empty), and it names no index path.
+  Its `human-revision-needed` label holds it, so nothing was written to the
+  issue.
 - **E6** — 2026-10-30, `grep -rn "docs/features/ROADMAP" --include=*.mjs
   --include=*.ts scripts packages` · 1 line · the alias constant in
   `packages/agentic-workflow/src/index-document.mjs` (R1).

@@ -392,6 +392,28 @@ test("compileWorkflowSnapshot fails closed when caller facts cannot form a v1 sn
   assert.ok(result.errors.includes("sourceRevision must be a non-empty string"));
 });
 
+test("#319: the migration window is closed — a pre-move document path is not the index", () => {
+  // The pre-319 path is assembled rather than spelled: the single-occurrence
+  // rule covers this tree, so no test restates it.
+  const preMovePath = ["docs", "features", "ROADMAP.md"].join("/");
+  const compile = (path, content) => compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "fix/134-machine-contract", headSha: "abcdef012345", dirty: false },
+    documents: [{ path, content }],
+  });
+
+  const preMove = compile(preMovePath, "| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 12 | `skill-lockfile` | in-progress | — | Machine contract |\n");
+  assert.equal(preMove.ok, true);
+  assert.equal(preMove.snapshot.unit, null, "a document at the pre-move path yields no unit");
+  assert.ok(
+    preMove.snapshot.unknowns.some((entry) => entry.field === "unit"),
+    "the absence is reported as an unknown, never as an empty unit",
+  );
+
+  const canonical = compile(ROADMAP_DOCUMENT, "| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 12 | `skill-lockfile` | in-progress | — | Machine contract |\n");
+  assert.equal(canonical.snapshot.unit?.id, "12-skill-lockfile", "the published path is still read");
+});
+
 test("compileWorkflowSnapshot falls back to the active fix index when no feature is in progress", () => {
   const result = compileWorkflowSnapshot({
     sourceRevision: "0123456789abcdef",
