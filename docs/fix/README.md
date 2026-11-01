@@ -18,6 +18,7 @@ table — history lives in git log + closed issues.
 | [#318](https://github.com/gtrabanco/agentic-workflow/issues/318) | class-escalation-forward-closure | in-progress | Class escalation + forward closure + generated PR evidence pack + remove narration surface (complements #315); branch `fix/318-class-escalation-forward-closure` |
 | [#340](https://github.com/gtrabanco/agentic-workflow/issues/340) | deletion-reuse-obligations | in-progress | product-audit residue dimensions (duplicate content, unused code, obsolete/missing docs) + reuse-first/replace-implies-delete + all-stages ask-don't-infer; branch `fix/340-deletion-reuse-obligations` |
 | [#338](https://github.com/gtrabanco/agentic-workflow/issues/338) | closed-ceremony-cli | in-progress | Closed deterministic ceremony CLI — `scripts/ceremony.mjs` with the P0 modules (workspace, docs, unit+plan, findings+ledger); branch `fix/338-closed-ceremony-cli` |
+| [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | in-progress | One index: `docs/ROADMAP.md` (`## Features` + `## Fixes`), published path constant, alias window; branch `fix/319-location-index-consolidation` |
 
 Historical artifacts remain under `docs/fix/`; merged and closed work is
 intentionally absent from this index.
