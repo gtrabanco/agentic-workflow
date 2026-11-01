@@ -858,14 +858,25 @@ All deterministic, all fixed input/output, all verifiable with exit code and JSO
   · 68 tests / 68 pass / 0 fail; `node scripts/run-root-suite.mjs` · exit 0 ·
   1284 tests / 1284 pass / 0 fail; `plan lint --slug 338-closed-ceremony-cli` ·
   PASS; `node scripts/check-skill-context.mjs --routes` · PASS.
+- **F1** — 2026-11-01, external-verification blocker on O14: the obligation's
+  invariant cell asserted that no existing script's bytes change on the branch,
+  while the declared E8a repair moved `scripts/unit-doc-phases.mjs` and added a
+  `scripts/phase-lint.test.mjs` case — the cell now names that exception and its
+  evidence points at receipt G6 (head `938f578b`, 1284/1284) instead of the
+  superseded G5. Re-run: `node scripts/run-root-suite.mjs` → exit 0.
+  swept: /no existing script's bytes change/ → expected 0 in docs/fix/338-closed-ceremony-cli/*.md
 
 ## Next
 
-Owner verdict on the diff: all 7 phases executed, all 16 obligations `verified`,
-and the external-verification blockers repaired in one batch (E7, receipts in
-G5). Next concrete step: a fresh external verification of the repaired head,
-then the PR against `main` (`Closes #338`); the S10/`review`-module minimum
-lands as the first follow-up PR per the issue's own priority list.
+External verification of the repaired head ran (base `4939b5fe` → head
+`938f578b`): every obligation validator re-ran green, the one ledger blocker
+(O14's absolute invariant cell) is folded as F1, and four advisories stay open
+as proposals for owner triage — E9c's `62/115` arithmetic, `plan update --tasks`'
+always-empty `tasks-removed`, `branchSlug()`'s note on a commit-less checkout,
+and one unreproducible suite flake observed while the branch was being edited
+concurrently. Next concrete step: the PR against `main` (`Closes #338`); the
+S10/`review`-module minimum lands as the first follow-up PR per the issue's own
+priority list.
 
 ## References
 
