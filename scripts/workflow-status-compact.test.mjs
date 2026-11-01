@@ -29,6 +29,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(repoRoot, "scripts", "workflow-status.mjs");
@@ -90,7 +91,7 @@ function makeFixture({ roadmapRows = [], openPrs = [], mergedPrs = [], issues = 
     fs.writeFileSync(abs, content);
   };
 
-  write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
+  write(ROADMAP_DOCUMENT, `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
   write("docs/fix/README.md", `${FIX_INDEX}\n`);
   write("docs/workflow/REPOSITORY_STATE.md", FROZEN_NRS);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);

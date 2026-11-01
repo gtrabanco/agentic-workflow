@@ -501,16 +501,26 @@ test("F20: the in-flight corpus rule lives in one owner, not two copies", () => 
   // disagree about which docs are live. The shared reader owns the rule now —
   // the pin refuses a re-implementation in either consumer and requires the
   // one owner to actually hold it.
+  // Unit 319 moved the two paths behind the published constants, so the pin
+  // follows the rule to its new home instead of being dropped: neither consumer
+  // may name an index path, and the one owner must read both tables through the
+  // constant rather than restating either.
+  const legacyPath = ["docs", "features", "ROADMAP.md"].join("/");
   for (const file of ["scripts/promise-coherence.mjs", "scripts/vocabulary-probe.mjs"]) {
     const text = readFileSync(path.join(ROOT, file), "utf8");
     assert.ok(
-      !text.includes("docs/features/ROADMAP.md"),
+      !text.includes(legacyPath),
       `${file} must not re-implement the corpus rule — scripts/unit-doc-phases.mjs owns it`,
+    );
+    assert.ok(
+      !text.includes("docs/ROADMAP.md"),
+      `${file} must not restate the published index path either`,
     );
   }
   const shared = readFileSync(path.join(ROOT, "scripts/unit-doc-phases.mjs"), "utf8");
-  assert.match(shared, /docs\/features\/ROADMAP\.md/, "the shared reader is the one owner");
-  assert.match(shared, /docs\/fix\/README\.md/, "the shared reader owns both indexes");
+  assert.match(shared, /index-document\.mjs/, "the shared reader imports the published constants");
+  assert.match(shared, /ROADMAP_FEATURES_HEADING/, "the shared reader scopes the features table");
+  assert.match(shared, /ROADMAP_FIXES_HEADING/, "the shared reader owns both indexes");
 });
 
 test("F19: the sweep walk bounds entries visited, not only files pushed", () => {

@@ -16,6 +16,13 @@ import {
   utf8ByteCompare,
 } from "./canonical-json.js";
 import { sha256Hex } from "./sha256.js";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_DOCUMENT,
+  ROADMAP_DOCUMENT_SUFFIX,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+} from "./paths.js";
 import { validateContinuation, type EnvelopeContinuation } from "./continuation.js";
 import {
   VERIFICATION_COMMAND_STATUSES,
@@ -2058,6 +2065,43 @@ function documentFor(documents: readonly WorkflowDocument[], suffix: string): Wo
   return documents.find((document) => document.path.endsWith(suffix));
 }
 
+/**
+ * The consolidated index among the caller's documents (issue #319). The
+ * canonical path wins over the pre-move one, and either is recognised by the
+ * published suffix, so this package never spells the legacy path.
+ */
+function indexDocument(documents: readonly WorkflowDocument[]): WorkflowDocument | undefined {
+  return documents.find((document) => document.path === ROADMAP_DOCUMENT || document.path.endsWith(`/${ROADMAP_DOCUMENT}`))
+    ?? documentFor(documents, ROADMAP_DOCUMENT_SUFFIX);
+}
+
+/**
+ * One `## <heading>` section's body, or `undefined` when the document has no
+ * such heading (a pre-319 document carries one table and no heading, so its
+ * whole content is the section).
+ */
+function sectionContent(content: string, heading: string): string | undefined {
+  const wanted = heading.trim().toLowerCase();
+  const lines = content.split("\n");
+  let level = 0;
+  let inFence = false;
+  const body: string[] = [];
+  for (const line of lines) {
+    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
+    const match = inFence ? null : /^(#{1,6})\s+(.*)$/.exec(line);
+    if (match) {
+      if (level !== 0 && match[1].length <= level) break;
+      if (level === 0 && match[2].trim().toLowerCase() === wanted) {
+        level = match[1].length;
+        continue;
+      }
+      if (level === 0) continue;
+    }
+    if (level !== 0) body.push(line);
+  }
+  return level === 0 ? undefined : body.join("\n");
+}
+
 function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSnapshot["repositoryState"] {
   if (document === undefined) return "missing";
   const value = /(?:^|\n)Status:\s*([^\n\r]+)/i.exec(document.content)?.[1]?.trim().toLowerCase();
@@ -2068,7 +2112,8 @@ function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSn
 function roadmapFeature(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  for (const row of document.content.split("\n")) {
+  const table = sectionContent(document.content, ROADMAP_FEATURES_HEADING) ?? document.content;
+  for (const row of table.split("\n")) {
     const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
     const slug = cells[1]?.replace(/^`|`$/g, "");
@@ -2088,7 +2133,8 @@ function indexStatus(value: string): string {
 function fixUnit(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  for (const row of document.content.split("\n")) {
+  const table = sectionContent(document.content, ROADMAP_FIXES_HEADING) ?? document.content;
+  for (const row of table.split("\n")) {
     const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
     if (cells.length < 3) continue;
     const id = cells[0]?.replace(/^`|`$/g, "") ?? "";
@@ -2219,9 +2265,13 @@ export function validateWorkflowSnapshotV1(value: unknown): WorkflowSnapshotVali
  */
 export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowSnapshotResult {
   const repositoryStateDocument = documentFor(input.documents, "docs/workflow/REPOSITORY_STATE.md");
-  const roadmapDocument = documentFor(input.documents, "docs/features/ROADMAP.md");
+  // Issue #319: the features and the fixes live in one document, and a fix row
+  // is read from its own table there. A pre-319 tree still ships
+  // `docs/fix/README.md`, so the standalone fix index is accepted too (the read
+  // alias); the consolidated index wins when a caller supplies both.
+  const roadmapDocument = indexDocument(input.documents);
   const feature = roadmapFeature(roadmapDocument);
-  const fixIndexDocument = documentFor(input.documents, "docs/fix/README.md");
+  const fixIndexDocument = documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument;
   const fix = feature === null ? fixUnit(fixIndexDocument) : null;
   const selected = feature ?? fix;
   const selectedKind = feature === null && fix !== null ? "fix" : "feature";
@@ -3893,6 +3943,16 @@ export {
   ROADMAP_OPERATIONS,
   CHANGELOG_OPERATIONS,
 } from "./file-schemas.js";
+
+// ── The location index's published paths (unit 319, issue #319) ─────
+export {
+  ROADMAP_DOCUMENT,
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  ROADMAP_DOCUMENT_SUFFIX,
+  ROADMAP_LEGACY_READ,
+} from "./paths.js";
 
 // ── Published closed vocabularies (unit 84, issue #315) ─────────────
 export {

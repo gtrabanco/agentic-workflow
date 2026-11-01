@@ -14,6 +14,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { cer, makeRepo, unitDoc } from "./ceremony/testing.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const REPO = path.resolve(import.meta.dirname, "..");
 
@@ -101,7 +102,7 @@ test("unit list reads the fix index and the roadmap for status (S4)", () => {
   ].join("\n"));
   fs.mkdirSync(path.join(dir, "docs/features/07-shipped"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/features/07-shipped/SPEC.md"), "# 07 — shipped\n");
-  fs.writeFileSync(path.join(dir, "docs/features/ROADMAP.md"), [
+  fs.writeFileSync(path.join(dir, ROADMAP_DOCUMENT), [
     "| NN | Slug | Status | Depends on | Summary |",
     "|----|------|--------|------------|---------|",
     "| 07 | `shipped` | done · [#12](https://example.test/12) | — | fixture |",

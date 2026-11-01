@@ -18,6 +18,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { runProbe, inFlightDocs } from "./vocabulary-probe.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE_ROOT = path.join(ROOT, "scripts", "fixtures", "vocabulary-probe", "tree");
@@ -107,7 +108,7 @@ function corpusFromTheIndexes(root) {
   const settled = /done|discarded|superseded/i;
   const dated = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
   const rows = [];
-  const roadmap = path.join(root, "docs/features/ROADMAP.md");
+  const roadmap = path.join(root, ROADMAP_DOCUMENT);
   if (existsSync(roadmap)) {
     for (const line of readFileSync(roadmap, "utf8").split(/\r?\n/)) {
       const row = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/.exec(line);
