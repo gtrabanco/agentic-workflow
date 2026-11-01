@@ -3672,3 +3672,21 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Remove the config-gated tool guards feature (#344) — replaced by a soft rule in AGENTS.md
 - **Decisions:** The config-gated tool guards shipped in #344 were removed: the fail-closed config switch bricked unrelated routed skills on any config issue, textual matching refused innocuous commands quoting guarded verbs, and whole-invocation blocking took down unrelated commands. Owner decided the tooling approach fails. Discipline for linear history moves to a soft rule in AGENTS.md — no git push --force or equivalent without explicit owner authorization in-turn and no alternative. The per-surface / per-command rework on fix/346-guards-per-surface is abandoned unmerged.
 - **Next:** Merge in PR #349 (chore/remove-tool-guards), review the soft rule in AGENTS.md. Fix #346 will be the last issue on mechanical guard enforcement.
+
+- 2026-11-01T09:35 — **External verification + fold of fix/338-closed-ceremony-cli** —
+  A third-party external verification of the entire branch (base `4939b5fe` → head
+  `938f578b`) found one ledger blocker and four advisories. The blocker (O14) was
+  a ledger-row defect, not a behavioral one: the obligations cell asserted "no
+  existing script's bytes change" while the branch's own declared E8a repair moved
+  `scripts/unit-doc-phases.mjs` and added a `scripts/phase-lint.test.mjs` case.
+  One-line cell amendment naming the E8a exception, evidence repointed from
+  superseded G5 to G6 (1284/1284). Dependent surfaces swept: the SPEC's `## Log`
+  (an `F1` record with its `swept:` declaration) and `## Next` block.
+  PR #350 opened (`feat(ceremony): closed deterministic CLI…`) and merged into
+  main. All 16 obligations verified: 68 ceremony-suite tests, 1284 root-suite tests,
+  R1–R4 reproducers green, plan lint PASS, version-parity PASS.
+  **Status:** merged into main (`d34883d3`).
+  **Follow-up:** the S10 review-module minimum (`create` / `append-axis` /
+  `synthesize`) plus the remaining P1/P2 modules (review, acceptance, refutation,
+  fusion, delta, pr, progress, evidence, commit, roadmap) as ordered by the issue's
+  own priority list.
