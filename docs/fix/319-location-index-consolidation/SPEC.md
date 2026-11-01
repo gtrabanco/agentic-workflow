@@ -230,6 +230,11 @@ proves it.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F1 | S6a · packages/agentic-workflow/src/index-document.mjs:175 | code | med | source | fold |
+| F2 | S6a · packages/agentic-workflow-schema/src/index.ts:2274 | code | med | source | fold |
+| F3 | S7 · packages/agentic-workflow-schema/src/index.ts:2083 | code | med | source | fold |
+| F4 | S8 · docs/fix/319-location-index-consolidation/SPEC.md:223 | spec-drift | med | plan | replan-in-unit |
+| F5 | S11 · docs/fix/319-location-index-consolidation/SPEC.md:226 | spec-drift | med | plan | replan-in-unit |
 
 ## Log
 
@@ -322,6 +327,13 @@ proves it.
   declared validator re-ran at the corrected head: root suite 1301/1301, schema
   727/727, crate 254/254, pi 454/454, `index-document` 8/8, `roadmap-moved`
   7/7, skill-context PASS, version-parity PASS both halves.
+- **V2** — packages/agentic-workflow/src/index-document.mjs:175 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: failing reproducer against unchanged code — half-migrated tree (canonical `docs/ROADMAP.md` with feature row `91 alpha`, no `## Fixes`, standalone `docs/fix/README.md` carrying `[#91] beta`): `node packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/91-beta/SPEC.md` → `slug-mismatch — doc folder says 'beta', row says 'alpha'`, exit 1; variant without a colliding NN → PASS 0 violations while the unit's fix row sits unread in the standalone index; fully migrated control → PASS. Four sibling consumers keep the standalone fallback (pinned by `scripts/workflow-status-sensor.test.mjs:1120`; promised by `docs/workflow/MIGRATION.md:39-41` and `skills/init-workspace/references/UPGRADE.md:48-51`) · confirmed
+- **V3** — packages/agentic-workflow-schema/src/index.ts:2271-2274 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — the comment states "the consolidated index wins when a caller supplies both" while `documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument` makes the standalone document win whenever present; masked only by the declared-inert `fixUnit` matcher · confirmed
+- **V4** — packages/agentic-workflow-schema/src/index.ts:2083-2099 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `sectionContent` duplicates the crate's `roadmapSection` (`packages/agentic-workflow/src/index-document.mjs:113-146`) with no recorded reason, and the pair diverges on escaped `\|` (`tableCells` handles it at index-document.mjs:142; the schema's `split("|")` at index.ts:2117 does not); the mirror-parity test pins only the four constants · confirmed
+- **V5** — docs/fix/319-location-index-consolidation/SPEC.md:223 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1 (`scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md:18`, a record fixture pre-existing at main whose historical text S4 forbids rewriting) against the criterion's stated 0 · confirmed
+- **V6** — docs/fix/319-location-index-consolidation/SPEC.md:226 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `rg -c '\*\*D1\*\*|\*\*D2\*\*' docs/fix/319-location-index-consolidation/SPEC.md` → 4 (S11 body :69-70 + Log decisions :247,:250) against the criterion's stated 2 · confirmed
+- **R1** — 2026-11-01, review at HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · verdict REVIEW-FAIL · cycle 1 · gate exit 0
+- **G1** — 2026-11-01, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass, 0 fail at HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 (reviewer gate run, isolated verify pass; `node --test scripts/roadmap-moved.test.mjs` · exit 0 · 7/7, `node --test scripts/index-document.test.mjs` · exit 0 · 8/8, `bun scripts/check-skill-context.mjs` · PASS · 28 skills)
 
 ## Next
 
