@@ -100,6 +100,42 @@ test("findings/ledger delete-section removes one section; legacy carrier stays r
   assert.equal(legacy.json.error, "legacy-carrier-readonly");
 });
 
+test("ledger read exposes the documented mark fields; count adds the issue's key set (S5)", () => {
+  const dir = makeUnit({ log: [
+    "- **G1** — 2026-10-31, GATE-RAN · HEAD abc1234 · root suite green",
+    "- **P1** — 2026-11-24 10:00, did the thing · abc1234.",
+  ].join("\n") });
+  const read = cer(["ledger", "read", "--slug", "1-fixture"], dir);
+  assert.equal(read.code, 0);
+  const gate = read.json.marks.find((m) => m.kind === "G");
+  assert.equal(gate.type, "GATE-RAN");
+  assert.equal(gate.sha, "abc1234");
+  assert.equal(gate.detail, "root suite green");
+  assert.equal(gate.date, "2026-10-31");
+  assert.equal(gate.text, "2026-10-31, GATE-RAN · HEAD abc1234 · root suite green", "the raw line text is untouched");
+  const progress = read.json.marks.find((m) => m.kind === "P");
+  assert.equal(progress.type, "P");
+  assert.equal(progress.sha, null);
+
+  const counts = cer(["ledger", "count", "--slug", "1-fixture"], dir);
+  assert.equal(counts.json.counts.G, 1, "the carrier-native counts stay as they were");
+  assert.equal(counts.json.documented["GATE-RAN"], 1);
+  assert.equal(counts.json.documented["REVIEW-RAN"], null, "a mark the carrier does not carry is null, never zero");
+  assert.equal(counts.json.documented.VF, null);
+});
+
+test("ledger count and read keep the legacy carrier's own vocabulary (R1, O4)", () => {
+  const dir = makeLegacyUnit();
+  const counts = cer(["ledger", "count", "--slug", "2-legacy"], dir);
+  assert.equal(counts.json.counts["REVIEW-RAN"], 23);
+  assert.equal(counts.json.documented["REVIEW-RAN"], 23);
+  assert.equal(counts.json.documented.VF, 68);
+  assert.equal(counts.json.documented.R, 23, "R aliases the review mark on either carrier");
+  const read = cer(["ledger", "read", "--slug", "2-legacy"], dir);
+  const review = read.json.marks.find((m) => m.type === "REVIEW-RAN");
+  assert.match(review.sha, /^[0-9a-f]{7,40}$/);
+});
+
 test("a flag the operation does not use is a usage error, never silently ignored (S6, S8)", () => {
   const dir = makeUnit({ findingsRows: ROW("F1") });
   assert.equal(cer(["findings", "read", "--slug", "1-fixture", "--severity", "high"], dir).json.error, "unknown-flag");

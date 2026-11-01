@@ -20,6 +20,32 @@ const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const TEMPLATES = { fix: "docs/fix/_TEMPLATE/SPEC.md", feature: "docs/features/_TEMPLATE/SPEC.md" };
 const UNIT_ROUTE = fileURLToPath(new URL("../unit-route.mjs", import.meta.url));
 
+/** The first token of a status cell (`done · [#12](…)` → `done`, `` `planned` `` → `planned`). */
+function statusToken(cell) {
+  const token = cell.replace(/`/g, "").split(" · ")[0].trim();
+  return token === "" ? "unregistered" : token;
+}
+
+/** Unit slug → status, from the two registries that own it: the fix index and the feature roadmap. */
+function statusIndex(cwd) {
+  const statuses = new Map();
+  const fixIndex = path.join(cwd, "docs/fix/README.md");
+  if (fs.existsSync(fixIndex)) {
+    for (const line of fs.readFileSync(fixIndex, "utf8").split("\n")) {
+      const m = line.match(/^\| \[#(\d+)\]\([^)]*\) \| ([^|]+) \| ([^|]+) \|/);
+      if (m) statuses.set(`${m[1]}-${m[2].trim()}`, statusToken(m[3]));
+    }
+  }
+  const roadmap = path.join(cwd, "docs/features/ROADMAP.md");
+  if (fs.existsSync(roadmap)) {
+    for (const line of fs.readFileSync(roadmap, "utf8").split("\n")) {
+      const m = line.match(/^\|\s*(\d+)\s*\|\s*`?([^`|]+?)`?\s*\|\s*([^|]+?)\s*\|/);
+      if (m) statuses.set(`${m[1].padStart(2, "0")}-${m[2].trim()}`, statusToken(m[3]));
+    }
+  }
+  return statuses;
+}
+
 function runUnitRoute(args, cwd) {
   let stdout = "";
   let code = 0;
@@ -94,15 +120,8 @@ export function unit(op, argv, cwd = process.cwd()) {
     case "list": {
       const listFlags = parseFlags(argv, []);
       onlyFlags(listFlags, []);
-      const readme = path.join(cwd, "docs/fix/README.md");
-      const statuses = new Map();
-      if (fs.existsSync(readme)) {
-        for (const line of fs.readFileSync(readme, "utf8").split("\n")) {
-          const m = line.match(/^\| \[#(\d+)\]\([^)]*\) \| ([^|]+) \| ([^|]+) \|/);
-          if (m) statuses.set(`${m[1].padStart(2, "0")}-${m[2].trim()}`, m[3].trim());
-        }
-      }
-      const units = listUnits(cwd).map((u) => ({ ...u, status: statuses.get(u.slug) ?? (u.type === "feature" ? "unregistered" : "unregistered") }));
+      const statuses = statusIndex(cwd);
+      const units = listUnits(cwd).map((u) => ({ ...u, status: statuses.get(u.slug) ?? "unregistered" }));
       out({ units });
     }
     case "triage": {
