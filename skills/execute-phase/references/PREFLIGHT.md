@@ -69,8 +69,8 @@ appending to the unit doc's Evidence section.
 
 ### Own-status precondition (runs after the dependency closure is met, still before any edit)
 
-Read the unit doc's status from the roadmap (the five-state machine —
-`docs/features/ROADMAP.md` → Status legend):
+Read the unit doc's status from the location index (the five-state machine —
+`docs/ROADMAP.md` → Status legend):
 
 1. **`idea`** (or no triage block in the unit doc) → STOP, before any edit:
 

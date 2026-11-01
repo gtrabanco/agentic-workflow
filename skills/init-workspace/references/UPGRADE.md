@@ -4,7 +4,7 @@ Entered when Step 0 finds an existing **agentic-workflow scaffold** (not a
 bare or foreign repo). Bootstrap mode (the Process section above) never
 engages here — upgrade mode reuses the same discovery + interview machinery,
 scoped to **only the blocks the current template has that this project
-lacks**. Nine ordered steps:
+lacks**. Ten ordered steps:
 
 1. **Locate the current template.** Fetch the current `template/` the same
    way bootstrap does — `npx degit gtrabanco/agentic-workflow/template <temp-dir>`
@@ -33,7 +33,19 @@ lacks**. Nine ordered steps:
    dated migration note so the proposal explains *why* the block exists and
    *what* it migrates. If `MIGRATION.md` is absent, proceed on the template
    diff alone and say so in the report — never block on a missing note.
-4. **Propose the adaptive lane conventions (feature 61 P11).** For pre-lane
+4. **Propose the consolidated location index (issue #319).** A project whose
+   roadmap still lives at `docs/features/ROADMAP.md`, or whose fix index is still
+   a standalone `docs/fix/README.md`, is offered the move **additively**:
+   `docs/ROADMAP.md` gained as a new file (the project's feature table plus a
+   `## Fixes` section built from its own fix index), the old path removed **only
+   after the new file is in place**, and the fix README reduced to the one-line
+   pointer stub the template ships. Never rewrite an edited roadmap: if the
+   project's table differs from the template's, carry the project's rows
+   verbatim and list the differences as residuals. A project that prefers to wait
+   keeps the old path working — the readers accept it for one release train
+   (`docs/workflow/MIGRATION.md`, 2026-10-30).
+
+5. **Propose the adaptive lane conventions (feature 61 P11).** For pre-lane
    installs (before the fixed pipeline was retired), propose these missing
    blocks additively — **never clobber existing content**:
    - The **unit document conventions** section in AGENTS.md (the 14-section
@@ -50,7 +62,7 @@ lacks**. Nine ordered steps:
    the project already answered** — a block that's already filled is skipped,
    not re-interviewed. The lane conventions are additive only: existing content
    is never rewritten, only new blocks are inserted where missing.
-5. **Write additively.** Insert accepted blocks, including a missing
+6. **Write additively.** Insert accepted blocks, including a missing
    `docs/workflow/REPOSITORY_STATE.md`; fill raw, still-placeholder
    blocks with the confirmed values. **Never rewrite a block the project has
    already tailored, and never delete anything** — a tailored block the
@@ -61,7 +73,7 @@ lacks**. Nine ordered steps:
    `path-protection.md` page are proposed from the template; an existing
    owner-written `path-policy.json` is never clobbered and is listed as a
    residual instead. Leave honest placeholders where the user skipped.
-6. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
+7. **Retire the legacy `CLAUDE.md` — only with an explicit yes, never as a side
    effect.** Older releases of this workflow wrote the guide as `CLAUDE.md`;
    current ones write `AGENTS.md`, and current Claude Code reads `AGENTS.md`.
    When the project has a `CLAUDE.md`, three ordered moves — never skip (a):
@@ -83,7 +95,7 @@ lacks**. Nine ordered steps:
 
    This step is the only writer of `CLAUDE.md` in upgrade mode, and it is never
    reached without the answer from (b).
-7. **Seed missing urgency labels, additively (feature 15).** Independent of
+8. **Seed missing urgency labels, additively (feature 15).** Independent of
    the agent-guide/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and
    `fix-next` labels (`gh label list`); create whichever is missing with the
@@ -92,7 +104,7 @@ lacks**. Nine ordered steps:
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
 
-8. **Provision Serena, additively only (Refs #219).** Load
+9. **Provision Serena, additively only (Refs #219).** Load
    [SERENA](SERENA.md) and ask its single consent question — the tool install,
    the detected platform's MCP registration and the global trust append all ride
    on that one yes, and a refusal writes nothing. Then append the `.gitignore`
@@ -101,7 +113,7 @@ lacks**. Nine ordered steps:
    the health check, and render the fixed provisioning report. This step is
    additive-only; it never rewrites or deletes, consistent with upgrade mode's
    rule.
-9. **Report + hand off.** Summarize blocks added, filled, and skipped
+10. **Report + hand off.** Summarize blocks added, filled, and skipped
    (residuals), the legacy `CLAUDE.md` outcome (folded items and removed, or kept
    with the reason), the urgency labels seeded (or already present), then print the
    recommendation to run `product-audit` next to see which newly-available
@@ -121,12 +133,12 @@ lacks**. Nine ordered steps:
 - **A block the project already tailored.** If the current template also
   changed a block the project customized, **do not merge, diff-patch, or
   overwrite it** — leave it exactly as the project has it and list it as a
-  residual in the report (step 5's never-clobber invariant). The user decides
+  residual in the report (step 6's never-clobber invariant). The user decides
   separately, via an explicit bootstrap adapt-in-place run, whether to
   re-tailor it.
 - **Bootstrap stays unchanged on a bare or foreign repo.** If Step 0's
   scaffold markers (an agent guide — `AGENTS.md` or a legacy `CLAUDE.md` — plus
-  `docs/features/ROADMAP.md` or
+  `docs/ROADMAP.md`, a pre-319 `docs/features/ROADMAP.md`, or
   `docs/workflow/`) are absent — no repo, an empty repo, or a guide
   that isn't this workflow's — upgrade mode never engages; the existing
   bootstrap Process (merge/adapt/abort) runs exactly as before this mode was

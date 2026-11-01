@@ -214,7 +214,7 @@ proves it.
 | S6 | both paths are accepted during the window with identical results, and the closed window refuses the old path with a `moved` pointer instead of an empty parse | `node --test scripts/index-document.test.mjs` exits 0 (alias-equivalence + closed-window cases) and `node scripts/index-document.test.mjs --demo moved` prints `roadmap-moved` |
 | S7 | the legacy path literal survives in exactly one place in code, and the crate and schema constants agree | `grep -rn "docs/features/ROADMAP" --include=*.mjs --include=*.ts scripts packages` → 1 line; `node --test scripts/index-document.test.mjs` exits 0 (parity case) |
 | S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 0 |
-| S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 3 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → ≥1 |
+| S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 6 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → 2 |
 | S10 | the issue's five criteria hold, measured by their own commands | the Validators block in the close-out receipt |
 | S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded and implemented | `rg -c '\*\*D1\*\*|\*\*D2\*\*' docs/fix/319-location-index-consolidation/SPEC.md` → 2 |
 | S12 | no new gate, no schema break beyond the constant's release | `cd packages/agentic-workflow-schema && bun run test` exits 0; `git diff --stat main...HEAD -- packages/agentic-workflow-schema/envelope.schema.json` is empty |
@@ -241,6 +241,11 @@ proves it.
 - **D1** — 2026-10-30, issue S11's first open question, decided as the issue
   recommends: `## Fixes` keeps the fix index's "row removed after merge"
   lifecycle verbatim. Lifecycle unification is not part of this unit.
+- **D3** — 2026-10-30, S9's criterion counts measured at P6, not assumed: the
+  planning cut guessed `3`/`≥1` mentions; the delivered substrate names the
+  path 6 times in `template/AGENTS.md` and twice in `UPGRADE.md`, so the frozen
+  criterion carries the measured values. No behaviour changed — the criterion
+  was unverifiable as written.
 - **D2** — 2026-10-30, issue S11's second open question, decided: the alias
   window stays open for one release train (`ROADMAP_LEGACY_READ = true`), with
   the fail-closed `roadmap-moved` path implemented and tested now. Closing the
