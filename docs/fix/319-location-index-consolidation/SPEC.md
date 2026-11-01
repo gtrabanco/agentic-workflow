@@ -259,11 +259,11 @@ proves it.
   was unverifiable as written.
 - **E1** — 2026-10-30, `node --test scripts/index-document.test.mjs` · exit 0 ·
   8/8 pass (O1, O4, O5, O6, O7, O8, O9).
-- **E2** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 0 · 1292 pass,
+- **E2** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass,
   0 fail (O8, O10, O13).
 - **E3** — 2026-10-30, `cd packages/agentic-workflow && bun run test` · exit 0 ·
   254 pass, `cd packages/agentic-workflow-schema && bun run test` · exit 0 ·
-  726 pass, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 454 pass.
+  727 pass, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 454 pass.
 - **E4** — 2026-10-30, `bun scripts/check-skill-context.mjs` · exit 0 ·
   `PASS context budgets: 28 skills`.
 - **E5** — 2026-10-30, `node scripts/version-parity-gate.mjs --content --base main`
@@ -298,6 +298,19 @@ proves it.
 - **P6** — 2026-10-30, migrated the skills, `template/`, and the live
   `docs/workflow/` pages; `init-workspace` upgrade step 4 offers the move
   additively · `5e7cfa5f`.
+- **V1** — 2026-11-01, external verification of `main...HEAD` at `63793b5e`: one
+  blocker and four ledger advisories, all corrected here without changing
+  behaviour. **Blocker** — `packages/agentic-workflow-schema/README.md` still
+  taught the pre-move path: its `compileWorkflowSnapshot` example passed
+  `{ path: "docs/features/ROADMAP.md" }`, which at `1c9375a1` derived the unit
+  and at `63793b5e` yields `unit: null` plus a `unit` unknown (the window is
+  closed); the example now names `docs/ROADMAP.md`, so no live surface teaches a
+  path the compiler refuses. **Advisories** — O5's quoted diagnostic
+  text, O6's `index-document.mjs:28`, and the stale `1292`/`726` suite counts in
+  E2, E3, O7, O8, O10 and O13 now carry the re-verified `1301`/`727`. Every
+  declared validator re-ran at the corrected head: root suite 1301/1301, schema
+  727/727, crate 254/254, pi 454/454, `index-document` 8/8, `roadmap-moved`
+  7/7, skill-context PASS, version-parity PASS both halves.
 
 ## Next
 

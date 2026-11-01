@@ -148,7 +148,7 @@ const result = compileWorkflowSnapshot({
   repository: { branch, headSha, dirty },
   documents: [
     { path: "docs/workflow/REPOSITORY_STATE.md", content: repositoryState },
-    { path: "docs/features/ROADMAP.md", content: roadmap },
+    { path: "docs/ROADMAP.md", content: roadmap },
     { path: "docs/features/12-machine-contract/SPEC.md", content: spec },
     { path: "docs/features/12-machine-contract/progress.md", content: progress },
   ],
