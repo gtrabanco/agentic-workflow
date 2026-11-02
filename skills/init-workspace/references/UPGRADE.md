@@ -52,11 +52,15 @@ lacks**. Ten ordered steps:
 5. **Propose the adaptive lane conventions (feature 61 P11).** For pre-lane
    installs (before the fixed pipeline was retired), propose these missing
    blocks additively — **never clobber existing content**:
-   - The **unit document conventions** section in AGENTS.md (the 14-section
-     SPEC.md, triage-driven step selection, diff-size guard, evidence rows,
-     dated progress log, closed commit format `type(scope): description`).
-   - The **unit doc template** under `docs/features/_TEMPLATE/SPEC.md` if
-     absent — the same 14-section template used by new units.
+   - The **unit document conventions** section in AGENTS.md (the
+     `spec-by-reference` unit doc the template ships — `Specs` with `S#`
+     requirements, `Tasks`, `Findings`, `Log` — triage-driven step selection,
+     diff-size guard, evidence rows, dated progress log, closed commit format
+     `type(scope): description`).
+   - The **unit doc templates** under `docs/features/_TEMPLATE/SPEC.md` and
+     `docs/fix/_TEMPLATE/SPEC.md` if absent — the re-cut `spec-by-reference`
+     templates the scaffold ships. A pre-existing unit keeps the legacy
+     14-section shape and is never rewritten to migrate.
    - The **lane workflow doc** under `docs/workflow/` if absent: `FEATURE_WORKFLOW.md`
      (unit doc → triage → catalog steps → evidence → review → release),
      `ISSUE_WORKFLOW.md` (issues route through triage to the lane).

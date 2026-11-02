@@ -254,6 +254,86 @@ test("#308 both templates carry the re-cut shape's section set", () => {
   }
 });
 
+// #332 (T4/T7): the scaffold ships the shape its own guide declares. The root
+// templates were the only ones any gate read, so the scaffold could publish the
+// retired 14-section shape (features) and the older Goal/Phases shape (fix) while
+// `template/AGENTS.md` promised the re-cut one. Both are bound here and in the
+// `normative-surfaces@1` rows, so a regression fails in two places.
+const SCAFFOLD_TEMPLATES = Object.freeze([
+  "template/docs/features/_TEMPLATE/SPEC.md",
+  "template/docs/fix/_TEMPLATE/SPEC.md",
+]);
+
+test("#332 the scaffold unit templates carry the re-cut shape and lint clean", () => {
+  for (const template of SCAFFOLD_TEMPLATES) {
+    const found = headings(read(template));
+    let cursor = -1;
+    for (const section of SPEC_REF_SECTIONS) {
+      const at = found.indexOf(section);
+      assert.notEqual(at, -1, `${template} is missing ## ${section} from the re-cut shape`);
+      assert.ok(at > cursor, `${template} places ## ${section} out of contract order`);
+      cursor = at;
+    }
+    for (const legacyOnly of ["Objective", "Why", "User outcome", "Acceptance criteria", "Evidence", "Progress log"]) {
+      assert.ok(!found.includes(legacyOnly), `${template} still carries the legacy-only ## ${legacyOnly}`);
+    }
+    let stdout = "";
+    let failed = null;
+    try {
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+    } catch (error) {
+      failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    assert.equal(failed, null, failed ?? "");
+    assert.match(stdout, /^verdict PASS$/m, `${template} did not lint PASS under the grammar it publishes`);
+  }
+  // the guide that declares the shape is read with the same eye
+  assert.match(read("template/AGENTS.md"), /`spec-by-reference` shape/, "the template guide names the shape the templates carry");
+});
+
+// The skill that writes the scaffold teaches the shape the scaffold ships (#332
+// T5): its SKILL.md was retargeted to `spec-by-reference`, and its references
+// must not keep asserting the retired 14-section shape as what a new unit gets.
+// A legacy unit *keeping* the 14-section shape is fine and stays sayable.
+test("#332 init-workspace never teaches the retired shape as the new-unit shape", () => {
+  const refusals = [
+    /all 14 sections/,
+    /14-section template used by new units/,
+    /the 14-section\s+SPEC\.md/,
+  ];
+  const teach = (relative) => refusals.some((pattern) => pattern.test(read(relative)));
+  const surfaces = ["skills/init-workspace/SKILL.md",
+    ...fs.readdirSync(path.join(ROOT, "skills/init-workspace/references"))
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => `skills/init-workspace/references/${name}`)];
+  for (const surface of surfaces) {
+    assert.ok(!teach(surface), `${surface} still teaches the retired 14-section shape as what a new unit carries`);
+  }
+});
+
+test("#332 the scaffold templates the prose names are the files actually shipped", () => {
+  // The same drift one level down: the skill promised `features/_TEMPLATE` +
+  // `ROADMAP` and `fix/_TEMPLATE` + `README`, but only the SPEC templates ship —
+  // the consolidated index is `docs/ROADMAP.md`. Every named template is asserted
+  // against the scaffold copy, not against a remembered shape.
+  const scaffold = (relative) => path.join("template", relative);
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    assert.ok(fs.existsSync(path.join(ROOT, scaffold(template))), `the scaffold ships ${scaffold(template)}`);
+  }
+  assert.ok(fs.existsSync(path.join(ROOT, scaffold("docs/features") + path.sep + "ROADMAP.md")),
+    "the scaffold ships the features roadmap beside its template");
+  assert.ok(fs.existsSync(path.join(ROOT, scaffold("docs/fix") + path.sep + "README.md")),
+    "the scaffold ships the fix index beside its template");
+  for (const file of ["skills/init-workspace/SKILL.md", "skills/init-workspace/references/BOOTSTRAP_WRITE.md",
+    "skills/init-workspace/references/UPGRADE.md", "README.md"]) {
+    const text = read(file);
+    // A consolidated-index claim names the canonical roadmap as something the
+    // scaffold already holds; the scaffold's own index lives under `docs/features/`
+    // until upgrade mode moves it, so the guide may only promise the move.
+    assert.ok(!/keep[^.]{0,80}docs\/ROADMAP\.md/i.test(text), `${file} promises a consolidated roadmap the scaffold does not ship`);
+  }
+});
+
 test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
   // AC1's validators read the templates' section list; nothing ran the shipped
   // linter over them, so a template whose own example violated its own rule

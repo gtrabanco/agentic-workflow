@@ -553,4 +553,134 @@ function blockEndIndex(source, startIdx, openCh, closeCh) {
   assert.equal(dup.key, "routeLinesMax");
 }
 
-console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, and duplicate-key failures rejected");
+// Documents (the guide layer) — issue #332, S7's budget coverage.
+
+const documentsHead = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--documents", "--json"], { encoding: "utf8" });
+assert.equal(documentsHead.status, 0, documentsHead.stderr);
+const documentsReport = JSON.parse(documentsHead.stdout);
+assert.equal(documentsReport.ok, true, "the head is inside every declared guide-layer ceiling");
+assert.ok(documentsReport.documents.some((row) => row.file === "AGENTS.md"), "the guide is budgeted");
+const guideRow = documentsReport.documents.find((row) => row.file === "AGENTS.md");
+assert.ok(guideRow.machine > 0 && guideRow.prose > 0, "the guide's report splits its machine region from its prose");
+
+const GUIDE_FIXTURE = [
+  "# AGENTS.md",
+  "",
+  "## Deep references",
+  "",
+  "- a row",
+  "",
+  "```text",
+  "normalizer-inventory@1",
+  "step | kind | side",
+  "```",
+  "",
+  "```text",
+  "normative-surfaces@1",
+  "surface | file | grammar | machine | must-name",
+  "```",
+  "",
+  "```text",
+  "rendered-facts@1",
+  "surface | claim | machine | rule",
+  "```",
+  "",
+].join(String.fromCharCode(10));
+
+const documentsFixture = (setup) => {
+  const fixture = mktemp("agentic-context-documents-");
+  fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
+  fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
+  fs.mkdirSync(path.join(fixture, "skills"), { recursive: true });
+  fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
+  const files = {
+    "AGENTS.md": { linesMax: 20, proseLinesMax: 8, estimateMax: 400, machineBlocks: ["normalizer-inventory@1", "normative-surfaces@1", "rendered-facts@1"], machineLines: 14 },
+    "docs/workflow/REFERENCE.md": { linesMax: 10, estimateMax: 200 },
+  };
+  setup(fixture, files);
+  const manifest = { schemaVersion: 1, referenceDepth: 1, defaults: {}, skills: {}, documents: { requiredFiles: ["AGENTS.md"], files } };
+  fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest));
+  return fixture;
+};
+
+const runDocuments = (fixture) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--documents"], { encoding: "utf8" });
+
+// the fixture itself is green, so every refusal below is the mutation and nothing else
+{
+  const fixture = documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE);
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+    files["docs/workflow/REFERENCE.md"].linesMax = 2;
+  });
+  try {
+    const result = runDocuments(fixture);
+    assert.equal(result.status, 0, result.stderr + result.stdout);
+    assert.match(result.stdout, /PASS context documents/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// an over-budget document is refused by name
+{
+  const fixture = documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE + "one more line" + String.fromCharCode(10));
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+    files["docs/workflow/REFERENCE.md"].linesMax = 1;
+  });
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0, "an over-budget guide-layer document fails closed");
+    assert.match(result.stderr, /AGENTS\.md: lines \d+ > 20/, "the refusal names the file and its ceiling");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// a declared document that is missing fails closed instead of being skipped
+{
+  const fixture = documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE);
+    files["docs/workflow/REFERENCE.md"].linesMax = 2;
+  });
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /declared document is missing/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// a guide missing one of its machine blocks is a defect, and the prose split is refused
+{
+  const fixture = documentsFixture((root) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE.replace("rendered-facts@1", "not-the-marker"));
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+  });
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /machine blocks .* are not all present/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+// the machine region is pinned exactly: a prose line that moves inside it is a mismatch
+{
+  const fixture = documentsFixture((root, files) => {
+    fs.writeFileSync(path.join(root, "AGENTS.md"), GUIDE_FIXTURE);
+    fs.writeFileSync(path.join(root, "docs/workflow/REFERENCE.md"), "# Reference" + String.fromCharCode(10));
+    files["AGENTS.md"].machineLines = 3;
+  });
+  try {
+    const result = runDocuments(fixture);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /machine-table lines .* != the declared 3/);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
+console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, route-reference, duplicate-key and guide-layer failures rejected");

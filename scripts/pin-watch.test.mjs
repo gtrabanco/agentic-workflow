@@ -3,8 +3,8 @@
  * AC2, obligation O3, issue #219 decision D1's addendum).
  *
  * The watch reports dependency-pin drift on a schedule. It may only report:
- * upgrading a pin stays a deliberate human `fix(deps)` PR (AGENTS.md →
- * Packages, PE-005), so nothing here writes a manifest.
+ * upgrading a pin stays a deliberate human `fix(deps)` PR (`docs/workflow/PACKAGES.md`,
+ * PE-005), so nothing here writes a manifest.
  *
  * No network: the registry fetcher is injected everywhere, and the issue plan
  * is a pure function over an already-fetched open-issue list.
