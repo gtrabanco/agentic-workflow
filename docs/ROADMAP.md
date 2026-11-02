@@ -140,6 +140,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
 | [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | done · [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) | One index: this document (`## Features` + `## Fixes`), published path constant, the read window closed at D4 with a `roadmap-moved` refusal (the lever stays as the rollback); branch `fix/319-location-index-consolidation` |
+| [#355](https://github.com/gtrabanco/agentic-workflow/issues/355) | scaffold-parity-routes | in-progress | Row 92: the scaffold gets the comparator it never had (`scripts/scaffold-parity.test.mjs`), the exported templates join the re-cut section pin, the audit's finding line carries `route:` at flight, and the classifier routes a half-planned unit to `replan-in-unit`; branch `fix/355-scaffold-parity-routes` |
 | [#370](https://github.com/gtrabanco/agentic-workflow/issues/370) | pi-150-compat-reverification | done · [#372](https://github.com/gtrabanco/agentic-workflow/pull/372) | Deliberate `fix(deps)`: two-leg `pi-compat-guard` re-run (0.99.1 + latest=1.5.0, COMPAT-OK), README baseline → Pi 1.5.0, `@types/node` 24.13.3 → 26.6.6 folded from #367, release intent as a changeset (no hand-written bump); branch `fix/370-pi-150-compat-reverification` |
 
 
