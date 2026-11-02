@@ -2301,14 +2301,19 @@ export function validateWorkflowSnapshotV1(value: unknown): WorkflowSnapshotVali
 export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowSnapshotResult {
   const repositoryStateDocument = documentFor(input.documents, "docs/workflow/REPOSITORY_STATE.md");
   // Issue #319: the features and the fixes live in one document, and a fix row
-  // is read from its own table there. A pre-319 tree still ships
-  // `docs/fix/README.md`, so the standalone fix index is accepted too (the read
-  // alias); the standalone fix index takes priority when both are present,
-  // falling back to the consolidated index when only the latter exists.
+  // is read from its own table there. A pre-319 tree — or a half-migrated one,
+  // whose consolidated index has no `## Fixes` table yet — still carries the fix
+  // rows in `docs/fix/README.md`, so that document is the fallback, read only
+  // when the consolidated index cannot answer. The consolidated table always
+  // wins when both can: a migrated tree always ships the standalone file as a
+  // stub, and a stale copy of the rows there must never shadow them.
   const roadmapDocument = indexDocument(input.documents);
   const feature = roadmapFeature(roadmapDocument);
-  const fixIndexDocument = documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument;
-  const fix = feature === null ? fixUnit(fixIndexDocument) : null;
+  const consolidatedFixes = roadmapDocument === undefined ? null : fixUnit(roadmapDocument);
+  const fixIndexDocument = consolidatedFixes === null
+    ? (documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument)
+    : roadmapDocument;
+  const fix = feature === null ? (consolidatedFixes ?? fixUnit(documentFor(input.documents, FIX_INDEX_DOCUMENT))) : null;
   const selected = feature ?? fix;
   const selectedKind = feature === null && fix !== null ? "fix" : "feature";
   const provenance: SnapshotProvenance[] = [];
