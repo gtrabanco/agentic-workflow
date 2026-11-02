@@ -619,6 +619,23 @@ test("#319 F9: a consolidated ## Fixes table owns the fix rows even when the row
   );
 });
 
+test("#319 F16: an escaped pipe never collapses the unit's provenance line", () => {
+  // Issue #319 F16: the fold that unified the mirror passed a re-joined row
+  // (`cells.join(" | ")`) into the provenance lookup. An escaped `\|` renders
+  // differently from its source, so the lookup missed and the provenance line
+  // fell back to the sentinel 1 — the unit cited the wrong line silently.
+  const row = "| 12 | topic \\| subtopic | in-progress | — | x |";
+  const content = ["# Roadmap", "", "## Features", "", "| NN | Slug | Status | Depends on | Summary |", "|---|---|---|---|---|", "| 13 | other | done | — | y |", row, ""].join("\n");
+  const result = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content }],
+  });
+  assert.equal(result.ok, true);
+  const unitLine = result.snapshot.provenance.find((entry) => entry.field === "unit")?.line;
+  assert.equal(unitLine, 8, "the provenance line is the row's own line, not the 1 sentinel");
+});
+
 test("#319 F14: a fenced example row is never a unit, on either published side", () => {
   // Issue #319 F14: the index teaches its own row format, so a writer copying a
   // row into a fence is normal authoring. That example is content, not data.

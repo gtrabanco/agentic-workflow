@@ -187,7 +187,13 @@ export function roadmapSection(text, heading) {
   return level === 0 ? null : out.join("\n");
 }
 
-/** The cells of one Markdown table row, splitting only on unescaped pipes. */
+/**
+ * The cells of one Markdown table row, splitting only on unescaped pipes and
+ * dropping only the boundary cells the pipes actually delimit — the same
+ * contract the schema package's mirror holds, so a row reads identically on
+ * both published sides whether or not it carries a trailing pipe (issue #319,
+ * F15).
+ */
 export function tableCells(line) {
   const cells = [];
   let current = "";
@@ -204,7 +210,9 @@ export function tableCells(line) {
     }
   }
   cells.push(current.trim());
-  return cells.length > 2 ? cells.slice(1, -1) : [];
+  if (cells.length < 2) return [];
+  const body = cells[0] === "" ? cells.slice(1) : cells;
+  return body[body.length - 1] === "" ? body.slice(0, -1) : body;
 }
 
 const isSeparatorRow = (cells) => cells.length > 0 && cells.every((cell) => /^[-:\s]*$/.test(cell));
