@@ -80,6 +80,22 @@
       "sessions": 57,
       "memories": 32,
       "prompts": 0
+    },
+    {
+      "id": "d5376acc",
+      "created_by": "agent",
+      "created_at": "2026-11-02T22:58:42.397841791Z",
+      "sessions": 100,
+      "memories": 46,
+      "prompts": 0
+    },
+    {
+      "id": "a9d5b8ad",
+      "created_by": "agent",
+      "created_at": "2026-11-02T22:58:56.143715067Z",
+      "sessions": 626,
+      "memories": 0,
+      "prompts": 1024
     }
   ]
 }
