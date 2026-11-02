@@ -62,7 +62,7 @@
     "@gtrabanco/agentic-workflow-schema": "4.10.0"
   },
   "devDependencies": {
-    "@types/node": "24.13.3",
+    "@types/node": "26.6.6",
     "typescript": "7"
   }
 }
