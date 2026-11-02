@@ -3814,3 +3814,18 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Adversarial N=2 cycle 4 revealed F14 (fence-blinded row scanner, medium); fold produced a single grammar (fenceRun) used by both roadmapSection and roadmapTableRows in the crate, indexFenceRun in the schema, with tableCells boundary-cell fix on the schema mirror so cells[i] is identical across both published sides. The schema's `FenceRun` type was exported from pre-execution.ts and imported into index.ts for cross-file access.
 - **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
 
+
+
+## 2026-11-02T15:26:00Z — fix/319-location-index-consolidation — manual
+- **Commits:** 47 (`c94c53dc…402bdbf1`)
+- **Files:** 77 files
+- **Summary:** Fold F14: fixed the index parser's fence-tracking — one boundary-cell grammar (fenceRun / indexFenceRun) now owns fence state for both the heading scanner and the row scanner in the crate and the schema mirror, plus a boundary-cell fix on the schema's tableCells pipe-slicing. The fold introduced one fence grammar instead of two, proving red/green on both packages, red-first regression tests added to both, and all gates green at head 402bdbf1.
+- **Decisions:** Adversarial N=2 cycle 4 revealed F14 (fence-blinded row scanner, medium); fold produced a single grammar (fenceRun) used by both roadmapSection and roadmapTableRows in the crate, indexFenceRun in the schema, with tableCells boundary-cell fix on the schema mirror so cells[i] is identical across both published sides. The schema's `FenceRun` type was exported from pre-execution.ts and imported into index.ts for cross-file access.
+- **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
+
+## 2026-11-02T15:30:00Z — fix/319-location-index-consolidation — manual
+- **Commits:** 47 (`c94c53dc…402bdbf1`)
+- **Files:** 77 files
+- **Summary:** Fold F15 (schema boundary-cell tableCells: slices empty boundary pipes, so cells[i] maps identically across both published sides), F16 (schema regression test requires dist rebuild to go red), F17 (E7 in SPEC Log — direct read, no code change needed). All gates green at head 402bdbf1.
+- **Decisions:** Red-first regression tests: F15 fixed the schema's tableCells to slice boundary pipes exactly as the crate does (cells.length < 2 returns [] then body slicing), so `cells[0]` and `cells[2]` are identical on both published sides. F16 proved that schema-package tests importing ../dist/index.js require a dist rebuild to properly go red — the test fixture ran against stale dist output until `bun run test` recompiled.
+- **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
