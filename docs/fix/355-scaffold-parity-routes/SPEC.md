@@ -269,7 +269,7 @@ section is the anchor a review's per-criterion coverage table reads.
 | AC-5 | Every finding line in `product-audit`'s fixed output block carries `route:`, the progressive-loading rule is stated once, and "never executes it" survives (S3, S7) | `node --test scripts/scaffold-parity.test.mjs` — the audit-route case asserts the block line, the single statement and the guarantee |
 | AC-6 | `CLASSIFY.md`'s residue row routes planned-missing work to `replan-in-unit` and a one-line consumer to `fold into phase` (S4, S8) | `node --test scripts/scaffold-parity.test.mjs` — the classifier case asserts both branches in one row |
 | AC-7 | `check-skill-context` stays green and no existing pin is weakened (S9) | `bun scripts/check-skill-context.mjs` exits 0; `git diff --name-only main` lists no pre-existing test file |
-| AC-8 | No new skill, menu entry, audit dimension, audit subcommand or scope flag is introduced; #352, #354 and unit #353's documents are untouched (S11, S12, S13, S14) | `rg -n '\-\-residue|new dimension' skills/product-audit` matches 0; `git status --porcelain docs/fix/353-residue-shadow-copies` shows only the two-line ledger correction |
+| AC-8 | No new skill, menu entry, audit dimension, audit subcommand or scope flag is introduced; #352, #354 and unit #353's documents are untouched (S11, S12, S13, S14) | `rg -n '\-\-residue|new dimension' skills/product-audit` matches 0; no `docs/fix/353-*` files were carried as hunks (S15), and `git status --porcelain docs/fix/353-residue-shadow-copies` shows nothing to change |
 
 ## Findings
 
@@ -384,9 +384,8 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 ## References
 
 - Issue [#355](https://github.com/gtrabanco/agentic-workflow/issues/355) — the request (`L1`).
-- Roadmap row 92 `scaffold-parity-routes` (`docs/ROADMAP.md` § Features).
-- Unit `docs/fix/353-residue-shadow-copies/SPEC.md` — its P6/S5/S6 claim names this work; P2 corrects that claim (S15).
-- `scripts/unit-doc-contract.test.mjs` (the re-cut section pin), `scripts/residue-dimensions.test.mjs` (the residue wording pins), `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (the ceilings).
+- Roadmap row 92 `scaffold-parity-routes` (`docs/ROADMAP.md` § Fixes).
+- `scripts/unit-doc-contract.test.mjs` (the re-cut section pin), `scripts/scaffold-parity.test.mjs` (the comparator), `scripts/residue-dimensions.test.mjs` (the #353 regression pins, untouched by this unit), `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (the ceilings).
 
 ## Branch
 
