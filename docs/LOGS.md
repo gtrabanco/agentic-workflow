@@ -3743,3 +3743,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Discussed and designed feature #352: migrate ceremony CLI (fix/338) + sensors into @gtrabanco/agentic-workflow crate, distributed via bunx/npx at versioned pin (RUNNER.md); triaged issues 352 and 333
 - **Decisions:** Version contract: closed as option B (RUNNER.md carrier skill, stamped by release.mjs apply, verified by normative-drift; avoids agent-mediated frontmatter inference); scope: feature 352 single umbrella unit, includes P0/P1/P2 ceremony modules + all sensors + pr module with gh degradation; dedup: package vocabulary wins (ceremony unit/plan/roadmap absorbed into unit-doc/Roadmap services); scripts/ceremony* deleted post-migration; 333: fix now, medium severity, high-severity audit defect of init-workspace CAPABILITIES.md seeding (template copy instead of evidence-based inference, same gap in this repo) — triage routes to /unit-lane --fix 333
 - **Next:** /triage-issue 333 — act on fix-now defect; 352 — needs triage to plan feature unit
+
+## 2026-11-02T09:25:02Z — fix/319-location-index-consolidation — manual
+- **Commits:** 23 (`c94c53dc…a5c75e79`)
+- **Files:** 75 files
+- **Summary:** unit-lane #319: completed P1-P8, fold-fixed F2/F4/F5 findings, posted review-change:pass receipt, PR #351 ready for audit-pr
+- **Decisions:** F1 and F3 remain as design observations (not actionable) documented in Log; requester is verifier
+- **Next:** audit-pr #351 — terminal merge gate; the current review-change:pass receipt is its precondition
