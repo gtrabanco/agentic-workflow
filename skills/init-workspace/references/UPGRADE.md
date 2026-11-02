@@ -57,10 +57,10 @@ lacks**. Ten ordered steps:
      requirements, `Tasks`, `Findings`, `Log` — triage-driven step selection,
      diff-size guard, evidence rows, dated progress log, closed commit format
      `type(scope): description`).
-   - The **unit doc template** under `docs/features/_TEMPLATE/SPEC.md` if
-     absent — the re-cut `spec-by-reference` template the scaffold ships. A
-     pre-existing unit keeps the legacy 14-section shape and is never rewritten
-     to migrate.
+   - The **unit doc templates** under `docs/features/_TEMPLATE/SPEC.md` and
+     `docs/fix/_TEMPLATE/SPEC.md` if absent — the re-cut `spec-by-reference`
+     templates the scaffold ships. A pre-existing unit keeps the legacy
+     14-section shape and is never rewritten to migrate.
    - The **lane workflow doc** under `docs/workflow/` if absent: `FEATURE_WORKFLOW.md`
      (unit doc → triage → catalog steps → evidence → review → release),
      `ISSUE_WORKFLOW.md` (issues route through triage to the lane).
