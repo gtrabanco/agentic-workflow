@@ -19,6 +19,7 @@ const requestedRoutes = [];
 let manifestOnly = false;
 let routeMode = false;
 let budgetsMode = false;
+let documentsMode = false;
 let jsonOutput = false;
 
 for (let index = 0; index < args.length; index += 1) {
@@ -33,6 +34,8 @@ for (let index = 0; index < args.length; index += 1) {
     routeMode = true;
   } else if (args[index] === "--budgets") {
     budgetsMode = true;
+  } else if (args[index] === "--documents") {
+    documentsMode = true;
   } else if (args[index] === "--json") {
     jsonOutput = true;
   } else if (args[index] === "--route") {
@@ -68,6 +71,109 @@ if (manifestOnly) {
 
 const estimate = (text) => Math.ceil(Buffer.byteLength(text, "utf8") / 4);
 const lineCount = (text) => text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
+
+/**
+ * The machine region of a document: from the `### …` heading that opens the first
+ * declared versioned block to the closing fence of the last one. The region is
+ * counted separately from the prose because it is a contract a gate reads, not
+ * an instruction an always-loaded session follows.
+ */
+const machineRegion = (text, markers) => {
+  const lines = text.split("\n");
+  const fences = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    if (!lines[index].startsWith("```")) continue;
+    let close = -1;
+    for (let next = index + 1; next < lines.length; next += 1) {
+      if (lines[next].startsWith("```")) {
+        close = next;
+        break;
+      }
+    }
+    if (close === -1) return null;
+    fences.push({ marker: (lines[index + 1] ?? "").trim(), open: index, close });
+    index = close;
+  }
+  const wanted = new Set(markers);
+  const found = fences.filter((fence) => wanted.has(fence.marker));
+  if (new Set(found.map((fence) => fence.marker)).size !== wanted.size) return null;
+  const first = found[0];
+  const last = found[found.length - 1];
+  let start = first.open;
+  for (let line = first.open - 1; line >= 0; line -= 1) {
+    if (/^###\s/.test(lines[line])) {
+      start = line;
+      break;
+    }
+  }
+  return { lines: last.close - start + 1, start, end: last.close };
+};
+
+/** Validate the guide layer against the manifest's `documents` section. */
+const documentFindings = (spec) => {
+  if (!spec || typeof spec.files !== "object" || spec.files === null) {
+    return { failures: ["the manifest declares no `documents` section"], rows: [] };
+  }
+  const failures = [];
+  const rows = [];
+  for (const relative of Object.keys(spec.files)) {
+    const budget = spec.files[relative];
+    const file = path.join(repoRoot, relative);
+    if (!fs.existsSync(file)) {
+      failures.push(`${relative}: declared document is missing`);
+      continue;
+    }
+    const text = fs.readFileSync(file, "utf8");
+    const lines = lineCount(text);
+    const size = estimate(text);
+    if (typeof budget.linesMax !== "number") failures.push(`${relative}: the budget declares no linesMax`);
+    else if (lines > budget.linesMax) failures.push(`${relative}: lines ${lines} > ${budget.linesMax}`);
+    if (typeof budget.estimateMax === "number" && size > budget.estimateMax) {
+      failures.push(`${relative}: estimate ${size} > ${budget.estimateMax}`);
+    }
+    let prose = null;
+    let machine = null;
+    if (Array.isArray(budget.machineBlocks) && budget.machineBlocks.length > 0) {
+      const region = machineRegion(text, budget.machineBlocks);
+      if (region === null) {
+        failures.push(`${relative}: the declared machine blocks (${budget.machineBlocks.join(", ")}) are not all present`);
+      } else {
+        machine = region.lines;
+        prose = lines - machine;
+        if (typeof budget.machineLines === "number" && machine !== budget.machineLines) {
+          failures.push(`${relative}: machine-table lines ${machine} != the declared ${budget.machineLines}`);
+        }
+        if (typeof budget.proseLinesMax === "number" && prose > budget.proseLinesMax) {
+          failures.push(`${relative}: prose lines ${prose} > ${budget.proseLinesMax}`);
+        }
+      }
+    }
+    rows.push({ file: relative, lines, estimate: size, prose, machine, linesMax: budget.linesMax ?? null, proseLinesMax: budget.proseLinesMax ?? null });
+  }
+  for (const relative of spec.requiredFiles ?? []) {
+    if (!(relative in spec.files)) failures.push(`${relative}: a required document has no budget row`);
+  }
+  return { failures, rows };
+};
+
+if (documentsMode) {
+  const { failures, rows } = documentFindings(manifest.documents);
+  if (jsonOutput) {
+    console.log(JSON.stringify({ ok: failures.length === 0, documents: rows, failures }, null, 2));
+  } else {
+    console.log(`${"document".padEnd(38)} ${"lines".padStart(6)} ${"machine".padStart(8)} ${"prose".padStart(6)} ${"estimate".padStart(9)}`);
+    for (const row of rows) {
+      const cell = (value) => (value === null ? "-" : String(value));
+      console.log(`${row.file.padEnd(38)} ${String(row.lines).padStart(6)} ${cell(row.machine).padStart(8)} ${cell(row.prose).padStart(6)} ${String(row.estimate).padStart(9)}`);
+    }
+  }
+  if (failures.length > 0) {
+    for (const failure of failures) console.error(`FAIL context documents: ${failure}`);
+    process.exit(1);
+  }
+  if (!jsonOutput) console.log(`PASS context documents: ${rows.length} budgeted documents`);
+  process.exit(0);
+}
 const nestedEntries = (directory, relative = "") => {
   if (!fs.existsSync(directory)) return [];
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

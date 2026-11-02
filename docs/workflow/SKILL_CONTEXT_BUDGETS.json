@@ -9,6 +9,40 @@
     "referenceEstimateMax": 2200,
     "referenceLinesMax": 280
   },
+  "documents": {
+    "note": "The guide layer: the always-loaded guide and the references it indexes. Every ceiling is ceil(measured x 1.10) with its reason declared in `sources`, the same arithmetic the per-skill ceilings use; `machineLines` is pinned exactly because the three versioned blocks are contracts a gate reads, not prose an always-loaded session follows.",
+    "requiredFiles": [
+      "AGENTS.md",
+      "docs/workflow/SKILL_AUTHORING.md",
+      "docs/workflow/PACKAGES.md"
+    ],
+    "files": {
+      "AGENTS.md": {
+        "linesMax": 393,
+        "proseLinesMax": 292,
+        "estimateMax": 6792,
+        "machineBlocks": ["normalizer-inventory@1", "normative-surfaces@1", "rendered-facts@1"],
+        "machineLines": 92,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 24,693 est, 92 machine-region lines, 265 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(265 x 1.10) = 292 and ceil(6174 x 1.10) = 6792. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate."
+        }
+      },
+      "docs/workflow/SKILL_AUTHORING.md": {
+        "linesMax": 189,
+        "estimateMax": 2897,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's authoring rules (frontmatter contract, body sections, the closing `Next` block, hand-off versus compose across model tiers). Measured 171 lines / 2633 est; ceilings ceil(171 x 1.10) = 189 and ceil(2633 x 1.10) = 2897."
+        }
+      },
+      "docs/workflow/PACKAGES.md": {
+        "linesMax": 86,
+        "estimateMax": 2127,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's Packages section (bun workspace, one lockfile, pin rules, version parity, changesets, publish channels). Measured 78 lines / 1933 est; ceilings ceil(78 x 1.10) = 86 and ceil(1933 x 1.10) = 2127."
+        }
+      }
+    }
+  },
   "skills": {
     "audit-docs": {
       "descriptionEstimateMax": 240
