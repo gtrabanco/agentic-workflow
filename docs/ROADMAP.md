@@ -1,8 +1,15 @@
 # Roadmap
 
-The single source of truth for feature **numbering, ordering, and dependencies**.
-Every feature folder under `docs/features/<NN>-<slug>/` must have a row here, and
-every row must have a folder (or be explicitly marked "scheduled").
+The workflow's **single location index**, in one document: `## Features` orders
+the feature units (feature **numbering, ordering, and dependencies**), `## Fixes`
+carries the active fixes, and the sections below the tables are the status
+machine and the conventions both tables follow. One index, one writer — the same
+"single surface, single owner" rule the repo applies to unit docs.
+
+Every feature folder under `docs/features/<NN>-<slug>/` must have a row in
+`## Features`, and every row must have a folder (or be explicitly marked
+"scheduled"). Every fix folder under `docs/fix/<issue-number>-<topic>/` is
+registered in `## Fixes` while its work is open.
 
 ## Features
 
@@ -93,15 +100,37 @@ every row must have a folder (or be explicitly marked "scheduled").
 | 83 | `odd-hybrid-direction` | idea | — | Issue [#307](https://github.com/gtrabanco/agentic-workflow/issues/307) (direction): the ODD-hybrid default — organic default (G_Programming ODD) + owner directives + this repo's deterministic layer, in that order. Credited as the direction behind row 79 / issue [#308](https://github.com/gtrabanco/agentic-workflow/issues/308); it names no phases and starts no unit until the owner routes it |
 | 84 | `published-vocabulary-sweep-gate` | done · [#330](https://github.com/gtrabanco/agentic-workflow/pull/330) | — (soft: 79, merged) | Issue [#315](https://github.com/gtrabanco/agentic-workflow/issues/315) (M): machine-pin the published vocabularies and make the fold **survivors** rule executable — a gate that refuses a fold whose same-class sibling surfaces were not re-checked (live evidence: unit 79's F49 → F50 → F51, one class, eleven cycles). Owns the general sibling-sweep rule row 57 defers to |
 | 85 | `class-escalation-and-narration-removal` | idea | 84 (soft) | Issue [#318](https://github.com/gtrabanco/agentic-workflow/issues/318) (M, complements #315): class escalation — instances get repaired, the class never does, so recurrence itself must escalate — plus forward closure, a generated PR evidence pack, and removing the narration surface. Re-scoped 2026-10-26 to the four pieces no other issue owns |
-| 86 | `location-index-consolidation` | idea | — (soft: 61 79, merged) | Issue [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) (BREAKING, M): one location index — `docs/features/ROADMAP.md` moves to `docs/ROADMAP.md` as the single `## Features` + `## Fixes` table, absorbing `docs/fix/README.md`'s active-fixes index and the status-machine prose. The path is read and written by deterministic code (sensor, router, crate, schema tests) and the normative-surfaces inventory pins surfaces beside it, so it ships as its own unit with a migration plan — never a drive-by rename |
+| 86 | `location-index-consolidation` | done · [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) | — (soft: 61 79, merged) | Issue [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) (BREAKING, M): one location index — `docs/features/ROADMAP.md` moves to `docs/ROADMAP.md` as the single `## Features` + `## Fixes` table, absorbing `docs/fix/README.md`'s active-fixes index and the status-machine prose. The path is read and written by deterministic code (sensor, router, crate, schema tests) and the normative-surfaces inventory pins surfaces beside it, so it ships as its own unit with a migration plan — never a drive-by rename — delivered as the fix unit `docs/fix/319-location-index-consolidation/` |
 
 
+
+
+## Fixes
+
+The active-fixes index, relocated here from `docs/fix/README.md` (issue #319).
+A fix has its own unit folder `docs/fix/<issue-number>-<topic>/`; while its work
+is open it is registered in this table, and the row is removed only **after** the
+PR merges — history lives in git log + the closed issue, never in this table.
+
+### Fix status legend
+
+- `pending` — SPEC drafted, branch not yet open
+- `in-progress` — branch open, work ongoing
+- `done` — built, PR open, awaiting merge (merge state lives in the forge — the
+  same meaning as the features table's `done`); the row is removed only **after**
+  the PR merges
+
+### Active
+
+| Issue | Topic | Status | Notes |
+|---|---|---|---|
+| [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | done · [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) | One index: this document (`## Features` + `## Fixes`), published path constant, the read window closed at D4 with a `roadmap-moved` refusal (the lever stays as the rollback); branch `fix/319-location-index-consolidation` |
 
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 
 Owner-approved ordering by expected token/time savings, dependencies respected.
-Fixes carry no feature number (fix #224 is tracked in the fix index). Each entry:
+Fixes carry no feature number (fix #224 is tracked in the `## Fixes` table). Each entry:
 feature NN (issue #NNN).
 
 - **Phase 0 — quick wins (no dependencies):** fix #224 · 52 (#226) · 59 (#215+231, absorbs 48/56) · 55 (#230)
@@ -175,3 +204,11 @@ inferred, and no second skill writes the same edge.
   `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.
 - Keep this table consistent with the feature folders (the `audit-docs` skill
   checks for drift).
+- **Fixes** live in `docs/fix/<issue-number>-<topic>/` on branch
+  `fix/<issue-number>-<topic>`, with a tracked issue in the project's forge that
+  the PR closes via `Closes #<n>` (or the forge's auto-close convention). The row
+  is removed from `## Fixes` only **after** the PR merges — do not maintain
+  history there.
+- `docs/fix/README.md` is a pointer stub: the index it used to hold is the
+  `## Fixes` table above, and `docs/fix/_TEMPLATE/SPEC.md` is still the fix SPEC
+  format.

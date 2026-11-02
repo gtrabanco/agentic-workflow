@@ -54,7 +54,7 @@ export const STAGE_ARTIFACTS = {
 
 /** The governing authorities every stage binds beside its own artifacts. */
 export const CONTEXT_SOURCES = [
-  // `docs/features/ROADMAP.md` is deliberately NOT bound (roadmap scoping). It is
+  // The location index is deliberately NOT bound (roadmap scoping). It is
   // the shared lifecycle ledger of every unit: rows for other units are appended
   // while a plan is in flight, and the status machine's own sanctioned writes
   // (`planned` → `in-progress` set by execute-phase P1, `done` at PR open) would

@@ -36,6 +36,7 @@ import { spawnSync } from "node:child_process";
 import { parseUnitDocPhases } from "./unit-doc-phases.mjs";
 import { compute as needsInputCompute } from "./needs-input.mjs";
 import { checkUnitDoc, findRow, rowUpsert } from "../packages/agentic-workflow/src/edit/Roadmap.mjs";
+import { ROADMAP_DOCUMENT, readRoadmapIndex } from "../packages/agentic-workflow/src/index-document.mjs";
 import {
   openRows,
   routeOfRow,
@@ -339,7 +340,10 @@ function resolveTargetUnit(token) {
 }
 
 function roadmapRow(nn, cwd = TARGET) {
-  const text = fs.readFileSync(path.join(cwd, "docs/features/ROADMAP.md"), "utf8");
+  // The published constant, not a literal (issue #319): one index, one path.
+  const index = readRoadmapIndex(cwd);
+  if (index === null) return null;
+  const text = index.text;
   const line = text.split("\n").find((row) => row.startsWith(`| ${nn} |`));
   if (!line) return null;
   const cells = line.split("|").map((cell) => cell.trim());
@@ -550,7 +554,7 @@ function runRootSuite() {
  */
 export function settleCommitArgs({ unit, prNumber, prUrl }) {
   const message = `docs(roadmap): settle ${unit} — done · [#${prNumber}](${prUrl})`;
-  return ["commit", "-m", message, "--", "docs/features/ROADMAP.md"];
+  return ["commit", "-m", message, "--", ROADMAP_DOCUMENT];
 }
 
 /** One act: `tests` and the roadmap settle run in code, everything else spawns a pi session. */

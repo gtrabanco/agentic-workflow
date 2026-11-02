@@ -170,7 +170,7 @@ planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<
 progress | docs/features/<NN>-<slug>/SPEC.md · docs/fix/<issue>-<topic>/SPEC.md | unit-lane:progress-entries + execute-phase:phase-entries + execute-phase:gate-rejection-traces | none | none | bun test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | unit-lane:known-entries + execute-phase:blocker-entries-and-status | none | none | bun test scripts/ledger-ownership.test.mjs
 decisions | docs/features/<NN>-<slug>/decisions.md · docs/fix/<issue>-<topic>/decisions.md | unit-lane:decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none | none | bun test scripts/ledger-ownership.test.mjs
-roadmap | docs/features/ROADMAP.md · docs/fix/README.md | unit-lane:row-registration + execute-phase:status-and-pr-link + audit-docs:low-risk-row-repair | none | none | bun test scripts/bounded-delivery-loops.test.mjs
+roadmap | docs/ROADMAP.md | unit-lane:row-registration + execute-phase:status-and-pr-link + audit-docs:low-risk-row-repair | none | none | bun test scripts/bounded-delivery-loops.test.mjs
 acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | unit-lane:acceptance-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md (legacy pre-feature 61) · sed -n '/^## Acceptance criteria/,/^## /p' <unit>/SPEC.md then git hash-object --stdin (unit doc era, post-feature 61)
 # no-script-writer: SPEC.md · PLAN.md · TASKS.md · CHECKLIST.md · testing.md · architecture-notes.md · planning-evidence.md · planning-obligations.md · delegated-evidence.md
 ```

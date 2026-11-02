@@ -261,7 +261,9 @@ export function crossReferences(root, docPath = DOC) {
 /** AC3(e), AC6 — the audit-target T1–T4 facts hold in the committed tree. */
 export function auditTargetTraps(root) {
   const target = path.join(root, "audit-target");
-  const worklist = path.join(target, "docs", "fix", "README.md");
+  // Issue #319: the worklist is the index document's `## Fixes` table, not a
+  // standalone fix index. The trap is the row, wherever the index keeps it.
+  const worklist = path.join(target, "docs", "ROADMAP.md");
   if (!fs.existsSync(worklist)) {
     return { ok: false, message: `auditTargetTraps: missing worklist ${showPath(worklist)}` };
   }

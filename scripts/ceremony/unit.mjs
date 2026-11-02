@@ -15,6 +15,13 @@ import {
   gitOrFail, out, fail, block, onlyFlags, parseFlags, resolveUnit, listUnits, replaceSection,
   deleteSection, readSection, splitSections, parseFindings, parseLog, parseTasks, today,
 } from "./lib.mjs";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  readRoadmapIndex,
+  roadmapSection,
+} from "../../packages/agentic-workflow/src/index-document.mjs";
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const TEMPLATES = { fix: "docs/fix/_TEMPLATE/SPEC.md", feature: "docs/features/_TEMPLATE/SPEC.md" };
@@ -26,22 +33,39 @@ function statusToken(cell) {
   return token === "" ? "unregistered" : token;
 }
 
-/** Unit slug → status, from the two registries that own it: the fix index and the feature roadmap. */
+/**
+ * Unit slug → status, from the one index that owns both tables (issue #319):
+ * its `## Fixes` table and its `## Features` table. A pre-319 tree keeps them in
+ * two files, and the alias reads whichever layout the repository has.
+ */
 function statusIndex(cwd) {
   const statuses = new Map();
-  const fixIndex = path.join(cwd, "docs/fix/README.md");
-  if (fs.existsSync(fixIndex)) {
-    for (const line of fs.readFileSync(fixIndex, "utf8").split("\n")) {
-      const m = line.match(/^\| \[#(\d+)\]\([^)]*\) \| ([^|]+) \| ([^|]+) \|/);
-      if (m) statuses.set(`${m[1]}-${m[2].trim()}`, statusToken(m[3]));
-    }
+  let index;
+  try {
+    index = readRoadmapIndex(cwd);
+  } catch (error) {
+    // Exit 2 is the ceremony's "blocked, fix the workspace" class: the index
+    // moved, so no unit status can be derived and nothing is guessed.
+    block({ error: "roadmap-moved", detail: error.message });
   }
-  const roadmap = path.join(cwd, "docs/features/ROADMAP.md");
-  if (fs.existsSync(roadmap)) {
-    for (const line of fs.readFileSync(roadmap, "utf8").split("\n")) {
-      const m = line.match(/^\|\s*(\d+)\s*\|\s*`?([^`|]+?)`?\s*\|\s*([^|]+?)\s*\|/);
-      if (m) statuses.set(`${m[1].padStart(2, "0")}-${m[2].trim()}`, statusToken(m[3]));
-    }
+  const features = index === null ? "" : roadmapSection(index.text, ROADMAP_FEATURES_HEADING) ?? index.text;
+  for (const line of features.split("\n")) {
+    const m = line.match(/^\|\s*(\d+)\s*\|\s*`?([^`|]+?)`?\s*\|\s*([^|]+?)\s*\|/);
+    if (m) statuses.set(`${m[1].padStart(2, "0")}-${m[2].trim()}`, statusToken(m[3]));
+  }
+  const fixes = index === null ? null : roadmapSection(index.text, ROADMAP_FIXES_HEADING);
+  const fixLines = fixes !== null
+    ? fixes.split("\n")
+    : (() => {
+        try {
+          return fs.readFileSync(path.join(cwd, FIX_INDEX_DOCUMENT), "utf8").split("\n");
+        } catch {
+          return [];
+        }
+      })();
+  for (const line of fixLines) {
+    const m = line.match(/^\| \[#(\d+)\]\([^)]*\) \| ([^|]+) \| ([^|]+) \|/);
+    if (m) statuses.set(`${m[1]}-${m[2].trim()}`, statusToken(m[3]));
   }
   return statuses;
 }

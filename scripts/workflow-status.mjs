@@ -22,6 +22,13 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadSchemaRuntime } from "./schema-runtime.mjs";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  resolveRoadmapSource,
+  roadmapSection,
+} from "../packages/agentic-workflow/src/index-document.mjs";
 // The contract's *shape* — the stage artifact tables, the context sources and the
 // receipt grammar — is owned by one dependency-free module this sensor and the
 // verifier both import: the sensor used to hand-mirror the tables and re-implement
@@ -1416,8 +1423,19 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
   const gitState = readGitState();
   const forgeBudget_ = forgeBudget();
   const forge = readForgeState(forgeBudget_);
-  const roadmap = parseRoadmap(readProject("docs/features/ROADMAP.md"));
-  const fixes = parseFixIndex(readProject("docs/fix/README.md"));
+  // One index (issue #319): the features and the fixes are two tables of the
+  // same document. The pre-move roadmap and the standalone fix index stay
+  // readable while the alias window is open, and each parser is handed its own
+  // table so a feature row is never read as a fix. A closed window refuses the
+  // pre-move path rather than emitting an empty index.
+  const indexSource = resolveRoadmapSource({ exists: (relative) => readProject(relative) !== null });
+  const indexText = indexSource === null ? null : readProject(indexSource.path);
+  const featuresText = indexText === null ? null : roadmapSection(indexText, ROADMAP_FEATURES_HEADING) ?? indexText;
+  // The fixes table lives in the consolidated index; a pre-319 tree keeps it in
+  // its own file, which the alias still reads until the window closes.
+  const fixesText = (indexText === null ? null : roadmapSection(indexText, ROADMAP_FIXES_HEADING)) ?? readProject(FIX_INDEX_DOCUMENT);
+  const roadmap = parseRoadmap(featuresText);
+  const fixes = parseFixIndex(fixesText);
   const units = [...roadmap, ...fixes];
   const mergeResolver = makeMergeResolver(forge, forgeBudget_);
   const dependencies = computeDependencies(units, mergeResolver);

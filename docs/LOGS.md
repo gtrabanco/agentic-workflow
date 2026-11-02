@@ -3672,3 +3672,172 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Remove the config-gated tool guards feature (#344) — replaced by a soft rule in AGENTS.md
 - **Decisions:** The config-gated tool guards shipped in #344 were removed: the fail-closed config switch bricked unrelated routed skills on any config issue, textual matching refused innocuous commands quoting guarded verbs, and whole-invocation blocking took down unrelated commands. Owner decided the tooling approach fails. Discipline for linear history moves to a soft rule in AGENTS.md — no git push --force or equivalent without explicit owner authorization in-turn and no alternative. The per-surface / per-command rework on fix/346-guards-per-surface is abandoned unmerged.
 - **Next:** Merge in PR #349 (chore/remove-tool-guards), review the soft rule in AGENTS.md. Fix #346 will be the last issue on mechanical guard enforcement.
+
+- 2026-11-01T09:35 — **External verification + fold of fix/338-closed-ceremony-cli** —
+  A third-party external verification of the entire branch (base `4939b5fe` → head
+  `938f578b`) found one ledger blocker and four advisories. The blocker (O14) was
+  a ledger-row defect, not a behavioral one: the obligations cell asserted "no
+  existing script's bytes change" while the branch's own declared E8a repair moved
+  `scripts/unit-doc-phases.mjs` and added a `scripts/phase-lint.test.mjs` case.
+  One-line cell amendment naming the E8a exception, evidence repointed from
+  superseded G5 to G6 (1284/1284). Dependent surfaces swept: the SPEC's `## Log`
+  (an `F1` record with its `swept:` declaration) and `## Next` block.
+  PR #350 opened (`feat(ceremony): closed deterministic CLI…`) and merged into
+  main. All 16 obligations verified: 68 ceremony-suite tests, 1284 root-suite tests,
+  R1–R4 reproducers green, plan lint PASS, version-parity PASS.
+  **Status:** merged into main (`d34883d3`).
+  **Follow-up:** the S10 review-module minimum (`create` / `append-axis` /
+  `synthesize`) plus the remaining P1/P2 modules (review, acceptance, refutation,
+  fusion, delta, pr, progress, evidence, commit, roadmap) as ordered by the issue's
+  own priority list.
+
+## 2026-11-01T09:35:46Z — main — manual (external verification of fix/338)
+- **Commits:** 2 (fc5a8aed, f2eb6ff3 — later merged into main via PR #350 as cbe0e00f + f2eb6ff3)
+- **Files:** 7 files (71 additions, 6 deletions) — `scripts/ceremony/unit.mjs`, `scripts/ceremony/ledger.mjs`, `scripts/ceremony/testing.mjs`, `scripts/ceremony-unit-plan.test.mjs`, `scripts/ceremony-findings-ledger.test.mjs`, `docs/fix/338-closed-ceremony-cli/SPEC.md`, `docs/fix/338-closed-ceremony-cli/planning-evidence.md`
+- **Summary:** External-verification session on `fix/338-closed-ceremony-cli` (base `4939b5fe`, head `f2eb6ff3`). Ran all declared verification commands, reproduced R1–R4 frozen-failure reproducers end-to-end in scratch repos, ran root suite. Found 2 blockers and 4 advisories. Applied all repairs in one test-first batch: fixed `unit route` (which failed for every slug because it called unit-route.mjs route mode with `--json`, but route mode takes one positional), fixed `ledger verify` on the legacy carrier (false-negatives because mark was looked up under kind alias but legacy counts used long forms), fixed fixture leak (cleanup at process exit). Root suite 53/53 ceremony suites, 1268/1268 total. Branch later merged as PR #350.
+- **Decisions:** (1) `unit route` delegates to unit-route.mjs's read-only `--triage <unit> --json` — the issue defines route as "same as triage but read-only"; route mode's one-arg contract was not documented in the issue but is the real boundary. (2) `ledger verify` resolves mark against carrier's own vocabulary (mark → kind alias → legacy long form) — avoids the contradiction where the same module's `count` reported 23 but `verify` returned false. (3) Advisory on `--folded false` rejection kept as deliberate deviation under findings-table@1 (folded rows leave the table; re-append to revert). (4) Advisory on dual vocabularies in `ledger count` kept because normalizing would break the frozen R1 contract (`counts["REVIEW-RAN"]=23`). (5) Fixture leak in `testing.mjs` fixed: `makeRepo()` now tracks dirs in a global set removed at process exit.
+- **Next:** Branch merged via PR #350 (`d34883d3`). The follow-up PR for the P1 review module (S10) is the next concrete step per the unit doc's own priority list.
+
+## 2026-11-01T09:36:10Z — main — manual
+- **Commits:** 0
+- **Files:** 0 files changed
+- **Summary:** Deleted 8 merged local branches (feat/closed-release-channels, feat/history-guard, feat/pin-watch-partial-specs, feat/workspace-local-siblings, feature/331-authoring-repo-setup, fix/318-class-escalation-forward-closure, fix/schema-evidence-row-test-import, test/schema-version-pin-removal). Produced a report of all non-merged local and remote branches. Kept feat/agwo (scaffold npm package).
+- **Decisions:** Deleted only branches confirmed merged into main. feat/agwo retained on user request despite being a scaffold-only package.
+- **Next:** Decide action on non-merged branches: feat/45-operator-approved-model-routing, feat/agwo, feature/180-versioned-skills-releases, fix/346-guards-per-surface, origin/feat/69, origin/inheritance, origin/revert-212-feat/37.
+
+- **Commits:** 2 (`cbe0e00f…938f578b`)
+- **Files:** scripts/ceremony/lib.mjs, scripts/ceremony/plan.mjs, scripts/ceremony/unit.mjs, scripts/ceremony/findings.mjs, scripts/ceremony/ledger.mjs, scripts/ceremony/workspace.mjs, scripts/ceremony/test suites, scripts/unit-doc-phases.mjs, scripts/phase-lint.test.mjs, skills/phase-contract/SKILL.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, .changeset/338-closed-ceremony-cli.md, docs/fix/338-closed-ceremony-cli/SPEC.md, docs/fix/338-closed-ceremony-cli/planning-obligations.md
+- **Summary:** Closed the external-verification blockers and advisories found on the fix/338 branch (base `4939b5fe`, head `938f578b`) and the second repair round (base `fc5a8aed`, head `938f578b`). Blockers: (1) `plan update --tasks` silently dropped `- [x]` ticks and `(Implements: S#)` of untouched tasks — fixed by keeping existing task fields on partial updates, adding `tasks-added`/`tasks-removed` delta to response; (2) `findings update --folded true --severity critical` succeeded while dropping `--severity` — now applies all cell flags together with fold, echoing them in response and the F log line; (3) `delete-section` was `unknown-subcommand` — implemented on `unit`, `plan`, `findings` and `ledger` (removes section + its `###` embeds, nothing else); (4) usage errors (`hash-object` w/o `--path`, `diff-scope HEAD..nope`) printed stack traces with empty stdout — all now return JSON `missing-flag`/`invalid-ref` exit 1; git commands capture stderr (never echo a stack); `main-check` resolves main/master/origin/HEAD. Advisories: (a) `docs check-phase-labels` returned absolute paths (not byte-stable) — now relative; (b) `docs check-all` required `--slug` while L1 takes no input — now derives the unit from the branch name; (c) `unit list` answered `unregistered` everywhere — now reads both the fix index and feature ROADMAP (62/115 real status here); (d) `ledger read` lacked `type`/`date`/`sha`/`detail` — now carries them, null where the carrier doesn't hold; `ledger count` adds the documented key set; (e) the unit's P2 validator row claimed `unknown-command` pre-CLI while E1 says module-absent — corrected. Also: the tick mark `- [x] P<n> —` is now accepted by the unit-doc grammar, so `phase-lint` parses ticked lane units and the unit-doc `S10` move from Specs to Non-goals closes the `spec-unlinked` lint blocker.
+- **Decisions:** All user-ordered repairs applied (S7 section-delete, `--folded true` + cells together, issue-form documented options). One deviation kept deliberate: `--folded false` stays `fold-flip-unsupported` — a folded row leaves the six-column `findings-table@1` carrier, so re-appending is the revert.
+- **Next:** S10 review-module minimum (create, append-axis, synthesize) as the first follow-up PR, per the issue's own P1 priority list. Then P2 review (acceptance, refutation, fusion) and P2 operational modules (delta, pr, progress, evidence, commit, roadmap) completing the closed ceremony set.
+
+## 2026-11-01T22:37:42Z — fix/319-location-index-consolidation — manual
+- **Commits:** 15 (`c94c53dc…d945e368`)
+- **Files:** 75 files
+- **Summary:** External verification of fix/319-location-index-consolidation (base `1c9375a1` → head `63793b5e` → `d945e368`) against its SPEC and 16-row obligations ledger. Every declared claim was proven by re-running its command, never from the implementer's report: 1 blocker and 4 ledger advisories found, all repaired and re-verified, then pushed.
+- **Decisions:** The blocker was `packages/agentic-workflow-schema/README.md`, whose `compileWorkflowSnapshot` example still passed `docs/features/ROADMAP.md` after the migration window closed — it derived a unit at base and yields `unit: null` plus a `unit` unknown at head. That block is not executed by `verification-docs.test.mjs` (only blocks containing `validateVerificationPlanV1` are compiled and run), which is why a green suite never caught it; proving it took a behavioral probe against `src/`. The four advisories were ledger bookkeeping: O5's quoted `roadmap-moved` diagnostic text, O6's `index-document.mjs:28` → `:30`, and the stale suite counts `1292`/`726` → `1301`/`727` in E2, E3, O7, O8, O10 and O13. A `## Log` entry **V1** records the verification in the unit SPEC so the ledger explains its own corrected numbers. Lesson: suite counts in a ledger drift the moment the branch gains a test — record them only from a fresh run at the head being claimed.
+- **Next:** PR [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) is open and `MERGEABLE`, awaiting human review and merge; issue [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) stays OPEN until the PR closes it via `Closes #319`. Two pre-existing behaviours were deliberately left alone, both owner decisions: `fixUnit` in `compileWorkflowSnapshot` is inert on this repo's fix-row format (declared known pre-existing issue), and lifecycle unification (feature five-state vs fix removed-after-merge) remains a separate decision.
+
+## 2026-11-01T22:39:51Z — fix/319-location-index-consolidation — manual
+- **Commits:** 16 (`c94c53dc…df54a215`)
+- **Files:** 75 files
+- **Summary:** Closed the ROADMAP read-alias window on request (decision D4, recorded as the unit's S6a) and audited/patched issue #332. The consolidated docs/ROADMAP.md is live, so ROADMAP_LEGACY_READ is now false in both published constants modules, ROADMAP_DOCUMENT_SUFFIX is gone, and the schema snapshot compiler matches the published path only (a pre-move document yields unit: null plus an explicit unknown). Every deterministic consumer turns RoadmapMovedError into a clean diagnostic with no stack and no index-derived output — router, sensor, unit cycle, vocabulary probe, settle validator (exit 2), ceremony unit module (blocked class, exit 2) and the crate's roadmap check (exit 2) — pinned by the new scripts/roadmap-moved.test.mjs (7 cases, one per consumer). Unit records S6a, decisions D4/D5, obligations O14-O16 (16/16 verified). Suite counts at the session's head: root 1301, agentic-workflow 254, schema 727, pi 454, all green.
+- **Decisions:** D4 supersedes D2: the window closes now, not at a later release cut; ROADMAP_LEGACY_READ stays as the documented rollback lever and index-document.test.mjs proves both directions. A half-migrated tree (canonical roadmap without a ## Fixes heading plus a standalone docs/fix/README.md) still reads its fix rows, so folding the fix table in is a safe second pass — the fix-table alias is deliberately separate from the closed path window. unit-route --triage and promise-coherence are absent from the refusal suite on purpose: triage never reads the index and promise-coherence is a repo-local gate with no --root, so a case for either would have been faked; the suite header states it. D5: issue #332 needs no correction — it pins GUIDE_REL in normative-drift.test.mjs, the homes list in pre-execution-quality.test.mjs and the AGENTS.md reader inventory, none of which this branch touched, and it names no index path; its human-revision-needed label was left alone, so nothing was written to the issue. While closing the window the audit-docs fix-index hygiene check also fired: four ## Fixes rows (#331, #318, #340, #338) were still listed although their PRs had merged; they were removed.
+- **Next:** PR [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) is open, MERGEABLE/CLEAN at head `d945e368`, awaiting the human merge (issue [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) stays OPEN until it closes). After the merge: delete the #319 row from `docs/ROADMAP.md` § Fixes (the convention removes a row only after its PR merges). Then the manual `audit-docs` run the verifier wanted (check 1 still flags feature row 86 as a row without a `docs/features/` folder; it is delivered by `docs/fix/319-location-index-consolidation/`), and the next release cut carries the major bump declared in `.changeset/319-location-index-consolidation.md`.
+## 2026-11-02T09:15:43Z — fix/319-location-index-consolidation — manual
+- **Commits:** 19 (`c94c53dc…25d1b7de`)
+- **Files:** 75 files
+- **Summary:** Closed fix/319 receipt gap — P3 and P7 Progress log entries
+- **Decisions:** The unit doc's ## Log carried P1, P2, P4, P5, P6 but not P3 and P7, even though their work existed inside ec64bb4f and 5e7cfa5f. Checked git log -- <deliverable path> to attribute each phase before declaring the log complete, and re-derived the changeset skill count (six, not five) with rg before admitting it into the doc.
+- **Next:** /audit-pr 351 — merge gate; CI all green, PR CLEAN/MERGEABLE
+## 2026-11-02T09:16:40Z — fix/319-location-index-consolidation — manual
+- **Commits:** 20 (`c94c53dc…3dc16e3c`)
+- **Files:** 75 files
+- **Summary:** reanudé la lane fix/319-location-index-consolidation: verifiqué que el trabajo de P3/P7/P8 ya estaba hecho y verificado en las obligaciones, pero el log del unit doc no tenía las entradas de progreso; la lane se reanudó con el router en P3
+- **Decisions:** el router lee fases del token P<n> en la cabecera de ## Log; el texto en prosa no cuenta (unit-route.mjs loggedPhases); el trabajo de P3/P7/P8 estaba hecho pero el log no lo reflejaba
+- **Next:** /execute-phase --fix 319 P3 (tier: cheap)
+
+## 2026-11-02T09:17:32Z — fix/319-location-index-consolidation — manual
+- **Commits:** 21 (`c94c53dc…281414a7`)
+- **Files:** 75 files
+- **Summary:** Discussed and designed feature #352: migrate ceremony CLI (fix/338) + sensors into @gtrabanco/agentic-workflow crate, distributed via bunx/npx at versioned pin (RUNNER.md); triaged issues 352 and 333
+- **Decisions:** Version contract: closed as option B (RUNNER.md carrier skill, stamped by release.mjs apply, verified by normative-drift; avoids agent-mediated frontmatter inference); scope: feature 352 single umbrella unit, includes P0/P1/P2 ceremony modules + all sensors + pr module with gh degradation; dedup: package vocabulary wins (ceremony unit/plan/roadmap absorbed into unit-doc/Roadmap services); scripts/ceremony* deleted post-migration; 333: fix now, medium severity, high-severity audit defect of init-workspace CAPABILITIES.md seeding (template copy instead of evidence-based inference, same gap in this repo) — triage routes to /unit-lane --fix 333
+- **Next:** /triage-issue 333 — act on fix-now defect; 352 — needs triage to plan feature unit
+
+## 2026-11-02T09:25:02Z — fix/319-location-index-consolidation — manual
+- **Commits:** 23 (`c94c53dc…a5c75e79`)
+- **Files:** 75 files
+- **Summary:** unit-lane #319: completed P1-P8, fold-fixed F2/F4/F5 findings, posted review-change:pass receipt, PR #351 ready for audit-pr
+- **Decisions:** F1 and F3 remain as design observations (not actionable) documented in Log; requester is verifier
+- **Next:** audit-pr #351 — terminal merge gate; the current review-change:pass receipt is its precondition
+## 2026-11-02T10:13:49Z — fix/319-location-index-consolidation — manual
+- **Commits:** 24 (`c94c53dc…d7051089`)
+- **Files:** 75 files
+- **Summary:** Review + fold-findings fix/319-location-index-consolidation: ran a full review at head 980573a7 (code, security, verify, perf, spec-drift axes, gate 1301/1301), found 5 med findings — F1 (crate roadmap check breaks half-migration promise, red reproducer), F2/F3 (schema snapshot: self-contradicting read-order + parser duplicate), F4/F5 (SPEC acceptance criteria counts stale); two were replan-in-unit (F4/F5: S8/S11 criteria need re-cutting), three were source/fold (F1/F2/F3: actual defects) — persisted to SPEC.md ## Findings with gate V-lines, pushed to PR #351; the fold then started on F1+F3 but collided with another session writing uncommitted fixes to the same tree, so the fold was halted at the point of collision with a clear status report for the user to choose between the two approaches
+- **Decisions:** F1/F4/F5 blocked: F1 needs a plan-level decision (add standalone fallback to roadmap check matching 4 siblings + MIGRATION.md:39-41, or drop the half-migration promise); F4/F5 are SPEC acceptance criteria that need re-cutting via /unit-lane --fix 319's plan step, not fold; F3 is resolved by the other session's tableFor/tableCells in the schema package but uncommitted and untested; fold was halted before any FOLDED verdict because two sessions wrote the same working tree
+- **Next:** Decide which F1 fix survives: (A) the fold-findings fix in bin/agentic-workflow.mjs (fallback to standalone index, 3 regression tests, my work) or (B) the other session's isConsolidatedDocument fix in index-document.mjs (different mechanism); then either continue the fold on a clean tree or let the other session finish, followed by /review-change delta re-review and /audit-pr
+
+## 2026-11-02T11:55:44Z — fix/319-location-index-consolidation — manual
+- **Commits:** 27 (`c94c53dc…5c8bf14e`)
+- **Files:** 76 files
+- **Summary:** fold-findings para fix/319-location-index-consolidation: cerró la cola de findings F1+F3 (code/source) con root-cause fixes — F1: roadmapTableRows ya no hereda filas de Features como Fixes cuando el consolidado carece de ## Fixes; F3: el schema ahora respeta pipes escapados como el crate. Regresiones red-first verificadas en ambos paquetes. A5c75e79 fue corregido: reescribir criterios de aceptación es debilitar la comprobación, prohibido por fold-findings; el commit queda en historia y el Log del unit lo supersedo con V7. PR #351 sigue abierto, review-receipt actualizado a 2a68d2bb.
+- **Decisions:** V7 corregí mi propio turno anterior: F4/F5 eran replan-in-unit (clase congelada), nunca se fold-fixean reescribiendo el criterio; F1/F3 eran source fold que requieren root-cause code fix, no nota de prosa. El fold real requiere changes a index-document.mjs, Roadmap.mjs, schema index.ts y tests regresivos red-first.
+- **Next:** review-change 319-location-index-consolidation para re-review del delta F1+F3; luego audit-pr #351 para merge terminal
+
+## 2026-11-02T11:57:34Z — fix/319-location-index-consolidation — manual
+- **Commits:** 28 (`c94c53dc…3a3e2fdd`)
+- **Files:** 76 files
+- **Summary:** triage #352/#333; open issue #353; worktree fix/353-residue-shadow-copies PR #354 (shadow copies, obsolete surfaces, compatibility policy, test-first, 1289/1289 green); user interrupted and redirected: route in audit, CLASSIFY replan route, template parity → new issue #355; cleaned up stray files from non-worktree root; stash dropped
+- **Decisions:** PR #354 en review: no añadí scope ni re-basé ceilings; issue #355 única para route+CLASSIFY+templates+test; el guard de path-protection no lee ledgers del worktree, contaminando la raíz de la rama #319; stash drop tras cerrar la issue
+- **Next:** /review-change sobre fix/353-residue-shadow-copies en contexto limpio; /triage-issue 355; luego audit-pr #351
+## 2026-11-02T11:58:20Z — fix/319-location-index-consolidation — manual
+- **Commits:** 29 (`c94c53dc…980109e8`)
+- **Files:** 76 files
+- **Summary:** Triage issue #355 (scaffold template drift) and uncommitted work on #319 F8 (unit-route read consolidation)
+- **Decisions:** Uncommitted work: unit-route read consolidation (#319 F8) — replaced four redundant reads of ROADMAP.md with a single process-level cache, plus expanded index.ts validate/compileWorkflowSnapshot to handle consolidated fix index fallback correctly. Triaged #355 as fix-now with fix-next urgency.
+- **Next:** For #319 F8: commit the uncommitted changes (packages/agentic-workflow-schema/src/index.ts, scripts/unit-route.mjs, scripts/unit-route.test.mjs), run root suite, create PR. For #355: /unit-lane --fix 355 to create the fix unit and implement template parity + shape test + audit route + classifier route.
+
+## 2026-11-02T12:01:43Z — fix/319-location-index-consolidation — manual
+- **Commits:** 30 (`c94c53dc…36770f07`)
+- **Files:** 76 files
+- **Summary:** Clarified breaking-change notation (!) in conventional commit titles
+- **Decisions:** No changes applied — session used for learning/clarification about feat(scope)! syntax for breaking changes
+## 2026-11-02T12:08:08Z — fix/319-location-index-consolidation — manual
+- **Commits:** 32 (`c94c53dc…ef8e7a3f`)
+- **Files:** 76 files
+- **Summary:** Review + fold fix/319-location-index-consolidation: cycle-2 review found 3 fix-now defects (F6: fold deleted the unit log, F7: schema read standalone index first, F8: router re-read the index 4x per lookup) — all three folded, full gate green
+## 2026-11-02T13:05:53Z — fix/319-location-index-consolidation — manual
+- **Commits:** 35 (`c94c53dc…07ab2725`)
+- **Files:** 76 files
+- **Summary:** Cycle-3 review and fold of fix/319-location-index-consolidation: ran a full review-change (code/security/perf/brand), verified two-cycle cap exceeded with user authorization, folded F9 (schema stale-standalone fallback row-absent case), F10 (crate CLI lever never consulted the shared resolver, rollback dead), F12 (ROADMAP fix row stuck at in-progress), F13 (changeset names non-existent export), and re-cut F11's frozen P6 validator via the plan step (migration prose must name the old path). Added regression tests for F9 in machine-contract.test.mjs and F10 in roadmap-check.test.mjs. All gates green after fold.
+- **Decisions:** Cycle 3 authorized explicitly past the two-cycle cap: the fold found new fix-now rows, so the review→fold loop continued. The crate's CLI resolved the index by hand instead of through resolveRoadmapSource, making the documented rollback lever impossible to use — fixed by delegating index resolution to the shared reader. The schema package's rollback lever stays a literal boolean (dependency-free, no @types/node); the runtime channel that flips it lives in the crate's index-document.mjs. The P6 validator was unsatisfiable with correct migration prose — re-cut to exits 0 and paired with the actual reader pin (S7 one-literal check).
+- **Next:** Re-run /review-change on this branch to close the review loop and verify no new findings; then /audit-pr to proceed to merge gate.
+## 2026-11-02T15:20:26Z — fix/319-location-index-consolidation — manual
+- **Commits:** 42 (`c94c53dc…8e355f67`)
+- **Files:** 79 files
+- **Summary:** Deep source analysis of gentle-ai v4.3.1 compared vs agentic-workflow across 17 axes; routed comparison results into #360 (risk-tiered ceremony), #361 (severity/impact ladder), #362 (review-loop economics), #363 (differential baseline check), #365 (vulnerability pass + research-first); closed #364 as dup of #356; labeled all with needs-triage; clarified mid-flight-commit staleness for #363; confirmed #355 as vehicle for spec-by-reference scaffold parity gap
+- **Decisions:** (1) Adopt risk-tiered ceremony from ODD: classifier-computed tiers passive/standard/high, zero ceremony for docs-only — confirmed by arXiv 2608.09290, 2606.22528, 2610.34491. (2) Adopt severity/impact vocabulary ladder (BLOCKER|CRITICAL|WARNING|SUGGESTION) + baseline-advisory rule — direct answer to pain on PR #354. (3) Adopt computed correction budget for review→fold loops — arXiv 2603.00539 proves prose caps are weak version of observed unit 258 (12 cycles). (4) Adopt differential baseline check — mechanical classification change-caused vs pre-existing; owner decision pending on mid-flight commit staleness (option a recommended). (5) Adopt passive tier — 60-80% wall-clock savings for docs-only. (6) #355 labeled needs-triage as vehicle for scaffold parity gap. (7) #364 closed as dup of #356 (already existed from papers conversation).
+- **Next:** Triage #360-#365+#355 after ROADMAP.md relocation (marked needs-triage; two PRs will change ROADMAP.md). Decide #363 option (a) trivial-paths exclusion vs (b) convention. Then begin #361 (severity ladder) and #362 (review-loop economics) — lowest effort, highest impact on unit 258 pain.
+
+
+## 2026-11-02T15:21:28Z — fix/319-location-index-consolidation — manual
+- **Commits:** 44 (`c94c53dc…dbe2ffa7`)
+- **Files:** 79 files
+- **Summary:** Cycle-6 delta re-review of fix/319-location-index-consolidation: /review-change on the F15+F16+F17 batch (402bdbf1..9b7e80d1). Verified F15 red-first (parent tableCells → red; head → green, both published sides identical), F16 red-first (parent dist rebuild → red; head → green 24/24), F17 (E7 in Log — direct read). Zero new findings. Gate green (root 1303, schema 732, crate 260, pi 454, moved+index 16, normative 20, parity PASS, coherence PASS, phase-lint PASS). Receipt: current at 44a01010, emitted with scope manifest. Decision: REVIEW-PASS. Owner also committed docs/research/ATTRIBUTION.md and papers-sweep-2026-11-02.md between the fold batch and this review (foreign-only, outside unit scope).
+- **Decisions:** Red-first regression tests: F16 required a dist rebuild to properly go red (test imports ../dist/index.js, not src/), confirming the red-first methodology for schema-package tests that import dist.
+- **Next:** /audit-pr to merge fix/319-location-index-consolidation (PR #351)
+
+## 2026-11-02T15:26:00Z — fix/319-location-index-consolidation — manual
+- **Commits:** 47 (`c94c53dc…402bdbf1`)
+- **Files:** 77 files
+- **Summary:** Fold F14: fixed the index parser's fence-tracking — one boundary-cell grammar (fenceRun / indexFenceRun) now owns fence state for both the heading scanner and the row scanner in the crate and the schema mirror, plus a boundary-cell fix on the schema's tableCells pipe-slicing. The fold introduced one fence grammar instead of two, proving red/green on both packages, red-first regression tests added to both, and all gates green at head 402bdbf1.
+- **Decisions:** Adversarial N=2 cycle 4 revealed F14 (fence-blinded row scanner, medium); fold produced a single grammar (fenceRun) used by both roadmapSection and roadmapTableRows in the crate, indexFenceRun in the schema, with tableCells boundary-cell fix on the schema mirror so cells[i] is identical across both published sides. The schema's `FenceRun` type was exported from pre-execution.ts and imported into index.ts for cross-file access.
+- **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
+
+
+
+## 2026-11-02T15:26:00Z — fix/319-location-index-consolidation — manual
+- **Commits:** 47 (`c94c53dc…402bdbf1`)
+- **Files:** 77 files
+- **Summary:** Fold F14: fixed the index parser's fence-tracking — one boundary-cell grammar (fenceRun / indexFenceRun) now owns fence state for both the heading scanner and the row scanner in the crate and the schema mirror, plus a boundary-cell fix on the schema's tableCells pipe-slicing. The fold introduced one fence grammar instead of two, proving red/green on both packages, red-first regression tests added to both, and all gates green at head 402bdbf1.
+- **Decisions:** Adversarial N=2 cycle 4 revealed F14 (fence-blinded row scanner, medium); fold produced a single grammar (fenceRun) used by both roadmapSection and roadmapTableRows in the crate, indexFenceRun in the schema, with tableCells boundary-cell fix on the schema mirror so cells[i] is identical across both published sides. The schema's `FenceRun` type was exported from pre-execution.ts and imported into index.ts for cross-file access.
+- **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
+
+## 2026-11-02T15:30:00Z — fix/319-location-index-consolidation — manual
+- **Commits:** 47 (`c94c53dc…402bdbf1`)
+- **Files:** 77 files
+- **Summary:** Fold F15 (schema boundary-cell tableCells: slices empty boundary pipes, so cells[i] maps identically across both published sides), F16 (schema regression test requires dist rebuild to go red), F17 (E7 in SPEC Log — direct read, no code change needed). All gates green at head 402bdbf1.
+- **Decisions:** Red-first regression tests: F15 fixed the schema's tableCells to slice boundary pipes exactly as the crate does (cells.length < 2 returns [] then body slicing), so `cells[0]` and `cells[2]` are identical on both published sides. F16 proved that schema-package tests importing ../dist/index.js require a dist rebuild to properly go red — the test fixture ran against stale dist output until `bun run test` recompiled.
+- **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
+
+## 2026-11-02T15:26:19Z — fix/319-location-index-consolidation — manual
+- **Commits:** 49 (`c94c53dc…f63ac1ad`)
+- **Files:** 79 files
+- **Summary:** Subagent-topology evidence verified and #260 refined: Cognition/AOrchestra/2601.11327/DACS/MAST confirm the owner's recollection (subagents = context isolation for read-heavy work, not general code-writing); posted refinement comment 6580622775 (4 amendments: curated-context briefs, decision-bearing vs determined phases, concurrency cap ≤3, delegated-write behind measured acceptance); 6 new ATTRIBUTION.md rows (evidence-only, landing #260)
+- **Next:** Owner reviews the #260 refinement comment before unit-lane takes it; PR #351 awaits /audit-pr; then /triage-issue 356 + 357 + 358 + 359
+## 2026-11-02T15:28:50Z — fix/319-location-index-consolidation — manual
+- **Commits:** 51 (`c94c53dc…0376d7ae`)
+- **Files:** 79 files
+- **Summary:** Audit-pr PR #351: BLOCKED (4 blockers), then fold F18 (missing triage block) and F20 (missing P8 receipt); F19/F21 remain open
+- **Decisions:** (1) Audited PR #351 against the full contract — receipt current at 8e355f67, CI green, obligations 16/16 verified, but lineage blocked (no pasted ## Triaged steps), scope creep (docs/research/* commits), missing P8 receipt, dirty tree — four blockers total. (2) Another session was concurrently committing on this branch — 6 new commits on top of the audited head, one of which was the external review session; a past audit-pr persist (F18–F21 rows) was lost to the concurrent work. (3) F21 self-resolved (tree clean) and F14/F15 already folded externally, so only F18 (triage block) and F20 (P8 receipt) needed fixing. (4) Did NOT push — local branch now ahead 3 of origin; the concurrent session's push will void the SHA-bound review receipt (already stale vs a7cdd5b3). (5) F19 (docs/research scope creep) and F21 audit trail rows left open per owner instruction.
+- **Next:** Resolve F19 (move docs/research/* to its own PR) and /review-change to refresh the stale receipt at the new head; then re-run /audit-pr — push coordination with the concurrent session required
