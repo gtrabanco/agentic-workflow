@@ -3799,12 +3799,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** (1) Adopt risk-tiered ceremony from ODD: classifier-computed tiers passive/standard/high, zero ceremony for docs-only — confirmed by arXiv 2608.09290, 2606.22528, 2610.34491. (2) Adopt severity/impact vocabulary ladder (BLOCKER|CRITICAL|WARNING|SUGGESTION) + baseline-advisory rule — direct answer to pain on PR #354. (3) Adopt computed correction budget for review→fold loops — arXiv 2603.00539 proves prose caps are weak version of observed unit 258 (12 cycles). (4) Adopt differential baseline check — mechanical classification change-caused vs pre-existing; owner decision pending on mid-flight commit staleness (option a recommended). (5) Adopt passive tier — 60-80% wall-clock savings for docs-only. (6) #355 labeled needs-triage as vehicle for scaffold parity gap. (7) #364 closed as dup of #356 (already existed from papers conversation).
 - **Next:** Triage #360-#365+#355 after ROADMAP.md relocation (marked needs-triage; two PRs will change ROADMAP.md). Decide #363 option (a) trivial-paths exclusion vs (b) convention. Then begin #361 (severity ladder) and #362 (review-loop economics) — lowest effort, highest impact on unit 258 pain.
 
-## 2026-11-02T15:20:43Z — fix/319-location-index-consolidation — manual
-- **Commits:** `402bdbf1..9b7e80d1` (5 commits), plus 2 prior commits from the cycle-4 re-review (8e355f67, 68718a5d)
-- **Files:** `docs/fix/319-location-index-consolidation/SPEC.md`, `packages/agentic-workflow/src/index-document.mjs`, `packages/agentic-workflow-schema/src/index.ts`, `packages/agentic-workflow-schema/test/machine-contract.test.mjs`, `scripts/index-document.test.mjs`, `docs/research/ATTRIBUTION.md`
-- **Summary:** Cycle 5 re-review: /review-change reported REVIEW-FAIL with 3 med fix-now findings (F15 tableCells divergence, F16 provenance regression, F17 S3 log gap) and 8 low report-only notes; /fold-findings repaired all 3 (one unified boundary-cell rule across both published sides, raw source line for provenance, S3 merge evidence appended) — gate 1303+732+260+454 green, 3/3 FOLDED 9b7e80d1
-- **Decisions:** F15 and F16 are both F14-fold descendants but different mechanisms (boundary-cell extraction vs row-string normalization) so kept as separate fold groups in one commit; class escalation declined — different verifiers; sweep declared for the removed slice(1,-1) and cells.join patterns
-- **Next:** /review-change on the re-reviewed branch, then /audit-pr if clean (PR #351 open)
+
 ## 2026-11-02T15:21:28Z — fix/319-location-index-consolidation — manual
 - **Commits:** 44 (`c94c53dc…dbe2ffa7`)
 - **Files:** 79 files
@@ -3812,18 +3807,3 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Red-first regression tests: F16 required a dist rebuild to properly go red (test imports ../dist/index.js, not src/), confirming the red-first methodology for schema-package tests that import dist.
 - **Next:** /audit-pr to merge fix/319-location-index-consolidation (PR #351)
 
-
-## 2026-11-02T15:21:32Z — fix/319-location-index-consolidation — manual
-- **Commits:** 4 (dbe2ffa7…8e355f67, including 8e355f67 and 68718a5d from earlier)
-- **Files:** docs/research/ATTRIBUTION.md, docs/research/papers-sweep-2026-11-02.md, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow/src/index-document.mjs, scripts/index-document.test.mjs, docs/fix/319-location-index-consolidation/SPEC.md, docs/LOGS.md
-- **Summary:** Cycle 5 re-review of fix/319: /review-change reported REVIEW-FAIL with 3 med fix-now findings (F15 tableCells divergence, F16 provenance regression, F17 S3 log gap) — all 3 folded, full gate green (1303+732+260+454). Added attribution guide and papers-sweep research for gentle-ai v4.3.1 comparison across 17 axes.
-- **Decisions:** F15/F16 kept separate fold groups (different mechanisms); class escalation declined (different verifiers); sweep declared for removed slice(1,-1) and cells.join patterns.
-- **Next:** Complete final re-review of fix/319, then /audit-pr to proceed to merge gate.
-
-
-## 2026-11-02T15:21:32Z — fix/319-location-index-consolidation — manual
-- **Commits:** 44 (`c94c53dc…dbe2ffa7`)
-- **Files:** 79 files
-- **Summary:** Triage issues #356-359 (four arXiv-backed proposals: test triage, skill-lint security, adversarial review kill-mandate, prose-gate inventory)
-- **Decisions:** All four issues are new capability proposals, not bugs or trigger-based activations — each was evaluated against the scope-membership checklist (no overlap with any open unit's SPEC/phase task/AC), all returned no match, all promoted-to-feature
-- **Next:** /unit-lane --from-issue 356 + /unit-lane --from-issue 357 + /unit-lane --from-issue 358 + /unit-lane --from-issue 359 — build each promoted feature as its own unit
