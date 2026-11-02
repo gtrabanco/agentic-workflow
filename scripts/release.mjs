@@ -267,6 +267,290 @@ function highestLevel(changesets) {
   return null;
 }
 
+/**
+ * The version this cut ships, resolved once for every mode that needs it: the
+ * plan prints it, a release-notes render names it, apply writes it. Same
+ * inputs (tree + args + date) always give the same answer, so a canary body
+ * rendered before the cut names the exact tag that cut will push.
+ */
+function resolveReleasePlan({ root, args, packages, changesets }) {
+  const forced = args.version !== null;
+  const gitRepo = isGitRepo(root);
+  const canaryFloor = gitRepo ? lastCanaryBase(root) : null;
+
+  // Resolve the base: the last stable v-tag, else the highest package version
+  // (the first release — deterministic and printed, never guessed in silence).
+  // A forced latest release needs no base to compute from — the operator named
+  // the exact version (D-40-4); the base is then display-only.
+  let base = args.base ?? lastStableTag(root);
+  let baseNote = "";
+  // The train never cuts below what is already published: a stale v-tag (or
+  // its absence) must not downgrade the train below a package version npm
+  // would refuse to walk back.
+  const pkgVersions = packages.map((p) => p.version).filter((v) => SEMVER_RE.test(v));
+  const newer = (a, b) => compareStable(b, a);
+  const highestPkg = [...pkgVersions].sort(newer)[0];
+  if (!args.base && highestPkg && (!base || newer(base, highestPkg) > 0)) {
+    base = highestPkg;
+    baseNote = baseNote || (stableTags(root).length === 0
+      ? " (highest package version — no stable v-tag)"
+      : " (highest package version — above the stale v-tag)" );
+  } else if (!base) {
+    if (pkgVersions.length > 0) {
+      base = highestPkg;
+      baseNote = " (highest package version — no stable v-tag)";
+    }
+  }
+  if (!base && forced && args.channel === "stable") base = args.version;
+  if (!base) fail("no --base given and neither a stable v* tag nor a package version provides one");
+  if (!SEMVER_RE.test(base)) fail(`base must be a stable X.Y.Z version, got: ${base}`);
+
+  let version;
+  const level = highestLevel(changesets);
+  // A canary is a prerelease of the NEXT train, not of the last stable: a
+  // prerelease built on the published stable sorts BELOW it, so `@canary`
+  // would hand a consumer an older tree than `latest`. The default base is the
+  // next train this plan computes — the changeset bump, raised to the base of
+  // any canary already cut (the operator flow: force 5.0.0 as the canary base
+  // and every later canary stays 5.0.0-canary.<date>.<n>). `--version` forces
+  // that base (D-40-4) and `--base` pins it literally (the AC-07 replay path).
+  const derivedStable = level ? bumpVersion(base, level) : null;
+  const nextTrain = [derivedStable, canaryFloor].filter(Boolean).sort(compareStable).at(-1) ?? base;
+  const canaryBase = args.channel === "canary"
+    ? args.version ?? (args.base !== null ? base : nextTrain)
+    : null;
+  if (args.channel === "stable") {
+    if (forced) {
+      version = args.version;
+    } else {
+      // Promotion: a canary base above the changeset-derived version IS the
+      // stable suggestion — the canary was already handed out under that
+      // version and the stable cut moves stable, `latest` and `canary` onto
+      // it, with the pending changesets folded in (or none — a pure
+      // promotion). Without a canary the intent is the changesets, as before.
+      const promoted = canaryFloor !== null && (derivedStable === null || compareStable(canaryFloor, derivedStable) > 0);
+      if (derivedStable === null && !promoted) {
+        fail(`no changeset intent in ${path.join(root, ".changeset")}, no canary to promote and no --version override — no release intent`);
+      }
+      version = promoted ? canaryFloor : derivedStable;
+    }
+    if (gitRepo && stableTags(root).includes(`v${version}`)) {
+      fail(!forced && canaryFloor !== null && version === canaryFloor
+        ? `the canary base ${canaryFloor} is already the stable tag v${canaryFloor} — nothing left to promote; add changesets or pass --version`
+        : `version ${version} collides with the existing tag v${version} — versions are immutable`);
+    }
+  }
+
+  return { forced, gitRepo, canaryFloor, base, baseNote, level, version, canaryBase };
+}
+
+// --- release notes ---------------------------------------------------------
+
+// The closed set of release-note sections, in the order they render. A change
+// lands in exactly one: breaking first (whatever its type), then its own type,
+// and everything without a first-class section under `Maintenance`.
+const NOTE_GROUPS = [["feat", "Features"], ["fix", "Fixes"], ["perf", "Performance"], ["docs", "Documentation"]];
+const NOTE_REST = "Maintenance";
+const LEVEL_RANK = { patch: 0, minor: 1, major: 2 };
+const CONVENTIONAL_TITLE_RE = /^([a-zA-Z]+)(\([^)]*\))?(!)?:\s+\S/;
+const PI_PACKAGE = "npm:@gtrabanco/pi-agentic-workflow";
+const SKILLS_ADD = "npx skills add gtrabanco/agentic-workflow";
+
+/** `<base>-canary.<stamp>.<n>` — the channel version, from the tag counter. */
+function canaryVersion(root, canaryBase, stamp, channel, gitRepo) {
+  const n = gitRepo ? channelTagCounter(root, canaryBase, stamp, channel) + 1 : 1;
+  return `${canaryBase}-canary.${stamp}.${n}`;
+}
+
+function parseCanaryTag(tag) {
+  const m = /^v(\d+\.\d+\.\d+)-canary\.(\d{8})\.(\d+)$/.exec(tag);
+  return m ? { base: m[1], stamp: m[2], n: Number(m[3]) } : null;
+}
+
+/** Every canary tag reachable from HEAD, newest first — the cut history. */
+function canaryTags(root) {
+  const out = git(root, ["tag", "-l", "--merged", "HEAD", "v*-canary.*"]) ?? "";
+  return out
+    .split("\n")
+    .filter(Boolean)
+    .map((tag) => ({ tag, parsed: parseCanaryTag(tag) }))
+    .filter((entry) => entry.parsed)
+    .sort((a, b) =>
+      compareStable(b.parsed.base, a.parsed.base) ||
+      b.parsed.stamp.localeCompare(a.parsed.stamp) ||
+      b.parsed.n - a.parsed.n);
+}
+
+/**
+ * The canary this cut follows: the highest one below it. Nothing consumes
+ * changesets until a stable cut, so every prerelease reprints the whole
+ * backlog; this is what separates the news from what an earlier prerelease
+ * already handed out. Null on the first cut of a train.
+ */
+function previousCanaryTag(root, version) {
+  const current = parseCanaryTag(`v${version}`);
+  if (!current) return null;
+  const older = canaryTags(root).filter(({ parsed }) => {
+    const byBase = compareStable(current.base, parsed.base);
+    if (byBase !== 0) return byBase > 0;
+    return parsed.stamp < current.stamp || (parsed.stamp === current.stamp && parsed.n < current.n);
+  });
+  return older[0]?.tag ?? null;
+}
+
+/** The `.changeset/` file names that existed at a tag — the carried backlog. */
+function changesetsAtTag(root, tag) {
+  const out = git(root, ["ls-tree", "-r", "--name-only", tag, "--", ".changeset"]);
+  return out === null ? null : new Set(out.split("\n").filter(Boolean).map((file) => path.basename(file)));
+}
+
+/**
+ * One changeset as a release-note entry: the conventional commit title it
+ * declares becomes the `###` heading and its prose follows. A body written in
+ * another shape still renders — its first sentence is the heading — because
+ * the changeset linter, not the renderer, is what requires the title.
+ */
+function splitChange(body = []) {
+  const [first = "", ...rest] = body;
+  const title = String(first).trim();
+  const detail = rest.join("\n").trim();
+  const conventional = CONVENTIONAL_TITLE_RE.exec(title);
+  if (conventional) {
+    return {
+      head: title,
+      type: conventional[1].toLowerCase(),
+      breaking: conventional[3] === "!",
+      detail,
+    };
+  }
+  const plain = title.replace(/^\*\*/, "").replace(/\*\*/, "").trim();
+  const sentence = /^(.+?[.!?])(\s|$)/.exec(plain)?.[1] ?? plain;
+  const head = sentence.length > 120 ? `${sentence.slice(0, 117).trimEnd()}…` : sentence;
+  return {
+    head,
+    type: "other",
+    breaking: false,
+    detail: [plain.slice(sentence.length).trim(), detail].filter(Boolean).join("\n").trim(),
+  };
+}
+
+/** One row per declared package or skill, at the highest level it declares. */
+function bumpRows(changesets) {
+  const rows = new Map();
+  for (const changeset of changesets) {
+    for (const entry of changeset.entries) {
+      const known = rows.get(entry.pkg);
+      if (!known || LEVEL_RANK[entry.level] > LEVEL_RANK[known.level]) rows.set(entry.pkg, { ...entry });
+    }
+  }
+  return [...rows.values()].sort((a, b) =>
+    a.kind === b.kind
+      ? a.pkg.toLowerCase().localeCompare(b.pkg.toLowerCase())
+      : a.kind === "package" ? -1 : 1);
+}
+
+/**
+ * How to install what this release contains, and how to move between the
+ * channels. `pi install` replaces the recorded source of the same package
+ * instead of adding a second entry (the settings match key is `npm:<name>`,
+ * tag included or not), so switching channels is one command and no uninstall.
+ */
+function installBlock({ channel, tag, bumps }) {
+  const libraries = bumps.filter((row) =>
+    row.kind === "package" && row.pkg.startsWith("@gtrabanco/") && row.pkg !== "@gtrabanco/pi-agentic-workflow");
+  const libraryCommand = (distTag) =>
+    libraries.length > 0 ? [`npm install ${libraries.map((row) => `${row.pkg}@${distTag}`).join(" ")}`] : [];
+  const lines = ["## Install", ""];
+  if (channel === "canary") {
+    lines.push("This prerelease:", "", "```sh", `pi install ${PI_PACKAGE}@canary`, `${SKILLS_ADD}#v${tag}`, ...libraryCommand("canary"), "```", "");
+    lines.push(
+      "Back to the stable channel — no uninstall needed: re-running the install with the other",
+      "tag replaces the recorded source.",
+      "", "```sh", `pi install ${PI_PACKAGE}@latest`, `${SKILLS_ADD}#stable`, ...libraryCommand("latest"), "```", "",
+      "The `@canary` npm tag is repointed at the stable version on every stable cut, so",
+      "`pi update --extensions` lands there at the next one; a pinned `#v…` skills install stays on",
+      "that tree and follows the branch only after the `#stable` re-add.",
+    );
+  } else {
+    lines.push("```sh", `pi install ${PI_PACKAGE}@latest`, `${SKILLS_ADD}#v${tag}`, ...libraryCommand("latest"), "```", "");
+    lines.push(
+      `\`#v${tag}\` pins this release; \`#stable\` (and the \`latest\` dist-tag) follow the branch.`,
+      `To try the next prerelease instead: \`pi install ${PI_PACKAGE}@canary\`.`,
+    );
+  }
+  return lines;
+}
+
+/**
+ * The release body for `gh release create --notes-file`. The changeset IS the
+ * release note, but a body nobody can read is not a note: every change gets a
+ * heading, changes group by kind with breaking first, the cut's own bumps are a
+ * table, and the reader is told how to install and how to move channels. A
+ * canary also separates the changes it adds from the ones it merely reprints.
+ */
+function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, gitRepo }) {
+  const tag = channel === "canary"
+    ? canaryVersion(root, plan.canaryBase, stamp, channel, gitRepo)
+    : plan.version;
+  const changes = changesets.map((changeset) => {
+    const change = { file: changeset.file, ...splitChange(changeset.body) };
+    if (changeset.entries.some((entry) => entry.level === "major")) change.breaking = true;
+    if (/^BREAKING[ -]CHANGE:/m.test(change.detail)) change.breaking = true;
+    return change;
+  });
+  const previous = channel === "canary" ? previousCanaryTag(root, tag) : null;
+  const carriedFiles = previous ? changesetsAtTag(root, previous) : null;
+  const isCarried = (change) => Boolean(carriedFiles?.has(change.file));
+  const news = changes.filter((change) => !isCarried(change));
+  const earlier = changes.filter(isCarried);
+
+  const out = [];
+  out.push(
+    channel === "canary"
+      ? `Prerelease of the next stable train \`${plan.canaryBase}\`: every change below is pending on`
+        + " `main`, the stable cut consumes it, and nothing here is published as `latest`."
+      : `Stable release of the unified train — every package and skill carries \`${tag}\`.`,
+    "",
+  );
+  if (plan.forced) {
+    out.push(channel === "canary"
+      ? `> Canary base forced by operator: \`${plan.canaryBase}\`.`
+      : `> Version forced by operator: ${tag}.`, "");
+  }
+  out.push(...installBlock({ channel, tag, bumps: bumpRows(changesets) }), "");
+
+  out.push("## Package bumps", "", "| What | Bump |", "|---|---|");
+  for (const row of bumpRows(changesets)) out.push(`| \`${row.pkg}\` | ${row.level} |`);
+  out.push("");
+
+  const section = (title, rows) => {
+    if (rows.length === 0) return;
+    out.push(`## ${title}`, "");
+    for (const row of rows) {
+      out.push(`### ${row.head}`, "");
+      if (row.detail) out.push(row.detail, "");
+    }
+  };
+  section("Breaking changes", news.filter((change) => change.breaking));
+  for (const [type, title] of NOTE_GROUPS) {
+    section(title, news.filter((change) => !change.breaking && change.type === type));
+  }
+  section(NOTE_REST, news.filter((change) =>
+    !change.breaking && !NOTE_GROUPS.some(([type]) => type === change.type)));
+
+  if (earlier.length > 0) {
+    out.push("## Also in this prerelease", "",
+      `Already carried by \`${previous}\` — the same tree, nothing new to read here.`, "",
+      "<details>", `<summary>${earlier.length} earlier change${earlier.length === 1 ? "" : "s"}</summary>`, "");
+    for (const row of earlier) {
+      out.push(`### ${row.head}`, "");
+      if (row.detail) out.push(row.detail, "");
+    }
+    out.push("</details>", "");
+  }
+  return out.join("\n").trimEnd();
+}
+
 // --- apply (stable channel) -------------------------------------------------
 
 function setPackageVersion(pkgPath, version) {
@@ -401,86 +685,17 @@ function main() {
   const packages = readPackages(root);
   const changesets = readChangesets(root);
 
-  // release-notes — the assembled release body for `gh release create
-  // --notes-file`: the accumulated changeset bodies (the changeset IS the
-  // release note), plus the forced-version marker when D-40-4 applies. No
-  // base, no version computation, no writes.
-  if (args.mode === "release-notes") {
-    const bodies = changesets.map((c) => c.body.join("\n"));
-    if (args.version !== null) {
-      if (!SEMVER_RE.test(args.version)) fail(`--version must be a stable X.Y.Z version, got: ${args.version}`);
-      bodies.push(`Version forced by operator: ${args.version}`);
-    }
-    console.log(bodies.join("\n\n"));
-    process.exit(0);
-  }
-
   const declared = new Set(changesets.flatMap((c) => c.entries.map((e) => e.pkg)));
-  const forced = args.version !== null;
-  const gitRepo = isGitRepo(root);
-  const canaryFloor = gitRepo ? lastCanaryBase(root) : null;
+  const plan = resolveReleasePlan({ root, args, packages, changesets });
+  const { forced, gitRepo, canaryFloor, base, baseNote, level, canaryBase } = plan;
+  const version = plan.version;
 
-  // Resolve the base: the last stable v-tag, else the highest package version
-  // (the first release — deterministic and printed, never guessed in silence).
-  // A forced latest release needs no base to compute from — the operator named
-  // the exact version (D-40-4); the base is then display-only.
-  let base = args.base ?? lastStableTag(root);
-  let baseNote = "";
-  // The train never cuts below what is already published: a stale v-tag (or
-  // its absence) must not downgrade the train below a package version npm
-  // would refuse to walk back.
-  const pkgVersions = packages.map((p) => p.version).filter((v) => SEMVER_RE.test(v));
-  const newer = (a, b) => compareStable(b, a);
-  const highestPkg = [...pkgVersions].sort(newer)[0];
-  if (!args.base && highestPkg && (!base || newer(base, highestPkg) > 0)) {
-    base = highestPkg;
-    baseNote = baseNote || (stableTags(root).length === 0
-      ? " (highest package version — no stable v-tag)"
-      : " (highest package version — above the stale v-tag)" );
-  } else if (!base) {
-    if (pkgVersions.length > 0) {
-      base = highestPkg;
-      baseNote = " (highest package version — no stable v-tag)";
-    }
-  }
-  if (!base && forced && args.channel === "stable") base = args.version;
-  if (!base) fail("no --base given and neither a stable v* tag nor a package version provides one");
-  if (!SEMVER_RE.test(base)) fail(`base must be a stable X.Y.Z version, got: ${base}`);
-
-  let version;
-  const level = highestLevel(changesets);
-  // A canary is a prerelease of the NEXT train, not of the last stable: a
-  // prerelease built on the published stable sorts BELOW it, so `@canary`
-  // would hand a consumer an older tree than `latest`. The default base is the
-  // next train this plan computes — the changeset bump, raised to the base of
-  // any canary already cut (the operator flow: force 5.0.0 as the canary base
-  // and every later canary stays 5.0.0-canary.<date>.<n>). `--version` forces
-  // that base (D-40-4) and `--base` pins it literally (the AC-07 replay path).
-  const derivedStable = level ? bumpVersion(base, level) : null;
-  const nextTrain = [derivedStable, canaryFloor].filter(Boolean).sort(compareStable).at(-1) ?? base;
-  const canaryBase = args.channel === "canary"
-    ? args.version ?? (args.base !== null ? base : nextTrain)
-    : null;
-  if (args.channel === "stable") {
-    if (forced) {
-      version = args.version;
-    } else {
-      // Promotion: a canary base above the changeset-derived version IS the
-      // stable suggestion — the canary was already handed out under that
-      // version and the stable cut moves stable, `latest` and `canary` onto
-      // it, with the pending changesets folded in (or none — a pure
-      // promotion). Without a canary the intent is the changesets, as before.
-      const promoted = canaryFloor !== null && (derivedStable === null || compareStable(canaryFloor, derivedStable) > 0);
-      if (derivedStable === null && !promoted) {
-        fail(`no changeset intent in ${path.join(root, ".changeset")}, no canary to promote and no --version override — no release intent`);
-      }
-      version = promoted ? canaryFloor : derivedStable;
-    }
-    if (gitRepo && stableTags(root).includes(`v${version}`)) {
-      fail(!forced && canaryFloor !== null && version === canaryFloor
-        ? `the canary base ${canaryFloor} is already the stable tag v${canaryFloor} — nothing left to promote; add changesets or pass --version`
-        : `version ${version} collides with the existing tag v${version} — versions are immutable`);
-    }
+  // release-notes — the rendered body for `gh release create --notes-file`. It
+  // resolves the SAME version the plan does, so a canary body names the exact
+  // tag its cut publishes. Renders to stdout only; no writes.
+  if (args.mode === "release-notes") {
+    console.log(renderReleaseNotes({ root, packages, changesets, plan, channel: args.channel, stamp, gitRepo }));
+    process.exit(0);
   }
 
   const human = args.mode !== "publish-plan" && args.mode !== "publish-stage"; // machine modes print TSV only
@@ -576,8 +791,7 @@ function main() {
   } else {
     // canary — the only prerelease channel: a prerelease of the base that
     // never touches the latest dist-tag and never consumes the changesets.
-    const n = gitRepo ? channelTagCounter(root, canaryBase, stamp, args.channel) + 1 : 1;
-    const prerelease = `${canaryBase}-canary.${stamp}.${n}`;
+    const prerelease = canaryVersion(root, canaryBase, stamp, args.channel, gitRepo);
     const listed = packages.filter((p) => declared.has(p.name));
     // Machine-readable plan for the publish workflow's channel job: one TSV
     // line per declared package (name, dir, version, dist-tag).
