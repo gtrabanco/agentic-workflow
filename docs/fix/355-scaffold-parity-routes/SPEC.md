@@ -366,6 +366,12 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 - **E4** — 2026-11-02, the same case after the hook comment was marked legacy · exit 0 · offenders `[]`; the drift-refusal case reports `features/_TEMPLATE/SPEC.md:19 — ACCEPTANCE.md`, and the legacy-allowance case passes on both `template/AGENTS.md` carrier paragraphs.
 - **E5** — 2026-11-02, `node --test scripts/scaffold-parity.test.mjs` · exit 0 · 16/17 then 17/17 — the audit `route:` cell, the single progressive-loading statement, the `never executes it` guarantee and the classifier's two-branch row all match.
 - **E6** — 2026-11-02, `node --test scripts/unit-doc-contract.test.mjs` · exit 0 · 19 tests (17 before), with `template/docs/features/_TEMPLATE/SPEC.md` and `template/docs/fix/_TEMPLATE/SPEC.md` now listed; `git diff main` on the file is the two added paths and their comment.
+- **P1** — 2026-11-02, the red corpus and its reader landed: `scripts/scaffold-parity.test.mjs` plus six fixtures (red export, four drift cases, one retired-artifact case) · `bf8977a1`
+- **P2** — 2026-11-02, the turn-contract hook's comment marks `ACCEPTANCE.md` as the legacy shape the hook tolerates; the scaffold's other mentions stay legacy-marked · `68d5f803`
+- **P3** — 2026-11-02, the two exported templates joined the re-cut pin and the parity suite went green · `68d5f803`
+- **P4** — 2026-11-02, the audit's finding line carries `route:` and the progressive-loading rule is stated once · `8b76cc59`
+- **P5** — 2026-11-02, the classifier's residue row routes planned-missing work to `replan-in-unit` · `8b76cc59`
+- **P6** — 2026-11-02, the unit registered in the roadmap, the ledgers closed and the whole gate run · `bf8977a1` + `68d5f803`
 - **E7** — 2026-11-02, `node scripts/unit-route.mjs 355` · exit 0 · the unit resolves with its row registered; `git status --porcelain packages/` prints nothing.
 - **G2** — 2026-11-02, `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 28 skills` (`product-audit` 3,081 est / 240 lines under its 3,192 ceiling).
 - **G3** — 2026-11-02, `bun scripts/check-skill-context.mjs --routes` · exit 0 · `PASS route budgets: 14 routes` after the four `review-change:*` ceilings were re-based to `ceil(measured × 1.10)` with the growth source declared (the classifier row).
@@ -373,7 +379,7 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
 
 ## Next
 
-`/unit-lane --fix 355` — P5 is applied and P6's gate is recorded; the external verifier reviews the diff before any PR is opened.
+`/review-change 355-scaffold-parity-routes` — execution is complete and every obligation is `verified`; the SHA-bound review receipt is the PR's precondition for `/audit-pr`.
 
 ## References
 
