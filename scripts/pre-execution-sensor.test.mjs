@@ -29,6 +29,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { loadSchemaRuntime } from "./schema-runtime.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -130,7 +131,7 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
   write(`${dir}/PLAN.md`, "# Plan\n\nP1 ships it.\n");
   write(`${dir}/planning-evidence.md`, "# Evidence\n\n- PE-1 measured.\n");
   write(`${dir}/planning-obligations.md`, "# Obligations\n\n- OB-1.\n");
-  write("docs/features/ROADMAP.md", ROADMAP);
+  write(ROADMAP_DOCUMENT, ROADMAP);
   write("AGENTS.md", GUIDE);
   write("src/code.ts", "export const a = 1;\n");
   git(root, "init", "-q", "-b", "main");
@@ -592,7 +593,7 @@ test("RS14: a fix plan receipt recorded with a null parent verifies current", (t
 test("roadmap: an unrelated unit's row does not stale a recorded receipt", (t) => {
   const f = makeRepo(t);
   recordReceipt(f, { stage: "spec" });
-  f.write("docs/features/ROADMAP.md", "# Roadmap\n\n| 99 | 99-toy | planned |\n| 100 | 100-other | planned |\n");
+  f.write(ROADMAP_DOCUMENT, "# Roadmap\n\n| 99 | 99-toy | planned |\n| 100 | 100-other | planned |\n");
   const uncommitted = report(verify(f, "spec"));
   assert.equal(uncommitted.digestMatches, true, "an uncommitted roadmap edit binds none of this unit's bytes");
   assert.equal(uncommitted.current, true);
@@ -608,7 +609,7 @@ test("roadmap: the unit's own sanctioned status transition does not stale its re
   const spec = recordReceipt(f, { stage: "spec" });
   recordReceipt(f, { stage: "plan", parent: spec.digest });
   // execute-phase P1's mandated write: row → in-progress.
-  f.write("docs/features/ROADMAP.md", "# Roadmap\n\n| 99 | 99-toy | in-progress |\n");
+  f.write(ROADMAP_DOCUMENT, "# Roadmap\n\n| 99 | 99-toy | in-progress |\n");
   f.commit("docs(roadmap): 99-toy in-progress (P1)");
   const v = verify(f, "plan", ["--parent", spec.digest]);
   const r = report(v);

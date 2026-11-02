@@ -9,6 +9,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { roadmapTableRows } from "../index-document.mjs";
 
 /**
  * The separator rule matches the table that exists in this repository
@@ -149,15 +150,19 @@ function rowNumber(cell) {
   return m ? m[1] ?? m[2] : null;
 }
 
-function parseIndexRows(indexText) {
+/**
+ * The index rows of one kind, keyed by unit number. Scoped through
+ * `roadmapTableRows` so a consolidated document (issue #319) never answers a
+ * fix check with a feature row of the same number, while a pre-319 document or
+ * a caller-supplied fragment keeps its single-table meaning.
+ */
+function parseIndexRows(indexText, kind) {
   const rows = new Map();
-  for (const line of indexText.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = line.split("|").map((c) => c.trim());
-    if (cells.length < 4) continue;
-    const nn = rowNumber(cells[1] ?? "");
+  for (const cells of roadmapTableRows(indexText, kind === "fix" ? "fix" : "feature")) {
+    if (cells.length < 3) continue;
+    const nn = rowNumber(cells[0] ?? "");
     if (!nn) continue;
-    rows.set(nn, { status: cells[3] ?? "", slug: (cells[2] ?? "").replace(/`/g, "") });
+    rows.set(nn, { status: cells[2] ?? "", slug: (cells[1] ?? "").replace(/`/g, "") });
   }
   return rows;
 }
@@ -206,7 +211,7 @@ function ownPrUrls(docText) {
  */
 export function checkUnitDoc({ nn, slug, kind, docText, indexText }) {
   const violations = [];
-  const row = parseIndexRows(indexText).get(String(nn));
+  const row = parseIndexRows(indexText, kind).get(String(nn));
   if (!row) {
     if (kind !== "fix") {
       violations.push({ code: "row-missing", line: 1, detail: `no roadmap row for NN ${nn}` });

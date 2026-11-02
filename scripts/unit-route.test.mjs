@@ -12,6 +12,7 @@
  */
 
 import assert from "node:assert/strict";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 // The router's own classifiers, imported so the collapsed carrier's column vocabularies are
 // pinned against the code the CLI runs, not against a paraphrase of it.
@@ -362,7 +363,7 @@ test("F31/P6: a `defined` unit with all phases recorded refuses with exit 1 — 
   const fixture = path.join(tmpDir, `unit-route-f31-p6-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // Set the roadmap row for unit 13 to `defined` (not `done`).
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(
     roadmapPath,
@@ -428,7 +429,7 @@ test("F31/P6: a `done` unit with all phases recorded still routes to close-out",
   const fixture = path.join(tmpDir, `unit-route-f31-done-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // Set the roadmap row for unit 13 to `done`.
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(
     roadmapPath,
@@ -625,7 +626,7 @@ test("#291 F8: `— P<n> — implemented` records the phase (formal shape)", () 
   const fixture = path.join(tmpDir, `unit-route-f8-formal-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
   // P6: close-out requires status === "done"; set the roadmap accordingly.
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
@@ -657,7 +658,7 @@ test("#291 F8: `— P<n> implemented` (no second dash) records the phase", () =>
   const tmpDir = os.tmpdir();
   const fixture = path.join(tmpDir, `unit-route-f8-simple-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
@@ -689,7 +690,7 @@ test("#291 F8: `— implement P2: ...` (action word before P) records the phase"
   const tmpDir = os.tmpdir();
   const fixture = path.join(tmpDir, `unit-route-f8-action-${Date.now()}`);
   fs.cpSync(FIXTURE, fixture, { recursive: true });
-  const roadmapPath = path.join(fixture, "docs", "features", "ROADMAP.md");
+  const roadmapPath = path.join(fixture, ROADMAP_DOCUMENT);
   const roadmap = fs.readFileSync(roadmapPath, "utf8");
   fs.writeFileSync(roadmapPath, roadmap.replace(
     "| 13 | `execute-unit` | in-progress |",
@@ -942,4 +943,42 @@ test("#318 S9: the read set names the one carrier the unit actually owns", () =>
   const legacy = readSet(run(["10-replan-unit"]).stdout);
   assert.ok(legacy.entries.includes("docs/features/10-replan-unit/review-findings.md"),
     "a legacy unit still reads its side ledger");
+});
+
+test("#319 F8: one status lookup reads the index once, not once per probe", () => {
+  // Issue #319 F8: `roadmapIndexText()` proved existence with a full
+  // `readProject()` read and then read the file again, and `standaloneFixRows()`
+  // repeated the pair — four full reads of the consolidated index per status
+  // lookup on the miss path, where one read answers every question.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-reads-"));
+  try {
+    fs.cpSync(FIXTURE, root, { recursive: true });
+    const counter = path.join(root, "count-reads.cjs");
+    fs.writeFileSync(
+      counter,
+      [
+        'const fs = require("node:fs");',
+        "const read = fs.readFileSync;",
+        "let reads = 0;",
+        "fs.readFileSync = function (file, ...rest) {",
+        '  if (String(file).endsWith("/docs/ROADMAP.md")) reads += 1;',
+        "  return read.call(this, file, ...rest);",
+        "};",
+        'process.on("exit", () => console.error("index-reads=" + reads));',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    const result = spawnSync(process.execPath, ["--require", counter, SCRIPT, "37-phase-lint-script"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: { ...process.env, UNIT_ROUTE_REPO: root },
+    });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const reads = Number(/index-reads=(\d+)/.exec(result.stderr)?.[1] ?? NaN);
+    assert.ok(Number.isInteger(reads), result.stderr);
+    assert.equal(reads, 1, `the index was read ${reads} times for one routed block`);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

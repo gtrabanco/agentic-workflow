@@ -29,6 +29,15 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseUnitDocPhases, loggedPhases, parseLog, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  roadmapSection,
+  roadmapTableRows,
+  resolveRoadmapSource,
+} from "../packages/agentic-workflow/src/index-document.mjs";
 
 const PROJECT = process.env.UNIT_ROUTE_REPO
   ? path.resolve(process.env.UNIT_ROUTE_REPO)
@@ -295,26 +304,82 @@ export function resolveUnit(token) {
   return { matches, clean };
 }
 
+/** The index's own directory and filename, so its read set follows the constant. */
+const ROADMAP_DIR = ROADMAP_DOCUMENT.slice(0, ROADMAP_DOCUMENT.lastIndexOf("/"));
+const ROADMAP_FILE = ROADMAP_DOCUMENT.slice(ROADMAP_DOCUMENT.lastIndexOf("/") + 1);
+
+/**
+ * The location index this project carries: one document with two tables since
+ * issue #319, the pre-move roadmap plus the standalone fix index before it. The
+ * path comes from the published constant, never a literal.
+ */
+function roadmapIndexText() {
+  let source;
+  try {
+    source = resolveRoadmapSource({ exists: (relative) => exists(relative) });
+  } catch (error) {
+    // Fail closed with the pointer at the new home: a router that silently read
+    // an empty index would route every unit to `historical`.
+    fail(1, sanitize(error.message));
+  }
+  return source === null ? null : readProject(source.path);
+}
+
+/**
+ * The resolved index document, read once per process: every route asks several
+ * questions of the same document (its feature rows, its fix rows, its status
+ * cells), and re-reading it per question was four full reads of a document that
+ * only changes between invocations.
+ */
+let indexCache;
+function roadmapIndex() {
+  if (indexCache === undefined) {
+    const text = roadmapIndexText();
+    indexCache = text === null ? null : { text };
+  }
+  return indexCache;
+}
+
+/** The rows of one index table: the section's own table when the document has it. */
+function indexRows(kind) {
+  const index = roadmapIndex();
+  if (index === null) return [];
+  return roadmapTableRows(index.text, kind);
+}
+
+/**
+ * The fix rows of a standalone fix index: read when the consolidated index has
+ * no `## Fixes` table of its own (a pre-319 tree, or a half-migrated one), so a
+ * fix row is never answered by a feature row and never silently absent.
+ */
+function standaloneFixRows() {
+  const index = roadmapIndex();
+  if (index !== null && roadmapSection(index.text, ROADMAP_FIXES_HEADING) !== null) return null;
+  const standalone = readProject(FIX_INDEX_DOCUMENT);
+  return standalone === null ? null : standalone.split("\n").map((line) => line);
+}
+
 /** Issue numbers referenced by the roadmap's own rows (a tracked feature). */
 function roadmapIssues() {
-  const text = readProject("docs/features/ROADMAP.md") ?? "";
   const numbers = new Set();
-  for (const line of text.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const match = /issues\/(\d+)/.exec(line);
+  for (const cells of indexRows("feature")) {
+    const match = /issues\/(\d+)/.exec(cells.join("|"));
     if (match) numbers.add(match[1]);
   }
   return numbers;
 }
 
-/** Issue numbers referenced by the fix index (the tracked-issue surface). */
+/** Issue numbers referenced by the fix table (the tracked-issue surface). */
 function fixIndexIssues() {
-  const text = readProject("docs/fix/README.md") ?? "";
   const numbers = new Set();
-  for (const line of text.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const match = /issues\/(\d+)|#(\d+)/.exec(line.split("|")[1] ?? "");
+  const add = (cell) => {
+    const match = /issues\/(\d+)|#(\d+)/.exec(cell ?? "");
     if (match) numbers.add(match[1] ?? match[2]);
+  };
+  for (const cells of indexRows("fix")) add(cells[0]);
+  for (const line of standaloneFixRows() ?? []) {
+    if (!line.startsWith("|")) continue;
+    add(line.split("|")[1].trim());
   }
   return numbers;
 }
@@ -328,27 +393,29 @@ function statusToken(cell) {
   return cell.replace(/[`*]/g, "").split("·")[0].trim();
 }
 
-/** Roadmap rows whose first cell carries the unit number. */
+/** Feature rows whose first cell carries the unit number (`| NN | slug | status |`). */
 function roadmapStatus(number) {
-  const text = readProject("docs/features/ROADMAP.md") ?? "";
-  for (const line of text.split("\n")) {
-    if (!line.startsWith("|")) continue;
-    const cells = line.split("|").map((cell) => cell.trim());
+  for (const cells of indexRows("feature")) {
     if (cells.length < 4) continue;
-    if (cells[1] !== String(number)) continue;
-    return sanitize(statusToken(cells[3])) || "unknown";
+    if (cells[0] !== String(number)) continue;
+    return sanitize(statusToken(cells[2])) || "unknown";
   }
   return null;
 }
 
-/** Fix-index row status for an issue number. */
+/** Fix row status for an issue number (`| [#N](url) | topic | status |`). */
 function fixIndexStatus(number) {
-  const text = readProject("docs/fix/README.md") ?? "";
-  for (const line of text.split("\n")) {
+  const pattern = new RegExp(`issues/${number}\\b|#${number}\\b`);
+  for (const cells of indexRows("fix")) {
+    if (cells.length < 4) continue;
+    if (!pattern.test(cells[0])) continue;
+    return sanitize(statusToken(cells[2])) || "unknown";
+  }
+  for (const line of standaloneFixRows() ?? []) {
     if (!line.startsWith("|")) continue;
     const cells = line.split("|").map((cell) => cell.trim());
     if (cells.length < 4) continue;
-    if (!new RegExp(`issues/${number}\\b|#${number}\\b`).test(cells[1])) continue;
+    if (!pattern.test(cells[1])) continue;
     return sanitize(statusToken(cells[3])) || "unknown";
   }
   return null;
@@ -809,7 +876,7 @@ function main(argv) {
     // command documents, so it resolves instead of dead-ending (F34).
     if (numeric && roadmapIssues().has(clean)) {
       const command = `/unit-lane --from-issue ${clean}`;
-      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]), reviewCycles: 0, ledgerSize: 0 });
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor(ROADMAP_DIR, [], [ROADMAP_FILE]), reviewCycles: 0, ledgerSize: 0 });
       return;
     }
     fail(1, `unknown unit: ${sanitize(clean)}`);

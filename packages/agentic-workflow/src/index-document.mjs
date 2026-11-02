@@ -1,0 +1,304 @@
+/**
+ * The location indexes — one document, two tables (issue #319).
+ *
+ * `docs/ROADMAP.md` is the single index: `## Features` orders feature units,
+ * `## Fixes` carries the active fixes that used to live in `docs/fix/README.md`.
+ * The path is published here so a consumer never hardcodes it again — the
+ * 15-file recurrence the move was made to end.
+ *
+ * The same constants are mirrored by `@gtrabanco/agentic-workflow-schema`
+ * (`src/paths.ts`), the package the orchestration layer imports; the mirror is
+ * held in step by `scripts/index-document.test.mjs`, which reads both sources.
+ * The pre-move path is spelled exactly once in the tree, in this file: the
+ * alias below.
+ *
+ * The migration window is CLOSED (owner decision D4, 2026-10-30; it supersedes
+ * unit 319's D2): every reader resolves {@link ROADMAP_DOCUMENT} only. A
+ * repository that still carries the pre-move path is refused with a
+ * `roadmap-moved` pointer at its new home — never a silent empty parse, and
+ * never an empty index. `ROADMAP_LEGACY_READ` stays as the documented
+ * rollback lever: flipping it back to `true` re-opens the alias for an
+ * emergency, it is not a normal operating mode.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+
+/** The consolidated index. */
+export const ROADMAP_DOCUMENT = "docs/ROADMAP.md";
+/** The pre-move path: detected only, so the refusal can name it. Never read. */
+export const ROADMAP_LEGACY_DOCUMENT = "docs/features/ROADMAP.md";
+/** The fix index file. Before unit 319 it was the index itself; now it is a stub. */
+export const FIX_INDEX_DOCUMENT = "docs/fix/README.md";
+/** The features table's heading in the consolidated index. */
+export const ROADMAP_FEATURES_HEADING = "Features";
+/** The fixes table's heading in the consolidated index. */
+export const ROADMAP_FIXES_HEADING = "Fixes";
+/**
+ * D4: the read alias is closed. Kept as an explicit, tested rollback lever:
+ * `true` re-opens the pre-move path for an emergency, and every consumer reads
+ * it through this one value.
+ *
+ * An operator rolling back cannot edit an installed package, so
+ * `AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ=1` re-opens it at run time — the same
+ * value, one channel wider. It never re-opens by accident: only the exact `1`.
+ */
+export const ROADMAP_LEGACY_READ = process.env.AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ === "1";
+/** The closed code a closed window refuses the pre-move path with. */
+export const ROADMAP_MOVED_CODE = "roadmap-moved";
+
+/**
+ * The pre-move path was read after the window closed. The error names the file
+ * that moved and where it moved to, so a consumer reconciles instead of parsing
+ * an empty document.
+ */
+export class RoadmapMovedError extends Error {
+  constructor(from = ROADMAP_LEGACY_DOCUMENT, to = ROADMAP_DOCUMENT) {
+    super(`${ROADMAP_MOVED_CODE}: ${from} has moved to ${to} — read ${to}`);
+    this.name = "RoadmapMovedError";
+    this.code = ROADMAP_MOVED_CODE;
+    this.from = from;
+    this.to = to;
+  }
+}
+
+/**
+ * Which index a repository carries, without reading it: `{ path, source }`
+ * where `source` is `"canonical"`, or `"legacy"` only while the rollback lever
+ * is on; `null` when neither exists. A repository that carries only the
+ * pre-move path and no rollback is refused here, before any read.
+ *
+ * `exists` is the caller's own existence check, so a consumer that confines
+ * reads to its project root (the sensor) keeps its confinement instead of
+ * bypassing it with a second filesystem call.
+ *
+ * @param {object} options
+ * @param {(relative: string) => boolean} options.exists
+ * @param {boolean} [options.legacy] — defaults to the window flag.
+ * @returns {{path: string, source: "canonical"|"legacy"} | null}
+ */
+export function resolveRoadmapSource({ exists, legacy = ROADMAP_LEGACY_READ }) {
+  if (exists(ROADMAP_DOCUMENT)) return { path: ROADMAP_DOCUMENT, source: "canonical" };
+  if (!exists(ROADMAP_LEGACY_DOCUMENT)) return null;
+  if (!legacy) throw new RoadmapMovedError();
+  return { path: ROADMAP_LEGACY_DOCUMENT, source: "legacy" };
+}
+
+/**
+ * Read the index a repository carries: `{ path, source, text }` or `null`.
+ * Throws `RoadmapMovedError` when only the pre-move path exists and the window
+ * is closed.
+ *
+ * @param {string} rootDir
+ * @param {{legacy?: boolean}} [options]
+ */
+export function readRoadmapIndex(rootDir, { legacy = ROADMAP_LEGACY_READ } = {}) {
+  const exists = (relative) => {
+    try {
+      return fs.lstatSync(path.join(rootDir, relative)).isFile();
+    } catch {
+      return false;
+    }
+  };
+  const source = resolveRoadmapSource({ exists, legacy });
+  if (source === null) return null;
+  return { ...source, text: fs.readFileSync(path.join(rootDir, source.path), "utf8") };
+}
+
+/**
+ * A fence-looking line: up to three spaces, then three-or-more backticks or
+ * tildes. `marker` is the character that opened the run, `length` how long it is.
+ * (CommonMark's shape, which the schema package's `advanceFence` shares.)
+ */
+const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/**
+ * Advance the fence state over one line, returning the block still open after it
+ * — the one grammar for every reader of the index.
+ *
+ * A block closes only on a run of the character that OPENED it, at least as long,
+ * with nothing but spaces after it. A block that is not open ignores input
+ * indented four columns or more: that is an indented code block, not a fence.
+ * Every consumer decides through this one function, so the heading scan and the
+ * row scan can never track differently — a fenced example row is document text,
+ * never a live row of a table.
+ *
+ * @param {string} line
+ * @param {{marker: string, length: number} | null} open
+ * @returns {{marker: string, length: number} | null}
+ */
+export function fenceRun(line, open) {
+  const run = FENCE_LINE.exec(line);
+  if (run === null) {
+    if (open === null && /^ {4,}/.test(line) && line.trimStart().startsWith("|")) return open;
+    return open;
+  }
+  const marker = run[1][0];
+  const length = run[1].length;
+  if (open === null) {
+    if (/^ {4,}/.test(line)) return null;
+    return { marker, length };
+  }
+  return marker === open.marker && length >= open.length && run[2].trim() === "" ? null : open;
+}
+
+/**
+ * Whether a line is a live table row: a table row that no open fence owns. Rows
+ * indented four columns or more are an indented code block's lines, not rows.
+ *
+ * @param {string} line
+ * @param {{marker: string, length: number} | null} open — the block open before this line
+ * @returns {boolean}
+ */
+export function isLiveTableRow(line, open) {
+  if (open !== null) return false;
+  if (/^ {4,}/.test(line)) return false;
+  return line.trimStart().startsWith("|");
+}
+
+/**
+ * The body of one `## <heading>` section, or `null` when the document has no
+ * such heading. Fenced code blocks are respected: a `##` line inside a fence is
+ * document text, not a heading.
+ *
+ * @param {string} text
+ * @param {string} heading
+ * @returns {string | null}
+ */
+export function roadmapSection(text, heading) {
+  if (typeof text !== "string") return null;
+  const wanted = heading.trim().toLowerCase();
+  const out = [];
+  let fence = null;
+  let level = 0;
+  for (const line of text.split("\n")) {
+    fence = fenceRun(line, fence);
+    const match = fence === null ? /^(#{1,6})\s+(.*)$/.exec(line) : null;
+    if (match) {
+      if (level !== 0 && match[1].length <= level) break; // the section ended
+      if (level === 0 && match[2].trim().toLowerCase() === wanted) {
+        level = match[1].length;
+        continue;
+      }
+      if (level === 0) continue;
+    }
+    if (level !== 0) out.push(line);
+  }
+  return level === 0 ? null : out.join("\n");
+}
+
+/**
+ * The cells of one Markdown table row, splitting only on unescaped pipes and
+ * dropping only the boundary cells the pipes actually delimit — the same
+ * contract the schema package's mirror holds, so a row reads identically on
+ * both published sides whether or not it carries a trailing pipe (issue #319,
+ * F15).
+ */
+export function tableCells(line) {
+  const cells = [];
+  let current = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      current += "|";
+      index += 1;
+    } else if (char === "|") {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  cells.push(current.trim());
+  if (cells.length < 2) return [];
+  const body = cells[0] === "" ? cells.slice(1) : cells;
+  return body[body.length - 1] === "" ? body.slice(0, -1) : body;
+}
+
+const isSeparatorRow = (cells) => cells.length > 0 && cells.every((cell) => /^[-:\s]*$/.test(cell));
+
+/**
+ * Whether a document declares its tables by heading — the consolidated index,
+ * and any document that has begun migrating to it. A pre-319 roadmap puts one
+ * table straight under its title and is not one.
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+function declaresTablesByHeading(text) {
+  return roadmapSection(text, ROADMAP_FEATURES_HEADING) !== null || roadmapSection(text, ROADMAP_FIXES_HEADING) !== null;
+}
+
+/**
+ * The data rows of the table that belongs to `kind` — `"feature"` reads
+ * `## Features`, `"fix"` reads `## Fixes`.
+ *
+ * Scoping is what keeps the two tables apart: in a consolidated document a
+ * feature row numbered `N` and a fix row for issue `N` are different rows, and a
+ * parser handed the whole file must never mix them. A document without the
+ * heading (a pre-319 roadmap, a standalone fix index, a caller-supplied
+ * fragment) keeps its single-table meaning: every row is the caller's kind.
+ *
+ * A document that declares its tables by heading is the exception: when its
+ * `## Fixes` heading is absent, the fix table is empty rather than inherited
+ * from `## Features`. Reading the features table as fixes there is the
+ * half-migrated defect (issue #319, F1) — feature row `N` would answer for fix
+ * row `N` and report a slug mismatch against another kind.
+ *
+ * The inverse is not symmetric: a pre-319 roadmap keeps its features table under
+ * its title, so a feature read that finds no `## Features` heading but does find
+ * `## Fixes` is a half-migrated roadmap, never an empty feature table.
+ *
+ * Only live rows are returned: a fenced code block (a writer's example of the
+ * row format) and an indented code block are content, never data — the same
+ * `fenceRun` grammar the heading scan uses, so no reader can track differently.
+ *
+ * @param {string} text
+ * @param {"feature"|"fix"} kind
+ * @returns {string[][]}
+ */
+export function roadmapTableRows(text, kind) {
+  if (typeof text !== "string") return [];
+  const heading = kind === "fix" ? ROADMAP_FIXES_HEADING : ROADMAP_FEATURES_HEADING;
+  const section = roadmapSection(text, heading);
+  const emptyFixTable = section === null && kind === "fix" && declaresTablesByHeading(text);
+  const body = emptyFixTable ? "" : (section ?? text);
+  const rows = [];
+  let fence = null;
+  for (const line of body.split("\n")) {
+    if (isLiveTableRow(line, fence)) {
+      const cells = tableCells(line);
+      if (cells.length > 0 && !isSeparatorRow(cells)) rows.push(cells);
+    }
+    fence = fenceRun(line, fence);
+  }
+  return rows;
+}
+
+/**
+ * The fix index's rows for this repository: the `## Fixes` table of the
+ * consolidated index when it has one, else the standalone `docs/fix/README.md`
+ * of a pre-319 tree. `{ path, text }` or `null`.
+ *
+ * @param {string} rootDir
+ * @param {{legacy?: boolean}} [options]
+ */
+export function readFixIndexTable(rootDir, { legacy = ROADMAP_LEGACY_READ } = {}) {
+  const index = readRoadmapIndex(rootDir, { legacy });
+  if (index !== null) {
+    const section = roadmapSection(index.text, ROADMAP_FIXES_HEADING);
+    if (section !== null) return { path: index.path, text: section };
+  }
+  const standalone = path.join(rootDir, FIX_INDEX_DOCUMENT);
+  try {
+    if (!fs.lstatSync(standalone).isFile()) return null;
+    return { path: FIX_INDEX_DOCUMENT, text: fs.readFileSync(standalone, "utf8") };
+  } catch {
+    return null;
+  }
+}
+
+/** Whether a caller-supplied document path is the consolidated index. */
+export function isRoadmapDocument(documentPath) {
+  return typeof documentPath === "string" && (documentPath === ROADMAP_DOCUMENT || documentPath.endsWith(`/${ROADMAP_DOCUMENT}`));
+}

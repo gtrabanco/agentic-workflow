@@ -16,6 +16,13 @@ import {
   utf8ByteCompare,
 } from "./canonical-json.js";
 import { sha256Hex } from "./sha256.js";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+} from "./paths.js";
+import type { FenceRun } from "./pre-execution.js";
 import { validateContinuation, type EnvelopeContinuation } from "./continuation.js";
 import {
   VERIFICATION_COMMAND_STATUSES,
@@ -2058,6 +2065,121 @@ function documentFor(documents: readonly WorkflowDocument[], suffix: string): Wo
   return documents.find((document) => document.path.endsWith(suffix));
 }
 
+/**
+ * The consolidated index among the caller's documents (issue #319). Only the
+ * published path matches: the migration window is closed (D4), so a document
+ * list still carrying the pre-move path answers "no index" instead of being
+ * read as one — the snapshot then reports the unit as unknown rather than
+ * deriving a unit from a file that moved.
+ */
+function indexDocument(documents: readonly WorkflowDocument[]): WorkflowDocument | undefined {
+  return documentFor(documents, ROADMAP_DOCUMENT);
+}
+
+/**
+ * A fence-looking line: up to three spaces, then three-or-more backticks or
+ * tildes. The schema package's `advanceFence` holds the same shape for the
+ * pre-execution selectors; the index readers below share this one.
+ */
+const INDEX_FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/** The block still open after one line, by CommonMark's rule: it closes only on
+ * a run of the character that opened it, at least as long, followed by spaces. */
+function indexFenceRun(line: string, open: FenceRun | null): FenceRun | null {
+  const run = INDEX_FENCE_LINE.exec(line);
+  if (run === null) return open;
+  if (open === null) return /^ {4,}/.test(line) ? null : { marker: run[1][0] as string, length: run[1].length };
+  return run[1][0] === open.marker && run[1].length >= open.length && run[2].trim() === "" ? null : open;
+}
+
+/**
+ * One `## <heading>` section's body, or `undefined` when the document has no
+ * such heading (a pre-319 document carries one table and no heading, so its
+ * whole content is the section).
+ */
+function sectionContent(content: string, heading: string): string | undefined {
+  const wanted = heading.trim().toLowerCase();
+  let level = 0;
+  let fence: FenceRun | null = null;
+  const body: string[] = [];
+  for (const line of content.split("\n")) {
+    fence = indexFenceRun(line, fence);
+    const match = fence === null ? /^(#{1,6})\s+(.*)$/.exec(line) : null;
+    if (match) {
+      if (level !== 0 && match[1].length <= level) break;
+      if (level === 0 && match[2].trim().toLowerCase() === wanted) {
+        level = match[1].length;
+        continue;
+      }
+      if (level === 0) continue;
+    }
+    if (level !== 0) body.push(line);
+  }
+  return level === 0 ? undefined : body.join("\n");
+}
+
+/** The live rows of a table body (issue #319, F14): a row inside a fenced or
+ * indented code block is a writer's example, never data — the same grammar the
+ * heading scan uses, so no reader tracks fences differently. Each row keeps the
+ * source line it was read from, so provenance cites that line rather than a
+ * re-rendered row that an escaped `\|` keeps out of the document (issue #319,
+ * F16). */
+function tableRowCells(content: string): Array<{ cells: string[]; line: string }> {
+  const rows: Array<{ cells: string[]; line: string }> = [];
+  let fence: FenceRun | null = null;
+  for (const line of content.split("\n")) {
+    if (fence === null && !/^ {4,}/.test(line) && line.trimStart().startsWith("|")) rows.push({ cells: tableCells(line), line });
+    fence = indexFenceRun(line, fence);
+  }
+  return rows;
+}
+
+/** The cells of one Markdown table row, splitting only on unescaped pipes — the
+ * same contract the crate's `tableCells` holds (`index-document.mjs`), so a row
+ * carrying an escaped `\|` reads identically on both sides of the mirror. */
+function tableCells(line: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      current += "|";
+      index += 1;
+    } else if (char === "|") {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  cells.push(current.trim());
+  if (cells.length < 2) return [];
+  const body = cells[0] === "" ? cells.slice(1) : cells;
+  return body[body.length - 1] === "" ? body.slice(0, -1) : body;
+}
+
+/** The table body of one kind: its own section when present; a document that
+ * declares its tables by heading has no rows of this kind when this heading is
+ * absent (issue #319, F1); a pre-319 roadmap keeps its single table under its
+ * title, so only the fix read is affected. */
+function tableFor(content: string, heading: string): string {
+  const section = sectionContent(content, heading);
+  if (section !== undefined) return section;
+  if (heading !== ROADMAP_FIXES_HEADING) return content;
+  const declaresTables = sectionContent(content, ROADMAP_FEATURES_HEADING) !== undefined
+    || sectionContent(content, ROADMAP_FIXES_HEADING) !== undefined;
+  return declaresTables ? "" : content;
+}
+
+/**
+ * Whether a document carries its own `## Fixes` table (issue #319). A migrated
+ * index does; a half-migrated one — `## Features` present, no `## Fixes` yet —
+ * does not, and keeps the documented fallback to the standalone fix index.
+ */
+function hasFixTable(content: string): boolean {
+  return sectionContent(content, ROADMAP_FIXES_HEADING) !== undefined;
+}
+
 function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSnapshot["repositoryState"] {
   if (document === undefined) return "missing";
   const value = /(?:^|\n)Status:\s*([^\n\r]+)/i.exec(document.content)?.[1]?.trim().toLowerCase();
@@ -2068,13 +2190,13 @@ function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSn
 function roadmapFeature(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  for (const row of document.content.split("\n")) {
-    const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
+  const table = tableFor(document.content, ROADMAP_FEATURES_HEADING);
+  for (const { cells, line } of tableRowCells(table)) {
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
     const slug = cells[1]?.replace(/^`|`$/g, "");
     if (slug === undefined || slug.length === 0) continue;
     const id = `${cells[0]}-${slug}`;
-    candidates.push({ id, status: cells[2] ?? "unknown", row });
+    candidates.push({ id, status: cells[2] ?? "unknown", row: line });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
@@ -2088,12 +2210,13 @@ function indexStatus(value: string): string {
 function fixUnit(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  for (const row of document.content.split("\n")) {
-    const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
-    if (cells.length < 3) continue;
-    const id = cells[0]?.replace(/^`|`$/g, "") ?? "";
+  const table = tableFor(document.content, ROADMAP_FIXES_HEADING);
+  for (const { cells, line } of tableRowCells(table)) {
+    const nonEmpty = cells.filter(Boolean);
+    if (nonEmpty.length < 3) continue;
+    const id = nonEmpty[0]?.replace(/^`|`$/g, "") ?? "";
     if (!/^\d+-[A-Za-z0-9._-]+$/.test(id)) continue;
-    candidates.push({ id, status: cells[2] ?? "unknown", row });
+    candidates.push({ id, status: nonEmpty[2] ?? "unknown", row: line });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
@@ -2219,10 +2342,22 @@ export function validateWorkflowSnapshotV1(value: unknown): WorkflowSnapshotVali
  */
 export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowSnapshotResult {
   const repositoryStateDocument = documentFor(input.documents, "docs/workflow/REPOSITORY_STATE.md");
-  const roadmapDocument = documentFor(input.documents, "docs/features/ROADMAP.md");
+  // Issue #319 F9: the fallback to the standalone fix index is a property of a
+  // *half-migrated* tree — one whose consolidated index has no `## Fixes` table
+  // yet, which `MIGRATION.md` and `init-workspace`'s upgrade step document as
+  // still readable. A migrated tree is different: its `## Fixes` table exists,
+  // so it owns the fix rows outright and a stale standalone copy must never
+  // shadow them — the crate pins exactly this (`roadmap-check.test.mjs`, "A
+  // stale standalone index that would disagree: it must be ignored"). Reading
+  // the stale row there resolves a unit the consolidated index does not declare
+  // and makes the two published sides disagree on the same tree.
+  const roadmapDocument = indexDocument(input.documents);
   const feature = roadmapFeature(roadmapDocument);
-  const fixIndexDocument = documentFor(input.documents, "docs/fix/README.md");
-  const fix = feature === null ? fixUnit(fixIndexDocument) : null;
+  const consolidatedFixes = roadmapDocument === undefined ? null : fixUnit(roadmapDocument);
+  const fixTableOwnsTheRows = roadmapDocument !== undefined && hasFixTable(roadmapDocument.content);
+  const standaloneFixDocument = fixTableOwnsTheRows ? undefined : documentFor(input.documents, FIX_INDEX_DOCUMENT);
+  const fix = feature === null ? (consolidatedFixes ?? fixUnit(standaloneFixDocument)) : null;
+  const fixIndexDocument = consolidatedFixes === null ? (standaloneFixDocument ?? roadmapDocument) : roadmapDocument;
   const selected = feature ?? fix;
   const selectedKind = feature === null && fix !== null ? "fix" : "feature";
   const provenance: SnapshotProvenance[] = [];
@@ -3893,6 +4028,15 @@ export {
   ROADMAP_OPERATIONS,
   CHANGELOG_OPERATIONS,
 } from "./file-schemas.js";
+
+// ── The location index's published paths (unit 319, issue #319) ─────
+export {
+  ROADMAP_DOCUMENT,
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  ROADMAP_LEGACY_READ,
+} from "./paths.js";
 
 // ── Published closed vocabularies (unit 84, issue #315) ─────────────
 export {

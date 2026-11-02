@@ -65,7 +65,8 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 - An existing **agent guide** (`AGENTS.md`, or a legacy `CLAUDE.md`), `docs/`,
   `.github/`? If so, **do not clobber** — check first whether it's an
   **agentic-workflow scaffold** (marker: an agent guide present *and* either
-  `docs/features/ROADMAP.md` or a `docs/workflow/` dir). If both markers are
+  `docs/ROADMAP.md` — or the pre-319 `docs/features/ROADMAP.md` — or a
+  `docs/workflow/` dir). If both markers are
   present, offer **upgrade** as the default action, alongside merge /
   adapt-in-place / abort — see **Upgrade mode** below. If an agent guide or
   `docs/` exists but the markers are absent (a foreign scaffold), stay in

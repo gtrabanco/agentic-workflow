@@ -13,6 +13,13 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_FEATURES_HEADING,
+  ROADMAP_FIXES_HEADING,
+  readRoadmapIndex,
+  roadmapSection,
+} from "../packages/agentic-workflow/src/index-document.mjs";
 
 /** A fence the line opens, or null: three-or-more backticks/tildes. */
 export const FENCE_OPEN = /^(`{3,}|~{3,})/;
@@ -395,18 +402,35 @@ function readLinesUnder(root, relative) {
  */
 export function inFlightUnitDocs(root) {
   const out = [];
-  const roadmap = readLinesUnder(root, "docs/features/ROADMAP.md");
-  if (roadmap !== null) {
-    for (const line of roadmap) {
+  // One index (issue #319): the features and the fixes are two tables of the
+  // same document, so each row grammar is fed its own table and never the whole
+  // file — a feature row numbered N is not a fix row for issue N.
+  const index = readRoadmapIndex(root);
+  if (index !== null) {
+    const features = roadmapSection(index.text, ROADMAP_FEATURES_HEADING) ?? index.text;
+    for (const line of features.split("\n")) {
       const row = ROADMAP_ROW.exec(line);
       if (row === null) continue;
       if (/done|discarded|superseded/i.test(row[3])) continue;
       out.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
     }
+    const fixes = roadmapSection(index.text, ROADMAP_FIXES_HEADING);
+    if (fixes !== null) {
+      for (const line of fixes.split("\n")) {
+        const row = FIX_ROW.exec(line);
+        if (row === null) continue;
+        if (/done/i.test(row[3])) continue;
+        out.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);
+      }
+    }
   }
-  const fixes = readLinesUnder(root, "docs/fix/README.md");
-  if (fixes !== null) {
-    for (const line of fixes) {
+  // A pre-319 tree keeps the fixes in their own file; the alias reads it until
+  // the migration window closes.
+  const standaloneFixes = index === null || roadmapSection(index.text, ROADMAP_FIXES_HEADING) === null
+    ? readLinesUnder(root, FIX_INDEX_DOCUMENT)
+    : null;
+  if (standaloneFixes !== null) {
+    for (const line of standaloneFixes) {
       const row = FIX_ROW.exec(line);
       if (row === null) continue;
       if (/done/i.test(row[3])) continue;

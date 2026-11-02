@@ -489,7 +489,7 @@ const LEVEL_ONE_HEADING = /^# (.*)$/;
 const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 
 /** The fence a selector pass is inside: which character opened it, and how long it was. */
-type FenceRun = { readonly marker: string; readonly length: number };
+export type FenceRun = { readonly marker: string; readonly length: number };
 
 /**
  * Advance the fence state over one fence-looking line (finding F64). A block closes
