@@ -124,7 +124,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | in-progress | One index: this document (`## Features` + `## Fixes`), published path constant, alias window; branch `fix/319-location-index-consolidation` |
+| [#319](https://github.com/gtrabanco/agentic-workflow/issues/319) | location-index-consolidation | done · [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) | One index: this document (`## Features` + `## Fixes`), published path constant, the read window closed at D4 with a `roadmap-moved` refusal (the lever stays as the rollback); branch `fix/319-location-index-consolidation` |
 
 
 ## Bureaucracy-reduction execution order (2026-09-15)

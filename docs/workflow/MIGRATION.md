@@ -24,10 +24,12 @@ D4, 2026-10-30 — it supersedes D2's "one release train"): every reader resolve
 `docs/ROADMAP.md` only, and a repository that still carries only the pre-move
 path is refused with a `roadmap-moved` pointer at its new home — never a silent
 empty parse, never an empty index. The refusal is a clean diagnostic on every
-deterministic consumer (router, sensor, unit cycle, verbose probe, settle
+deterministic consumer (router, sensor, unit cycle, vocabulary probe, settle
 validator, ceremony CLI, crate `roadmap check`, schema snapshot), pinned by
-`scripts/roadmap-moved.test.mjs`. `ROADMAP_LEGACY_READ` stays as the documented
-rollback lever: flipping it back to `true` re-opens the alias for an emergency,
+`scripts/roadmap-moved.test.mjs` and the schema package's own `machine-contract`
+suite. `ROADMAP_LEGACY_READ` stays as the documented
+rollback lever: setting it (or `AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ=1` on an
+installed package) to `true` re-opens the alias for an emergency,
 it is not a normal operating mode.
 
 **What you have to do:**

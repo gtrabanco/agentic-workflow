@@ -357,4 +357,41 @@ describe("roadmap check — the half-migrated tree (issue #319)", () => {
     ok(r.stdout.includes("verdict: PASS"), r.stdout);
     ok(!r.stdout.includes("slug-mismatch"), "no feature row answers for the fix row: \n" + r.stdout);
   });
+
+  it("the documented rollback lever re-opens the pre-move path for every consumer", () => {
+    // F10: `ROADMAP_LEGACY_READ = true` is the documented emergency rollback
+    // (`index-document.mjs`), and the shared reader honours it — but the CLI
+    // computed its canonical index directly and never consulted the reader, so
+    // flipping the lever changed nothing here: a legacy-only tree answered
+    // "index not found" and lost the `roadmap-moved` pointer that names the new
+    // home. The CLI reads the index through the shared resolver now.
+    //
+    // The tree is its own tmp root: the doc's walk must stop at this repository
+    // root, never climb to the checkout's real `docs/ROADMAP.md`.
+    const root = mkdtempSync(join(tmpdir(), "agentic-workflow-lever-"));
+    const docDir = join(root, "docs", "fix", "91-beta");
+    mkdirSync(docDir, { recursive: true });
+    writeFileSync(join(docDir, "SPEC.md"), "# fix unit\n## Next\n\nReady to merge.\n", "utf8");
+    mkdirSync(join(root, "docs", "features"), { recursive: true });
+    writeFileSync(
+      join(root, "docs", "features", "ROADMAP.md"),
+      roadmapTable(["| 91 | `beta` | in-progress | — | a pre-319 tree |"]),
+      "utf8",
+    );
+
+    // Window closed: the pre-move path is refused with its pointer at the new home.
+    const closed = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], { encoding: "utf8" });
+    strictEqual(closed.status, 2, closed.stdout + closed.stderr);
+    ok(closed.stderr.includes("roadmap-moved"), closed.stderr);
+    ok(closed.stderr.includes("docs/ROADMAP.md"), closed.stderr);
+
+    // Window re-opened by the lever: the same tree reads its fix row.
+    const reOpened = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], {
+      encoding: "utf8",
+      env: { ...process.env, AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ: "1" },
+    });
+    strictEqual(reOpened.status, 0, reOpened.stdout + reOpened.stderr);
+    ok(reOpened.stdout.includes("verdict: PASS"), reOpened.stdout);
+    rmSync(root, { recursive: true, force: true });
+  });
 });
