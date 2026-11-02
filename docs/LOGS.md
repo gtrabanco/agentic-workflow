@@ -3679,3 +3679,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-pr #354 + fix lineage and traceability
 - **Decisions:** La PR #354 pasa los gates de código pero falla en el pre-execution lineage (falta el bloque ## Triaged steps) — solo documental, no afecta al objetivo de la PR; y la fila del fix-index estaba en 'in-progress' cuando debería ser 'done'.
 - **Next:** Re-run /audit-pr tras commit 1bed8bf4; CI debe estar verde para el /review-change
+
+## 2026-11-02T12:14:52Z — fix/353-residue-shadow-copies — manual
+- **Commits:** 5 (`5a0709c2…14db48d4`)
+- **Files:** 10 files
+- **Summary:** review-change at fix/353 HEAD — REVIEW-PASS, two low findings left unfixed per owner directive
+- **Decisions:** Owner decided findings 2 (weak test pins) and 3 (missing P log lines) stay unfixed: neither affects functionality, and the owner prefers keeping the reviewed HEAD (with posted receipt) untouched over cosmetic churn
+- **Next:** /audit-pr on PR #354
