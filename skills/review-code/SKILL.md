@@ -32,7 +32,11 @@ default branch. State the scope at the top of the returned table.
 ✓ Every error path is handled — no swallowed exceptions, no empty catch, no
   silently-ignored return codes
 ✓ No duplicated logic (a changed block does not re-implement an existing
-  helper — cite the existing one if it does)
+  helper — cite the existing one if it does), **including a shadow copy**: a
+  file, schema, helper or prose block whose original lives outside the reviewed
+  tree, in a pinned dependency or a published package, is a duplicate of that
+  artifact — cite the artifact and its pin, or the recorded reason the copy must
+  exist; the vendoring rule demands provenance, never a second implementation
 ✓ No dead code introduced (unused functions, params, imports, unreachable
   branches)
 ✓ No leftover TODO/FIXME/HACK markers in the diff
@@ -67,6 +71,17 @@ default branch. State the scope at the top of the returned table.
 ✓ **Duplication is a deletion candidate (#340)** — a duplicated block,
   checklist or contract (code or prose) proposes its own deletion, or carries
   the recorded reason the copy must exist; a silent duplicate is a finding
+✓ **Obsolete by an available mechanism is a deletion, code and docs (#353)** —
+  a changed or neighbouring surface the project already supersedes (a helper a
+  pinned dependency owns, a doc describing a replaced flow, a local script the
+  runner provides) is `fix-now (delete)`; the deciding rule is the project's
+  **compatibility policy**, read from its `AGENTS.md` before classifying — when
+  nothing in it requires keeping the old surface, keeping it is the finding and
+  deleting it is the fix
+✓ **A citation is not a consumer (#353)** — prose (`AGENTS.md`, a skill, a
+  comment, a docs page) naming a symbol, file or block never makes it used; the
+  consumer test is executable or explicitly declared, and every citation is part
+  of what the deletion removes
 ✓ **Features-preserved-without-it (#340)** — after any proposed deletion
   (code or skill prose; "code" includes prose), verify every requested
   feature still works without the removed part before merge; a deletion that
