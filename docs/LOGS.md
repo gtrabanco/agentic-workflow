@@ -3805,3 +3805,18 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Cycle 5 re-review: /review-change reported REVIEW-FAIL with 3 med fix-now findings (F15 tableCells divergence, F16 provenance regression, F17 S3 log gap) and 8 low report-only notes; /fold-findings repaired all 3 (one unified boundary-cell rule across both published sides, raw source line for provenance, S3 merge evidence appended) — gate 1303+732+260+454 green, 3/3 FOLDED 9b7e80d1
 - **Decisions:** F15 and F16 are both F14-fold descendants but different mechanisms (boundary-cell extraction vs row-string normalization) so kept as separate fold groups in one commit; class escalation declined — different verifiers; sweep declared for the removed slice(1,-1) and cells.join patterns
 - **Next:** /review-change on the re-reviewed branch, then /audit-pr if clean (PR #351 open)
+## 2026-11-02T15:21:28Z — fix/319-location-index-consolidation — manual
+- **Commits:** 44 (`c94c53dc…dbe2ffa7`)
+- **Files:** 79 files
+- **Summary:** Cycle-6 delta re-review of fix/319-location-index-consolidation: /review-change on the F15+F16+F17 batch (402bdbf1..9b7e80d1). Verified F15 red-first (parent tableCells → red; head → green, both published sides identical), F16 red-first (parent dist rebuild → red; head → green 24/24), F17 (E7 in Log — direct read). Zero new findings. Gate green (root 1303, schema 732, crate 260, pi 454, moved+index 16, normative 20, parity PASS, coherence PASS, phase-lint PASS). Receipt: current at 44a01010, emitted with scope manifest. Decision: REVIEW-PASS. Owner also committed docs/research/ATTRIBUTION.md and papers-sweep-2026-11-02.md between the fold batch and this review (foreign-only, outside unit scope).
+- **Decisions:** Red-first regression tests: F16 required a dist rebuild to properly go red (test imports ../dist/index.js, not src/), confirming the red-first methodology for schema-package tests that import dist.
+- **Next:** /audit-pr to merge fix/319-location-index-consolidation (PR #351)
+
+
+## 2026-11-02T15:21:32Z — fix/319-location-index-consolidation — manual
+- **Commits:** 4 (dbe2ffa7…8e355f67, including 8e355f67 and 68718a5d from earlier)
+- **Files:** docs/research/ATTRIBUTION.md, docs/research/papers-sweep-2026-11-02.md, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow/src/index-document.mjs, scripts/index-document.test.mjs, docs/fix/319-location-index-consolidation/SPEC.md, docs/LOGS.md
+- **Summary:** Cycle 5 re-review of fix/319: /review-change reported REVIEW-FAIL with 3 med fix-now findings (F15 tableCells divergence, F16 provenance regression, F17 S3 log gap) — all 3 folded, full gate green (1303+732+260+454). Added attribution guide and papers-sweep research for gentle-ai v4.3.1 comparison across 17 axes.
+- **Decisions:** F15/F16 kept separate fold groups (different mechanisms); class escalation declined (different verifiers); sweep declared for removed slice(1,-1) and cells.join patterns.
+- **Next:** Complete final re-review of fix/319, then /audit-pr to proceed to merge gate.
+
