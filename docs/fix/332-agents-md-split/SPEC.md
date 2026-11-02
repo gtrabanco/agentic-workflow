@@ -271,6 +271,15 @@ separate at once).
 The ledger is `planning-obligations.md` beside this doc. Before the unit ships,
 every row is `verified` or an evidenced `n/a`.
 
+**Ledger amendments (declared, not silent).** Four validators were mis-specified
+at cut and were corrected during P8, each keeping the behaviour it checks:
+O4's alternation matched a legitimate pointer line in the guide's layout block, so
+it now checks that no `## Packages` section exists while the reference does; O5
+diffed against `1c9375a1` (the base of the previous unit) instead of `main`, which
+imported an unrelated upstream change; O21 and O24 embedded an unescaped `|`
+inside a table cell, which split the row, so each alternation is now two named
+commands. No requirement changed and no status was granted without its command.
+
 ## Findings
 
 | id | S# / file:line | axis | severity | class | route |
@@ -296,9 +305,25 @@ the closed set in `log-kind@1`.
   and the next step. Never end with a pending tracked task unless I told you to stop.
   ```
 
+- **P1** — 2026-11-01, the unit doc, both planning ledgers and the decision ledger frozen · 5988179b.
+- **E1** — 2026-11-01, `node scripts/check-skill-context.mjs --documents --json` · exit 0 · ok true, `AGENTS.md` prose 274 ≤ 302, machine 83 == 83, lines 357 ≤ 393, estimate 6255 ≤ 6881.
+- **P2** — 2026-11-01, the guide-layer contract suite and its three refusal cases · 5ed1ea32.
+- **E2** — 2026-11-01, `GUIDE_SPLIT_ROOT=/tmp/base332 node --test scripts/guide-split.test.mjs` (base `main` @ `826f9c06`) · 12 of 14 cases fail · the two that pass are the refusal fixtures and the pre-split-tree case, which is red by design.
+- **P3** — 2026-11-01, the authoring and packages prose extracted verbatim, the Deep-references index added, the two semantic readers retargeted · f6a23df2 (P3's extraction, P4's rule lines and P5's budget ship together because they are one file, `AGENTS.md`; splitting them would leave the guide red between commits).
+- **E3** — 2026-11-01, `node scripts/phase-lint.mjs docs/fix/332-agents-md-split/SPEC.md` · exit 0 · `verdict PASS`, eight phases, no unlinked requirement.
+- **P4** — 2026-11-01, the eight core rules stated (map, precedence, layout, runtime split, testing, session log, ownership, boundary) · f6a23df2.
+- **P5** — 2026-11-01, `--documents` mode, the manifest's `documents` section and its five cases · 6f1208b6.
+- **E4** — 2026-11-01, `bun scripts/run-root-suite.mjs` · exit 1 · `error: Cannot use test outside of the test runner. Run "bun test" to run tests.` — the measured split the guide now states.
+- **P6** — 2026-11-01, the template guide repaired (one H1, visible optional block, no tombstone, platform-neutral session log, no dated ids) · 717fb8b5.
+- **P7** — 2026-11-01, both template unit docs re-cut to `spec-by-reference`, `init-workspace` retargeted, and the template tree bound in both gates · bba20fc7.
+- **E5** — 2026-11-01, `node scripts/phase-lint.mjs template/docs/{features,fix}/_TEMPLATE/SPEC.md` · `verdict BLOCKED: no-phases` and `verdict BLOCKED: unparseable` at `main` @ `826f9c06`; `verdict PASS` here. The frozen-failure reproducer for S22/S25.
+- **P8** — 2026-11-01, every obligation row closed and the release intent shipped.
+
 ## Next
 
-- P1 is frozen; P2 is the next action.
+Hand the diff to the owner for external verification: the deviation in `## Impact`
+(S7's literal 120 lines), the obligations ledger's 27 verified rows and the
+verification block are the review surface.
 
 ## References
 
