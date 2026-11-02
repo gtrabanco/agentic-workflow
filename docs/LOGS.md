@@ -3770,3 +3770,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** triage #352/#333; open issue #353; worktree fix/353-residue-shadow-copies PR #354 (shadow copies, obsolete surfaces, compatibility policy, test-first, 1289/1289 green); user interrupted and redirected: route in audit, CLASSIFY replan route, template parity → new issue #355; cleaned up stray files from non-worktree root; stash dropped
 - **Decisions:** PR #354 en review: no añadí scope ni re-basé ceilings; issue #355 única para route+CLASSIFY+templates+test; el guard de path-protection no lee ledgers del worktree, contaminando la raíz de la rama #319; stash drop tras cerrar la issue
 - **Next:** /review-change sobre fix/353-residue-shadow-copies en contexto limpio; /triage-issue 355; luego audit-pr #351
+## 2026-11-02T11:58:20Z — fix/319-location-index-consolidation — manual
+- **Commits:** 29 (`c94c53dc…980109e8`)
+- **Files:** 76 files
+- **Summary:** Triage issue #355 (scaffold template drift) and uncommitted work on #319 F8 (unit-route read consolidation)
+- **Decisions:** Uncommitted work: unit-route read consolidation (#319 F8) — replaced four redundant reads of ROADMAP.md with a single process-level cache, plus expanded index.ts validate/compileWorkflowSnapshot to handle consolidated fix index fallback correctly. Triaged #355 as fix-now with fix-next urgency.
+- **Next:** For #319 F8: commit the uncommitted changes (packages/agentic-workflow-schema/src/index.ts, scripts/unit-route.mjs, scripts/unit-route.test.mjs), run root suite, create PR. For #355: /unit-lane --fix 355 to create the fix unit and implement template parity + shape test + audit route + classifier route.
