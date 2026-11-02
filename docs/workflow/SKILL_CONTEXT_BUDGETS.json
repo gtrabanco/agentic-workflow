@@ -58,12 +58,13 @@
       "mainLinesMax": 411
     },
     "init-workspace": {
-      "mainEstimateMax": 3663,
+      "mainEstimateMax": 4066,
       "mainSources": {
+        "issue #332 (unit 332-agents-md-split, T5)": "the unit-document conventions paragraph now teaches the re-cut `spec-by-reference` shape the template ships, instead of the retired \"14 sections\" list (which it keeps only as the shape a pre-existing unit is never rewritten out of). Measured at the change by `bun scripts/check-skill-context.mjs`: 3696 est / 255 lines; ceilings re-based to ceil(3696 x 1.10) = 4066 / ceil(255 x 1.10) = 281, reason declared",
         "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)",
         "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)"
       },
-      "mainLinesMax": 252,
+      "mainLinesMax": 281,
       "referenceEstimateMax": 3412,
       "referenceSources": {
         "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)",

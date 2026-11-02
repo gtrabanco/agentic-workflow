@@ -1,15 +1,13 @@
 # fix/<issue-number>-<topic>
 
-> Fix specification. Copy this folder to
+> Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in the `## Fixes` table of `docs/ROADMAP.md`. Lighter than a feature spec — no
-> separate planning artifacts: the SPEC and sibling `ACCEPTANCE.md` are the
-> source of truth, and its `## Phases` section is the execution ledger.
-
-## Goal
-
-One paragraph: what this fix repairs and why it cannot wait for a
-regular feature cycle.
+> entry in the `## Fixes` table of `docs/ROADMAP.md`. This is the same closed unit doc
+> `scripts/unit-route.mjs --triage` reads for a feature, in the re-cut
+> `spec-by-reference` shape; the fix template keeps four extra sections
+> (`Issue`, `Branch`, `Depends on`, `Regression scope`) on top. A unit opened
+> before the re-cut keeps the legacy 14-section shape — both are accepted, and a
+> legacy doc is never rewritten to migrate it.
 
 ## Issue
 
@@ -17,138 +15,198 @@ regular feature cycle.
 via `Closes #<n>` in the body (or the forge's equivalent auto-close
 convention).
 
+## Specs
+
+Requirements, each numbered `S#` and quoting the requester's own words verbatim
+between the quote markers. Cut one requirement per distinct ask, in the order the
+issue states them. **A later correction is appended under its own id**
+(`S1a`, `S2a`, …) and never rewrites the id it corrects.
+
+**S1 — <short title in your own words>.**
+> <the issue's words, verbatim and unedited>
+
+**S2 — <short title>.**
+> <the issue's words, verbatim and unedited>
+
+The grammar the machine reads (`spec-requirement@1`): one `**S# — title.**` line
+per requirement, followed by a `>` blockquote carrying the requester's words. A
+correction is its own line with its own id (`S1a`) — never a rewrite of the line
+it corrects.
+
+```text
+spec-requirement@1
+kind | shape | what it orders
+requirement | **S<n>[a-z]? — <title>.** | one requirement; the id is what a task links and a finding cites
+quote | > <the requester's words, verbatim> | the requirement's own text, unedited apart from a marked elision
+correction | **S<n><letter> — <title>.** | an appended amendment to requirement S<n>; never an edit of it
+```
+
+## Impact
+
+What the fix touches beyond its own lines: the callers of what changes, the
+consumers of what it delivers, the mentions that stop being true when it lands
+(comments, docs, declared validators, narrations), and what to ask before
+touching something live on the other side. Cut at plan time; the fix sweeps
+this surface, it is not rediscovered at review.
+
+## Retirements
+
+What this fix makes obsolete: every surface, token, pane, helper, contract or
+narrative this unit **retires**, each with its replacement or its no-consumer
+evidence (`grep -rc '<the removed name>' <scope>` → 0). A fix that only adds is
+the exceptional case: an empty answer states *why nothing can be removed*, so
+the omission is a reason rather than a gap. Cut at plan time — a retirement is a
+planned task with its negative-capability pin, never a review-time discovery.
+
+## Non-goals
+
+What this fix is NOT. Regression scope is declared below; findings discovered
+during implementation never expand scope beyond the declared regression boundary.
+
+## Future
+
+Ideas the user deferred ("down the road I'd like…"), captured verbatim with a
+date and a status: `open`, `planned`, or `discarded <YYYY-MM-DD>`. This unit
+never implements, specs, or tasks a row here. Write `none` when nothing was
+deferred. Reviewed at unit close, on session resume, and whenever later work
+returns to the same area — each open row is then offered as
+plan-now / keep-deferred / discard.
+
+## Future cost
+
+Standing obligations this fix imposes on future work. Each row: the rule + who it binds.
+Write `none` if it imposes none.
+
+## Applicable tests
+
+The tests this fix will run (triage-decided). Write exactly
+`n/a — no tests step for this fix` when there is none.
+
+## Known pre-existing issues
+
+Each: `<issue/observation>` + explicit `affects` or `does-not-affect` this unit.
+A red gate is never excused by an unrecorded issue.
+
+## Tasks
+
+P1…Pn with stable IDs, one line each, smallest first. Final task is verification
+when the unit has behavior. Each task carries its validator — a backticked
+command plus its expected outcome (for example
+``(validator: `node --test scripts/x.test.mjs` exits 0)``) — an
+`(Implements: S1, S2)` line naming the requirements it delivers, and may carry a
+nested `Relevant files: <path, path…>` line: **metadata, never a task** (owner:
+`skills/phase-contract/SKILL.md`).
+
+- P1 — <task> (validator: `<command>` exits 0)
+  (Implements: S1, S2)
+  Relevant files: <path>
+
+The link grammar (`task-spec-link@1`): every task bullet names the requirements
+it delivers on its own `(Implements: …)` line, and `phase-lint` refuses a bullet
+with no link, a link to an undeclared id, and a base requirement no bullet
+implements.
+
+```text
+task-spec-link@1
+kind | shape | what it orders
+link | (Implements: S<n>, S<m>, …) | the requirements this task delivers; metadata, never task text
+```
+
+### Planning evidence
+
+One row per Engineering claim (the closed column order and vocabularies are owned
+by `skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-evidence.md` and
+this section names it instead — never both.
+
+### Obligations
+
+One row per normative behaviour, compatibility invariant, affected use case, and
+required failure state (`obligation-id | authority-source | affected-use-case-or-invariant | phase | task |
+implementation-owner | validator | required-evidence | status` — shape owned by
+`skills/pre-execution-review/references/LEDGERS.md`). Embedded here for XS/S
+units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
+and this section names it — never both. Before the unit ships, every row is
+`verified` (or an evidenced `n/a`).
+
+## Findings
+
+OPEN rows only: a row a review persisted as fix-now work and no fold has closed
+yet. A folded row leaves this table and becomes a `## Log` line. Rows are appended
+by `review-change` and `triage-issue` — the writers the `review-findings` truth
+class of the ownership map (`skills/pre-execution-review/references/LEDGERS.md`)
+declares; this section is that ledger's collapsed carrier, never a second ledger,
+and no other writer touches it.
+
+The carrier grammar (`findings-table@1`): the OPEN rows only, appended by
+`review-change` and `triage-issue`. A folded row leaves the table and becomes a
+`## Log` line, so this table never grows a history column.
+
+```text
+findings-table@1
+column | shape | what it holds
+id | F<n> | the stable finding id a fold and a log line cite
+target | S<n> · <file>:<line> | the requirement or the location the finding names
+axis | <axis> | the review axis that found it
+severity | high \| med \| low | the ledger severity (the canonical scale)
+class | product \| plan \| source \| environment \| runtime | the owner that repairs it
+route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`scripts/unit-route.mjs`), and `class` names the owner that repairs it
+```
+
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
+
+## Log
+
+Append-only. `L1` is the issue text verbatim; every later line carries one kind
+token from the closed set in `log-kind@1` below — a request or correction
+(a verbatim quote), an evidence run, a gate run, a folded finding, an owner
+decision, a phase's progress, a review run, a finding's verification. The review
+mark and the finding signatures that used to be rows in `review-findings.md` are
+`R` and `V` lines here, so a migrated unit's whole receipt history
+is one section. A correction never edits an earlier line: it
+appends. Evidence and gate lines carry the command and its exit code, so a
+reviewer re-runs a line instead of trusting a table.
+
+```text
+log-kind@1
+kind | token | what the line records
+L | L<n> | the request or a correction, quoting the requester verbatim
+E | E<n> | an evidence run — the command, its exit code and its output
+G | G<n> | a gate run — the command and its exit code
+F | F<n> | a folded finding — the fold commit and what was verified
+D | D<n> | an owner decision — the authority and what was decided
+P | P<n> | a phase's progress — what was done and the commit
+R | R<n> | a review run — `HEAD <sha>`, the verdict, the cycle and the gate exit
+V | V<n> | a finding's verification — the row it signs, the recheck and its result
+```
+
+- **L1** — <YYYY-MM-DD>, the issue, verbatim:
+  ```
+  <the issue as it was written>
+  ```
+- **E1** — <YYYY-MM-DD>, `<command>` · exit 0 · <output, ≤2 lines>.
+- **P1** — <YYYY-MM-DD HH:MM>, <what was done> · <commit sha>.
+
+## Next
+
+The single next action.
+
+## References
+
+Issues, roadmap rows, related material. The PR closes the tracked issue via
+`Closes #<n>`. `none` if empty.
+
 ## Branch
 
 `fix/<issue-number>-<topic>`
 
 ## Depends on
 
-Other fixes (by folder name) that must merge first. Empty if
-independent.
+Other fixes (by folder name) that must merge first. Empty if independent.
 
-## Root cause
+## Regression scope
 
-What broke, where, and why. Reference the commit, feature, or
-decision where the defect was introduced if known.
-
-## Detected in
-
-When and how the defect surfaced — review finding, incident, failing
-test, customer report, etc.
-
-## Scope
-
-### In scope
-
-The exact change set.
-
-### Out of scope
-
-Adjacent issues this fix deliberately does NOT touch. Link to their
-own fix folder or feature where each belongs.
-
-### Planning evidence
-
-The fix's own authority, without a Product half: reproduction, root cause with
-code evidence, regression scope, rollback path, and the affected invariant or use
-case — one compact row each. Never an exploration transcript.
-
-| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
-|---|---|---|---|---|---|---|---|
-
-### Obligations
-
-One row per normative behaviour, applicable invariant, affected use case, and
-required failure state. Status is `planned | in-progress | verified | n/a |
-deferred`; `n/a` requires evidence, and no current-unit obligation may be
-`deferred` to a follow-up issue.
-
-| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
-|---|---|---|---|---|---|---|---|---|
-
-## Acceptance
-
-Objective, verifiable conditions for "done". Each criterion is a runnable
-command where possible, or labelled `read-verified` — never unlabelled prose.
-
-**Validator determinism.** A frozen validator must be deterministic — pin network,
-clock, randomness, and unordered-concurrency dependencies (fixed version,
-frozen fixture, recorded input) or downgrade the row to `read-verified:`/
-`manual:`.
-
-**Property / fuzz validators.** A validator may be a property or fuzz test with deterministic, bounded runtime within the project's timeout budgets.
-No new validator kind is needed: property/fuzz uses the existing `commands`
-row class.
-
-### Spec-lint (mechanical — presence checks only)
-
-Run by the lane's triage step (fix mode) before committing the draft;
-fail-closed, no quality judgement. Any FAIL → fix the SPEC before the commit.
-
-- [ ] No template placeholders left (`grep -nE '<(topic|n|task|command|expected)'`
-      over the filled sections returns nothing — the `### P1` scaffold lines
-      are replaced, not kept).
-- [ ] `### Out of scope` has ≥ 1 concrete bullet — never empty.
-- [ ] Every `## Acceptance` criterion is a runnable command OR labelled
-      `read-verified`.
-- [ ] Every phase passes the 8-box Phase-lint below (already mandatory,
-      owned by `skills/phase-contract/SKILL.md`).
-- [ ] `### Planning evidence` has a `current` row for the reproduction, the root
-      cause, the regression scope, and the rollback path — none blank, none
-      `n/a`.
-- [ ] `### Obligations` has one row per normative behaviour, applicable invariant,
-      affected use case, and required failure state, each with a phase and a
-      validator; no `deferred` row and none exported to a follow-up issue.
-
-## Phases
-
-Execution ledger — `execute-phase --fix <n>` runs **all remaining phases by
-default** and ticks tasks here; an explicit `P<n>` runs exactly one phase.
-**Always ≥ 2 phases**: `P1..Pn` implement the fix
-(each task independently checkable, no judgement); the final phase is
-always `Hardening & PR` — keep its pre-written tasks **literally**, never
-paraphrase or merge them into an implementation phase.
-
-### Phase-lint (owned by `skills/phase-contract/SKILL.md`)
-
-Every implementation phase below must pass all 8 boxes before it is emitted
-(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
-unticked box blocks emission/execution until the phase is re-cut or split.
-Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
-record the result here as `Phase-lint: PASS (8/8) · fingerprint
-<P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
-
-### P1 — <implementation>
-
-Layer: `<schema/db|domain|api|ui|config/infra|docs|hardening>`. Done-when:
-`<command>` → `<expected outcome>`.
-
-- [ ] <task — independently checkable, mapped to evidence>
-
-### P2 — Hardening & PR
-
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
-      Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #<n>`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
-
-## Testing
-
-What test confirms the fix, at what layer (unit / integration /
-architecture). Prefer integration over heavy mocking.
-
-## Rollback
-
-How to revert safely if the fix misbehaves in production. State the
-single command or PR-revert flow, plus any data-side cleanup.
-
-## Status
-
-`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
-
-(Removed from `docs/ROADMAP.md` § Fixes only **after** the PR merges.)
+What previously-working behaviour must NOT break. Each row: the scenario
+and the test/command that verifies it. Write `n/a` if the fix cannot regress
+existing behaviour.
