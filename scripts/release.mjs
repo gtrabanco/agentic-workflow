@@ -334,9 +334,14 @@ function insertCompanionRow(changelogPath, { name, dirName, version, date, level
 
 /**
  * Locate the insert position for a package's companion row — the first line
- * under the package's table grid (newest row first). Fails closed: a missing
+ * under the package's own table grid (newest row first). Fails closed: a missing
  * anchor or a grid-less table must never be written into (an indexOf(-1)
  * once landed the row at offset 1, silently corrupting the file).
+ *
+ * The search is bounded to THIS table's block and the grid must be the line
+ * directly under the header row. Reading `"|---|"` anywhere forward let a grid
+ * belonging to a later table — or the `|---|` inside a row's prose — satisfy the
+ * requirement, and the row landed in the wrong table.
  */
 function companionRowStart(changelog, { name, dirName }) {
   const anchor = `#### [\`${name}\`](packages/${dirName}/)`;
@@ -344,11 +349,20 @@ function companionRowStart(changelog, { name, dirName }) {
   if (idx === -1) {
     fail(`CHANGELOG.md has no "Companion npm packages" table for ${name} (expected ${anchor})`);
   }
-  const headerIdx = changelog.indexOf("|---|", idx);
-  if (headerIdx === -1) {
-    fail(`CHANGELOG.md companion table for ${name} has no "|---|" grid under its heading — repair the table before applying`);
+  const blockStart = changelog.indexOf("\n", idx) + 1;
+  const rest = changelog.slice(blockStart);
+  const blockEnd = rest.search(/^#{2,4} /m);
+  const scoped = blockEnd === -1 ? rest : rest.slice(0, blockEnd);
+  const lines = scoped.split("\n");
+  const headerAt = lines.findIndex((line) => /^\|\s*Version\s*\|/.test(line));
+  const grid = /^\|(?:\s*:?-{2,}:?\s*\|)+$/;
+  if (headerAt === -1 || !grid.test(lines[headerAt + 1] ?? "")) {
+    fail(
+      `CHANGELOG.md companion table for ${name} has no "|---|" grid directly under its header row — repair the table before applying`,
+    );
   }
-  return changelog.indexOf("\n", headerIdx) + 1; // newest row first
+  const through = lines.slice(0, headerAt + 2).join("\n").length + 1; // past the grid's newline
+  return blockStart + through; // newest row first
 }
 
 // --- main ---------------------------------------------------------------------
