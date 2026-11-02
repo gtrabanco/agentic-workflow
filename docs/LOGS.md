@@ -3950,3 +3950,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** review-change at fix/353 HEAD — REVIEW-PASS, two low findings left unfixed per owner directive
 - **Decisions:** Owner decided findings 2 (weak test pins) and 3 (missing P log lines) stay unfixed: neither affects functionality, and the owner prefers keeping the reviewed HEAD (with posted receipt) untouched over cosmetic churn
 - **Next:** /audit-pr on PR #354
+## 2026-11-02T22:39:38Z — main — manual
+- **Commits:** 11 (`a0bd2d59…aa768d7e`)
+- **Files:** 13 files
+- **Summary:** Merge feature/180 and fix/353 branches into main — sync post-merge LOGS.md updates, preserve publish.yml version validation
+- **Decisions:** feature/180 y fix/353 ya habían sido merged como PR (#335 y #354) pero las ramas locales tenían commits post-merge (principalmente docs/LOGS.md). Merge normal para sync those log entries a main. Se preservó la versión validada de publish.yml (versión X.Y.Z) sobre la versión simple de HEAD. fix/346-guards-per-surface no fue touch — contiene fixes completos para el bug #346 pero fue abandonada por decisión del owner (PR #349 eliminó los guards por completo).
+- **Next:** Push to origin/main, delete feature/180-versioned-skills-releases and fix/353-residue-shadow-copies local branches, keep fix/346-guards-per-surface for potential future reimplementación
