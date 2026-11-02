@@ -3856,3 +3856,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** —
 - **Summary:** Review roadmap coherence: found 5 stale rows, 15 open issues without a Features row, 4 issues needing re-scope. Opened PR #368 (docs/roadmap-rows-87-101) adding rows 87–101 to the Features table, reconciled rows 40/46/58/85/71, posted dated re-scopes on #173/#174/#201/#227, supersession records on #352/#360/#361/#363/#329/#269, and created issue #366 restoring the anchor for row 71 (doc-cli). PR is mergeable with all CI checks green.
 - **Next:** Merge PR #368, then decide on topology of execution (#360 vs #260 vs #294) and #366 build-vs-absorb
+## 2026-11-02T17:28Z — feat/332-agents-md-split — manual
+- **Commits:** 8 (`d949b5f9…47d2f902`)
+- **Files:** 22 files
+- **Summary:** Audit pi 1.5.0 changelog against packages/pi-agentic-workflow, post forge updates on issues #274 and #284, open new issue #370
+- **Decisions:** Zero TypeBox value: package registers 0 tools, imports nothing from pi-ai, and 1.5.0 narrowed TypeBox to JSON Schema features only; two-leg compat re-run + @types/node bump folded into single fix(deps) PR
+- **Next:** Close #370 once compat guard passes (0.99.1 + latest)
