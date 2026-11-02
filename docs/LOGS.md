@@ -3829,3 +3829,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fold F15 (schema boundary-cell tableCells: slices empty boundary pipes, so cells[i] maps identically across both published sides), F16 (schema regression test requires dist rebuild to go red), F17 (E7 in SPEC Log — direct read, no code change needed). All gates green at head 402bdbf1.
 - **Decisions:** Red-first regression tests: F15 fixed the schema's tableCells to slice boundary pipes exactly as the crate does (cells.length < 2 returns [] then body slicing), so `cells[0]` and `cells[2]` are identical on both published sides. F16 proved that schema-package tests importing ../dist/index.js require a dist rebuild to properly go red — the test fixture ran against stale dist output until `bun run test` recompiled.
 - **Next:** /review-change --adversarial 2 on the changed HEAD (delta mode: fold diff 6 files, +260/-28). After a clean review, /audit-pr.
+
+## 2026-11-02T15:26:19Z — fix/319-location-index-consolidation — manual
+- **Commits:** 49 (`c94c53dc…f63ac1ad`)
+- **Files:** 79 files
+- **Summary:** Subagent-topology evidence verified and #260 refined: Cognition/AOrchestra/2601.11327/DACS/MAST confirm the owner's recollection (subagents = context isolation for read-heavy work, not general code-writing); posted refinement comment 6580622775 (4 amendments: curated-context briefs, decision-bearing vs determined phases, concurrency cap ≤3, delegated-write behind measured acceptance); 6 new ATTRIBUTION.md rows (evidence-only, landing #260)
+- **Next:** Owner reviews the #260 refinement comment before unit-lane takes it; PR #351 awaits /audit-pr; then /triage-issue 356 + 357 + 358 + 359
