@@ -156,6 +156,18 @@ export function tableCells(line) {
 const isSeparatorRow = (cells) => cells.length > 0 && cells.every((cell) => /^[-:\s]*$/.test(cell));
 
 /**
+ * Whether a document declares its tables by heading — the consolidated index,
+ * and any document that has begun migrating to it. A pre-319 roadmap puts one
+ * table straight under its title and is not one.
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+function declaresTablesByHeading(text) {
+  return roadmapSection(text, ROADMAP_FEATURES_HEADING) !== null || roadmapSection(text, ROADMAP_FIXES_HEADING) !== null;
+}
+
+/**
  * The data rows of the table that belongs to `kind` — `"feature"` reads
  * `## Features`, `"fix"` reads `## Fixes`.
  *
@@ -165,6 +177,16 @@ const isSeparatorRow = (cells) => cells.length > 0 && cells.every((cell) => /^[-
  * heading (a pre-319 roadmap, a standalone fix index, a caller-supplied
  * fragment) keeps its single-table meaning: every row is the caller's kind.
  *
+ * A document that declares its tables by heading is the exception: when its
+ * `## Fixes` heading is absent, the fix table is empty rather than inherited
+ * from `## Features`. Reading the features table as fixes there is the
+ * half-migrated defect (issue #319, F1) — feature row `N` would answer for fix
+ * row `N` and report a slug mismatch against another kind.
+ *
+ * The inverse is not symmetric: a pre-319 roadmap keeps its features table under
+ * its title, so a feature read that finds no `## Features` heading but does find
+ * `## Fixes` is a half-migrated roadmap, never an empty feature table.
+ *
  * @param {string} text
  * @param {"feature"|"fix"} kind
  * @returns {string[][]}
@@ -172,7 +194,9 @@ const isSeparatorRow = (cells) => cells.length > 0 && cells.every((cell) => /^[-
 export function roadmapTableRows(text, kind) {
   if (typeof text !== "string") return [];
   const heading = kind === "fix" ? ROADMAP_FIXES_HEADING : ROADMAP_FEATURES_HEADING;
-  const body = roadmapSection(text, heading) ?? text;
+  const section = roadmapSection(text, heading);
+  const emptyFixTable = section === null && kind === "fix" && declaresTablesByHeading(text);
+  const body = emptyFixTable ? "" : (section ?? text);
   const rows = [];
   for (const line of body.split("\n")) {
     if (!line.trimStart().startsWith("|")) continue;

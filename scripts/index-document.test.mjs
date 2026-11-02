@@ -189,6 +189,15 @@ test("O9/R5: the two tables never leak into each other's parsers", async () => {
   // A legacy document carries one table and no headings: every row belongs to the caller's kind.
   const legacyOnly = "| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 319 | `x` | in-progress | — | s |\n";
   assert.equal(unitRows(roadmapTableRows(legacyOnly, "feature")).length, 1, "a headingless document keeps its single-table meaning");
+
+  // F1: a consolidated document whose `## Fixes` table is absent has NO fix rows.
+  // Reading its `## Features` rows as fixes makes feature row N answer for fix row N.
+  const consolidatedNoFixes = CONSOLIDATED.slice(0, CONSOLIDATED.indexOf("## Fixes"));
+  assert.equal(unitRows(roadmapTableRows(consolidatedNoFixes, "fix")).length, 0, "a consolidated document without ## Fixes has no fix rows");
+  assert.equal(unitRows(roadmapTableRows(consolidatedNoFixes, "feature")).length, 1, "its features table still reads");
+  const halfMigrated = checkUnitDoc({ nn: "319", slug: "wrong-slug", kind: "fix", docText: "", indexText: consolidatedNoFixes });
+  assert.equal(halfMigrated.ok, true, "a missing fix row is that index's convention, never a slug match against a feature row");
+  assert.deepEqual(halfMigrated.violations, [], "no feature row answers for the fix row");
 });
 
 test("O8: every live reader and writer goes through the published constant", () => {

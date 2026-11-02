@@ -2102,6 +2102,41 @@ function sectionContent(content: string, heading: string): string | undefined {
   return level === 0 ? undefined : body.join("\n");
 }
 
+/** The cells of one Markdown table row, splitting only on unescaped pipes — the
+ * same contract the crate's `tableCells` holds (`index-document.mjs`), so a row
+ * carrying an escaped `\|` reads identically on both sides of the mirror. */
+function tableCells(line: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      current += "|";
+      index += 1;
+    } else if (char === "|") {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  cells.push(current.trim());
+  return cells.length > 2 ? cells.slice(1, -1) : [];
+}
+
+/** The table body of one kind: its own section when present; a document that
+ * declares its tables by heading has no rows of this kind when this heading is
+ * absent (issue #319, F1); a pre-319 roadmap keeps its single table under its
+ * title, so only the fix read is affected. */
+function tableFor(content: string, heading: string): string {
+  const section = sectionContent(content, heading);
+  if (section !== undefined) return section;
+  if (heading !== ROADMAP_FIXES_HEADING) return content;
+  const declaresTables = sectionContent(content, ROADMAP_FEATURES_HEADING) !== undefined
+    || sectionContent(content, ROADMAP_FIXES_HEADING) !== undefined;
+  return declaresTables ? "" : content;
+}
+
 function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSnapshot["repositoryState"] {
   if (document === undefined) return "missing";
   const value = /(?:^|\n)Status:\s*([^\n\r]+)/i.exec(document.content)?.[1]?.trim().toLowerCase();
@@ -2112,9 +2147,9 @@ function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSn
 function roadmapFeature(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  const table = sectionContent(document.content, ROADMAP_FEATURES_HEADING) ?? document.content;
+  const table = tableFor(document.content, ROADMAP_FEATURES_HEADING);
   for (const row of table.split("\n")) {
-    const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
+    const cells = tableCells(row).filter(Boolean);
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
     const slug = cells[1]?.replace(/^`|`$/g, "");
     if (slug === undefined || slug.length === 0) continue;
@@ -2133,9 +2168,9 @@ function indexStatus(value: string): string {
 function fixUnit(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
-  const table = sectionContent(document.content, ROADMAP_FIXES_HEADING) ?? document.content;
+  const table = tableFor(document.content, ROADMAP_FIXES_HEADING);
   for (const row of table.split("\n")) {
-    const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
+    const cells = tableCells(row).filter(Boolean);
     if (cells.length < 3) continue;
     const id = cells[0]?.replace(/^`|`$/g, "") ?? "";
     if (!/^\d+-[A-Za-z0-9._-]+$/.test(id)) continue;
