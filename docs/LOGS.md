@@ -3736,3 +3736,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** reanudé la lane fix/319-location-index-consolidation: verifiqué que el trabajo de P3/P7/P8 ya estaba hecho y verificado en las obligaciones, pero el log del unit doc no tenía las entradas de progreso; la lane se reanudó con el router en P3
 - **Decisions:** el router lee fases del token P<n> en la cabecera de ## Log; el texto en prosa no cuenta (unit-route.mjs loggedPhases); el trabajo de P3/P7/P8 estaba hecho pero el log no lo reflejaba
 - **Next:** /execute-phase --fix 319 P3 (tier: cheap)
+
+## 2026-11-02T09:17:32Z — fix/319-location-index-consolidation — manual
+- **Commits:** 21 (`c94c53dc…281414a7`)
+- **Files:** 75 files
+- **Summary:** Discussed and designed feature #352: migrate ceremony CLI (fix/338) + sensors into @gtrabanco/agentic-workflow crate, distributed via bunx/npx at versioned pin (RUNNER.md); triaged issues 352 and 333
+- **Decisions:** Version contract: closed as option B (RUNNER.md carrier skill, stamped by release.mjs apply, verified by normative-drift; avoids agent-mediated frontmatter inference); scope: feature 352 single umbrella unit, includes P0/P1/P2 ceremony modules + all sensors + pr module with gh degradation; dedup: package vocabulary wins (ceremony unit/plan/roadmap absorbed into unit-doc/Roadmap services); scripts/ceremony* deleted post-migration; 333: fix now, medium severity, high-severity audit defect of init-workspace CAPABILITIES.md seeding (template copy instead of evidence-based inference, same gap in this repo) — triage routes to /unit-lane --fix 333
+- **Next:** /triage-issue 333 — act on fix-now defect; 352 — needs triage to plan feature unit
