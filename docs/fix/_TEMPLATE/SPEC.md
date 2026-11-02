@@ -2,7 +2,7 @@
 
 > Fix specification — one single unit document. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. This is the same closed unit doc
+> entry in the `## Fixes` table of `docs/ROADMAP.md`. This is the same closed unit doc
 > `scripts/unit-route.mjs --triage` reads for a feature, in the re-cut
 > `spec-by-reference` shape; the fix template keeps four extra sections
 > (`Issue`, `Branch`, `Depends on`, `Regression scope`) on top. A unit opened

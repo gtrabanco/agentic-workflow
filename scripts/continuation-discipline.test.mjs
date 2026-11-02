@@ -38,6 +38,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { loadSchemaRuntime } from "./schema-runtime.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SENSOR = path.join(repoRoot, "scripts", "workflow-status.mjs");
@@ -70,7 +71,16 @@ const ROADMAP_HEADER = [
   "| NN | Slug | Status | Depends on | Summary |",
   "|----|------|--------|------------|---------|",
 ].join("\n");
-const FIX_INDEX = "# Active fixes\n\n## Active\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|";
+/**
+ * The index as the workflow ships it (issue #319): one document, two tables. A
+ * fixture that wants fix rows appends them under `## Fixes`; the standalone
+ * `docs/fix/README.md` is no longer where the sensor reads them.
+ */
+const FIX_SECTION_HEADER = "## Fixes\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|";
+
+const indexDocument = (featureRows, fixRows) =>
+  [ROADMAP_HEADER, ...featureRows, "", FIX_SECTION_HEADER, ...fixRows, ""].join("\n");
+
 const FROZEN_NRS = "# Normalized repository state\n\nStatus: frozen\n\nSnapshot: fix-1";
 const GUIDE = "# Project guide\n\nRules.\n";
 const ACCEPTANCE = "# Acceptance\n\n- A1 the thing ships.\n";
@@ -136,8 +146,7 @@ function makeFixture({ unit = "90-alpha", status = "defined", branch = "main", e
   };
   const unitDir = `docs/features/${unit}`;
 
-  write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n| ${unit.slice(0, 2)} | \`${unit.slice(3)}\` | ${status} | — | a unit |\n`);
-  write("docs/fix/README.md", `${FIX_INDEX}\n`);
+  write(ROADMAP_DOCUMENT, indexDocument([`| ${unit.slice(0, 2)} | \`${unit.slice(3)}\` | ${status} | — | a unit |`], []));
   write("docs/workflow/REPOSITORY_STATE.md", `${FROZEN_NRS}\n`);
   write("AGENTS.md", GUIDE);
   write(`${unitDir}/SPEC.md`, specText());

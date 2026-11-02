@@ -34,9 +34,10 @@ Find and read whatever exists; record the real paths and rules:
   npm/pnpm/yarn/cargo/go/make equivalents).
 - The architecture doc and layering rules.
 - The feature system: a SPEC template (e.g. `docs/features/_TEMPLATE/SPEC.md`),
-  the roadmap (e.g. `docs/features/ROADMAP.md`), and 1–2 recent feature folders
+  the roadmap (e.g. `docs/ROADMAP.md`), and 1–2 recent feature folders
   to learn the exact artifact set used.
-- The fix system: a fix index (e.g. `docs/fix/README.md`) and fix SPEC template.
+- The fix system: the fix index (a `## Fixes` table in the roadmap document) and
+  fix SPEC template.
 - `.github/ISSUE_TEMPLATE/` and `.github/PULL_REQUEST_TEMPLATE.md`.
 - The **forge** (issue/PR tracker + CLI): detect it from the remote URL
   (github.com → `gh`, gitlab → `glab`, else ask) and write the skills' forge

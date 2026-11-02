@@ -19,6 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(repoRoot, "scripts", "workflow-status.mjs");
@@ -36,14 +37,16 @@ const ROADMAP_HEADER = [
   "|----|------|--------|------------|---------|",
 ].join("\n");
 
-const FIX_INDEX = [
-  "# Active fixes",
-  "",
-  "## Active",
-  "",
-  "| Issue | Topic | Status | Notes |",
-  "|---|---|---|---|",
-].join("\n");
+/**
+ * The index as the workflow ships it (issue #319): one document, two tables. A
+ * fixture that wants fix rows appends them under `## Fixes`; the standalone
+ * `docs/fix/README.md` is no longer where the sensor reads them.
+ */
+const FIX_SECTION_HEADER = "## Fixes\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|";
+
+const indexDocument = (featureRows, fixRows) =>
+  [ROADMAP_HEADER, ...featureRows, "", FIX_SECTION_HEADER, ...fixRows, ""].join("\n");
+const FIX_ROWS = [];
 
 const FROZEN_NRS = [
   "# Normalized repository state",
@@ -102,8 +105,7 @@ function makeFixture({
     fs.writeFileSync(abs, content);
   };
 
-  write("docs/features/ROADMAP.md", `${ROADMAP_HEADER}\n${roadmapRows.join("\n")}\n`);
-  write("docs/fix/README.md", `${FIX_INDEX}\n`);
+  write(ROADMAP_DOCUMENT, indexDocument(roadmapRows, FIX_ROWS));
   if (nrs !== null) write("docs/workflow/REPOSITORY_STATE.md", nrs);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);
 

@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import {
   compileWorkflowSnapshot,
+  ROADMAP_DOCUMENT,
   parseTurn,
   renderOutputInstruction,
   validateEnvelopeV2Strict,
@@ -280,7 +281,7 @@ test("compileWorkflowSnapshot reports deterministic phase state and provenance",
         content: "# Repository state\n\nStatus: frozen\n",
       },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content:
           "| # | Slug | Status | Depends on | Title |\n| - | - | - | - | - |\n| 12 | skill-lockfile | in-progress | — | Machine contract |\n",
       },
@@ -320,7 +321,7 @@ test("compileWorkflowSnapshot refuses to infer a phase from ambiguous progress",
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content: "| 12 | skill-lockfile | in-progress | — | Machine contract |\n",
       },
       {
@@ -343,7 +344,7 @@ test("compileWorkflowSnapshot records missing phase documents for the active uni
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
       {
-        path: "docs/features/ROADMAP.md",
+        path: ROADMAP_DOCUMENT,
         content: "| 22 | `machine-contract` | in-progress · [#134](https://example.test/pr/134) | — | Machine contract |\n",
       },
     ],
@@ -391,13 +392,64 @@ test("compileWorkflowSnapshot fails closed when caller facts cannot form a v1 sn
   assert.ok(result.errors.includes("sourceRevision must be a non-empty string"));
 });
 
+test("#319: the migration window is closed — a pre-move document path is not the index", () => {
+  // The pre-319 path is assembled rather than spelled: the single-occurrence
+  // rule covers this tree, so no test restates it.
+  const preMovePath = ["docs", "features", "ROADMAP.md"].join("/");
+  const compile = (path, content) => compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "fix/134-machine-contract", headSha: "abcdef012345", dirty: false },
+    documents: [{ path, content }],
+  });
+
+  const preMove = compile(preMovePath, "| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 12 | `skill-lockfile` | in-progress | — | Machine contract |\n");
+  assert.equal(preMove.ok, true);
+  assert.equal(preMove.snapshot.unit, null, "a document at the pre-move path yields no unit");
+  assert.ok(
+    preMove.snapshot.unknowns.some((entry) => entry.field === "unit"),
+    "the absence is reported as an unknown, never as an empty unit",
+  );
+
+  const canonical = compile(ROADMAP_DOCUMENT, "| NN | Slug | Status | Depends on | Summary |\n|---|---|---|---|---|\n| 12 | `skill-lockfile` | in-progress | — | Machine contract |\n");
+  assert.equal(canonical.snapshot.unit?.id, "12-skill-lockfile", "the published path is still read");
+});
+
+test("#319 F3: an escaped pipe stays one cell, as it does in the crate", () => {
+  // The crate splits table rows only on unescaped pipes (`tableCells`); this
+  // package parsed the same rows with `split("|")`, so an escaped `\\|` in the
+  // topic cell shifted every later column: the status read as the escaped
+  // fragment's successor, and the row resolved to the wrong lifecycle state.
+  const content = [
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    "|---|---|---|---|---|",
+    "| 12 | `skill-lockfile` | done | — | a finished feature |",
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    "| `12-skill-lockfile` | topic \\| subtopic | in-progress | x |",
+    "",
+  ].join("\n");
+  const result = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content }],
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.snapshot.unit?.id, "12-skill-lockfile", "the fix row is the in-progress one");
+  assert.equal(result.snapshot.unit?.status, "in-progress", "the status cell is not the escaped fragment's successor");
+});
+
 test("compileWorkflowSnapshot falls back to the active fix index when no feature is in progress", () => {
   const result = compileWorkflowSnapshot({
     sourceRevision: "0123456789abcdef",
     repository: { branch: "fix/134-machine-contract", headSha: "abcdef012345", dirty: false },
     documents: [
       { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
-      { path: "docs/features/ROADMAP.md", content: "| 12 | skill-lockfile | done | — | Machine contract |\n" },
+      { path: ROADMAP_DOCUMENT, content: "| 12 | skill-lockfile | done | — | Machine contract |\n" },
       {
         path: "docs/fix/README.md",
         content:
@@ -453,4 +505,198 @@ test("published JSON Schemas match the strict v2, outcome, and snapshot contract
   assert.ok(snapshotSchema.required.includes("provenance"));
   assert.ok(snapshotSchema.required.includes("contradictions"));
   assert.ok(snapshotSchema.required.includes("unknowns"));
+});
+
+test("#319 F7: the consolidated ## Fixes table wins over a stale standalone fix index", () => {
+  // Issue #319 F7: every other consumer pins the consolidated table first
+  // (`packages/agentic-workflow/test/roadmap-check.test.mjs` — "keeps preferring
+  // the consolidated ## Fixes table once the tree is migrated"). The snapshot
+  // read the standalone document first and could never see the consolidated
+  // table on a migrated tree, where `docs/fix/README.md` always exists as a stub.
+  const separator = "|---|---|---|---|";
+  const consolidated = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "| `42-slug` | consolidated-topic | in-progress | x |",
+    "",
+  ].join("\n");
+  const standalone = ["# Fixes", "", "| Issue | Topic | Status | Notes |", separator, "| `42-slug` | standalone-topic | in-progress | y |", ""].join("\n");
+  const base = { sourceRevision: "0123456789abcdef", repository: { branch: "main", headSha: "abcdef012345", dirty: false } };
+
+  const both = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: consolidated },
+      { path: "docs/fix/README.md", content: standalone },
+    ],
+  });
+  assert.equal(both.ok, true);
+  assert.deepEqual(both.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    both.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    [ROADMAP_DOCUMENT],
+  );
+
+  const onlyConsolidated = compileWorkflowSnapshot({ ...base, documents: [{ path: ROADMAP_DOCUMENT, content: consolidated }] });
+  assert.equal(onlyConsolidated.ok, true);
+  assert.deepEqual(onlyConsolidated.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+
+  const onlyStandalone = compileWorkflowSnapshot({
+    ...base,
+    documents: [{ path: "docs/fix/README.md", content: standalone }],
+  });
+  assert.equal(onlyStandalone.ok, true);
+  assert.deepEqual(onlyStandalone.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    onlyStandalone.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    ["docs/fix/README.md"],
+  );
+});
+
+test("#319 F9: a consolidated ## Fixes table owns the fix rows even when the row is absent", () => {
+  // Issue #319 F9: F7 fixed the document *order* but kept conflating "the
+  // consolidated index has no `## Fixes` table" (a half-migrated tree — the
+  // fallback is promised) with "the table exists and has no row for this unit"
+  // (a migrated tree — the stale standalone index must be ignored, exactly as
+  // the crate pins at `packages/agentic-workflow/test/roadmap-check.test.mjs`,
+  // "A stale standalone index that would disagree: it must be ignored").
+  // Reading the stale row here resolves a unit the consolidated index does not
+  // declare, so the two published sides disagree on the same tree.
+  const separator = "|---|---|---|---|";
+  const migratedWithoutTheRow = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    separator,
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "| [#77](https://example.invalid/issues/77) | `other-fix` | in-progress | x |",
+    "",
+  ].join("\n");
+  const staleStandalone = ["# Active fixes", "", "| Issue | Topic | Status | Notes |", separator, "| `42-slug` | stale-topic | in-progress | y |", ""].join("\n");
+  const base = { sourceRevision: "0123456789abcdef", repository: { branch: "main", headSha: "abcdef012345", dirty: false } };
+
+  const migrated = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: migratedWithoutTheRow },
+      { path: "docs/fix/README.md", content: staleStandalone },
+    ],
+  });
+  assert.equal(migrated.ok, true);
+  assert.equal(migrated.snapshot.unit, null, "a migrated tree never resolves a fix row its own ## Fixes table does not declare");
+
+  // The half-migrated tree keeps the promised fallback: no `## Fixes` heading at
+  // all, which is the state `MIGRATION.md` and `init-workspace`'s upgrade step
+  // document as still readable.
+  const halfMigrated = ["# Roadmap", "", "## Features", "", "| NN | Slug | Status | Depends on | Summary |", separator, "", ""].join("\n");
+  const half = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: halfMigrated },
+      { path: "docs/fix/README.md", content: staleStandalone },
+    ],
+  });
+  assert.equal(half.ok, true);
+  assert.deepEqual(half.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    half.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    ["docs/fix/README.md"],
+  );
+});
+
+test("#319 F16: an escaped pipe never collapses the unit's provenance line", () => {
+  // Issue #319 F16: the fold that unified the mirror passed a re-joined row
+  // (`cells.join(" | ")`) into the provenance lookup. An escaped `\|` renders
+  // differently from its source, so the lookup missed and the provenance line
+  // fell back to the sentinel 1 — the unit cited the wrong line silently.
+  const row = "| 12 | topic \\| subtopic | in-progress | — | x |";
+  const content = ["# Roadmap", "", "## Features", "", "| NN | Slug | Status | Depends on | Summary |", "|---|---|---|---|---|", "| 13 | other | done | — | y |", row, ""].join("\n");
+  const result = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content }],
+  });
+  assert.equal(result.ok, true);
+  const unitLine = result.snapshot.provenance.find((entry) => entry.field === "unit")?.line;
+  assert.equal(unitLine, 8, "the provenance line is the row's own line, not the 1 sentinel");
+});
+
+test("#319 F14: a fenced example row is never a unit, on either published side", () => {
+  // Issue #319 F14: the index teaches its own row format, so a writer copying a
+  // row into a fence is normal authoring. That example is content, not data.
+  // The crate's `roadmapTableRows` and this mirror's `tableRowCells` share one
+  // fence grammar; before the fix the schema resolved a unit out of the fence.
+  const separator = "|---|---|---|---|";
+  const withFencedExamples = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    "|---|---|---|---|---|",
+    "| 01 | `real` | in-progress | — | a live feature row |",
+    "",
+    "```markdown",
+    "| 02 | `fenced` | in-progress | — | an example, not a unit |",
+    "```",
+    "",
+    "## Fixes",
+    "",
+    "| Unit | Topic | Status |",
+    "|---|---|---|",
+    "~~~",
+    "| 99-fenced-fix | fenced-topic | in-progress |",
+    "~~~",
+    "| 77-real-fix | real-topic | in-progress |",
+    "",
+  ].join("\n");
+
+  const snapshot = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content: withFencedExamples }],
+  });
+  assert.equal(snapshot.ok, true);
+  assert.deepEqual(
+    snapshot.snapshot.unit,
+    { kind: "feature", id: "01-real", status: "in-progress" },
+    "the fenced feature example never competes with the live row",
+  );
+
+  // Fix-only tree: the fenced fix example must not become the unit either.
+  const fixesOnly = [
+    "# Roadmap",
+    "",
+    "## Fixes",
+    "",
+    "| Unit | Topic | Status |",
+    "|---|---|---|",
+    "```",
+    "| 99-fenced-fix | fenced-topic | in-progress |",
+    "```",
+    "| 77-real-fix | real-topic | in-progress |",
+    "",
+  ].join("\n");
+  const fixSnapshot = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content: fixesOnly }],
+  });
+  assert.equal(fixSnapshot.ok, true);
+  assert.deepEqual(fixSnapshot.snapshot.unit, { kind: "fix", id: "77-real-fix", status: "in-progress" });
 });

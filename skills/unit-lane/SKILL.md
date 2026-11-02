@@ -95,9 +95,9 @@ create it from the tree the unit belongs to:
 
 | Invocation | Folder | Template | Index to register |
 |---|---|---|---|
-| `<NN-slug>` / `"<idea>"` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/features/ROADMAP.md` |
-| `--fix <issue-number>` | `docs/fix/<issue-number>-<topic>/` | `docs/fix/_TEMPLATE/SPEC.md` | `docs/fix/README.md` |
-| `--from-issue <issue-number>` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/features/ROADMAP.md` (row links `#<issue-number>`) |
+| `<NN-slug>` / `"<idea>"` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/ROADMAP.md` § Features |
+| `--fix <issue-number>` | `docs/fix/<issue-number>-<topic>/` | `docs/fix/_TEMPLATE/SPEC.md` | `docs/ROADMAP.md` § Fixes |
+| `--from-issue <issue-number>` | `docs/features/<NN>-<slug>/` | `docs/features/_TEMPLATE/SPEC.md` | `docs/ROADMAP.md` § Features (row links `#<issue-number>`) |
 
 For `--fix`/`--from-issue`, read the tracked issue in the forge first and keep
 its number; the folder name carries it (`fix/<issue-number>-<topic>`). Fill

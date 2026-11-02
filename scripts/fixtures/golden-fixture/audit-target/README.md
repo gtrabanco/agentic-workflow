@@ -25,8 +25,8 @@ about is `0046`.
 
 ## Declared forge state
 
-The tracked worklist `docs/fix/README.md` still shows row `9 — stale-cache` as
-`in-progress`. The project's declared forge reports that issue **closed** and its
+The tracked worklist (`docs/ROADMAP.md` § Fixes) still shows row `9 — stale-cache`
+as `in-progress`. The project's declared forge reports that issue **closed** and its
 PR **merged**.
 
 ## Stored audits

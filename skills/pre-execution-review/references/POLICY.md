@@ -136,8 +136,8 @@ a count and never waives a finding.
   `execute-phase`, and a `PLAN-REVIEW-PASS` never certifies the Product half.
 - A gate answer from a roadmap row's status. Gates read receipts only;
   roadmap rows are labels and never answer a gate. `done` means built + PR open
-  with the human merge pending (`docs/features/ROADMAP.md` § Status legend;
-  `docs/fix/README.md` § Status legend), so it never satisfies or suppresses a
+  with the human merge pending (`docs/ROADMAP.md` § Status legend and § Fix
+  status legend), so it never satisfies or suppresses a
   pre-execution/verification gate, never retires the obligation to re-derive a
   receipt, and never lets a reviewer or consumer report a unit closed while its
   PR is unmerged. The complement of §5's "no verdict *from* a status" — and the

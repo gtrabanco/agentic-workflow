@@ -152,7 +152,7 @@ const planReceiptValue = {
       severity: "info",
       class: "source",
       claim: "The roadmap row and the SPEC agree on dependency ids.",
-      evidenceRefs: ["docs/features/ROADMAP.md:28"],
+      evidenceRefs: ["docs/ROADMAP.md:28"],
       verification: "verified",
       resolution: "resolved",
       resolutionEvidence: "Re-read at rev-0002; no change.",
