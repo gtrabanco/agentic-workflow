@@ -3841,3 +3841,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Audit-pr PR #351: BLOCKED (4 blockers), then fold F18 (missing triage block) and F20 (missing P8 receipt); F19/F21 remain open
 - **Decisions:** (1) Audited PR #351 against the full contract — receipt current at 8e355f67, CI green, obligations 16/16 verified, but lineage blocked (no pasted ## Triaged steps), scope creep (docs/research/* commits), missing P8 receipt, dirty tree — four blockers total. (2) Another session was concurrently committing on this branch — 6 new commits on top of the audited head, one of which was the external review session; a past audit-pr persist (F18–F21 rows) was lost to the concurrent work. (3) F21 self-resolved (tree clean) and F14/F15 already folded externally, so only F18 (triage block) and F20 (P8 receipt) needed fixing. (4) Did NOT push — local branch now ahead 3 of origin; the concurrent session's push will void the SHA-bound review receipt (already stale vs a7cdd5b3). (5) F19 (docs/research scope creep) and F21 audit trail rows left open per owner instruction.
 - **Next:** Resolve F19 (move docs/research/* to its own PR) and /review-change to refresh the stale receipt at the new head; then re-run /audit-pr — push coordination with the concurrent session required
+## 2026-11-02T15:40:35Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Triage batch: triage 6 issues (360, 361, 362, 363, 365, 356) — all promote-to-feature
