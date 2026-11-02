@@ -42,3 +42,17 @@ Cheap defaults taken instead of asking, dated and correctable:
   scope reaches 120. Reported to the owner as a deviation, never self-approved;
   shrinking rule semantics to hit the number is the defect class the no-shim rule
   exists to stop.
+
+## Path-protection records
+
+`**/*.test.*` is a frozen class in the shipped policy; pre-freeze create/modify is
+`justification`, recorded here before the write.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/guide-split.test.mjs | P2 | 2026-11-01 | human-owner (issue #332 work order) | the guide-layer contract suite is this unit's own new artifact, authored test-first as O2/O3/O10/O11-O17's validator; no pre-existing suite covers the split, and the file cannot exist before the mechanic it judges is delivered
+justification | scripts/check-skill-context.test.mjs | P5 | 2026-11-01 | human-owner (issue #332 work order) | O1/O8's documents budget is a new mode of a gate whose suite already owns every fixture shape for it; the case belongs beside the existing manifest cases rather than in a second suite, so the file gains one describe block and no existing assertion changes
+justification | scripts/scaffold-guide.test.mjs | P6 | 2026-11-01 | human-owner (issue #332 work order) | O19-O21/O24's validators are template-tree defects with no existing suite: `residue-dimensions.test.mjs` pins one template sentence and `phase-lint` pins target rows, neither reads the template guide's structure
+justification | scripts/unit-doc-contract.test.mjs | P7 | 2026-11-01 | human-owner (issue #332 work order) | O22/O25 bind the two template unit docs to the re-cut shape; the file already loops the root templates for exactly that contract, so the change is the loop's file list plus its two named cases — the existing root-template assertions stay byte-identical
+justification | scripts/pin-watch.test.mjs | P3 | 2026-11-01 | human-owner (issue #332 work order) | O6 retargets the public issue body `pin-watch.mjs` emits ("AGENTS.md → Packages" names a section that moved); the suite owns that body's assertion, so the expectation moves with it and no other case changes
