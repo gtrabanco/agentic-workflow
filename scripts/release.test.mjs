@@ -39,7 +39,7 @@ const PACKAGES = [
   "@gtrabanco/agentic-workflow",
 ];
 
-function fixture({ changesets = { "the-change.md": ["pi:patch"] }, version = "1.0.0", git = false } = {}) {
+function fixture({ changesets = { "the-change.md": ["pi:patch"] }, bodies = {}, version = "1.0.0", git = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "release-fixture-"));
   for (const name of PACKAGES) {
     const dirName = name.replace("@gtrabanco/", "");
@@ -69,12 +69,13 @@ function fixture({ changesets = { "the-change.md": ["pi:patch"] }, version = "1.
   for (const [file, entries] of Object.entries(changesets)) {
     const fm = entries.map((e) => {
       const [pkg, level] = e.split(":");
-      const name = pkg === "pi" ? PACKAGES[0] : pkg === "schema" ? PACKAGES[1] : PACKAGES[2];
+      const name = pkg === "pi" ? PACKAGES[0] : pkg === "schema" ? PACKAGES[1] : pkg === "agentic" ? PACKAGES[2] : pkg;
       return `"${name}": ${level ?? levels[pkg]}`;
     });
+    const body = bodies[file] ?? [`Change number ${++i} body line.`];
     fs.writeFileSync(
       path.join(changesetDir, file.endsWith(".md") ? file : `${file}.md`),
-      ["---", ...fm, "---", "", `Change number ${++i} body line.`, ""].join("\n"),
+      ["---", ...fm, "---", "", ...body, ""].join("\n"),
     );
   }
   const tables = PACKAGES.map(
@@ -395,6 +396,131 @@ test("release-notes marks a forced version", () => {
   const result = run(["release-notes", "--root", root, "--version", "5.0.0"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
+});
+
+// A release body is read by a human deciding whether to upgrade, so it is a
+// rendered document: one heading per change (the changeset's own conventional
+// title), grouped by kind, plus what the cut actually bumps. The raw
+// concatenation this replaces shipped 6.4 KB with zero headings (#375).
+const STRUCTURED = {
+  "a-feature.md": ["pi:patch"],
+  "b-fix.md": ["schema:minor"],
+  "c-breaking.md": ["agentic:major"],
+};
+
+const TITLED = {
+  bodies: {
+    "a-feature.md": ["feat(pi): add the routing flag", "", "Why it matters."],
+    "b-fix.md": ["fix(schema): repair the parser", "", "The failure it repairs."],
+    "c-breaking.md": ["feat(crate)!: drop the legacy entry point", "", "Migrate to the new one."],
+  },
+};
+
+const ordered = (text, needles) => {
+  const at = needles.map((n) => text.indexOf(n));
+  assert.ok(at.every((i) => i !== -1), `missing one of: ${needles.join(" | ")}`);
+  assert.deepEqual([...at].sort((a, b) => a - b), at, `out of order: ${needles.join(" | ")}`);
+};
+
+test("release-notes renders one heading per change, grouped by kind, breaking first", () => {
+  const root = fixture({ changesets: STRUCTURED, ...TITLED });
+  const result = run(["release-notes", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  // the changeset title IS the heading, and its prose stays below it
+  assert.match(result.stdout, /^### feat\(crate\)!: drop the legacy entry point$/m);
+  assert.match(result.stdout, /^### feat\(pi\): add the routing flag$/m);
+  assert.match(result.stdout, /^### fix\(schema\): repair the parser$/m);
+  assert.match(result.stdout, /Migrate to the new one\./);
+  ordered(result.stdout, ["## Breaking changes", "### feat(crate)!:", "## Features", "### feat(pi):", "## Fixes", "### fix(schema):"]);
+  // nothing is a raw body dump any more: every change carries a heading
+  assert.doesNotMatch(result.stdout, /^feat\(pi\): add the routing flag$/m);
+});
+
+test("release-notes lists every declared package and skill with its level", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch", "alpha:minor"], "b.md": ["schema:major"] } });
+  const result = run(["release-notes", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /^## Package bumps$/m);
+  assert.match(result.stdout, /^\| `@gtrabanco\/pi-agentic-workflow` \| patch \|$/m);
+  assert.match(result.stdout, /^\| `@gtrabanco\/agentic-workflow-schema` \| major \|$/m);
+  assert.match(result.stdout, /^\| `alpha` \| minor \|$/m, "a declared skill is a bump row too");
+  assert.doesNotMatch(result.stdout, /`beta`/, "an undeclared skill is not bumped");
+});
+
+// A release that does not say how to install it is a release nobody can use,
+// and a prerelease doubles the question: how do I try it, and how do I get
+// back? Both answers belong in the body (#375).
+test("release-notes tells the reader how to install the channel it renders", () => {
+  const root = fixture({ changesets: STRUCTURED, ...TITLED });
+  const stable = run(["release-notes", "--root", root, "--channel", "stable"]);
+  assert.equal(stable.status, 0, stable.stderr || stable.stdout);
+  assert.match(stable.stdout, /^## Install$/m);
+  assert.match(stable.stdout, /pi install npm:@gtrabanco\/pi-agentic-workflow@latest/);
+  assert.match(stable.stdout, /npx skills add gtrabanco\/agentic-workflow#v2\.0\.0/);
+
+  const canaryRoot = fixture({ changesets: STRUCTURED, ...TITLED, git: true });
+  const canary = run(["release-notes", "--root", canaryRoot, "--channel", "canary", "--date", "2026-11-02"]);
+  assert.equal(canary.status, 0, canary.stderr || canary.stdout);
+  assert.match(canary.stdout, /pi install npm:@gtrabanco\/pi-agentic-workflow@canary/);
+  assert.match(canary.stdout, /npx skills add gtrabanco\/agentic-workflow#v2\.0\.0-canary\.20261102\.1/);
+  // the way back, with the reason no uninstall is needed
+  assert.match(canary.stdout, /pi install npm:@gtrabanco\/pi-agentic-workflow@latest/);
+  assert.match(canary.stdout, /npx skills add gtrabanco\/agentic-workflow#stable/);
+  assert.match(canary.stdout, /no uninstall/i);
+});
+
+// Canaries never consume changesets, so every cut reprints the whole backlog
+// and the reader cannot tell yesterday's news from today's. The body keeps the
+// earlier changes readable but separates them from the ones this cut adds.
+test("a canary body separates what is new since the previous canary from what it already carried", () => {
+  const root = fixture({
+    changesets: { "carried.md": ["pi:patch"] },
+    bodies: { "carried.md": ["feat(pi): the change already handed out", "", "Old news."] },
+    git: true,
+  });
+  execFileSync("git", ["tag", "v1.0.1-canary.20261101.1"], { cwd: root });
+  fs.writeFileSync(
+    path.join(root, ".changeset", "fresh.md"),
+    ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", "fix(pi): the change this cut adds", "", "New news.", ""].join("\n"),
+  );
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "fresh"], { cwd: root });
+
+  const result = run(["release-notes", "--root", root, "--channel", "canary", "--date", "2026-11-02"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const fresh = result.stdout.indexOf("### fix(pi): the change this cut adds");
+  const carried = result.stdout.indexOf("### feat(pi): the change already handed out");
+  assert.ok(fresh !== -1, "the new change is rendered");
+  assert.ok(carried !== -1, "the carried change is still readable");
+  assert.ok(fresh < carried, "the new change comes first — it is the news");
+  // the carried half is behind the previous cut's tag and a collapsed block
+  const marker = result.stdout.indexOf("v1.0.1-canary.20261101.1");
+  assert.ok(marker !== -1 && marker < carried, "the carried section names the previous canary");
+  assert.match(result.stdout.slice(0, carried), /<details>/, "the carried changes are collapsed");
+  const section = result.stdout.indexOf("## Also in this prerelease");
+  assert.ok(section !== -1 && section < marker, "the carried half is its own section, not mixed into the news");
+});
+
+test("a change is not reported as carried when the previous canary predates it", () => {
+  const root = fixture({ changesets: {}, git: true });
+  execFileSync("git", ["tag", "v1.0.1-canary.20261001.1"], { cwd: root });
+  fs.writeFileSync(
+    path.join(root, ".changeset", "a.md"),
+    ["---", '"@gtrabanco/pi-agentic-workflow": patch', "---", "", "feat(pi): the only change", "", "Detail.", ""].join("\n"),
+  );
+  execFileSync("git", ["add", "-A"], { cwd: root });
+  execFileSync("git", ["commit", "-qm", "the change"], { cwd: root });
+  const result = run(["release-notes", "--root", root, "--channel", "canary", "--date", "2026-11-02"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /^### feat\(pi\): the only change$/m, "it is in the news, not in the carried half");
+  assert.doesNotMatch(result.stdout, /<details>/, "no previous cut carried it, so nothing is collapsed");
+});
+
+test("release-notes refuses to render a stable cut with no release intent", () => {
+  const root = fixture({ changesets: {} });
+  const result = run(["release-notes", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr || result.stdout, /no release intent/i);
 });
 
 test("publish-plan prints per-package TSV lines for the declared packages (the channel publish job's input)", () => {

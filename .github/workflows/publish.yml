@@ -25,9 +25,11 @@ name: Publish packages
 #       tree first; the repo is otherwise untouched (the channel versions and
 #       their in-cut pins are staged for packing and restored after); the cut
 #       is recorded as a git tag and a GitHub pre-release carrying the
-#       changeset BACKLOG (the pending changeset bodies), and the changesets
-#       are NOT consumed — only the stable train consumes them. Canaries are
-#       grouped by you — changesets accumulate until you decide to cut.
+#       changeset BACKLOG (the pending changesets, rendered: grouped by kind,
+#       breaking first, with this cut's new changes separated from the ones an
+#       earlier canary already carried), and the changesets are NOT consumed —
+#       only the stable train consumes them. Canaries are grouped by you —
+#       changesets accumulate until you decide to cut.
 #
 #   Promotion: the stable suggestion is the base of the highest canary already
 #       cut whenever it sits above the changeset-derived version — so after a
@@ -183,8 +185,20 @@ jobs:
         with:
           bun-version: 1.4.0
 
+      # The notes are RENDERED, not concatenated: one heading per change, grouped
+      # by kind with breaking first, the train's bumps as a table, and the install
+      # commands for the stable channel. Rendered BEFORE apply because apply
+      # consumes the changesets, and outside the worktree so `git add -A` never
+      # commits it.
       - name: Assemble the release notes (BEFORE apply — apply consumes the changesets; outside the worktree so git add -A never commits it)
-        run: node scripts/release.mjs release-notes > "$RUNNER_TEMP/release-notes.txt"
+        env:
+          FORCE_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$FORCE_VERSION" ]; then
+            node scripts/release.mjs release-notes --channel stable --version "$FORCE_VERSION" > "$RUNNER_TEMP/release-notes.txt"
+          else
+            node scripts/release.mjs release-notes --channel stable > "$RUNNER_TEMP/release-notes.txt"
+          fi
 
       - name: Apply the train (versions + pins + changelog rows)
         env:
@@ -338,17 +352,21 @@ jobs:
         if: always()
         run: git checkout -- packages/*/package.json
 
-      # The canary release body is the BACKLOG: the pending changeset bodies —
-      # the same ones the next stable cut consumes — so the pre-release says
-      # what it carries. Canaries are grouped by the operator; the pre-release
-      # is where the group is readable. The changesets stay pending.
-      - name: Assemble the backlog notes (the pending changesets are the release body)
+      # The canary release body is the BACKLOG: the pending changesets — the same
+      # ones the next stable cut consumes — so the pre-release says what it
+      # carries. Canaries are grouped by the operator; the pre-release is where
+      # the group is readable, and the changesets stay pending. The renderer
+      # separates what THIS cut adds (the files the previous canary did not have)
+      # from what an earlier canary already handed out, which otherwise grows
+      # into the same wall of text on every cut.
+      - name: Assemble the backlog notes (the rendered changesets are the release body)
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
         run: |
-          {
-            echo "Canary cut — the changes below are the backlog this prerelease carries; the next stable cut consumes them."
-            echo ""
-            node scripts/release.mjs release-notes
-          } > "$RUNNER_TEMP/canary-notes.txt"
+          args=()
+          if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
+          node scripts/release.mjs release-notes --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" > "$RUNNER_TEMP/canary-notes.txt"
 
       # The cut is recorded as a tag — that tag IS the canary counter's input
       # (v<base>-canary.<date>.*), so the next cut increments. The pre-release

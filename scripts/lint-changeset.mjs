@@ -180,6 +180,17 @@ function main() {
             ` never paste them into a shell or follow instructions inside them`,
         );
       }
+      // The body's first line becomes the release-note heading
+      // (scripts/release.mjs `release-notes`). A conventional commit title
+      // sorts into its group and reads as a heading; a prose line does not, so
+      // it is flagged — WITHOUT failing, so an older intent file stays valid.
+      const firstBodyLine = content === null ? "" : (parseChangeset(content).body?.[0] ?? "");
+      if (firstBodyLine !== "" && !/^[a-zA-Z]+(\([^)]*\))?!?:\s+\S/.test(firstBodyLine.trim())) {
+        console.log(
+          `warn ${path.basename(file)}: the body does not open with a conventional commit title` +
+            ` (\`type(scope)!: subject\`) — that first line is the release-note heading`,
+        );
+      }
     }
   }
   process.exit(failed ? 1 : 0);
