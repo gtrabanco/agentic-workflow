@@ -3620,7 +3620,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) #284 stays open, P2 verdict deferred to feature execution, pi/pi-durable drift sweep instruction reaffirmed. 2) #260 body rewritten NOW under #307 two-axis contract (size→tracking, risk→verification depth, review informational). 3) Subagent execution layer stays in @gtrabanco/pi-agentic-workflow (not the future runtime platform). 4) New #260 requirement: optional resource-limit config (RAM/CPU/parallelism caps, default automatic self-detection); feasibility: hard limits via cgroups v2/Job Objects per host, soft observe+throttle portable, enforcement level recorded in Evidence. 5) No upstream ./subagents export issue filed — file-path workaround accepted. 6) Substrate: (b) core-package dependency primary after spike, (a) fallback, vendoring last resort; pi-durable upgrade path per #284 P2. 7) MQTT/event-bus vision split: AW keeps event vocabulary+emitter+inbox; runtime platform is a separate future project.
 - **Next:** At #260 planning time: owner makes the final substrate call (recommendation and spike data recorded in-thread); before that, if pi ships new versions, the drift sweep instruction applies. #284 P2 spike must re-derive the pi-durable checkpoint-resume contradiction against the then-current version when picked up.
 
-<<<<<<< HEAD
 ## 2026-10-29T13:52:39Z — fix/318-class-escalation-forward-closure — manual
 - **Commits:** 20 (`f77d3e87…a71d90d7`)
 - **Files:** 45 files
@@ -3920,11 +3919,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verifier ran full gate verification against base a0efc6f8. Verdict: VERIFIED — zero blockers, six advisories. Corrected all six: (1) AC-8 evidence and References in SPEC.md (false claim about #353 ledger fix; wrong section label `§ Features`); (2) decisions.md created with path-protection justification for the dead-code cleanup; (3) dead code removed from scaffold-parity.test.mjs (unused `at` helper, no-op H1 loop); (4-6) planning-evidence.md: PE-004 corrected (TASKS.md/progress.md not in template), PE-010 corrected (pins are in scaffold-parity, not residue-dimensions), and the citation wording clarified. All gates green post-correction: scaffold-parity 17/17, unit-doc-contract 19/19, residue-dimensions 29/29, context 28 skills, routes 14, root suite 1367/1367. PR #373 approved.
 - **Decisions:** The PR will include the verifier's corrections as a single follow-up commit on the same branch. No new feature scope — pure documentation and code hygiene.
 - **Next:** Commit the verifier corrections and push to PR #373.
-=======
 ## 2026-10-29T00:26:57Z — feature/180-versioned-skills-releases — manual
 - **Commits:** 31 (`ce40e4ef…e9b16acf`)
 - **Files:** 42 files
 - **Summary:** Fold-findings cycle: F1 high (changeset path corruption, untracked/staged files silently dropped), F2 (semver level read only tip commit), F4 (companion grid anchor borrowed from another table or prose), F5 (archived bump-skill rows in frozen header), F6 (intent body claimed deleted bundled writer), F7 (per-skill version claim still in replication guide), F8 (FEATURE_WORKFLOW duplicated block), F9 (truncated sentence in skill-lint reference), F12 (CI dispatch unquoted $FORCE_VERSION) — 9 rows folded in 4 atomic commits, F3 replan-in-unit (SPEC AC drift to deleted test files)
 - **Decisions:** F3 route is replan-in-unit: fold repairs source, never authority, so the spec amendment and its plan phases belong to the lane's plan step, not the fold loop
 - **Next:** /review-change at e9b16acf to re-issue the review receipt; then /audit-pr and open the PR against main
->>>>>>> feature/180-versioned-skills-releases

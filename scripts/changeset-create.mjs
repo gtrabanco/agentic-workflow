@@ -94,7 +94,6 @@ function changedFiles(root, base) {
   const committed = git(root, ["diff", "--name-only", `${base}...HEAD`]) ?? "";
   const dirty = gitRaw(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]) ?? "";
   const files = new Set(committed.split("\n").filter(Boolean));
-<<<<<<< HEAD
   // -z entries are `XY <path>\0`; strip the two status characters and the
   // separator, never the path's own first bytes (the earlier slice(2) after a
   // replace that already dropped the prefix read every dirty path as
