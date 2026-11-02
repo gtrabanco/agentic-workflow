@@ -3820,3 +3820,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** F15/F16 kept separate fold groups (different mechanisms); class escalation declined (different verifiers); sweep declared for removed slice(1,-1) and cells.join patterns.
 - **Next:** Complete final re-review of fix/319, then /audit-pr to proceed to merge gate.
 
+
+## 2026-11-02T15:21:32Z — fix/319-location-index-consolidation — manual
+- **Commits:** 44 (`c94c53dc…dbe2ffa7`)
+- **Files:** 79 files
+- **Summary:** Triage issues #356-359 (four arXiv-backed proposals: test triage, skill-lint security, adversarial review kill-mandate, prose-gate inventory)
+- **Decisions:** All four issues are new capability proposals, not bugs or trigger-based activations — each was evaluated against the scope-membership checklist (no overlap with any open unit's SPEC/phase task/AC), all returned no match, all promoted-to-feature
+- **Next:** /unit-lane --from-issue 356 + /unit-lane --from-issue 357 + /unit-lane --from-issue 358 + /unit-lane --from-issue 359 — build each promoted feature as its own unit
