@@ -291,6 +291,26 @@ test("#332 the scaffold unit templates carry the re-cut shape and lint clean", (
   assert.match(read("template/AGENTS.md"), /`spec-by-reference` shape/, "the template guide names the shape the templates carry");
 });
 
+// The skill that writes the scaffold teaches the shape the scaffold ships (#332
+// T5): its SKILL.md was retargeted to `spec-by-reference`, and its references
+// must not keep asserting the retired 14-section shape as what a new unit gets.
+// A legacy unit *keeping* the 14-section shape is fine and stays sayable.
+test("#332 init-workspace never teaches the retired shape as the new-unit shape", () => {
+  const refusals = [
+    /all 14 sections/,
+    /14-section template used by new units/,
+    /the 14-section\s+SPEC\.md/,
+  ];
+  const teach = (relative) => refusals.some((pattern) => pattern.test(read(relative)));
+  const surfaces = ["skills/init-workspace/SKILL.md",
+    ...fs.readdirSync(path.join(ROOT, "skills/init-workspace/references"))
+      .filter((name) => name.endsWith(".md"))
+      .map((name) => `skills/init-workspace/references/${name}`)];
+  for (const surface of surfaces) {
+    assert.ok(!teach(surface), `${surface} still teaches the retired 14-section shape as what a new unit carries`);
+  }
+});
+
 test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
   // AC1's validators read the templates' section list; nothing ran the shipped
   // linter over them, so a template whose own example violated its own rule
