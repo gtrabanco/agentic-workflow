@@ -105,6 +105,8 @@ test("cut + canary installs the workspace, gates the commit, stages and restores
   assert.match(block, /npm install -g npm@latest/, "Trusted Publishing needs npm >= 11.5.1");
   assert.match(block, /\( cd "packages\/\$dir" && bun run test \)/, "each declared package is gated before staging");
   assert.match(block, /release\.mjs publish-stage --channel/);
+  assert.match(block, /CUT_DATE=\$\(date -u \+%F\)/, "the cut date is pinned once");
+  assert.doesNotMatch(block, /--date "\$\(date/, "plan and stage read the pinned date, never a second clock read");
   assert.doesNotMatch(block, /npm version/, "no per-package npm version: the stage step owns the temp state");
   assert.match(block, /npm publish --ignore-scripts/, "lifecycle scripts never re-run the gate against the staged version");
   assert.match(block, /if: always\(\)[\s\S]{0,120}git checkout -- packages\/\*\/package\.json/);
