@@ -2268,7 +2268,8 @@ export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowS
   // Issue #319: the features and the fixes live in one document, and a fix row
   // is read from its own table there. A pre-319 tree still ships
   // `docs/fix/README.md`, so the standalone fix index is accepted too (the read
-  // alias); the consolidated index wins when a caller supplies both.
+  // alias); the standalone fix index takes priority when both are present,
+  // falling back to the consolidated index when only the latter exists.
   const roadmapDocument = indexDocument(input.documents);
   const feature = roadmapFeature(roadmapDocument);
   const fixIndexDocument = documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument;

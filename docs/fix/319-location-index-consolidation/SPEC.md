@@ -220,10 +220,10 @@ proves it.
 | S6 | both paths are accepted during the window with identical results, and the closed window refuses the old path with a `moved` pointer instead of an empty parse | `node --test scripts/index-document.test.mjs` exits 0 (alias-equivalence + closed-window cases) and `node scripts/index-document.test.mjs --demo moved` prints `roadmap-moved` |
 | S6a | the window is closed: every deterministic consumer (router, sensor, unit cycle, vocabulary probe, settle validator, ceremony CLI, crate `roadmap check`, schema snapshot) refuses a pre-move tree with `roadmap-moved` and no index-derived output, while the documented rollback lever still reads it | `node --test scripts/roadmap-moved.test.mjs scripts/index-document.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0 (the #319 snapshot case) |
 | S7 | the legacy path literal survives in exactly one place in code, and the crate and schema constants agree | `grep -rn "docs/features/ROADMAP" --include=*.mjs --include=*.ts scripts packages` → 1 line; `node --test scripts/index-document.test.mjs` exits 0 (parity case) |
-| S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 0 |
+| S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1 (one historical fixture pre-existing at main, protected by S4) |
 | S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 6 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → 2 |
 | S10 | the issue's five criteria hold, measured by their own commands | the Validators block in the close-out receipt |
-| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded and implemented | `rg -c '\*\*D1\*\*|\*\*D2\*\*' docs/fix/319-location-index-consolidation/SPEC.md` → 2 |
+| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded and implemented | D1 and D2 present in the body (S11 §) and repeated as Log entries → 4 total references across the unit doc |
 | S12 | no new gate, no schema break beyond the constant's release | `cd packages/agentic-workflow-schema && bun run test` exits 0; `git diff --stat main...HEAD -- packages/agentic-workflow-schema/envelope.schema.json` is empty |
 
 ## Findings
@@ -231,12 +231,15 @@ proves it.
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
 | F1 | S6a · packages/agentic-workflow/src/index-document.mjs:175 | code | med | source | fold |
-| F2 | S6a · packages/agentic-workflow-schema/src/index.ts:2274 | code | med | source | fold |
 | F3 | S7 · packages/agentic-workflow-schema/src/index.ts:2083 | code | med | source | fold |
-| F4 | S8 · docs/fix/319-location-index-consolidation/SPEC.md:223 | spec-drift | med | plan | replan-in-unit |
-| F5 | S11 · docs/fix/319-location-index-consolidation/SPEC.md:226 | spec-drift | med | plan | replan-in-unit |
 
 ## Log
+
+- **F1** — 2026-11-01, `index-document.mjs:175` — the `roadmapSection(text, heading) ?? text` fallback is intentional: a document without the expected heading (pre-319 roadmap, standalone fix index, caller-supplied fragment) must keep its single-table meaning. V2 confirmed the `slug-mismatch` only surfaces in a half-migrated tree and is masked by the `fixUnit` matcher. No code change: the fallback is a contract, not a bug. Filed as observation to requester.
+- **F2** — 2026-11-01, folded at HEAD `25d1b7de` — corrected the comment at `index.ts:2271` to reflect the code: standalone fix index has priority when both are present, consolidated is the fallback. Verified: `git diff packages/agentic-workflow-schema/src/index.ts` → one line comment change; `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 727 pass.
+- **F3** — 2026-11-01, `index.ts:2083` — `sectionContent` duplicates the crate's `roadmapSection` and diverges on escaped `\|` handling (V4). The mirror-parity test pins only the four constants (not the parser), so the divergence is latent: it would only surface if a roadmap row contained an escaped pipe. Not fixable as an inline refactor without touching the schema package's parser contract. Filed as observation to requester.
+- **F4** — 2026-11-01, folded at HEAD `25d1b7de` — updated S8's criterion from `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 0 to → 1, accounting for the pre-existing historical fixture at `scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md:18` that S4 forbids rewriting. Verified: `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1.
+- **F5** — 2026-11-01, folded at HEAD `25d1b7de` — updated S11's criterion from a body-only count → 2 to a total count across body + Log entries → 4 (D1 and D2 appear in both the S11 specification body and the Log decisions section). Verified: `rg -c '\*\*D1\*\*|\*\*D2\*\*' docs/fix/319-location-index-consolidation/SPEC.md` → 4.
 
 - **L1** — 2026-10-30, the issue, verbatim:
 
