@@ -41,8 +41,10 @@ The installable set is **13 user-facing + 14 internal** (27 total):
   hidden from the menu and dispatched by the user-facing workflow routers.
   The repo-only `skill-lint` helper is excluded from the installable count.
 
-> **Versioning.** Each skill carries its own `version:` (semver) in frontmatter;
-> changes are logged in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an
+> **Versioning.** Skills carry the ecosystem's unified train version in their
+> `version:` frontmatter, stamped by `scripts/release.mjs apply` when a release
+> is cut; a change ships as a `.changeset/` intent file and lands in the train's
+> history in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an
 > install with `npx skills update`.
 
 ## Method 1 — `skills` CLI (deterministic)

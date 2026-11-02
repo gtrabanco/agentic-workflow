@@ -178,9 +178,15 @@ jobs:
         env:
           FORCE_VERSION: ${{ inputs.version }}
         run: |
-          ARGS=""
-          if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
-          node scripts/release.mjs apply $ARGS
+          if [ -n "$FORCE_VERSION" ]; then
+            if [[ ! "$FORCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::version must be an exact X.Y.Z stable version, got: $FORCE_VERSION"
+              exit 1
+            fi
+            node scripts/release.mjs apply --version "$FORCE_VERSION"
+          else
+            node scripts/release.mjs apply
+          fi
 
       - name: Refresh the workspace lock (the train moved versions and pins)
         # One lock at the repository root, and the members link each other from

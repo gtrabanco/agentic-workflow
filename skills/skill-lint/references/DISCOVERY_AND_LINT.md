@@ -18,8 +18,9 @@ Ask one consolidated question only when a rule's applicability remains genuinely
 
 ### 3. Lint, warn, never repair
 
-Check all seven `AGENTS.md` invariants. This skill edits nothing — it reports. A
-SKILL.md, so report violations without fixing them:
+Check all seven `AGENTS.md` invariants against each changed SKILL.md. This skill
+edits nothing — it reports, so state every violation and leave the fix to the
+author:
 
 1. User-facing entrypoint contains a visible closing `→ Next:` block.
 2. Planning/execution uses `P1…` phases, never `S1` or `Step N`.

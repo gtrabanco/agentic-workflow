@@ -114,8 +114,8 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 
 1. **In the PR** — create the changeset intent file by running
    `node scripts/changeset-create.mjs` (it derives the affected packages and
-   skills from the modified files, the semver from the conventional commit
-   title, and the file name PR-first). One file per PR, as many entries as
+   skills from the modified files, the semver from the branch's conventional
+   commits, and the file name PR-first). One file per PR, as many entries as
    the change needs — the highest severity wins the train and each change
    lands in the changelog's right section at cut time. `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
