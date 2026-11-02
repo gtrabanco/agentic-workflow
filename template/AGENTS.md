@@ -280,6 +280,13 @@ State the invariants explicitly there (e.g. "module X must not import module Y",
 
 Generic, stack-independent guardrails. Add your own.
 
+- **Backward compatibility — `<declare: none | N-1 minor | …>`:** `<one line>
+  saying what the project keeps alive and the mechanism that makes an old
+  surface unnecessary — a project that declares `none` deletes a superseded
+  surface in the change that supersedes it, and a copy of a published artifact
+  (script, schema, helper, prose block) is never a compatibility shim>`. The
+  review pack reads this line to decide whether an obsolete surface is deleted
+  or kept; a blank line is an open question, never an assumed `none`.
 - **Dependencies:** justify every new dependency; prefer the platform/standard
   library; pin versions. Avoid redundant libraries that duplicate existing ones.
 - **Honesty to the user:** never hide real limitations of the product (limits,

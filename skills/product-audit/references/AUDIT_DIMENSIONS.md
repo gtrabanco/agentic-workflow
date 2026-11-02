@@ -36,6 +36,7 @@ classifier (`review-implementation`, `CLASSIFY.md`) like every other finding.
 **Duplicate content** — pass only if:
 
 - ✓ every duplicated grammar block, checklist, table, contract or paragraph found is either a reference to a single owner or carries its declared reason for the copy
+- ✓ a **shadow copy** — a file, script, schema, helper or prose block whose original lives in a pinned dependency or a published package — is a duplicate of that artifact, not a local convenience: one finding citing the copy, the artifact and its pin; vendoring is legitimate only with its provenance header and a recorded reason, never as a silent fork
 - ✓ each confirmed duplicate is one finding citing both locations
 - ✓ the same sweep run over the clean fixture twin (below) yields zero findings
 
@@ -44,6 +45,7 @@ classifier (`review-implementation`, `CLASSIFY.md`) like every other finding.
 - ✓ every unconsumed exported/defined symbol (or unreferenced prose block) is classified exactly one way: written as part of a delivered feature that **no functionality invokes** → **bug finding** (the feature was not implemented completely — the unit shipped half of what was asked); orphaned because a requested change **replaced or removed** that feature or part → **deletion candidate** (`fix-now (delete)`, not a bug)
 - ✓ the classification cites what requested the original feature and what replaced it — classifier evidence, never the auditor's impression
 - ✓ after any proposed deletion, **features-preserved-without-it** is verified: every requested feature still works without the removed code or prose — a deletion that breaks a requested feature is a finding, not a cleanup
+- ✓ a **prose citation** (`AGENTS.md`, a skill file, a comment, a docs page) is not evidence of a consumer: the consumer test is executable or explicitly declared, and the citation is itself part of what the deletion removes — a surface the project's declared compatibility policy does not require keeping is `fix-now (delete)`, never "documented, therefore alive"
 
 **Obsolete & missing documentation** — pass only if:
 

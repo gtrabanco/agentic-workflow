@@ -14,6 +14,7 @@ table — history lives in git log + closed issues.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
+| [#353](https://github.com/gtrabanco/agentic-workflow/issues/353) | residue-shadow-copies | in-progress | review-code + product-audit catch a shadow copy of a pinned/published artifact and an obsolete-by-mechanism surface, decided by the project's declared compatibility policy; a prose citation is never a consumer; branch `fix/353-residue-shadow-copies` |
 | [#331](https://github.com/gtrabanco/agentic-workflow/issues/331) | authoring-setup | in-progress | Authoring-repo initial setup — `docs/workflow/SETUP.md`, `scripts/setup-env.mjs` (`--check`), `scripts/update-tools.mjs` (`--dry-run`), CI check job; branch `feature/331-authoring-repo-setup` |
 | [#318](https://github.com/gtrabanco/agentic-workflow/issues/318) | class-escalation-forward-closure | in-progress | Class escalation + forward closure + generated PR evidence pack + remove narration surface (complements #315); branch `fix/318-class-escalation-forward-closure` |
 | [#340](https://github.com/gtrabanco/agentic-workflow/issues/340) | deletion-reuse-obligations | in-progress | product-audit residue dimensions (duplicate content, unused code, obsolete/missing docs) + reuse-first/replace-implies-delete + all-stages ask-don't-infer; branch `fix/340-deletion-reuse-obligations` |
