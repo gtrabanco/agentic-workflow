@@ -195,8 +195,8 @@ Conventions written into the project's AGENTS.md:
 
 These are written by bootstrap (fresh) and upgrade mode (additive-only for pre-
 lane installs). A pre-lane project gets only: the lane conventions section in
-AGENTS.md, the unit doc template under `docs/features/_TEMPLATE/`, and the
-docs-map row for the unit doc.
+AGENTS.md, the unit doc templates under `docs/features/_TEMPLATE/` and
+`docs/fix/_TEMPLATE/`, and the docs-map rows for them.
 
 ## Normalized Repository State
 

@@ -311,6 +311,29 @@ test("#332 init-workspace never teaches the retired shape as the new-unit shape"
   }
 });
 
+test("#332 the scaffold templates the prose names are the files actually shipped", () => {
+  // The same drift one level down: the skill promised `features/_TEMPLATE` +
+  // `ROADMAP` and `fix/_TEMPLATE` + `README`, but only the SPEC templates ship —
+  // the consolidated index is `docs/ROADMAP.md`. Every named template is asserted
+  // against the scaffold copy, not against a remembered shape.
+  const scaffold = (relative) => path.join("template", relative);
+  for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+    assert.ok(fs.existsSync(path.join(ROOT, scaffold(template))), `the scaffold ships ${scaffold(template)}`);
+  }
+  assert.ok(fs.existsSync(path.join(ROOT, scaffold("docs/features") + path.sep + "ROADMAP.md")),
+    "the scaffold ships the features roadmap beside its template");
+  assert.ok(fs.existsSync(path.join(ROOT, scaffold("docs/fix") + path.sep + "README.md")),
+    "the scaffold ships the fix index beside its template");
+  for (const file of ["skills/init-workspace/SKILL.md", "skills/init-workspace/references/BOOTSTRAP_WRITE.md",
+    "skills/init-workspace/references/UPGRADE.md", "README.md"]) {
+    const text = read(file);
+    // A consolidated-index claim names the canonical roadmap as something the
+    // scaffold already holds; the scaffold's own index lives under `docs/features/`
+    // until upgrade mode moves it, so the guide may only promise the move.
+    assert.ok(!/keep[^.]{0,80}docs\/ROADMAP\.md/i.test(text), `${file} promises a consolidated roadmap the scaffold does not ship`);
+  }
+});
+
 test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
   // AC1's validators read the templates' section list; nothing ran the shipped
   // linter over them, so a template whose own example violated its own rule
