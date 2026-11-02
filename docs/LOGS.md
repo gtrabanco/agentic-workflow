@@ -3845,3 +3845,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 0
 - **Files:** —
 - **Summary:** Triage batch: triage 6 issues (360, 361, 362, 363, 365, 356) — all promote-to-feature
+## 2026-11-02T16:50:01Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Recovered from a worktree relocation mistake that displaced a live agent's workspace, then repaired the ci-publish-fix worktree without losing WIP
+- **Decisions:** The ci-publish-fix worktree was created inside .git/worktrees/ (a self-referential admin dir), which made git refuse deletion and broke the session. Instead of rm --force, moved the checkout to .worktrees/ (gitignored convention), preserved the diff sha256 and verbatim files for verification, and rebuilt the admin metadata. The live transcript was recovered from ~/.pi/agent/sessions/ before the filesystem repair; 3 user prompts extracted (canary publish logic). WIP verified byte-identical before/after (175 inserted, 61 deleted across 4 files).
+- **Next:** cd .worktrees/ci-publish-fix && git pull --rebase to get the 3 behind commits from origin/ci-publish-fix, then continue the canary publish work (release.mjs, publish.yml changes)
