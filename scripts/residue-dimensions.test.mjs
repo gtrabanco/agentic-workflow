@@ -125,6 +125,37 @@ test("review-code keeps the S8 deletion mandate and sweep declaration items (reg
   assert.match(reviewCode, /Sweep declaration present/);
 });
 
+// ── 3b. Shadow copies, prose citations, declared compatibility (#353) ───────
+
+test("review-code names a copy of a pinned/published artifact as a duplicate (#353)", () => {
+  assert.match(reviewCode, /[Ss]hadow copy/);
+  assert.match(reviewCode, /pinned dependency|published package|published artifact/i);
+  // The original lives outside the reviewed tree — never "an existing helper".
+  assert.match(reviewCode, /outside the reviewed|outside the (tree|repository)/i);
+});
+
+test("review-code refuses a prose citation as evidence of a consumer (#353)", () => {
+  assert.match(reviewCode, /[Cc]itation is not a consumer|not evidence of a consumer/i);
+});
+
+test("review-code decides obsolete-vs-keep by the project's declared compatibility policy (#353)", () => {
+  assert.match(reviewCode, /compatibility polic/i);
+  assert.match(reviewCode, /AGENTS\.md/);
+  assert.match(reviewCode, /fix-now \(delete\)/);
+});
+
+test("dimension table carries the shadow-copy case and the prose-citation rule (#353)", () => {
+  assert.match(dimensions, /[Ss]hadow copy/);
+  assert.match(dimensions, /pinned dependency|published package|published artifact/i);
+  assert.match(dimensions, /prose citation/i);
+});
+
+test("the repo declares no backward-compatibility support and the template asks every project to (#353)", () => {
+  assert.match(read("AGENTS.md"), /[Nn]o backward-compatibility support/);
+  assert.match(read("AGENTS.md"), /never a compatibility shim/);
+  assert.match(read("template/AGENTS.md"), /Backward compatibility/);
+});
+
 // ── 4. Plan reference: reuse-first + replace-implies-delete (S5, S6) ────────
 
 test("plan reference carries reuse-first as a pass-only-if checklist item (S5)", () => {
