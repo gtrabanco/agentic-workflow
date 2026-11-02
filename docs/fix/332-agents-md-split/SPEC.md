@@ -319,9 +319,11 @@ the closed set in `log-kind@1`.
 - **E5** — 2026-11-01, `node scripts/phase-lint.mjs template/docs/{features,fix}/_TEMPLATE/SPEC.md` · `verdict BLOCKED: no-phases` and `verdict BLOCKED: unparseable` at `main` @ `826f9c06`; `verdict PASS` here. The frozen-failure reproducer for S22/S25.
 - **P8** — 2026-11-01, every obligation row closed and the release intent shipped.
 
+- **P9** — 2026-11-01, PR #371 opened against `main` after integrating the two `main` moves (a merge commit, never a force push); CI green on the merge head (`root-suite`, `dependency-pin-gate`, `pi-compat-guard`).
+
 ## Next
 
-Hand the diff to the owner for external verification: the deviation in `## Impact`
+PR #371 awaits the owner's external verification: the deviation in `## Impact`
 (S7's literal 120 lines), the obligations ledger's 27 verified rows and the
 verification block are the review surface.
 
