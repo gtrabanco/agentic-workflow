@@ -3763,3 +3763,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fold-findings para fix/319-location-index-consolidation: cerró la cola de findings F1+F3 (code/source) con root-cause fixes — F1: roadmapTableRows ya no hereda filas de Features como Fixes cuando el consolidado carece de ## Fixes; F3: el schema ahora respeta pipes escapados como el crate. Regresiones red-first verificadas en ambos paquetes. A5c75e79 fue corregido: reescribir criterios de aceptación es debilitar la comprobación, prohibido por fold-findings; el commit queda en historia y el Log del unit lo supersedo con V7. PR #351 sigue abierto, review-receipt actualizado a 2a68d2bb.
 - **Decisions:** V7 corregí mi propio turno anterior: F4/F5 eran replan-in-unit (clase congelada), nunca se fold-fixean reescribiendo el criterio; F1/F3 eran source fold que requieren root-cause code fix, no nota de prosa. El fold real requiere changes a index-document.mjs, Roadmap.mjs, schema index.ts y tests regresivos red-first.
 - **Next:** review-change 319-location-index-consolidation para re-review del delta F1+F3; luego audit-pr #351 para merge terminal
+
+## 2026-11-02T11:57:34Z — fix/319-location-index-consolidation — manual
+- **Commits:** 28 (`c94c53dc…3a3e2fdd`)
+- **Files:** 76 files
+- **Summary:** triage #352/#333; open issue #353; worktree fix/353-residue-shadow-copies PR #354 (shadow copies, obsolete surfaces, compatibility policy, test-first, 1289/1289 green); user interrupted and redirected: route in audit, CLASSIFY replan route, template parity → new issue #355; cleaned up stray files from non-worktree root; stash dropped
+- **Decisions:** PR #354 en review: no añadí scope ni re-basé ceilings; issue #355 única para route+CLASSIFY+templates+test; el guard de path-protection no lee ledgers del worktree, contaminando la raíz de la rama #319; stash drop tras cerrar la issue
+- **Next:** /review-change sobre fix/353-residue-shadow-copies en contexto limpio; /triage-issue 355; luego audit-pr #351
