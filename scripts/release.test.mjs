@@ -408,6 +408,22 @@ test("publish-plan prints per-package TSV lines for the declared packages (the c
   ]);
 });
 
+// Machine modes print TSV only: a forced --version must not leak the human
+// "Canary base forced by operator" note into the stream the publish job's gate
+// consumes — its while-loop reads every line as name\tdir\tversion\tttag, so a
+// note line becomes a row with an empty dir and the gate runs in the wrong
+// directory (observed in CI: /usr/bin/test exited 1).
+test("publish-plan with a forced version emits TSV rows only (no human note lines)", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  const result = run(["publish-plan", "--root", root, "--channel", "canary", "--version", "9.8.7", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const lines = result.stdout.trim().split("\n");
+  assert.deepEqual(lines, [
+    "@gtrabanco/pi-agentic-workflow\tpi-agentic-workflow\t9.8.7-canary.20260916.1\tcanary",
+  ]);
+  assert.doesNotMatch(result.stdout, /forced by operator/i);
+});
+
 test("publish-plan lists nothing when no changeset declares packages (empty cut, not an error)", () => {
   const root = fixture({ changesets: {} });
   const result = run(["publish-plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);

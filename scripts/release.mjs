@@ -490,7 +490,7 @@ function main() {
       : `${base}${baseNote}`;
     console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${baseLine}, date: ${date}`);
   }
-  if (forced) {
+  if (human && forced) {
     console.log(args.channel === "stable"
       ? `Version forced by operator: ${version}`
       : `Canary base forced by operator: ${canaryBase}`);
