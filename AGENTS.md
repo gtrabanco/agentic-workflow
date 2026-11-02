@@ -97,6 +97,16 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   even when its own work looks finished. Vocabulary and semantics are owned by
   `skills/triage-issue/references/LABELS.md`; this guide is the only place that
   states the hold, and every skill honors it before acting.
+- **No backward-compatibility support (owner decision).** This repository ships
+  one version at a time and never keeps an old surface alive for an older
+  consumer: every dependency is pinned, the skills and the three packages carry
+  one train version (D-40-14), and the version-parity gate plus the pin-watch job
+  keep the pair aligned. A superseded helper, script, doc, flag or prose block is
+  deleted in the change that supersedes it; a copy of a published artifact is
+  never a compatibility shim. A project that needs an older line keeps an older
+  **pin**, not a fork. If a real external consumer ever needs a surface kept, that
+  is a new unit with a recorded decision — never a default. The review pack reads
+  this rule (its compatibility policy) when classifying an obsolete surface.
 
 ---
 
