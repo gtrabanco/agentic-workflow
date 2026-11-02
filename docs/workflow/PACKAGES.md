@@ -76,3 +76,16 @@ member's version resolves from the registry and fails).
   `stable`) — `mode: suggest` previews the
   versions read-only; everything runs `scripts/release.mjs` in CI.
 - **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>"` or `"<skill-name>"`: patch|minor|major — the highest severity in the set always wins the train (D-40-15) — plus a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
+
+**The release body is rendered, not concatenated** (issue #375).
+`scripts/release.mjs release-notes` turns the pending changesets into a document
+that is deterministic for a tree + date: an `## Install` block for the channel
+being cut (`@canary` + the pinned `#v<tag>` skills ref, or `latest` +
+`#v<version>`) with the way back to the other one — re-running the install
+replaces the recorded source, so no uninstall is involved; a `## Package bumps`
+table; one `##` section per kind (`Breaking changes` first) and one `###`
+heading per change, taken from the **first line of its changeset body**, so that
+line is a conventional commit title (`type(scope)!: subject`) — the linter warns
+when it is not. A canary puts the changes added since the previous canary's tag
+first and collapses the rest: nothing consumes changesets until a stable cut.
+`--generate-notes` still appends the generated PR list and its author credit.

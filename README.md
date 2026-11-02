@@ -525,6 +525,30 @@ Restart Pi and run `/agentic-workflow-settings` once. Update and removal are
 configuration, and troubleshooting live in
 **[`packages/pi-agentic-workflow/README.md`](packages/pi-agentic-workflow/README.md)**.
 
+### Channels: stable and canary
+
+The package follows two npm dist-tags. `latest` is the stable train; `canary` is
+the prerelease of the next train, cut for the packages that changed.
+
+```sh
+# Try the next prerelease
+pi install npm:@gtrabanco/pi-agentic-workflow@canary
+npx skills add gtrabanco/agentic-workflow#<the canary tag from its release page>
+
+# Back to stable
+pi install npm:@gtrabanco/pi-agentic-workflow@latest
+npx skills add gtrabanco/agentic-workflow#stable
+```
+
+No uninstall is needed in either direction: `pi install` replaces the recorded
+source of the same package instead of adding a second copy, and the skills CLI
+keeps one ref per skill name (the last `add` wins). `pi update --extensions`
+then follows whichever tag is recorded. The `@canary` dist-tag is repointed at
+every stable cut, so an install left on `@canary` lands on the stable version at
+the next one; a skills install pinned to a `#v…` tag is frozen and follows the
+branch only after the `#stable` re-add. Every release page repeats these
+commands for its own channel.
+
 ## Uninstall
 
 To remove the complete `agentic-workflow` install from the current project
