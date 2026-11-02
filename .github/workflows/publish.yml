@@ -116,7 +116,13 @@ jobs:
           FORCE_VERSION: ${{ inputs.version }}
         run: |
           args=()
-          if [ -n "$FORCE_VERSION" ]; then args+=(--version "$FORCE_VERSION"); fi
+          if [ -n "$FORCE_VERSION" ]; then
+            if [[ ! "$FORCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::version must be an exact X.Y.Z stable version, got: $FORCE_VERSION"
+              exit 1
+            fi
+            args+=(--version "$FORCE_VERSION")
+          fi
           node scripts/release.mjs plan --channel stable "${args[@]}" | tee plan-stable.txt
 
       - name: Canary suggestion (a prerelease of the next train — the stable base, or the base of a canary already cut)
@@ -124,7 +130,13 @@ jobs:
           FORCE_VERSION: ${{ inputs.version }}
         run: |
           args=()
-          if [ -n "$FORCE_VERSION" ]; then args+=(--version "$FORCE_VERSION"); fi
+          if [ -n "$FORCE_VERSION" ]; then
+            if [[ ! "$FORCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::version must be an exact X.Y.Z stable version, got: $FORCE_VERSION"
+              exit 1
+            fi
+            args+=(--version "$FORCE_VERSION")
+          fi
           node scripts/release.mjs plan --channel canary --date "$(date -u +%F)" "${args[@]}" | tee plan-canary.txt
 
       - name: Run summary
