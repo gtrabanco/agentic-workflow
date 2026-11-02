@@ -105,7 +105,7 @@ Verdict: <one-line honest health verdict>
   Installed tooling ....... ✓ | ⚠ | ✗ | n-a
 
 ## Findings (severity-ranked, one F-sequence for the whole audit)
-  F1 [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore>
+  F1 [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore> — route: <the next command for this finding | none — <why>> [· loads: <the one reference that route needs>]
   F2 [SEV] ...
   [example — scope-export recurrence] F<k> [med] Workflow discipline — <N>
     consecutive units exported scope via `## Amendments`/descope issues —
@@ -148,6 +148,11 @@ Finding set: F<k> + F<j> + F<m> (print every proposed finding; one finding → F
 
 Replace every finding placeholder with the complete actual set before printing;
 never print `…` or only the first finding in a live hand-off.
+
+`route:` is the triage taken at flight: the next command for that finding plus,
+optionally, the one reference that command loads. `none` costs no context. It
+is the progressive-loading decision, not a schema to fill — and stating a route
+never executes it: the report file stays the only mutation.
 
 `<id>` is the audit's incremental number (Process step 9). A finding is
 addressable forever as `<audit-id> F<k>` — e.g. `triage-issue 3 F2` reads
