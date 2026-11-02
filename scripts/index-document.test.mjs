@@ -99,17 +99,27 @@ test("O6/R1: the pre-move path is written in exactly one place in live code", ()
 
 test("O7: the crate's constants and the schema package's published constants agree", async () => {
   const source = read(SCHEMA_MODULE);
+  /**
+   * A published constant's declared value: a string literal, a boolean literal,
+   * or — for the rollback lever, which an installed package must be able to
+   * flip at run time — the expression it derives from. A derived constant is
+   * compared by the declaration, never by a value the environment could change
+   * under the test.
+   */
   const declared = (name) => {
-    const match = new RegExp(`export const ${name}\\s*=\\s*("([^"]*)"|true|false)`).exec(source);
+    const match = new RegExp(`export const ${name}\\s*=\\s*("([^"]*)"|true|false|[^;]+);`).exec(source);
     assert.ok(match, `${SCHEMA_MODULE} publishes ${name}`);
-    return match[1].replace(/^"|"$/g, "");
+    return /^"[^"]*"$/.test(match[1]) ? match[1].replace(/^"|"$/g, "") : match[1].trim();
+  };
+  const isLiteral = (name) => {
+    const value = declared(name);
+    return /^(true|false)$/.test(value) || !/\s|\(|=>|process\./.test(value) ? value : null;
   };
   const shared = [
     "ROADMAP_DOCUMENT",
     "FIX_INDEX_DOCUMENT",
     "ROADMAP_FEATURES_HEADING",
     "ROADMAP_FIXES_HEADING",
-    "ROADMAP_LEGACY_READ",
   ];
   for (const name of shared) {
     const value = await crate(name);
@@ -117,9 +127,19 @@ test("O7: the crate's constants and the schema package's published constants agr
     assert.equal(typeof value, kind, `${CRATE_MODULE} publishes ${name} as a ${kind}`);
     assert.equal(String(value), declared(name), `${name} is the same value in both packages`);
   }
+  // The rollback lever reads `false` on both sides — the schema package stays
+  // dependency-free and publishes the closed value, while the crate derives it
+  // from the run-time channel an installed package can flip. Both state the same
+  // fact and `crate("ROADMAP_LEGACY_READ")` is `false` in a clean environment.
+  assert.equal(declared("ROADMAP_LEGACY_READ"), "false", "the schema package publishes the closed window (D4)");
+  assert.equal(await crate("ROADMAP_LEGACY_READ"), false, "the migration window is closed (D4) in a clean environment");
+  assert.match(
+    read(CRATE_MODULE).match(/export const ROADMAP_LEGACY_READ\s*=\s*([^;]+);/)?.[1]?.trim() ?? "",
+    /AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ/,
+    "the crate keeps the lever flippable by an installed package",
+  );
   assert.match(read("packages/agentic-workflow-schema/src/index.ts"), /from "\.\/paths\.js"/, "the schema package re-exports the constants");
   assert.equal(await crate("ROADMAP_DOCUMENT"), CANONICAL);
-  assert.equal(await crate("ROADMAP_LEGACY_READ"), false, "the migration window is closed (D4)");
   assert.equal(await crate("ROADMAP_LEGACY_DOCUMENT"), LEGACY, "the pre-move path is still named so the refusal can point at it");
 });
 

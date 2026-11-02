@@ -185,8 +185,8 @@ R1–R5 are O1, O2, O5, O6, O9's validators below.
   (Implements: S8, S10)
   Relevant files: scripts/fixtures
 - P6 — Migrate the skills, `template/` substrate and live `docs/workflow/` pages.
-  (validator: `rg -n 'docs/features/ROADMAP' docs/workflow skills template` exits 1)
-  (Implements: S8, S9, S10)
+  (validator: `rg -n 'docs/features/ROADMAP' docs/workflow skills template` exits 0)
+  (Implements: S8, S9, S10, S7)
   Relevant files: skills/unit-lane/SKILL.md
 - P7 — Verification: declaration, receipt and the changeset intent.
   (validator: `node scripts/run-root-suite.mjs` exits 0)
@@ -223,18 +223,16 @@ proves it.
 | S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1 (one historical fixture pre-existing at main, protected by S4) |
 | S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 6 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → 2 |
 | S10 | the issue's five criteria hold, measured by their own commands | the Validators block in the close-out receipt |
-| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded, and D2's supersession by D4 is recorded too | D1, D2 and D4 recorded in the body (S11 §) and in the Log → `rg -c '\*\*(D1|D2|D4)\*\*'` → 5 (2 body + 3 Log) |
+| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded, and D2's supersession by D4 is recorded too | D1, D2 and D4 recorded in the body (S11 §) and in the Log → `rg -c '\*\*(D1|D2|D4)\*\*'` matches 5 (2 body + 3 Log) |
+| S6b | the documented rollback lever governs every consumer: with the window closed a pre-move-only tree is refused with its `roadmap-moved` pointer, and with the lever on the same tree reads its rows | `cd packages/agentic-workflow && bun run test` exits 0 ("the documented rollback lever re-opens the pre-move path for every consumer") |
+| S7b | a migrated tree's `## Fixes` table owns its fix rows: an absent row is never answered from a stale standalone index, while a half-migrated tree keeps the documented fallback | `cd packages/agentic-workflow-schema && bun run test` exits 0 ("#319 F9") |
 | S12 | no new gate, no schema break beyond the constant's release | `cd packages/agentic-workflow-schema && bun run test` exits 0; `git diff --stat main...HEAD -- packages/agentic-workflow-schema/envelope.schema.json` is empty |
 
 ## Findings
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F9 | packages/agentic-workflow-schema/src/index.ts:2311-2315 | code | med | source | fold |
-| F10 | packages/agentic-workflow/bin/agentic-workflow.mjs:303-309 | code | med | source | fold |
-| F11 | docs/fix/319-location-index-consolidation/SPEC.md:188 | spec-drift | med | plan | replan-in-unit |
-| F12 | docs/ROADMAP.md:127 | brand | med | source | fold |
-| F13 | .changeset/319-location-index-consolidation.md:20-22 | brand | med | source | fold |
+
 
 ## Log
 
@@ -390,5 +388,11 @@ nothing here self-approves.
 - **V16** — docs/fix/319-location-index-consolidation/SPEC.md:188 · reviewer review-change · HEAD a125d0009a4a0e60f0355188948afc59f28b9f4a · recheck: direct command — `rg -n 'docs/features/ROADMAP' docs/workflow skills template` → exit 0, 8 lines (7 added by this branch: `MIGRATION.md` ×4, `UPGRADE.md` ×2, `skills/init-workspace/SKILL.md` ×1, plus one pre-existing `GOLDEN_FIXTURE.md` run-log row) against P6's frozen "exits 1" · confirmed
 - **V17** — docs/ROADMAP.md:127 · reviewer review-change · HEAD a125d0009a4a0e60f0355188948afc59f28b9f4a · recheck: direct read — fix row `[#319] … in-progress` vs feature row 86 `done · [#351]` in the same document; the legend defines `done` = "built, PR open, awaiting merge" and PR #351 is open · confirmed
 - **V18** — .changeset/319-location-index-consolidation.md:20 · reviewer review-change · HEAD a125d0009a4a0e60f0355188948afc59f28b9f4a · recheck: direct read — the changeset names "the tolerant document suffix" among the crate's exports; neither package exports any suffix constant · confirmed
+- **F11 (plan re-cut)** — 2026-11-02, REPLANNED IN UNIT via the plan step on this branch — P6's frozen validator read `rg -n 'docs/features/ROADMAP' docs/workflow skills template` exits 1, which no correct delivery can satisfy: the migration prose this phase ships must name the pre-move path to move off it (`MIGRATION.md`, `UPGRADE.md`, the `init-workspace` scaffold probe), and `GOLDEN_FIXTURE.md`'s run log is append-only record (S4). Re-cut to `exits 0` and paired with the reader pin that actually proves the phase (S7's one-literal check, 1 line — the alias definition), declared as S7. `node scripts/phase-lint.mjs docs/fix/319-location-index-consolidation/SPEC.md` · verdict PASS at this head.
+- **F9** — 2026-11-02, FOLDED in the cycle-3 batch — root cause: `compileWorkflowSnapshot` conflated "the consolidated index has no `## Fixes` table" (a half-migrated tree, where the documented fallback applies) with "the table exists and does not declare this unit" (a migrated tree, where a stale standalone copy must never shadow it — the crate's own pin). Fix: the fallback is taken only when the consolidated document carries no `## Fixes` heading; a migrated tree's table owns its rows outright. Regression: `packages/agentic-workflow-schema/test/machine-contract.test.mjs` "#319 F9" — red without the fix (unit resolved as `42-slug` from `docs/fix/README.md`), green with it, and the half-migrated control still reads its standalone row. Declared as S7b.
+- **F10** — 2026-11-02, FOLDED in the cycle-3 batch — root cause: the crate CLI computed its canonical index by hand and never consulted the shared resolver, so the documented rollback lever (`ROADMAP_LEGACY_READ`) could not re-open the pre-move path there: a legacy-only tree answered "index not found" and lost the `roadmap-moved` pointer. Fix: the CLI resolves the index through `resolveRoadmapSource`, so the lever governs it as it governs every other consumer, and the lever reads one run-time channel (`AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ=1`) an installed package can actually flip. Regression: `packages/agentic-workflow/test/roadmap-check.test.mjs` "the documented rollback lever re-opens the pre-move path for every consumer" — red without the fix, green with it. Declared as S6b.
+- **F12** — 2026-11-02, FOLDED in the cycle-3 batch — the fix row for #319 read `in-progress` while feature row 86 read `done · [#351]` in the same document, and the legend defines `done` as built with the PR open; the Notes also named an "alias window" as delivered without disclosing that D4 closed it. Corrected to `done · [#351]` and to what shipped. No regression: the row is data, and `roadmap-settle` reads the settled shape (root suite green).
+- **F13** — 2026-11-02, FOLDED in the cycle-3 batch — the changeset named "the tolerant document suffix" among the crate's exports; no such constant exists in either package. Replaced with the `roadmap-moved` code, which is published. Swept the sibling claim in the same sentence (`scripts/roadmap-moved.test.mjs` alone never pinned the schema snapshot — `machine-contract` does), and the low notes from the same review on the same surface: `MIGRATION.md`'s "verbose probe" → `vocabulary probe`, and its pinning sentence now names both suites.
+- **G4** — 2026-11-02, the cycle-3 fold gate at the batch head — `node scripts/run-root-suite.mjs` · exit 0 · 1302 pass; `packages/agentic-workflow-schema` `bun run test` · 730 pass; `packages/agentic-workflow` `bun run test` · 259 pass; `packages/pi-agentic-workflow` `bun run test` · 454 pass; `node --test scripts/index-document.test.mjs` · 8 pass; `node scripts/phase-lint.mjs docs/fix/319-location-index-consolidation/SPEC.md` · PASS; `bun scripts/check-skill-context.mjs` · PASS · 28 skills; `node --test scripts/normative-drift.test.mjs` · 20 pass; `node scripts/version-parity-gate.mjs --content --base main` · PASS.
 - **R3** — 2026-11-02, review at HEAD a125d0009a4a0e60f0355188948afc59f28b9f4a · verdict REVIEW-FAIL · cycle 3 (delta re-review escalated to a full pass: width — `docs/LOGS.md` outside the cited-file union; size — 282 changed lines > 200) · gate exit 0 · run on the user's explicit instruction past the two-cycle cap
 - **G3** — 2026-11-02, `node scripts/run-root-suite.mjs` · exit 0 · 1302 pass, 0 fail; `packages/agentic-workflow-schema` `bun run test` · 729/729; `packages/agentic-workflow` `bun run test` · 258/258; `packages/pi-agentic-workflow` `bun run test` · 454/454; `node --test scripts/roadmap-moved.test.mjs scripts/index-document.test.mjs` · exit 0 · 15/15 (`--demo moved` prints `roadmap-moved`); `bun scripts/check-skill-context.mjs` · PASS · 28 skills; `node --test scripts/normative-drift.test.mjs` · exit 0 · 20/20; `node scripts/version-parity-gate.mjs --content --base main` · exit 0 — all at HEAD a125d0009a4a0e60f0355188948afc59f28b9f4a (reviewer gate run)

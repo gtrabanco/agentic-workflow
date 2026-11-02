@@ -2137,6 +2137,15 @@ function tableFor(content: string, heading: string): string {
   return declaresTables ? "" : content;
 }
 
+/**
+ * Whether a document carries its own `## Fixes` table (issue #319). A migrated
+ * index does; a half-migrated one — `## Features` present, no `## Fixes` yet —
+ * does not, and keeps the documented fallback to the standalone fix index.
+ */
+function hasFixTable(content: string): boolean {
+  return sectionContent(content, ROADMAP_FIXES_HEADING) !== undefined;
+}
+
 function repositoryStateFrom(document: WorkflowDocument | undefined): WorkflowSnapshot["repositoryState"] {
   if (document === undefined) return "missing";
   const value = /(?:^|\n)Status:\s*([^\n\r]+)/i.exec(document.content)?.[1]?.trim().toLowerCase();
@@ -2300,20 +2309,22 @@ export function validateWorkflowSnapshotV1(value: unknown): WorkflowSnapshotVali
  */
 export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowSnapshotResult {
   const repositoryStateDocument = documentFor(input.documents, "docs/workflow/REPOSITORY_STATE.md");
-  // Issue #319: the features and the fixes live in one document, and a fix row
-  // is read from its own table there. A pre-319 tree — or a half-migrated one,
-  // whose consolidated index has no `## Fixes` table yet — still carries the fix
-  // rows in `docs/fix/README.md`, so that document is the fallback, read only
-  // when the consolidated index cannot answer. The consolidated table always
-  // wins when both can: a migrated tree always ships the standalone file as a
-  // stub, and a stale copy of the rows there must never shadow them.
+  // Issue #319 F9: the fallback to the standalone fix index is a property of a
+  // *half-migrated* tree — one whose consolidated index has no `## Fixes` table
+  // yet, which `MIGRATION.md` and `init-workspace`'s upgrade step document as
+  // still readable. A migrated tree is different: its `## Fixes` table exists,
+  // so it owns the fix rows outright and a stale standalone copy must never
+  // shadow them — the crate pins exactly this (`roadmap-check.test.mjs`, "A
+  // stale standalone index that would disagree: it must be ignored"). Reading
+  // the stale row there resolves a unit the consolidated index does not declare
+  // and makes the two published sides disagree on the same tree.
   const roadmapDocument = indexDocument(input.documents);
   const feature = roadmapFeature(roadmapDocument);
   const consolidatedFixes = roadmapDocument === undefined ? null : fixUnit(roadmapDocument);
-  const fixIndexDocument = consolidatedFixes === null
-    ? (documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument)
-    : roadmapDocument;
-  const fix = feature === null ? (consolidatedFixes ?? fixUnit(documentFor(input.documents, FIX_INDEX_DOCUMENT))) : null;
+  const fixTableOwnsTheRows = roadmapDocument !== undefined && hasFixTable(roadmapDocument.content);
+  const standaloneFixDocument = fixTableOwnsTheRows ? undefined : documentFor(input.documents, FIX_INDEX_DOCUMENT);
+  const fix = feature === null ? (consolidatedFixes ?? fixUnit(standaloneFixDocument)) : null;
+  const fixIndexDocument = consolidatedFixes === null ? (standaloneFixDocument ?? roadmapDocument) : roadmapDocument;
   const selected = feature ?? fix;
   const selectedKind = feature === null && fix !== null ? "fix" : "feature";
   const provenance: SnapshotProvenance[] = [];

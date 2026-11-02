@@ -38,8 +38,12 @@ export const ROADMAP_FIXES_HEADING = "Fixes";
  * D4: the read alias is closed. Kept as an explicit, tested rollback lever:
  * `true` re-opens the pre-move path for an emergency, and every consumer reads
  * it through this one value.
+ *
+ * An operator rolling back cannot edit an installed package, so
+ * `AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ=1` re-opens it at run time — the same
+ * value, one channel wider. It never re-opens by accident: only the exact `1`.
  */
-export const ROADMAP_LEGACY_READ = false;
+export const ROADMAP_LEGACY_READ = process.env.AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ === "1";
 /** The closed code a closed window refuses the pre-move path with. */
 export const ROADMAP_MOVED_CODE = "roadmap-moved";
 

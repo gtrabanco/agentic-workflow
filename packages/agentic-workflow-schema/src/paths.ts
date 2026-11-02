@@ -19,5 +19,11 @@ export const FIX_INDEX_DOCUMENT = "docs/fix/README.md";
 export const ROADMAP_FEATURES_HEADING = "Features";
 /** The heading of the fixes table in the consolidated index. */
 export const ROADMAP_FIXES_HEADING = "Fixes";
-/** The migration window: closed by decision D4. Kept as the documented rollback lever. */
+/**
+ * The migration window: closed by decision D4. Kept as the documented rollback
+ * lever. This package stays dependency-free (no Node typings), so it publishes
+ * the closed value; the runtime channel that flips it for an installed package
+ * lives in the crate (`src/index-document.mjs`), which is the module that reads
+ * the filesystem. Both sides state the same fact: the window is closed.
+ */
 export const ROADMAP_LEGACY_READ = false;

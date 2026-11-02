@@ -31,9 +31,8 @@ import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
   ROADMAP_FIXES_HEADING,
-  ROADMAP_LEGACY_DOCUMENT,
-  ROADMAP_LEGACY_READ,
   RoadmapMovedError,
+  resolveRoadmapSource,
   roadmapSection,
 } from "../src/index-document.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
@@ -84,6 +83,23 @@ function refuse(reason) {
 /** Strip the docs root from a published index path (`docs/X/Y.md` → `X/Y.md`). */
 function relativeToDocs(index) {
   return index.replace(/^docs\//, "");
+}
+
+/**
+ * The index this tree carries, resolved by the shared reader so the documented
+ * rollback lever applies here exactly as it does everywhere else: the reader
+ * decides which path is readable, and a tree that carries only the pre-move
+ * path while the window is closed is refused with its pointer at the new home.
+ * Returns `{ direct, index }`: the path a caller passed explicitly (never
+ * resolved through the tree) and the walked-up index path.
+ *
+ * @param {string} docPath — the unit doc the walk starts from
+ * @param {string|undefined} direct — `--roadmap`/`--index`, already read
+ */
+function resolveIndex(docPath, direct) {
+  if (direct !== undefined) return { direct: resolve(direct), index: null };
+  const source = resolveRoadmapSource({ exists: (relative) => findUpIndex(docPath, relative) !== null });
+  return { direct: null, index: source === null ? null : findUpIndex(docPath, source.path) };
 }
 
 function findUpIndex(docPath, relativeIndex) {
@@ -297,15 +313,12 @@ switch (command) {
         // reads its own table there. A pre-319 tree still has the pre-move
         // roadmap and the standalone fix index under the alias.
         const indexArg = flag("--roadmap") ?? flag("--index");
-        // The migration window is closed (D4): the index is the consolidated
-        // document, and a tree that still carries only the pre-move path is
-        // refused with the pointer at its new home instead of being read.
-        const canonicalIndex = findUpIndex(docPath, relativeToDocs(ROADMAP_DOCUMENT));
-        const movedIndex = canonicalIndex === null && !ROADMAP_LEGACY_READ
-          ? findUpIndex(docPath, relativeToDocs(ROADMAP_LEGACY_DOCUMENT))
-          : null;
-        if (movedIndex !== null) refuse(new RoadmapMovedError().message);
-        const indexPath = indexArg ? resolve(indexArg) : canonicalIndex;
+        // The index is resolved through the shared reader, so the documented
+        // rollback lever (`ROADMAP_LEGACY_READ`) governs this consumer too: with
+        // the window closed a pre-move-only tree is refused with the pointer at
+        // its new home, and with the lever on the same tree reads as before.
+        const resolved = resolveIndex(docPath, indexArg);
+        const indexPath = resolved.direct ?? resolved.index;
         if (!indexPath) {
           refuse(`index not found for ${docArg} — pass --roadmap <file>`);
         }

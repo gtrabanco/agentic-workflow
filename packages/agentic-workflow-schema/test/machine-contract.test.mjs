@@ -561,3 +561,60 @@ test("#319 F7: the consolidated ## Fixes table wins over a stale standalone fix 
     ["docs/fix/README.md"],
   );
 });
+
+test("#319 F9: a consolidated ## Fixes table owns the fix rows even when the row is absent", () => {
+  // Issue #319 F9: F7 fixed the document *order* but kept conflating "the
+  // consolidated index has no `## Fixes` table" (a half-migrated tree — the
+  // fallback is promised) with "the table exists and has no row for this unit"
+  // (a migrated tree — the stale standalone index must be ignored, exactly as
+  // the crate pins at `packages/agentic-workflow/test/roadmap-check.test.mjs`,
+  // "A stale standalone index that would disagree: it must be ignored").
+  // Reading the stale row here resolves a unit the consolidated index does not
+  // declare, so the two published sides disagree on the same tree.
+  const separator = "|---|---|---|---|";
+  const migratedWithoutTheRow = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    separator,
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "| [#77](https://example.invalid/issues/77) | `other-fix` | in-progress | x |",
+    "",
+  ].join("\n");
+  const staleStandalone = ["# Active fixes", "", "| Issue | Topic | Status | Notes |", separator, "| `42-slug` | stale-topic | in-progress | y |", ""].join("\n");
+  const base = { sourceRevision: "0123456789abcdef", repository: { branch: "main", headSha: "abcdef012345", dirty: false } };
+
+  const migrated = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: migratedWithoutTheRow },
+      { path: "docs/fix/README.md", content: staleStandalone },
+    ],
+  });
+  assert.equal(migrated.ok, true);
+  assert.equal(migrated.snapshot.unit, null, "a migrated tree never resolves a fix row its own ## Fixes table does not declare");
+
+  // The half-migrated tree keeps the promised fallback: no `## Fixes` heading at
+  // all, which is the state `MIGRATION.md` and `init-workspace`'s upgrade step
+  // document as still readable.
+  const halfMigrated = ["# Roadmap", "", "## Features", "", "| NN | Slug | Status | Depends on | Summary |", separator, "", ""].join("\n");
+  const half = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: halfMigrated },
+      { path: "docs/fix/README.md", content: staleStandalone },
+    ],
+  });
+  assert.equal(half.ok, true);
+  assert.deepEqual(half.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    half.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    ["docs/fix/README.md"],
+  );
+});
