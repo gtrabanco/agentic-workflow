@@ -3888,3 +3888,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #332: split AGENTS.md into a core guide + deep references, budget the guide layer, repair template audit, open PR #371
 - **Decisions:** S7's ~120-line goal is unreachable at 357 lines (83 machine blocks stay + 142+ prose core); declared deviation, not smoothed over. main moved 2x during the branch; merged (never force-pushed). Carries one parallel-session docs(log) commit.
 - **Next:** Owner reviews PR #371 (https://github.com/gtrabanco/agentic-workflow/pull/371), all CI green, ready to merge
+## 2026-11-02T18:54:00Z — feat/332-agents-md-split — manual
+- **Commits:** 14 (`20fc92a1…e0febc70`)
+- **Files:** 25 files
+- **Summary:** External verify on fix/332-agents-md-split: folded surviving-mentions of the retired 14-section shape and of the templates the scaffold ships
+- **Decisions:** The external verifier blocked on three surfaces still teaching the old 14-section shape (BOOTSTRAP_WRITE.md, UPGRADE.md) and on the README layout row + bootstrap prose that named one template where the scaffold ships two. Decision: repair all three in one batch per root cause, not per file; refuse a consolidated docs/ROADMAP.md claim in the README because that path only exists after upgrade mode moves it, not from the scaffold.
+- **Next:** Owner merges PR #371 (feat/332-agents-md-split → main): all blockers closed, gate 1348 green, budget ceilings clean, promise-coherence PASS, phase-lint PASS
