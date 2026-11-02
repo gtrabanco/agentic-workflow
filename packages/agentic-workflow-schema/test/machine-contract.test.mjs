@@ -618,3 +618,68 @@ test("#319 F9: a consolidated ## Fixes table owns the fix rows even when the row
     ["docs/fix/README.md"],
   );
 });
+
+test("#319 F14: a fenced example row is never a unit, on either published side", () => {
+  // Issue #319 F14: the index teaches its own row format, so a writer copying a
+  // row into a fence is normal authoring. That example is content, not data.
+  // The crate's `roadmapTableRows` and this mirror's `tableRowCells` share one
+  // fence grammar; before the fix the schema resolved a unit out of the fence.
+  const separator = "|---|---|---|---|";
+  const withFencedExamples = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    "|---|---|---|---|---|",
+    "| 01 | `real` | in-progress | — | a live feature row |",
+    "",
+    "```markdown",
+    "| 02 | `fenced` | in-progress | — | an example, not a unit |",
+    "```",
+    "",
+    "## Fixes",
+    "",
+    "| Unit | Topic | Status |",
+    "|---|---|---|",
+    "~~~",
+    "| 99-fenced-fix | fenced-topic | in-progress |",
+    "~~~",
+    "| 77-real-fix | real-topic | in-progress |",
+    "",
+  ].join("\n");
+
+  const snapshot = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content: withFencedExamples }],
+  });
+  assert.equal(snapshot.ok, true);
+  assert.deepEqual(
+    snapshot.snapshot.unit,
+    { kind: "feature", id: "01-real", status: "in-progress" },
+    "the fenced feature example never competes with the live row",
+  );
+
+  // Fix-only tree: the fenced fix example must not become the unit either.
+  const fixesOnly = [
+    "# Roadmap",
+    "",
+    "## Fixes",
+    "",
+    "| Unit | Topic | Status |",
+    "|---|---|---|",
+    "```",
+    "| 99-fenced-fix | fenced-topic | in-progress |",
+    "```",
+    "| 77-real-fix | real-topic | in-progress |",
+    "",
+  ].join("\n");
+  const fixSnapshot = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content: fixesOnly }],
+  });
+  assert.equal(fixSnapshot.ok, true);
+  assert.deepEqual(fixSnapshot.snapshot.unit, { kind: "fix", id: "77-real-fix", status: "in-progress" });
+});
