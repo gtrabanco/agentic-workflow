@@ -22,8 +22,12 @@
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
 7. **Propagate the unit doc template.** Ensure
-   `docs/features/_TEMPLATE/SPEC.md` exists with all 14 sections sections.
-   This is the template used when creating new unit documents.
+   `docs/features/_TEMPLATE/SPEC.md` exists cut in the `spec-by-reference` shape
+   the template ships (`Specs` with `S#` requirements, Impact, Non-goals, Future
+   cost, Applicable tests, Known pre-existing issues, `Tasks`, `Findings`, `Log`,
+   Next, References). This is the template used when creating new unit
+   documents; a unit opened before this shape keeps the legacy 14-section shape
+   and is never rewritten to migrate.
 8. **Provision Serena — one consented question, then write.** Load
    [SERENA](SERENA.md) and ask its single consent question; one yes covers the
    tool install, the detected platform's MCP registration and the global trust
