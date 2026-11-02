@@ -3786,3 +3786,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Commits:** 32 (`c94c53dc…ef8e7a3f`)
 - **Files:** 76 files
 - **Summary:** Review + fold fix/319-location-index-consolidation: cycle-2 review found 3 fix-now defects (F6: fold deleted the unit log, F7: schema read standalone index first, F8: router re-read the index 4x per lookup) — all three folded, full gate green
+## 2026-11-02T13:05:53Z — fix/319-location-index-consolidation — manual
+- **Commits:** 35 (`c94c53dc…07ab2725`)
+- **Files:** 76 files
+- **Summary:** Cycle-3 review and fold of fix/319-location-index-consolidation: ran a full review-change (code/security/perf/brand), verified two-cycle cap exceeded with user authorization, folded F9 (schema stale-standalone fallback row-absent case), F10 (crate CLI lever never consulted the shared resolver, rollback dead), F12 (ROADMAP fix row stuck at in-progress), F13 (changeset names non-existent export), and re-cut F11's frozen P6 validator via the plan step (migration prose must name the old path). Added regression tests for F9 in machine-contract.test.mjs and F10 in roadmap-check.test.mjs. All gates green after fold.
+- **Decisions:** Cycle 3 authorized explicitly past the two-cycle cap: the fold found new fix-now rows, so the review→fold loop continued. The crate's CLI resolved the index by hand instead of through resolveRoadmapSource, making the documented rollback lever impossible to use — fixed by delegating index resolution to the shared reader. The schema package's rollback lever stays a literal boolean (dependency-free, no @types/node); the runtime channel that flips it lives in the crate's index-document.mjs. The P6 validator was unsatisfiable with correct migration prose — re-cut to exits 0 and paired with the actual reader pin (S7 one-literal check).
+- **Next:** Re-run /review-change on this branch to close the review loop and verify no new findings; then /audit-pr to proceed to merge gate.
