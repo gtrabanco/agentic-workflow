@@ -197,6 +197,17 @@ R1–R5 are O1, O2, O5, O6, O9's validators below.
   (validator: `node --test scripts/roadmap-moved.test.mjs` exits 0)
   (Implements: S6a)
   Relevant files: scripts/roadmap-moved.test.mjs
+
+## Triaged steps
+
+```
+TRIAGE — 319-location-index-consolidation (fix)
+Steps: implement, evidence
+Tiers: implement: cheap, evidence: strong
+Skipped: research: trivial scope, design: trivial scope, plan: trivial scope, tests: trivial scope, review: trivial scope, docs: trivial scope, release: not a feature
+Budget: strong
+```
+
 ### Planning evidence
 
 The ledger lives beside this doc as `planning-evidence.md` (M unit).
@@ -232,6 +243,8 @@ proves it.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F19 | commit `44a01010` (`docs/research/ATTRIBUTION.md`, `docs/research/papers-sweep-2026-11-02.md`) | Scope integrity (creep) | high | fix-now | split out of this PR — move the `docs/research/*` work to its own branch/PR (it is undeclared in the SPEC, the PR body and #319) |
+| F21 | gate: Hygiene — tree clean (`M docs/research/ATTRIBUTION.md`) | Hygiene | high | fix-now | resolved externally — the tree is clean again (the edit was discarded, not committed); row kept for the audit trail, nothing to fold |
 
 
 ## Log
@@ -323,6 +336,7 @@ proves it.
   `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass,
   `bun scripts/check-skill-context.mjs` · PASS · 28 skills,
   `node scripts/version-parity-gate.mjs --content --base main` · PASS · `5e7cfa5f`.
+- **P8** — 2026-11-02, closed the migration window (S6a, decision D4): `ROADMAP_LEGACY_READ` is `false` in both published constants modules, every deterministic consumer (router, sensor, unit cycle, vocabulary probe, settle validator, ceremony CLI, crate `roadmap check`) refuses a pre-move tree with a clean `roadmap-moved` diagnostic and no index-derived output, and the schema reads the published path only; `node --test scripts/roadmap-moved.test.mjs` · exit 0 · 7/7 (O14), `cd packages/agentic-workflow-schema && bun run test` · exit 0 · 727 pass (O15), `node --test scripts/ceremony-unit-plan.test.mjs scripts/roadmap-moved.test.mjs` · exit 0 · 25 + 7 cases (O16) · `07ab2725`.
 - **V1** — 2026-11-01, external verification of `main...HEAD` at `63793b5e`: one
   blocker and four ledger advisories, all corrected here without changing
   behaviour. **Blocker** — `packages/agentic-workflow-schema/README.md` still
@@ -405,6 +419,8 @@ nothing here self-approves.
 - **V22** — docs/fix/319-location-index-consolidation/SPEC.md `## Log` · reviewer review-change · HEAD 402bdbf1b325188bcd3641bf33c64f014b2f7e1b · recheck: direct read — zero non-quotation Log hits for #316/#315/#318 (the only hits are S1's frozen body quotes and V8's own text); the merges themselves are verified on `git log main --grep=316` — S3's "recorded in the unit Log" clause stays unmet; the F6 restoration rebuilt the pre-fold Log verbatim and the pre-fold Log never carried the S3 evidence line either · confirmed
 - **R5** — 2026-11-02, review at HEAD 402bdbf1b325188bcd3641bf33c64f014b2f7e1b · verdict REVIEW-FAIL · cycle 5 (delta re-review escalated to a full pass: width — `packages/agentic-workflow-schema/src/pre-execution.ts` outside the F14 cited-file union; size — 287 changed lines > 200) · single-reviewer run, adversarial recommendation surfaced in the report · gate: G6 consumed at the identical head · run on the user's explicit instruction past the two-cycle cap
 - **E7** — 2026-11-02, S3's dependency record, measured at cut-over on `main`: `#316` → PR `#323` `064cbe91` (roadmap writer call sites + settle gate), `#315` → PR `#330` `fc79b77f` (published-vocabulary sweep gate), `#318` → PR `#339` `fc45a31a` (class escalation and forward closure) — all three merged before this unit's first cut, so the hard dependency S3 names was satisfied at cut time. Recorded here because S3's criterion requires it in this Log and the pre-fold Log never carried it (F17, first surfaced as V8).
+- **F18** — 2026-11-02, FOLDED — the `## Triaged steps` block was re-derived with `bun scripts/unit-route.mjs --triage 319-location-index-consolidation` and pasted verbatim below `## Tasks`; `bun scripts/unit-lineage.mjs --unit 319-location-index-consolidation` → `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (16)`.
+- **F20** — 2026-11-02, FOLDED — the missing P8 phase receipt is recorded in this Log (**P8**).
 - **F15** — 2026-11-02, FOLDED in the cycle-5 batch — root cause: the crate's `tableCells` stripped the first and last cell unconditionally (`slice(1, -1)`), which is only correct for a row that carries both boundary pipes; a writer's row without a trailing pipe lost its last data cell (and a leading-escaped row lost everything), while the schema mirror's conditional boundary strip kept it — so one document parsed differently on the two published sides. Fix: the crate now holds the schema's conditional rule (drop a leading empty cell and a trailing empty cell, not blind slices), which is the same boundary contract on both sides. Regression: `scripts/index-document.test.mjs` "F15: a row without a trailing pipe keeps its last cell, on both published sides" — red without the fix (`["12","a"]` for `| 12 | a | b`), green with it. Swept: the crate's only `tableCells` call site (`roadmapTableRows`) and the four row shapes the two implementations are compared over.
 - **F16** — 2026-11-02, FOLDED in the cycle-5 batch — root cause: the F14 fold replaced the raw source row with a re-joined `cells.join(" | ")` before handing it to `lineNumber`, and a re-joined row containing an escaped `\|` is not a substring of the document, so `lineNumber` returned its miss sentinel `1` and the unit's provenance cited line 1 silently. Fix: `tableRowCells` now carries `{ cells, line }` so `roadmapFeature`/`fixUnit` cite the source line they were read from, as the pre-fold code did. Regression: `packages/agentic-workflow-schema/test/machine-contract.test.mjs` "#319 F16: an escaped pipe never collapses the unit's provenance line" — red without the fix (line 1), green with it (line 8).
 - **F17** — 2026-11-02, FOLDED in the cycle-5 batch — S3's "recorded in the unit Log" clause was unmet: the Log carried no line evidencing the #316/#315/#318 merges (V8 reported it; the F6 restoration rebuilt the pre-fold Log verbatim, which never carried it either). Fix: `E7` records the three merge commits measured on `main` (`#316` → PR `#323` `064cbe91`, `#315` → PR `#330` `fc79b77f`, `#318` → PR `#339` `fc45a31a`). No code change; the criterion is now provable from this Log.
