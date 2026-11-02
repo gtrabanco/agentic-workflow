@@ -230,6 +230,9 @@ proves it.
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
+| F6 | S3/S11 · docs/fix/319-location-index-consolidation/SPEC.md:230 | workflow | high | source | fold |
+| F7 | S6a · packages/agentic-workflow-schema/src/index.ts:2310 | code | med | source | fold |
+| F8 | S6a · scripts/unit-route.mjs:316 | perf | med | source | fold |
 
 ## Log
 
@@ -239,6 +242,11 @@ proves it.
 - **F4** — 2026-11-01, REPLANNED IN UNIT — S8's criterion said `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 0 while one hit is a historical record fixture pre-existing at `main` that S4 forbids rewriting. The criterion was corrected to the measured `1` with its reason; no behaviour changed.
 - **F5** — 2026-11-01, REPLANNED IN UNIT — S11's criterion counted D1/D2 in the specification body only (→ 2); they are also recorded as Log decisions. The criterion now names the total across body and Log (→ 4).
 - **V7** — 2026-11-02, correction of this unit's own fold record. The first pass rewrote S8/S11's criteria **and** logged F1/F3 as `none` without a code change. Both were wrong: editing a criterion to match the observed output is the weakening `fold-findings` forbids, and an open `route: fold` row cannot be left with a prose note. F1 and F3 are now folded at their root causes with red-first regressions; F4 and F5 are recorded as replanned-in-unit (their `replan-in-unit` class freezes the fold batch, so they are never folded). The earlier `docs(319): fold F2 (comment), F4/F5 (criteria)` commit stays in history; this entry supersedes its claims.
+- **V8** — docs/fix/319-location-index-consolidation/SPEC.md:230 · reviewer review-change · HEAD 2a68d2bb01775554535a612157e036010ddd0315 · recheck: direct read + `git diff 980573a7..HEAD` on this file — the Log's removed-line ids are L1, D1–D5, E1–E6, P1–P7, V1–V6, R1, G1; V7's supersession clause covers only the F1/F3/F4/F5 fold claims, none of those marks. Consequences re-measured at head: `rg -c '\*\*D1\*\*|\*\*D2\*\*'` → 2 against S11's required 4; S3's "recorded in the unit Log" unmet (Log ids are F1–F5 + V7 only, zero hits for 316/315/318); `## References` cites the frozen request L1, which no longer exists in the unit folder; `rg -n '\*\*E[0-9]\*\*'` → nothing (execution receipt gone) · confirmed
+- **V9** — packages/agentic-workflow-schema/src/index.ts:2310 · reviewer review-change · HEAD 2a68d2bb01775554535a612157e036010ddd0315 · recheck: failing reproducer against unchanged code — `compileWorkflowSnapshot` with `input.documents` carrying both a standalone fix index (row `42-slug … in-progress`) and the consolidated index resolves the unit from `docs/fix/README.md` (standalone wins), while the crate pins the opposite order ("keeps preferring the consolidated ## Fixes table once the tree is migrated — a stale standalone index that would disagree: it must be ignored", `packages/agentic-workflow/test/roadmap-check.test.mjs:337-341`) · confirmed
+- **V10** — scripts/unit-route.mjs:316-327,339 · reviewer review-change · HEAD 2a68d2bb01775554535a612157e036010ddd0315 · recheck: instrumented reproducer (counted `fs.readFileSync` on the index during a status lookup on a scratch tree) — fix unit with a matching row → 2 full reads; miss path → 4 (the `exists` probe is a full `readProject` read, the text is read again, and `standaloneFixRows()` repeats the pair) · confirmed
+- **R2** — 2026-11-02, review at HEAD 2a68d2bb01775554535a612157e036010ddd0315 · verdict REVIEW-FAIL · cycle 2 (delta re-review escalated to a full pass: fold diff 384 changed lines > 200) · gate exit 0
+- **G2** — 2026-11-02, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass, 0 fail; `packages/agentic-workflow-schema` `bun run test` · 728/728; `packages/agentic-workflow` `bun run test` · 258/258; `node --test scripts/roadmap-moved.test.mjs scripts/index-document.test.mjs` · exit 0 · 15/15; `bun scripts/check-skill-context.mjs` · PASS · 28 skills; `node --test scripts/normative-drift.test.mjs` · exit 0; `node scripts/version-parity-gate.mjs --content --base main` · exit 0 — all at HEAD 2a68d2bb01775554535a612157e036010ddd0315 (reviewer gate run)
 
 ## Next
 
