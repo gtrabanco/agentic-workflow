@@ -414,6 +414,35 @@ test("#319: the migration window is closed — a pre-move document path is not t
   assert.equal(canonical.snapshot.unit?.id, "12-skill-lockfile", "the published path is still read");
 });
 
+test("#319 F3: an escaped pipe stays one cell, as it does in the crate", () => {
+  // The crate splits table rows only on unescaped pipes (`tableCells`); this
+  // package parsed the same rows with `split("|")`, so an escaped `\\|` in the
+  // topic cell shifted every later column: the status read as the escaped
+  // fragment's successor, and the row resolved to the wrong lifecycle state.
+  const content = [
+    "## Features",
+    "",
+    "| NN | Slug | Status | Depends on | Summary |",
+    "|---|---|---|---|---|",
+    "| 12 | `skill-lockfile` | done | — | a finished feature |",
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    "| `12-skill-lockfile` | topic \\| subtopic | in-progress | x |",
+    "",
+  ].join("\n");
+  const result = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [{ path: ROADMAP_DOCUMENT, content }],
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.snapshot.unit?.id, "12-skill-lockfile", "the fix row is the in-progress one");
+  assert.equal(result.snapshot.unit?.status, "in-progress", "the status cell is not the escaped fragment's successor");
+});
+
 test("compileWorkflowSnapshot falls back to the active fix index when no feature is in progress", () => {
   const result = compileWorkflowSnapshot({
     sourceRevision: "0123456789abcdef",

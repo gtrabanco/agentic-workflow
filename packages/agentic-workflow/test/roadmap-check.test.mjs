@@ -257,3 +257,104 @@ describe("previous behavior holds — the writer ops the call sites already name
     strictEqual(receipt.ok, true);
   });
 });
+
+describe("roadmap check — the half-migrated tree (issue #319)", () => {
+  // The documented two-pass migration: the consolidated index exists without a
+  // `## Fixes` table while the active fix rows are still in the standalone fix
+  // index. `MIGRATION.md` and `init-workspace`'s upgrade reference promise that
+  // a tree in this state still reads its fix rows.
+  const halfMigrated = (featureRow) =>
+    [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      REAL_SEPARATOR,
+      featureRow,
+      "",
+    ].join("\n");
+
+  const fixDocDir = (relative) => {
+    const dir = join(tmpDir, relative);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "SPEC.md"), "# fix unit\n## Next\n\nReady to merge.\n", "utf8");
+    return dir;
+  };
+
+  it("reads the standalone fix index instead of a feature row with the same NN", () => {
+    const root = join(tmpDir, "half-1");
+    const docDir = fixDocDir("half-1/docs/fix/91-beta");
+    writeFileSync(join(root, "docs", "ROADMAP.md"), halfMigrated("| 91 | `alpha` | in-progress | — | a feature row that must never be read as fix 91 |"), "utf8");
+    const standalone = join(root, "docs", "fix", "README.md");
+    writeFileSync(standalone, fixIndexTable(["| [#91](https://example.invalid/issues/91) | `beta` | in-progress | x |"]), "utf8");
+
+    const r = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], { encoding: "utf8" });
+    strictEqual(r.status, 0, r.stdout + r.stderr);
+    ok(r.stdout.includes("verdict: PASS"), r.stdout);
+  });
+
+  it("never reports a vacuous pass: the fix row's own settle obligation is checked", () => {
+    const root = join(tmpDir, "half-2");
+    const docDir = join(tmpDir, "half-2", "docs", "fix", "91-beta");
+    mkdirSync(docDir, { recursive: true });
+    // The doc carries its PR URL, so an unsettled row must fail once the
+    // standalone index is read.
+    writeFileSync(join(docDir, "SPEC.md"), "# fix unit\n## Next\n\nPR #402 (`" + OWNER + "/pull/402`).\n", "utf8");
+    writeFileSync(join(root, "docs", "ROADMAP.md"), halfMigrated("| 90 | `alpha` | in-progress | — | no row for 91 here |"), "utf8");
+    writeFileSync(
+      join(root, "docs", "fix", "README.md"),
+      fixIndexTable(["| [#91](https://example.invalid/issues/91) | `beta` | in-progress | x |"]),
+      "utf8",
+    );
+
+    const r = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], { encoding: "utf8" });
+    strictEqual(r.status, 1, r.stdout + r.stderr);
+    ok(r.stdout.includes("pr-url-unsettled"), r.stdout);
+  });
+
+  it("keeps preferring the consolidated ## Fixes table once the tree is migrated", () => {
+    const root = join(tmpDir, "half-3");
+    const docDir = fixDocDir("half-3/docs/fix/91-beta");
+    writeFileSync(
+      join(root, "docs", "ROADMAP.md"),
+      [
+        "# Roadmap",
+        "",
+        "## Features",
+        "",
+        "| NN | Slug | Status | Depends on | Summary |",
+        REAL_SEPARATOR,
+        "| 90 | `alpha` | in-progress | — | a feature row |",
+        "",
+        "## Fixes",
+        "",
+        "| Issue | Topic | Status | Notes |",
+        "|---|---|---|---|",
+        "| [#91](https://example.invalid/issues/91) | `beta` | in-progress | consolidated |",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    // A stale standalone index that would disagree: it must be ignored.
+    writeFileSync(join(root, "docs", "fix", "README.md"), fixIndexTable(["| [#91](https://example.invalid/issues/91) | `other` | in-progress | x |"]), "utf8");
+
+    const r = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], { encoding: "utf8" });
+    strictEqual(r.status, 0, r.stdout + r.stderr);
+  });
+
+  it("never reads a feature row as the fix row of the same NN when ## Fixes is absent", () => {
+    // F1: a consolidated document that has no `## Fixes` table and no standalone
+    // index has NO fix rows. Reading its Features table as fixes makes feature
+    // row 91 answer for fix 91 and report a slug mismatch against a row that
+    // belongs to another kind entirely.
+    const root = join(tmpDir, "half-4");
+    const docDir = fixDocDir("half-4/docs/fix/91-beta");
+    writeFileSync(join(root, "docs", "ROADMAP.md"), halfMigrated("| 91 | `alpha` | in-progress | — | a feature row that must never be read as fix 91 |"), "utf8");
+
+    const r = spawnSync(process.execPath, [CLI, "roadmap", "check", join(docDir, "SPEC.md")], { encoding: "utf8" });
+    strictEqual(r.status, 0, r.stdout + r.stderr);
+    ok(r.stdout.includes("verdict: PASS"), r.stdout);
+    ok(!r.stdout.includes("slug-mismatch"), "no feature row answers for the fix row: \n" + r.stdout);
+  });
+});

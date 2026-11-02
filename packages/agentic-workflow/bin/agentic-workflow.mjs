@@ -28,10 +28,13 @@ import { join, resolve, basename, dirname } from "node:path";
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
 import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
 import {
+  FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
+  ROADMAP_FIXES_HEADING,
   ROADMAP_LEGACY_DOCUMENT,
   ROADMAP_LEGACY_READ,
   RoadmapMovedError,
+  roadmapSection,
 } from "../src/index-document.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
@@ -309,7 +312,26 @@ switch (command) {
         const dirName = basename(dirname(docPath));
         const nn = /^(\d+)/.exec(dirName)?.[1] ?? "";
         const slug = dirName.replace(/^\d+-/, "");
-        const result = checkUnitDoc({ nn, slug, kind: isFix ? "fix" : "feature", docText, indexText: readFileSync(indexPath, "utf8") });
+        // A half-migrated tree (issue #319): the consolidated index exists but
+        // carries no `## Fixes` table, so the active fix rows are still in the
+        // standalone fix index. `MIGRATION.md` and `init-workspace`'s upgrade
+        // reference promise that state is readable, so a fix doc falls back to
+        // it exactly as the sensor, router, settle validator and ceremony CLI
+        // do — never a feature row read as a fix row, never a vacuous pass.
+        const indexText = readFileSync(indexPath, "utf8");
+        const fixIndexText = isFix && !indexArg && roadmapSection(indexText, ROADMAP_FIXES_HEADING) === null
+          ? (() => {
+            const standalone = findUpIndex(docPath, relativeToDocs(FIX_INDEX_DOCUMENT));
+            return standalone === null ? null : readFileSync(standalone, "utf8");
+          })()
+          : null;
+        const result = checkUnitDoc({
+          nn,
+          slug,
+          kind: isFix ? "fix" : "feature",
+          docText,
+          indexText: fixIndexText ?? indexText,
+        });
         if (parsed.json) {
           console.log(
             JSON.stringify(
