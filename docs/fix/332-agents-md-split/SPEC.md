@@ -321,11 +321,35 @@ the closed set in `log-kind@1`.
 
 - **P9** — 2026-11-01, PR #371 opened against `main` after integrating the two `main` moves (a merge commit, never a force push); CI green on the merge head (`root-suite`, `dependency-pin-gate`, `pi-compat-guard`).
 
+- **F1** — 2026-11-02, external verification folded: `BOOTSTRAP_WRITE.md` and
+  `UPGRADE.md` still taught the retired 14-section shape as what a new unit gets
+  (S23 landed only in `SKILL.md`), so bootstrap verified a correct copy against a
+  section list the template no longer carries. Both retargeted to
+  `spec-by-reference`, with the legacy shape kept for units already cut in it.
+  Commit `95b0c86c` · 2026-11-02.
+- **F2** — 2026-11-02, the same drift one level down: the prose promised a
+  `ROADMAP` beside `features/_TEMPLATE` and a `README` beside `fix/_TEMPLATE`
+  while only the SPEC templates ship, and named one template where the scaffold
+  ships two. Prose now names the shipped files; `README.md`'s layout row matches.
+  Commit `b3de16f3` · 2026-11-02.
+- **E6** — 2026-11-02, `node scripts/run-root-suite.mjs` at `b3de16f3` · exit 0,
+  1348 tests, pass 1348, fail 0, skipped 0 — the two `#332` cases in
+  `scripts/unit-doc-contract.test.mjs` are the delta over P8's 1331 and the fold's
+  own case (`init-workspace never teaches the retired shape`) went red first.
+- **E7** — 2026-11-02, `bun scripts/check-skill-context.mjs` · `PASS context
+  budgets: 28 skills`; `--documents` · `PASS context documents: 3 budgeted
+  documents`. `init-workspace` measures 3701 est / 255 lines inside the 4066 / 281
+  ceilings — the fold needed no manifest change, so no ceiling moved for it.
+- **F1** — 2026-11-02, sweep of the two fold batches, one line per stale form:
+  - swept: /all 14 sections|14-section template used by new units/ → expected 0 in skills/init-workspace/**.md
+  - swept: /_TEMPLATE`? \+ `?ROADMAP|_TEMPLATE`? \+ `?README/ → expected 0 in README.md
+
 ## Next
 
-PR #371 awaits the owner's external verification: the deviation in `## Impact`
-(S7's literal 120 lines), the obligations ledger's 27 verified rows and the
-verification block are the review surface.
+PR #371 awaits the owner's merge decision: the deviation in `## Impact` (S7's
+literal 120 lines and S10's 7-9-row map, both reported to the owner), the
+obligations ledger's 27 verified rows, the verification block and the two fold
+batches under `## Log` are the review surface.
 
 ## References
 
