@@ -254,6 +254,43 @@ test("#308 both templates carry the re-cut shape's section set", () => {
   }
 });
 
+// #332 (T4/T7): the scaffold ships the shape its own guide declares. The root
+// templates were the only ones any gate read, so the scaffold could publish the
+// retired 14-section shape (features) and the older Goal/Phases shape (fix) while
+// `template/AGENTS.md` promised the re-cut one. Both are bound here and in the
+// `normative-surfaces@1` rows, so a regression fails in two places.
+const SCAFFOLD_TEMPLATES = Object.freeze([
+  "template/docs/features/_TEMPLATE/SPEC.md",
+  "template/docs/fix/_TEMPLATE/SPEC.md",
+]);
+
+test("#332 the scaffold unit templates carry the re-cut shape and lint clean", () => {
+  for (const template of SCAFFOLD_TEMPLATES) {
+    const found = headings(read(template));
+    let cursor = -1;
+    for (const section of SPEC_REF_SECTIONS) {
+      const at = found.indexOf(section);
+      assert.notEqual(at, -1, `${template} is missing ## ${section} from the re-cut shape`);
+      assert.ok(at > cursor, `${template} places ## ${section} out of contract order`);
+      cursor = at;
+    }
+    for (const legacyOnly of ["Objective", "Why", "User outcome", "Acceptance criteria", "Evidence", "Progress log"]) {
+      assert.ok(!found.includes(legacyOnly), `${template} still carries the legacy-only ## ${legacyOnly}`);
+    }
+    let stdout = "";
+    let failed = null;
+    try {
+      stdout = execFileSync(process.execPath, [path.join(ROOT, "scripts/phase-lint.mjs"), path.join(ROOT, template)], { encoding: "utf8" });
+    } catch (error) {
+      failed = `${template}: exit ${error.status}\n${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    assert.equal(failed, null, failed ?? "");
+    assert.match(stdout, /^verdict PASS$/m, `${template} did not lint PASS under the grammar it publishes`);
+  }
+  // the guide that declares the shape is read with the same eye
+  assert.match(read("template/AGENTS.md"), /`spec-by-reference` shape/, "the template guide names the shape the templates carry");
+});
+
 test("#308 both templates pass the grammar they publish, so a fresh unit lints clean", () => {
   // AC1's validators read the templates' section list; nothing ran the shipped
   // linter over them, so a template whose own example violated its own rule
