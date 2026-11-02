@@ -21,7 +21,11 @@
         "linesMax": 393,
         "proseLinesMax": 302,
         "estimateMax": 6881,
-        "machineBlocks": ["normalizer-inventory@1", "normative-surfaces@1", "rendered-facts@1"],
+        "machineBlocks": [
+          "normalizer-inventory@1",
+          "normative-surfaces@1",
+          "rendered-facts@1"
+        ],
         "machineLines": 83,
         "sources": {
           "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 6,255 est, 83 machine-region lines, 274 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(274 x 1.10) = 302 and ceil(6255 x 1.10) = 6881. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate."
@@ -35,10 +39,11 @@
         }
       },
       "docs/workflow/PACKAGES.md": {
-        "linesMax": 86,
-        "estimateMax": 2127,
+        "linesMax": 101,
+        "estimateMax": 2381,
         "sources": {
-          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's Packages section (bun workspace, one lockfile, pin rules, version parity, changesets, publish channels). Measured 78 lines / 1933 est; ceilings ceil(78 x 1.10) = 86 and ceil(1933 x 1.10) = 2127."
+          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's Packages section (bun workspace, one lockfile, pin rules, version parity, changesets, publish channels). Measured 78 lines / 1933 est; ceilings ceil(78 x 1.10) = 86 and ceil(1933 x 1.10) = 2127.",
+          "issue #375 (unit 375-release-notes-rendering)": "the release body's contract joined the changeset-format bullet this document already owns: rendered sections, the heading convention (a changeset body's first line), the channel install block and the canary delta. Measured at the change with `node scripts/check-skill-context.mjs --documents`: 91 lines / 2164 est; ceilings re-based to ceil(91 x 1.10) = 101 and ceil(2164 x 1.10) = 2381."
         }
       }
     }

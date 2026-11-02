@@ -140,7 +140,8 @@ test("each stable publish job points the canary dist-tag at the stable release",
 // group is readable.
 test("cut + canary opens the GitHub pre-release with the changeset backlog as notes", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
-  assert.match(block, /release\.mjs release-notes/, "the pending changeset bodies are the canary's change backlog");
+  assert.match(block, /release\.mjs release-notes --channel "\$CHANNEL" --date "\$CUT_DATE"/, "the same renderer, naming the channel and the pinned cut date");
+  assert.match(block, /--date "\$CUT_DATE"/, "the body names the exact tag this cut publishes — the same pinned date the stage reads");
   assert.match(block, /--notes-file "\$RUNNER_TEMP\/canary-notes\.txt"/);
   const notes = block.indexOf("release-notes");
   const create = block.indexOf("gh release create");
@@ -195,13 +196,15 @@ test("the pi job keeps its mutation and tarball gates (the #164 publish-time gua
 // notes file generated after apply is empty and the release body loses them.
 test("the release notes are assembled BEFORE apply consumes the changesets, outside the commit", () => {
   const cut = jobBlock(read(PUBLISH), "cut");
-  const notes = cut.indexOf("release-notes >");
+  const notes = cut.indexOf("release-notes --channel stable");
   const apply = cut.indexOf("release.mjs apply");
   assert.ok(notes !== -1, "the cut job assembles the notes file");
   assert.ok(apply !== -1, "the cut job applies the train");
   assert.ok(notes < apply, "notes must be assembled before apply deletes the consumed changesets");
   // the notes file lives outside the worktree — git add -A must never commit it
-  assert.match(cut, /release-notes > "\$RUNNER_TEMP\/release-notes\.txt"/);
+  // (the command names its channel: the same renderer serves both channels and
+  // renders the install block and the version the channel is about to ship)
+  assert.match(cut, /release-notes --channel stable[^\n]*> "\$RUNNER_TEMP\/release-notes\.txt"/);
   assert.match(cut, /--notes-file "\$RUNNER_TEMP\/release-notes\.txt"/);
 });
 

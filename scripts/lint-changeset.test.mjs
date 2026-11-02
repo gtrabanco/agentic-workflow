@@ -35,7 +35,7 @@ const VALID = [
   '"@gtrabanco/pi-agentic-workflow": patch',
   "---",
   "",
-  "Fixes the thing.",
+  "fix(pi): fixes the thing.",
   "",
 ].join("\n");
 
@@ -132,6 +132,20 @@ test("warns without failing when a body carries a command-substitution shape", (
   assert.match(result.stdout, /\$\(/);
   assert.match(result.stdout, /ok clean\.md/);
   assert.doesNotMatch(result.stdout, /warn clean\.md/);
+});
+
+// The body's first line becomes the release-note heading
+// (scripts/release.mjs `release-notes`): a conventional commit title sorts into
+// its kind group and reads as a heading, a prose line does not. Flagged, never
+// failed — an older intent file stays valid.
+test("warns without failing when the body does not open with a conventional commit title", () => {
+  const dir = fixtureDir({
+    "prose.md": '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\nFixes the thing in prose.\n',
+  });
+  const result = run(["--changeset-dir", dir]);
+  assert.equal(result.status, 0, "a warning never fails the PR gate");
+  assert.match(result.stdout, /ok prose\.md/);
+  assert.match(result.stdout, /warn prose\.md: the body does not open with a conventional commit title/);
 });
 
 // D-40-15: a changeset can declare SKILLS as well as packages — the skill
