@@ -99,14 +99,7 @@ const machineRegion = (text, markers) => {
   if (new Set(found.map((fence) => fence.marker)).size !== wanted.size) return null;
   const first = found[0];
   const last = found[found.length - 1];
-  let start = first.open;
-  for (let line = first.open - 1; line >= 0; line -= 1) {
-    if (/^###\s/.test(lines[line])) {
-      start = line;
-      break;
-    }
-  }
-  return { lines: last.close - start + 1, start, end: last.close };
+  return { lines: last.close - first.open + 1, start: first.open, end: last.close };
 };
 
 /** Validate the guide layer against the manifest's `documents` section. */
