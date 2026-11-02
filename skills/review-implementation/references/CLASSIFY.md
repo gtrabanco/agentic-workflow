@@ -175,7 +175,7 @@ your domains):
 | API token committed in a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | fold into phase |
 | New export endpoint has no failure-mode test | tests | med | fix-now | Untested error path | Low | Regression risk | no | fold into phase |
 | Fixing this backend bug pulls in an auth redesign | correctness | high | decision-required | Unavoidable product/architecture decision | — | Blocking | no | surface decision, block |
-| Exported helper of a delivered feature that nothing invokes | residue | med | fix-now | The unit shipped half of what was asked — the consumer was never delivered (bug, not cleanup) | Low (deliver the consumer or fold the missing half) | Feature stays incomplete | no | fold into phase |
+| Exported helper of a delivered feature that nothing invokes | residue | med | fix-now | The unit shipped half of what was asked — the consumer was never delivered (bug, not cleanup) | Low | Feature stays incomplete | no | `replan-in-unit` when the missing half is planned work — the plan cut the unit short, and a fold repairs what exists, never what was never planned; `fold into phase` when the missing piece is a one-line consumer |
 | Module orphaned by the unit's own replacement of its feature | residue | med | fix-now (delete) | Superseded part left behind by a requested change | Low (delete + sweep declaration) | Dead weight grows | no | fold deletion task |
 | Rate limiter reusable across the fleet | architecture | low | proposal | Independent of this unit (D3) | — | — | yes | batch proposal + trigger |
 | Single-caller wrapper around a stdlib call | overengineering | low | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
