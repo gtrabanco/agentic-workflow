@@ -101,8 +101,10 @@ None.
 
 ## Findings
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F1 | docs/fix/353-residue-shadow-copies/SPEC.md (## Log) | Lineage | high | fix-now | /unit-lane 353-residue-shadow-copies --retriage | yes |
+| F2 | docs/fix/README.md:17 | Traceability | high | fix-now | execute-phase (doc commit) | yes |
 
 ## Log
 
@@ -114,6 +116,18 @@ None.
 - **G2** — 2026-11-01, `node --test scripts/normative-drift.test.mjs` · exit 0.
 - **G3** — 2026-11-01, `node scripts/run-root-suite.mjs` · exit 0 · 1289 pass, 0 fail (the review's gate run; the residue suite 29/29, `bun scripts/check-skill-context.mjs` exit 0 and `normative-drift` 20/20 re-ran green in the same pass).
 - **R1** — 2026-11-01, review-change · HEAD `729271b3e1a332fce2c42d0505d60e9f4b9639e2` · REVIEW-PASS · cycle 1 · gate exit 0 · 0 fix-now rows (3 low report-notes; 1 candidate refuted — missing `## Acceptance criteria` is the #308 spec-by-reference shape, pinned by `scripts/unit-doc-contract.test.mjs:195-211`).
+
+## Triaged steps
+
+Re-derived from this unit doc's own facts (`bun scripts/unit-route.mjs --triage 353-residue-shadow-copies`) after the audit's lineage blocker F1 — pasted verbatim, binding the doc's bytes:
+
+```text
+TRIAGE — 353-residue-shadow-copies (fix)
+Steps: implement, evidence
+Tiers: implement: cheap, evidence: strong
+Skipped: research: trivial scope, design: trivial scope, plan: trivial scope, tests: trivial scope, review: trivial scope, docs: trivial scope, release: not a feature
+Budget: strong
+```
 
 ## Next
 
