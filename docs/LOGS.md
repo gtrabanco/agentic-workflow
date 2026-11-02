@@ -3776,3 +3776,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Triage issue #355 (scaffold template drift) and uncommitted work on #319 F8 (unit-route read consolidation)
 - **Decisions:** Uncommitted work: unit-route read consolidation (#319 F8) — replaced four redundant reads of ROADMAP.md with a single process-level cache, plus expanded index.ts validate/compileWorkflowSnapshot to handle consolidated fix index fallback correctly. Triaged #355 as fix-now with fix-next urgency.
 - **Next:** For #319 F8: commit the uncommitted changes (packages/agentic-workflow-schema/src/index.ts, scripts/unit-route.mjs, scripts/unit-route.test.mjs), run root suite, create PR. For #355: /unit-lane --fix 355 to create the fix unit and implement template parity + shape test + audit route + classifier route.
+
+## 2026-11-02T12:01:43Z — fix/319-location-index-consolidation — manual
+- **Commits:** 30 (`c94c53dc…36770f07`)
+- **Files:** 76 files
+- **Summary:** Clarified breaking-change notation (!) in conventional commit titles
+- **Decisions:** No changes applied — session used for learning/clarification about feat(scope)! syntax for breaking changes
