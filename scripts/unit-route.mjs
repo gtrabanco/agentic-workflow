@@ -316,7 +316,7 @@ const ROADMAP_FILE = ROADMAP_DOCUMENT.slice(ROADMAP_DOCUMENT.lastIndexOf("/") + 
 function roadmapIndexText() {
   let source;
   try {
-    source = resolveRoadmapSource({ exists: (relative) => readProject(relative) !== null });
+    source = resolveRoadmapSource({ exists: (relative) => exists(relative) });
   } catch (error) {
     // Fail closed with the pointer at the new home: a router that silently read
     // an empty index would route every unit to `historical`.
@@ -325,17 +325,36 @@ function roadmapIndexText() {
   return source === null ? null : readProject(source.path);
 }
 
-/** The rows of one index table: the section's own table when the document has it. */
-function indexRows(kind) {
-  const text = roadmapIndexText();
-  if (text === null) return [];
-  return roadmapTableRows(text, kind);
+/**
+ * The resolved index document, read once per process: every route asks several
+ * questions of the same document (its feature rows, its fix rows, its status
+ * cells), and re-reading it per question was four full reads of a document that
+ * only changes between invocations.
+ */
+let indexCache;
+function roadmapIndex() {
+  if (indexCache === undefined) {
+    const text = roadmapIndexText();
+    indexCache = text === null ? null : { text };
+  }
+  return indexCache;
 }
 
-/** The standalone fix index of a pre-319 tree, read only while the alias window is open. */
+/** The rows of one index table: the section's own table when the document has it. */
+function indexRows(kind) {
+  const index = roadmapIndex();
+  if (index === null) return [];
+  return roadmapTableRows(index.text, kind);
+}
+
+/**
+ * The fix rows of a standalone fix index: read when the consolidated index has
+ * no `## Fixes` table of its own (a pre-319 tree, or a half-migrated one), so a
+ * fix row is never answered by a feature row and never silently absent.
+ */
 function standaloneFixRows() {
-  const text = roadmapIndexText();
-  if (text !== null && roadmapSection(text, ROADMAP_FIXES_HEADING) !== null) return null;
+  const index = roadmapIndex();
+  if (index !== null && roadmapSection(index.text, ROADMAP_FIXES_HEADING) !== null) return null;
   const standalone = readProject(FIX_INDEX_DOCUMENT);
   return standalone === null ? null : standalone.split("\n").map((line) => line);
 }

@@ -223,16 +223,13 @@ proves it.
 | S8 | every live reader/writer uses the published constant, and the fixture trees carry the consolidated layout | `node scripts/run-root-suite.mjs` exits 0 and `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1 (one historical fixture pre-existing at main, protected by S4) |
 | S9 | `template/` scaffolds the new layout and `init-workspace`'s upgrade reference offers the move additively | `rg -c 'docs/ROADMAP.md' template/AGENTS.md` → 6 and `rg -c 'docs/ROADMAP.md' skills/init-workspace/references/UPGRADE.md` → 2 |
 | S10 | the issue's five criteria hold, measured by their own commands | the Validators block in the close-out receipt |
-| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded and implemented | D1 and D2 present in the body (S11 §) and repeated as Log entries → 4 total references across the unit doc |
+| S11 | D1 (fix lifecycle verbatim) and D2 (one-train alias window) are recorded, and D2's supersession by D4 is recorded too | D1, D2 and D4 recorded in the body (S11 §) and in the Log → `rg -c '\*\*(D1|D2|D4)\*\*'` → 5 (2 body + 3 Log) |
 | S12 | no new gate, no schema break beyond the constant's release | `cd packages/agentic-workflow-schema && bun run test` exits 0; `git diff --stat main...HEAD -- packages/agentic-workflow-schema/envelope.schema.json` is empty |
 
 ## Findings
 
 | id | S# / file:line | axis | severity | class | route |
 |---|---|---|---|---|---|
-| F6 | S3/S11 · docs/fix/319-location-index-consolidation/SPEC.md:230 | workflow | high | source | fold |
-| F7 | S6a · packages/agentic-workflow-schema/src/index.ts:2310 | code | med | source | fold |
-| F8 | S6a · scripts/unit-route.mjs:316 | perf | med | source | fold |
 
 ## Log
 
@@ -247,6 +244,102 @@ proves it.
 - **V10** — scripts/unit-route.mjs:316-327,339 · reviewer review-change · HEAD 2a68d2bb01775554535a612157e036010ddd0315 · recheck: instrumented reproducer (counted `fs.readFileSync` on the index during a status lookup on a scratch tree) — fix unit with a matching row → 2 full reads; miss path → 4 (the `exists` probe is a full `readProject` read, the text is read again, and `standaloneFixRows()` repeats the pair) · confirmed
 - **R2** — 2026-11-02, review at HEAD 2a68d2bb01775554535a612157e036010ddd0315 · verdict REVIEW-FAIL · cycle 2 (delta re-review escalated to a full pass: fold diff 384 changed lines > 200) · gate exit 0
 - **G2** — 2026-11-02, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass, 0 fail; `packages/agentic-workflow-schema` `bun run test` · 728/728; `packages/agentic-workflow` `bun run test` · 258/258; `node --test scripts/roadmap-moved.test.mjs scripts/index-document.test.mjs` · exit 0 · 15/15; `bun scripts/check-skill-context.mjs` · PASS · 28 skills; `node --test scripts/normative-drift.test.mjs` · exit 0; `node scripts/version-parity-gate.mjs --content --base main` · exit 0 — all at HEAD 2a68d2bb01775554535a612157e036010ddd0315 (reviewer gate run)
+- **L1** — 2026-10-30, the issue, verbatim:
+
+  ```text
+  # NEW FEATURE (BREAKING): consolidate the location indexes — docs/features/ROADMAP.md moves to docs/ROADMAP.md as the single Features+Fixes index
+  ```
+
+  The body is frozen verbatim in `## Specs` above, section by section
+  (Summary · Why · Sequencing · Blast radius · Mechanics · Acceptance criteria ·
+  Open questions · Non-goals). The only elisions are the blast-radius layer
+  table and the sequencing bullets' detail, both marked in S3/S4; read them from
+  the forge with `gh issue view 319 --json body --jq .body`.
+- **D1** — 2026-10-30, issue S11's first open question, decided as the issue
+  recommends: `## Fixes` keeps the fix index's "row removed after merge"
+  lifecycle verbatim. Lifecycle unification is not part of this unit.
+- **D2** — 2026-10-30, issue S11's second open question, decided: the alias
+  window stays open for one release train (`ROADMAP_LEGACY_READ = true`), with
+  the fail-closed `roadmap-moved` path implemented and tested now. Closing the
+  window is a one-constant flip plus the legacy branch's deletion, owned by the
+  next release cut (see `## Future cost`).
+- **D3** — 2026-10-30, S9's criterion counts measured at P6, not assumed: the
+  planning cut guessed `3`/`≥1` mentions; the delivered substrate names the path
+  6 times in `template/AGENTS.md` and twice in `UPGRADE.md`, so the frozen
+  criterion carries the measured values. No behaviour changed — the criterion
+  was unverifiable as written.
+- **E1** — 2026-10-30, `node --test scripts/index-document.test.mjs` · exit 0 ·
+  8/8 pass (O1, O4, O5, O6, O7, O8, O9).
+- **E2** — 2026-10-30, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass,
+  0 fail (O8, O10, O13).
+- **E3** — 2026-10-30, `cd packages/agentic-workflow && bun run test` · exit 0 ·
+  254 pass, `cd packages/agentic-workflow-schema && bun run test` · exit 0 ·
+  727 pass, `cd packages/pi-agentic-workflow && bun run test` · exit 0 · 454 pass.
+- **E4** — 2026-10-30, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`.
+- **E5** — 2026-10-30, `node scripts/version-parity-gate.mjs --content --base main`
+  · exit 0 · PASS (changeset route for all three packages);
+  `--pins` · exit 0 · PASS (both local pins match).
+- **D4** — 2026-10-30, owner instruction quoted as S6a: the migration window is
+  **closed now**, not at a later release cut. D2's "one release train" is
+  superseded. `ROADMAP_LEGACY_READ` is `false` in both published constants
+  modules; it stays as the documented rollback lever, and closing the window is
+  pinned per consumer by `scripts/roadmap-moved.test.mjs`.
+- **D5** — 2026-10-30, issue `#332` (split `AGENTS.md` into a core guide plus
+  progressive references) needs **no correction from this unit**: it pins
+  `scripts/normative-drift.test.mjs`'s `GUIDE_REL`, the `homes` assertion in
+  `scripts/pre-execution-quality.test.mjs` and an inventory of `AGENTS.md`
+  readers, none of which this change touched (`git diff --name-only
+  main...HEAD -- AGENTS.md scripts/normative-drift.test.mjs
+  scripts/pre-execution-quality.test.mjs` is empty), and it names no index path.
+  Its `human-revision-needed` label holds it, so nothing was written to the
+  issue.
+- **E6** — 2026-10-30, `grep -rn "docs/features/ROADMAP" --include=*.mjs
+  --include=*.ts scripts packages` · 1 line · the alias constant in
+  `packages/agentic-workflow/src/index-document.mjs` (R1).
+- **P1** — 2026-10-30, cut the unit doc, the two ledgers and the index
+  registration · `5b2a2d27`.
+- **P2** — 2026-10-30, published the constants in the crate, migrated the eight
+  live consumers, added the schema mirror and scoped both tables; the vector
+  whose fixture cited the pre-move path is re-blessed · `ec64bb4f`.
+- **P3** — 2026-10-30, mirrored the constants in the schema package
+  (`src/paths.ts`, re-exported from the package root) and made
+  `compileWorkflowSnapshot` read the consolidated document through them;
+  `cd packages/agentic-workflow-schema && bun run test` · 727 pass · `ec64bb4f`.
+- **P4** — 2026-10-30, moved and consolidated the index; the fix index is the
+  one-line stub · `67f2e3a8`.
+- **P5** — 2026-10-30, re-pinned the six fixture trees and the golden fixture ·
+  `5d5e360a`.
+- **P6** — 2026-10-30, migrated the skills, `template/`, and the live
+  `docs/workflow/` pages; `init-workspace` upgrade step 4 offers the move
+  additively · `5e7cfa5f`.
+- **P7** — 2026-11-01, verification: declared the S10 criteria against the
+  close-out receipt and wrote the `.changeset` intent (both packages major, and
+  the six affected skills — `execute-phase`, `init-workspace`,
+  `pre-execution-review`, `triage-issue`, `unit-lane`, `workflow-status` — major);
+  `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass,
+  `bun scripts/check-skill-context.mjs` · PASS · 28 skills,
+  `node scripts/version-parity-gate.mjs --content --base main` · PASS · `5e7cfa5f`.
+- **V1** — 2026-11-01, external verification of `main...HEAD` at `63793b5e`: one
+  blocker and four ledger advisories, all corrected here without changing
+  behaviour. **Blocker** — `packages/agentic-workflow-schema/README.md` still
+  taught the pre-move path: its `compileWorkflowSnapshot` example passed
+  `{ path: "docs/features/ROADMAP.md" }`, which at `1c9375a1` derived the unit
+  and at `63793b5e` yields `unit: null` plus a `unit` unknown (the window is
+  closed); the example now names `docs/ROADMAP.md`, so no live surface teaches a
+  path the compiler refuses. **Advisories** — O5's quoted diagnostic
+  text, O6's `index-document.mjs:28`, and the stale `1292`/`726` suite counts in
+  E2, E3, O7, O8, O10 and O13 now carry the re-verified `1301`/`727`. Every
+  declared validator re-ran at the corrected head: root suite 1301/1301, schema
+  727/727, crate 254/254, pi 454/454, `index-document` 8/8, `roadmap-moved`
+  7/7, skill-context PASS, version-parity PASS both halves.
+- **V2** — packages/agentic-workflow/src/index-document.mjs:175 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: failing reproducer against unchanged code — half-migrated tree (canonical `docs/ROADMAP.md` with feature row `91 alpha`, no `## Fixes`, standalone `docs/fix/README.md` carrying `[#91] beta`): `node packages/agentic-workflow/bin/agentic-workflow.mjs roadmap check docs/fix/91-beta/SPEC.md` → `slug-mismatch — doc folder says 'beta', row says 'alpha'`, exit 1; variant without a colliding NN → PASS 0 violations while the unit's fix row sits unread in the standalone index; fully migrated control → PASS. Four sibling consumers keep the standalone fallback (pinned by `scripts/workflow-status-sensor.test.mjs:1120`; promised by `docs/workflow/MIGRATION.md:39-41` and `skills/init-workspace/references/UPGRADE.md:48-51`) · confirmed
+- **V3** — packages/agentic-workflow-schema/src/index.ts:2271-2274 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — the comment states "the consolidated index wins when a caller supplies both" while `documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument` makes the standalone document win whenever present; masked only by the declared-inert `fixUnit` matcher · confirmed
+- **V4** — packages/agentic-workflow-schema/src/index.ts:2083-2099 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `sectionContent` duplicates the crate's `roadmapSection` (`packages/agentic-workflow/src/index-document.mjs:113-146`) with no recorded reason, and the pair diverges on escaped `\|` (`tableCells` handles it at index-document.mjs:142; the schema's `split("|")` at index.ts:2117 does not); the mirror-parity test pins only the four constants · confirmed
+- **V5** — docs/fix/319-location-index-consolidation/SPEC.md:223 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `rg -c 'docs/features/ROADMAP' scripts/fixtures` → 1 (`scripts/fixtures/unit-route/docs/features/37-phase-lint-script/review-findings.md:18`, a record fixture pre-existing at main whose historical text S4 forbids rewriting) against the criterion's stated 0 · confirmed
+- **V6** — docs/fix/319-location-index-consolidation/SPEC.md:226 · reviewer review-change · HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · recheck: direct read — `rg -c '\*\*D1\*\*|\*\*D2\*\*' docs/fix/319-location-index-consolidation/SPEC.md` → 4 (S11 body :69-70 + Log decisions :247,:250) against the criterion's stated 2 · confirmed
+- **R1** — 2026-11-01, review at HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 · verdict REVIEW-FAIL · cycle 1 · gate exit 0
+- **G1** — 2026-11-01, `node scripts/run-root-suite.mjs` · exit 0 · 1301 pass, 0 fail at HEAD 980573a7ec0f4cc10bf7a04e6ef619513e6c18a6 (reviewer gate run, isolated verify pass; `node --test scripts/roadmap-moved.test.mjs` · exit 0 · 7/7, `node --test scripts/index-document.test.mjs` · exit 0 · 8/8, `bun scripts/check-skill-context.mjs` · PASS · 28 skills)
 
 ## Next
 
@@ -281,3 +374,9 @@ nothing here self-approves.
 | the crate's roadmap writer keeps its behaviour | `cd packages/agentic-workflow && bun run test` exits 0 |
 | the schema snapshot contract keeps its shape | `cd packages/agentic-workflow-schema && bun run test` exits 0 |
 | skill context budgets and drifted-normative surfaces stay green | `bun scripts/check-skill-context.mjs` exits 0 and `node --test scripts/normative-drift.test.mjs` exits 0 |
+- **F6** — 2026-11-02, FOLDED with F7/F8 — root cause: the `2a68d2bb` fold rewrote the `## Log` instead of appending to it, deleting L1, D1–D5, E1–E6, P1–P7, V1–V6, R1 and G1 (V7's supersession covered only the F1/F3/F4/F5 fold claims). Fix: every deleted entry is restored verbatim from `git show 2a68d2bb^:docs/fix/319-location-index-consolidation/SPEC.md`, above this cycle's entries; S11's criterion was re-cut to the set it can now prove (D1/D2/D4 in the body and in the Log, `rg -c` → 5). Regression: `rg -c '\*\*(D1|D2|D4)\*\*'` → 5, and the pre-fold entries are byte-identical to the parent blob.
+- **F7** — 2026-11-02, FOLDED with F6/F8 — root cause: `compileWorkflowSnapshot` resolved the fix branch from `documentFor(input.documents, FIX_INDEX_DOCUMENT) ?? roadmapDocument`, so the standalone index won whenever present — and a migrated tree always ships it as a stub, making the consolidated `## Fixes` table unreachable. Fix: the consolidated document is read first and the standalone index is the fallback, matching the order the crate pins. Regression: `packages/agentic-workflow-schema/test/machine-contract.test.mjs` "#319 F7: the consolidated ## Fixes table wins over a stale standalone fix index" — red without the fix (`source: docs/fix/README.md`), green with it.
+- **F8** — 2026-11-02, FOLDED with F6/F7 — root cause: `roadmapIndexText()` proved existence with a full `readProject()` read and then read the file again, and `standaloneFixRows()` repeated the pair — four full reads of the consolidated index per status lookup on the miss path. Fix: the existence probe is `statSync`, the resolved document is read once per process, and the stale "read only while the alias window is open" comment now states what the code does. Regression: `scripts/unit-route.test.mjs` "#319 F8: one status lookup reads the index once, not once per probe" — red without the fix (`2 !== 1`), green with it.
+- **V11** — SR-11 fold · `docs/fix/319-location-index-consolidation/SPEC.md`, cycle 2 · head 5c8bf14e restored then folded at this commit · recheck: direct read — the restored `## Log` carries L1, D1–D5, E1–E6, P1–P7, V1–V6, R1 and G1 verbatim from the parent blob, and S11's re-cut criterion measures 5 · confirmed
+- **V12** — `packages/agentic-workflow-schema/src/index.ts:2303` · head at fold · recheck: reproducer — the #319 F7 regression is red on the pre-fold code (unit provenance `docs/fix/README.md`) and green after, with `packages/agentic-workflow/test/roadmap-check.test.mjs`'s consolidated-first case still green · confirmed
+- **V13** — `scripts/unit-route.mjs:316` · head at fold · recheck: instrumented read count — 2 before the fold, 1 after, measured inside `scripts/unit-route.test.mjs` by counting `fs.readFileSync` calls on `docs/ROADMAP.md` · confirmed

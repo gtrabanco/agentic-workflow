@@ -506,3 +506,58 @@ test("published JSON Schemas match the strict v2, outcome, and snapshot contract
   assert.ok(snapshotSchema.required.includes("contradictions"));
   assert.ok(snapshotSchema.required.includes("unknowns"));
 });
+
+test("#319 F7: the consolidated ## Fixes table wins over a stale standalone fix index", () => {
+  // Issue #319 F7: every other consumer pins the consolidated table first
+  // (`packages/agentic-workflow/test/roadmap-check.test.mjs` — "keeps preferring
+  // the consolidated ## Fixes table once the tree is migrated"). The snapshot
+  // read the standalone document first and could never see the consolidated
+  // table on a migrated tree, where `docs/fix/README.md` always exists as a stub.
+  const separator = "|---|---|---|---|";
+  const consolidated = [
+    "# Roadmap",
+    "",
+    "## Features",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    separator,
+    "| `42-slug` | consolidated-topic | in-progress | x |",
+    "",
+  ].join("\n");
+  const standalone = ["# Fixes", "", "| Issue | Topic | Status | Notes |", separator, "| `42-slug` | standalone-topic | in-progress | y |", ""].join("\n");
+  const base = { sourceRevision: "0123456789abcdef", repository: { branch: "main", headSha: "abcdef012345", dirty: false } };
+
+  const both = compileWorkflowSnapshot({
+    ...base,
+    documents: [
+      { path: ROADMAP_DOCUMENT, content: consolidated },
+      { path: "docs/fix/README.md", content: standalone },
+    ],
+  });
+  assert.equal(both.ok, true);
+  assert.deepEqual(both.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    both.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    [ROADMAP_DOCUMENT],
+  );
+
+  const onlyConsolidated = compileWorkflowSnapshot({ ...base, documents: [{ path: ROADMAP_DOCUMENT, content: consolidated }] });
+  assert.equal(onlyConsolidated.ok, true);
+  assert.deepEqual(onlyConsolidated.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+
+  const onlyStandalone = compileWorkflowSnapshot({
+    ...base,
+    documents: [{ path: "docs/fix/README.md", content: standalone }],
+  });
+  assert.equal(onlyStandalone.ok, true);
+  assert.deepEqual(onlyStandalone.snapshot.unit, { kind: "fix", id: "42-slug", status: "in-progress" });
+  assert.deepEqual(
+    onlyStandalone.snapshot.provenance.filter((entry) => entry.field === "unit").map((entry) => entry.source),
+    ["docs/fix/README.md"],
+  );
+});

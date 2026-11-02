@@ -944,3 +944,41 @@ test("#318 S9: the read set names the one carrier the unit actually owns", () =>
   assert.ok(legacy.entries.includes("docs/features/10-replan-unit/review-findings.md"),
     "a legacy unit still reads its side ledger");
 });
+
+test("#319 F8: one status lookup reads the index once, not once per probe", () => {
+  // Issue #319 F8: `roadmapIndexText()` proved existence with a full
+  // `readProject()` read and then read the file again, and `standaloneFixRows()`
+  // repeated the pair — four full reads of the consolidated index per status
+  // lookup on the miss path, where one read answers every question.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-reads-"));
+  try {
+    fs.cpSync(FIXTURE, root, { recursive: true });
+    const counter = path.join(root, "count-reads.cjs");
+    fs.writeFileSync(
+      counter,
+      [
+        'const fs = require("node:fs");',
+        "const read = fs.readFileSync;",
+        "let reads = 0;",
+        "fs.readFileSync = function (file, ...rest) {",
+        '  if (String(file).endsWith("/docs/ROADMAP.md")) reads += 1;',
+        "  return read.call(this, file, ...rest);",
+        "};",
+        'process.on("exit", () => console.error("index-reads=" + reads));',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    const result = spawnSync(process.execPath, ["--require", counter, SCRIPT, "37-phase-lint-script"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: { ...process.env, UNIT_ROUTE_REPO: root },
+    });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const reads = Number(/index-reads=(\d+)/.exec(result.stderr)?.[1] ?? NaN);
+    assert.ok(Number.isInteger(reads), result.stderr);
+    assert.equal(reads, 1, `the index was read ${reads} times for one routed block`);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
