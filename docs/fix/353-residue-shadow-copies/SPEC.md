@@ -112,6 +112,8 @@ None.
 - **E2** — 2026-11-01, `node --test scripts/residue-dimensions.test.mjs` · exit 0 · 29 tests pass after P2–P4.
 - **G1** — 2026-11-01, `bun scripts/check-skill-context.mjs` · exit 0 · every budget within its ceiling.
 - **G2** — 2026-11-01, `node --test scripts/normative-drift.test.mjs` · exit 0.
+- **G3** — 2026-11-01, `node scripts/run-root-suite.mjs` · exit 0 · 1289 pass, 0 fail (the review's gate run; the residue suite 29/29, `bun scripts/check-skill-context.mjs` exit 0 and `normative-drift` 20/20 re-ran green in the same pass).
+- **R1** — 2026-11-01, review-change · HEAD `729271b3e1a332fce2c42d0505d60e9f4b9639e2` · REVIEW-PASS · cycle 1 · gate exit 0 · 0 fix-now rows (3 low report-notes; 1 candidate refuted — missing `## Acceptance criteria` is the #308 spec-by-reference shape, pinned by `scripts/unit-doc-contract.test.mjs:195-211`).
 
 ## Next
 
