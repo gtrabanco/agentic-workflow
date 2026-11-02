@@ -15,7 +15,7 @@
  */
 
 import { describe, it, before, after } from "node:test";
-import { strictEqual, ok } from "node:assert";
+import { strictEqual, deepStrictEqual, ok } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,7 +23,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { checkUnitDoc, findRow, ROADMAP_CHECK_CODES, rowUpsert } from "../src/edit/Roadmap.mjs";
-import { ROADMAP_DOCUMENT } from "../src/index-document.mjs";
+import { ROADMAP_DOCUMENT, roadmapTableRows } from "../src/index-document.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "bin", "agentic-workflow.mjs");
@@ -393,5 +393,84 @@ describe("roadmap check — the half-migrated tree (issue #319)", () => {
     strictEqual(reOpened.status, 0, reOpened.stdout + reOpened.stderr);
     ok(reOpened.stdout.includes("verdict: PASS"), reOpened.stdout);
     rmSync(root, { recursive: true, force: true });
+  });
+
+  it("#319 F14: the row scanner reads one fence grammar, so a fenced example is never a live row", () => {
+    // The consolidated index teaches its own row format; a writer editing it
+    // copies a row into a fence. That example is content, not an active unit.
+    const doc = [
+      "# Roadmap",
+      "",
+      "## Features",
+      "",
+      "| NN | Slug | Status | Depends on | Summary |",
+      "|----|------|--------|------------|---------|",
+      "| 01 | `real` | in-progress | — | a live feature row |",
+      "",
+      "## Fixes",
+      "",
+      "The row format:",
+      "",
+      "```markdown",
+      "| [#999](https://example.test/999) | example-fix | pending | not a unit |",
+      "```",
+      "",
+      "| [#319](https://example.test/319) | real-fix | done | a live fix row |",
+      "",
+      "~~~",
+      "| 42 | `tilde` | pending | — | fenced with tildes |",
+      "~~~",
+      "",
+    ].join("\n");
+
+    const fixRows = roadmapTableRows(doc, "fix");
+    deepStrictEqual(fixRows.map((cells) => cells[1]), ["real-fix"], "the fenced example is not a fix row");
+
+    const featureRows = roadmapTableRows(doc, "feature");
+    deepStrictEqual(
+      featureRows.map((cells) => cells[0]).filter((cell) => /^\d+$/.test(cell ?? "")),
+      ["01"],
+      "neither fence leaks into the features table",
+    );
+
+    // The reported face: a headline rule outside a fence does not open one, so
+    // an equal-length fence is needed for anything past it to be content.
+    const rule = ["## Fixes", "", "| #3 | headline-fix | done |", "", "| #4 | live-fix | done |"].join("\n");
+    deepStrictEqual(roadmapTableRows(rule, "fix").map((cells) => cells[0]), ["#3", "#4"], "a headline rule is not a fence");
+
+    // A run shorter than the one that opened the block does not close it
+    // (CommonMark), and a fence closes only on its own character.
+    const mixed = [
+      "## Fixes",
+      "````",
+      "```",
+      "| #5 | still-fenced | done |",
+      "~~~~~~~~~",
+      "| #6 | still-fenced-too | done |",
+      "````",
+      "| #7 | live | done |",
+    ].join("\n");
+    deepStrictEqual(
+      roadmapTableRows(mixed, "fix").map((cells) => cells[0]),
+      ["#7"],
+      "only a fence of the opening character at equal-or-greater length closes the block",
+    );
+
+    // The keyed consumer shares the grammar instead of restating it.
+    const result = checkUnitDoc({
+      nn: "999",
+      slug: "example-fix",
+      kind: "fix",
+      docText: "# fix unit\n\nStatus: planned\n",
+      indexText: doc,
+    });
+    ok(
+      result.violations.every((violation) => violation.code !== "row-missing"),
+      `a fenced example never answers a fix check as a missing row: ${JSON.stringify(result.violations)}`,
+    );
+    ok(
+      result.violations.every((violation) => violation.code !== "slug-mismatch"),
+      `a fenced example never answers a fix check with its slug: ${JSON.stringify(result.violations)}`,
+    );
   });
 });

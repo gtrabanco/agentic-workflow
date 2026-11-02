@@ -22,6 +22,7 @@ import {
   ROADMAP_FEATURES_HEADING,
   ROADMAP_FIXES_HEADING,
 } from "./paths.js";
+import type { FenceRun } from "./pre-execution.js";
 import { validateContinuation, type EnvelopeContinuation } from "./continuation.js";
 import {
   VERIFICATION_COMMAND_STATUSES,
@@ -2076,19 +2077,34 @@ function indexDocument(documents: readonly WorkflowDocument[]): WorkflowDocument
 }
 
 /**
+ * A fence-looking line: up to three spaces, then three-or-more backticks or
+ * tildes. The schema package's `advanceFence` holds the same shape for the
+ * pre-execution selectors; the index readers below share this one.
+ */
+const INDEX_FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/** The block still open after one line, by CommonMark's rule: it closes only on
+ * a run of the character that opened it, at least as long, followed by spaces. */
+function indexFenceRun(line: string, open: FenceRun | null): FenceRun | null {
+  const run = INDEX_FENCE_LINE.exec(line);
+  if (run === null) return open;
+  if (open === null) return /^ {4,}/.test(line) ? null : { marker: run[1][0] as string, length: run[1].length };
+  return run[1][0] === open.marker && run[1].length >= open.length && run[2].trim() === "" ? null : open;
+}
+
+/**
  * One `## <heading>` section's body, or `undefined` when the document has no
  * such heading (a pre-319 document carries one table and no heading, so its
  * whole content is the section).
  */
 function sectionContent(content: string, heading: string): string | undefined {
   const wanted = heading.trim().toLowerCase();
-  const lines = content.split("\n");
   let level = 0;
-  let inFence = false;
+  let fence: FenceRun | null = null;
   const body: string[] = [];
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
-    const match = inFence ? null : /^(#{1,6})\s+(.*)$/.exec(line);
+  for (const line of content.split("\n")) {
+    fence = indexFenceRun(line, fence);
+    const match = fence === null ? /^(#{1,6})\s+(.*)$/.exec(line) : null;
     if (match) {
       if (level !== 0 && match[1].length <= level) break;
       if (level === 0 && match[2].trim().toLowerCase() === wanted) {
@@ -2100,6 +2116,19 @@ function sectionContent(content: string, heading: string): string | undefined {
     if (level !== 0) body.push(line);
   }
   return level === 0 ? undefined : body.join("\n");
+}
+
+/** The live rows of a table body (issue #319, F14): a row inside a fenced or
+ * indented code block is a writer's example, never data — the same grammar the
+ * heading scan uses, so no reader tracks fences differently. */
+function tableRowCells(content: string): string[][] {
+  const rows: string[][] = [];
+  let fence: FenceRun | null = null;
+  for (const line of content.split("\n")) {
+    if (fence === null && !/^ {4,}/.test(line) && line.trimStart().startsWith("|")) rows.push(tableCells(line));
+    fence = indexFenceRun(line, fence);
+  }
+  return rows;
 }
 
 /** The cells of one Markdown table row, splitting only on unescaped pipes — the
@@ -2121,7 +2150,9 @@ function tableCells(line: string): string[] {
     }
   }
   cells.push(current.trim());
-  return cells.length > 2 ? cells.slice(1, -1) : [];
+  if (cells.length < 2) return [];
+  const body = cells[0] === "" ? cells.slice(1) : cells;
+  return body[body.length - 1] === "" ? body.slice(0, -1) : body;
 }
 
 /** The table body of one kind: its own section when present; a document that
@@ -2157,13 +2188,12 @@ function roadmapFeature(document: WorkflowDocument | undefined): { id: string; s
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
   const table = tableFor(document.content, ROADMAP_FEATURES_HEADING);
-  for (const row of table.split("\n")) {
-    const cells = tableCells(row).filter(Boolean);
+  for (const cells of tableRowCells(table)) {
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
     const slug = cells[1]?.replace(/^`|`$/g, "");
     if (slug === undefined || slug.length === 0) continue;
     const id = `${cells[0]}-${slug}`;
-    candidates.push({ id, status: cells[2] ?? "unknown", row });
+    candidates.push({ id, status: cells[2] ?? "unknown", row: cells.join(" | ") });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
@@ -2178,12 +2208,12 @@ function fixUnit(document: WorkflowDocument | undefined): { id: string; status: 
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
   const table = tableFor(document.content, ROADMAP_FIXES_HEADING);
-  for (const row of table.split("\n")) {
-    const cells = tableCells(row).filter(Boolean);
-    if (cells.length < 3) continue;
-    const id = cells[0]?.replace(/^`|`$/g, "") ?? "";
+  for (const cells of tableRowCells(table)) {
+    const nonEmpty = cells.filter(Boolean);
+    if (nonEmpty.length < 3) continue;
+    const id = nonEmpty[0]?.replace(/^`|`$/g, "") ?? "";
     if (!/^\d+-[A-Za-z0-9._-]+$/.test(id)) continue;
-    candidates.push({ id, status: cells[2] ?? "unknown", row });
+    candidates.push({ id, status: nonEmpty[2] ?? "unknown", row: cells.join(" | ") });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")

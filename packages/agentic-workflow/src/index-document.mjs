@@ -106,6 +106,57 @@ export function readRoadmapIndex(rootDir, { legacy = ROADMAP_LEGACY_READ } = {})
 }
 
 /**
+ * A fence-looking line: up to three spaces, then three-or-more backticks or
+ * tildes. `marker` is the character that opened the run, `length` how long it is.
+ * (CommonMark's shape, which the schema package's `advanceFence` shares.)
+ */
+const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/**
+ * Advance the fence state over one line, returning the block still open after it
+ * — the one grammar for every reader of the index.
+ *
+ * A block closes only on a run of the character that OPENED it, at least as long,
+ * with nothing but spaces after it. A block that is not open ignores input
+ * indented four columns or more: that is an indented code block, not a fence.
+ * Every consumer decides through this one function, so the heading scan and the
+ * row scan can never track differently — a fenced example row is document text,
+ * never a live row of a table.
+ *
+ * @param {string} line
+ * @param {{marker: string, length: number} | null} open
+ * @returns {{marker: string, length: number} | null}
+ */
+export function fenceRun(line, open) {
+  const run = FENCE_LINE.exec(line);
+  if (run === null) {
+    if (open === null && /^ {4,}/.test(line) && line.trimStart().startsWith("|")) return open;
+    return open;
+  }
+  const marker = run[1][0];
+  const length = run[1].length;
+  if (open === null) {
+    if (/^ {4,}/.test(line)) return null;
+    return { marker, length };
+  }
+  return marker === open.marker && length >= open.length && run[2].trim() === "" ? null : open;
+}
+
+/**
+ * Whether a line is a live table row: a table row that no open fence owns. Rows
+ * indented four columns or more are an indented code block's lines, not rows.
+ *
+ * @param {string} line
+ * @param {{marker: string, length: number} | null} open — the block open before this line
+ * @returns {boolean}
+ */
+export function isLiveTableRow(line, open) {
+  if (open !== null) return false;
+  if (/^ {4,}/.test(line)) return false;
+  return line.trimStart().startsWith("|");
+}
+
+/**
  * The body of one `## <heading>` section, or `null` when the document has no
  * such heading. Fenced code blocks are respected: a `##` line inside a fence is
  * document text, not a heading.
@@ -117,13 +168,12 @@ export function readRoadmapIndex(rootDir, { legacy = ROADMAP_LEGACY_READ } = {})
 export function roadmapSection(text, heading) {
   if (typeof text !== "string") return null;
   const wanted = heading.trim().toLowerCase();
-  const lines = text.split("\n");
   const out = [];
-  let inFence = false;
+  let fence = null;
   let level = 0;
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
-    const match = inFence ? null : /^(#{1,6})\s+(.*)$/.exec(line);
+  for (const line of text.split("\n")) {
+    fence = fenceRun(line, fence);
+    const match = fence === null ? /^(#{1,6})\s+(.*)$/.exec(line) : null;
     if (match) {
       if (level !== 0 && match[1].length <= level) break; // the section ended
       if (level === 0 && match[2].trim().toLowerCase() === wanted) {
@@ -191,6 +241,10 @@ function declaresTablesByHeading(text) {
  * its title, so a feature read that finds no `## Features` heading but does find
  * `## Fixes` is a half-migrated roadmap, never an empty feature table.
  *
+ * Only live rows are returned: a fenced code block (a writer's example of the
+ * row format) and an indented code block are content, never data — the same
+ * `fenceRun` grammar the heading scan uses, so no reader can track differently.
+ *
  * @param {string} text
  * @param {"feature"|"fix"} kind
  * @returns {string[][]}
@@ -202,11 +256,13 @@ export function roadmapTableRows(text, kind) {
   const emptyFixTable = section === null && kind === "fix" && declaresTablesByHeading(text);
   const body = emptyFixTable ? "" : (section ?? text);
   const rows = [];
+  let fence = null;
   for (const line of body.split("\n")) {
-    if (!line.trimStart().startsWith("|")) continue;
-    const cells = tableCells(line);
-    if (cells.length === 0 || isSeparatorRow(cells)) continue;
-    rows.push(cells);
+    if (isLiveTableRow(line, fence)) {
+      const cells = tableCells(line);
+      if (cells.length > 0 && !isSeparatorRow(cells)) rows.push(cells);
+    }
+    fence = fenceRun(line, fence);
   }
   return rows;
 }
