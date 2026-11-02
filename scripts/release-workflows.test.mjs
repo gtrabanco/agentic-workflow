@@ -102,7 +102,7 @@ test("cut + canary publishes the declared packages at the canary version, gated 
 test("cut + canary installs the workspace, gates the commit, stages and restores", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
   assert.match(block, /bun install --frozen-lockfile/, "the publish gate needs the real dependency tree");
-  assert.match(block, /npm install -g npm@latest/, "Trusted Publishing needs npm >= 11.5.1");
+  assert.match(block, /npm install -g npm@latest/, "Trusted Publishing needs npm >= 11.21 for publish + dist-tag");
   assert.match(block, /\( cd "packages\/\$dir" && bun run test \)/, "each declared package is gated before staging");
   assert.match(block, /release\.mjs publish-stage --channel/);
   assert.match(block, /CUT_DATE=\$\(date -u \+%F\)/, "the cut date is pinned once");
@@ -113,11 +113,38 @@ test("cut + canary installs the workspace, gates the commit, stages and restores
   assert.match(block, /gh release create "v\$V"[^\n]*--prerelease/, "the channel cut is visible as a GitHub pre-release");
 });
 
-test("cut + canary rejects the stable-only version input instead of ignoring it", () => {
+test("cut + canary accepts the version input as the canary base (a variable, never a literal)", () => {
+  const text = read(PUBLISH);
+  const block = jobBlock(text, "cut-prerelease");
+  assert.match(block, /VERSION: \$\{\{ inputs\.version \}\}/);
+  assert.match(block, /publish-plan --channel "\$CHANNEL" --date "\$CUT_DATE" "\$\{args\[@\]\}"/, "the plan receives the forced base");
+  assert.match(block, /publish-stage --channel "\$CHANNEL" --date "\$CUT_DATE" "\$\{args\[@\]\}"/, "the stage receives the same forced base");
+  assert.doesNotMatch(block, /Reject a forced version/, "the canary base is a supported override, not a rejected input");
+  const suggest = jobBlock(text, "suggest");
+  assert.match(suggest, /plan --channel canary[\s\S]{0,80}"\$\{args\[@\]\}"/, "the canary suggestion receives the same base");
+});
+
+// A stable release is what `@canary` installs until the next canary cut: every
+// stable publish job moves the dist-tag to the version it just published.
+test("each stable publish job points the canary dist-tag at the stable release", () => {
+  const text = read(PUBLISH);
+  assert.equal([...text.matchAll(/npm dist-tag add "\$NAME@\$VERSION" canary/g)].length, 3, "one per publishable package");
+  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+    assert.match(jobBlock(text, job), /npm dist-tag add/, `${job} promotes canary`);
+  }
+});
+
+// The canary release body is the BACKLOG: the pending changeset bodies — the
+// same ones the next stable cut consumes — so the pre-release says what it
+// carries. Canaries are grouped by the operator; the pre-release is where the
+// group is readable.
+test("cut + canary opens the GitHub pre-release with the changeset backlog as notes", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
-  assert.match(block, /inputs\.version != ''/);
-  assert.match(block, /::error::[^\n]*version input/);
-  assert.match(block, /exit 1/);
+  assert.match(block, /release\.mjs release-notes/, "the pending changeset bodies are the canary's change backlog");
+  assert.match(block, /--notes-file "\$RUNNER_TEMP\/canary-notes\.txt"/);
+  const notes = block.indexOf("release-notes");
+  const create = block.indexOf("gh release create");
+  assert.ok(notes !== -1 && create !== -1 && notes < create, "the backlog is assembled before the release opens");
 });
 
 test("the publish jobs run only on push events (a dispatch run never publishes stale checkouts)", () => {

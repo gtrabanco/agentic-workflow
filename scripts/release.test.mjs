@@ -403,8 +403,8 @@ test("publish-plan prints per-package TSV lines for the declared packages (the c
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const lines = result.stdout.trim().split("\n");
   assert.deepEqual(lines.sort(), [
-    "@gtrabanco/agentic-workflow-schema\tagentic-workflow-schema\t1.0.0-canary.20260916.1\tcanary",
-    "@gtrabanco/pi-agentic-workflow\tpi-agentic-workflow\t1.0.0-canary.20260916.1\tcanary",
+    "@gtrabanco/agentic-workflow-schema\tagentic-workflow-schema\t1.1.0-canary.20260916.1\tcanary",
+    "@gtrabanco/pi-agentic-workflow\tpi-agentic-workflow\t1.1.0-canary.20260916.1\tcanary",
   ]);
 });
 
@@ -430,14 +430,14 @@ test("publish-stage versions the declared packages and pins only the siblings cu
   const root = fixture({ changesets: { "all.md": ["pi:patch", "schema:patch", "agentic:patch"] } });
   const result = run(["publish-stage", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  const canary = "1.0.0-canary.20260916.1";
+  const canary = "1.0.1-canary.20260916.1";
   for (const name of PACKAGES) assert.equal(readPkgVersion(root, name), canary, `${name} is staged at the channel version`);
   const pi = JSON.parse(fs.readFileSync(path.join(root, "packages", "pi-agentic-workflow", "package.json"), "utf8"));
   assert.equal(pi.dependencies["@gtrabanco/agentic-workflow"], canary);
   assert.equal(pi.dependencies["@gtrabanco/agentic-workflow-schema"], canary);
   // The machine plan is the same TSV publish-plan emits, so the publish loop
   // reads one source of truth for name, directory, version and dist-tag.
-  assert.match(result.stdout, /^@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.0-canary\.20260916\.1\tcanary$/m);
+  assert.match(result.stdout, /^@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.1-canary\.20260916\.1\tcanary$/m);
   // A channel cut writes nothing durable: no changelog row, no consumed intent.
   assert.doesNotMatch(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8"), /canary/);
   assert.equal(fs.existsSync(path.join(root, ".changeset", "all.md")), true);
@@ -448,7 +448,7 @@ test("publish-stage leaves an undeclared sibling's version and its pin alone", (
   const root = fixture({ changesets: { "pi-only.md": ["pi:patch"] } });
   const result = run(["publish-stage", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0-canary.20260916.1");
+  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.1-canary.20260916.1");
   assert.equal(readPkgVersion(root, PACKAGES[1]), "1.0.0", "an undeclared package is not cut");
   assert.equal(readPkgVersion(root, PACKAGES[2]), "1.0.0", "an undeclared package is not cut");
   const pi = JSON.parse(fs.readFileSync(path.join(root, "packages", "pi-agentic-workflow", "package.json"), "utf8"));
@@ -507,13 +507,35 @@ test("--dry-run is an accepted alias for plan (SPEC capability-closure Read test
 
 // External-verify blocker: --version with a prerelease channel printed
 // "Version forced by operator: undefined" and silently ignored the override.
-test("--version with the canary channel is rejected, never silently ignored", () => {
+// The canary is a prerelease of the NEXT train: with the pending changesets
+// that is the same version the stable plan computes (last stable + the highest
+// changeset level). A prerelease built on the already-published stable would
+// sort BELOW it, so `@canary` would hand a consumer an older tree than `latest`.
+test("the canary base is the next train the stable plan computes", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:minor"] } });
+  const result = run(["plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /1\.1\.0-canary\.20260916\.1/, "the minor bump is the canary base");
+  assert.doesNotMatch(result.stdout, /1\.0\.0-canary/, "the published stable is not the canary base");
+});
+
+// The operator-supplied version is a VARIABLE, never a literal in the pipeline:
+// it forces the canary base (the stable train version it will become).
+test("--version forces the canary base and never prints undefined", () => {
   const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
-  for (const channel of ["canary"]) {
-    const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", channel, "--version", "9.9.9"]);
-    assert.equal(result.status, 1, `${channel}: --version off the latest train must fail, not succeed`);
-    assert.match(result.stderr || result.stdout, /--version/);
-    assert.doesNotMatch(result.stdout, /undefined/);
+  const result = run(["plan", "--root", root, "--channel", "canary", "--version", "9.8.7", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /9\.8\.7-canary\.20260916\.1/);
+  assert.match(result.stdout, /Canary base forced by operator: 9\.8\.7/);
+  assert.doesNotMatch(result.stdout, /undefined/);
+});
+
+test("a non-X.Y.Z canary base is refused instead of guessed", () => {
+  const root = fixture({ changesets: { "a.md": ["pi:patch"] } });
+  for (const value of ["9.8", "v9.8.7", "latest"]) {
+    const result = run(["plan", "--root", root, "--channel", "canary", "--version", value]);
+    assert.equal(result.status, 1, `${value} must be refused`);
+    assert.match(result.stderr || result.stdout, /--version must be a stable X\.Y\.Z version/);
   }
 });
 
@@ -599,4 +621,74 @@ test("each change lands in its own package's section, skills ride pi, undeclared
   assert.match(piRow, /Lane body\. \(skills: unit-lane\)/);
   assert.doesNotMatch(piRow, /Schema-only body\./, "the pi section does not carry schema's change");
   assert.match(crateRow, /Unified train bump/, "a package with nothing declared says so explicitly");
+});
+
+// ── The canary base feeds the stable suggestion (promotion) ──────────────────
+//
+// Operator flow: cut a canary with the forced base 5.0.0 (or let the plan
+// compute it), keep working, then decide stable. A canary cut never tags a
+// stable version and never consumes the changesets, so the channel tags
+// (v5.0.0-canary.*) are the ONLY durable record that the next train was
+// already named. The stable suggestion must not suggest below it: promoting
+// the canary IS a stable cut, with or without new pending changesets, and
+// the stable pointer, `latest` and `canary` all land on the same version.
+
+/** Last stable 4.9.0 + a canary of the next train already cut at base 5.0.0. */
+function canaryFixture() {
+  const root = fixture({ changesets: {}, version: "4.9.0", git: true });
+  execFileSync("git", ["tag", "v4.9.0"], { cwd: root });
+  execFileSync("git", ["tag", "v5.0.0-canary.20260101.1"], { cwd: root });
+  return root;
+}
+
+test("the stable suggestion is the canary base (promotion) with no pending changesets", () => {
+  const root = canaryFixture();
+  const result = run(["plan", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /train version: 5\.0\.0/, "the canary base is the stable suggestion");
+  assert.match(result.stdout, /4\.9\.0 → 5\.0\.0/, "the train moves to the canary base");
+});
+
+test("the stable suggestion is the canary base when it sits above the changeset-derived version", () => {
+  const root = canaryFixture();
+  fs.writeFileSync(
+    path.join(root, ".changeset", "late.md"),
+    '---\n"@gtrabanco/pi-agentic-workflow": patch\n---\n\nLate change body.\n',
+  );
+  const result = run(["plan", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /train version: 5\.0\.0/, "4.9.1 is below the canary base — the base wins");
+});
+
+test("the canary suggestion continues from the canary base, not the last stable", () => {
+  const root = canaryFixture();
+  const result = run(["plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /5\.0\.0-canary\.20260916\.1/);
+  assert.doesNotMatch(result.stdout, /4\.9\.0-canary/, "the last stable is never the canary base once 5.0.0 was named");
+});
+
+test("a recut of the same canary base on the same day increments the counter (.2 because .1 exists)", () => {
+  const root = canaryFixture();
+  execFileSync("git", ["tag", "v5.0.0-canary.20260916.1"], { cwd: root });
+  const result = run(["plan", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /5\.0\.0-canary\.20260916\.2\b/);
+});
+
+test("promotion apply cuts the stable train from the canary base without changesets", () => {
+  const root = canaryFixture();
+  const result = run(["apply", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  for (const name of PACKAGES) {
+    assert.equal(readPkgVersion(root, name), "5.0.0", `${name} carries the promoted train`);
+  }
+});
+
+test("a canary base already cut as stable refuses to re-promote", () => {
+  const root = canaryFixture();
+  execFileSync("git", ["tag", "v5.0.0"], { cwd: root });
+  const result = run(["plan", "--root", root, "--channel", "stable"]);
+  assert.equal(result.status, 1, "v5.0.0 already exists as a stable tag — the suggestion would collide");
+  assert.match(result.stderr || result.stdout, /5\.0\.0/);
 });

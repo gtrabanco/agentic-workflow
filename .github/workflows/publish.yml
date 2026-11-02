@@ -12,18 +12,29 @@ name: Publish packages
 #       from the changeset bodies), refreshes the lockfiles, adds exactly ONE
 #       release commit, pushes it, tags vX.Y.Z, fast-forwards `stable` and
 #       opens the GitHub Release (npm dist-tag: latest — npm's vocabulary).
+#       The publish jobs also point the `canary` dist-tag at that stable
+#       version, so `@canary` never lags behind `@latest` between cuts.
 #       `version` forces the train (D-40-4; the notes are marked "Version
 #       forced by operator"). The push fires the publish jobs of a second run
 #       of this same workflow.
 #   Launch with mode: cut + channel: canary → publishes ONLY the packages
-#       declared in the accumulated changesets, at the canary version
-#       (`<base>-canary.<date>.<n>`, a prerelease of the last stable) under
-#       the canary dist-tag. The declared packages are gated on the COMMITTED
+#       declared in the accumulated changesets, at a prerelease of the NEXT
+#       train (`<next-train>-canary.<date>.<n>` — the same base the stable
+#       suggestion computes, or the `version` input when given) under the
+#       canary dist-tag. The declared packages are gated on the COMMITTED
 #       tree first; the repo is otherwise untouched (the channel versions and
 #       their in-cut pins are staged for packing and restored after); the cut
-#       is recorded as a git tag and a GitHub pre-release, and the changesets
+#       is recorded as a git tag and a GitHub pre-release carrying the
+#       changeset BACKLOG (the pending changeset bodies), and the changesets
 #       are NOT consumed — only the stable train consumes them. Canaries are
 #       grouped by you — changesets accumulate until you decide to cut.
+#
+#   Promotion: the stable suggestion is the base of the highest canary already
+#       cut whenever it sits above the changeset-derived version — so after a
+#       canary at 5.0.0 the next stable cut is 5.0.0 (pure promotion with no
+#       pending changesets, the canary plus the newly accumulated changes
+#       otherwise), and stable, `latest` and `canary` all point at that same
+#       version until the next cut.
 #
 # The channel set is CLOSED: stable + canary (owner decision, post-#180
 # follow-up). The old `latest` channel name is retired — `stable` is the train.
@@ -71,7 +82,7 @@ on:
           - stable
           - canary
       version:
-        description: "cut + stable only: force this exact train version (X.Y.Z, optional)"
+        description: "optional X.Y.Z: forces the stable train version, or the canary base (the canary publishes <X.Y.Z>-canary.<date>.<n>)"
         type: string
         required: false
         default: ""
@@ -104,12 +115,17 @@ jobs:
         env:
           FORCE_VERSION: ${{ inputs.version }}
         run: |
-          ARGS=""
-          if [ -n "$FORCE_VERSION" ]; then ARGS="--version $FORCE_VERSION"; fi
-          node scripts/release.mjs plan --channel stable $ARGS | tee plan-stable.txt
+          args=()
+          if [ -n "$FORCE_VERSION" ]; then args+=(--version "$FORCE_VERSION"); fi
+          node scripts/release.mjs plan --channel stable "${args[@]}" | tee plan-stable.txt
 
-      - name: Canary suggestion (a prerelease of the last stable)
-        run: node scripts/release.mjs plan --channel canary --date "$(date +%F)" | tee plan-canary.txt
+      - name: Canary suggestion (a prerelease of the next train — the stable base, or the base of a canary already cut)
+        env:
+          FORCE_VERSION: ${{ inputs.version }}
+        run: |
+          args=()
+          if [ -n "$FORCE_VERSION" ]; then args+=(--version "$FORCE_VERSION"); fi
+          node scripts/release.mjs plan --channel canary --date "$(date -u +%F)" "${args[@]}" | tee plan-canary.txt
 
       - name: Run summary
         if: always()
@@ -220,14 +236,10 @@ jobs:
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
-      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+      # Publish and dist-tag writes both go through Trusted Publishing:
+      # OIDC needs npm >= 11.5.1 to publish and >= 11.21 to move a dist-tag.
+      - name: Ensure npm supports Trusted Publishing (>= 11.21 — publish + dist-tag)
         run: npm install -g npm@latest
-
-      - name: Reject a forced version (the input is stable-only)
-        if: inputs.version != ''
-        run: |
-          echo "::error::the version input applies to cut + channel: stable only — the canary channel computes <last-stable>-canary.<date>.<n>; re-dispatch with an empty version"
-          exit 1
 
       # The publish gate is each package's own test suite, run HERE against the
       # committed tree. The channel version is a packaging side effect staged
@@ -249,7 +261,11 @@ jobs:
       - name: Resolve the declared packages and their channel version
         env:
           CHANNEL: ${{ inputs.channel }}
-        run: node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$CUT_DATE" | tee publish-plan.tsv
+          VERSION: ${{ inputs.version }}
+        run: |
+          args=()
+          if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
+          node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" | tee publish-plan.tsv
 
       - name: Gate the declared packages (never publish red)
         run: |
@@ -267,7 +283,11 @@ jobs:
       - name: Stage the channel versions
         env:
           CHANNEL: ${{ inputs.channel }}
-        run: node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$CUT_DATE" >/dev/null
+          VERSION: ${{ inputs.version }}
+        run: |
+          args=()
+          if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
+          node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" >/dev/null
 
       # Per declared package: run the exact-version gate (a canary already on
       # the registry skips) and publish under the channel dist-tag. Lifecycle
@@ -300,6 +320,18 @@ jobs:
         if: always()
         run: git checkout -- packages/*/package.json
 
+      # The canary release body is the BACKLOG: the pending changeset bodies —
+      # the same ones the next stable cut consumes — so the pre-release says
+      # what it carries. Canaries are grouped by the operator; the pre-release
+      # is where the group is readable. The changesets stay pending.
+      - name: Assemble the backlog notes (the pending changesets are the release body)
+        run: |
+          {
+            echo "Canary cut — the changes below are the backlog this prerelease carries; the next stable cut consumes them."
+            echo ""
+            node scripts/release.mjs release-notes
+          } > "$RUNNER_TEMP/canary-notes.txt"
+
       # The cut is recorded as a tag — that tag IS the canary counter's input
       # (v<base>-canary.<date>.*), so the next cut increments. The pre-release
       # makes the channel cut visible on the forge without touching `latest`:
@@ -322,7 +354,7 @@ jobs:
               git push origin "v$V"
             fi
             gh release view "v$V" >/dev/null 2>&1 \
-              || gh release create "v$V" --prerelease --verify-tag --generate-notes --title "v$V"
+              || gh release create "v$V" --prerelease --verify-tag --generate-notes --title "v$V" --notes-file "$RUNNER_TEMP/canary-notes.txt"
             echo "recorded cut v$V ($CHANNEL)"
           else
             echo "nothing declared — no tag"
@@ -380,7 +412,9 @@ jobs:
         # skew fails `bun install --frozen-lockfile` before the gate runs).
         with:
           bun-version: 1.4.0
-      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+      # Publish and dist-tag writes both go through Trusted Publishing:
+      # OIDC needs npm >= 11.5.1 to publish and >= 11.21 to move a dist-tag.
+      - name: Ensure npm supports Trusted Publishing (>= 11.21 — publish + dist-tag)
         run: npm install -g npm@latest
       - name: Install (bun, frozen lockfile)
         run: bun install --frozen-lockfile
@@ -398,6 +432,18 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # A stable release is also what `@canary` installs until the next canary:
+      # the tag never lags behind `latest`. npm's Trusted Publisher record for
+      # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
+      # dist-tag"), a permission separate from direct publishing.
+      - name: Point the canary dist-tag at the stable release
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          npm dist-tag add "$NAME@$VERSION" canary || {
+            echo "::error::could not move the canary dist-tag — enable 'Allow npm dist-tag' for this workflow's Trusted Publisher on npmjs.com (npm >= 11.21)"
+            exit 1
+          }
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
@@ -447,7 +493,9 @@ jobs:
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
-      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+      # Publish and dist-tag writes both go through Trusted Publishing:
+      # OIDC needs npm >= 11.5.1 to publish and >= 11.21 to move a dist-tag.
+      - name: Ensure npm supports Trusted Publishing (>= 11.21 — publish + dist-tag)
         run: npm install -g npm@latest
       # The gate needs the crate's pinned dependencies: `src/doc/envelope.mjs`
       # imports `typebox` lazily, so without node_modules every test that
@@ -468,6 +516,18 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # A stable release is also what `@canary` installs until the next canary:
+      # the tag never lags behind `latest`. npm's Trusted Publisher record for
+      # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
+      # dist-tag"), a permission separate from direct publishing.
+      - name: Point the canary dist-tag at the stable release
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          npm dist-tag add "$NAME@$VERSION" canary || {
+            echo "::error::could not move the canary dist-tag — enable 'Allow npm dist-tag' for this workflow's Trusted Publisher on npmjs.com (npm >= 11.21)"
+            exit 1
+          }
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
@@ -517,7 +577,9 @@ jobs:
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
-      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+      # Publish and dist-tag writes both go through Trusted Publishing:
+      # OIDC needs npm >= 11.5.1 to publish and >= 11.21 to move a dist-tag.
+      - name: Ensure npm supports Trusted Publishing (>= 11.21 — publish + dist-tag)
         run: npm install -g npm@latest
       - name: Install + build (bun, frozen lockfile; prepare runs tsc and stages the bundle)
         run: bun install --frozen-lockfile
@@ -565,6 +627,18 @@ jobs:
         id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance --tag "latest"
+      # A stable release is also what `@canary` installs until the next canary:
+      # the tag never lags behind `latest`. npm's Trusted Publisher record for
+      # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
+      # dist-tag"), a permission separate from direct publishing.
+      - name: Point the canary dist-tag at the stable release
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          npm dist-tag add "$NAME@$VERSION" canary || {
+            echo "::error::could not move the canary dist-tag — enable 'Allow npm dist-tag' for this workflow's Trusted Publisher on npmjs.com (npm >= 11.21)"
+            exit 1
+          }
       - name: Troubleshooting pointer on failure
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
