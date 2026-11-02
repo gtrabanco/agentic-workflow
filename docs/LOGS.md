@@ -3782,3 +3782,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 76 files
 - **Summary:** Clarified breaking-change notation (!) in conventional commit titles
 - **Decisions:** No changes applied — session used for learning/clarification about feat(scope)! syntax for breaking changes
+## 2026-11-02T12:08:08Z — fix/319-location-index-consolidation — manual
+- **Commits:** 32 (`c94c53dc…ef8e7a3f`)
+- **Files:** 76 files
+- **Summary:** Review + fold fix/319-location-index-consolidation: cycle-2 review found 3 fix-now defects (F6: fold deleted the unit log, F7: schema read standalone index first, F8: router re-read the index 4x per lookup) — all three folded, full gate green
