@@ -3882,3 +3882,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Audit pi 1.5.0 changelog against packages/pi-agentic-workflow, post forge updates on issues #274 and #284, open new issue #370
 - **Decisions:** Zero TypeBox value: package registers 0 tools, imports nothing from pi-ai, and 1.5.0 narrowed TypeBox to JSON Schema features only; two-leg compat re-run + @types/node bump folded into single fix(deps) PR
 - **Next:** Close #370 once compat guard passes (0.99.1 + latest)
+## 2026-11-02T17:49Z — feat/332-agents-md-split — manual
+- **Commits:** 10 (`20fc92a1…1a653a8a`)
+- **Files:** 22 files
+- **Summary:** Applied issue #332: split AGENTS.md into a core guide + deep references, budget the guide layer, repair template audit, open PR #371
+- **Decisions:** S7's ~120-line goal is unreachable at 357 lines (83 machine blocks stay + 142+ prose core); declared deviation, not smoothed over. main moved 2x during the branch; merged (never force-pushed). Carries one parallel-session docs(log) commit.
+- **Next:** Owner reviews PR #371 (https://github.com/gtrabanco/agentic-workflow/pull/371), all CI green, ready to merge
