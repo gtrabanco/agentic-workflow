@@ -63,7 +63,10 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
    sequential id `F1, F2, …` — **one single `F` sequence for the whole audit**,
    in ranked order, regardless of dimension. Never use a different letter per
    dimension or per severity; `F` is the only prefix. Proposals reference the
-   finding ids they derive from (`from: F3, F7`).
+   finding ids they derive from (`from: F3, F7`). Each finding also carries its
+   `route:` — the next command for it, plus the one reference that command needs
+   when that reference is not already loaded here. Deciding the route now is
+   what makes the next run progressive; executing it is never this run's job.
 8. **Delta vs prior audit of equivalent scope** — only after the findings are
    synthesized and numbered on your own (step 7), load the newest previous audit
    in `docs/audits/` with an equivalent scope (whole product, or the same
