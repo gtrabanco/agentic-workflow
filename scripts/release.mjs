@@ -25,18 +25,20 @@
  *             release body is marked "Version forced by operator: X.Y.Z"
  *             (AC-10) and the version must not collide with an existing tag.
  *
- * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias) and
- * `apply` (writes package.json versions + CHANGELOG companion rows for the
+ * Modes: `plan` (default, read-only — `--dry-run` is an accepted alias),
  * `apply` (writes package.json versions + CHANGELOG companion rows for the
  * stable channel, stamps every skill's SKILL.md frontmatter with the
  * train version (D-40-14), then deletes the consumed `.changeset/*.md` files
- * so the next cut carries only new intent). `--version` forces the STABLE train
+ * so the next cut carries only new intent), `publish-plan` (read-only TSV for
+ * the channel publish job) and `publish-stage` (the same TSV plus the temp
+ * channel versions and pins written for publishing — restored by the job;
+ * never committed). `--version` forces the STABLE train
  * only — the canary channel computes its own version and rejects it. git/npm/gh
  * commands are always PRINTED, never executed — an operator or workflow runs
  * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
  * are third-party data, never interpolated into a shell command.
- * an operator or workflow runs them. GitHub Release notes use
- * `--generate-notes` so merged PR authors are credited (AC-15, PE-004).
+ * GitHub Release notes use `--generate-notes` so merged PR authors are
+ * credited (AC-15, PE-004).
  *
  * Dependency-free (node: builtins only — the node-compat rule, AC-01).
  *
@@ -44,6 +46,7 @@
  *   node scripts/release.mjs [plan|apply] [--channel stable|canary]
  *        [--version X.Y.Z] [--base X.Y.Z] [--date YYYY-MM-DD] [--summary "..."]
  *        [--root DIR]
+ *   node scripts/release.mjs publish-plan|publish-stage --channel canary --date YYYY-MM-DD
  *
  * Exit codes: 0 = plan produced / applied, 1 = failure, 2 = usage error.
  */
@@ -66,10 +69,13 @@ function usage() {
     "usage: node scripts/release.mjs [plan|apply] [--channel stable|canary]",
     "                     [--version X.Y.Z] [--base X.Y.Z] [--date YYYY-MM-DD]",
     "                     [--summary \"...\"] [--root DIR]",
+    "       node scripts/release.mjs publish-plan|publish-stage --channel canary --date YYYY-MM-DD",
     "",
     "Deterministic release pipeline for the unified version train (issue #180).",
     "`plan` (default) is read-only; `apply` writes package versions + CHANGELOG",
     "companion rows for the stable channel and consumes the applied changesets.",
+    "`publish-stage` writes the temp canary versions + pins for the publish job",
+    "(restored after publishing, never committed).",
     "--version forces the stable train only. git/npm/gh commands are printed,",
     "never executed.",
   ].join("\n");
@@ -79,7 +85,7 @@ function parseArgs(argv) {
   const args = { mode: "plan", channel: "stable", version: null, base: null, date: null, summary: null, root: DEFAULT_ROOT };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "plan" || a === "apply" || a === "release-notes" || a === "publish-plan") args.mode = a;
+    if (a === "plan" || a === "apply" || a === "release-notes" || a === "publish-plan" || a === "publish-stage") args.mode = a;
     else if (a === "--channel") args.channel = argv[++i];
     else if (a === "--version") args.version = argv[++i];
     else if (a === "--base") args.base = argv[++i];
@@ -258,6 +264,30 @@ function rewriteLocalPins(root, packages, version) {
   return rewrites;
 }
 
+/**
+ * Stage a channel cut in the worktree: every DECLARED package carries the
+ * prerelease version, and an exact pin moves only when its target is declared
+ * in the same cut — pinning an undeclared sibling would name a version this
+ * canary never publishes. The state is temporary: the publish job restores it
+ * with `git checkout -- packages/<member>/package.json` after `npm publish`.
+ */
+function stageChannelVersions(root, packages, declared, version) {
+  let staged = 0;
+  for (const pkg of packages) {
+    if (!declared.has(pkg.name)) continue;
+    const json = JSON.parse(fs.readFileSync(pkg.path, "utf8"));
+    json.version = version;
+    const deps = json.dependencies ?? {};
+    for (const [dep, spec] of Object.entries(deps)) {
+      if (!declared.has(dep) || !SEMVER_RE.test(String(spec)) || spec === version) continue;
+      deps[dep] = version;
+    }
+    fs.writeFileSync(pkg.path, JSON.stringify(json, null, 2) + "\n");
+    staged += 1;
+  }
+  return staged;
+}
+
 function insertCompanionRow(changelogPath, { name, dirName, version, date, level, summary }) {
   const changelog = fs.readFileSync(changelogPath, "utf8");
   const rowStart = companionRowStart(changelog, { name, dirName });
@@ -305,8 +335,8 @@ function main() {
         : `--channel must be one of ${CHANNELS.join(", ")} — the channel set is closed`,
     );
   }
-  if (args.mode === "publish-plan" && args.channel === "stable") {
-    fail("publish-plan is for canary — channel stable cuts the train with apply");
+  if ((args.mode === "publish-plan" || args.mode === "publish-stage") && args.channel === "stable") {
+    fail(`${args.mode} is for canary — channel stable cuts the train with apply`);
   }
   if (args.dryRun && args.mode !== "plan") {
     fail("--dry-run plans only — drop it to run apply");
@@ -389,7 +419,7 @@ function main() {
     }
   }
 
-  const human = args.mode !== "publish-plan"; // machine modes print TSV only
+  const human = args.mode !== "publish-plan" && args.mode !== "publish-stage"; // machine modes print TSV only
   if (human) console.log(`release plan — channel: ${args.channel}, mode: ${args.mode}, base: ${base}${baseNote}, date: ${date}`);
   if (forced) console.log(`Version forced by operator: ${version}`);
 
@@ -475,7 +505,11 @@ function main() {
     const listed = packages.filter((p) => declared.has(p.name));
     // Machine-readable plan for the publish workflow's channel job: one TSV
     // line per declared package (name, dir, version, dist-tag).
-    if (args.mode === "publish-plan") {
+    if (args.mode === "publish-plan" || args.mode === "publish-stage") {
+      if (args.mode === "publish-stage") {
+        const staged = stageChannelVersions(root, packages, declared, prerelease);
+        console.error(`staged: ${staged} package.json version(s) + their in-cut pins at ${prerelease} — the publish job restores them, nothing is committed`);
+      }
       for (const pkg of listed) {
         console.log(`${pkg.name}\t${pkg.dirName}\t${prerelease}\t${args.channel}`);
       }
@@ -490,7 +524,7 @@ function main() {
     for (const pkg of listed) {
       console.log(`  cd packages/${pkg.dirName} && npm version ${prerelease} --no-git-tag-version && npm publish --tag ${args.channel} && git checkout -- package.json`);
     }
-    console.log(`note: canary never moves the latest dist-tag; publish it with the workflow's channel input or by hand`);
+    console.log("note: canary never moves the latest dist-tag; `publish-stage` writes the temp versions + in-cut pins the publish job uses, and the job restores packages/*/package.json afterwards");
   }
 
   if (args.mode === "plan") console.log("plan only — nothing written");
