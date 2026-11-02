@@ -3851,3 +3851,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Recovered from a worktree relocation mistake that displaced a live agent's workspace, then repaired the ci-publish-fix worktree without losing WIP
 - **Decisions:** The ci-publish-fix worktree was created inside .git/worktrees/ (a self-referential admin dir), which made git refuse deletion and broke the session. Instead of rm --force, moved the checkout to .worktrees/ (gitignored convention), preserved the diff sha256 and verbatim files for verification, and rebuilt the admin metadata. The live transcript was recovered from ~/.pi/agent/sessions/ before the filesystem repair; 3 user prompts extracted (canary publish logic). WIP verified byte-identical before/after (175 inserted, 61 deleted across 4 files).
 - **Next:** cd .worktrees/ci-publish-fix && git pull --rebase to get the 3 behind commits from origin/ci-publish-fix, then continue the canary publish work (release.mjs, publish.yml changes)
+## 2026-11-02T17:19:39Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Review roadmap coherence: found 5 stale rows, 15 open issues without a Features row, 4 issues needing re-scope. Opened PR #368 (docs/roadmap-rows-87-101) adding rows 87–101 to the Features table, reconciled rows 40/46/58/85/71, posted dated re-scopes on #173/#174/#201/#227, supersession records on #352/#360/#361/#363/#329/#269, and created issue #366 restoring the anchor for row 71 (doc-cli). PR is mergeable with all CI checks green.
+- **Next:** Merge PR #368, then decide on topology of execution (#360 vs #260 vs #294) and #366 build-vs-absorb
