@@ -1,0 +1,66 @@
+# Source attribution ledger
+
+**Policy (owner decision, 2026-11-02): 100% transparency.** Every paper, project,
+or third-party artifact whose ideas, designs, or bytes this repository adopts is
+recorded here: **what** was taken (idea adapted vs bytes vendored), **where** it
+landed (issue / feature / file), and **when**. Nothing adopted is unattributed.
+
+Rules that compose with this ledger:
+
+- **Bytes vendored** (code copied verbatim or near-verbatim) additionally carry
+  the four-part provenance header at the copy site — source URL, author, version,
+  license name — per the AGENTS.md vendoring rule. This ledger never substitutes
+  that header; it records the adoption in both places.
+- **Ideas adapted** (a mechanism, policy, or design re-implemented in our own
+  words and code) need only this row.
+- **Rejected/inspected-only sources** are not listed unless the rejection reason
+  is useful; the papers sweeps in this folder record full verdicts, including
+  discards.
+- A paper cited in an issue as evidence but **not** incorporated into a surface
+  is marked `evidence only` — it shaped a decision, nothing was copied.
+
+## Incorporated papers
+
+| Date | Source | What we took | Kind | Where it landed |
+|---|---|---|---|---|
+| 2026-11-02 | [TDAD — arXiv 2603.17973](https://arxiv.org/abs/2603.17973) | Test targeting: the TDD rule gains a "which tests" impact set; empty impact set = recorded skip (test triage) | idea adapted | [#356](https://github.com/gtrabanco/agentic-workflow/issues/356) (AGENTS.md rule amendment + execute-phase verification, planned) |
+| 2026-11-02 | [Refute-or-Promote — arXiv 2604.19049](https://arxiv.org/abs/2604.19049) | Adversarial review as kill-mandate (disprove, not enumerate); cross-model-family critic option; unanimity-as-warning | idea adapted | [#358](https://github.com/gtrabanco/agentic-workflow/issues/358) (review-change contract, planned) |
+| 2026-11-02 | [OpenCodeReview — arXiv 2608.09290](https://arxiv.org/abs/2608.09290) | Diff-only reflector as final precision filter; determinism-first review dispatch evidence | idea adapted | [#358](https://github.com/gtrabanco/agentic-workflow/issues/358) |
+| 2026-11-02 | [CIVER — arXiv 2610.36010](https://arxiv.org/abs/2610.36010) | Stability-under-unrelated-changes check for finding attribution | idea adapted | [#358](https://github.com/gtrabanco/agentic-workflow/issues/358) |
+| 2026-11-02 | [Economics of reasoning effort — arXiv 2610.34491](https://arxiv.org/abs/2610.34491) | Escalate-on-verified-failure effort policy for model routing | idea adapted | [#201 comment](https://github.com/gtrabanco/agentic-workflow/issues/201#issuecomment-6579779883) (owner ruling pending on command-route scope) |
+| 2026-11-02 | [Governance Decay — arXiv 2606.22528](https://arxiv.org/abs/2606.22528) | Rationale for the prose-gate inventory: prose-only gates do not survive compaction; gates move to scripts | idea adapted | [#359](https://github.com/gtrabanco/agentic-workflow/issues/359) + [#174 comment](https://github.com/gtrabanco/agentic-workflow/issues/174#issuecomment-6579780515) |
+| 2026-11-02 | [kw-bench — arXiv 2610.36405](https://arxiv.org/abs/2610.36405) | "Inertia" constraint for state-flow design: episode state must project durable external state, never a transcript summary | evidence only (design constraint) | [#174 comment](https://github.com/gtrabanco/agentic-workflow/issues/174#issuecomment-6579780515) |
+| 2026-11-02 | [SKILL.md anatomy/smells — arXiv 2607.01456](https://arxiv.org/abs/2607.01456) | Skill-smell checks for skill-lint (26-smell taxonomy, repo-applicable subset) | idea adapted | [#357](https://github.com/gtrabanco/agentic-workflow/issues/357) |
+| 2026-11-02 | [Agent Skills in the Wild — arXiv 2601.10338](https://arxiv.org/abs/2601.10338) (+ [2604.02837](https://arxiv.org/abs/2604.02837)) | Skills supply-chain security checks for skill-lint (hidden instructions, frontmatter XML, invisible Unicode, exfiltration patterns) | idea adapted | [#357](https://github.com/gtrabanco/agentic-workflow/issues/357) |
+| 2026-11-02 | [Instruction adherence factorial — arXiv 2605.10039](https://arxiv.org/abs/2605.10039) | Evidence for per-turn tool-choice re-decision and nearest-literal sweep | evidence only | [#329 comment](https://github.com/gtrabanco/agentic-workflow/issues/329#issuecomment-6579781014) |
+| 2026-11-02 | [AutoCompact — arXiv 2610.02163](https://arxiv.org/abs/2610.02163) | Design reference for compaction timing (deterministic counterpart) | evidence only | [#174 comment](https://github.com/gtrabanco/agentic-workflow/issues/174#issuecomment-6579780515) |
+
+## Incorporated earlier (first sweep + prior units)
+
+| Date | Source | What we took | Kind | Where it landed |
+|---|---|---|---|---|
+| 2026-09-05 | [Are LLMs Reliable Code Reviewers? — arXiv 2603.00539](https://arxiv.org/abs/2603.00539) | Review-loop discipline: materiality floor, two-cycle cap, failing-reproducer-before-persist, anti-invention rule | idea adapted | features 31/32/50 (merged) |
+| 2026-09-15 | [Chain of Draft — arXiv 2502.18600](https://arxiv.org/abs/2502.18600); [TALE — arXiv 2412.18547](https://arxiv.org/abs/2412.18547); [LLMs Cannot Self-Correct Reasoning Yet — arXiv 2310.01798](https://arxiv.org/abs/2310.01798); [Let Me Speak Freely — arXiv 2408.02442](https://arxiv.org/abs/2408.02442); [SWE-agent — arXiv 2405.15793](https://arxiv.org/abs/2405.15793); [Lost in the Middle — arXiv 2307.03172](https://arxiv.org/abs/2307.03172) | Token-economy evidence base: eliminate narration not checks, external feedback over self-correction loops, structured format only for machine-consumed data, interface design drives performance, attention budget | evidence only | Bureaucracy-reduction execution order (docs/ROADMAP.md, 2026-09-15) |
+| 2026-08-26 | [SKILLSTATE — arXiv 2608.26263](https://arxiv.org/abs/2608.26263) | Explicit mutable execution state for long-running skills (episode lifecycle, not full Algorithm 1 in v1) | idea adapted | [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (open; pi-package-only v1) |
+| 2026-10 | [Spec Kit Agents — arXiv 2604.05278](https://arxiv.org/abs/2604.05278) | Validation of per-phase grounding hooks in SDD pipelines (no direct adoption yet) | evidence only | [papers sweep 2026-11-02](./papers-sweep-2026-11-02.md) |
+| 2026-11-02 | [Your Policy Is Secretly a Harness — arXiv 2610.37255](https://arxiv.org/abs/2610.37255) | Harness-evaluation methodology: fixed-model comparison invalid; wording/section order is performance surface | evidence only | [papers sweep 2026-11-02](./papers-sweep-2026-11-02.md) (golden-fixture methodology note) |
+| 2026-11-02 | [Evaluating AGENTS.md — arXiv 2602.11988](https://arxiv.org/abs/2602.11988) + [efficiency study — arXiv 2601.20404](https://arxiv.org/abs/2601.20404) | Conflicting evidence on agent-guide files; reconciled as "commands + boundaries yes, derivable descriptions no" | evidence only | [papers sweep 2026-11-02](./papers-sweep-2026-11-02.md) (template guidance, no unit yet) |
+
+## Incorporated projects & tools
+
+| Date | Source | What we took/adapted | Kind | Where it landed |
+|---|---|---|---|---|
+| 2026-08 | [vercel-labs/skills CLI](https://github.com/vercel-labs/skills) | Distribution channel for our skills (we publish to it; no code copied) | external dependency | README "Distribution" |
+| 2026-09 | [@llblab/pi-state-flow](https://github.com/llblab/pi-state-flow) | Backend idea for the opt-in state-flow lifecycle (episode start/stop commands) | idea adapted | [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (soft optional integration; never a hard dependency) |
+| 2026-09 | [Engram](https://github.com/Gentleman-Programming/engram) (owner-adjacent project) | Cross-session memory substrate and save/recall protocol at unit boundaries | integration | feature 66 (merged, PR #312) |
+| 2026-09 | [@bacnh85/pi-serena](https://github.com/bacnh85/pi-serena) (Serena LSP) | LSP-backed verification provisioning | dependency | feature 67 (merged, PR #313) |
+| 2026-08 | [gentle-ai v2.5.0-rc.2](docs/research/gentle-ai-v2.5.0-rc.2-contracts.md) | Contracts/lifecycle patterns studied; transferable ideas noted (transition schema, persist-then-stop, refusal ratchet). No bytes copied | studied | research artifact only |
+| 2025–2026 | Anthropic Agent Skills posts; Cognition "Don't Build Multi-Agents"; Anthropic multi-agent research post; Claude Code / Aider / Devin / OpenHands harness writeups | Progressive disclosure, code-as-docs, single-threaded agents + compression, token-usage variance | evidence only | 2026-09-15 token audit (bureaucracy-reduction order) |
+
+## Maintenance
+
+- New adoptions append a row **in the same PR** that adopts them.
+- An adoption without a row here is a provenance defect, not a formatting slip.
+- Full verdict tables for each sweep (including discarded papers) live in this
+  folder: [papers-sweep-2026-11-02.md](./papers-sweep-2026-11-02.md) and the
+  2026-09-15 audit summarized in docs/LOGS.md.
