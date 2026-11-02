@@ -8,41 +8,92 @@
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
 
-This repo is **not** an application. It ships two things:
-
-1. **`skills/`** — a stack-agnostic set of agent skills that run a disciplined,
-   doc-driven feature/issue workflow. Each is one `skills/<name>/SKILL.md`.
-2. **`template/`** — an exportable documentation scaffold: the *way of working*
-   (documentation map, SPEC/feature/fix templates, GitHub templates, conventions)
-   that a target project copies so the skills have a substrate to operate on.
-
-The skills are **project-adaptive**: at runtime they discover and obey the target
-project's own guide, documentation map, architecture, roadmap and style docs.
-Nothing here is tied to a specific stack, framework, or architecture pattern.
-
----
+This repo is **not** an application. It ships two things: **`skills/`** — a
+stack-agnostic set of agent skills that run a disciplined, doc-driven
+feature/issue workflow, one `skills/<name>/SKILL.md` each — and **`template/`** —
+an exportable documentation scaffold (documentation map, SPEC/feature/fix
+templates, GitHub templates, conventions) that a target project copies so the
+skills have a substrate to operate on. The skills are **project-adaptive**: at
+runtime they discover and obey the target project's own guide, documentation map,
+architecture, roadmap and style docs, so nothing here is tied to a specific
+stack, framework, or architecture pattern.
 
 ## Repository layout
 
 ```
 skills/                  the workflow skills (one SKILL.md each) — the installable source
 template/                the exportable documentation scaffold (generic, copyable)
-packages/                two companion npm packages (bun-managed islands — see Packages below)
+packages/                two companion npm packages (bun-managed islands — docs/workflow/PACKAGES.md)
+scripts/                 the deterministic gates and generators, each with its sibling *.test.mjs
 docs/workflow/           the tutorial: feature flow, issue flow, skill reference, replication
-docs/features/_TEMPLATE  feature SPEC template + ROADMAP
-docs/fix/                fix SPEC template + index
+docs/ROADMAP.md          the single Features+Fixes index — the worklist
+docs/architecture/       ARCHITECTURE.md and ARCHITECTURAL_INVARIANTS.md
+docs/design/             design notes (REDESIGN.md)
+docs/research/           research notes and their evidence
+docs/CAPABILITIES.md     the capability inventory (roles + cross-cutting subsystems)
+docs/LOGS.md             the session journal (`log-session` writes it)
+docs/features/_TEMPLATE  feature SPEC template
+docs/fix/                fix SPEC template + one folder per fix unit
+.changeset/              per-PR release intent files
 .github/                 issue + PR templates the workflow expects
+skills.sh.json           the skills-CLI manifest
 README.md                project overview
 ```
 
 **Dogfooding model (authoring):** repo sessions consume the workflow from the
-installed release (Pi package / installed plugin), not from the working copy.
-The committed layout carries no working-copy activation surface. Authoring
-sessions opt in by creating a local, gitignored mount
-(`ln -sfn ../skills .claude/skills`) or by exercising a single working-copy
-skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
+installed release (Pi package / installed plugin), not from the working copy; the
+committed layout carries no working-copy activation surface. Authoring sessions
+opt in by creating a local, gitignored mount (`ln -sfn ../skills .claude/skills`)
+or by exercising a single working-copy skill via per-session flags (e.g.
+`pi --no-skills --skill skills/<name>/SKILL.md`). **One home:** the rationale and
+the export path are [`README.md`](README.md#dogfooding-the-authoring-model).
 
----
+## Documentation map
+
+Which doc owns what — read the right context before acting, and add a row when a
+new doc takes ownership of a task:
+
+| Task | Required docs |
+|---|---|
+| Any change to these skills, gates or templates | this guide, then the owner each line below names |
+| Authoring or editing a skill | [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) |
+| Anything under `packages/` | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) |
+| Picking up work, sequencing a unit | [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/workflow/LANE_FLOW.md`](docs/workflow/LANE_FLOW.md) |
+| Writing a unit doc | [`docs/features/_TEMPLATE/SPEC.md`](docs/features/_TEMPLATE/SPEC.md), [`docs/fix/_TEMPLATE/SPEC.md`](docs/fix/_TEMPLATE/SPEC.md) |
+| An architecture change or a cross-cutting rule | [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`docs/architecture/ARCHITECTURAL_INVARIANTS.md`](docs/architecture/ARCHITECTURAL_INVARIANTS.md) |
+| A new capability or integration surface | [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) |
+| Resuming a session, or what happened last | [`docs/LOGS.md`](docs/LOGS.md), [`docs/workflow/REPOSITORY_STATE.md`](docs/workflow/REPOSITORY_STATE.md) |
+| The tutorial as a whole | [`docs/workflow/README.md`](docs/workflow/README.md) — it owns the pages index |
+
+## Deep references
+
+This file is the **core**: identity, layout, the rules that bound every change,
+the verification gate and the machine contracts. Everything that only matters
+while doing one kind of work is one hop away and read on demand:
+
+| Reference | Read it when you are… |
+|---|---|
+| [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) | authoring or editing a skill: frontmatter contract, body sections, the closing `→ Next:` block, hand-off vs compose across a model/effort boundary |
+| [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) | touching `packages/`: the bun workspace, the single lockfile, pin rules, the version-parity gate, changesets, publish channels |
+| [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) | smoke-testing a wording change to an executor-path skill |
+| [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
+| [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
+| [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
+| [`docs/workflow/SETUP.md`](docs/workflow/SETUP.md) | provisioning this repo's own authoring toolchain |
+
+## Instruction precedence
+
+When two sources disagree, the **nearest one wins**:
+
+1. An explicit instruction in the prompt.
+2. The nearest `AGENTS.md` — this file is the repository's root one.
+3. A personal `~/AGENTS.md`.
+4. The documents: `docs/ROADMAP.md`, this directory's `docs/workflow/` tutorial,
+   and the unit docs.
+
+A lower rung never overrides a higher one. Where the same rule lives below this
+file, this guide **links** it instead of restating it (see the ownership rule
+under [Working rules](#working-rules)).
 
 ## Working rules
 
@@ -90,6 +141,13 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   the discipline lives here, in review and in the owner's merge.
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
+- **A new script ships its sibling suite, and a test is never edited to pass.**
+  Every `scripts/x.mjs` arrives with `scripts/x.test.mjs` in the same commit;
+  `scripts/structural-sibling-pins.test.mjs` reads the tree, so an unpaired file
+  fails the gate. A failing test is repaired by changing the code it judges —
+  never by relaxing, deleting or skipping the assertion, and never by narrowing
+  its input until it passes. A case that genuinely cannot hold is `n/a` with its
+  reason recorded, not quietly removed.
 - **`human-revision-needed` blocks development.** An issue or PR carrying that
   label is on hold: nothing is planned, implemented, committed or merged for it
   until a human removes the label. It means "a plan is waiting for human review",
@@ -107,192 +165,12 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
   **pin**, not a fork. If a real external consumer ever needs a surface kept, that
   is a new unit with a recorded decision — never a default. The review pack reads
   this rule (its compatibility policy) when classifying an obsolete surface.
-
----
-
-## Authoring a skill
-
-A skill is a folder `skills/<name>/SKILL.md` with YAML frontmatter + a body.
-
-```yaml
----
-name: <kebab-case-name>          # must match the directory name
-user-invocable: true             # REQUIRED for it to appear in the agent's /command menu
-version: <train>                 # the unified train version — stamped by `scripts/release.mjs apply` at cut time, never bumped by hand
-description: >
-  One paragraph with concrete trigger phrases so the agent knows when to load it.
----
-```
-
-Body sections every skill follows: `When to use`, `Step 0 — Discover the project
-(always first)`, `Process`, `Guardrails`, `Relationship to other skills`,
-`Done when`.
-
-> **`user-invocable: true` is mandatory.** Without it, the skill is not offered
-> in the slash-command menu in this environment. Always set it explicitly.
-
-> **Always close with a `→ Next:` block.** Every skill ends its turn with a
-> **visible recommendation block** — not a buried "Done when" bullet. The shape is
-> the "review checkpoint" style: one **recommended** command on the `→ Next:` line,
-> then the open alternatives as `·` sub-bullets, leaving the choice to the user
-> (recommend, never dictate). Use this exact shape:
->
-> ```
-> → Next: /<recommended-command> — <one-line why>
->   · <alternative> → <when to pick it>
->   · <alternative> → <when to pick it>
-> ```
->
-> Two cases the block must cover when they apply: (a) **finishing a unit/feature** →
-> point to the next concrete unit (`/plan-feature --next`, or a named issue/roadmap
-> entry); (b) **recurring inconsistency** — when `review-change`/`triage-issue` see
-> the *same* problem twice (e.g. SPEC drift on consecutive units) → recommend
-> `/product-audit`. A terminal verdict still names what to do with it (merge,
-> re-audit, triage). This is part of "Done when" for every skill.
-
-> **Phases are `P1, P2, …` ("phases"); `S#` are requirement ids.** Two
-> vocabularies, kept apart: a unit doc's `## Specs` numbers its requirements `S#`
-> (issue #308), and `## Tasks` labels its implementation steps `P1, P2, …` — so a
-> skill that produces or references a plan labels steps `P1, P2, …` and calls them
-> *phases* (a Spanish or other-language UI may say "fases"/"pasos", but the
-> committed artifacts and the labels stay `P1, P2, …`), never `S1`/`Step 1`. A
-> requirement is never a phase and a phase is never a requirement: the `S#` is what
-> a task links and a finding cites, the `P#` is the executor's argument. The label
-> must be stable and uniform: a **phase label** is never written as `S1`/`S2`/"Step N"
-> into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap — the `S#` that belongs
-> in a SPEC is a `## Specs` requirement id, never a step in `## Tasks` (which is also
-> where a task links the `S#` it delivers).
-
-> **Checklists over heuristics; fixed output formats.** Skills are executed by
-> models of any strength, not only frontier ones — write instructions a weaker
-> model cannot misread: (a) heuristics become **checklists** ("pass only if: ✓ …"),
-> every item independently checkable, n/a stated explicitly; (b) reports and
-> verdicts carry a **fixed output contract** ("Return exactly: …" with the block
-> quoted) ending in an unambiguous decision (`PASS | FAIL`,
-> `MERGE-READY | BLOCKED`, a named verdict); (c) bound freedom with
-> **Allowed / Forbidden lists** wherever a skill could "improve" beyond scope;
-> (d) "if needed" is banned — name the minimum set to verify (docs, files,
-> checks). Claude tiers stay the declared defaults (they set the reference bar),
-> but every skill must run correctly on any agent and any model — see the README
-> model-equivalence table.
-
-> **Complete dynamic hand-offs.** When the invocation or artifact contains more
-> than one issue, dependency, finding, or other target, the closing recommendation
-> must name every actual ID once, in order, joined with ` + ` (for example,
-> `#71 + #72 + #73`). A command may use the designated primary when its syntax
-> requires one, but the full set must remain visible beside it. Never emit only
-> the primary, a generic "act on the verdicts", or literal placeholders/ellipsis
-> in a live hand-off.
-
-> **Turn contract at the top.** Every user-facing skill opens with a
-> `## Turn contract` section: the 2–6 boxes every invocation must tick before
-> the turn may end (the deliverable in its fixed format; the closing `→ Next:`
-> block printed **last**; for executors: git/forge commands actually **RUN**
-> with sha/PR-URL pasted — describing an action is not performing it). Weaker
-> models drop end-of-document duties, so the contract goes first, and every
-> skill states that an about-to-end turn with an unchecked box is not done.
-
-> **Self-contained reviews — never depend on external skills.** The review axes
-> are covered by the repo's **own internal review pack**
-> (`skills/review-*`: code, security, verify, debt, design, a11y, brand, perf,
-> seo — each a fixed checklist returning a findings table + `PASS | FAIL`).
-> `review-change` / `product-audit` compose the pack; platform skills a project
-> installs are **optional extras run in addition, never dependencies** — a skill
-> body must never require a Claude Code-bundled or third-party skill to function.
-
-> **Every user-facing skill carries a `## Portability` section.** The skills
-> install into 70+ agents via the `skills` CLI; Claude Code features (slash-command
-> menu, per-skill `model:`/`effort:`, `/loop`, subagents, hooks, `ultracode`) are
-> conveniences, **not the contract**. Every `user-invocable: true` skill includes a
-> short `## Portability (agents other than Claude Code)` section stating the
-> fallbacks that apply to it, drawn from these standards:
-> *no slash menu* → open the target skill's `SKILL.md` and follow it literally in a
-> fresh conversation; *no model tiers* → strongest model for planning/review/audit,
-> cheaper for mechanical execution, and never review a change with a model weaker
-> than the one that wrote it; *no `/loop`/subagents* → re-invoke manually and follow
-> the closing `→ Next:` block. Tailor per skill (e.g. hooks for `log-session`,
-> subagents for autopilot-level orchestration (deferred to roadmap row 62)). Additionally, whenever a skill body references a
-> Claude Code-specific feature, pair it **inline** with the generic fallback — the
-> instruction must be executable by an agent that has never heard of Claude Code.
-
-> **One version: the unified train (D-40-14).** Skills carry the ecosystem
-> version — the same number as the npm packages and the `vX.Y.Z` tag. It is
-> stamped by code: `scripts/release.mjs apply` writes every `version:` line at
-> cut time from the accumulated changesets, and the per-skill bump ledger
-> (per-skill semver, per-skill CHANGELOG rows) is retired — the per-skill
-> tables in [`CHANGELOG.md`](CHANGELOG.md) are a frozen archive. A change to a
-> skill ships with a `.changeset/*.md` intent file (or the parity gate fails
-> the PR); renames and other breaking surfaces still need a note in
-> `docs/workflow/MIGRATION.md`.
->
-> **Create the intent file by running code, not by hand:**
-> `node scripts/changeset-create.mjs` derives the affected packages and skills
-> from the modified files, the semver from the conventional commit title
-> (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; `--level`
-> overrides), and the file name PR-first (`<pr|branch>-<title>.md`) so names
-> stay unique. One file per PR, as many entries as the change needs; it never
-> overwrites. At cut time each change lands in the changelog's right section:
-> the scoped key routes the row to that package's own table, skill entries
-> ride the skills-content package's row named as `(skills: …)`, and a package
-> bumped by the train with nothing declared says so explicitly.
-
-> **Smoke-test wording changes to executor-path skills.** After editing
-> `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
-> `plan-feature-from-issue`, `design-feature`, or a `review-*` skill, run the
-> manual procedure in
-> [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) — it
-> drives a fixed toy fixture through the changed skill with the weakest model
-> in your fleet to catch wording a frontier model absorbs silently but a weak
-> model misreads.
-
-### Hand off, don't compose across a model/effort boundary
-
-A skill's `model` and `effort` are **fixed at the start of its turn** and do **not**
-change when it loads another skill mid-turn (verified against the Claude Code
-skills / model-config docs). So invoking skill B from skill A runs B at **A's**
-model and effort, not B's — silently under- or over-powering B.
-
-**Rule (the test is ≥, not "same"):** before composing skill B in-turn, compare
-tiers. Compose **only when A's model/effort is ≥ B's** (so B isn't under-powered).
-If B needs a **higher** model or effort than A, **hand off** instead — print
-`run /<skill>` / the next command and let the user invoke B in a fresh turn at its
-own tier. Most of the flow already hands off (`plan-feature` prints
-`execute-phase NN P1`; `plan-fix` stops and suggests `execute-phase --fix`;
-`triage-issue`/`review-change`/`audit-pr` route with suggestions; `execute-phase`
-hands off to `/review-change` at its review checkpoint).
-
-**Why ≥ and not "same":** composing at a *higher* tier (e.g. `product-audit` at
-`opus`/`max` running `audit-docs`'s `sonnet`/`medium` checks) over-powers B —
-harmless, just costlier. Composing at a *lower* tier (the bug we hit: `execute-phase`
-at `sonnet`/`medium` running `review-change` at `opus`/`high`) **under-powers** B — a
-real regression. So the orchestrators and routers, which are the high-tier (`opus`,
-`high`/`max`) skills, may safely compose what they synthesize: `review-change` →
-`review-implementation` + companions; `product-audit` → its sub-checks; the
-`plan-feature` router → its `opus` internals (it carries the highest effort of its
-paths). Everything else hands off.
-
-> Note: `ultracode` is a Claude Code **session setting** (xhigh effort + automatic
-> multi-agent workflow orchestration), **not** a frontmatter `effort:` value — a
-> skill cannot declare it. The accepted `effort:` values are `low`/`medium`/`high`/
-> `xhigh`/`max`.
-
----
-
-## Distribution
-
-The skills install with the [`skills`](https://github.com/vercel-labs/skills) CLI,
-which reads the `SKILL.md` files straight from this repo into any supported agent
-(Claude Code, Cursor, Codex, …):
-
-```sh
-npx skills add gtrabanco/agentic-workflow
-```
-
-There is no build step and no generated installer — adding a skill is just adding
-a `skills/<name>/SKILL.md`. Full replication guidance is in
-`docs/workflow/REPLICATE.md`.
-
----
+- **Every repetition names its owner.** Before a rule, contract or vocabulary
+  enters this guide — or any doc — find the surface that owns it and link it.
+  A second copy is allowed only where a consumer cannot reach the owner, and it
+  must say whose it is. This is the rule that keeps the file from growing back
+  after the split: `scripts/residue-dimensions.test.mjs` refuses a rule name that
+  appears outside its owner without a pointer.
 
 ## Verification
 
@@ -301,14 +179,16 @@ This repo has no application build. "Green" means:
 - The `skills` CLI discovers every skill: `npx skills add . --list` lists them all.
 - Markdown is well-formed; cross-references between docs resolve.
 - Context budgets pass: `bun scripts/check-skill-context.mjs` (every skill's
-  `SKILL.md` is within its enforced line/token budget and reference reachability).
+  `SKILL.md` is within its enforced line/token budget, and the guide layer —
+  this file plus its `docs/workflow/` references — is within the budgets
+  `bun scripts/check-skill-context.mjs --documents` reads from the same manifest).
 - No stack/real-project references leaked into the skills or shared docs.
-- Root suites pass: `node scripts/run-root-suite.mjs` (the same `scripts/*.test.mjs`
-  with git signing neutralized for the throwaway fixture repositories, so an
-  operator's `commit.gpgsign=true` cannot fail a suite that commits nothing real);
-  `node --test scripts/*.test.mjs` runs the identical suites when signing is off —
-  including `scripts/golden-fixture.test.mjs`, which asserts the golden fixture's
-  deterministic half.
+- Root suites pass: `node scripts/run-root-suite.mjs` (the same
+  `scripts/*.test.mjs` with git signing neutralized for the throwaway fixture
+  repositories, so an operator's `commit.gpgsign=true` cannot fail a suite that
+  commits nothing real); `node --test scripts/*.test.mjs` runs the identical
+  suites when signing is off — including `scripts/golden-fixture.test.mjs`, which
+  asserts the golden fixture's deterministic half.
 - If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
   there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
@@ -320,7 +200,25 @@ This repo has no application build. "Green" means:
   `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
   trees; the staged one is always rebuilt first, so it is never stale.
 
-**Runtime convention (two scopes, one override):** `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is set. Outside that override, scope decides: (a) **manual invocation** of repo scripts runs bun-first (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage strings show the bun form, and skills running in user projects resolve bun-else-node at invocation (`npm_config_user_agent` starting with `bun/` pins bun); (b) **package-spawned children of `@gtrabanco/pi-agentic-workflow`** run under the runtime that launched pi (bun when pi was installed via bun, node when via npm), resolved by the package's runtime module (`detectRuntime`/`runtimeBin`/`runtimeEnv`) — the user's install choice decides, bun is never forced. The shebangs stay `#!/usr/bin/env node` — the portable fallback, since a shebang cannot express "bun else node".
+**Runtime convention — bun runs scripts, `node --test` runs the suite.** Two
+scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
+set. Outside that override: (a) **manual invocation** of repo scripts is bun-first
+(`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as
+the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage
+strings show the bun form, and skills running in user projects resolve
+bun-else-node at invocation (`npm_config_user_agent` starting with `bun/` pins
+bun); (b) **package-spawned children of `@gtrabanco/pi-agentic-workflow`** run
+under the runtime that launched pi (bun when pi was installed via bun, node when
+via npm), resolved by the package's runtime module
+(`detectRuntime`/`runtimeBin`/`runtimeEnv`) — the user's install choice decides,
+bun is never forced. The shebangs stay `#!/usr/bin/env node` — the portable
+fallback, since a shebang cannot express "bun else node". **The suite is the one
+measured exception:** `node scripts/run-root-suite.mjs` and
+`node --test scripts/*.test.mjs` run it, while `bun scripts/run-root-suite.mjs`
+fails by construction (`Cannot use test outside of the test runner` — bun only
+enters a runner through its `test` subcommand). Switching the suite's commands to
+bun therefore belongs to the `node → bun` sweep (issue #329) and needs that
+carve-out carried with it.
 
 ### Normalizer inventory (this repository)
 
@@ -389,10 +287,10 @@ turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRA
 turn-contract-receipt | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:turn-contract-receipt@1 | n/a | no
 open-questions-block | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:open-questions@1 | continuation-refusal-type | no
 path-protection-contract | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:path-protection@1 | path-protection-reason | no
-spec-requirement-ids | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:spec-requirement@1 | n/a | no
-task-spec-links | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:task-spec-link@1 | n/a | no
-log-kind-vocabulary | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:log-kind@1 | n/a | no
-findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md | block:findings-table@1 | n/a | no
+spec-requirement-ids | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:spec-requirement@1 | n/a | no
+task-spec-links | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:task-spec-link@1 | n/a | no
+log-kind-vocabulary | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:log-kind@1 | n/a | no
+findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:findings-table@1 | n/a | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 ```
 
@@ -421,83 +319,6 @@ run after a freeze. `bundle:skills` stages a gitignored build artifact that the
 package's own lifecycle stages and removes again, so no one has to sequence it by
 hand. No script or skill may keep a second copy of this list.
 
----
-
-## Packages
-
-The packages under `packages/` are members of a **bun workspace**: a private
-root `package.json` declares `workspaces: ["packages/*"]` and carries no
-identity of its own. Members link each other **from the folder**, so a package
-that pins a sibling installs that sibling's working copy — not a published
-tarball — while the manifest keeps the exact version every consumer receives
-(`npm publish` does not rewrite a `workspace:` spec, so the exact version is
-what ships and the protocol is never used).
-
-The reason is not convenience: a sibling pin used to name a version that only
-existed **after** the merge that changed it, so a bump and its pin move could
-never share a commit — the pin named an unpublished version (uninstallable) and
-the lockfile could not be regenerated before the publish `--frozen-lockfile`
-requires. The workspace removes that ordering trap; the pin rule below is still
-enforced, and install itself enforces it (a pin that does not match the
-member's version resolves from the registry and fails).
-
-- **bun is the package manager, everywhere, with ONE lockfile.** `bun.lock` at
-  the repository root (committed) is the sole lockfile for every member:
-  install at the root with `bun install --frozen-lockfile`, or from a member
-  directory (bun resolves the workspace root and installs the whole graph);
-  run scripts with `bun run <script>`. A `bun.lock` or `package-lock.json`
-  inside a package is drift — it would resolve that package's siblings from the
-  registry instead of from the folder — and `scripts/workspace-lock-policy.test.mjs`
-  fails the suite if one appears (both npm lockfiles resurrected once, on main,
-  and had to be removed again). The npm CLI is still used for the publish step
-  only (Trusted Publishing + `--provenance` are npm-CLI-specific tooling Bun
-  doesn't replicate).
-- **Dependency versions are pinned; floating specs are not.** Every `dependencies`/`devDependencies` entry names a version a fresh resolution may install: a full release (`6.0.3`) or a **deliberate partial pin** (`6`, `7`, `6.0`). A partial pin is a claim about the dependency, and it always carries its reason — the compiler is the standing example: TypeScript **honours semver** and is a well-maintained project, so a major-only pin still receives the fixes and the performance work of every 7.x release without a manifest edit, and this repository wants the speed of the native compiler. Refused, with no exception: `^`, `~`, `*`, `latest`, any other dist-tag, `x` ranges, and the local-only protocols `file:`, `link:`, `workspace:`, `git+` — each lets an install resolve to bytes nobody reviewed without the dependency having earned that trust. The committed `bun.lock` still records the exact resolution for every pin, partial or full, so byte-for-byte reproducibility does not depend on how precise the manifest specifier is. A partial pin is invisible to the `--pins` half of the parity gate (it verifies exact pins only), so it moves on the owner's deliberate `fix(deps)` cadence, not on a gate's nudge. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
-- **Version bumps are manual and same-PR — and CI-enforced (feature 75, #292; trigger set extended to every package in feature 40).**
-  Bump `version:` in the touched package's `package.json` and add a row to the
-  "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
-  feature 40, ship a valid `.changeset/*.md` declaring the package (the
-  release train applies it at cut time). The rule is no longer prose-only:
-  `root-suite.yml` runs `scripts/version-parity-gate.mjs` on every PR with two
-  halves — the **content** half (offline, deterministic) fails any change
-  under the trigger set of **every package under `packages/` (derived from the
-  tree at runtime — a new package inherits the gate by existing; nothing to
-  extend)** plus **`skills/**`** as the Pi package's shipped content, unless
-  each triggered package is bumped + has its CHANGELOG companion row or is
-  declared by a changeset (root `skills/` is the Pi package's staged content,
-  which is exactly why a skills-only merge used to publish nothing; the
-  skills-content-source mapping is the gate's only declared constant — extend
-  it if a new package ever becomes a `skills/` content source, and audit the
-  gate if packages ever ship outside `packages/`); the **registry** half (a
-  separate job, clearly-degraded-when-
-  unreachable) fails an exact pin whose target has published a newer version,
-  and — for pins whose target is a local package under `packages/` — a pin that
-  does not equal the **local package version** (the one the merge publishes;
-  verified offline even when the registry is unreachable): a pin behind it
-  recreates the post-publish red window, a pin ahead of everything points at a
-  version that will never exist — fix: bump the pin + the package version in
-  the same PR. The workspace is what makes that instruction executable: the
-  member resolves its sibling from the folder, so the pin may name a version
-  the merge has not published yet, and the root lock stays installable with
-  `--frozen-lockfile` (before the workspace, that same instruction was
-  unsatisfiable — an unpublished pin did not resolve, and a stale lock failed
-  the install — so the pin could only chase a publish). CI publishes on merge
-  to `main` when the version differs
-  from the registry — one consolidated workflow since 2026-10-28
-  (`.github/workflows/publish.yml`, three jobs chained schema → crate → pi;
-  D-40-12): npm Trusted Publisher records pin the workflow filename, so the
-  consolidation required re-registering the three packages' records to
-  `publish.yml` on npmjs.com (owner one-time step; until then a publish
-  fails E403). Releases are cut by dispatching `publish.yml` with `mode: cut`
-  (`channel: stable` = train + publish, npm dist-tag `latest`;
-  `channel: canary` = prerelease cut for the declared packages — the channel
-  set is closed, and the old `latest` channel name is retired in favour of
-  `stable`) — `mode: suggest` previews the
-  versions read-only; everything runs `scripts/release.mjs` in CI.
-- **Changesets file-format adopted, tool not** (decided 2026-08-30; reopened by feature 40 / issue #180, 2026-10-28). The curated changelog tables above remain the release-notes surface. The 2026-08-30 rejection targeted the full changesets tool (workspace root, version-PR loop, Trusted Publisher re-binding); both reopening triggers have since fired — a third package landed and per-package snapshot channels are needed — so the **file format** is now the per-PR release intent: a `.changeset/*.md` (YAML frontmatter mapping `"<package>"` or `"<skill-name>"`: patch|minor|major — the highest severity in the set always wins the train (D-40-15) — plus a release-note body), linted by `scripts/lint-changeset.mjs` and consumed by `scripts/release.mjs` at release time. A valid intent file declaring a package satisfies the version-parity gate's content half for that package in place of a manual package.json bump (the gate covers every package under `packages/` + `skills/` as the Pi package's content source); the tool's workspace machinery, version-PR loop and Trusted Publisher re-binding stay rejected.
-
----
-
 ## Conventions
 
 | Type | Convention |
@@ -508,13 +329,12 @@ member's version resolves from the registry and fails).
 | Machine/config surfaces (`.claude-plugin/plugin.json` `skills` array) | alphabetical |
 | Narrative surfaces (README "The skills" `###` sections, `docs/workflow/SKILLS.md`) | flow order (the stage a skill runs at: Setup, Design, Plan, Execute, Review & audit, Decide, Document, Session, Repo maintenance, Autopilot) — never alphabetized |
 
----
-
 ## Skills available in this repo
 
 When repeated searches or repeated documentation lookups happen while working
 here, prefer creating or refining a skill over re-deriving the knowledge. Store
-reusable operational knowledge as a skill under `skills/`.
+reusable operational knowledge as a skill under `skills/`; the authoring contract
+is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
 **Repo maintenance skill (specific to this repo):**
 
@@ -528,3 +348,10 @@ reusable operational knowledge as a skill under `skills/`.
   It also carries `metadata.internal: true`, the `skills` CLI's own gate
   that keeps `npx skills add` from discovering/offering repo-internal
   skills to target projects (see `docs/fix/74-bump-skill-discovery-exclusion/`).
+
+## Distribution
+
+The skills install with the [`skills`](https://github.com/vercel-labs/skills) CLI:
+`npx skills add gtrabanco/agentic-workflow`. There is no build step — adding a
+skill is adding a `skills/<name>/SKILL.md`; replication guidance is
+[`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).

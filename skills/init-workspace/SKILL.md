@@ -167,11 +167,17 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 ## Unit document conventions (the adaptive lane)
 
-The adaptive lane (feature 61) replaces the fixed pipeline with a single-unit-
-document model. Every NEW unit produces one `SPEC.md` under
-`docs/features/<NN>-<slug>/` with 14 sections: Objective, Why, User outcome, Acceptance criteria, Impact,
-Non-goals, Future cost, Applicable tests, Known pre-existing issues, Tasks,
-Evidence, Progress log, Next, References.
+The adaptive lane replaces the fixed pipeline with a single-unit-document model.
+Every NEW unit produces one `SPEC.md` under `docs/features/<NN>-<slug>/`, cut in
+the **`spec-by-reference`** shape the template ships: `Specs` (numbered `S#`, each
+quoting the requester's words verbatim), Impact, Non-goals, Future cost,
+Applicable tests, Known pre-existing issues, `Tasks` (each bullet linked to the
+`S#` it delivers), `Findings` (OPEN rows only), `Log` (append-only; `L1` is the
+request verbatim), Next, References. A unit opened before this shape keeps the
+legacy 14-section shape — Objective, Why, User outcome, Acceptance criteria,
+Impact, Non-goals, Future cost, Applicable tests, Known pre-existing issues,
+Tasks, Evidence, Progress log, Next, References — and is never rewritten to
+migrate.
 
 Conventions written into the project's AGENTS.md:
 
@@ -189,8 +195,8 @@ Conventions written into the project's AGENTS.md:
 
 These are written by bootstrap (fresh) and upgrade mode (additive-only for pre-
 lane installs). A pre-lane project gets only: the lane conventions section in
-AGENTS.md, the unit doc template under `docs/features/_TEMPLATE/`, and the
-docs-map row for the unit doc.
+AGENTS.md, the unit doc templates under `docs/features/_TEMPLATE/` and
+`docs/fix/_TEMPLATE/`, and the docs-map rows for them.
 
 ## Normalized Repository State
 

@@ -3876,3 +3876,21 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Full canary promotion rule for the release pipeline: stable suggestion now promotes the highest canary base (max of changeset-derived version and base of any existing canary tag `v<X>.<Y>.<Z>-canary.*`), canary GitHub pre-release carries the pending changeset bodies as a change backlog via `--notes-file`, and stable publish jobs move the canary dist-tag so `canary == latest == stable` between cuts. Added collision guard when the canary base is already a stable tag.
 - **Decisions:** (1) Canary base = `max(changeset-derived next train, base of highest existing canary tag)` — so `@canary` never hands an older tree than `@latest`. (2) Stable suggestion promotes the highest canary base — pure promotion (no changesets) or canary + new changesets. (3) Canary GitHub pre-release body = pending changesets backlog assembled before the release opens (not `--generate-notes` alone). (4) Stable publish moves canary dist-tag to latest so `stable == canary == latest` between cuts. (5) Collision guard: when canary base is already a stable tag, refuses the suggestion and asks for changesets or `--version`. (6) `--version` input now forces the canary base (a variable, never a literal) instead of being rejected outright.
 - **Next:** Commit the four-file diff (`scripts/release.mjs`, `scripts/release.test.mjs`, `scripts/release-workflows.test.mjs`, `.github/workflows/publish.yml`), push, and merge to main. Then run `/audit-pr` to verify the new release workflow end-to-end.
+## 2026-11-02T17:28Z — feat/332-agents-md-split — manual
+- **Commits:** 8 (`d949b5f9…47d2f902`)
+- **Files:** 22 files
+- **Summary:** Audit pi 1.5.0 changelog against packages/pi-agentic-workflow, post forge updates on issues #274 and #284, open new issue #370
+- **Decisions:** Zero TypeBox value: package registers 0 tools, imports nothing from pi-ai, and 1.5.0 narrowed TypeBox to JSON Schema features only; two-leg compat re-run + @types/node bump folded into single fix(deps) PR
+- **Next:** Close #370 once compat guard passes (0.99.1 + latest)
+## 2026-11-02T17:49Z — feat/332-agents-md-split — manual
+- **Commits:** 10 (`20fc92a1…1a653a8a`)
+- **Files:** 22 files
+- **Summary:** Applied issue #332: split AGENTS.md into a core guide + deep references, budget the guide layer, repair template audit, open PR #371
+- **Decisions:** S7's ~120-line goal is unreachable at 357 lines (83 machine blocks stay + 142+ prose core); declared deviation, not smoothed over. main moved 2x during the branch; merged (never force-pushed). Carries one parallel-session docs(log) commit.
+- **Next:** Owner reviews PR #371 (https://github.com/gtrabanco/agentic-workflow/pull/371), all CI green, ready to merge
+## 2026-11-02T18:54:00Z — feat/332-agents-md-split — manual
+- **Commits:** 14 (`20fc92a1…e0febc70`)
+- **Files:** 25 files
+- **Summary:** External verify on fix/332-agents-md-split: folded surviving-mentions of the retired 14-section shape and of the templates the scaffold ships
+- **Decisions:** The external verifier blocked on three surfaces still teaching the old 14-section shape (BOOTSTRAP_WRITE.md, UPGRADE.md) and on the README layout row + bootstrap prose that named one template where the scaffold ships two. Decision: repair all three in one batch per root cause, not per file; refuse a consolidated docs/ROADMAP.md claim in the README because that path only exists after upgrade mode moves it, not from the scaffold.
+- **Next:** Owner merges PR #371 (feat/332-agents-md-split → main): all blockers closed, gate 1348 green, budget ceilings clean, promise-coherence PASS, phase-lint PASS

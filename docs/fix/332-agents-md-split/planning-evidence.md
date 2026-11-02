@@ -1,0 +1,41 @@
+# Planning Evidence — fix/332-agents-md-split
+
+> One row per Engineering claim the change rests on. `authority-kind`:
+> `known` | `assumption` | `unknown` | `spec`. `freshness`: `current` | `stale` |
+> `not-applicable`. Every `known` row was sampled at the cut head (2026-11-01,
+> `main` @ `826f9c06`).
+
+## Ledger
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | known | `AGENTS.md` is 530 lines / 37,103 bytes at the cut head — the issue's 453 / 29 KB is stale, and the revision comment's 483 / 32,481 B is stale too | `wc -l < AGENTS.md` → 530; `wc -c < AGENTS.md` → 37103 | stale | O1, O26 |
+| PE-002 | known | The prose blocks to extract are the authoring rules (lines 113-280, 168 lines) and the Packages section (lines 426-500, 75 lines) | `rg -n '^## \|^### ' AGENTS.md` → `113:## Authoring a skill`, `248:### Hand off…`, `281:## Distribution`, `426:## Packages`, `501:## Conventions` | current | O3, O4 |
+| PE-003 | known | The three machine tables occupy lines 325-425 (101 lines) and the surrounding verification prose 297-324; the issue's remaining core (header 1-24, layout 25-46, working rules 47-112, conventions 501-512, skills 513-530) is 142 lines before any new section, so the literal `≤120` total is unreachable in every variant of S5/S6 | the same heading scan, blocks summed: 24+22+66+12+18 = 142; tables 101 | current | O1 |
+| PE-004 | known | The suite runs under both runtimes but not through bun's flag form: `node scripts/run-root-suite.mjs` exits 0 (1308 tests, ~117 s), `bun scripts/run-root-suite.mjs` fails `error: Cannot use test outside of the test runner. Run "bun test" to run tests.`, and `bun test scripts/normative-drift.test.mjs` runs 20 tests | `node scripts/run-root-suite.mjs` → `ℹ pass 1308 / fail 0`, exit 0; `bun scripts/run-root-suite.mjs` → the quoted error; `bun test scripts/normative-drift.test.mjs` → `20 pass 0 fail` | current | O14 |
+| PE-005 | known | 25 non-Markdown files and 14 skills reference `AGENTS.md`; of the files, two carry a semantic dependency rather than a comment: `scripts/pin-watch.mjs:337` prints "AGENTS.md → Packages" into a public issue body, and `scripts/golden-fixture.test.mjs:249` requires `AGENTS.md` to name `GOLDEN_FIXTURE.md` | `rg -l 'AGENTS\.md' --glob '!*.md' .` → 25 files; `rg -l 'AGENTS\.md' skills` → 14 files; the two hits read at their lines | current | O6, O2 |
+| PE-006 | known | Five assertions pin `AGENTS.md` content, and all five target the machine tables or the working rules the default variant keeps: `GUIDE_REL` (`normative-drift.test.mjs:71`), `homes == ["AGENTS.md"]` (`pre-execution-quality.test.mjs:1622-1624`), `block:finding-mark@1` (`review-loop-discipline.test.mjs:154`), the `ask-dont-infer-rule` row (`residue-dimensions.test.mjs:233`) and the compatibility-policy sentences (`residue-dimensions.test.mjs:154-156`) | each file read at the cited line | current | O5 |
+| PE-007 | known | `docs/workflow/` is already the map's tutorial home and `scripts/workflow-docs-index.test.mjs` fails any file in it without a `## Pages` row (and any row without a file), so a new reference doc there is reachable and indexed by construction — `docs/reference/` would be a new top-level folder with no map row | `docs/workflow/README.md` `## Pages`/`## Data` tables; the test's `declared()`/`onDisk()` parity | current | O9, O2 |
+| PE-008 | known | `scripts/check-skill-context.mjs` validates only `skills/*/SKILL.md` and their `references/`; its manifest is `schemaVersion: 1` with `referenceDepth: 1`, and it never opens a `docs/` file, so a guide-layer budget needs a new mode and manifest section rather than a reuse | `scripts/check-skill-context.mjs:9-50,181-220`; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` head | current | O8 |
+| PE-009 | known | `scripts/unit-doc-contract.test.mjs:150` loops a literal list of two root templates for the re-cut section shape, so adding the two scaffold templates to that list binds S22 with no new test machinery | `scripts/unit-doc-contract.test.mjs:150-168`; `UNIT_DOC_SPEC_REF_SECTIONS` at :180 | current | O22, O25 |
+| PE-010 | known | A `normative-surfaces@1` row's `file` cell is split on `+` and every listed file must carry the row's grammar block or the surface faults, so appending the scaffold templates to the four unit-doc rows binds S25 with no gate code | `scripts/normative-drift.test.mjs:349-380` (`row.file.split("+")`, `surface … has no … block`) | current | O25 |
+| PE-011 | known | The scaffold publishes the retired shape in three places: `template/docs/features/_TEMPLATE/SPEC.md` (83 lines, legacy 14-section), `template/docs/fix/_TEMPLATE/SPEC.md` (154 lines, Goal/Root cause/Scope/Phases), and `skills/init-workspace/SKILL.md:170-176` ("with 14 sections"); `template/AGENTS.md` already declares the re-cut shape the template does not carry | `rg -n '^## ' template/docs/features/_TEMPLATE/SPEC.md template/docs/fix/_TEMPLATE/SPEC.md`; `sed -n '169,176p' skills/init-workspace/SKILL.md` | current | O22, O23 |
+| PE-012 | known | The scaffold guide's three defects are present at the cited lines: an H1 `# Docs site` at line 48 with the optional block hidden in an HTML comment at 50-57, the tombstone row `Generated developer docs` at line 46, and the `.claude/` hook bullet in the session-log section | `sed -n '44,58p' template/AGENTS.md`; `rg -n 'Generated developer docs\|\.claude/settings\.json\.example' template/AGENTS.md` | current | O19, O20, O21 |
+| PE-013 | known | Budget ceilings are conventionally `ceil(measured × 1.10)` with a declared reason in a `sources` map (per-skill entries in the manifest), so a new guide-layer ceiling follows the same arithmetic instead of inventing a round number | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` `skills.fold-findings.mainSources` and `skills.init-workspace.mainSources` | current | O1, O8 |
+| PE-014 | known | The version-parity gate's content half triggers on `skills/**` and on every package under `packages/`, and accepts a `.changeset/*.md` intent in place of a manual bump; a `template/**`-only change triggers nothing | `scripts/version-parity-gate.mjs`; `node scripts/version-parity-gate.mjs --content --base main` → PASS at cut | current | O27 |
+| PE-015 | assumption | "No duplicated content" is measurable as set arithmetic over normalized lines: a non-trivial line (≥ 40 characters after whitespace collapse) that appears in both the core and a reference doc is a duplicate. The risk is a false positive on a shared code fence or a shared URL | owner: this unit (P2) — the refusal cases in `scripts/guide-split.test.mjs` pin both a real duplicate and a benign shared reference, so the check is claimed by tests rather than by reading | current | O10 |
+| PE-016 | assumption | Pinning the core at its measured size (`ceil(measured × 1.10)`) is enough to keep the file from growing back, because the growth the requester names (P9) arrives as prose, which every added line shows | owner: this unit (P5) — the ceiling is enforced by the gate, not by review discipline; if a future unit needs headroom it must edit the manifest and declare the reason, the same way a skill budget grows | current | O1, O17 |
+| PE-017 | known | Home containment: `AGENTS.md:113-280` (authoring) and `:426-500` (packages) hold the only copies of those two rule sets — `rg -l 'Hand off, don't compose\|bun workspace' --glob '!*.md' .` finds no code copy, and the skills restate only their own frontmatter contract | `rg -ln "Hand off, don't compose" .` → `AGENTS.md` only; `rg -ln 'bun-managed islands' .` → `AGENTS.md` only | current | O3, O4 |
+
+## Verification
+
+- PE-001…PE-014, PE-017 sampled at the cut head with the commands in the `source`
+  cell.
+- **PE-015 resolved at P2**: the guide-split suite carries three refusal cases
+  (dead link, duplicated paragraph, over-budget file) and one benign case (a
+  shared URL in both files is not a duplicate), so the operational definition is
+  pinned by tests.
+- **PE-016 resolved at P5**: the ceiling is read from the manifest by
+  `check-skill-context.mjs --documents` and asserted by its suite; the guide-split
+  suite reads the same manifest instead of holding a second copy of the number.
+- No `unknown` rows remain.

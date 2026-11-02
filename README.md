@@ -31,8 +31,9 @@ packages/                companion npm packages: @gtrabanco/agentic-workflow-sch
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
-docs/features/_TEMPLATE  feature SPEC template + ROADMAP (the planning artifacts skills produce)
-docs/fix/                fix SPEC template + index
+docs/ROADMAP.md           the single Features+Fixes index (the planning artifacts skills produce)
+docs/features/_TEMPLATE  feature SPEC template
+docs/fix/                fix SPEC template + index README
 .github/                 issue + PR templates the workflow expects
 ```
 

@@ -9,6 +9,40 @@
     "referenceEstimateMax": 2200,
     "referenceLinesMax": 280
   },
+  "documents": {
+    "note": "The guide layer: the always-loaded guide and the references it indexes. Every ceiling is ceil(measured x 1.10) with its reason declared in `sources`, the same arithmetic the per-skill ceilings use; `machineLines` is pinned exactly because the three versioned blocks are contracts a gate reads, not prose an always-loaded session follows.",
+    "requiredFiles": [
+      "AGENTS.md",
+      "docs/workflow/SKILL_AUTHORING.md",
+      "docs/workflow/PACKAGES.md"
+    ],
+    "files": {
+      "AGENTS.md": {
+        "linesMax": 393,
+        "proseLinesMax": 302,
+        "estimateMax": 6881,
+        "machineBlocks": ["normalizer-inventory@1", "normative-surfaces@1", "rendered-facts@1"],
+        "machineLines": 83,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 6,255 est, 83 machine-region lines, 274 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(274 x 1.10) = 302 and ceil(6255 x 1.10) = 6881. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate."
+        }
+      },
+      "docs/workflow/SKILL_AUTHORING.md": {
+        "linesMax": 189,
+        "estimateMax": 2897,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's authoring rules (frontmatter contract, body sections, the closing `Next` block, hand-off versus compose across model tiers). Measured 171 lines / 2633 est; ceilings ceil(171 x 1.10) = 189 and ceil(2633 x 1.10) = 2897."
+        }
+      },
+      "docs/workflow/PACKAGES.md": {
+        "linesMax": 86,
+        "estimateMax": 2127,
+        "sources": {
+          "issue #332 (unit 332-agents-md-split)": "verbatim relocation of the guide's Packages section (bun workspace, one lockfile, pin rules, version parity, changesets, publish channels). Measured 78 lines / 1933 est; ceilings ceil(78 x 1.10) = 86 and ceil(1933 x 1.10) = 2127."
+        }
+      }
+    }
+  },
   "skills": {
     "audit-docs": {
       "descriptionEstimateMax": 240
@@ -24,12 +58,13 @@
       "mainLinesMax": 411
     },
     "init-workspace": {
-      "mainEstimateMax": 3663,
+      "mainEstimateMax": 4066,
       "mainSources": {
+        "issue #332 (unit 332-agents-md-split, T5)": "the unit-document conventions paragraph now teaches the spec-by-reference shape the template ships, and the retired \"with 14 sections\" sentence is gone (the legacy shape stays named for the units already cut in it). Measured at the change by `bun scripts/check-skill-context.mjs`: 3696 est / 255 lines; ceilings re-based to ceil(3696 x 1.10) = 4066 / ceil(255 x 1.10) = 281, reason declared",
         "unit 65 P8 (AC22)": "the consent-gated retrieval-index scaffold + hooks block grew SKILL.md from the 2800 flat ceiling to measured 2904; ceiling re-based to ceil(2904 x 1.10) = 3195, reason declared (retrieval-index consent contract)",
         "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)"
       },
-      "mainLinesMax": 252,
+      "mainLinesMax": 281,
       "referenceEstimateMax": 3412,
       "referenceSources": {
         "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)",

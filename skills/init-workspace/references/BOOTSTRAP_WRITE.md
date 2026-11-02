@@ -4,10 +4,11 @@
    the documentation map rows, architecture); write the **adaptive lane
    conventions** (unit document, triage, catalog steps, guards, evidence rows,
    dated progress log, closed commit format `type(scope): description`); keep
-   the `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and
-   the `.github/` templates; keep `.agentic-workflow/hooks/` and activate only
-   the adapters explicitly accepted in the interview; prune unused doc folders
-   and map rows. Leave honest placeholders where the user hasn't decided — never
+   the documentation templates it ships — `features/_TEMPLATE` beside
+   `features/ROADMAP.md`, and `fix/_TEMPLATE` beside `fix/README.md` — and the
+   `.github/` templates; keep `.agentic-workflow/hooks/` and activate only the
+   adapters explicitly accepted in the interview; prune unused doc folders and
+   map rows. Leave honest placeholders where the user hasn't decided — never
    invent values.
 5. **Seed Normalized Repository State.** Copy
    `template/docs/workflow/REPOSITORY_STATE.md` to
@@ -21,9 +22,14 @@
    optional: an absent document means no project invariants are declared, not
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
-7. **Propagate the unit doc template.** Ensure
-   `docs/features/_TEMPLATE/SPEC.md` exists with all 14 sections sections.
-   This is the template used when creating new unit documents.
+7. **Propagate the unit doc templates.** Ensure both template folders exist and
+   are cut in the `spec-by-reference` shape the scaffold ships —
+   `docs/features/_TEMPLATE/SPEC.md` and `docs/fix/_TEMPLATE/SPEC.md` (`Specs`
+   with `S#` requirements, Impact, Non-goals, Future cost, Applicable tests,
+   Known pre-existing issues, `Tasks`, `Findings`, `Log`, Next, References).
+   These are the templates used when creating new unit documents; a unit opened
+   before this shape keeps the legacy 14-section shape and is never rewritten to
+   migrate.
 8. **Provision Serena — one consented question, then write.** Load
    [SERENA](SERENA.md) and ask its single consent question; one yes covers the
    tool install, the detected platform's MCP registration and the global trust
