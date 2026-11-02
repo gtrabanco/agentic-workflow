@@ -43,18 +43,21 @@ your domains.
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
-| Generated developer docs | *(deprecated — generate-docs skill removed)* |
 
-# Docs site *(optional — uncomment and fill for a docs website that the project manages manually)*
+## Docs site *(optional)*
 
-<!--
+Delete this section when the project does not manage a documentation website.
+Fill the slots in place; nothing here is commented out, so a copy of this file
+stays readable as it was written.
+
+```
 - format: starlight | docusaurus | markdown
 - content-dir: src/content/docs/
 - build: npx astro check   # or `none`
 - map: npm run docs:graph  # a script emitting a nodes[]/edges[] JSON via
                            # deterministic tooling (dependency-cruiser, madge,
                            # TypeDoc, tree-sitter, LSP…); or `none`
--->
+```
 
 ---
 
@@ -207,10 +210,10 @@ Rules the ledger enforces:
   dispatcher (`scripts/needs-input.mjs`), so a malformed ledger fails closed
   instead of silently dropping a question.
 
-**Adaptive lane (unit-driven workflow — feature 61).** Every NEW unit (feature
+**Adaptive lane (unit-driven workflow).** Every NEW unit (feature
 or fix) produces exactly one `SPEC.md` under `docs/features/<NN>-<slug>/`, in one
-of two accepted shapes. The **`spec-by-reference` shape** (issue #308, the
-template's shape) has 11 sections: `Specs` (numbered `S#`, each quoting the
+of two accepted shapes. The **`spec-by-reference` shape** (the template's shape)
+has 11 sections: `Specs` (numbered `S#`, each quoting the
 requester's own words verbatim; a correction appends under its own id like
 `S1a`), Impact, Non-goals, Future cost, Applicable tests, Known pre-existing
 issues, `Tasks` (each bullet linked to the `S#` it delivers), `Findings` (OPEN
@@ -383,10 +386,14 @@ After merge: remove the row from `## Fixes` in `docs/ROADMAP.md`.
 optional:
 
 - **`/log-session`** (manual, rich) — summary, decisions, next step. Run it
-  before `/clear` or before closing for the day.
-- **`.claude/` hooks** (automatic, free) — append a mechanical entry on `/clear`
-  and exit; an opt-in hook re-injects the last entry to resume context. Copy
-  `.claude/settings.json.example` to enable; see `.claude/README.md`.
+  before `/clear` or before closing for the day. This works on every platform and
+  is the fallback the workflow assumes.
+- **A platform adapter** (automatic, free) — when your agent platform supports
+  hooks, `/init-workspace` detects it and names the adapter in this line: append a
+  mechanical entry on `/clear` and exit, and opt in to re-injecting the last entry
+  when a session resumes. Declare the adapter you actually use, or delete this
+  bullet and write a **manual log** — the scaffold never hard-wires one platform's
+  directory, and a project without hooks is a supported project.
 
 **Context hygiene rule:** end of a catalog step → `/log-session` then a NEW
 conversation, never compact — compaction re-reads the whole transcript with
