@@ -220,6 +220,21 @@ test("O9/R5: the two tables never leak into each other's parsers", async () => {
   assert.deepEqual(halfMigrated.violations, [], "no feature row answers for the fix row");
 });
 
+test("F15: a row without a trailing pipe keeps its last cell, on both published sides", async () => {
+  // The crate stripped the first and last cell unconditionally, so a writer's
+  // row that omits the trailing pipe lost its final column while the schema
+  // package kept it — the same document parsed differently per published side.
+  const tableCells = await crate("tableCells");
+  assert.deepEqual(tableCells("| 12 | a | b |"), ["12", "a", "b"], "a closed row reads its three data cells");
+  assert.deepEqual(tableCells("| 12 | a | b"), ["12", "a", "b"], "an unclosed row is not short a cell");
+  assert.deepEqual(tableCells("| 12 | a \\| x | b"), ["12", "a | x", "b"], "an escaped pipe stays one cell and the last cell survives");
+
+  const roadmapTableRows = await crate("roadmapTableRows");
+  const unclosed = "## Features\n\n| NN | Slug | Status | Summary\n|---|---|---|---\n| 12 | `beta` | in-progress | s\n";
+  const rows = roadmapTableRows(unclosed, "feature");
+  assert.deepEqual(rows.at(-1), ["12", "`beta`", "in-progress", "s"], "the row scanner keeps the status and the summary cell");
+});
+
 test("O8: every live reader and writer goes through the published constant", () => {
   const consumers = [
     "scripts/unit-route.mjs",

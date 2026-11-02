@@ -2120,12 +2120,15 @@ function sectionContent(content: string, heading: string): string | undefined {
 
 /** The live rows of a table body (issue #319, F14): a row inside a fenced or
  * indented code block is a writer's example, never data — the same grammar the
- * heading scan uses, so no reader tracks fences differently. */
-function tableRowCells(content: string): string[][] {
-  const rows: string[][] = [];
+ * heading scan uses, so no reader tracks fences differently. Each row keeps the
+ * source line it was read from, so provenance cites that line rather than a
+ * re-rendered row that an escaped `\|` keeps out of the document (issue #319,
+ * F16). */
+function tableRowCells(content: string): Array<{ cells: string[]; line: string }> {
+  const rows: Array<{ cells: string[]; line: string }> = [];
   let fence: FenceRun | null = null;
   for (const line of content.split("\n")) {
-    if (fence === null && !/^ {4,}/.test(line) && line.trimStart().startsWith("|")) rows.push(tableCells(line));
+    if (fence === null && !/^ {4,}/.test(line) && line.trimStart().startsWith("|")) rows.push({ cells: tableCells(line), line });
     fence = indexFenceRun(line, fence);
   }
   return rows;
@@ -2188,12 +2191,12 @@ function roadmapFeature(document: WorkflowDocument | undefined): { id: string; s
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
   const table = tableFor(document.content, ROADMAP_FEATURES_HEADING);
-  for (const cells of tableRowCells(table)) {
+  for (const { cells, line } of tableRowCells(table)) {
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
     const slug = cells[1]?.replace(/^`|`$/g, "");
     if (slug === undefined || slug.length === 0) continue;
     const id = `${cells[0]}-${slug}`;
-    candidates.push({ id, status: cells[2] ?? "unknown", row: cells.join(" | ") });
+    candidates.push({ id, status: cells[2] ?? "unknown", row: line });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
@@ -2208,12 +2211,12 @@ function fixUnit(document: WorkflowDocument | undefined): { id: string; status: 
   if (document === undefined) return null;
   const candidates: Array<{ id: string; status: string; row: string }> = [];
   const table = tableFor(document.content, ROADMAP_FIXES_HEADING);
-  for (const cells of tableRowCells(table)) {
+  for (const { cells, line } of tableRowCells(table)) {
     const nonEmpty = cells.filter(Boolean);
     if (nonEmpty.length < 3) continue;
     const id = nonEmpty[0]?.replace(/^`|`$/g, "") ?? "";
     if (!/^\d+-[A-Za-z0-9._-]+$/.test(id)) continue;
-    candidates.push({ id, status: nonEmpty[2] ?? "unknown", row: cells.join(" | ") });
+    candidates.push({ id, status: nonEmpty[2] ?? "unknown", row: line });
   }
   return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
     ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
