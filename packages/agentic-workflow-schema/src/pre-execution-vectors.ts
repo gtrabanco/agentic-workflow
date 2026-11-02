@@ -38,6 +38,10 @@ export const PRE_EXECUTION_CANONICAL_VECTORS: readonly PreExecutionCanonicalVect
   Object.freeze({
     contract: "agentic-workflow/pre-execution-review-receipt@1",
     description: "Plan-stage arbiter receipt carrying two findings and one critic parent digest",
-    digest: "27d7d2b949b2776dc386ba217d93926f02580d54b7c194a99710f6f3696ee97e",
+    // Unit 319: the fixture's finding F-1 cited the location index at its
+    // pre-move path. The index moved to `docs/ROADMAP.md`, so the payload's
+    // evidence ref changed and this digest was re-blessed with it in the same
+    // change — a declared contract-data change, recorded in CHANGELOG.md.
+    digest: "a74771f91d2f04c05a1a699e72cb44ca0052452efb41d05954e3ce0e57f90233",
   }),
 ]);

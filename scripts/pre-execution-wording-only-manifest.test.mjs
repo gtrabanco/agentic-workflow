@@ -34,6 +34,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sensorScript = path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs");
@@ -127,7 +128,7 @@ function makeRepo(t) {
   write(`${UNIT_DIR}/PLAN.md`, "# Plan\n\nP1 ships it.\n");
   write(`${UNIT_DIR}/planning-evidence.md`, "# Evidence\n\n- PE-1 measured.\n");
   write(`${UNIT_DIR}/planning-obligations.md`, "# Obligations\n\n- OB-1.\n");
-  write("docs/features/ROADMAP.md", ROADMAP);
+  write(ROADMAP_DOCUMENT, ROADMAP);
   write("AGENTS.md", GUIDE);
   write("src/code.ts", "export const a = 1;\n");
   git(root, "init", "-q", "-b", "main");

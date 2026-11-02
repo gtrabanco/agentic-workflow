@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  ROADMAP_DOCUMENT,
   SKILL_REQUIRED_EVIDENCE,
   WORKFLOW_INTENTS,
   WORKFLOW_SKILL_PROFILES,
@@ -22,7 +23,7 @@ const FULL_EVIDENCE = [
   "verification",
   "issue-state",
   "pull-request-state",
-  "snapshot@docs/features/ROADMAP.md:1",
+  `snapshot@${ROADMAP_DOCUMENT}:1`,
 ];
 
 function frozenSnapshot() {

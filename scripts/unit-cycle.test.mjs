@@ -15,6 +15,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 import {
   decide,
   renderPrompt,
@@ -449,7 +450,7 @@ test("settleCommitArgs: the -m option precedes the -- separator (F1: after -- ev
   assert.ok(separator > 0, "argv carries a -- separator");
   // Everything after -- is a pathspec: the -m flag and its message must sit before it.
   assert.ok(argv.indexOf("-m") > 0 && argv.indexOf("-m") < separator, "-m precedes --");
-  assert.equal(argv[separator + 1], "docs/features/ROADMAP.md");
+  assert.equal(argv[separator + 1], ROADMAP_DOCUMENT);
   const message = argv[argv.indexOf("-m") + 1];
   assert.match(message, /settle 80-example — done · \[#323\]\(https:\/\/github\.com\/gtrabanco\/agentic-workflow\/pull\/323\)/);
 });
@@ -457,5 +458,5 @@ test("settleCommitArgs: the -m option precedes the -- separator (F1: after -- ev
 test("settleCommitArgs: the only pathspec is the roadmap table (no stray option lands after --)", () => {
   const argv = settleCommitArgs({ unit: "316-roadmap-settle", prNumber: 1, prUrl: "https://example.test/pr/1" });
   const separator = argv.indexOf("--");
-  assert.deepEqual(argv.slice(separator + 1), ["docs/features/ROADMAP.md"]);
+  assert.deepEqual(argv.slice(separator + 1), [ROADMAP_DOCUMENT]);
 });

@@ -27,6 +27,14 @@ import { join, resolve, basename, dirname } from "node:path";
 // Import SDK modules
 import { create, setSection, evidence_addRow, progress_logEntry, validate } from "../src/edit/UnitDoc.mjs";
 import { rowUpsert, annotate as roadmapAnnotate, checkUnitDoc, ROADMAP_CHECK_CODES } from "../src/edit/Roadmap.mjs";
+import {
+  FIX_INDEX_DOCUMENT,
+  ROADMAP_DOCUMENT,
+  ROADMAP_FIXES_HEADING,
+  RoadmapMovedError,
+  resolveRoadmapSource,
+  roadmapSection,
+} from "../src/index-document.mjs";
 import { rowAdd } from "../src/edit/Changelog.mjs";
 import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
@@ -69,9 +77,31 @@ function refuse(reason) {
 }
 
 /**
- * Walk up from a unit doc to the repo root until the default index (e.g.
- * `docs/features/ROADMAP.md`) exists; null when no ancestor carries it.
+ * Walk up from a unit doc to the repo root until the default index exists; null
+ * when no ancestor carries it.
  */
+/** Strip the docs root from a published index path (`docs/X/Y.md` → `X/Y.md`). */
+function relativeToDocs(index) {
+  return index.replace(/^docs\//, "");
+}
+
+/**
+ * The index this tree carries, resolved by the shared reader so the documented
+ * rollback lever applies here exactly as it does everywhere else: the reader
+ * decides which path is readable, and a tree that carries only the pre-move
+ * path while the window is closed is refused with its pointer at the new home.
+ * Returns `{ direct, index }`: the path a caller passed explicitly (never
+ * resolved through the tree) and the walked-up index path.
+ *
+ * @param {string} docPath — the unit doc the walk starts from
+ * @param {string|undefined} direct — `--roadmap`/`--index`, already read
+ */
+function resolveIndex(docPath, direct) {
+  if (direct !== undefined) return { direct: resolve(direct), index: null };
+  const source = resolveRoadmapSource({ exists: (relative) => findUpIndex(docPath, relative) !== null });
+  return { direct: null, index: source === null ? null : findUpIndex(docPath, source.path) };
+}
+
 function findUpIndex(docPath, relativeIndex) {
   let dir = dirname(docPath);
   for (;;) {
@@ -278,18 +308,43 @@ switch (command) {
         // contradiction).
         const parts = docPath.split("/");
         const isFix = parts.includes("docs") && parts[parts.indexOf("docs") + 1] === "fix";
-        const defaultIndex = isFix ? "docs/fix/README.md" : "docs/features/ROADMAP.md";
+        // One index (issue #319): a feature row and a fix row are two tables of
+        // the same document, so both kinds default to it and `checkUnitDoc`
+        // reads its own table there. A pre-319 tree still has the pre-move
+        // roadmap and the standalone fix index under the alias.
         const indexArg = flag("--roadmap") ?? flag("--index");
-        const indexPath = indexArg
-          ? resolve(indexArg)
-          : findUpIndex(docPath, defaultIndex.split("/").pop());
+        // The index is resolved through the shared reader, so the documented
+        // rollback lever (`ROADMAP_LEGACY_READ`) governs this consumer too: with
+        // the window closed a pre-move-only tree is refused with the pointer at
+        // its new home, and with the lever on the same tree reads as before.
+        const resolved = resolveIndex(docPath, indexArg);
+        const indexPath = resolved.direct ?? resolved.index;
         if (!indexPath) {
           refuse(`index not found for ${docArg} — pass --roadmap <file>`);
         }
         const dirName = basename(dirname(docPath));
         const nn = /^(\d+)/.exec(dirName)?.[1] ?? "";
         const slug = dirName.replace(/^\d+-/, "");
-        const result = checkUnitDoc({ nn, slug, kind: isFix ? "fix" : "feature", docText, indexText: readFileSync(indexPath, "utf8") });
+        // A half-migrated tree (issue #319): the consolidated index exists but
+        // carries no `## Fixes` table, so the active fix rows are still in the
+        // standalone fix index. `MIGRATION.md` and `init-workspace`'s upgrade
+        // reference promise that state is readable, so a fix doc falls back to
+        // it exactly as the sensor, router, settle validator and ceremony CLI
+        // do — never a feature row read as a fix row, never a vacuous pass.
+        const indexText = readFileSync(indexPath, "utf8");
+        const fixIndexText = isFix && !indexArg && roadmapSection(indexText, ROADMAP_FIXES_HEADING) === null
+          ? (() => {
+            const standalone = findUpIndex(docPath, relativeToDocs(FIX_INDEX_DOCUMENT));
+            return standalone === null ? null : readFileSync(standalone, "utf8");
+          })()
+          : null;
+        const result = checkUnitDoc({
+          nn,
+          slug,
+          kind: isFix ? "fix" : "feature",
+          docText,
+          indexText: fixIndexText ?? indexText,
+        });
         if (parsed.json) {
           console.log(
             JSON.stringify(

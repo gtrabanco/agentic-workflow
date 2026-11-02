@@ -67,8 +67,8 @@ bytes on a mature repo); the exact keep/drop set is in
 ## Step 0 — Discover the project (always first)
 
 Per the agent guide's **Workflow conventions** + **documentation map**. The
-script reads what THIS skill needs (`docs/features/ROADMAP.md`, the fix index
-`docs/fix/README.md`, every in-flight feature folder's `TASKS.md` +
+script reads what THIS skill needs (the location index `docs/ROADMAP.md` — its
+`## Features` and `## Fixes` tables — every in-flight feature folder's `TASKS.md` +
 `progress.md` and its findings carrier — `SPEC.md` `## Findings` + `## Log` for a
 migrated unit (issue #308), `review-findings.md` for a legacy one — and
 `docs/workflow/REPOSITORY_STATE.md`);

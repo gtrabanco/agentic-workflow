@@ -2,7 +2,7 @@
 
 > Fix specification. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
-> entry in `docs/fix/README.md`. Lighter than a feature spec — no
+> entry in the `## Fixes` table of `docs/ROADMAP.md`. Lighter than a feature spec — no
 > separate planning artifacts: the SPEC and sibling `ACCEPTANCE.md` are the
 > source of truth, and its `## Phases` section is the execution ledger.
 
@@ -151,4 +151,4 @@ single command or PR-revert flow, plus any data-side cleanup.
 
 `pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
 
-(Removed from `docs/fix/README.md` only **after** the PR merges.)
+(Removed from `docs/ROADMAP.md` § Fixes only **after** the PR merges.)

@@ -18,6 +18,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { runProbe, inFlightDocs } from "./vocabulary-probe.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE_ROOT = path.join(ROOT, "scripts", "fixtures", "vocabulary-probe", "tree");
@@ -103,11 +104,26 @@ test("the corpus rule is the documented one, re-derived from the indexes", () =>
  * The in-flight corpus read straight off the two indexes — the test's own
  * parse of the published row shape, deliberately not the probe's code.
  */
+/** The body of one `## <heading>` section, or null — the oracle's own reader. */
+function indexSection(text, heading) {
+  const lines = text.split(/\r?\n/);
+  const body = [];
+  let inside = false;
+  for (const line of lines) {
+    if (/^##\s+/.test(line)) {
+      inside = line.trim().slice(2).trim().toLowerCase() === heading.toLowerCase();
+      continue;
+    }
+    if (inside) body.push(line);
+  }
+  return body.length === 0 ? null : body.join("\n");
+}
+
 function corpusFromTheIndexes(root) {
   const settled = /done|discarded|superseded/i;
   const dated = /\d{4}-\d{2}-\d{2} \d{2}:\d{2} — /;
   const rows = [];
-  const roadmap = path.join(root, "docs/features/ROADMAP.md");
+  const roadmap = path.join(root, ROADMAP_DOCUMENT);
   if (existsSync(roadmap)) {
     for (const line of readFileSync(roadmap, "utf8").split(/\r?\n/)) {
       const row = /^\|\s*(\d+)\s*\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+)\|/.exec(line);
@@ -115,9 +131,16 @@ function corpusFromTheIndexes(root) {
       rows.push(`docs/features/${row[1]}-${row[2]}/SPEC.md`);
     }
   }
+  // The fix rows live in the same document's `## Fixes` table since issue #319;
+  // the oracle keeps its own section reader so it never borrows the probe's.
+  const fixesSection = indexSection(
+    existsSync(roadmap) ? readFileSync(roadmap, "utf8") : "",
+    "Fixes",
+  );
   const index = path.join(root, "docs/fix/README.md");
-  if (existsSync(index)) {
-    for (const line of readFileSync(index, "utf8").split(/\r?\n/)) {
+  const legacyFixIndex = fixesSection ?? (existsSync(index) ? readFileSync(index, "utf8") : null);
+  if (legacyFixIndex !== null) {
+    for (const line of legacyFixIndex.split(/\r?\n/)) {
       const row = /^\|\s*\[#(\d+)\]\([^)]*\)\s*\|\s*([a-z0-9-]+)\s*\|\s*`?([a-z-]+)`?/.exec(line);
       if (row === null || /done/i.test(row[3])) continue;
       rows.push(`docs/fix/${row[1]}-${row[2]}/SPEC.md`);

@@ -14,6 +14,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { cer, makeRepo, unitDoc } from "./ceremony/testing.mjs";
+import { ROADMAP_DOCUMENT } from "../packages/agentic-workflow/src/index-document.mjs";
 
 const REPO = path.resolve(import.meta.dirname, "..");
 
@@ -93,18 +94,22 @@ test("unit list reads the fix index and the roadmap for status (S4)", () => {
   const dir = makeRepo();
   fs.mkdirSync(path.join(dir, "docs/fix/1-fixture"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), unitDoc({ tasks: GOOD_TASKS }));
-  fs.writeFileSync(path.join(dir, "docs/fix/README.md"), [
-    "| Issue | Topic | Status | Notes |",
-    "|---|---|---|---|",
-    "| [#1](https://example.test/1) | fixture | in-progress | branch `fix/1-fixture` |",
-    "",
-  ].join("\n"));
   fs.mkdirSync(path.join(dir, "docs/features/07-shipped"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/features/07-shipped/SPEC.md"), "# 07 — shipped\n");
-  fs.writeFileSync(path.join(dir, "docs/features/ROADMAP.md"), [
+  // Issue #319: one index document, two tables — the fix row lives in its own
+  // `## Fixes` table, never in a standalone fix index file.
+  fs.writeFileSync(path.join(dir, ROADMAP_DOCUMENT), [
+    "## Features",
+    "",
     "| NN | Slug | Status | Depends on | Summary |",
     "|----|------|--------|------------|---------|",
     "| 07 | `shipped` | done · [#12](https://example.test/12) | — | fixture |",
+    "",
+    "## Fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    "| [#1](https://example.test/1) | fixture | in-progress | branch `fix/1-fixture` |",
     "",
   ].join("\n"));
   const list = cer(["unit", "list"], dir);

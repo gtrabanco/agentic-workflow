@@ -1,5 +1,50 @@
 # Migration notes
 
+## 2026-10-30 — one location index: `docs/ROADMAP.md` (issue #319)
+
+**What changed.** The workflow's location indexes are one document.
+`docs/features/ROADMAP.md` moves to **`docs/ROADMAP.md`**, which now carries:
+
+- `## Features` — the feature table, columns unchanged;
+- `## Fixes` — the active-fixes index that used to live in `docs/fix/README.md`,
+  with its status legend and its "a row is removed only after the PR merges"
+  life cycle, verbatim;
+- the five-state status machine and the conventions both tables follow.
+
+`docs/fix/README.md` is now a one-line pointer stub; the
+`docs/fix/<issue-number>-<topic>/` SPEC folders did not move. Historical unit
+docs are record, not code: no closed unit folder was rewritten.
+
+**Read alias, one write path.** The path is published, not hardcoded:
+`@gtrabanco/agentic-workflow` exports `ROADMAP_DOCUMENT` /
+`FIX_INDEX_DOCUMENT` and the two table headings from
+`src/index-document.mjs`, and `@gtrabanco/agentic-workflow-schema` publishes the
+same values from `src/paths.ts`. **The migration window is closed** (decision
+D4, 2026-10-30 — it supersedes D2's "one release train"): every reader resolves
+`docs/ROADMAP.md` only, and a repository that still carries only the pre-move
+path is refused with a `roadmap-moved` pointer at its new home — never a silent
+empty parse, never an empty index. The refusal is a clean diagnostic on every
+deterministic consumer (router, sensor, unit cycle, vocabulary probe, settle
+validator, ceremony CLI, crate `roadmap check`, schema snapshot), pinned by
+`scripts/roadmap-moved.test.mjs` and the schema package's own `machine-contract`
+suite. `ROADMAP_LEGACY_READ` stays as the documented
+rollback lever: setting it (or `AGENTIC_WORKFLOW_ROADMAP_LEGACY_READ=1` on an
+installed package) to `true` re-opens the alias for an emergency,
+it is not a normal operating mode.
+
+**What you have to do:**
+
+- **Target project bootstrapped from `template/`?** Move `docs/features/ROADMAP.md`
+  to `docs/ROADMAP.md` and fold your fix index into a `## Fixes` table there
+  **before** running the lane again; `init-workspace`'s upgrade mode offers
+  exactly that move as an additive block (it never clobbers an edited roadmap).
+  A half-migrated tree — canonical roadmap without a `## Fixes` table plus a
+  standalone `docs/fix/README.md` — still reads its fix rows, so the fix table
+  can be folded in a second pass.
+- **Scripts or automation reading the old path?** Import the published constant
+  instead of the path: the next move will not touch your code.
+
+
 ## 2026-09-22 — the fixed pipeline is retired, absorbed into the lane (feature 61 P8)
 
 **What changed.** `design-feature`, `plan-feature` (+ `plan-feature-scaffold`,

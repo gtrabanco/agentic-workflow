@@ -49,7 +49,9 @@ test("settling the rows turns the same fixture tree green", () => {
   const tmp = fs.mkdtempSync(path.join(fs.tmpdir?.() ?? "/tmp", "roadmap-settle-"));
   fs.cpSync(FIXTURES, tmp, { recursive: true });
   try {
-    const table = path.join(tmp, "docs", "features", "ROADMAP.md");
+    // Issue #319: one index document carries both tables, so both repairs land
+    // in it — the features row and the fix row.
+    const table = path.join(tmp, "docs", "ROADMAP.md");
     fs.writeFileSync(
       table,
       fs
@@ -57,11 +59,10 @@ test("settling the rows turns the same fixture tree green", () => {
         .replace("| 77 | `settle-repro` | in-progress |", "| 77 | `settle-repro` | done · [#309](https://github.com/gtrabanco/agentic-workflow/pull/309) |"),
       "utf8",
     );
-    const fixIndex = path.join(tmp, "docs", "fix", "README.md");
     fs.writeFileSync(
-      fixIndex,
+      table,
       fs
-        .readFileSync(fixIndex, "utf8")
+        .readFileSync(table, "utf8")
         .replace("| [#91](https://github.com/gtrabanco/agentic-workflow/issues/91) | settle-fix-open | `in-progress` |", "| [#91](https://github.com/gtrabanco/agentic-workflow/issues/91) | settle-fix-open | `done` · [#303](https://github.com/gtrabanco/agentic-workflow/pull/303) |"),
       "utf8",
     );
