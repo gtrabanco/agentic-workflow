@@ -15,6 +15,7 @@ Notion ("Agentic Workflow").
 | [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (fix-now / postpone / wontfix / promote) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
+| [SKILL_AUTHORING.md](SKILL_AUTHORING.md) | The authoring contract for a skill: frontmatter, body sections, the closing `→ Next:` block, and the hand-off-versus-compose rule across model tiers |
 | [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to review — `review-change` (the right reviews per platform) and its `review-implementation` engine (find → classified decision table) |
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install — replicate the skill system in another project |
@@ -25,6 +26,7 @@ Notion ("Agentic Workflow").
 | [REPOSITORY_STATE.md](REPOSITORY_STATE.md) | The frozen Normalized Repository State — the evidence-backed snapshot of observed truth that `discover-repository-state` writes and `resolve-repository-state` alone may replace |
 | [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Golden fixture: the manual judgment protocol (run a changed executor-path skill against the committed toy fixture with the weakest fleet model) plus the executable `scripts/golden-fixture.test.mjs` suite that asserts its deterministic half |
 | [WORKFLOW_INVARIANTS.md](WORKFLOW_INVARIANTS.md) | Portable contract for optional project architectural invariants and their evidence-based evaluation |
+| [PACKAGES.md](PACKAGES.md) | The two companion npm packages: the bun workspace and its single lockfile, the pin rules, the version-parity gate, changesets, and the publish channels |
 
 ## Data
 
