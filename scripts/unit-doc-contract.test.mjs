@@ -147,7 +147,16 @@ test("#305 every router fixture is a unit doc the contract accepts", () => {
 // template declares. The legacy shape keeps its own proof — a legacy unit doc is
 // still a valid unit doc (the corpus's `20-legacy-shape` fixture and every closed
 // unit in the tree), and the selector accepts it (the schema package's tests).
-for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
+//
+// #355: the exported scaffold (`template/docs/**/_TEMPLATE/`) carries the same
+// shape — a project bootstrapped today is cut on these files — so the same pin
+// reads them rather than a second suite re-asserting the order.
+for (const template of [
+  "docs/features/_TEMPLATE/SPEC.md",
+  "docs/fix/_TEMPLATE/SPEC.md",
+  "template/docs/features/_TEMPLATE/SPEC.md",
+  "template/docs/fix/_TEMPLATE/SPEC.md",
+]) {
   test(`#305/#308 ${template} carries the re-cut shape's sections in contract order`, () => {
     const found = headings(read(template));
     const required = ownerSpecRef();

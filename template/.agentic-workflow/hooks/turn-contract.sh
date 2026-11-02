@@ -53,7 +53,9 @@ fi
 
 # box2 — unit doc present at HEAD for a unit-shaped branch. In the adaptive
 # lane model, the unit doc (SPEC.md) carries the Evidence and Progress sections
-# that replace the old ACCEPTANCE.md; presence at HEAD is the frozen surface.
+# presence at HEAD is the frozen surface. A pre-feature 61 project kept its
+# frozen acceptance in a sibling ACCEPTANCE.md instead; that shape is legacy and
+# is never produced by this hook, only tolerated by the readers below.
 unit_dir=""
 case "$current_branch" in
   feat/*) unit_dir="docs/features/${current_branch#feat/}" ;;
