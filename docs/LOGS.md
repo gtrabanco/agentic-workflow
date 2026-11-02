@@ -3672,3 +3672,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Remove the config-gated tool guards feature (#344) — replaced by a soft rule in AGENTS.md
 - **Decisions:** The config-gated tool guards shipped in #344 were removed: the fail-closed config switch bricked unrelated routed skills on any config issue, textual matching refused innocuous commands quoting guarded verbs, and whole-invocation blocking took down unrelated commands. Owner decided the tooling approach fails. Discipline for linear history moves to a soft rule in AGENTS.md — no git push --force or equivalent without explicit owner authorization in-turn and no alternative. The per-surface / per-command rework on fix/346-guards-per-surface is abandoned unmerged.
 - **Next:** Merge in PR #349 (chore/remove-tool-guards), review the soft rule in AGENTS.md. Fix #346 will be the last issue on mechanical guard enforcement.
+
+## 2026-11-02T12:14:33Z — fix/353-residue-shadow-copies — manual
+- **Commits:** 4 (`5a0709c2…1bed8bf4`)
+- **Files:** 9 files
+- **Summary:** audit-pr #354 + fix lineage and traceability
+- **Decisions:** La PR #354 pasa los gates de código pero falla en el pre-execution lineage (falta el bloque ## Triaged steps) — solo documental, no afecta al objetivo de la PR; y la fila del fix-index estaba en 'in-progress' cuando debería ser 'done'.
+- **Next:** Re-run /audit-pr tras commit 1bed8bf4; CI debe estar verde para el /review-change
