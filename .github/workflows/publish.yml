@@ -219,15 +219,54 @@ jobs:
         uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.0
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Reject a forced version (the input is stable-only)
+        if: inputs.version != ''
+        run: |
+          echo "::error::the version input applies to cut + channel: stable only — the canary channel computes <last-stable>-canary.<date>.<n>; re-dispatch with an empty version"
+          exit 1
+
+      # The publish gate is each package's own test suite, run HERE against the
+      # committed tree. The channel version is a packaging side effect staged
+      # afterwards: a suite may assert release-state invariants (the changelog
+      # row of the version being shipped) that a derived prerelease cannot
+      # satisfy, and the source it validates is the commit, not the version
+      # string. The install is what gives those suites a real dependency tree —
+      # without it bun auto-install answered the imports but the suites'
+      # absolute `node_modules/typescript/bin/tsc` paths did not exist.
+      - name: Install the workspace (the publish gate needs it)
+        run: bun install --frozen-lockfile
 
       - name: Resolve the declared packages and their channel version
         env:
           CHANNEL: ${{ inputs.channel }}
         run: node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$(date +%F)" | tee publish-plan.tsv
 
-      # Per declared package: temp-write the channel version, run the exact-
-      # version gate (a canary already on the registry skips), publish under
-      # the channel dist-tag, restore the repo — the commit state never moves.
+      - name: Gate the declared packages (never publish red)
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r name dir _version _tag; do
+            [ -n "$name" ] || continue
+            echo "::group::test $name"
+            ( cd "packages/$dir" && bun run test )
+            echo "::endgroup::"
+          done < publish-plan.tsv
+
+      # Temp-write the channel versions and the pins pointing at a sibling cut
+      # in the SAME canary (an undeclared sibling keeps its published stable
+      # pin). The next step restores them, so the commit state never moves.
+      - name: Stage the channel versions
+        env:
+          CHANNEL: ${{ inputs.channel }}
+        run: node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$(date +%F)" >/dev/null
+
+      # Per declared package: run the exact-version gate (a canary already on
+      # the registry skips) and publish under the channel dist-tag. Lifecycle
+      # scripts are OFF: the gate above already ran, and `prepublishOnly` would
+      # re-run it against the staged prerelease version. The gate also left the
+      # build output (`tsc`/bundle) each tarball needs in place.
       - name: Publish the channel
         env:
           CHANNEL: ${{ inputs.channel }}
@@ -238,30 +277,45 @@ jobs:
             echo "::group::$name@$version ($tag)"
             (
               cd "packages/$dir"
-              npm version "$version" --no-git-tag-version --allow-same-version >/dev/null
               if node "$GITHUB_WORKSPACE/scripts/npm-version-gate.mjs" | grep -q "^publish=true"; then
-                npm publish --access public --provenance --tag "$tag"
+                npm publish --ignore-scripts --access public --provenance --tag "$tag"
                 echo "published $name@$version ($tag)"
               else
                 echo "skip: $name@$version is already on the registry"
               fi
-              git checkout -- package.json
             )
             echo "::endgroup::"
           done < publish-plan.tsv
 
-      # The cut is recorded as a git tag — that tag IS the canary counter's
-      # input (v<base>-canary.<date>.*), so the next cut increments. Prerelease
-      # tags never pollute the stable base (the base only counts bare vX.Y.Z).
-      - name: Record the cut as a tag
+      # Always: a publish that fails halfway must not leave the staged versions
+      # in the worktree the tag/release step and any retry read.
+      - name: Restore the repo (temp versions are never committed)
+        if: always()
+        run: git checkout -- packages/*/package.json
+
+      # The cut is recorded as a tag — that tag IS the canary counter's input
+      # (v<base>-canary.<date>.*), so the next cut increments. The pre-release
+      # makes the channel cut visible on the forge without touching `latest`:
+      # GitHub assigns `latest` only to the newest NON-prerelease release, and
+      # npm keeps the canary dist-tag separate from `latest` by construction.
+      - name: Record the cut as a tag and a GitHub pre-release
         if: hashFiles('publish-plan.tsv') != ''
         env:
           CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -s publish-plan.tsv ]; then
             V=$(awk -F'\t' '{print $3; exit}' publish-plan.tsv)
-            git tag "v$V"
-            git push origin "v$V"
+            if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+              [ "$(git rev-parse "v$V^{commit}")" = "$(git rev-parse HEAD)" ] \
+                || { echo "::error::v$V is already recorded on another commit"; exit 1; }
+              echo "tag v$V already recorded at HEAD"
+            else
+              git tag "v$V"
+              git push origin "v$V"
+            fi
+            gh release view "v$V" >/dev/null 2>&1 \
+              || gh release create "v$V" --prerelease --verify-tag --generate-notes --title "v$V"
             echo "recorded cut v$V ($CHANNEL)"
           else
             echo "nothing declared — no tag"

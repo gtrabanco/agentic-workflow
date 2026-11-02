@@ -120,9 +120,6 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    lands in the changelog's right section at cut time. `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
-   package.json bump. `scripts/lint-changeset.mjs`
-   lints intent files in CI; a valid intent file declaring a package
-   satisfies the version-parity gate's content half in place of a manual
    package.json bump. The `skill-lint` helper lints the authoring rules
    before committing.
 2. **Skill edits** — no per-skill bookkeeping: the changeset IS the change
@@ -135,10 +132,16 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    ONE release commit, tags `vX.Y.Z`, fast-forwards `stable`, opens the
    GitHub Release, and the push fires the publish jobs (schema → crate → pi)
    that publish npm (dist-tag `latest`). `channel: canary` instead publishes
-   only the declared packages under the canary dist-tag — the repo is
-   untouched, the changesets are NOT consumed (only the stable train consumes
-   them), and canaries are grouped by you. `mode: suggest` is the read-only
-   preview (stable + canary suggestions + every changeset's semver annotation).
+   only the declared packages under the canary dist-tag: it installs the
+   workspace, gates every declared package on its own test suite against the
+   committed tree, stages the channel versions plus the pins pointing at a
+   sibling cut in the same canary (`scripts/release.mjs publish-stage`),
+   publishes with lifecycle scripts off, restores the worktree, and records
+   the cut as a git tag + a GitHub **pre-release** (never `latest` on either
+   surface). The repo is untouched, the changesets are NOT consumed (only the
+   stable train consumes them), and canaries are grouped by you. `mode: suggest`
+   is the read-only preview (stable + canary suggestions + every changeset's
+   semver annotation).
 4. **Channels** — the channel set is CLOSED: `stable` (the train, npm
    dist-tag `latest`) + `canary` (never moves `latest`; deterministic
    `<base>-canary.<yyyymmdd>.<n>`). The old `latest` channel name is retired
@@ -153,7 +156,9 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    published), and the publish workflow runs in
    dependency order: schema → runner crate → pi, chained with `needs:`
    (`pi-publish` waits for both upstream publish jobs) so a pin never
-   resolves to an unpublished version. Nothing publishes
+   resolves to an unpublished version. A canary rewrites a pin only when the
+   sibling is declared in the same cut; an undeclared sibling keeps the stable
+   version it was published with. Nothing publishes
    "alone": every train release moves the three packages together.
 6. **Single entry point (D-40-13)** — one workflow, `publish.yml`, owns the
    whole pipeline: `mode: suggest` (read-only), `mode: cut` + `channel`

@@ -422,6 +422,46 @@ test("publish-plan refuses channel stable (that is apply's job)", () => {
   assert.match(result.stderr || result.stdout, /apply/);
 });
 
+// A channel cut publishes a SUBSET of the tree: the temp version and the pins
+// pointing at a sibling cut in the SAME canary are written by code, published,
+// then restored. A pin to an undeclared sibling must stay on the stable version
+// it was published with — that version is the one the registry actually has.
+test("publish-stage versions the declared packages and pins only the siblings cut with them", () => {
+  const root = fixture({ changesets: { "all.md": ["pi:patch", "schema:patch", "agentic:patch"] } });
+  const result = run(["publish-stage", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const canary = "1.0.0-canary.20260916.1";
+  for (const name of PACKAGES) assert.equal(readPkgVersion(root, name), canary, `${name} is staged at the channel version`);
+  const pi = JSON.parse(fs.readFileSync(path.join(root, "packages", "pi-agentic-workflow", "package.json"), "utf8"));
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow"], canary);
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow-schema"], canary);
+  // The machine plan is the same TSV publish-plan emits, so the publish loop
+  // reads one source of truth for name, directory, version and dist-tag.
+  assert.match(result.stdout, /^@gtrabanco\/pi-agentic-workflow\tpi-agentic-workflow\t1\.0\.0-canary\.20260916\.1\tcanary$/m);
+  // A channel cut writes nothing durable: no changelog row, no consumed intent.
+  assert.doesNotMatch(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8"), /canary/);
+  assert.equal(fs.existsSync(path.join(root, ".changeset", "all.md")), true);
+  assert.doesNotMatch(fs.readFileSync(path.join(root, "skills/alpha/SKILL.md"), "utf8"), /canary/);
+});
+
+test("publish-stage leaves an undeclared sibling's version and its pin alone", () => {
+  const root = fixture({ changesets: { "pi-only.md": ["pi:patch"] } });
+  const result = run(["publish-stage", "--root", root, "--channel", "canary", "--date", "2026-09-16"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(readPkgVersion(root, PACKAGES[0]), "1.0.0-canary.20260916.1");
+  assert.equal(readPkgVersion(root, PACKAGES[1]), "1.0.0", "an undeclared package is not cut");
+  assert.equal(readPkgVersion(root, PACKAGES[2]), "1.0.0", "an undeclared package is not cut");
+  const pi = JSON.parse(fs.readFileSync(path.join(root, "packages", "pi-agentic-workflow", "package.json"), "utf8"));
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow"], "1.0.0");
+  assert.equal(pi.dependencies["@gtrabanco/agentic-workflow-schema"], "1.0.0");
+});
+
+test("publish-stage refuses channel stable (that is apply's job)", () => {
+  const result = run(["publish-stage", "--root", fixture(), "--channel", "stable"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr || result.stdout, /apply/);
+});
+
 // External-verify blocker: apply consumed the intent but left the files in
 // .changeset/, so the NEXT cut re-consumed them — a patch-only release
 // computed the stale minor again and re-printed stale bodies into the notes.

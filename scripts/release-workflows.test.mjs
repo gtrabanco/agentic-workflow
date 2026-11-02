@@ -86,11 +86,36 @@ test("cut + stable applies the train, adds one commit, tags and releases — nev
 test("cut + canary publishes the declared packages at the canary version, gated and tagged", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
   assert.match(block, /inputs\.channel == 'canary'/, "the canary channel is the only prerelease route");
-  assert.match(block, /release\.mjs publish-plan --channel/);
+  assert.match(block, /release\.mjs publish-stage --channel/);
   assert.match(block, /npm-version-gate\.mjs/, "the exact-version gate guards every publish");
-  assert.match(block, /npm publish --access public --provenance --tag "\$tag"/);
-  assert.match(block, /git checkout -- package\.json/, "the repo is restored after the temp version");
+  assert.match(block, /npm publish --ignore-scripts --access public --provenance --tag "\$tag"/);
+  assert.match(block, /git checkout -- packages\/\*\/package\.json/, "the repo is restored after the temp version");
   assert.match(block, /git tag "v\$V"/, "the tag is the canary counter's input");
+});
+
+// The canary job runs the same never-publish-red gate a push publish runs, but
+// over the COMMITTED tree: the suites are not there to bless a derived
+// prerelease. release.mjs then stages the temp channel versions (the npm
+// lifecycle scripts stay off during publish so the gate is not re-run against
+// them) and the job restores the worktree. A per-package `npm version` reached
+// `npm publish` with no dependency tree at all.
+test("cut + canary installs the workspace, gates the commit, stages and restores", () => {
+  const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  assert.match(block, /bun install --frozen-lockfile/, "the publish gate needs the real dependency tree");
+  assert.match(block, /npm install -g npm@latest/, "Trusted Publishing needs npm >= 11.5.1");
+  assert.match(block, /\( cd "packages\/\$dir" && bun run test \)/, "each declared package is gated before staging");
+  assert.match(block, /release\.mjs publish-stage --channel/);
+  assert.doesNotMatch(block, /npm version/, "no per-package npm version: the stage step owns the temp state");
+  assert.match(block, /npm publish --ignore-scripts/, "lifecycle scripts never re-run the gate against the staged version");
+  assert.match(block, /if: always\(\)[\s\S]{0,120}git checkout -- packages\/\*\/package\.json/);
+  assert.match(block, /gh release create "v\$V"[^\n]*--prerelease/, "the channel cut is visible as a GitHub pre-release");
+});
+
+test("cut + canary rejects the stable-only version input instead of ignoring it", () => {
+  const block = jobBlock(read(PUBLISH), "cut-prerelease");
+  assert.match(block, /inputs\.version != ''/);
+  assert.match(block, /::error::[^\n]*version input/);
+  assert.match(block, /exit 1/);
 });
 
 test("the publish jobs run only on push events (a dispatch run never publishes stale checkouts)", () => {
