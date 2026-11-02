@@ -3730,3 +3730,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Closed fix/319 receipt gap — P3 and P7 Progress log entries
 - **Decisions:** The unit doc's ## Log carried P1, P2, P4, P5, P6 but not P3 and P7, even though their work existed inside ec64bb4f and 5e7cfa5f. Checked git log -- <deliverable path> to attribute each phase before declaring the log complete, and re-derived the changeset skill count (six, not five) with rg before admitting it into the doc.
 - **Next:** /audit-pr 351 — merge gate; CI all green, PR CLEAN/MERGEABLE
+## 2026-11-02T09:16:40Z — fix/319-location-index-consolidation — manual
+- **Commits:** 20 (`c94c53dc…3dc16e3c`)
+- **Files:** 75 files
+- **Summary:** reanudé la lane fix/319-location-index-consolidation: verifiqué que el trabajo de P3/P7/P8 ya estaba hecho y verificado en las obligaciones, pero el log del unit doc no tenía las entradas de progreso; la lane se reanudó con el router en P3
+- **Decisions:** el router lee fases del token P<n> en la cabecera de ## Log; el texto en prosa no cuenta (unit-route.mjs loggedPhases); el trabajo de P3/P7/P8 estaba hecho pero el log no lo reflejaba
+- **Next:** /execute-phase --fix 319 P3 (tier: cheap)
