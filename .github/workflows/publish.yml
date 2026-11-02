@@ -239,10 +239,16 @@ jobs:
       - name: Install the workspace (the publish gate needs it)
         run: bun install --frozen-lockfile
 
+      # Both the read-only plan and the stage must read the SAME date: the
+      # version is `<base>-canary.<date>.<n>`, and a run that crosses UTC
+      # midnight between the two steps would tag a version it never staged.
+      - name: Pin the cut date
+        run: echo "CUT_DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+
       - name: Resolve the declared packages and their channel version
         env:
           CHANNEL: ${{ inputs.channel }}
-        run: node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$(date +%F)" | tee publish-plan.tsv
+        run: node scripts/release.mjs publish-plan --channel "$CHANNEL" --date "$CUT_DATE" | tee publish-plan.tsv
 
       - name: Gate the declared packages (never publish red)
         run: |
@@ -260,7 +266,7 @@ jobs:
       - name: Stage the channel versions
         env:
           CHANNEL: ${{ inputs.channel }}
-        run: node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$(date +%F)" >/dev/null
+        run: node scripts/release.mjs publish-stage --channel "$CHANNEL" --date "$CUT_DATE" >/dev/null
 
       # Per declared package: run the exact-version gate (a canary already on
       # the registry skips) and publish under the channel dist-tag. Lifecycle
