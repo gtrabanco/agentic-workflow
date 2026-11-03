@@ -56,10 +56,11 @@
    append, and a refusal installs, registers and writes **nothing**. On yes:
    (a) append the `.gitignore` block additively (skip when already present);
    (b) write `.serena/project.yml` with the `language_servers` list for every
-   detected language (never overwrite an existing file — report it); (c) run the
-   health check and render the fixed provisioning report. When no installer is
-   available, offer only what the machine can perform and record the residual
-   with its reason — the run completes either way.
+   detected language (never overwrite an existing file — report it); (c) run
+   the health check and render the fixed provisioning report; (d) run `serena
+   project index` to pre-cache symbols (avoids first-call delay). When no
+   installer is available, offer only what the machine can perform and record
+   the residual with its reason — the run completes either way.
 10. **Offer Engram provisioning.** Load [ENGRAM](ENGRAM.md), detect the binary
    and ask consent: register the `engram` MCP server (absolute path, exact
    `mcp --tools=agent` argv) when the host has one, leave an existing
