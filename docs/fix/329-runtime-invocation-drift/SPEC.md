@@ -327,6 +327,7 @@ proves it. Frozen at cut.
 - **P5** — 2026-11-04, the normative sentence landed in both guides and the per-turn box in both turn contracts, citing `setup-env.mjs --check`; the suite carve-out is untouched · d777699d.
 - **P6** — 2026-11-04, the deleted-skill guard registers a counted skip; the rest of the file sits behind the same guard, no assertion deleted · d777699d.
 - **P7** — 2026-11-04, verification: root suite `G1`, differential `E14`, budgets `E13`, lineage `G2`; the eight `execute-phase:*` route ceilings re-based with their declared growth source · d777699d.
+- **E18** — 2026-11-04, runtime portability of the new suite: `bun test scripts/invocation-drift.test.mjs` initially failed the S8 case because `process.execPath` is bun there and the nested `node --test` leg executed `bun --test`; the leg now resolves the node binary by name when the parent is bun. Re-run: `bun test` · exit 0 · 11 pass / 0 fail; `node --test` · exit 0 · 11 pass / 0 fail.
 
 ## Next
 
