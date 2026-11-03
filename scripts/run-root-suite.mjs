@@ -23,10 +23,10 @@
  * `commit.gpgsign` itself.
  *
  * Usage
- *   node scripts/run-root-suite.mjs            # the whole root gate
- *   node scripts/run-root-suite.mjs -- <args>  # forward args to `node --test`
+ *   bun scripts/run-root-suite.mjs            # the whole root gate
+ *   bun scripts/run-root-suite.mjs -- <args>  # forward args to `bun test`
  *
- * Exit: whatever `node --test` returns, the exit status is forwarded verbatim.
+ * Exit: whatever the test runner returns, the exit status is forwarded verbatim.
  */
 
 import { spawnSync } from "node:child_process";
@@ -52,7 +52,12 @@ const selected = forwarded.length > 0 ? forwarded : suites();
 // `-c commit.gpgsign=false` applies to commands this process spawns only; the
 // suites also `git init` fresh repositories, whose own config starts empty and
 // inherits this as the system/global layer.
-const result = spawnSync(process.execPath, ["--test", ...selected], {
+// Bun uses `bun test <files>` (subcommand), Node uses `node --test <files>` (flag).
+// Bun defaults to a 5-second per-test timeout; set 30s to cover spawn overhead
+// on tests that are fast in node but slow to spawn under bun.
+const isBun = process.execPath.includes("bun");
+const testOpts = isBun ? ["test", "--timeout=30000", ...selected] : ["--test", ...selected];
+const result = spawnSync(process.execPath, testOpts, {
   cwd: REPO_ROOT,
   stdio: "inherit",
   env: {
