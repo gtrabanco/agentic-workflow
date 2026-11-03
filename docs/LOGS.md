@@ -3969,6 +3969,34 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+
+## 2026-11-03T00:53:44Z — feat-357-skill-smells — manual
+- **Commits:** 11 (`e006b3fb…356653bf`)
+- **Files:** 14 files
+- **Summary:** Issue #357 applied: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut, 15 obligations verified, all gates green, PR #377 opened and all three checks passing. diff-guard exception recorded.
+- **Decisions:** S2 is a marker-shape rule (prose body flags, namespace-field admitted). S8 needs both date AND currency word. S3 scoped to description only. Full-scope includes references/.
+- **Next:** Owner's PR #377 verdict. The template/AGENTS.md rider is open in the unit doc's ## Future.
+
+## 2026-11-03T00:57:00Z — feat-357-skill-smells — manual
+- **Commits:** 12 (`e006b3fb…7ea79273`)
+- **Files:** 15 files
+- **Summary:** Issue #357 applied end-to-end: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut with two planning ledgers (13 PE rows, 15 obligations), all 15 verified. PR #377 opened, all three checks green (root-suite 1m46s, pi-compat-guard 25s, dependency-pin-gate 11s). diff-guard exception recorded (14 files, 1150+ lines).
+- **Decisions:** S2 is marker-shape rule (prose body flags, namespace-field admitted — bans only hidden prose, not repo receipt contract). S8 needs both date AND currency word so provenance dates stay clean. S3 scoped to description only — 17 placeholder argument hints would false-positive. Full-scope includes references/ because skills add ships the folder. One recorded exception: diff-guard BREACH 1150+ lines / 14 files — mandatory unit doc + scanner + reference, stacking forbidden by AGENTS.md.
+- **Next:** Owner PR #377 verdict — merge gate is you. The template/AGENTS.md rider is open in the unit doc's Future.
+
+## 2026-11-03T10:43:55Z — feat-357-skill-smells — external verify
+- **Commits:** 1 (`8711fb8b`)
+- **Files:** README.md, docs/fix/357-skill-lint-smells-supply-chain/SPEC.md
+- **Summary:** Fresh-eyes verification of fix/357 (base merge-base `6e65d0b3` · head `356653bf`). All 15 obligations re-ran green (sweep PASS 89/0, suite 20/20, root gate 1401/1401, budgets, changeset, phase-lint PASS, lineage OK, promise-coherence PASS · 28 checked · 13 skipped). Three findings emerged: F1 blocker — README.md:138 still narrated the pre-#357 contract (no content checks), while the same narration was rewritten in AGENTS.md/SKILLS.md/FEATURE_WORKFLOW.md (F51 class); F2/F3 — the SPEC validator cells S9/P4 stated counts that never held (`rg -c 'Skipped'` matched 0, not 1; `rg -c 'CHECKS.md'` matched 3, not 1). All three folded in one batch: README reworded to mirror SKILLS.md, validator cells corrected to reproducible counts, G4 file set updated, round recorded as E9 + F1–F3 in the Log.
+- **Decisions:** The README fix was the sole blocker — the other two were doc drift (SPEC cells never verified at cut). The gate's own pair lands red-first (suite `b8461b4f` → implementation `1374ea96`).
+- **Next:** Owner merge PR #377 — the merge closes #357, removes the row 94 entry from '## Fixes' to the merged history. After merge: the fix-357-skill-smells worktree can be pruned.
+
+## 2026-11-03T10:55:48Z — feat-357-skill-smells — manual
+- **Commits:** 15 (`e006b3fb…6da1439b`)
+- **Files:** 16 files
+- **Summary:** Fresh-eyes external verification of fix/357 (skill-lint smell + supply-chain checks) across the full 15-commit branch (merge-base 6e65d0b3 → head 6da1439b). Re-ran every declared validator: sweep PASS 89 files/0 findings, suite 20/20, root gate 1401/1401, budgets PASS, changeset lint OK, phase-lint PASS (fingerprint 6ca43a01), lineage OK (15/15 obligations), promise-coherence PASS 28/13. Adversarial probe with mktemp scratch confirmed all 7 checks fire correctly and usage errors exit 2. Sibling sweep clean: no surviving pre-#357 narration outside the unit doc. Three minor advisories flagged (E6 line-count figure stale at 148 vs 131; SL-07 code requires date-on-line while prose claims expiry alone flags; diff-guard breach inflated by main-side divergence). Verdict: VERIFIED.
+- **Decisions:** Obligations closed with independent re-run (not just trusting E-lines). The README.md F1 blocker from the prior round is genuinely folded — verified by byte diff and rg. The SL-07 under-flagging on expiry-without-date is noted as advisory only (sweep stays clean, frozen acceptance passes, only a prose-vs-code drift inside the unit).
+- **Next:** Owner merge PR #377 if happy with this verification. After merge: prune the feat-357-skill-smells worktree.
 ## 2026-11-03T00:53:48Z — fix-329-tool-choice — manual
 - **Commits:** 5 (`d777699d…54d102a1`)
 - **Files:** 31 files
