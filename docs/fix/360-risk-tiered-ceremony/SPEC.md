@@ -251,6 +251,21 @@ section is the anchor a review's per-criterion coverage table reads.
 - **P1** — 2026-11-02, published `RISK_TIER_KINDS` / `RISK_TIER_SIGNAL_KINDS` / `RISK_TIER_REASONS` and the pure classifier `scripts/risk-tiers.mjs`; `node --test scripts/risk-tier-classifier.test.mjs` → 13 tests, `pass 13`, `fail 0`; the same file run against the base tree stays `pass 0 / fail 12`, and its `F1` probe passes with `RISK_TIER_BASE` pointed at the base tree.
 - **P2** — 2026-11-02, the closed ceremony CLI gained `tier classify|read|plan`; `node scripts/ceremony.mjs tier classify --paths docs/a.md` · exit 0 · `"tier": "passive"`.
 - **P3** — 2026-11-02, the sensor projects `detail.risk_tier` and the envelope's `detail` key set is declared; measured on this branch it reads `high` only while the fixture corpus carries a raw deletion call, `standard` otherwise.
+- **E5** — 2026-11-02, fixtures before the real tree: a throwaway repo under `mktemp -d` classified eight contrived edges (prose naming a deletion command → `passive`, prose beside an executable → `standard`, extensionless file → `standard`, CI workflow → `high`, lockfile → `standard`), and a written `docs/passive/<id>.md` record parsed back to exactly its five fields. Both are pinned now (`F2b`/`F3b`/`F3d` in the corpus, `C5b` in the ceremony suite).
+- **E6** — 2026-11-02, `node --input-type=module -e "import('./packages/agentic-workflow-schema/dist/index.js')…"` · exit 0 · the built package publishes `RISK_TIER_KINDS` (3), `RISK_TIER_SIGNAL_KINDS` (6) and `RISK_TIER_REASONS` (5); `node --test scripts/vocabulary-parity.test.mjs` · 9/9 pass (O6).
+- **E7** — 2026-11-02, `node --test scripts/normative-drift.test.mjs` · 20/20 pass with the five new `normative-surfaces@1` rows live (three `schema-export:`, two `block:`); the inventory's must-name direction re-derives the three sets from the verdict grammar (O7).
+- **E8** — 2026-11-02, `node scripts/workflow-status.mjs` · exit 0 · `detail.risk_tier` = `{tier, reason, reason_kind, signals[], task_size{…}}`; `node --test scripts/workflow-status-sensor.test.mjs` · 76/76 pass (O8).
+- **E9** — 2026-11-02, the lane's step 1a, the executor's per-tier citation and the passive carrier's grammar are pinned by `scripts/risk-tier-ceremony.test.mjs` (`C3`, `C3a`, `C4`, `C5`, `C5a`, `C5b`), and `node --test scripts/unit-doc-contract.test.mjs` stays 19/19 (O9, O10, O11).
+- **E10** — 2026-11-02, `node scripts/workflow-status.mjs` prints `next.tier: cheap` unchanged and `git diff 1f527d45 -- scripts/workflow-status.mjs` carries no change to `TIER_MAP` or `suggested_tier` (O12).
+- **E11** — 2026-11-02, `git status --porcelain packages/` lists only the schema package's two source files; `rg -n "^import" scripts/risk-tiers.mjs` matches one specifier — the schema vocabulary source. No crate surface touched (O13).
+- **E12** — 2026-11-02, `node scripts/run-root-suite.mjs` · exit 0 · `tests 1445 · pass 1445 · fail 0 · skipped 0`; `bun scripts/check-skill-context.mjs` `PASS context budgets: 28 skills`, `--routes` `PASS route budgets: 14 routes`, `--documents` `PASS context documents: 3 budgeted documents` (O14).
+- **E13** — 2026-11-02, `rg -c '360-risk-tiered-ceremony' docs/ROADMAP.md` matches 1; `node scripts/unit-route.mjs 360-risk-tiered-ceremony` prints `route: execute` (O16).
+- **E14** — 2026-11-02, the unit's `## Future` carries the ≥3-unit aggregation as an open row and no measurement is asserted without its instrument; `classifyObligations` over this unit's ledger answers `{ok: true, count: 17, open: []}` (O17).
+- **E15** — 2026-11-02, the differential: `workflow-status.mjs` run against a copy of the base commit and at head differs only by the new `detail.risk_tier` key and the dirty-file count of the three files the test copy added; every pre-existing `detail` key is byte-identical, and the four pre-existing ceremony operations (`unit read`, `docs check`, `ledger read`, `findings read`) print identical stdout and exit codes at both heads (O15).
+
+## Next
+
+External verification by the owner: read the diff and the `## Log` evidence lines, then decide.
 
 ## References
 
