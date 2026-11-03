@@ -22,7 +22,19 @@ name: Root suite
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '.changeset/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'template/**'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '.changeset/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'template/**'
   workflow_dispatch: {}
 
 permissions:
