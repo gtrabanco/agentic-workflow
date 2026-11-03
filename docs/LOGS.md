@@ -4145,3 +4145,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Next:** Issue reported: https://github.com/oraios/serena/issues/2253. No workaround needed for actual Serena MCP usage (TS/Bash tools work fine); only health-check gate is broken.
 
 
+
+## 2026-11-03T18:23Z — ci/publish-manual-only — Serena MCP + provisioning gap
+- **Commits:** 0 (diagnostic only — no code changes)
+- **Files:** none
+- **Summary:** Two discoveries in one session: (a) Serena MCP was never registered in pi — traced to manual removal in commit `f8afc6d0` (Sep 10). Fixed via `pi mcp add serena`, verified 5 languages active (typescript, bash, json, yaml). (b) init-workspace's Serena provisioning writes `.serena/project.yml`, installs LSPs, runs health-check — but never executes `serena project index`. Symbol cache starts empty; first `find_symbol`/`rename_symbol` calls suffer delays. Created issue #391 for both fixes.
+- **Decisions:** Serena index is one-time (docs: 'called only once, auto-updates during use') — no git hooks, no periodic runs. MCP registration is the real first-call dependency. No `download-ls-dependencies` (no Docker). Serena hardcodes npm (no bun config — issue #2252 in Serena repo).
+- **Next:** Fix #391: modify `skills/init-workspace/references/SERENA.md` to add `serena project index` as step 7 in the provisioning sequence, with `index:` field in the PROVISIONING report block.
