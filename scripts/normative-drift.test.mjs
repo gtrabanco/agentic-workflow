@@ -906,11 +906,27 @@ test("text → machine: the live repository orders nothing the machine surface d
 
 test("machine → text: every value of the must-name vocabularies is ordered by a surface", () => {
   const vocabularies = live.surfaces.filter((s) => s.mustName).flatMap((s) => s.machine);
-  assert.deepEqual(uniq(vocabularies).sort(), ["continuation-refusal-type", "envelope-field:next", "gate-rejection-type"],
-    "the closed set the second direction covers is declared in the file header");
+  assert.deepEqual(uniq(vocabularies).sort(), [
+    "continuation-refusal-type", "envelope-field:next", "gate-rejection-type",
+    "risk-tier", "risk-tier-reason", "risk-tier-signal",
+  ], "the closed set the second direction covers is declared in the file header");
   const fieldKeys = [...live.machine.fields.keys()];
   assert.ok(fieldKeys.some((k) => k.endsWith(":next")), `the envelope next list is published by name, got: ${fieldKeys.join(", ")}`);
   const named = new Set([...live.printedGateTypes, ...live.verdicts.map((v) => v.token), ...live.fields.filter((f) => f.object === "next").map((f) => f.field)]);
+  // Issue #360 — the three risk-tier sets are must-name vocabularies too. Each is
+  // *published* by a `schema-export` surface (the declaration home the `namedBy`
+  // rule accepts) and *ordered* by the `risk-tier-verdict@1` block's own cells, so
+  // the tier an agent reads is never a value that only the schema knows about.
+  const verdictBlock = versionedBlock(read("skills/execute-phase/references/RISK_TIERS.md"), "risk-tier-verdict@1");
+  assert.ok(verdictBlock, "the risk-tier verdict block is the surface that orders the tier");
+  const ordered = new Set(verdictBlock.rows.flatMap((row) => Object.values(row)).flatMap((cell) => String(cell).split(/[\s|,`]+/)));
+  for (const vocabulary of ["risk-tier", "risk-tier-signal", "risk-tier-reason"]) {
+    const publisher = live.surfaces.find((s) => s.machine.includes(vocabulary) && s.schemaExport);
+    assert.ok(publisher, `${vocabulary} is published by a schema-export surface`);
+    for (const value of live.machine.vocabularies.get(vocabulary)) {
+      assert.ok(ordered.has(value), `${vocabulary}:${value} is ordered by the verdict grammar`);
+    }
+  }
   for (const value of live.machine.vocabularies.get("gate-rejection-type")) assert.ok(named.has(value), `gate type ${value} is named`);
   // pre-execution-verdict is no longer must-name (review-spec and review-plan are absorbed);
   // it's still published by the schema but not ordered by any normative surface.

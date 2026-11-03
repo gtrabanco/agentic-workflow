@@ -1,0 +1,37 @@
+# Planning Evidence — fix/360-risk-tiered-ceremony
+
+> One row per Engineering claim the change rests on. `authority-kind`:
+> `known` | `assumption` | `unknown` | `spec`. `freshness`: `current` | `stale` |
+> `not-applicable`. Every `known` row was sampled at the cut head (2026-11-02,
+> `1f527d45`) with the command in its `source` cell.
+
+## Ledger
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | known | The cut head is green before the first line of code, so every later red is this unit's: 1416 root tests, 33 suites, `fail 0`, `skipped 0`, after `bun install` + `bun run build` in `packages/agentic-workflow-schema` (the root suites resolve its gitignored `dist/`) | `node scripts/run-root-suite.mjs` → `ℹ tests 1416 · ℹ suites 33 · ℹ fail 0 · ℹ skipped 0` | current | O1, O15 |
+| PE-002 | known | The canonical home of a published closed vocabulary is `packages/agentic-workflow-schema/src/vocabularies.ts` (exports of frozen string arrays), not the prose that cites it; `scripts/vocabulary-parity.test.mjs` pins every second copy to those consts | `sed -n '1,47p' packages/agentic-workflow-schema/src/vocabularies.ts` → `FUTURE_STATUS_KINDS`, `FINDINGS_TABLE_SEVERITIES`, `LOG_KIND_TOKENS`; the parity suite's header states decision D2 | current | O1, O2 |
+| PE-003 | known | `scripts/normative-drift.test.mjs` reads a `schema-export:NAME` grammar row straight from the committed schema source (`publishedConstArrays`), and treats that export as the declaration home that satisfies `must-name: yes` — so a new vocabulary only needs its row, never a second export | `scripts/normative-drift.test.mjs:400-425` (the `schema-export` branch) and `:640-660` (`surface.schemaExport`) | current | O3, O10 |
+| PE-004 | known | The closed ceremony CLI (`#338`) is a registry of `<object> <subcommand>` modules with one exit contract (0 success, 1 usage error, 2 ceremonial block) and JSON on stdout; adding an object is adding a module + a registry key, and an unknown object stays a JSON usage error | `sed -n '20,60p' scripts/ceremony.mjs`; `scripts/ceremony/lib.mjs` (`out`, `fail`, `block`, `parseFlags`) | current | O4, O5 |
+| PE-005 | known | `scripts/ceremony.test.mjs` asserts the registry's closed world (an unknown object is `unknown-object`, exit 1), so a new object must be added to both the registry and any list the suite pins | `rg -n 'unknown-object\|REGISTRY\|objects' scripts/ceremony.test.mjs` | current | O5, O14 |
+| PE-006 | known | Envelope v2's detail objects are validated by `packages/agentic-workflow-schema/src/index.ts` field lists (`rejectUnexpectedKeys`), and `skills/workflow-status/references/SENSOR_CORE.md` declares which fields the sensor may project in its `sensor-fields@1` block — a field absent from both is refused | `scripts/normative-drift.test.mjs` `sensor-envelope-fields` row + `buildMachine()`'s field extraction; `SENSOR_CORE.md` `sensor-fields@1` | current | O6, O7 |
+| PE-007 | known | `next.tier` (`strong`/`cheap`) is the model-budget tier derived by `tierFor(command)` from `TIER_MAP`, and `findings.fix_now[].suggested_tier` is a second, per-finding field over the same two tokens; neither is a risk tier, so the risk tier must be a separately named key (`detail.risk_tier`) to avoid changing an existing consumer's meaning | `rg -n 'TIER_MAP\|suggested_tier\|stage.tier' scripts/workflow-status.mjs` | current | O8, O11 |
+| PE-008 | known | The lane's triage block is the authoritative step list printed by `scripts/unit-route.mjs --triage` and pasted verbatim; the catalog (`scripts/catalog.json`) is the closed step source, so a tier-aware triage reads the catalog rather than inventing steps | `skills/unit-lane/SKILL.md` §2 ("PASTE its stdout block verbatim"), `scripts/unit-route.mjs` `--triage` | current | O9 |
+| PE-009 | known | The unit-doc contract pins the re-cut section sequence for a literal list of template paths, and the scaffold (`template/`) is bound by parity — so a passive-shape sentence in the templates is the only carrier that reaches a bootstrapped project | `scripts/unit-doc-contract.test.mjs` template loop; `scripts/scaffold-parity.test.mjs` | current | O12 |
+| PE-010 | assumption | "Executable vs non-executable content" (S3) is decidable from repo evidence by file extension plus comment/blank-line density: a changed file whose every changed line is a comment or blank has no executable effect even when its extension is executable. Not sampled against a third-party corpus; the classifier owns the table and this unit's fixtures pin it | owner: this unit (P1) — `scripts/risk-tier-classifier.test.mjs` carries the corpus | current | O2, O11 |
+| PE-011 | assumption | The three signals S5 names for `high` (auth, destructive ops, CI/publish surfaces) are path-shaped in this repository: they are named by path prefixes (`skills/*/references/*AUTH*`, `.github/workflows/`, `scripts/release.mjs`, `scripts/publish*`) rather than by content analysis. A content-level detector is out of this unit's scope (S10 forbids model-emitted tokens, and a content heuristic nobody measured would be a guess wearing a table) | owner: this unit (P1) — the `HIGH_RISK_PATHS` table is the declared fixture | current | O2, O12 |
+| PE-012 | known | `#352`'s crate is not built yet: `packages/` holds only the three JS packages and no Rust toolchain is configured in CI, so `crate-able` means "pure ES module, `node:` imports only, no repo-internal import cycles" — the same shape `scripts/ceremony/lib.mjs` already ships | `ls packages/` → `agentic-workflow agentic-workflow-schema pi-agentic-workflow`; `bun run build` needs no cargo | current | O13 |
+| PE-013 | known | `docs/ROADMAP.md` row 97 (`risk-tiered-ceremony`) is `idea` at the cut head and points at issue #360; the unit is registered in `## Fixes` as its own row by the lane's plan step | `rg -n '97 \| \`risk-tiered-ceremony\`' docs/ROADMAP.md` | current | O16 |
+| PE-014 | known | The existing skill context ceilings are enforced by `scripts/check-skill-context.mjs` and re-basable only with a declared reason in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | `bun scripts/check-skill-context.mjs` output shape; the budgets file's `sources` convention | current | O14 |
+| PE-015 | known | A paper citation is evidence only where the repo already recorded it: both arXiv ids S4 names are in `docs/research/papers-sweep-2026-11-02.md` with an `APPLY` verdict, so the SPEC cites the sweep rather than re-asserting the papers | `rg -n '2608.09290\|2606.22528' docs/research/papers-sweep-2026-11-02.md` | current | O1 |
+| PE-016 | unknown | Whether ≥3 real units will produce a measurable per-tier delta (S9) — this unit emits the tier and records it per unit, but the aggregation instrument does not exist yet, so no measurement is claimed here | owner: this unit's `## Future` row — implemented by a follow-up unit with its own evidence | current | O17 |
+
+## Verification
+
+- PE-001…PE-009 and PE-012…PE-015 sampled at the cut head with the commands in
+  the `source` cell (2026-11-02, `1f527d45`).
+- **PE-010 and PE-011 are `assumption` with an owner**: both are resolved by P1's
+  fixtures, which are the corpus the tables are pinned to; neither is cited as if
+  it had been sampled elsewhere.
+- **PE-016 is `unknown`**: it is deferred by the unit's own `## Future` row and
+  no obligation depends on a number coming out of it.

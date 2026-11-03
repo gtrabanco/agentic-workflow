@@ -49,6 +49,9 @@ import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } fr
 // (#308 cycle-3 F37/F39: the inline copies had drifted — one unanchored, one
 // fence-blind — while the shared reader was already both).
 import { openFence, closesFence, sectionBounds, parseLog } from "./unit-doc-phases.mjs";
+// Issue #360 — the risk tier of the change in scope. The classifier decides it
+// (one home, `scripts/risk-tiers.mjs`); this sensor only projects the verdict.
+import { classifyTier, taskSizeOf } from "./risk-tiers.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -1646,8 +1649,36 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
     ? deriveReviewLoopCycles(parseReceipts(readProject(path.join(currentUnitDir, "progress.md"))))
     : { spec: 0, plan: 0 };
 
+  // Issue #360 — the risk tier of the branch's own change. The classifier reads
+  // the changed paths and their contents (repo evidence only) and this sensor
+  // projects its verdict; the tier is never derived here and never taken from a
+  // model. `next.tier` stays the model-budget tier and is untouched.
+  const riskTier = (() => {
+    const base = (() => {
+      const mergeBase = git("merge-base", "origin/main", "HEAD") ?? git("merge-base", "main", "HEAD");
+      if (mergeBase) return mergeBase;
+      const roots = git("rev-list", "--max-parents=0", "HEAD");
+      return roots ? roots.split("\n").pop() : null;
+    })();
+    const scoped = base === null ? gitState.dirtyFiles.map((line) => line.slice(3).trim()) : (() => {
+      const committed = (git("diff", "--name-only", "--no-renames", base, "HEAD") ?? "").split("\n").filter(Boolean);
+      const dirty = gitState.dirtyFiles.map((line) => line.slice(3).trim());
+      return [...new Set([...committed, ...dirty])].sort();
+    })();
+    const files = new Map(scoped.map((rel) => [rel, readProject(rel) ?? ""]));
+    const verdict = classifyTier(files);
+    return {
+      tier: verdict.tier,
+      reason: verdict.reason,
+      reason_kind: verdict.reason_kind,
+      signals: verdict.signals,
+      task_size: taskSizeOf(verdict.tier),
+    };
+  })();
+
   const detail = {
     repository_state: nrs,
+    risk_tier: riskTier,
     design_candidates: designCandidates_,
     pre_execution: receiptRows,
     review_loop_cycles: reviewLoopCycles,

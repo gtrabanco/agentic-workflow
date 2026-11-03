@@ -314,27 +314,7 @@ test("P1: importing the module with the built runtime present exits 0 (A:11 case
 
 test("P1: importing with dist/ absent fails with the named precondition (A:11 case b)", () => {
   const tmp = mkTmp("workflow-status-nodist-");
-  fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
-  fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "schema-runtime.mjs"), path.join(tmp, "scripts", "schema-runtime.mjs"));
-  // The sensor's real import graph: the contract module it shares with the
-  // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
-  // (named precondition, never a module-not-found) are unchanged.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
-  // router's row semantics); the sandbox mirrors it, so the assertions stay
-  // "the named precondition, never a module-not-found". #291 AC3: the
-  // phase-parser was added on the router's import graph (unit-route → phase-lint
-  // → unit-doc-phases). All three files are mirrored.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
-  // Issue #319 put the published index paths on that graph (scripts → the
-  // crate's `src/index-document.mjs`), so the sandbox mirrors the module too.
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
-  fs.copyFileSync(
-    path.join(repoRoot, "packages", "agentic-workflow", "src", "index-document.mjs"),
-    path.join(tmp, "packages", "agentic-workflow", "src", "index-document.mjs"),
-  );
+  mirrorSensorGraph(tmp);
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -344,32 +324,37 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   assert.doesNotMatch(`${result.stderr}`, /ERR_MODULE_NOT_FOUND/);
 });
 
-test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope printed, exit 0 (E-38-1)", () => {
-  const { dir } = makeFixture();
-  const tmp = mkTmp("workflow-status-stub-");
+
+/**
+ * Mirror the sensor's real import graph into a sandbox tree: the stub tests below
+ * run a *copy* of `workflow-status.mjs`, so every module it imports must be there
+ * or the sandbox fails with `ERR_MODULE_NOT_FOUND` instead of the behaviour the
+ * test asserts. #291 added the phase parser on the router's graph; #319 the
+ * published index paths; #360 the risk classifier.
+ */
+function mirrorSensorGraph(tmp) {
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
-  fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "schema-runtime.mjs"), path.join(tmp, "scripts", "schema-runtime.mjs"));
-  // The sensor's real import graph: the contract module it shares with the
-  // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
-  // (named precondition, never a module-not-found) are unchanged.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
-  // The F13 fold added the router edge to that graph (the sensor imports the
-  // router's row semantics); the sandbox mirrors it, so the assertions stay
-  // "the named precondition, never a module-not-found". #291 AC3: the
-  // phase-parser was added on the router's import graph (unit-route → phase-lint
-  // → unit-doc-phases). All three files are mirrored.
-  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "phase-lint.mjs"), path.join(tmp, "scripts", "phase-lint.mjs"));
-  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-doc-phases.mjs"), path.join(tmp, "scripts", "unit-doc-phases.mjs"));
-  // Issue #319 put the published index paths on that graph (scripts → the
-  // crate's `src/index-document.mjs`), so the sandbox mirrors the module too.
+  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "src"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
+  for (const file of ["workflow-status.mjs", "schema-runtime.mjs", "pre-execution-contract.mjs", "unit-route.mjs",
+    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs"]) {
+    fs.copyFileSync(path.join(repoRoot, "scripts", file), path.join(tmp, "scripts", file));
+  }
+  fs.copyFileSync(
+    path.join(repoRoot, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
+    path.join(tmp, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
+  );
   fs.copyFileSync(
     path.join(repoRoot, "packages", "agentic-workflow", "src", "index-document.mjs"),
     path.join(tmp, "packages", "agentic-workflow", "src", "index-document.mjs"),
   );
+}
+
+test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope printed, exit 0 (E-38-1)", () => {
+  const { dir } = makeFixture();
+  const tmp = mkTmp("workflow-status-stub-");
+  mirrorSensorGraph(tmp);
+  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",
