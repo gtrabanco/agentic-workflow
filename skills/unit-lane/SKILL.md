@@ -111,6 +111,36 @@ decisions that are not acceptance criteria run through the design step's
 assumptions. See
 [the unit doc template](references/STEPS.md) for section order.
 
+### 1a. Risk tier — read the verdict, never decide it
+
+Before the unit doc is created, the change's **risk tier** decides whether it
+needs one at all. Read it; never compute it:
+
+```
+bun scripts/ceremony.mjs tier classify            # the branch's own diff
+bun scripts/ceremony.mjs tier classify --paths a,b  # an explicit scope
+```
+
+The verdict is the owner's, not this skill's: the tiers, the named signals and
+the per-tier ceremony are stated once in `execute-phase`'s
+[RISK_TIERS.md](../execute-phase/references/RISK_TIERS.md) (block
+`risk-tier-verdict@1`), and a model-supplied tier is never an input.
+
+- **`passive`** — documentation, images, comments, prose with no executable
+  effect. **Zero ceremony**: no unit doc, no phases, no evidence table, no
+  review pass. Record the structural readback in `docs/passive/<id>.md` — the
+  five-field record that file owns (block `passive-record@1`) — run the
+  project's deterministic gate, and stop. A docs-only request never opens a
+  unit folder.
+- **`standard`** — continue with step 1: the current unit-doc ceremony.
+- **`high`** — continue with step 1 **and** copy the verdict's named
+  `signals[]` entry verbatim into the unit doc's `## Impact`; the full review
+  pass is owed.
+
+**Task Size = Understood + Contained risk + Resumable-from-diff.** File counts
+never decide: the classifier reports how many paths changed and reads none of
+them as a reason.
+
 ### 2. Triage — read the catalog, never re-derive
 
 Run `bun scripts/unit-route.mjs --triage <slug>` (or `<NN>` for numeric). PASTE

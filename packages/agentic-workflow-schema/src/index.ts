@@ -565,6 +565,18 @@ function rejectUnexpectedKeys(
   }
 }
 
+/**
+ * The `detail` object's declared keys (issue #360 adds `risk_tier`). `detail` is
+ * the sensor's projection surface: every field is delivered as an object above,
+ * so the envelope's licence to extend it is not a licence to invent a key.
+ */
+const DETAIL_KEYS = [
+  "repository_state", "design_candidates", "pre_execution", "review_loop_cycles",
+  "features", "fixes", "startable_now", "blocked_units", "open_prs", "pending_triage",
+  "untriaged_issues", "workflow_observations", "degradations", "continuation_refusal",
+  "crash_recovery", "urgent", "substrate_notice", "risk_tier",
+] as const;
+
 function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: string[]): void {
   rejectUnexpectedKeys(value.unit, "unit", ["type", "id", "issue", "branch"], errors);
   rejectUnexpectedKeys(value.phase, "phase", ["current", "total", "completed"], errors);
@@ -588,6 +600,20 @@ function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: st
   }
   rejectUnexpectedKeys(value.dependencies, "dependencies", ["unmet", "build_order"], errors);
   rejectUnexpectedKeys(value.recommendations, "recommendations", ["product_audit", "reason"], errors);
+  // Issue #360: the risk tier the classifier computed for the unit in scope. A
+  // distinct key from `next.tier` (the model budget), never a second spelling of it.
+  rejectUnexpectedKeys(value.detail, "detail", DETAIL_KEYS, errors);
+  if (isObj(value.detail) && isObj(value.detail.risk_tier)) {
+    rejectUnexpectedKeys(value.detail.risk_tier, "detail.risk_tier", ["tier", "reason", "reason_kind", "signals", "task_size"], errors);
+    if (isObj(value.detail.risk_tier.task_size)) {
+      rejectUnexpectedKeys(
+        value.detail.risk_tier.task_size,
+        "detail.risk_tier.task_size",
+        ["understood", "contained_risk", "resumable_from_diff", "ceremony", "verification"],
+        errors,
+      );
+    }
+  }
   if (value.needs_input !== null) {
     rejectUnexpectedKeys(value.needs_input, "needs_input", ["question", "options"], errors);
   }
@@ -4045,6 +4071,9 @@ export {
   LOG_KIND_TOKENS,
   SWEEP_CLAIM_KINDS,
   SWEEP_MISMATCH_REASONS,
+  RISK_TIER_KINDS,
+  RISK_TIER_SIGNAL_KINDS,
+  RISK_TIER_REASONS,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4052,4 +4081,7 @@ export type {
   LogKindToken,
   SweepClaimKind,
   SweepMismatchReason,
+  RiskTier,
+  RiskTierSignal,
+  RiskTierReason,
 } from "./vocabularies.js";

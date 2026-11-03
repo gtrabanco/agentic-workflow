@@ -45,3 +45,29 @@ export type SweepClaimKind = (typeof SWEEP_CLAIM_KINDS)[number];
 /** The sweep claim's fail-closed reason code. */
 export const SWEEP_MISMATCH_REASONS = Object.freeze(["sweep-mismatch"]);
 export type SweepMismatchReason = (typeof SWEEP_MISMATCH_REASONS)[number];
+
+/** The risk tiers (`risk-tier`), published by the `risk-tier-verdict@1` block
+ *  (owner: `skills/execute-phase/references/RISK_TIERS.md`) and emitted only by
+ *  the ceremony CLI's `tier classify` — never by the model (issue #360 S5, S7).
+ *  A distinct vocabulary from the model-budget tier `next.tier`
+ *  (`strong | cheap`): this one names the ceremony a change owes. */
+export const RISK_TIER_KINDS = Object.freeze(["passive", "standard", "high"]);
+export type RiskTier = (typeof RISK_TIER_KINDS)[number];
+
+/** The named high-risk items a `high` verdict must carry (issue #360 S5): the
+ *  tier is never bare, and every token here resolves a path class the
+ *  classifier owns. `content` marks an executable change that raised no named
+ *  surface; it is how `standard` explains itself too. */
+export const RISK_TIER_SIGNAL_KINDS = Object.freeze(["auth", "security", "destructive", "ci", "publish", "content"]);
+export type RiskTierSignal = (typeof RISK_TIER_SIGNAL_KINDS)[number];
+
+/** Why the classifier answered what it answered — a closed set, so a reason is
+ *  grammar rather than prose a reader has to trust. */
+export const RISK_TIER_REASONS = Object.freeze([
+  "no-executable-effect",
+  "comment-only",
+  "executable-content",
+  "named-high-risk",
+  "empty-change",
+]);
+export type RiskTierReason = (typeof RISK_TIER_REASONS)[number];
