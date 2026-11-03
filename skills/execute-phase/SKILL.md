@@ -38,6 +38,9 @@ done:
   is inferred: a gap runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback
 if bun is not installed) and the
   `open-questions@1` block is pasted, then the run stops.
+✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
+  `rg` before `grep` on search; availability checked once with
+  `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
 ✓ Triage verified — unit doc Evidence section header matches
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
@@ -167,7 +170,7 @@ The row shape is published grammar (`evidence-row@1` in
 observed output or a ✓/✗ verdict is a shape violation rather than a style nit.
 
 **Bounded checkpoint (S13/S14).** The claim-evidence loop is only paid if it is
-cheap: `node scripts/test-route.mjs --check <changed path>` names the minimal
+cheap: `bun scripts/test-route.mjs --check <changed path>` names the minimal
 suite a path needs, so an intermediate verification costs seconds instead of the
 full gate. An unmatched path answers `route: full-suite` — never fewer tests —
 and the full gate stays what the merge gate and CI run.

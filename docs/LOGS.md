@@ -3969,6 +3969,18 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+## 2026-11-03T00:53:48Z — fix-329-tool-choice — manual
+- **Commits:** 5 (`d777699d…54d102a1`)
+- **Files:** 31 files
+- **Summary:** Apply fix #329: bun-first tool discipline gate
+- **Decisions:** D3: gate reads fixed tokens only, never parses sentences to be deterministic. D5 (S11): per-file tests are bun-first, full gate stays on node because bun test scripts/ differs on 7 of 1,390 cases (six hit bun's 5-second default test timeout, one is bun's error frame echoing a source comment). D4: silent green replaced by visible skip. D1: bootstrap scripts allowed to keep usage: node because setup-env provisions bun.
+- **Next:** Open PR #380 against main with Closes #329; review the evidence pack in the PR body and merge when ready
+## 2026-11-03T09:52:45Z — fix-329-tool-choice — manual
+- **Commits:** 7 (`d777699d…8fb76b12`)
+- **Files:** 40 files
+- **Summary:** fix #329 advisory batch: tutorial literal sweep + gate scope expansion + evidence re-sampling
+- **Decisions:** D6: the tutorial's instruction pages are the same nearest-literal surface the external verify's root cause named, so the gate's literal scan grows to docs/workflow/** with the same one-line fallback window. Two declared exemptions: bootstrap pair in prose (D1) and REPOSITORY_STATE.md (frozen receipts). E21: bun test scripts/ failure count is load-dependent (7 vs 5); classes (4 bun-5s-timeout + 1 error-frame echo) are the stable fact D5 rests on.
+- **Next:** Verify the gate is green under the next commit that lands on this branch: bun scripts/invocation-drift.mjs + node scripts/run-root-suite.mjs; then open the PR fix/329-tool-choice if not already merged.
 ## 2026-11-03T00:47:44Z — fix-333-capabilities — manual
 - **Commits:** 7 (`36180c67…afe02f97`)
 - **Files:** 12 files

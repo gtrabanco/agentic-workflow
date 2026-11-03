@@ -42,7 +42,7 @@ rediscovered at review.
 
 What this fix makes obsolete: every surface, token, pane, helper, contract or
 narrative this unit **retires**, each with its replacement or its no-consumer
-evidence (`grep -rc '<the removed name>' <scope>` → 0). A fix that only adds is
+evidence (`rg -c '<the removed name>' <scope>` → 0; `grep -c` is the fallback when rg is absent). A fix that only adds is
 the exceptional case: an empty answer states *why nothing can be removed*, so
 the omission is a reason rather than a gap. Cut at plan time — a retirement is a
 planned task with its negative-capability pin, never a review-time discovery.

@@ -39,7 +39,7 @@ use the single-file format only.
 The triage step reads the unit's scope from the first-pass SPEC content and
 returns a deterministic ordered list of steps the unit needs.
 
-Invoke `node scripts/unit-route.mjs --triage <NN>` to get:
+Invoke `bun scripts/unit-route.mjs --triage <NN>` to get:
 - **Steps** the unit needs (from the closed catalog)
 - **Skipped** steps and why
 - **Budget** tier (`strong` or `cheap`)
@@ -119,7 +119,7 @@ skipped by triage.
 Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
 
 1. **In the PR** — create the changeset intent file by running
-   `node scripts/changeset-create.mjs` (it derives the affected packages and
+   `bun scripts/changeset-create.mjs` (it derives the affected packages and
    skills from the modified files, the semver from the branch's conventional
    commits, and the file name PR-first). One file per PR, as many entries as
    the change needs — the highest severity wins the train and each change
@@ -172,7 +172,7 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    `version` input for the forced override, and the
    push-triggered publish jobs. `scripts/release.mjs` always runs in CI —
    no release step is done by hand.
-7. **Force-version** — `node scripts/release.mjs plan --version X.Y.Z`
+7. **Force-version** — `bun scripts/release.mjs plan --version X.Y.Z`
    overrides the computation for marketing campaigns (stable train only —
    the canary channel computes its own version and rejects `--version`);
    the release body is marked `Version forced by operator: X.Y.Z`. A cut
@@ -191,14 +191,14 @@ un-publishing.
 If a phase produces a 200-line diff against a 50-line budget:
 1. The guard detects the overflow at the phase boundary
 2. The unit is expelled from the light path
-3. Mandatory re-triage: `node scripts/unit-route.mjs --triage <NN>`
+3. Mandatory re-triage: `bun scripts/unit-route.mjs --triage <NN>`
 4. The triage may route to a new set of steps or flag for `replan`
 
 ## Worked example
 
 ```
 # New feature unit: docs/features/62-some-feature/SPEC.md (complete, 14 sections)
-node scripts/unit-route.mjs --triage 62
+bun scripts/unit-route.mjs --triage 62
   → Steps: design, implement, tests, evidence, review
   → Skipped: research (not a new domain), plan (not code unit), docs (not docs unit), release (small scope)
   → Budget: strong

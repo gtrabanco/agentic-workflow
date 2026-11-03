@@ -301,7 +301,7 @@ per unit, single writer = `scripts/review-state.mjs`, model passes read-only: ea
 file in the affecting-path inventory ends a cycle `reviewed@<sha>` or
 `skipped@<sha>` with a concrete reason; skips auto-invalidate when a later diff
 touches the file; coverage closure `inventory − reviewed − skipped = 0` is a
-mechanical receipt check. Run `node scripts/review-state.mjs check --unit <slug>`
+mechanical receipt check. Run `bun scripts/review-state.mjs check --unit <slug>`
 and paste the block — `closure: complete` exits 0, `closure: open(n)` exits 1 and
 is a blocker, never a note.
 
