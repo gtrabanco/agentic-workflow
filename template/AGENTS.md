@@ -72,6 +72,12 @@ tables), and the template(s) or
 recent artifacts for the task at hand. Never assume paths or formats; if a doc is
 missing, say so and fall back to these conventions rather than guessing.
 
+**Shell-tool discipline (re-decided every turn).**
+Manual invocation runs `bun` before `node` and search runs `rg` before `grep`;
+both stay legitimate as the documented fallback when the preferred tool is
+absent — check availability once per session, never assume it. Retarget the two
+pairs to this project's preferred tools when they differ.
+
 **Normalized Repository State.** When `docs/workflow/REPOSITORY_STATE.md` exists,
 consume its frozen, evidence-backed facts and accepted decisions before
 rediscovering them. Keep facts, planned work, documentation, and inference

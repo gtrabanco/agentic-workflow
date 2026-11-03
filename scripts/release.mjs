@@ -82,7 +82,7 @@ const LEVELS = ["patch", "minor", "major"];
 
 function usage() {
   return [
-    "usage: node scripts/release.mjs [plan|apply] [--channel stable|canary]",
+    "usage: bun scripts/release.mjs [plan|apply] [--channel stable|canary]",
     "                     [--version X.Y.Z] [--base X.Y.Z] [--date YYYY-MM-DD]",
     "                     [--summary \"...\"] [--root DIR]",
     "       node scripts/release.mjs publish-plan|publish-stage --channel canary --date YYYY-MM-DD",

@@ -106,7 +106,7 @@ only a user decision closes a question.
 Consume it with the deterministic dispatcher:
 
 ```
-node scripts/needs-input.mjs <unit-dir> [--json]
+bun scripts/needs-input.mjs <unit-dir> [--json]
 ```
 
 It reads the unit doc plus `decisions.md` and prints the versioned
@@ -244,7 +244,7 @@ The sensor also emits `next.candidate_count` (candidates at that priority level)
 | `advance` | Pi-native conductor: sensor → decide → invoke loop (feature 62) |
 | `workflow-status` | Read the sensor envelope |
 | `bun scripts/unit-route.mjs --triage <NN> [--json]` | Triage a unit |
-| `node scripts/needs-input.mjs <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
+| `bun scripts/needs-input.mjs <unit-dir>` | Print the `open-questions@1` block (exit 0 well-formed, non-zero malformed) |
 | `bun scripts/diff-guard.mjs --base <ref>` | Diff-size guard check |
 | `agentic-workflow memory probe [--json]` | Bounded memory-substrate health verdict (`memory-probe@1`), once per session before the first memory read; always exits 0 |
 | `agentic-workflow unit-doc create` | Create a unit doc (SDK) |

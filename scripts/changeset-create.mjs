@@ -41,7 +41,7 @@ const LEVELS = ["patch", "minor", "major"];
 
 function usage() {
   return [
-    "usage: node scripts/changeset-create.mjs [--level patch|minor|major]",
+    "usage: bun scripts/changeset-create.mjs [--level patch|minor|major]",
     "                     [--message \"...\"] [--name <stem>] [--pr <number>]",
     "                     [--base <ref>] [--root DIR]",
     "",
