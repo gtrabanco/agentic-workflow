@@ -180,5 +180,5 @@ test("the shipped repository's history passes the gate (O4)", () => {
   const output = `${result.stdout}${result.stderr}`;
   assert.equal(result.status, 0, `the shipped history reports findings:\n${output}`);
   assert.match(result.stdout, /^verdict: PASS$/m, output);
-  assert.match(result.stdout, /^red-first — \d+ pair\(s\) · cutoff [0-9a-f]{7}/m, output);
+  assert.match(result.stdout, /^red-first — \d+ pair\(s\) · \d+ after the cutoff · cutoff [0-9a-f]{7}/m, output);
 });
