@@ -419,6 +419,13 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   `critical` → `CRITICAL`, `major` → `WARNING`, `minor` → `SUGGESTION`, so
   `BLOCKER | CRITICAL | WARNING` open still fails a pass and `SUGGESTION` still
   never blocks. No disposition value changes.
+- **D10** — 2026-11-04, owner decision after external verification: the
+  frozen-severity re-review override in `fold-findings` fires on `BLOCKER` **or**
+  `CRITICAL` (option 1 of the verifier's decision request), restoring the radius
+  the retired ledger's `high` forced — the same widening `SENSOR_CORE.md` and
+  `PERSIST_AND_DECIDE.md` already carry. The `BLOCKER`-only trigger was the
+  external review's one blocker; the owner chose preservation over recording the
+  narrowing.
 
 - **P1** — 2026-11-04, the frozen-failure corpus was extracted before any machine
   change: the probe fixtures now carry the two live unit-79 rows (F5 functional,
