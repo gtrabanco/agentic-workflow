@@ -129,9 +129,9 @@ Computed, never chosen: `bun scripts/ceremony.mjs tier classify --paths "<this c
 - P5 — Wire the accumulator into the extension and ship the metric sink: the listeners, the telemetry switch in the settings console, and the sink writing `tier-cost@1` rows the repo reader accepts (validator: `cd packages/pi-agentic-workflow && bun run test` exits 0, and `bun scripts/tier-cost.mjs read --ledger <fixture>` exits 0 on a row the sink produced)
   (Implements: S4, S4a, S4b, S7)
   Relevant files: packages/pi-agentic-workflow/src/extension/index.ts, packages/pi-agentic-workflow/src/session-telemetry.ts, packages/pi-agentic-workflow/src/settings/console.ts
-- P6 — Raise the compatibility floor to pi `>=1.5.0` and ship the release intent: `package.json`, the README verified baseline, the CHANGELOG row and the changeset (validator: `cd packages/pi-agentic-workflow && bun test test/verified-baseline.test.mjs` exits 0, `bun scripts/version-parity-gate.mjs` exits 0, `bun scripts/lint-changeset.mjs` exits 0)
+- P6 — Raise the compatibility floor to the version the surface actually needs — **pi `>=1.1.0`**, decided by `tool_execution_end.durationMs` and not by convenience — and ship the release intent: `package.json`, the README's floor sentence with the evidence for it, and the changeset. No CHANGELOG row is written by hand: this repository generates it from the changesets at release (`scripts/release.mjs`), and `version-parity-gate --content` accepts the changeset route (validator: `cd packages/pi-agentic-workflow && bun test test/verified-baseline.test.mjs` exits 0, `bun scripts/version-parity-gate.mjs --content --base origin/main` exits 0 with `VERDICT: PASS`, `bun scripts/lint-changeset.mjs` exits 0)
   (Implements: S4a)
-  Relevant files: packages/pi-agentic-workflow/package.json, packages/pi-agentic-workflow/README.md, packages/pi-agentic-workflow/CHANGELOG.md, .changeset/
+  Relevant files: packages/pi-agentic-workflow/package.json, packages/pi-agentic-workflow/README.md, .changeset/383-measured-acceptance.md
 - P7 — Verify: the obligations ledger closed with its validators run in the foreground, the differential check of every touched command against the base commit, and the whole root gate (validator: `node scripts/run-root-suite.mjs` exits 0 with `fail 0`, and the differential run reports no unrequested stdout/stderr/exit difference on `ceremony tier plan|read|classify`, `workflow-status` and `log-session`)
   (Implements: S1, S2, S3, S4, S4a, S4b, S5, S6, S7, S8)
   Relevant files: docs/fix/383-measured-acceptance/planning-obligations.md, docs/fix/383-measured-acceptance/SPEC.md
@@ -248,6 +248,10 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 - **E17** — 2026-11-03, `bun scripts/bundle-skills.mjs` + `bun test test/*.test.mjs` · exit 0 · `472 pass · 0 fail` (40 files).
 - **E18** — 2026-11-03, `node --test scripts/ledger-ownership.test.mjs` · exit 0 · `12 pass · 0 fail` — the `tier-cost` class, `docs/workflow/TIER_COST.md` as the one extra location, and `pi-agentic-workflow:session-telemetry` as an owner all traverse the scan; AC16's third amendment is recorded in the unit 28 manifest with the owner's approval.
 - **G3** — 2026-11-03, `node scripts/run-root-suite.mjs` · exit 0 · `ℹ tests 1523 · ℹ suites 33 · ℹ pass 1522 · ℹ fail 0 · ℹ skipped 1`; `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 3 budgeted documents`.
+
+- **P6** — 2026-11-03, the floor is **1.1.0**, not 1.5.0: `tool_execution_end.durationMs` is the only pi surface this unit needs, and it is the one 1.0.4 lacks. The `major` intent ships as a changeset, because this repository generates its CHANGELOG at release rather than by hand.
+- **E19** — 2026-11-03, `npm pack @earendil-works/pi-coding-agent@1.0.4`/`@1.1.0` → `rg -c durationMs dist/core/extensions/types.d.ts` · nothing vs `2`; `TurnStartEvent.timestamp` present in both — PE-014 resolved against published types, not the changelog.
+- **E20** — 2026-11-03, `node --test test/verified-baseline.test.mjs` · exit 0 · `3 pass · 0 fail`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `changeset route … VERDICT: PASS`.
 
 ## Next
 
