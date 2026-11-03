@@ -35,8 +35,11 @@ default branch. State the scope at the top of the returned table.
 ✓ Webhooks/callbacks verify signatures before processing
 ✓ Rate limiting / abuse controls considered where a new public surface appears
   (n/a if none)
-✓ New/updated dependencies pinned and free of known-critical advisories (state
-  how you checked)
+✓ New/updated dependencies pinned and free of known-critical advisories — run
+  `bun scripts/dependency-advisory-pass.mjs` (node fallback if bun is not
+  installed) and cite the row it prints for a dependency this change **adds or
+  updates**: a `blocking` row is a finding, a `report-only` row is a report-note,
+  and a pre-existing advisory on an untouched dependency is never a finding here
 ✓ Error responses don't leak stack traces or internal paths
 ✓ Unsafe deserialization / dynamic evaluation of untrusted data absent
 
