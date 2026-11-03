@@ -32,15 +32,55 @@
      infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
      (e.g. `frontend/` for a non-UI project).
    - **Capability inventory** (`docs/CAPABILITIES.md` — the substrate
-     the lane's `design` catalog step's Integration closure walks). Seed it from
-     discovery, not raw placeholders: on an existing codebase, propose the roles
-     and the `yes|no|partial` state of each template subsystem row (auth, ACL,
-     navigation, notifications, search, audit, settings, jobs, storage, i18n,
-     flags, billing, public API) from what the code actually shows; on an
-     empty repo, walk the same fixed rows with the user (`no` is a valid,
-     load-bearing answer). Delete rows that can never apply to this product;
-     confirm the result in one round — never leave the file as the raw
-     template.
+     the lane's `design` catalog step's Integration closure walks). The row list
+     in `template/docs/CAPABILITIES.md` is a **candidate set evaluated against
+     this project**, never a floor to trim and never text to copy. Run
+     `capability-inventory@1`'s six moves in order — no move substitutes for
+     another — and score each candidate with the probes in
+     `capability-evidence@1`. An unsettled row is an open question, never a
+     default: the all-stages no-assumption rule owns that call (`ask-don't-infer`,
+     `skills/unit-lane/references/DESIGN.md`) and this bullet only applies it. The
+     result is checked by bootstrap write step 5, which refuses a raw seed.
+
+     Roles follow the same three outcomes: a role cites the file that grants it,
+     a role this project type cannot have is deleted, and a role nothing settles
+     is asked — never invented from the levels such projects usually have.
+
+     ```text
+     capability-inventory@1
+     move | what it settles | evidence it reads | what is written
+     1 classify | which kind of project is this, and which surfaces can it carry at all | Step 0's discovery: manifests, the source tree, an existing agent guide, the documentation map, an existing roadmap | a project type and the surfaces it can carry — the input to the delete test; nothing reaches the inventory yet
+     2 delete | can this candidate's surface exist in that kind of project | the classified project type, never the project's maturity | nothing: the row is removed **without a question**, and the report names the row and the type evidence that justified the deletion — a missing ACL in a service is a `no`, an ACL in a markdown-only project cannot exist
+     3 infer | does evidence prove this row's state | one cited path per row, taken from that row's probes in `capability-evidence@1`: a directory, a package dependency, an entry point, a config key | `yes`, `partial` or `no` with that path recorded in the row's evidence cell; a `no` cites the surface it inspected and found absent
+     4 ask | is the row plausible for this project but unproven | the absence of evidence, never the model's expectation of what projects usually have | one batched round covering every such row together — the existence question before any state question for the same subsystem, the inferred proposal beside each, `no` never offered as the safe default
+     5 forbid | nothing — this move only binds | — | a state for a row with neither evidence nor a user reply: never `no` by default, never the template's text, never inferred from what projects usually have. The row is written `unresolved — <question>` and listed in the report
+     6 report | what the run concluded | the three outcomes above | the deleted rows with their type evidence, the inferred rows with their cited paths, the asked round (questions, proposals, answers) or why no round was needed, and every `unresolved — <question>` row
+     ```
+
+     The probes are generic by contract — they name the surface, never a package:
+     a stack whose equivalent differs is probed by its equivalent, and a probe that
+     cannot resolve in this project is recorded as an open question, not read as
+     absence. An empty repository has no evidence at all, so every surviving
+     candidate is asked; the delete move still runs first, so the round never
+     asks about a surface the project type excludes.
+
+     ```text
+     capability-evidence@1
+     candidate | proves yes | proves partial | proves no
+     Authentication | a login, registration or token entry point, an auth guard or middleware, and a session or credential store | a credential helper or store that no entry point consumes | the project has a request path and none of the three probes exists, or its dependency manifests carry no auth package
+     ACL / permissions | a permission registry, policy file or guard declaring who may do what, enforced at an entry point | policy data with no enforcement call site | the project has an action surface and no policy file or guard names it
+     Navigation (menus, dashboard) | a menu, sidebar, route table or dashboard view | a route table consumed by a single surface with no navigation entry | the project renders a UI and carries no menu, route or dashboard file
+     Notifications (email, push, in-app) | a channel adapter, message templates plus a sender | templates with no sender, or a sender with no template | a project that could deliver a message has no channel, template or queue
+     Search | an index builder plus a query entry point | one of the two without the other | a content-bearing project with neither an index nor a query path
+     Audit log / activity trail | an append-only log surface plus a reader | an append-only log with no reader | the project mutates state and keeps no log path
+     Settings / preferences | a config store plus its read and write entry points | a config file with no writer command | a project with runtime configuration and no store
+     Background jobs / scheduling | a queue, worker, cron entry or event hook | an event hook with no scheduler | a project that runs on events and carries none
+     File / media storage | an upload flow, a storage adapter or a bucket client | a storage dependency no flow consumes | a project that handles files and carries neither
+     i18n / localization | locale files plus a locale switch | locale files with no switch | a user-facing surface with no locale file
+     Feature flags | a flag store plus a read at a decision point | a flag constant with no store | a decision point with no flag read
+     Billing / payments | a provider client, a plan or price model, a webhook handler | one of the three without the other two | a billable surface with none of the three
+     Public API / integrations | a published package entry, a server route table or a documented client SDK | an internal module exported without documentation | a distributable project with no published entry
+     ```
    - **Performance tooling** — detect what the stack offers, one slot at a
      time (fixed checklist, first match per slot; record `none` explicitly
      when nothing fits — never leave the slot undiscussed):
