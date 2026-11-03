@@ -120,8 +120,8 @@ Versioning is a **deterministic pipeline**, not per-PR hand bookkeeping:
    lands in the changelog's right section at cut time. `scripts/lint-changeset.mjs`
    lints intent files in CI; a valid intent file declaring a package
    satisfies the version-parity gate's content half in place of a manual
-   package.json bump. The `skill-lint` helper lints the authoring rules
-   before committing.
+   package.json bump. The `skill-lint` helper lints the authoring rules and
+   runs the skill content checks (`bun scripts/skill-lint.mjs`) before committing.
 2. **Skill edits** — no per-skill bookkeeping: the changeset IS the change
    record. Skills carry the unified train version, stamped by
    `scripts/release.mjs apply` at cut time (D-40-14).
