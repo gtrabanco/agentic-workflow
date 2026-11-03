@@ -674,7 +674,7 @@ const EXIT_CODES = {
   [OUTCOME.FAILED]: 5,
 };
 
-const USAGE = `usage: node scripts/unit-cycle.mjs <NN|slug|path> [--repo <checkout>] [--max-cycles N] [--max-actions N] [--dry-run] [--json]
+const USAGE = `usage: bun scripts/unit-cycle.mjs <NN|slug|path> [--repo <checkout>] [--max-cycles N] [--max-actions N] [--dry-run] [--json]
 
 Runs a unit's whole delivery cycle as code: design → plan → phases → tests →
 evidence → docs → release → review receipt → fold ≤ X → audit-pr, stopping on

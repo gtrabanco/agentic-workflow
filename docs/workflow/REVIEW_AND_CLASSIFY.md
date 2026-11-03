@@ -80,7 +80,7 @@ the review (D3):
 
 - **fix-now** → folds directly into the current unit's open step. Never a
   tracked issue (AC 12).
-- **fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`; its
+- **fix-now / replan-in-unit** → run `bun scripts/unit-route.mjs <unit>`; its
   `route: replan` line triggers `unit-lane` to append user-confirmed steps to
   the unit's catalog (via triage re-run), then `execute-phase` runs them on
   the same branch — never a downgrade (AC 12).
@@ -141,7 +141,7 @@ gate, because the whole point is to catch what one reviewer would miss.
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
 one pass. Routes **fix-now** into the current unit's open step, **replan-in-unit**
-through `node scripts/unit-route.mjs <unit>` triggering `unit-lane` to append
+through `bun scripts/unit-route.mjs <unit>` triggering `unit-lane` to append
 user-confirmed catalog steps, surfaces
 **decision-required** to the user,
 and batches independent **proposals** for the user to route to `triage-issue`.
