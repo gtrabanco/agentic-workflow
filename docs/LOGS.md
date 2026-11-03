@@ -4002,3 +4002,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of fix/360 (risk-tiered ceremony classifier) — correction batch: the verifier found 2 blockers and 3 advisories; owner accepted all
 - **Decisions:** B1-b: guard en lint-changeset.mjs que rechaza bodies citando paths inexistentes (no solo corregir la cita); A2: meter el inventario de SIZE_TIER_KINDS ahora en vez de aplazar a 360c
 - **Next:** Commit y crear PR fix/360; si se quiere A3 (SVG con script), registrar en unit doc como known-issue
+
+## 2026-11-03T10:56:38Z — fix/360 — manual
+- **Commits:** 11 (`87ae66a6…55b31377`)
+- **Files:** 32 files
+- **Summary:** fix/360: implemented the risk-tiered ceremony classifier and its machine surfaces
+- **Decisions:** D1: size_tier and risk_tier are two separate facts under detail, next.tier kept untouched; D2: capability analysis deferred to 360c (list matching rejected); m1-b: passive carrier written only by CLI; m2-b: risk-tiers.md cited by path, not loaded on execute routes; split #360 into three units (360a here, 360b=#383 for S9, 360c=#384 for capability+passive-writer); SERENA.md ceiling re-based after main's 1a91657b reddened the gate; fix changeset lint, bind size tier vocab, correct declared validators
+- **Next:** /unit-lane --fix 383 to build S9 measured acceptance; /unit-lane --fix 384 for capability-based risk detection and the passive carrier CLI
