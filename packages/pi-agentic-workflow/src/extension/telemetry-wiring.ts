@@ -21,6 +21,7 @@
  *    never called.
  */
 
+import { randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createSessionTelemetry, unitFromCommand, type TelemetrySink } from "../session-telemetry.js";
 import { createLedgerSink } from "../telemetry-sinks.js";
@@ -120,16 +121,28 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
   const changedPaths = options.changedPaths ?? (() => sessionChangedPaths(options.root, start || "HEAD"));
 
   let fromContext: string | undefined;
+  let identity: string | undefined;
+  /**
+   * The identity of this session. Pi's own id when the caller or the context
+   * has one, and otherwise a fresh one for this instance: one extension instance
+   * is one session, so a caller that names nothing still cannot collide with
+   * another session. An unnamed sample that merged with the next one would be the
+   * silent loss the ledger's guard exists to avoid.
+   */
+  function identityOf(): string {
+    if (identity === undefined) {
+      const given = options.sessionId?.() ?? fromContext;
+      identity = given !== undefined && given !== "" ? given : `instance-${randomUUID()}`;
+    }
+    return identity;
+  }
+
   /**
    * The provenance string the ledger stores. The session half is what keeps two
    * sessions of one unit on one day apart: without it they collapse into the
    * same row, and the second is silently lost.
    */
-  const source = (): string => {
-    if (options.source !== undefined) return options.source;
-    const id = options.sessionId?.() ?? fromContext;
-    return id === undefined || id === "" ? "pi:session" : `pi:session=${id}`;
-  };
+  const source = (): string => options.source ?? `pi:session=${identityOf()}`;
 
   let unit: string | null = null;
   let accumulator: ReturnType<typeof createSessionTelemetry> | null = null;
