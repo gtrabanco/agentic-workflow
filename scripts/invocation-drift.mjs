@@ -22,8 +22,10 @@
  *                       sentence (S1)
  *   turn-box            either executor skill missing its per-turn choice box
  *                       (S2)
- *   suite-carve-out     `AGENTS.md` missing the measured exception that keeps
- *                       the root suite on `node --test` (S10)
+ *   suite-carve-out     `AGENTS.md` missing the measured suite facts — the
+ *                       per-file runners, the per-runtime gate invocation, CI's
+ *                       node leg and the bun per-test budget (S10; re-cut when
+ *                       the gate gained bun support)
  *   bootstrap-allowlist a declared bootstrap script is gone (stale allowlist)
  *
  * The allowlist is the bootstrap pair: `setup-env.mjs` provisions bun, so it
@@ -60,12 +62,13 @@ export const GUIDE_LINE =
 export const TURN_BOX =
   "✓ Tool choice re-made this turn — `bun` before `node` on manual invocation, `rg` before `grep` on search; availability checked once with `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)";
 
-/** S10/S11 — the suite commands the sweep must carry, never move. */
+/** S10/S11 — the suite facts the sweep must carry, never move. */
 const SUITE_CARVE_OUT = [
   "bun test scripts/<file>.test.mjs",
   "node --test scripts/<file>.test.mjs",
   "node scripts/run-root-suite.mjs",
-  "fails by construction",
+  "under either runtime",
+  "budgets a 60s per-test timeout on the bun leg",
 ];
 
 const GUIDE_FILES = ["AGENTS.md", "template/AGENTS.md"];
