@@ -38,7 +38,6 @@ function accumulator(overrides = {}) {
   const telemetry = createSessionTelemetry({
     enabled: true,
     unit: "383-measured-acceptance",
-    tier: "standard",
     changedPaths: 12,
     sinks: [{ name: "recording", write: (sample) => written.push(sample) }],
     now: clock.now,
@@ -124,7 +123,6 @@ test("one broken sink costs the others nothing, and never blocks shutdown", () =
   const telemetry = createSessionTelemetry({
     enabled: true,
     unit: "383-measured-acceptance",
-    tier: "standard",
     sinks: [
       { name: "broken", write: () => { throw new Error("publisher down"); } },
       { name: "recording", write: (sample) => good.push(sample) },
@@ -143,16 +141,43 @@ test("the sample is content-free: a unit id and numbers, nothing a model said", 
   telemetry.onTurnEnd({ message: { usage: { totalTokens: 10, input: 4, output: 6 } } });
   const sample = telemetry.flush();
   assert.deepEqual(Object.keys(sample).sort(), [
-    "changed_paths", "model_ms", "observed", "source", "tier", "tokens", "tool_ms", "turns", "unit",
+    "changed_paths", "model_ms", "observed", "source", "tokens", "tool_ms", "turns", "unit",
   ]);
   for (const [key, value] of Object.entries(sample)) {
-    if (["unit", "tier", "observed", "source"].includes(key)) {
+    if (["unit", "observed", "source"].includes(key)) {
       assert.equal(typeof value, "string", `${key} is the only kind of string a sample carries`);
       continue;
     }
     assert.equal(typeof value, "number", `${key} is a number`);
   }
   assert.match(sample.observed, /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test("the path count is taken when the sample is written, not when the accumulator was built", () => {
+  let touched = 0;
+  const { telemetry } = accumulator({ changedPaths: () => touched });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  touched = 13; // the work happened after the accumulator existed, which is the normal case
+  assert.equal(telemetry.flush().changed_paths, 13, "a snapshot taken at build time would report 0 for every session's own work");
+});
+
+test("the provenance string is resolved at emit time, so one builder can name each session", () => {
+  let session = "s-1";
+  const written = [];
+  const telemetry = createSessionTelemetry({
+    enabled: true,
+    unit: "383-measured-acceptance",
+    changedPaths: 0,
+    sinks: [{ name: "recording", write: (sample) => written.push(sample) }],
+    now: () => 0,
+    date: () => DATE,
+    source: () => `pi:session=${session}`,
+  });
+  telemetry.onTurnEnd({ message: { usage: { totalTokens: 10 } } });
+  assert.equal(telemetry.flush().source, "pi:session=s-1");
+  assert.equal(written[0].source, "pi:session=s-1");
+  session = "s-2";
+  assert.equal(written[0].source, "pi:session=s-1", "the sample already emitted is not re-read");
 });
 
 test("a unit is resolved from the command invocation, deterministically, or not at all", () => {
