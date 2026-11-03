@@ -1634,3 +1634,61 @@ test("normalizer inventory: one home, and every entry names its side of the free
 
 console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution, delegated evidence, normalizer order");
 }
+
+/**
+ * A ledger is one table. Markdown ends a table at a blank line, so a single
+ * stray blank inside `## Ledger` silently orphans every row after it — the
+ * orphan still greps, still counts, and the unit reports an obligation that no
+ * table holds. Unit 383 shipped exactly that (a blank line between `O16` and
+ * `O17`) and every gate stayed green, which is why the check below exists: the
+ * fault is textual, so it is caught here and not by trusting the author.
+ */
+function ledgerTableFault(text) {
+  const lines = text.split("\n");
+  const at = lines.findIndex((line) => /^##\s+Ledger\s*$/.test(line));
+  if (at === -1) return null;
+  const body = [];
+  for (const line of lines.slice(at + 1)) {
+    if (/^##\s/.test(line)) break;
+    body.push(line);
+  }
+  while (body.length > 0 && body[0].trim() === "") body.shift();
+  if (body.length < 2 || !body[0].trim().startsWith("|")) return "the section opens with no table";
+  for (let index = 1; index < body.length; index += 1) {
+    if (body[index].trim() === "") {
+      const rest = body.slice(index + 1).filter((line) => line.trim() !== "");
+      if (rest.length > 0 && rest[0].trim().startsWith("|")) return `a blank line at section line ${index + 2} splits the table`;
+      break;
+    }
+    if (!body[index].trim().startsWith("|")) return `section line ${index + 2} is not a table row`;
+  }
+  return null;
+}
+
+test("a unit ledger is one contiguous table: a blank line inside it orphans every row after it", () => {
+  const clean = "## Ledger\n\n| id | claim |\n|---|---|\n| O1 | one |\n| O2 | two |\n";
+  const split = "## Ledger\n\n| id | claim |\n|---|---|\n| O1 | one |\n\n| O2 | two |\n";
+  const ragged = "## Ledger\n\n| id | claim |\n|---|---|\n| O1 | one |\nnot a row\n";
+
+  assert.equal(ledgerTableFault(clean), null, "a contiguous table is the passing shape");
+  assert.match(ledgerTableFault(split), /splits the table/, "the blank-line split is the fault this case exists to catch");
+  assert.match(ledgerTableFault(ragged), /is not a table row/);
+
+  const offenders = [];
+  let files = 0;
+  for (const tree of ["docs/fix", "docs/features"]) {
+    const base = path.join(root, tree);
+    if (!fs.existsSync(base)) continue;
+    for (const unit of fs.readdirSync(base)) {
+      for (const name of ["planning-obligations.md", "planning-evidence.md"]) {
+        const rel = path.join(tree, unit, name);
+        if (!fs.existsSync(path.join(root, rel))) continue;
+        files += 1;
+        const fault = ledgerTableFault(fs.readFileSync(path.join(root, rel), "utf8"));
+        if (fault) offenders.push(`${rel}: ${fault}`);
+      }
+    }
+  }
+  assert.ok(files > 0, "the repository ships at least one planning ledger for this case to judge");
+  assert.deepEqual(offenders, [], `ledgers whose table is broken:\n${offenders.join("\n")}`);
+});
