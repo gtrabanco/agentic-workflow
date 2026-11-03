@@ -142,6 +142,7 @@ test("F3d the destructive signal is a destructive operation, never a path name a
     `${"rmdirSync"}(cacheDir, { recursive: true });`,
     `${"rm"} --recursive --force build/`,
     `DELETE ${"FROM"} users WHERE id = 7;`,
+    `TRUNCATE ${"TABLE"} users;`,
   ];
   for (const source of destructive) {
     assert.deepEqual(classifyTier(treeOf({ "scripts/maintenance.mjs": source })).signals.map((s) => s.signal), ["destructive"],
@@ -151,11 +152,14 @@ test("F3d the destructive signal is a destructive operation, never a path name a
     `${"rmSync"}(scratch, { recursive: true, force: true });`,
     `${"rmSync"}(scratch, { force: true, recursive: true });`,
     "const label = 'delete a row from the docs';",
+    "// page counts stay bounded: truncation is not a risk",
   ];
   for (const source of notDestructive) {
     const verdict = classifyTier(treeOf({ "scripts/maintenance.mjs": source }));
     assert.deepEqual(verdict.signals, [], `${source} is not a destructive operation`);
-    assert.equal(verdict.tier, "standard", "an ordinary executable change is standard");
+    // A comment-only edit is passive by the F2b rule; a source line is standard.
+    const expected = /^\s*\/\//.test(source) ? "passive" : "standard";
+    assert.equal(verdict.tier, expected, "no destructive signal, no raised tier");
   }
   assert.equal(classifyTier(treeOf({ "docs/delete-a-row.md": prose(3) })).tier, "passive",
     "a prose path named for deletion is prose");

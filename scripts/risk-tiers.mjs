@@ -76,7 +76,7 @@ const DESTRUCTIVE_CONTENT = new RegExp(
     "\\brm\\s+(?:-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*|--recursive\\s+--force|--force\\s+--recursive)\\b",
     "\\bdrop\\s+(?:table|database)\\b",
     "\\bdelete\\s+from\\b",
-    "\\bTRUNCATE\\b",
+    "\\bTRUNCATE\\s+(?:TABLE\\b|[a-z_][a-z0-9_]*\\s*;)",
     "\\bgit\\s+push\\s+--force\\b",
   ].join("|"),
   "i",

@@ -215,6 +215,23 @@ test("C5 both unit-doc templates describe the passive shape and the scaffold mir
   }
 });
 
+test("C5b a passive record written from the grammar parses back to exactly its five fields", () => {
+  const record = [
+    "# 2026-11-02-notes",
+    "",
+    "- id — `2026-11-02-notes`",
+    "- tier — passive",
+    "- paths — `docs/workflow/SETUP.md`, `README.md`",
+    "- readback — both files read in full: prose only, no code block a runtime executes",
+    "- gate — `node scripts/run-root-suite.mjs` · exit 0",
+  ].join("\n");
+  const fields = record.split("\n").map((line) => /^- (\w+) — (.+)$/.exec(line)).filter(Boolean).map((m) => m[1]);
+  assert.deepEqual(fields, ["id", "tier", "paths", "readback", "gate"], "the record carries the grammar's five fields, in order");
+  const grammar = /```text\npassive-record@1\n([\s\S]*?)```/.exec(read("skills/execute-phase/references/RISK_TIERS.md"));
+  const declared = grammar[1].split("\n").map((line) => line.split("|")[0].trim()).filter(Boolean);
+  assert.deepEqual(fields, declared, "the written record and the declared grammar agree — no field the schema does not publish");
+});
+
 test("C5a the passive record is a readback, not a unit doc: no phases, no evidence table", () => {
   const reference = read("skills/execute-phase/references/RISK_TIERS.md");
   const fenced = /```text\npassive-record@1\n([\s\S]*?)```/.exec(reference);
