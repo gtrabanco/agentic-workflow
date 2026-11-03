@@ -1,4 +1,5 @@
 ---
+"@gtrabanco/agentic-workflow": major
 "@gtrabanco/agentic-workflow-schema": major
 "@gtrabanco/pi-agentic-workflow": major
 "review-a11y": major
