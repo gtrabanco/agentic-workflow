@@ -5,10 +5,11 @@
  *
  * The gate (`scripts/invocation-drift.mjs`) is the enforcement half of the
  * bun-before-node / rg-before-grep discipline: it fails closed on a wrong-tool
- * usage string, a skill literal that teaches the fallback, a missing guide
- * sentence or turn box, and a missing suite carve-out. This suite proves the
- * gate red on one fixture per rule, green on a compliant toy tree, and green on
- * this checkout (the live case is the frozen-failure corpus' exit condition).
+ * usage string, a skill or template literal that teaches the fallback (script
+ * or test invocation), a missing guide sentence or turn box, and a missing
+ * suite carve-out. This suite proves the gate red on one fixture per rule,
+ * green on a compliant toy tree, and green on this checkout (the live case is
+ * the frozen-failure corpus' exit condition).
  *
  * It also pins issue #329 S8: the deleted-skill guard in
  * `scripts/pre-execution-quality.test.mjs` must be a skip the runner counts,
@@ -40,7 +41,7 @@ const write = (root, rel, text) => {
 };
 
 const CARVE_OUT =
-  "The suite is the one measured exception: `node scripts/run-root-suite.mjs` and `node --test scripts/*.test.mjs` run it, while `bun scripts/run-root-suite.mjs` fails by construction.";
+  "The suite is the one measured exception: `bun test scripts/<file>.test.mjs` is the per-file runner, `node --test scripts/<file>.test.mjs` is its fallback, `node scripts/run-root-suite.mjs` runs the gate, and `bun scripts/run-root-suite.mjs` fails by construction.";
 
 /** A tree every rule accepts, so each case below plants exactly one defect. */
 function compliantTree(name) {
@@ -92,19 +93,35 @@ test("the bootstrap pair's node literal stays legal, and a vanished bootstrap sc
 test("a skill literal teaches the fallback unless the fallback is declared beside it (S3, S4)", () => {
   const root = compliantTree("skill-literal");
   write(root, "skills/fold-findings/SKILL.md", "Run `node scripts/review-state.mjs check` and paste it.\n");
-  const violation = scan(root).violations.find((row) => row.id === "skill-node-literal");
+  const violation = scan(root).violations.find((row) => row.id === "node-command-literal");
   assert.ok(violation, "an undeclared node literal is a violation");
   assert.equal(violation.location, "skills/fold-findings/SKILL.md:1");
 
   const legal = compliantTree("skill-fallback");
   write(legal, "skills/fold-findings/SKILL.md", "Run `bun scripts/review-state.mjs check` (node fallback\n`node scripts/review-state.mjs check`).\n");
-  assert.ok(!violationIds(legal).includes("skill-node-literal"), "the declared fallback window is legal");
+  assert.ok(!violationIds(legal).includes("node-command-literal"), "the declared fallback window is legal");
+});
+
+test("test invocations are bun-first too, in skills and in the scaffold templates (S11)", () => {
+  const root = compliantTree("test-literal");
+  write(root, "skills/fold-findings/SKILL.md", "Validate with `node --test scripts/fold-findings.test.mjs` and paste it.\n");
+  const violation = scan(root).violations.find((row) => row.id === "node-command-literal");
+  assert.ok(violation, "an undeclared node --test literal is a violation");
+  assert.match(violation.location, /^skills\/fold-findings\/SKILL\.md:1$/);
+
+  const template = compliantTree("template-literal");
+  write(template, "template/docs/fix/_TEMPLATE/SPEC.md", "(validator: `node --test scripts/x.test.mjs` exits 0)\n");
+  assert.ok(violationIds(template).includes("node-command-literal"), "the scaffold's validator example is the nearest literal a planner copies");
+
+  const legal = compliantTree("test-fallback");
+  write(legal, "skills/fold-findings/SKILL.md", "Validate with `bun test scripts/fold-findings.test.mjs` (node fallback\n`node --test scripts/fold-findings.test.mjs`).\n");
+  assert.ok(!violationIds(legal).includes("node-command-literal"), "the declared test fallback is legal");
 });
 
 test("a line-wrapped node literal is still caught (the drift's own shape)", () => {
   const root = compliantTree("wrapped");
   write(root, "skills/unit-lane/SKILL.md", "# Lane\n\nrun `node\nscripts/needs-input.mjs <unit-dir>`\n");
-  assert.ok(violationIds(root).includes("skill-node-literal"), "wrapping does not launder the literal");
+  assert.ok(violationIds(root).includes("node-command-literal"), "wrapping does not launder the literal");
 });
 
 test("the guide sentence is required in both guides (S1)", () => {
