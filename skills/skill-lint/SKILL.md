@@ -104,8 +104,8 @@ be worked on from any agent:
 - **No per-skill `model:`/`effort:`** — a mid-tier model is enough; this is
   classification + lint bookkeeping. The content checks are code, so they give
   the same answer on any model.
-- **No `bun`** — run `node scripts/skill-lint.mjs`, the same argv and the same
-  block.
+- **No `bun`-only assumption** — `bun scripts/skill-lint.mjs` is the form to
+  print. The fallback is `node scripts/skill-lint.mjs`: same argv, same block.
 
 ## Relationship to other skills
 
