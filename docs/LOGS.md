@@ -4130,3 +4130,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** paths-ignore restored with the principle: ignore only surfaces that drift gates don't police. The root-suite header says "runs on every change to any path, because the suites read the whole tree" — but the tree has two classes: (a) the normative surfaces drift gates catch, and (b) the ceremony artifacts (unit docs, logs, research) verified locally during development. The two don't mix in a CI trigger. The ledger-provenance test gap is a known issue, not a silent one — documented in memory topic ledger-provenance-CI-hazard.
 - **Next:** commit these changes, push to origin/fix/360, and either add to PR #387 (fix/360) or open a new PR with the paths-ignore + fixture migration. Owner to decide on the ledger-provenance CI gap.
 
+## 2026-11-03T16:50:24Z — fix/360 — manual
+- **Commits:** 21 (`87ae66a6…71814565`)
+- **Files:** 35 files
+- **Summary:** Pruned root-suite CI paths + migrated ledger-provenance fixtures
+- **Decisions:** paths-ignore added so doc-only surfaces (features/fix logs, .pi, .engram, .claude-plugin, etc.) skip the root-suite; moved review-findings test fixtures from docs/features/26 and docs/features/36 into scripts/fixtures/ledger-provenance/ to keep docs clean of test artifacts
+- **Next:** Resolve the known ledger-provenance CI gap: decide whether to move the 2 remaining historical commits from docs/features/ into a separate pull_request_target/manual workflow, or accept them as invisible under paths-ignore
