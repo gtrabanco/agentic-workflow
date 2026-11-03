@@ -55,7 +55,7 @@ conversion target**: it is assigned by evidence (a reproducer), so no row of thi
 table reaches it. The table replaces the ad-hoc mapping that lived at
 `PERSIST_AND_DECIDE.md`.
 
-The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs:718-721`)
+The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs`, pinned by `scripts/vocabulary-parity.test.mjs`)
 is a direct projection of this table onto the envelope schema's `high|med|low`
 enum, not a competing converter; it always produces a value listed here.
 
@@ -100,7 +100,7 @@ operates inside the `REVIEW-FAIL` branch as the evidence that determines whether
 a finding truly blocks.
 
 **`report-note` definition owner.** The `report-note` classification is owned by
-`LEDGERS.md` §3 (`:91-96`): material is `medium`+ on the receipt scale, which is
+`LEDGERS.md` §3 (the planning-receipt severity block): material is `medium`+ on the receipt scale, which is
 `WARNING` or above on the ladder, and a `SUGGESTION` row is a persisted
 report-note. Classifying surfaces cite this owner instead of restating the
 materiality bar.

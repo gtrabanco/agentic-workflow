@@ -546,7 +546,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 24132,
+      "routeEstimateMax": 24151,
       "routeLinesMax": 1676,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -569,7 +569,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 19911 est / 1408 lines at this re-basis; ceiling = ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 20189 est / 1427 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 24132 est and ceil(measured x 1.10) = 1676 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 24132 est and ceil(measured x 1.10) = 1676 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:default-backend": {
@@ -588,7 +589,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 22314,
+      "routeEstimateMax": 22333,
       "routeLinesMax": 1557,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -611,7 +612,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:default-web": {
@@ -630,7 +632,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 22314,
+      "routeEstimateMax": 22333,
       "routeLinesMax": 1557,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -653,7 +655,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:synthesize": {
@@ -672,7 +675,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 22830,
+      "routeEstimateMax": 22849,
       "routeLinesMax": 1581,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
@@ -695,7 +698,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18727 est / 1322 lines at this re-basis; ceiling = ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 19005 est / 1341 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
-        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22830 est and ceil(measured x 1.10) = 1581 lines, reason declared."
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22830 est and ceil(measured x 1.10) = 1581 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     }
   },
