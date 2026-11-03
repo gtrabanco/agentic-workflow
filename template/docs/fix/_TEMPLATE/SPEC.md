@@ -92,7 +92,7 @@ A red gate is never excused by an unrecorded issue.
 P1…Pn with stable IDs, one line each, smallest first. Final task is verification
 when the unit has behavior. Each task carries its validator — a backticked
 command plus its expected outcome (for example
-``(validator: `node --test scripts/x.test.mjs` exits 0)``) — an
+``(validator: `bun test scripts/x.test.mjs` exits 0)``) — an
 `(Implements: S1, S2)` line naming the requirements it delivers, and may carry a
 nested `Relevant files: <path, path…>` line: **metadata, never a task** (owner:
 `skills/phase-contract/SKILL.md`).

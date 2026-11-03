@@ -51,6 +51,16 @@ frozen request is L1; every later decision cites its `S#`.
 §Runtime convention, not the issue body, and it is quoted here so the sweep
 cannot silently move the suite to a command that fails by construction.
 
+**S11 — Correction: the tests themselves run bun-first.**
+> Este cambio pretende corregir el uso de node y has usado node en lugar de bun para muchos de tus tests.
+
+Owner correction, 2026-11-04. It amends the reading of `S5`/`S10`, never their
+ids: the full root gate keeps `node scripts/run-root-suite.mjs` for the measured
+runner differences, but every per-file test invocation — in unit-doc validators,
+obligation rows, the scaffold's validator example and this unit's own evidence —
+is `bun test scripts/<file>.test.mjs`, with `node --test` only as the declared
+fallback.
+
 ## Impact
 
 - **Both agent guides.** `AGENTS.md` §Runtime convention gains the tool-choice
@@ -58,6 +68,9 @@ cannot silently move the suite to a command that fails by construction.
   in the scaffold's placeholder voice. `scripts/check-skill-context.mjs
   --documents` bounds the repo guide (393 lines / 6,881 est at the base), so the
   edit must fit that headroom.
+- **Both SPEC templates.** `template/docs/{features,fix}/_TEMPLATE/SPEC.md`
+  switch their validator example to the bun form (S11), so the scaffold stops
+  teaching the nearest literal the old way.
 - **Both executor skills.** `skills/unit-lane/SKILL.md` and
   `skills/execute-phase/SKILL.md` turn contracts gain one box each; per-skill
   context ceilings are 4,135 / 319 (unit-lane) and 4,693 / 369 (execute-phase);
@@ -144,31 +157,29 @@ skip), `scripts/unit-route.test.mjs` (the swept usage literal),
   docs/fix/329-runtime-invocation-drift/planning-obligations.md
 - P2 — Tests first: the `invocation-drift` gate and its sibling suite, proven red
   on the base tree and on one fixture per rule, green on a compliant toy tree
-  (validator: `node --test scripts/invocation-drift.test.mjs` exits 0 with the
+  (validator: `bun test scripts/invocation-drift.test.mjs` exits 0 with the
   fixture and live-tree cases, and the RED run is recorded in the Log)
   (Implements: S3, S6, S9)
   Relevant files: scripts/invocation-drift.mjs, scripts/invocation-drift.test.mjs
 - P3 — Sweep the seventeen script usage strings to the bun form and move the one
   test that pins the old literal (validator:
-  `node scripts/invocation-drift.mjs` exits 0 with zero `usage-node` violations)
+  `bun scripts/invocation-drift.mjs` exits 0 with zero `usage-node` violations)
   (Implements: S3, S6)
-- P4 — Move the five skill literals that teach `node scripts/…` to the bun form,
-  leaving the one line that declares the fallback (validator:
-  `node scripts/invocation-drift.mjs` exits 0 with zero `skill-node-literal` violations)
-  (Implements: S3, S4)
-  Relevant files: skills/execute-phase/SKILL.md, skills/init-workspace/SKILL.md,
-  skills/fold-findings/SKILL.md,
-  skills/review-change/references/PERSIST_AND_DECIDE.md, skills/unit-lane/SKILL.md
+- P4 — Move the five skill literals that teach `node scripts/…` to the bun form
+  and the two SPEC templates' `node --test` validator example to the bun form,
+  leaving the lines that declare the fallback (validator:
+  `bun scripts/invocation-drift.mjs` exits 0 with zero `node-command-literal` violations)
+  (Implements: S3, S4, S11)
 - P5 — Land the normative tool-discipline line in both guides and the per-turn
   choice box in both skills, citing `setup-env.mjs --check` for availability and
-  keeping the suite carve-out (validator: `node scripts/invocation-drift.mjs`
+  keeping the suite carve-out (validator: `bun scripts/invocation-drift.mjs`
   exits 0 with `verdict: PASS` and `bun scripts/check-skill-context.mjs` exits 0)
-  (Implements: S1, S2, S4, S5, S7, S10)
+  (Implements: S1, S2, S4, S5, S7, S10, S11)
   Relevant files: AGENTS.md, template/AGENTS.md, skills/unit-lane/SKILL.md,
   skills/execute-phase/SKILL.md
 - P6 — Replace the silent `process.exit(0)` guard with a registered skip so the
   runner reports it, keeping every existing assertion behind the same guard
-  (validator: `node --test scripts/pre-execution-quality.test.mjs` exits 0 and
+  (validator: `bun test scripts/pre-execution-quality.test.mjs` exits 0 and
   prints `skipped 1`)
   (Implements: S8)
   Relevant files: scripts/pre-execution-quality.test.mjs
@@ -211,16 +222,17 @@ proves it. Frozen at cut.
 
 | S# | criterion | proving check |
 |---|---|---|
-| S1 | both guides carry the normative sentence: bun before node on manual invocation, rg before grep on search, both fallbacks legitimate, availability checked once per session | `node scripts/invocation-drift.mjs` exits 0 with `verdict: PASS`; `rg -c 'Manual invocation runs `bun` before `node`' AGENTS.md template/AGENTS.md` → 1 and 1 |
-| S2 | both executor skills tick the choice every turn, not once per session | `node scripts/invocation-drift.mjs` exits 0; `rg -c 'Tool choice re-made' skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → 1 each |
-| S3 | no non-bootstrap `usage: node` literal survives in `scripts/*.mjs`; every remaining one is declared with its reason | `node scripts/invocation-drift.mjs` exits 0; `rg -n 'usage: node' scripts/*.mjs` outside test files → only `setup-env.mjs` and `update-tools.mjs` |
+| S1 | both guides carry the normative sentence: bun before node on manual invocation, rg before grep on search, both fallbacks legitimate, availability checked once per session | `bun scripts/invocation-drift.mjs` exits 0 with `verdict: PASS`; `rg -c 'Manual invocation runs `bun` before `node`' AGENTS.md template/AGENTS.md` → 1 and 1 |
+| S2 | both executor skills tick the choice every turn, not once per session | `bun scripts/invocation-drift.mjs` exits 0; `rg -c 'Tool choice re-made' skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → 1 each |
+| S3 | no non-bootstrap `usage: node` literal survives in `scripts/*.mjs`; every remaining one is declared with its reason | `bun scripts/invocation-drift.mjs` exits 0; `rg -n 'usage: node' scripts/*.mjs` outside test files → only `setup-env.mjs` and `update-tools.mjs` |
 | S4 | the rg duty is a tool-choice line only — no search machinery, no #269 slice | `git diff --name-only main` lists no search/index/installer surface; the line names `grep` as the documented fallback |
-| S5 | no CI workflow and no runtime-resolution module changes; node stays the suite runner and the fallback | `git diff --name-only main -- .github/workflows packages/pi-agentic-workflow/src` prints nothing; `rg -c 'node --test scripts/\*\.test\.mjs' AGENTS.md` → 1 |
-| S6 | the sweep ships with a pin test that fails on every swept literal and passes only when the tree is clean | `node --test scripts/invocation-drift.test.mjs` exits 0 with the fixture and live-tree cases |
+| S5 | no CI workflow and no runtime-resolution module changes; the full gate stays `node scripts/run-root-suite.mjs` and node remains the fallback | `git diff --name-only main -- .github/workflows packages/pi-agentic-workflow/src` prints nothing; `rg -c 'node scripts/run-root-suite.mjs' AGENTS.md` → 1 |
+| S6 | the sweep ships with a pin test that fails on every swept literal and passes only when the tree is clean | `bun test scripts/invocation-drift.test.mjs` exits 0 with the fixture and live-tree cases |
 | S7 | the availability half is cited, not duplicated: the box points at `setup-env.mjs --check` | `rg -c 'setup-env.mjs --check' skills/unit-lane/SKILL.md skills/execute-phase/SKILL.md` → 1 each |
-| S8 | the deleted-skill guard is a skip the runner counts, never a silent green | `bun test scripts/pre-execution-quality.test.mjs` prints `1 skip`; `node --test scripts/pre-execution-quality.test.mjs` prints `skipped 1`; both exit 0 |
-| S9 | the ratification is machine-held: one gate owns the usage strings, the skill literals, the required surfaces and the suite carve-out, and the root suite runs it | `node --test scripts/invocation-drift.test.mjs` exits 0; `node scripts/run-root-suite.mjs` exits 0 naming the suite |
-| S10 | the suite commands stay `node scripts/run-root-suite.mjs` / `node --test` and the guide states why | `node scripts/invocation-drift.mjs` exits 0 (`suite-carve-out` row); `rg -c 'fails by construction' AGENTS.md` → 1 |
+| S8 | the deleted-skill guard is a skip the runner counts, never a silent green | `bun test scripts/pre-execution-quality.test.mjs` prints `1 skip`; `bun test scripts/pre-execution-quality.test.mjs` prints `skipped 1`; both exit 0 |
+| S9 | the ratification is machine-held: one gate owns the usage strings, the node literals (script and test forms, in skills and templates), the required surfaces and the suite carve-out, and the root suite runs it | `bun test scripts/invocation-drift.test.mjs` exits 0; `node scripts/run-root-suite.mjs` exits 0 naming the suite |
+| S10 | the suite carve-out is carried with its commands: per file `bun test scripts/<file>.test.mjs` (fallback `node --test …`), the gate `node scripts/run-root-suite.mjs`, and the guide states why | `bun scripts/invocation-drift.mjs` exits 0 (`suite-carve-out` row); `rg -c 'fails by construction' AGENTS.md` → 1 |
+| S11 | every per-file test invocation in this unit's task validators is `bun test scripts/<file>.test.mjs`; node appears only as the declared fallback and as the full-gate wrapper | `sed -n '/^## Tasks/,/^## Acceptance criteria/p' docs/fix/329-runtime-invocation-drift/SPEC.md \| rg -c 'validator: .node --test'` → 0 and the same pipeline for `validator: .node scripts/` → 1 (the root-suite wrapper); `bun test scripts/invocation-drift.test.mjs` exits 0 with its S11 case |
 
 ## Findings
 
@@ -328,6 +340,13 @@ proves it. Frozen at cut.
 - **P6** — 2026-11-04, the deleted-skill guard registers a counted skip; the rest of the file sits behind the same guard, no assertion deleted · d777699d.
 - **P7** — 2026-11-04, verification: root suite `G1`, differential `E14`, budgets `E13`, lineage `G2`; the eight `execute-phase:*` route ceilings re-based with their declared growth source · d777699d.
 - **E18** — 2026-11-04, runtime portability of the new suite: `bun test scripts/invocation-drift.test.mjs` initially failed the S8 case because `process.execPath` is bun there and the nested `node --test` leg executed `bun --test`; the leg now resolves the node binary by name when the parent is bun. Re-run: `bun test` · exit 0 · 11 pass / 0 fail; `node --test` · exit 0 · 11 pass / 0 fail.
+- **L2** — 2026-11-04, owner correction, verbatim:
+  > Este cambio pretende corregir el uso de node y has usado node en lugar de bun para muchos de tus tests.
+- **D5** — 2026-11-04, decision, authority `S11` (the L2 correction, amending how `S5`/`S10` are read): per-file test invocation is `bun test scripts/<file>.test.mjs`, with `node --test` only as the declared fallback; the full gate keeps `node scripts/run-root-suite.mjs` because the measurement (`E19`) shows bun's runner is not equivalent yet. The unit's task validators, obligation rows, the scaffold's validator example and the gate's rule changed in this batch.
+- **E19** — 2026-11-04, the measurement behind D5: `bun test scripts/` · exit 1 · `1382 pass / 1 skip / 7 fail`, `Ran 1390 tests across 68 files`; the seven are runner differences, not suite defects: six are bun's 5-second default test timeout on cases that legitimately take longer under `node:test`'s no-default model, one is bun's error frame echoing the source comment that names `ERR_MODULE_NOT_FOUND`. `bun scripts/run-root-suite.mjs scripts/needs-input.test.mjs` · exit 1 · `error: Cannot use afterAll() outside of the test runner`.
+- **E20** — 2026-11-04, the bun-first re-runs the correction demands: `bun test scripts/invocation-drift.test.mjs` · exit 0 · 12 pass / 0 fail (the new S11 case included); `bun test scripts/unit-route.test.mjs` · exit 0 · 57 pass / 0 fail; `bun test scripts/pre-execution-quality.test.mjs` · exit 0 · 0 pass / 1 skip / 0 fail; `bun scripts/invocation-drift.mjs` · exit 0 · `verdict: PASS`, 113 files checked (skills + templates).
+- **G3** — 2026-11-04, the correction batch's full gate at the corrected head: `node scripts/run-root-suite.mjs` · exit 0 · 1,393 tests / 1,392 pass / 0 fail / 1 skipped.
+- **P8** — 2026-11-04, correction batch (L2/S11): the gate now also rules on `node --test …` literals in `skills/**` and `template/**` (`node-command-literal`), the two SPEC templates and the guide state the bun-first per-file form, every task validator and obligation row that invoked a test file moved to `bun test scripts/<file>.test.mjs`, and the measured full-gate reasons are recorded (`E19`) · this commit.
 
 ## Next
 
@@ -356,7 +375,7 @@ depended on.
 
 | Scenario | Check |
 |---|---|
-| every touched script's usage text still names its own invocation, now bun-form | `node --test scripts/unit-route.test.mjs` exits 0; the differential run against the base copy differs only in `node` → `bun` |
+| every touched script's usage text still names its own invocation, now bun-form | `bun test scripts/unit-route.test.mjs` exits 0; the differential run against the base copy differs only in `node` → `bun` |
 | the root suite still discovers and runs every suite, including the new gate | `node scripts/run-root-suite.mjs` exits 0 |
 | the pre-execution-quality assertions still run where the deleted skills exist | the fixture run of the file against the golden fixture (skills present) still executes its cases |
 | skill and guide context budgets still pass | `bun scripts/check-skill-context.mjs` and `bun scripts/check-skill-context.mjs --documents` exit 0 |

@@ -11,9 +11,9 @@
  *
  *   usage-node          a usage string naming node in `scripts/*.mjs` outside the
  *                       declared bootstrap allowlist (S3)
- *   skill-node-literal  a `node scripts/…` literal in `skills/**` with no
- *                       fallback declaration on the line or the one before it
- *                       (S3/S4)
+ *   node-command-literal  a `node scripts/…` or `node --test …` literal in
+ *                       `skills/**` or `template/**` with no fallback
+ *                       declaration on the line or the one before it (S3/S4/S11)
  *   guide-line          either agent guide missing the normative tool-choice
  *                       sentence (S1)
  *   turn-box            either executor skill missing its per-turn choice box
@@ -56,14 +56,25 @@ export const GUIDE_LINE =
 export const TURN_BOX =
   "✓ Tool choice re-made this turn — `bun` before `node` on manual invocation, `rg` before `grep` on search; availability checked once with `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)";
 
-/** S10 — the suite exception the sweep must carry, never move. */
-const SUITE_CARVE_OUT = ["node --test scripts/*.test.mjs", "fails by construction"];
+/** S10/S11 — the suite commands the sweep must carry, never move. */
+const SUITE_CARVE_OUT = [
+  "bun test scripts/<file>.test.mjs",
+  "node --test scripts/<file>.test.mjs",
+  "node scripts/run-root-suite.mjs",
+  "fails by construction",
+];
 
 const GUIDE_FILES = ["AGENTS.md", "template/AGENTS.md"];
 const TURN_BOX_FILES = ["skills/unit-lane/SKILL.md", "skills/execute-phase/SKILL.md"];
 
-/** `node <path under scripts/>` — a literal an agent copies as an invocation. */
+/**
+ * A literal an agent copies as an invocation: `node scripts/…` (a manual
+ * invocation the bun-first rule owns) and `node --test …` (a test invocation,
+ * bun-first per file since issue #329's correction). Both are legal only when
+ * the adjacent line declares the fallback.
+ */
 const NODE_SCRIPT_LITERAL = /\bnode\s+(scripts\/[\w./-]+)/g;
+const NODE_TEST_LITERAL = /\bnode\s+(--test\b[^\n`]*)/g;
 const USAGE_NODE = /\busage:\s*node\b/;
 
 function parseArgs(argv) {
@@ -105,7 +116,7 @@ function listScripts(root) {
   }
 }
 
-function listSkillMarkdown(root) {
+function listMarkdown(root, top) {
   const found = [];
   const walk = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -115,31 +126,36 @@ function listSkillMarkdown(root) {
     }
   };
   try {
-    walk(path.join(root, "skills"));
+    walk(path.join(root, top));
   } catch {
     return [];
   }
   return found.sort();
 }
 
-/** Every `node scripts/…` literal, with the line it starts on. */
-function nodeScriptLiterals(text) {
+const listSkillMarkdown = (root) => listMarkdown(root, "skills");
+const listTemplateMarkdown = (root) => listMarkdown(root, "template");
+
+/** Every `node scripts/…` / `node --test …` literal, with the line it starts on. */
+function nodeCommandLiterals(text) {
   const hits = [];
-  for (const match of text.matchAll(NODE_SCRIPT_LITERAL)) {
-    const line = text.slice(0, match.index).split("\n").length;
-    hits.push({ target: match[1], line });
+  for (const pattern of [NODE_SCRIPT_LITERAL, NODE_TEST_LITERAL]) {
+    for (const match of text.matchAll(pattern)) {
+      const line = text.slice(0, match.index).split("\n").length;
+      hits.push({ target: match[1].trim(), line });
+    }
   }
   return hits;
 }
 
 /**
  * A literal is legal only when the line before it or the line itself declares
- * the fallback. The window is fixed (never a sentence parse) so a wrapped
- * literal still has to keep the declaration adjacent.
+ * the fallback (`fallback` or `absent`). The window is fixed (never a sentence
+ * parse) so a wrapped literal still has to keep the declaration adjacent.
  */
 function declaresFallback(lines, line) {
   const window = [lines[line - 2], lines[line - 1]].filter(Boolean);
-  return window.some((text) => /fallback/i.test(text));
+  return window.some((text) => /fallback|absent/i.test(text));
 }
 
 export function scan(root) {
@@ -176,15 +192,15 @@ export function scan(root) {
     }
   }
 
-  for (const file of listSkillMarkdown(root)) {
+  for (const file of [...listSkillMarkdown(root), ...listTemplateMarkdown(root)]) {
     const text = read(root, file);
     if (text === null) continue;
     counts.skillFiles += 1;
     const lines = text.split("\n");
-    for (const hit of nodeScriptLiterals(text)) {
+    for (const hit of nodeCommandLiterals(text)) {
       if (declaresFallback(lines, hit.line)) continue;
       violations.push({
-        id: "skill-node-literal",
+        id: "node-command-literal",
         location: `${file}:${hit.line}`,
         detail: `\`node ${hit.target}\` teaches the fallback tool — use the preferred invocation or declare the fallback on the line`,
       });
