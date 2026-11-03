@@ -184,7 +184,7 @@ with no registration step.
   declared allowances, the recorded skips of S9), and `SKILL.md` runs the scanner
   in its Turn contract and process without losing the seven authoring rules
   (validator: `node scripts/skill-lint.mjs` exits 0 and
-  `rg -c 'CHECKS.md' skills/skill-lint/SKILL.md` matches 1)
+  `rg -c 'CHECKS.md' skills/skill-lint/SKILL.md` matches 3)
   (Implements: S1, S9, S10, S13)
   Relevant files: skills/skill-lint/SKILL.md, skills/skill-lint/references/CHECKS.md
 - P5 — The sweep, the docs and the release intent: run the full scan, triage what
@@ -229,7 +229,7 @@ proves it. Frozen at cut.
 | S6 | an instruction that sends data outward or reads a credential is a finding | suite exits 0, its SL-05 exfiltration and credential cases both pass |
 | S7 | a Windows-style backslash path is a finding, and a regex escape or a table escape is not | suite exits 0, its SL-06 path and escape cases both pass |
 | S8 | a dated currency claim or an expiry is a finding, a provenance date is not | suite exits 0, its SL-07 claim and provenance cases both pass |
-| S9 | every smell the repo's conventions exclude is written down with its reason | `rg -c 'Skipped' skills/skill-lint/references/CHECKS.md` matches 1 and the three reasons are present in its table |
+| S9 | every smell the repo's conventions exclude is written down with its reason | `rg -c '\\| skipped \\|' skills/skill-lint/references/CHECKS.md` matches 3 and the three reasons are present in its table |
 | S10 | the lint repairs nothing and invents no surface | `git status --porcelain` after a full scan is unchanged; the skill stays `user-invocable: false` and absent from `.claude-plugin/plugin.json` |
 | S11 | one fixture per pattern fails the lint and a clean skill passes | suite exits 0 with one case per check plus the clean-fixture case |
 | S12 | the sweep ran once and every finding is repaired or a recorded decision | `node scripts/skill-lint.mjs` exits 0 with `0 finding(s)`, and D1/D2 name the 20 markers and the 5 dates |
@@ -321,7 +321,9 @@ proves it. Frozen at cut.
 - **G1** — 2026-11-02, the root gate: `node scripts/run-root-suite.mjs` · exit 0 · `1401 tests, 1401 pass, 0 fail`.
 - **G2** — 2026-11-02, `bun scripts/phase-lint.mjs docs/fix/357-skill-lint-smells-supply-chain/SPEC.md` · exit 0 · `verdict PASS` (6/6 per phase, fingerprint `6ca43a01…`); `node scripts/unit-lineage.mjs --unit 357-skill-lint-smells-supply-chain` · exit 0 · `LINEAGE OK`.
 - **G3** — 2026-11-02, `node --test scripts/normative-drift.test.mjs` · exit 0 · `20 tests, 20 pass` — the new reference adds no declared normative surface and the linter's closing block is unchanged; `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS · 28 claims checked · 13 skipped`.
-- **G4** — 2026-11-02, `node scripts/diff-guard.mjs --base origin/main` · BREACH, both budgets: the line count and the file count are above 400 and 8. The file set is enumerated so the claim does not move with this document: the unit doc, its two ledgers, `scripts/skill-lint.mjs`, its sibling suite, `skills/skill-lint/references/CHECKS.md`, `skills/skill-lint/SKILL.md`, the changeset, the change→suite route, and one line each in the roadmap, the attribution ledger, `docs/workflow/SKILLS.md`, `AGENTS.md` and `docs/workflow/FEATURE_WORKFLOW.md`.
+- **G4** — 2026-11-02, `node scripts/diff-guard.mjs --base origin/main` · BREACH, both budgets: the line count and the file count are above 400 and 8. The file set is enumerated so the claim does not move with this document: the unit doc, its two ledgers, `scripts/skill-lint.mjs`, its sibling suite, `skills/skill-lint/references/CHECKS.md`, `skills/skill-lint/SKILL.md`, the changeset, the change→suite route, and one line each in the roadmap, the
+  attribution ledger, `docs/workflow/SKILLS.md`, `AGENTS.md`,
+  `docs/workflow/FEATURE_WORKFLOW.md` and the README's `skill-lint` row.
   **Recorded exception, not a forced number.** The unit doc and its two ledgers are the largest block and are mandatory here (they substitute the lane's plan step); the scanner and its fixture corpus are next; the owning reference and the linter's rewrite are small; the rest is one-line wiring. A split was considered and rejected: stacking is forbidden by `AGENTS.md`, and a docs-only PR would document a scanner that does not exist yet, which is exactly the drift this unit's own subject is about.
 - **P1** — 2026-11-02, the unit doc, its two ledgers and the frozen failure corpus cut before any code · `e006b3fb`.
 - **P2** — 2026-11-02, the fixture corpus (`scripts/skill-lint.test.mjs`), red on the missing module (E1) · `a305e5b1`.
@@ -329,6 +331,29 @@ proves it. Frozen at cut.
 - **P4** — 2026-11-02, the linter wiring: `references/CHECKS.md` owns the seven rules and the three recorded skips, `SKILL.md` runs the scanner in its turn contract and process · `a305e5b1`.
 - **P5** — 2026-11-02, the sweep and its triage (D1/D2), `docs/workflow/SKILLS.md`, the roadmap rows, the two attribution cells, the change→suite route and the changeset · `0ecb1ef7`.
 - **P6** — 2026-11-02, verification on the full diff: every obligation row closed with its validator run (E4–E7, G1–G4) and the branch handed off.
+- **E9** — 2026-11-02, external verification (base `6e65d0b3` · head `356653bf`,
+  fresh eyes): all 15 obligations re-ran green in a clean session — the sweep
+  `PASS` (89 files, 0 findings), the suite 20/20, the root gate 1401/1401, the
+  budgets and the changeset lint exit 0, `phase-lint` PASS, `LINEAGE OK`,
+  `promise-coherence` PASS · 28 checked · 13 skipped. Findings F1–F3 below came
+  out of that round; E1's red-first run stays unverifiable from git (P2 and P3
+  share commit `a305e5b1`), as the triage block's declared deviation already
+  records.
+- **F1** — 2026-11-02, folded (external verify) — `README.md`'s `skill-lint` row
+  still narrated the pre-#357 contract (trigger "After editing a SKILL.md", no
+  content checks), while the same narration was rewritten in `AGENTS.md`,
+  `docs/workflow/SKILLS.md` and `docs/workflow/FEATURE_WORKFLOW.md`. The row now
+  mirrors the `SKILLS.md` wording: content checks first, then the authoring and
+  registration rules, trigger extended to a reference beside one.
+- **F2** — 2026-11-02, folded (external verify) — S9's proving check claimed
+  `rg -c 'Skipped' …` matches 1; the command matches 0 (the table rows are
+  lowercase `skipped`). It now states the command that reproduces:
+  `rg -c '\\| skipped \\|' …` matches 3, the same count the suite's
+  recorded-skip case pins.
+- **F3** — 2026-11-02, folded (external verify) — P4's validator claimed
+  `rg -c 'CHECKS.md' skills/skill-lint/SKILL.md` matches 1; it matches 3 (and
+  already did at the P4 commit), so the frozen count is corrected to 3. The G4
+  exception file set gains the README row this fold adds.
 
 ## Triaged steps
 
