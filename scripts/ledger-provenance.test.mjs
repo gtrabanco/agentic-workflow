@@ -390,7 +390,7 @@ test("unit 26's fold ledger is read, not silently passed", () => {
   // reports is the ledger's own historical residue — F63/F64/F108 write
   // `· folded P<n> <sha>`, a shape that predates the annotator's `· fold <sha>` —
   // and must name exactly those rows rather than a blanket pass or a blanket fail.
-  const rel = "docs/features/26-staged-verification-contracts/review-findings.md";
+  const rel = "scripts/fixtures/ledger-provenance/review-findings-26.md";
   const result = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   assert.match(result.stdout, /CHECK PASS/);
@@ -498,7 +498,7 @@ test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", (
   // ledger must say so row by row rather than claim a blanket PASS. The four cycle-9
   // rows this batch folded are proven, which is the path under test; a future fold
   // that re-points or annotates the residue is free to make this green.
-  const rel = "docs/features/36-verification-contract-hygiene/review-findings.md";
+  const rel = "scripts/fixtures/ledger-provenance/review-findings-36.md";
   const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
   const open = json.filter((e) => e.status === "open" && !/^F(2[0-9]|3[0-9]|4[0-9]|5[0-4])$/.test(e.id));
   assert.equal(open.length, 0, `a folded row is never bucketed open: ${open.map((e) => e.id).join(", ")}`);

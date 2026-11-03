@@ -96,6 +96,26 @@ live evidence against a frozen ledger remains a contradiction candidate.
    MERGE-READY bound to the PR's current head SHA (look for the audit
    comment marker on the PR)? Derive `review_pending` (no current mark) /
    `audit_pending` / `merge_ready` per unit.
+8a. **Risk tier → `detail.risk_tier`.** The classifier (`scripts/risk-tiers.mjs`)
+   reads the branch's own change — the diff against its merge base plus any
+   uncommitted path, and those files' contents — and emits the tier as
+   `{tier, reason, reason_kind, signals[], task_size{…}}`. This sensor projects
+   that verdict and never derives one: a tier it computed itself would be a
+   second classifier. The field is `detail.risk_tier`, deliberately **not**
+   `next.tier` — that one is the model budget (`strong | cheap`) and step 8's
+   per-finding `suggested_tier` reuses it. Read-only like every other step; an
+   empty change emits `standard` with `reason_kind: "empty-change"` (fail closed
+   upward: nothing proved the change inert, so it pays the standard ceremony).
+
+8b. **Size tier → `detail.size_tier`.** `{size_tier, changed_paths}` — the size
+   of the branch's change, derived from the same verdict as step 8a and never
+   counted twice. Three values: `prose` (no executable effect), `small` (few
+   paths) or `large` (past the classifier's bound). It exists for the two
+   decisions that need a size — splitting a unit that is too large and grouping
+   several small ones — and it is a distinct fact from the risk tier: a one-file
+   auth change is `small` **and** `high`; a 400-file docs sweep is `prose` and
+   `passive`.
+
 9. **Fix-now fold ledger → `findings.fix_now[]`.** For each in-flight unit
    (feature or fix) that has a `review-findings.md` ledger, read only its
    `folded: no` rows and emit each as a structured item:
@@ -134,4 +154,12 @@ findings.fix_now | suggested_tier
 dependencies | unmet
 blockers | kind
 recommendations | product_audit
+detail.risk_tier | tier
+detail.risk_tier | reason_kind
+detail.risk_tier | signals
+detail.risk_tier | task_size
+detail.risk_tier.task_size | ceremony
+detail.risk_tier.task_size | verification
+detail.size_tier | size_tier
+detail.size_tier | changed_paths
 ```

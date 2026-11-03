@@ -11,7 +11,7 @@
 
 feat(roadmap)!: consolidate the location indexes into `docs/ROADMAP.md`
 
-`docs/features/ROADMAP.md` moves to `docs/ROADMAP.md`, which becomes the
+The roadmap moves to `docs/ROADMAP.md` (out of `docs/features/`), which becomes the
 workflow's single location index: `## Features` (columns unchanged), `## Fixes`
 (the active-fixes index absorbed from `docs/fix/README.md`, with its status
 legend and its "row removed only after the PR merges" life cycle verbatim), and

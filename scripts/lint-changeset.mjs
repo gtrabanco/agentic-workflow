@@ -19,6 +19,14 @@
  * repo's packages/ directory —
  * an intent for a package this repo does not ship is malformed, not aspirational.
  *
+ * A body that cites a repo-root path (a backticked token whose first segment is
+ * a top-level entry of the repository) must cite a path that exists: the
+ * release note is a surviving-mention surface, and a note pointing at a file a
+ * later rename removed is the stale-mention defect the sibling sweep exists to
+ * catch. Placeholders (`docs/passive/<id>.md`, `template/docs/**`) and
+ * package-relative citations (`src/index.ts`) are prose about shapes, not paths
+ * this gate can judge, so they are skipped.
+ *
  * Usage:
  *   node scripts/lint-changeset.mjs [--changeset-dir DIR] [files...]
  *
@@ -64,6 +72,27 @@ function packageNames() {
   return names;
 }
 
+/**
+ * The repo-root-relative paths a changeset body cites: backticked tokens that
+ * contain a `/`, carry no whitespace, glob or placeholder metacharacters, and
+ * whose first segment is an entry of the repository root. Anything else — a
+ * package name, `@types/node`, a package-relative `src/…` path — is not a path
+ * of this repo, so it is not judged here.
+ */
+export function citedRepoPaths(body, rootEntries = null) {
+  const tops = new Set(rootEntries ?? fs.readdirSync(REPO_ROOT));
+  const cited = [];
+  for (const m of String(body ?? "").matchAll(/`([^`\n]+)`/g)) {
+    const token = m[1].trim();
+    if (!token.includes("/") || /\s/.test(token)) continue;
+    if (/[<>*{}]/.test(token)) continue; // placeholder or glob: prose about a shape
+    if (!/^[\w@.][\w@./-]*$/.test(token)) continue;
+    if (!tops.has(token.split("/")[0])) continue; // package-relative citation
+    cited.push(token);
+  }
+  return [...new Set(cited)];
+}
+
 /** Validate one file; returns an error string or null. */
 export function lintChangesetFile(filePath, knownPackages, knownSkills = []) {
   let content;
@@ -81,6 +110,11 @@ export function lintChangesetFile(filePath, knownPackages, knownSkills = []) {
       }
     } else if (!knownPackages.includes(entry.pkg)) {
       return `unknown package: ${entry.pkg} (this repo ships: ${knownPackages.join(", ")})`;
+    }
+  }
+  for (const cited of citedRepoPaths(parsed.body.join("\n"))) {
+    if (!fs.existsSync(path.join(REPO_ROOT, cited))) {
+      return `cites a repo path that does not exist: ${cited}`;
     }
   }
   return null;
