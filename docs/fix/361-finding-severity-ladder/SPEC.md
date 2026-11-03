@@ -532,6 +532,13 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   reported as measured: 1,552 added / 329 deleted lines over 65 files, of which
   the ten test-and-fixture files are the grammar's own fixtures and the
   regression pins, never padding.
+- **G7** — 2026-11-04, `node scripts/diff-guard.mjs --base origin/main` · exit 1 ·
+  BREACH 1,906 lines > 400 · 65 files > 8, re-measured after `main` moved twice
+  and both merges were resolved on this branch (`05f9d6d0`, PR #378; `1f527d45`,
+  PR #379 — issue #333). Same recorded exception as G6: the number is reported,
+  never shrunk, and the branch carries `main`'s work as a merge, not as this
+  unit's authored lines.
+
 - **G5** — 2026-11-04, `node scripts/unit-route.mjs 361` · exit 0 · every phase is
   recorded, so the router refuses close-out by name — `status is 'in-progress'
   (not 'done')` — because the PR that makes the row `done` does not exist yet.
