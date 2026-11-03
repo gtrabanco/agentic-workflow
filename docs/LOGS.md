@@ -4136,3 +4136,12 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Pruned root-suite CI paths + migrated ledger-provenance fixtures
 - **Decisions:** paths-ignore added so doc-only surfaces (features/fix logs, .pi, .engram, .claude-plugin, etc.) skip the root-suite; moved review-findings test fixtures from docs/features/26 and docs/features/36 into scripts/fixtures/ledger-provenance/ to keep docs clean of test artifacts
 - **Next:** Resolve the known ledger-provenance CI gap: decide whether to move the 2 remaining historical commits from docs/features/ into a separate pull_request_target/manual workflow, or accept them as invisible under paths-ignore
+
+## 2026-11-03T18:23:25Z — ci/publish-manual-only — manual
+- **Commits:** 1 (`79642c8e…79642c8e`)
+- **Files:** .github/workflows/publish.yml, .github/workflows/root-suite.yml, scripts/release-workflows.test.mjs
+- **Summary:** Diagnosed Serena health-check crash on .json files (SolidLSP exception -32601) and reported it as issue #2253
+- **Decisions:** Root cause: vscode-json-languageserver doesn't implement textDocument/references (LSP -32601). Serena's health check tests every LS including JSON, calls find_referencing_symbols on the first .json file, SolidLSP raises unhandled exception, entire check aborts. Not a config issue — it's a Serena bug (issue #2253 created).
+- **Next:** Issue reported: https://github.com/oraios/serena/issues/2253. No workaround needed for actual Serena MCP usage (TS/Bash tools work fine); only health-check gate is broken.
+
+
