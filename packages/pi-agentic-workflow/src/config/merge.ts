@@ -157,6 +157,11 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     memory: {
       engram: pick(false, projectFile.memory?.engram, globalFile.memory?.engram) === true,
     },
+    // Issue #383 — the same boolean resolution: project, then global, then the
+    // shipped "no".
+    telemetry: {
+      enabled: pick(false, projectFile.telemetry?.enabled, globalFile.telemetry?.enabled) === true,
+    },
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),
     profileFallback: mergeProfileFallback(globalFile.profileFallback, projectFile.profileFallback),
