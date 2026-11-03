@@ -1,0 +1,259 @@
+# fix/382-red-first-commits
+
+> Fix specification — one single unit document, cut in the `spec-by-reference`
+> shape from `docs/fix/_TEMPLATE/SPEC.md`. The request is issue #382 (title and
+> body quoted verbatim in `## Specs` and `L1`); the planning ledgers are frozen
+> as the sibling `planning-evidence.md` / `planning-obligations.md` (M sizing)
+> and this document's sections name them instead of embedding them.
+
+## Issue
+
+`#382` — red-first evidence: a new sibling suite lands red in its own commit
+before the implementation. The PR must close it with `Closes #382`. Roadmap row
+102 (`red-first-commits`) is this unit's registry entry.
+
+## Specs
+
+Requirements numbered `S#`, quoting the issue's own words verbatim. The frozen
+request is `L1`; every later decision cites its `S#`.
+
+**S1 — The ceremony: two commits, red then green.**
+> a new script and its sibling suite land in two commits, in this order — the suite first, observed failing on the missing module or the failing assertion (the **red commit**), then the implementation, observed green. The unit doc's `## Log` records both runs as `E` lines naming both commit hashes, so the ceremony is justified with reproducible evidence, not narration.
+
+**S2 — The deterministic gate: same-commit pairs after the cutoff fail.**
+> `scripts/red-first.mjs` + sibling `scripts/red-first.test.mjs` (hard gate in the root suite). For every `scripts/<x>.test.mjs` + `scripts/<x>.mjs` pair whose introducing commits are both after the gate's own introduction, the test's introducing commit must **precede** the implementation's; a pair introduced in one commit after the gate fails. Pairs introduced at or before the gate's own commit are grandfathered. Verified with throwaway `mktemp` git repos (the root-suite pattern).
+
+**S3 — The skills half: the ceremony travels to target projects.**
+> `execute-phase` and `unit-lane` carry the ceremony into target projects — the tests step commits red before the implementation step commits green, per task, and the evidence names both commits.
+
+**S4 — The prose surfaces: the rule and its evidence shape are stated.**
+> Prose surfaces: `AGENTS.md` (working rules) and `docs/workflow/FEATURE_WORKFLOW.md` (the tutorial's testing/commit section).
+
+**S5 — No per-hunk enforcement; no history rewrites.**
+> No per-hunk ordering enforcement for behavior *added* to an existing script+suite pair — the gate covers new sibling pairs deterministically; the prose rule covers the broader discipline.
+> No rewriting of published history to manufacture red commits for past units.
+
+**S6 — Acceptance: the gate discriminates; the tree passes; a changeset ships; the rule dogfoods itself.**
+> - [ ] The gate fails a fixture pair committed together after the cutoff and passes a test-first pair and the shipped tree.
+> - [ ] The rule and its evidence shape are stated in `AGENTS.md`, `docs/workflow/FEATURE_WORKFLOW.md`, `execute-phase` and `unit-lane` without breaking context budgets.
+> - [ ] A changeset ships for the touched skills; the gate's own pair lands red-first (the rule dogfoods itself).
+
+## Impact
+
+- `scripts/red-first.mjs` (new) + `scripts/red-first.test.mjs` (new) — the
+  mechanical half. The gate reads git history (`git log --diff-filter=A`) and
+  nothing else; it runs inside the root suite with zero model tokens, so the
+  ceremony check is programmatic by construction. Its sibling suite is
+  mandatory (`scripts/structural-sibling-pins.test.mjs`).
+- `scripts/test-route-map.json` — the change→suite route for the new pair;
+  unmatched paths already fall back to the full gate, the row makes the route
+  explicit.
+- `AGENTS.md` — the working-rules bullet that owns the sibling rule gains the
+  ordering half; this guide is the repo's binding statement of the ceremony.
+- `docs/workflow/FEATURE_WORKFLOW.md` — the tutorial's execution-order section
+  states the same rule where triage and steps are taught.
+- `skills/unit-lane/references/TESTS.md` + `IMPLEMENT.md` — the step references
+  that own the tests and implement checklists: the red commit becomes the
+  checklist, and `IMPLEMENT.md`'s "Never commit red" gains its one sanctioned
+  exception so the two rules cannot collide.
+- `skills/execute-phase/SKILL.md` — the executor's step-4 wording: the red run
+  becomes a red *commit*. Its budget headroom is 20 lines (349 of 369), so the
+  edit is a rewrap, not an expansion.
+- `.changeset/` — the skills release intent (the two touched skill surfaces).
+- `docs/ROADMAP.md` — the row 102 status and the `## Fixes` row.
+- Determinism boundary: the gate is a pure function of the git history it is
+  pointed at; it reads, writes nothing, calls no network, has no dependency,
+  and prints a byte-stable block for the same history.
+
+## Retirements
+
+Nothing is retired. `scripts/structural-sibling-pins.test.mjs` keeps owning
+pair *existence* — this unit adds *ordering* beside it, so no line of it is
+subsumed and its bullet in `AGENTS.md` survives with one added sentence.
+
+## Non-goals
+
+- No per-hunk or per-behavior ordering enforcement inside an existing pair
+  (S5): the gate's granularity is the pair's introducing commits.
+- No rewriting of published history to manufacture red commits for past units
+  (S5): pairs at or before the gate's own introduction are grandfathered.
+- No new skill, no menu entry, no dependency: the gate is a repo script and the
+  ceremony lands as prose in surfaces that already exist.
+- No test-only gates get a pair requirement: `scripts/*.test.mjs` files with no
+  `scripts/<x>.mjs` sibling (the structural gates) are out of the gate's scope
+  — there is nothing to precede.
+
+## Future
+
+| deferred idea (verbatim) | date | status |
+|---|---|---|
+| Extending the ordering rule to pairs outside `scripts/` (e.g. a target project's source trees) once the ceremony has settled here | 2026-11-04 | open |
+
+## Future cost
+
+- Every future script lands as two commits — the suite's red commit and the
+  implementation's green commit — with both runs recorded in the unit doc's
+  Log. Binds every author of a repo script.
+- The gate's cutoff is its own introducing commit: rebasing it away, deleting
+  it or squashing its pair into one commit reddens the gate. Binds whoever
+  touches `scripts/red-first.mjs`'s history.
+
+## Applicable tests
+
+`node --test scripts/red-first.test.mjs` — the gate's own suite: one fixture
+per required failure state (same-commit pair, implementation-first pair), the
+test-first pass case, the grandfathering case, the no-pair skip case, and the
+shipped-tree pin. `node scripts/run-root-suite.mjs` — the root gate, which
+discovers the new suite with no registration step.
+
+## Known pre-existing issues
+
+- `#329` / roadmap row 88 — the root suite runs under `node` by construction
+  and fails under `bun`. `affects` nothing here: the gate and its suite are
+  documented `node`-first, same as every sibling gate.
+- `#352` / roadmap row 91 — `scripts/` is repo-only and planned to move into
+  the published crate. `does-not-affect`: the gate would move with the other
+  repo gates.
+- External verification of #357 could not re-run E1's red-first run from git
+  (P2 and P3 share commit `a305e5b1`). `affects` this unit directly — it is
+  the defect this unit closes for every future pair.
+
+## Tasks
+
+- P1 — Cut this unit doc and its two ledgers; register roadmap row 102 and
+  freeze the requirements before any code (validator:
+  `bun scripts/phase-lint.mjs docs/fix/382-red-first-commits/SPEC.md` exits 0
+  and its verdict line reads `verdict: PASS`)
+  (Implements: S1, S2, S3, S4, S5, S6)
+  Relevant files: docs/fix/382-red-first-commits/SPEC.md, docs/ROADMAP.md
+- P2 — Commit the fixture corpus alone — the red commit: the suite
+  `scripts/red-first.test.mjs` with its fixture cases (the two required
+  failure states, the passing order, the grandfathering, the no-pair skip and
+  the shipped-tree pin), every case failing on `MODULE_NOT_FOUND` for the
+  missing gate module (validator: `node --test scripts/red-first.test.mjs`
+  exits non-zero, every case failing on the missing module)
+  (Implements: S2, S6)
+  Relevant files: scripts/red-first.test.mjs
+- P3 — Implement the gate `scripts/red-first.mjs`: the pair discovery, the
+  cutoff from its own introducing commit, the ancestor ordering check, the
+  byte-stable report and the PASS/FAIL exit code (validator:
+  `node --test scripts/red-first.test.mjs` exits 0 and prints `verdict: PASS`)
+  (Implements: S2, S6)
+  Relevant files: scripts/red-first.mjs
+- P4 — Wire the surfaces: the test-route-map row, the `AGENTS.md`
+  sibling-rule bullet, `docs/workflow/FEATURE_WORKFLOW.md`'s execution-order
+  section, `unit-lane`'s TESTS/IMPLEMENT references (the red commit in the
+  checklist, the sanctioned exception to "Never commit red") and
+  `execute-phase`'s step-4 rewrap (validator: `node --test
+  scripts/red-first.test.mjs` exits 0 and `bun scripts/check-skill-context.mjs`
+  exits 0)
+  (Implements: S1, S3, S4, S6)
+  Relevant files: scripts/test-route-map.json, AGENTS.md, docs/workflow/FEATURE_WORKFLOW.md, skills/unit-lane/references/TESTS.md, skills/unit-lane/references/IMPLEMENT.md, skills/execute-phase/SKILL.md
+- P5 — Verification and the release intent: the root gate, the changeset, the
+  roadmap status and the PR that closes #382 (validator:
+  `node scripts/run-root-suite.mjs` exits 0 and
+  `bun scripts/lint-changeset.mjs` exits 0)
+  (Implements: S1, S2, S3, S4, S5, S6)
+  Relevant files: .changeset, docs/ROADMAP.md
+
+### Planning evidence
+
+Frozen as the sibling [`planning-evidence.md`](planning-evidence.md) (M sizing) —
+one row per Engineering claim the change rests on (`PE-001`…`PE-008`).
+
+### Obligations
+
+Frozen as the sibling [`planning-obligations.md`](planning-obligations.md) (M
+sizing) — one row per normative behaviour, compatibility invariant, affected use
+case and required failure state (`O1`…`O9`).
+
+## Acceptance criteria
+
+One observable, testable criterion per requirement; each names the check that
+proves it. Frozen at cut.
+
+| S# | criterion | proving check |
+|---|---|---|
+| S1 | a new script+suite lands as two commits, red recorded before green, with both SHAs in the unit doc's Log | this unit's own `E2`/`E3` lines name both commits; `node scripts/red-first.mjs` exits 0 |
+| S2 | a same-commit pair after the cutoff fails; a test-first pair passes; the shipped tree passes | `node --test scripts/red-first.test.mjs` exits 0, its same-commit and test-first and shipped-tree cases all pass |
+| S3 | the tests step commits red before the implementation commits green, and the evidence names both commits | `rg -c 'red-first' skills/unit-lane/references/TESTS.md skills/unit-lane/references/IMPLEMENT.md` matches ≥1 per file; `bun scripts/check-skill-context.mjs` exits 0 |
+| S4 | AGENTS.md and FEATURE_WORKFLOW.md state the rule with the evidence shape | `rg -c 'red commit' AGENTS.md docs/workflow/FEATURE_WORKFLOW.md` matches ≥1 per file |
+| S5 | no per-hunk gate exists and no history was rewritten | `git log --oneline origin/main..HEAD` is a straight line off `main` (no rewrite), and the gate's flags are only `--repo` |
+| S6 | the changeset is valid and the gate's own pair lands red-first | `bun scripts/lint-changeset.mjs` exits 0; `git log --diff-filter=A --format=%H -- scripts/red-first.test.mjs scripts/red-first.mjs` shows two distinct commits, test first |
+
+## Findings
+
+| id | S# / file:line | axis | severity | class | route |
+|---|---|---|---|---|---|
+
+## Log
+
+- **L1** — 2026-11-04, the issue and the owner's decisions, verbatim (the
+  request's body; the three owner answers came from the verify thread):
+  ```
+  ## Summary
+
+  External verification of #357 (PR #377) surfaced **E1**: the unit's log claims the fixture corpus ran red (`MODULE_NOT_FOUND` for the missing scanner) before the implementation existed — but P2 (tests) and P3 (implementation) landed in the **same commit** (`a305e5b1`), so no committed state shows the red run. The claim is unverifiable from git, and nothing in the repo's rules or gates prevents a repeat: the sibling rule ("a new script ships its sibling suite") constrains *existence*, never *commit ordering*, so the TDD ceremony leaves no reproducible evidence.
+
+  ## Proposed fix
+
+  - **The ceremony (repo rule):** a new script and its sibling suite land in two commits, in this order — the suite first, observed failing on the missing module or the failing assertion (the **red commit**), then the implementation, observed green. The unit doc's `## Log` records both runs as `E` lines naming both commit hashes, so the ceremony is justified with reproducible evidence, not narration.
+  - **The deterministic gate:** `scripts/red-first.mjs` + sibling `scripts/red-first.test.mjs` (hard gate in the root suite). For every `scripts/<x>.test.mjs` + `scripts/<x>.mjs` pair whose introducing commits are both after the gate's own introduction, the test's introducing commit must **precede** the implementation's; a pair introduced in one commit after the gate fails. Pairs introduced at or before the gate's own commit are grandfathered. Verified with throwaway `mktemp` git repos (the root-suite pattern).
+  - **The skills half (owner decision, 2026-11-02 — repo and skills):** `execute-phase` and `unit-lane` carry the ceremony into target projects — the tests step commits red before the implementation step commits green, per task, and the evidence names both commits.
+  - Prose surfaces: `AGENTS.md` (working rules) and `docs/workflow/FEATURE_WORKFLOW.md` (the tutorial's testing/commit section).
+
+  ## Non-goals
+
+  - No per-hunk ordering enforcement for behavior *added* to an existing script+suite pair — the gate covers new sibling pairs deterministically; the prose rule covers the broader discipline.
+  - No rewriting of published history to manufacture red commits for past units.
+
+  ## Acceptance criteria
+
+  - [ ] The gate fails a fixture pair committed together after the cutoff and passes a test-first pair and the shipped tree.
+  - [ ] The rule and its evidence shape are stated in `AGENTS.md`, `docs/workflow/FEATURE_WORKFLOW.md`, `execute-phase` and `unit-lane` without breaking context budgets.
+  - [ ] A changeset ships for the touched skills; the gate's own pair lands red-first (the rule dogfoods itself).
+  ```
+  Owner answers (2026-11-04): "1. Abre con gh" (the issue is this unit's
+  request, opened with the automated note), "2. Repo y skills" (S3 in scope),
+  and the confirmation that the gate must be programmatic — a deterministic
+  script in the root suite, zero model tokens at run time.
+- **D1** — 2026-11-04, the gate's granularity is the pair's introducing
+  commits (S5): enforcing ordering per behavior-change inside an existing pair
+  would require parsing hunks against diffs — brittle, and `git log
+  --diff-filter=A` cannot express it. The prose rule (S1, S4) carries the
+  per-task discipline; the gate carries the pair-level one. Recorded as the
+  scoping decision, not a limitation discovered later.
+- **D2** — 2026-11-04, the cutoff is the gate's own introducing commit, not a
+  date constant: a date drifts with rebases and timezones, while the
+  introducing commit is a fact git already holds, and it makes the gate
+  self-anchoring on any clone (no configuration surface).
+
+## Next
+
+The PR's green checks and the owner's verdict: the merge closes `#382` and
+removes the `## Fixes` row.
+
+## References
+
+- `#382` — this fix's tracked issue (roadmap row 102).
+- `docs/fix/357-skill-lint-smells-supply-chain/SPEC.md` — the E1 evidence gap
+  this unit closes (external-verify round, 2026-11-02).
+- `scripts/structural-sibling-pins.test.mjs` — the pair-existence gate this
+  unit composes beside, never replaces.
+
+## Branch
+
+`fix/382-red-first-commits`
+
+## Depends on
+
+None — independent of every open unit.
+
+## Regression scope
+
+| scenario | verifier |
+|---|---|
+| existing sibling pairs (all pre-gate) stay grandfathered | `node scripts/red-first.mjs` exits 0 on the shipped tree |
+| pair existence is still enforced as before | `node --test scripts/structural-sibling-pins.test.mjs` exits 0 |
+| every other skill's budget is untouched | `bun scripts/check-skill-context.mjs` exits 0 |
+| the root gate stays green | `node scripts/run-root-suite.mjs` exits 0 |
