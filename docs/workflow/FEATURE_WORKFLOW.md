@@ -63,6 +63,12 @@ Example outputs:
 Execution order: research → design → plan → implement → tests → evidence →
 review → docs → release. The catalog returns a filtered, ordered subset.
 
+A new script and its sibling suite land red-first: the suite is committed
+alone and observed failing (the red commit), the implementation is committed
+after, observed green — the unit doc's `## Log` records both runs as `E`
+lines naming both commit SHAs, and `scripts/red-first.mjs` enforces the
+pair ordering in the root suite.
+
 ## Stage 1 — Catalog steps
 
 Each step in the triage-decided order is a bounded phase:
