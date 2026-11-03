@@ -67,7 +67,7 @@ const LEDGER_HEADER = [
   "# Review findings",
   "",
   "| id | file:line | axis | severity | class | route | folded |",
-  "|---|---|---|---|---|---|---|",
+  "|---|---|---|---|---|---|---|---|",
 ].join("\n");
 
 const FIXTURE_DIRS = new Set();
@@ -284,9 +284,9 @@ test("#308 compact: a migrated unit's memo names `SPEC.md ## Findings`, not the 
     "## Known pre-existing issues", "", "none", "",
     "## Tasks", "", "- P1 — do the thing (validator: `true` exits 0)", "  (Implements: S1)", "",
     "## Findings", "",
-    "| id | S# / file:line | axis | severity | class | route |",
-    "|---|---|---|---|---|---|",
-    `| F1 | S1 · scripts/a.mjs:1 | code | high | fix-now | ${LONG_MEMO} |`,
+    "| id | S# / file:line | axis | severity | impact | class | route |",
+    "|---|---|---|---|---|---|---|",
+    `| F1 | S1 · scripts/a.mjs:1 | code | high | blocking | fix-now | ${LONG_MEMO} |`,
     "", "## Log", "", "- **L1** — 2026-10-01, the request, verbatim: Do the thing.",
     "", "## Next", "", "P1.", "", "## References", "", "none", "",
   ].join("\n");

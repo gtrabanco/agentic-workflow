@@ -220,7 +220,7 @@ export function readSection(md, token) {
   return lines.slice(sec.bodyStart, end).join("\n").replace(/^\n+|\s+$/g, "");
 }
 
-/** Parse the `## Findings` six-column table (findings-table@1) → [{id,target,axis,severity,class,route}]. */
+/** Parse the `## Findings` seven-column table (findings-table@1) → [{id,target,axis,severity,impact,class,route}]. */
 export function parseFindings(md) {
   const body = readSection(md, "findings");
   if (body == null) return [];
@@ -228,14 +228,14 @@ export function parseFindings(md) {
     .filter((l) => /^\| F\d+/.test(l.trim()))
     .map((l) => {
       const c = l.split("|").map((s) => s.trim());
-      return { id: c[1], target: c[2], axis: c[3], severity: c[4], class: c[5], route: c[6] };
+      return { id: c[1], target: c[2], axis: c[3], severity: c[4], impact: c[5], class: c[6], route: c[7] };
     });
 }
 
 /** Render the findings table with the given rows (header + separator preserved). */
 export function renderFindings(rows) {
-  const head = "| id | S# / file:line | axis | severity | class | route |\n|---|---|---|---|---|---|";
-  const body = rows.map((r) => `| ${r.id} | ${r.target} | ${r.axis} | ${r.severity} | ${r.class} | ${r.route} |`).join("\n");
+  const head = "| id | S# / file:line | axis | severity | impact | class | route |\n|---|---|---|---|---|---|---|";
+  const body = rows.map((r) => `| ${r.id} | ${r.target} | ${r.axis} | ${r.severity} | ${r.impact} | ${r.class} | ${r.route} |`).join("\n");
   return rows.length ? `${head}\n${body}` : head;
 }
 
