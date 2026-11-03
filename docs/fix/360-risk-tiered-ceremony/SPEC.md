@@ -279,7 +279,8 @@ External verification by the owner: read the diff and the `## Log` evidence line
 
 ## References
 
-- Issue [#360](https://github.com/gtrabanco/agentic-workflow/issues/360) — this unit; the PR closes it via `Closes #360`.
+- Issue [#360](https://github.com/gtrabanco/agentic-workflow/issues/360) — the parent issue. **This unit does not close it**: #360 stays open until its S9 child lands (`360b`), because S9 is a delivery requirement of the parent (decision D360-1 in `decisions.md`).
+- Split children: [#383](https://github.com/gtrabanco/agentic-workflow/issues/383) (`360b`, S9 measured acceptance) and [#384](https://github.com/gtrabanco/agentic-workflow/issues/384) (`360c`, capability analysis + the passive carrier CLI).
 - Direction [#307](https://github.com/gtrabanco/agentic-workflow/issues/307) — roadmap row 83 (`odd-hybrid-direction`).
 - Roadmap row 97 (`risk-tiered-ceremony`) — this unit's row.
 - `docs/research/papers-sweep-2026-11-02.md` — arXiv 2608.09290 and 2606.22528, the evidence S4 cites.
