@@ -56,7 +56,7 @@ What this unit is NOT. Findings discovered during implementation never expand sc
 The unit's ceremony is proportional to risk, and the tier is **computed, never
 chosen**: `bun scripts/ceremony.mjs tier classify` reads the change's paths and
 contents and emits `passive | standard | high` (owner:
-`skills/execute-phase/references/RISK_TIERS.md`, block `risk-tier-verdict@1`).
+`skills/execute-phase/references/risk-tiers.md`, block `risk-tier-verdict@1`).
 Copy the verdict below verbatim; a tier written from memory is not a tier.
 
 - **`passive`** — documentation, images, comments, prose with no executable

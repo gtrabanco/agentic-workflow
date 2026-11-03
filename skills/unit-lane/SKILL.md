@@ -123,7 +123,7 @@ bun scripts/ceremony.mjs tier classify --paths a,b  # an explicit scope
 
 The verdict is the owner's, not this skill's: the tiers, the named signals and
 the per-tier ceremony are stated once in `execute-phase`'s
-[RISK_TIERS.md](../execute-phase/references/RISK_TIERS.md) (block
+[risk-tiers.md](../execute-phase/references/risk-tiers.md) (block
 `risk-tier-verdict@1`), and a model-supplied tier is never an input.
 
 - **`passive`** — documentation, images, comments, prose with no executable

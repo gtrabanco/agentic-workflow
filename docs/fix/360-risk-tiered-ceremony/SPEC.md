@@ -177,6 +177,16 @@ cannot show its measured delta).
   (Implements: S8, S9)
   Relevant files: docs/ROADMAP.md, docs/fix/360-risk-tiered-ceremony/planning-obligations.md
 
+## Triaged steps
+
+```text
+TRIAGE — 360-risk-tiered-ceremony (fix)
+Steps: implement, evidence
+Tiers: implement: cheap, evidence: strong
+Skipped: research: trivial scope, design: trivial scope, plan: trivial scope, tests: trivial scope, review: trivial scope, docs: trivial scope, release: not a feature
+Budget: strong
+```
+
 ### Planning evidence
 
 The ledger lives beside this doc as [`planning-evidence.md`](planning-evidence.md)
@@ -199,7 +209,7 @@ section is the anchor a review's per-criterion coverage table reads.
 | AC-3 | The classifier reads repo evidence only — paths and contents, executable vs non-executable, named auth/security/destructive/CI/publish surfaces (S3) | `node --test scripts/risk-tier-classifier.test.mjs` — the `F3b`/`F3d` cases name each surface, and `F6b` refuses a clock, environment read or network call |
 | AC-4 | The two papers S4 cites are the ones the repository already recorded | `rg -n '2608.09290\|2606.22528' docs/research/papers-sweep-2026-11-02.md` matches 2 |
 | AC-5 | Three closed tiers: `passive` (prose, no unit doc, structural readback), `standard` (the current unit-doc ceremony), `high` (requires a named high-risk item) (S5) | `node --test scripts/risk-tier-classifier.test.mjs` and `node --test scripts/risk-tier-ceremony.test.mjs` — the tier table is the `risk-tier-verdict@1` block and every fixture asserts its branch |
-| AC-6 | Verification mirrors the tier: passive → readback, standard → the project's gates, high → the full review pass (S6) | `node --test scripts/risk-tier-ceremony.test.mjs` — the executor case asserts all three branches of the `RISK_TIERS.md` table |
+| AC-6 | Verification mirrors the tier: passive → readback, standard → the project's gates, high → the full review pass (S6) | `node --test scripts/risk-tier-ceremony.test.mjs` — the executor case asserts all three branches of the `risk-tiers.md` table |
 | AC-7 | The tier vocabulary and the classifier's output are versioned grammar, emitted by the ceremony CLI, never model-emitted (S7) | `node --test scripts/vocabulary-parity.test.mjs` and `node --test scripts/normative-drift.test.mjs` exit 0; the CLI refuses a `--tier` input with `unknown-flag` |
 | AC-8 | The surfaces the issue names carry the tier: the lane's triage, the executor, the sensor, the ceremony CLI (S8) | `node --test scripts/risk-tier-ceremony.test.mjs` — the lane, executor and sensor cases; `node scripts/workflow-status.mjs` prints `detail.risk_tier` |
 | AC-9 | No measurement is claimed without its instrument: the unit records the tier per unit and the ≥3-unit aggregation is a standing, dated obligation (S9) | `rg -n '≥3 real units' docs/fix/360-risk-tiered-ceremony/SPEC.md` matches at least 1 and `node scripts/unit-lineage.mjs --unit 360` exits 0 |

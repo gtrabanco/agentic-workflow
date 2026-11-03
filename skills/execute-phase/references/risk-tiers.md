@@ -19,6 +19,8 @@ reason | <one sentence> | why the classifier answered what it answered
 reason_kind | no-executable-effect | comment-only | executable-content | named-high-risk | empty-change | the closed reason (machine: `RISK_TIER_REASONS`)
 signals | auth | security | destructive | ci | publish | content | the *named* item that raised `high` (machine: `RISK_TIER_SIGNAL_KINDS`)
 task_size | {understood, contained_risk, resumable_from_diff, ceremony, verification} | the Task Size the verdict implies
+size_tier | prose | small | large | the change's size, a **different fact** from the tier (machine: `SIZE_TIER_KINDS`)
+changed_paths | <n> | how many paths the verdict saw — reported, never read as a reason
 ```
 
 ## Task Size
@@ -37,6 +39,30 @@ nobody.
 Ambiguity fails closed **upward**: an empty scope, an unknown path class or a
 mixed change never falls to `passive`. A change the classifier cannot prove inert
 pays the ceremony that proves it.
+
+## Two callers, two scopes (and when their answers may differ)
+
+The classifier is a **pure function of `path → contents`**: no git, no branch, no
+history, no clock. Two different directories whose files carry the same relative
+paths and the same bytes classify **identically** — a scratch copy is not a
+special case. *Where* the tree lives never changes the verdict.
+
+What changes it is **which paths you hand it**, and there are two callers:
+
+| Caller | Scope it classifies |
+|---|---|
+| `workflow-status` (the sensor) | the branch's whole change: `git diff --name-only` against the merge base, plus every uncommitted path |
+| `ceremony tier classify --paths a,b` | exactly the paths passed |
+
+So the two answers **agree whenever the scopes agree**, and may diverge when they
+do not: a long-lived branch with commits from earlier sessions classifies wider
+through the sensor than through a `--paths` call naming only today's files. That
+is a scope difference, never a content difference — the same scope always yields
+the same tier, byte for byte.
+
+A caller that wants the sensor's answer passes the sensor's scope; a caller that
+wants "what am I about to touch" passes `--paths`. Neither may report the other's
+answer as its own.
 
 ## The three tiers
 

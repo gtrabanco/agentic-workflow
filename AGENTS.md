@@ -295,8 +295,8 @@ path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema
 risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
 risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
 risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_REASONS | risk-tier-reason | yes
-risk-tier-verdict | skills/execute-phase/references/RISK_TIERS.md | block:risk-tier-verdict@1 | n/a | no
-passive-record | skills/execute-phase/references/RISK_TIERS.md | block:passive-record@1 | n/a | no
+risk-tier-verdict | skills/execute-phase/references/risk-tiers.md | block:risk-tier-verdict@1 | n/a | no
+passive-record | skills/execute-phase/references/risk-tiers.md | block:passive-record@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

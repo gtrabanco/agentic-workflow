@@ -109,11 +109,8 @@ If a step argument is given (e.g. `P2`), use that step. Otherwise, the **first
 unfinished step** — the first P<k> in `Tasks` whose checkbox is unticked.
 Never execute a step the triage skipped.
 
-**The step's ceremony is the risk tier's, not this skill's choice.** Read the
-verdict (`bun scripts/ceremony.mjs tier classify`, or the tier the lane pasted
-into the unit doc) and apply [RISK_TIERS.md](references/RISK_TIERS.md) — the one
-owner of the per-tier table. A phase never lowers its own tier: a `high` verdict
-owes the full review pass even when the phase looks mechanical.
+**The ceremony belongs to the risk tier** ([risk-tiers.md](references/risk-tiers.md)
+owns that table). A phase never lowers its own tier.
 
 ### 3. Pre-step gates
 
@@ -263,7 +260,6 @@ These files must be loaded when their topic is active:
 - [PREFLIGHT.md](references/PREFLIGHT.md) — all gate blocks (dependency, status, pre-exec, evidence, lint, path-protection)
 - [EXECUTION_CONTRACT.md](references/EXECUTION_CONTRACT.md) — step completion gate, architectural invariants
 - [PRE_EXECUTION_GATE.md](references/PRE_EXECUTION_GATE.md) — pre-execution review gate, normalizer order
-- [RISK_TIERS.md](references/RISK_TIERS.md) — the risk tier, the per-tier ceremony it orders, and the passive carrier
 - [FOLDING.md](references/FOLDING.md) — review finding fold cycle
 - [DESCOPE.md](references/DESCOPE.md) — descope test and amendment rule
 - [FORGE_BODY.md](references/FORGE_BODY.md) — forge operations (gh body-file rule)

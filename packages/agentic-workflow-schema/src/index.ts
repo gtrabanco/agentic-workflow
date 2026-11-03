@@ -574,7 +574,7 @@ const DETAIL_KEYS = [
   "repository_state", "design_candidates", "pre_execution", "review_loop_cycles",
   "features", "fixes", "startable_now", "blocked_units", "open_prs", "pending_triage",
   "untriaged_issues", "workflow_observations", "degradations", "continuation_refusal",
-  "crash_recovery", "urgent", "substrate_notice", "risk_tier",
+  "crash_recovery", "urgent", "substrate_notice", "risk_tier", "size_tier",
 ] as const;
 
 function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: string[]): void {
@@ -603,6 +603,9 @@ function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: st
   // Issue #360: the risk tier the classifier computed for the unit in scope. A
   // distinct key from `next.tier` (the model budget), never a second spelling of it.
   rejectUnexpectedKeys(value.detail, "detail", DETAIL_KEYS, errors);
+  if (isObj(value.detail) && isObj(value.detail.size_tier)) {
+    rejectUnexpectedKeys(value.detail.size_tier, "detail.size_tier", ["size_tier", "changed_paths"], errors);
+  }
   if (isObj(value.detail) && isObj(value.detail.risk_tier)) {
     rejectUnexpectedKeys(value.detail.risk_tier, "detail.risk_tier", ["tier", "reason", "reason_kind", "signals", "task_size"], errors);
     if (isObj(value.detail.risk_tier.task_size)) {
@@ -4074,6 +4077,7 @@ export {
   RISK_TIER_KINDS,
   RISK_TIER_SIGNAL_KINDS,
   RISK_TIER_REASONS,
+  SIZE_TIER_KINDS,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4084,4 +4088,5 @@ export type {
   RiskTier,
   RiskTierSignal,
   RiskTierReason,
+  SizeTier,
 } from "./vocabularies.js";

@@ -47,7 +47,7 @@ export const SWEEP_MISMATCH_REASONS = Object.freeze(["sweep-mismatch"]);
 export type SweepMismatchReason = (typeof SWEEP_MISMATCH_REASONS)[number];
 
 /** The risk tiers (`risk-tier`), published by the `risk-tier-verdict@1` block
- *  (owner: `skills/execute-phase/references/RISK_TIERS.md`) and emitted only by
+ *  (owner: `skills/execute-phase/references/risk-tiers.md`) and emitted only by
  *  the ceremony CLI's `tier classify` — never by the model (issue #360 S5, S7).
  *  A distinct vocabulary from the model-budget tier `next.tier`
  *  (`strong | cheap`): this one names the ceremony a change owes. */
@@ -60,6 +60,14 @@ export type RiskTier = (typeof RISK_TIER_KINDS)[number];
  *  surface; it is how `standard` explains itself too. */
 export const RISK_TIER_SIGNAL_KINDS = Object.freeze(["auth", "security", "destructive", "ci", "publish", "content"]);
 export type RiskTierSignal = (typeof RISK_TIER_SIGNAL_KINDS)[number];
+
+/** The size tier (`size-tier`), published by the `risk-tier-verdict@1` block:
+ *  what the unit's *size* is, for the two decisions that need one — splitting a
+ *  unit that is too large and grouping several small ones (issue #360 S2, S5).
+ *  Deliberately a different field from the risk tier: a one-file auth change is
+ *  `small` and `high`; a 400-file docs sweep is `prose` and `passive`. */
+export const SIZE_TIER_KINDS = Object.freeze(["prose", "small", "large"]);
+export type SizeTier = (typeof SIZE_TIER_KINDS)[number];
 
 /** Why the classifier answered what it answered — a closed set, so a reason is
  *  grammar rather than prose a reader has to trust. */
