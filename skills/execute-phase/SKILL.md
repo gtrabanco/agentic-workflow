@@ -135,10 +135,7 @@ Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.
 Follow the unit-lane reference for this step (`references/STEPS.md` catalog):
 one line — read the step's reference file, perform its checklist, commit the
 work. For `implement` steps: write tests-first where they pay (core/domain,
-orchestration) — a new script+suite pair lands red-first: commit the suite
-alone observed failing (the red commit), then the implementation observed
-green, both recorded as `E` lines naming both SHAs. UI/adapter glue may
-test after.
+orchestration) — a new script+suite pair lands red-first: suite commits red (observed failing), implementation green; UI/adapter glue may test after.
 
 ### 5. Claim-evidence loop (S5 — before post-step)
 
