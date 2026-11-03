@@ -25,10 +25,13 @@ lacks**. Ten ordered steps:
    doc page, or the Normalized
    Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
    diff-against-current-template contract; it is the only source of *what's
-   new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
-   discovery-seeded defaults bootstrap's interview uses — never as the raw
-   template. A missing repository-state ledger is proposed from the template
-   without overwriting any existing ledger.)
+   new*. (A missing `docs/CAPABILITIES.md` is proposed by the same contract
+   bootstrap runs — the six moves of `capability-inventory@1` in
+   `BOOTSTRAP_DISCOVERY.md`, and the write gate in `BOOTSTRAP_WRITE.md` step 5 —
+   applied **additively** to the one missing file: never the raw template, and
+   never a re-litigation of a file the project already tailored. A missing
+   repository-state ledger is proposed from the template without overwriting any
+   existing ledger.)
 3. **Read `docs/workflow/MIGRATION.md`.** For each missing block, pull its
    dated migration note so the proposal explains *why* the block exists and
    *what* it migrates. If `MIGRATION.md` is absent, proceed on the template
@@ -72,7 +75,11 @@ lacks**. Ten ordered steps:
    is never rewritten, only new blocks are inserted where missing.
 6. **Write additively.** Insert accepted blocks, including a missing
    `docs/workflow/REPOSITORY_STATE.md`; fill raw, still-placeholder
-   blocks with the confirmed values. **Never rewrite a block the project has
+   blocks with the confirmed values. A placeholder-only `docs/CAPABILITIES.md`
+   is the one raw block the user is never asked to fill by hand: it is written by
+   `capability-inventory@1`'s moves and refused by `BOOTSTRAP_WRITE.md` step 5
+   until every row carries a state, so the result is never a trimmed template.
+   **Never rewrite a block the project has
    already tailored, and never delete anything** — a tailored block the
    template also changed is left untouched and listed as a residual, not
    silently updated. For hooks, add the canonical pack when absent and activate
