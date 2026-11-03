@@ -300,8 +300,8 @@ const classify = () => read("skills/review-implementation/references/CLASSIFY.md
 test("#355 the audit's finding line carries `route:` as the triage taken at flight", () => {
   const skill = auditSkill();
   // The fixed output block's finding line, not a proposal: S7 says every finding.
-  assert.match(skill, /^ {2}F1 \[SEV\] <dimension> — <finding> — evidence: .* — class: <[^>]+> — route: /m,
-    "product-audit's fixed finding line must carry `route:` on every finding");
+  assert.match(skill, /^ {2}F1 \[SEV · impact\] <dimension> — <finding> — evidence: .* — class: <[^>]+> — route: /m,
+    "product-audit's fixed finding line must carry `route:` on every finding (the grade cell names both published sets, #361)");
   // The route states the next command and, optionally, the one reference it loads.
   assert.match(skill, /route: <the next command for this finding/);
   assert.match(skill, /loads:/);

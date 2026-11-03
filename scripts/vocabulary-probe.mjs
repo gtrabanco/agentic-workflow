@@ -15,8 +15,14 @@
  *                      `open | planned | discarded <YYYY-MM-DD>` (the date is
  *                      required on `discarded`, forbidden on the other two)
  *   finding-severity   every `## Findings` table severity cell is
- *                      `high | med | low` (the sensor may accept legacy
- *                      aliases on read; a published document may not carry one)
+ *                      `BLOCKER | CRITICAL | WARNING | SUGGESTION` (the ledger
+ *                      scope's published ladder; the sensor may accept the
+ *                      retired `high | med | low` and finder aliases on read, a
+ *                      published document may not carry one)
+ *   finding-impact     every `## Findings` table impact cell is present and
+ *                      `blocking | docs-only | report-only`, and a `BLOCKER`
+ *                      never carries `report-only` (a blocker that blocks
+ *                      nothing is the contradiction the static gate can refuse)
  *   finding-class      every `## Findings` table class cell is
  *                      `product | plan | source | environment | runtime`
  *
@@ -40,9 +46,12 @@ import { sectionBounds, openFence, closesFence, inFlightUnitDocs } from "./unit-
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** The canonical sets, read from the built schema runtime (one declaration). */
-const { FUTURE_STATUS_KINDS, FINDINGS_TABLE_SEVERITIES, PRE_EXECUTION_FINDING_CLASSES } = await import(
-  schemaRuntimePath
-);
+const {
+  FUTURE_STATUS_KINDS,
+  FINDINGS_TABLE_SEVERITIES,
+  FINDINGS_TABLE_IMPACTS,
+  PRE_EXECUTION_FINDING_CLASSES,
+} = await import(schemaRuntimePath);
 
 /** A `## Future` bullet: `- `status` — …`. */
 const FUTURE_BULLET = /^\s*[-*+]\s+(.*)$/;
@@ -127,9 +136,17 @@ function documentViolations(doc) {
       if (/^(id|:?-+:?)$/.test(cells[1])) continue;
       const severity = cells[4];
       if (severity !== undefined && severity !== "" && !FINDINGS_TABLE_SEVERITIES.includes(severity)) {
-        record("finding-severity", doc.file, row.number, severity, `the published scale is ${FINDINGS_TABLE_SEVERITIES.join(" | ")} (aliases like 'medium' are a read-side accommodation, never a published token)`);
+        record("finding-severity", doc.file, row.number, severity, `the published ladder is ${FINDINGS_TABLE_SEVERITIES.join(" | ")} (the retired ledger scale and the finder aliases like 'medium' are a read-side accommodation, never a published token)`);
       }
-      const klass = cells[5];
+      const impact = cells[5];
+      if (impact === undefined || impact === "") {
+        record("finding-impact", doc.file, row.number, "", `every row states its impact — the published set is ${FINDINGS_TABLE_IMPACTS.join(" | ")}`);
+      } else if (!FINDINGS_TABLE_IMPACTS.includes(impact)) {
+        record("finding-impact", doc.file, row.number, impact, `the published set is ${FINDINGS_TABLE_IMPACTS.join(" | ")}`);
+      } else if (severity === "BLOCKER" && impact === "report-only") {
+        record("finding-impact", doc.file, row.number, `${severity} + ${impact}`, "a `BLOCKER` is caused by the change and reproducible with realistic input, so it never blocks nothing — `report-only` is the pre-existing advisory's impact and never a correction round");
+      }
+      const klass = cells[6];
       if (klass !== undefined && klass !== "" && !PRE_EXECUTION_FINDING_CLASSES.includes(klass)) {
         record("finding-class", doc.file, row.number, klass, `the published set is ${PRE_EXECUTION_FINDING_CLASSES.join(" | ")}`);
       }
