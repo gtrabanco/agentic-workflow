@@ -13,6 +13,10 @@
  *  - **Content-free.** The payload carries a unit id and numbers. No prompt
  *    text, no model output, no diff, no file content — the accumulator never
  *    receives any of them, so no sink can leak what it was never given.
+ *  - **Measured when written, never snapshotted early.** The path count and the
+ *    provenance string may be functions, resolved as the sample is taken: a
+ *    value captured when the accumulator was built describes the tree and the
+ *    run *before* the work the sample exists to record.
  *  - **Off means absent.** A disabled accumulator emits nothing and reports
  *    nothing; it never estimates the sample it did not take.
  *
@@ -36,7 +40,6 @@ export interface MessageUsage {
 /** One unit sample — the numbers only, in the ledger's own column order. */
 export interface TelemetrySample {
   readonly unit: string;
-  readonly tier: string;
   readonly changed_paths: number;
   readonly tokens: number;
   readonly turns: number;
@@ -57,16 +60,23 @@ export interface SessionTelemetryOptions {
   readonly enabled: boolean;
   /** The unit the session is working on, as its directory is named. */
   readonly unit: string;
-  /** The tier the unit recorded for itself. */
-  readonly tier: string;
-  readonly changedPaths?: number;
+  /**
+   * How many paths this session changed. A function is evaluated when the sample
+   * is written, which is the only moment the answer is known: a count taken when
+   * the accumulator was built would describe the tree before the session worked.
+   */
+  readonly changedPaths?: number | (() => number);
   readonly sinks?: readonly TelemetrySink[];
   /** Milliseconds since the epoch; injected so the suite owns the clock. */
   readonly now?: () => number;
   /** `YYYY-MM-DD`; injected for the same reason. */
   readonly date?: () => string;
-  /** The producer's provenance string, so a sample traces back to its run. */
-  readonly source?: string;
+  /**
+   * The producer's provenance string, so a sample traces back to its run. A
+   * function is resolved at emit time, which is how one builder can name the
+   * session it is about to measure.
+   */
+  readonly source?: string | (() => string);
 }
 
 export interface SessionTelemetry {
@@ -99,6 +109,7 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
   const date = options.date ?? (() => new Date(now()).toISOString().slice(0, 10));
   const sinks = options.sinks ?? [];
   const source = options.source ?? "pi:session";
+  const changedPaths = options.changedPaths ?? 0;
 
   let tokens = 0;
   let turns = 0;
@@ -114,14 +125,13 @@ export function createSessionTelemetry(options: SessionTelemetryOptions): Sessio
     if (!EPOCH_DAY.test(observed)) throw new Error(`observed date must be YYYY-MM-DD, got ${observed}`);
     return {
       unit: options.unit,
-      tier: options.tier,
-      changed_paths: options.changedPaths ?? 0,
+      changed_paths: typeof changedPaths === "function" ? changedPaths() : changedPaths,
       tokens,
       turns,
       model_ms: Math.max(0, Math.round(modelMs)),
       tool_ms: Math.max(0, Math.round(toolMs)),
       observed,
-      source,
+      source: typeof source === "function" ? source() : source,
     };
   }
 

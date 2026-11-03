@@ -13,6 +13,9 @@
  *    the project's own directories. A session that ran no unit-scoped command
  *    emits nothing: a sample without a unit would be a row the ledger cannot
  *    attribute, which is worse than no row.
+ *  - **The sample names its session.** The sink's idempotency guard compares a
+ *    whole row, so the session id in `source` is what keeps a second session of
+ *    the same unit — the same day, the same tree — from being written over.
  *  - **Off registers no listener at all.** A listener that wakes up to find itself
  *    disabled is a cost with no feature, so `enabled: false` means `pi.on` is
  *    never called.
@@ -31,9 +34,9 @@ export const TELEMETRY_EVENTS = Object.freeze([
   "session_shutdown",
 ] as const);
 
-/** The slice of `pi` the wiring needs. */
+/** The slice of `pi` the wiring needs. Pi hands every handler its context. */
 export interface PiLike {
-  on(event: string, handler: (event?: unknown) => void): void;
+  on(event: string, handler: (event?: unknown, ctx?: unknown) => void): void;
 }
 
 export interface TelemetryWiringOptions {
@@ -46,6 +49,12 @@ export interface TelemetryWiringOptions {
   readonly changedPaths?: () => number;
   /** The HEAD the session started on, captured at `session_start`. */
   readonly sessionStartSha?: () => string;
+  /**
+   * The id of the session being measured, so two sessions that touch the same
+   * unit on the same day are two samples instead of one. Read lazily: the
+   * caller already holds the live context when it builds the wiring.
+   */
+  readonly sessionId?: () => string | undefined;
   readonly now?: () => number;
   readonly date?: () => string;
   readonly source?: string;
@@ -58,6 +67,17 @@ export interface TelemetryWiring {
 }
 
 const DEFAULT_LEDGER = "docs/workflow/TIER_COST.md";
+
+/**
+ * The session id pi hands a handler in its context (`ctx.sessionManager`). It is
+ * read defensively: the wiring must stay a factory over a `pi`-shaped object, and
+ * a context without a session manager is a caller that simply named no id.
+ */
+function sessionIdOf(ctx: unknown): string | undefined {
+  const manager = (ctx as { sessionManager?: { getSessionId?: () => unknown } } | undefined)?.sessionManager;
+  const id = manager?.getSessionId?.();
+  return typeof id === "string" && id !== "" ? id : undefined;
+}
 
 /** `git` in the project, or `""` when the project is not a repository. */
 function git(root: string, args: string[]): string {
@@ -88,7 +108,8 @@ export function sessionChangedPaths(root: string, startSha: string): number {
 
 /**
  * Build the wiring. Everything it cannot know is injected: the project root, the
- * sinks, the clock, the path count and the session's starting commit.
+ * sinks, the clock, the path count, the session id and the session's starting
+ * commit.
  */
 export function createTelemetryWiring(options: TelemetryWiringOptions): TelemetryWiring {
   const sinks = options.sinks ?? [createLedgerSink({ ledgerPath: options.ledgerPath ?? `${options.root}/${DEFAULT_LEDGER}` })];
@@ -97,6 +118,18 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
   const startSha = options.sessionStartSha ?? (() => git(options.root, ["rev-parse", "HEAD"]).trim());
   let start = "";
   const changedPaths = options.changedPaths ?? (() => sessionChangedPaths(options.root, start || "HEAD"));
+
+  let fromContext: string | undefined;
+  /**
+   * The provenance string the ledger stores. The session half is what keeps two
+   * sessions of one unit on one day apart: without it they collapse into the
+   * same row, and the second is silently lost.
+   */
+  const source = (): string => {
+    if (options.source !== undefined) return options.source;
+    const id = options.sessionId?.() ?? fromContext;
+    return id === undefined || id === "" ? "pi:session" : `pi:session=${id}`;
+  };
 
   let unit: string | null = null;
   let accumulator: ReturnType<typeof createSessionTelemetry> | null = null;
@@ -107,12 +140,11 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
     return createSessionTelemetry({
       enabled: true,
       unit,
-      tier: "standard",
-      changedPaths: changedPaths(),
+      changedPaths,
       sinks,
       now,
       date,
-      source: options.source ?? "pi:session",
+      source,
     });
   }
 
@@ -130,7 +162,8 @@ export function createTelemetryWiring(options: TelemetryWiringOptions): Telemetr
 
     register(pi) {
       if (!options.enabled) return;
-      pi.on("session_start", () => {
+      pi.on("session_start", (_event, ctx) => {
+        fromContext = sessionIdOf(ctx);
         accumulator ??= build();
       });
       pi.on("turn_start", (event) => accumulator?.onTurnStart((event ?? {}) as { timestamp?: number }));

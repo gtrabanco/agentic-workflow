@@ -35,6 +35,10 @@ function cellsOf(line: string): string[] {
  * no grammar block, when the sample and the declared columns disagree, or when
  * the table's header is not the declared set. The accumulator catches a sink
  * failure so one broken destination never costs the others their sample.
+ *
+ * Its idempotency guard compares a whole row: a repeated emission is dropped, a
+ * different sample never is. The session identity that keeps two sessions apart
+ * lives in the sample's `source`, not in a key invented here.
  */
 export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
   const { ledgerPath } = options;
@@ -73,11 +77,13 @@ export function createLedgerSink(options: LedgerSinkOptions): TelemetrySink {
       let lastRow = headerAt + 1;
       while (lastRow + 1 < lines.length && lines[lastRow + 1].trim().startsWith("|")) lastRow += 1;
 
-      // One row per sample: a second shutdown for the same session appends nothing.
+      // One row per sample: the guard compares the whole row, because the row is
+      // what a sample is. Keying it on a few cells (unit, source, day) would
+      // swallow a second session of the same unit — the exact case the ledger
+      // exists to record — while an identical row is a re-emission, not a sample.
       for (let index = headerAt + 2; index <= lastRow; index += 1) {
         const cells = cellsOf(lines[index]);
-        const row = Object.fromEntries(declared.map((column, at) => [column, cells[at] ?? ""]));
-        if (row.unit === String(values.unit) && row.source === String(values.source) && row.observed === String(values.observed)) return;
+        if (declared.every((column, at) => (cells[at] ?? "") === String(values[column]))) return;
       }
 
       lines.splice(lastRow + 1, 0, `| ${declared.map((column) => String(values[column])).join(" | ")} |`);
