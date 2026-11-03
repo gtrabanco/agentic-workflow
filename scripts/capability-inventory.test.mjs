@@ -137,8 +137,9 @@ function grammarRows(text, name) {
   for (const match of text.matchAll(fence)) {
     const lines = match[1].replace(/\n$/, "").split("\n");
     if (lines[0].trim() !== name) continue;
+    // Line 1 is the block id and line 2 its column header — the repo's shape.
     return lines
-      .slice(1)
+      .slice(2)
       .filter((line) => line.trim() !== "")
       .map((line) => line.split("|").map((cell) => cell.trim()));
   }
@@ -240,6 +241,23 @@ test("A5 — the same reader refuses a throwaway copy of the template tree", () 
   }
 });
 
+test("A6 — the repair states its three outcomes: deleted candidates gone, the rest cited, project rows added (#333 S11, S13, S14, S15)", () => {
+  const text = read(INVENTORY);
+  const subsystems = subsystemRows(text).map((cells) => cells[0]);
+  const deleted = ["Navigation (menus, dashboard)", "Notifications (email, push, in-app)", "File / media storage", "Billing / payments"];
+  assert.deepEqual(
+    subsystems.filter((name) => deleted.includes(name)),
+    [],
+    "a row the project type cannot carry survived the delete move",
+  );
+  const added = ["Skills distribution", "Scaffold export", "Deterministic gates"];
+  for (const name of added) {
+    assert.ok(subsystems.includes(name), `the project-specific row \`${name}\` is missing`);
+  }
+  assert.equal(roleRows(text).length, 2, "the inventory documents both roles: the owner and an agent session");
+  assert.equal(subsystems.length, 12, "nine retained candidates plus three project-specific rows");
+});
+
 /* ------------------------------------------- B. the procedure and its probes */
 
 test("B1 — the discovery route carries the six ordered moves (#333 S1, S7)", () => {
@@ -287,13 +305,13 @@ test("B4 — every candidate has a probe row, and the two sets are equal (#333 S
   assert.deepEqual(probes, candidates, "the probe table and the template's candidate set diverged");
 });
 
-test("B5 — one owner: the procedure is stated in exactly one file (#333 S9)", () => {
+test("B5 — one owner: the procedure block is stated in exactly one file (#333 S9)", () => {
   const references = path.join(root, "skills/init-workspace/references");
   const carriers = fs
     .readdirSync(references)
     .filter((name) => name.endsWith(".md"))
-    .filter((name) => fs.readFileSync(path.join(references, name), "utf8").includes("capability-inventory@1"));
-  assert.deepEqual(carriers, ["BOOTSTRAP_DISCOVERY.md"], "the procedure is copied into a second reference");
+    .filter((name) => grammarRows(fs.readFileSync(path.join(references, name), "utf8"), "capability-inventory@1").length > 0);
+  assert.deepEqual(carriers, ["BOOTSTRAP_DISCOVERY.md"], "the procedure block is copied into a second reference");
 });
 
 /* ------------------------------------------------ C. the write gate and upgrade */
@@ -301,7 +319,10 @@ test("B5 — one owner: the procedure is stated in exactly one file (#333 S9)", 
 test("C1 — the write route gates the inventory it reports as seeded (#333 S5, S8)", () => {
   const write = read(WRITE);
   assert.match(write, /docs\/CAPABILITIES\.md/, "the write route never names the inventory");
-  assert.match(write, /rg -n '<\[\^>\]\+>' docs\/CAPABILITIES\.md|no `<`,? placeholder|no `<…>` placeholder/, "the gate names no placeholder probe");
+  assert.ok(
+    write.includes("rg -n '\\| *`?<[^>]+>`? *\\|' docs/CAPABILITIES.md"),
+    "the gate names no placeholder probe",
+  );
   assert.match(write, /unresolved — <question>/, "the gate does not accept the explicit unresolved form");
   assert.match(write, /residual/, "a failing file is not reported as a residual");
   assert.match(write, /not\W+reported as seeded|never reported as seeded|is not reported as seeded/, "the gate does not refuse the raw seed");
@@ -321,9 +342,9 @@ test("D1 — the template calls its rows candidates and states the order (#333 S
   const template = read(TEMPLATE);
   const header = template.slice(0, template.indexOf("## Cross-cutting subsystems"));
   assert.match(header, /candidate/i, "the template's header does not call the rows candidates");
-  const deleted = header.search(/delete/i);
-  const inferred = header.search(/infer/i);
-  const asked = header.search(/ask/i);
+  const deleted = header.search(/\*\*delete\*\*/i);
+  const inferred = header.search(/\*\*infer\*\*/i);
+  const asked = header.search(/\*\*ask\*\*/i);
   assert.ok(deleted !== -1 && inferred !== -1 && asked !== -1, "the header does not state all three moves");
   assert.ok(deleted < inferred && inferred < asked, "the header does not state delete-then-infer-then-ask");
   assert.match(header, /unresolved — <question>/, "the header does not name the unresolved form");
