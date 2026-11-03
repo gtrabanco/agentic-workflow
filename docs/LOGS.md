@@ -3969,6 +3969,20 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+## 2026-11-03T00:47:44Z — fix-333-capabilities — manual
+- **Commits:** 7 (`36180c67…afe02f97`)
+- **Files:** 12 files
+- **Summary:** External verification of fix-333-capabilities: fresh eyes on the diff from base 6e65d0b3 → head 6b6fbfde. All 15 obligations checked, all validators re-ran green (capability-inventory 15/15, residue-dimensions 29/29, context budgets PASS, root-suite 1396/1396, phase-lint PASS), no-vacuity differentials reproduced (14 pass / 1 fail C1), sibling sweep clean (zero old-wording survivors), consumer-diff empty, no rename, no gate shipped to targets.
+- **Decisions:** Blocker threshold: reproducible regression at base vs head only. Advisory threshold: pre-existing defects or frozen history. E9 count imprecision (13 pass → 14 pass on 15-test corpus) was an advisory, not a blocker: the test case is correct and reproduces.
+- **Next:** Merge fix-333-capabilities to main; the unit is verified with 0 blockers.
+
+## 2026-11-03T00:48:33Z — fix-333-capabilities — manual
+- **Commits:** 8 (`36180c67…3c1aca08`)
+- **Files:** 13 files
+- **Summary:** fix/333: applied the capability-inventory seeding contract — init-workspace now infers docs/CAPABILITIES.md from cited paths, asks what evidence cannot settle, and deletes the rows the project type excludes. Cut the unit doc (SPEC, ledgers, decisions), red corpus (15-case suite), procedure (capability-inventory@1), write gate, upgrade pointer, template candidate header, and repo inventory repair. PR #379 merged CI: all green.
+- **Decisions:** Procedure over prose: replaced the single discovery bullet with six ordered moves: classify → delete → infer → ask → forbid → report. Post-write gate is BOOTSTRAP_WRITE.md step 5. Upgrade mode points at the one owner. The red corpus proves the failure: 11/14 cases failed before any prose. Diff-guard exception recorded (1176 lines / 12 files). Pre-existing issue recorded (verification-contract Acceptance criteria section mismatch) — not repaired, outside scope. Unknown: model-run smoke test deferred to next golden-fixture run (PE-013).
+- **Next:** PR #379 (fix-333-capabilities → main, all CI green). External verifier review pending. If approved: owner merge. If rejected: identify blockers, one correction batch, one recheck cycle.
+
 ## 2026-11-03T00:42:29Z — feat-365-vuln-research — manual
 - **Commits:** 2 (`e84eb643…8afa93f4`)
 - **Files:** 10 files
