@@ -134,6 +134,25 @@ test("each stable publish job points the canary dist-tag at the stable release",
   }
 });
 
+// The promotion is only honest when the run actually published. Before this
+// guard, a push run whose gate skipped (committed version already on the
+// registry) still executed `npm dist-tag add … canary`: run 41547545135
+// (2026-11-02T23:43Z) rewrote `canary` from 5.0.0-canary.20261102.1 back to
+// 4.10.0 on all three packages, orphaning the canary build.
+test("the canary promotion is gated on the publish decision", () => {
+  const text = read(PUBLISH);
+  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
+    const block = jobBlock(text, job);
+    const step = block.slice(block.indexOf("- name: Point the canary dist-tag at the stable release"));
+    assert.ok(step, `${job} must carry the promotion step`);
+    assert.match(
+      step.slice(0, 200),
+      /\n\s+if: steps\.version\.outputs\.publish == 'true'/,
+      `${job} moves the tag on a skipped publish — a run that published nothing must never rewrite \`canary\``,
+    );
+  }
+});
+
 // The canary release body is the BACKLOG: the pending changeset bodies — the
 // same ones the next stable cut consumes — so the pre-release says what it
 // carries. Canaries are grouped by the operator; the pre-release is where the
