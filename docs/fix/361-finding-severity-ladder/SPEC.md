@@ -420,6 +420,113 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   `BLOCKER | CRITICAL | WARNING` open still fails a pass and `SUGGESTION` still
   never blocks. No disposition value changes.
 
+- **P1** — 2026-11-04, the frozen-failure corpus was extracted before any machine
+  change: the probe fixtures now carry the two live unit-79 rows (F5 functional,
+  F12 docs-only) in the target grammar plus the three rows this unit must refuse,
+  and six cases went red (E1) · commit `daf07e1b` (fixtures) + `70976fa4` (cases).
+
+- **E1** — 2026-11-04, `node --test scripts/vocabulary-probe.test.mjs` · exit 1 ·
+  pre-change red: `tests 10 · pass 4 · fail 6` — the ladder, impact, corpus and
+  clean-fixture cases plus the two older vocabulary cases the new grammar moves.
+
+- **E2** — 2026-11-04, `node --test scripts/vocabulary-parity.test.mjs` · exit 1 ·
+  pre-change red: `tests 16 · pass 7 · fail 9` — the nine `#361` cases.
+
+- **P2** — 2026-11-04, the two closed sets are published in the schema package's
+  canonical home and re-exported from its root · commit `2550a563`.
+
+- **P3** — 2026-11-04, the four templates and the `UnitDoc` skeleton publish the
+  seven-column row with both vocabulary cells.
+
+- **P4** — 2026-11-04, the readers and writers carry the grammar: ceremony
+  parse/render/append with `--impact` and the two refusals, the router's
+  cell-step, and the sensor's ladder projection · commit `075d5cc5`.
+
+- **P5** — 2026-11-04, the gates: the probe's `finding-impact` dimension, the
+  parity pins, and the two `normative-surfaces@1` cells the drift gate resolves
+  from the committed source · commit `70976fa4`.
+
+- **P6** — 2026-11-04, `CLASSIFY.md` owns the ladder, the baseline-advisory rule,
+  the conversion table and the escalation · commit `9b07f8e1`.
+
+- **P7** — 2026-11-04, the nine finder output contracts publish `Sev` + `Impact`
+  and cite the owner · commit `9b07f8e1`.
+
+- **P8** — 2026-11-04, `review-change`'s synthesis, report and persist contracts
+  carry both cells · commit `9b07f8e1`.
+
+- **P9** — 2026-11-04, the audit, fold and ledger contracts carry the vocabulary
+  (finding line, blocker row, frozen-severity branch, ledger append, carrier map,
+  tier projection) · commit `9b07f8e1`.
+
+- **P10** — 2026-11-04, `skill-lint`'s eighth rule and the migration note ·
+  commit `9b07f8e1`.
+
+- **E3** — 2026-11-04, `node --test scripts/vocabulary-probe.test.mjs` · exit 0 ·
+  `tests 10 · pass 10 · fail 0`.
+
+- **E4** — 2026-11-04, `node --test scripts/vocabulary-parity.test.mjs` · exit 0 ·
+  `tests 15 · pass 15 · fail 0` (the nine `#361` cases plus the six set pins).
+
+- **E5** — 2026-11-04, `node --test scripts/normative-drift.test.mjs` · exit 0 ·
+  `tests 21 · pass 21 · fail 0`, including the case that names both new surfaces
+  and their grammar cells.
+
+- **E6** — 2026-11-04, `node --test scripts/unit-route.test.mjs
+  scripts/ceremony-findings-ledger.test.mjs` · exit 0 · `tests 77 · pass 77 ·
+  fail 0` (the router reads the impact cell; the writer refuses an off-vocabulary
+  cell and a `BLOCKER` + `report-only` row, and writes nothing when it refuses).
+
+- **E7** — 2026-11-04, `node --test scripts/workflow-status-sensor.test.mjs
+  scripts/ledger-provenance.test.mjs` · exit 0 · `tests 102 · pass 102 · fail 0`
+  (the ladder projects `high/high/med/low`, a legacy `high` cell still projects
+  `high`, the legacy seven-column ledger still refuses a non-seven-column row).
+
+- **E8** — 2026-11-04, differential against the base commit `6e65d0b3` on a
+  throwaway legacy fixture (`mktemp -d`, removed after): `workflow-status.mjs`
+  output byte-identical (git-state fields excluded) and `unit-route.mjs
+  1-legacy` byte-identical — the legacy carrier's behaviour is unchanged; the
+  only requested difference is the migrated carrier's grammar.
+
+- **E9** — 2026-11-04, sweep and scope: `rg -c 'critical\|major\|minor'
+  skills/review-*` → 0 matches; `rg -c FINDINGS_TABLE_IMPACTS
+  skills/skill-lint/references/DISCOVERY_AND_LINT.md` → 1;
+  `rg -c 'findings-table@1' docs/workflow/MIGRATION.md` → 1;
+  `git diff --stat main -- docs/features/79-spec-by-reference/review-findings.md`
+  → no lines; `git diff --name-status main -- skills/ | rg '^A'` → no lines;
+  `rg -n 'const ROUTES' -A 1 scripts/unit-route.mjs` → the same eight-value set.
+
+- **E10** — 2026-11-04, `node --test scripts/scaffold-parity.test.mjs` · exit 0 ·
+  `tests 17 · pass 17 · fail 0` — `#355`'s `route:` cell and the classifier's
+  replan branch survive (the audit's finding line now names both published sets).
+
+- **G1** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 0 ·
+  `tests 1396 · suites 33 · pass 1396 · fail 0 · skipped 0`.
+
+- **G2** — 2026-11-04, `(cd packages/agentic-workflow-schema && bun run test)` ·
+  exit 0 · `732 pass · 0 fail` across 38 files.
+
+- **G3** — 2026-11-04, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`; `--routes` → `PASS route budgets: 14
+  routes`; `--documents` → `PASS context documents: 3 budgeted documents`
+  (CLASSIFY.md re-based 3,764 → 4,861 est and 280 → 311 lines, the five route
+  ceilings and AGENTS.md's `machineLines` 83 → 85, each with its source
+  declared).
+
+- **G4** — 2026-11-04, `bun scripts/lint-changeset.mjs
+  .changeset/361-finding-severity-ladder.md` · exit 0 · `ok
+  361-finding-severity-ladder.md`.
+
+- **G5** — 2026-11-04, `node scripts/unit-route.mjs 361` · exit 0 · every phase is
+  recorded, so the router refuses close-out by name — `status is 'in-progress'
+  (not 'done')` — because the PR that makes the row `done` does not exist yet.
+  That refusal is the expected pre-PR state, not a pass: the row turns `done`
+  when the owner opens the PR, and `route: close-out` follows from it.
+
+- **P11** — 2026-11-04, the unit is registered in both roadmap tables, the
+  changeset declares the breaking bump for both packages and the touched skills,
+  and every budget the growth moved was re-based with its source declared.
+
 ## Next
 
 P1 — extract the frozen-failure corpus as failing checks.
