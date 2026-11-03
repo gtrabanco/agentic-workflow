@@ -53,6 +53,7 @@ Cut at plan time; the unit sweeps this surface rather than rediscovering it at r
 | `packages/pi-agentic-workflow/src/extension/index.ts` | one more listener set (`session_start`, `turn_start`, `turn_end`, `tool_execution_end`, `session_shutdown`) beside routing and the receipt guard | every driven command |
 | `packages/pi-agentic-workflow/src/settings/console.ts` | the telemetry switch (independent of the log switch #394 owns) | the settings picker |
 | `packages/pi-agentic-workflow/package.json` + `README.md` + `CHANGELOG.md` | peer floor rises to pi `>=1.5.0` — `Usage.cost.totalFromProvider` is 1.5.0's; `tool_execution_end.durationMs` is 1.1.0's | `test/verified-baseline.test.mjs`, the version-parity gate |
+| `scripts/ceremony/tier.mjs` | `recordedTier` gains the shape its own template orders a unit to use (`## Risk tier` ⇢ `` - **Tier** — `<tier>` ``, "Copy the verdict below verbatim"), so a unit that recorded its tier the canonical way is readable; the two shapes it already read keep reading | `ceremony tier plan\|read`, `scripts/tier-cost.mjs` |
 | `docs/fix/360-risk-tiered-ceremony/SPEC.md` | its `## Future` row says the aggregation is "a follow-up with its own evidence" — that follow-up is this unit | audit-docs, the roadmap |
 
 Two surfaces deliberately **not** touched: the closed ceremony CLI (`scripts/ceremony.mjs` — measurement is a sensor, not a ceremony operation, and its registry is pinned by `scripts/ceremony.test.mjs`, so adding an object here would buy no behaviour) and the Envelope v2 detail block (`scripts/workflow-status.mjs` — the ledger is a file, not an envelope field, so no schema package change and no `sensor-fields@1` churn).
@@ -244,7 +245,7 @@ None. `360a` is merged (`b1ec9240`); `#394` depends on this unit, not the revers
 
 | Scenario | Verified by |
 |---|---|
-| `ceremony tier classify \| read \| plan` emit the same JSON and exit codes as at the base commit | differential run in P7 against a `/tmp` copy of the base commit — no unrequested difference |
+| `ceremony tier classify \| read \| plan` emit the same JSON and exit codes as at the base commit, with one declared exception: `plan` now counts this unit's own doc and the template shape (`recorded 1 → 2`, `totals 128 → 129`), which is O16 | differential run in P7 against a `/tmp` copy of the base commit — that declared difference and nothing else |
 | `workflow-status` emits byte-identical Envelope v2 (no new field, no new `detail` key) | differential run in P7; `bun test scripts/workflow-status-sensor.test.mjs` exits 0 |
 | the `/log-session` skill writes nothing new and no hook exists yet (`#394` is not this unit) | `rg -c 'session_shutdown\|autoLogSession' packages/pi-agentic-workflow/src` → 0 |
 | the package's existing extension behaviour (routing, receipt guard, restore-after-settle) is unchanged with telemetry off | `cd packages/pi-agentic-workflow && bun run test` exits 0 |
