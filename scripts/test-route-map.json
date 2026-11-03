@@ -184,6 +184,16 @@
         "scripts/npm-version-gate.test.mjs",
         "scripts/pin-watch.test.mjs"
       ]
+    },
+    {
+      "name": "dependency-advisory-pass",
+      "globs": [
+        "scripts/dependency-advisory-pass.mjs",
+        "scripts/dependency-advisory-pass.test.mjs"
+      ],
+      "suites": [
+        "scripts/dependency-advisory-pass.test.mjs"
+      ]
     }
   ]
 }
