@@ -27,7 +27,7 @@ default branch. State the scope at the top of the returned table.
 - ✓ No N+1 query/IO pattern on changed data-access paths (loop bodies issuing
   queries/requests — cite)
 - ✓ Algorithmic complexity of new code paths stated where input can grow (an
-  unbounded O(n²) on user data is a major finding)
+  unbounded O(n²) on user data is a `WARNING` finding)
 - ✓ No blocking IO/sync work added on hot/request paths where the platform is
   async
 - ✓ Resources opened by the change are closed/released on ALL paths including
@@ -45,13 +45,13 @@ default branch. State the scope at the top of the returned table.
   paths its benchmarks cover: RUN the benchmark on the base branch and on the
   change, and cite both numbers in Evidence as
   `<cmd> → base <x> / change <y> (<±z%>)`. A regression beyond the noise band
-  (the project's declared band, else ±5%) is a **major** finding; a delta
+  (the project's declared band, else ±5%) is a `WARNING` finding; a delta
   inside the band is no finding. The declared command failing (non-zero exit)
   is itself a finding (the gate can't measure) — never silently skipped.
 - ✓ **No declared perf commands** → state exactly
   `n/a — no declared perf commands` for the item above (never skip it
   silently), and if the diff adds algorithmic code on input that can grow,
-  add a **minor** finding recommending the project adopt the tooling via
+  add a `SUGGESTION` recommending the project adopt the tooling via
   `init-workspace`'s Performance tooling round.
 
 ## Materiality bar
@@ -65,20 +65,25 @@ change — never pad the table.
 
 ## Return exactly
 
+`Sev` and `Impact` are the two published closed sets (`BLOCKER | CRITICAL |
+WARNING | SUGGESTION` and `blocking | docs-only | report-only`); their meanings
+are owned by `review-implementation` (`CLASSIFY.md` §Severity ladder) — assign a
+token, never a prose grade.
+
 ```
 REVIEW PERF — scope: <scope>
 
-| # | Finding | Sev | Evidence | Suggested fix |
-|---|---------|-----|----------|---------------|
-| 1 | <what>  | critical|major|minor | <file:line — or, for measured findings, `<cmd> → base <x> / change <y> (<±z%>)`> | <smallest action> |
+| # | Finding | Sev | Impact | Evidence | Suggested fix |
+|---|---------|-----|--------|----------|---------------|
+| 1 | <what>  | BLOCKER|CRITICAL|WARNING|SUGGESTION | blocking|docs-only|report-only | <file:line — or, for measured findings, `<cmd> → base <x> / change <y> (<±z%>)`> | <smallest action> |
 
 Checklist: <n> evaluated, <n> pass, <n> findings, <n> n/a (<which + why>)
 Summary: <1-2 sentences>
 Decision: PASS | FAIL
 ```
 
-FAIL if any critical or major finding is open; PASS otherwise. Minor findings
-never block — they route to the caller's triage step.
+FAIL if any `BLOCKER`, `CRITICAL` or `WARNING` finding is open; PASS otherwise.
+`SUGGESTION` findings never block — they route to the caller's triage step.
 
 ## Done when
 

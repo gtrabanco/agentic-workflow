@@ -290,7 +290,7 @@ test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledg
   // structural to a parser that honours it, so the flatten class covers Cf too.
   const cfRow = "| F13\u202eX | scripts/evil5.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
   const sepRow = "| F12\u2028Y | scripts/evil4.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
-  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n${cfRow}\n`);
+  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n${cfRow}\n`);
 
   const result = run(["90-hostile-unit"], { root });
   assert.equal(result.status, 0, result.stderr);
@@ -320,7 +320,7 @@ const hostileLedger = (rows) => {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(
     path.join(dir, "review-findings.md"),
-    `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${rows.join("\n")}\n`,
+    `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|---|\n${rows.join("\n")}\n`,
   );
   return run(["90-fold3-unit"], { root });
 };
@@ -847,9 +847,9 @@ test("#308 the collapsed carrier's `class` vocabulary routes the owner, not pros
   // authority it cannot touch (#293's rule, re-based onto the new column).
   const doc = (klass, route) => [
     "## Findings", "",
-    "| id | S# / file:line | axis | severity | class | route |",
-    "|---|---|---|---|---|---|",
-    `| F1 | S1 | code | med | ${klass} | ${route} |`,
+    "| id | S# / file:line | axis | severity | impact | class | route |",
+    "|---|---|---|---|---|---|---|",
+    `| F1 | S1 | code | med | blocking | ${klass} | ${route} |`,
     "", "## Log", "",
   ].join("\n");
   const cases = [
@@ -870,6 +870,27 @@ test("#308 the collapsed carrier's `class` vocabulary routes the owner, not pros
   // a whole-cell read, never a substring scan (#293 F9's over-match class).
   const [mention] = findingsRows(doc("source", "fold: the plan owner is NOT needed here"));
   assert.equal(routeOfRow(mention), "fold", "prose naming the plan owner must not steal a source row from the fold");
+});
+
+test("#361 the impact cell is a column of its own: it never shifts `class` or `route`", () => {
+  // The carrier grew a fifth cell (#361, `findings-table@1`), so the reader must
+  // step over `impact` — reading it as `class` would turn a `docs-only` impact into
+  // an unknown owner and silently downgrade a plan-owned row to the fold.
+  const doc = (impact, klass, route) => [
+    "## Findings", "",
+    "| id | S# / file:line | axis | severity | impact | class | route |",
+    "|---|---|---|---|---|---|---|",
+    `| F1 | S1 | code | CRITICAL | ${impact} | ${klass} | ${route} |`,
+    "", "## Log", "",
+  ].join("\n");
+  const [docsOnly] = findingsRows(doc("docs-only", "plan", "fold into P1"));
+  assert.equal(docsOnly.impact, "docs-only", "the impact cell is read as the impact");
+  assert.equal(docsOnly.klass, "plan", "the class cell is still the repairing owner");
+  assert.equal(docsOnly.severity, "CRITICAL", "the severity cell is the ladder token");
+  assert.equal(docsOnly.route, "fold into P1", "the route cell is the disposition");
+  assert.equal(routeOfRow(docsOnly), "replan", "and the plan-owned row still routes to replan");
+  const [reportOnly] = findingsRows(doc("report-only", "source", "fold: repair the parse"));
+  assert.equal(routeOfRow(reportOnly), "fold", "a report-only advisory keeps its own route");
 });
 
 test("#308 the legacy shape is untouched: no ## Log, no ## Findings, same routes", () => {

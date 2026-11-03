@@ -34,23 +34,25 @@ function makeLegacyUnit() {
   return dir;
 }
 
-const ROW = (id, sev = "med", folded = "") =>
-  `| ${id} | src/a.ts:1 | code | ${sev} | fix-now | fold |${folded ? ` ${folded} |` : ""}`;
+const ROW = (id, sev = "WARNING", impact = "blocking") =>
+  `| ${id} | src/a.ts:1 | code | ${sev} | ${impact} | source | fold |`;
 
 test("findings append/read/update on the migrated table (S4, S7)", () => {
   const dir = makeUnit();
-  const a = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/a.ts", "--line", "1", "--axis", "code", "--severity", "med", "--class", "fix-now", "--route", "fold"], dir);
+  const a = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/a.ts", "--line", "1", "--axis", "code", "--severity", "WARNING", "--impact", "blocking", "--class", "source", "--route", "fold"], dir);
   assert.equal(a.code, 0);
   assert.equal(a.json.finding.id, "F1");
-  const b = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/b.ts", "--line", "2", "--axis", "security", "--severity", "high", "--class", "fix-now", "--route", "fold"], dir);
+  assert.equal(a.json.finding.impact, "blocking");
+  const b = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/b.ts", "--line", "2", "--axis", "security", "--severity", "CRITICAL", "--impact", "blocking", "--class", "source", "--route", "fold"], dir);
   assert.equal(b.json.finding.id, "F2");
   const read = cer(["findings", "read", "--slug", "1-fixture"], dir);
   assert.equal(read.json.carrier, "unit-doc");
   assert.equal(read.json.findings.length, 2);
-  const up = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--severity", "low"], dir);
+  const up = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--severity", "SUGGESTION", "--impact", "report-only"], dir);
   assert.equal(up.code, 0);
-  assert.equal(up.json.severity, "low");
-  assert.equal(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings[0].severity, "low");
+  assert.equal(up.json.severity, "SUGGESTION");
+  assert.equal(up.json.impact, "report-only");
+  assert.equal(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings[0].severity, "SUGGESTION");
 });
 
 test("R4 reproducer: `findings update --folded true` removes the row and appends the F log line (O12)", () => {
@@ -71,15 +73,15 @@ test("R4 reproducer: `findings update --folded true` removes the row and appends
 
 test("findings update applies its cell flags together with --folded true (S7)", () => {
   const dir = makeUnit({ findingsRows: ROW("F1") });
-  const r = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--severity", "critical", "--class", "replan-in-unit", "--folded", "true"], dir);
+  const r = cer(["findings", "update", "--slug", "1-fixture", "--id", "1", "--severity", "CRITICAL", "--class", "plan", "--folded", "true"], dir);
   assert.equal(r.code, 0);
   assert.equal(r.json.folded, true);
-  assert.equal(r.json.severity, "critical");
-  assert.equal(r.json.class, "replan-in-unit");
+  assert.equal(r.json.severity, "CRITICAL");
+  assert.equal(r.json.class, "plan");
   assert.deepEqual(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings, []);
   const fLine = cer(["ledger", "read", "--slug", "1-fixture"], dir).json.marks.find((m) => m.kind === "F");
   assert.match(fLine.text, /folded F1 \(code\)/);
-  assert.match(fLine.text, /severity: critical/);
+  assert.match(fLine.text, /severity: CRITICAL/);
 });
 
 test("findings/ledger delete-section removes one section; legacy carrier stays read-only (S7)", () => {
@@ -139,7 +141,7 @@ test("ledger count and read keep the legacy carrier's own vocabulary (R1, O4)", 
 test("a flag the operation does not use is a usage error, never silently ignored (S6, S8)", () => {
   const dir = makeUnit({ findingsRows: ROW("F1") });
   assert.equal(cer(["findings", "read", "--slug", "1-fixture", "--severity", "high"], dir).json.error, "unknown-flag");
-  const appended = cer(["findings", "append", "--slug", "1-fixture", "--file", "a.ts", "--axis", "code", "--severity", "low", "--class", "c", "--route", "r", "--folded", "true"], dir);
+  const appended = cer(["findings", "append", "--slug", "1-fixture", "--file", "a.ts", "--axis", "code", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "c", "--route", "r", "--folded", "true"], dir);
   assert.equal(appended.code, 1);
   assert.equal(appended.json.error, "unknown-flag");
   assert.equal(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings.length, 1, "the rejected call wrote nothing");
@@ -165,35 +167,52 @@ test("folded flip on a migrated carrier: --folded false is a usage error", () =>
 });
 
 test("findings delete by id/axis/severity and delete-all", () => {
-  const dir = makeUnit({ findingsRows: [ROW("F1", "low"), ROW("F2"), ROW("F3", "low")].join("\n") });
+  const dir = makeUnit({ findingsRows: [ROW("F1", "SUGGESTION", "report-only"), ROW("F2"), ROW("F3", "SUGGESTION", "report-only")].join("\n") });
   assert.equal(cer(["findings", "delete", "--slug", "1-fixture", "--id", "2"], dir).json["deleted-count"], 1);
-  assert.equal(cer(["findings", "delete", "--slug", "1-fixture", "--severity", "low"], dir).json["deleted-count"], 2);
-  assert.equal(cer(["findings", "append", "--slug", "1-fixture", "--file", "c.ts", "--axis", "a", "--severity", "low", "--class", "c", "--route", "r"], dir).json.finding.id, "F1");
+  assert.equal(cer(["findings", "delete", "--slug", "1-fixture", "--severity", "SUGGESTION"], dir).json["deleted-count"], 2);
+  assert.equal(cer(["findings", "append", "--slug", "1-fixture", "--file", "c.ts", "--axis", "a", "--severity", "SUGGESTION", "--impact", "report-only", "--class", "c", "--route", "r"], dir).json.finding.id, "F1");
   assert.equal(cer(["findings", "delete-all", "--slug", "1-fixture"], dir).json["deleted-count"], 1);
   assert.deepEqual(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings, []);
 });
 
+test("#361 the writer refuses an off-vocabulary severity, an off-vocabulary impact and a blocker that blocks nothing", () => {
+  const dir = makeUnit();
+  const badSeverity = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/a.ts", "--axis", "code", "--severity", "med", "--impact", "blocking", "--class", "source", "--route", "fold"], dir);
+  assert.equal(badSeverity.code, 1);
+  assert.equal(badSeverity.json.error, "unknown-vocabulary");
+  assert.equal(badSeverity.json.flag, "--severity");
+  assert.match(badSeverity.json.allowed, /BLOCKER\|CRITICAL\|WARNING\|SUGGESTION/);
+  const badImpact = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/a.ts", "--axis", "code", "--severity", "WARNING", "--impact", "sometimes", "--class", "source", "--route", "fold"], dir);
+  assert.equal(badImpact.json.error, "unknown-vocabulary");
+  assert.equal(badImpact.json.flag, "--impact");
+  assert.match(badImpact.json.allowed, /blocking\|docs-only\|report-only/);
+  const contradiction = cer(["findings", "append", "--slug", "1-fixture", "--file", "src/a.ts", "--axis", "code", "--severity", "BLOCKER", "--impact", "report-only", "--class", "source", "--route", "fold"], dir);
+  assert.equal(contradiction.json.error, "blocker-cannot-be-advisory");
+  // and nothing was written: the carrier is still the empty header
+  assert.deepEqual(cer(["findings", "read", "--slug", "1-fixture"], dir).json.findings, []);
+});
+
 test("findings merge keeps the lowest id and the highest severity (S5)", () => {
-  const dir = makeUnit({ findingsRows: [ROW("F1", "low"), ROW("F2", "high"), ROW("F3", "med")].join("\n") });
+  const dir = makeUnit({ findingsRows: [ROW("F1", "SUGGESTION", "report-only"), ROW("F2", "CRITICAL"), ROW("F3", "WARNING")].join("\n") });
   const r = cer(["findings", "merge", "--slug", "1-fixture", "--ids", "2,1,3"], dir);
   assert.equal(r.code, 0);
   assert.equal(r.json["new-id"], "F1");
-  assert.equal(r.json.finding.severity, "high");
+  assert.equal(r.json.finding.severity, "CRITICAL");
   assert.match(r.json.finding.target, /src\/a\.ts:1 \+ src\/a\.ts:1 \+ src\/a\.ts:1/);
   const read = cer(["findings", "read", "--slug", "1-fixture"], dir);
   assert.equal(read.json.findings.length, 1);
 });
 
 test("findings summarize groups by axis/severity/class; legacy carrier is read-only", () => {
-  const dir = makeUnit({ findingsRows: [ROW("F1", "low"), ROW("F2", "high")].join("\n") });
+  const dir = makeUnit({ findingsRows: [ROW("F1", "SUGGESTION", "report-only"), ROW("F2", "CRITICAL")].join("\n") });
   const s = cer(["findings", "summarize", "--slug", "1-fixture"], dir);
   assert.equal(s.json.total, 2);
-  assert.equal(s.json.bySeverity.high, 1);
+  assert.equal(s.json.bySeverity.CRITICAL, 1);
   const legacy = makeLegacyUnit();
   const lr = cer(["findings", "read", "--slug", "2-legacy"], legacy);
   assert.equal(lr.json.carrier, "legacy");
   assert.ok(lr.json.findings.length > 50, `legacy F rows parsed: ${lr.json.findings.length}`);
-  const lw = cer(["findings", "update", "--slug", "2-legacy", "--id", "1", "--severity", "low"], legacy);
+  const lw = cer(["findings", "update", "--slug", "2-legacy", "--id", "1", "--severity", "SUGGESTION"], legacy);
   assert.equal(lw.code, 1);
   assert.equal(lw.json.error, "legacy-carrier-readonly");
 });

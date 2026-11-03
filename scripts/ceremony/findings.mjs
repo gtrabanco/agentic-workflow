@@ -3,10 +3,16 @@
  * findings.mjs — ceremony `findings` module (issue #338 P0).
  *
  * CRUD on the findings carrier. Two carriers, one read path (LEDGERS.md): a
- * unit doc with a `## Findings` section is the migrated six-column
+ * unit doc with a `## Findings` section is the migrated seven-column
  * `findings-table@1` carrier (read + write); a unit without one falls back to
  * the legacy `review-findings.md` side ledger (read-only — a legacy unit is
  * never rewritten).
+ *
+ * The severity and impact cells are closed vocabularies and this module is one
+ * of their writers, so both are validated against the published sets before a
+ * byte is written: an off-vocabulary token is `unknown-vocabulary`, never a
+ * malformed row that the probe has to find later. The sets come from the
+ * canonical declaration (the built schema runtime), never a second copy here.
  */
 
 import fs from "node:fs";
@@ -15,8 +21,21 @@ import {
   out, fail, onlyFlags, parseFlags, resolveUnit, splitSections, replaceSection, deleteSection,
   parseFindings, renderFindings, appendLogLine, today,
 } from "./lib.mjs";
+import { schemaRuntimePath } from "../schema-runtime.mjs";
 
-const SEVERITY_RANK = { critical: 5, high: 4, med: 3, medium: 3, low: 2, info: 1 };
+const { FINDINGS_TABLE_SEVERITIES, FINDINGS_TABLE_IMPACTS } = await import(schemaRuntimePath);
+
+/** Highest-first merge order across both carriers: the ladder, then the legacy
+ *  ledger aliases a pre-#308 unit still carries (read-only, never written). */
+const SEVERITY_RANK = {
+  BLOCKER: 6, CRITICAL: 5, WARNING: 4, SUGGESTION: 3,
+  critical: 5, high: 5, medium: 3, med: 3, low: 2, info: 1,
+};
+
+/** Refuse a token the published set does not carry, naming the cell and the set. */
+function requireVocabulary(value, set, flag) {
+  if (!set.includes(value)) fail("unknown-vocabulary", { flag: `--${flag}`, value, allowed: set.join("|") });
+}
 
 /** Resolve the unit's findings carrier: migrated unit-doc table or legacy side file. */
 export function findingsCarrier(slug, cwd) {
@@ -47,21 +66,26 @@ function parseLegacyFindings(text) {
 }
 
 export function findings(op, argv, cwd = process.cwd()) {
-  const flags = parseFlags(argv, ["slug", "id", "ids", "file", "line", "target", "axis", "severity", "class", "route", "folded", "section"], ["slug"]);
+  const flags = parseFlags(argv, ["slug", "id", "ids", "file", "line", "target", "axis", "severity", "impact", "class", "route", "folded", "section"], ["slug"]);
   const c = findingsCarrier(flags.slug, cwd);
 
   switch (op) {
     case "append": {
-      onlyFlags(flags, ["file", "line", "target", "axis", "severity", "class", "route"]);
+      onlyFlags(flags, ["file", "line", "target", "axis", "severity", "impact", "class", "route"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
-      for (const r of ["axis", "severity", "class", "route"]) {
+      for (const r of ["axis", "severity", "impact", "class", "route"]) {
         if (!flags[r]) fail("missing-flag", { flag: `--${r}` });
+      }
+      requireVocabulary(flags.severity, FINDINGS_TABLE_SEVERITIES, "severity");
+      requireVocabulary(flags.impact, FINDINGS_TABLE_IMPACTS, "impact");
+      if (flags.severity === "BLOCKER" && flags.impact === "report-only") {
+        fail("blocker-cannot-be-advisory", { severity: flags.severity, impact: flags.impact });
       }
       if (!flags.target && !flags.file) fail("missing-flag", { flag: "--target | --file" });
       const rows = parseFindings(c.md);
       const id = `F${nextId(c.md)}`;
       const target = flags.target ?? `${flags.file}${flags.line ? `:${flags.line}` : ""}`;
-      const row = { id, target, axis: flags.axis, severity: flags.severity, class: flags.class, route: flags.route };
+      const row = { id, target, axis: flags.axis, severity: flags.severity, impact: flags.impact, class: flags.class, route: flags.route };
       writeRows(c, [...rows, row]);
       out({ appended: true, slug: flags.slug, finding: row, carrier: c.carrier });
     }
@@ -73,7 +97,7 @@ export function findings(op, argv, cwd = process.cwd()) {
       out({ slug: flags.slug, carrier: c.carrier, findings: parseFindings(c.md) });
     }
     case "update": {
-      onlyFlags(flags, ["id", "severity", "class", "route", "folded"]);
+      onlyFlags(flags, ["id", "severity", "impact", "class", "route", "folded"]);
       if (c.carrier === "legacy") fail("legacy-carrier-readonly", { slug: flags.slug, path: c.legacyPath });
       if (!flags.id) fail("missing-flag", { flag: "--id" });
       const rows = parseFindings(c.md);
@@ -82,7 +106,9 @@ export function findings(op, argv, cwd = process.cwd()) {
       // Every cell flag applies, folded or not: the issue's own example passes
       // `--severity` and `--folded true` together, so folding after the edit and
       // echoing both is the contract — never silently dropping one of them.
-      const cells = ["severity", "class", "route"].filter((k) => flags[k]);
+      if (flags.severity) requireVocabulary(flags.severity, FINDINGS_TABLE_SEVERITIES, "severity");
+      if (flags.impact) requireVocabulary(flags.impact, FINDINGS_TABLE_IMPACTS, "impact");
+      const cells = ["severity", "impact", "class", "route"].filter((k) => flags[k]);
       for (const k of cells) row[k] = flags[k];
       const applied = Object.fromEntries(cells.map((k) => [k, row[k]]));
       if (flags.folded === "true") {
@@ -93,7 +119,10 @@ export function findings(op, argv, cwd = process.cwd()) {
         out({ updated: true, slug: flags.slug, id: row.id, folded: true, ...applied, log: "F-line appended" });
       }
       if (flags.folded === "false") fail("fold-flip-unsupported", { note: "a folded row left the table; re-append instead (findings-table@1)" });
-      if (!cells.length) fail("missing-flag", { flag: "--severity | --class | --route | --folded true" });
+      if (row.severity === "BLOCKER" && row.impact === "report-only") {
+        fail("blocker-cannot-be-advisory", { severity: row.severity, impact: row.impact });
+      }
+      if (!cells.length) fail("missing-flag", { flag: "--severity | --impact | --class | --route | --folded true" });
       writeRows(c, rows);
       out({ updated: true, slug: flags.slug, id: row.id, ...applied });
     }
@@ -149,6 +178,7 @@ export function findings(op, argv, cwd = process.cwd()) {
         target: mergedInOrder.map((m) => m.target).join(" + "),
         axis: top.axis,
         severity: top.severity,
+        impact: top.impact,
         class: top.class,
         route: top.route,
       };

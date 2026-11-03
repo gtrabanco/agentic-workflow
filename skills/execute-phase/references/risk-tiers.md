@@ -1,8 +1,7 @@
 # Risk tiers — ceremony proportional to risk
 
 > Owner of the `risk-tier-verdict@1` grammar and of the per-tier ceremony table.
-> Issue [#360](https://github.com/gtrabanco/agentic-workflow/issues/360) /
-> direction [#307](https://github.com/gtrabanco/agentic-workflow/issues/307).
+> Unit #360, direction #307; the roadmap row is the issue's canonical link.
 > Every other file cites this one; nothing restates the table.
 
 The tier is **computed, never chosen**. `scripts/risk-tiers.mjs` (and the closed

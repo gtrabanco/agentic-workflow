@@ -5,11 +5,11 @@ For a change to a backend export module (no UI surface):
 > Scope: branch diff vs `main` (`src/export/**`). Skipped: design / a11y / SEO /
 > brand — no UI surface.
 
-| Axis | Finding | Sev | Class | WHY | Route |
-|---|---|---|---|---|---|
-| security | API token read from a committed file | high | fix-now | Credential exposure | fold into phase |
-| tests | Export handler has no failure-mode test | med | fix-now | Untested error path | fold into phase |
-| architecture | Rate limiter reusable across the fleet | low | proposal | Independent of this unit (D3) | batch proposal + trigger |
+| Axis | Finding | Sev | Impact | Class | WHY | Route |
+|---|---|---|---|---|---|---|
+| security | API token read from a committed file | BLOCKER | blocking | fix-now | Credential exposure | fold into phase |
+| tests | Export handler has no failure-mode test | WARNING | blocking | fix-now | Untested error path | fold into phase |
+| architecture | Rate limiter reusable across the fleet | SUGGESTION | report-only | proposal | Independent of this unit (D3) | batch proposal + trigger |
 
 > Manual-verification (automation can't confirm):
 > - The exported file opens cleanly in a spreadsheet app.
@@ -41,8 +41,9 @@ lost, and none becomes reviewer-created backlog (D3):
 - **ignore** → note the rationale in the report; no further action.
 
 The report's `Decision:` line is **three-state** (D10): `REVIEW-PASS` when the
-table is clean (the ledger carries only `high`/`med` fix-now rows — `low`
-findings are report-only notes that never block), `REVIEW-FAIL` while any
+table is clean (the ledger carries only `BLOCKER`/`CRITICAL`/`WARNING` fix-now
+rows — a `SUGGESTION`, and any `report-only` row, is a note that never blocks),
+`REVIEW-FAIL` while any
 fix-now finding is open, and
 `NEEDS-DECISION` when a decision-required finding blocks. Only `REVIEW-PASS`
 **and only when the PR exists** posts the idempotent exact-SHA receipt (step 13

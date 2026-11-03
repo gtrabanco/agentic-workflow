@@ -8,7 +8,7 @@
    duplicate content, unused code classified two ways, obsolete + missing
    documentation — product-wide, across code and skill/docs prose, with the
    features-preserved-without-it check after every proposed deletion. Classify
-   findings (severity + closed class set from review-implementation/CLASSIFY.md).
+   findings (the published severity ladder plus the impact cell and the closed class set, all owned by `review-implementation/CLASSIFY.md`).
 
 **Evidence-provenance gate (fixed):** applies during every evidence-collecting sweep
 step (2–5). Each item ends with exactly one fallback; never pick another one mid-audit.

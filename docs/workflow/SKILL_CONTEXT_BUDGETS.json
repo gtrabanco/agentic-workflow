@@ -26,10 +26,12 @@
           "normative-surfaces@1",
           "rendered-facts@1"
         ],
-        "machineLines": 89,
+        "machineLines": 91,
         "sources": {
           "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 6,255 est, 83 machine-region lines, 274 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(274 x 1.10) = 302 and ceil(6255 x 1.10) = 6881. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate.",
-          "external verify of fix/360 (correction batch E16)": "the size tier joins the three risk-tier sets in the inventory: one `size-tier-vocabulary` row (schema-export:SIZE_TIER_KINDS, machine size-tier, must-name yes) added to `normative-surfaces@1` by the external-verify correction batch; measured with `bun scripts/check-skill-context.mjs --documents` at this re-base: 89 machine-region lines, 363 lines / 6,436 est, inside the unchanged ceilings 393 / 302 / 6881"
+          "external verify of fix/360 (correction batch E16)": "the size tier joins the three risk-tier sets in the inventory: one `size-tier-vocabulary` row (schema-export:SIZE_TIER_KINDS, machine size-tier, must-name yes) added to `normative-surfaces@1` by the external-verify correction batch; measured with `bun scripts/check-skill-context.mjs --documents` at this re-base: 89 machine-region lines, 363 lines / 6,436 est, inside the unchanged ceilings 393 / 302 / 6881",
+          "merge of fix/360 with issue #361": "the two change sets each add rows to `normative-surfaces@1` and each re-pinned `machineLines` for its own tree; merged, both row sets stand, so the machine region is 91 lines — fix/360's five risk-tier and size-tier rows plus #361's two review rows — and the merged guide measures 384 lines / 6,817 est inside the unchanged ceilings 393 / 302 / 6881. Only `machineLines` is re-pinned; no line, prose or estimate ceiling moves.",
+          "issue #361 (unit 361-finding-severity-ladder)": "the normative-surfaces@1 inventory gains the two grammar cells issue #361 publishes (`findings-severity-ladder`, both resolved by `block:finding-severity-ladder@1` and `block:finding-impact@1` in `review-implementation`'s `CLASSIFY.md`). Machine-region lines move 83 → 85 (the two rows); measured at the change with `bun scripts/check-skill-context.mjs --documents`: 359 lines, 6,320 est, 274 prose lines — inside the existing line, prose and estimate ceilings, so only `machineLines` is re-pinned."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
@@ -71,11 +73,10 @@
         "fix 258 / #258 harden-needs-input": "the hand-written guard is replaced by the mandatory-consent three-tier dispatch and a pointer to scripts/needs-input.mjs; [target-dir] is restated as optional-with-recorded-default (F7) and the Turn-contract box names the scratch unit §Consent requires (F53) — measured 3330 est / 229 lines at the cycle-12 fold head; ceiling re-based to ceil(3330 x 1.10) = 3663 / ceil(229 x 1.10) = 252 (down from 3463/249, the body is bounded, not grown)"
       },
       "mainLinesMax": 281,
-      "referenceEstimateMax": 3916,
+      "referenceEstimateMax": 3412,
       "referenceSources": {
         "feature 67 (#219) serena provisioning": "SERENA.md owns the tool half as well as the project config now: the consented install routes (uv tool install -p 3.13 serena-agent + serena init, pipx on the MCP path only), the per-platform MCP registration table, the consent-gated global trusted_project_path_patterns append, the fixed provisioning report and the TS/JS-only evidence confinement (AC3/AC4/AC5/AC7/AC8) — measured 2508 est / 211 lines; ceiling re-based to ceil(2508 x 1.10) = 2759 (lines stay under the 280 default)",
-        "issue #321 pi native MCP registration": "SERENA.md gains the pi row in the per-platform MCP registration table (pi mcp add serena -- serena start-mcp-server --context claude-code; user-level default → ~/.pi/agent/mcp.json, --local → .pi/mcp.json) plus the pi-specific notes block (the two registration options, the mcp__serena__ tool namespace, the toolExposure knob, the resolved --context open question and the consent gating) — measured 3101 est / 242 lines; ceiling re-based to ceil(3101 x 1.10) = 3412 (lines stay under the 280 default)",
-        "1a91657b worktree support (pre-existing drift repaired here)": "the Worktree support subsection added a consented `<project-root>/**` wildcard to the trust question (detection, the four branches, and the residual on no), growing SERENA.md past its 3412 ceiling and reddening `bun scripts/check-skill-context.mjs` on main. Measured 3560 est / 273 lines; ceiling re-based to the exact ceil(3560 x 1.10) = 3916 (lines stay under the 280 default). Repaired in fix/360 because the branch already carries 1a91657b and a red gate blocks every unit; the growth source is that commit, not this one."
+        "issue #321 pi native MCP registration": "SERENA.md gains the pi row in the per-platform MCP registration table (pi mcp add serena -- serena start-mcp-server --context claude-code; user-level default → ~/.pi/agent/mcp.json, --local → .pi/mcp.json) plus the pi-specific notes block (the two registration options, the mcp__serena__ tool namespace, the toolExposure knob, the resolved --context open question and the consent gating) — measured 3101 est / 242 lines; ceiling re-based to ceil(3101 x 1.10) = 3412 (lines stay under the 280 default)"
       }
     },
     "log-session": {
@@ -115,13 +116,15 @@
       }
     },
     "review-implementation": {
-      "referenceEstimateMax": 3764,
+      "referenceEstimateMax": 4861,
       "referenceSources": {
         "feature 32 (P3)": "CLASSIFY.md (canonical severity conversion table, blocking gate rule) grew the reference from the measured 2076 (main) to 2671; ceiling re-based to ceil(2671 x 1.10) = 2939",
         "triage 32 F8": "the sensor-projection note added to CLASSIFY.md at 3912d9c1 grew it to 2730 est (10918 B / 4); ceiling re-based to ceil(2730 x 1.10) = 3003",
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference findings carrier (issue #308) moved into CLASSIFY.md and grew it from the measured 2671 to 3037 est (12147 B / 4); ceiling re-based to ceil(3037 x 1.10) = 3341",
-        "fix 340 (two-way unused-code rule)": "fix 340 (two-way unused-code rule): CLASSIFY.md gains the unused-code routing subsection and two decision-table rows — measured at this re-basis: 3421 est, so the reference ceiling re-bases to ceil(3421 x 1.10) = 3764. Growth source = fix 340's CLASSIFY.md additions"
-      }
+        "fix 340 (two-way unused-code rule)": "fix 340 (two-way unused-code rule): CLASSIFY.md gains the unused-code routing subsection and two decision-table rows — measured at this re-basis: 3421 est, so the reference ceiling re-bases to ceil(3421 x 1.10) = 3764. Growth source = fix 340's CLASSIFY.md additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "CLASSIFY.md becomes the one owner of the findings severity ladder and the impact set: the two versioned grammar blocks, the baseline-advisory rule, the escalation sentence, and the conversion table retargeted onto the ladder — its `high`, `med`, `low`, finder and planning rows stay as the read aliases an older receipt converts through. Measured at the change with `node scripts/check-skill-context.mjs --json`: 4,419 est (17,676 B / 4) and 282 lines; ceilings re-based to ceil(4419 x 1.10) = 4861 and ceil(282 x 1.10) = 311, reason declared."
+      },
+      "referenceLinesMax": 311
     },
     "review-change": {
       "mainEstimateMax": 3457,
@@ -192,8 +195,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11080,
-      "routeLinesMax": 681,
+      "routeEstimateMax": 11175,
+      "routeLinesMax": 686,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -207,7 +210,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared."
       }
     },
     "audit-pr:fix": {
@@ -215,8 +219,8 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 11080,
-      "routeLinesMax": 681,
+      "routeEstimateMax": 11175,
+      "routeLinesMax": 686,
       "sources": {
         "fix #182 (deterministic receipts + PR hygiene)": "three terminal-hygiene gates (tree-clean / branch-pushed / pr-ready) added to the merge contract, plus the receipt and gate runtimes named in the Turn contract and the process step; ceiling = ceil(measured x 1.10)",
         "fix 285 (lane-era lineage gate)": "02_CLOSURE_AND_SCOPE_GATES.md rewritten for the lane-era surfaces (triage-block currency + unit-doc obligations, legacy verify path retained); route measured estimate 9193, lines 574; ceiling = ceil(measured x 1.10)",
@@ -230,7 +234,8 @@
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 9881 est / 608 lines at this re-basis; ceiling = ceil(9881 x 1.10) = 10870 / ceil(608 x 1.10) = 669",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 10071 est / 619 lines at this re-basis; growth source = fix 318's skill additions.",
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the audit route loads `audit-pr`'s process, whose BLOCKED path now writes the seven-column `findings-table@1` row (impact cell, ladder severity) beside the legacy row shape; measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 11175 est and ceil(measured x 1.10) = 686 lines, reason declared."
       }
     },
     "execute-phase:descope": {
@@ -248,8 +253,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15205,
-      "routeLinesMax": 1148,
+      "routeEstimateMax": 15242,
+      "routeLinesMax": 1150,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 843 lines at the first re-basis, 856 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(856 x 1.10) = 942",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -270,8 +275,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13766 est at this re-basis; ceiling re-based to ceil(13766 × 1.10) = 15143",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13800 est / 1043 lines; ceiling re-based to the exact ceil(measured x 1.10) = 15181 / 1148."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13800 est / 1043 lines; ceiling re-based to the exact ceil(measured x 1.10) = 15181 / 1148.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13856 est / 1045 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 15242 / 1150; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:feature": {
@@ -288,8 +293,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -309,8 +314,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:final-pr": {
@@ -328,8 +333,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15054,
-      "routeLinesMax": 1125,
+      "routeEstimateMax": 15091,
+      "routeLinesMax": 1127,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 822 lines at the first re-basis, 835 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(835 x 1.10) = 919",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -350,8 +355,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13629 est at this re-basis; ceiling re-based to ceil(13629 × 1.10) = 14992",
-      "routeEstimateMax": 15054,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13663 est / 1022 lines; ceiling re-based to the exact ceil(measured x 1.10) = 15030 / 1125."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13663 est / 1022 lines; ceiling re-based to the exact ceil(measured x 1.10) = 15030 / 1125.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13719 est / 1024 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 15091 / 1127; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:finding": {
@@ -368,8 +373,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -388,8 +393,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:fix": {
@@ -406,8 +411,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -426,8 +431,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:legacy": {
@@ -444,8 +449,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's mirror of the per-phase hand-off contract (closing hand-off names one phase + the catalog tier, whole-unit mode demoted to explicit operator choice, lane resume after the last phase, Progress entry names the phase id) grew execute-phase/SKILL.md; route measured 798 lines at the first re-basis, 811 after the golden-fixture-driven two-block closing contract (the weak-model smoke caught a last-phase P<k+1> that names a nonexistent phase); ceiling = ceil(811 x 1.10) = 893",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -464,8 +469,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:small": {
@@ -482,8 +487,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "issue #291 / unit 73 P4": "the executor's per-phase hand-off contract plus its golden-fixture-driven two-block closing contract grew execute-phase/SKILL.md; route measured 811 lines at this re-basis; ceiling = ceil(811 x 1.10) = 893",
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
@@ -503,8 +508,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "execute-phase:unit-loop": {
@@ -521,8 +526,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14490,
-      "routeLinesMax": 1098,
+      "routeEstimateMax": 14527,
+      "routeLinesMax": 1100,
       "sources": {
         "workflow-gap audit 2026-09": "research-step cutoff rules (evidence-grounding 1.7.0) and tests-first red-run evidence (execute-phase 4.8.0) grew the shared references these routes load; ceiling re-based to ceil(measured x 1.10).",
         "feature 32 P3/P4": "feature 32 P3/P4: the unit's skill-contract text (canonical severity table in CLASSIFY.md, gate-ran@1 in LEDGERS.md, sole-flipper/triage/roadmap/NRS prose) grew this route's loaded references. Ceiling re-based to ceil(measured x 1.10).",
@@ -539,8 +544,8 @@
         "fix 340 (pre-existing drift re-base)": "fix 340 (pre-existing drift, re-based at cut): the merged #318/#339/#345 content grew these routes' measured estimates past exactly ceil(measured x 1.10) by one rounding unit; ceiling raised to the exact ceil, no growth from fix 340 itself (its prose stays within the prior headroom)",
         "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
         "fix 338 (tick-aware unit-doc grammar)": "fix 338 (executed-phase tick in the unit-doc grammar): the grammar table names the optional `- [x] ` tick mark the ceremony CLI writes, so a ticked bullet is the same `P<n>` phase; measured 13116 est at this re-basis; ceiling re-based to ceil(13116 × 1.10) = 14428",
-      "routeEstimateMax": 16658,
-        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098."
+        "issue #360 (unit 360a-risk-tiered-ceremony)": "the executor gains one sentence naming the risk tier as the ceremony's owner and linking `references/risk-tiers.md`, which is cited, not loaded on the route (owner decision m2-b). Measured at the change with `bun scripts/check-skill-context.mjs --routes`: 13150 est / 998 lines; ceiling re-based to the exact ceil(measured x 1.10) = 14466 / 1098.",
+        "fix/360 x main merge re-basis": "re-based at the fix/360 x main merge: #360 (unit 360a) measured each route before its own three-line risk-tier sentence landed in execute-phase/SKILL.md, so the merged tree measures 13206 est / 1000 lines and the ceilings sit below the declared 10% headroom. Re-set to the exact ceil(measured x 1.10) = 14527 / 1100; growth source = issue #360's executor sentence (owner decision m2-b) on top of main's #382 red-first reword."
       }
     },
     "review-change:adversarial": {
@@ -560,8 +565,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 22930,
-      "routeLinesMax": 1609,
+      "routeEstimateMax": 24151,
+      "routeLinesMax": 1676,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -582,7 +587,9 @@
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 19911 est / 1408 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 19911 est / 1408 lines at this re-basis; ceiling = ceil(19911 x 1.10) = 21903 / ceil(1408 x 1.10) = 1549",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 20189 est / 1427 lines at this re-basis; growth source = fix 318's skill additions.",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 24132 est and ceil(measured x 1.10) = 1676 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:default-backend": {
@@ -601,8 +608,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 21112,
-      "routeLinesMax": 1490,
+      "routeEstimateMax": 22333,
+      "routeLinesMax": 1557,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -623,7 +630,9 @@
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18258 est / 1300 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1430",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions.",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:default-web": {
@@ -642,8 +651,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 21112,
-      "routeLinesMax": 1490,
+      "routeEstimateMax": 22333,
+      "routeLinesMax": 1557,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -664,7 +673,9 @@
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18258 est / 1300 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1430",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18258 est / 1300 lines at this re-basis; ceiling = ceil(18258 x 1.10) = 20084 / ceil(1300 x 1.10) = 1431",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 18536 est / 1319 lines at this re-basis; growth source = fix 318's skill additions.",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22314 est and ceil(measured x 1.10) = 1557 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     },
     "review-change:synthesize": {
@@ -683,8 +694,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 21628,
-      "routeLinesMax": 1514,
+      "routeEstimateMax": 22849,
+      "routeLinesMax": 1581,
       "sources": {
         "#355 (fix 355)": "fix 355 (#355): the classifier's residue row routes a delivered feature's missing *planned* half to `replan-in-unit` with both branches stated in one row, and `skills/review-implementation/references/CLASSIFY.md` is loaded by every review-change route; ceilings re-based to exact ceil(measured x 1.10) from the checker's own measured route at this cut. Growth source = fix 355's classifier row.",
         "2026-09-21 main sync re-basis": "the author-email normalization (087b2064) lengthened every skill's frontmatter by 2 estimate units, so every route measured 2 units higher at once, and the twelve routes whose ceilings carried at most 2 units of slack went over; feature 32's fold F35-F39 (9aa33530) added a line to review-change and audit-docs on top. Ceiling re-set to ceil(measured x 1.10).",
@@ -705,7 +716,9 @@
         "PR #311 merge (feature 79 x feature 66)": "the spec-by-reference unit-document re-cut (issue #308, feature 79) and feature 66's memory-boundary box met in PR #311, so this route measures 18727 est / 1322 lines on the shipped tree and the ceilings below the declared 10% headroom are re-set to ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455",
         "feature 84 review fold (F2/F12: sweep bounds + the report-validator class)": "feature 84 review fold (F2/F12): `references/FOLDING.md` moves the sweep grammar to the column-zero `sweep-declaration@1` block stating the bounds the gate enforces (pattern body at most 200 characters; no quantified group over a quantified body), and `promise-coherence.mjs` now re-runs the committed report validators and names a tally that machine-checked nothing. Route measured 18727 est / 1322 lines at this re-basis; ceiling = ceil(18727 x 1.10) = 20600 / ceil(1322 x 1.10) = 1455",
         "fix 318 (S1/S2/S5/S8/S9/S10 adoption)": "fix 318 (S1/S2/S5/S8/S9/S10 adoption): the class-escalation, claim-evidence, evidence-bound, deletion-matue and review-audit text landed in the skills and references these routes load, so the route re-bases to exact ceil(measured × 1.10) over the merged tree. Measured 19005 est / 1341 lines at this re-basis; growth source = fix 318's skill additions.",
-        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions"
+        "fix 340 (deletion-reuse obligations)": "fix 340 (deletion-reuse obligations): #340's prose landed in the skills these routes load — execute-phase/SKILL.md (all-stages ask-don't-infer guardrail), review-change/SKILL.md (owner re-point), review-code/SKILL.md (residue checklist items) and review-implementation/CLASSIFY.md (two-way unused-code rule); audit-pr/execute-phase ceilings also absorb the pre-existing one-unit rounding drift from merged #318/#339/#345 content. Re-based to exact ceil(measured x 1.10) at fix 340's cut; growth source = fix 340's skill additions",
+        "issue #361 (unit 361-finding-severity-ladder)": "the review route loads `review-change`'s four contracts, which now carry the findings severity ladder and the impact cell (synthesis table, report block, persist row shape, decision line); measured at the change with `bun scripts/check-skill-context.mjs --routes --json`; ceilings re-based to ceil(measured x 1.10) = 22830 est and ceil(measured x 1.10) = 1581 lines, reason declared.",
+        "external-verify advisories (unit 361)": "external-verify advisories (unit 361): the external verification's advisory repairs — CLASSIFY.md's two stale line pointers replaced by rot-proof symbol citations and the Retirements sweep evidence corrected in the unit doc — grew the route's CLASSIFY.md load (review-implementation measured 2860 est / 282 lines); ceilings re-set to ceil(measured x 1.10) over the route's own measurement at this re-basis, growth source = the external-verify advisory fold on top of the #361 re-basis."
       }
     }
   },

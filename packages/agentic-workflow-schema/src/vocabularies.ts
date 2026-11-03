@@ -16,13 +16,25 @@
 export const FUTURE_STATUS_KINDS = Object.freeze(["open", "planned", "discarded"]);
 export type FutureStatus = (typeof FUTURE_STATUS_KINDS)[number];
 
-/** The findings-table severity vocabulary (`finding-severity`), published by
- *  the `findings-table@1` block: `high | med | low`. Distinct from the review
- *  payload's five-level `FINDING_SEVERITIES` scale (index.ts) — the table is
- *  the ledger scale; the sensor's `SEVERITY_VOCABULARY` may accept legacy
- *  aliases on read, but the canonical table scale is this set. */
-export const FINDINGS_TABLE_SEVERITIES = Object.freeze(["high", "med", "low"]);
+/** The findings-table severity ladder (`finding-severity-ladder`, issue #361),
+ *  published by the `findings-table@1` block: `BLOCKER | CRITICAL | WARNING |
+ *  SUGGESTION`. It replaces the retired `high | med | low` ledger scale; it is
+ *  distinct from the review payload's five-level `FINDING_SEVERITIES` scale and
+ *  from the planning receipt's `PRE_EXECUTION_FINDING_SEVERITIES` (both map onto
+ *  the ladder through `review-implementation`'s conversion table), and it is the
+ *  only severity a finder may assign. `BLOCKER` is never a conversion target: it
+ *  requires a reproducer (a failure caused by the change), never a scale. */
+export const FINDINGS_TABLE_SEVERITIES = Object.freeze(["BLOCKER", "CRITICAL", "WARNING", "SUGGESTION"]);
 export type FindingsTableSeverity = (typeof FINDINGS_TABLE_SEVERITIES)[number];
+
+/** The findings-table impact vocabulary (`finding-impact`, issue #361), published
+ *  beside the severity by the same `findings-table@1` block: `blocking |
+ *  docs-only | report-only` — does the finding affect behaviour, only documents,
+ *  or nothing that blocks. A `BLOCKER` row is `blocking` or `docs-only`;
+ *  `report-only` is the pre-existing advisory's impact (never a correction
+ *  round). */
+export const FINDINGS_TABLE_IMPACTS = Object.freeze(["blocking", "docs-only", "report-only"]);
+export type FindingsTableImpact = (typeof FINDINGS_TABLE_IMPACTS)[number];
 
 // The findings-table class vocabulary (`finding-class`) is already published
 // canonically: `PRE_EXECUTION_FINDING_CLASSES` in `pre-execution.ts` is exactly
