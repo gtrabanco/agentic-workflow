@@ -6,6 +6,17 @@
 > navigation, and the rest. A model cannot reliably *guess* which subsystems
 > your project has, but it can *walk a list* — this file is that list.
 >
+> **Candidate rows, not a floor.** Everything below is the starting candidate
+> set for *any* project, and `init-workspace` evaluates it against this one
+> instead of copying it. Per row, in this order: **delete** it when the project
+> cannot carry that surface — no question is asked, and the run reports the row
+> with the project-type evidence that justified the deletion; **infer** its state
+> only from a cited repository path (a directory, a dependency, an entry point, a
+> config key); **ask** what remains in one round, the existence question before
+> any state question, the inferred proposal beside each. A row neither the
+> repository nor you settle is written `unresolved — <question>` — never a
+> guessed `no`, never this file's text.
+>
 > **Ownership & lifecycle:** seeded by `init-workspace` (from discovery +
 > interview); **extended by `execute-phase`** whenever a phase introduces a new
 > subsystem, role, or permission (additive, in the same commit as the code);
@@ -19,6 +30,8 @@
 
 Every role/permission level the project has. The lane's `design` step role matrix
 must list EVERY row here with an explicit `allowed`/`denied` per capability.
+`Granted where` names the file or configuration that assigns the role; a role no
+path grants is deleted, never invented, and a role nothing settles is asked.
 
 | Role | Description | Granted where |
 |---|---|---|
@@ -26,12 +39,13 @@ must list EVERY row here with an explicit `allowed`/`denied` per capability.
 
 ## Cross-cutting subsystems
 
-One row per subsystem. `Exists` is `yes | no | partial` — never blank. Delete
-rows that can never apply to this product (e.g. `Billing` for an internal
-tool) and add project-specific ones (the fixed set below is the floor, not the
-ceiling).
+One row per subsystem that survived the evaluation. `Exists` is
+`yes | partial | no` — never blank, never a placeholder. `yes` and `partial` carry
+the path that proves them; `no` carries the surface that was inspected and found
+absent. Add project-specific subsystems beside the candidates below — the list is
+a candidate set, not a ceiling.
 
-| Subsystem | Exists | Surfaces / entry points | Notes |
+| Subsystem | Exists | Surfaces / entry points | Evidence |
 |---|---|---|---|
 | Authentication | `<yes\|no\|partial>` | `<login page, session middleware, …>` | |
 | ACL / permissions | `<yes\|no\|partial>` | `<permission registry, checks, …>` | |
