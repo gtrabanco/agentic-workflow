@@ -3975,3 +3975,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of fix/365-vuln-research branch (commit 8afa93f4), fold-findings (empty queue), and PR creation for #365
 - **Decisions:** external verifier adopted 'trust bytes, not claims' — no implementer summaries, only git diff and validator runs; external verify returned Verdict: VERIFIED with 0 blockers, 3 advisories (none reproducible on this tree); PR #378 opened base main, 10 files, 2 commits, evidence pack generated from acceptance criteria
 - **Next:** Wait for PR review. If needed: /audit-pr 378 before merge; or follow advisory triage for the three advisory rows (unrealistic --root arg, nonexistent bun.lock alias shape, self-declared diff-guard exception documented in Log G2)
+
+## 2026-11-03T00:43:03Z — feat-365-vuln-research — manual
+- **Commits:** 3 (`e84eb643…9764a18c`)
+- **Files:** 11 files
+- **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
+- **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
+- **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
