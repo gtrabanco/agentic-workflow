@@ -637,8 +637,8 @@ function makeDocFixture(t) {
   const writeDoc = (lines) =>
     fs.writeFileSync(
       path.join(root, UNIT_DOC),
-      ["# 9 — doc", "", "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
-       "|---|---|---|---|---|---|", "| F9 | S1 · src/index.ts:1 | code | med | source | fold: fix it |", "",
+      ["# 9 — doc", "", "## Findings", "", "| id | S# / file:line | axis | severity | impact | class | route |",
+       "|---|---|---|---|---|---|---|", "| F9 | S1 · src/index.ts:1 | code | med | blocking | source | fold: fix it |", "",
        "## Log", "", "- **L1** — 2026-10-23, the request, verbatim", ...lines, ""].join("\n"),
     );
   return { root, fold, writeDoc };
@@ -775,8 +775,8 @@ test("#308 F45 a legacy unit doc quoting ## Findings in a fence is not the colla
     [
       "# 9 — legacy doc", "", "## Objective", "quoted fence only", "",
       "How a migrated unit reads:", "", "```markdown", "## Findings", "",
-      "| id | S# / file:line | axis | severity | class | route |", "|---|---|---|---|---|---|",
-      "| F1 | S1 · src/index.ts:1 | code | med | source | fold: quoted |", "",
+      "| id | S# / file:line | axis | severity | impact | class | route |", "|---|---|---|---|---|---|---|",
+      "| F1 | S1 · src/index.ts:1 | code | med | blocking | source | fold: quoted |", "",
       "## Log", "", "- **F9** — folded F9 · `dead000` · quoted, not a receipt", "```", "",
     ].join("\n"),
   );

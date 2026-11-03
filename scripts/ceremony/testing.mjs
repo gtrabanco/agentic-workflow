@@ -95,8 +95,8 @@ ${tasks}
 
 ## Findings
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
 ${findings}
 
 ## Log

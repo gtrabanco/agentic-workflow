@@ -155,14 +155,14 @@ const OBLIGATION_HEADER = "| obligation-id | authority-source | affected-use-cas
 const obligationsBlock = (kind) => {
   if (kind === null) return "";
   if (kind === "empty") {
-    return `\n### Obligations\n\n${OBLIGATION_HEADER}\n|---|---|---|---|---|---|---|---|---|\n`;
+    return `\n### Obligations\n\n${OBLIGATION_HEADER}\n|---|---|---|---|---|---|---|---|---|---|\n`;
   }
   const row = kind === "open"
     ? `| O1 | AC1 | the toy works after the fix | P1 | P1 | unit-lane:implement | \`node --test scripts/toy.test.mjs\` | gate output in Evidence | planned |`
     : kind === "na"
       ? `| n/a | none | no normative behaviour in this fix | — | — | — | — | — | n/a: truly no obligations |`
       : `| O1 | AC1 | the toy works after the fix | P1 | P1 | unit-lane:implement | \`node --test scripts/toy.test.mjs\` | gate output in Evidence | verified |`;
-  return `\n### Obligations\n\n${OBLIGATION_HEADER}\n|---|---|---|---|---|---|---|---|---|\n${row}\n`;
+  return `\n### Obligations\n\n${OBLIGATION_HEADER}\n|---|---|---|---|---|---|---|---|---|---|\n${row}\n`;
 };
 
 const GUIDE = "# Project guide\n\nRules.\n";
@@ -410,9 +410,9 @@ test("unit-lineage: a later `###` heading never leaks the Findings table into th
   const specPath = path.join(root, UNIT_DIR, "SPEC.md");
   const spec = fs.readFileSync(specPath, "utf8");
   const findings =
-    "\n## Findings\n\n| id | S# / file:line | axis | severity | class | route |\n" +
-    "|---|---|---|---|---|---|\n" +
-    "| F7 | S4 · x.mjs:1 | mergeability | high | source | fold — an open repair |\n" +
+    "\n## Findings\n\n| id | S# / file:line | axis | severity | impact | class | route |\n" +
+    "|---|---|---|---|---|---|---|\n" +
+    "| F7 | S4 · x.mjs:1 | mergeability | high | blocking | source | fold — an open repair |\n" +
     "\n## Review verdict\n\n### Cycle 1 — 2026-10-27\n\n```\nREVIEW-VERDICT: FAIL\n```\n";
   fs.writeFileSync(specPath, spec + findings);
   const r = lineage(root);
@@ -450,7 +450,7 @@ test("unit-lineage: embedded+separate-file ledgers (never both) is BLOCKED (F15)
   const { root } = makeRepo(t, { obligations: "verified" });
   // add a separate-file ledger with an open row
   fs.writeFileSync(path.join(root, UNIT_DIR, "planning-obligations.md"),
-    `| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |\n|---|---|---|---|---|---|---|---|---|\n| O2 | AC2 | secondary | P2 | task | unit-lane | cmd | evidence | planned |\n`);
+    `| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |\n|---|---|---|---|---|---|---|---|---|---|\n| O2 | AC2 | secondary | P2 | task | unit-lane | cmd | evidence | planned |\n`);
   const r = lineage(root);
   assert.equal(r.status, 1, `never both must BLOCK: ${r.stdout}`);
   assert.match(r.stdout, /LINEAGE BLOCKED/);
