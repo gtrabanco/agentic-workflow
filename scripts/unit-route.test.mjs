@@ -232,7 +232,7 @@ test("F6: --help and -h print the usage contract on stdout and exit 0", () => {
   for (const flag of ["--help", "-h"]) {
     const result = run([flag]);
     assert.equal(result.status, 0, `${flag}: ${result.stderr}`);
-    assert.match(result.stdout, /^usage: node scripts\/unit-route\.mjs/m, flag);
+    assert.match(result.stdout, /^usage: bun scripts\/unit-route\.mjs/m, flag);
     assert.match(result.stdout, /Exit codes/i, `${flag}: the exit-code contract is named`);
     assert.match(result.stdout, /replan/, `${flag}: the closed route table is named`);
     assert.equal(result.stderr, "", `${flag}: help is not an error`);
