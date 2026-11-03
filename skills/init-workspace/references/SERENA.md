@@ -84,25 +84,6 @@ Never write `.serena/` or `.gitignore` without an explicit yes, and report
 exactly what was written. (This matches the skill's existing installation-consent
 rule.)
 
-### Provisioning order (fixed)
-
-The provisioning steps are executed in this exact order during Serena setup:
-
-```
-Provisioning order (fixed):
-1. Append .gitignore block (if absent)
-2. Write .serena/project.yml (if absent)
-3. Install Serena (uv/pipx)
-4. Register MCP for detected platform
-5. Append trust to global serena_config.yml
-6. Run health check — fail closed if any listed server failed to start
-7. Run `serena project index` to pre-cache symbols (avoids first-call delay)
-```
-
-Steps 1–6 are covered by their own sections below. Step 7 is documented here
-as the final step in the order; the implementation detail lives in the
-`serena project index` invocation within the provisioning flow.
-
 ## Health check — fail closed at the claim
 
 After activation, confirm **each listed server** initialised by asking Serena
