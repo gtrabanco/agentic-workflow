@@ -449,6 +449,16 @@ invariant and required failure state. Not embedded here.
   above; O7's validator cell was corrected to count the procedure **block** (the
   id is mentioned by pointer in `UPGRADE.md`, which is exactly what S9 asks for),
   and A6 was added so O10's three structural outcomes are checkable.
+- **P8a** — 2026-11-03, `node scripts/diff-guard.mjs --base main` · `DIFF-GUARD
+  BREACH — main..HEAD · Lines: 1176 > 400 · Files: 12 > 8`, recorded as an
+  exception rather than gamed: 513 of those lines are the unit doc, the two frozen
+  ledgers and the release intent this change's own instructions require; 385 are
+  the red corpus (a 15-case suite, of which 11 failed before the fix); the
+  remaining ~280 are the three references, the exported template, this
+  repository's repaired inventory and the close-out. No split keeps each slice
+  green and self-contained: the corpus, the procedure it grades and the repair
+  that proves the procedure are one subject, and `scripts/capability-inventory.test.mjs`
+  is red without any one of them.
 
 ## Next
 
