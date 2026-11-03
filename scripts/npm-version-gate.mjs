@@ -73,22 +73,26 @@ export function decidePublish({ local, published, lookupError = false }) {
   if (versions.length === 0) {
     return { publish: true, notice: null }; // not on the registry yet; the first publish is manual
   }
-  const latest = versions.reduce((best, v) => (compareSemver(v, best) > 0 ? v : best), versions[0]);
+  // The list is versions, not a dist-tag: this is the HIGHEST published
+  // version. Calling it `latest` made the skip notice claim a dist-tag held a
+  // version that `latest` did not point at (2026-11-03: the notice said
+  // `5.0.0-canary.20261102.1 holds latest` while npm's `latest` was 4.10.0).
+  const highest = versions.reduce((best, v) => (compareSemver(v, best) > 0 ? v : best), versions[0]);
 
   if (versions.includes(local)) {
     // The incident's branch: already published, so `npm publish` would hard-fail.
-    if (compareSemver(local, latest) < 0) {
+    if (compareSemver(local, highest) < 0) {
       return {
         publish: false,
-        notice: `local ${local} is already on the registry but ${latest} holds \`latest\` — skipping; moving \`latest\` back needs a forward version bump`,
+        notice: `local ${local} is already on the registry and ${highest} is the highest published version — skipping; this gate reads no dist-tag`,
       };
     }
     return { publish: false, notice: null };
   }
-  if (compareSemver(local, latest) < 0) {
+  if (compareSemver(local, highest) < 0) {
     return {
       publish: true,
-      notice: `publishing ${local} while ${latest} holds \`latest\` — the \`latest\` tag will move backwards`,
+      notice: `publishing ${local} while ${highest} is the highest published version — the latest tag will move backwards`,
     };
   }
   return { publish: true, notice: null };
