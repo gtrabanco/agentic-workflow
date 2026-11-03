@@ -4137,18 +4137,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** paths-ignore added so doc-only surfaces (features/fix logs, .pi, .engram, .claude-plugin, etc.) skip the root-suite; moved review-findings test fixtures from docs/features/26 and docs/features/36 into scripts/fixtures/ledger-provenance/ to keep docs clean of test artifacts
 - **Next:** Resolve the known ledger-provenance CI gap: decide whether to move the 2 remaining historical commits from docs/features/ into a separate pull_request_target/manual workflow, or accept them as invisible under paths-ignore
 
-## 2026-11-03T18:23:25Z — ci/publish-manual-only — manual
-- **Commits:** 1 (`79642c8e…79642c8e`)
-- **Files:** .github/workflows/publish.yml, .github/workflows/root-suite.yml, scripts/release-workflows.test.mjs
-- **Summary:** Diagnosed Serena health-check crash on .json files (SolidLSP exception -32601) and reported it as issue #2253
-- **Decisions:** Root cause: vscode-json-languageserver doesn't implement textDocument/references (LSP -32601). Serena's health check tests every LS including JSON, calls find_referencing_symbols on the first .json file, SolidLSP raises unhandled exception, entire check aborts. Not a config issue — it's a Serena bug (issue #2253 created).
-- **Next:** Issue reported: https://github.com/oraios/serena/issues/2253. No workaround needed for actual Serena MCP usage (TS/Bash tools work fine); only health-check gate is broken.
-
-
-
-## 2026-11-03T18:23Z — ci/publish-manual-only — Serena MCP + provisioning gap
-- **Commits:** 0 (diagnostic only — no code changes)
-- **Files:** none
-- **Summary:** Two discoveries in one session: (a) Serena MCP was never registered in pi — traced to manual removal in commit `f8afc6d0` (Sep 10). Fixed via `pi mcp add serena`, verified 5 languages active (typescript, bash, json, yaml). (b) init-workspace's Serena provisioning writes `.serena/project.yml`, installs LSPs, runs health-check — but never executes `serena project index`. Symbol cache starts empty; first `find_symbol`/`rename_symbol` calls suffer delays. Created issue #391 for both fixes.
-- **Decisions:** Serena index is one-time (docs: 'called only once, auto-updates during use') — no git hooks, no periodic runs. MCP registration is the real first-call dependency. No `download-ls-dependencies` (no Docker). Serena hardcodes npm (no bun config — issue #2252 in Serena repo).
-- **Next:** Fix #391: modify `skills/init-workspace/references/SERENA.md` to add `serena project index` as step 7 in the provisioning sequence, with `index:` field in the PROVISIONING report block.
+## 2026-11-03T18:24:52Z — ci/publish-manual-only — manual
+- **Commits:** 2 (`79642c8e…9bcd718e`)
+- **Files:** .github/workflows/publish.yml, .github/workflows/root-suite.yml, docs/LOGS.md, scripts/release-workflows.test.mjs
+- **Summary:** Fixed three CI defects (#387 fallout): canary dist-tag overwrite, ledger-provenance git path mismatch, and overly broad CI paths-ignore; created PR #390 merged to main. Then restructured publish.yml so it only runs on manual workflow_dispatch — removed push trigger, added mode: publish, cut now dispatches it after pushing. PR #392 on ci/publish-manual-only (awaiting #390 merge to pass root-suite).
+- **Decisions:** Removed push trigger from publish.yml (owner decision 2026-11-03): push caused spurious runs 41547545135, 41491732207, 41640940769, 41678476615 that published nothing. Cut now requests its own publish via gh workflow run after committing. Replaced byte-copy ledger fixtures with synthetic git history (makeMarkerHistory) to fix git log --path mismatch. All edits done with edit tool and bun -e, no python.
+- **Next:** 1) Merge PR #390 to fix root-suite ledger regression, then relaunch checks on PR #392. 2) Test cut→publish chain on a feature branch or main via manual dispatch.
