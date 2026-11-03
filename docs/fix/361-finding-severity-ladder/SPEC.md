@@ -517,6 +517,21 @@ V | V<n> | a finding's verification — the row it signs, the recheck and its re
   .changeset/361-finding-severity-ladder.md` · exit 0 · `ok
   361-finding-severity-ladder.md`.
 
+- **G6** — 2026-11-04, `node scripts/diff-guard.mjs --base main` · exit 1 · BREACH
+  1,881 lines > 400 · 65 files > 8.
+  **Recorded exception, not a forced number.** An honest split was attempted and
+  rejected: the only seams are schema/templates/readers/gates/prose, and every
+  one of them is a different *side of the same grammar*. A commit that adds the
+  column without the four positional parsers publishes a malformed carrier; one
+  that adds the ladder without the four templates leaves two severities in the
+  tree; one that adds the rule without `CLASSIFY.md` leaves `BLOCKER`
+  undefined; and one that adds any of it without the parity/probe pins has no
+  gate — each intermediate state is worse than the breach. A docs-only PR
+  would document a vocabulary the machine does not publish, and stacking is
+  forbidden (`AGENTS.md`: one PR per unit, always against `main`). The count is
+  reported as measured: 1,552 added / 329 deleted lines over 65 files, of which
+  the ten test-and-fixture files are the grammar's own fixtures and the
+  regression pins, never padding.
 - **G5** — 2026-11-04, `node scripts/unit-route.mjs 361` · exit 0 · every phase is
   recorded, so the router refuses close-out by name — `status is 'in-progress'
   (not 'done')` — because the PR that makes the row `done` does not exist yet.
