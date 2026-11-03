@@ -42,3 +42,7 @@ tmp/
 
 # Workspace install output (bun workspaces: one lock at the root)
 node_modules/
+
+# The measured-acceptance ledger's writer lock: transient by design, and a crash
+# can leave one behind until the next write takes it over (#383).
+docs/workflow/TIER_COST.md.lock

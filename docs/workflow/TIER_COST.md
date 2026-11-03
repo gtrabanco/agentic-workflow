@@ -15,6 +15,8 @@ never an extra cell.
 (`turn_start` → `turn_end` → `session_shutdown`), from the numbers the model
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
+Two sessions append on their own shutdowns, so the writer takes a lock beside
+the ledger and the row of whichever session read last is never lost.
 
 **What a row never carries.** No derived fact: the tier and the ceremony counts are repository facts that `scripts/tier-cost.mjs` resolves from the unit's own carrier at read time, so a stored copy could only drift.  No prompt text, no model output, no diff, no file
 content — and no session span. A session's first and last timestamps measure how
@@ -38,7 +40,7 @@ turns | `<integer>` | how many assistant turns the unit took
 model_ms | `<integer>` | milliseconds the model spent producing those turns
 tool_ms | `<integer>` | milliseconds the unit's tools spent, from the runtime's monotonic clock
 observed | `<YYYY-MM-DD>` | the date the sample was taken
-source | `<producer>:<ref>` | the producer's own provenance string, so a row traces back to the run that wrote it — the shipped sink writes `pi:session=<session id>`
+source | `<producer>:<ref>` | the producer's own provenance string, so a row traces back to the run that wrote it — the shipped sink writes `pi:session=<session id>`, or `pi:session=instance-<ref>` for a caller that had no session id at hand, never a shared constant
 ```
 
 Ceremony steps, as `skills/execute-phase/references/risk-tiers.md` declares them:
