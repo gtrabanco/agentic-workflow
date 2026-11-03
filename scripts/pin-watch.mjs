@@ -653,7 +653,7 @@ function main(argv) {
   );
   if (unknown.length > 0) {
     process.stderr.write(`pin-watch: unknown argument: ${unknown[0]}\n`);
-    process.stderr.write("usage: node scripts/pin-watch.mjs [--check|--file-issues] [--json] [--repo <owner/name>]\n");
+    process.stderr.write("usage: bun scripts/pin-watch.mjs [--check|--file-issues] [--json] [--repo <owner/name>]\n");
     return 2;
   }
 

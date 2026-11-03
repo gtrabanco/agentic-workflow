@@ -49,7 +49,7 @@ Installing a tool, wiring a hook, or overwriting an existing file each need an
 explicit yes; context never supplies one, and an ambiguous repository state
 (partially scaffolding) is not a route to guess. A consent gap is an open
 question: **(0) provenance** (search the repo's own docs and record where) →
-**(1) research** (concrete options) → **(2) halt**: run `node
+**(1) research** (concrete options) → **(2) halt**: run `bun
 scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop with the questions carried in it. The dispatcher needs a unit folder, and
 consent gaps usually precede any unit — so the run first writes a scratch one
