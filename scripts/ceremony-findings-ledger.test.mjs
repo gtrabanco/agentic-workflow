@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import { cer, makeRepo, unitDoc } from "./ceremony/testing.mjs";
 
 const REPO = path.resolve(import.meta.dirname, "..");
+const FIXTURE_ROOT = path.join(REPO, "scripts", "fixtures", "ceremony-findings-ledger");
 
 function makeUnit({ findingsRows = "", log = "" } = {}) {
   const dir = makeRepo();
@@ -29,7 +30,7 @@ function makeLegacyUnit() {
   const dir = makeRepo();
   fs.mkdirSync(path.join(dir, "docs/fix/2-legacy"), { recursive: true });
   fs.writeFileSync(path.join(dir, "docs/fix/2-legacy/SPEC.md"), `# fix/2-legacy\n\n## Issue\n\n\`#2\` — legacy.\n`);
-  const source = fs.readFileSync(path.join(REPO, "docs/fix/258-harden-needs-input-contracts/review-findings.md"), "utf8");
+  const source = fs.readFileSync(path.join(FIXTURE_ROOT, "review-findings.md"), "utf8");
   fs.writeFileSync(path.join(dir, "docs/fix/2-legacy/review-findings.md"), source);
   return dir;
 }
