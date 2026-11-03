@@ -43,6 +43,7 @@ your domains.
 | Cross-session memory | Engram, the workflow's memory substrate *(ask-first: provisioned by `/init-workspace` on a non-pi host, or by the pi package's `memory.engram` consent; the save/recall protocol is `unit-lane`'s `references/MEMORY.md`)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
+| LSP navigation & diagnostics | Serena *(optional: installed via `/init-workspace`; provides symbol lookup, diagnostics, and rename; document verification stays a deterministic script's job)* |
 
 ## Docs site *(optional)*
 
@@ -268,6 +269,30 @@ the project doesn't have; delete the block only if none apply.
 - complexity-lint: <command | none>  # e.g. the linter's complexity ruleset
 - noise-band: ±5%                    # deltas inside the band are not findings
 ```
+
+---
+
+## Serena setup *(optional — filled by `init-workspace`; read by `review-change`)*
+
+Serena is an opt-in LSP-powered navigation and diagnostics tool. When
+provisioned via `/init-workspace`, it writes `.serena/project.yml`, registers
+the MCP server, configures trust, and runs the health check.
+
+**Symbol indexing is automatic on first setup** — `init-workspace` runs
+`serena project index` during provisioning so the symbol cache is pre-built.
+During normal usage Serena refreshes the index itself when files change.
+**No git hooks or pre-commit triggers are needed.**
+
+In rare cases where symbols disappear or diagnostics behave inconsistently,
+run `serena project index` from the project root to rebuild the cache:
+
+```sh
+serena project index
+```
+
+LSP evidence (diagnostics, symbol lookups) is consumed by the workflow's review
+axes as optional navigation aid — document verification (schema rules, required
+sections, column counts) stays a deterministic script's job regardless.
 
 ---
 
