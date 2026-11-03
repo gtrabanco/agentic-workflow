@@ -256,7 +256,7 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 
 ## Next
 
-External verification of this branch. The unit's own steps are closed; nothing opens a PR, publishes the branch or merges until the owner's verdict, and `#394` then consumes the accumulator this unit ships.
+PR [#395](https://github.com/gtrabanco/agentic-workflow/pull/395) is open and its CI is green (`root-suite`, `pi-compat-guard`, `dependency-pin-gate`, `crate-node-compat`, `pi-node-compat`, `schema-node-compat`). Merge is the owner's; after it, the `## Fixes` row is removed and `#394` starts, consuming this unit's sink interface.
 
 ## References
 
