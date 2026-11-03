@@ -1,10 +1,9 @@
 # AGENTS.md
 
-> **This is the repository's single agent guide.** It used to be named
-> `CLAUDE.md`; that file is gone so there is exactly one copy of these rules.
-> Older Claude Code releases only read `CLAUDE.md` — if yours is one of them,
-> point it at this file rather than re-creating that one (see the
-> `init-workspace` skill for the same rule applied to target projects).
+> **This is the repository's single agent guide** — exactly one copy of these
+> rules. Older Claude Code releases only read `CLAUDE.md`; if yours is one of
+> them, point it at this file rather than re-creating that one (the
+> `init-workspace` skill applies the same rule to target projects).
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
 
@@ -100,9 +99,8 @@ under [Working rules](#working-rules)).
 - **Docs language is English-only (permanent).** Every committed artifact (skills,
   docs, templates, `README`, `CHANGELOG`, commits, PR descriptions) is in English,
   regardless of the language used to request the work; reply to the user in the
-  user's language. The bilingual EN/ES `.es.md` siblings and their reciprocal
-  language-switcher links were removed repo-wide (2026-09-15) to stop paying a
-  per-commit translation cost. Owner decision 2026-10-27 (issue
+  user's language. The bilingual `.es.md` siblings were removed repo-wide
+  (2026-09-15). Owner decision 2026-10-27 (issue
   [#232](https://github.com/gtrabanco/agentic-workflow/issues/232)): the package
   ships **English-only permanently** — bilingualism is a rendering concern of the
   project's upcoming web layer (#295 direction), never a committed artifact. Do
@@ -112,9 +110,8 @@ under [Working rules](#working-rules)).
   third party into this repository — into a package's `src/`, a script, or a
   skill reference — keeps a header comment naming the **source URL, the author,
   the version copied, and the license name**. A copy without those four is a
-  provenance defect, not a formatting slip: nothing else in the tree says where
-  the bytes came from, so an upstream relicensing or an attribution obligation
-  cannot be audited later. Vendoring is a real alternative to adding a
+  provenance defect: an upstream relicensing or an attribution obligation cannot
+  be audited later. Vendoring is a real alternative to adding a
   dependency and it is weighed as one (unit 28's D36 rejected a 1,419-line
   copied `sha256` closure on measured cost and kept the package's own core, and
   AC21 keeps the schema package dependency-free); whichever route a change
@@ -129,10 +126,9 @@ under [Working rules](#working-rules)).
   `main` only advances through a PR. When `main` moves and the PR conflicts, the
   branch is brought up to date by integrating `main` and resolving the conflicted
   files on the branch: the agent resolves the files and hands the branch back,
-  and the owner runs the integration. Commits already pushed are a shared
-  surface — a reviewer's checkout, another session, a CI artifact — so the owner
-  rewrites them when a rewrite is genuinely needed, and the PR then notes why the
-  hashes changed. Only the owner may rewrite published history: an agent must
+  and the owner runs the integration. Pushed commits are a shared surface — a
+  reviewer's checkout, another session, a CI artifact — so the owner rewrites
+  them when genuinely needed, and the PR then notes why the hashes changed. Only the owner may rewrite published history: an agent must
   never run `git push --force` (or any command with the identical result — a
   rebase/amend of already-pushed commits followed by a push, a ref delete plus
   re-push, or any force spelling) unless the owner explicitly authorizes it in
@@ -230,10 +226,9 @@ timeout model). CI still runs `node scripts/run-root-suite.mjs`. Before the
 adaptation `bun scripts/run-root-suite.mjs` failed by construction
 (`Cannot use test outside of the test runner` — bun only enters a runner through its
 `test` subcommand) and `bun test scripts/` was not equivalent (unit 329's Log `E19`:
-bun's 5-second default timeout, and bun's error frame echoing a source comment that
-named `ERR_MODULE_NOT_FOUND`); both classes are closed — the timeout is budgeted by
-the gate, and the echoed comment no longer carries that token. Issue #329's sweep
-had pinned the node-only carve-out; `scripts/invocation-drift.mjs` still pins this
+bun's 5-second default timeout, and an echoed error frame carrying
+`ERR_MODULE_NOT_FOUND`); issue #329's sweep had pinned the node-only carve-out and
+both failure classes are now closed. `scripts/invocation-drift.mjs` still pins this
 paragraph's facts, so they cannot be dropped silently.
 
 **Tool choice is re-decided every turn.**
@@ -317,18 +312,24 @@ findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md 
 findings-severity-ladder | skills/review-implementation/references/CLASSIFY.md | block:finding-severity-ladder@1 | finding-severity-ladder | no
 findings-impact | skills/review-implementation/references/CLASSIFY.md | block:finding-impact@1 | finding-impact | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
+risk-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_KINDS | risk-tier | yes
+risk-tier-signals | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_SIGNAL_KINDS | risk-tier-signal | yes
+risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:RISK_TIER_REASONS | risk-tier-reason | yes
+size-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SIZE_TIER_KINDS | size-tier | yes
+risk-tier-verdict | skills/execute-phase/references/risk-tiers.md | block:risk-tier-verdict@1 | n/a | no
+passive-record | skills/execute-phase/references/risk-tiers.md | block:passive-record@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
 
 Where prose repeats a version, a count, or a contract id, the machine is
-authoritative and the prose is the defect (AC15). A regex over sentences cannot
-find those, so each restatement is declared once here and the test **recomputes**
-the value: `claim` is a fixed form (`literal:<exact text>`, `version-tables`,
-`package-versions`; `version-tables` is retired with the per-skill ledger — D-40-14), `machine` names the publisher, `+` joins surfaces that each
-carry the same fact. `literal:` compares the number or id inside the quoted text;
-the table kinds compare every row the same way. A restatement found in review but
-not pinned here is a known-issue with its re-trigger condition, never a silent gap.
+authoritative and the prose is the defect (AC15). Each restatement is declared
+once here and the test **recomputes** the value: `claim` is a fixed form
+(`literal:<exact text>`, `package-versions`), `machine` names the publisher, `+`
+joins surfaces carrying the same fact; `literal:` compares the number or id inside
+the quoted text, the table kinds compare every row the same way. A restatement
+found in review but not pinned here is a known-issue with its re-trigger
+condition, never a silent gap.
 
 ```text
 rendered-facts@1
@@ -341,8 +342,8 @@ CHANGELOG.md | package-versions | package:version | equals-each
 The two schema generators are the clean example of the split the rule turns on: the
 same script rewrites a projection or reports on it, and only the reporting mode may
 run after a freeze. `bundle:skills` stages a gitignored build artifact that the
-package's own lifecycle stages and removes again, so no one has to sequence it by
-hand. No script or skill may keep a second copy of this list.
+package's own lifecycle stages and removes again. No script or skill may keep a
+second copy of this list.
 
 ## Conventions
 

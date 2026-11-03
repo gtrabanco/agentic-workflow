@@ -112,6 +112,9 @@ If a step argument is given (e.g. `P2`), use that step. Otherwise, the **first
 unfinished step** — the first P<k> in `Tasks` whose checkbox is unticked.
 Never execute a step the triage skipped.
 
+**The ceremony belongs to the risk tier** ([risk-tiers.md](references/risk-tiers.md)
+owns that table). A phase never lowers its own tier.
+
 ### 3. Pre-step gates
 
 Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.md)):

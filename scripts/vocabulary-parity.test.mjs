@@ -31,6 +31,10 @@ const {
   SWEEP_CLAIM_KINDS,
   SWEEP_MISMATCH_REASONS,
   PRE_EXECUTION_FINDING_CLASSES,
+  RISK_TIER_KINDS,
+  RISK_TIER_SIGNAL_KINDS,
+  RISK_TIER_REASONS,
+  SIZE_TIER_KINDS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -58,6 +62,10 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["SWEEP_CLAIM_KINDS", SWEEP_CLAIM_KINDS],
     ["SWEEP_MISMATCH_REASONS", SWEEP_MISMATCH_REASONS],
     ["PRE_EXECUTION_FINDING_CLASSES", PRE_EXECUTION_FINDING_CLASSES],
+    ["RISK_TIER_KINDS", RISK_TIER_KINDS],
+    ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS],
+    ["RISK_TIER_REASONS", RISK_TIER_REASONS],
+    ["SIZE_TIER_KINDS", SIZE_TIER_KINDS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
@@ -92,6 +100,25 @@ test("every prose copy of the Future-status set carries exactly the canonical to
       assert.match(text, new RegExp("\\\\?`" + status + "(?:\\\\?`| <)"), `${copy}: the canonical token '${status}' is present`);
     }
     assert.doesNotMatch(text, /kept deferred/, `${copy}: no off-vocabulary status token survives here`);
+  }
+});
+
+test("the risk tiers are the published set, and the classifier re-exports rather than restates them", () => {
+  assert.deepEqual([...RISK_TIER_KINDS], ["passive", "standard", "high"]);
+  const classifier = read("scripts/risk-tiers.mjs");
+  // The classifier may re-export the sets; it may not spell a tier literal of its own.
+  assert.match(classifier, /from "\.\.\/packages\/agentic-workflow-schema\/src\/vocabularies\.ts"/,
+    "one home: the classifier imports the published consts");
+  assert.doesNotMatch(classifier, /\["passive",\s*"standard"/, "no second copy of the tier set");
+});
+
+test("the tier-verdict grammar block publishes every token of the three sets", () => {
+  const block = read("skills/execute-phase/references/risk-tiers.md");
+  const fenced = /```text\nrisk-tier-verdict@1\n([\s\S]*?)```/.exec(block);
+  assert.ok(fenced, "the grammar block is fenced and versioned");
+  const cells = new Set(fenced[1].split(/[\s`,|]+/).filter(Boolean));
+  for (const [name, values] of [["RISK_TIER_KINDS", RISK_TIER_KINDS], ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS], ["RISK_TIER_REASONS", RISK_TIER_REASONS], ["SIZE_TIER_KINDS", SIZE_TIER_KINDS]]) {
+    for (const value of values) assert.ok(cells.has(value), `${name}: ${value} is published by risk-tier-verdict@1`);
   }
 });
 

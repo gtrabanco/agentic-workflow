@@ -51,6 +51,28 @@ planned task with its negative-capability pin, never a review-time discovery.
 
 What this unit is NOT. Findings discovered during implementation never expand scope.
 
+## Risk tier
+
+The unit's ceremony is proportional to risk, and the tier is **computed, never
+chosen**: `bun scripts/ceremony.mjs tier classify` reads the change's paths and
+contents and emits `passive | standard | high` (owner:
+`skills/execute-phase/references/risk-tiers.md`, block `risk-tier-verdict@1`).
+Copy the verdict below verbatim; a tier written from memory is not a tier.
+
+- **`passive`** — documentation, images, comments, prose with no executable
+  effect. This unit doc is **not created at all**: the readback lives in
+  `docs/passive/<id>.md` (block `passive-record@1`: id, tier, paths, readback,
+  gate), and the project's deterministic gate is the whole verification.
+- **`standard`** — the ceremony this document describes.
+- **`high`** — this document **plus** the named high-risk item from the
+  verdict's `signals[]`, quoted in `## Impact`, plus the full review pass.
+
+**Task Size = Understood + Contained risk + Resumable-from-diff.** File counts
+never decide.
+
+- **Tier** — `<passive | standard | high>` · **Task Size** — `<verdict.task_size>`
+- **Named high-risk item** — `<signals[0] or "none — not a high-tier unit">`
+
 ## Future
 
 Ideas the user deferred ("down the road I'd like…"), captured verbatim with a
