@@ -33,9 +33,10 @@ const IMPL_FILE = `export const pair = 1;\n`;
 const NO_PAIR_TEST = `import { test } from "node:test";\ntest("structural gate", () => {});\n`;
 
 /**
- * A throwaway repository whose commits are `[{ files, message }, …]`, each
- * committed in order with signing neutralized (the operator's
+ * A throwaway repository whose commits are `[{ files, deletes, message }, …]`,
+ * each committed in order with signing neutralized (the operator's
  * `commit.gpgsign` cannot fail a fixture that commits nothing real).
+ * `deletes` removes paths with `git rm`, so a later re-add counts as an add.
  */
 function withRepo(commits, run) {
   const root = fs.mkdtempSync(path.join(tmpBase, "red-first-"));
@@ -50,10 +51,11 @@ function withRepo(commits, run) {
     git(["config", "user.name", "fixture"]);
     const shas = [];
     for (const commit of commits) {
-      for (const [file, content] of Object.entries(commit.files)) {
+      for (const [file, content] of Object.entries(commit.files ?? {})) {
         fs.mkdirSync(path.join(root, file, ".."), { recursive: true });
         fs.writeFileSync(path.join(root, file), content);
       }
+      if (commit.deletes) git(["rm", "-q", "--", ...commit.deletes]);
       git(["add", "."]);
       git(["-c", "commit.gpgsign=false", "commit", "-m", commit.message]);
       shas.push(git(["rev-parse", "HEAD"]).trim());
@@ -143,6 +145,26 @@ test("a suite with no implementation sibling is out of scope (O4)", () => {
       const result = gate(root);
       assert.equal(result.status, 0, result.output);
       assert.match(result.stdout, /^verdict: PASS$/m, result.stdout);
+    },
+  );
+});
+
+// ── A re-added pair is judged by its latest add (O1) ────────────────────────
+
+test("a pair re-added together after an earlier add still fails (O1)", () => {
+  withRepo(
+    [
+      gateCommit,
+      { files: { "scripts/back.test.mjs": TEST_FILE }, message: "test: the suite lands red" },
+      { files: { "scripts/back.mjs": IMPL_FILE }, message: "feat: the implementation lands green" },
+      { deletes: ["scripts/back.mjs", "scripts/back.test.mjs"], message: "chore: drop the pair" },
+      { files: { "scripts/back.mjs": IMPL_FILE, "scripts/back.test.mjs": TEST_FILE }, message: "feat: the pair lands in one commit again" },
+    ],
+    (root) => {
+      const result = gate(root);
+      assert.equal(result.status, 1, result.output);
+      assert.match(result.stdout, /FINDING .*scripts\/back\.mjs/, result.stdout);
+      assert.match(result.stdout, /^verdict: FAIL$/m, result.stdout);
     },
   );
 });
