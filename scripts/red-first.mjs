@@ -64,10 +64,10 @@ function main(argv) {
   };
   const lines = (out) => out.split("\n").map((line) => line.trim()).filter(Boolean);
 
-  /** The oldest commit that added `file` — its introducing commit. */
+  /** The most recent commit that added `file` — the add that produced its current bytes. */
   const introduced = (file) => {
     const commits = lines(git(["log", "--diff-filter=A", "--format=%H", "--", file]));
-    return commits.length === 0 ? null : commits[commits.length - 1];
+    return commits.length === 0 ? null : commits[0];
   };
   const isAncestor = (older, newer) => ancestorStatus(older, newer, root) === 0;
 

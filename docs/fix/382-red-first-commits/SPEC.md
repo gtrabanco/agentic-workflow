@@ -288,6 +288,26 @@ proves it. Frozen at cut.
   repo's runtime convention. `dependency-advisory-pass.mjs:57` is flagged by
   the same run but is main's own pre-existing red (#365's file vs #380's new
   gate), recorded here as an advisory outside this unit's scope.
+- **E8** — 2026-11-05, the correction round the external verification forced
+  (`decisions.md`, P6). The verifier proved the gate answered `PASS` for the
+  exact one-commit regression this unit exists to close: `introduced()` read
+  `commits[commits.length - 1]` — the OLDEST add of a path — so a pair deleted
+  and re-added together after the cutoff was ordered by its first-ever add and
+  never flagged. Red side: the new case `a pair re-added together after an
+  earlier add still fails (O1)` against the previous index · `node --test
+  scripts/red-first.test.mjs` · exit 1 · 8 pass, **1 fail (the re-added case
+  only)** — every pre-existing case stays green, so the case discriminates
+  rather than duplicating. Green side: `introduced()` takes `commits[0]`, the
+  add that produced the current bytes · `node --test scripts/red-first.test.mjs`
+  · exit 0 · `9 tests, 9 pass, 0 fail`. The shipped tree is unchanged by the
+  fix: `node scripts/red-first.mjs` · exit 0 · `29 pair(s) · 0 after the cutoff
+  · cutoff 1374ea9`, `verdict: PASS` — the only multi-add pair
+  (`scripts/review-receipt.test.mjs`) stays grandfathered because its latest
+  add (`2fc1432c`) predates the cutoff. Root gate: `node
+  scripts/run-root-suite.mjs` · exit 0 · `1438 tests, 1437 pass, 0 fail`.
+  `scripts/red-first.test.mjs` is a protected path (`**/*.test.*`, `freeze:
+  true`), so the edit ships with the owner's `approval` record in
+  `decisions.md`, never as an unattributed suite change.
 
 ## Triaged steps
 
