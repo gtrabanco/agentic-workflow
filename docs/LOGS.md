@@ -4136,3 +4136,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Pruned root-suite CI paths + migrated ledger-provenance fixtures
 - **Decisions:** paths-ignore added so doc-only surfaces (features/fix logs, .pi, .engram, .claude-plugin, etc.) skip the root-suite; moved review-findings test fixtures from docs/features/26 and docs/features/36 into scripts/fixtures/ledger-provenance/ to keep docs clean of test artifacts
 - **Next:** Resolve the known ledger-provenance CI gap: decide whether to move the 2 remaining historical commits from docs/features/ into a separate pull_request_target/manual workflow, or accept them as invisible under paths-ignore
+
+## 2026-11-03T17:06Z — main — manual
+- **Commits:** 4 (a5388742…b1ec9240)
+- **Files:** 5 files (1012 additions, 2 deletions)
+- **Summary:** Fixed root-suite CI failure, pruned doc-only CI paths, migrated ledger-provenance fixtures, and implemented computed risk-tier classifier with ceremony CLI.
+- **Decisions:** Root-suite CI was failing due to stale fixture paths and doc-only coverage in CI config; pruned paths to reduce noise and moved review-fixtures to a dedicated fixture directory. Risk-tier classifier (fix #387) implemented as a computed classifier with ceremony integration.
+- **Next:** Continue with fix/360 branch work or next roadmap unit
