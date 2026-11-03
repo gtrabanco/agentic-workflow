@@ -146,9 +146,12 @@ test("the deleted-skill guard is a visible skip under node --test and bun test (
 
   // The root suite already runs under `node --test`; a nested run needs the
   // parent's test context cleared or node refuses to execute the child file.
+  // `process.execPath` is bun when this suite runs under `bun test`, and the
+  // node leg must stay the node binary the convention names.
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
-  const node = spawnSync(process.execPath, ["--test", file], { cwd: repoRoot, encoding: "utf8", env });
+  const nodeBin = /(?:^|[\\/])bun(?:\.exe)?$/.test(process.execPath) ? "node" : process.execPath;
+  const node = spawnSync(nodeBin, ["--test", file], { cwd: repoRoot, encoding: "utf8", env });
   assert.equal(node.status, 0, node.stdout + node.stderr);
   assert.match(`${node.stdout}\n${node.stderr}`, /skipped 1/, "the runner must count the skip, not report a bare green");
 
