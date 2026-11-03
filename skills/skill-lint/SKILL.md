@@ -13,9 +13,9 @@ description: >
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The lint results (all 7 authoring rules, including the two machine-surface
-  parity/ordering checks and the internal-skill discovery-exclusion check)
-  were reported
+✓ The lint results (all 8 authoring rules, including the two machine-surface
+  parity/ordering checks, the internal-skill discovery-exclusion check and the
+  published-vocabulary check) were reported
 ✓ Every violation was reported to the user, none silently repaired
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
@@ -41,7 +41,7 @@ anything, confirm you are in that repo (presence of `skills/` +
 
 ### 1. Lint, warn, never repair
 
-Check all seven `AGENTS.md` invariants per
+Check all eight `AGENTS.md` invariants per
 [change discovery and authoring lint](references/DISCOVERY_AND_LINT.md).
 Report every violation without fixing it.
 

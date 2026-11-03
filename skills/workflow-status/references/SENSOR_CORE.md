@@ -105,7 +105,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
 
    | Condition | `suggested_tier` |
    |---|---|
-   | `severity == "high"` | `strong` |
+   | `severity` is `BLOCKER` or `CRITICAL` (a legacy `high` row projects identically) | `strong` |
    | `axis` ∈ {security, correctness, logic, architecture, design, concurrency} | `strong` |
    | anything else | `cheap` |
 

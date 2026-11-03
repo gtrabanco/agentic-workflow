@@ -195,7 +195,7 @@ A finding without changed-bytes grounding is a report-note, never fix-now.
 This is narrower and stronger than the delta-mode "genuinely new" admission:
 it bounds what a reviewer may invent at all, not only where it may re-report.
 The classifier routes `fix-now (delete)` for genuine findings; report-notes
-route to `info` severity and do not block.
+route to `SUGGESTION` severity with impact `report-only` and do not block.
 
 ## Portability
 

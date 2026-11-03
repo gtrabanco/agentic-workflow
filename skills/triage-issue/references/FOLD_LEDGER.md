@@ -11,11 +11,12 @@ redefined here** — the legacy 7-column row:
 | id | file:line | axis | severity | class | route | folded |
 ```
 
-and the migrated 6-column `findings-table@1` row (`id`, `S# / file:line`, `axis`,
-`severity`, `class` = the owner that repairs it, `route` = the disposition), whose
-rows are open by definition: closing one deletes the row and appends a `## Log` `F`
-line. Writing a 7-column row, or a `folded` flip, into a migrated unit's table is a
-carrier violation, not a formatting slip.
+and the migrated 7-column `findings-table@1` row (`id`, `S# / file:line`, `axis`,
+`severity` = the published ladder, `impact`, `class` = the owner that repairs it,
+`route` = the disposition), whose rows are open by definition: closing one deletes
+the row and appends a `## Log` `F` line. Writing the legacy row shape, or a
+`folded` flip, into a migrated unit's table is a carrier violation, not a
+formatting slip.
 
 The appended row: `folded` starts `no` (this skill never sets `folded: yes` —
 that transition belongs solely to `/fold-findings`), and the `route` cell
