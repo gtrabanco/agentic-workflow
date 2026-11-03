@@ -3996,3 +3996,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
 - **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
 - **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
+## 2026-11-03T10:54:28Z — fix/360 — manual
+- **Commits:** 10 (`87ae66a6…87c83d46`)
+- **Files:** 31 files
+- **Summary:** External verify of fix/360 (risk-tiered ceremony classifier) — correction batch: the verifier found 2 blockers and 3 advisories; owner accepted all
+- **Decisions:** B1-b: guard en lint-changeset.mjs que rechaza bodies citando paths inexistentes (no solo corregir la cita); A2: meter el inventario de SIZE_TIER_KINDS ahora en vez de aplazar a 360c
+- **Next:** Commit y crear PR fix/360; si se quiere A3 (SVG con script), registrar en unit doc como known-issue
