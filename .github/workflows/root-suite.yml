@@ -22,7 +22,45 @@ name: Root suite
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/features/**'
+      - '!docs/features/_TEMPLATE/**'
+      - 'docs/fix/**'
+      - '!docs/fix/_TEMPLATE/**'
+      - '!docs/fix/README.md'
+      - 'docs/LOGS.md'
+      - 'docs/research/**'
+      - 'docs/design/**'
+      - '.changeset/**'
+      - 'README.md'
+      - 'LICENSE'
+      - '.pi/**'
+      - '.pi-web/'
+      - '.serena/**'
+      - '.engram/**'
+      - '.claude-plugin/**'
+      - '.bun-version'
+      - '.node-version'
   pull_request:
+    paths-ignore:
+      - 'docs/features/**'
+      - '!docs/features/_TEMPLATE/**'
+      - 'docs/fix/**'
+      - '!docs/fix/_TEMPLATE/**'
+      - '!docs/fix/README.md'
+      - 'docs/LOGS.md'
+      - 'docs/research/**'
+      - 'docs/design/**'
+      - '.changeset/**'
+      - 'README.md'
+      - 'LICENSE'
+      - '.pi/**'
+      - '.pi-web/'
+      - '.serena/**'
+      - '.engram/**'
+      - '.claude-plugin/**'
+      - '.bun-version'
+      - '.node-version'
   workflow_dispatch: {}
 
 permissions:
