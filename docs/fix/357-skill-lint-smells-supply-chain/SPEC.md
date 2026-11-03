@@ -307,6 +307,25 @@ proves it. Frozen at cut.
 - **D5** — 2026-11-02, delivery: one PR against `main` (the repo forbids stacking)
   with every slice below; `diff-guard` is reported honestly rather than split.
 
+- **E1** — 2026-11-02, red first (obligations O2–O11): `node --test scripts/skill-lint.test.mjs` · exit 1 · every case failing on `MODULE_NOT_FOUND` for `scripts/skill-lint.mjs`, which did not exist yet — the fixture corpus was written and run before the scanner.
+- **E2** — 2026-11-02, the corpus green after P3: `node --test scripts/skill-lint.test.mjs` · exit 0 · `20 tests, 20 pass, 0 fail` — one fixture per check, the two allowance cases (declared marker, placeholder argument), the two ablation cases (pinned URL, regex escape), the provenance-date case, the `--skill` subset, the byte-stable/JSON/no-write case, the recorded-skip case, the authoring-rule survival case and the shipped-tree pin.
+- **E3** — 2026-11-02, the full sweep (S12, O11): `node scripts/skill-lint.mjs` · exit 0 · `89 file(s) · 7 check(s)`, `0 finding(s)`, `verdict: PASS`. The triage of what the sweep *would* have reported without the allowances is D1 (the 20 comments) and D2 (the 5 dates); no repair was needed, and the shipped-tree case in E2 now pins it.
+- **E4** — 2026-11-02, report-only (O1): `git status --porcelain` is empty immediately after the sweep — the scan created nothing and rewrote nothing; `node scripts/skill-lint.mjs` exits 0.
+- **E5** — 2026-11-02, the attribution rows (S14, O13): `rg -c 'scripts/skill-lint.mjs' docs/research/ATTRIBUTION.md` · exit 0 · `2` — both #357 rows now name the scanner, one for the smell paper and one for the supply-chain paper.
+- **E6** — 2026-11-02, the budgets and the release intent (S13, O12): `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets: 28 skills` (no budget re-based — `skill-lint` stays at the manifest defaults, 98 → 148 lines against a 240 ceiling); `bun scripts/lint-changeset.mjs` · exit 0 · `10` files `ok`, including `.changeset/feat-357-skill-smells-…md`.
+- **E7** — 2026-11-02, differential (no pre-existing behaviour changes): the base commit in a `mktemp -d` copy (`6e65d0b3`, built with `bun install --frozen-lockfile` + `bun run build` in the schema package) ran `node scripts/run-root-suite.mjs` → `1381 tests, 2 fail` (`unit 26's fold ledger…`, `unit 36's fold ledger…`), and both of those pass in isolation in **both** trees, so they are load flakes, not a base verdict; at head the same command reports `1401 tests, 0 fail`. `+20` is exactly the new suite, and no other suite's pass count moved.
+- **G1** — 2026-11-02, the root gate: `node scripts/run-root-suite.mjs` · exit 0 · `1401 tests, 1401 pass, 0 fail`.
+- **G2** — 2026-11-02, `bun scripts/phase-lint.mjs docs/fix/357-skill-lint-smells-supply-chain/SPEC.md` · exit 0 · `verdict PASS` (6/6 per phase, fingerprint `6ca43a01…`); `node scripts/unit-lineage.mjs --unit 357-skill-lint-smells-supply-chain` · exit 0 · `LINEAGE OK`.
+- **G3** — 2026-11-02, `node --test scripts/normative-drift.test.mjs` · exit 0 · `20 tests, 20 pass` — the new reference adds no declared normative surface and the linter's closing block is unchanged; `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS · 28 claims checked · 13 skipped`.
+- **G4** — 2026-11-02, `node scripts/diff-guard.mjs --base origin/main` · BREACH `1123 > 400` lines, `12 > 8` files.
+  **Recorded exception, not a forced number.** The unit doc and its two ledgers are 410 of those lines and are mandatory here (they substitute the lane's plan step); the scanner plus its fixture corpus are 556; the owning reference and the linter's rewrite are 117; the rest is one-line wiring. A split was considered and rejected: stacking is forbidden by `AGENTS.md`, and a docs-only PR would document a scanner that does not exist yet, which is exactly the drift this unit's own subject is about.
+- **P1** — 2026-11-02, the unit doc, its two ledgers and the frozen failure corpus cut before any code · `e006b3fb`.
+- **P2** — 2026-11-02, the fixture corpus (`scripts/skill-lint.test.mjs`), red on the missing module (E1) · `a305e5b1`.
+- **P3** — 2026-11-02, `scripts/skill-lint.mjs`: the seven checks, the marker shape, the pinned-URL rule, `--skill`, `--json`, the byte-stable report · `a305e5b1`.
+- **P4** — 2026-11-02, the linter wiring: `references/CHECKS.md` owns the seven rules and the three recorded skips, `SKILL.md` runs the scanner in its turn contract and process · `a305e5b1`.
+- **P5** — 2026-11-02, the sweep and its triage (D1/D2), `docs/workflow/SKILLS.md`, the roadmap rows, the two attribution cells, the change→suite route and the changeset · `0ecb1ef7`.
+- **P6** — 2026-11-02, verification on the full diff: every obligation row closed with its validator run (E4–E7, G1–G4) and the branch handed off.
+
 ## Triaged steps
 
 ```text
@@ -325,7 +344,8 @@ so `P2` exists and is the frozen proof of `O10`.
 
 ## Next
 
-P2 — write `scripts/skill-lint.test.mjs` red-first, then implement `scripts/skill-lint.mjs`.
+The owner's verdict on the diff: the sweep, the suite and the ledger are the
+evidence, and the merge closes `#357` and removes the `## Fixes` row.
 
 ## References
 
