@@ -1,8 +1,10 @@
 # 90 — off-vocab-future
 
 > Fixture: reintroduces the F40 defect class verbatim — a Future row whose
-> status token is outside the published vocabulary. This file is read by
-> `scripts/vocabulary-probe.test.mjs` and must keep failing the probe.
+> status token is outside the published vocabulary — and carries the three
+> findings rows `#361` must refuse: the retired `medium` severity, a `BLOCKER`
+> whose impact says it blocks nothing, and an empty impact cell. This file is
+> read by `scripts/vocabulary-probe.test.mjs` and must keep failing the probe.
 
 ## Future
 
@@ -12,10 +14,12 @@
 
 ## Findings
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
-| F1 | S1 · docs/features/90-off-vocab-future/SPEC.md:9 | code | medium | source | fold |
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+| F1 | S1 · docs/features/90-off-vocab-future/SPEC.md:18 | code | medium | docs-only | source | fold |
+| F2 | S2 · docs/features/90-off-vocab-future/SPEC.md:19 | code | BLOCKER | report-only | source | fold |
+| F3 | S3 · docs/features/90-off-vocab-future/SPEC.md:20 | code | WARNING |  | source | fold |
 
 ## Progress log
 
-- 2026-10-27 09:00 — fixture seeded — next: probe must refuse the token above
+- 2026-10-27 09:00 — fixture seeded — next: probe must refuse the tokens above

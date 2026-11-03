@@ -291,6 +291,8 @@ spec-requirement-ids | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC
 task-spec-links | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:task-spec-link@1 | n/a | no
 log-kind-vocabulary | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:log-kind@1 | n/a | no
 findings-carrier | docs/features/_TEMPLATE/SPEC.md + docs/fix/_TEMPLATE/SPEC.md + template/docs/features/_TEMPLATE/SPEC.md + template/docs/fix/_TEMPLATE/SPEC.md | block:findings-table@1 | n/a | no
+findings-severity-ladder | skills/review-implementation/references/CLASSIFY.md | block:finding-severity-ladder@1 | finding-severity-ladder | no
+findings-impact | skills/review-implementation/references/CLASSIFY.md | block:finding-impact@1 | finding-impact | no
 path-protection-reasons | packages/agentic-workflow/src/path-policy.mjs | schema-export:PATH_GUARD_REASONS | path-protection-reason | no
 ```
 
