@@ -227,6 +227,77 @@ proves it. Frozen at cut.
   date constant: a date drifts with rebases and timezones, while the
   introducing commit is a fact git already holds, and it makes the gate
   self-anchoring on any clone (no configuration surface).
+- **E1** — 2026-11-04, the cut is frozen before any code:
+  `bun scripts/phase-lint.mjs docs/fix/382-red-first-commits/SPEC.md` · exit 0 ·
+  `verdict PASS` (5/5 phases; fingerprint `3da0f2d6…`); the triage block ran via
+  `bun scripts/unit-route.mjs --triage 382-red-first-commits`.
+- **E2** — 2026-11-04, the red commit (S1, O8, red side): the suite alone at
+  commit `b8461b4f` — `node --test scripts/red-first.test.mjs` · exit 1 · every
+  case failing on the missing gate file (`ENOENT … scripts/red-first.mjs`; the
+  fixture corpus loads the gate's bytes for fixture repos, so the module-missing
+  failure is the loader's, not a test bug).
+- **E3** — 2026-11-04, the green commit (S1, O8, green side): the gate lands at
+  commit `1374ea96` — `node --test scripts/red-first.test.mjs` · exit 0 ·
+  `8 tests, 8 pass, 0 fail` — the two required failure states, the passing
+  order, the grandfathering, the no-pair skip, the usage error, determinism and
+  the shipped-tree pin.
+- **E4** — 2026-11-04, the shipped tree (O4, S2):
+  `node scripts/red-first.mjs` · exit 0 · `28 pair(s) · 0 after the cutoff ·
+  cutoff 1374ea9`, `0 finding(s)`, `verdict: PASS` — every pre-gate pair is
+  grandfathered, including this unit's own pair now ordered test-first.
+- **E5** — 2026-11-04, the wiring surfaces (O6, O7):
+  `rg -c 'red-first' skills/unit-lane/references/TESTS.md
+  skills/unit-lane/references/IMPLEMENT.md` → 1 and 1;
+  `rg -c 'red commit' AGENTS.md docs/workflow/FEATURE_WORKFLOW.md` → 2 and 1;
+  `bun scripts/check-skill-context.mjs` · exit 0 · `PASS context budgets:
+  28 skills`, and `check-skill-context.mjs --routes` · exit 0 after the
+  execute-phase rewrap was trimmed back under the route ceilings (three
+  trimming commits — the ceilings were exact at the base).
+- **E6** — 2026-11-04, the release intent (O9):
+  `bun scripts/lint-changeset.mjs` · exit 0 ·
+  `.changeset/fix-382-red-first-commits-tests-land-red-before-the-implementation.md`
+  ok, declaring `execute-phase` and `unit-lane` minor.
+- **G1** — 2026-11-04, the root gate (O9): `node scripts/run-root-suite.mjs` ·
+  exit 0 · `1424 tests, 1424 pass, 0 fail` — the new suite is discovered with
+  no registration step; `node --test
+  scripts/structural-sibling-pins.test.mjs` · exit 0 (existence still enforced).
+- **G2** — 2026-11-04, `node scripts/diff-guard.mjs --base 1f527d45 --unit
+  382-red-first-commits` · BREACH, both budgets: 664 lines > 400, 13 files > 8
+  (against origin/main the run is meaningless — main moved past the branch
+  base). **Recorded exception, not a forced number:** the unit doc and its two
+  ledgers (~290 lines) are the spec-by-reference block; the gate and its
+  fixture corpus (~380 lines) are the deliverable; the remaining six files are
+  one-line-to-one-paragraph wiring. A split was considered and rejected:
+  stacking is forbidden by `AGENTS.md`, and a prose-only PR would state a rule
+  with no enforcing gate — the exact proven-desert pattern this unit closes.
+- **P1** — 2026-11-04, the unit doc, its two ledgers and roadmap row 102 cut
+  before any code · `acc1735f`.
+- **P2** — 2026-11-04, the fixture corpus committed alone — the red commit
+  (E2) · `b8461b4f`.
+- **P3** — 2026-11-04, the gate implemented — the green commit (E3), then the
+  suite's report-header pin corrected to the shipped shape · `1374ea96`,
+  `4ad9bb75`.
+- **P4** — 2026-11-04, the wiring: the route row, the AGENTS.md bullet (its
+  pin's line shape kept), FEATURE_WORKFLOW, TESTS/IMPLEMENT, the
+  execute-phase rewrap · `255c3e28`, `dfd27311`, `ded26c78`.
+- **P5** — 2026-11-04, verification on the full diff (E1–E6, G1–G2), the
+  changeset, the roadmap status and the PR that closes #382.
+
+## Triaged steps
+
+```text
+TRIAGE — 382-red-first-commits (fix)
+Steps: implement, evidence
+Tiers: implement: cheap, evidence: strong
+Skipped: research: trivial scope, design: trivial scope, plan: trivial scope, tests: trivial scope, review: trivial scope, docs: trivial scope, release: not a feature
+Budget: strong
+```
+
+Run 2026-11-04 via `bun scripts/unit-route.mjs --triage 382-red-first-commits`.
+This block is authoritative for routing, and the model never re-derives it.
+**Declared deviation:** the catalog skips `tests` as trivial scope, but this
+unit's own rule (S1) orders a test before the behaviour it judges, so `P2`
+exists and is the frozen proof of O8 — the red commit is the tests step.
 
 ## Next
 
