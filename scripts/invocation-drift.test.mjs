@@ -5,9 +5,9 @@
  *
  * The gate (`scripts/invocation-drift.mjs`) is the enforcement half of the
  * bun-before-node / rg-before-grep discipline: it fails closed on a wrong-tool
- * usage string, a skill or template literal that teaches the fallback (script
- * or test invocation), a missing guide sentence or turn box, and a missing
- * suite carve-out. This suite proves the gate red on one fixture per rule,
+ * usage string, a skill, template or tutorial literal that teaches the fallback
+ * (script or test invocation), a missing guide sentence or turn box, and a
+ * missing suite carve-out. This suite proves the gate red on one fixture per rule,
  * green on a compliant toy tree, and green on this checkout (the live case is
  * the frozen-failure corpus' exit condition).
  *
@@ -55,6 +55,12 @@ function compliantTree(name) {
   write(root, "scripts/setup-env.mjs", "// usage: node scripts/setup-env.mjs [--check]\n");
   write(root, "scripts/update-tools.mjs", "// usage: node scripts/update-tools.mjs [--dry-run]\n");
   write(root, "skills/execute-phase/references/PREFLIGHT.md", "run `bun scripts/phase-lint.mjs` (node fallback\n`node scripts/phase-lint.mjs`)\n");
+  // The tutorial's instruction pages are gated too; the compliant tree carries
+  // one in the bun form plus the two declared exemptions (the bootstrap pair in
+  // prose, and the frozen-receipts document).
+  write(root, "docs/workflow/FEATURE_WORKFLOW.md", "Invoke `bun scripts/unit-route.mjs --triage <NN>` to get the steps.\n");
+  write(root, "docs/workflow/SETUP.md", "node scripts/setup-env.mjs --check    # verify only\nnode scripts/update-tools.mjs --dry-run\n");
+  write(root, "docs/workflow/REPOSITORY_STATE.md", "| F005 | receipt | `node scripts/check-skill-context.mjs` | frozen |\n");
   return root;
 }
 
@@ -118,6 +124,26 @@ test("test invocations are bun-first too, in skills and in the scaffold template
   assert.ok(!violationIds(legal).includes("node-command-literal"), "the declared test fallback is legal");
 });
 
+test("the tutorial's instruction pages are gated with the same fallback window (S3, S9)", () => {
+  const root = compliantTree("docs-literal");
+  write(root, "docs/workflow/LANE_FLOW.md", "Consume it with the dispatcher:\n\n```\nnode scripts/needs-input.mjs <unit-dir> [--json]\n```\n");
+  const violation = scan(root).violations.find((row) => row.id === "node-command-literal");
+  assert.ok(violation, "a tutorial page teaching node is the nearest literal the next session copies");
+  assert.equal(violation.location, "docs/workflow/LANE_FLOW.md:4");
+
+  const legal = compliantTree("docs-fallback");
+  write(legal, "docs/workflow/LANE_FLOW.md", "run `bun scripts/needs-input.mjs <unit-dir>` (node fallback\n`node scripts/needs-input.mjs <unit-dir>` when bun is absent).\n");
+  assert.ok(!violationIds(legal).includes("node-command-literal"), "the declared fallback window is legal in prose too");
+
+  const bootstrap = compliantTree("docs-bootstrap");
+  write(bootstrap, "docs/workflow/SETUP.md", "node scripts/setup-env.mjs --check    # verify only\n");
+  assert.ok(!violationIds(bootstrap).includes("node-command-literal"), "the declared bootstrap pair stays legal in prose (D1)");
+
+  const frozen = compliantTree("docs-frozen-receipts");
+  write(frozen, "docs/workflow/REPOSITORY_STATE.md", "| F004 | receipt | `node scripts/check-skill-context.mjs` | frozen |\n| F005 | receipt | `node --test scripts/a.test.mjs` | frozen |\n");
+  assert.ok(!violationIds(frozen).includes("node-command-literal"), "frozen receipts are evidence of what ran, never instructions");
+});
+
 test("a line-wrapped node literal is still caught (the drift's own shape)", () => {
   const root = compliantTree("wrapped");
   write(root, "skills/unit-lane/SKILL.md", "# Lane\n\nrun `node\nscripts/needs-input.mjs <unit-dir>`\n");
@@ -156,6 +182,7 @@ test("this checkout is drift-free (the frozen-failure corpus' exit condition)", 
   const result = runGate(repoRoot);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /^verdict: PASS$/m);
+  assert.match(result.stdout, /tutorial docs/, "the tutorial scope is part of the checked surface");
 });
 
 test("the deleted-skill guard is a visible skip under node --test and bun test (S8)", (t) => {

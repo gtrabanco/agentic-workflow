@@ -120,7 +120,7 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > `docs/workflow/MIGRATION.md`.
 >
 > **Create the intent file by running code, not by hand:**
-> `node scripts/changeset-create.mjs` derives the affected packages and skills
+> `bun scripts/changeset-create.mjs` derives the affected packages and skills
 > from the modified files, the semver from the conventional commit title
 > (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; `--level`
 > overrides), and the file name PR-first (`<pr|branch>-<title>.md`) so names
