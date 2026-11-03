@@ -146,7 +146,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 
 | Skill | Role |
 |---|---|
-| `skill-lint` | After editing a SKILL.md: lints the authoring rules and the machine-surface registration rules. Repo-only — reports, never repairs; the train version is stamped by `scripts/release.mjs apply` (D-40-14) |
+| `skill-lint` | After editing a SKILL.md or a reference beside one: runs the content checks (`bun scripts/skill-lint.mjs` — hidden comments, frontmatter tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, time-sensitive claims; rules in `references/CHECKS.md`) and lints the authoring + machine-surface registration rules. Repo-only — reports, never repairs; the train version is stamped by `scripts/release.mjs apply` (D-40-14) |
 
 ## Invocation & arguments reference
 

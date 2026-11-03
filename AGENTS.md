@@ -358,7 +358,8 @@ is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
 - **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
   retired, D-40-14) — after editing any SKILL.md, run this before committing.
-  It lints the repo's authoring rules and reports; it repairs nothing and
+  It lints the repo's authoring rules, and runs the content checks
+  (`bun scripts/skill-lint.mjs`), and reports; it repairs nothing and
   bumps nothing — the train version is stamped by `scripts/release.mjs apply`
   at cut time, and a skill change ships via a `.changeset/` intent file.
   `skill-lint` is `user-invocable: false` — invoke it via the Skill
