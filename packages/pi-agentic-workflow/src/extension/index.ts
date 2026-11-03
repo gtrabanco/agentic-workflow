@@ -260,9 +260,9 @@ export default function extension(pi: ExtensionAPI): void {
   // Said once per session: an override that was ignored (or a malformed file)
   // is reported the first time the guard runs, never on every tool call.
   let reportedDegradations = false;
-  // Issue #383 — the session accumulator. Pi rebinds extensions per session
-  // (`session_shutdown`, then reload, then `session_start`), so one instance owns
-  // one session's sample; the switch is read from the project's own config.
+  // Issue #383 — the session accumulator. Pi builds a fresh extension instance
+  // per session (its runtime factory rebuilds the services, and the resource
+  // loader re-runs every factory), so one instance owns one session's sample.
   let telemetry: TelemetryWiring | null = null;
   const noteCommand = (name: string, args: readonly string[]): void => telemetry?.noteCommand(name, args);
 
@@ -316,7 +316,10 @@ export default function extension(pi: ExtensionAPI): void {
     const projectTrusted = ctx.isProjectTrusted();
     const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted });
     if (loaded.config.telemetry?.enabled === true && telemetry === null) {
-      telemetry = createTelemetryWiring({ root: ctx.cwd, enabled: true });
+      // The id is read once, here: pi invalidates a captured context after the
+      // session is replaced, and one extension instance serves one session.
+      const sessionId = ctx.sessionManager.getSessionId();
+      telemetry = createTelemetryWiring({ root: ctx.cwd, enabled: true, sessionId: () => sessionId });
       telemetry.register(pi);
     }
     const report = provisionEngram({
