@@ -4064,3 +4064,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
 - **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
 - **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
+## 2026-11-03T13:02:27Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 22 (`daf07e1b…ebd676ac`)
+- **Files:** 68 files
+- **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
+- **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
+- **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)
