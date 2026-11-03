@@ -88,7 +88,7 @@ test("the unit comes from the dispatched command, and one session emits one samp
   assert.equal(written[0].turns, 1);
   assert.equal(written[0].tool_ms, 200);
   assert.equal(written[0].changed_paths, 7, "the injected counter is used when the caller owns git");
-  assert.equal(written[0].source, "pi:session", "with no session id at hand the source names only the producer");
+  assert.match(written[0].source, /^pi:session=instance-[0-9a-f-]{36}$/, "a caller that named no session gets a fresh identity, never a shared constant");
   fire("session_shutdown");
   assert.equal(written.length, 1, "a second shutdown is not a second row");
 });
@@ -139,6 +139,31 @@ test("the path count is the session's own work, measured when the sample is writ
   fire("turn_end", { message: { usage: { totalTokens: 10 } } });
   fire("session_shutdown");
   assert.equal(written[0].changed_paths, 3, "the command ran on a clean tree; the three paths are what the session did after it");
+});
+
+test("two wirings with no session id still cannot share a source", () => {
+  const root = project();
+  const sample = (instance) => {
+    const written = [];
+    const { pi, fire } = fakePi();
+    instance.register(pi);
+    instance.noteCommand("execute-phase", ["383"]);
+    fire("session_start");
+    fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+    fire("session_shutdown");
+    return written;
+  };
+  const build = (sinks) => createTelemetryWiring({ root, enabled: true, sinks, changedPaths: () => 3, sessionStartSha: () => "abc", now: () => 1_000, date: () => "2026-11-03" });
+  const written = [];
+  const sink = { name: "recording", write: (value) => written.push(value) };
+  sample(build([sink]));
+  sample(build([sink]));
+  assert.equal(written.length, 2);
+  assert.notEqual(
+    written[0].source,
+    written[1].source,
+    "a caller that never named a session still gets one identity per session, so two identical samples cannot merge",
+  );
 });
 
 test("a session that named no unit emits nothing — no invented row", () => {

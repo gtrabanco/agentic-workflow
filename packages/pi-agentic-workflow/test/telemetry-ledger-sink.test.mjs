@@ -8,6 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -143,4 +144,74 @@ test("round trip: the repository's reader accepts the sink's row and reads the s
   assert.equal(row.tool_ms, SAMPLE.tool_ms);
   assert.equal(row.changed_paths, SAMPLE.changed_paths);
   assert.equal(compare(read.rows).verdict, "insufficient-corpus", "one unit is a corpus of one, and the comparison says so");
+});
+
+// --- the ledger is a file two sessions can reach at once -------------------
+//
+// Pi runs sessions in separate processes, and each one appends on its own
+// shutdown. A read-modify-write with no exclusion loses the row of whichever
+// writer read last: two sessions measured, one row kept, and nothing says so.
+// These cases pin the exclusion, not just the happy path.
+
+/** The lock a writer takes beside the ledger. */
+const lockPath = (ledgerPath) => `${ledgerPath}.lock`;
+
+test("a writer waits for the lock another process holds, then writes its row", async () => {
+  const { root, ledgerPath } = project();
+  const script = path.join(root, "waiter.mjs");
+  const dist = new URL("../dist/telemetry-sinks.js", import.meta.url).href;
+  fs.writeFileSync(
+    script,
+    `import { createLedgerSink } from ${JSON.stringify(dist)};\n` +
+      `createLedgerSink({ ledgerPath: ${JSON.stringify(ledgerPath)}, lockTimeoutMs: 5000 }).write(${JSON.stringify({ ...SAMPLE, tokens: 7, source: "pi:session=waiter" })});\n`,
+  );
+
+  fs.writeFileSync(lockPath(ledgerPath), "held by the test");
+  const child = spawn(process.execPath, [script], { stdio: "ignore" });
+  const finished = new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("exit", (code) => resolve(code));
+  });
+  // Long enough that the child has to observe the lock and wait for it.
+  setTimeout(() => fs.rmSync(lockPath(ledgerPath), { force: true }), 150);
+
+  assert.equal(await finished, 0, "the writer waited instead of failing");
+  const rows = rowsOf(ledgerPath);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].source, "pi:session=waiter");
+  assert.equal(fs.existsSync(lockPath(ledgerPath)), false, "the lock it took is released");
+});
+
+test("a lock left behind by a dead writer is taken over, not waited on forever", () => {
+  const { ledgerPath } = project();
+  fs.writeFileSync(lockPath(ledgerPath), "a writer that died");
+  const old = new Date(Date.now() - 60_000);
+  fs.utimesSync(lockPath(ledgerPath), old, old);
+
+  createLedgerSink({ ledgerPath, lockStaleMs: 1_000 }).write(SAMPLE);
+  assert.equal(rowsOf(ledgerPath).length, 1);
+  assert.equal(fs.existsSync(lockPath(ledgerPath)), false);
+});
+
+test("an unreachable lock refuses the row instead of writing over the table", () => {
+  const { ledgerPath } = project();
+  const before = fs.readFileSync(ledgerPath, "utf8");
+  fs.writeFileSync(lockPath(ledgerPath), "held");
+
+  assert.throws(
+    () => createLedgerSink({ ledgerPath, lockTimeoutMs: 0 }).write(SAMPLE),
+    /locked/,
+    "a writer that cannot get the lock reports the loss; it never rewrites the table blind",
+  );
+  assert.equal(fs.readFileSync(ledgerPath, "utf8"), before);
+  assert.equal(fs.existsSync(lockPath(ledgerPath)), true, "a lock the sink did not take is not the sink's to remove");
+});
+
+test("the lock is released even when the write itself is refused", () => {
+  const { root, ledgerPath } = project();
+  const broken = path.join(root, "docs/workflow/TIER_COST.md");
+  fs.writeFileSync(broken, "# no grammar here\n");
+
+  assert.throws(() => createLedgerSink({ ledgerPath: broken }).write(SAMPLE));
+  assert.equal(fs.existsSync(lockPath(broken)), false, "a refusal still releases the lock it took");
 });
