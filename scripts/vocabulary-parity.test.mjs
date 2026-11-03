@@ -105,7 +105,7 @@ test("the risk tiers are the published set, and the classifier re-exports rather
 });
 
 test("the tier-verdict grammar block publishes every token of the three sets", () => {
-  const block = read("skills/execute-phase/references/RISK_TIERS.md");
+  const block = read("skills/execute-phase/references/risk-tiers.md");
   const fenced = /```text\nrisk-tier-verdict@1\n([\s\S]*?)```/.exec(block);
   assert.ok(fenced, "the grammar block is fenced and versioned");
   const cells = new Set(fenced[1].split(/[\s`,|]+/).filter(Boolean));

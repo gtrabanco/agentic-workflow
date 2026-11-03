@@ -51,7 +51,7 @@ import { isOpen, isMarkRow, routeOfRow, sanitize, findingsRows, flattenCell } fr
 import { openFence, closesFence, sectionBounds, parseLog } from "./unit-doc-phases.mjs";
 // Issue #360 — the risk tier of the change in scope. The classifier decides it
 // (one home, `scripts/risk-tiers.mjs`); this sensor only projects the verdict.
-import { classifyTier, taskSizeOf } from "./risk-tiers.mjs";
+import { classifyTier, taskSizeOf, sizeTierOf } from "./risk-tiers.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -1673,12 +1673,14 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
       reason_kind: verdict.reason_kind,
       signals: verdict.signals,
       task_size: taskSizeOf(verdict.tier),
+      paths_changed: verdict.paths.changed.length,
     };
   })();
 
   const detail = {
     repository_state: nrs,
     risk_tier: riskTier,
+    size_tier: sizeTierOf(riskTier),
     design_candidates: designCandidates_,
     pre_execution: receiptRows,
     review_loop_cycles: reviewLoopCycles,

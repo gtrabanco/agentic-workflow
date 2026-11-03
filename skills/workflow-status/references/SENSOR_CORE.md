@@ -107,6 +107,15 @@ live evidence against a frozen ledger remains a contradiction candidate.
    empty change emits `standard` with `reason_kind: "empty-change"` (fail closed
    upward: nothing proved the change inert, so it pays the standard ceremony).
 
+8b. **Size tier → `detail.size_tier`.** `{size_tier, changed_paths}` — the size
+   of the branch's change, derived from the same verdict as step 8a and never
+   counted twice. Three values: `prose` (no executable effect), `small` (few
+   paths) or `large` (past the classifier's bound). It exists for the two
+   decisions that need a size — splitting a unit that is too large and grouping
+   several small ones — and it is a distinct fact from the risk tier: a one-file
+   auth change is `small` **and** `high`; a 400-file docs sweep is `prose` and
+   `passive`.
+
 9. **Fix-now fold ledger → `findings.fix_now[]`.** For each in-flight unit
    (feature or fix) that has a `review-findings.md` ledger, read only its
    `folded: no` rows and emit each as a structured item:
@@ -151,4 +160,6 @@ detail.risk_tier | signals
 detail.risk_tier | task_size
 detail.risk_tier.task_size | ceremony
 detail.risk_tier.task_size | verification
+detail.size_tier | size_tier
+detail.size_tier | changed_paths
 ```

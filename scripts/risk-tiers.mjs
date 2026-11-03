@@ -28,7 +28,7 @@ import {
 
 export { RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS, RISK_TIER_REASONS };
 
-/** The contract id of the verdict shape the CLI emits and `RISK_TIERS.md`
+/** The contract id of the verdict shape the CLI emits and `risk-tiers.md`
  *  documents (`risk-tier-verdict@1`). */
 export const RISK_TIERS_CONTRACT_ID = "risk-tier-verdict@1";
 
@@ -196,6 +196,36 @@ export function taskSizeOf(tier) {
     ceremony: "unit-doc+review-change",
     verification: "review-change",
   };
+}
+
+/**
+ * The **size tier**: what a unit's size is, for the two decisions that need one —
+ * splitting a unit that is too large, and grouping several small ones. It is a
+ * different question from the risk tier (a one-file auth change is small and
+ * high; a 400-file docs sweep is large and passive), so it is a different field
+ * and never a re-reading of the risk verdict.
+ *
+ * Derived from the change's shape, not from a line count alone: `prose` (no
+ * executable effect), `small` (few paths, all inert or trivially executable) or
+ * `large` (enough paths that the diff-size guard is the next thing to trip).
+ */
+export const SIZE_TIER_THRESHOLDS = Object.freeze({ small_max_paths: 8 });
+
+/**
+ * The size tier of a verdict. Takes either the classifier's own object
+ * (`paths.changed`) or the envelope's projection of it (`paths_changed`), so the
+ * sensor re-derives the size from the risk verdict it already holds instead of
+ * keeping a second copy of the rules.
+ */
+export function sizeTierOf(verdict, thresholds = SIZE_TIER_THRESHOLDS) {
+  const count = Array.isArray(verdict?.paths?.changed)
+    ? verdict.paths.changed.length
+    : typeof verdict?.paths_changed === "number" ? verdict.paths_changed : null;
+  if (count === null) {
+    throw new Error("sizeTierOf needs a classifier verdict carrying paths.changed or paths_changed");
+  }
+  if (verdict.tier === "passive") return { size_tier: "prose", changed_paths: count };
+  return { size_tier: count <= thresholds.small_max_paths ? "small" : "large", changed_paths: count };
 }
 
 /**

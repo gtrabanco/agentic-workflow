@@ -139,11 +139,11 @@ test("C2 the inventory declares the tier vocabularies and the verdict grammar as
     assert.ok(guide.includes(`${surface} | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:${exportName} |`),
       `${surface} is an inventoried surface bound to ${exportName}`);
   }
-  assert.ok(guide.includes("risk-tier-verdict | skills/execute-phase/references/RISK_TIERS.md | block:risk-tier-verdict@1 |"),
+  assert.ok(guide.includes("risk-tier-verdict | skills/execute-phase/references/risk-tiers.md | block:risk-tier-verdict@1 |"),
     "the verdict grammar is an inventoried surface");
-  assert.ok(guide.includes("passive-record | skills/execute-phase/references/RISK_TIERS.md | block:passive-record@1 |"),
+  assert.ok(guide.includes("passive-record | skills/execute-phase/references/risk-tiers.md | block:passive-record@1 |"),
     "the passive carrier's grammar is an inventoried surface");
-  const tierBlock = read("skills/execute-phase/references/RISK_TIERS.md");
+  const tierBlock = read("skills/execute-phase/references/risk-tiers.md");
   assert.match(tierBlock, /```text\nrisk-tier-verdict@1\n/, "the block that owns the verdict shape");
   assert.match(tierBlock, /```text\npassive-record@1\n/, "the block that owns the passive carrier");
 });
@@ -162,6 +162,26 @@ test("C2b the classifier and the ceremony module agree on the vocabulary (no sec
   assert.deepEqual([...RISK_TIER_KINDS], ["passive", "standard", "high"]);
   const ceremony = await import(pathToFileURL(path.join(ROOT, "scripts", "ceremony", "tier.mjs")).href);
   assert.deepEqual([...ceremony.RISK_TIER_KINDS], [...RISK_TIER_KINDS], "one declaration, imported");
+});
+
+test("C2c the size tier and the risk tier are two sources of truth in one place, and `next` stays untouched", () => {
+  const repo = fixtureRepo();
+  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "workflow-status.mjs")], {
+    cwd: repo,
+    encoding: "utf8",
+    timeout: 60_000,
+    env: { ...process.env, PATH: `${path.join(repo, "bin")}:${process.env.PATH}` },
+  });
+  assert.equal(result.status, 0, `the sensor runs on a bare fixture repo (stderr: ${result.stderr})`);
+  const envelope = JSON.parse(result.stdout.slice(result.stdout.indexOf("{")));
+  // One home per fact: the risk/size of the unit lives under `detail`; `next`
+  // keeps its own, different meaning (the model budget for the next command).
+  assert.ok(envelope.detail.risk_tier, "detail.risk_tier is the risk tier");
+  assert.ok(envelope.detail.size_tier, "detail.size_tier is the size tier");
+  assert.deepEqual(Object.keys(envelope.next).filter((k) => /risk|size/.test(k)), [],
+    "next carries no second copy of the risk or size tier");
+  assert.equal(envelope.next.tier, "cheap", "next.tier is unchanged: the command's model budget");
+  assert.ok(["strong", "cheap"].includes(envelope.next.tier), "next.tier is still the model budget");
 });
 
 // ---------------------------------------------------------------------------
@@ -191,8 +211,8 @@ test("C3a a passive verdict routes a docs-only request to the zero-ceremony path
 
 test("C4 execute-phase states the three per-tier ceremonies once, and cites the owner", () => {
   const skill = read("skills/execute-phase/SKILL.md");
-  const reference = read("skills/execute-phase/references/RISK_TIERS.md");
-  assert.match(skill, /RISK_TIERS\.md/, "the executor cites the owner instead of restating the table");
+  const reference = read("skills/execute-phase/references/risk-tiers.md");
+  assert.match(skill, /references\/risk-tiers\.md/, "the executor cites the owner instead of restating the table");
   assert.match(reference, /^\| `passive` \|.*readback/m, "passive → structural readback");
   assert.match(reference, /^\| `standard` \|.*unit-doc/m, "standard → the current unit-doc ceremony");
   assert.match(reference, /^\| `high` \|.*review-change/m, "high → full review-change");
@@ -227,13 +247,13 @@ test("C5b a passive record written from the grammar parses back to exactly its f
   ].join("\n");
   const fields = record.split("\n").map((line) => /^- (\w+) — (.+)$/.exec(line)).filter(Boolean).map((m) => m[1]);
   assert.deepEqual(fields, ["id", "tier", "paths", "readback", "gate"], "the record carries the grammar's five fields, in order");
-  const grammar = /```text\npassive-record@1\n([\s\S]*?)```/.exec(read("skills/execute-phase/references/RISK_TIERS.md"));
+  const grammar = /```text\npassive-record@1\n([\s\S]*?)```/.exec(read("skills/execute-phase/references/risk-tiers.md"));
   const declared = grammar[1].split("\n").map((line) => line.split("|")[0].trim()).filter(Boolean);
   assert.deepEqual(fields, declared, "the written record and the declared grammar agree — no field the schema does not publish");
 });
 
 test("C5a the passive record is a readback, not a unit doc: no phases, no evidence table", () => {
-  const reference = read("skills/execute-phase/references/RISK_TIERS.md");
+  const reference = read("skills/execute-phase/references/risk-tiers.md");
   const fenced = /```text\npassive-record@1\n([\s\S]*?)```/.exec(reference);
   assert.ok(fenced, "the passive carrier's grammar is fenced and versioned");
   const fields = fenced[1].split("\n").map((line) => line.split("|")[0].trim()).filter(Boolean);

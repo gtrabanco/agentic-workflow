@@ -917,7 +917,7 @@ test("machine → text: every value of the must-name vocabularies is ordered by 
   // *published* by a `schema-export` surface (the declaration home the `namedBy`
   // rule accepts) and *ordered* by the `risk-tier-verdict@1` block's own cells, so
   // the tier an agent reads is never a value that only the schema knows about.
-  const verdictBlock = versionedBlock(read("skills/execute-phase/references/RISK_TIERS.md"), "risk-tier-verdict@1");
+  const verdictBlock = versionedBlock(read("skills/execute-phase/references/risk-tiers.md"), "risk-tier-verdict@1");
   assert.ok(verdictBlock, "the risk-tier verdict block is the surface that orders the tier");
   const ordered = new Set(verdictBlock.rows.flatMap((row) => Object.values(row)).flatMap((cell) => String(cell).split(/[\s|,`]+/)));
   for (const vocabulary of ["risk-tier", "risk-tier-signal", "risk-tier-reason"]) {
