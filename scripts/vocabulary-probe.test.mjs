@@ -45,10 +45,10 @@ test("#315 F40: the `kept deferred <date>` reproducer fails the probe naming fil
   const violations = violationsOf(result, "future-status");
   assert.equal(violations.length, 1, "exactly the off-vocabulary row is refused");
   assert.match(violations[0].file, /90-off-vocab-future\/SPEC\.md$/);
-  assert.equal(violations[0].line, 9, "the finding names the row's own line");
+  assert.equal(violations[0].line, 11, "the finding names the row's own line");
   assert.match(violations[0].token, /kept deferred 2026-10-26/);
   const block = result.lines.join("\n");
-  assert.match(block, /^Vocabulary-probe: future-status .*90-off-vocab-future\/SPEC\.md:9 — `kept deferred 2026-10-26`$/m);
+  assert.match(block, /^Vocabulary-probe: future-status .*90-off-vocab-future\/SPEC\.md:11 — `kept deferred 2026-10-26`$/m);
   assert.match(block, /kept deferred 2026-10-26/);
 });
 
@@ -58,6 +58,43 @@ test("#315 F40 sibling: an off-vocabulary findings severity (`medium` vs the pub
   assert.equal(violations.length, 1);
   assert.match(violations[0].file, /90-off-vocab-future\/SPEC\.md$/);
   assert.match(violations[0].token, /^medium$/);
+});
+
+test("#361 the ladder is the carrier's severity scale: the retired `medium` is refused by name", () => {
+  const result = runProbe(FIXTURE_ROOT);
+  const violations = violationsOf(result, "finding-severity");
+  assert.equal(violations.length, 1, "exactly the off-ladder row is refused");
+  assert.match(violations[0].file, /90-off-vocab-future\/SPEC\.md$/);
+  assert.equal(violations[0].line, 19, "the finding names the row's own line");
+  assert.equal(violations[0].token, "medium");
+  assert.match(violations[0].why, /BLOCKER \| CRITICAL \| WARNING \| SUGGESTION/);
+});
+
+test("#361 the impact cell is required and closed: a missing cell and a `report-only` blocker are refused", () => {
+  const result = runProbe(FIXTURE_ROOT);
+  const violations = violationsOf(result, "finding-impact");
+  assert.equal(violations.length, 2, "the empty cell and the contradiction are both refused");
+  const empty = violations.find((violation) => violation.line === 21);
+  assert.ok(empty, "the row with no impact cell is named by its line");
+  assert.equal(empty.token, "", "an empty cell is the missing-token case");
+  assert.match(empty.why, /blocking \| docs-only \| report-only/);
+  const contradiction = violations.find((violation) => violation.line === 20);
+  assert.ok(contradiction, "the `BLOCKER` + `report-only` row is named by its line");
+  assert.match(contradiction.token, /BLOCKER/);
+  assert.match(contradiction.why, /never blocks nothing|report-only/);
+});
+
+test("#361 the frozen corpus: the unit-79 functional row and the docs-only row pass, separated by their own cells", () => {
+  const result = runProbe(FIXTURE_ROOT);
+  const named = result.violations.filter((violation) => /91-clean-future/.test(violation.file));
+  assert.deepEqual(named, [], "the clean fixture is clean in the published grammar");
+  const rows = readFileSync(path.join(FIXTURE_ROOT, "docs/features/91-clean-future/SPEC.md"), "utf8")
+    .split("\n")
+    .filter((line) => /^\| F\d+ \|/.test(line))
+    .map((line) => line.split("|").map((cell) => cell.trim()));
+  assert.equal(rows.length, 2, "the fixture carries the two live rows");
+  assert.deepEqual([rows[0][4], rows[0][5]], ["BLOCKER", "blocking"], "the functional defect is a blocking blocker");
+  assert.deepEqual([rows[1][4], rows[1][5]], ["WARNING", "docs-only"], "the docs-only drift says so");
 });
 
 test("the clean fixture document passes every declared vocabulary", () => {

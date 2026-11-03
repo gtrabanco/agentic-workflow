@@ -5,33 +5,75 @@ the **synthesized** findings table (D5). Classify each finding into exactly one
 class, in this order. Never reopen source files to classify; the table's
 evidence is authoritative.
 
+### Severity ladder and impact (the one published vocabulary)
+
+Two closed sets grade a finding, published here once and cited by every finder
+and consumer: `skills/review-*` assigns them, `review-change` fuses them, this
+engine classifies over them, and the unit doc's `findings-table@1` row stores
+them. A new token is a schema-const + grammar-block + parity-pin change in one
+PR (`packages/agentic-workflow-schema/src/vocabularies.ts`,
+`scripts/vocabulary-parity.test.mjs`) — never a prose-only edit.
+
+```text
+finding-severity-ladder@1
+token | meaning | what assigning it requires
+BLOCKER | caused by the change and reproducible with realistic input — the merge stops until it is repaired | a reproducer that fails at the head (the differential baseline run, `#363`)
+CRITICAL | a severe defect the current unit must repair: correctness, security or data loss | the single-owner citation that fails
+WARNING | degraded behaviour, a real untested path, or notable debt | the citation that fails
+SUGGESTION | taste, cosmetics, or a micro-optimisation without a measured need | never persisted and never blocking
+```
+
+```text
+finding-impact@1
+token | meaning | how it gates
+blocking | the finding changes behaviour | the row blocks when its route is `fix-now`
+docs-only | the defect is in documentation; no behaviour changes | the row blocks when its route is `fix-now`
+report-only | recorded, never blocks: the pre-existing advisory, a proposal, or taste | nothing — it is never persisted to the fold ledger
+```
+
+**The baseline-advisory rule (the citable definition).** A blocker is **caused
+by the change and reproducible with realistic input**. A failure already present
+at the base commit is a **pre-existing advisory**: its impact is `report-only`
+and it **never requires a correction round** — it is reported with its evidence
+and routed to the user, never folded. The run that proves cause is the
+differential baseline check (`#363`); until it exists the rule is cited from
+here, and `scripts/vocabulary-probe.mjs` refuses the one contradiction a static
+gate can see — a `BLOCKER` row whose impact is `report-only`.
+
+**Escalation stays `decision-required`.** When a reviewer believes the ladder
+under-certified a failure — a false negative it could not reproduce, or a real
+defect whose cause it cannot attribute — it does not inflate the token: the row
+routes `decision-required` and the user alone resolves it. The ladder is added
+on top of the disposition table below, never in place of it.
+
 ### Severity conversion (canonical table)
 
-The single-owner table below maps every severity scale the review pack emits
-onto the classification scale (`high | med | low`). Only this section may
-convert — a consumer facing an unknown scale **fails closed** (no ad-hoc
-conversion). The table replaces the ad-hoc mapping that lived at
+The single-owner table below maps every severity scale the review pack has ever
+emitted onto the ladder. Only this section may convert — a consumer facing an
+unknown scale **fails closed** (no ad-hoc conversion). **`BLOCKER` is never a
+conversion target**: it is assigned by evidence (a reproducer), so no row of this
+table reaches it. The table replaces the ad-hoc mapping that lived at
 `PERSIST_AND_DECIDE.md`.
 
-The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs:718-721`)
+The sensor's own `SEVERITY_VOCABULARY` map (`scripts/workflow-status.mjs`, pinned by `scripts/vocabulary-parity.test.mjs`)
 is a direct projection of this table onto the envelope schema's `high|med|low`
 enum, not a competing converter; it always produces a value listed here.
 
-| Producer scale | → `high` | → `med` | → `low` |
-|---|---|---|---|
-| Ledger (`CLASSIFY.md` itself): `high` | self | — | — |
-| Ledger: `med` | — | self | — |
-| Ledger: `low` | — | — | self |
-| Finder (nine review passes): `critical` → `high` | ✓ | — | — |
-| Finder: `major` → `med` | — | ✓ | — |
-| Finder: `minor` → `low` | — | — | ✓ |
-| Planning: `critical` → `high` | ✓ | — | — |
-| Planning: `high` → `high` | ✓ | — | — |
-| Planning: `medium` → `med` | — | ✓ | — |
-| Planning: `low` → `low` | — | — | ✓ |
-| Planning: `info` → `low` | — | — | ✓ |
-| `audit-docs`: `high` → `high` | ✓ | — | — |
-| `audit-docs`: `low` → `low` | — | — | ✓ |
+| Producer scale | → BLOCKER | → CRITICAL | → WARNING | → SUGGESTION |
+|---|---|---|---|---|
+| Retired ledger (`review-findings.md`, closed units): `high` | — | ✓ | — | — |
+| Retired ledger: `med` | — | — | ✓ | — |
+| Retired ledger: `low` | — | — | — | ✓ |
+| Finder (pre-#361 scale): `critical` | — | ✓ | — | — |
+| Finder: `major` | — | — | ✓ | — |
+| Finder: `minor` | — | — | — | ✓ |
+| Planning receipt: `critical` | — | ✓ | — | — |
+| Planning receipt: `high` | — | ✓ | — | — |
+| Planning receipt: `medium` | — | — | ✓ | — |
+| Planning receipt: `low` | — | — | — | ✓ |
+| Planning receipt: `info` | — | — | — | ✓ |
+| `audit-docs`: `high` | — | ✓ | — | — |
+| `audit-docs`: `low` | — | — | — | ✓ |
 
 **Unknown scale → fail closed.** A scale not listed above is an error; the
 consuming skill must not guess.
@@ -50,13 +92,16 @@ opinion. The four citation categories are:
    persisted as `fix-now` with `folded: no`).
 
 No citation among these four categories → the finding is a **report-note** or
-**proposal**, never blocking. D10's verdict rule (the three-way `REVIEW-PASS |
+**proposal**, never blocking. A row whose impact is `report-only` never blocks
+and is never persisted, whatever its severity — that is the baseline-advisory
+rule above, applied. D10's verdict rule (the three-way `REVIEW-PASS |
 REVIEW-FAIL | NEEDS-DECISION` verdict) remains **unchanged** — the derived gate
 operates inside the `REVIEW-FAIL` branch as the evidence that determines whether
 a finding truly blocks.
 
 **`report-note` definition owner.** The `report-note` classification is owned by
-`LEDGERS.md` §3 (`:91-96`): material is `medium`+, a `low` row is a persisted
+`LEDGERS.md` §3 (the planning-receipt severity block): material is `medium`+ on the receipt scale, which is
+`WARNING` or above on the ladder, and a `SUGGESTION` row is a persisted
 report-note. Classifying surfaces cite this owner instead of restating the
 materiality bar.
 
@@ -70,13 +115,15 @@ only with a rationale.
 
 ### Step 2 — Is it current-unit work? (only blocking outcomes)
 
-**Severity floor first.** A `low` finding (taste, cosmetics, micro-optimization
-without a measured need) is **never persisted and never blocks**: it is carried
-as a report note with its evidence, and the fold ledger never sees it. But a
-real defect mislabeled `low` stays real: when the evidence shows a correctness,
-security, behavioral, or data-integrity defect, classify it at `med` minimum —
-deflating a real defect to `low` to unblock a review is itself a review defect.
-Only `high` and `med` findings run through the current-unit gate below.
+**Severity floor first.** A `SUGGESTION` finding (taste, cosmetics,
+micro-optimization without a measured need) is **never persisted and never
+blocks**: it is carried as a report note with its evidence, and the fold ledger
+never sees it. The same holds for any `report-only` row. But a real defect
+mislabeled `SUGGESTION` stays real: when the evidence shows a correctness,
+security, behavioral, or data-integrity defect, classify it at `WARNING` minimum
+— deflating a real defect to unblock a review is itself a review defect. Only
+`BLOCKER`, `CRITICAL` and `WARNING` rows run through the current-unit gate
+below.
 
 A finding belongs to the **current unit** when it maps to the governing SPEC, a
 phase, a documented invariant, correctness, security, accessibility, a required
@@ -170,19 +217,24 @@ unused-code row without both citations is not classifiable.
 For every finding, give the reasoning columns. Example (generic — your findings,
 your domains):
 
-| Finding | Axis | Sev | Class | WHY | Implementation risk | Long-term impact | Premature-opt? | Route |
-|---|---|---|---|---|---|---|---|---|
-| API token committed in a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | fold into phase |
-| New export endpoint has no failure-mode test | tests | med | fix-now | Untested error path | Low | Regression risk | no | fold into phase |
-| Fixing this backend bug pulls in an auth redesign | correctness | high | decision-required | Unavoidable product/architecture decision | — | Blocking | no | surface decision, block |
-| Exported helper of a delivered feature that nothing invokes | residue | med | fix-now | The unit shipped half of what was asked — the consumer was never delivered (bug, not cleanup) | Low | Feature stays incomplete | no | `replan-in-unit` when the missing half is planned work — the plan cut the unit short, and a fold repairs what exists, never what was never planned; `fold into phase` when the missing piece is a one-line consumer |
-| Module orphaned by the unit's own replacement of its feature | residue | med | fix-now (delete) | Superseded part left behind by a requested change | Low (delete + sweep declaration) | Dead weight grows | no | fold deletion task |
-| Rate limiter reusable across the fleet | architecture | low | proposal | Independent of this unit (D3) | — | — | yes | batch proposal + trigger |
-| Single-caller wrapper around a stdlib call | overengineering | low | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
+| Finding | Axis | Sev | Impact | Class | WHY | Implementation risk | Long-term impact | Premature-opt? | Route |
+|---|---|---|---|---|---|---|---|---|---|
+| API token committed in a config file | security | BLOCKER | blocking | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | fold into phase |
+| New export endpoint has no failure-mode test | tests | WARNING | blocking | fix-now | Untested error path | Low | Regression risk | no | fold into phase |
+| Fixing this backend bug pulls in an auth redesign | correctness | CRITICAL | blocking | decision-required | Unavoidable product/architecture decision | — | Blocking | no | surface decision, block |
+| A failing test the base commit already failed | tests | CRITICAL | report-only | ignore | Pre-existing at base — an advisory, never a correction round | — | — | no | report with the counter-evidence; no fold |
+| Exported helper of a delivered feature that nothing invokes | residue | WARNING | blocking | fix-now | The unit shipped half of what was asked — the consumer was never delivered (bug, not cleanup) | Low | Feature stays incomplete | no | `replan-in-unit` when the missing half is planned work — the plan cut the unit short, and a fold repairs what exists, never what was never planned; `fold into phase` when the missing piece is a one-line consumer |
+| Module orphaned by the unit's own replacement of its feature | residue | WARNING | blocking | fix-now (delete) | Superseded part left behind by a requested change | Low (delete + sweep declaration) | Dead weight grows | no | fold deletion task |
+| Rate limiter reusable across the fleet | architecture | SUGGESTION | report-only | proposal | Independent of this unit (D3) | — | — | yes | batch proposal + trigger |
+| Single-caller wrapper around a stdlib call | overengineering | SUGGESTION | report-only | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
 
-- **Sev** — **high**: correctness, security, or data-loss risk, or a merge
-  blocker. **med**: degraded behavior, a real untested path, or notable debt.
-  **low**: taste, cosmetics, or micro-optimization without a measured need.
+- **Sev** — the ladder: **BLOCKER** (caused by the change, reproducible — the
+  merge stops), **CRITICAL** (correctness, security, or data-loss risk),
+  **WARNING** (degraded behavior, a real untested path, notable debt),
+  **SUGGESTION** (taste, cosmetics, or micro-optimization without a measured
+  need).
+- **Impact** — **blocking** (changes behaviour), **docs-only** (documents only),
+  **report-only** (recorded, never blocks; the pre-existing advisory).
 - **WHY** — one-sentence justification for the class.
 - **Implementation risk** — risk of *fixing* it now (blast radius, churn).
 - **Long-term impact** — cost of *not* fixing it (debt, drift, incident odds).

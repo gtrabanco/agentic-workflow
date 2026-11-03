@@ -31,17 +31,21 @@
    on a **BLOCKED** verdict is, by definition, fix-now — merge is gated on it.
    Append each to the unit's fix-now fold ledger — its `## Findings` section for
    a migrated unit (issue #308), `review-findings.md` for a legacy one; probe the
-   doc first and write to exactly one carrier (same fixed schema
+   doc first and write to exactly one carrier, in that carrier's own schema
+   (`findings-table@1`'s `| id | S# / file:line | axis | severity | impact |
+   class | route |` for a migrated unit, or the legacy
    `| id | file:line | axis | severity | class | route | folded |` as
-   `review-change`'s persist step) — the **same ledger**, not a separate one
+   `review-change`'s persist step states it) — the **same ledger**, not a separate one
    (D4: the fold cycle consumes one list). **Merged unit → no write** — check
    `gh pr view --json state`; `MERGED` skips the persist step entirely. For
    each blocker: `file:line` = the cited evidence location (the gate name
    when no single line applies); `axis` = the gate name (e.g. `Review
-   receipt`, `Docs`, `Traceability`); `severity` = `high` (a blocker gates
-   the merge by definition); `class` = `fix-now`; `route` = the routing this
-   skill's own Routing section assigns to that kind of blocker; `folded`
-   starts `no`.
+   receipt`, `Docs`, `Traceability`); `severity` = `BLOCKER` (a blocker gates
+   the merge by definition) with `impact` = `blocking`, or `docs-only` when the
+   gate is a documentation gate; `class` = the carrier's own cell (`fix-now` on
+   a legacy row, the repairing owner on a `findings-table@1` row); `route` = the
+   routing this skill's own Routing section assigns to that kind of blocker;
+   `folded` starts `no` on a legacy row.
    Re-runs **dedupe by `file:line` + axis**, identical to `review-change`'s
    rule — a blocker already on the ledger at that `file:line`+axis is not
    re-appended; a genuinely new blocker gets the next `Fn` id.

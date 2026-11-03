@@ -191,13 +191,13 @@ export function findingsRows(doc) {
   for (const line of body.split("\n")) {
     if (!line.startsWith("|")) continue;
     const cells = cellsOf(line).slice(1, -1);
-    if (cells.length < 6) continue;
-    const [id, target, axis, severity, klass] = cells;
-    const route = cells.slice(5).join(" | ");
+    if (cells.length < 7) continue;
+    const [id, target, axis, severity, impact, klass] = cells;
+    const route = cells.slice(6).join(" | ");
     if (/^id$/i.test(id) || isSeparator(id) || isMarkRow(id)) continue;
     // `carrier: "doc"` selects the collapsed carrier's column grammar in
     // `routeOfRow`; the legacy `openRows` rows carry no marker and keep prose matching.
-    rows.push({ id, file: target, axis, severity, klass, route, folded: "no", carrier: "doc" });
+    rows.push({ id, file: target, axis, severity, impact, klass, route, folded: "no", carrier: "doc" });
   }
   return rows;
 }

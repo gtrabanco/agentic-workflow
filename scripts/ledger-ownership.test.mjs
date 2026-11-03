@@ -746,7 +746,7 @@ test("#308 one truth class owns both carriers, and the template cites that row",
   for (const kind of ["`R` line", "`G` line", "`V` line", "`F` line"]) {
     assert.ok(mapping.includes(kind), `LEDGERS.md's carrier mapping omits the ${kind} grammar`);
   }
-  assert.ok(/findings-table@1/.test(mapping), "the carrier mapping omits the six-column migrated row");
+  assert.ok(/findings-table@1/.test(mapping), "the carrier mapping omits the seven-column migrated row");
   for (const template of ["docs/features/_TEMPLATE/SPEC.md", "docs/fix/_TEMPLATE/SPEC.md"]) {
     assert.match(read(template), /`review-findings` truth\s+class of the ownership map/,
       `${template}: ## Findings cites no machine row`);

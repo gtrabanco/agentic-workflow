@@ -4037,6 +4037,20 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
 - **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
 
+## 2026-11-03T09:53:54Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 14 (`daf07e1b…a5953e8a`)
+- **Files:** 65 files
+- **Summary:** feat(361): PR 381 for the finding-severity-ladder — merged main's two latest changes, fixed CI content-gate, all green
+- **Decisions:** PR 381 created against main; main moved twice (PRs #378 and #379/#333), integrated as merges; resolved ROADMAP.md conflicts and baseline-advisory repetition by citing CLASSIFY.md owner; changeset missing @gtrabanco/agentic-workflow package — gate only runs in CI, so local pass hid it
+- **Next:** Merge PR #381 (mergeable: clean, all CI green); then run /audit-pr 381
+
+## 2026-11-03T10:43:53Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 17 (`daf07e1b…0e213001`)
+- **Files:** 66 files
+- **Summary:** External verification of fix/361: the finding-severity-ladder unit — caught one blocker (fold-findings frozen-severity re-review override narrowed to BLOCKER-only, missing CRITICAL which the change's own conversion maps from the retired ledger high) and three advisories (sweep evidence inaccurate, stale line pointers, one-home gate sensitivity) — all repaired. Verdict: VERIFIED.
+- **Decisions:** Owner chose option 1: the fold-findings override fires on BLOCKER or CRITICAL (preserving the radius the retired ledger's high forced, consistent with SENSOR_CORE.md and review-change widening). The block was fixed with a three-line table rewrite and a documentation decision entry (D10). Advisories 1-2 fixed: CLASSIFY.md line pointers replaced by symbol citations; unit doc sweep evidence corrected to name the two pre-existing budget-journal narrations. Advisory 3 (one-home gate sensitivity) left as designed behavior.
+- **Next:** Open PR #381 if not already open, then merge fix/361-finding-severity-ladder to main. After merge: close issue #361, track #362 (computed correction budget) and #363 (differential baseline check) as the planned follow-ups consuming the severity ladder.
+
 ## 2026-11-03T11:19:04Z — fix/382-red-first-commits — manual
 - **Commits:** 13 (`acc1735f…769e8d1c`)
 - **Files:** 14 files
@@ -4050,3 +4064,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
 - **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
 - **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
+## 2026-11-03T13:02:27Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 22 (`daf07e1b…ebd676ac`)
+- **Files:** 68 files
+- **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
+- **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
+- **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)
