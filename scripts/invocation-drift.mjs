@@ -12,8 +12,12 @@
  *   usage-node          a usage string naming node in `scripts/*.mjs` outside the
  *                       declared bootstrap allowlist (S3)
  *   node-command-literal  a `node scripts/…` or `node --test …` literal in
- *                       `skills/**` or `template/**` with no fallback
- *                       declaration on the line or the one before it (S3/S4/S11)
+ *                       `skills/**`, `template/**` or the tutorial's
+ *                       instruction pages (`docs/workflow/**`) with no fallback
+ *                       declaration on the line or the one before it (S3/S4/S11).
+ *                       Two declared exemptions: the bootstrap pair stays legal
+ *                       in prose (D1), and `docs/workflow/REPOSITORY_STATE.md` is
+ *                       frozen receipts — evidence of what ran, never instructions
  *   guide-line          either agent guide missing the normative tool-choice
  *                       sentence (S1)
  *   turn-box            either executor skill missing its per-turn choice box
@@ -66,6 +70,14 @@ const SUITE_CARVE_OUT = [
 
 const GUIDE_FILES = ["AGENTS.md", "template/AGENTS.md"];
 const TURN_BOX_FILES = ["skills/unit-lane/SKILL.md", "skills/execute-phase/SKILL.md"];
+
+/** Tutorial receipts excluded from the literal scan: frozen evidence, not instructions. */
+const WORKFLOW_DOC_EXCLUSIONS = new Map([
+  ["docs/workflow/REPOSITORY_STATE.md", "frozen Normalized Repository State receipts (read-only facts contract, never instructions)"],
+]);
+
+/** The bootstrap pair's node literal stays legal in prose too (D1). */
+const BOOTSTRAP_LITERAL = /^scripts\/(setup-env|update-tools)\.mjs$/;
 
 /**
  * A literal an agent copies as an invocation: `node scripts/…` (a manual
@@ -135,6 +147,8 @@ function listMarkdown(root, top) {
 
 const listSkillMarkdown = (root) => listMarkdown(root, "skills");
 const listTemplateMarkdown = (root) => listMarkdown(root, "template");
+const listWorkflowDocs = (root) =>
+  listMarkdown(root, "docs/workflow").filter((file) => !WORKFLOW_DOC_EXCLUSIONS.has(file));
 
 /** Every `node scripts/…` / `node --test …` literal, with the line it starts on. */
 function nodeCommandLiterals(text) {
@@ -161,7 +175,7 @@ function declaresFallback(lines, line) {
 export function scan(root) {
   const violations = [];
   const allowed = [];
-  const counts = { usageStrings: 0, skillFiles: 0, guides: 0, turnBoxes: 0 };
+  const counts = { usageStrings: 0, skillFiles: 0, docsFiles: 0, guides: 0, turnBoxes: 0 };
 
   for (const script of listScripts(root)) {
     const text = read(root, script);
@@ -198,6 +212,22 @@ export function scan(root) {
     counts.skillFiles += 1;
     const lines = text.split("\n");
     for (const hit of nodeCommandLiterals(text)) {
+      if (declaresFallback(lines, hit.line)) continue;
+      violations.push({
+        id: "node-command-literal",
+        location: `${file}:${hit.line}`,
+        detail: `\`node ${hit.target}\` teaches the fallback tool — use the preferred invocation or declare the fallback on the line`,
+      });
+    }
+  }
+
+  for (const file of listWorkflowDocs(root)) {
+    const text = read(root, file);
+    if (text === null) continue;
+    counts.docsFiles += 1;
+    const lines = text.split("\n");
+    for (const hit of nodeCommandLiterals(text)) {
+      if (BOOTSTRAP_LITERAL.test(hit.target)) continue;
       if (declaresFallback(lines, hit.line)) continue;
       violations.push({
         id: "node-command-literal",
@@ -251,7 +281,7 @@ export function report(root, scanResult) {
     "invocation-drift@1",
     `root: ${root}`,
     `verdict: ${verdict}`,
-    `checked: ${counts.usageStrings} usage strings · ${counts.skillFiles} skill files · ${counts.guides} guides · ${counts.turnBoxes} turn contracts`,
+    `checked: ${counts.usageStrings} usage strings · ${counts.skillFiles} skill files · ${counts.docsFiles} tutorial docs · ${counts.guides} guides · ${counts.turnBoxes} turn contracts`,
   ];
   for (const row of allowed) lines.push(`allow: ${row.path} — ${row.reason}`);
   for (const row of violations) lines.push(`violation: ${row.id} | ${row.location} | ${row.detail}`);

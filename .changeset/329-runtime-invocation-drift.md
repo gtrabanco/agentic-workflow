@@ -16,7 +16,11 @@ form, five skill lines that taught `node scripts/…` move to `bun`, and one
 `node` line keeps its place because it declares the fallback on the same line.
 The bootstrap pair (`setup-env.mjs`, `update-tools.mjs`) keeps its node usage
 string by declaration — `setup-env` provisions bun, so it cannot print a bun
-usage string on a machine that has no bun yet.
+usage string on a machine that has no bun yet. The gate's literal scan also
+covers the tutorial's instruction pages (`docs/workflow/**`), which taught the
+same wrong-tool literals; the bootstrap pair stays legal in prose and the
+frozen `REPOSITORY_STATE.md` receipts are exempt. The SPEC templates' removal-
+evidence example is rg-first with grep as the declared fallback.
 
 `scripts/invocation-drift.mjs` is the new deterministic gate: it fails closed on
 an undeclared wrong-tool usage string, a skill literal with no adjacent fallback
