@@ -13,7 +13,8 @@
  * dist-tag equality — so the regression case below is the first test here.
  *
  * Covers:
- *   - REGRESSION: local already published but not `latest` → skip, no publish
+ *   - REGRESSION: local already published but not the newest → skip, no publish
+ *   - the skip notice names the highest published version, never a dist-tag
  *   - local == registry's only version → skip (the pre-incident green path)
  *   - local newer than every published version → publish
  *   - registry empty / lookup failed → publish (first publish stays manual)
@@ -50,12 +51,17 @@ const writePkg = (version) => {
 // The decision (pure)
 // ---------------------------------------------------------------------------
 
-test("REGRESSION: a version already on the registry skips even when it is not latest", () => {
+test("REGRESSION: a version already on the registry skips even when it is not the newest", () => {
   // The exact state of 2026-09-27: local 0.17.0 after the revert, registry
-  // [0.17.0, 0.18.0] with 0.18.0 as latest. Old gate → publish → EBADVERSION.
+  // [0.17.0, 0.18.0]. Old gate → publish → EBADVERSION.
   const decision = decidePublish({ local: "0.17.0", published: ["0.16.0", "0.17.0", "0.18.0"] });
   assert.equal(decision.publish, false, "an already-published version must never reach `npm publish`");
-  assert.match(decision.notice ?? "", /0\.18\.0/, "the skip must say which version actually holds `latest`");
+  assert.match(decision.notice ?? "", /0\.18\.0/, "the skip must name the version that sits above it");
+  // The registry read is the version list; no dist-tag is consulted, so the
+  // notice cannot claim one. It did: on 2026-11-03 the gate reported
+  // `5.0.0-canary.20261102.1 holds \`latest\`` while `latest` was 4.10.0.
+  assert.doesNotMatch(decision.notice ?? "", /holds `latest`/, "the gate reads no dist-tag, so it may not name one");
+  assert.doesNotMatch(decision.notice ?? "", /latest/, "nor imply `latest` moved");
 });
 
 test("local equals the registry's only version → skip (the pre-incident green path)", () => {
