@@ -4008,3 +4008,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
 - **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
 - **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
+
+## 2026-11-03T11:19:04Z — fix/382-red-first-commits — manual
+- **Commits:** 13 (`acc1735f…769e8d1c`)
+- **Files:** 14 files
+- **Summary:** External verify of fix/382-red-first-commits: the red-first gate's introduced() read the oldest add of a path instead of the latest, so a pair deleted and re-added together after the cutoff reported PASS — the exact regression this unit exists to close. The fix landed in two commits (red then green), with a path-protection approval record for the protected suite.
+- **Decisions:** scripts/red-first.test.mjs is a protected path (test-file, freeze:true) so the edit required an owner-approval record in decisions.md rather than a self-approval; the guard discriminates correctly (pass/approved with row, fail/approval-required without)
+- **Next:** Push the 2 commits (cbeaa9f1, 769e8d1c) to origin/fix/382-red-first-commits, then re-run the full external verify to close the cycle
