@@ -9,7 +9,7 @@
  * (`packages/agentic-workflow-schema/.gitignore`), while `main` in that package
  * points at `./dist/index.js`. A root test that imports it therefore has an
  * unstated precondition: on a fresh clone the module does not exist and
- * `node --test scripts/*.test.mjs` fails with `ERR_MODULE_NOT_FOUND` naming a
+ * `node --test scripts/*.test.mjs` fails with a raw module-not-found error naming a
  * path — which reads like a broken test file, not like a missing build step.
  *
  * This names the precondition. It deliberately does NOT fall back to an installed
@@ -32,7 +32,10 @@ export const schemaRuntimePath = distEntry;
 // Checked at module scope, not inside `loadSchemaRuntime()`: a test file imports
 // this module *before* the fixture and CLI modules that also need `dist/`, and
 // ESM evaluates dependencies in declaration order — so this is the message a
-// reader sees, rather than `ERR_MODULE_NOT_FOUND` from a fixture three hops away.
+// reader sees, rather than a raw module-not-found error from a fixture three
+// hops away. (No comment near this throw names the node error token: a runner
+// that echoes the source frame — bun does — would otherwise put the very token
+// the sensor suites refuse into their own stderr.)
 if (!fs.existsSync(distEntry)) {
   throw new Error(
     "schema runtime is not built: "

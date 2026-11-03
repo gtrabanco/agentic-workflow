@@ -53,10 +53,11 @@ const selected = forwarded.length > 0 ? forwarded : suites();
 // suites also `git init` fresh repositories, whose own config starts empty and
 // inherits this as the system/global layer.
 // Bun uses `bun test <files>` (subcommand), Node uses `node --test <files>` (flag).
-// Bun defaults to a 5-second per-test timeout; set 30s to cover spawn overhead
-// on tests that are fast in node but slow to spawn under bun.
+// Bun defaults to a 5-second per-test timeout; budget 60s to cover bun→bun spawn
+// overhead and the full-history git walks on tests that are fast in node but slow
+// under bun (node keeps its no-default timeout model).
 const isBun = process.execPath.includes("bun");
-const testOpts = isBun ? ["test", "--timeout=30000", ...selected] : ["--test", ...selected];
+const testOpts = isBun ? ["test", "--timeout=60000", ...selected] : ["--test", ...selected];
 const result = spawnSync(process.execPath, testOpts, {
   cwd: REPO_ROOT,
   stdio: "inherit",
