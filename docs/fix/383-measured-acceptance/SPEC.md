@@ -47,7 +47,7 @@ Cut at plan time; the unit sweeps this surface rather than rediscovering it at r
 | `scripts/tier-cost.mjs` (new) | the reader, the per-tier aggregate, the comparison and the `tier-cost@1` row grammar — pure over committed facts, no clock in any verdict | the new suite, `docs/workflow/TIER_COST.md`'s rows |
 | `scripts/tier-cost.test.mjs` (new) | the frozen failure corpus and the red-first sibling suite | `scripts/red-first.mjs`, the root gate |
 | `docs/workflow/TIER_COST.md` (new) | the measurement ledger itself: header, row grammar, one row per unit sample | the reader; `docs/workflow/README.md`'s page index |
-| `skills/pre-execution-review/references/LEDGERS.md` | the new truth class joins `ledger-ownership@1` (owner, writer, validator) | `scripts/ledger-ownership.test.mjs` |
+| `skills/pre-execution-review/references/LEDGERS.md` | **not touched, and that is the finding**: a `tier-cost` truth class would amend unit 65's frozen AC16 (`scripts/ledger-ownership.test.mjs` pins the seven classes and restricts a ledger to `docs/{features,fix}/` + `docs/ROADMAP.md`), so the ledger declares its writer in its own header and the ruling sits in `## Future` | `scripts/ledger-ownership.test.mjs` (unchanged, still green) |
 | `AGENTS.md` (`normative-surfaces@1`) | the row grammar becomes an inventoried normative surface | `scripts/normative-drift.test.mjs` |
 | `packages/pi-agentic-workflow/src/session-telemetry.ts` (new) | the accumulator S4b rules into this unit: session marker, per-turn usage, model/tool time, unit identity, content-free counters, sink interface | the extension wiring, #394's log sink |
 | `packages/pi-agentic-workflow/src/extension/index.ts` | one more listener set (`session_start`, `turn_start`, `turn_end`, `tool_execution_end`, `session_shutdown`) beside routing and the receipt guard | every driven command |
@@ -89,6 +89,7 @@ Computed, never chosen: `bun scripts/ceremony.mjs tier classify --paths "<this c
 - `open` — 2026-11-03, wall-clock as a *gated* metric. Owner (S4a): the span is false; the turn boundary is honest. Re-open when the accumulator's `model_ms`/`tool_ms` have been sampled across ≥3 units per tier and the owner wants a time dimension in the comparison. Owner: the owner.
 - `open` — 2026-11-03, the historical corpus. Offline, a unit cannot be mapped to its own diff (unit docs record `## Branch`; merged branches are deleted and the merge commit is forge evidence). A declared unit→commit mapping would let the comparison run over the 128 existing units. Owner: a future unit.
 - `open` — 2026-11-03, `#394`'s log sink over this accumulator (owner: `#394`).
+- `open` — 2026-11-03, **decision-required**: a `tier-cost` truth class in `ledger-ownership@1`. `scripts/ledger-ownership.test.mjs` pins the seven AC16 classes (unit 65) and allows a declared ledger only under `docs/features/`, `docs/fix/` or `docs/ROADMAP.md`, so this ledger's ownership lives in its own header and its grammar in `normative-surfaces@1` until the owner rules on amending AC16. Owner: the owner.
 
 ## Future cost
 
@@ -228,6 +229,13 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 - **E7** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` · exit 0 · `ℹ tests 9 · ℹ pass 9 · ℹ fail 0`; `bun test scripts/tier-cost.test.mjs` · exit 0 · `9 pass · 0 fail`.
 - **E8** — 2026-11-03, differential `bun scripts/ceremony.mjs tier plan` — base `626e4461`: `totals 128 · recorded 1 · {passive 1, standard 0, high 0}`; head: `totals 129 · recorded 2 · {passive 1, standard 1, high 0}`. The declared difference is this unit's own doc plus the `## Risk tier` shape its template orders (O16); nothing else moved.
 - **G1** — 2026-11-03, `node scripts/run-root-suite.mjs` at `30ad8f7f` · exit 0 · `ℹ tests 1522 · ℹ suites 33 · ℹ pass 1521 · ℹ fail 0 · ℹ skipped 1`.
+
+- **P3** — 2026-11-03, published `docs/workflow/TIER_COST.md` (grammar, writer, the empty table), its `normative-surfaces@1` row, its place in `docs/workflow/README.md` and the re-pinned `machineLines` (91 → 92, estimate 6,814 inside 6,881). The ownership-map row is `n/a` with its evidence: AC16's seven classes are frozen and a ruling is recorded in `## Future` (O7, O17).
+- **E9** — 2026-11-03, `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` · exit 0 · `columns` = the eleven published names, `rows: []`; `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` · exit 2 · `insufficient-corpus` — S6's verdict on the real, empty corpus.
+- **E10** — 2026-11-03, `bun test scripts/normative-drift.test.mjs` · 21 pass · 0 fail; `bun test scripts/workflow-docs-index.test.mjs` · 5 pass · 0 fail; `bun test scripts/ledger-ownership.test.mjs` · 12 pass · 0 fail; `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 3 budgeted documents`.
+- **E11** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` · exit 0 · `ℹ tests 10 · ℹ pass 10 · ℹ fail 0` — the empty-ledger case landed red (`column-set`/`clean bill`) before the two fixes it forced (the `ceremony_skipped` declaration and the zero-sample verdict).
+
+- **G2** — 2026-11-03, `node scripts/run-root-suite.mjs` at `83004092` · exit 0 · `ℹ tests 1523 · ℹ suites 33 · ℹ pass 1522 · ℹ fail 0 · ℹ skipped 1`.
 
 ## Next
 

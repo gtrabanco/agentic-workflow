@@ -26,6 +26,7 @@ Notion ("Agentic Workflow").
 | [REPOSITORY_STATE.md](REPOSITORY_STATE.md) | The frozen Normalized Repository State — the evidence-backed snapshot of observed truth that `discover-repository-state` writes and `resolve-repository-state` alone may replace |
 | [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Golden fixture: the manual judgment protocol (run a changed executor-path skill against the committed toy fixture with the weakest fleet model) plus the executable `scripts/golden-fixture.test.mjs` suite that asserts its deterministic half |
 | [WORKFLOW_INVARIANTS.md](WORKFLOW_INVARIANTS.md) | Portable contract for optional project architectural invariants and their evidence-based evaluation |
+| [TIER_COST.md](TIER_COST.md) | The measured acceptance for the risk tiers: the `tier-cost@1` row grammar, who writes a sample, what a row never carries, and the `insufficient-corpus` verdict the comparison declares instead of inventing a figure |
 | [PACKAGES.md](PACKAGES.md) | The two companion npm packages: the bun workspace and its single lockfile, the pin rules, the version-parity gate, changesets, and the publish channels |
 
 ## Data

@@ -175,6 +175,19 @@ test("the comparison refuses below three units per tier and names the counts it 
   assert.equal(full.by_risk_tier.standard.ceremony_skipped_sum, 0);
 });
 
+test("an empty ledger is a ledger: no samples aggregate to nothing and the comparison blocks", () => {
+  const empty = parseLedger(ledger([]));
+  assert.equal(empty.error, undefined, "a fresh ledger carries the grammar and no samples — that is not a parse failure");
+  assert.deepEqual(empty.rows, []);
+
+  const grouped = aggregate([]);
+  assert.equal(grouped.rows, 0);
+  assert.equal(grouped.by_risk_tier.passive.units, 0);
+  assert.equal(grouped.by_size_tier.prose.units, 0);
+
+  assert.equal(compare([]).verdict, "insufficient-corpus", "no samples is the smallest corpus, never a clean bill");
+});
+
 test("time is never a span: the module carries no wall-clock token, and no flag accepts a model's number", () => {
   const source = fs.readFileSync(path.join(ROOT, "scripts/tier-cost.mjs"), "utf8");
   assert.doesNotMatch(source, /wall_clock|wall-clock|\belapsed\b|savings/i, "S4a: no span-shaped cell, no claim of a saving in minutes");
