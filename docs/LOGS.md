@@ -3969,3 +3969,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+## 2026-11-03T00:42:29Z — feat-365-vuln-research — manual
+- **Commits:** 2 (`e84eb643…8afa93f4`)
+- **Files:** 10 files
+- **Summary:** External verify of fix/365-vuln-research branch (commit 8afa93f4), fold-findings (empty queue), and PR creation for #365
+- **Decisions:** external verifier adopted 'trust bytes, not claims' — no implementer summaries, only git diff and validator runs; external verify returned Verdict: VERIFIED with 0 blockers, 3 advisories (none reproducible on this tree); PR #378 opened base main, 10 files, 2 commits, evidence pack generated from acceptance criteria
+- **Next:** Wait for PR review. If needed: /audit-pr 378 before merge; or follow advisory triage for the three advisory rows (unrealistic --root arg, nonexistent bun.lock alias shape, self-declared diff-guard exception documented in Log G2)
