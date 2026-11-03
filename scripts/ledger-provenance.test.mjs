@@ -4,8 +4,9 @@
  * F106 / P20 — the ledger recount must be mechanical, never asserted.
  *
  * `scripts/ledger-provenance.mjs` is the recount, so these tests pin the recount:
- * a fixture repo covering every provenance shape the real ledger has, plus the
- * real unit-26 ledger, which must pass `--check` from now on.
+ * fixture repositories covering every provenance shape the real ledgers carry —
+ * including the legacy `· folded P<n> <sha>` route marker the historical units
+ * wrote — each built with the history its own markers cite.
  */
 
 import assert from "node:assert/strict";
@@ -383,19 +384,171 @@ test("`--check --annotate` speaks in the conditional (C2)", (t) => {
 });
 
 
-test("unit 26's fold ledger is read, not silently passed", () => {
-  // Feature 36's F80: `--check` used to exit 0 on this ledger while classifying
-  // every row `open` (the annotated cells and their tokens were never read), so a
-  // green recount here proved nothing. The recount now reads every row; the red it
-  // reports is the ledger's own historical residue — F63/F64/F108 write
-  // `· folded P<n> <sha>`, a shape that predates the annotator's `· fold <sha>` —
-  // and must name exactly those rows rather than a blanket pass or a blanket fail.
-  const rel = "scripts/fixtures/ledger-provenance/review-findings-26.md";
-  const result = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
-  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /CHECK PASS/);
-  const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
-  assert.equal(json.filter((e) => e.status === "open").length, 0, "no folded row is bucketed open");
+/**
+ * The annotated shapes the historical ledgers carry (`docs/features/26-…`,
+ * `36-…`), in a repository that owns the history its markers cite.
+ *
+ * These two cases used to read byte copies of those two ledgers, committed under
+ * `scripts/fixtures/ledger-provenance/` (2026-11-03). That reddened the gate on a
+ * tree nobody had changed: the recount resolves each row's flip from
+ * `git log -- <path>`, and a copy added in ONE commit flips every row at that
+ * import commit, which claims no finding id. 24 rows of unit 26's ledger fell to
+ * `cited-unverified` because their only citation was the legacy route marker and
+ * their proof had been "this commit flipped this row". Change is provenance, so a
+ * fixture has to build it — a copy can only prove that bytes match.
+ */
+function makeMarkerHistory(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-markers-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const abs = (rel) => path.join(root, rel);
+  const write = (rel, text) => fs.writeFileSync(abs(rel), text);
+  const commit = (message) => {
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "HEAD");
+  };
+
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  fs.mkdirSync(abs("src"), { recursive: true });
+  fs.mkdirSync(path.dirname(abs(LEDGER)), { recursive: true });
+  write("src/a.ts", "export const a = 1;\n");
+  write("src/b.ts", "export const b = 1;\n");
+  write("src/c.ts", "export const c = 1;\n");
+  let rows = [
+    row("F1", "src/a.ts:1", "fold into current unit", "no"),
+    row("F2", "src/b.ts:1", "fold into current unit", "no"),
+    row("F3", "src/b.ts:1", "fold into current unit", "no"),
+  ];
+  write(LEDGER, HEADER + rows.join(""));
+  commit("planning artifacts");
+
+  const setRow = (id, cells) => {
+    rows = rows.map((line) => (line.startsWith(`| ${id} |`) ? `| ${cells.join(" | ")} |\n` : line));
+    write(LEDGER, HEADER + rows.join(""));
+  };
+
+  // F1 — the legacy shape, exactly as unit 26 wrote it: the surface is repaired in
+  // one commit, the row is ticked in a second, and a third appends the route marker
+  // naming both (`· folded P8 <fix> · fold <fix> (ticked <tick>)`). The marker's last
+  // token is the commit that flipped the row, which is the only proof this row has —
+  // neither subject names a finding id.
+  write("src/a.ts", "export const a = 2;\n");
+  const p8Fix = commit("fix(schema): P8 repair freshness classification");
+  setRow("F1", ["F1", "src/a.ts:1", "code", "high", "fix-now", "fold into current unit", "yes"]);
+  const f1Tick = commit("docs(schema): record the P8 fold");
+  setRow("F1", [
+    "F1",
+    "src/a.ts:1",
+    "code",
+    "high",
+    "fix-now",
+    `fold into current unit · folded P8 ${p8Fix.slice(0, 7)} · fold ${p8Fix.slice(0, 7)} (ticked ${f1Tick.slice(0, 7)})`,
+    "yes",
+  ]);
+  commit("docs(schema): annotate F1");
+
+  // F2 — the annotator's own shape: the marker lives in the folded cell and its
+  // commit claims the row in its subject, so a copy cannot take this proof away.
+  write("src/b.ts", "export const b = 2;\n");
+  const f2Fix = commit("fix(schema): fold F2 — the second surface");
+  setRow("F2", ["F2", "src/b.ts:1", "code", "high", "fix-now", "fold into current unit", `yes · fold ${f2Fix.slice(0, 7)}`]);
+  commit("docs(schema): record the F2 fold");
+
+  // F3 — a route-cell marker whose commit claims the row.
+  write("src/b.ts", "export const b = 3;\n");
+  const f3Fix = commit("fix(schema): fold F3 — the third surface");
+  setRow("F3", ["F3", "src/b.ts:1", "code", "high", "fix-now", `fold into current unit · fold ${f3Fix.slice(0, 7)}`, "yes"]);
+  commit("docs(schema): annotate F3");
+
+  return { root, p8Fix, f1Tick, f2Fix, f3Fix };
+}
+
+test("an annotated ledger is proven by the history its markers cite (unit 26's shape)", (t) => {
+  // Feature 36's F80: `--check` used to exit 0 on the annotated ledgers while
+  // bucketing every row `open`, because the marker cells were never read. Reading
+  // them is only half the bar; the recount must resolve the commit they name.
+  const { root, f1Tick, f2Fix, f3Fix } = makeMarkerHistory(t);
+  const json = JSON.parse(run(root, "--json").stdout);
+  assert.deepEqual(
+    json.map((e) => [e.id, e.status]),
+    [
+      ["F1", "proven-cited"],
+      ["F2", "proven-cited"],
+      ["F3", "proven-cited"],
+    ],
+    "every folded row is proven, and none is bucketed open",
+  );
+  assert.equal(json.find((e) => e.id === "F1").fold, f1Tick.slice(0, 7), "the legacy route marker is read: its last token is the row's flip");
+  assert.equal(json.find((e) => e.id === "F2").fold, f2Fix.slice(0, 7), "the folded-cell marker is read");
+  assert.equal(json.find((e) => e.id === "F3").fold, f3Fix.slice(0, 7));
+  const check = run(root, "--check");
+  assert.equal(check.status, 0, check.stdout);
+  assert.match(check.stdout, /CHECK PASS/);
+});
+
+test("a copied ledger loses the proofs its history carried, and says so (the 24-row class)", (t) => {
+  // The 2026-11-03 regression, reduced: the rows whose proof was "the commit that
+  // flipped this row" cannot be proven by a copy, because the copy's only commit
+  // flipped all of them at once. The recount must report that — the failure this
+  // case pins is a silent pass over a citation nobody can tie to a fold.
+  const { root } = makeMarkerHistory(t);
+  const copy = "docs/copied-ledger.md";
+  fs.copyFileSync(path.join(root, LEDGER), path.join(root, copy));
+  git(root, "add", "-A", "--", ".");
+  git(root, "commit", "-qm", "docs(x): import a ledger copy");
+  const onCopy = (...flags) => spawnSync(process.execPath, [script, copy, ...flags], { cwd: root, encoding: "utf8" });
+
+  const json = JSON.parse(onCopy("--json").stdout);
+  const status = Object.fromEntries(json.map((e) => [e.id, e.status]));
+  assert.equal(status.F1, "cited-unverified", "the flip proof is gone: the marker's commit folded something else here");
+  assert.equal(status.F2, "proven-cited", "a marker whose subject claims the row survives the copy");
+  assert.equal(status.F3, "proven-cited");
+  const check = onCopy("--check");
+  assert.equal(check.status, 1, "the copy must not pass the check");
+  assert.match(check.stdout, /CHECK FAIL/);
+  assert.match(check.stdout, /cited-unverified: F1/, check.stdout);
+});
+
+test("a marker that folded something else is reported, never trusted (F63's shape)", (t) => {
+  // Unit 36's ledger residue: the row cites a reachable commit whose subject names
+  // another finding and which is not the commit that flipped the row. Trusting it
+  // would be the silent pass the recount exists to prevent; flagging it names the
+  // one repair that works — cite the commit that actually folded the row.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-foreign-mark-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const write = (rel, text) => fs.writeFileSync(path.join(root, rel), text);
+  const commit = (message) => {
+    git(root, "add", "-A", "--", ".");
+    git(root, "commit", "-qm", message);
+    return git(root, "rev-parse", "HEAD");
+  };
+  git(root, "init", "-q", "-b", "main");
+  git(root, "config", "user.email", "fixture@example.invalid");
+  git(root, "config", "user.name", "Fixture");
+  git(root, "config", "commit.gpgsign", "false");
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(root, LEDGER)), { recursive: true });
+  write("src/index.ts", "export const a = 1;\n");
+  write(LEDGER, HEADER + row("F63", "src/index.ts:1", "fold into current unit", "no"));
+  commit("planning artifacts");
+  write("src/index.ts", "export const a = 2;\n");
+  const foreign = commit("fix(schema): fold F9 — another unit's finding");
+  write(
+    LEDGER,
+    HEADER + row("F63", "src/index.ts:1", `fold into current unit · fold ${foreign}`, "yes"),
+  );
+  commit("docs(schema): housekeeping");
+
+  const json = JSON.parse(run(root, "--json").stdout);
+  const f63 = json.find((e) => e.id === "F63");
+  assert.equal(f63.status, "cited-unverified", "a foreign-allegiance marker cannot prove the row");
+  assert.deepEqual(f63.cited, [foreign.slice(0, 7)], "the marker is named, so the repair is obvious");
+  const check = run(root, "--check");
+  assert.equal(check.status, 1);
+  assert.match(check.stdout, /cited-unverified: F63/, check.stdout);
 });
 
 test("--annotate never writes a token the contract does not declare (A1)", (t) => {
@@ -491,27 +644,16 @@ console.log(
   "PASS ledger provenance: atomic, message-only, range, forge-only, unprovable and fabricated-sha rows all classified",
 );
 
-test("unit 36's fold ledger names its open residue, not a blanket pass (F80)", () => {
-  // The recount's own gate on the ledger this fix ships in. Cycle 9 inherited F21–F54
-  // folded before the annotator wrote `· fold <sha>` into the cell (they cite the
-  // commit in the route cell instead, the shape that predates the marker), and the
-  // ledger must say so row by row rather than claim a blanket PASS. The four cycle-9
-  // rows this batch folded are proven, which is the path under test; a future fold
-  // that re-points or annotates the residue is free to make this green.
-  const rel = "scripts/fixtures/ledger-provenance/review-findings-36.md";
-  const json = JSON.parse(spawnSync(process.execPath, [script, rel, "--json"], { cwd: repoRoot, encoding: "utf8" }).stdout);
-  const open = json.filter((e) => e.status === "open" && !/^F(2[0-9]|3[0-9]|4[0-9]|5[0-4])$/.test(e.id));
-  assert.equal(open.length, 0, `a folded row is never bucketed open: ${open.map((e) => e.id).join(", ")}`);
-  for (const id of ["F78", "F79", "F80", "F81", "F82", "F83", "F84", "F85", "F86"]) {
-    assert.equal(json.find((e) => e.id === id).status, "proven-cited", `${id}'s own marker must prove it`);
-  }
-  const check = spawnSync(process.execPath, [script, rel, "--check"], { cwd: repoRoot, encoding: "utf8" });
-  const citations = json.filter((e) => e.status === "cited-unverified").map((e) => e.id);
-  assert.equal(check.status, citations.length === 0 ? 0 : 1, "the check mirrors the residue it can see");
-  if (citations.length) assert.match(check.stdout, /by cause:/, check.stdout);
-  // Cycle 10 repaired the residue this guard was written against: no row is open and
-  // the recount now validates the whole ledger instead of reporting it.
-  assert.deepEqual(citations, [], "the ledger's citations are repaired and verified");
+test("a folded row is never bucketed open, whatever marker shape carries it (F80)", (t) => {
+  // Unit 36's shape: rows folded before the annotator wrote `· fold <sha>` cite the
+  // commit in the route cell instead. The recount must read every folded row as
+  // folded — a row bucketed `open` is a citation the check never validated.
+  const { root } = makeMarkerHistory(t);
+  const json = JSON.parse(run(root, "--json").stdout);
+  const open = json.filter((e) => e.status === "open");
+  assert.deepEqual(open.map((e) => e.id), [], `a folded row is never bucketed open: ${open.map((e) => e.id).join(", ")}`);
+  const flagged = json.filter((e) => e.status === "cited-unverified").map((e) => e.id);
+  assert.deepEqual(flagged, [], "the fixture's markers are all provable by its own history");
 });
 
 test("an annotated ledger's citations are read and validated, not silently passed (F80)", (t) => {

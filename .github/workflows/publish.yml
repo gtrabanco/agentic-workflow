@@ -473,7 +473,12 @@ jobs:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
       # dist-tag"), a permission separate from direct publishing.
+      # Only a run that PUBLISHED moves the tag. On 2026-11-02 a push-triggered
+      # run whose gate skipped (the committed version was already on the registry)
+      # still rewrote `canary` from 5.0.0-canary.20261102.1 back to 4.10.0 on all
+      # three packages, orphaning a published canary that nothing pointed at.
       - name: Point the canary dist-tag at the stable release
+        if: steps.version.outputs.publish == 'true'
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
@@ -533,7 +538,12 @@ jobs:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
       # dist-tag"), a permission separate from direct publishing.
+      # Only a run that PUBLISHED moves the tag. On 2026-11-02 a push-triggered
+      # run whose gate skipped (the committed version was already on the registry)
+      # still rewrote `canary` from 5.0.0-canary.20261102.1 back to 4.10.0 on all
+      # three packages, orphaning a published canary that nothing pointed at.
       - name: Point the canary dist-tag at the stable release
+        if: steps.version.outputs.publish == 'true'
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
@@ -621,7 +631,12 @@ jobs:
       # the tag never lags behind `latest`. npm's Trusted Publisher record for
       # this workflow must allow dist-tag writes (npm >= 11.21, "Allow npm
       # dist-tag"), a permission separate from direct publishing.
+      # Only a run that PUBLISHED moves the tag. On 2026-11-02 a push-triggered
+      # run whose gate skipped (the committed version was already on the registry)
+      # still rewrote `canary` from 5.0.0-canary.20261102.1 back to 4.10.0 on all
+      # three packages, orphaning a published canary that nothing pointed at.
       - name: Point the canary dist-tag at the stable release
+        if: steps.version.outputs.publish == 'true'
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
