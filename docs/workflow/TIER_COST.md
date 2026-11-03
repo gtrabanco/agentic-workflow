@@ -16,7 +16,7 @@ never an extra cell.
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
 
-**What a row never carries.** No prompt text, no model output, no diff, no file
+**What a row never carries.** No derived fact: the tier and the ceremony counts are repository facts that `scripts/tier-cost.mjs` resolves from the unit's own carrier at read time, so a stored copy could only drift.  No prompt text, no model output, no diff, no file
 content — and no session span. A session's first and last timestamps measure how
 long a person was away, not how long the work took: measured here, the same
 corpus shows gaps of 123 h against minutes of work. Time enters only as
@@ -26,14 +26,11 @@ corpus shows gaps of 123 h against minutes of work. Time enters only as
 tier-cost@1
 column | shape | what it holds
 unit | `<issue>-<slug>` | the unit the sample belongs to, as its directory is named under `docs/fix/` or `docs/features/`, or its `docs/passive/` id
-tier | `passive` \| `standard` \| `high` | the tier the unit recorded in its own carrier; the reader re-resolves it and refuses a disagreement
 changed_paths | `<integer>` | how many paths the unit changed; the size tier (`prose \| small \| large`) is derived from it at read time, never stored
 tokens | `<integer>` | the provider's own token count, summed over the unit's turns
 turns | `<integer>` | how many assistant turns the unit took
 model_ms | `<integer>` | milliseconds the model spent producing those turns
 tool_ms | `<integer>` | milliseconds the unit's tools spent, from the runtime's monotonic clock
-ceremony_recorded | `<integer>` | how many of the four ceremony steps the unit's carrier actually delivered
-ceremony_skipped | `<integer>` | how many of the four it did not: `4 - ceremony_recorded`, derived from the same carrier so the pair always sums to four
 observed | `<YYYY-MM-DD>` | the date the sample was taken
 source | `<producer>:<ref>` | the producer's own provenance string, so a row traces back to the run that wrote it
 ```
@@ -49,8 +46,8 @@ One row per unit sample. The table is empty until the sink writes its first row;
 an empty table is a corpus of zero, and the comparison says so instead of
 inventing a figure.
 
-| unit | tier | changed_paths | tokens | turns | model_ms | tool_ms | ceremony_recorded | ceremony_skipped | observed | source |
-|---|---|---|---|---|---|---|---|---|---|---|
+| unit | changed_paths | tokens | turns | model_ms | tool_ms | observed | source |
+|---|---|---|---|---|---|---|---|
 
 ## Reading it
 
