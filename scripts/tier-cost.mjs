@@ -113,7 +113,6 @@ export function parseLedger(text) {
     }
     rows.push(record);
   }
-  if (rows.length === 0) return { error: "missing-table", detail: "the sample table carries no row" };
   return { columns: [...COLUMNS], rows };
 }
 
@@ -245,12 +244,18 @@ export function aggregate(rows) {
  */
 export function compare(rows, { min = MIN_UNITS_PER_TIER } = {}) {
   const grouped = aggregate(rows);
-  const short = RISK_TIER_KINDS.filter((tier) => grouped.by_risk_tier[tier].units > 0 && grouped.by_risk_tier[tier].units < min);
+  // No samples at all is the smallest corpus there is, so it names every tier
+  // rather than passing as a clean bill; below the bound on a tier that has
+  // samples, that tier is the one named.
+  const short = rows.length === 0
+    ? RISK_TIER_KINDS.map((tier) => ({ tier, units: 0 }))
+    : RISK_TIER_KINDS.filter((tier) => grouped.by_risk_tier[tier].units > 0 && grouped.by_risk_tier[tier].units < min)
+        .map((tier) => ({ tier, units: grouped.by_risk_tier[tier].units }));
   return {
     contract: TIER_COST_CONTRACT_ID,
     verdict: short.length === 0 ? "ok" : "insufficient-corpus",
     min_units_per_tier: min,
-    short_tiers: short.map((tier) => ({ tier, units: grouped.by_risk_tier[tier].units })),
+    short_tiers: short,
     by_risk_tier: grouped.by_risk_tier,
     by_size_tier: grouped.by_size_tier,
   };
