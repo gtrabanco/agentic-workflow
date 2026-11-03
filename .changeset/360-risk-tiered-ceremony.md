@@ -20,4 +20,4 @@ The three vocabularies are published as versioned grammar
 `normative-surfaces@1`; the closed ceremony CLI emits the verdict
 (`ceremony tier classify|read|plan`), the sensor projects it as
 `detail.risk_tier` — a distinct key from `next.tier`, which stays the model
-budget — and the lane's triage and the executor's `RISK_TIERS.md` consume it.
+budget — and the lane's triage and the executor's `risk-tiers.md` consume it.

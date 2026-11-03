@@ -162,3 +162,43 @@ test("a skill entry is valid and an unknown skill name is not", () => {
   assert.equal(bad.status, 1);
   assert.match(bad.stderr || bad.stdout, /unknown skill: no-such-skill/);
 });
+
+// The release note is a surviving-mention surface: a body that cites a
+// repo-root path must cite one that exists. A rename that lands without
+// sweeping its changeset narration leaves a release note pointing at a dead
+// path (the RISK_TIERS.md → risk-tiers.md class).
+test("fails closed when the body cites a repo path that does not exist", () => {
+  const dir = fixtureDir({
+    "ghost-path.md": [
+      "---",
+      '"@gtrabanco/pi-agentic-workflow": patch',
+      "---",
+      "",
+      "fix(pi): rewrites `scripts/definitely-not-here.mjs`.",
+      "",
+    ].join("\n"),
+  });
+  const result = run(["--changeset-dir", dir]);
+  assert.equal(result.status, 1);
+  assert.match(
+    result.stderr || result.stdout,
+    /cites a repo path that does not exist: scripts\/definitely-not-here\.mjs/,
+  );
+});
+
+test("accepts cited paths that exist and skips placeholders and package-relative citations", () => {
+  const dir = fixtureDir({
+    "real-paths.md": [
+      "---",
+      '"unit-lane": patch',
+      "---",
+      "",
+      // `scripts/risk-tiers.mjs` exists; `docs/passive/<id>.md` is a placeholder
+      // shape and `src/index.ts` is package-relative — neither is this gate's to judge.
+      "fix(unit-lane): cites `scripts/risk-tiers.mjs`, `docs/passive/<id>.md` and `src/index.ts`.",
+      "",
+    ].join("\n"),
+  });
+  const result = run(["--changeset-dir", dir]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
