@@ -22,10 +22,10 @@ function fakePi() {
   const handlers = new Map();
   return {
     pi: { on: (event, handler) => handlers.set(event, handler) },
-    fire(event, payload = {}) {
+    fire(event, payload = {}, ctx = {}) {
       const handler = handlers.get(event);
       assert.ok(handler, `no handler registered for ${event}`);
-      return handler(payload);
+      return handler(payload, ctx);
     },
     registered: () => [...handlers.keys()].sort(),
   };
@@ -46,11 +46,12 @@ function wiring(overrides = {}) {
     root: overrides.root ?? project(),
     enabled: overrides.enabled ?? true,
     sinks: [{ name: "recording", write: (sample) => written.push(sample) }],
-    changedPaths: overrides.changedPaths ?? (() => 7),
-    sessionStartSha: () => "abc123",
+    ...("changedPaths" in overrides ? { changedPaths: overrides.changedPaths } : {}),
+    sessionStartSha: overrides.sessionStartSha ?? (() => "abc123"),
+    sessionId: overrides.sessionId,
     now: clock,
     date: () => "2026-11-03",
-    source: "pi:session=abc",
+    source: overrides.source,
   });
   return { instance, written };
 }
@@ -70,7 +71,7 @@ test("on registers the five lifecycle events", () => {
 });
 
 test("the unit comes from the dispatched command, and one session emits one sample", () => {
-  const { instance, written } = wiring();
+  const { instance, written } = wiring({ changedPaths: () => 7 });
   const { pi, fire } = fakePi();
   instance.register(pi);
   instance.noteCommand("execute-phase", ["383", "P2"]);
@@ -86,9 +87,58 @@ test("the unit comes from the dispatched command, and one session emits one samp
   assert.equal(written[0].tokens, 750);
   assert.equal(written[0].turns, 1);
   assert.equal(written[0].tool_ms, 200);
-  assert.equal(written[0].changed_paths, 7);
+  assert.equal(written[0].changed_paths, 7, "the injected counter is used when the caller owns git");
+  assert.equal(written[0].source, "pi:session", "with no session id at hand the source names only the producer");
   fire("session_shutdown");
   assert.equal(written.length, 1, "a second shutdown is not a second row");
+});
+
+test("the sample names the session it measured, so two sessions are two rows", () => {
+  const { instance, written } = wiring({ sessionId: () => "s-42" });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+  fire("session_start", {}, { sessionManager: { getSessionId: () => "s-42" } });
+  fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+  fire("session_shutdown");
+  assert.equal(written[0].source, "pi:session=s-42");
+});
+
+test("the session id comes from the start context when the caller injected none", () => {
+  const { instance, written } = wiring();
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  instance.noteCommand("execute-phase", ["383"]);
+  fire("session_start", {}, { sessionManager: { getSessionId: () => "s-from-ctx" } });
+  fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+  fire("session_shutdown");
+  assert.equal(written[0].source, "pi:session=s-from-ctx");
+});
+
+test("the path count is the session's own work, measured when the sample is written", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "telemetry-paths-"));
+  const run = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
+  run("init", "-q");
+  run("config", "user.email", "t@example.com");
+  run("config", "user.name", "t");
+  fs.mkdirSync(path.join(root, "docs/fix/383-measured-acceptance"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs/fix/383-measured-acceptance/SPEC.md"), "# fix/383-measured-acceptance\n");
+  run("add", ".");
+  run("commit", "-qm", "base");
+
+  const { instance, written } = wiring({ root, sessionStartSha: () => run("rev-parse", "HEAD").trim() });
+  const { pi, fire } = fakePi();
+  instance.register(pi);
+  fire("session_start");
+  instance.noteCommand("execute-phase", ["383"]); // dispatched on a clean tree
+
+  for (let index = 0; index < 3; index += 1) fs.writeFileSync(path.join(root, `f${index}.txt`), "x\n");
+  run("add", ".");
+  run("commit", "-qm", "the session's own work");
+
+  fire("turn_end", { message: { usage: { totalTokens: 10 } } });
+  fire("session_shutdown");
+  assert.equal(written[0].changed_paths, 3, "the command ran on a clean tree; the three paths are what the session did after it");
 });
 
 test("a session that named no unit emits nothing — no invented row", () => {

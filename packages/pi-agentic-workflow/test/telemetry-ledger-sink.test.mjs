@@ -19,7 +19,6 @@ const DATE = "2026-11-03";
 
 const SAMPLE = {
   unit: "383-measured-acceptance",
-  tier: "standard",
   changed_paths: 12,
   tokens: 1_500,
   turns: 4,
@@ -77,6 +76,28 @@ test("the sink is idempotent: the same sample twice is one row", () => {
   assert.equal(rowsOf(ledgerPath).length, 1, "a second shutdown for one session must not append a second row");
 });
 
+test("two sessions of the same unit on the same day are two rows", () => {
+  const { ledgerPath } = project();
+  const sink = createLedgerSink({ ledgerPath });
+  sink.write(SAMPLE);
+  sink.write({ ...SAMPLE, tokens: 2_000, source: "pi:session=def" });
+  const rows = rowsOf(ledgerPath);
+  assert.equal(rows.length, 2, "a second session measured the same day is a sample, not a duplicate");
+  assert.deepEqual(rows.map((row) => row.source), ["pi:session=abc", "pi:session=def"]);
+  assert.deepEqual(rows.map((row) => row.tokens), [1_500, 2_000]);
+});
+
+test("only an identical row is a duplicate: the guard never swallows a different sample", () => {
+  const { ledgerPath } = project();
+  const sink = createLedgerSink({ ledgerPath });
+  sink.write(SAMPLE);
+  for (const change of [{ tokens: 1 }, { turns: 9 }, { observed: "2026-11-04" }, { changed_paths: 0 }]) {
+    const before = rowsOf(ledgerPath).length;
+    sink.write({ ...SAMPLE, ...change });
+    assert.equal(rowsOf(ledgerPath).length, before + 1, `a row differing in ${Object.keys(change)[0]} is a new sample`);
+  }
+});
+
 test("the sink never rewrites an earlier row", () => {
   const { ledgerPath } = project();
   const before = fs.readFileSync(ledgerPath, "utf8");
@@ -115,7 +136,7 @@ test("round trip: the repository's reader accepts the sink's row and reads the s
   assert.equal(read.error, undefined, `the repo reader refused the sink's row: ${read.detail ?? ""}`);
   const row = read.rows[0];
   assert.equal(row.unit, SAMPLE.unit);
-  assert.equal(row.tier, SAMPLE.tier);
+  assert.equal(row.tier, "standard", "the tier is derived from the carrier, exactly the fact the sink never stored");
   assert.equal(row.tokens, SAMPLE.tokens);
   assert.equal(row.turns, SAMPLE.turns);
   assert.equal(row.model_ms, SAMPLE.model_ms);
