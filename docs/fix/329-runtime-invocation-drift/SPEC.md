@@ -347,6 +347,7 @@ proves it. Frozen at cut.
 - **E20** — 2026-11-04, the bun-first re-runs the correction demands: `bun test scripts/invocation-drift.test.mjs` · exit 0 · 12 pass / 0 fail (the new S11 case included); `bun test scripts/unit-route.test.mjs` · exit 0 · 57 pass / 0 fail; `bun test scripts/pre-execution-quality.test.mjs` · exit 0 · 0 pass / 1 skip / 0 fail; `bun scripts/invocation-drift.mjs` · exit 0 · `verdict: PASS`, 113 files checked (skills + templates).
 - **G3** — 2026-11-04, the correction batch's full gate at the corrected head: `node scripts/run-root-suite.mjs` · exit 0 · 1,393 tests / 1,392 pass / 0 fail / 1 skipped.
 - **P8** — 2026-11-04, correction batch (L2/S11): the gate now also rules on `node --test …` literals in `skills/**` and `template/**` (`node-command-literal`), the two SPEC templates and the guide state the bun-first per-file form, every task validator and obligation row that invoked a test file moved to `bun test scripts/<file>.test.mjs`, and the measured full-gate reasons are recorded (`E19`) · this commit.
+- **P9** — 2026-11-04, PR [#380](https://github.com/gtrabanco/agentic-workflow/pull/380) opened against `main` with `Closes #329`; the roadmap row settles to `done · [#380]`.
 
 ## Next
 
@@ -358,6 +359,7 @@ it red against the base tree.
 - Issue [#329](https://github.com/gtrabanco/agentic-workflow/issues/329)
 - Roadmap row 88 `runtime-invocation-drift-gate` (features table)
 - `AGENTS.md` §Runtime convention; `docs/workflow/SETUP.md` (`setup-env --check`)
+- Pull request [#380](https://github.com/gtrabanco/agentic-workflow/pull/380) (`Closes #329`)
 - Sibling scope: issue #269 (roadmap row 80) owns the ripgrep search feature
 - Template: `docs/fix/_TEMPLATE/SPEC.md`; ledger shapes:
   `skills/pre-execution-review/references/LEDGERS.md`
