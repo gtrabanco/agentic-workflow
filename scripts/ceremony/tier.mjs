@@ -72,11 +72,18 @@ function scopePaths(flags, cwd) {
   return [...new Set([...committed, ...dirty])].filter(Boolean).sort();
 }
 
-/** The tier a unit recorded in its own `## Log` evidence lines, or `null`. */
+/**
+ * The tier a unit recorded, or `null`. Three shapes, one reader: the `## Risk
+ * tier` block the template writes ("Copy the verdict below verbatim"), the
+ * classifier's JSON pasted into a `## Log` evidence line, and a plain
+ * `tier: <value>` sentence. A unit that copied the verdict into the block its
+ * template asks for is recording it, so refusing that shape would refuse the
+ * canonical one (#383 S4).
+ */
 export function recordedTier(specText) {
-  const matches = [...specText.matchAll(/"tier":\s*"([a-z]+)"|tier:\s*`?([a-z]+)`?/g)];
+  const matches = [...specText.matchAll(/\*\*Tier\*\*\s*—\s*`([a-z]+)`|"tier":\s*"([a-z]+)"|tier:\s*`?([a-z]+)`?/g)];
   for (let i = matches.length - 1; i >= 0; i -= 1) {
-    const token = matches[i][1] ?? matches[i][2];
+    const token = matches[i][1] ?? matches[i][2] ?? matches[i][3];
     if (RISK_TIER_KINDS.includes(token)) return token;
   }
   return null;
