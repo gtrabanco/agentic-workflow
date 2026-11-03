@@ -113,6 +113,19 @@ test("a row's tier is re-resolved from the unit's own carrier, never trusted fro
   assert.equal(agreeing.rows[0].tier, "standard");
 });
 
+test("a recorded tier is read from the template block, the classifier's JSON and a plain sentence", () => {
+  const root = project({
+    "docs/fix/111-a/SPEC.md": unitDoc("standard"),
+    "docs/fix/222-b/SPEC.md": "# fix/222-b\n\n## Log\n\n- **E1** — 2026-11-03, `bun scripts/ceremony.mjs tier classify` · exit 0 · {\"tier\": \"passive\"}.\n",
+    "docs/fix/333-c/SPEC.md": "# fix/333-c\n\nRecorded by the classifier: tier: `high`.\n",
+    "docs/fix/444-d/SPEC.md": "# fix/444-d\n\n## Specs\n\n**S1 — a requirement.**\n> the words\n",
+  });
+  assert.equal(resolveTier(root, "111-a"), "standard", "the template's ## Risk tier block is a recorded tier");
+  assert.equal(resolveTier(root, "222-b"), "passive", "the classifier's JSON in an evidence line still reads");
+  assert.equal(resolveTier(root, "333-c"), "high", "a plain sentence still reads");
+  assert.equal(resolveTier(root, "444-d"), null, "a unit that recorded nothing is not given a tier");
+});
+
 test("ceremony is counted against the four declared steps, and a doc-less unit invents nothing", () => {
   const root = project({
     "docs/fix/111-a/SPEC.md": unitDoc("standard"),
@@ -144,18 +157,18 @@ test("the aggregate groups by both published tiers and prints no single figure",
 });
 
 test("the comparison refuses below three units per tier and names the counts it saw", () => {
-  const thin = compare([{ tier: "passive", tokens: 100 }, { tier: "standard", tokens: 900 }]);
+  const thin = compare([{ tier: "passive", changed_paths: 2, tokens: 100 }, { tier: "standard", changed_paths: 9, tokens: 900 }]);
   assert.equal(thin.verdict, "insufficient-corpus");
   assert.equal(thin.by_risk_tier.passive.units, 1);
   assert.equal(thin.by_risk_tier.high.units, 0);
 
   const full = compare([
-    { tier: "passive", tokens: 100, ceremony_skipped: 4 },
-    { tier: "passive", tokens: 200, ceremony_skipped: 4 },
-    { tier: "passive", tokens: 300, ceremony_skipped: 4 },
-    { tier: "standard", tokens: 900, ceremony_skipped: 0 },
-    { tier: "standard", tokens: 950, ceremony_skipped: 0 },
-    { tier: "standard", tokens: 990, ceremony_skipped: 0 },
+    { tier: "passive", changed_paths: 2, tokens: 100, ceremony_skipped: 4 },
+    { tier: "passive", changed_paths: 2, tokens: 200, ceremony_skipped: 4 },
+    { tier: "passive", changed_paths: 2, tokens: 300, ceremony_skipped: 4 },
+    { tier: "standard", changed_paths: 9, tokens: 900, ceremony_skipped: 0 },
+    { tier: "standard", changed_paths: 9, tokens: 950, ceremony_skipped: 0 },
+    { tier: "standard", changed_paths: 9, tokens: 990, ceremony_skipped: 0 },
   ]);
   assert.equal(full.verdict, "ok");
   assert.equal(full.by_risk_tier.passive.tokens_median, 200);
