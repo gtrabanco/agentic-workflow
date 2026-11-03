@@ -12,6 +12,8 @@ justification | scripts/fixtures/spec-by-reference/tree/docs/features/24-migrate
 justification | scripts/fixtures/spec-by-reference/tree/docs/features/90-missing-shared/SPEC.md | P4 | 2026-11-04 | execute-phase | Same grammar move: the fixture's `## Findings` header and rows gain the impact cell.
 justification | scripts/fixtures/spec-by-reference/golden-fixture/SPEC.md | P4 | 2026-11-04 | execute-phase | Same grammar move: the golden fixture's `## Findings` header gains the impact cell (it carries no data row).
 justification | scripts/fixtures/spec-by-reference/258-harden-needs-input-contracts/SPEC.md | P4 | 2026-11-04 | execute-phase | Same grammar move: the unit-258 fixture's two open rows gain the impact cell their severity implies.
+justification | scripts/skill-lint.test.mjs | P9 | 2026-11-04 | execute-phase | #357's O14 case pins the authoring-rule count at seven; this unit legitimately adds rule 8 (the published vocabularies), leaving rules 1–7 byte-identical, so the count is the incidental pin and the assertion's meaning (the reference owns the authoring rules) is unchanged.
+approval | scripts/skill-lint.test.mjs | P9 | 2026-11-04 | human-owner | Owner approved raising O14's pinned count from seven to eight instead of dropping this unit's rule 8.
 ```
 
 ## Decisions

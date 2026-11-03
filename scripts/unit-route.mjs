@@ -479,7 +479,7 @@ function fail(code, message) {
 }
 
 /** The `--help`/`-h` contract: printed on stdout, exit 0 — help is not a failure. */
-const USAGE = `usage: node scripts/unit-route.mjs <unit|issue>
+const USAGE = `usage: bun scripts/unit-route.mjs <unit|issue>
 
 Prints the route one delivery unit takes now, from its own ledger. The routes,
 first match winning: replan (an open row whose frozen route is the plan owner),
@@ -846,7 +846,7 @@ function main(argv) {
   }
   if (args[0] === "--triage") {
     if (args.length < 2 || args.length > 3 || (args.length === 3 && args[2] !== "--json")) {
-      fail(1, "usage: node scripts/unit-route.mjs --triage <unit> [--json]");
+      fail(1, "usage: bun scripts/unit-route.mjs --triage <unit> [--json]");
     }
     const result = runTriage(args[1], { json: args[2] === "--json" });
     if (args[2] === "--json") {
@@ -854,8 +854,8 @@ function main(argv) {
     }
     return;
   }
-  if (args.length === 0) fail(1, "usage: node scripts/unit-route.mjs <unit|issue>");
-  if (args.length > 1) fail(1, `usage: node scripts/unit-route.mjs <unit|issue> — expected exactly one argument, got ${args.length}`);
+  if (args.length === 0) fail(1, "usage: bun scripts/unit-route.mjs <unit|issue>");
+  if (args.length > 1) fail(1, `usage: bun scripts/unit-route.mjs <unit|issue> — expected exactly one argument, got ${args.length}`);
 
   const token = args[0];
   const { matches, clean } = resolveUnit(token);
