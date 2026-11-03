@@ -106,6 +106,16 @@
       ]
     },
     {
+      "name": "skill-lint",
+      "globs": [
+        "scripts/skill-lint.mjs",
+        "scripts/skill-lint.test.mjs"
+      ],
+      "suites": [
+        "scripts/skill-lint.test.mjs"
+      ]
+    },
+    {
       "name": "skills-content",
       "globs": [
         "skills/**"
