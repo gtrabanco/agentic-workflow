@@ -155,3 +155,13 @@ jobs:
 
       - name: Dependency-pin gate (registry — degraded when unreachable)
         run: node scripts/version-parity-gate.mjs --pins
+
+      # Dependency advisories (issue #365): the resolved tree queried against OSV
+      # — every package the committed lock states, by its resolved version, never
+      # a manifest range. **Report-only by design** (owner decision S6): the pass
+      # exits 0 whatever it finds, so a pre-existing advisory on a dependency no
+      # commit touched cannot redden a PR — the review scopes a `blocking` row to
+      # the dependencies a change adds or updates. Degraded, not failed, when OSV
+      # is unreachable: the same contract as the `--pins` step above.
+      - name: Dependency advisories (OSV — report-only, never fails)
+        run: node scripts/dependency-advisory-pass.mjs
