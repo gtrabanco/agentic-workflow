@@ -195,7 +195,9 @@ with no registration step.
   (Implements: S9, S12, S13, S14)
   Relevant files: docs/workflow/SKILLS.md, docs/ROADMAP.md, docs/research/ATTRIBUTION.md, scripts/test-route-map.json, .changeset
 - P6 — Verification on the full diff and the hand-off: every obligation row
-  closed, the root gate green, the differential run recorded, the PR opened
+  closed, the root gate green, the differential run recorded, and the branch
+  handed to the owner — this change is applied directly, so no PR is opened from
+  it and the owner's verdict is the merge gate
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S11, S12, S13, S14)
   Relevant files: scripts/, skills/, docs/
