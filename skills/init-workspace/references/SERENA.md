@@ -248,6 +248,7 @@ mcp:       <registered <platform> -> <path> | already present | refused | failed
 trust:     <appended <pattern> | already covered | refused - untrusted | n/a>
 config:    <written .serena/project.yml | already present | skipped: <reason>>
 health:    <one line per listed server, see below>
+index:     <indexed N files in Xs | skipped: <reason> | failed: <error>>
 residual:  <none | the reason this run is degraded>
 ```
 
