@@ -214,34 +214,26 @@ fails with nothing in the project to blame.
 
 #### Worktree support
 
-If the project uses git worktrees (detected by `git worktree list` returning more
-than one entry, or by the presence of a `.worktrees/` directory in the repo),
-the single root pattern will not cover the worktree directories — Serena treats
-each worktree as a separate project path and will not follow symbolic links
-inside untrusted projects.
+A single root pattern does not cover worktrees: Serena treats each worktree as a
+separate project path and will not follow symbolic links inside untrusted
+projects.
 
-- **Detect** — run `git worktree list` from the project root; if the output has
-  more than one line, the repo uses worktrees.
-- **Offer an additional wildcard pattern** in the same consented question:
-  `<project-root>/**` which matches the root and every child (including all
-  current and future worktrees under `.worktrees/`). This is safer than listing
-  individual worktree paths because a new worktree is created without any
-  re-trigger.
-- **On yes** — append the wildcard pattern alongside the root pattern. The glob
-  `**` covers nested dirs, so `"/home/user/my-project/**"` matches
-  `/home/user/my-project` itself plus every path below it (`/.worktrees/feat-x`,
-  `/packages/subpkg`, etc.) — it stays scoped to this project's tree.
-- **When the project does not use worktrees and the user has no explicit
-  preference** — skip the wildcard; the root pattern is sufficient.
-- **When the project proclaims branch-only preference but the user still wants
-  worktree readiness** — still offer the wildcard with a note: "if you ever
-  create a test worktree, Serena will work out of the box".
-- **On no** — record the lack of worktree coverage as a residual. A future
-  worktree will need manual trust append.
+- **Detect** — `git worktree list` from the project root; more than one line, or
+  a `.worktrees/` directory in the repo, means the project uses worktrees.
+- **Offer an additional wildcard `<project-root>/**`** in the same consented
+  question. It matches the root and every child, so a worktree created later
+  needs no re-trigger, and `**` keeps it scoped to this project's tree.
+- **On yes** — append it alongside the root pattern. **On no** — record the
+  missing worktree coverage as a residual; a future worktree needs a manual
+  trust append.
+- **No worktrees and no stated preference** — skip the wildcard, the root
+  pattern is sufficient. A user who wants worktree readiness anyway gets it
+  with a note: "if you ever create a test worktree, Serena will work out of the
+  box".
 
 **Idempotency:** skip the append when an equivalent pattern already exists in
-`trusted_project_path_patterns` (match by prefix, not by exact equality). If the
-root pattern is already present and a `**` variant is also present, do nothing.
+`trusted_project_path_patterns` (match by prefix, not exact equality); a root
+pattern plus a `**` variant means do nothing.
 
 ### Report — exactly what happened
 
