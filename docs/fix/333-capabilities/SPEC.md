@@ -115,7 +115,7 @@ demonstrated on throwaway trees (`mktemp -d`, removed after), never on the live
 - **C2 (S2, S14)** — every row in this repository's inventory that carries
   `yes` or `partial` cites a repository path that exists, and so does a `no` row's
   probe: `node --test scripts/capability-inventory.test.mjs` exits 0 with the
-  evidence-path case reporting `0 unproven rows`.
+  evidence-path case passing (A3), which iterates every subsystem and role row.
 - **C3 (S3, S15)** — the procedure states the existence question before any state
   question and writes `unresolved — <question>` for a declined row: the same suite
   exits 0 with the `unresolved` case and the ask-order case passing.
@@ -128,16 +128,16 @@ demonstrated on throwaway trees (`mktemp -d`, removed after), never on the live
   its fixture half proves the reader fails the shipped template (`manual:` not
   needed — the fixture is a copy of the template's own cells).
 - **C6 (S6, S9)** — upgrade mode names the same owner procedure instead of a
-  second copy: the same suite exits 0 with the upgrade case passing, and
-  `test/alias-coverage`-style duplication is absent —
-  `rg -c 'capability-inventory@1' skills/init-workspace/references/` matches
-  exactly 1 file.
+  second copy: the same suite exits 0 with the upgrade case and the single-owner
+  case passing, and `rg -l '^\s*capability-inventory@1$'
+  skills/init-workspace/references/` matches one file — a pointer may name the id,
+  only the owner may state the block.
 - **C7 (S10)** — the template's header states the delete-then-ask-then-infer
   order and calls the rows candidates: the same suite exits 0 with the template
   case passing.
 - **C8 (S11, S17)** — this repository's `docs/CAPABILITIES.md` contains no
-  template placeholder and no template-only row: the same suite exits 0 with
-  `0 placeholder cells in docs/CAPABILITIES.md`.
+  template placeholder and no template-only row: the same suite exits 0 with its
+  placeholder-cell case and its evidence-path case both passing (A2 and A3).
 - **C9 (S12)** — on a throwaway empty directory, a copy of the template put
   through the post-write checks is refused (it is the raw seed); a settled copy
   passes. The suite's fixture half runs both directions.
@@ -192,7 +192,7 @@ demonstrated on throwaway trees (`mktemp -d`, removed after), never on the live
 |---|---|---|
 | the discovery bullet's "propose the roles and the `yes\|no\|partial` state of each template subsystem row … from what the code actually shows" | the six ordered moves of `capability-inventory@1` (classify → delete → infer → ask → forbid → report) plus `capability-evidence@1`'s per-row probes | `rg -n 'from what the code actually shows' skills/init-workspace/` → 0 matches after this change |
 | the template's "the fixed set below is the floor, not the ceiling" and "Delete rows that can never apply to this product" | the candidate contract: delete-first by project type, infer with a cited path, ask the remainder, never default; the same sentence shape in `template/docs/CAPABILITIES.md` and `docs/CAPABILITIES.md` | `rg -n 'the floor, not the ceiling' template/ docs/CAPABILITIES.md` → 0 matches |
-| this repository's template-only inventory (13 placeholder subsystem rows, 1 placeholder role row, 0 real values) | 12 evidence-cited subsystem rows (9 candidates + 3 project-specific) and 2 role rows under the corrected rule | `rg -c 'yes\\\|no\\\|partial' docs/CAPABILITIES.md` → 0; `node --test scripts/capability-inventory.test.mjs` reports `0 placeholder cells` |
+| this repository's template-only inventory (13 placeholder subsystem rows, 1 placeholder role row, 0 real values) | 12 evidence-cited subsystem rows (9 candidates + 3 project-specific) and 2 role rows under the corrected rule | `rg -c 'yes\\\|no\\\|partial' docs/CAPABILITIES.md` → 0; `node --test scripts/capability-inventory.test.mjs` passes its placeholder-cell case (A2) |
 
 A fix that only adds is the exception; this one retires the defect's own text in
 both places it lives (the skill and the exported document), so each row above
@@ -286,7 +286,7 @@ carries its no-consumer evidence.
   (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 with the template case passing)
   (Implements: S10, S18)
 - P7 — Repair this repository's inventory under the corrected rule.
-  (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 printing `0 placeholder cells in docs/CAPABILITIES.md`)
+  (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 with the placeholder-cell, evidence-path and structural cases passing)
   (Implements: S11, S13, S14, S15, S17, S20)
 - P8 — Verification and close-out: every obligation flips with its validator's
   run recorded; the root gate and the context budgets are green.
@@ -394,6 +394,61 @@ invariant and required failure state. Not embedded here.
 
   Automated written using an AI.
   ```
+
+- **P1** — 2026-11-03, the unit was cut before any implementation line: this SPEC,
+  both planning ledgers, the `docs/ROADMAP.md` § Fixes row and the release intent
+  · `36180c67`.
+- **P2** — 2026-11-03, the red corpus landed as
+  `scripts/capability-inventory.test.mjs` (pure readers over text, so the defect's
+  own bytes are the corpus) · `0533f11b`.
+- **E8** — 2026-11-03, `node --test scripts/capability-inventory.test.mjs` · exit
+  1 · 14 tests, 3 pass, 11 fail (A2, A3, A5, B1–B5, C1, C2, D1) before the
+  procedure existed — the red half of the corpus, not a padded assertion.
+- **P3** — 2026-11-03, the procedure, its evidence table, the write gate, the
+  upgrade pointer and the exported template's candidate header · `f5e60812`;
+  the inventory repair is its own change, as S11 requires · `474961ca`.
+- **E1** — 2026-11-03, `node --test scripts/capability-inventory.test.mjs` · exit
+  0 · 15 tests, 15 pass, 0 fail (the 14 cases cut in P2 plus A6, added by P7 to
+  make O10's structural outcomes checkable).
+- **E2** — 2026-11-03, `node --test scripts/residue-dimensions.test.mjs` · exit 0
+  · 29 tests, 29 pass — the no-assumption owner keeps one statement and the new
+  procedure carries its pointer in-window.
+- **E3** — 2026-11-03, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`; `bun scripts/check-skill-context.mjs
+  --routes` · exit 0 · `PASS route budgets: 14 routes` — no ceiling re-based.
+- **E4** — 2026-11-03, `rg -l '^\s*capability-inventory@1$'
+  skills/init-workspace/references/` · exit 0 · exactly one file
+  (`BOOTSTRAP_DISCOVERY.md`), so the two routes cannot diverge.
+- **E5** — 2026-11-03, `git diff --name-only main -- skills/design-feature
+  skills/execute-phase skills/product-audit docs/workflow/SKILLS.md` · exit 0 ·
+  empty output — no consumer of the inventory changed.
+- **E6** — 2026-11-03, `git diff --name-status main -- docs/CAPABILITIES.md
+  template/` · exit 0 · `M docs/CAPABILITIES.md` and `M
+  template/docs/CAPABILITIES.md` — modified in place, nothing renamed and no
+  script added to the scaffold.
+- **E7** — 2026-11-03, `rg -n '\| *`?<[^>]+>`? *\|' docs/CAPABILITIES.md` · exit
+  1 (prints nothing) on the repaired file, and 14 matching rows on the template —
+  the gate would have failed this repository's seeded file.
+- **E9** — 2026-11-03, the write gate's refusal sentence removed from a
+  `git archive HEAD` copy in a temp dir: `CAPABILITY_INVENTORY_ROOT=<copy> node
+  --test scripts/capability-inventory.test.mjs` · exit 1 · 13 pass, 1 fail (C1)
+  — the case is not vacuous.
+- **E10** — 2026-11-03, differential against `git archive main` in a temp dir:
+  `check-skill-context` (both modes) byte-identical output; `residue-dimensions`
+  29/29, `scaffold-parity` 17/17, `unit-doc-contract` 19/19, `normative-drift`
+  20/20, `spec-by-reference` 17/17, `ledger-ownership` 12/12 in both trees — no
+  unasked stdout, stderr or exit change.
+- **G2** — 2026-11-03, `node scripts/phase-lint.mjs
+  docs/fix/333-capabilities/SPEC.md` · exit 0 · every phase `PASS (6/6)`, verdict
+  `PASS`.
+- **G3** — 2026-11-03, `node scripts/lint-changeset.mjs
+  .changeset/333-capabilities.md` · exit 0 · `ok`.
+- **G1** — 2026-11-03, `node scripts/run-root-suite.mjs` · exit 0 · tests 1396,
+  suites 33, pass 1396, fail 0, skipped 0.
+- **P8** — 2026-11-03, every obligation flipped with its validator's run recorded
+  above; O7's validator cell was corrected to count the procedure **block** (the
+  id is mentioned by pointer in `UPGRADE.md`, which is exactly what S9 asks for),
+  and A6 was added so O10's three structural outcomes are checkable.
 
 ## Next
 
