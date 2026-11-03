@@ -4077,3 +4077,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Optimize root-suite CI with paths-ignore and add Bun/Node compatibility
 - **Decisions:** paths-ignore: added wildcard globs (docs/**, .changeset/**, README.md, AGENTS.md, template/**) to skip CI runs when only docs/metadata change. Tests reading from docs/ use git history-based SHA verification (require full checkout) — migrated ceremony-findings-ledger to hermetic fixture to make one test doc-independent. Kept Node.js fallback for CI jobs needing tsc/npm resolution (not a bun portability issue). ledger-provenance tests (pre-existing ~16s timeout vs 30s limit, not in root gate) unchanged.
 - **Next:** /triage-issue on PR #389 to review and merge: fix/root-suite-bun-node-compat → main (2 commits, 4 files changed, ~1230 insertions)
+
+## 2026-11-03T14:51:53Z — fix/root-suite-bun-node-compat — manual
+- **Commits:** 3 (`3586fad3…0964c0ff`)
+- **Files:** .github/workflows/root-suite.yml, docs/LOGS.md, scripts/ceremony-findings-ledger.test.mjs, scripts/fixtures/ceremony-findings-ledger/review-findings.md, scripts/run-root-suite.mjs
+- **Summary:** Fix root-suite bun/node compatibility: make run-root-suite.mjs work with both bun and node test runners; migrate ceremony-findings-ledger to fixture dir; add CI paths-ignore
+- **Decisions:** D1: bun-first convention kept but run-root-suite now detects runtime and adapts; D2: ceremony-findings-ledger test migrated to hermetic fixture; D3: CI paths-ignore added to skip doc-only runs
+- **Next:** Review and merge PR on GitHub (fix/root-suite-bun-node-compat → main); resolve the author identity issue that was just fixed (pi-automated → Gabriel Trabanco Llano)
