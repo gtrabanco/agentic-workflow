@@ -4091,3 +4091,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
 - **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
 - **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)
+## 2026-11-03T14:05:25Z — fix/360 — manual
+- **Commits:** 15 (`87ae66a6…41d5a494`)
+- **Files:** 31 files
+- **Summary:** fix/360 merge with main (PR #381): resolved 4 merge conflicts, fixed SL-04 unpinned-URL in risk-tiers.md, re-based 8 execute-phase route ceilings that were stale after the merge
+- **Decisions:** SERENA.md: take main's compact section (all 17 facts preserved; 3398 est / 265 lines under the original 3412 ceiling) · SKILL_CONTEXT_BUDGETS.json: union of both sides' normative surfaces + reconciliation entry + revert obsolete SERENA re-base · log entries: byte-exact union of both sides (536 entries, 0 lost) · SL-04: remove bare issue URLs, use roadmap-canonical-link pattern · routes: #360 measured against a pre-growth tree; the merge widened the measured tree past the 10% headroom floor; re-based all 8 execute-phase routes to ceil(measured × 1.10) with named growth source
+- **Next:** git push origin fix/360; refresh PR #387 (fix/360 → main); after human merges #387: continue with fix/360b (#383, S9 measured acceptance) and fix/360c (#384, capability analysis + passive carrier CLI)
