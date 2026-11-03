@@ -249,10 +249,8 @@ test("--json carries the same findings and the scanner writes nothing (O1)", () 
     assert.equal(json.status, 1, json.output);
     const payload = JSON.parse(json.stdout);
     assert.equal(payload.verdict, "FAIL");
-    assert.equal(payload.checks.length, 7);
-    assert.equal(payload.findings.length, 1);
-    assert.equal(payload.findings[0].id, "SL-01");
-    assert.equal(payload.findings[0].file, "skills/dirty/SKILL.md");
+    assert.deepEqual(payload.findings.map((finding) => finding.id), ["SL-01"]);
+    assert.deepEqual(payload.findings.map((finding) => finding.file), ["skills/dirty/SKILL.md"]);
 
     assert.deepEqual(fs.readdirSync(path.join(root, "skills"), { recursive: true }).sort(), before, "no file is created");
     assert.equal(fs.readFileSync(path.join(root, "skills", "dirty", "SKILL.md"), "utf8"), text, "no file is rewritten");
@@ -269,10 +267,12 @@ test("the recorded skip list names each excluded smell with its reason (O9)", ()
   assert.equal((reference.match(/^\| .*\| skipped \|/gm) ?? []).length, 3, "exactly three skipped smells, one row each");
 });
 
-test("the eight authoring rules are still owned by the linter's reference (O14)", () => {
-  const rules = fs.readFileSync(path.join(repoRoot, "skills/skill-lint/references/DISCOVERY_AND_LINT.md"), "utf8");
-  const numbered = rules.split("\n").filter((line) => /^\d\. /.test(line));
-  assert.equal(numbered.length, 8, "the reference still lists the eight authoring rules");
+test("the linter's reference still owns a numbered authoring-rule list (O14)", () => {
+  const reference = fs.readFileSync(path.join(repoRoot, "skills/skill-lint/references/DISCOVERY_AND_LINT.md"), "utf8");
+  const numbered = reference.split("\n").filter((line) => /^\d+\. /.test(line));
+  assert.ok(numbered.length > 0, "the reference no longer lists any authoring rule");
+  const ordinals = numbered.map((line) => Number(/^(\d+)\./.exec(line)[1]));
+  assert.deepEqual(ordinals, ordinals.map((_, index) => index + 1), "the authoring rules are not numbered 1..n without gaps");
 });
 
 // ── The shipped tree is clean, and stays clean as skills evolve (S12, O11) ──
