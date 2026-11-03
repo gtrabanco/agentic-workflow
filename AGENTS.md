@@ -220,6 +220,13 @@ enters a runner through its `test` subcommand). Switching the suite's commands t
 bun therefore belongs to the `node → bun` sweep (issue #329) and needs that
 carve-out carried with it.
 
+**Tool choice is re-decided every turn.**
+Manual invocation runs `bun` before `node` and search runs `rg` before `grep`;
+both stay legitimate as the documented fallback when the preferred tool is
+absent — check availability once per session with
+`node scripts/setup-env.mjs --check` (`docs/workflow/SETUP.md`), never assume it.
+The `rg`-first *search feature* stays #269's; this rule owns the tool choice only.
+
 ### Normalizer inventory (this repository)
 
 The rule that orders these steps — and the fact that a post-freeze byte change voids

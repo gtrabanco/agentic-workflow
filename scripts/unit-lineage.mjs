@@ -262,7 +262,7 @@ function main(argv) {
   const asJson = args.includes("--json");
   const unitIndex = args.indexOf("--unit");
   if (unitIndex === -1 || args[unitIndex + 1] === undefined) {
-    fail(2, "usage: node scripts/unit-lineage.mjs --unit <slug> [--root <dir>] [--json]");
+    fail(2, "usage: bun scripts/unit-lineage.mjs --unit <slug> [--root <dir>] [--json]");
   }
   const token = args[unitIndex + 1];
   const rootIndex = args.indexOf("--root");
