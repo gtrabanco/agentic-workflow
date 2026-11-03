@@ -9,8 +9,12 @@
  *       stable, GitHub Release (never npm publish — the push fires the jobs);
  *   dispatch mode: cut + channel: canary → publish the declared packages at
  *       the canary version under that dist-tag (repo untouched);
- *   push → the publish jobs publish the committed versions as latest, in
- *       dependency order, each idempotent through the exact-version gate.
+ *   push → REMOVED (owner decision 2026-11-03): the workflow runs only on
+ *       `workflow_dispatch`, because the push side spent the whole gate chain
+ *       to publish nothing whenever the committed version was already on the
+ *       registry. `mode: publish` publishes the committed versions as latest,
+ *       in dependency order, each idempotent through the exact-version gate;
+ *       `cut` requests that mode for the commit it just pushed.
  * The channel set is CLOSED: stable + canary — nothing else (owner decision,
  * post-#180 follow-up; the npm dist-tag for stable remains `latest`).
  * release-plan.yml and release-train.yml are DELETED (folded into modes).
@@ -167,12 +171,36 @@ test("cut + canary opens the GitHub pre-release with the changeset backlog as no
   assert.ok(notes !== -1 && create !== -1 && notes < create, "the backlog is assembled before the release opens");
 });
 
-test("the publish jobs run only on push events (a dispatch run never publishes stale checkouts)", () => {
+test("the publish jobs run only on mode: publish (no push publishes anything)", () => {
   const text = read(PUBLISH);
-  for (const job of ["schema-publish", "crate-publish", "pi-publish", "schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
+  assert.doesNotMatch(text, /^\s{2}push:/m, "the workflow must not trigger on push");
+  for (const job of ["schema-publish", "crate-publish", "pi-publish"]) {
     const block = jobBlock(text, job);
-    assert.match(block, /if: github\.event_name == 'push'/, `${job} is push-only`);
+    assert.match(
+      block,
+      /if: github\.event_name == 'workflow_dispatch' && inputs\.mode == 'publish'/,
+      `${job} must answer to the publish mode and nothing else`,
+    );
   }
+});
+
+test("the release entry point is manual: no push trigger, and `mode` offers publish", () => {
+  const text = read(PUBLISH);
+  const on = text.slice(text.indexOf("\non:"), text.indexOf("\npermissions:"));
+  assert.ok(!/^\s{2}push:/m.test(on), "a push trigger means a merge can publish a release nobody asked for");
+  assert.match(on, /^\s{2}workflow_dispatch:/m, "the operator's dispatch is the only entry");
+  const modes = [...on.matchAll(/^\s{10}- (\w+)$/gm)].map((m) => m[1]);
+  assert.ok(modes.includes("suggest") && modes.includes("cut") && modes.includes("publish"), `mode must offer suggest, cut and publish (got ${modes.join(", ")})`);
+  assert.doesNotMatch(on, /skills\//, "skills/ is package content, never a trigger path (AC-08)");
+});
+
+test("the stable cut requests the publish of the commit it pushed", () => {
+  const block = jobBlock(read(PUBLISH), "cut");
+  assert.match(block, /gh workflow run publish\.yml --ref main -f mode=publish/, "one dispatch must release: the cut asks for its own publish run");
+  assert.match(block, /actions: write/, "the request needs the actions scope");
+  const push = block.indexOf("git push");
+  const request = block.indexOf("gh workflow run");
+  assert.ok(push !== -1 && request !== -1 && push < request, "the commit must be pushed before its publish is requested");
 });
 
 test("publish jobs chain in dependency order: pi waits for schema AND crate (D-40-10)", () => {
@@ -181,27 +209,24 @@ test("publish jobs chain in dependency order: pi waits for schema AND crate (D-4
   assert.match(piBlock, /needs:\s*\[schema-publish, crate-publish\]/);
 });
 
-test("each package has its own node-compat job and version gate (never publish red)", () => {
+test("each package has its own node-compat leg and version gate (never publish red)", () => {
   const text = read(PUBLISH);
+  // The runtime legs validate the tree, not the release, so they live with the
+  // rest of the gate in root-suite.yml — on push AND on pull requests, which
+  // the release workflow never was.
+  const gate = read(".github/workflows/root-suite.yml");
   for (const job of ["schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
-    assert.match(text, new RegExp(`^\\s{2}${job}:`, "m"));
+    assert.match(gate, new RegExp(`^\\s{2}${job}:`, "m"), `${job} belongs to the root gate`);
+    assert.doesNotMatch(text, new RegExp(`^\\s{2}${job}:`, "m"), `${job} must not stay in the release workflow`);
   }
   assert.equal([...text.matchAll(/npm-version-gate\.mjs/g)].length, 4, "3 publish jobs + the cut-prerelease loop");
 });
 
-test("push paths name the three package trees + the workflow file, never skills/ (AC-08)", () => {
+test("the release workflow's trigger names no package tree, because it has none", () => {
   const text = read(PUBLISH);
-  const on = text.slice(text.indexOf("on:"), text.indexOf("permissions:"));
-  const paths = [...on.matchAll(/-\s*"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(
-    paths.sort(),
-    [
-      ".github/workflows/publish.yml",
-      "packages/agentic-workflow-schema/**",
-      "packages/agentic-workflow/**",
-      "packages/pi-agentic-workflow/**",
-    ].sort(),
-  );
+  const on = text.slice(text.indexOf("\non:"), text.indexOf("\npermissions:"));
+  assert.doesNotMatch(on, /paths:/, "a release is dispatched, never inferred from a path");
+  assert.doesNotMatch(on, /packages\//, "no package tree triggers the release workflow");
 });
 
 test("the pi job keeps its mutation and tarball gates (the #164 publish-time guards)", () => {
@@ -248,10 +273,13 @@ test("least privilege: each job elevates only the permissions it needs", () => {
     assert.match(b, /contents: read/);
     assert.doesNotMatch(b, /contents: write/, `${job} never mutates the repo`);
   }
+  // The runtime legs validate the tree rather than publishing, and they live in
+  // the root gate now: still read-only there, and still no OIDC token.
+  const gateText = read(".github/workflows/root-suite.yml");
   for (const job of ["schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
-    const b = jobBlock(text, job);
+    const b = jobBlock(gateText, job);
     assert.doesNotMatch(b, /id-token/, `${job} is a test gate, not a publisher`);
-    assert.match(b, /contents: read/);
+    assert.match(b, /contents: read/, `${job} reads the tree and nothing else`);
   }
 });
 

@@ -1,8 +1,8 @@
 name: Publish packages
 
 # THE single release entry point (feature 40, issue #180; D-40-13). One
-# workflow, three things it can do, always via scripts/release.mjs running in
-# CI — nothing about a release is done by hand:
+# workflow, MANUAL ONLY (owner decision 2026-11-03: nothing here fires on push),
+# four things it can do, always via scripts/release.mjs running in CI.
 #
 #   Launch with mode: suggest  → READ-ONLY. Runs `release.mjs plan` for the
 #       stable train AND the canary, plus every changeset with its semver
@@ -15,8 +15,13 @@ name: Publish packages
 #       The publish jobs also point the `canary` dist-tag at that stable
 #       version, so `@canary` never lags behind `@latest` between cuts.
 #       `version` forces the train (D-40-4; the notes are marked "Version
-#       forced by operator"). The push fires the publish jobs of a second run
-#       of this same workflow.
+#       forced by operator"). The run ends by requesting `mode: publish` for the
+#       commit it just pushed, so one dispatch releases everything.
+#   Launch with mode: publish → publishes the versions COMMITTED on main (the
+#       train's release commit, or a direct bump) as `latest`, in dependency
+#       order, each idempotent: the exact-version gate skips what the registry
+#       already has. `cut` fires this mode itself; dispatching it again is the
+#       retry path when a publish fails, and it never touches the train.
 #   Launch with mode: cut + channel: canary → publishes ONLY the packages
 #       declared in the accumulated changesets, at a prerelease of the NEXT
 #       train (`<next-train>-canary.<date>.<n>` — the same base the stable
@@ -41,10 +46,11 @@ name: Publish packages
 # The channel set is CLOSED: stable + canary (owner decision, post-#180
 # follow-up). The old `latest` channel name is retired — `stable` is the train.
 #
-#   A push to main touching a package tree (the train's release commit, or a
-#   direct bump) publishes the committed versions as `latest` through the
-#   publish jobs below — in dependency order, each idempotent: the exact-
-#   version gate skips what the registry already has.
+#   Nothing publishes on its own. The push trigger that used to own the publish
+#   side is gone: it fired on every package-tree push and on every edit of this
+#   file, spending the whole gate chain to publish nothing whenever the
+#   committed version was already on the registry — and, before the canary
+#   promotion was gated, rewriting the `canary` dist-tag on the way out.
 #
 # npm publishing happens ONLY in this workflow's publish/cut-prerelease jobs:
 # the npm Trusted Publisher records for the three packages are bound to this
@@ -58,23 +64,23 @@ name: Publish packages
 # `needs:` chains schema-publish / crate-publish → pi-publish.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/agentic-workflow-schema/**"
-      - "packages/agentic-workflow/**"
-      - "packages/pi-agentic-workflow/**"
-      - ".github/workflows/publish.yml"
+  # MANUAL ONLY (owner decision 2026-11-03). Nothing here fires on push: the
+  # workflow used to run on every package-tree push and on every edit of this
+  # file, spending the full gate chain to publish nothing whenever the committed
+  # version was already on the registry — and, before the gate below, rewriting
+  # the `canary` dist-tag while it did. A release starts when the operator
+  # dispatches it, and at no other moment.
   workflow_dispatch:
     inputs:
       mode:
-        description: "suggest = read-only preview; cut = release now"
+        description: "suggest = preview; cut = apply the train / cut the canary; publish = publish the versions already committed on main"
         type: choice
         required: true
         default: suggest
         options:
           - suggest
           - cut
+          - publish
       channel:
         description: "cut: stable applies the train; canary publishes the declared packages under the canary dist-tag"
         type: choice
@@ -171,6 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # the release commit, the tags, the stable branch, the release
+      actions: write # the dispatch that publishes what this run just committed
     steps:
       - name: Checkout (full history — the base is the last stable v-tag)
         uses: actions/checkout@v7.0.0
@@ -235,7 +242,7 @@ jobs:
           git commit -m "chore(release): cut the version train"
           echo "VERSION=$(node -p "require('./packages/agentic-workflow-schema/package.json').version")" >> "$GITHUB_ENV"
 
-      - name: Push the release commit (fires the publish jobs on a second run)
+      - name: Push the release commit
         run: git push
 
       - name: Tag, fast-forward stable, open the release
@@ -246,6 +253,21 @@ jobs:
           git push origin "v$VERSION"
           git push origin "HEAD:refs/heads/stable"
           gh release create "v$VERSION" --generate-notes --title "v$VERSION" --notes-file "$RUNNER_TEMP/release-notes.txt"
+
+      # One manual action per release. Publishing stays its own run (its own
+      # gates, its own retry), the push trigger is gone, so the cut requests the
+      # publish of the commit it just pushed — and says so when the request fails
+      # instead of leaving a tagged release that never reached npm.
+      - name: Request the publish run for the commit this run pushed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh workflow run publish.yml --ref main -f mode=publish; then
+            echo "publish requested for v$VERSION on main"
+          else
+            echo "::error::could not dispatch mode: publish — run it by hand for v$VERSION (the release commit and tag are already pushed)"
+            exit 1
+          fi
 
   # ───────────────────────────── cut + canary/alpha/beta/rc ────────────────
   cut-prerelease:
@@ -396,36 +418,15 @@ jobs:
             echo "nothing declared — no tag"
           fi
 
-  # ────────────────────────────── publish jobs (push only) ─────────────────
-  # These run on push events — the release train's commit, or a direct bump —
-  # and publish the COMMITTED versions. A dispatch run never publishes stale
-  # checkouts: suggest/cut own the dispatch side, the push owns this side.
-
-  schema-node-compat:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/agentic-workflow-schema
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Install (bun as installer only — frozen lockfile)
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Build + test (node runtime — the guaranteed fallback)
-        run: bun run test:node
+  # ───────────────────────── publish jobs (mode: publish) ──────────────────
+  # They publish the COMMITTED versions of whatever HEAD main carries — the
+  # release train's commit, or a direct bump — in dependency order, each
+  # idempotent through the exact-version gate. `cut` fires this mode for the
+  # commit it just pushed; dispatching it again is the retry path, and it never
+  # touches the train.
 
   schema-publish:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -489,32 +490,8 @@ jobs:
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
 
-  crate-node-compat:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/agentic-workflow
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - name: Install deps (node-compat — typebox is a pinned dependency)
-        run: bun install --frozen-lockfile
-      - name: Test (node runtime — the guaranteed fallback)
-        run: node --test
-
   crate-publish:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -578,31 +555,8 @@ jobs:
         if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
 
-  pi-node-compat:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/pi-agentic-workflow
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Install (bun as installer only — frozen lockfile)
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Build + test (node runtime — the guaranteed fallback)
-        run: bun run test:node
-
   pi-publish:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
     needs: [schema-publish, crate-publish] # dependency order: pi's install resolves its exact crate+schema pins from the registry — both published first
     runs-on: ubuntu-latest
     permissions:
