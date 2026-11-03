@@ -244,7 +244,8 @@ OpenCode adapter does not load this fallback.
   project config written (or skipped with its reason), the tool installed and its
   MCP server registered for the detected platform — or each refused/absent item
   recorded as a residual with its reason — and the fixed provisioning report
-  states the health check per listed server. The run completes either way.
+  states the health check per listed server and the index result. The run
+  completes either way.
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
