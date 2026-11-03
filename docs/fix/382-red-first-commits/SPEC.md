@@ -282,6 +282,12 @@ proves it. Frozen at cut.
   execute-phase rewrap · `255c3e28`, `dfd27311`, `ded26c78`.
 - **P5** — 2026-11-04, verification on the full diff (E1–E6, G1–G2), the
   changeset, the roadmap status and the PR that closes #382.
+- **E7** — 2026-11-04, CI's invocation-drift gate (added to main by #380 after
+  this branch was cut) flagged `scripts/red-first.mjs:42` as usage-node — the
+  usage strings now teach bun-first with the node fallback, matching the
+  repo's runtime convention. `dependency-advisory-pass.mjs:57` is flagged by
+  the same run but is main's own pre-existing red (#365's file vs #380's new
+  gate), recorded here as an advisory outside this unit's scope.
 
 ## Triaged steps
 

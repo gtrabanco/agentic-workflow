@@ -10,8 +10,9 @@
  * which this gate composes beside and never replaces.
  *
  * Usage
- *   node scripts/red-first.mjs                 (the repository this file lives in)
- *   node scripts/red-first.mjs --repo <dir>    (another tree's history)
+ *   bun scripts/red-first.mjs                  (the repository this file lives in)
+ *   bun scripts/red-first.mjs --repo <dir>     (another tree's history)
+ *   (node fallback, same argv)
  *
  * Cutoff: the gate's own introducing commit (`git log --diff-filter=A` for
  * `scripts/red-first.mjs`). Every pair introduced at or before the cutoff is
@@ -39,7 +40,7 @@ const GATE_PATH = "scripts/red-first.mjs";
 
 function usage(message) {
   process.stderr.write(`red-first: ${message}\n`);
-  process.stderr.write("usage: node scripts/red-first.mjs [--repo <dir>]\n");
+  process.stderr.write("usage: bun scripts/red-first.mjs [--repo <dir>]  (node fallback, same argv)\n");
   process.exit(2);
 }
 
