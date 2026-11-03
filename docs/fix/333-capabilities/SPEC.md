@@ -431,8 +431,9 @@ invariant and required failure state. Not embedded here.
   the gate would have failed this repository's seeded file.
 - **E9** — 2026-11-03, the write gate's refusal sentence removed from a
   `git archive HEAD` copy in a temp dir: `CAPABILITY_INVENTORY_ROOT=<copy> node
-  --test scripts/capability-inventory.test.mjs` · exit 1 · 13 pass, 1 fail (C1)
-  — the case is not vacuous.
+  --test scripts/capability-inventory.test.mjs` · exit 1 · 14 pass, 1 fail (C1)
+  — the case is not vacuous. (First recorded as "13 pass" over the pre-A6
+  14-test corpus; re-run at head over the 15-test corpus: 14 pass, 1 fail, C1.)
 - **E10** — 2026-11-03, differential against `git archive main` in a temp dir:
   `check-skill-context` (both modes) byte-identical output; `residue-dimensions`
   29/29, `scaffold-parity` 17/17, `unit-doc-contract` 19/19, `normative-drift`
