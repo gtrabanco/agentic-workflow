@@ -3969,3 +3969,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+## 2026-11-03T00:47:44Z — fix-333-capabilities — manual
+- **Commits:** 7 (`36180c67…afe02f97`)
+- **Files:** 12 files
+- **Summary:** External verification of fix-333-capabilities: fresh eyes on the diff from base 6e65d0b3 → head 6b6fbfde. All 15 obligations checked, all validators re-ran green (capability-inventory 15/15, residue-dimensions 29/29, context budgets PASS, root-suite 1396/1396, phase-lint PASS), no-vacuity differentials reproduced (14 pass / 1 fail C1), sibling sweep clean (zero old-wording survivors), consumer-diff empty, no rename, no gate shipped to targets.
+- **Decisions:** Blocker threshold: reproducible regression at base vs head only. Advisory threshold: pre-existing defects or frozen history. E9 count imprecision (13 pass → 14 pass on 15-test corpus) was an advisory, not a blocker: the test case is correct and reproduces.
+- **Next:** Merge fix-333-capabilities to main; the unit is verified with 0 blockers.
