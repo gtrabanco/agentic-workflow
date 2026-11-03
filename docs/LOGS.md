@@ -4070,3 +4070,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
 - **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
 - **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)
+
+## 2026-11-03T14:38:50Z — fix/root-suite-bun-node-compat — manual
+- **Commits:** 2 (`3586fad3…bf1c79d5`)
+- **Files:** .github/workflows/root-suite.yml, scripts/ceremony-findings-ledger.test.mjs, scripts/fixtures/ceremony-findings-ledger/review-findings.md, scripts/run-root-suite.mjs
+- **Summary:** Optimize root-suite CI with paths-ignore and add Bun/Node compatibility
+- **Decisions:** paths-ignore: added wildcard globs (docs/**, .changeset/**, README.md, AGENTS.md, template/**) to skip CI runs when only docs/metadata change. Tests reading from docs/ use git history-based SHA verification (require full checkout) — migrated ceremony-findings-ledger to hermetic fixture to make one test doc-independent. Kept Node.js fallback for CI jobs needing tsc/npm resolution (not a bun portability issue). ledger-provenance tests (pre-existing ~16s timeout vs 30s limit, not in root gate) unchanged.
+- **Next:** /triage-issue on PR #389 to review and merge: fix/root-suite-bun-node-compat → main (2 commits, 4 files changed, ~1230 insertions)
