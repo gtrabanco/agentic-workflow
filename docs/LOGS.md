@@ -4002,3 +4002,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat(361): PR 381 for the finding-severity-ladder — merged main's two latest changes, fixed CI content-gate, all green
 - **Decisions:** PR 381 created against main; main moved twice (PRs #378 and #379/#333), integrated as merges; resolved ROADMAP.md conflicts and baseline-advisory repetition by citing CLASSIFY.md owner; changeset missing @gtrabanco/agentic-workflow package — gate only runs in CI, so local pass hid it
 - **Next:** Merge PR #381 (mergeable: clean, all CI green); then run /audit-pr 381
+
+## 2026-11-03T10:43:53Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 17 (`daf07e1b…0e213001`)
+- **Files:** 66 files
+- **Summary:** External verification of fix/361: the finding-severity-ladder unit — caught one blocker (fold-findings frozen-severity re-review override narrowed to BLOCKER-only, missing CRITICAL which the change's own conversion maps from the retired ledger high) and three advisories (sweep evidence inaccurate, stale line pointers, one-home gate sensitivity) — all repaired. Verdict: VERIFIED.
+- **Decisions:** Owner chose option 1: the fold-findings override fires on BLOCKER or CRITICAL (preserving the radius the retired ledger's high forced, consistent with SENSOR_CORE.md and review-change widening). The block was fixed with a three-line table rewrite and a documentation decision entry (D10). Advisories 1-2 fixed: CLASSIFY.md line pointers replaced by symbol citations; unit doc sweep evidence corrected to name the two pre-existing budget-journal narrations. Advisory 3 (one-home gate sensitivity) left as designed behavior.
+- **Next:** Open PR #381 if not already open, then merge fix/361-finding-severity-ladder to main. After merge: close issue #361, track #362 (computed correction budget) and #363 (differential baseline check) as the planned follow-ups consuming the severity ladder.
