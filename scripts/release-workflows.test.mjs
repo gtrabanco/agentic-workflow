@@ -275,3 +275,66 @@ test("the dispatch version input is shape-checked and never expanded unquoted in
     assert.match(block, /--version "\$FORCE_VERSION"/, `${job} passes the value as one quoted argument`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// The root gate's trigger — the same contract class, one workflow over:
+// `paths-ignore` decides whether ANY of the root suites run, so an entry there
+// is a claim that no suite reads that path from this checkout. On 2026-11-03
+// the claim was false (`docs/fix/**`, `docs/features/**`, `.claude-plugin/**`
+// were ignored while `ledger-ownership`, `residue-dimensions` and
+// `pre-execution-quality` read them), so the drift gates were skipped exactly
+// when the surfaces they police changed.
+// ---------------------------------------------------------------------------
+
+const ROOT_SUITE = ".github/workflows/root-suite.yml";
+
+/** Journal, notes, prose, toolchain state, changeset intents — no real-tree reader. */
+const ROOT_SUITE_IGNORED = Object.freeze([
+  ".changeset/**",
+  ".engram/**",
+  ".pi-web/**",
+  ".pi/**",
+  ".serena/**",
+  "LICENSE",
+  "README.md",
+  "docs/LOGS.md",
+  "docs/design/**",
+  "docs/research/**",
+]);
+
+/** A path a root suite reads from THIS checkout, with the reader that reads it. */
+const ROOT_SUITE_TRIGGERING = Object.freeze([
+  { glob: "docs/features/**", reader: "scripts/ledger-ownership.test.mjs", needle: "docs/features/" },
+  { glob: "docs/fix/**", reader: "scripts/residue-dimensions.test.mjs", needle: "docs/fix/" },
+  { glob: ".claude-plugin/**", reader: "scripts/pre-execution-quality.test.mjs", needle: ".claude-plugin/" },
+  { glob: ".node-version", reader: ROOT_SUITE, needle: ".node-version" },
+  { glob: ".bun-version", reader: "scripts/setup-env.test.mjs", needle: ".bun-version" },
+]);
+
+/** The list one trigger block carries, as GitHub reads it. */
+function ignoredBy(event) {
+  const on = read(ROOT_SUITE).slice(read(ROOT_SUITE).indexOf("\non:"), read(ROOT_SUITE).indexOf("\npermissions:"));
+  const rest = on.slice(on.indexOf(`${event}:`) + event.length + 1);
+  const next = rest.slice(1).search(/\n {2}[a-z_]+:/);
+  const block = next === -1 ? rest : rest.slice(0, next + 1);
+  return [...block.slice(block.indexOf("paths-ignore:")).matchAll(/^\s+- '([^']+)'/gm)].map((m) => m[1]);
+}
+
+test("the root gate's ignore list is closed, and both trigger blocks carry it", () => {
+  const push = ignoredBy("push");
+  assert.deepEqual([...push].sort(), [...ROOT_SUITE_IGNORED].sort(), "the ignored set changed — decide, then update this list and the workflow's rule");
+  assert.deepEqual(ignoredBy("pull_request"), push, "a push-only prune leaves the PR red and the merge green (or the reverse)");
+});
+
+test("no path a root suite reads from this checkout is ignored", () => {
+  for (const { glob, reader, needle } of ROOT_SUITE_TRIGGERING) {
+    assert.ok(read(reader).includes(needle), `${reader} no longer reads ${needle} — retire the exemption or restore the read`);
+    assert.ok(!ROOT_SUITE_IGNORED.includes(glob), `${glob} is ignored, so ${reader} would be skipped exactly when its subject changes`);
+  }
+});
+
+test("the root gate's workflow states the rule its ignore list obeys", () => {
+  const header = read(ROOT_SUITE).slice(0, read(ROOT_SUITE).indexOf("\non:"));
+  assert.match(header, /no root suite reads it from this tree/i, "the rule that bounds the list must be written where the list lives");
+  assert.match(header, /release-workflows\.test\.mjs/, "the header names the suite that pins it");
+});
