@@ -237,6 +237,12 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 
 - **G2** — 2026-11-03, `node scripts/run-root-suite.mjs` at `83004092` · exit 0 · `ℹ tests 1523 · ℹ suites 33 · ℹ pass 1522 · ℹ fail 0 · ℹ skipped 1`.
 
+- **P4** — 2026-11-03, the session accumulator and its sink interface in the package · `13ea336b` (suite `b9bd5acc`).
+- **E12** — 2026-11-03, `node --test test/session-telemetry.test.mjs` with `dist/session-telemetry.js` absent · exit 1 · `ERR_MODULE_NOT_FOUND … dist/session-telemetry.js` — the red run of the final corpus, all 9 cases failing on the missing module.
+- **E13** — 2026-11-03, `bun scripts/bundle-skills.mjs` · `bundled 27 skills (87 files)`; `bun test test/*.test.mjs` · exit 0 · `466 pass · 0 fail` (39 files).
+- **E14** — 2026-11-03, differential in a detached worktree at `626e4461`: the same package suite reports `457 pass · 35 fail` **without** `bundle:skills` staged and `457 pass · 0 fail` with it — so those 35 were the un-staged skills tree in this environment, never this change; head adds 9 tests, all green.
+- **E15** — 2026-11-03, `rg -c 'wall_clock|wall-clock|\belapsed\b|savings' scripts/tier-cost.mjs docs/workflow/TIER_COST.md` · exit 1 (0 matches) — S4a holds across the instrument and the ledger.
+
 ## Next
 
 P1 — cut row in `docs/ROADMAP.md`, then land `scripts/tier-cost.test.mjs` alone as the red commit.
