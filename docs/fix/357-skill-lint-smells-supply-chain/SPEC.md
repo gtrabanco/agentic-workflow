@@ -195,9 +195,10 @@ with no registration step.
   (Implements: S9, S12, S13, S14)
   Relevant files: docs/workflow/SKILLS.md, docs/ROADMAP.md, docs/research/ATTRIBUTION.md, scripts/test-route-map.json, .changeset
 - P6 — Verification on the full diff and the hand-off: every obligation row
-  closed, the root gate green, the differential run recorded, and the branch
-  handed to the owner — this change is applied directly, so no PR is opened from
-  it and the owner's verdict is the merge gate
+  closed, the root gate green, the differential run recorded, and the diff handed
+  to the owner for the verdict; the branch was pushed and [PR
+  #377](https://github.com/gtrabanco/agentic-workflow/pull/377) opened when the
+  owner asked for it (E8), and the owner's verdict stays the merge gate
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S11, S12, S13, S14)
   Relevant files: scripts/, skills/, docs/
