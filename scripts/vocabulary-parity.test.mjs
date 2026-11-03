@@ -175,7 +175,14 @@ test("#361 the baseline-advisory rule has one home and every finder cites it", (
       if (!file.endsWith(".md")) continue;
       const rel = path.relative(ROOT, file);
       if (rel === owner) continue;
-      if (readFileSync(file, "utf8").includes("pre-existing advisory")) copies.push(rel);
+      const text = readFileSync(file, "utf8");
+      for (const match of text.matchAll(/pre-existing advisory/g)) {
+        // A citation is not a restatement: the sentence may name the phrase only
+        // with its owner beside it (the same "names its owner" rule the guide
+        // applies to every repeated contract). A bare copy is the defect.
+        const around = text.slice(Math.max(0, match.index - 400), match.index + 400);
+        if (!around.includes("CLASSIFY.md")) copies.push(rel);
+      }
     }
   }
   assert.deepEqual(copies, [], `the baseline-advisory rule is restated in ${copies.join(", ")} — cite its owner instead`);
