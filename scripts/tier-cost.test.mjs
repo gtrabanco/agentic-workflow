@@ -51,8 +51,8 @@ function ledger(rows, columns = COLUMNS) {
 }
 
 /** One sample row, in the published column order. */
-function row(unit, { tier, changed = 4, tokens = 1000, turns = 3, model = 900, tool = 60, recorded = 4, skipped = 0, observed = "2026-11-03", source = "pi:session=abc" } = {}) {
-  return [unit, tier, changed, tokens, turns, model, tool, recorded, skipped, observed, source];
+function row(unit, { changed = 4, tokens = 1000, turns = 3, model = 900, tool = 60, observed = "2026-11-03", source = "pi:session=abc" } = {}) {
+  return [unit, changed, tokens, turns, model, tool, observed, source];
 }
 
 /** A unit doc that recorded a tier and carries the ceremony steps it owes. */
@@ -73,26 +73,25 @@ function passiveCarrier(id) {
 test("the instrument publishes its contract id and the exact column set", () => {
   assert.equal(TIER_COST_CONTRACT_ID, "tier-cost@1");
   assert.deepEqual(COLUMNS, [
-    "unit", "tier", "changed_paths", "tokens", "turns", "model_ms", "tool_ms",
-    "ceremony_recorded", "ceremony_skipped", "observed", "source",
-  ]);
+    "unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source",
+  ], "the row is what was measured: the tier, the size tier and the ceremony counts are derived at read time");
   assert.deepEqual(CEREMONY_STEPS, ["unit-doc", "phases", "evidence-table", "review"], "the four ceremony steps are the ones risk-tiers.md declares");
 });
 
 test("the grammar is the header: an undeclared column is refused, a short row is refused", () => {
-  const ok = parseLedger(ledger([row("111-a", { tier: "standard" })]));
-  assert.equal(ok.columns.length, 11);
+  const ok = parseLedger(ledger([row("111-a")]));
+  assert.equal(ok.columns.length, 8);
   assert.equal(ok.rows.length, 1);
 
-  const extra = parseLedger(ledger([row("111-a", { tier: "standard" })], [...COLUMNS, "wall_clock"]));
+  const extra = parseLedger(ledger([row("111-a")], [...COLUMNS, "wall_clock"]));
   assert.equal(extra.error, "undeclared-column");
   assert.match(extra.detail, /wall_clock/);
 
-  const short = ledger([[...row("111-a", { tier: "standard" }).slice(0, 10)]]);
+  const short = ledger([[...row("111-a").slice(0, 7)]]);
   assert.equal(parseLedger(short).error, "row-shape");
 });
 
-test("a row's tier is re-resolved from the unit's own carrier, never trusted from the cell", () => {
+test("the tier comes from the unit's carrier at read time, and a unit with no carrier is refused", () => {
   const root = project({
     "docs/fix/111-a/SPEC.md": unitDoc("standard"),
     "docs/passive/222-b.md": passiveCarrier("222-b"),
@@ -101,16 +100,13 @@ test("a row's tier is re-resolved from the unit's own carrier, never trusted fro
   assert.equal(resolveTier(root, "222-b"), "passive");
   assert.equal(resolveTier(root, "333-ghost"), null);
 
-  const stale = readLedger(root, ledger([row("111-a", { tier: "passive" })]));
-  assert.equal(stale.error, "stale-tier");
-  assert.match(stale.detail, /111-a/);
-
-  const ghost = readLedger(root, ledger([row("333-ghost", { tier: "standard" })]));
+  const ghost = readLedger(root, ledger([row("333-ghost")]));
   assert.equal(ghost.error, "unknown-unit");
 
-  const agreeing = readLedger(root, ledger([row("111-a", { tier: "standard" })]));
-  assert.equal(agreeing.error, undefined);
-  assert.equal(agreeing.rows[0].tier, "standard");
+  const read = readLedger(root, ledger([row("111-a"), row("222-b")]));
+  assert.equal(read.error, undefined);
+  assert.deepEqual(read.rows.map((r) => r.tier), ["standard", "passive"], "no stored tier can disagree with the carrier");
+  assert.deepEqual(read.rows.map((r) => r.ceremony_skipped), [0, 4]);
 });
 
 test("a recorded tier is read from the template block, the classifier's JSON and a plain sentence", () => {
@@ -199,7 +195,7 @@ test("time is never a span: the module carries no wall-clock token, and no flag 
 test("the CLI reads a ledger, aggregates it, and blocks the comparison on a thin corpus", () => {
   const root = project({
     "docs/fix/111-a/SPEC.md": unitDoc("standard", { tasks: 1, evidence: 1, review: 0 }),
-    "docs/workflow/TIER_COST.md": ledger([row("111-a", { tier: "standard", recorded: 3, skipped: 1 })]),
+    "docs/workflow/TIER_COST.md": ledger([row("111-a")]),
   });
   const ledgerPath = path.join(root, "docs/workflow/TIER_COST.md");
 

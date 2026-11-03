@@ -42,8 +42,7 @@ export const LEDGER_PATH = "docs/workflow/TIER_COST.md";
  * row can always be traced to the command that wrote it.
  */
 export const COLUMNS = Object.freeze([
-  "unit", "tier", "changed_paths", "tokens", "turns", "model_ms", "tool_ms",
-  "ceremony_recorded", "ceremony_skipped", "observed", "source",
+  "unit", "changed_paths", "tokens", "turns", "model_ms", "tool_ms", "observed", "source",
 ]);
 
 /**
@@ -191,9 +190,10 @@ export function readLedger(root, text) {
   for (const row of parsed.rows) {
     const recorded = resolveTier(root, row.unit);
     if (recorded === null) return { error: "unknown-unit", detail: `${row.unit}: no unit doc and no passive carrier` };
-    if (recorded !== row.tier) return { error: "stale-tier", detail: `${row.unit}: row says ${row.tier}, its carrier recorded ${recorded}` };
     const ceremony = ceremonyOf(root, row.unit);
-    rows.push({ ...row, ceremony_recorded: ceremony.recorded, ceremony_skipped: ceremony.skipped });
+    // The tier and the ceremony are repository facts, resolved here: a stored copy
+    // could only drift from the carrier it is supposed to report.
+    rows.push({ ...row, tier: recorded, ceremony_recorded: ceremony.recorded, ceremony_skipped: ceremony.skipped });
   }
   return { columns: parsed.columns, rows };
 }
