@@ -222,6 +222,13 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 - **E4** — 2026-11-03, `rg -n 'pi-coding-agent' packages/pi-agentic-workflow/package.json` · exit 0 · `">=0.99.1"` — the floor P6 raises.
 - **E5** — 2026-11-03, `rg -c 'durationMs' ~/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/types.d.ts` · exit 0 · `2` — `tool_execution_end.durationMs` exists in the installed pi 1.5.0.
 
+- **P1** — 2026-11-03, cut the unit doc, its two ledgers, the acceptance criteria and the roadmap row, then landed the corpus alone and red · `55983196` (plan) + `02486199` (corpus) + `56ff1cca` (widened corpus, still red).
+- **E6** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` with `scripts/tier-cost.mjs` absent · exit 1 · `ERR_MODULE_NOT_FOUND: Cannot find module …/scripts/tier-cost.mjs` — the red run of the final corpus, all 9 cases failing on the missing module.
+- **P2** — 2026-11-03, the instrument plus the shared reader's third shape · `30ad8f7f`.
+- **E7** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` · exit 0 · `ℹ tests 9 · ℹ pass 9 · ℹ fail 0`; `bun test scripts/tier-cost.test.mjs` · exit 0 · `9 pass · 0 fail`.
+- **E8** — 2026-11-03, differential `bun scripts/ceremony.mjs tier plan` — base `626e4461`: `totals 128 · recorded 1 · {passive 1, standard 0, high 0}`; head: `totals 129 · recorded 2 · {passive 1, standard 1, high 0}`. The declared difference is this unit's own doc plus the `## Risk tier` shape its template orders (O16); nothing else moved.
+- **G1** — 2026-11-03, `node scripts/run-root-suite.mjs` at `30ad8f7f` · exit 0 · `ℹ tests 1522 · ℹ suites 33 · ℹ pass 1521 · ℹ fail 0 · ℹ skipped 1`.
+
 ## Next
 
 P1 — cut row in `docs/ROADMAP.md`, then land `scripts/tier-cost.test.mjs` alone as the red commit.
