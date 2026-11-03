@@ -20,13 +20,15 @@ exact command tokens.
    ```
 
    is the legacy schema, and only a legacy unit is written with it. A migrated unit
-   writes `findings-table@1` — six columns, no `folded` cell, and `class` holding
-   the owner that repairs the row (`product`/`plan`/`source`/`environment`/`runtime`)
-   while `route` holds the disposition (`fold`/`replan-in-unit`/`decision-required`/
-   `product owner — …`) — the grammar the unit doc itself publishes:
+   writes `findings-table@1` — seven columns, no `folded` cell, `severity` holding
+   the published ladder, `impact` saying whether the row affects behaviour, only
+   documents or nothing that blocks, and `class` holding the owner that repairs the
+   row (`product`/`plan`/`source`/`environment`/`runtime`) while `route` holds the
+   disposition (`fold`/`replan-in-unit`/`decision-required`/`product owner — …`) —
+   the grammar the unit doc itself publishes:
 
    ```
-   | id | S# / file:line | axis | severity | class | route |
+   | id | S# / file:line | axis | severity | impact | class | route |
    ```
 
    `folded: no → yes` is therefore a **legacy-only** flip: in a migrated carrier a
@@ -35,10 +37,11 @@ exact command tokens.
 
    **Merged unit → no write** (a PR exists and its state is `MERGED` — check
    `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
-   by definition). Otherwise, for each **fix-now** finding of severity `high`
-   or `med` (only ledger severities; finder scale
-   converts through the canonical table in
-   `CLASSIFY.md`):
+   by definition). Otherwise, for each **fix-now** finding of severity `BLOCKER`,
+   `CRITICAL` or `WARNING` (only ladder severities; an older scale converts
+   through the canonical table in `CLASSIFY.md`) and whose `impact` is not
+   `report-only` (a `report-only` row is a report note — the baseline-advisory
+   rule never earns a correction round):
    append a row
    (create the file with the header row when missing), carrying the
    verbatim `Sev` value into `severity`; a legacy row's `folded` always starts `no`
@@ -49,7 +52,7 @@ exact command tokens.
    as modeled in `LEDGERS.md` (§finding-mark@1) and the fixture.
    `ledger-ownership@1` / `fold-findings:folded-flag` is the sole writer of
    the `folded: no → yes` flip.
-   A `low` finding is **never persisted to the fold ledger** — report-only
+   A `SUGGESTION` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
    **dedupe by `file:line` + axis**:
    a row already on the ledger at that `file:line`+axis is not re-appended;
@@ -120,7 +123,7 @@ exact command tokens.
    Manual verification (a human must check):
    - <item> …
 
-   Notes (low · report-only, never persisted):
+   Notes (SUGGESTION · report-only, never persisted):
    - <finding + evidence, or none>
 
    Refuted (verified false — reported with counter-evidence, never persisted):

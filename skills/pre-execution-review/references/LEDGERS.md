@@ -33,9 +33,12 @@ class, so a migrated unit's `## Findings`/`## Log` are that ledger inside the un
 never a new class or a second owner set. One mark, two grammars: review run =
 `review-mark@1` row / `## Log` `R` line; gate run = `gate-ran@1` row / `G` line; finding
 verification = `finding-mark@1` row / `V` line; folded finding = the `folded: no → yes`
-flip / the row leaving for an `F` line; OPEN finding = seven-column row / six-column
-`findings-table@1` row. A migrated unit has no `folded` cell to flip; a legacy unit has
-no `R`/`V` grammar.
+flip / the row leaving for an `F` line; OPEN finding = legacy seven-column row /
+seven-column `findings-table@1` row. A migrated unit has no `folded` cell to flip; a
+legacy unit has no `R`/`V` grammar. The `findings-table@1` row carries the published
+ladder plus the `impact` cell (`id | S# / file:line | axis | severity | impact | class
+| route`, owned by the two unit-doc templates); the legacy row keeps its own
+`| id | file:line | axis | severity | class | route | folded |`.
 
 ### 1. Planning evidence
 

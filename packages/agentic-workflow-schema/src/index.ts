@@ -4042,6 +4042,7 @@ export {
 export {
   FUTURE_STATUS_KINDS,
   FINDINGS_TABLE_SEVERITIES,
+  FINDINGS_TABLE_IMPACTS,
   LOG_KIND_TOKENS,
   SWEEP_CLAIM_KINDS,
   SWEEP_MISMATCH_REASONS,
@@ -4049,6 +4050,7 @@ export {
 export type {
   FutureStatus,
   FindingsTableSeverity,
+  FindingsTableImpact,
   LogKindToken,
   SweepClaimKind,
   SweepMismatchReason,

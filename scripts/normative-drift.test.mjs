@@ -73,6 +73,7 @@ const INVENTORY_MARKER = "normative-surfaces@1";
 const FACTS_MARKER = "rendered-facts@1";
 const SCHEMA_INDEX_REL = "packages/agentic-workflow-schema/src/index.ts";
 const SCHEMA_PREEXEC_REL = "packages/agentic-workflow-schema/src/pre-execution-contract.ts";
+const SCHEMA_VOCABULARIES_REL = "packages/agentic-workflow-schema/src/vocabularies.ts";
 const POLICY_REL = "skills/pre-execution-review/references/POLICY.md";
 const GATE_VOCABULARY_MARKER = "gate-rejection-vocabulary@1";
 const NA = "n/a";
@@ -171,6 +172,7 @@ function publishedStageMatrix(src) {
 function buildMachine() {
   const index = read(SCHEMA_INDEX_REL);
   const preexec = read(SCHEMA_PREEXEC_REL);
+  const vocabulariesSrc = read(SCHEMA_VOCABULARIES_REL);
   const consts = new Map([...publishedConstArrays(index), ...publishedConstArrays(preexec)]);
   const contracts = new Map([...publishedContractIds(index), ...publishedContractIds(preexec)]);
   const transitions = publishedTransitionTable(index, "WORKFLOW_TRANSITION_TABLE");
@@ -197,6 +199,17 @@ function buildMachine() {
   vocabularies.set("workflow-intent", pre("WORKFLOW_INTENTS"));
   vocabularies.set("pre-execution-verdict", pre("PRE_EXECUTION_VERDICTS"));
   vocabularies.set("pre-execution-stage", pre("PRE_EXECUTION_STAGES"));
+  // The findings carrier's two published sets (issue #361) live in
+  // `src/vocabularies.ts`, the canonical home unit 84 declared; they are read
+  // from that committed source under the names the inventory cites.
+  const vocabConsts = publishedConstArrays(vocabulariesSrc);
+  const carrierSet = (symbol) => {
+    const values = vocabConsts.get(symbol);
+    if (!values) throw new Error(`machine vocabulary not published in src/vocabularies.ts: ${symbol}`);
+    return values;
+  };
+  vocabularies.set("finding-severity-ladder", carrierSet("FINDINGS_TABLE_SEVERITIES"));
+  vocabularies.set("finding-impact", carrierSet("FINDINGS_TABLE_IMPACTS"));
   return {
     consts,
     contracts,
@@ -321,7 +334,7 @@ function buildSurfaceModel() {
     ownerFiles: [],
     alternations: [],
     allFlags: [],
-    readFiles: new Set([GUIDE_REL, SCHEMA_INDEX_REL, SCHEMA_PREEXEC_REL, POLICY_REL]),
+    readFiles: new Set([GUIDE_REL, SCHEMA_INDEX_REL, SCHEMA_PREEXEC_REL, SCHEMA_VOCABULARIES_REL, POLICY_REL]),
   };
   model.allFlags = [...model.hints.values()].flatMap((h) => flagsIn(h.hint));
   const guide = read(GUIDE_REL);
@@ -440,6 +453,7 @@ const REFERENCEABLE_VOCABULARIES = new Set([
   "pre-execution-context-kind", "pre-execution-author-exclusion", "pre-execution-model-diversity",
   "pre-execution-finding-class", "pre-execution-finding-severity", "pre-execution-review-role",
   "pre-execution-parent-role", "pre-execution-selector", "pre-execution-context-presence",
+  "finding-severity-ladder", "finding-impact",
 ]);
 /** The closed sets an `<a|b|c>` alternation in a fixed-output block may bind to. */
 const CLOSED_VOCABULARIES = [
@@ -447,6 +461,7 @@ const CLOSED_VOCABULARIES = [
   "pre-execution-context-kind", "pre-execution-author-exclusion", "pre-execution-model-diversity",
   "pre-execution-finding-class", "pre-execution-finding-severity", "pre-execution-review-role",
   "pre-execution-parent-role", "envelope-state", "workflow-intent", "gate-rejection-type",
+  "finding-severity-ladder", "finding-impact",
 ];
 
 function readBlockTokens(model, entry, block, file) {
@@ -1311,6 +1326,22 @@ test("#308 the spec-by-reference grammar blocks are declared normative surfaces"
     assert.ok(surface.grammar.startsWith("block:") || surface.grammar.startsWith("fenced:"),
       `${name} resolves to a versioned grammar kind`);
   }
+});
+
+test("#361 the findings ladder and the impact set are declared normative surfaces", () => {
+  const declared = new Map(live.surfaces.map((surface) => [surface.surface, surface]));
+  for (const [name, vocab, tokens] of [
+    ["findings-severity-ladder", "finding-severity-ladder", ["BLOCKER", "CRITICAL", "WARNING", "SUGGESTION"]],
+    ["findings-impact", "finding-impact", ["blocking", "docs-only", "report-only"]],
+  ]) {
+    const surface = declared.get(name);
+    assert.ok(surface, `the inventory must declare ${name} — a published vocabulary that orders a row is a normative surface`);
+    assert.deepEqual(surface.faults, [], `${name}: ${surface.faults.join("; ")}`);
+    assert.equal(surface.grammar, `block:${vocab.replace("-ladder", "-ladder")}@1`, `${name} resolves to its versioned grammar`);
+    assert.deepEqual([...live.machine.vocabularies.get(vocab)], tokens, `${vocab} is read from the committed source`);
+  }
+  // The declaration is a check, not a claim: the grammar cell resolves to a block
+  // that exists in the named file, which is what `surface.faults` above proves.
 });
 
 test("#308 the closed log-kind vocabulary is published by the block, never restated in code", () => {

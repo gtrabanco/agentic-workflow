@@ -18,7 +18,7 @@ Ask one consolidated question only when a rule's applicability remains genuinely
 
 ### 3. Lint, warn, never repair
 
-Check all seven `AGENTS.md` invariants against each changed SKILL.md. This skill
+Check all eight `AGENTS.md` invariants against each changed SKILL.md. This skill
 edits nothing — it reports, so state every violation and leave the fix to the
 author:
 
@@ -34,5 +34,14 @@ author:
    `metadata.internal: true` inside frontmatter. Plugin-listed internal steps
    are exempt. Check only between the first two `---` lines; body prose does not
    satisfy the rule.
+8. **Published vocabularies, never a second copy (issue #361).** A skill whose
+   output contract publishes a closed vocabulary must publish exactly the
+   canonical tokens: a findings table's `Sev` cell is `FINDINGS_TABLE_SEVERITIES`
+   (`BLOCKER`, `CRITICAL`, `WARNING`, `SUGGESTION`) and its `Impact` cell is
+   `FINDINGS_TABLE_IMPACTS` (`blocking`, `docs-only`, `report-only`), both
+   declared in `packages/agentic-workflow-schema/src/vocabularies.ts` and pinned
+   by `scripts/vocabulary-parity.test.mjs`. Report a drifted or missing cell;
+   never repair it. The parity suite is this rule's enforcing half — this lint
+   only makes the drift visible before the commit.
 
 Report every result in the summary; lint warnings do not block the commit.

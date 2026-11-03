@@ -16,8 +16,10 @@ description: >
 ```
 ✓ `bun scripts/skill-lint.mjs` ran and its report block is pasted verbatim
   (a `PASS` verdict, or every `FINDING` line as printed)
-✓ The seven authoring rules were checked against each changed SKILL.md
-  (`references/DISCOVERY_AND_LINT.md`) and every violation was reported
+✓ The eight authoring rules were checked against each changed SKILL.md
+  (`references/DISCOVERY_AND_LINT.md`) — including the two machine-surface
+  parity/ordering checks, the internal-skill discovery-exclusion check and the
+  published-vocabulary check — and every violation was reported
 ✓ Nothing was repaired, added or rewritten — the lint reports only
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
@@ -60,7 +62,7 @@ code already gave.
 
 ### 2. Lint, warn, never repair
 
-Check all seven `AGENTS.md` authoring invariants per
+Check all eight `AGENTS.md` authoring invariants per
 [change discovery and authoring lint](references/DISCOVERY_AND_LINT.md).
 Report every violation without fixing it. These are structure and registration
 rules (closing block, phase labels, portability, turn contract, plugin
@@ -102,8 +104,8 @@ be worked on from any agent:
 - **No per-skill `model:`/`effort:`** — a mid-tier model is enough; this is
   classification + lint bookkeeping. The content checks are code, so they give
   the same answer on any model.
-- **No `bun`** — run `node scripts/skill-lint.mjs`, the same argv and the same
-  block.
+- **No `bun`-only assumption** — `bun scripts/skill-lint.mjs` is the form to
+  print. The fallback is `node scripts/skill-lint.mjs`: same argv, same block.
 
 ## Relationship to other skills
 
@@ -123,9 +125,9 @@ be worked on from any agent:
 
 - The scanner's block is pasted and every `FINDING` line is reported for the
   user to fix before committing — or the verdict is `PASS`.
-- All seven authoring-rule violations (missing `→ Next:` block, `S1`/"Step"
+- All eight authoring-rule violations (missing `→ Next:` block, `S1`/"Step"
   phase labels, a `user-invocable: true` skill absent from `plugin.json`, a
-  non-alphabetical machine surface, …) are reported for the user to fix before
-  committing.
+  non-alphabetical machine surface, a drifted `Sev`/`Impact` cell, …) are
+  reported for the user to fix before committing.
 - **The next step is printed** — the `git add` + `git commit` command, ready
   to run.

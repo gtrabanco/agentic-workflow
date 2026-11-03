@@ -89,8 +89,8 @@ One row per Engineering claim. Embedded here: this is an XS unit.
 
 OPEN rows only; a folded row becomes a `## Log` line. This unit has none.
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
 
 ## Log
 

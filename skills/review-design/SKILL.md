@@ -46,20 +46,25 @@ change — never pad the table.
 
 ## Return exactly
 
+`Sev` and `Impact` are the two published closed sets (`BLOCKER | CRITICAL |
+WARNING | SUGGESTION` and `blocking | docs-only | report-only`); their meanings
+are owned by `review-implementation` (`CLASSIFY.md` §Severity ladder) — assign a
+token, never a prose grade.
+
 ```
 REVIEW DESIGN — scope: <scope>
 
-| # | Finding | Sev | Evidence | Suggested fix |
-|---|---------|-----|----------|---------------|
-| 1 | <what>  | critical|major|minor | <file:line> | <smallest action> |
+| # | Finding | Sev | Impact | Evidence | Suggested fix |
+|---|---------|-----|--------|----------|---------------|
+| 1 | <what>  | BLOCKER|CRITICAL|WARNING|SUGGESTION | blocking|docs-only|report-only | <file:line> | <smallest action> |
 
 Checklist: <n> evaluated, <n> pass, <n> findings, <n> n/a (<which + why>)
 Summary: <1-2 sentences>
 Decision: PASS | FAIL
 ```
 
-FAIL if any critical or major finding is open; PASS otherwise. Minor findings
-never block — they route to the caller's triage step.
+FAIL if any `BLOCKER`, `CRITICAL` or `WARNING` finding is open; PASS otherwise.
+`SUGGESTION` findings never block — they route to the caller's triage step.
 
 ## Done when
 

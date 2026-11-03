@@ -783,8 +783,15 @@ const STRONG_AXES = new Set(["security", "correctness", "logic", "architecture",
  * finder scale (`critical`/`major`/`minor`) or prose. Passing a row through unmapped
  * emitted a schema-invalid envelope (the self-check named every one) while still
  * exiting 0, so the sensor published a document its own validator rejected.
+ *
+ * The carrier's own scale is the published ladder (`findings-table@1`, issue #361)
+ * and the entries below it are the read-side aliases: a pre-#308 legacy ledger
+ * carries `high|med|low`, an older migrated doc may still carry the finder scale.
+ * The envelope is not re-cut for a ledger vocabulary — this map is the projection,
+ * and `scripts/vocabulary-parity.test.mjs` pins it to the canonical sets.
  */
-const SEVERITY_VOCABULARY = new Map([
+export const SEVERITY_VOCABULARY = new Map([
+  ["BLOCKER", "high"], ["CRITICAL", "high"], ["WARNING", "med"], ["SUGGESTION", "low"],
   ["critical", "high"], ["major", "med"], ["medium", "med"], ["minor", "low"],
   ["high", "high"], ["med", "med"], ["low", "low"],
 ]);
@@ -871,11 +878,15 @@ function readFixNow(unitDir, observations = []) {
   const items = [];
   const carrier = findingsCarrier(unitDir);
   for (const { id, file, axis, severity, klass, route } of carrier.rows) {
-    const normalized = SEVERITY_VOCABULARY.get(String(severity).toLowerCase()) ?? null;
+    // The ladder's tokens are case-sensitive (a mixed carrier is a defect, never a
+    // silent accept); the legacy aliases below it are matched case-insensitively,
+    // which is how a pre-#308 ledger's `High` still projects.
+    const cell = String(severity).trim();
+    const normalized = SEVERITY_VOCABULARY.get(cell) ?? SEVERITY_VOCABULARY.get(cell.toLowerCase()) ?? null;
     if (!normalized) {
       // Named, never silent: the row is dropped from the envelope, and the ledger's
       // own vocabulary drift is reported (the AC-19 degradation pattern).
-      observations.push(`${unitDir}: dropped review-findings row '${flattenCell(id)}' — severity '${flattenCell(severity)}' is outside high|med|low`);
+      observations.push(`${unitDir}: dropped review-findings row '${flattenCell(id)}' — severity '${flattenCell(severity)}' is outside the published ladder and its read aliases`);
       continue;
     }
     const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";

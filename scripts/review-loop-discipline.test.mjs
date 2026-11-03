@@ -2,7 +2,7 @@
 
 // Fix #159 — the review→fold loop must terminate. Pins the four loop killers
 // to their owning skill text:
-//   1. materiality survives classification and the decision (low = report-only)
+//   1. materiality survives classification and the decision (SUGGESTION = report-only)
 //   2. workspace state is a precondition, not a persisted finding
 //   3. folded rows are re-verified, not re-reported
 //   4. the review→fold loop is bounded at two review→fold cycles per unit
@@ -36,18 +36,22 @@ const planOutput = safeRead("skills/review-plan/references/OUTPUT.md");
 
 // ── 1. Materiality survives classification and the decision ────────────────
 
-assert.match(classify, /A `low` finding[^.]*is \*\*never persisted and never blocks\*\*/s);
+assert.match(classify, /A `SUGGESTION` finding[^.]*is \*\*never persisted and never\s+blocks\*\*/s);
 assert.match(classify, /carried\s+as a report note/);
-assert.match(classify, /classify it at `med` minimum/);
-assert.match(classify, /deflating a real defect to `low` to unblock a review is itself a review defect/);
+assert.match(classify, /classify it at `WARNING` minimum/);
+assert.match(classify, /deflating a real defect to unblock a review is itself a review defect/);
 
-// The severity vocabulary is consistent end-to-end: finder scale maps onto the
-// classification scale, and only high/med rows persist.
-assert.match(persist, /finding of severity `high`\s+or `med`/);
-assert.match(classify, /critical.*high.*major.*med.*minor.*low/s);
+// The severity vocabulary is consistent end-to-end: the finder and receipt scales
+// map onto the ladder, and only BLOCKER/CRITICAL/WARNING rows persist.
+assert.match(persist, /finding of severity `BLOCKER`,\s+`CRITICAL` or `WARNING`/);
+// #361: the conversion table maps every older scale onto the ladder, and BLOCKER is
+// never a conversion target.
+assert.match(classify, /\| Producer scale \| → BLOCKER \| → CRITICAL \| → WARNING \| → SUGGESTION \|/);
+assert.match(classify, /`minor` \| — \| — \| — \| ✓ \|/);
+assert.match(classify, /`BLOCKER` is never a\s+conversion target/);
 assert.match(persist, /never persisted to the fold ledger/);
-assert.match(outputGuardrails, /`low`\s+findings are report-only notes that never block/);
-assert.match(persist, /Notes \(low · report-only/);
+assert.match(outputGuardrails, /a `SUGGESTION`, and any `report-only` row, is a note that never blocks/);
+assert.match(persist, /Notes \(SUGGESTION · report-only/);
 
 // ── 2. Workspace state is a precondition, not a persisted finding ──────────
 
@@ -310,12 +314,12 @@ assert.match(foldSkill, /no-decision/);
 assert.match(foldSkill, /re-review default/);
 
 // 10g. Branch-selection decision inputs (repair P30-2): the docs-only file-set
-// test (E-D3), the frozen-severity-`high` override, and the SKIPPED-requires-
+// test (E-D3), the frozen-severity-`BLOCKER` override, and the SKIPPED-requires-
 // prior-consumer-decision rule (E-D2).
 assert.match(foldSkill, /every fold-diff/);
 assert.match(foldSkill, /Markdown\/documentation file/);
 assert.match(foldSkill, /frozen severity/);
-assert.match(foldSkill, /`high`/);
+assert.match(foldSkill, /`BLOCKER`/);
 assert.match(foldSkill, /RE-REVIEW-REQUIRED \(delta\)/);
 assert.match(foldSkill, /prior consumer decision/);
 assert.match(foldSkill, /RE-REVIEW-OPTIONAL/);
@@ -514,12 +518,12 @@ assert.match(sensorCore, /absent ledger emits a non-blocking substrate notice/);
 
 // ── 14. Feature 32 (P3) — classification single-owner contract pins ─────────
 
-// IS-2: canonical severity conversion table exists in CLASSIFY.md with all four
-// producer scales mapped onto high|med|low.
+// IS-2: canonical severity conversion table exists in CLASSIFY.md with every
+// producer scale mapped onto the #361 ladder.
 assert.match(classify, /Severity conversion \(canonical table\)/);
-assert.match(classify, /Producer scale.*→ `high`.*→ `med`.*→ `low`/s);
-assert.match(classify, /Ledger \(`CLASSIFY.md` itself\): `high`/);
-assert.match(classify, /Finder \(nine review passes\): `critical`/);
+assert.match(classify, /Producer scale.*→ BLOCKER.*→ CRITICAL.*→ WARNING.*→ SUGGESTION/s);
+assert.match(classify, /Retired ledger \(`review-findings\.md`, closed units\): `high`/);
+assert.match(classify, /Finder \(pre-#361 scale\): `critical`/);
 assert.match(classify, /Planning/);
 assert.match(classify, /`audit-docs`/);
 assert.match(classify, /Unknown scale.*fail closed/);
@@ -558,7 +562,7 @@ assert.doesNotMatch(productAudit, /\btradeoff\b/);
 assert.match(productAudit, /fix-now.*replan-in-unit.*decision-required.*proposal.*ignore|fix-now.*replan-in-unit/s);
 
 // IS-2: PERSIST_AND_DECIDE.md finder-scale maps to canonical table, not ad-hoc.
-assert.doesNotMatch(persist, /critical.*high.*major.*med.*minor.*low/s);
+assert.doesNotMatch(persist, /→ ?`?(?:BLOCKER|CRITICAL|WARNING|SUGGESTION)`?/s);
 assert.match(persist, /canonical table.*CLASSIFY\.md|CLASSIFY\.md.*canonical table/s);
 
 // IS-2: audit-pr closure-integrity scale is pass/blocker/n-a.
