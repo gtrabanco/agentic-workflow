@@ -96,6 +96,8 @@ export interface ConfigFile {
   /** Feature 66 (AC3/D3): the memory-substrate consent surface — Engram's MCP
    *  registration is ask-first, so nothing is provisioned unless this says so. */
   memory?: MemoryConfigFile;
+  /** Issue #383: the per-unit cost sample. */
+  telemetry?: TelemetryConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -126,6 +128,17 @@ export interface MemoryConfigFile {
 /** What the extension READS: every `memory` knob resolved (feature 66). */
 export interface MemoryConfig {
   engram: boolean;
+}
+
+/** What an operator WRITES under `telemetry` (issue #383). */
+export interface TelemetryConfigFile {
+  /** Opt in to the per-unit cost sample. Absent or `false` measures nothing. */
+  enabled?: boolean;
+}
+
+/** What the extension READS: the telemetry switch, resolved (issue #383). */
+export interface TelemetryConfig {
+  enabled: boolean;
 }
 
 export interface ConfigIssue {
@@ -159,6 +172,8 @@ export interface EffectiveConfig {
   profileFallback: ProfileFallbackConfig;
   /** Feature 66: the memory-substrate consent surface. */
   memory: MemoryConfig;
+  /** Issue #383: the measured acceptance is opt-in, like every other runtime cost. */
+  telemetry: TelemetryConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

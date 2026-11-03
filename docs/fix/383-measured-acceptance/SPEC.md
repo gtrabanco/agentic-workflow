@@ -253,6 +253,10 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 - **E19** — 2026-11-03, `npm pack @earendil-works/pi-coding-agent@1.0.4`/`@1.1.0` → `rg -c durationMs dist/core/extensions/types.d.ts` · nothing vs `2`; `TurnStartEvent.timestamp` present in both — PE-014 resolved against published types, not the changelog.
 - **E20** — 2026-11-03, `node --test test/verified-baseline.test.mjs` · exit 0 · `3 pass · 0 fail`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `changeset route … VERDICT: PASS`.
 
+- **P5 (second half)** — 2026-11-03, the wiring: five lifecycle listeners, the `telemetry` switch (off by default, one boolean, strict parser), the command→unit note, and the ledger sink registration on the first measured session. The default path count is the session's own scope (`git diff start..HEAD` plus the dirty tree), so a long-lived branch is never charged to the unit that happened to end it.
+- **E21** — 2026-11-03, `node --test test/telemetry-wiring.test.mjs` · exit 0 · `7 pass · 0 fail` — off registers nothing, the unit comes from the dispatched command, one session emits one sample, a session with no unit emits nothing, the switch parses strictly, and the scope counts the session's own paths.
+- **E22** — 2026-11-03, `bun scripts/bundle-skills.mjs` + `bun test test/*.test.mjs` · exit 0 · `479 pass · 0 fail` (41 files).
+
 ## Next
 
 P1 — cut row in `docs/ROADMAP.md`, then land `scripts/tier-cost.test.mjs` alone as the red commit.
