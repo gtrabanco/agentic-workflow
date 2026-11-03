@@ -4156,3 +4156,8 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Triaged and fixed issue #391: Serena auto-index provisioning gap
 - **Decisions:** The issue described a real gap: Serena's symbol index was not part of the provisioning order in SERENA.md reference documentation. Added the 7-step provisioning order block, the index: field in the SERENA PROVISIONING report, step (d) in BOOTSTRAP_WRITE.md, and a 'Serena setup' section in the template/AGENTS.md scaffold. The fix was additive — no behavioral change to existing code, only documentation and reference alignment. Issue closed as completed; PR #393 created.
 - **Next:** Merge PR #393; continue with the next roadmap item from /workflow-status
+## 2026-11-03T23:21:23Z — fix/383-measured-acceptance — manual
+- **Commits:** 20 (`55983196…8194e6e7`)
+- **Files:** 34 files
+- **Summary:** Fixed .gitignore .serena rules
+- **Next:** Continue work on fix/383-measured-acceptance
