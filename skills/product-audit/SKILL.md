@@ -105,9 +105,9 @@ Verdict: <one-line honest health verdict>
   Installed tooling ....... ✓ | ⚠ | ✗ | n-a
 
 ## Findings (severity-ranked, one F-sequence for the whole audit)
-  F1 [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore> — route: <the next command for this finding | none — <why>> [· loads: <the one reference that route needs>]
-  F2 [SEV] ...
-  [example — scope-export recurrence] F<k> [med] Workflow discipline — <N>
+  F1 [SEV · impact] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|replan-in-unit|decision-required|proposal|ignore> — route: <the next command for this finding | none — <why>> [· loads: <the one reference that route needs>]
+  F2 [SEV · impact] ...
+  [example — scope-export recurrence] F<k> [WARNING · report-only] Workflow discipline — <N>
     consecutive units exported scope via `## Amendments`/descope issues —
     features are being cut too big for real capacity — evidence: <unit list +
     amendments/issues> — class: proposal — route: #64 (atomicity/split rules)
@@ -121,7 +121,7 @@ Verdict: <one-line honest health verdict>
 ## Proposals — the user decides which to act on
 
 ### Issues to open
-  - <title> [sev] — from: F<k>[, F<j>] — <why> — route: /triage-issue <id> F<k> — evidence: <…>
+  - <title> [SEV · impact] — from: F<k>[, F<j>] — <why> — route: /triage-issue <id> F<k> — evidence: <…>
   (none — <why>)
 
 ### Roadmap — add
