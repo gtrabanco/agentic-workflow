@@ -110,7 +110,7 @@ correction | **S<n><letter> — <title>.** | an appended amendment to requiremen
 |---|---|---|
 | `severity \| high \| med \| low` as the `findings-table@1` scale | `severity \| BLOCKER \| CRITICAL \| WARNING \| SUGGESTION` plus the `impact` cell | `rg -n 'high \\\\| med \\\\| low' docs/features/_TEMPLATE docs/fix/_TEMPLATE template/docs` matches 0 after the change (the legacy carrier's own block stays in `LEDGERS.md`) |
 | the finder scale `critical \| major \| minor` in a `review-*` output contract | the same ladder, assigned by every finder | `rg -n 'critical\|major\|minor' skills/review-*` matches 0 after the change |
-| the six-column `findings-table@1` row shape | the seven-column row (`impact` between `severity` and `class`) | `rg -n 'six-column\|six columns\|6-column\|6 cols' skills/ docs/workflow/` matches 0 after the change |
+| the six-column `findings-table@1` row shape | the seven-column row (`impact` between `severity` and `class`) | the live grammar carries 0 six-column rows: `rg -n 'six-column\|six columns\|6-column\|6 cols' skills/ docs/workflow/` matches only the two dated budget-journal narrations of #308 in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`:60`, `:107`) — history, never a live grammar |
 
 The legacy `review-findings.md` seven-column row is **not** retired: it is a
 closed unit's frozen history (`docs/features/79-spec-by-reference/review-findings.md`
