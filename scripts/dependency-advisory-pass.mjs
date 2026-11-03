@@ -54,7 +54,7 @@ import { parseLock } from "./pin-watch.mjs";
 import { packageDirs, semverGt } from "./version-parity-gate.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const USAGE = "usage: node scripts/dependency-advisory-pass.mjs [--root <dir>] [--json]";
+const USAGE = "usage: bun scripts/dependency-advisory-pass.mjs [--root <dir>] [--json]  (node fallback, same argv)";
 
 /** The one network dependency `S9` allows. */
 export const OSV_API = "https://api.osv.dev";

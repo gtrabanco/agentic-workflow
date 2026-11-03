@@ -26,6 +26,9 @@ done:
   runs `bun scripts/needs-input.mjs <unit-dir>` (node fallback if bun is not
   installed) and stops with the `open-questions@1` block routed back to the
   owning stage.
+✓ Tool choice re-made this turn — `bun` before `node` on manual invocation,
+  `rg` before `grep` on search; availability checked once with
+  `node scripts/setup-env.mjs --check` (node and grep stay the documented fallback)
 ✓ Every claim the SPEC or the plan asserts (objective, why, ACs, tasks) cites
   its source — `path:line`, a doc, or an owner answer in the unit folder's
   `sources.md`. A claim with none is a question, never a default.
@@ -66,7 +69,7 @@ objective/why/user-outcome the SPEC carries are **never inferred**: no silent
 is resolved in one fixed order — **(0) provenance** (search the repo's own docs
 and append an `open-question` row to the unit's `decisions.md` recording where)
 → **(1) research** (2–3 concrete options with trade-offs; asking for more
-research is a legitimate answer) → **(2) halt**: run `node
+research is a legitimate answer) → **(2) halt**: run `bun
 scripts/needs-input.mjs <unit-dir>`, paste the `open-questions@1` block verbatim,
 stop. The block routes each question back to the stage that owns the fact —
 `design` for scope/architecture, `unit-lane` for plan-owned facts. Grammar and
