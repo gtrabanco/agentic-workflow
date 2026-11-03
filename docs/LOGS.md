@@ -3976,3 +3976,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Issue #357 applied: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut, 15 obligations verified, all gates green, PR #377 opened and all three checks passing. diff-guard exception recorded.
 - **Decisions:** S2 is a marker-shape rule (prose body flags, namespace-field admitted). S8 needs both date AND currency word. S3 scoped to description only. Full-scope includes references/.
 - **Next:** Owner's PR #377 verdict. The template/AGENTS.md rider is open in the unit doc's ## Future.
+
+## 2026-11-03T00:57:00Z — feat-357-skill-smells — manual
+- **Commits:** 12 (`e006b3fb…7ea79273`)
+- **Files:** 15 files
+- **Summary:** Issue #357 applied end-to-end: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut with two planning ledgers (13 PE rows, 15 obligations), all 15 verified. PR #377 opened, all three checks green (root-suite 1m46s, pi-compat-guard 25s, dependency-pin-gate 11s). diff-guard exception recorded (14 files, 1150+ lines).
+- **Decisions:** S2 is marker-shape rule (prose body flags, namespace-field admitted — bans only hidden prose, not repo receipt contract). S8 needs both date AND currency word so provenance dates stay clean. S3 scoped to description only — 17 placeholder argument hints would false-positive. Full-scope includes references/ because skills add ships the folder. One recorded exception: diff-guard BREACH 1150+ lines / 14 files — mandatory unit doc + scanner + reference, stacking forbidden by AGENTS.md.
+- **Next:** Owner PR #377 verdict — merge gate is you. The template/AGENTS.md rider is open in the unit doc's Future.
