@@ -194,6 +194,16 @@
       "suites": [
         "scripts/dependency-advisory-pass.test.mjs"
       ]
+    },
+    {
+      "name": "red-first",
+      "globs": [
+        "scripts/red-first.mjs",
+        "scripts/red-first.test.mjs"
+      ],
+      "suites": [
+        "scripts/red-first.test.mjs"
+      ]
     }
   ]
 }

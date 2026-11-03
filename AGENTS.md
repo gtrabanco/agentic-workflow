@@ -141,10 +141,16 @@ under [Working rules](#working-rules)).
   the discipline lives here, in review and in the owner's merge.
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
-- **A new script ships its sibling suite, and a test is never edited to pass.**
-  Every `scripts/x.mjs` arrives with `scripts/x.test.mjs` in the same commit;
-  `scripts/structural-sibling-pins.test.mjs` reads the tree, so an unpaired file
-  fails the gate. A failing test is repaired by changing the code it judges —
+- **A new script ships its sibling suite — red commit before green — and a
+  test is never edited to pass.** Every `scripts/x.mjs` arrives with
+  `scripts/x.test.mjs` as two commits: the suite lands alone, observed
+  failing on the missing module or the failing assertion (the red commit),
+  then the implementation lands observed green — the unit doc's `## Log`
+  records both runs as `E` lines naming both SHAs, and
+  `scripts/red-first.mjs` enforces the ordering in the root suite (pairs
+  introduced after the gate's own commit; earlier pairs are grandfathered).
+  `scripts/structural-sibling-pins.test.mjs` reads the tree, so an unpaired
+  file fails the gate. A failing test is repaired by changing the code it judges —
   never by relaxing, deleting or skipping the assertion, and never by narrowing
   its input until it passes. A case that genuinely cannot hold is `n/a` with its
   reason recorded, not quietly removed.
