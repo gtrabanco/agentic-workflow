@@ -178,7 +178,7 @@ function printPlan(plan) {
 function main(argv) {
   if (argv.includes("--help") || argv.includes("-h")) {
     process.stdout.write(
-      "usage: node scripts/test-route.mjs --check <path> | --list\n\n"
+      "usage: bun scripts/test-route.mjs --check <path> | --list\n\n"
       + "Prints the minimal suite route a changed path selects. An unmatched path,\n"
       + "an unreadable map, or a route naming a suite that does not exist answers the\n"
       + "full suite — never fewer tests. The planner writes nothing.\n",
@@ -206,7 +206,7 @@ function main(argv) {
 
   const index = argv.indexOf("--check");
   if (index === -1) {
-    process.stderr.write("TEST ROUTE — error\nusage: node scripts/test-route.mjs --check <path> | --list\n");
+    process.stderr.write("TEST ROUTE — error\nusage: bun scripts/test-route.mjs --check <path> | --list\n");
     process.exit(1);
   }
   const changed = argv[index + 1];

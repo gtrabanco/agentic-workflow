@@ -3997,3 +3997,56 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fresh-eyes external verification of fix/357 (skill-lint smell + supply-chain checks) across the full 15-commit branch (merge-base 6e65d0b3 → head 6da1439b). Re-ran every declared validator: sweep PASS 89 files/0 findings, suite 20/20, root gate 1401/1401, budgets PASS, changeset lint OK, phase-lint PASS (fingerprint 6ca43a01), lineage OK (15/15 obligations), promise-coherence PASS 28/13. Adversarial probe with mktemp scratch confirmed all 7 checks fire correctly and usage errors exit 2. Sibling sweep clean: no surviving pre-#357 narration outside the unit doc. Three minor advisories flagged (E6 line-count figure stale at 148 vs 131; SL-07 code requires date-on-line while prose claims expiry alone flags; diff-guard breach inflated by main-side divergence). Verdict: VERIFIED.
 - **Decisions:** Obligations closed with independent re-run (not just trusting E-lines). The README.md F1 blocker from the prior round is genuinely folded — verified by byte diff and rg. The SL-07 under-flagging on expiry-without-date is noted as advisory only (sweep stays clean, frozen acceptance passes, only a prose-vs-code drift inside the unit).
 - **Next:** Owner merge PR #377 if happy with this verification. After merge: prune the feat-357-skill-smells worktree.
+## 2026-11-03T00:53:48Z — fix-329-tool-choice — manual
+- **Commits:** 5 (`d777699d…54d102a1`)
+- **Files:** 31 files
+- **Summary:** Apply fix #329: bun-first tool discipline gate
+- **Decisions:** D3: gate reads fixed tokens only, never parses sentences to be deterministic. D5 (S11): per-file tests are bun-first, full gate stays on node because bun test scripts/ differs on 7 of 1,390 cases (six hit bun's 5-second default test timeout, one is bun's error frame echoing a source comment). D4: silent green replaced by visible skip. D1: bootstrap scripts allowed to keep usage: node because setup-env provisions bun.
+- **Next:** Open PR #380 against main with Closes #329; review the evidence pack in the PR body and merge when ready
+## 2026-11-03T09:52:45Z — fix-329-tool-choice — manual
+- **Commits:** 7 (`d777699d…8fb76b12`)
+- **Files:** 40 files
+- **Summary:** fix #329 advisory batch: tutorial literal sweep + gate scope expansion + evidence re-sampling
+- **Decisions:** D6: the tutorial's instruction pages are the same nearest-literal surface the external verify's root cause named, so the gate's literal scan grows to docs/workflow/** with the same one-line fallback window. Two declared exemptions: bootstrap pair in prose (D1) and REPOSITORY_STATE.md (frozen receipts). E21: bun test scripts/ failure count is load-dependent (7 vs 5); classes (4 bun-5s-timeout + 1 error-frame echo) are the stable fact D5 rests on.
+- **Next:** Verify the gate is green under the next commit that lands on this branch: bun scripts/invocation-drift.mjs + node scripts/run-root-suite.mjs; then open the PR fix/329-tool-choice if not already merged.
+## 2026-11-03T00:47:44Z — fix-333-capabilities — manual
+- **Commits:** 7 (`36180c67…afe02f97`)
+- **Files:** 12 files
+- **Summary:** External verification of fix-333-capabilities: fresh eyes on the diff from base 6e65d0b3 → head 6b6fbfde. All 15 obligations checked, all validators re-ran green (capability-inventory 15/15, residue-dimensions 29/29, context budgets PASS, root-suite 1396/1396, phase-lint PASS), no-vacuity differentials reproduced (14 pass / 1 fail C1), sibling sweep clean (zero old-wording survivors), consumer-diff empty, no rename, no gate shipped to targets.
+- **Decisions:** Blocker threshold: reproducible regression at base vs head only. Advisory threshold: pre-existing defects or frozen history. E9 count imprecision (13 pass → 14 pass on 15-test corpus) was an advisory, not a blocker: the test case is correct and reproduces.
+- **Next:** Merge fix-333-capabilities to main; the unit is verified with 0 blockers.
+
+## 2026-11-03T00:48:33Z — fix-333-capabilities — manual
+- **Commits:** 8 (`36180c67…3c1aca08`)
+- **Files:** 13 files
+- **Summary:** fix/333: applied the capability-inventory seeding contract — init-workspace now infers docs/CAPABILITIES.md from cited paths, asks what evidence cannot settle, and deletes the rows the project type excludes. Cut the unit doc (SPEC, ledgers, decisions), red corpus (15-case suite), procedure (capability-inventory@1), write gate, upgrade pointer, template candidate header, and repo inventory repair. PR #379 merged CI: all green.
+- **Decisions:** Procedure over prose: replaced the single discovery bullet with six ordered moves: classify → delete → infer → ask → forbid → report. Post-write gate is BOOTSTRAP_WRITE.md step 5. Upgrade mode points at the one owner. The red corpus proves the failure: 11/14 cases failed before any prose. Diff-guard exception recorded (1176 lines / 12 files). Pre-existing issue recorded (verification-contract Acceptance criteria section mismatch) — not repaired, outside scope. Unknown: model-run smoke test deferred to next golden-fixture run (PE-013).
+- **Next:** PR #379 (fix-333-capabilities → main, all CI green). External verifier review pending. If approved: owner merge. If rejected: identify blockers, one correction batch, one recheck cycle.
+
+## 2026-11-03T00:42:29Z — feat-365-vuln-research — manual
+- **Commits:** 2 (`e84eb643…8afa93f4`)
+- **Files:** 10 files
+- **Summary:** External verify of fix/365-vuln-research branch (commit 8afa93f4), fold-findings (empty queue), and PR creation for #365
+- **Decisions:** external verifier adopted 'trust bytes, not claims' — no implementer summaries, only git diff and validator runs; external verify returned Verdict: VERIFIED with 0 blockers, 3 advisories (none reproducible on this tree); PR #378 opened base main, 10 files, 2 commits, evidence pack generated from acceptance criteria
+- **Next:** Wait for PR review. If needed: /audit-pr 378 before merge; or follow advisory triage for the three advisory rows (unrealistic --root arg, nonexistent bun.lock alias shape, self-declared diff-guard exception documented in Log G2)
+
+## 2026-11-03T00:43:03Z — feat-365-vuln-research — manual
+- **Commits:** 3 (`e84eb643…9764a18c`)
+- **Files:** 11 files
+- **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
+- **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
+- **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
+
+## 2026-11-03T11:19:04Z — fix/382-red-first-commits — manual
+- **Commits:** 13 (`acc1735f…769e8d1c`)
+- **Files:** 14 files
+- **Summary:** External verify of fix/382-red-first-commits: the red-first gate's introduced() read the oldest add of a path instead of the latest, so a pair deleted and re-added together after the cutoff reported PASS — the exact regression this unit exists to close. The fix landed in two commits (red then green), with a path-protection approval record for the protected suite.
+- **Decisions:** scripts/red-first.test.mjs is a protected path (test-file, freeze:true) so the edit required an owner-approval record in decisions.md rather than a self-approval; the guard discriminates correctly (pass/approved with row, fail/approval-required without)
+- **Next:** Push the 2 commits (cbeaa9f1, 769e8d1c) to origin/fix/382-red-first-commits, then re-run the full external verify to close the cycle
+
+## 2026-11-03T11:30:16Z — fix/382-red-first-commits — manual
+- **Commits:** 14 (`acc1735f…7f031169`)
+- **Files:** 15 files
+- **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
+- **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
+- **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
