@@ -170,7 +170,6 @@ proves it. Frozen at cut.
 ## Log
 
 Append-only. `L1` is the issue text verbatim; the owner's corrections are `L2`/`L3`, quoted in their own words.
-
 - **L1** — 2026-11-03, the issue, verbatim:
   ```
 ## Parent
@@ -222,48 +221,42 @@ The owner decides at triage whether wall-clock is in scope at all or tokens + ph
 - **E3** — 2026-11-03, `rg -c 'tier-cost|TIER_COST' scripts packages skills -g '!node_modules'` · exit 1 (no matches) · no prior instrument to supersede, so `## Retirements` states a reason rather than a task.
 - **E4** — 2026-11-03, `rg -n 'pi-coding-agent' packages/pi-agentic-workflow/package.json` · exit 0 · `">=0.99.1"` — the floor P6 raises.
 - **E5** — 2026-11-03, `rg -c 'durationMs' ~/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/types.d.ts` · exit 0 · `2` — `tool_execution_end.durationMs` exists in the installed pi 1.5.0.
-
 - **P1** — 2026-11-03, cut the unit doc, its two ledgers, the acceptance criteria and the roadmap row, then landed the corpus alone and red · `55983196` (plan) + `02486199` (corpus) + `56ff1cca` (widened corpus, still red).
 - **E6** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` with `scripts/tier-cost.mjs` absent · exit 1 · `ERR_MODULE_NOT_FOUND: Cannot find module …/scripts/tier-cost.mjs` — the red run of the final corpus, all 9 cases failing on the missing module.
 - **P2** — 2026-11-03, the instrument plus the shared reader's third shape · `30ad8f7f`.
 - **E7** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` · exit 0 · `ℹ tests 9 · ℹ pass 9 · ℹ fail 0`; `bun test scripts/tier-cost.test.mjs` · exit 0 · `9 pass · 0 fail`.
 - **E8** — 2026-11-03, differential `bun scripts/ceremony.mjs tier plan` — base `626e4461`: `totals 128 · recorded 1 · {passive 1, standard 0, high 0}`; head: `totals 129 · recorded 2 · {passive 1, standard 1, high 0}`. The declared difference is this unit's own doc plus the `## Risk tier` shape its template orders (O16); nothing else moved.
 - **G1** — 2026-11-03, `node scripts/run-root-suite.mjs` at `30ad8f7f` · exit 0 · `ℹ tests 1522 · ℹ suites 33 · ℹ pass 1521 · ℹ fail 0 · ℹ skipped 1`.
-
 - **P3** — 2026-11-03, published `docs/workflow/TIER_COST.md` (grammar, writer, the empty table), its `normative-surfaces@1` row, its place in `docs/workflow/README.md` and the re-pinned `machineLines` (91 → 92, estimate 6,814 inside 6,881). The ownership-map row is `n/a` with its evidence: AC16's seven classes are frozen and a ruling is recorded in `## Future` (O7, O17).
 - **E9** — 2026-11-03, `bun scripts/tier-cost.mjs read --ledger docs/workflow/TIER_COST.md` · exit 0 · `columns` = the eleven published names, `rows: []`; `bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md` · exit 2 · `insufficient-corpus` — S6's verdict on the real, empty corpus.
 - **E10** — 2026-11-03, `bun test scripts/normative-drift.test.mjs` · 21 pass · 0 fail; `bun test scripts/workflow-docs-index.test.mjs` · 5 pass · 0 fail; `bun test scripts/ledger-ownership.test.mjs` · 12 pass · 0 fail; `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 3 budgeted documents`.
 - **E11** — 2026-11-03, `node --test scripts/tier-cost.test.mjs` · exit 0 · `ℹ tests 10 · ℹ pass 10 · ℹ fail 0` — the empty-ledger case landed red (`column-set`/`clean bill`) before the two fixes it forced (the `ceremony_skipped` declaration and the zero-sample verdict).
-
 - **G2** — 2026-11-03, `node scripts/run-root-suite.mjs` at `83004092` · exit 0 · `ℹ tests 1523 · ℹ suites 33 · ℹ pass 1522 · ℹ fail 0 · ℹ skipped 1`.
-
 - **P4** — 2026-11-03, the session accumulator and its sink interface in the package · `13ea336b` (suite `b9bd5acc`).
 - **E12** — 2026-11-03, `node --test test/session-telemetry.test.mjs` with `dist/session-telemetry.js` absent · exit 1 · `ERR_MODULE_NOT_FOUND … dist/session-telemetry.js` — the red run of the final corpus, all 9 cases failing on the missing module.
 - **E13** — 2026-11-03, `bun scripts/bundle-skills.mjs` · `bundled 27 skills (87 files)`; `bun test test/*.test.mjs` · exit 0 · `466 pass · 0 fail` (39 files).
 - **E14** — 2026-11-03, differential in a detached worktree at `626e4461`: the same package suite reports `457 pass · 35 fail` **without** `bundle:skills` staged and `457 pass · 0 fail` with it — so those 35 were the un-staged skills tree in this environment, never this change; head adds 9 tests, all green.
 - **E15** — 2026-11-03, `rg -c 'wall_clock|wall-clock|\belapsed\b|savings' scripts/tier-cost.mjs docs/workflow/TIER_COST.md` · exit 1 (0 matches) — S4a holds across the instrument and the ledger.
-
 - **P5** — 2026-11-03, the metric sink, its round trip and the ownership amendment. The grammar settled at **eight stored columns** after the sink proved that `tier`, `changed_paths`' size tier and the two ceremony counts are all reader-derived repository facts: storing them would be a second home, so the row is exactly what was measured.
 - **E16** — 2026-11-03, `node --test test/telemetry-ledger-sink.test.mjs` · exit 0 · `6 pass · 0 fail`; the round-trip case reads the sink's row back through `scripts/tier-cost.mjs` (`readLedger` → same tokens, turns, `model_ms`, `tool_ms`; `compare` → `insufficient-corpus`).
 - **E17** — 2026-11-03, `bun scripts/bundle-skills.mjs` + `bun test test/*.test.mjs` · exit 0 · `472 pass · 0 fail` (40 files).
 - **E18** — 2026-11-03, `node --test scripts/ledger-ownership.test.mjs` · exit 0 · `12 pass · 0 fail` — the `tier-cost` class, `docs/workflow/TIER_COST.md` as the one extra location, and `pi-agentic-workflow:session-telemetry` as an owner all traverse the scan; AC16's third amendment is recorded in the unit 28 manifest with the owner's approval.
 - **G3** — 2026-11-03, `node scripts/run-root-suite.mjs` · exit 0 · `ℹ tests 1523 · ℹ suites 33 · ℹ pass 1522 · ℹ fail 0 · ℹ skipped 1`; `bun scripts/check-skill-context.mjs --documents` · `PASS context documents: 3 budgeted documents`.
-
 - **P6** — 2026-11-03, the floor is **1.1.0**, not 1.5.0: `tool_execution_end.durationMs` is the only pi surface this unit needs, and it is the one 1.0.4 lacks. The `major` intent ships as a changeset, because this repository generates its CHANGELOG at release rather than by hand.
 - **E19** — 2026-11-03, `npm pack @earendil-works/pi-coding-agent@1.0.4`/`@1.1.0` → `rg -c durationMs dist/core/extensions/types.d.ts` · nothing vs `2`; `TurnStartEvent.timestamp` present in both — PE-014 resolved against published types, not the changelog.
 - **E20** — 2026-11-03, `node --test test/verified-baseline.test.mjs` · exit 0 · `3 pass · 0 fail`; `bun scripts/lint-changeset.mjs` · exit 0; `bun scripts/version-parity-gate.mjs --content --base origin/main` · exit 0 · `changeset route … VERDICT: PASS`.
-
 - **P5 (second half)** — 2026-11-03, the wiring: five lifecycle listeners, the `telemetry` switch (off by default, one boolean, strict parser), the command→unit note, and the ledger sink registration on the first measured session. The default path count is the session's own scope (`git diff start..HEAD` plus the dirty tree), so a long-lived branch is never charged to the unit that happened to end it.
 - **E21** — 2026-11-03, `node --test test/telemetry-wiring.test.mjs` · exit 0 · `7 pass · 0 fail` — off registers nothing, the unit comes from the dispatched command, one session emits one sample, a session with no unit emits nothing, the switch parses strictly, and the scope counts the session's own paths.
 - **E22** — 2026-11-03, `bun scripts/bundle-skills.mjs` + `bun test test/*.test.mjs` · exit 0 · `479 pass · 0 fail` (41 files).
-
 - **P7** — 2026-11-03, the differential and the final gate. `tier classify` and `tier read` are byte-identical to the base; `tier plan` differs by exactly the declared row and counts. The unit doc failed `phase-lint` twice on P6's prose (a creation verb counted its paths; then a decision word) — the task text was tightened rather than the rule relaxed, and every box now passes on its own merits.
 - **E23** — 2026-11-03, `bun scripts/ceremony.mjs tier classify|read|plan` in `.worktrees/base` (`626e4461`) and in this branch · classify `b223095c…` both, read `ed05b8d0…` both, plan `a215acc1…` vs `6258015d…` — the plan diff is `totals 128 → 129`, `recorded 1 → 2`, `standard 0 → 1` and the row for `383-measured-acceptance`.
 - **G4** — 2026-11-03, `bun scripts/phase-lint.mjs docs/fix/383-measured-acceptance/SPEC.md` · exit 0 · `verdict PASS`; `node scripts/run-root-suite.mjs` · `ℹ tests 1523 · suites 33 · pass 1522 · fail 0 · skipped 1`; package suite · `479 pass · 0 fail`.
 
+- **P7a** — 2026-11-03, the owner's review of the diff surfaced five defects in the unit's own paperwork, all fixed in one batch: a blank line that orphaned `O17` out of the obligations table, `O14` still claiming a `1.5.0` floor, `O15` claiming a differential that had not run, a `## Next` still pointing at `P1`, and blank lines splitting the `## Log` list. No behaviour changed; every gate re-ran.
+
 ## Next
 
-P1 — cut row in `docs/ROADMAP.md`, then land `scripts/tier-cost.test.mjs` alone as the red commit.
+External verification of this branch. The unit's own steps are closed; nothing opens a PR, publishes the branch or merges until the owner's verdict, and `#394` then consumes the accumulator this unit ships.
 
 ## References
 
