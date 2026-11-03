@@ -213,7 +213,7 @@ function commandShow(argv) {
 function main(argv) {
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h")) {
     process.stdout.write(
-      "usage: node scripts/review-state.mjs record|mark|check|show [--unit <slug>] …\n\n"
+      "usage: bun scripts/review-state.mjs record|mark|check|show [--unit <slug>] …\n\n"
       + "The single writer of .review-state/review-state.json: it derives the\n"
       + "affecting-path inventory from git, records reviewed@<sha> or skipped@<sha>,\n"
       + "reopens a skip a later commit invalidated, and answers coverage closure as\n"

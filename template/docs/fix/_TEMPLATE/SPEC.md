@@ -53,7 +53,7 @@ this surface, it is not rediscovered at review.
 
 What this fix makes obsolete: every surface, token, pane, helper, contract or
 narrative this unit **retires**, each with its replacement or its no-consumer
-evidence (`grep -rc '<the removed name>' <scope>` → 0). A fix that only adds is
+evidence (`rg -c '<the removed name>' <scope>` → 0; `grep -c` is the fallback when rg is absent). A fix that only adds is
 the exceptional case: an empty answer states *why nothing can be removed*, so
 the omission is a reason rather than a gap. Cut at plan time — a retirement is a
 planned task with its negative-capability pin, never a review-time discovery.
@@ -114,7 +114,7 @@ A red gate is never excused by an unrecorded issue.
 P1…Pn with stable IDs, one line each, smallest first. Final task is verification
 when the unit has behavior. Each task carries its validator — a backticked
 command plus its expected outcome (for example
-``(validator: `node --test scripts/x.test.mjs` exits 0)``) — an
+``(validator: `bun test scripts/x.test.mjs` exits 0)``) — an
 `(Implements: S1, S2)` line naming the requirements it delivers, and may carry a
 nested `Relevant files: <path, path…>` line: **metadata, never a task** (owner:
 `skills/phase-contract/SKILL.md`).

@@ -172,7 +172,7 @@ function main() {
     if (argv[i] === "--changeset-dir") dir = path.resolve(argv[++i]);
     else if (argv[i] === "--help" || argv[i] === "-h") {
       console.log(
-        "usage: node scripts/lint-changeset.mjs [--changeset-dir DIR] [files...]\n" +
+        "usage: bun scripts/lint-changeset.mjs [--changeset-dir DIR] [files...]\n" +
           "Lints changesets-format intent files; exit 0 valid, 1 malformed (fail closed).",
       );
       process.exit(0);

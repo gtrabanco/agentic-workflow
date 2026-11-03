@@ -43,12 +43,15 @@ const fromIssue = safeRead("skills/plan-feature-from-issue/SKILL.md");
 const plugin = JSON.parse(read(".claude-plugin/plugin.json"));
 const skillsSh = JSON.parse(read("skills.sh.json"));
 
-// P8b: guard — most assertions in this file depend on deleted skills.
-// If none of the key deleted skills exist, skip the file entirely.
-if (!grounding && !reviewSpec && !designFeature && !planFeature) {
-  console.log("SKIP pre-execution-quality: deleted skills (evidence-grounding, review-spec, design-feature, plan-feature) all absent");
-  process.exit(0);
-}
+// P8b: guard — most assertions in this file depend on deleted skills. When none
+// of the key deleted skills exist, register a skip the runner counts (issue #329
+// S8: `bun test`/`node --test` must report it, never a bare green) and keep the
+// rest of the file inside this guard.
+const deletedSkillsAbsent = !grounding && !reviewSpec && !designFeature && !planFeature;
+if (deletedSkillsAbsent) {
+  test("pre-execution-quality: deleted-skill fixtures", { skip: "deleted skills (evidence-grounding, review-spec, design-feature, plan-feature) all absent" }, () => {});
+  console.log("SKIP pre-execution-quality: deleted skills (evidence-grounding, review-spec, design-feature, plan-feature) all absent — reported to the runner as a skip");
+} else {
 
 // --- closed vocabularies (single source of truth: the skills' own text) --------
 
@@ -1630,3 +1633,4 @@ test("normalizer inventory: one home, and every entry names its side of the free
 });
 
 console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution, delegated evidence, normalizer order");
+}

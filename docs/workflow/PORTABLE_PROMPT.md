@@ -147,7 +147,7 @@ the frozen ledger and route missing or contradictory state to these skills.
    contradicted, silently exceeded, or left untouched), and synthesize ONE classified
    table + an explicit manual-verification checklist. Give **every finding a
    destination**: fix-now folds into the current unit's open phase, replan-in-unit
-   runs `node scripts/unit-route.mjs <unit>` so the planner its `route: replan`
+   runs `bun scripts/unit-route.mjs <unit>` so the planner its `route: replan`
    line names appends user-confirmed phases, decision-required surfaces to the user, and
    independent proposals are batched for explicit user triage (never create
    backlog yourself). Findings only; on failure recommend the manual path
