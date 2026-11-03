@@ -41,7 +41,7 @@ const write = (root, rel, text) => {
 };
 
 const CARVE_OUT =
-  "The suite is the one measured exception: `bun test scripts/<file>.test.mjs` is the per-file runner, `node --test scripts/<file>.test.mjs` is its fallback, `node scripts/run-root-suite.mjs` runs the gate, and `bun scripts/run-root-suite.mjs` fails by construction.";
+  "The suite's rule extends to the gate: `bun test scripts/<file>.test.mjs` is the per-file runner, `node --test scripts/<file>.test.mjs` is its fallback, the whole gate runs under either runtime, and the CI leg `node scripts/run-root-suite.mjs` budgets a 60s per-test timeout on the bun leg.";
 
 /** A tree every rule accepts, so each case below plants exactly one defect. */
 function compliantTree(name) {

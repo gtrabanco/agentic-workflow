@@ -4070,3 +4070,23 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
 - **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
 - **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)
+
+## 2026-11-03T14:38:50Z — fix/root-suite-bun-node-compat — manual
+- **Commits:** 2 (`3586fad3…bf1c79d5`)
+- **Files:** .github/workflows/root-suite.yml, scripts/ceremony-findings-ledger.test.mjs, scripts/fixtures/ceremony-findings-ledger/review-findings.md, scripts/run-root-suite.mjs
+- **Summary:** Optimize root-suite CI with paths-ignore and add Bun/Node compatibility
+- **Decisions:** paths-ignore: added wildcard globs (docs/**, .changeset/**, README.md, AGENTS.md, template/**) to skip CI runs when only docs/metadata change. Tests reading from docs/ use git history-based SHA verification (require full checkout) — migrated ceremony-findings-ledger to hermetic fixture to make one test doc-independent. Kept Node.js fallback for CI jobs needing tsc/npm resolution (not a bun portability issue). ledger-provenance tests (pre-existing ~16s timeout vs 30s limit, not in root gate) unchanged.
+- **Next:** /triage-issue on PR #389 to review and merge: fix/root-suite-bun-node-compat → main (2 commits, 4 files changed, ~1230 insertions)
+
+## 2026-11-03T14:51:53Z — fix/root-suite-bun-node-compat — manual
+- **Commits:** 3 (`3586fad3…0964c0ff`)
+- **Files:** .github/workflows/root-suite.yml, docs/LOGS.md, scripts/ceremony-findings-ledger.test.mjs, scripts/fixtures/ceremony-findings-ledger/review-findings.md, scripts/run-root-suite.mjs
+- **Summary:** Fix root-suite bun/node compatibility: make run-root-suite.mjs work with both bun and node test runners; migrate ceremony-findings-ledger to fixture dir; add CI paths-ignore
+- **Decisions:** D1: bun-first convention kept but run-root-suite now detects runtime and adapts; D2: ceremony-findings-ledger test migrated to hermetic fixture; D3: CI paths-ignore added to skip doc-only runs
+- **Next:** Review and merge PR on GitHub (fix/root-suite-bun-node-compat → main); resolve the author identity issue that was just fixed (pi-automated → Gabriel Trabanco Llano)
+
+## 2026-11-03T15:17:19Z — fix/root-suite-bun-node-compat — manual
+- **Commits:** 6 (`3586fad3…c00314ca`)
+- **Files:** 8 files
+- **Summary:** Complete PR #389 (root-suite bun/node compat): fixed 2 bun-only failures in code (ledger-provenance timeout 30s→60s in run-root-suite; schema-runtime comment no longer carries ERR_MODULE_NOT_FOUND token echoed by bun error frame); dropped paths-ignore globs from root-suite.yml that skipped drift gates reading AGENTS.md/docs/**/template/**; re-pinned guide facts (AGENTS.md runtime paragraph, invocation-drift SUITE_CARVE_OUT + fixture). CI green node 1472/0, bun 1470/0. Also fixed repo-local git identity override (user.name=pi-automated in .git/config) that made agent commits authored as pi-automated instead of the owner; unsetting that config so future commits use the owner GitHub identity.
+
