@@ -603,7 +603,7 @@ test("F7/F8: a mixed-vocabulary fold ledger is normalized, and an unusable row i
   assert.ok(!items.some((item) => /^[-:]*$/.test(item.id)), "a separator row never projects a finding");
   assert.match(
     envelope.detail.workflow_observations.join("\n"),
-    /dropped review-findings row 'F2'.*prose.*outside high\|med\|low/,
+    /dropped review-findings row 'F2'.*prose.*outside the published ladder/,
     "a dropped row is named, never silent",
   );
   assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
@@ -1369,8 +1369,8 @@ function migratedSpec({ findings = [], log = [], status = "in-progress" } = {}) 
     "## Applicable tests", "", "n/a — no tests step for this unit", "",
     "## Known pre-existing issues", "", "none", "",
     "## Tasks", "", "- P1 — do the thing (validator: `true` exits 0)", "  (Implements: S1)", "",
-    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
-    "|---|---|---|---|---|---|",
+    "## Findings", "", "| id | S# / file:line | axis | severity | impact | class | route |",
+    "|---|---|---|---|---|---|---|",
     ...findings,
     "", "## Log", "", "- **L1** — 2026-10-01, the request, verbatim: Do the thing.",
     ...log,
@@ -1381,8 +1381,8 @@ function migratedSpec({ findings = [], log = [], status = "in-progress" } = {}) 
 test("#308 a migrated unit's OPEN ## Findings rows project as fix-now, exactly like the ledger", () => {
   const spec = migratedSpec({
     findings: [
-      "| F1 | S1 · scripts/a.mjs:1 | code | med | fix-now | fold into phase |",
-      "| F2 | S1 · scripts/b.mjs:2 | code | high | fix-now | replan-in-unit: plan owner |",
+      "| F1 | S1 · scripts/a.mjs:1 | code | WARNING | blocking | fix-now | fold into phase |",
+      "| F2 | S1 · scripts/b.mjs:2 | code | CRITICAL | blocking | fix-now | replan-in-unit: plan owner |",
     ],
   });
   const result = makeFixture({
@@ -1399,6 +1399,34 @@ test("#308 a migrated unit's OPEN ## Findings rows project as fix-now, exactly l
     trigger: "an open finding's frozen route is the plan owner — replan-in-unit (F2)",
     source_skill: "unit-lane",
   }], "the plan-owned row wins the route table, read out of the doc");
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("#361 the ladder projects onto the envelope's unchanged severity enum", () => {
+  const spec = migratedSpec({
+    findings: [
+      "| F1 | S1 · scripts/a.mjs:1 | code | BLOCKER | blocking | source | fold |",
+      "| F2 | S1 · scripts/b.mjs:2 | code | CRITICAL | blocking | source | fold |",
+      "| F3 | S1 · scripts/c.mjs:3 | code | WARNING | docs-only | source | fold |",
+      "| F4 | S1 · scripts/d.mjs:4 | code | SUGGESTION | report-only | source | fold |",
+      "| F5 | S1 · scripts/e.mjs:5 | code | high | blocking | fix-now | fold |",
+    ],
+  });
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/SPEC.md": spec },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const byId = new Map(envelope.findings.fix_now.map((item) => [item.id, item]));
+  assert.deepEqual(
+    ["F1", "F2", "F3", "F4"].map((id) => byId.get(id)?.severity),
+    ["high", "high", "med", "low"],
+    "every ladder token projects, highest first",
+  );
+  assert.equal(byId.get("F1").suggested_tier, "strong", "a blocker is a strong tier");
+  assert.equal(byId.get("F1").impact, undefined, "the impact cell never leaks into the envelope");
+  assert.equal(byId.get("F5").severity, "high", "a legacy carrier cell still projects exactly as before");
   assert.equal(validateEnvelope(envelope).ok, true);
 });
 
@@ -1554,7 +1582,7 @@ test("#308 F38: no control or format character survives the sensor's echo of led
     roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
     extraFiles: {
       "docs/features/90-alpha/SPEC.md": migratedSpec({
-        findings: ["| F1\u200b | S1\u200b·\u202e scripts/a.mjs:1 | code | med | fix-now | fold: repair \u2028the defect |"],
+        findings: ["| F1\u200b | S1\u200b·\u202e scripts/a.mjs:1 | code | WARNING | blocking | fix-now | fold: repair \u2028the defect |"],
         log: ["- **G1** — \u0085`node --test scripts/*.test.mjs` · exit 0\u200b."],
       }),
     },
@@ -1595,15 +1623,15 @@ test("#308 F45 a `## Findings` heading quoted inside a fence does not make a leg
     "## Tasks", "", "### P1 — sample", "", "Layer: config/infra. Done-when: `true` exits 0.", "",
     "## Evidence", "", "| AC | What | Exit | Output | Verified-by |", "|---|---|---|---|---|", "",
     "The re-cut carrier looks like this, in a fence only:", "", "```markdown",
-    "## Findings", "", "| id | S# / file:line | axis | severity | class | route |",
-    "|---|---|---|---|---|---|",
-    "| F9 | S1 · scripts/z.mjs:9 | code | high | source | fold: quoted, not real |",
+    "## Findings", "", "| id | S# / file:line | axis | severity | impact | class | route |",
+    "|---|---|---|---|---|---|---|",
+    "| F9 | S1 · scripts/z.mjs:9 | code | high | blocking | source | fold: quoted, not real |",
     "```", "", "## Progress log", "", "`2026-10-26 — quoted fence → abc1234`", "",
     "## Next", "", "P1.", "", "## References", "", "none", "",
   ].join("\n");
   const ledger = [
     "| id | file:line | axis | severity | class | route | folded |",
-    "|---|---|---|---|---|---|---|",
+    "|---|---|---|---|---|---|---|---|",
     "| F1 | scripts/a.mjs:1 | code | med | fix-now | fold into phase | no |",
   ].join("\n");
   const fixture = makeFixture({

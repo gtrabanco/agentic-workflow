@@ -43,8 +43,8 @@ none
 
 OPEN rows only; none here.
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
 
 ## Log
 

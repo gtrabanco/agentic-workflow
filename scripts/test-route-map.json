@@ -106,6 +106,16 @@
       ]
     },
     {
+      "name": "skill-lint",
+      "globs": [
+        "scripts/skill-lint.mjs",
+        "scripts/skill-lint.test.mjs"
+      ],
+      "suites": [
+        "scripts/skill-lint.test.mjs"
+      ]
+    },
+    {
       "name": "skills-content",
       "globs": [
         "skills/**"
@@ -193,6 +203,16 @@
       ],
       "suites": [
         "scripts/dependency-advisory-pass.test.mjs"
+      ]
+    },
+    {
+      "name": "red-first",
+      "globs": [
+        "scripts/red-first.mjs",
+        "scripts/red-first.test.mjs"
+      ],
+      "suites": [
+        "scripts/red-first.test.mjs"
       ]
     }
   ]

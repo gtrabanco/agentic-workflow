@@ -3969,6 +3969,34 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+
+## 2026-11-03T00:53:44Z — feat-357-skill-smells — manual
+- **Commits:** 11 (`e006b3fb…356653bf`)
+- **Files:** 14 files
+- **Summary:** Issue #357 applied: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut, 15 obligations verified, all gates green, PR #377 opened and all three checks passing. diff-guard exception recorded.
+- **Decisions:** S2 is a marker-shape rule (prose body flags, namespace-field admitted). S8 needs both date AND currency word. S3 scoped to description only. Full-scope includes references/.
+- **Next:** Owner's PR #377 verdict. The template/AGENTS.md rider is open in the unit doc's ## Future.
+
+## 2026-11-03T00:57:00Z — feat-357-skill-smells — manual
+- **Commits:** 12 (`e006b3fb…7ea79273`)
+- **Files:** 15 files
+- **Summary:** Issue #357 applied end-to-end: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut with two planning ledgers (13 PE rows, 15 obligations), all 15 verified. PR #377 opened, all three checks green (root-suite 1m46s, pi-compat-guard 25s, dependency-pin-gate 11s). diff-guard exception recorded (14 files, 1150+ lines).
+- **Decisions:** S2 is marker-shape rule (prose body flags, namespace-field admitted — bans only hidden prose, not repo receipt contract). S8 needs both date AND currency word so provenance dates stay clean. S3 scoped to description only — 17 placeholder argument hints would false-positive. Full-scope includes references/ because skills add ships the folder. One recorded exception: diff-guard BREACH 1150+ lines / 14 files — mandatory unit doc + scanner + reference, stacking forbidden by AGENTS.md.
+- **Next:** Owner PR #377 verdict — merge gate is you. The template/AGENTS.md rider is open in the unit doc's Future.
+
+## 2026-11-03T10:43:55Z — feat-357-skill-smells — external verify
+- **Commits:** 1 (`8711fb8b`)
+- **Files:** README.md, docs/fix/357-skill-lint-smells-supply-chain/SPEC.md
+- **Summary:** Fresh-eyes verification of fix/357 (base merge-base `6e65d0b3` · head `356653bf`). All 15 obligations re-ran green (sweep PASS 89/0, suite 20/20, root gate 1401/1401, budgets, changeset, phase-lint PASS, lineage OK, promise-coherence PASS · 28 checked · 13 skipped). Three findings emerged: F1 blocker — README.md:138 still narrated the pre-#357 contract (no content checks), while the same narration was rewritten in AGENTS.md/SKILLS.md/FEATURE_WORKFLOW.md (F51 class); F2/F3 — the SPEC validator cells S9/P4 stated counts that never held (`rg -c 'Skipped'` matched 0, not 1; `rg -c 'CHECKS.md'` matched 3, not 1). All three folded in one batch: README reworded to mirror SKILLS.md, validator cells corrected to reproducible counts, G4 file set updated, round recorded as E9 + F1–F3 in the Log.
+- **Decisions:** The README fix was the sole blocker — the other two were doc drift (SPEC cells never verified at cut). The gate's own pair lands red-first (suite `b8461b4f` → implementation `1374ea96`).
+- **Next:** Owner merge PR #377 — the merge closes #357, removes the row 94 entry from '## Fixes' to the merged history. After merge: the fix-357-skill-smells worktree can be pruned.
+
+## 2026-11-03T10:55:48Z — feat-357-skill-smells — manual
+- **Commits:** 15 (`e006b3fb…6da1439b`)
+- **Files:** 16 files
+- **Summary:** Fresh-eyes external verification of fix/357 (skill-lint smell + supply-chain checks) across the full 15-commit branch (merge-base 6e65d0b3 → head 6da1439b). Re-ran every declared validator: sweep PASS 89 files/0 findings, suite 20/20, root gate 1401/1401, budgets PASS, changeset lint OK, phase-lint PASS (fingerprint 6ca43a01), lineage OK (15/15 obligations), promise-coherence PASS 28/13. Adversarial probe with mktemp scratch confirmed all 7 checks fire correctly and usage errors exit 2. Sibling sweep clean: no surviving pre-#357 narration outside the unit doc. Three minor advisories flagged (E6 line-count figure stale at 148 vs 131; SL-07 code requires date-on-line while prose claims expiry alone flags; diff-guard breach inflated by main-side divergence). Verdict: VERIFIED.
+- **Decisions:** Obligations closed with independent re-run (not just trusting E-lines). The README.md F1 blocker from the prior round is genuinely folded — verified by byte diff and rg. The SL-07 under-flagging on expiry-without-date is noted as advisory only (sweep stays clean, frozen acceptance passes, only a prose-vs-code drift inside the unit).
+- **Next:** Owner merge PR #377 if happy with this verification. After merge: prune the feat-357-skill-smells worktree.
 ## 2026-11-03T00:53:48Z — fix-329-tool-choice — manual
 - **Commits:** 5 (`d777699d…54d102a1`)
 - **Files:** 31 files
@@ -4008,6 +4036,20 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
 - **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
 - **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
+## 2026-11-03T09:53:54Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 14 (`daf07e1b…a5953e8a`)
+- **Files:** 65 files
+- **Summary:** feat(361): PR 381 for the finding-severity-ladder — merged main's two latest changes, fixed CI content-gate, all green
+- **Decisions:** PR 381 created against main; main moved twice (PRs #378 and #379/#333), integrated as merges; resolved ROADMAP.md conflicts and baseline-advisory repetition by citing CLASSIFY.md owner; changeset missing @gtrabanco/agentic-workflow package — gate only runs in CI, so local pass hid it
+- **Next:** Merge PR #381 (mergeable: clean, all CI green); then run /audit-pr 381
+
+## 2026-11-03T10:43:53Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 17 (`daf07e1b…0e213001`)
+- **Files:** 66 files
+- **Summary:** External verification of fix/361: the finding-severity-ladder unit — caught one blocker (fold-findings frozen-severity re-review override narrowed to BLOCKER-only, missing CRITICAL which the change's own conversion maps from the retired ledger high) and three advisories (sweep evidence inaccurate, stale line pointers, one-home gate sensitivity) — all repaired. Verdict: VERIFIED.
+- **Decisions:** Owner chose option 1: the fold-findings override fires on BLOCKER or CRITICAL (preserving the radius the retired ledger's high forced, consistent with SENSOR_CORE.md and review-change widening). The block was fixed with a three-line table rewrite and a documentation decision entry (D10). Advisories 1-2 fixed: CLASSIFY.md line pointers replaced by symbol citations; unit doc sweep evidence corrected to name the two pre-existing budget-journal narrations. Advisory 3 (one-home gate sensitivity) left as designed behavior.
+- **Next:** Open PR #381 if not already open, then merge fix/361-finding-severity-ladder to main. After merge: close issue #361, track #362 (computed correction budget) and #363 (differential baseline check) as the planned follow-ups consuming the severity ladder.
+
 ## 2026-11-03T10:54:28Z — fix/360 — manual
 - **Commits:** 10 (`87ae66a6…87c83d46`)
 - **Files:** 31 files
@@ -4021,9 +4063,31 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/360: implemented the risk-tiered ceremony classifier and its machine surfaces
 - **Decisions:** D1: size_tier and risk_tier are two separate facts under detail, next.tier kept untouched; D2: capability analysis deferred to 360c (list matching rejected); m1-b: passive carrier written only by CLI; m2-b: risk-tiers.md cited by path, not loaded on execute routes; split #360 into three units (360a here, 360b=#383 for S9, 360c=#384 for capability+passive-writer); SERENA.md ceiling re-based after main's 1a91657b reddened the gate; fix changeset lint, bind size tier vocab, correct declared validators
 - **Next:** /unit-lane --fix 383 to build S9 measured acceptance; /unit-lane --fix 384 for capability-based risk detection and the passive carrier CLI
+
+## 2026-11-03T11:19:04Z — fix/382-red-first-commits — manual
+- **Commits:** 13 (`acc1735f…769e8d1c`)
+- **Files:** 14 files
+- **Summary:** External verify of fix/382-red-first-commits: the red-first gate's introduced() read the oldest add of a path instead of the latest, so a pair deleted and re-added together after the cutoff reported PASS — the exact regression this unit exists to close. The fix landed in two commits (red then green), with a path-protection approval record for the protected suite.
+- **Decisions:** scripts/red-first.test.mjs is a protected path (test-file, freeze:true) so the edit required an owner-approval record in decisions.md rather than a self-approval; the guard discriminates correctly (pass/approved with row, fail/approval-required without)
+- **Next:** Push the 2 commits (cbeaa9f1, 769e8d1c) to origin/fix/382-red-first-commits, then re-run the full external verify to close the cycle
+
 ## 2026-11-03T11:23:46Z — fix/360 — manual
 - **Commits:** 13 (`87ae66a6…39ff962f`)
 - **Files:** 32 files
 - **Summary:** fix/360 external verification and PR creation — verified the risk-tiered ceremony classifier (360a) against base 1f527d45, all 267 tests across 7 suites green, all 17 obligations verified with running validators, no blockers found; then rebased onto origin/main to resolve merge conflicts in SKILL_CONTEXT_BUDGETS.json (329 tool-choice growth), committed the merge, pushed fix/360 to origin, and created PR #387 (https://github.com/gtrabanco/agentic-workflow/pull/387) against main
 - **Decisions:** External verify: trusted bytes over claims — ran all tests against a scratch copy of base commit 1f527d45 to prove the red-to-green differential; all new tests (risk-tier-classifier, risk-tier-ceremony, vocabulary-parity, normative-drift, unit-doc-contract, lint-changeset, workflow-status-sensor) and pre-existing gates stay green; sibling sweep found no stale mentions of old paths or conflation of next.tier with risk_tier. Rebase merge: chose git merge over rebase to avoid the 16-way context-free conflict pattern in SKILL_CONTEXT_BUDGETS.json — resolved by keeping origin/main's higher estimate values (fix 329 came later) while preserving both the 329 and 360 source annotations, then correcting 8 truncated JSON source lines that the regex-based resolver had missed
 - **Next:** PR #387 is open and green — await human merge; after merge, 360b (#383, S9 measured acceptance) and 360c (#384, capability analysis + passive carrier CLI) are the next units in the #360 chain
+
+## 2026-11-03T11:30:16Z — fix/382-red-first-commits — manual
+- **Commits:** 14 (`acc1735f…7f031169`)
+- **Files:** 15 files
+- **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
+- **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
+- **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
+
+## 2026-11-03T13:02:27Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 22 (`daf07e1b…ebd676ac`)
+- **Files:** 68 files
+- **Summary:** Merge PR #381 fix/361-finding-severity-ladder into main and repair two post-merge regressions that red the root suite.
+- **Decisions:** D1: skill-lint merge resolution used main's structure as the base (the mechanical half from #357) and grafted 361's eighth authoring rule into it. D2: raised the O14 authoring-rule count from 7 to 8 in the test, with owner approval recorded in decisions.md. D3: rewrote SERENA.md's worktree section to remove duplication and pass the context budget without re-basing. D4: fixed the invocation-drift violation (node-command-literal) in skill-lint's Portability section.
+- **Next:** Merge PR #381 (root-suite clean: 1472 pass / 0 fail; mergeStateStatus: CLEAN)

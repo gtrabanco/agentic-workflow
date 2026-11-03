@@ -197,8 +197,8 @@ OPEN rows only: a row a review persisted as fix-now work and no fold has closed.
 A folded row leaves this table and becomes a \`## Log\` line. Rows are appended by
 \`review-change\` and \`triage-issue\`.
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
 
 ## Log
 

@@ -1,7 +1,11 @@
 # 91 — clean-future
 
 > Fixture: every declared vocabulary token in range. The probe must pass this
-> document without a violation.
+> document without a violation. Its two findings rows are the frozen corpus
+> `#361` exists for — the two live rows of
+> `docs/features/79-spec-by-reference/review-findings.md` (F5, a functional
+> defect; F12, a docs-only drift) — carried in the seven-column grammar, where
+> the `impact` cell is what finally separates them.
 
 ## Future
 
@@ -20,10 +24,10 @@ fence walk, one of them dead).
 
 ## Findings
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
-| F1 | S1 · docs/features/91-clean-future/SPEC.md:9 | code | med | source | fold |
-| F2 | S2 · docs/features/91-clean-future/SPEC.md:10 | code | high | product | replan-in-unit |
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+| F1 | S1 · scripts/workflow-status.mjs:639 | code | BLOCKER | blocking | source | fold |
+| F2 | S2 · docs/workflow/MIGRATION.md:11 | workflow | WARNING | docs-only | source | fold |
 
 ## Progress log
 

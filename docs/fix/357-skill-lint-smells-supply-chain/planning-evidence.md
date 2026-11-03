@@ -1,0 +1,30 @@
+# Planning Evidence — fix/357-skill-lint-smells-supply-chain
+
+> One row per Engineering claim the change rests on. `authority-kind`:
+> `known` | `assumption` | `unknown` | `spec`. `freshness`: `current` | `stale` |
+> `not-applicable`. Every `known` row was sampled at the cut head (2026-11-02,
+> `main` @ `6e65d0b3`) with the command in its `source` cell. An unsampled
+> assumption is `unknown` with an owner, never a silent citation.
+
+## Ledger
+
+| id | authority-kind | claim | source | freshness | affected-decision-or-obligation |
+|---|---|---|---|---|---|
+| PE-001 | known | `skill-lint` is prose only: a 98-line `SKILL.md` plus a 38-line `references/DISCOVERY_AND_LINT.md` carrying seven authoring rules, and no script implements any of them — `scripts/` mentions the skill once, as a line in the pre-execution manifest | `wc -l skills/skill-lint/SKILL.md skills/skill-lint/references/DISCOVERY_AND_LINT.md` → `98 38`; `rg -l 'skill-lint' scripts/*.mjs` → only `scripts/pre-execution-quality.test.mjs:1594` | current | O1, O9 |
+| PE-002 | known | The distributed trust surface is 88 markdown files: 28 `skills/<name>/SKILL.md` plus 60 references, and `npx skills add` ships the folder — a reference is read by the installing agent exactly like the `SKILL.md` | `find skills -name '*.md' \| wc -l` → `88`; `find skills -mindepth 2 -maxdepth 2 -name SKILL.md \| wc -l` → `28` | current | O2, S2 scope (D4) |
+| PE-003 | known | The skills tree carries exactly 20 HTML comments across 6 files, and every one of them is a marker: the 4 receipt-marker mentions (`review-change:pass` ×3, `audit-pr:merge-ready` ×1) and the 16 region markers the `unit-lane` document templates carry (`sources`/`questions`/`deferred`/`acceptance`/`tasks`/`retirements` × `start`/`end`) | `rg -c '<!--' skills \| sort` → 6 files, `1 1 1 1 8 8`; `rg -n '<!--' skills` → every body matches `^[a-z]+:[a-z-]+( start\|end)?$` or the receipt shape | current | O2, D1 |
+| PE-004 | known | The skills tree is already clean on three of the seven checks: zero external URLs, zero backslash paths, zero invisible or zero-width codepoints | `rg -c 'https?://' skills` → no match; `rg -n '\\\\' skills --glob '*.md'` → no match; `rg -nP '[\x{200B}\x{200C}\x{200D}\x{FEFF}\x{00AD}]' skills` → no match | current | O5, O7, D5 |
+| PE-005 | known | The skills tree carries five ISO dates, every one a provenance record written next to what it proves, not a currency claim | `rg -n '\b20\d{2}-\d{2}-\d{2}\b' skills` → `ENGRAM.md:48` ("decision D3, 2026-10-21"), `SERENA.md:6` ("verified 2026-09-24"), `UPGRADE.md:45` ("MIGRATION.md, 2026-10-30, decision D4"), `FOLD_LEDGER.md:24` (a row's example date), `MEMORY.md:4` ("decision 2026-09-24, feature 66") | current | O8, D2 |
+| PE-006 | known | No frontmatter `description:` in any of the 28 skills carries an XML/HTML tag, while 9 skills' `argument-hint:` carry 17 `<placeholder>` tokens — so a whole-frontmatter tag scan would flag the repo's own declared argument surface | a node read of every `skills/*/SKILL.md` frontmatter at the cut head → `argument-hint placeholder tokens: 17 in 9 skills`, `DESC TAG` printed zero times | current | O3, D3 |
+| PE-007 | known | The repo's precedent for a skills scanner is `scripts/check-skill-context.mjs`: node builtins only, mktemp fixtures that copy the real tree, a byte-stable report, `exit 0`/`exit 1`, and a sibling suite — the shape this unit copies instead of inventing one | `scripts/check-skill-context.mjs:1-40` (usage/exit contract); `scripts/check-skill-context.test.mjs:12-45` (`mktemp` + `fs.cpSync` fixture, `spawnSync`, asserted refusal) | current | O1, O10 |
+| PE-008 | known | The root gate discovers every `scripts/*.test.mjs` with no registration step, so the new suite joins it by existing | `scripts/run-root-suite.mjs:36-45` (`readdirSync(...).filter(name => name.endsWith(".test.mjs"))`); `node scripts/run-root-suite.mjs` at the cut head → 1,381 tests, 33 suites | current | O10, O12 |
+| PE-009 | known | The two #357 adoption rows already exist in the attribution ledger with kind `idea adapted`; their landing cell names only the issue URL, so S14 is confirming and completing those two rows, not appending new ones | `docs/research/ATTRIBUTION.md:33-34` | current | O13 |
+| PE-010 | known | `skill-lint` runs at the manifest defaults (`mainEstimateMax` 2,800, `mainLinesMax` 240): the manifest carries no override for it, so the added prose is inside a ceiling with ~140 lines of headroom today | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`defaults`, and no `skill-lint` key); `bun scripts/check-skill-context.mjs \| rg 'skill-lint'` → `PASS … 98 lines` | current | O11 |
+| PE-011 | known | `scripts/promise-coherence.mjs` re-runs every validator cell in an in-flight unit doc and every `node`/`bun scripts/x.mjs` claim in a skill's Turn-contract box, so the obligation validators and the new Turn-contract line must reproduce verbatim | `scripts/promise-coherence.mjs:1241-1290` (Turn-contract claims), `scripts/promise-coherence.mjs:15-40` (claim kinds + default doc set) | current | O9, O11 |
+| PE-012 | known | `scripts/test-route-map.json` is a declared normative surface whose unmatched paths run the full gate, and its `changesets`/`skills-content` routes are keyed by glob — a new `scripts/skill-lint.*` pair needs its own route row or every run falls back to the full gate | `scripts/test-route-map.json` (`description`, `routes[].globs`); `scripts/test-route.test.mjs` (the map's own pin) | current | O12 |
+| PE-013 | unknown | Whether any consumer agent actually reads hidden HTML comments in our skills — no consumer was sampled; the two 2026 studies measure the vulnerability class across 42,447 public skills, and this unit mechanizes their finding rather than re-measuring it | owner: the issue (`arXiv 2601.10338`: 26.1% of scanned skills carry ≥1 vulnerability) — cited as rationale, never as a sampled claim about our tree | not-applicable | O1, O2 |
+
+## Verification
+
+Re-sampled on the change tree before hand-off; the runs are `E`/`G` lines in the
+unit doc's `## Log`.

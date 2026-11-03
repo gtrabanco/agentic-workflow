@@ -49,9 +49,9 @@ none
 
 OPEN rows only.
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
-| F7 | S1 · `src/toy.txt:12` | code | med | source | fold into P1 |
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+| F7 | S1 · `src/toy.txt:12` | code | WARNING | blocking | source | fold into P1 |
 
 ## Log
 

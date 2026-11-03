@@ -1,5 +1,44 @@
 # Migration notes
 
+## 2026-11-04 — the findings carrier gains a severity ladder and an impact column (issue #361)
+
+**What changed.** The `findings-table@1` carrier — the `## Findings` table a
+migrated unit doc carries — moved from six columns to seven:
+
+```text
+| id | S# / file:line | axis | severity | class | route |
+| id | S# / file:line | axis | severity | impact | class | route |
+```
+
+`severity` now holds the published ladder (`BLOCKER | CRITICAL | WARNING |
+SUGGESTION`) instead of the retired `high | med | low` ledger scale, and the new
+`impact` cell (`blocking | docs-only | report-only`) says whether the finding
+affects behaviour, only documents, or nothing that blocks. Both sets are
+published in `packages/agentic-workflow-schema/src/vocabularies.ts`
+(`FINDINGS_TABLE_SEVERITIES`, `FINDINGS_TABLE_IMPACTS`), their meanings and the
+baseline-advisory rule are owned by `skills/review-implementation/references/CLASSIFY.md`
+§Severity ladder, and every `review-*` output contract publishes the two cells.
+
+**What you have to do:**
+
+- **A unit doc opened before this release** keeps a six-column table. Add the
+  `impact` cell to its header and to each row, and convert each row's severity
+  through `CLASSIFY.md`'s canonical table (`high` → `CRITICAL`, `med` →
+  `WARNING`, `low` → `SUGGESTION`); `BLOCKER` is assigned by evidence, never by
+  conversion. `scripts/vocabulary-probe.mjs` refuses a row that keeps the
+  retired scale or omits the cell, naming `file:line`.
+- **A closed unit's ledger is history.** `docs/features/<NN>-<slug>/review-findings.md`
+  and the closed unit docs stay byte-identical; the sensor still reads their
+  `high | med | low` cells through the published read aliases, so nothing has to
+  be rewritten retroactively.
+- **Writing a findings row from a script?** `ceremony findings append` requires
+  `--severity` from the ladder and `--impact` from the impact set, and refuses a
+  `BLOCKER` whose impact is `report-only` — a blocker that blocks nothing is the
+  one contradiction the static gate can see.
+- **Consuming the envelope?** Nothing changed there: `findings.fix_now[].severity`
+  stays `high | med | low`, and the sensor projects the ladder onto it
+  (`BLOCKER`/`CRITICAL` → `high`, `WARNING` → `med`, `SUGGESTION` → `low`).
+
 ## 2026-10-30 — one location index: `docs/ROADMAP.md` (issue #319)
 
 **What changed.** The workflow's location indexes are one document.

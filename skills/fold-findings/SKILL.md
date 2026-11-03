@@ -71,8 +71,8 @@ Per Workflow conventions, read:
 
    - legacy (7 cols): `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`
      — closing a row flips `folded: no → yes`, and this skill is that flip's sole writer
-   - migrated (6 cols, `findings-table@1`): `\| id \| S# / file:line \| axis \| severity \|
-     class \| route \|` — every row it holds is OPEN; closing one **deletes the row** and
+   - migrated (7 cols, `findings-table@1`): `\| id \| S# / file:line \| axis \| severity \|
+     impact \| class \| route \|` — every row it holds is OPEN; closing one **deletes the row** and
      appends a `## Log` `F` line naming the fold commit. There is no `folded` column to
      flip, and `class` here is the repairing owner (`product`/`plan`/`source`/
      `environment`/`runtime`), not a disposition.
@@ -363,20 +363,22 @@ decision to skip.
 |---|---|---|
 | freeze-batch (≥ 1 product-owned row) | `PRODUCT-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `product` — the lane repairs the half through its `design` step, its `review` step re-judges it; the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
 | freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `/unit-lane <slug>` (feature) or `/unit-lane --fix <n>` (fix) when the router concludes `replan` — user confirms, the lane's `plan` step appends the phases and its `review` step gates, then `/execute-phase` on this unit; on `route: decision` stop and surface the decision to the user — the conclusion printed by `bun scripts/unit-route.mjs <unit>` (node fallback if bun is not installed; discovery step the fold already ran) |
-| `all-repair-in-place` + docs-only + green sweep declaration + no folded row severity `high` | `RE-REVIEW-SKIPPED` | skip — green sweep (#315) + docs-only ⇒ skip is default (S9); re-review requires recorded justification |
-| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
-| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
+| `all-repair-in-place` + docs-only + green sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` | `RE-REVIEW-SKIPPED` | skip — green sweep (#315) + docs-only ⇒ skip is default (S9); re-review requires recorded justification |
+| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
+| `all-repair-in-place` + docs-only + no sweep declaration + no folded row severity `BLOCKER` or `CRITICAL` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |
-| anything else (behavioral surface or any folded row `high`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
+| anything else (behavioral surface or any folded row `BLOCKER` or `CRITICAL`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
 
 **Branch-selection decision inputs.**
 
 - **Docs-only test (E-D3).** ``RE-REVIEW-OPTIONAL`` requires every fold-diff
   file to be a Markdown/documentation file; otherwise the batch is behavioral
   (→ `RE-REVIEW-REQUIRED (delta)`).
-- **Frozen-severity-`high` override.** A folded row whose frozen severity is
-  `high` forces `RE-REVIEW-REQUIRED (delta)` even on a docs-only diff. Frozen
-  fields are never edited to reach a branch.
+- **Frozen-severity-`BLOCKER`-or-`CRITICAL` override.** A folded row whose frozen severity is
+  `BLOCKER` or `CRITICAL` forces `RE-REVIEW-REQUIRED (delta)` even on a docs-only
+  diff — the same band `SENSOR_CORE.md` projects `strong`, and the exact radius
+  the retired ledger's `high` forced (the conversion maps `high` → `CRITICAL`).
+  Frozen fields are never edited to reach a branch.
 - **SKIPPED with sweep (S9).** `RE-REVIEW-SKIPPED` is printed when the batch
   is docs-only + has a green sweep declaration (#315's claim kind), even
   without a prior consumer decision. This is the default inversion: skip is

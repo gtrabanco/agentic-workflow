@@ -158,10 +158,10 @@ becomes a `## Log` line and leaves this table. Rows `F1`–`F8`, `F33`–`F40` a
 unit's 1,208-line ledger are summarised there too (`F9`–`F32`, `F41`–`F49`,
 `F58`+).
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
-| F12 | S2a · `skills/unit-lane/references/DESIGN.md:88` | code | med | source | fold into P3 |
-| F14 | S3 · `skills/unit-lane/references/RESEARCH.md:41` | code | low | source | fold into P3 |
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
+| F12 | S2a · `skills/unit-lane/references/DESIGN.md:88` | code | WARNING | docs-only | source | fold into P3 |
+| F14 | S3 · `skills/unit-lane/references/RESEARCH.md:41` | code | SUGGESTION | report-only | source | fold into P3 |
 
 ## Log
 

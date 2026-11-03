@@ -159,13 +159,14 @@ column | shape | what it holds
 id | F<n> | the stable finding id a fold and a log line cite
 target | S<n> · <file>:<line> | the requirement or the location the finding names
 axis | <axis> | the review axis that found it
-severity | high \| med \| low | the ledger severity (the canonical scale)
+severity | BLOCKER \| CRITICAL \| WARNING \| SUGGESTION | the published ladder (meanings owned by `skills/review-implementation/references/CLASSIFY.md` §Severity ladder): `BLOCKER` requires a reproducer and is never a conversion target
+impact | blocking \| docs-only \| report-only | whether the finding affects behaviour, only documents, or nothing that blocks: `blocking`/`docs-only` for a `BLOCKER`, and `report-only` for a pre-existing advisory, which never earns a correction round
 class | product \| plan \| source \| environment \| runtime | the owner that repairs it
 route | fold \| replan-in-unit \| decision-required \| product owner — … \| <free prose> | where the row goes; the router reads this column's head first (`scripts/unit-route.mjs`), and `class` names the owner that repairs it
 ```
 
-| id | S# / file:line | axis | severity | class | route |
-|---|---|---|---|---|---|
+| id | S# / file:line | axis | severity | impact | class | route |
+|---|---|---|---|---|---|---|
 
 ## Log
 
