@@ -33,6 +33,7 @@ const {
   RISK_TIER_KINDS,
   RISK_TIER_SIGNAL_KINDS,
   RISK_TIER_REASONS,
+  SIZE_TIER_KINDS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -51,6 +52,7 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["RISK_TIER_KINDS", RISK_TIER_KINDS],
     ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS],
     ["RISK_TIER_REASONS", RISK_TIER_REASONS],
+    ["SIZE_TIER_KINDS", SIZE_TIER_KINDS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }
@@ -109,7 +111,7 @@ test("the tier-verdict grammar block publishes every token of the three sets", (
   const fenced = /```text\nrisk-tier-verdict@1\n([\s\S]*?)```/.exec(block);
   assert.ok(fenced, "the grammar block is fenced and versioned");
   const cells = new Set(fenced[1].split(/[\s`,|]+/).filter(Boolean));
-  for (const [name, values] of [["RISK_TIER_KINDS", RISK_TIER_KINDS], ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS], ["RISK_TIER_REASONS", RISK_TIER_REASONS]]) {
+  for (const [name, values] of [["RISK_TIER_KINDS", RISK_TIER_KINDS], ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS], ["RISK_TIER_REASONS", RISK_TIER_REASONS], ["SIZE_TIER_KINDS", SIZE_TIER_KINDS]]) {
     for (const value of values) assert.ok(cells.has(value), `${name}: ${value} is published by risk-tier-verdict@1`);
   }
 });
