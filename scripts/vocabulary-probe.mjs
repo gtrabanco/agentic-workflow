@@ -183,12 +183,12 @@ function main(argv) {
   let root = ROOT;
   if (argv[0] === "--root") {
     if (argv.length !== 2) {
-      process.stderr.write("usage: node scripts/vocabulary-probe.mjs [--root <dir>]\n");
+      process.stderr.write("usage: bun scripts/vocabulary-probe.mjs [--root <dir>]\n");
       return 2;
     }
     root = path.resolve(argv[1]);
   } else if (argv.length !== 0) {
-    process.stderr.write("usage: node scripts/vocabulary-probe.mjs [--root <dir>]\n");
+    process.stderr.write("usage: bun scripts/vocabulary-probe.mjs [--root <dir>]\n");
     return 2;
   }
   let result;

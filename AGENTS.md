@@ -186,9 +186,10 @@ This repo has no application build. "Green" means:
 - Root suites pass: `node scripts/run-root-suite.mjs` (the same
   `scripts/*.test.mjs` with git signing neutralized for the throwaway fixture
   repositories, so an operator's `commit.gpgsign=true` cannot fail a suite that
-  commits nothing real); `node --test scripts/*.test.mjs` runs the identical
-  suites when signing is off — including `scripts/golden-fixture.test.mjs`, which
-  asserts the golden fixture's deterministic half.
+  commits nothing real); per file, `bun test scripts/<file>.test.mjs` runs the
+  identical suite bun-first (`node --test scripts/<file>.test.mjs` is the
+  fallback) — including `scripts/golden-fixture.test.mjs`, which asserts the
+  golden fixture's deterministic half.
 - If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
   there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
@@ -200,7 +201,7 @@ This repo has no application build. "Green" means:
   `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
   trees; the staged one is always rebuilt first, so it is never stale.
 
-**Runtime convention — bun runs scripts, `node --test` runs the suite.** Two
+**Runtime convention — bun runs scripts and tests; the root gate runs on node.** Two
 scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
 set. Outside that override: (a) **manual invocation** of repo scripts is bun-first
 (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as
@@ -212,13 +213,25 @@ under the runtime that launched pi (bun when pi was installed via bun, node when
 via npm), resolved by the package's runtime module
 (`detectRuntime`/`runtimeBin`/`runtimeEnv`) — the user's install choice decides,
 bun is never forced. The shebangs stay `#!/usr/bin/env node` — the portable
-fallback, since a shebang cannot express "bun else node". **The suite is the one
-measured exception:** `node scripts/run-root-suite.mjs` and
-`node --test scripts/*.test.mjs` run it, while `bun scripts/run-root-suite.mjs`
-fails by construction (`Cannot use test outside of the test runner` — bun only
-enters a runner through its `test` subcommand). Switching the suite's commands to
-bun therefore belongs to the `node → bun` sweep (issue #329) and needs that
-carve-out carried with it.
+fallback, since a shebang cannot express "bun else node". **The suite has one measured
+exception.** Per file, tests are bun-first — `bun test scripts/<file>.test.mjs`,
+with `node --test scripts/<file>.test.mjs` as the guaranteed fallback. The gate
+stays on node: `node scripts/run-root-suite.mjs`, while `bun
+scripts/run-root-suite.mjs` fails by construction
+(`Cannot use test outside of the test runner` — bun only enters a runner through
+its `test` subcommand), and
+`bun test scripts/` is not yet equivalent (its runner's 5-second default test
+timeout and its error-frame formatting differ on a small set of cases; the
+measured list is unit 329's Log `E19`). Issue #329's sweep carried this
+carve-out; `scripts/invocation-drift.mjs` now pins these facts, so it cannot be
+dropped silently.
+
+**Tool choice is re-decided every turn.**
+Manual invocation runs `bun` before `node` and search runs `rg` before `grep`;
+both stay legitimate as the documented fallback when the preferred tool is
+absent — check availability once per session with
+`node scripts/setup-env.mjs --check` (`docs/workflow/SETUP.md`), never assume it.
+The `rg`-first *search feature* stays #269's; this rule owns the tool choice only.
 
 ### Normalizer inventory (this repository)
 

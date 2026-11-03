@@ -623,7 +623,7 @@ function main(argv) {
   const args = argv.slice(2);
   const mode = args.filter((a) => a === "--content" || a === "--pins");
   if (mode.length !== 1) {
-    failUsage("usage: node scripts/version-parity-gate.mjs --content [--base <ref>] | --pins [--package <dir>]");
+    failUsage("usage: bun scripts/version-parity-gate.mjs --content [--base <ref>] | --pins [--package <dir>]");
   }
   const flagValue = (flag) => {
     const i = args.indexOf(flag);

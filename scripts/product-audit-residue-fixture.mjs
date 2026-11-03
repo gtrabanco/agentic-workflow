@@ -24,7 +24,7 @@ import path from "node:path";
 
 const target = process.argv[2];
 if (!target) {
-  console.error("usage: node scripts/product-audit-residue-fixture.mjs <target-dir>");
+  console.error("usage: bun scripts/product-audit-residue-fixture.mjs <target-dir>");
   process.exit(1);
 }
 
