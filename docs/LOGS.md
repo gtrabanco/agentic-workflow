@@ -3996,3 +3996,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/365: deterministic dependency-advisory pass from the review pack
 - **Decisions:** Adopt OSV (api.osv.dev) as data source, not a scanner — osv-scanner needs a toolchain, bun audit cannot state a fix version, Dependabot alerts disabled here; report-only forever (S6: pass always exits 0, blocking rows classified but never fatal; pre-existing HIGH advisories cannot redden unrelated changes); Incibe recorded, not ingested — vendor/product RSS has no ecosystem+version query surface
 - **Next:** Push feat/365-vuln-research as a PR to main; hand off to your review
+## 2026-11-03T09:53:54Z — fix/361-finding-severity-ladder — manual
+- **Commits:** 14 (`daf07e1b…a5953e8a`)
+- **Files:** 65 files
+- **Summary:** feat(361): PR 381 for the finding-severity-ladder — merged main's two latest changes, fixed CI content-gate, all green
+- **Decisions:** PR 381 created against main; main moved twice (PRs #378 and #379/#333), integrated as merges; resolved ROADMAP.md conflicts and baseline-advisory repetition by citing CLASSIFY.md owner; changeset missing @gtrabanco/agentic-workflow package — gate only runs in CI, so local pass hid it
+- **Next:** Merge PR #381 (mergeable: clean, all CI green); then run /audit-pr 381
