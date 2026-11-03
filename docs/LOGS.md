@@ -4015,3 +4015,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of fix/382-red-first-commits: the red-first gate's introduced() read the oldest add of a path instead of the latest, so a pair deleted and re-added together after the cutoff reported PASS — the exact regression this unit exists to close. The fix landed in two commits (red then green), with a path-protection approval record for the protected suite.
 - **Decisions:** scripts/red-first.test.mjs is a protected path (test-file, freeze:true) so the edit required an owner-approval record in decisions.md rather than a self-approval; the guard discriminates correctly (pass/approved with row, fail/approval-required without)
 - **Next:** Push the 2 commits (cbeaa9f1, 769e8d1c) to origin/fix/382-red-first-commits, then re-run the full external verify to close the cycle
+
+## 2026-11-03T11:30:16Z — fix/382-red-first-commits — manual
+- **Commits:** 14 (`acc1735f…7f031169`)
+- **Files:** 15 files
+- **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
+- **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
+- **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
