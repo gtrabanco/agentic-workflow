@@ -3969,3 +3969,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Render the GitHub release body: structured per-change headings, kind sections, bump table, install block per channel, canary delta; fix linter warning on #370 title
 - **Decisions:** The release body was a raw concatenation of changeset bodies (6.4 KB, zero headings). Resolved by a renderer: one ### heading per change from its conventional title, kind sections with breaking first, package/skill bump table, install block (pi install replaces source, no uninstall needed), and a canary delta. --generate-notes stays for PR-author credit. resolveReleasePlan extracted for shared version resolution. linter warns (not fails) on non-conventional body titles. --release-notes-rendering branch diff guard exception recorded.
 - **Next:** PR #376 open, await /review-change at its HEAD
+
+## 2026-11-03T00:53:44Z — feat-357-skill-smells — manual
+- **Commits:** 11 (`e006b3fb…356653bf`)
+- **Files:** 14 files
+- **Summary:** Issue #357 applied: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut, 15 obligations verified, all gates green, PR #377 opened and all three checks passing. diff-guard exception recorded.
+- **Decisions:** S2 is a marker-shape rule (prose body flags, namespace-field admitted). S8 needs both date AND currency word. S3 scoped to description only. Full-scope includes references/.
+- **Next:** Owner's PR #377 verdict. The template/AGENTS.md rider is open in the unit doc's ## Future.
