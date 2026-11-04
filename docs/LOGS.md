@@ -4216,3 +4216,11 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) 394/396 promoted, 398 fix-now high — applied promoted/fix-next labels and posted dated comments. 2) Created 5 worktrees for parallel lanes, but subsessions failed: broken templates (#398's own bug) caused #396 to derive trivial scope and skip review/tests; #394 got stuck in unused-var loops; #398 was interrupted mid-template edit.
 - **Next:** Triage remaining issues from the worktree batch (356, 358) and restart the lanes after fixing template frontmatter first — that fix should land before any of the other units.
 
+
+
+## 2026-11-04T17:12:48Z — fix/release-notes-rendering — manual
+- **Commits:** 1 (`e9c1a72e…e9c1a72e`)
+- **Files:** .github/workflows/publish.yml, scripts/release-workflows.test.mjs, scripts/release.mjs, scripts/release.test.mjs
+- **Summary:** Fix: release notes were combining --generate-notes + --notes-file, producing a merged wall of text on GitHub releases
+- **Decisions:** Removed --generate-notes from gh release create (both stable and canary channels) because GitHub appends its auto-generated PR list when both flags are present. Replaced with a renderContributors() function that queries gh pr list for merged PRs since the previous tag, producing a clean Contributors section at the end of the release body.
+- **Next:** Wait for PR #404 to be reviewed and merged; after merge, the next canary cut will render clean release notes with contributor credits.
