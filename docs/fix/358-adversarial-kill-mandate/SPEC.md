@@ -219,6 +219,12 @@ none
   verdict, and the classifier reads changed paths including ignored build output
   in a worktree — **does not affect** the unit: the verdict is taken over the
   unit's declared paths (`--paths`) at close.
+- `bun scripts/check-skill-context.mjs --documents` is **already red at the base
+  commit** `c8b64d0b` (`AGENTS.md: estimate 6884 > 6881` — three estimate units
+  over the ceiling the #383 re-base left) — **affects this unit**: the four
+  inventory rows re-base `AGENTS.md` anyway, so this unit's re-base covers both
+  the pre-existing 3 units and its own growth, and the differential run in `E13`
+  records the base's red line beside the head's PASS.
 
 ## Tasks
 
@@ -363,11 +369,12 @@ Frozen as the sibling `planning-obligations.md` (M sizing) — not embedded.
   the two budget re-bases. `README.md` (the review-change row) is in the working
   tree for the close commit.
 - **E10 — token delta (S11, measured; A1 states the limit)** — the reviewed
-  route `review-change:adversarial` as the cut head measured **21,955 est /
-  1,523 lines** (11 loaded files) and at this change **23,385 est / 1,611 lines**
-  (`bun scripts/check-skill-context.mjs --routes`) — **+1,430 est (+6.5%) /
-  +88 lines (+5.8%)**, all of it the two contract files: `ADVERSARIAL_SETUP.md`
-  4,733 B → 9,526 B, `ADVERSARIAL_SYNTHESIS.md` 3,549 B → 4,425 B. The other
+  route `review-change:adversarial` at the base commit measured **21,955 est /
+  1,523 lines** (11 loaded files) and at this change **23,372 est / 1,610 lines**
+  (`bun scripts/check-skill-context.mjs --routes`, run in a `git archive` copy of
+  `c8b64d0b` and in the worktree) — **+1,417 est (+6.5%) / +87 lines (+5.7%)**,
+  all of it the two contract files: `ADVERSARIAL_SETUP.md` 4,733 B → 9,526 B,
+  `ADVERSARIAL_SYNTHESIS.md` 3,549 B → 4,425 B. The other
   routes are unmoved or nearly so: `default-backend`/`default-web` 20,302 →
   20,302 (**0**), `synthesize` 20,771 → 20,990 (+219, the placement paragraph),
   and `review-change/SKILL.md` 3,186 → 3,186 (**0**). **What is measured is the
@@ -395,6 +402,22 @@ Frozen as the sibling `planning-obligations.md` (M sizing) — not embedded.
   neither is a product defect.
 - **G2** — 2026-11-04, `bun scripts/lint-changeset.mjs` · exit 0 ·
   `.changeset/358-adversarial-kill-mandate.md` valid.
+- **G3** — 2026-11-04, `bun scripts/phase-lint.mjs
+  docs/fix/358-adversarial-kill-mandate/SPEC.md` · exit 0 · `verdict PASS` with
+  every phase `PASS (6/6)`.
+- **G4** — 2026-11-04, `node packages/agentic-workflow/bin/agentic-workflow.mjs
+  roadmap check docs/fix/358-adversarial-kill-mandate/SPEC.md` · exit 0 ·
+  `verdict: PASS / violations: 0`.
+- **E13 — differential check** — a `git archive c8b64d0b` copy against the
+  worktree, same commands, output diffed: `skill-lint` **identical** (PASS, 0
+  findings both sides); `check-skill-context --skill review-change`
+  **identical**; `--routes` differs **only** in the two rows this unit grew
+  (`review-change:adversarial` 21,955/1,523 → 23,372/1,610 and
+  `review-change:synthesize` 20,771/1,437 → 20,990/1,450 — the measured deltas
+  recorded in `E10`); `--documents` differs from a **red** base
+  (`AGENTS.md: estimate 6884 > 6881`) to a **green** head (393 lines / 96
+  machine / 297 prose / 7,054 est). No unrequested stdout, stderr or exit-code
+  difference was found.
 
 ## Next
 
