@@ -1008,47 +1008,46 @@ test("#319 F8: one status lookup reads the index once, not once per probe", () =
 // #398 — scope fallback reads ## Specs S# lines (not just ## Objective / ## Acceptance criteria)
 // ===========================================================================
 
-const triageSteps = (stdout) => {
-  const m = /^Steps: (.+)$/m.exec(stdout);
-  return m ? m[1].split(", ").map((s) => s.trim()) : [];
+/** The triage answer for one fixture slug, parsed from the machine envelope. */
+const triageOf = (slug) => {
+  const result = run(["--triage", slug, "--json"]);
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
 };
 
-test("#398 B1: spec-by-reference doc with ≥3 S# requirements derives scope:standard, not trivial", () => {
-  // A unit with ≥3 **S#** requirements and no frontmatter must derive standard scope.
-  // Regression: without the fix, unitFacts reads Objective (absent) and Acceptance
-  // criteria (absent) → 0 objectives, 0 ACs → trivial.
-  const result = run(["--triage", "50-specbyref-many"]);
-  assert.equal(result.status, 0, result.stderr);
-  const steps = triageSteps(result.stdout);
-  assert.ok(steps.includes("research"), "50-specbyref-many should include research; got: " + steps.join(", "));
-  assert.ok(steps.includes("design"), "50-specbyref-many should include design; got: " + steps.join(", "));
-  assert.ok(steps.includes("plan"), "50-specbyref-many should include plan; got: " + steps.join(", "));
-  assert.ok(steps.includes("review"), "50-specbyref-many should include review; got: " + steps.join(", "));
-  assert.ok(steps.includes("implement"), "50-specbyref-many should include implement; got: " + steps.join(", "));
-  assert.ok(steps.includes("evidence"), "50-specbyref-many should include evidence; got: " + steps.join(", "));
+const standardFeature = ["research", "design", "plan", "implement", "evidence", "review", "docs"];
+const trivialFeature = ["implement", "evidence"];
+
+test("#398 B1: a spec-by-reference doc with 3 S# requirements and no frontmatter derives standard", () => {
+  // R1 reproducer: unitFacts read only ## Objective / ## Acceptance criteria, so a
+  // doc carrying neither derived trivial and silently skipped design, plan, tests,
+  // review and docs.
+  assert.deepEqual(triageOf("50-specbyref-many").steps, standardFeature);
 });
 
-test("#398 B1: spec-by-reference doc with ≤2 S# requirements still derives trivial", () => {
-  // A unit with only 1 S# requirement and no explicit scope should derive trivial.
-  const result = run(["--triage", "51-specbyref-few"]);
-  assert.equal(result.status, 0, result.stderr);
-  const steps = triageSteps(result.stdout);
-  assert.ok(!steps.includes("research"), "51-specbyref-few should skip research; got: " + steps.join(", "));
-  assert.ok(!steps.includes("design"), "51-specbyref-few should skip design; got: " + steps.join(", "));
-  assert.ok(!steps.includes("plan"), "51-specbyref-few should skip plan; got: " + steps.join(", "));
-  assert.ok(steps.includes("implement"), "51-specbyref-few should include implement; got: " + steps.join(", "));
-  assert.ok(steps.includes("evidence"), "51-specbyref-few should include evidence; got: " + steps.join(", "));
+test("#398 B1: a spec-by-reference doc with 1 S# requirement still derives trivial", () => {
+  // The threshold is the published rule (>= 3 requirements), not "has a ## Specs".
+  assert.deepEqual(triageOf("51-specbyref-few").steps, trivialFeature);
 });
 
-test("#398 B1: explicit scope:frontmatter overrides both S# count and legacy sections", () => {
-  // Even with ≥3 S# requirements, explicit frontmatter scope wins.
-  // scope:medium → includes release step.
-  const result = run(["--triage", "52-explicit-scope"]);
-  assert.equal(result.status, 0, result.stderr);
-  const steps = triageSteps(result.stdout);
-  assert.ok(steps.includes("research"), "52-explicit-scope should include research; got: " + steps.join(", "));
-  assert.ok(steps.includes("design"), "52-explicit-scope should include design; got: " + steps.join(", "));
-  assert.ok(steps.includes("plan"), "52-explicit-scope should include plan; got: " + steps.join(", "));
-  assert.ok(steps.includes("release"), "52-explicit-scope should include release (medium); got: " + steps.join(", "));
-  assert.ok(steps.includes("review"), "52-explicit-scope should include review; got: " + steps.join(", "));
+test("#398 B1: an explicit scope: frontmatter wins over both shapes", () => {
+  assert.deepEqual(triageOf("52-explicit-scope").steps, [...standardFeature, "release"]);
+});
+
+test("#398 B1: a requirement title keeps counting when it carries emphasis", () => {
+  // The grammar reads the title to the bold close (scripts/unit-doc-phases.mjs
+  // SPEC_REQUIREMENT), so `**S1 — the *notes* command.**` is one requirement.
+  assert.deepEqual(triageOf("54-specbyref-emphasis").steps, standardFeature);
+});
+
+test("#398 B1: a fenced quote of the grammar is not a requirement", () => {
+  // A fenced block is quoted text: three `**S#**` example lines inside one must
+  // not inflate a one-requirement doc into standard scope.
+  assert.deepEqual(triageOf("55-specbyref-fenced-example").steps, trivialFeature);
+});
+
+test("#398 B1 regression: the legacy Objective / Acceptance criteria pair keeps its derivation", () => {
+  // The fallback was ADDED to, never replaced: a legacy doc still derives from
+  // its own pair exactly as before.
+  assert.deepEqual(triageOf("56-legacy-pair").steps, trivialFeature);
 });
