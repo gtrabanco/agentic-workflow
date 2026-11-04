@@ -4228,3 +4228,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/358-adversarial-kill-mandate — deliver the adversarial kill-mandate layer: published vocabulary, deterministic checker, and verdict grammar
 - **Decisions:** O9/O14 validators narrowed at cut to avoid self-harm on pre-existing unrelated hits (D1); the diff parser bound to hunk extents (21fc20e0) after a red-first case; SKILLS.md row updated to narrate the verdict layer; O16 ledger cell corrected to the pre-existing 1 skip; E14 recorded the green advisory-fold re-run (12 pass, root gate 0 fail, schema 732 pass)
 - **Next:** push feat/358-adversarial-review and open/refresh the PR — add 'Closes #358' to the PR description; then /review-change on a fresh context for external verification
+## 2026-11-04T16:55:59Z — feat/358-adversarial-review — manual
+- **Commits:** 10 (`0fe253dd…42fc3a58`)
+- **Files:** 27 files
+- **Summary:** Fix Serena marksman language server crash (missing libicu)
+- **Decisions:** Replaced broken marksman binary with DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 wrapper and patched marksman.py to set the env var at runtime
+- **Next:** Run serena project health-check to verify; monitor for Serena upgrades that may reinstall the binary
