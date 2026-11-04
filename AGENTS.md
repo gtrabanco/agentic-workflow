@@ -323,6 +323,10 @@ risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schem
 size-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SIZE_TIER_KINDS | size-tier | yes
 risk-tier-verdict | skills/execute-phase/references/risk-tiers.md | block:risk-tier-verdict@1 | n/a | no
 passive-record | skills/execute-phase/references/risk-tiers.md | block:passive-record@1 | n/a | no
+adversarial-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_VERDICTS | adversarial-verdict | no
+adversarial-reflector-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_REFLECTOR_VERDICTS | adversarial-reflector-verdict | no
+adversarial-stability-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_STABILITY_VERDICTS | adversarial-stability | no
+adversarial-verdict-grammar | skills/review-change/references/ADVERSARIAL_SETUP.md | block:adversarial-verdict@1 | adversarial-verdict+adversarial-reflector-verdict+adversarial-stability | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
