@@ -152,6 +152,12 @@ change's own diff (the tier is the classifier's, never this document's):
   cells where the pinned header has nine.** **Does not affect** this unit (the
   gate reads the status column as the last cell, which still resolves); recorded
   so a later sweep does not read it as this unit's drift.
+- **`node scripts/workflow-status.mjs` fails with `Maximum call stack size
+  exceeded`** on an unmodified `main` worktree (`92715797`) and on this branch's
+  base (`c8b64d0b`), identically. **Does not affect** this unit: the sensor is not
+  in this change's verification set and no root suite calls it on the live tree
+  (its suite runs fixtures). Recorded so a later session does not read it as
+  regression, and routed to `triage-issue` as its own unit.
 
 ## Tasks
 
