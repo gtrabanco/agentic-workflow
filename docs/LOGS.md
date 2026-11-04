@@ -4202,3 +4202,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Configure Serena monorepo: remove sub-package .serena dirs, add gitignore, configure cross-package workspace folders
 - **Decisions:** Serena operates from root in monorepo, not per-package. Sub-package .serena/ dirs were auto-detected by Serena but unnecessary; cross-package references handled via ls_additional_workspace_folders in project.yml for TSServer to discover imports between schema, agentic-workflow, and pi packages
 - **Next:** Activate Serena in this project (serena init) if not already done, or test cross-package symbol references with the new configuration
+
+## 2026-11-04T15:02:14Z — main — manual
+- **Commits:** 42 (`55983196…b49bc7c2`)
+- **Files:** 41 files
+- **Summary:** Main branch: merged PR #397 (feat/103-doc-currency) and PR #395 (feat/383 measured-acceptance), plus Serena monorepo config, README repairs, and session-close buffer fix
+- **Decisions:** Serena is a root-level monorepo tool: removed sub-package .serena dirs and configured cross-package workspace folders via project.yml; merged PR #397 required conflict resolution because 103's SPEC moved from docs/features/103/ to docs/fix/103/; the README Session section must show workflow-status and log-session skills, not an auto-log entry that doesn't exist yet
+- **Next:** Close the unit-lane for #394 (auto log-session) in the .worktrees/issue-394 worktree: rebasing on main, correcting the 12 verified-but-unimplemented obligations to planned, and implementing the auto-log wiring
