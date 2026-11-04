@@ -207,8 +207,7 @@ This repo has no application build. "Green" means:
   trees; the staged one is always rebuilt first, so it is never stale.
 
 **Runtime convention — bun runs scripts and tests; the root gate runs under either
-runtime.** Two
-scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
+runtime.** Two scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
 set. Outside that override: (a) **manual invocation** of repo scripts is bun-first
 (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as
 the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage
@@ -362,8 +361,8 @@ second copy of this list.
 
 ## Skills available in this repo
 
-When repeated searches or repeated documentation lookups happen while working
-here, prefer creating or refining a skill over re-deriving the knowledge. Store
+When repeated searches or documentation lookups happen here,
+prefer creating or refining a skill over re-deriving the knowledge. Store
 reusable operational knowledge as a skill under `skills/`; the authoring contract
 is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
@@ -371,7 +370,7 @@ is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
 - **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
   retired, D-40-14) — after editing any SKILL.md, run this before committing.
-  It lints the repo's authoring rules, and runs the content checks
+  It lints the repo's authoring rules and runs the content checks
   (`bun scripts/skill-lint.mjs`), and reports; it repairs nothing and
   bumps nothing — the train version is stamped by `scripts/release.mjs apply`
   at cut time, and a skill change ships via a `.changeset/` intent file.
