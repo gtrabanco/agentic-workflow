@@ -437,6 +437,7 @@ OPEN rows only.
 
 - **E24** — 2026-11-04, the pre-existing guide-budget overflow repaired: `AGENTS.md` lost the duplicated example `"the project's verification gate"` from the *Stack/architecture agnostic* bullet (27536 → 27501 bytes, outside the machine region, so `machine` stays 92). `node scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 389 lines · 92 machine · 297 prose · estimate 6876` (ceiling 6881). `node --test scripts/check-skill-context.test.mjs scripts/guide-split.test.mjs scripts/normative-drift.test.mjs` · exit 0 · 36/36; `node --test scripts/invocation-drift.test.mjs` · exit 0 · 13/13.
 - **E25** — 2026-11-04, `node scripts/run-root-suite.mjs` at this head · exit 0 · 33 suites · 1533 pass · 0 fail (E22's two failures are gone).
+- **E26** — 2026-11-04, the same gate on the bun-first leg the repository's runtime convention prefers: `bun scripts/run-root-suite.mjs` · exit 0 · 1532 tests across 75 files · 0 fail (3m07s). The runner adapts the invocation per runtime, so the two legs judge the same suite.
 ## Next
 
 Handoff gate. O1–O14 are `verified` with their evidence in `## Log`; the
