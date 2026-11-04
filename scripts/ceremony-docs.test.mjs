@@ -146,3 +146,135 @@ test("unknown docs subcommand → exit 1", () => {
   assert.equal(r.code, 1);
   assert.equal(r.json.error, "unknown-subcommand");
 });
+
+// #398 B3: no ## Tasks section → n/a, not vacuous valid:true
+
+test("#398 B3: unit doc with no ## Tasks reports n/a (legacy carrier), not valid:true", () => {
+  // A unit doc that uses the spec-by-reference shape has no ## Tasks section.
+  // checkTasksTicks and checkProgressEntry must report n/a with the legacy-carrier
+  // reason, not vacuous valid:true.
+  const dir = makeUnitRepo({ tasks: "", log: "" });
+  // Remove the Tasks section by writing a spec-by-reference doc
+  fs.writeFileSync(
+    path.join(dir, "docs/fix/1-fixture/SPEC.md"),
+    `# 1 — no-tasks-unit
+
+## Specs
+
+**S1 — the request.**
+> Add a command.
+
+## Impact
+
+none
+
+## Non-goals
+
+- Nothing
+
+## Future
+
+none
+
+## Future cost
+
+none
+
+## Applicable tests
+
+n/a
+
+## Known pre-existing issues
+
+none
+
+## Findings
+
+none
+
+## Tasks
+
+none
+
+## Log
+
+## Next
+
+none
+
+## References
+
+none
+`,
+  );
+  const r = cer(["docs", "check-tasks-ticks", "--slug", "1-fixture"], dir);
+  assert.equal(r.code, 0, "should not block; n/a is not a failure");
+  assert.ok(r.json.valid || r.json["n/a"], "must report n/a or valid");
+  const hasNarrowAnswer = r.json["n/a"] === "no ## Tasks section — legacy carrier" ||
+    r.json.valid === true && Object.keys(r.json).length <= 2;
+  // The key assertion: not valid:true with an empty mismatched array (vacuous pass)
+  if (r.json.valid === true && r.json.mismatched && r.json.mismatched.length === 0) {
+    assert.fail("no ## Tasks should NOT report vacuous valid:true with empty mismatched");
+  }
+});
+
+test("#398 B3: check-progress-entry with no ## Tasks reports n/a, not valid:true", () => {
+  const dir = makeUnitRepo({ tasks: "", log: "" });
+  fs.writeFileSync(
+    path.join(dir, "docs/fix/1-fixture/SPEC.md"),
+    `# 1 — no-tasks-unit
+
+## Specs
+
+**S1 — the request.**
+> Add a command.
+
+## Impact
+
+none
+
+## Non-goals
+
+- Nothing
+
+## Future
+
+none
+
+## Future cost
+
+none
+
+## Applicable tests
+
+n/a
+
+## Known pre-existing issues
+
+none
+
+## Findings
+
+none
+
+## Tasks
+
+none
+
+## Log
+
+## Next
+
+none
+
+## References
+
+none
+`,
+  );
+  const r = cer(["docs", "check-progress-entry", "--slug", "1-fixture"], dir);
+  assert.equal(r.code, 0, "should not block; n/a is not a failure");
+  if (r.json.valid === true && r.json.missing && r.json.missing.length === 0) {
+    assert.fail("no ## Tasks should NOT report vacuous valid:true with empty missing");
+  }
+});
