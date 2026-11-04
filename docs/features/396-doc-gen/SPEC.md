@@ -91,7 +91,7 @@ change's own diff (the tier is the classifier's, never this document's):
 {
   "contract": "risk-tier-verdict@1",
   "tier": "standard",
-  "reason": "3 path(s) carry executable content: docs/features/396-doc-gen/, scripts/docs-generate.mjs, scripts/docs-generate.test.mjs",
+  "reason": "3 path(s) carry executable content: scripts/docs-generate.mjs, scripts/docs-generate.test.mjs, scripts/test-route-map.json",
   "reason_kind": "executable-content",
   "task_size": {
     "understood": true,
@@ -325,12 +325,36 @@ proves it. Frozen at cut.
   (exit 2, nothing written). S4 forbids a silent failure, and silently downgrading
   a format the project explicitly named would be exactly that.
 - **E1** — 2026-11-04, `node scripts/unit-route.mjs --triage 396-doc-gen` · exit 0 · `Steps: research, design, plan, implement, tests, evidence, review, docs, release` / `Skipped: none`.
-- **E2** — 2026-11-04, `bun scripts/ceremony.mjs tier classify` · exit 0 · `tier: standard`, `task_size.contained_risk: contained`.
+- **E2** — 2026-11-04, `bun scripts/ceremony.mjs tier classify` · exit 0 · `tier: standard`, `task_size.contained_risk: contained` (verdict copied verbatim into `## Risk tier`).
+- **E3** — 2026-11-04, `bun test scripts/docs-generate.test.mjs` at the red commit `772147ac` · exit 1 · `0 pass · 19 fail`, every case failing on `Cannot find module '.../scripts/docs-generate.mjs'` (`ERR_MODULE_NOT_FOUND`).
+- **E4** — 2026-11-04, `bun test scripts/docs-generate.test.mjs` and `node --test scripts/docs-generate.test.mjs` · exit 0 both · `20 pass · 0 fail` under each runtime (the frozen corpus, including the live-tree `--check`).
+- **E5** — 2026-11-04, `rg -c "Document what this unit shipped" skills/unit-lane/references/DOCS.md` → `1`; `rg -c "All docs the unit demands are updated" skills/unit-lane/references/DOCS.md` → no match (exit 1). O1 verified.
+- **E6** — 2026-11-04, `bun scripts/docs-generate.mjs --dry-run` in this repository (no `Docs site` block) · exit 0 · ``Format: md — degraded (no `Docs site` block in AGENTS.md)`` / `Would write: code.md, index.md, units.md` — the S4 path, reported rather than silent. O4 verified.
+- **E7** — 2026-11-04, `node scripts/docs-generate.mjs --root <tmp tree declaring format: asciidoc>` · exit 2 · `DOCS GENERATE REFUSAL — unrecognised format 'asciidoc' in AGENTS.md; expected markdown | md | mdx | starlight | docusaurus | html | latex | tex`, and the tree holds nothing but its own `AGENTS.md`. O5 verified.
+- **E8** — 2026-11-04, `rg -c "docs-generate" skills/init-workspace/SKILL.md skills/init-workspace/references/BOOTSTRAP_WRITE.md template/AGENTS.md` · exit 0 · `1`, `1`, `2` — recorded as measured: the row predicted one match per surface and the scaffold's block names the generator and its `--check` mode on two lines, so the behaviour (every surface names the generator) holds while the predicted count was wrong. O10 verified on the behaviour, the count disclosed.
+- **E9** — 2026-11-04, differential check against `c8b64d0b` (a `mktemp -d` copy of the base commit; removed after): `bun scripts/skill-lint.mjs` identical (`PASS`, 90 files); `bun scripts/phase-lint.mjs docs/features/103-doc-currency/SPEC.md` identical (same fingerprint `1c325170…`); `node scripts/unit-route.mjs --triage 103-doc-currency` identical; `bun scripts/roadmap-settle.mjs` 130 → 131 unit docs (the unit this change adds); `node scripts/test-route.mjs --list` +1 route (`docs-generate`); `bun scripts/check-skill-context.mjs --documents` FAIL → PASS (D6's repair). No unrequested difference.
+- **G1** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 0 · `tests 1544 · pass 1543 · fail 0 · skipped 1` (the skip is pre-existing).
+- **G2** — 2026-11-04, `bun scripts/skill-lint.mjs` · exit 0 · `verdict: PASS` (90 files, 0 findings).
+- **G3** — 2026-11-04, `bun scripts/check-skill-context.mjs` and `… --documents` · exit 0 both · `PASS context budgets: 28 skills` / `PASS context documents: 3 budgeted documents` (`AGENTS.md` 6881/6881).
+- **G4** — 2026-11-04, `bun scripts/phase-lint.mjs docs/features/396-doc-gen/SPEC.md` · exit 0 · `verdict PASS`, all phases 6/6.
+- **G5** — 2026-11-04, `bun scripts/roadmap-settle.mjs` · exit 0 · 131 unit docs checked, `verdict: PASS`, 0 violations.
+- **G6** — 2026-11-04, `node scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`; `node scripts/version-parity-gate.mjs --content` → `VERDICT: PASS` (the intent covers `@gtrabanco/pi-agentic-workflow`).
+- **G7** — 2026-11-04, `bun scripts/red-first.mjs` · exit 0 · `32 pair(s) · 2 after the cutoff · 0 finding(s)`, `verdict: PASS` — the suite's red commit precedes the generator's.
+- **D6** — 2026-11-04, decision: `CHANGELOG.md` gains no row here. The changelog tables are the **release script's** surface (`docs/workflow/PACKAGES.md` §release flow: `scripts/release.mjs` writes the version's rows from the pending changesets), so this unit ships its release note as `.changeset/396-doc-gen.md` and writes no version it does not own. P12 is closed by that intent plus `version-parity-gate --content` (G6).
+- **D7** — 2026-11-04, decision: the guide-layer overrun declared under `## Known pre-existing issues` was repaired in this change (`1c6e460f`) rather than reported and left red — three sentences tightened inside the existing ceiling, no rule, owner link or pinned phrase (`as the documented fallback`, the tool-choice sentence, the suite facts) touched, ceilings unchanged. Without it the root gate cannot be green and `O11` could not be verified.
+- **P1** — 2026-11-04, the frozen corpus cut alone and observed red (`772147ac`); the implementation's first green at `ecaa1467`.
+- **P2** — 2026-11-04, the generator implemented, then routed onto the shared fence-aware reader and its aliased target dropped after the sibling pins caught both (`ecaa1467`, `4f1f1b0f`); the path→suite map registration `99be3342`.
+- **P3** — 2026-11-04, the docs step's explicit documentation task (`ca4ab1e9`).
+- **P4** — 2026-11-04, `init-workspace`'s format choice and the scaffold's widened `Docs site` block (`a1e637e8`, `49943398`).
+- **P5** — 2026-11-04, roadmap row 396, the committed projection and the release intent (`88857c5c`, `d326ca4e`).
+- **P6** — 2026-11-04, the guide repair (`1c6e460f`) and the frozen corpus' two premise corrections (`440ef706`); the gate is `G1`.
 
 ## Next
 
-`P1` — cut `scripts/docs-generate.test.mjs`, observe it red, commit the suite
-alone.
+The owner is the external verifier (D2): read the diff against `## Acceptance
+criteria`, re-run `G1`–`G7`, and answer. No `review-change`, `audit-pr` or fold
+cycle runs on this change; the obligations are closed in
+[`planning-obligations.md`](planning-obligations.md).
 
 ## References
 

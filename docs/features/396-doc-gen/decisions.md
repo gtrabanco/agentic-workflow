@@ -44,3 +44,12 @@ justification | scripts/docs-generate.test.mjs | P1 | 2026-11-04 | execute-phase
   the project explicitly named but the generator cannot honor is a refusal
   (exit 2, nothing written), because emitting markdown for `format: asciidoc`
   would be the silent failure S4 forbids.
+- **D6 — no CHANGELOG row; the release note is the changeset.** The changelog
+  tables are the release script's surface (`docs/workflow/PACKAGES.md`), so this
+  unit writes no version it does not own. `.changeset/396-doc-gen.md` is the
+  release note and `version-parity-gate --content` is its receipt.
+- **D7 — the pre-existing guide overrun is repaired here, not reported and left
+  red.** `AGENTS.md` measured 6884 against its declared 6881 ceiling on `main`;
+  the root gate (and the two suites reading the manifest) cannot be green while it
+  stands, so `O11` would be unverifiable. Three sentences were tightened inside
+  the unchanged ceiling — no rule, owner link or pinned phrase removed.
