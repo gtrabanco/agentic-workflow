@@ -1,0 +1,7 @@
+diff --git a/scripts/review-state.mjs b/scripts/review-state.mjs
+--- a/scripts/review-state.mjs
++++ b/scripts/review-state.mjs
+@@ -18,3 +18,4 @@ export function readState
+ const next = readJson(file);
++if (!next) return null;
+ return next;
