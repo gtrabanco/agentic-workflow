@@ -242,31 +242,31 @@ none
 
 ## Tasks
 
-- P1 — red-first tests for S4: a spec-by-reference doc with ≥3 `**S#**` requirements derives `standard`, 1–2 requirements stay `trivial`, explicit frontmatter wins, and the legacy pair keeps its previous derivation (validator: `node --test scripts/unit-route.test.mjs` exits 0)
+- [x] P1 — red-first tests for S4: a spec-by-reference doc with ≥3 `**S#**` requirements derives `standard`, 1–2 requirements stay `trivial`, explicit frontmatter wins, and the legacy pair keeps its previous derivation (validator: `node --test scripts/unit-route.test.mjs` exits 0)
   (Implements: S4)
   Relevant files: scripts/unit-route.test.mjs, scripts/fixtures/unit-route/docs/features/
-- P2 — green: `unitFacts` reads both accepted shapes through the shared `parseSpecs` grammar, plus the differential sample over every repo unit (validator: `node --test scripts/unit-route.test.mjs` exits 0; the differential run differs only on the ≥3-`S#` docs)
+- [x] P2 — green: `unitFacts` reads both accepted shapes through the shared `parseSpecs` grammar, plus the differential sample over every repo unit (validator: `node --test scripts/unit-route.test.mjs` exits 0; the differential run differs only on the ≥3-`S#` docs)
   (Implements: S4)
   Relevant files: scripts/unit-route.mjs
-- P3 — red-first tests for S6: no `## Tasks` answers `n/a` with the legacy-carrier reason in all three discipline checks, and `check-all` tells the same story (validator: `node --test scripts/ceremony-docs.test.mjs` exits 0)
+- [x] P3 — red-first tests for S6: no `## Tasks` answers `n/a` with the legacy-carrier reason in all three discipline checks, and `check-all` tells the same story (validator: `node --test scripts/ceremony-docs.test.mjs` exits 0)
   (Implements: S6)
   Relevant files: scripts/ceremony-docs.test.mjs, scripts/ceremony/docs.mjs
-- P4 — green: the vacuous pass becomes an `n/a` answer, `check-all` treats `n/a` as passing, decision recorded (validator: `node scripts/ceremony.mjs docs check-all --slug 32-review-consistency-pack` exits 0 with `overall: PASS`)
+- [x] P4 — green: the vacuous pass becomes an `n/a` answer, `check-all` treats `n/a` as passing, decision recorded (validator: `node scripts/ceremony.mjs docs check-all --slug 32-review-consistency-pack` exits 0 with `overall: PASS`)
   (Implements: S6)
   Relevant files: scripts/ceremony/docs.mjs, docs/fix/398-retired-carriers/decisions.md
-- P5 — templates gain the `type`/`scope` block and the `## Triaged steps` slot in both repo and exported trees (validator: `bun test scripts/*-parity.test.mjs scripts/unit-doc-contract.test.mjs` exits 0)
+- [x] P5 — templates gain the `type`/`scope` block and the `## Triaged steps` slot in both repo and exported trees (validator: `bun test scripts/*-parity.test.mjs scripts/unit-doc-contract.test.mjs` exits 0)
   (Implements: S5)
   Relevant files: docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md
-- P6 — scope A: checks 10 and 11 rewritten, legacy scope labelled, lane-era owners named, count still 15 (validator: `bun scripts/skill-lint.mjs` exits 0 with `verdict: PASS`; `bun scripts/check-skill-context.mjs` exits 0)
+- [x] P6 — scope A: checks 10 and 11 rewritten, legacy scope labelled, lane-era owners named, count still 15 (validator: `bun scripts/skill-lint.mjs` exits 0 with `verdict: PASS`; `bun scripts/check-skill-context.mjs` exits 0)
   (Implements: S1, S2, S3)
   Relevant files: skills/audit-docs/SKILL.md
-- P7 — evidence the rewrite bites both ways: one lane-era unit passes, one legacy defect reproduces (validator: `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true` and the legacy copy exits 2 with `valid: false`)
+- [x] P7 — evidence the rewrite bites both ways: one lane-era unit passes, one legacy defect reproduces (validator: `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true` and the legacy copy exits 2 with `valid: false`)
   (Implements: S1)
   Relevant files: docs/fix/398-retired-carriers/SPEC.md
-- P8 — the repository gate and the non-goal sweep (validator: `node scripts/run-root-suite.mjs` exits 0)
+- [x] P8 — the repository gate and the non-goal sweep (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
   Relevant files: all changed files
-- P9 — release intent passes its two gates (validator: `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS`; `node scripts/lint-changeset.mjs <file>` matches `ok`)
+- [x] P9 — release intent passes its two gates (validator: `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS`; `node scripts/lint-changeset.mjs <file>` matches `ok`)
   (Implements: S8)
   Relevant files: .changeset/*.md
 
@@ -350,20 +350,20 @@ One observable criterion per `S#`, each naming the check that proves it.
 
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | S4, S8 (P1) | a spec-by-reference unit doc with ≥3 `**S<n> — …**` requirement lines and no `scope` frontmatter derives `standard`, never `trivial` (R1 reproducer: today it derives `trivial` and silently skips design/plan/tests/review/docs) | P1 | P1 | execute-phase | `node --test scripts/unit-route.test.mjs` exits 0 with the 4 `#398 B1` cases green | red run on the base code (cases fail naming `trivial`) then green run, as E lines in `## Log` | planned |
-| O2 | S4, S8 (P2) | the fallback reads both accepted shapes through the one shared grammar, and no unit's derived scope changes except the intended ≥3-`S#` docs (differential) | P2 | P2 | execute-phase | `node scripts/unit-route.mjs --triage <slug>` over every `docs/{features,fix}/*/SPEC.md` differs from the base run only on the ≥3-`S#` set | differential table (base vs change) pasted in `## Log` | planned |
-| O3 | S6, S8 (P3) | `check-tasks-ticks` answers `{"n/a": "no ## Tasks section — legacy carrier"}` on a doc with no `## Tasks`, never a vacuous `valid: true` (R2 reproducer) | P3 | P3 | execute-phase | `node --test scripts/ceremony-docs.test.mjs` exits 0 with the exact-assertion case | red run (vacuous `valid: true` observed) then green run in `## Log` | planned |
-| O4 | S6, S8 (P3) | `check-progress-entry` answers the same `n/a` reason on a doc with no `## Tasks`, never a vacuous `valid: true` | P3 | P3 | execute-phase | `node --test scripts/ceremony-docs.test.mjs` exits 0 with the exact-assertion case | red run then green run in `## Log` | planned |
-| O5 | S6, S8 (P4) | `check-all` tells the same story as the sub-checks: an `n/a` row is a passing row, the aggregate no longer errors `missing-section` on a legacy unit (R4 reproducer), and the choice is recorded | P4 | P4 | execute-phase | `node scripts/ceremony.mjs docs check-all --slug 32-review-consistency-pack` exits 0 with `overall: PASS` and the three `n/a` rows | pasted CLI output + the D1 decision line in `decisions.md` | planned |
-| O6 | S5, S8 (P5) | the two repo templates and the two exported templates carry the commented `type`/`scope` vocabulary and the `## Triaged steps` slot, in the contract order both parity suites pin | P5 | P5 | execute-phase | `node --test scripts/scaffold-parity.test.mjs` exits 0 and `node --test scripts/unit-doc-contract.test.mjs` exits 0 | both suite runs in `## Log` | planned |
-| O7 | S5, S8 (P5) | a unit copied from a template survives `phase-lint` and `unit-lineage` once its triage block is pasted (the template states the paste) | P5 | P5 | execute-phase | `node scripts/phase-lint.mjs <fixture>/SPEC.md` matches `PASS` and `node scripts/unit-lineage.mjs --unit <fixture-slug>` matches `LINEAGE OK` | the two fixture runs pasted in `## Log` | planned |
-| O8 | S1, S8 (P6) | check 11 branches on `TASKS.md` presence first, names the two ceremony sub-checks (not `check-all`), declares the no-`## Tasks` case, and keeps `done`→HIGH / in-flight→LOW with close-out delegated to `audit-pr` (R3 reproducer) | P6 | P6 | execute-phase | the S1 property check over `skills/audit-docs/SKILL.md` matches 6/6 and `bun scripts/skill-lint.mjs` exits 0 with `verdict: PASS` | both runs, plus the S1 property check red-before/green-after, in `## Log` | planned |
-| O9 | S2, S8 (P6) | check 10 keeps the legacy grep labelled *legacy carriers only*, names `phase-lint` and `check-phase-labels` as the lane-era owners, and notes an `S#` hit in a lane-era doc is not a phase label (R5 reproducer) | P6 | P6 | execute-phase | the S2 property check over `skills/audit-docs/SKILL.md` matches 3/3 | the check run (red-before/green-after) in `## Log` | planned |
-| O10 | S3, S8 (P6) | the report contract is frozen: 15 checks, no `MEDIUM`, `review-loop-discipline.test.mjs` and `AUDIT_DIMENSIONS.md` unmodified | P6 | P6 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` exits 0 and `git diff --stat main -- scripts/review-loop-discipline.test.mjs skills/product-audit/references/AUDIT_DIMENSIONS.md` prints nothing | both runs in `## Log` | planned |
-| O11 | S1, S8 (P7) | the rewritten check 11 bites both ways: a lane-era unit passes it and a legacy defect is still caught | P7 | P7 | execute-phase | `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true`, and the legacy-defect copy exits 2 with `valid: false` | both outputs pasted verbatim in `## Log` | planned |
-| O12 | S8 (P8) | the repository gate is green at the handoff head | P8 | P8 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | exit code and pass/fail tally in `## Log` | planned |
-| O13 | S8 (P9) | the release intent passes both of its gates | P9 | P9 | execute-phase | `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS` and `node scripts/lint-changeset.mjs <file>` matches `ok` | both outputs in `## Log` | planned |
-| O14 | S7, S8 (P8) | the non-goals hold: check count still 15, no legacy unit rewritten, `unit-lineage`/`audit-pr`/triage catalog untouched | P8 | P8 | execute-phase | `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` matches 15 and `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing | both runs in `## Log` | planned |
+| O1 | S4, S8 (P1) | a spec-by-reference unit doc with ≥3 `**S<n> — …**` requirement lines and no `scope` frontmatter derives `standard`, never `trivial` (R1 reproducer: today it derives `trivial` and silently skips design/plan/tests/review/docs) | P1 | P1 | execute-phase | `node --test scripts/unit-route.test.mjs` exits 0 with the 4 `#398 B1` cases green | red run on the base code (cases fail naming `trivial`) then green run, as E lines in `## Log` | verified |
+| O2 | S4, S8 (P2) | the fallback reads both accepted shapes through the one shared grammar, and no unit's derived scope changes except the intended ≥3-`S#` docs (differential) | P2 | P2 | execute-phase | `node scripts/unit-route.mjs --triage <slug>` over every `docs/{features,fix}/*/SPEC.md` differs from the base run only on the ≥3-`S#` set | differential table (base vs change) pasted in `## Log` | verified |
+| O3 | S6, S8 (P3) | `check-tasks-ticks` answers `{"n/a": "no ## Tasks section — legacy carrier"}` on a doc with no `## Tasks`, never a vacuous `valid: true` (R2 reproducer) | P3 | P3 | execute-phase | `node --test scripts/ceremony-docs.test.mjs` exits 0 with the exact-assertion case | red run (vacuous `valid: true` observed) then green run in `## Log` | verified |
+| O4 | S6, S8 (P3) | `check-progress-entry` answers the same `n/a` reason on a doc with no `## Tasks`, never a vacuous `valid: true` | P3 | P3 | execute-phase | `node --test scripts/ceremony-docs.test.mjs` exits 0 with the exact-assertion case | red run then green run in `## Log` | verified |
+| O5 | S6, S8 (P4) | `check-all` tells the same story as the sub-checks: an `n/a` row is a passing row, the aggregate no longer errors `missing-section` on a legacy unit (R4 reproducer), and the choice is recorded | P4 | P4 | execute-phase | `node scripts/ceremony.mjs docs check-all --slug 32-review-consistency-pack` exits 0 with `overall: PASS` and the three `n/a` rows | pasted CLI output + the D1 decision line in `decisions.md` | verified |
+| O6 | S5, S8 (P5) | the two repo templates and the two exported templates carry the commented `type`/`scope` vocabulary and the `## Triaged steps` slot, in the contract order both parity suites pin | P5 | P5 | execute-phase | `node --test scripts/scaffold-parity.test.mjs` exits 0 and `node --test scripts/unit-doc-contract.test.mjs` exits 0 | both suite runs in `## Log` | verified |
+| O7 | S5, S8 (P5) | a unit copied from a template survives `phase-lint` and `unit-lineage` once its triage block is pasted (the template states the paste) | P5 | P5 | execute-phase | `node scripts/phase-lint.mjs <fixture>/SPEC.md` matches `PASS` and `node scripts/unit-lineage.mjs --unit <fixture-slug>` matches `LINEAGE OK` | the two fixture runs pasted in `## Log` | verified |
+| O8 | S1, S8 (P6) | check 11 branches on `TASKS.md` presence first, names the two ceremony sub-checks (not `check-all`), declares the no-`## Tasks` case, and keeps `done`→HIGH / in-flight→LOW with close-out delegated to `audit-pr` (R3 reproducer) | P6 | P6 | execute-phase | the S1 property check over `skills/audit-docs/SKILL.md` matches 6/6 and `bun scripts/skill-lint.mjs` exits 0 with `verdict: PASS` | both runs, plus the S1 property check red-before/green-after, in `## Log` | verified |
+| O9 | S2, S8 (P6) | check 10 keeps the legacy grep labelled *legacy carriers only*, names `phase-lint` and `check-phase-labels` as the lane-era owners, and notes an `S#` hit in a lane-era doc is not a phase label (R5 reproducer) | P6 | P6 | execute-phase | the S2 property check over `skills/audit-docs/SKILL.md` matches 3/3 | the check run (red-before/green-after) in `## Log` | verified |
+| O10 | S3, S8 (P6) | the report contract is frozen: 15 checks, no `MEDIUM`, `review-loop-discipline.test.mjs` and `AUDIT_DIMENSIONS.md` unmodified | P6 | P6 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` exits 0 and `git diff --stat main -- scripts/review-loop-discipline.test.mjs skills/product-audit/references/AUDIT_DIMENSIONS.md` prints nothing | both runs in `## Log` | verified |
+| O11 | S1, S8 (P7) | the rewritten check 11 bites both ways: a lane-era unit passes it and a legacy defect is still caught | P7 | P7 | execute-phase | `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true`, and the legacy-defect copy exits 2 with `valid: false` | both outputs pasted verbatim in `## Log` | verified |
+| O12 | S8 (P8) | the repository gate is green at the handoff head | P8 | P8 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | exit code and pass/fail tally in `## Log` | in-progress |
+| O13 | S8 (P9) | the release intent passes both of its gates | P9 | P9 | execute-phase | `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS` and `node scripts/lint-changeset.mjs <file>` matches `ok` | both outputs in `## Log` | verified |
+| O14 | S7, S8 (P8) | the non-goals hold: check count still 15, no legacy unit rewritten, `unit-lineage`/`audit-pr`/triage catalog untouched | P8 | P8 | execute-phase | `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` matches 15 and `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing | both runs in `## Log` | verified |
 
 ## Findings
 
@@ -402,9 +402,47 @@ OPEN rows only.
   checks span alone (`sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' … |
   grep -cE '^[0-9]+\. '` → 15). Corrected before the row moved off `planned`.
 
+- **P1** — 2026-11-04, the S4 cases written red first: 6 cases over 6 fixtures, observed failing on the base code (59 pass · 2 fail) and again on the trimmed grammar (62 · 2) · 6c7844fe.
+- **P2** — 2026-11-04, `unitFacts` reads both accepted shapes through `parseSpecs`; the differential over every unit doc was run for this row · d91ba9a6.
+- **P3** — 2026-11-04, the S6 cases tightened to the exact envelope and observed failing (11 pass · 4 fail) · a0787e3c.
+- **P4** — 2026-11-04, the three discipline checks answer `n/a` and `check-all` agrees · 488069ec.
+- **P5** — 2026-11-04, all four templates carry the `type`/`scope` block and the `## Triaged steps` slot; validated on a throwaway copy before the real tree · b35acb8f.
+- **P6** — 2026-11-04, checks 10 and 11 rewritten; the report contract untouched · 54ec9c17.
+- **P7** — 2026-11-04, check 11 exercised both ways on real carriers (E13–E17).
+- **P8** — 2026-11-04, the repository gate ran green at this head (E18); only this unit doc and its decisions moved afterwards.
+- **P9** — 2026-11-04, the changeset intent passes its two gates (E19–E20) · 63483201.
+- **E1** — 2026-11-04, base code + the current router suite (`node --test scripts/unit-route.test.mjs` in a `/tmp` copy of `main`) · exit 1 · 59 pass · 2 fail, the failures being `#398 B1` ≥3-`S#` (derived `implement, evidence`).
+- **E2** — 2026-11-04, base code + the current ceremony suite, same copy · exit 1 · 11 pass · 2 fail (both `#398 B3` cases).
+- **E3** — 2026-11-04, `node --test scripts/unit-route.test.mjs` on the trimmed grammar · exit 1 · 62 pass · 2 fail: emphasis miscounted, fenced quote counted.
+- **E4** — 2026-11-04, `node --test scripts/unit-route.test.mjs` after `parseSpecs` · exit 0 · 64 pass · 0 fail.
+- **E5** — 2026-11-04, differential `unit-route --triage --json` over all 132 `docs/{features,fix}/*/SPEC.md`, base code vs head, same tree · exit 0 · 18 differ, 114 byte-identical; every differing unit has no `scope:` frontmatter and ≥4 `S#` (4, 4, 6, 6, 9, 9, 9, 10, 10, 10, 11, 13, 14, 14, 15, 16, 20, 26). `103-doc-currency` unchanged.
+- **E6** — 2026-11-04, `node --test scripts/ceremony-docs.test.mjs` with the tightened cases · exit 1 · 11 pass · 4 fail.
+- **E7** — 2026-11-04, `node --test scripts/ceremony-docs.test.mjs` after the `n/a` answer · exit 0 · 15 pass · 0 fail.
+- **E8** — 2026-11-04, `bun test scripts/ceremony*.test.mjs` · exit 0 · 73 pass · 0 fail across 5 files.
+- **E9** — 2026-11-04, `bash /tmp/398-prose-check.sh` (S1 6 properties, S2 4, S3 3) before the rewrite · exit 1 · 6 passed · 9 missing.
+- **E10** — 2026-11-04, `bash /tmp/398-prose-check.sh` after the rewrite · exit 0 · 15 passed · 0 missing.
+- **E11** — 2026-11-04, `SCAFFOLD_PARITY_ROOT=<throwaway copy> node --test scripts/scaffold-parity.test.mjs` and the contract suite inside that copy · exit 0 · 17/17 and 19/19.
+- **E12** — 2026-11-04, `bun test scripts/*-parity.test.mjs scripts/unit-doc-contract.test.mjs` in-tree after the template change · exit 0 · 53 pass · 0 fail.
+- **E13** — 2026-11-04, `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` and `… check-progress-entry --slug 103-doc-currency` · exit 0 twice · `{"valid":true,"mismatched":[]}` and `{"valid":true,"missing":[]}`.
+- **E14** — 2026-11-04, the same two commands on `32-review-consistency-pack` (legacy) · exit 0 twice · `{"n/a":"no ## Tasks section — legacy carrier"}`.
+- **E15** — 2026-11-04, `node scripts/ceremony.mjs docs check-all --slug 32-review-consistency-pack` · exit 0 · `overall: PASS` with the three `n/a` rows (phase-labels, tasks-ticks, progress) and `commit-format`/`docs-language` valid.
+- **E16** — 2026-11-04, `node scripts/ceremony.mjs docs check-tasks-ticks --slug 370-pi-150-compat-reverification` · exit 2 · `valid:false`, P1 ticked but not logged — the lane-era branch still catches a real defect.
+- **E17** — 2026-11-04, the check-11 legacy branch on a `/tmp` copy of `06-design-feature`: clean `legacy carrier consistent` exit 0; with one box unticked and one phase appended without a progress entry `unticked: P1 …` + `no progress entry: P9` exit 1.
+- **E18** — 2026-11-04, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`, `verdict: PASS`; `bun scripts/check-skill-context.mjs` · exit 0 · `audit-docs 2730 tokens / 205 lines` (ceilings 2800 / 240).
+- **E19** — 2026-11-04, `node --test scripts/review-loop-discipline.test.mjs` · exit 0 · 1 pass; `git diff --stat main -- scripts/review-loop-discipline.test.mjs skills/product-audit/references/AUDIT_DIMENSIONS.md` prints nothing.
+- **E20** — 2026-11-04, the template copy in a throwaway tree: `node scripts/phase-lint.mjs docs/features/99-template-cut/SPEC.md` · exit 0 · `verdict PASS`; after pasting its triage block and one contracted obligation row, `node scripts/unit-lineage.mjs --unit 99-template-cut` · exit 0 · `LINEAGE OK — lane-era … obligations closed (1)`.
+- **E21** — 2026-11-04, `node scripts/lint-changeset.mjs .changeset/398-retired-carriers.md` · exit 0 · `ok`; `node scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`.
+- **E22** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 1 · 1531 pass · 2 fail, both the same failure: `FAIL context documents: AGENTS.md: estimate 6884 > 6881`. Pre-existing on `main`, not this unit: `AGENTS.md` is byte-identical to `main` (`diff -q` clean), and main's own tree reproduces the same numbers (`node scripts/check-skill-context.mjs --documents` in a `main` copy · exit 1 · same line). It landed with the PR #397 merge `27456e50` (27536 bytes → 6884; the branch head `4afd3a9f` was 27459 → 6865, inside the ceiling). O12 therefore stays open.
+- **E23** — 2026-11-04, the non-goal sweep: `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` · exit 0 · 15; `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing; `git diff --name-only main -- docs/features docs/fix | grep -vE '(_TEMPLATE|398-retired-carriers)'` prints nothing; `git diff --stat main -- scripts/fixtures/catalog` prints nothing.
+
 ## Next
 
-Run P1; then P2–P9 in order. Stop at the handoff gate for the external verdict.
+Handoff gate. O1–O11, O13 and O14 are `verified` with their evidence in `## Log`;
+**O12 is open** — `node scripts/run-root-suite.mjs` exits 1 on a pre-existing
+`AGENTS.md` context-budget overflow (`6884 > 6881`) that `main` reproduces
+identically (E22). The decision — trim the twelve bytes of unpinned guide prose
+in this unit, or leave P8 to its own fix — is the owner's, not this unit's to
+take.
 
 ## References
 
