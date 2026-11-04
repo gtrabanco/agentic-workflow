@@ -4241,3 +4241,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Issue #358: PR 399 opened (base `main`, head `fix/358-adversarial-kill-mandate`, 7 branch commits, 25 files, +1475/−11). Merged from main (a single `LOGS.md` conflict resolved by keeping both append-only entries) and pushed. All local gates green: root-suite 1536/1535 pass, check-skill-context 28 skills + 3 documents, skill-lint 0 findings. CI jobs queued behind a runner backlog. No `review-change` has run on the branch yet — that is the intended next step before `/audit-pr`.
 - **Decisions:** PR title set as `fix(358): adversarial pass verifies instead of enumerating — kill mandate, diff-only reflector, stability check`; the PR body was written from the template's fix section with the full evidence pack, rollback, and honest disclosures (pre-existing red on --documents gate, D1 narrowed validators, no review-change receipt yet).
 - **Next:** `/review-change` on the branch from a fresh context, then `/audit-pr 399`
+## 2026-11-04T17:07:47Z — feat/398-retired-carriers — manual
+- **Commits:** 17 (`77a68992…989aa2d7`)
+- **Files:** 20 files
+- **Summary:** Repaired Serena: installed libicu76 to fix marksman (markdown LSP) startup failure
+- **Decisions:** System package libicu76 required by the .NET-based marksman binary; no code changes, just system dependency
+- **Next:** No pending items — Serena now passes health check
