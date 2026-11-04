@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseUnitDocPhases, loggedPhases, parseLog, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
@@ -608,12 +608,14 @@ function unitFacts(doc, unitDir) {
     }
     scope = fm.scope;
   } else {
-    // #398 B1: read both accepted shapes — legacy Objective/Acceptance criteria
-    // and spec-by-reference ## Specs **S<n>** lines. A doc with ≥ 3
-    // requirements is never trivial (real work: design, plan, tests, review).
-    const specsBody = sectionBody(doc, "Specs") || "";
-    const specCount = (specsBody.match(/\*\*S\d+[a-z]*\b[^*]*\*\*/gm) || []).length;
-    if (specCount >= 3) {
+    // #398 B1: read both accepted shapes — the legacy Objective/Acceptance
+    // criteria pair and the spec-by-reference ## Specs requirements. The count
+    // comes from the one reader that owns that grammar (parseSpecs, whose
+    // fence-aware scan is what keeps a quoted example from counting); a doc
+    // carrying >= 3 requirements is never trivial (real work: design, plan,
+    // tests, review).
+    const requirements = parseSpecs(doc).requirements.length;
+    if (requirements >= 3) {
       scope = "standard";
     } else {
       const objective = sectionBody(doc, "Objective") || "";
