@@ -6,7 +6,7 @@ argument-hint: "[--fix]"
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Audit cross-document coherence: docs ↔ roadmap ↔ code ↔ fix index ↔ issues.
+  Audit cross-document coherence: docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index ↔ issues.
   Finds drift — features in docs/ not in the roadmap (or vice versa), fix-index
   entries already merged/closed, broken documentation-map links, dependency
   cycles, artifacts in the wrong language, naming-convention violations — and
@@ -106,6 +106,17 @@ run the command shown, don't infer.
     a unit built on unmerged deps is HIGH unless `decisions.md` records a
     user-forced override (`--force`), which downgrades it to LOW (documented
     risk).
+15. **README currency against what shipped.** Run each README against the
+    tree: `rg -n '<a retired name or stale claim>' README.md packages/*/README.md`
+    and every hit that names a surface the tree no longer carries (a retired
+    skill in an install/uninstall example, a command count or package count the
+    tree contradicts, a "none yet" beside shipped subcommands) is **HIGH** —
+    the claim misleads a reader who acts on it. Its mirror: a shipped,
+    consumer-facing surface with no README entry at all is **HIGH** (the
+    document-or-don't-coin residue read at README scope — `product-audit` owns
+    the product-wide sweep, this check is the docs-tree half). Superseded prose
+    left standing beside its replacement is **LOW**. Owners: the rule is
+    `AGENTS.md` §Working rules, the step is `skills/unit-lane/references/DOCS.md`.
 
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
@@ -119,11 +130,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-14) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-15) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/14 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/15 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```

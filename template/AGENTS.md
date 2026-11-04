@@ -79,6 +79,15 @@ both stay legitimate as the documented fallback when the preferred tool is
 absent — check availability once per session, never assume it. Retarget the two
 pairs to this project's preferred tools when they differ.
 
+**Documentation currency.** A unit that changes a shipped surface documents it
+in the same change: every README (or equivalent entry page) that describes that
+surface — project README, package or module README, the docs-site page declared
+above — now describes what actually shipped, and the prose it supersedes is
+deleted rather than left standing beside the new text. `rg -n '<the retired
+claim>' <the file>` returning nothing is the retirement's evidence. This is a
+required part of the docs step, not a follow-up: the step's checklist is owned
+by the lane's `docs` step reference, and `audit-docs` re-checks it afterwards.
+
 **Normalized Repository State.** When `docs/workflow/REPOSITORY_STATE.md` exists,
 consume its frozen, evidence-backed facts and accepted decisions before
 rediscovering them. Keep facts, planned work, documentation, and inference

@@ -64,7 +64,7 @@ Two JSON files, both optional:
 {
   "default": { "model": "anthropic/claude-opus-4-5", "thinking": "high" },
   "commands": {
-    "plan-feature": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
+    "unit-lane": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
     "review-change": { "thinking": "max" }
   },
   "onUnavailableRoute": "stop",
@@ -84,7 +84,7 @@ whatever the session already had, because the shipped default route is
   resolves and has credentials, without touching the session while probing; when
   every entry is unusable the command stops (or, with `onUnavailableRoute`
   `inherit`, warns and runs on the current model), naming each candidate and why
-  it was skipped. `plan-feature` above tries `anthropic/claude-sonnet-4-5` first,
+  it was skipped. `unit-lane` above tries `anthropic/claude-sonnet-4-5` first,
   then `openai/gpt-5.2`.
 - `thinking` is one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`,
   or `"inherit"`.
@@ -263,8 +263,8 @@ nothing runs on a model you did not pick. To run anyway on the current model, se
 ## Your session after a command
 
 By default (**`onSettle: "keep"`**), the routed model and thinking level **stay**
-in the open chat window once the command settles. If `plan-feature` runs on
-`glm-5` and you want to tweak the plan it produced, your next prompt keeps
+in the open chat window once the command settles. If `unit-lane` runs on
+`glm-5` and you want to tweak the SPEC it produced, your next prompt keeps
 running on `glm-5` — same for a follow-up question. When you don't need the
 heavy model, switch it yourself with `/model` (or Ctrl+P) to something cheaper;
 nothing restores over your choice.
@@ -313,7 +313,7 @@ dialog.
 
 | You see | Means |
 | --- | --- |
-| `refused: invalid configuration` | A config file was rejected. The same message names the field, e.g. `$.commands.plan-feature.model`. Run `/agentic-workflow-settings` to see the file, or fix the JSON. |
+| `refused: invalid configuration` | A config file was rejected. The same message names the field, e.g. `$.commands.unit-lane.model`. Run `/agentic-workflow-settings` to see the file, or fix the JSON. |
 | `stopped: the configured model` … `is not in the model registry` | The reference is wrong or the provider is not configured. Use `/model` to see the exact `provider/modelId`. |
 | `has no configured credentials` | The model exists but you cannot use it yet. Authenticate, or set `onUnavailableRoute` to `inherit`. |
 | `could not be selected` | Pi refused the switch. The command stops with the reason — unless `onUnavailableRoute` is `inherit`, in which case it warns and runs on your current model. |

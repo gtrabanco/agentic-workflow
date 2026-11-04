@@ -27,15 +27,28 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 
 ```
 skills/                  28 source skills (13 user-facing + 14 workflow internals + 1 metadata-internal; 27 discoverable — skill-lint is repo-only)
-packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
-                         and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
+packages/                three companion npm packages: @gtrabanco/agentic-workflow (the runner crate —
+                         `agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory>`, typed file
+                         services, guards and the `doc` retrieval index), @gtrabanco/agentic-workflow-schema
+                         (machine contracts) and @gtrabanco/pi-agentic-workflow (one-command install for Pi —
+                         see Install)
+scripts/                 the deterministic gates, sensors and generators, each with its sibling *.test.mjs
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
 docs/ROADMAP.md           the single Features+Fixes index (the planning artifacts skills produce)
 docs/features/_TEMPLATE  feature SPEC template
-docs/fix/                fix SPEC template + index README
+docs/fix/                fix SPEC template (the active-fixes index lives in docs/ROADMAP.md)
 .github/                 issue + PR templates the workflow expects
 ```
+
+The runner crate ships the **`doc` retrieval index** (feature 65): one gitignored
+SQLite store under `.agentic-workflow/index/` that answers `agentic-workflow
+doc --query <term>` — FTS5 keyword search today, an optional OpenAI-compatible
+embeddings endpoint (`AGENTIC_WORKFLOW_DOC_EMBEDDINGS_*`) when a key is
+configured, with declared degradations instead of silent failure. It is a
+**discovery aid, never authority**: no gate or decision reads it. Positional
+document operations (`doc read|edit|index`) are unit `71`, still `defined` — the
+CLI refuses them by name and only accepts the four retrieval flags.
 
 **Dogfooding model (authoring):** repo sessions consume the workflow from the
 installed release (Pi package / installed plugin), not from the working copy.
@@ -84,6 +97,12 @@ review the change → audit → merge.**
 | `discover-repository-state` | Creates and freezes an evidence-backed repository-state ledger before planning or implementation; facts, decisions, documentation, planned work, and inference remain distinct |
 | `resolve-repository-state` | Sole writer for an explicit repository-state contradiction; verifies the competing evidence and publishes the next frozen snapshot |
 
+### Design & plan
+
+| Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unit-lane`  | **One-shot lane conductor for a delivery unit** (the entry point for new work): opens or resumes `docs/features/<NN>-<slug>/SPEC.md`, runs a closed-catalog **triage** that picks the steps this unit actually needs (research, design, plan, implement, tests, evidence, review, docs, release) and runs them **inline, one step per turn**, cutting phases at plan time, then hands execution to `/execute-phase` **one phase per turn** and closes with the evidence, the context-clean review receipt and `/audit-pr`. Deterministic guards (diff-size, path protection, scope) bite when a unit outgrows the light path, and a missing input stops it with the `open-questions@1` block instead of guessing. |
+
 ### Execute
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
@@ -98,7 +117,7 @@ review the change → audit → merge.**
 | `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. A token- or claim-shaped change carries its `swept:` declaration, which `promise-coherence` re-runs. |
 | `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. A stale-by-sha receipt that recorded a scope manifest stays current across a non-affecting head delta (session log, agent toolstate); any affecting-path delta still voids it (fix/286). The pre-execution lineage gate keys on the unit surface: lane-era units verify their pasted triage block by re-derivation and close obligations from the unit doc; legacy units keep the progress.md receipt path (fix/285). MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. |
 | `product-audit` | the **product** | Explicit-invocation-only, periodic full-spectrum health check persisted as `docs/audits/<id>-<date>.md`; mines code and feature history into severity-ranked findings plus issue/roadmap/tooling proposals, checks capability-inventory freshness and repeated scope export, gates every claim on evidence provenance and reports the delta vs the prior audit of equivalent scope, and never auto-fixes; it **owns the repo-wide open-ended bug hunt, security research and broken-version investigation** (scoped, sampled and budgeted per dimension) while `review-change` owns the same hunt against one change. |
-| `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
+| `audit-docs`    | the **docs**    | Audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index for drift                                                        |
 
 `review-change` and `audit-pr` also evaluate the optional project
 `ARCHITECTURAL_INVARIANTS.md` document: every applicable rule needs repository
@@ -125,9 +144,11 @@ Projects that do not declare the document remain compatible.
 
 ### Session
 
+> `log-session` belongs to this stage too; its entry sits under
+> [Document](#document) so the same skill is never described twice.
+
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
 | `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine (`idea`/`defined`/`planned`/`in-progress`/`done`), what is startable right now (status ≥ `defined`, deps met) and in which build order, `idea` rows reported as `detail.design_candidates`, open PRs + audit state, pending fixes and findings awaiting triage, the mandatory end review proven from its durable `REVIEW-RAN` mark rather than from a findings file that merely exists, the untriaged open-issue backlog (`detail.untriaged_issues`, label-authoritative with a `VERDICT:`-comment legacy fallback), each unit's unfolded fix-now findings from its findings carrier — the unit doc's `## Findings` section for a migrated unit, `review-findings.md` for a legacy one — as structured `findings.fix_now[]` items carrying a derived `suggested_tier`, plus the injection-safe `detail.urgent` field (labels-only `urgent`/`fix-next` issues + in-flight interruptibility facts) — and emits it as one fixed JSON machine envelope, `findings.fix_now[]` severity-normalized to the published `high`/`med`/`low` enum, self-checked against the bundled schema and a fixed command→tier map before printing (per-unit `review`/`closure`/`issues_born` and the `next.suggested[]` surface remain steps 10–13 of the published sequence, skill-side and **not yet sensor-mechanized**). With `--last-envelope`, a **no-progress guard** flags a stalled unit still at its pre-advance status. With `--compact`, the same envelope drops repository history — proved-merged units out of `detail.features`/`detail.fixes`, the findings' evidence memos reduced to a fingerprint that keeps their length and names the ledger — while every decision field and `detail.workflow_observations` stay byte-identical (about half the bytes), so a poll loop reads the reduced document and any consumer may switch modes per read
 as a `workflow_observations` note instead of silently repeating it. The resolved `next` command is also projected into the schema-validated `next.continuation` object (argv + derived rendering + at-emit preconditions + receiver-verifiable evidence digest + the `convergence` field it advances), with fail-closed typed refusals at `detail.continuation_refusal` whenever no v1 class owns the command, the forge is offline, or a precondition is uncheckable — the emitted command is quoted, never authored. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
 
@@ -147,9 +168,10 @@ never as a dependency. See `docs/workflow/RECOMMENDED_SKILLS.md`.
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — three skills were
 > renamed, so re-add to update + delete the three old folders.
 >
-> **Versioning.** Each skill is versioned independently (`version:` in its
-> frontmatter); changes are logged in [`CHANGELOG.md`](CHANGELOG.md). Upgrade an
-> install with `npx skills update`.
+> **Versioning.** The skills and the three packages carry **one train version**
+> (`version:` in its frontmatter, stamped by `scripts/release.mjs apply` at cut
+> time — D-40-14); changes are logged in [`CHANGELOG.md`](CHANGELOG.md). Upgrade
+> an install with `npx skills update`.
 
 ## Choosing a model
 
@@ -198,7 +220,8 @@ frontier-class model at all:
 
 - **Execution** (`execute-phase`, `log-session`, doc bookkeeping) is designed
   for the cheapest tier — one fresh worker context per phase, compact handoff
-  via `progress.md`, at most 10 full-file reads per phase. The outer invocation
+  through the unit doc's own `## Tasks` and `## Log`, at most 10 full-file reads
+  per phase. The outer invocation
   continues through every remaining phase unless an explicit `P<n>` is passed.
 - **Planning, review, and audit** (`unit-lane`, `review-change`,
   `audit-pr`, `product-audit`) still get the
@@ -364,8 +387,10 @@ concurrent — 3–4 in practice, leaving headroom for the conductor — and rem
 an agentic loop spends one request per tool round-trip, so several agents in
 parallel hit 60 rpm quickly.
 
-Whisper, Kokoro, Rerank, Qwen3 Embedding and Flux 2 Klein are
-audio/retrieval/image models — not used by the workflow. Model strength above
+Whisper, Kokoro, Rerank, Qwen3 Embedding and Flux 2 Klein are NaN's hosted
+audio/retrieval/image models — this workflow never routes to them (its own
+document retrieval index, when configured, calls a generic OpenAI-compatible
+embeddings endpoint, not this catalog). Model strength above
 is framed by active-params + role, not benchmark numbers — sanity-check
 against a current leaderboard before pinning; this landscape moves fast.
 
@@ -420,7 +445,8 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 
 ```
 # New unit: docs/features/NN-<slug>/SPEC.md (14 sections)
-/execute-phase NN                  → lane executes triage-decided steps (design, implement, tests, evidence, review...)
+/unit-lane NN                      → triage picks the steps this unit needs; the lane runs them one per turn
+                                   → execution is handed off one phase at a time: /execute-phase NN P<k>
                                    → a finished unit always opens its PR + flips to done (built, not merged)
 /fold-findings → re-run /review-change  # manual review→fold; unresolved findings go to triage/replan
 /audit-pr                          # merge gate: merge-ready or blockers (never merge with pending docs)
@@ -489,7 +515,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:
-npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
+npx skills add gtrabanco/agentic-workflow --skill unit-lane --skill triage-issue
 npx skills add gtrabanco/agentic-workflow --agent claude-code --agent cursor
 
 # Install for the current user (global) instead of the current project:
@@ -498,7 +524,7 @@ npx skills add gtrabanco/agentic-workflow --global
 # Manage them later:
 npx skills list
 npx skills update
-npx skills remove plan-feature
+npx skills remove unit-lane
 
 # Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
 npx skills add gtrabanco/agentic-workflow#release-2026-07-02
@@ -512,7 +538,7 @@ On [Pi](https://github.com/badlogic/pi-mono) you don't need the skills CLI at
 all — the method ships as a single npm package that bundles the same skills
 together with everything the copy-per-agent route leaves out: a friendly slash
 command for every public skill (`/unit-lane --next`, not
-`/skill:plan-feature --next`), and optional per-command model routing that
+`/skill:unit-lane --next`), and optional per-command model routing that
 sends each workflow command to the model you choose and gives your session
 back afterwards.
 
@@ -563,7 +589,8 @@ npx skills remove --yes \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
   review-seo review-verify triage-issue \
-  verification-contract workflow-status unit-lane bump-skill
+  verification-contract workflow-status unit-lane pre-execution-review \
+  plan-feature-interview bump-skill
 ```
 
 Use the same command with `--global` to remove the global installation. The
@@ -589,8 +616,8 @@ npx skills add gtrabanco/agentic-workflow
 
 For a global installation, add `--global` to both commands. These names are not
 published by the current pack: `plan-feature-interview` was an internal helper
-installed by older releases before its logic moved to `design-feature`, and
-`bump-skill` was later reclassified as repository-internal.
+installed by older releases before its logic moved into the lane's `design`
+step, and `bump-skill` was later reclassified as repository-internal.
 
 ### Updating an existing install
 
@@ -655,7 +682,7 @@ the skill shows as enabled. Three working ways:
 ```sh
 # 1. One-time: create a bundle → /workflow becomes the slash entry point
 hermes bundles create workflow \
-  -s init-workspace -s plan-feature -s plan-fix -s execute-phase \
+  -s init-workspace -s unit-lane -s execute-phase \
   -s review-change -s audit-pr -s product-audit -s audit-docs \
   -s triage-issue -s log-session \
   -d "agentic-workflow: plan → execute → review → audit → merge"
