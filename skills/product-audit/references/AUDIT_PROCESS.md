@@ -30,8 +30,9 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
   output > repository inventory > worklist index) and record the winner next to the claim.
   Fallback: `mark unverified`.
 
-3. **Audit process & docs** — incomplete phases (`progress.md`/`TASKS.md`), aging
-   open issues, **solvable known-issues** (trigger now met), doc-map completeness
+3. **Audit process & docs** — incomplete phases on the unit's own carrier
+   (`audit-docs` check 11 discriminates it: lane-era `## Tasks`/`## Log`, legacy
+   `TASKS.md`/`progress.md`), aging open issues, **solvable known-issues** (trigger now met), doc-map completeness
    (compose `audit-docs`), missing/optimizable workflow docs, and **capability
    inventory freshness**: cross-check `docs/CAPABILITIES.md` against the code —
    roles, permissions, or cross-cutting subsystems present in the code but
