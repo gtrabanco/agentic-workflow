@@ -122,7 +122,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `unit-lane` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `unit-lane` |
-| `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
+| `audit-docs` | the **docs** | Audit docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
 > (`user-invocable: false`) — the synthesized-table classifier it composes, and
@@ -211,7 +211,7 @@ review-change ── runs the applicable read-only reviews + classifies a change
                  decision-required ─▶ surface, block · proposals ─▶ user routes to triage-issue
 audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
-audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
+audit-docs ───── audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index, anytime
 
 # The conductor is the companion pi package's `advance` command (feature 62):
 # sensor (`workflow-status`) → deterministic decide → invoke the printed

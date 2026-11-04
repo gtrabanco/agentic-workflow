@@ -15,12 +15,36 @@ as subcommands of it.
   throwaway producer output. It is committed as a directory (`.gitkeep`) so the
   convention exists on a fresh clone.
 
-Current producers: none yet. `scripts/phase-lint.mjs` deliberately stays in the
-repository's `scripts/` tree (feature 37 ED1). Feature 38's
-`scripts/workflow-status.mjs` landed in that same repository tree before this
-crate existed, so re-homing it here is a recorded follow-up (feature 37
-ED8.4c) with no unit assigned yet; feature 42 is the next candidate to add the
-first crate subcommand.
+The crate is the lane's **runner**: every deterministic file service, sensor and
+guard the workflow needs ships as a subcommand here, so a skill or a target
+project invokes one pinned CLI instead of a tree of loose scripts.
+
+## Commands
+
+```text
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory> ...
+```
+
+Every operation prints one fixed receipt block (with `--json` the same receipt
+as JSON). A refused operation exits **2** with `EDIT REFUSAL — <reason>` **before
+writing anything**.
+
+| Command | What it does |
+|---|---|
+| `unit-doc <NN-slug> <op>` | Typed unit-document service: `create`, `setSection`, `evidence`, `progress`, `validate` — schema-checked, unknown sections refused |
+| `roadmap <op>` | Roadmap writer: `rowUpsert` and `annotate` take a table path, and `roadmap check <unit-doc> [--roadmap <f>] [--index <f>] [--json]` returns named violation codes (0 clean · 1 violations · 2 usage) |
+| `changelog [file] <json>` | Appends a changelog row through the writer (defaults to `./CHANGELOG.md`) |
+| `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused |
+| `manifest [plugin.json] <op>` | `skillAdd` / `skillRemove` on the plugin manifest — the alphabetical machine-surface registration |
+| `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query, `--query` answering over FTS5 keyword search and — when `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL` / `_MODEL` / `_API_KEY` are set — a hybrid pass over stored vectors. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`. Discovery only: no gate reads it. Positional doc ops (`read`/`edit`/`index`) ship with unit 71 and are refused by name until then |
+| `memory probe [--json]` | The five-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
+
+Two sibling binaries ship in the same package and are invoked by the skills:
+
+| Binary | What it does |
+|---|---|
+| `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
+| `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
 
 ## `memory probe` — bounded memory-substrate health (feature 66)
 
