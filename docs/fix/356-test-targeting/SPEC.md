@@ -374,6 +374,17 @@ leaves this table and becomes a `## Log` line.
   corpus ~780, and the wiring six files of one-to-forty lines each. A split was
   considered and rejected: `AGENTS.md` forbids stacked PRs, and a prose-only PR
   would ship a rule with no enforcing mechanism.
+- **E10** — 2026-11-04, CI's root suite caught a defect in this unit's own
+  corpus, not in the hint: the case `a code change surfaces the affected suite
+  and excludes the unrelated one` asserted `tier: rg`, and GitHub's runner ships
+  no `rg`. Red side: the CI run for PR #402 · `ℹ fail 1` ·
+  `'grep' !== 'rg'` at `scripts/test-impact.test.mjs:207`. Green side, and the
+  proof the assertion was the defect rather than the behaviour: the whole gate
+  re-run with a PATH carrying every binary on this machine **except `rg`** ·
+  exit 0 · `1543 pass · 1 skip · 0 fail`, and the repaired case asserts a
+  portable tier answered while still pinning the exact suite list and the
+  exclusion of the unrelated suite. The degradation case that owns the matcher
+  question is untouched.
 - **P1** — 2026-11-04, the unit doc, its two ledgers and roadmap row 93 cut
   before any code · `16069246`.
 - **P2** — 2026-11-04, the fixture corpus committed alone — the red commit (E2)
