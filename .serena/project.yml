@@ -104,7 +104,10 @@ ls_workspace_folders:
 #   additional_workspace_folders:
 #     - ../sibling-package
 #     - ../shared-lib
-ls_additional_workspace_folders: []
+ls_additional_workspace_folders:
+  - "./packages/agentic-workflow-schema"
+  - "./packages/agentic-workflow"
+  - "./packages/pi-agentic-workflow"
 
 # list of additional paths to ignore in this project.
 # Same syntax as gitignore, so you can use * and **.
