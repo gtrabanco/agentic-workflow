@@ -204,7 +204,13 @@ test("a code change surfaces the affected suite and excludes the unrelated one (
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /^TEST IMPACT — targeted$/m);
     assert.deepEqual(suitesOf(result.stdout), ["src/math.test.mjs"]);
-    assert.equal(fieldOf(result.stdout, "tier"), "rg");
+    // The tier names the matcher this machine offers, not this case's subject:
+    // a runner without rg answers `grep` and owes the same set, which is what
+    // the degradation case below pins.
+    assert.ok(
+      ["rg", "grep"].includes(fieldOf(result.stdout, "tier") ?? ""),
+      `a portable tier answered, got: ${fieldOf(result.stdout, "tier")}`,
+    );
     assert.ok((fieldOf(result.stdout, "symbols") ?? "").includes("add"), "the touched symbol is named");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
