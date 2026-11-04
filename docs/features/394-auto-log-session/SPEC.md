@@ -131,6 +131,7 @@ Computed, never chosen: `bun scripts/ceremony.mjs tier classify --base main` →
 - `scripts/session-close.mjs`'s `--kind auto` shape differs from the hook's — `does-not-affect` this unit (nothing calls it; the divergence is in `## Future` with its re-trigger).
 - `docs/fix/383-measured-acceptance/SPEC.md` carries a retirement pin whose expected output was `rg -c 'session_shutdown\|autoLogSession' packages/pi-agentic-workflow/src` → 0. That row recorded that unit's state at its cut; after this unit the command answers 2. `does-not-affect`: it is a frozen historical record of a merged unit, not a gate this repository re-runs.
 - `packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` is not a pi event *type* consumer (it is a factory over a `pi`-shaped object) — unchanged, `does-not-affect`.
+- **The guide-layer budget is red before this unit.** `node scripts/check-skill-context.mjs --documents` answers `AGENTS.md: estimate 6884 > 6881` at the base commit `c8b64d0b` as well as at this head (the same command, same numbers, run in both trees). `does-not-affect` this unit — no guide-layer file is touched here — but it reds `scripts/check-skill-context.test.mjs` in the root suite, so the gate's red is reported rather than excused. Repairing it is a `budgets` re-base with its growth source, or 3 estimate points of `AGENTS.md` prose removed, and both are the owner's call on a surface this unit does not own.
 
 ## Tasks
 
@@ -216,6 +217,33 @@ plus the roadmap settle after the owner opens the PR.
 - **D8** — 2026-11-04, the renderer and the publisher interface live in the runner crate (`@gtrabanco/agentic-workflow`), not in the pi package: S2 needs a CLI, the crate is the shipped home of `<object> <subcommand>` deterministic commands, the pi package already depends on it and cannot be imported by it, and one owner for the entry shape means one module — not a mirror plus a parity test.
 - **D9** — 2026-11-04, `template/.claude/hooks/log-session-end.sh` is the parity **oracle**: the test executes it in a throwaway repository and diffs its appended bytes, so the prose about parity cannot drift from the script.
 - **D10** — 2026-11-04, `docs/LOGS.md`'s header parenthetical ("until feature 41's `autoLogSession: mechanical`") is repaired in place: it is a header sentence, not a journal entry — the append-only rule governs entries, and a wrong header is documentation currency (AGENTS.md §Working rules).
+
+- **D11** — 2026-11-04, the entry is appended on every `session_shutdown` with its `reason` recorded (no filter on `reload`/`new`/`resume`): the mechanics bullet says one entry per shutdown, and a filter would be an invented rule. A reason filter is in `## Future` with its re-trigger.
+- **P1** — 2026-11-04 15:20, the crate's renderer, its frozen payload and the `log render` CLI, plus the publisher Strategy — `render.mjs`, `publish.mjs`, their type projections, the CLI route and the crate README row · `ad5a2b3f` (suites landed red first in `92d48e85`).
+- **P2** — 2026-11-04 15:31, the pi side: the facts builder and the marker store, the `autoLogSession` switch with its strict schema and merge, the independent session wiring, and the registration in `index.ts` · `573d3b0c` (suites landed red first in `5fd4440a` and `2b5df9d0`).
+- **P3** — 2026-11-04 15:44, the defect the first green run exposed: `git`'s porcelain output was trimmed, which shifted every path one character left (`docs/LOGS.md` → `ocs/LOGS.md`), and the `.pi/` marker directory appeared in the entry's own file list. The reader stopped trimming, and `collectFiles` now filters this package's own bookkeeping.
+- **E1** — 2026-11-04, `bun test test/log.render.test.mjs` in `packages/agentic-workflow` · exit 0 · `17 pass · 0 fail`.
+- **E2** — 2026-11-04, `bun test test/log.publish.test.mjs` in `packages/agentic-workflow` · exit 0 · `11 pass · 0 fail`.
+- **E3** — 2026-11-04, `bun test test/auto-log-session.test.mjs` in `packages/pi-agentic-workflow` · exit 0 · `11 pass · 0 fail` (the marker round trip `AM-02`, the foreign marker `AM-03`, the frozen payload `AM-07`).
+- **E4** — 2026-11-04, `bun test test/auto-log-session-config.test.mjs` in `packages/pi-agentic-workflow` · exit 0 · `7 pass · 0 fail`.
+- **E5** — 2026-11-04, `bun test test/auto-log-session-wiring.test.mjs` in `packages/pi-agentic-workflow` · exit 0 · `11 pass · 0 fail` (the `off`, one-entry, second-shutdown, no-journal, foreign-marker, publisher-failure and S4 matrix cases).
+- **E6** — 2026-11-04, `bun test test/auto-log-session-parity.test.mjs` in `packages/pi-agentic-workflow` · exit 0 · `4 pass · 0 fail` — `AP-01`/`AP-02` run `template/.claude/hooks/log-session-start.sh` and `log-session-end.sh` for real and compare the appended bytes, `AP-03` pins CLI-vs-extension, `AP-04` pins the marker's own namespace.
+- **E7** — 2026-11-04, `rg -c "@earendil-works" packages/agentic-workflow/src/log/render.mjs` · exit 1 · no match (the renderer has no pi in its closure).
+- **E8** — 2026-11-04, `rg -c "createSessionTelemetry|onTurnEnd" packages/pi-agentic-workflow/src/extension/auto-log-session-wiring.ts` · exit 1 · no match (the log adds no counter; the accumulator is #383's).
+- **E9** — 2026-11-04, `rg -c "auto-log-session-wiring" packages/pi-agentic-workflow/src/extension/index.ts` · exit 0 · `1`, and `rg -c "autoLogSession|createPublisher" packages/pi-agentic-workflow/src/extension/telemetry-wiring.ts` · exit 1 · no match (two switches, two wirings).
+- **E10** — 2026-11-04, `node packages/agentic-workflow/bin/agentic-workflow.mjs log render --facts <fixture> --json` · exit 0 · `{"ok":true,"contract":"log-entry@1","facts":"log-facts@1","entry":"## 2026-11-04T15:12Z — …`.
+- **E11** — 2026-11-04, `node packages/agentic-workflow/bin/agentic-workflow.mjs log render --facts /dev/null` · exit 2 · `LOG REFUSAL — the facts payload is not JSON: Unexpected end of JSON input`.
+- **E12** — 2026-11-04, `rg -c "until feature 41's" docs/LOGS.md` · exit 1 · no match (the retired interim rule).
+- **E13** — 2026-11-04, differential against the base commit `c8b64d0b` (a source-only copy in `/tmp`): `agentic-workflow unit-doc 103-doc-currency validate`, `roadmap check docs/features/103-doc-currency/SPEC.md` and `memory probe --json` are byte-identical at base and head; the only difference is the intended `log` in the usage line (`…|doc|memory>` → `…|doc|memory|log>`).
+- **E14** — 2026-11-04, `node scripts/check-skill-context.mjs --documents` at the base commit `c8b64d0b` · exit 1 · `AGENTS.md: estimate 6884 > 6881` — the guide-layer red predates this unit (recorded under `## Known pre-existing issues`).
+- **G1** — 2026-11-04, `bun run test` in `packages/pi-agentic-workflow` · exit 0 · `526 pass · 0 fail` across 46 files (base `c8b64d0b`: 493 across 42).
+- **G2** — 2026-11-04, `bun test test/` in `packages/agentic-workflow` · exit 0 · `287 pass · 0 fail` across 15 files (base: 260 across 13).
+- **G3** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 1 · `tests 1524 · pass 1521 · fail 2 · skipped 1` — both failures are `scripts/check-skill-context.test.mjs`'s guide-layer ceiling, reproduced at the base commit (E14). Nothing else red.
+- **G4** — 2026-11-04, `node scripts/version-parity-gate.mjs --content --base main` · exit 0 · `VERDICT: PASS` (changeset route for both packages), and `--pins` · exit 0 · `VERDICT: PASS`.
+- **G5** — 2026-11-04, `node scripts/check-skill-context.mjs` (skills only) · exit 0 · `PASS context budgets: 28 skills`.
+- **G6** — 2026-11-04, `node scripts/phase-lint.mjs docs/features/394-auto-log-session/SPEC.md` · exit 0 · `P1…P10 Phase-lint: PASS (6/6)` · `verdict PASS`.
+- **G7** — 2026-11-04, `node packages/agentic-workflow/bin/agentic-workflow.mjs unit-doc 394-auto-log-session validate` · exit 0 · `{"ok": true, "violations": []}`, and `roadmap check docs/features/394-auto-log-session/SPEC.md` · exit 0 · `ok: true`, no violations.
+- **G8** — 2026-11-04, `node scripts/unit-lineage.mjs --unit 394-auto-log-session` · exit 0 · `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (19)`.
 
 ## Next
 
