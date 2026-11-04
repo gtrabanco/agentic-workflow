@@ -65,13 +65,12 @@ test("AM-02 createMarker writes `<short-sha> <epoch> <iso>` and returns what it 
   assert.equal(record.sha, run(["rev-parse", "--short", "HEAD"]).trim());
   assert.equal(record.iso, "2026-11-04T15:12Z");
   assert.equal(record.epoch, Math.floor(Date.parse("2026-11-04T15:12:43Z") / 1000));
-  assert.equal(record.branch, "main");
   assert.deepEqual(fs.readFileSync(markerPath(root, "s1"), "utf8").trim().split(" "), [
     record.sha,
     String(record.epoch),
     record.iso,
   ]);
-  assert.deepEqual(readMarker(root, "s1"), { sha: record.sha, epoch: record.epoch, iso: record.iso, branch: record.branch });
+  assert.deepEqual(readMarker(root, "s1"), { sha: record.sha, epoch: record.epoch, iso: record.iso });
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -97,10 +96,13 @@ test("AM-04 outside a git repository there is no marker and no half-written stat
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test("AM-05 a detached HEAD is named, not left empty", () => {
+test("AM-05 a detached HEAD is named `detached`, not left empty", () => {
   const { root, run } = repo();
+  const marker = createMarker({ root, sessionId: "s1" });
   run(["checkout", "-q", "--detach", "HEAD"]);
-  assert.equal(createMarker({ root, sessionId: "s1" }).branch, "detached");
+  // The branch is a fact of the *shutdown*, not of the marker: a session can
+  // switch branches, and the hook reads it at the end for the same reason.
+  assert.equal(buildFacts({ root, marker, reason: "quit" }).branch, "detached");
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -114,6 +116,8 @@ test("AM-06 the path list unions the committed range with what is still uncommit
   fs.writeFileSync(path.join(root, "untracked.txt"), "u\n");
   assert.deepEqual(collectFiles({ root, startSha: start }), ["committed.txt", "dirty.txt", "untracked.txt"]);
   // A session that changed nothing lists nothing — the entry renders `—`.
+  run(["add", "."]);
+  run(["commit", "-q", "-m", "clean up"]);
   assert.deepEqual(collectFiles({ root, startSha: run(["rev-parse", "--short", "HEAD"]).trim() }), []);
   fs.rmSync(root, { recursive: true, force: true });
 });

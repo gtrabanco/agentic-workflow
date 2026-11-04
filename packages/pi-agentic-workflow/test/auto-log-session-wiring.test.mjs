@@ -54,7 +54,10 @@ function project({ journal = true, ledger = false } = {}) {
   fs.mkdirSync(path.join(root, "docs/fix/394-auto-log-session"), { recursive: true });
   fs.writeFileSync(path.join(root, "docs/fix/394-auto-log-session/SPEC.md"), "# 394\n\n## Risk tier\n\n- **Tier** — `standard` · **Task Size** — `small`\n");
   if (journal) fs.writeFileSync(path.join(root, "docs/LOGS.md"), "# Session log\n\n");
-  if (ledger) fs.writeFileSync(path.join(root, "docs/workflow/TIER_COST.md"), TIER_COST_LEDGER);
+  if (ledger) {
+    fs.mkdirSync(path.join(root, "docs/workflow"), { recursive: true });
+    fs.writeFileSync(path.join(root, "docs/workflow/TIER_COST.md"), TIER_COST_LEDGER);
+  }
   fs.writeFileSync(path.join(root, "seed.txt"), "seed\n");
   run(["add", "."]);
   run(["commit", "-q", "-m", "seed"]);
@@ -153,13 +156,18 @@ test("AW-05 a marker left by another session is never adopted and never removed"
   // A crashed session's marker, older than this one.
   fs.mkdirSync(path.join(root, ".pi"), { recursive: true });
   fs.writeFileSync(markerPath(root, "crashed-session"), "deadbee 1700000000 2023-11-14T22:13Z\n");
-  // This session's range must be its own HEAD, not the crashed marker's sha.
+
+  // This session marks its own HEAD, commits, then shuts down: its range must be
+  // the work it did, never the crashed marker's sha.
+  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const pi = fakePi();
+  wiring.register(pi.pi);
+  const ctx = { sessionManager: { getSessionId: () => SESSION } };
+  pi.fire("session_start", {}, ctx);
   fs.writeFileSync(path.join(root, "work.txt"), "w\n");
   run(["add", "."]);
   run(["commit", "-q", "-m", "session work"]);
-
-  const driven = session(createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }));
-  driven.shutdown();
+  pi.fire("session_shutdown", { reason: "quit" }, ctx);
   const journal = fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
   assert.match(journal, /- \*\*Commits:\*\* 1 `/u, "the entry counts this session's commit");
   assert.equal(journal.includes("deadbee"), false, "the crashed marker's sha never reaches the entry");
@@ -217,13 +225,13 @@ test("AW-08 the declared publisher receives the frozen payload, journal first", 
 
 test("AW-09 the switch the config resolves to is the switch the wiring obeys", () => {
   const { root } = project();
-  const journalOf = (mode) => {
-    const wiring = createAutoLogSessionWiring({ root, mode, now: NOW });
-    session(wiring, { id: `session-${mode}` }).shutdown();
-    return fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
-  };
-  assert.equal(journalOf("off"), "# Session log\n\n");
-  assert.match(journalOf("mechanical"), /auto \(quit\)/u);
+  const off = fakePi();
+  createAutoLogSessionWiring({ root, mode: "off", now: NOW }).register(off.pi);
+  assert.deepEqual(off.registered(), [], "off registers nothing to obey it");
+  assert.equal(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), "# Session log\n\n");
+
+  session(createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW }), { id: "session-on" }).shutdown();
+  assert.match(fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8"), /auto \(quit\)/u);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -235,7 +243,7 @@ test("AW-10 telemetry on with the log off writes the ledger row and no journal e
   const telemetry = createTelemetryWiring({ root, enabled: true, now: () => NOW(), date: () => "2026-11-04", sessionId: () => "tel-1" });
   telemetry.register(pi.pi);
   createAutoLogSessionWiring({ root, mode: "off", now: NOW }).register(pi.pi);
-  assert.deepEqual(pi.registered(), ["session_start", "session_shutdown", "tool_execution_end", "turn_end", "turn_start"]);
+  assert.deepEqual(pi.registered(), ["session_shutdown", "session_start", "tool_execution_end", "turn_end", "turn_start"]);
   telemetry.noteCommand("unit-lane", ["394-auto-log-session"]);
   pi.fire("session_start", {}, { sessionManager: { getSessionId: () => "tel-1" } });
   pi.fire("turn_start", { timestamp: NOW() });
