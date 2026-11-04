@@ -4188,3 +4188,17 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Resolved merge conflicts in PR #397 (feat/103-doc-currency) — merged into main, preserving git history and both session log entries.
 - **Decisions:** Both conflicted LOGS.md entries preserved in chronological order (fix/383 → feat/103); workflow README combined TIER_COST.md from main with updated PACKAGES.md from branch.
 - **Next:** Push merge: git push origin main
+
+## 2026-11-04T14:59:24Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Fixed broken README table layout in the Session section
+- **Decisions:** Compressed the workflow-status table description from ~480 words to ~60 words to fix table wrapping — preserved all key information, kept on main since the change was small and low-risk
+- **Next:** No pending items; the table fix landed on main
+
+## 2026-11-04T14:59:17Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Configure Serena monorepo: remove sub-package .serena dirs, add gitignore, configure cross-package workspace folders
+- **Decisions:** Serena operates from root in monorepo, not per-package. Sub-package .serena/ dirs were auto-detected by Serena but unnecessary; cross-package references handled via ls_additional_workspace_folders in project.yml for TSServer to discover imports between schema, agentic-workflow, and pi packages
+- **Next:** Activate Serena in this project (serena init) if not already done, or test cross-package symbol references with the new configuration
