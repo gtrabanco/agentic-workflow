@@ -159,14 +159,28 @@ which step owns the decision it forbids fusion to make.
 
 ## Risk tier
 
-- **Tier** — `standard` · **Task Size** — `<verdict.task_size>`
+- **Tier** — `standard` · **Task Size** — understood · contained · resumable from
+  diff, ceremony `unit-doc`, verification `gates`
 - **Named high-risk item** — `none — not a high-tier unit`
 
-Verdict copied verbatim from `bun scripts/ceremony.mjs tier classify` over the
-unit's own changed paths at close:
+Verdict copied verbatim from `bun scripts/ceremony.mjs tier classify --paths
+<the 24 changed paths>` at close:
 
 ```text
-<pending — filled with the final classify run>
+{
+  "contract": "risk-tier-verdict@1",
+  "tier": "standard",
+  "reason": "15 path(s) carry executable content: docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/agentic-workflow-schema/src/index.ts, packages/agentic-workflow-schema/src/vocabularies.ts, …",
+  "reason_kind": "executable-content",
+  "task_size": {
+    "understood": true,
+    "contained_risk": "contained",
+    "resumable_from_diff": true,
+    "ceremony": "unit-doc",
+    "verification": "gates"
+  },
+  "signals": []
+}
 ```
 
 ## Future
@@ -230,14 +244,15 @@ none
   resolve it (validator: `bun test scripts/normative-drift.test.mjs` exits 0)
   (Implements: S1, S2, S3, S7)
   Relevant files: AGENTS.md, skills/review-change/references/ADVERSARIAL_SETUP.md
-- P6 — Write the contracts into the adversarial references and the step order
-  into `REVIEW_PROCESS.md`, with the `review-change` route line
+- P6 — Write the verdict-layer contract into the two mode references and state
+  the mechanism in the README's review-change row
   (validator: `bun scripts/check-skill-context.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S6, S7)
-  Relevant files: skills/review-change
+  Relevant files: skills/review-change/references/ADVERSARIAL_SETUP.md
 - P7 — Record the token-delta measurement as `E` lines in `## Log`
-  (validator: `bun scripts/check-skill-context.mjs --routes` prints the
-  `review-change:adversarial` row before/after and the delta is recorded)
+  (validator: `bun scripts/check-skill-context.mjs --routes` exits 0 and its
+  `review-change:adversarial` row is recorded before and after, with the delta,
+  in `## Log` `E10`)
   (Implements: S11)
   Relevant files: docs/fix/358-adversarial-kill-mandate/SPEC.md
 - P8 — Run the whole verification block and close the obligations ledger
@@ -299,9 +314,93 @@ Frozen as the sibling `planning-obligations.md` (M sizing) — not embedded.
   *Automated written using AI.*
   ```
 
+- **D1** — 2026-11-04, owner decision (this cut): the ledger's O9 and O14
+  validators were written as repo-wide word bans (`resurrect`, `passes:`) and
+  would have failed on the sentence that *states* the absence of the mechanism
+  plus three pre-existing unrelated hits. Both cells were narrowed at cut to
+  what the requirement actually forbids — O9 to the changed-file set of the code
+  trees, O14 to `resolve-passes` — before any of them was run. Recorded here
+  because a corrected validator that is not disclosed reads like one that always
+  passed.
+- **P1** — 2026-11-04, the unit doc, both ledgers, the roadmap registration and
+  the changeset · `0fe253dd` (415 added, 1 deleted).
+- **E1** — 2026-11-04, `bun test scripts/adversarial-verdict.test.mjs` · exit 1 ·
+  red: `Cannot find module './adversarial-verdict.mjs'` (the suite landing before
+  the implementation) · commit `09bcc9b7`.
+- **P2** — 2026-11-04, the RED suite plus seven fixtures (three acceptance
+  scenarios and the anti-invention, reflector-leak, evidence-kind and CLI cases)
+  · `09bcc9b7` (439 added).
+- **P3** — 2026-11-04, the three published sets and the checker ·
+  `9a1de734` (329 added).
+- **E2** — 2026-11-04, `bun test scripts/adversarial-verdict.test.mjs` · exit 0 ·
+  `11 pass / 0 fail`.
+- **E3** — 2026-11-04, `bun scripts/adversarial-verdict.mjs --record
+  scripts/fixtures/adversarial-verdict/record-kill-confirm.json --diff
+  scripts/fixtures/adversarial-verdict/diff-kill-confirm.patch` · exit 0 ·
+  `tally: 2 persist · 1 killed · 0 dropped · 0 violation(s)` / `verdict: PASS`.
+- **E4** — 2026-11-04, the same command on `record-hallucination-kept.json` ·
+  exit 1 · `VIOLATION ungrounded-keep F1 — no hunk of this diff changes
+  skills/review-change/SKILL.md:88, so the reflector cannot ground the claim and
+  must drop it`.
+- **E5** — 2026-11-04, `bun test scripts/vocabulary-parity.test.mjs` · exit 0 ·
+  `20 pass / 0 fail`, including the three new `#358` cases (the block binds both
+  directions and the checker reads the published consts, not a local list).
+- **E6** — 2026-11-04, `bun test scripts/normative-drift.test.mjs` · exit 0 ·
+  `21 pass / 0 fail` — the four new inventory rows resolve with no edit to the
+  gate.
+- **E7** — 2026-11-04, `(cd packages/agentic-workflow-schema && bun run test)` ·
+  exit 0 · `732 pass / 0 fail`.
+- **E8** — 2026-11-04, `bun scripts/skill-lint.mjs` · exit 0 ·
+  `0 finding(s) in 0 file(s)`.
+- **E9** — 2026-11-04, `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`; `--routes` → `PASS route budgets: 14 routes`;
+  `--documents` → `PASS context documents: 3 budgeted documents`.
+- **P4/P5/P6** — 2026-11-04, the contract and its declared surface landed as one
+  commit (the consts had to precede the block for the parity pin to be green):
+  `06014ed9` (164 added, 11 deleted) — `ADVERSARIAL_SETUP.md` (86 → 160 lines,
+  `adversarial-verdict@1` included), `ADVERSARIAL_SYNTHESIS.md` (53 → 66) with the
+  placement paragraph, the four `normative-surfaces@1` rows, the parity cases and
+  the two budget re-bases. `README.md` (the review-change row) is in the working
+  tree for the close commit.
+- **E10 — token delta (S11, measured; A1 states the limit)** — the reviewed
+  route `review-change:adversarial` as the cut head measured **21,955 est /
+  1,523 lines** (11 loaded files) and at this change **23,385 est / 1,611 lines**
+  (`bun scripts/check-skill-context.mjs --routes`) — **+1,430 est (+6.5%) /
+  +88 lines (+5.8%)**, all of it the two contract files: `ADVERSARIAL_SETUP.md`
+  4,733 B → 9,526 B, `ADVERSARIAL_SYNTHESIS.md` 3,549 B → 4,425 B. The other
+  routes are unmoved or nearly so: `default-backend`/`default-web` 20,302 →
+  20,302 (**0**), `synthesize` 20,771 → 20,990 (+219, the placement paragraph),
+  and `review-change/SKILL.md` 3,186 → 3,186 (**0**). **What is measured is the
+  contract channel**, not a live model run: the per-finding arbitration payload
+  is the diff plus the claim, and the checker refuses a reflector input carrying
+  anything else (`reflector-not-diff-only`), so no transcript is ever re-sent.
+  The papers' 5–15× figure is theirs and is `unknown` here (PE-012) — a live
+  multi-model delta needs a real adversarial run, which no committed gate can
+  re-derive, so this unit reports the channel it can reproduce and says so.
+- **E11** — 2026-11-04, the regression scope, run: `git diff --name-only main --
+  scripts/audit-pr-gate.mjs scripts/review-receipt.mjs skills/audit-pr` → empty;
+  `rg -c 'Two-cycle cap' skills/review-change/references/REVIEW_PROCESS.md` → 1;
+  `git diff --name-status main -- skills/ | rg '^A'` → empty;
+  `rg -n 'argument-hint' skills/review-change/SKILL.md` → the unchanged
+  `<path-or-glob> [--adversarial N] [--synthesize>`.
+- **E12** — 2026-11-04, the unit's own code-tree diff (`git diff --name-only main
+  -- scripts/ packages/agentic-workflow/src packages/agentic-workflow-schema/src`)
+  → the checker, its suite, its fixtures, the parity suite and the two schema
+  sources and nothing else (O9, O14).
+- **G1** — 2026-11-04, `bun scripts/run-root-suite.mjs` · exit 0 · `1536 tests ·
+  1535 pass · 0 fail · 1 skip` (the skip is the pre-existing deleted-skill
+  fixture). Previously red on two local-only artifacts, fixed before this run:
+  the worktree's `node_modules` symlink broke `doc-discipline`'s `grep -lE` walk,
+  and `AGENTS.md`'s machine region overran its pin — both were this session's,
+  neither is a product defect.
+- **G2** — 2026-11-04, `bun scripts/lint-changeset.mjs` · exit 0 ·
+  `.changeset/358-adversarial-kill-mandate.md` valid.
+
 ## Next
 
-P2: land the RED suite and fixtures for the verdict record (S8–S10).
+The owner's review of the diff: `/review-change` on a fresh context is the
+external verification this unit does not self-grant, then `/audit-pr` at the
+merge gate.
 
 ## References
 
@@ -332,6 +431,6 @@ never built here, per S4).
 | The default (non-adversarial) review route still loads none of the new contract | `bun scripts/check-skill-context.mjs --route review-change:default-backend` exits 0 and `ADVERSARIAL_SETUP.md` is not in its file list |
 | The `--synthesize` route still fuses pasted tables at threshold ≥1 and still forbids dropping/downgrading while synthesizing | the fusion contract's rule sentence is present verbatim; `bun scripts/check-skill-context.mjs --route review-change:synthesize` exits 0 |
 | The merge gate and its receipt are unchanged | `git diff main -- scripts/audit-pr-gate.mjs scripts/review-receipt.mjs skills/audit-pr/` prints nothing |
-| The two-cycle cap, delta mode and escalation are unchanged | `git diff main -- skills/review-change/references/REVIEW_PROCESS.md` touches only the verification/fusion steps, never the cap |
+| The two-cycle cap, delta mode and escalation are unchanged | `git diff --name-only main -- skills/review-change/references/REVIEW_PROCESS.md` prints nothing — the mode's contract lives in the two adversarial references, so the always-loaded process (and every non-adversarial route) pays nothing |
 | The published skill set and menu entries are unchanged | `git diff --name-status main -- skills/` prints no `A` row |
 | The schema package's existing published sets are unchanged and still importable | `(cd packages/agentic-workflow-schema && bun run test)` exits 0 |
