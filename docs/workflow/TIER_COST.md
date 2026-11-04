@@ -48,16 +48,6 @@ a unit doc, its phases, an evidence table and a review pass. A `passive` unit
 owes none of them, so it records `0` and skips `4` — and that number is derived
 from its carrier, never from a promise.
 
-## Samples
-
-One row per measured session — a unit worked across three sessions is three
-samples, and the per-tier aggregate is what reads them together. The table is
-empty until the sink writes its first row; an empty table is a corpus of zero,
-and the comparison says so instead of inventing a figure.
-
-| unit | changed_paths | tokens | turns | model_ms | tool_ms | observed | source |
-|---|---|---|---|---|---|---|---|
-
 ## Reading it
 
 ```bash
@@ -66,7 +56,27 @@ bun scripts/tier-cost.mjs aggregate --ledger docs/workflow/TIER_COST.md
 bun scripts/tier-cost.mjs compare --ledger docs/workflow/TIER_COST.md
 ```
 
+The reader stops at the first line of the table that is not a row, so the samples
+table has to be last for the same reason the writer appends there.
+
 `compare` exits `2` with `insufficient-corpus` while any tier that has samples
 holds fewer than three units, naming the counts it saw. That is the honest
 answer for this repository today: one unit of 128 recorded a tier. The
 comparison is not a gate on anything — it reports.
+
+## Samples
+
+One row per measured session — a unit worked across three sessions is three
+samples, and the per-tier aggregate is what reads them together. The table is
+empty until the sink writes its first row; an empty table is a corpus of zero,
+and the comparison says so instead of inventing a figure.
+
+**This section is the file's last one, and that is a contract.** Two sessions of
+one project append their rows from separate processes, so the writer takes an
+`O_APPEND` on this file: the kernel places each line atomically and no byte of
+what is already here is touched. No lock, no queue, no row lost to a concurrent
+writer — and nothing may follow this table, because a row appended after
+trailing prose would land outside it.
+
+| unit | changed_paths | tokens | turns | model_ms | tool_ms | observed | source |
+|---|---|---|---|---|---|---|---|
