@@ -124,6 +124,7 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
 
 - #295 (project's upcoming web layer) will own the rendering of bilingual prompts and the web-facing PR evidence pack presentation.
 - Feature 41's `autoLogSession: mechanical` fully replaces the LOGS.md append-only interim rule.
+  **Reconciled 2026-11-04:** the writer landed as feature [#394](https://github.com/gtrabanco/agentic-workflow/issues/394) (`autoLogSession: mechanical`, re-homed from 41 by the owner) — this record stays frozen at its cut.
 - #227 (emitters for pane/row renders) fully replaces hand-rendered panes/rows.
 - **S17 (O36) — permanent token accounting** is deferred to **#307** (the measurement tier that owns the standing metrics). It cannot land here without duplicating that tier's owner: #307 defines what a token delta even means, and this unit has no standing-metric surface to hang it on.
 - **S18 (O39) — panes become a machine-born render** is deferred to **#227** (roadmap row 53, `deterministic-artifact-emitters`, still `idea`). The rule cannot be satisfied before the emitters exist: a pane rendered by hand from a record is exactly what S18 forbids, and there is nothing yet to render it from.
@@ -154,7 +155,7 @@ What the fix touches beyond its own lines: every workflow skill that writes narr
 
 ## Known pre-existing issues
 
-- Feature 41's `autoLogSession: mechanical` is still open (#174). This unit's S9 4b applies the interim append-only rule; the full fix ships with 41.
+- Feature 41's `autoLogSession: mechanical` is still open (#174). This unit's S9 4b applies the interim append-only rule; the full fix ships with 41. **Reconciled 2026-11-04:** it shipped as feature [#394](https://github.com/gtrabanco/agentic-workflow/issues/394), re-homed from 41 — the interim rule above held until then; this record stays frozen at its cut.
 - #227 (emitters for pane/row renders) is still open. This unit's S10 coordinate with #227 is noted; the full replacement ships with #227.
 - #315 (sweep enforcement) is still open. This unit composes with #315; the sweep-receipt claim kind and negative-capability pins come from #315.
 
@@ -344,7 +345,7 @@ Plan the unit: review the spec, cut planning evidence and obligations, then proc
 - Unit fix-258 (fix-258-harden-needs-input-contracts) — 12 review→fold cycles that burned
 - Feature 30 (re-review optional/skipped branch — never exercised)
 - Feature 61 (review-spec/review-plan absorbed into lane)
-- Feature 39/41/#174 (autoLogSession — pending, interim rule in S9)
+- Feature 39/41/#174 (autoLogSession — pending, interim rule in S9) → shipped as feature #394 (2026-11-04)
 
 ## Branch
 
