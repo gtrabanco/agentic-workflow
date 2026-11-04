@@ -104,7 +104,11 @@ export function commitSubject(summary, fallback = "log session") {
 // ---------------------------------------------------------------------------
 
 function git(args) {
-  const result = spawnSync("git", args, { encoding: "utf8" });
+  // maxBuffer: the session log is a durable journal that only grows — it has
+  // already outgrown spawnSync's 1 MB default, so `git show HEAD:<log>` (the
+  // append-only baseline read) returned ENOBUFS and `close` crashed with exit 1
+  // instead of committing. 64 MB keeps every reader well clear of that edge.
+  const result = spawnSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.error) throw new Error(`git not runnable: ${result.error.message}`);
   return result;
 }

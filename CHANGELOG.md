@@ -1,7 +1,9 @@
 # Changelog
 
-Each skill (`skills/<name>/SKILL.md`) carries its **own** `version:` in frontmatter
-and evolves independently. The per-skill tables below are the source of truth for
+Every skill (`skills/<name>/SKILL.md`) carries `version:` in frontmatter, and the
+skills and the three packages move as **one train version** (stamped by
+`scripts/release.mjs apply` at cut time — D-40-14). The per-skill tables below
+are the source of truth for
 **what changed between each version**; a condensed chronological log follows.
 
 ## Versioning policy (per skill)
