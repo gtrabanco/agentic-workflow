@@ -4209,3 +4209,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Main branch: merged PR #397 (feat/103-doc-currency) and PR #395 (feat/383 measured-acceptance), plus Serena monorepo config, README repairs, and session-close buffer fix
 - **Decisions:** Serena is a root-level monorepo tool: removed sub-package .serena dirs and configured cross-package workspace folders via project.yml; merged PR #397 required conflict resolution because 103's SPEC moved from docs/features/103/ to docs/fix/103/; the README Session section must show workflow-status and log-session skills, not an auto-log entry that doesn't exist yet
 - **Next:** Close the unit-lane for #394 (auto log-session) in the .worktrees/issue-394 worktree: rebasing on main, correcting the 12 verified-but-unimplemented obligations to planned, and implementing the auto-log wiring
+## 2026-11-04T15:25:58Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Triage issues 394, 396, 398: all three are new features — #394 (auto log-session) and #396 (doc-gen) promote to feature; #398 (retired carriers) is fix-now high severity. Created 5 worktrees (394, 396, 398, 356, 358). Launched 3 subsessions in parallel that all got stuck or halted — 394 looped on unused vars, 398 half-done on template frontmatter, 396 created SPEC but triaged trivial scope due to broken templates. Stopped all subsessions manually.
+- **Decisions:** 1) 394/396 promoted, 398 fix-now high — applied promoted/fix-next labels and posted dated comments. 2) Created 5 worktrees for parallel lanes, but subsessions failed: broken templates (#398's own bug) caused #396 to derive trivial scope and skip review/tests; #394 got stuck in unused-var loops; #398 was interrupted mid-template edit.
+- **Next:** Triage remaining issues from the worktree batch (356, 358) and restart the lanes after fixing template frontmatter first — that fix should land before any of the other units.
+
