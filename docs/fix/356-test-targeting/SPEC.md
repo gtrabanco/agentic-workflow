@@ -208,13 +208,13 @@ proves it. Frozen at cut.
 | S# | criterion | proving check |
 |---|---|---|
 | S1 | a docs/prose-only change yields an empty impact set and a recorded verdict, with no invented test | `bun test scripts/test-impact.test.mjs` exits 0 and its docs-only case passes |
-| S2 | the guide states the rule with its targeting half and its empty-set verdict | `rg -c 'test impact' AGENTS.md` matches at least 2 |
+| S2 | the guide states the rule with its targeting half and its empty-set verdict | `rg -c 'test impact' AGENTS.md` matches 1 and `rg -c 'test-impact-verdict' AGENTS.md` matches 1 |
 | S3 | the executor's contract names the derived set and the RED evidence that names it | `rg -c 'targeted' skills/execute-phase/references/TEST_IMPACT.md skills/execute-phase/SKILL.md` matches at least 1 per file |
 | S4 | the hint resolves a code change to the affected test files, falls back to `grep` with its verdict stated, and never substitutes the whole suite | `bun test scripts/test-impact.test.mjs` exits 0 and its code-change, sibling, `grep`-tier and LSP cases all pass |
 | S5 | `verification-contract` states which layer runs which tests and the recorded empty-impact verdict | `rg -c 'test impact' skills/verification-contract/SKILL.md` matches at least 1 |
 | S6 | no dependency and no graph infrastructure is added | `git diff --stat c8b64d0b -- package.json packages/agentic-workflow/package.json packages/pi-agentic-workflow/package.json bun.lock` prints nothing under the diff line |
 | S7 | the guide layer, the root suites and the changeset are green | `bun scripts/check-skill-context.mjs` exits 0; `bun scripts/run-root-suite.mjs` exits 0; `bun scripts/lint-changeset.mjs` exits 0 |
-| S8 | the amendment lands in the `AGENTS.md` core the split left behind, in the section that owns content rules | `rg -c 'test impact' AGENTS.md` matches at least 2 and `bun scripts/check-skill-context.mjs --documents` exits 0 |
+| S8 | the amendment lands in the `AGENTS.md` core the split left behind, in the section that owns content rules | `rg -c 'test impact' AGENTS.md` matches 1, `rg -c 'test-impact-verdict' AGENTS.md` matches 1 and `bun scripts/check-skill-context.mjs --documents` exits 0 |
 
 ## Findings
 
@@ -293,6 +293,20 @@ leaves this table and becomes a `## Log` line.
   `AGENTS.md` forbids stacking — a PR's base is always `main` — so the only
   legal split would be a stacked one. Recorded as the diff-guard exception
   (G2), never as a number forced to fit.
+- **D5** — 2026-11-04, the owner approved the counted-command correction
+  found at verification (E5, P5). Verbatim: "Okey, corrige la cifra y luego crea
+  la pr". The correction is a defect of the *proving command*, never of the
+  scope: `S2` and `S8` asked `rg -c 'test impact' AGENTS.md` for 2 matches while
+  the guide states the rule once and spells its inventory row
+  `test-impact-verdict`; both rows now read the two atoms they meant — the rule
+  phrase once and the surface id once — and `O2`'s validator resolves through
+  the same pair. No obligation, task, or criterion's *substance* changed.
+- **E9** — 2026-11-04, the corrected criterion and O2's validator, re-run
+  (D5): `rg -c 'test impact' AGENTS.md` · exit 0 · `1`;
+  `rg -c 'test-impact-verdict' AGENTS.md` · exit 0 · `1`;
+  `bun scripts/normative-drift.test.mjs` · exit 0 · `21 pass · 0 fail`;
+  `bun scripts/check-skill-context.mjs --documents` · exit 0 ·
+  `PASS context documents: 3 budgeted documents`.
 - **E1** — 2026-11-04, the cut is frozen before any code:
   `bun scripts/phase-lint.mjs docs/fix/356-test-targeting/SPEC.md` · exit 0 ·
   `verdict PASS` (5/5 phases, fingerprint `9544b897…`);
@@ -402,9 +416,9 @@ so `P2` exists and is the frozen proof of the red side.
 
 ## Next
 
-The owner's verdict on the handed-off diff — `Needs your decision` on one item:
-approve the S2/O2 count correction (E5, P5) or amend the frozen criterion. Then
-open the PR (`Closes #356`), set the fix row to `done`, and merge.
+The owner's verdict on the PR (`Closes #356`): the merge closes the issue and
+removes the `## Fixes` row. The one open decision — the S2/O2 counted-command
+correction — was approved and applied (D5, E9).
 
 ## References
 

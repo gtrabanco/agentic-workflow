@@ -10,7 +10,7 @@
 | obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
 |---|---|---|---|---|---|---|---|---|
 | O1 | S1, S7 (acceptance box 1) | a change whose paths are all prose (docs, `README.md`, a changeset note) yields an **empty** impact set: the verdict says so, it lists no suite, it invents no test — and the phase records the verdict instead of running the ceremony | P3 | P2, P3 | `scripts/test-impact.mjs` | `bun test scripts/test-impact.test.mjs` exits 0 with the docs-only case passing and `verdict: empty` / `suites (0)` in its captured block | the case name and its captured block, in the Log (E3, E4) | verified |
-| O2 | S2, S8 | the guide states the rule with its targeting half — a non-empty set derives its tests, an empty set records the verdict — and the verdict block is declared a normative surface with a fixed grammar | P4 | P4 | `AGENTS.md` | `rg -c 'test impact' AGENTS.md` matches at least 2, and `bun scripts/normative-drift.test.mjs` exits 0 with the `test-impact-verdict` row resolving `fenced:TEST IMPACT —` | both outputs, in the Log (E5, G1) | planned — the `>= 2` half does not reproduce: `rg -c 'test impact' AGENTS.md` is 1 (E5); correction proposed in P5, owner's decision pending |
+| O2 | S2, S8 | the guide states the rule with its targeting half — a non-empty set derives its tests, an empty set records the verdict — and the verdict block is declared a normative surface with a fixed grammar | P4 | P4 | `AGENTS.md` | `rg -c 'test impact' AGENTS.md` matches 1 and `rg -c 'test-impact-verdict' AGENTS.md` matches 1, and `bun scripts/normative-drift.test.mjs` exits 0 with the `test-impact-verdict` row resolving `fenced:TEST IMPACT —` | both counts and the drift run, in the Log (E9, G1) | verified — validator corrected by the owner's approval (D5) |
 | O3 | S3, S7 (acceptance box 2) | a code change surfaces the test files it can affect and **excludes** the unrelated ones — the set discriminates instead of answering "everything" | P3 | P2, P3 | `scripts/test-impact.mjs` | `bun test scripts/test-impact.test.mjs` exits 0 with the two-implementation fixture case passing (target suite listed, unrelated suite absent) | the case name, in the Log (E3, E4) | verified |
 | O4 | S3 | the executor's contract names the derived set as the source of the RED run's test names, so the failing-first evidence carries real test names | P4 | P2, P4 | `skills/execute-phase/references/TEST_IMPACT.md` + `skills/execute-phase/SKILL.md` | `rg -c 'targeted' skills/execute-phase/references/TEST_IMPACT.md skills/execute-phase/SKILL.md` matches at least 1 per file, and `bun scripts/check-skill-context.mjs` exits 0 | both counts and the budget run, in the Log (E5, G1) | verified |
 | O5 | S4, S7 (acceptance box 3) | with `rg` absent the hint degrades to `grep`, prints a `fallback:` line saying so, and returns the **same** suite set — a degraded tier never changes the answer | P3 | P2, P3 | `scripts/test-impact.mjs` | `bun test scripts/test-impact.test.mjs` exits 0 with the rg-absent case passing (`tier: grep`, the `fallback:` line present, the set equal to the `rg` run's) | the case name and the two blocks, in the Log (E3, E4) | verified |
@@ -26,9 +26,7 @@
 Every row flips to `verified` in the hand-off turn, with the run recorded as an
 `E`/`G` line in the unit doc's `## Log` and the summary in the last cell above.
 
-State at hand-off: ten of eleven rows `verified`; **O2 open** — its first half
-(`rg -c 'test impact' AGENTS.md` matching 2) cannot reproduce because the guide
-states the phrase once, in one bullet. The behaviour O2 records does hold (the
-rule at `AGENTS.md:144`, the `test-impact-verdict` row at `AGENTS.md:334`,
-`normative-drift` green); the correction of the row's validator is the owner's
-decision, never a silent edit (P5).
+State at hand-off: every row `verified`. `O2` was the one open row — its first
+half asked `rg -c 'test impact' AGENTS.md` for 2 matches while the guide states
+the phrase once — and the owner approved the correction of the counted command
+rather than an edit for the counter's sake (D5, E9).
