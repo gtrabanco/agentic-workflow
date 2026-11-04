@@ -57,6 +57,9 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Issue #383: the measured acceptance is opt-in, so the shipped shape carries
     // it switched off — the same record feature 66's memory consent uses here.
     telemetry: { enabled: false },
+    // Issue #394: the journal writer is opt-in as well — off, and no publisher
+    // named, so a fresh install writes nothing at either switch.
+    autoLogSession: { mode: "off", publisher: null },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });
