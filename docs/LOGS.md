@@ -4230,3 +4230,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Implement issue #394: opt-in auto log-session for the pi package — one mechanical journal entry per session, behind an off-by-default switch, with a renderer owned by the agentic-workflow crate and pluggable publishers
 - **Decisions:** autoLogSession.mode defaults to off and beats the telemetry switch in independence; marker at .pi/.session-<id>.start so it never adopts the template's .claude marker; publishers are a Strategy over a frozen log-facts@1 payload so every backend renders identically
 - **Next:** External verifier reviews PR #401 and decides on the pre-existing AGENTS.md guide-layer budget repair (estimate 6884 > 6881, +3 points over ceiling)
+## 2026-11-04T17:02:39Z — feat/394-auto-log-session — manual
+- **Commits:** 14 (`956a31dc…e9edd656`)
+- **Files:** 33 files
+- **Summary:** feat/394: external-verification fixes landed, PR #401 is ready (OPEN) but not yet merged
+- **Decisions:** Fixed Serena worktree registration — added 394-auto-log-session and 396-doc-gen to serena_config.yml projects list so Serena recognizes both worktrees. Previously only 356, 358, 398 worktrees were registered.
+- **Next:** Push this branch and its 3 extra commits to origin, then merge PR #401 (still OPEN)
