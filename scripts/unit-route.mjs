@@ -608,11 +608,20 @@ function unitFacts(doc, unitDir) {
     }
     scope = fm.scope;
   } else {
-    const objective = sectionBody(doc, "Objective") || "";
-    const objectiveLines = objective.split("\n").filter((l) => l.trim()).length;
-    const acBody = sectionBody(doc, "Acceptance criteria") || "";
-    const acCount = (acBody.match(/^\d+\./gm) || []).length;
-    scope = objectiveLines <= 3 && acCount <= 2 ? "trivial" : "standard";
+    // #398 B1: read both accepted shapes — legacy Objective/Acceptance criteria
+    // and spec-by-reference ## Specs **S<n>** lines. A doc with ≥ 3
+    // requirements is never trivial (real work: design, plan, tests, review).
+    const specsBody = sectionBody(doc, "Specs") || "";
+    const specCount = (specsBody.match(/\*\*S\d+[a-z]*\b[^*]*\*\*/gm) || []).length;
+    if (specCount >= 3) {
+      scope = "standard";
+    } else {
+      const objective = sectionBody(doc, "Objective") || "";
+      const objectiveLines = objective.split("\n").filter((l) => l.trim()).length;
+      const acBody = sectionBody(doc, "Acceptance criteria") || "";
+      const acCount = (acBody.match(/^\d+\./gm) || []).length;
+      scope = objectiveLines <= 3 && acCount <= 2 ? "trivial" : "standard";
+    }
   }
   const testsBody = sectionBody(doc, "Applicable tests") || "";
   const tests = /n\/a/i.test(testsBody) ? "n/a" : "declared";
