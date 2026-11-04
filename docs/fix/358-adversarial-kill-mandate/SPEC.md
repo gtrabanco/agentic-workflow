@@ -95,9 +95,12 @@ correction | **S<n><letter> — <title>.** | an appended amendment to requiremen
   `ADVERSARIAL_SYNTHESIS.md` states what fusion does with a verdict (it fuses
   the surviving rows, and a `kill`/`drop` is a recorded, reported verdict — the
   "never drop a finding while synthesizing" rule is not weakened, because the
-  verdict is produced *before* fusion and carries its own evidence);
-  `REVIEW_PROCESS.md` step 6 (verification) and its fusion step name the two new
-  sub-steps in order.
+  verdict is produced *before* fusion and carries its own evidence).
+  `REVIEW_PROCESS.md` stays untouched: its step 6 already verifies every
+  candidate before synthesis (`confirmed`/`refuted`, PE-003) and the kill
+  mandate formalizes that existing step inside the two adversarial references
+  rather than adding a competing one — so the always-loaded process (and every
+  non-adversarial route) pays nothing.
 - **`review-change/SKILL.md`** gains one route-table line and one turn-contract
   line — the conductor must know the pass ends in a verdict record, not in a
   findings table alone. Main-skill budget headroom is 271 est / 9 lines, so the
@@ -418,6 +421,29 @@ Frozen as the sibling `planning-obligations.md` (M sizing) — not embedded.
   (`AGENTS.md: estimate 6884 > 6881`) to a **green** head (393 lines / 96
   machine / 297 prose / 7,054 est). No unrequested stdout, stderr or exit-code
   difference was found.
+- **E14** — 2026-11-04, the advisory-fold re-run: `bun test
+  scripts/adversarial-verdict.test.mjs` · exit 0 · `12 pass / 0 fail` (the
+  grounding case added in `1c08ed64`); E3's fixture block byte-identical
+  (`2 persist · 1 killed`, `verdict: PASS`, exit 0); E4's refusal unchanged
+  (exit 1); `bun scripts/check-skill-context.mjs` / `--routes` / `--documents`
+  all PASS; `node scripts/run-root-suite.mjs` · exit 0 · `fail 0 · 1 skip` (the
+  same pre-existing deleted-skill fixture); `(cd packages/agentic-workflow-schema
+  && bun run test)` · exit 0 · `732 pass / 0 fail`.
+- **D2** — 2026-11-04, external-verify advisory fold: the external verification
+  returned five advisories, four repaired here — (1) `scripts/adversarial-verdict.mjs`'s
+  `changedLines` mistook a header-shaped content line (`+++ …`, produced by an
+  added markdown line starting with `++ `) for a file header, ending the hunk
+  walk and producing false `ungrounded-keep` refusals; fixed by bounding the
+  walk with the hunk's declared extents (red case first, `1c08ed64` →
+  `21fc20e0`); (2) this Impact section claimed `REVIEW_PROCESS.md` names the two
+  new sub-steps — false, the file is untouched by design and the claim is
+  reworded to what the diff does; (3) `docs/workflow/SKILLS.md`'s
+  `review-change` row still narrated the pass as enumeration only and now
+  states the verdict layer; (4) O16's validator cell demanded `skipped 0` while
+  the root gate's pre-existing deleted-skill fixture contributes a disclosed
+  skip — the cell now states the reality it asserts. The fifth (the PR
+  description must carry `Closes #358`) is a forge surface, not a committed
+  byte — left to the PR.
 
 ## Next
 
