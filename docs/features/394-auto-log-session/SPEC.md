@@ -244,10 +244,12 @@ plus the roadmap settle after the owner opens the PR.
 - **G6** — 2026-11-04, `node scripts/phase-lint.mjs docs/features/394-auto-log-session/SPEC.md` · exit 0 · `P1…P10 Phase-lint: PASS (6/6)` · `verdict PASS`.
 - **G7** — 2026-11-04, `node packages/agentic-workflow/bin/agentic-workflow.mjs unit-doc 394-auto-log-session validate` · exit 0 · `{"ok": true, "violations": []}`, and `roadmap check docs/features/394-auto-log-session/SPEC.md` · exit 0 · `ok: true`, no violations.
 - **G8** — 2026-11-04, `node scripts/unit-lineage.mjs --unit 394-auto-log-session` · exit 0 · `LINEAGE OK — lane-era (triage block re-derives) · obligations closed (19)`.
+- **P10** — 2026-11-04 16:06, the release step: the branch was rebased onto `main` at `92715797` (one docs commit had landed; no conflict — my edit is the journal header, main's is an appended entry), pushed, and PR [#401](https://github.com/gtrabanco/agentic-workflow/pull/401) opened with `Closes #394`. Roadmap row 394 settled to `done · [#401](…)` through the crate's writer (`roadmap rowUpsert` receipt pass, `07ecc0ee` → `dcd1dc61`) · settle commit follows this line.
+- **G9** — 2026-11-04, `node scripts/roadmap-settle.mjs` · exit 0 · `131 unit docs checked · verdict: PASS`, and `roadmap check docs/features/394-auto-log-session/SPEC.md` · exit 0 · `ok: true`, no violations.
 
 ## Next
 
-Run the verification block (P10) and hand the diff to the owner for external verification.
+External verification of PR [#401](https://github.com/gtrabanco/agentic-workflow/pull/401) — the owner is the verifier; nothing here self-approves. The PR was opened against `main` after a clean rebase onto `92715797`, and roadmap row 394 is settled (`done · [#401](…)`, `bun scripts/roadmap-settle.mjs` → `verdict: PASS`).
 
 ## References
 
