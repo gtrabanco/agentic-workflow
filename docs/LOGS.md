@@ -4234,3 +4234,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fix Serena marksman language server crash (missing libicu)
 - **Decisions:** Replaced broken marksman binary with DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 wrapper and patched marksman.py to set the env var at runtime
 - **Next:** Run serena project health-check to verify; monitor for Serena upgrades that may reinstall the binary
+
+## 2026-11-04T16:56:06Z — feat/358-adversarial-review — manual
+- **Commits:** 10 (`0fe253dd…42fc3a58`) plus this close commit
+- **Files:** 27 files
+- **Summary:** Issue #358: PR 399 opened (base `main`, head `fix/358-adversarial-kill-mandate`, 7 branch commits, 25 files, +1475/−11). Merged from main (a single `LOGS.md` conflict resolved by keeping both append-only entries) and pushed. All local gates green: root-suite 1536/1535 pass, check-skill-context 28 skills + 3 documents, skill-lint 0 findings. CI jobs queued behind a runner backlog. No `review-change` has run on the branch yet — that is the intended next step before `/audit-pr`.
+- **Decisions:** PR title set as `fix(358): adversarial pass verifies instead of enumerating — kill mandate, diff-only reflector, stability check`; the PR body was written from the template's fix section with the full evidence pack, rollback, and honest disclosures (pre-existing red on --documents gate, D1 narrowed validators, no review-change receipt yet).
+- **Next:** `/review-change` on the branch from a fresh context, then `/audit-pr 399`
