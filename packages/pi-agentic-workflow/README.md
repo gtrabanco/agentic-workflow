@@ -266,6 +266,13 @@ carrying `docs/LOGS.md`; enable the writer in either config file
 { "autoLogSession": { "mode": "mechanical" } }
 ```
 
+Two cases write nothing at all, on purpose: a project that is not a git
+repository (there are no facts to record), and a session that started before
+the journal existed — the journal's presence at session start is the opt-in,
+so creating `docs/LOGS.md` mid-session opts in the *next* session, not the
+running one. Both refusals are silent because a refusal note would itself be
+the residue a non-participating project must not carry.
+
 What it does per session, all of it git:
 
 - on start, records `.pi/.session-<id>.start` (`HEAD` sha, epoch, timestamp);
