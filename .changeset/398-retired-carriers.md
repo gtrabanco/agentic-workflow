@@ -32,3 +32,9 @@ so the aggregate and its sub-checks tell one story.
 The unit-doc templates (both repo trees and both exported twins) carry the
 `type`/`scope` vocabulary block and the `## Triaged steps` slot, so a new unit is
 cut with the surfaces the lane and the readers expect.
+
+Prose that still described the retired carriers as current is re-pointed:
+`log-session` pairs with the unit doc's `## Progress log`, and the
+`product-audit` / `review-implementation` / `review-change` references name the
+unit's own carrier (`audit-docs` check 11 discriminates it) instead of asserting
+`TASKS.md`/`progress.md` for every unit.

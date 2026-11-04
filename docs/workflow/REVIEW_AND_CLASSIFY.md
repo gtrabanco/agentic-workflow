@@ -53,7 +53,7 @@ violations (whatever the project's docs mandate).
 
 > **Dead-code exception:** code intentionally staged for an in-progress or
 > planned feature is **not** dead. The skill cross-checks the roadmap, the
-> feature SPEC/`TASKS.md`, and `known-issues.md`; if it can't tell, it marks the
+> unit doc, and `known-issues.md`; if it can't tell, it marks the
 > finding *verify* and asks — it never asserts "dead" on a guess.
 
 **Phase 2 — Classify.** Every finding lands in a decision table:

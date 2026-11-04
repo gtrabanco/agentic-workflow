@@ -22,8 +22,7 @@ classifies the synthesized table.
 
 Do **not** flag code as removable if it is **intentionally staged for an
 in-progress or planned feature**. Before reporting the dead-code concern
-(`review-code`), cross-check the roadmap, feature SPECs/`TASKS.md`, and
-`known-issues.md`: if the code is wired into a planned phase or another
+(`review-code`), cross-check the roadmap, the unit doc, and `known-issues.md`: if the code is wired into a planned phase or another
 feature, classify it *intentional / in-progress*, not dead. When unsure, mark
 it **verify** and ask — never assert "dead" on a guess.
 
