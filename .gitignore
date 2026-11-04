@@ -23,6 +23,9 @@ tmp/
 !.serena/project.yml
 # Sub-package .serena/ folders are local-only (Serena operates from root in this monorepo).
 packages/*/.serena/
+# Session markers the pi extension writes (#394). Narrow on purpose: `.pi/` holds
+# the project's configuration, which IS tracked; only the per-session marker is not.
+.pi/.session-*.start
 # Local state the pre-execution sensor writes inside the worktree.
 # Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/
