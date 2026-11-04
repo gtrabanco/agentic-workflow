@@ -4209,3 +4209,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Main branch: merged PR #397 (feat/103-doc-currency) and PR #395 (feat/383 measured-acceptance), plus Serena monorepo config, README repairs, and session-close buffer fix
 - **Decisions:** Serena is a root-level monorepo tool: removed sub-package .serena dirs and configured cross-package workspace folders via project.yml; merged PR #397 required conflict resolution because 103's SPEC moved from docs/features/103/ to docs/fix/103/; the README Session section must show workflow-status and log-session skills, not an auto-log entry that doesn't exist yet
 - **Next:** Close the unit-lane for #394 (auto log-session) in the .worktrees/issue-394 worktree: rebasing on main, correcting the 12 verified-but-unimplemented obligations to planned, and implementing the auto-log wiring
+
+## 2026-11-04T17:12:17Z — fix/356-test-targeting — manual
+- **Commits:** 10 (`16069246…b686e675`)
+- **Files:** 14 files
+- **Summary:** fix/356-test-targeting: implement test-impact.mjs and wire the test-impact rule into AGENTS.md + execute-phase + verification-contract + unit-lane; open PR #402 (mergeable, CI green); add diff-guard exception record and two late-case mutation receipts
+- **Decisions:** E11: replace P5 unverifiable 'observed failing' clause with reproducible mutation receipt — dropping MARKED_PATTERNS line reddens exactly 2 cases (18p/2f) and nothing else; D6: record path + sibling as deliberate design decisions so every line of the hint has authority; G3: attribute 1771 lines / 14 files to frozen obligations — budget attributed, never raised; E10: CI defect caught (tier: rg asserted instead of behaviour), fixed to portable tier with gate re-run
+- **Next:** PR #402 mergeable and CI green — ready for your merge. Post-merge: run local gate once to confirm CI parity; if you want, review the pre-push hook that blocks push (local-gate.mjs not in tree).
