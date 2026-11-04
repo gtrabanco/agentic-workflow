@@ -68,14 +68,50 @@ const usage = (message) => {
 
 /**
  * The added line numbers of every file in a unified diff, keyed by the new path.
- * Walked rather than read from the hunk header: a `+` line is a changed line, a
- * context line is not, and the reflected claim is grounded on the former only.
+ * The walk reads each hunk's declared extents (the counts in the `@@ -a,b +c,d
+ * @@` header) to know where its content ends, and a `+` line inside that range
+ * is a changed line, a context line is not, and the reflected claim is grounded
+ * on the former only. Header detection runs only outside a hunk, so a content
+ * line whose own text starts with `+++ ` or `--- ` can never be mistaken for a
+ * file header mid-hunk.
  */
 export function changedLines(diffText) {
   const changed = new Map();
   let file = null;
   let newLine = 0;
+  let oldLeft = 0;
+  let newLeft = 0;
   for (const line of diffText.split("\n")) {
+    if (oldLeft > 0 || newLeft > 0) {
+      // Inside a hunk: every line here is content, whatever its prefix — except
+      // a bare `@@` line, which is the next hunk's header (a content line that
+      // looks like one always carries its own `+`/`-`/space prefix first).
+      const next = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (next) {
+        oldLeft = Number(next[2] ?? 1);
+        newLeft = Number(next[4] ?? 1);
+        newLine = Number(next[3]);
+        continue;
+      }
+      if (line.startsWith("\\")) continue; // "\ No newline…" carries no line.
+      if (line.startsWith("+")) {
+        if (file) changed.get(file).add(newLine);
+        newLine += 1;
+        newLeft -= 1;
+      } else if (line.startsWith("-")) {
+        oldLeft -= 1;
+      } else if (line.startsWith(" ")) {
+        newLine += 1;
+        oldLeft -= 1;
+        newLeft -= 1;
+      } else {
+        // A blank line is the hunk's end (or a malformed diff): stop counting
+        // and fall back to header detection. Fail-closed either way.
+        oldLeft = 0;
+        newLeft = 0;
+      }
+      continue;
+    }
     if (line.startsWith("+++ ")) {
       const target = line.slice(4).trim();
       file = target === "/dev/null" ? null : target.replace(/^b\//, "");
@@ -83,22 +119,14 @@ export function changedLines(diffText) {
       continue;
     }
     if (line.startsWith("--- ")) continue;
-    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+    const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
     if (hunk) {
-      newLine = Number(hunk[1]);
+      oldLeft = Number(hunk[2] ?? 1);
+      newLeft = Number(hunk[4] ?? 1);
+      newLine = Number(hunk[3]);
       continue;
     }
-    if (file === null) continue;
-    if (line.startsWith("+")) {
-      changed.get(file).add(newLine);
-      newLine += 1;
-      continue;
-    }
-    if (line.startsWith(" ")) {
-      newLine += 1;
-      continue;
-    }
-    // "-" lines belong to the old file; "\ No newline…" carries no line.
+    // "diff --git", "index …", mode and rename lines — none carries a line.
   }
   return changed;
 }
