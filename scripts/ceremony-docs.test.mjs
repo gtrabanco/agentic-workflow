@@ -192,10 +192,6 @@ none
 
 none
 
-## Tasks
-
-none
-
 ## Log
 
 ## Next
@@ -254,10 +250,6 @@ n/a
 none
 
 ## Findings
-
-none
-
-## Tasks
 
 none
 

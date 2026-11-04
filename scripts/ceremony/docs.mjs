@@ -12,7 +12,8 @@ import path from "node:path";
 import { sectionText } from "../unit-doc-phases.mjs";
 import {
   git, out, block, fail, parseFlags, resolveUnit, parseTasks,
-  parseLog, walk, CONVENTIONAL_RE,
+  parseLog,
+  readSection, walk, CONVENTIONAL_RE,
 } from "./lib.mjs";
 
 /** Lines of the unit doc's `## Tasks` section with their 1-based line numbers.
@@ -21,7 +22,7 @@ import {
 function taskLines(specPath, displayPath) {
   const md = fs.readFileSync(specPath, "utf8");
   const body = sectionText(md, "Tasks");
-  if (body == null) fail("missing-section", { section: "tasks", path: displayPath });
+  if (body == null) return [];
   const startLine = md.slice(0, md.indexOf(body)).split("\n").length;
   return body.split("\n").map((text, i) => ({ line: startLine + i, text }));
 }
@@ -45,9 +46,12 @@ function branchSlug(cwd) {
   if (!match) fail("missing-flag", { flag: "--slug", branch, note: "this branch names no unit — pass --slug" });
   return match[1];
 }
-
 function checkTasksTicks(specPath) {
   const md = fs.readFileSync(specPath, "utf8");
+  // #398 B3: no ## Tasks → n/a (legacy carrier retired by feature 61/79)
+  if (readSection(md, "tasks") === null || readSection(md, "tasks").trim() === "") {
+    return { valid: true, "n/a": "no ## Tasks section — legacy carrier" };
+  }
   const logged = new Set(parseLog(md).filter((m) => m.kind === "P").map((m) => m.n));
   const mismatched = parseTasks(md)
     .filter((t) => t.ticked !== logged.has(t.n))
@@ -57,6 +61,10 @@ function checkTasksTicks(specPath) {
 
 function checkProgressEntry(specPath) {
   const md = fs.readFileSync(specPath, "utf8");
+  // #398 B3: no ## Tasks → n/a (legacy carrier retired by feature 61/79)
+  if (readSection(md, "tasks") === null || readSection(md, "tasks").trim() === "") {
+    return { valid: true, "n/a": "no ## Tasks section — legacy carrier" };
+  }
   const logged = new Set(parseLog(md).filter((m) => m.kind === "P").map((m) => m.n));
   const missing = parseTasks(md).filter((t) => !logged.has(t.n)).map((t) => `P${t.n}`);
   return { valid: missing.length === 0, missing };
