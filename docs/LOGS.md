@@ -4161,3 +4161,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** 34 files
 - **Summary:** Fixed .gitignore .serena rules
 - **Next:** Continue work on fix/383-measured-acceptance
+### [2026-11-04 00:28] — fix/383-measured-acceptance
+
+**Summary:** Log-session: replaced the lock-based ledger writer with atomic O_APPEND and closed all repair gaps. A, C, D repaired (changed_paths at write time, session identity, tier removed from payload); G1/G2/G3 closed (adapter guard test, identityOf collision prevention, concurrency). P10: lock was the wrong primitive — append is the exclusion.
+
+**Decisions:** Lock was replaced by atomic append: O_APPEND places rows atomically, no read needed so no window, no lock file, no timeout, no stale-lock takeover. Queue considered and rejected (broker is a supervised component, append is already the merge). Samples table is now the file's last section — a contract the writer enforces. Identity: instance-<uuid> per wiring instance.
+
+**Next:** Close residual blocker P2: update SPEC.md:55/:98 from 'peer floor ≥1.5.0' to '≥1.1.0' and 'totalFromProvider' to 'tool_execution_end.durationMs'.
