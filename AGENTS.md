@@ -118,8 +118,8 @@ under [Working rules](#working-rules)).
   takes, the provenance header is mandatory for the first.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
-  skills or the shared docs. Generic phrasing ("the project's architecture",
-  "the project's verification gate") is the rule.
+  skills or the shared docs. Generic phrasing ("the project's architecture")
+  is the rule.
 - **Documentation currency ships with the unit**: the README describing a
   changed surface is updated and its superseded prose deleted in the same PR.
   Step owner: [`skills/unit-lane/references/DOCS.md`](skills/unit-lane/references/DOCS.md);

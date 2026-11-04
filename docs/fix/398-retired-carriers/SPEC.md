@@ -361,7 +361,7 @@ One observable criterion per `S#`, each naming the check that proves it.
 | O9 | S2, S8 (P6) | check 10 keeps the legacy grep labelled *legacy carriers only*, names `phase-lint` and `check-phase-labels` as the lane-era owners, and notes an `S#` hit in a lane-era doc is not a phase label (R5 reproducer) | P6 | P6 | execute-phase | the S2 property check over `skills/audit-docs/SKILL.md` matches 3/3 | the check run (red-before/green-after) in `## Log` | verified |
 | O10 | S3, S8 (P6) | the report contract is frozen: 15 checks, no `MEDIUM`, `review-loop-discipline.test.mjs` and `AUDIT_DIMENSIONS.md` unmodified | P6 | P6 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` exits 0 and `git diff --stat main -- scripts/review-loop-discipline.test.mjs skills/product-audit/references/AUDIT_DIMENSIONS.md` prints nothing | both runs in `## Log` | verified |
 | O11 | S1, S8 (P7) | the rewritten check 11 bites both ways: a lane-era unit passes it and a legacy defect is still caught | P7 | P7 | execute-phase | `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true`, and the legacy-defect copy exits 2 with `valid: false` | both outputs pasted verbatim in `## Log` | verified |
-| O12 | S8 (P8) | the repository gate is green at the handoff head | P8 | P8 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | exit code and pass/fail tally in `## Log` | in-progress |
+| O12 | S8 (P8) | the repository gate is green at the handoff head | P8 | P8 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | exit code and pass/fail tally in `## Log` | verified |
 | O13 | S8 (P9) | the release intent passes both of its gates | P9 | P9 | execute-phase | `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS` and `node scripts/lint-changeset.mjs <file>` matches `ok` | both outputs in `## Log` | verified |
 | O14 | S7, S8 (P8) | the non-goals hold: check count still 15, no legacy unit rewritten, `unit-lineage`/`audit-pr`/triage catalog untouched | P8 | P8 | execute-phase | `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` matches 15 and `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing | both runs in `## Log` | verified |
 
@@ -435,14 +435,13 @@ OPEN rows only.
 - **E22** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 1 · 1531 pass · 2 fail, both the same failure: `FAIL context documents: AGENTS.md: estimate 6884 > 6881`. Pre-existing on `main`, not this unit: `AGENTS.md` is byte-identical to `main` (`diff -q` clean), and main's own tree reproduces the same numbers (`node scripts/check-skill-context.mjs --documents` in a `main` copy · exit 1 · same line). It landed with the PR #397 merge `27456e50` (27536 bytes → 6884; the branch head `4afd3a9f` was 27459 → 6865, inside the ceiling). O12 therefore stays open.
 - **E23** — 2026-11-04, the non-goal sweep: `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` · exit 0 · 15; `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing; `git diff --name-only main -- docs/features docs/fix | grep -vE '(_TEMPLATE|398-retired-carriers)'` prints nothing; `git diff --stat main -- scripts/fixtures/catalog` prints nothing.
 
+- **E24** — 2026-11-04, the pre-existing guide-budget overflow repaired: `AGENTS.md` lost the duplicated example `"the project's verification gate"` from the *Stack/architecture agnostic* bullet (27536 → 27501 bytes, outside the machine region, so `machine` stays 92). `node scripts/check-skill-context.mjs --documents` · exit 0 · `AGENTS.md 389 lines · 92 machine · 297 prose · estimate 6876` (ceiling 6881). `node --test scripts/check-skill-context.test.mjs scripts/guide-split.test.mjs scripts/normative-drift.test.mjs` · exit 0 · 36/36; `node --test scripts/invocation-drift.test.mjs` · exit 0 · 13/13.
+- **E25** — 2026-11-04, `node scripts/run-root-suite.mjs` at this head · exit 0 · 33 suites · 1533 pass · 0 fail (E22's two failures are gone).
 ## Next
 
-Handoff gate. O1–O11, O13 and O14 are `verified` with their evidence in `## Log`;
-**O12 is open** — `node scripts/run-root-suite.mjs` exits 1 on a pre-existing
-`AGENTS.md` context-budget overflow (`6884 > 6881`) that `main` reproduces
-identically (E22). The decision — trim the twelve bytes of unpinned guide prose
-in this unit, or leave P8 to its own fix — is the owner's, not this unit's to
-take.
+Handoff gate. O1–O14 are `verified` with their evidence in `## Log`; the
+repository gate is green at this head (E25). The external verifier's verdict,
+then the PR against `main`, is the remaining step — not this unit's to take.
 
 ## References
 
