@@ -416,13 +416,16 @@ so `P2` exists and is the frozen proof of the red side.
 
 ## Next
 
-The owner's verdict on the PR (`Closes #356`): the merge closes the issue and
-removes the `## Fixes` row. The one open decision — the S2/O2 counted-command
-correction — was approved and applied (D5, E9).
+The owner's verdict on PR [#402](https://github.com/gtrabanco/agentic-workflow/pull/402):
+the merge closes `#356`, removes the `## Fixes` row and settles roadmap row 93.
+The one open decision — the S2/O2 counted-command correction — was approved and
+applied (D5, E9); every obligation row is `verified`.
 
 ## References
 
 - `#356` — this fix's tracked issue (roadmap row 93).
+- PR [#402](https://github.com/gtrabanco/agentic-workflow/pull/402) — the
+  change set, with `Closes #356`.
 - arXiv 2603.17973 (TDAD) — the measured basis `S1` quotes.
 - `docs/fix/382-red-first-commits/SPEC.md` — the red-first gate this unit's
   suite lands under, and the shape this document copies.
