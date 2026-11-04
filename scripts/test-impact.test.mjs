@@ -77,6 +77,16 @@ function run(args, { cwd = repoRoot, envPath } = {}) {
 }
 
 const git = (cwd, args) => spawnSync("git", args, { cwd, encoding: "utf8" });
+
+/** A repository the `--base` cases can commit into; the identity is fixture-local. */
+function repository(files) {
+  const root = fixture(files);
+  git(root, ["init", "-q"]);
+  git(root, ["config", "user.email", "fixture@example.invalid"]);
+  git(root, ["config", "user.name", "fixture"]);
+  return root;
+}
+
 const commitAll = (cwd, message) => {
   git(cwd, ["add", "-A"]);
   const commit = git(cwd, ["-c", "commit.gpgsign=false", "commit", "-m", message]);
@@ -286,17 +296,28 @@ test("the hint refuses when no matcher is installed instead of answering empty (
 });
 
 test("no path in scope is a refusal, not an empty set (S1, O7)", () => {
-  const root = fixture({ "src/math.mjs": MATH });
+  const root = repository({ "src/math.mjs": MATH });
   try {
     const noArgs = run([], { cwd: root });
     assert.equal(noArgs.status, 1);
     assert.match(noArgs.stderr, /no path in scope/);
 
-    git(root, ["init", "-q"]);
     commitAll(root, "base");
     const emptyDiff = run(["--base", "HEAD"], { cwd: root });
     assert.equal(emptyDiff.status, 1);
     assert.match(emptyDiff.stderr, /no path in scope/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a --paths entry that exists nowhere is refused when no diff justifies it (O7)", () => {
+  const root = fixture({ "src/math.mjs": MATH });
+  try {
+    const result = run(["--paths", "docs/typo.md"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /--paths entry does not exist: docs\/typo\.md/);
+    assert.equal(result.stdout.includes("verdict: empty"), false, "a typo'd path is never an empty impact set");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -320,9 +341,8 @@ test("an unknown flag and a bare --base are usage errors (O7)", () => {
 // ── The diff tier ───────────────────────────────────────────────────────────
 
 test("--base reads the symbols the diff touches, not every declaration in the file (S3, PE-005)", () => {
-  const root = fixture({ "src/math.mjs": `${MATH}export function mul(a, b) {\n  return a * b;\n}\n`, "src/math.test.mjs": MATH_SUITE });
+  const root = repository({ "src/math.mjs": `${MATH}export function mul(a, b) {\n  return a * b;\n}\n`, "src/math.test.mjs": MATH_SUITE });
   try {
-    git(root, ["init", "-q"]);
     commitAll(root, "base");
     fs.appendFileSync(path.join(root, "src/math.mjs"), "export function sub(a, b) {\n  return a - b;\n}\n");
 
@@ -336,9 +356,8 @@ test("--base reads the symbols the diff touches, not every declaration in the fi
 });
 
 test("--base with a prose-only diff answers empty (S1, O1)", () => {
-  const root = fixture({ "README.md": "one\n", "src/math.mjs": MATH, "src/math.test.mjs": MATH_SUITE });
+  const root = repository({ "README.md": "one\n", "src/math.mjs": MATH, "src/math.test.mjs": MATH_SUITE });
   try {
-    git(root, ["init", "-q"]);
     commitAll(root, "base");
     fs.appendFileSync(path.join(root, "README.md"), "add and mul are described here.\n");
 
@@ -354,9 +373,8 @@ test("--base with a prose-only diff answers empty (S1, O1)", () => {
 // ── Invariants of the printed block ─────────────────────────────────────────
 
 test("the block is byte-stable across runs and the hint writes nothing (O7, PE-009)", () => {
-  const root = fixture({ "src/math.mjs": MATH, "src/math.test.mjs": MATH_SUITE });
+  const root = repository({ "src/math.mjs": MATH, "src/math.test.mjs": MATH_SUITE });
   try {
-    git(root, ["init", "-q"]);
     commitAll(root, "base");
     const before = git(root, ["status", "--porcelain"]).stdout;
     const first = run(["--paths", "src/math.mjs"], { cwd: root });
