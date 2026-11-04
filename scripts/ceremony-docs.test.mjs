@@ -147,126 +147,50 @@ test("unknown docs subcommand → exit 1", () => {
   assert.equal(r.json.error, "unknown-subcommand");
 });
 
-// #398 B3: no ## Tasks section → n/a, not vacuous valid:true
+// #398 B3: a unit doc with no ## Tasks is a legacy carrier, and the answer is
+// n/a — not a vacuous valid:true that claims a judgement nobody made.
 
-test("#398 B3: unit doc with no ## Tasks reports n/a (legacy carrier), not valid:true", () => {
-  // A unit doc that uses the spec-by-reference shape has no ## Tasks section.
-  // checkTasksTicks and checkProgressEntry must report n/a with the legacy-carrier
-  // reason, not vacuous valid:true.
-  const dir = makeUnitRepo({ tasks: "", log: "" });
-  // Remove the Tasks section by writing a spec-by-reference doc
-  fs.writeFileSync(
-    path.join(dir, "docs/fix/1-fixture/SPEC.md"),
-    `# 1 — no-tasks-unit
+/** A fixture unit doc with no `## Tasks` section at all (the legacy carrier). */
+const noTasksDoc = () =>
+  unitDoc({ tasks: GOOD_TASKS }).replace(/## Tasks\n[\s\S]*?(?=## Findings)/, "");
 
-## Specs
+const LEGACY_NA = { "n/a": "no ## Tasks section — legacy carrier" };
 
-**S1 — the request.**
-> Add a command.
-
-## Impact
-
-none
-
-## Non-goals
-
-- Nothing
-
-## Future
-
-none
-
-## Future cost
-
-none
-
-## Applicable tests
-
-n/a
-
-## Known pre-existing issues
-
-none
-
-## Findings
-
-none
-
-## Log
-
-## Next
-
-none
-
-## References
-
-none
-`,
-  );
+test("#398 B3: check-tasks-ticks answers n/a with the legacy-carrier reason, not valid:true", () => {
+  const dir = makeUnitRepo({ tasks: GOOD_TASKS });
+  fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), noTasksDoc());
   const r = cer(["docs", "check-tasks-ticks", "--slug", "1-fixture"], dir);
-  assert.equal(r.code, 0, "should not block; n/a is not a failure");
-  assert.ok(r.json.valid || r.json["n/a"], "must report n/a or valid");
-  const hasNarrowAnswer = r.json["n/a"] === "no ## Tasks section — legacy carrier" ||
-    r.json.valid === true && Object.keys(r.json).length <= 2;
-  // The key assertion: not valid:true with an empty mismatched array (vacuous pass)
-  if (r.json.valid === true && r.json.mismatched && r.json.mismatched.length === 0) {
-    assert.fail("no ## Tasks should NOT report vacuous valid:true with empty mismatched");
-  }
+  assert.equal(r.code, 0, r.stdout + r.stderr);
+  assert.deepEqual(r.json, LEGACY_NA);
 });
 
-test("#398 B3: check-progress-entry with no ## Tasks reports n/a, not valid:true", () => {
-  const dir = makeUnitRepo({ tasks: "", log: "" });
-  fs.writeFileSync(
-    path.join(dir, "docs/fix/1-fixture/SPEC.md"),
-    `# 1 — no-tasks-unit
-
-## Specs
-
-**S1 — the request.**
-> Add a command.
-
-## Impact
-
-none
-
-## Non-goals
-
-- Nothing
-
-## Future
-
-none
-
-## Future cost
-
-none
-
-## Applicable tests
-
-n/a
-
-## Known pre-existing issues
-
-none
-
-## Findings
-
-none
-
-## Log
-
-## Next
-
-none
-
-## References
-
-none
-`,
-  );
+test("#398 B3: check-progress-entry answers the same n/a reason, not valid:true", () => {
+  const dir = makeUnitRepo({ tasks: GOOD_TASKS });
+  fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), noTasksDoc());
   const r = cer(["docs", "check-progress-entry", "--slug", "1-fixture"], dir);
-  assert.equal(r.code, 0, "should not block; n/a is not a failure");
-  if (r.json.valid === true && r.json.missing && r.json.missing.length === 0) {
-    assert.fail("no ## Tasks should NOT report vacuous valid:true with empty missing");
-  }
+  assert.equal(r.code, 0, r.stdout + r.stderr);
+  assert.deepEqual(r.json, LEGACY_NA);
+});
+
+test("#398 B3: check-phase-labels answers the same n/a reason, not a vacuous valid:true", () => {
+  // The three discipline checks must tell one story: leaving phase-labels out
+  // would keep the check-all aggregate disagreeing with its own sub-checks.
+  const dir = makeUnitRepo({ tasks: GOOD_TASKS });
+  fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), noTasksDoc());
+  const r = cer(["docs", "check-phase-labels", "--slug", "1-fixture"], dir);
+  assert.equal(r.code, 0, r.stdout + r.stderr);
+  assert.deepEqual(r.json, LEGACY_NA);
+});
+
+test("#398 B3: check-all reports the same story on a legacy unit — n/a rows, PASS", () => {
+  const dir = makeUnitRepo({ tasks: GOOD_TASKS });
+  const seed = execFileSync("git", ["rev-parse", "HEAD"], { cwd: dir, encoding: "utf8" }).trim();
+  fs.writeFileSync(path.join(dir, "docs/fix/1-fixture/SPEC.md"), noTasksDoc());
+  const r = cer(["docs", "check-all", "--slug", "1-fixture", "--from", seed], dir);
+  assert.equal(r.code, 0, r.stdout + r.stderr);
+  assert.equal(r.json.overall, "PASS");
+  assert.deepEqual(r.json["tasks-ticks"], LEGACY_NA);
+  assert.deepEqual(r.json["phase-labels"], LEGACY_NA);
+  assert.deepEqual(r.json.progress, LEGACY_NA);
+  assert.equal(r.json["commit-format"].valid, true);
 });
