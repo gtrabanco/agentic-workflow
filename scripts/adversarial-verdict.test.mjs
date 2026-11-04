@@ -131,6 +131,35 @@ test("S1 — a kill with supporting evidence is refused: the mandate needs a dis
 
 /* ------------------------------------------------------------------------ S9 */
 
+test("grounding — a content line that looks like a header does not end the hunk walk", () => {
+  // A markdown line whose text starts with `++ ` reaches the diff as a
+  // `+++ …` content line. The walk must read the hunk's declared extents,
+  // not scan for headers, or the rest of the hunk lands in a phantom file
+  // and real added lines stop being grounded (a false ungrounded-keep).
+  const patch = [
+    "diff --git a/f.md b/f.md",
+    "--- a/f.md",
+    "+++ b/f.md",
+    "@@ -1,2 +1,5 @@",
+    " context",
+    "-old two",
+    "+line one",
+    "+++ bold header line",
+    "+line two",
+    "@@ -10,1 +11,2 @@",
+    " ctx",
+    "+added ten",
+  ].join("\n");
+  const result = validateRecord(recordOf([
+    row({ id: "F1", file: "f.md", line: 2 }),
+    row({ id: "F2", file: "f.md", line: 3 }),
+    row({ id: "F3", file: "f.md", line: 12 }),
+  ]), patch);
+  assert.deepEqual(codes(result), [], "added lines stay grounded even when their text starts with ++");
+  assert.deepEqual(result.persist.map((f) => f.destination),
+    ["persist f.md:2", "persist f.md:3", "persist f.md:12"]);
+});
+
 test("S9 — the diff-only reflector cannot keep a claim the diff does not ground", () => {
   const kept = validateRecord(record("record-hallucination-kept"), diff("diff-review-state"));
   assert.deepEqual(codes(kept), ["ungrounded-keep"]);
