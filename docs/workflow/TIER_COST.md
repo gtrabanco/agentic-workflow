@@ -15,8 +15,8 @@ never an extra cell.
 (`turn_start` → `turn_end` → `session_shutdown`), from the numbers the model
 provider and the tool runtime already produced. No human and no model types a
 value here: a cell that came from a prompt would be the defect #383 S7 forbids.
-Two sessions append on their own shutdowns, so the writer takes a lock beside
-the ledger and the row of whichever session read last is never lost.
+Two sessions append on their own shutdowns from separate processes, and the
+append is atomic, so neither row is lost to the other.
 
 **What a row never carries.** No derived fact: the tier and the ceremony counts are repository facts that `scripts/tier-cost.mjs` resolves from the unit's own carrier at read time, so a stored copy could only drift.  No prompt text, no model output, no diff, no file
 content — and no session span. A session's first and last timestamps measure how
