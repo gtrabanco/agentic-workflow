@@ -54,7 +54,7 @@
     "prepare": "bun run build:deps && bun run build && bun run bundle:skills"
   },
   "peerDependencies": {
-    "@earendil-works/pi-coding-agent": ">=0.99.1",
+    "@earendil-works/pi-coding-agent": ">=1.1.0",
     "@earendil-works/pi-tui": "*"
   },
   "dependencies": {

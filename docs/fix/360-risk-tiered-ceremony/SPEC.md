@@ -120,7 +120,8 @@ cannot show its measured delta).
   wall-clock per unit, per tier, before/after over ≥3 real units" needs a
   sensor that aggregates per-tier cost; this unit emits the tier and records
   it in the unit doc's `## Log`, but the aggregation over ≥3 units is a
-  follow-up with its own evidence. Not implemented here.
+  follow-up with its own evidence. Not implemented here — implemented by
+  `docs/fix/383-measured-acceptance/` (issue #383, PR #395).
 
 ## Future cost
 

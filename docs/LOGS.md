@@ -9,6 +9,13 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
+## 2026-11-03T22:05:00Z — fix/383-measured-acceptance — manual
+- **Commits:** 16 (`626e4461…98c9ed35`, plus this entry)
+- **Files:** 31 files (2013 additions, 17 deletions)
+- **Summary:** Built `360b` of `D360-1` — the instrument that measures what a risk tier saved. `scripts/tier-cost.mjs` reads a `tier-cost@1` ledger of one measured row per unit (tokens, turns, `model_ms`, `tool_ms`, observed date, provenance), aggregates by the risk tier and the size tier, and refuses the comparison below three units per tier with `insufficient-corpus` rather than inventing a figure — 1 unit of 128 records a tier. `@gtrabanco/pi-agentic-workflow` gained the session accumulator that measures it (`turn_start`/`turn_end`/`tool_execution_end`/`session_shutdown`, sink interface), the ledger sink with a round trip through the repo reader, an off-by-default `telemetry.enabled` switch with a strict parser, and the wiring that resolves the unit from the dispatched command. Peer floor raised to Pi 1.1.0 for `tool_execution_end.durationMs`; `major` changeset. PR #395.
+- **Decisions:** (1) Wall-clock out of scope (owner, S4a): a session span measures absence — 123.4 h maximum inter-agent gap against minutes of work in this repo's own corpus — so time enters only as turn-window-minus-tools and monotonic tool durations. (2) The accumulator is born in 383 and #394 consumes it as a second sink (owner, S4b). (3) AC16 of unit 28 amended with explicit owner approval: an eighth `tier-cost` truth class, `docs/workflow/TIER_COST.md` as the only extra ledger location, and `<package>:<src module>` as an owner kind. (4) The row stores only what was measured — the tier, the size tier and the ceremony counts are derived at read time, because two earlier drafts that stored them had two homes for one fact. (5) Floor is 1.1.0, not 1.5.0: decided by `durationMs`, verified against 1.0.4's and 1.1.0's published types. (6) `recordedTier` learned the `## Risk tier` shape its own template orders, which is the only observable delta in shipped commands (`ceremony tier plan`: `recorded 1 → 2`, `totals 128 → 129`). (7) A unit ledger that a blank line splits into two tables now fails `pre-execution-quality` — this unit shipped exactly that and every gate stayed green.
+- **Next:** External verification of PR #395. After merge: the `## Fixes` row is removed and `#394` (auto log-session) starts, consuming the accumulator's sink interface.
+
 ## 2026-10-26T11:21:16Z — feat/308-spec-by-reference — manual
 - **Commits:** 17 (39e2aa3a…bf46d8ea)
 - **Files:** 52 files (3366 additions, 162 deletions)
@@ -4149,3 +4156,15 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Triaged and fixed issue #391: Serena auto-index provisioning gap
 - **Decisions:** The issue described a real gap: Serena's symbol index was not part of the provisioning order in SERENA.md reference documentation. Added the 7-step provisioning order block, the index: field in the SERENA PROVISIONING report, step (d) in BOOTSTRAP_WRITE.md, and a 'Serena setup' section in the template/AGENTS.md scaffold. The fix was additive — no behavioral change to existing code, only documentation and reference alignment. Issue closed as completed; PR #393 created.
 - **Next:** Merge PR #393; continue with the next roadmap item from /workflow-status
+## 2026-11-03T23:21:23Z — fix/383-measured-acceptance — manual
+- **Commits:** 20 (`55983196…8194e6e7`)
+- **Files:** 34 files
+- **Summary:** Fixed .gitignore .serena rules
+- **Next:** Continue work on fix/383-measured-acceptance
+### [2026-11-04 00:28] — fix/383-measured-acceptance
+
+**Summary:** Log-session: replaced the lock-based ledger writer with atomic O_APPEND and closed all repair gaps. A, C, D repaired (changed_paths at write time, session identity, tier removed from payload); G1/G2/G3 closed (adapter guard test, identityOf collision prevention, concurrency). P10: lock was the wrong primitive — append is the exclusion.
+
+**Decisions:** Lock was replaced by atomic append: O_APPEND places rows atomically, no read needed so no window, no lock file, no timeout, no stale-lock takeover. Queue considered and rejected (broker is a supervised component, append is already the merge). Samples table is now the file's last section — a contract the writer enforces. Identity: instance-<uuid> per wiring instance.
+
+**Next:** Close residual blocker P2: update SPEC.md:55/:98 from 'peer floor ≥1.5.0' to '≥1.1.0' and 'totalFromProvider' to 'tool_execution_end.durationMs'.
