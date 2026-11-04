@@ -22,7 +22,7 @@ stack, framework, or architecture pattern.
 ```
 skills/                  the workflow skills (one SKILL.md each) — the installable source
 template/                the exportable documentation scaffold (generic, copyable)
-packages/                two companion npm packages (bun-managed islands — docs/workflow/PACKAGES.md)
+packages/                three companion npm packages (bun-managed islands — docs/workflow/PACKAGES.md)
 scripts/                 the deterministic gates and generators, each with its sibling *.test.mjs
 docs/workflow/           the tutorial: feature flow, issue flow, skill reference, replication
 docs/ROADMAP.md          the single Features+Fixes index — the worklist
@@ -120,6 +120,10 @@ under [Working rules](#working-rules)).
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture",
   "the project's verification gate") is the rule.
+- **Documentation currency ships with the unit**: the README describing a
+  changed surface is updated and its superseded prose deleted in the same PR.
+  Step owner: [`skills/unit-lane/references/DOCS.md`](skills/unit-lane/references/DOCS.md);
+  `audit-docs` check 15 audits it.
 - **One PR per unit of work, always against `main`.** Never work on `main`
   directly; never stack PRs (a PR's base is always `main`).
 - **Published history is owner-written.** Work in short branches off `main`;
