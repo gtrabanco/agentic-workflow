@@ -288,6 +288,102 @@ leaves this table and becomes a `## Log` line.
   `--references` entry that does not exist, and an unknown flag all exit 1. The
   one thing the hint never does is answer `empty` because it could not look.
 
+- **D4** — 2026-11-04, the delivery strategy is one PR (S7): the diff measures
+  1636 authored lines across 14 files, past the 400-line work-unit bound, and
+  `AGENTS.md` forbids stacking — a PR's base is always `main` — so the only
+  legal split would be a stacked one. Recorded as the diff-guard exception
+  (G2), never as a number forced to fit.
+- **E1** — 2026-11-04, the cut is frozen before any code:
+  `bun scripts/phase-lint.mjs docs/fix/356-test-targeting/SPEC.md` · exit 0 ·
+  `verdict PASS` (5/5 phases, fingerprint `9544b897…`);
+  `bun scripts/unit-route.mjs --triage 356-test-targeting` · exit 0 ·
+  `Steps: implement, evidence`.
+- **E2** — 2026-11-04, the red commit (O11, red side): the suite alone at
+  `22a6680d` — `bun test scripts/test-impact.test.mjs` · exit 1 ·
+  `error: Cannot find module './test-impact.mjs'` (0 pass, 1 fail, 1 error);
+  `node --test scripts/test-impact.test.mjs` · `pass 0 · fail 1`.
+- **E3** — 2026-11-04, the green commit (O1, O3, O5, O6, O7, O11 green side):
+  the hint lands at `8daf7087` — `bun test scripts/test-impact.test.mjs` ·
+  exit 0 · `20 pass · 0 fail`; the same file under `node --test` · `pass 20 ·
+  fail 0`.
+- **E4** — 2026-11-04, the three acceptance fixtures on the shipped tree
+  (S1, S4 box 1–3, O1, O3, O5):
+  `bun scripts/test-impact.mjs --paths README.md CHANGELOG.md` · exit 0 ·
+  `TEST IMPACT — empty`, `executable: 0`, `suites (0)`;
+  `bun scripts/test-impact.mjs --paths scripts/test-impact.mjs` · exit 0 ·
+  `TEST IMPACT — targeted`, `suites (1): scripts/test-impact.test.mjs`,
+  `symbols: classifyPath, isTestFile, symbolsIn`;
+  the same command under a PATH carrying only `grep` · exit 0 · `tier: grep`,
+  `fallback: rg absent — the symbol-to-test hint ran under grep (same answer, slower)`,
+  and the identical suite set.
+- **E5** — 2026-11-04, the prose surfaces (S2, S3, S5, S8, O4, O8):
+  `rg -c 'targeted' skills/execute-phase/references/TEST_IMPACT.md
+  skills/execute-phase/SKILL.md` → 5 and 1;
+  `rg -c 'test impact' skills/verification-contract/SKILL.md` → 1;
+  `rg -c 'test impact' AGENTS.md` → **1**, not the 2 the frozen criterion and
+  O2 ask for — the guide states the rule once, in one bullet, and the inventory
+  row spells the surface `test-impact-verdict` (hyphenated), so the second
+  occurrence the count assumed does not exist. The rule is stated
+  (`AGENTS.md:144`), the surface is declared (`AGENTS.md:334`) and
+  `bun scripts/normative-drift.test.mjs` · exit 0 · 21 pass resolves the row;
+  only the count is wrong, and it is reported rather than edited into the
+  frozen criterion.
+- **E6** — 2026-11-04, scope stayed where the Non-goals put it (S6, O10):
+  `git diff --stat c8b64d0b -- package.json
+  packages/agentic-workflow/package.json packages/pi-agentic-workflow/package.json
+  bun.lock` · no output (no manifest, no lockfile, no dependency).
+- **E7** — 2026-11-04, the differential against the base commit (the
+  `git archive c8b64d0b` copy in `/tmp`): `scripts/check-skill-context.mjs
+  --routes` differs only in the eleven routes this unit re-based;
+  `scripts/invocation-drift.mjs` · exit 0 both · `115 → 116 skill files` (the
+  new reference); `scripts/skill-lint.mjs` · exit 0 both · `90 → 91 file(s)`;
+  `scripts/test-route.mjs --list` · exit 0 both · one added route
+  (`test-impact`). No unexpected difference: every other reader prints the same
+  bytes.
+- **E8** — 2026-11-04, the shipped package still consumes the skills tree:
+  `cd packages/pi-agentic-workflow && bun run test` · exit 0 ·
+  `493 pass · 0 fail` (35 files) after `bundle:skills` staged the new reference.
+- **G1** — 2026-11-04, the root gate (S7, O9): `bun scripts/run-root-suite.mjs`
+  · exit 0 · `1541 pass · 1 skip · 0 fail` — up from `1520 pass · 2 fail · 1
+  skip · 1 error` at the base commit, where the two failures were the guide's
+  inherited estimate drift this unit's re-basis closes; and
+  `bun scripts/check-skill-context.mjs` · exit 0 ·
+  `PASS context budgets: 28 skills`; `--routes` · exit 0 ·
+  `PASS route budgets: 14 routes`; `--documents` · exit 0 ·
+  `PASS context documents: 3 budgeted documents`;
+  `bun scripts/lint-changeset.mjs` · exit 0 ·
+  `.changeset/fix-356-test-targeting-test-impact.md ok`.
+- **G2** — 2026-11-04, `bun scripts/diff-guard.mjs --base c8b64d0b --unit
+  356-test-targeting` · BREACH · `1636 > 400 lines`, `14 > 8 files`.
+  **Recorded exception (D4), not a forced number:** the unit doc and its two
+  ledgers are ~700 lines of the spec-by-reference block, the hint and its
+  corpus ~780, and the wiring six files of one-to-forty lines each. A split was
+  considered and rejected: `AGENTS.md` forbids stacked PRs, and a prose-only PR
+  would ship a rule with no enforcing mechanism.
+- **P1** — 2026-11-04, the unit doc, its two ledgers and roadmap row 93 cut
+  before any code · `16069246`.
+- **P2** — 2026-11-04, the fixture corpus committed alone — the red commit (E2)
+  · `22a6680d`, then the fixture identity and the unknown-path case · `1a35b463`.
+- **P3** — 2026-11-04, the hint implemented — the green commit (E3) ·
+  `8daf7087`.
+- **P4** — 2026-11-04, the wiring: the route row, the guide rule and its
+  inventory row, the new reference, the executor and contract paragraphs, the
+  budget re-basis and the changeset · `6230176a`.
+- **P5** — 2026-11-04, verification on the full diff (E1–E8, G1–G2), the
+  obligations closed, and this hand-off. **Open, for the owner:** AC `S2`'s
+  proving command and `O2`'s first half ask `rg -c 'test impact' AGENTS.md` for
+  2 matches, and the guide states the phrase once (E5). The substance both
+  record — the rule at `AGENTS.md:144`, the `test-impact-verdict` row at
+  `AGENTS.md:334`, `normative-drift` green — holds; the proposed correction is
+  `rg -c 'test impact' AGENTS.md` matches 1 **and**
+  `rg -c 'test-impact-verdict' AGENTS.md` matches 1.
+  **Disclosed deviation:** the two suite cases added after the red commit
+  (`a declaration written inside a fixture string is a mention`, `a one-file
+  change never answers the whole gate`) landed in `6230176a` rather than in the
+  red commit; each was observed failing against the implementation as it stood
+  (the fixture template yielded `added`; a one-file change answered 97 suites).
+  The pair itself — `22a6680d` before `8daf7087` — is red-first (O11).
+
 ## Triaged steps
 
 ```text
@@ -306,8 +402,9 @@ so `P2` exists and is the frozen proof of the red side.
 
 ## Next
 
-The external verifier's verdict on the handed-off diff: the merge closes
-`#356` and removes the `## Fixes` row.
+The owner's verdict on the handed-off diff — `Needs your decision` on one item:
+approve the S2/O2 count correction (E5, P5) or amend the frozen criterion. Then
+open the PR (`Closes #356`), set the fix row to `done`, and merge.
 
 ## References
 
