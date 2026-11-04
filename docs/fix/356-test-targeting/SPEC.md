@@ -385,6 +385,58 @@ leaves this table and becomes a `## Log` line.
   portable tier answered while still pinning the exact suite list and the
   exclusion of the unrelated suite. The degradation case that owns the matcher
   question is untouched.
+- **D6** — 2026-11-04, two of the impact set's four sources are design
+  decisions rather than the issue's own words (S4 names the mechanism, not an
+  exhaustive list): `path` — a suite that names the changed file's own path is
+  affected even when it imports nothing from it, which is how a spawn-based
+  suite refers to what it exercises — and `sibling` — the suite beside the
+  changed file belongs to it by construction. `symbol` and `lsp` are S4's. Both
+  extra sources are recorded here so every line of the hint has an authority,
+  and either can be dropped without touching the others.
+- **E11** — 2026-11-04, the two suite cases added after the red commit get a
+  **reproducible** red side, which supersedes the unverifiable clause in `P5`
+  ("observed failing against the implementation as it stood" — that state was
+  never committed, so no reader could re-run it). Mutation receipt, on the
+  shipped tree: drop the line anchoring from `MARKED_PATTERNS` (six lines, an
+  `^\s*` → `\b` rewrite in `scripts/test-impact.mjs`) ·
+  `bun test scripts/test-impact.test.mjs` · exit 1 · `18 pass · 2 fail` — exactly
+  `a declaration written inside a fixture string is a mention, never a symbol`
+  and `the shipped tree: a one-file change never answers the whole gate`, and
+  nothing else; restore (`git checkout -- scripts/test-impact.mjs`) · exit 0 ·
+  `20 pass · 0 fail`. So the two cases discriminate: the property they pin is
+  one the tree can lose, not one they merely restate. The pair ordering itself
+  was never the deviation — `22a6680d` precedes `8daf7087` (O11) — and it is
+  what `scripts/red-first.mjs` enforces.
+- **G3** — 2026-11-04, the diff-size guard re-run on the final diff, with the
+  attribution `D4` now asks for: `bun scripts/diff-guard.mjs --base c8b64d0b
+  --unit 356-test-targeting` · BREACH · `1771 > 400 lines`, `14 > 8 files`
+  (the earlier `G2` read 1636 at its own head; the evidence and PR-link commits
+  grew it). **Attribution — no line is outside a frozen obligation:**
+
+  | file | authored lines | authority |
+  |---|---|---|
+  | `scripts/test-impact.mjs` | 554 | O1, O3, O5, O6, O7 (S1, S3, S4) |
+  | `scripts/test-impact.test.mjs` | 427 | one case per behaviour and per failure state — O1, O3, O5, O6, O7, O11 |
+  | `docs/fix/356-test-targeting/SPEC.md` | 463 | the unit-doc contract's sections, S1–S8 verbatim, and the `E`/`G`/`P`/`D` receipts the evidence contract requires |
+  | `skills/execute-phase/references/TEST_IMPACT.md` | 87 | O4 (S3) — the contract owner |
+  | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | 95 | O9 — the ceilings this unit's growth re-bases |
+  | `planning-obligations.md` / `planning-evidence.md` | 58 | the ledger contracts (`LEDGERS.md` §1/§2) |
+  | `.changeset/…` | 27 | O9 (S7) — the release intent |
+  | `skills/verification-contract/SKILL.md` | 23 | O8 (S5) |
+  | `scripts/test-route-map.json` | 10 | O9 — the route the new pair needs |
+  | `AGENTS.md` | 9 | O2 (S2, S8) |
+  | `skills/execute-phase/SKILL.md` | 10 | O4 (S3) |
+  | `skills/unit-lane/references/TESTS.md` | 5 | O4 — the tests step's pointer |
+  | `docs/ROADMAP.md` | 3 | the fix template's registration |
+
+  **Verdict:** the size is the unit's, not drift — nothing was added beyond the
+  frozen criteria, no dependency or unrelated file moved (`E6`), and the bound
+  the guard enforces is a *review-checkpoint trigger* (`EXECUTION_CONTRACT.md`
+  §Review checkpoint triggers — accumulation over 400 lines or 8 files), which
+  the external verifier took. Reducing it would mean deleting evidence, docs or
+  comments, which the guard's own anti-gaming rule forbids; the budget is
+  therefore not waived (`--max-lines` was never raised: that is "forcing the
+  number"), it is **attributed**.
 - **P1** — 2026-11-04, the unit doc, its two ledgers and roadmap row 93 cut
   before any code · `16069246`.
 - **P2** — 2026-11-04, the fixture corpus committed alone — the red commit (E2)
