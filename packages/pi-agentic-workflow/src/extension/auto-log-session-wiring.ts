@@ -116,8 +116,9 @@ export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions)
           if (facts === null) return;
           publishAll(all, facts);
         } catch {
-          // A journal write must never block a shutdown: the next session's entry
-          // is a new entry, and this one failing is the price of never hanging.
+          // A journal write must never block a shutdown, and a teardown has no UI
+          // left to nag. The fan-out's own result is dropped on purpose: no retry,
+          // no queue, no report — the next session's entry is a new entry.
         } finally {
           removeMarker(options.root, sessionId);
         }

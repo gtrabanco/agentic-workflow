@@ -295,9 +295,9 @@ a path outside the repo, a log sink, whatever the argv runs:
 ```
 
 The local entry is written first and always kept: a publisher that fails, times
-out or cannot be spawned is reported and forgotten — never retried, never
-blocking the shutdown. **Paths travel** in the payload; the destination is the
-one you declared.
+out or cannot be spawned is dropped — never retried, never blocking the
+shutdown, and never costing the entry that is already on disk. **Paths travel**
+in the payload; the destination is the one you declared.
 
 **Independent of telemetry.** Turning this off keeps the per-unit cost sample;
 turning telemetry off keeps the entry. Rich, narrative entries stay
