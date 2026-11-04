@@ -236,7 +236,7 @@ function decideWorkflowAction(input: WorkflowDecisionInput): WorkflowActionDecis
 revision), snapshot state unknown or contradicted, unrecognized next intent,
 and any transition not in the closed table.
 
-See [SPEC](../features/24-workflow-transition-decider/SPEC.md) for the full
+See [SPEC](../../docs/features/24-workflow-transition-decider/SPEC.md) for the full
 design, transition tables, and reason-code vocabulary.
 
 Package major versions signal a breaking change to any published contract.
