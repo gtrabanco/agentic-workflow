@@ -46,6 +46,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { readRoadmapIndex, roadmapTableRows } from "../packages/agentic-workflow/src/index-document.mjs";
+import { sectionText } from "./unit-doc-phases.mjs";
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.dirname(SCRIPTS_DIR);
@@ -73,14 +74,13 @@ export const PAGES = Object.freeze(["index", "units", "code"]);
 
 // ── discovery ────────────────────────────────────────────────────────────
 
-/** The body of one `## ` section of the guide, fenced blocks included. */
+/**
+ * The body of one `## ` section of the guide, fenced blocks included. The
+ * reader is the shared fence-aware one (`sectionText`): an inline `^## `
+ * scan is the fence-blind defect class (#308 F28) the sibling pins refuse.
+ */
 function sectionBody(text, heading) {
-  const lines = text.split("\n");
-  const start = lines.findIndex((line) => line.trim() === `## ${heading}`);
-  if (start === -1) return null;
-  const rest = lines.slice(start + 1);
-  const end = rest.findIndex((line) => /^## /.test(line));
-  return (end === -1 ? rest : rest.slice(0, end)).join("\n");
+  return sectionText(text, heading);
 }
 
 /** The first fenced code block inside a body, or null. */
@@ -131,6 +131,20 @@ export function resolveFormat(site) {
   }
   const emitter = FORMAT_ALIASES[site.format];
   if (emitter === undefined) {
+    // The scaffold ships a menu of accepted values, never a chosen one. A copy
+    // whose slot still carries the menu declared nothing, so it degrades like an
+    // absent block instead of refusing — refusing would blame the owner for a
+    // placeholder the scaffold wrote. A single unknown value is a declaration
+    // this generator cannot honor, and that refuses.
+    if (site.format.includes("|")) {
+      return {
+        ok: true,
+        emitter: "md",
+        ext: "md",
+        declared: null,
+        degraded: `the \`Docs site\` block still carries the scaffold's format menu (\`${site.format}\`)`,
+      };
+    }
     const accepted = Object.keys(FORMAT_ALIASES).join(" | ");
     return { ok: false, reason: `unrecognised format '${site.format}' in ${GUIDE}; expected ${accepted}` };
   }
@@ -610,14 +624,14 @@ export function run({ root, mode }) {
   const model = collectSources(root);
   const format = resolveFormat(model.site);
   if (!format.ok) return { refusal: format.reason };
-  const dir = projectionDir(model.site);
+  const projection = projectionDir(model.site);
   const pages = planProjection(model, format);
-  const files = { dir, pages };
+  const files = { dir: projection, pages };
 
   if (mode === "dry-run") {
     return {
       lines: [
-        `DOCS DRY-RUN — ${dir}`,
+        `DOCS DRY-RUN — ${projection}`,
         formatLine(format),
         `Would write: ${[...pages.keys()].sort().join(", ")}`,
         "verdict: PASS",
@@ -627,7 +641,7 @@ export function run({ root, mode }) {
   }
 
   const result = syncProjection(root, files, { write: mode === "generate" });
-  const rel = (name) => path.posix.join(dir, name);
+  const rel = (name) => path.posix.join(projection, name);
 
   if (mode === "check") {
     const issues = [
@@ -638,7 +652,7 @@ export function run({ root, mode }) {
     const drift = issues.length > 0;
     return {
       lines: [
-        `DOCS CHECK — ${dir}`,
+        `DOCS CHECK — ${projection}`,
         formatLine(format),
         `Files: ${count(pages.size, "checked", "checked")} · ${count(result.missing.length, "missing", "missing")} · ` +
           `${count(result.stale.length, "stale", "stale")} · ${count(result.orphaned.length, "orphaned", "orphaned")}`,
@@ -651,7 +665,7 @@ export function run({ root, mode }) {
 
   return {
     lines: [
-      `DOCS GENERATE — ${dir}`,
+      `DOCS GENERATE — ${projection}`,
       formatLine(format),
       sourcesLine(model),
       `Files: ${count(result.written.length, "written", "written")} · ${count(result.deleted.length, "deleted", "deleted")} · ` +
