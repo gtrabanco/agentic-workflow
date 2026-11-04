@@ -93,7 +93,7 @@ Generated from 131 unit docs, 104 roadmap rows, 3 packages, 28 skills and 43 scr
 | 382-red-first-commits | fix | — | Fix specification — one single unit document, cut in the `spec-by-reference` |
 | 383-measured-acceptance | fix | done · [#395](https://github.com/gtrabanco/agentic-workflow/pull/395) | Split from [#360](https://github.com/gtrabanco/agentic-workflow/issues/360) by owner decision `D360-1` (2026-11-03). `360a` (the classifier + the tier's machine surface) ships first; this unit carries the part of #360 that cannot ship without it. |
 | 39-publish-schema-oidc-403 | fix | — | Fix specification. The SPEC alone is the source of truth; its |
-| 396-doc-gen | feature | in-progress | a unit that ships code cannot close without an explicit documentation task, and one deterministic command renders the repository's own artifacts — unit docs, roadmap rows and the shipped code — into the project's declared output format. |
+| 396-doc-gen | feature | done · [#400](https://github.com/gtrabanco/agentic-workflow/pull/400) | a unit that ships code cannot close without an explicit documentation task, and one deterministic command renders the repository's own artifacts — unit docs, roadmap rows and the shipped code — into the project's declared output format. |
 | 40-bump-skill-internal-only | fix | — | fix/40-bump-skill-internal-only |
 | 40-versioned-skills-releases | feature | done · [#335](https://github.com/gtrabanco/agentic-workflow/pull/335) | Feature specification for issue |
 | 51-plan-feature-replan-loop | fix | — | fix/51-plan-feature-replan-loop |
