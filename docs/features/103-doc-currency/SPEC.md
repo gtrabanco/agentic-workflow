@@ -109,23 +109,23 @@ Verdict copied verbatim from `bun scripts/ceremony.mjs tier classify` at the cha
 
 ## Tasks
 
-- P1 — Repair the README surfaces against the tree: the root `README.md` (third package + `scripts/` in the layout, the `doc` retrieval index paragraph, the `### Design & plan` row for `unit-lane`, the `/unit-lane` flow, every retired `plan-feature`/`plan-fix` example, the `pre-execution-review` uninstall entry, the fix-index pointer, the train-version line, the deduplicated `log-session`, the `progress.md` handoff and the embeddings sentence), `packages/agentic-workflow/README.md` (the command reference replacing "none yet", plus the two guard binaries), `packages/pi-agentic-workflow/README.md` (route examples), `packages/agentic-workflow-schema/README.md` (broken SPEC link), `docs/workflow/README.md` and `docs/workflow/SKILLS.md` (package count and axis rows), `CHANGELOG.md`'s header claim (validator: `rg -n 'three companion npm packages' README.md AGENTS.md` prints 2 matches)
+- [x] P1 — Repair the README surfaces against the tree: the root `README.md` (third package + `scripts/` in the layout, the `doc` retrieval index paragraph, the `### Design & plan` row for `unit-lane`, the `/unit-lane` flow, every retired `plan-feature`/`plan-fix` example, the `pre-execution-review` uninstall entry, the fix-index pointer, the train-version line, the deduplicated `log-session`, the `progress.md` handoff and the embeddings sentence), `packages/agentic-workflow/README.md` (the command reference replacing "none yet", plus the two guard binaries), `packages/pi-agentic-workflow/README.md` (route examples), `packages/agentic-workflow-schema/README.md` (broken SPEC link), `docs/workflow/README.md` and `docs/workflow/SKILLS.md` (package count and axis rows), `CHANGELOG.md`'s header claim (validator: `rg -n 'three companion npm packages' README.md AGENTS.md` prints 2 matches)
   (Implements: S1, S1a)
   Relevant files: README.md, CHANGELOG.md, packages/agentic-workflow/README.md, packages/pi-agentic-workflow/README.md, packages/agentic-workflow-schema/README.md, docs/workflow/README.md, docs/workflow/SKILLS.md, AGENTS.md
-- P2 — State the documentation-currency rule where it binds: the guide's Working rules with its owner links, and the same rule in the exported substrate `template/AGENTS.md` (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
+- [x] P2 — State the documentation-currency rule where it binds: the guide's Working rules with its owner links, and the same rule in the exported substrate `template/AGENTS.md` (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
   (Implements: S2)
   Relevant files: AGENTS.md, template/AGENTS.md
-- P3 — Make it required and audited: the lane's `docs` step checklist and output contract, `audit-docs` check 15 + the report contract's `Check (1-15)` / `<n>/15` + its description axis, and the suite's pinned count moved with its `justification` + `approval` record (validator: `node --test scripts/review-loop-discipline.test.mjs` exits 0)
+- [x] P3 — Make it required and audited: the lane's `docs` step checklist and output contract, `audit-docs` check 15 + the report contract's `Check (1-15)` / `<n>/15` + its description axis, and the suite's pinned count moved with its `justification` + `approval` record (validator: `node --test scripts/review-loop-discipline.test.mjs` exits 0)
   (Implements: S3, S6)
   Relevant files: skills/unit-lane/references/DOCS.md, skills/audit-docs/SKILL.md, scripts/review-loop-discipline.test.mjs, docs/features/103-doc-currency/decisions.md
-- P4 — Ship the release intent declaring the three packages and the two touched skills (validator: `node scripts/lint-changeset.mjs .changeset/103-doc-currency.md` exits 0)
+- [x] P4 — Ship the release intent declaring the three packages and the two touched skills (validator: `node scripts/lint-changeset.mjs .changeset/103-doc-currency.md` exits 0)
   (Implements: S4)
   Relevant files: .changeset/103-doc-currency.md
-- P5 — Cut the automation issue S5 asks for and record it as this unit's deferred item (validator: `gh issue view 396 --repo gtrabanco/agentic-workflow --json number -q .number` → 396)
+- [x] P5 — Cut the automation issue S5 asks for and record it as this unit's deferred item (validator: `gh issue view 396 --repo gtrabanco/agentic-workflow --json number -q .number` → 396)
   (Implements: S5)
-- P6 — Run the repository's deterministic gate over the whole change (validator: `node scripts/run-root-suite.mjs` exits 0)
+- [x] P6 — Run the repository's deterministic gate over the whole change (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S1a, S2, S3, S4, S5, S6)
-- P7 — Index the unit on the roadmap and open its PR against `main` (validator: `gh pr list --head feat/103-doc-currency --json number -q '.[0].number'` → the PR number)
+- [x] P7 — Index the unit on the roadmap and open its PR against `main` (validator: `gh pr list --head feat/103-doc-currency --json number -q '.[0].number'` → the PR number)
   (Implements: S4)
 
 ```text
@@ -188,6 +188,11 @@ kind | path | justification
 - **P2** — 2026-11-04 01:32, the guide rule and its scaffold twin, the required docs step, `audit-docs` check 15 with its report-contract pin moved under the recorded justification + owner approval, the unit doc and roadmap row 103 · `4afd3a9f`.
 
 - **P3** — 2026-11-04 01:35, pushed `feat/103-doc-currency` and opened [PR #397](https://github.com/gtrabanco/agentic-workflow/pull/397) against `main`; roadmap row 103 linked · branch head `4c243fae`.
+- **P3** — 2026-11-04 01:47, correction appended (the earlier `P3` line records the push and the PR — that is task **P7**): task P3's own work, the required `docs`-step checklist, `audit-docs` check 15 and its report-contract pin moved under the recorded justification + approval, landed in `4afd3a9f` · 4afd3a9f.
+- **P4** — 2026-11-04 01:30, the release intent for the three packages and the two touched skills cut and linted (`node scripts/lint-changeset.mjs .changeset/103-doc-currency.md` → `ok`) · a3830a94.
+- **P5** — 2026-11-04 01:28, issue #396 cut for the automation half (`gh issue view 396 --repo gtrabanco/agentic-workflow --json number -q .number` → 396); no repository commit — the artifact is the issue itself.
+- **P6** — 2026-11-04 01:38, the repository gate run over the whole change (`node scripts/run-root-suite.mjs` → 1512 pass, 0 fail) · 9c21cdc4.
+- **P7** — 2026-11-04 01:35, roadmap row 103 linked and PR #397 opened — the event the first `P3` line above recorded · 4c243fae, settled by `9c21cdc4`.
 
 ## Next
 
