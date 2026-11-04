@@ -173,10 +173,23 @@ kind | path | justification
   ```
 - **L2** — 2026-11-04, the scope answer, verbatim: `"alcance: completo"`; the structure answer, verbatim: `"Reparar el README, regla en AGENTS + paso requerido. Y crear una issue para incluir reglas que obliguen a crear una tarea que sea documentar lo que se ha hecho y automatizar la documentación también en formato md, mdx, html, latex o lo que el usuario haya decidido al inicializar el proyecto, pero hay que documentar el código y features realizadas."`; the obligation answer, verbatim: `"fuerza: prosa"`.
 - **L3** — 2026-11-04, owner decision: the path-protection gate refused the frozen-test edit; the owner was asked and answered verbatim `"Apruebo editar el test"` — both rows recorded in `docs/features/103-doc-currency/decisions.md`.
+- **E1** — 2026-11-04, `rg -c "Current producers: none yet" packages/agentic-workflow/README.md` (and the same pin per retired claim: the `plan-feature` examples, `two companion npm packages`, `evolves independently`, `fix SPEC template + index README`, `via \`progress.md\``, `Check (1-14)`) · exit 1 · no match anywhere (the `Retirements` table's eight pins).
+- **E2** — 2026-11-04, `rg -n 'three companion npm packages' README.md AGENTS.md` · exit 0 · 2 matches (P1's validator).
+- **E3** — 2026-11-04, `gh issue view 396 --repo gtrabanco/agentic-workflow --json number -q .number` · exit 0 · `396` (P5's validator).
+- **G1** — 2026-11-04, `bun scripts/skill-lint.mjs` · exit 0 · `verdict: PASS` (90 files, 0 findings).
+- **G2** — 2026-11-04, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 3 budgeted documents` (AGENTS.md 388/393 lines, 297/302 prose, 6865/6881 estimate); the skills half also `PASS` (audit-docs 2348/2800 est, 184/240 lines).
+- **G3** — 2026-11-04, `node --test scripts/review-loop-discipline.test.mjs` · exit 0 · pass 1, fail 0 (the moved pin, judged against the skill's new contract).
+- **G4** — 2026-11-04, `node packages/agentic-workflow/bin/path-guard.mjs --unit docs/features/103-doc-currency --phase P3 --base origin/main` · exit 0 · `PATH-GUARD pass — justified`, offenders: none (OB-4).
+- **G5** — 2026-11-04, `bun scripts/phase-lint.mjs docs/features/103-doc-currency/SPEC.md` · exit 0 · `verdict PASS`, all seven phases 6/6.
+- **G6** — 2026-11-04, `node scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (three packages via the changeset intent).
+- **G7** — 2026-11-04, `node scripts/lint-changeset.mjs .changeset/103-doc-currency.md` · exit 0 · `ok`.
+- **G8** — 2026-11-04, `node scripts/run-root-suite.mjs` · exit 0 · 1513 tests, 1512 pass, 0 fail, 1 pre-existing skip.
+- **P1** — 2026-11-04 01:31, the four README surfaces, the two narrative rows and the CHANGELOG header repaired against the tree; the release intent cut · `a3830a94`.
+- **P2** — 2026-11-04 01:32, the guide rule and its scaffold twin, the required docs step, `audit-docs` check 15 with its report-contract pin moved under the recorded justification + owner approval, the unit doc and roadmap row 103 · `4afd3a9f`.
 
 ## Next
 
-P1 — repair the README surfaces (validator in `## Tasks`).
+P7 — open the PR against `main` and link it from roadmap row 103 (validator in `## Tasks`).
 
 ## References
 
