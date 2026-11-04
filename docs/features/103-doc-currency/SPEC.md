@@ -187,9 +187,11 @@ kind | path | justification
 - **P1** — 2026-11-04 01:31, the four README surfaces, the two narrative rows and the CHANGELOG header repaired against the tree; the release intent cut · `a3830a94`.
 - **P2** — 2026-11-04 01:32, the guide rule and its scaffold twin, the required docs step, `audit-docs` check 15 with its report-contract pin moved under the recorded justification + owner approval, the unit doc and roadmap row 103 · `4afd3a9f`.
 
+- **P3** — 2026-11-04 01:35, pushed `feat/103-doc-currency` and opened [PR #397](https://github.com/gtrabanco/agentic-workflow/pull/397) against `main`; roadmap row 103 linked · branch head `4c243fae`.
+
 ## Next
 
-P7 — open the PR against `main` and link it from roadmap row 103 (validator in `## Tasks`).
+Context-clean `/review-change` in a conversation that did not implement this change, then `/audit-pr` (the review must not run here).
 
 ## References
 
