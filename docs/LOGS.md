@@ -4224,3 +4224,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verification of PR #401 (394-auto-log-session): reviewed the diff against base 92715797, re-ran all declared validators, caught one blocker (surviving 'until feature 41' mention in execute-phase's forbidden list + incorrect PE-012 scope claim) and 3 advisories (budget red, frozen fix record drift, README edge-cases). All fixed, root suite now pass 1523 · fail 0.
 - **Decisions:** Owner-directed: treat all 4 external findings as repairs, not discardable — the two frozen records get dated reconciliation notes (never rewritten) per the repo pattern from row 40; the silent-refusal edge-case is documented in the pi README (notifying would violate S1); only the execute-phase sibling needed actual code-adjacent repair.
 - **Next:** Push this correction commit to origin, then merge PR #401.
+## 2026-11-04T17:02:19Z — feat/394-auto-log-session — manual
+- **Commits:** 13 (`956a31dc…c672423b`)
+- **Files:** 33 files
+- **Summary:** Implement issue #394: opt-in auto log-session for the pi package — one mechanical journal entry per session, behind an off-by-default switch, with a renderer owned by the agentic-workflow crate and pluggable publishers
+- **Decisions:** autoLogSession.mode defaults to off and beats the telemetry switch in independence; marker at .pi/.session-<id>.start so it never adopts the template's .claude marker; publishers are a Strategy over a frozen log-facts@1 payload so every backend renders identically
+- **Next:** External verifier reviews PR #401 and decides on the pre-existing AGENTS.md guide-layer budget repair (estimate 6884 > 6881, +3 points over ceiling)
