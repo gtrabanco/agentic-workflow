@@ -44,6 +44,10 @@ bun scripts/docs-generate.mjs --dry-run  # the plan, writes nothing
 
 The run is deterministic: two consecutive runs are byte-identical, so
 `--check` exiting non-zero means a source moved and the projection did not.
+The generator runs where the project's tree carries the workflow's scripts; a
+tree that ships only the skills does not have the command yet, so the docs step
+records that the projection is pending the generator's arrival in the project —
+never a hand-written stand-in for a generated page.
 
 ## Fixed output contract
 
