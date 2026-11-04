@@ -192,15 +192,17 @@ function unitDirs(dir) {
     .filter((entry) => exists(entry.spec));
 }
 
-/** The unit's title and one-line, read from its own doc. */
+/** The unit's title and one-line, read from its own doc. The one-line is the
+ * `> One-line:` quote — the unit-doc grammar's only declared carrier for it. A
+ * legacy doc without that quote falls back to its title rather than surfacing
+ * whatever template prose sits in its first blockquote. */
 function unitFacts(specText) {
   const lines = specText.split("\n");
   const title = lines.find((line) => /^# /.test(line))?.slice(2).trim() ?? "";
   const oneLine =
     lines
-      .filter((line) => /^> \S/.test(line))
-      .map((line) => line.replace(/^> /, "").replace(/^One-line:\s*/, "").trim())
-      .find((line) => line !== "") ?? "";
+      .map((line) => /^> One-line:\s*(.+)$/.exec(line)?.[1]?.trim() ?? "")
+      .find((value) => value !== "") ?? "";
   return { title, oneLine };
 }
 
