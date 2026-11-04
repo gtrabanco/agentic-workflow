@@ -101,12 +101,24 @@
      so `review-perf` can measure instead of guess.
    - **Docs site** — does the project have (or want) a developer docs website
      a developer docs site can be written to? If yes, fill the template's
-     `Docs site` block in `AGENTS.md` (format: starlight/docusaurus/markdown,
-     content dir, build command, optional knowledge-map command — proposed
-     from discovery: an `astro.config.*` + `@astrojs/starlight` dependency
-     means Starlight). If no, leave the block commented out —
-     then reports NOT-CONFIGURED instead of guessing. Never scaffold the
+     `Docs site` block in `AGENTS.md` — `format`, `content-dir`, `build`, and
+     the optional knowledge-map command — proposed from discovery (an
+     `astro.config.*` + `@astrojs/starlight` dependency means Starlight). The
+     `format` slot is the project's **declared output format** and it decides
+     what the documentation generator renders: `markdown`/`md` → `.md`,
+     `starlight`/`docusaurus`/`mdx` → `.mdx`, `html` → `.html`, `latex`/`tex` →
+     `.tex`. Ask it as one question with those four targets and the proposal
+     from evidence, never as a default. If no, leave the block commented out —
+     the run then reports NOT-CONFIGURED instead of guessing, and the generator
+     falls back to markdown **and reports the degradation**. Never scaffold the
      website itself.
+     - **A new project** gets the format's output from its first unit: the
+       declared slot is what `bun scripts/docs-generate.mjs` renders.
+     - **An existing project** is offered the block **additively and with
+       explicit consent**: the offer names the block, the four targets and the
+       generator, and a refusal writes nothing and leaves the tree as it was —
+       an upgrade never introduces a documentation surface the owner did not
+       ask for.
    - **Naming conventions**, **MCP servers**, and **Serena language servers** (see
      [SERENA](SERENA.md) for the mapping), if any.
    - **Serena footprint** — the platform whose MCP config is the one to register
