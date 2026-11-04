@@ -1,3 +1,8 @@
+---
+type: feature
+scope: small
+---
+
 # 103 — doc-currency
 
 > One-line: the READMEs are repaired against what the tree actually ships, and documentation currency becomes a guide rule, a required docs step and an audit check.
@@ -128,6 +133,18 @@ Verdict copied verbatim from `bun scripts/ceremony.mjs tier classify` at the cha
 - [x] P7 — Index the unit on the roadmap and open its PR against `main` (validator: `gh pr list --head feat/103-doc-currency --json number -q '.[0].number'` → the PR number)
   (Implements: S4)
 
+## Triaged steps
+
+<!-- pasted verbatim from `bun scripts/unit-route.mjs --triage 103-doc-currency` -->
+
+```text
+TRIAGE — 103-doc-currency (feature)
+Steps: research, design, plan, implement, tests, evidence, review, docs
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
+Skipped: release: small scope
+Budget: strong
+```
+
 ```text
 path-protection-plan@1
 freeze-after: none
@@ -193,6 +210,11 @@ kind | path | justification
 - **P5** — 2026-11-04 01:28, issue #396 cut for the automation half (`gh issue view 396 --repo gtrabanco/agentic-workflow --json number -q .number` → 396); no repository commit — the artifact is the issue itself.
 - **P6** — 2026-11-04 01:38, the repository gate run over the whole change (`node scripts/run-root-suite.mjs` → 1512 pass, 0 fail) · 9c21cdc4.
 - **P7** — 2026-11-04 01:35, roadmap row 103 linked and PR #397 opened — the event the first `P3` line above recorded · 4c243fae, settled by `9c21cdc4`.
+- **E4** — 2026-11-04, `node scripts/unit-lineage.mjs --unit 103-doc-currency --json` · exit 1 · `{"verdict":"blocked","path":"lane-era","reason":"the unit doc carries no pasted `## Triaged steps` block with Steps/Skipped/Budget lines"}` — `audit-pr` gate 1 would have blocked this PR.
+- **E5** — 2026-11-04, `node scripts/unit-route.mjs --triage 103-doc-currency` before the repair · exit 0 · `Steps: implement, evidence` / `Skipped: … docs: trivial scope` — the doc carried no `type`/`scope` frontmatter, so the fallback heuristic read the retired `## Objective` / `## Acceptance criteria` sections, found none, and answered `trivial`.
+- **F1** — 2026-11-04, found while reviewing the plan for `audit-docs` check 11 and folded here: the unit doc carried neither the `type`/`scope` frontmatter nor the pasted `## Triaged steps` block every lane-era unit needs, so the lineage gate blocked and the triage skipped the `docs` step on a docs unit. Repair: frontmatter `type: feature` / `scope: small`, the block re-derived and pasted verbatim.
+- **D4** — 2026-11-04, `release` stays skipped (`small scope`) while this unit still ships `.changeset/103-doc-currency.md`: the changeset is the **version-parity gate's** release intent (feature 40), a different obligation from the catalog's `release` step, which is scoped to `medium`+ features.
+- **G9** — 2026-11-04, `node scripts/unit-lineage.mjs --unit 103-doc-currency --json` after the repair · exit 0 · `{"verdict":"ok","path":"lane-era","unit":"103-doc-currency","obligations":6}`.
 
 ## Next
 
