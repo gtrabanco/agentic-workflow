@@ -4218,3 +4218,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** 1) 394/396 promoted, 398 fix-now high — applied promoted/fix-next labels and posted dated comments. 2) Created 5 worktrees for parallel lanes, but subsessions failed: broken templates (#398's own bug) caused #396 to derive trivial scope and skip review/tests; #394 got stuck in unused-var loops; #398 was interrupted mid-template edit.
 - **Next:** Triage remaining issues from the worktree batch (356, 358) and restart the lanes after fixing template frontmatter first — that fix should land before any of the other units.
 
+## 2026-11-04T16:56:40Z — feat/394-auto-log-session — manual
+- **Commits:** 12 (`956a31dc…7b470456`)
+- **Files:** 33 files
+- **Summary:** External verification of PR #401 (394-auto-log-session): reviewed the diff against base 92715797, re-ran all declared validators, caught one blocker (surviving 'until feature 41' mention in execute-phase's forbidden list + incorrect PE-012 scope claim) and 3 advisories (budget red, frozen fix record drift, README edge-cases). All fixed, root suite now pass 1523 · fail 0.
+- **Decisions:** Owner-directed: treat all 4 external findings as repairs, not discardable — the two frozen records get dated reconciliation notes (never rewritten) per the repo pattern from row 40; the silent-refusal edge-case is documented in the pi README (notifying would violate S1); only the execute-phase sibling needed actual code-adjacent repair.
+- **Next:** Push this correction commit to origin, then merge PR #401.
