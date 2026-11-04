@@ -72,7 +72,14 @@ const NONE = "none";
  * one document, so its `## Features` / `## Fixes` tables are the ledger the map
  * names. A tree or file outside this list is still refused.
  */
-const DURABLE_LEDGER_TREES = Object.freeze(["docs/features/", "docs/fix/", "docs/ROADMAP.md"]);
+const DURABLE_LEDGER_TREES = Object.freeze([
+  "docs/features/",
+  "docs/fix/",
+  "docs/ROADMAP.md",
+  // AC16 third amendment: one file, never the whole `docs/workflow/` tree — the
+  // narrowest form that admits the measured-acceptance ledger.
+  "docs/workflow/TIER_COST.md",
+]);
 
 function insideDurableLedgerSurface(pattern) {
   return DURABLE_LEDGER_TREES.some((entry) => (entry.endsWith("/") ? pattern.startsWith(entry) : pattern === entry));
@@ -86,6 +93,7 @@ const TRUTH_CLASSES = [
   "decisions",
   "roadmap",
   "acceptance-manifest",
+  "tier-cost", // eighth class, AC16 third amendment (2026-11-03, explicit user approval)
 ];
 
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
@@ -247,7 +255,11 @@ function ownerCellFailures(who, cell, knownSkills) {
       failures.push(`${who}: owner "${entry}" is not the declared "<skill>:<column-set>" form`);
       continue;
     }
-    if (!knownSkills.has(skill)) failures.push(`${who}: owner "${skill}" is neither a shipped skill nor human-owner`);
+    // AC16 third amendment: a package runtime module owns the column set it
+    // writes, declared whole as `<package>:<module>` and resolved against
+    // `packages/<package>/src/` — the file must exist for the entry to be known.
+    if (knownSkills.has(entry.trim())) continue;
+    if (!knownSkills.has(skill)) failures.push(`${who}: owner "${skill}" is neither a shipped skill, a declared package module, nor human-owner`);
     if (columnSets.has(columnSet)) failures.push(`${who}: column set "${columnSet}" has two declared writers — one owner per column set`);
     columnSets.add(columnSet);
   }
@@ -440,6 +452,21 @@ function knownSkills(base = root) {
   if (fs.existsSync(dir)) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       if (entry.isDirectory() && fs.existsSync(path.join(dir, entry.name, "SKILL.md"))) names.add(entry.name);
+    }
+  }
+  // AC16 third amendment: a ledger written by the runtime rather than by a skill
+  // declares its writer as `<package>:<module>`, resolved against that package's
+  // `src/`. The file must exist — a declaration naming a module nobody ships is
+  // the same defect as an owner naming a skill that does not exist.
+  const packages = path.join(base, "packages");
+  if (fs.existsSync(packages)) {
+    for (const entry of fs.readdirSync(packages, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const src = path.join(packages, entry.name, "src");
+      if (!fs.existsSync(src)) continue;
+      for (const file of fs.readdirSync(src)) {
+        if (file.endsWith(".ts")) names.add(`${entry.name}:${file.replace(/\.ts$/, "")}`);
+      }
     }
   }
   return names;

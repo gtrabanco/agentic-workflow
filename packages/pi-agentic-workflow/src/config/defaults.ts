@@ -23,6 +23,9 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // Feature 66 — the memory substrate is ask-first: nothing is provisioned
   // until the operator opts in.
   memory: { engram: false },
+  // Issue #383 — the measured acceptance is opt-in: a fresh install measures
+  // nothing until an operator turns it on.
+  telemetry: { enabled: false },
   profiles: {},
   profileOrder: [],
   profileFallback: { ...DEFAULT_PROFILE_FALLBACK },

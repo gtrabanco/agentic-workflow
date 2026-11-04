@@ -54,6 +54,9 @@ test("AC6: the shipped default is inherit/inherit with the fail-closed fallback 
     // Feature 66 — the memory substrate is ask-first: nothing is provisioned
     // until the operator opts in.
     memory: { engram: false },
+    // Issue #383: the measured acceptance is opt-in, so the shipped shape carries
+    // it switched off — the same record feature 66's memory consent uses here.
+    telemetry: { enabled: false },
     // Feature 63 — declared keys: zero-config declares nothing.
     declared: { default: { model: false, thinking: false }, commands: {} },
   });

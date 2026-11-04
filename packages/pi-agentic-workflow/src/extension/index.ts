@@ -16,6 +16,7 @@ import type { InvocationContext, SettingsUi } from "../routing/types.js";
 import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../routing/state.js";
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
+import { createTelemetryWiring, type TelemetryWiring } from "./telemetry-wiring.js";
 import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
 import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
@@ -121,12 +122,15 @@ function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> 
   };
 }
 
-function toRegistrar(pi: ExtensionAPI): CommandRegistrar<PiModel> {
+function toRegistrar(pi: ExtensionAPI, noteCommand: (name: string, args: readonly string[]) => void): CommandRegistrar<PiModel> {
   return {
     registerCommand: (name, options) =>
       pi.registerCommand(name, {
         ...(options.description ? { description: options.description } : {}),
         handler: async (args, ctx) => {
+          // Issue #383: the session learns which unit it is working on from the
+          // command that names it, never from a model's claim.
+          noteCommand(name, String(args ?? "").split(/\s+/).filter(Boolean));
           await options.handler(args, toInvocationContext(ctx));
         },
       }),
@@ -256,9 +260,14 @@ export default function extension(pi: ExtensionAPI): void {
   // Said once per session: an override that was ignored (or a malformed file)
   // is reported the first time the guard runs, never on every tool call.
   let reportedDegradations = false;
+  // Issue #383 — the session accumulator. Pi builds a fresh extension instance
+  // per session (its runtime factory rebuilds the services, and the resource
+  // loader re-runs every factory), so one instance owns one session's sample.
+  let telemetry: TelemetryWiring | null = null;
+  const noteCommand = (name: string, args: readonly string[]): void => telemetry?.noteCommand(name, args);
 
   const { router, guards } = createExtension<PiModel>({
-    registrar: toRegistrar(pi),
+    registrar: toRegistrar(pi, noteCommand),
     // Resolved per call: the router must never hold a session-bound object
     // between turns, because Pi can hand a new session to the same extension.
     surface: () => ({
@@ -306,6 +315,13 @@ export default function extension(pi: ExtensionAPI): void {
 
     const projectTrusted = ctx.isProjectTrusted();
     const loaded = loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted });
+    if (loaded.config.telemetry?.enabled === true && telemetry === null) {
+      // The id is read once, here: pi invalidates a captured context after the
+      // session is replaced, and one extension instance serves one session.
+      const sessionId = ctx.sessionManager.getSessionId();
+      telemetry = createTelemetryWiring({ root: ctx.cwd, enabled: true, sessionId: () => sessionId });
+      telemetry.register(pi);
+    }
     const report = provisionEngram({
       consented: loaded.config.memory?.engram === true,
       configInvalid: !loaded.ok,

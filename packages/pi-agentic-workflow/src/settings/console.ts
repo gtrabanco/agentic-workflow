@@ -741,6 +741,7 @@ const KEY_ORDER = [
   "advance",
   "recommendedModels",
   "memory",
+  "telemetry",
   "profiles",
   "profileOrder",
   "profileFallback",
