@@ -9,6 +9,13 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
+## 2026-11-04T01:40:45Z — feat/103-doc-currency — manual
+- **Commits:** 5 (`a3830a94…9c21cdc4`)
+- **Files:** 16 files (384 insertions, 47 deletions)
+- **Summary:** The owner asked whether the READMEs track delivered features (embeddings shipped and undocumented) and, if not, to add the rule to `AGENTS.md` and make it a required step. The audit found the root README naming two packages while three ship — the runner crate and its `doc` retrieval index were in no README — no `/unit-lane` row or flow entry, retired `plan-feature`/`plan-fix` examples, a fix-index-README pointer, an independent-version claim, a duplicated `log-session` row and a `progress.md` handoff; the crate README still said "Current producers: none yet" while its router declared seven subcommands; the pi README routed a retired command; the schema README linked a missing SPEC path. Repaired all four READMEs plus the tutorial index rows and the CHANGELOG header; added the guide rule with its `template/` twin, the required `docs`-step checklist and `audit-docs` check 15 (report contract → `Check (1-15)` / `<n>/15`); moved the suite's pinned count 14 → 15; cut issue #396 for the automation half. PR #397.
+- **Decisions:** (1) The tier was read from the classifier, never chosen: prose-only said `passive`, and the moment the frozen-test pin entered the diff it said `standard` — so the passive carrier was deleted and a unit doc + `path-protection-plan@1` block cut instead. (2) `**/*.test.*` is a protected path: the owner was asked and approved ("Apruebo editar el test"); `justification` + `approval` rows live in `docs/features/103-doc-currency/decisions.md` and `path-guard` returns `pass — justified`. (3) The count pin follows the skill (precedent: feature 32 P3 moved 13 → 14); no assertion was narrowed, dropped or skipped. (4) Left alone as known pre-existing: `audit-docs` checks 10–11 still name pre-lane artifacts (`PLAN`/`TASKS`/`progress.md`).
+- **Next:** context-clean `/review-change` in a conversation that did not implement this change, then `/audit-pr` on PR #397; issue #396 (forced documentation task + `md`/`mdx`/`html`/`latex` rendering) awaits triage.
+
 ## 2026-10-26T11:21:16Z — feat/308-spec-by-reference — manual
 - **Commits:** 17 (39e2aa3a…bf46d8ea)
 - **Files:** 52 files (3366 additions, 162 deletions)
