@@ -359,17 +359,21 @@ proves it. Frozen at cut.
 - **P4** — 2026-11-04, `init-workspace`'s format choice and the scaffold's widened `Docs site` block (`a1e637e8`, `49943398`).
 - **P5** — 2026-11-04, roadmap row 396, the committed projection and the release intent (`88857c5c`, `d326ca4e`).
 - **P6** — 2026-11-04, the guide repair (`1c6e460f`) and the frozen corpus' two premise corrections (`440ef706`); the gate is `G1`.
+- **P7** — 2026-11-04, branch pushed and [PR #400](https://github.com/gtrabanco/agentic-workflow/pull/400) opened against `main`; roadmap row 396 settled to `done · [#400]`, and the projection regenerated from that row (`G8`).
+- **G8** — 2026-11-04, `bun scripts/docs-generate.mjs` · exit 0 · `1 written · 0 deleted · 2 unchanged` (the units page carries the settled row); `bun scripts/roadmap-settle.mjs` · exit 0 · 131 unit docs, `verdict: PASS`, 0 violations.
 
 ## Next
 
-The owner is the external verifier (D2): read the diff against `## Acceptance
-criteria`, re-run `G1`–`G7`, and answer. No `review-change`, `audit-pr` or fold
-cycle runs on this change; the obligations are closed in
+PR [#400](https://github.com/gtrabanco/agentic-workflow/pull/400) is open against
+`main` and the owner is the external verifier (D2): read the diff against
+`## Acceptance criteria` and re-run `G1`–`G7`. No `review-change`, `audit-pr` or
+fold cycle runs on this change; the obligations are closed in
 [`planning-obligations.md`](planning-obligations.md).
 
 ## References
 
 - Issue: [#396](https://github.com/gtrabanco/agentic-workflow/issues/396) — `Closes #396`.
+- PR: [#400](https://github.com/gtrabanco/agentic-workflow/pull/400) against `main`.
 - Companion: [#103](https://github.com/gtrabanco/agentic-workflow/issues/103) /
   `docs/features/103-doc-currency/SPEC.md` (the rule and the audit check this unit
   builds the automation on; merged in PR #397).
