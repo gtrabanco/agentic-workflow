@@ -216,10 +216,12 @@ test("LOF-16 a missing flag, an unknown operation and an unreadable file are ref
 
 /* ── the type projection cannot drift from the module ──────────────────── */
 
-test("LOF-17 the type projection declares exactly the module's exports", async () => {
-  const module = await import("../src/log/render.mjs");
-  const source = readFileSync(new URL("../src/log/render.d.mts", import.meta.url), "utf8");
-  const declared = [...source.matchAll(/export declare (?:const|function|class) (\w+)/gu)].map((match) => match[1]);
-  const runtime = Object.keys(module).filter((name) => name !== "default");
-  assert.deepEqual(declared.sort(), runtime.sort(), "render.d.mts and render.mjs export different names");
+test("LOF-17 each type projection declares exactly its module's exports", async () => {
+  for (const name of ["render", "publish"]) {
+    const module = await import(`../src/log/${name}.mjs`);
+    const source = readFileSync(new URL(`../src/log/${name}.d.mts`, import.meta.url), "utf8");
+    const declared = [...source.matchAll(/export declare (?:const|function|class) (\w+)/gu)].map((match) => match[1]);
+    const runtime = Object.keys(module).filter((key) => key !== "default");
+    assert.deepEqual(declared.sort(), runtime.sort(), `${name}.d.mts and ${name}.mjs export different names`);
+  }
 });
