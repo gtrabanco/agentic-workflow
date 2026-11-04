@@ -103,7 +103,7 @@ function fixture({ guide = "", units = [], roadmapRows = [], packages = [], skil
   for (const unit of units) {
     const dir = path.join(root, "docs", "features", unit.dir);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, "SPEC.md"), FEATURE_SPEC(unit.title, unit.oneLine));
+    fs.writeFileSync(path.join(dir, "SPEC.md"), unit.spec ?? FEATURE_SPEC(unit.title, unit.oneLine));
   }
   for (const pkg of packages) {
     const dir = path.join(root, "packages", pkg.dir);
@@ -222,6 +222,33 @@ test("coverage: the projection names the delivered features and the shipped code
     assert.match(code, /runner/, "the code page does not name the package's bin entry");
     assert.match(code, /some-skill/, "the code page does not name the skill");
     assert.match(code, /tool\.mjs/, "the code page does not name the script");
+  } finally {
+    cleanup(root);
+  }
+});
+
+test("units: a legacy spec without a One-line quote falls back to its title, never template boilerplate", () => {
+  const root = fixture({
+    units: [
+      {
+        dir: "01-legacy",
+        spec: [
+          "# 01 — legacy",
+          "",
+          "> Feature specification. Detailed phase tasks live in `PLAN.md` / `TASKS.md`.",
+          "",
+          "## Goal",
+          "",
+          "Ship the thing.",
+        ].join("\n"),
+      },
+    ],
+  });
+  try {
+    assert.equal(run(root).status, 0);
+    const units = fs.readFileSync(path.join(root, "docs", "generated", "units.md"), "utf8");
+    assert.doesNotMatch(units, /Feature specification/, "template boilerplate leaked into the units page");
+    assert.match(units, /\| 01-legacy \| feature \| — \| 01 — legacy \|/, "the cell does not fall back to the unit's title");
   } finally {
     cleanup(root);
   }
