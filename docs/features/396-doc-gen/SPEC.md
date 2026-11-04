@@ -128,11 +128,12 @@ change's own diff (the tier is the classifier's, never this document's):
 
 - `bun test scripts/docs-generate.test.mjs` exits 0 (the new suite: discovery,
   four emitters, fallback, refusal, determinism, drift, orphan removal, live tree)
-- `node scripts/run-root-suite.mjs` exits 0 (the repository gate)
+- `bun scripts/run-root-suite.mjs` exits 0 (the repository gate; CI runs the same
+  script under `node` — the documented fallback — and both legs are green)
 - `bun scripts/skill-lint.mjs` → `verdict: PASS`
 - `bun scripts/check-skill-context.mjs` and `… --documents` → both `PASS`
 - `bun scripts/roadmap-settle.mjs` exits 0 (the roadmap row this unit adds)
-- `node scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`
+- `bun scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`
 - `bun scripts/phase-lint.mjs docs/features/396-doc-gen/SPEC.md` → `verdict PASS`
 
 ## Known pre-existing issues
@@ -153,12 +154,17 @@ change's own diff (the tier is the classifier's, never this document's):
   cells where the pinned header has nine.** **Does not affect** this unit (the
   gate reads the status column as the last cell, which still resolves); recorded
   so a later sweep does not read it as this unit's drift.
-- **`node scripts/workflow-status.mjs` fails with `Maximum call stack size
-  exceeded`** on an unmodified `main` worktree (`92715797`) and on this branch's
-  base (`c8b64d0b`), identically. **Does not affect** this unit: the sensor is not
-  in this change's verification set and no root suite calls it on the live tree
-  (its suite runs fixtures). Recorded so a later session does not read it as
-  regression, and routed to `triage-issue` as its own unit.
+- **`scripts/workflow-status.mjs` fails with `Maximum call stack size exceeded`
+  under both runtimes** (`bun scripts/workflow-status.mjs` and
+  `node scripts/workflow-status.mjs`), identically on an unmodified `main`
+  worktree (`92715797`) and on this branch's base (`c8b64d0b`). The cause is a
+  missing cycle guard in `dependencyBuildOrder`'s `walk` (`scripts/workflow-status.mjs`,
+  `seen.add(depId)` after the recursive call), which recurses forever on the
+  roadmap's circular dependency between rows 98 and 100. **Does not affect** this
+  unit: the sensor is not in this change's verification set and no root suite
+  calls it on the live tree (its suite runs fixtures). Recorded so a later
+  session does not read it as regression, and routed to `triage-issue` as its own
+  unit.
 
 ## Tasks
 
@@ -212,16 +218,16 @@ change's own diff (the tier is the classifier's, never this document's):
   (Implements: S2, S6, S7)
   Relevant files: docs/generated
 - P11 — Cut the release intent (validator:
-  `node scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`)
+  `bun scripts/lint-changeset.mjs .changeset/396-doc-gen.md` → `ok`)
   (Implements: S2)
   Relevant files: .changeset/396-doc-gen.md
 - P12 — Record the shipped surface in the changelog (validator:
-  `node scripts/check-changelog-row.mjs "Unreleased" 4.10.0` → the table's row count
+  `bun scripts/check-changelog-row.mjs "Unreleased" 4.10.0` → the table's row count
   is unchanged, and `rg -c "docs-generate" CHANGELOG.md` matches 1)
   (Implements: S2)
   Relevant files: CHANGELOG.md
 - P13 — Verification over the whole change (validator:
-  `node scripts/run-root-suite.mjs` exits 0)
+  `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
 
 ## Triaged steps
@@ -234,7 +240,7 @@ Skipped: none
 Budget: strong
 ```
 
-Derived by `node scripts/unit-route.mjs --triage 396-doc-gen` and pasted
+Derived by `bun scripts/unit-route.mjs --triage 396-doc-gen` and pasted
 verbatim; this block is authoritative for routing.
 
 **Declared deviation.** `review` does not run here: the governing instruction for
@@ -361,6 +367,8 @@ proves it. Frozen at cut.
 - **P6** — 2026-11-04, the guide repair (`1c6e460f`) and the frozen corpus' two premise corrections (`440ef706`); the gate is `G1`.
 - **P7** — 2026-11-04, branch pushed and [PR #400](https://github.com/gtrabanco/agentic-workflow/pull/400) opened against `main`; roadmap row 396 settled to `done · [#400]`, and the projection regenerated from that row (`G8`).
 - **G8** — 2026-11-04, `bun scripts/docs-generate.mjs` · exit 0 · `1 written · 0 deleted · 2 unchanged` (the units page carries the settled row); `bun scripts/roadmap-settle.mjs` · exit 0 · 131 unit docs, `verdict: PASS`, 0 violations.
+- **D8** — 2026-11-04, owner correction: every manual invocation in `E1`–`G8` was written as `node …`, which violates the guide's bun-first rule (`bun` was present and already checked). Each one was re-run in its bun form with identical output — `bun scripts/unit-route.mjs --triage`, `bun scripts/unit-lineage.mjs`, `bun scripts/lint-changeset.mjs`, `bun scripts/version-parity-gate.mjs`, `bun scripts/docs-generate.mjs` — and `G9` records the gate under bun. The earlier lines are not rewritten (append-only), and the forward-looking surfaces (`## Applicable tests`, the P11–P13 validators, the `Derived by` line) now carry the bun form.
+- **G9** — 2026-11-04, `bun scripts/run-root-suite.mjs` · exit 0 · `1541 pass · 1 skip · 0 fail` (1542 tests across 76 files; the bun leg counts per test rather than per node assertion, which is the adaptation `scripts/run-root-suite.mjs` documents).
 
 ## Next
 
