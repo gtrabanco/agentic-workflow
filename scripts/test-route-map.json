@@ -214,6 +214,16 @@
       "suites": [
         "scripts/red-first.test.mjs"
       ]
+    },
+    {
+      "name": "test-impact",
+      "globs": [
+        "scripts/test-impact.mjs",
+        "scripts/test-impact.test.mjs"
+      ],
+      "suites": [
+        "scripts/test-impact.test.mjs"
+      ]
     }
   ]
 }

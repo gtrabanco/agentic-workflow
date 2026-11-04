@@ -45,6 +45,8 @@ if bun is not installed) and the
   `bun scripts/unit-route.mjs --triage <slug>` output block (PREFLIGHT.md)
 ✓ Unit doc read and step selected (explicit P<k> or first unfinished)
 ✓ Step executed and committed (one commit per step, conventional format)
+✓ Test impact derived — the phase's test set came from the hint's block
+  (TEST_IMPACT.md), and a prose-only phase recorded its `empty` verdict
 ✓ Evidence rows updated (command → exit/digest → output → verified-by)
   — each row carries the command, observed output (reproduced, not typed by
   hand), and the verifying-by credit. (S5 — claim-evidence loop: mandatory
@@ -140,8 +142,11 @@ Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.
 
 Follow the unit-lane reference for this step (`references/STEPS.md` catalog):
 one line — read the step's reference file, perform its checklist, commit the
-work. For `implement` steps: write tests-first where they pay (core/domain,
-orchestration) — a new script+suite pair lands red-first: suite commits red (observed failing), implementation green; UI/adapter glue may test after.
+work. For `implement` steps: derive the test set first ([TEST_IMPACT.md](references/TEST_IMPACT.md)
+owns the block and the RED-evidence shape) and write tests-first where they pay
+(core/domain, orchestration) — a new script+suite pair lands red-first: suite
+commits red (observed failing, naming the targeted suite), implementation green;
+UI/adapter glue may test after.
 
 ### 5. Claim-evidence loop (S5 — before post-step)
 
@@ -260,6 +265,7 @@ An issue may never be the first record of a descope.
 
 These files must be loaded when their topic is active:
 - [PREFLIGHT.md](references/PREFLIGHT.md) — all gate blocks (dependency, status, pre-exec, evidence, lint, path-protection)
+- [TEST_IMPACT.md](references/TEST_IMPACT.md) — the impact set, its block, the empty-impact verdict and the RED-evidence shape
 - [EXECUTION_CONTRACT.md](references/EXECUTION_CONTRACT.md) — step completion gate, architectural invariants
 - [PRE_EXECUTION_GATE.md](references/PRE_EXECUTION_GATE.md) — pre-execution review gate, normalizer order
 - [FOLDING.md](references/FOLDING.md) — review finding fold cycle

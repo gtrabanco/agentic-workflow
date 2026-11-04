@@ -155,6 +155,19 @@ test("declaration extraction reads the identifiers a language declares, never a 
   assert.ok(!found.includes("loadMap"), "an import is a mention, not a declaration");
 });
 
+test("a declaration written inside a fixture string is a mention, never a symbol (S4, O3)", () => {
+  const fixtureSource = [
+    "const SAMPLE = `export function added(a, b) {",
+    "  return a + b;",
+    "}`;",
+    'const OTHER = "export const multiplied = 2;";',
+    "// `export function commented()` in a doc comment is prose",
+    "export function real(a) { return a; }",
+  ].join("\n");
+  const found = symbolsIn(fixtureSource, ".mjs");
+  assert.deepEqual(found, ["real"], "only the file's own exported declaration is in scope");
+});
+
 // ── The block, driven through the CLI ───────────────────────────────────────
 
 test("a prose-only change answers an empty verdict with no suite and no invented test (S1, O1)", () => {
@@ -384,6 +397,17 @@ test("the block is byte-stable across runs and the hint writes nothing (O7, PE-0
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("the shipped tree: a one-file change never answers the whole gate (S3, O3)", () => {
+  const result = run(["--paths", "scripts/test-impact.mjs"]);
+  assert.equal(result.status, 0, result.stderr);
+  const suites = suitesOf(result.stdout);
+  assert.ok(suites.length > 0, "the hint finds the pair's own suite");
+  assert.ok(
+    suites.length < 20,
+    `a one-file change must stay a handful of suites, never the gate — got ${suites.length}`,
+  );
 });
 
 test("the shipped tree: this unit's own change targets its own suite (S3, S7)", () => {
