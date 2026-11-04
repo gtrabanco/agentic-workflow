@@ -106,7 +106,7 @@ function fixture({ guide = "", units = [], roadmapRows = [], packages = [], skil
     fs.writeFileSync(path.join(dir, "SPEC.md"), FEATURE_SPEC(unit.title, unit.oneLine));
   }
   for (const pkg of packages) {
-    const dir = path.join(root, "packages", pkg.name);
+    const dir = path.join(root, "packages", pkg.dir);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(
       path.join(dir, "package.json"),
@@ -128,13 +128,21 @@ function fixture({ guide = "", units = [], roadmapRows = [], packages = [], skil
   return root;
 }
 
-/** A fixture with the default declared format and one unit. */
-function declared(format, extra = []) {
+/**
+ * A fixture with a declared format and one unit. `contentDir: true` adds the
+ * `content-dir` slot (the projection lands under the project's site tree); the
+ * default leaves it out, so the projection lands in `docs/generated`.
+ */
+function declared(format, { contentDir = true } = {}) {
   return fixture({
-    guide: DOCS_SITE([`format: ${format}`, "content-dir: src/content/docs/", "build: npx astro check", "map: none", ...extra]),
+    guide: DOCS_SITE([
+      `format: ${format}`,
+      ...(contentDir ? ["content-dir: src/content/docs/", "build: npx astro check"] : []),
+      "map: none",
+    ]),
     units: [{ dir: "01-shipped", title: "Shipped", oneLine: "one delivered feature" }],
     roadmapRows: ["| 1 | `shipped` | done · [#7](https://example.test/pull/7) | — | one delivered feature |"],
-    packages: [{ name: "@fixture/runner", bin: { runner: "./bin/runner.mjs" } }],
+    packages: [{ dir: "runner", name: "@fixture/runner", bin: { runner: "./bin/runner.mjs" } }],
     skills: [{ name: "some-skill", description: "does one thing" }],
     scripts: ["tool.mjs"],
   });
@@ -202,7 +210,7 @@ test("refusal: an unrecognised declared format exits 2 and writes nothing", () =
 // ── S2/S5 — coverage of both halves ─────────────────────────────────────
 
 test("coverage: the projection names the delivered features and the shipped code", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     assert.equal(run(root).status, 0);
     const generated = path.join(root, "docs", "generated");
@@ -220,7 +228,7 @@ test("coverage: the projection names the delivered features and the shipped code
 });
 
 test("dry-run: reports the plan, writes nothing", () => {
-  const root = declared("html");
+  const root = declared("html", { contentDir: false });
   try {
     const result = run(root, "--dry-run");
     assert.equal(result.status, 0, result.stderr);
@@ -236,7 +244,7 @@ test("dry-run: reports the plan, writes nothing", () => {
 // ── S6 — determinism ────────────────────────────────────────────────────
 
 test("determinism: two consecutive runs are byte-identical, stdout included", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     const first = run(root);
     assert.equal(first.status, 0, first.stderr);
@@ -261,7 +269,7 @@ test("determinism: two consecutive runs are byte-identical, stdout included", ()
 // ── S6 — drift detection ────────────────────────────────────────────────
 
 test("check: a clean tree exits 0", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     assert.equal(run(root).status, 0);
     const result = run(root, "--check");
@@ -275,7 +283,7 @@ test("check: a clean tree exits 0", () => {
 });
 
 test("check: a missing page is named and exits 1", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     assert.equal(run(root).status, 0);
     fs.rmSync(path.join(root, "docs", "generated", "code.md"));
@@ -289,7 +297,7 @@ test("check: a missing page is named and exits 1", () => {
 });
 
 test("check: a stale page is named and exits 1", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     assert.equal(run(root).status, 0);
     const page = path.join(root, "docs", "generated", "units.md");
@@ -303,7 +311,7 @@ test("check: a stale page is named and exits 1", () => {
 });
 
 test("check: an orphaned page is named and exits 1 before the next run deletes it", () => {
-  const root = declared("markdown");
+  const root = declared("markdown", { contentDir: false });
   try {
     assert.equal(run(root).status, 0);
     const orphan = path.join(root, "docs", "generated", "old.md");
@@ -318,7 +326,7 @@ test("check: an orphaned page is named and exits 1 before the next run deletes i
 
 // ── S7 — obsolete surfaces never accumulate ─────────────────────────────
 
-test("removal: a page whose source unit is gone is deleted, authored files are untouched", () => {
+test("removal: a retired page is deleted and the retired unit leaves every page, authored files untouched", () => {
   const root = fixture({
     guide: DOCS_SITE(["format: markdown"]),
     units: [
@@ -332,11 +340,19 @@ test("removal: a page whose source unit is gone is deleted, authored files are u
     const generated = path.join(root, "docs", "generated");
     assert.match(fs.readFileSync(path.join(generated, "units.md"), "utf8"), /02-retired/);
     fs.writeFileSync(path.join(root, "docs", "hand-written.md"), "authored\n");
+    // Retire the unit *and* the page set the previous declaration produced: the
+    // retired unit leaves every page, and every page the new format does not
+    // name is deleted. A format change is the case that renames the whole set.
     fs.rmSync(path.join(root, "docs", "features", "02-retired"), { recursive: true, force: true });
-    const result = run(root);
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^Files: 3 written · 1 deleted · 0 unchanged$/m);
-    assert.doesNotMatch(fs.readFileSync(path.join(generated, "units.md"), "utf8"), /02-retired/);
+    fs.writeFileSync(
+      path.join(root, "AGENTS.md"),
+      DOCS_SITE(["format: latex"]),
+    );
+    const removed = run(root);
+    assert.equal(removed.status, 0, removed.stderr);
+    assert.match(removed.stdout, /^Files: 3 written · 3 deleted · 0 unchanged$/m);
+    assert.deepEqual([...tree(generated).keys()], ["code.tex", "index.tex", "units.tex"]);
+    assert.doesNotMatch(fs.readFileSync(path.join(generated, "units.tex"), "utf8"), /02-retired/);
     assert.equal(fs.readFileSync(path.join(root, "docs", "hand-written.md"), "utf8"), "authored\n");
   } finally {
     cleanup(root);
@@ -363,4 +379,16 @@ test("discovery: the Docs site block's slots are read, an absent block yields no
     map: "npm run docs:graph",
   });
   assert.equal(parseDocsSiteBlock("# No block here\n\ntext\n"), null);
+});
+
+test("degradation: an unfilled scaffold menu is not a declared format", () => {
+  const root = fixture({ guide: DOCS_SITE(["format: starlight | docusaurus | markdown"]) });
+  try {
+    const result = run(root);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^Format: md — degraded \(the `Docs site` block still carries the scaffold's format menu/m);
+    assert.ok(tree(path.join(root, "docs", "generated")).has("index.md"));
+  } finally {
+    cleanup(root);
+  }
 });
