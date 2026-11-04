@@ -35,7 +35,7 @@ function ledgerText(rows = []) {
   const block = columns.map((c) => `${c} | \`x\` | what it holds`).join("\n");
   const header = `| ${columns.join(" | ")} |\n|${columns.map(() => "---").join("|")}|`;
   const body = rows.map((cells) => `\n| ${cells.join(" | ")} |`).join("");
-  return `# Measured acceptance\n\n\`\`\`text\ntier-cost@1\ncolumn | shape | what it holds\n${block}\n\`\`\`\n\n## Samples\n\n${header}${body}\n\n## Reading it\n\nNothing else.\n`;
+  return `# Measured acceptance\n\n\`\`\`text\ntier-cost@1\ncolumn | shape | what it holds\n${block}\n\`\`\`\n\n## Reading it\n\nNothing else.\n\n## Samples\n\nOne row per measured session.\n\n${header}${body}\n`;
 }
 
 /** A throwaway project carrying one unit doc, so a row's tier can be resolved. */
@@ -104,9 +104,11 @@ test("the sink never rewrites an earlier row", () => {
   const before = fs.readFileSync(ledgerPath, "utf8");
   const sink = createLedgerSink({ ledgerPath });
   sink.write(SAMPLE);
+  const afterFirst = fs.readFileSync(ledgerPath, "utf8");
   sink.write({ ...SAMPLE, tokens: 2_000, source: "pi:session=def" });
   const after = fs.readFileSync(ledgerPath, "utf8");
-  assert.ok(after.startsWith(before.slice(0, before.indexOf("\n\n## Reading it"))), "every byte of the original table ordering is preserved");
+  assert.ok(afterFirst.startsWith(before), "the first write left every existing byte in place");
+  assert.ok(after.startsWith(afterFirst), "the second write left the first row in place");
   assert.equal(rowsOf(ledgerPath).length, 2);
 });
 
@@ -149,69 +151,65 @@ test("round trip: the repository's reader accepts the sink's row and reads the s
 // --- the ledger is a file two sessions can reach at once -------------------
 //
 // Pi runs sessions in separate processes, and each one appends on its own
-// shutdown. A read-modify-write with no exclusion loses the row of whichever
-// writer read last: two sessions measured, one row kept, and nothing says so.
-// These cases pin the exclusion, not just the happy path.
+// shutdown. A read-modify-write loses the row of whichever writer read last:
+// two sessions measured, one row kept, and nothing says so. The writer therefore
+// never rewrites the file — it appends one line with `O_APPEND`, which the
+// kernel places atomically — so no lock, no queue and no lost row is needed.
+// These cases pin that shape.
 
-/** The lock a writer takes beside the ledger. */
+/** The lock a rewriting writer would need; the append-only one takes none. */
 const lockPath = (ledgerPath) => `${ledgerPath}.lock`;
 
-test("a writer waits for the lock another process holds, then writes its row", async () => {
+test("concurrent writers all land, and no lock file is taken", async () => {
   const { root, ledgerPath } = project();
-  const script = path.join(root, "waiter.mjs");
   const dist = new URL("../dist/telemetry-sinks.js", import.meta.url).href;
+  const script = path.join(root, "writer.mjs");
   fs.writeFileSync(
     script,
     `import { createLedgerSink } from ${JSON.stringify(dist)};\n` +
-      `createLedgerSink({ ledgerPath: ${JSON.stringify(ledgerPath)}, lockTimeoutMs: 5000 }).write(${JSON.stringify({ ...SAMPLE, tokens: 7, source: "pi:session=waiter" })});\n`,
+      `const [ledger, who] = process.argv.slice(2);\n` +
+      `const sink = createLedgerSink({ ledgerPath: ledger });\n` +
+      `for (let i = 0; i < 3; i += 1) sink.write({ unit: "383-measured-acceptance", changed_paths: 1, tokens: 10 + i, turns: 1, model_ms: 1, tool_ms: 1, observed: ${JSON.stringify(DATE)}, source: \`pi:session=\${who}-\${i}\` });\n`,
   );
 
-  fs.writeFileSync(lockPath(ledgerPath), "held by the test");
-  const child = spawn(process.execPath, [script], { stdio: "ignore" });
-  const finished = new Promise((resolve, reject) => {
-    child.on("error", reject);
-    child.on("exit", (code) => resolve(code));
-  });
-  // Long enough that the child has to observe the lock and wait for it.
-  setTimeout(() => fs.rmSync(lockPath(ledgerPath), { force: true }), 150);
+  // Four sessions, each with its own identity: the sink's duplicate guard is
+  // per-row, and a session never races with itself (one process, one flush).
+  const children = ["a", "b", "c", "d"].map((who) => spawn(process.execPath, [script, ledgerPath, who], { stdio: "ignore" }));
+  const codes = await Promise.all(
+    children.map((child) => new Promise((resolve, reject) => {
+      child.on("error", reject);
+      child.on("exit", (code) => resolve(code));
+    })),
+  );
 
-  assert.equal(await finished, 0, "the writer waited instead of failing");
-  const rows = rowsOf(ledgerPath);
-  assert.equal(rows.length, 1);
-  assert.equal(rows[0].source, "pi:session=waiter");
-  assert.equal(fs.existsSync(lockPath(ledgerPath)), false, "the lock it took is released");
+  assert.deepEqual(codes, [0, 0, 0, 0], "every writer finished");
+  assert.equal(rowsOf(ledgerPath).length, 12, "12 samples measured, 12 rows written");
+  assert.equal(fs.existsSync(lockPath(ledgerPath)), false, "an appending writer needs no lock");
 });
 
-test("a lock left behind by a dead writer is taken over, not waited on forever", () => {
-  const { ledgerPath } = project();
-  fs.writeFileSync(lockPath(ledgerPath), "a writer that died");
-  const old = new Date(Date.now() - 60_000);
-  fs.utimesSync(lockPath(ledgerPath), old, old);
-
-  createLedgerSink({ ledgerPath, lockStaleMs: 1_000 }).write(SAMPLE);
-  assert.equal(rowsOf(ledgerPath).length, 1);
-  assert.equal(fs.existsSync(lockPath(ledgerPath)), false);
-});
-
-test("an unreachable lock refuses the row instead of writing over the table", () => {
+test("the writer appends: everything already in the ledger is a prefix of the result", () => {
   const { ledgerPath } = project();
   const before = fs.readFileSync(ledgerPath, "utf8");
-  fs.writeFileSync(lockPath(ledgerPath), "held");
-
-  assert.throws(
-    () => createLedgerSink({ ledgerPath, lockTimeoutMs: 0 }).write(SAMPLE),
-    /locked/,
-    "a writer that cannot get the lock reports the loss; it never rewrites the table blind",
-  );
-  assert.equal(fs.readFileSync(ledgerPath, "utf8"), before);
-  assert.equal(fs.existsSync(lockPath(ledgerPath)), true, "a lock the sink did not take is not the sink's to remove");
+  createLedgerSink({ ledgerPath }).write(SAMPLE);
+  const after = fs.readFileSync(ledgerPath, "utf8");
+  assert.ok(after.startsWith(before), "no byte of the ledger is rewritten");
+  assert.equal(after.length, before.length + "| 383-measured-acceptance | 12 | 1500 | 4 | 9400 | 600 | 2026-11-03 | pi:session=abc |\n".length);
+  assert.equal(rowsOf(ledgerPath).length, 1);
 });
 
-test("the lock is released even when the write itself is refused", () => {
+test("a samples table that is not the file's last section is refused", () => {
   const { root, ledgerPath } = project();
-  const broken = path.join(root, "docs/workflow/TIER_COST.md");
-  fs.writeFileSync(broken, "# no grammar here\n");
+  // The writer appends; if prose follows the table, the row would land after it.
+  fs.appendFileSync(ledgerPath, "\n## Reading it\n\nNothing else.\n");
+  const before = fs.readFileSync(ledgerPath, "utf8");
+  assert.throws(() => createLedgerSink({ ledgerPath }).write(SAMPLE), /last section/);
+  assert.equal(fs.readFileSync(ledgerPath, "utf8"), before);
+});
 
-  assert.throws(() => createLedgerSink({ ledgerPath: broken }).write(SAMPLE));
-  assert.equal(fs.existsSync(lockPath(broken)), false, "a refusal still releases the lock it took");
+test("a ledger whose last line is not a row is refused, never appended to blind", () => {
+  const { ledgerPath } = project();
+  fs.appendFileSync(ledgerPath, "trailing words with no newline");
+  const before = fs.readFileSync(ledgerPath, "utf8");
+  assert.throws(() => createLedgerSink({ ledgerPath }).write(SAMPLE), /must end with a newline/);
+  assert.equal(fs.readFileSync(ledgerPath, "utf8"), before);
 });
