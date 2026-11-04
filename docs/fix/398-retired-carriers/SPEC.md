@@ -363,7 +363,7 @@ One observable criterion per `S#`, each naming the check that proves it.
 | O11 | S1, S8 (P7) | the rewritten check 11 bites both ways: a lane-era unit passes it and a legacy defect is still caught | P7 | P7 | execute-phase | `node scripts/ceremony.mjs docs check-tasks-ticks --slug 103-doc-currency` exits 0 with `valid: true`, and the legacy-defect copy exits 2 with `valid: false` | both outputs pasted verbatim in `## Log` | planned |
 | O12 | S8 (P8) | the repository gate is green at the handoff head | P8 | P8 | execute-phase | `node scripts/run-root-suite.mjs` exits 0 | exit code and pass/fail tally in `## Log` | planned |
 | O13 | S8 (P9) | the release intent passes both of its gates | P9 | P9 | execute-phase | `node scripts/version-parity-gate.mjs --content` matches `VERDICT: PASS` and `node scripts/lint-changeset.mjs <file>` matches `ok` | both outputs in `## Log` | planned |
-| O14 | S7, S8 (P8) | the non-goals hold: check count still 15, no legacy unit rewritten, `unit-lineage`/`audit-pr`/triage catalog untouched | P8 | P8 | execute-phase | `rg -c '^[0-9]+\. ' skills/audit-docs/SKILL.md` matches 15 and `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr docs/features/06-* docs/features/13-*` prints nothing | both runs in `## Log` | planned |
+| O14 | S7, S8 (P8) | the non-goals hold: check count still 15, no legacy unit rewritten, `unit-lineage`/`audit-pr`/triage catalog untouched | P8 | P8 | execute-phase | `sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' skills/audit-docs/SKILL.md | grep -cE '^[0-9]+\. '` matches 15 and `git diff --stat main -- scripts/unit-lineage.mjs skills/audit-pr` prints nothing | both runs in `## Log` | planned |
 
 ## Findings
 
@@ -396,6 +396,11 @@ OPEN rows only.
   with its outcome), the planning evidence is `PE-001..PE-016`, and every
   obligation is `planned` at cut. Recorded as a correction of a malformed cut,
   before any status could be claimed.
+- **L3** — 2026-11-04, O14's validator corrected at the cut. The cell read
+  `rg -c '^[0-9]+\. ' skills/audit-docs/SKILL.md` matches 15, but that pattern
+  also counts the report's three process steps (18 today); it now counts the
+  checks span alone (`sed -n '/^1\. \*\*Roadmap/,/^15\. \*\*README/p' … |
+  grep -cE '^[0-9]+\. '` → 15). Corrected before the row moved off `planned`.
 
 ## Next
 
