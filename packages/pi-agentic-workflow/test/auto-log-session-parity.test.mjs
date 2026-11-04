@@ -20,7 +20,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { buildFacts, markerPath, readMarker } from "../dist/auto-log-session.js";
+import { buildFacts, createMarker, markerPath } from "../dist/auto-log-session.js";
 import { isRenderedEntry, renderEntry } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 
 const PKG_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
@@ -65,6 +65,9 @@ function hook(root, name, payload) {
 function hookedSession({ commits = 1 } = {}) {
   const { root, git } = repo();
   hook(root, "log-session-start.sh", { session_id: SESSION });
+  // The hook's own starting point: read from git, not from its `.claude/`
+  // marker — the two writers keep separate namespaces on purpose (AP-04).
+  const startSha = git(["rev-parse", "--short", "HEAD"]).trim();
   for (let index = 0; index < commits; index += 1) {
     fs.writeFileSync(path.join(root, `work-${index}.txt`), `${index}\n`);
     git(["add", "."]);
@@ -76,23 +79,26 @@ function hookedSession({ commits = 1 } = {}) {
   const appended = journal.slice(INITIAL.length);
   const timestamp = /^## (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z) — /u.exec(appended.slice(1))?.[1];
   assert.ok(timestamp, `the hook's header carries no readable timestamp: ${JSON.stringify(appended)}`);
-  return { root, appended, timestamp };
+  // Put the tree back the way the hook saw it when it collected its own path
+  // list, so the two writers are compared over one state: the append is undone
+  // and the hook's `.claude/` marker (untracked, and invisible to the hook's
+  // range diff) is removed. What remains is the session's work.
+  git(["checkout", "--", JOURNAL]);
+  fs.rmSync(path.join(root, ".claude"), { recursive: true, force: true });
+  return { root, appended, timestamp, marker: { sha: startSha, epoch: 0, iso: "1970-01-01T00:00Z" } };
 }
 
 test("AP-01 with a commit in its range, our append is the hook's append", () => {
-  const { root, appended, timestamp } = hookedSession({ commits: 1 });
+  const { root, appended, timestamp, marker } = hookedSession({ commits: 1 });
   assert.equal(isRenderedEntry(appended.slice(1)), true, "the oracle still speaks the frozen three-line shape");
 
-  const marker = readMarker(root, SESSION);
-  assert.ok(marker, "the start hook wrote a marker this package can read");
   const facts = buildFacts({ root, marker, reason: "exit", now: () => Date.parse(timestamp) });
   assert.equal(`\n${renderEntry(facts)}`, appended);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
 test("AP-02 with no commit in its range, the zero-count shape is identical too", () => {
-  const { root, appended, timestamp } = hookedSession({ commits: 0 });
-  const marker = readMarker(root, SESSION);
+  const { root, appended, timestamp, marker } = hookedSession({ commits: 0 });
   const facts = buildFacts({ root, marker, reason: "exit", now: () => Date.parse(timestamp) });
   assert.equal(`\n${renderEntry(facts)}`, appended);
   assert.match(appended, /- \*\*Commits:\*\* 0 `[0-9a-f]{4,40}…[0-9a-f]{4,40}`/u);
@@ -100,8 +106,7 @@ test("AP-02 with no commit in its range, the zero-count shape is identical too",
 });
 
 test("AP-03 the CLI reproduces the extension's entry from the same payload", () => {
-  const { root, timestamp } = hookedSession({ commits: 1 });
-  const marker = readMarker(root, SESSION);
+  const { root, timestamp, marker } = hookedSession({ commits: 1 });
   const facts = buildFacts({ root, marker, reason: "exit", now: () => Date.parse(timestamp) });
   const run = spawnSync(process.execPath, [CLI, "log", "render", "--facts", "-", "--raw"], {
     cwd: root,
@@ -113,16 +118,17 @@ test("AP-03 the CLI reproduces the extension's entry from the same payload", () 
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test("AP-04 the marker this package writes is the marker the hook's end script reads", () => {
-  // Same fields, same order, same separator: `.pi/` vs `.claude/` is the only
-  // difference, and that is what keeps one writer from adopting the other's
-  // crashed marker.
+test("AP-04 the marker holds the hook's fields, in its own directory", () => {
+  // Same three fields in the same order and separator — but `.pi/`, never
+  // `.claude/`: that separation is what keeps one writer from adopting the
+  // other's crashed marker, so it is asserted rather than assumed.
   const { root } = repo();
   hook(root, "log-session-start.sh", { session_id: SESSION });
-  const ours = readMarker(root, SESSION);
-  assert.ok(ours);
   const hookMarker = fs.readFileSync(path.join(root, ".claude", `.session-${SESSION}.start`), "utf8").trim().split(" ");
+  const ours = createMarker({ root, sessionId: SESSION, now: () => Number(hookMarker[1]) * 1000 });
+  assert.ok(ours);
   assert.deepEqual([ours.sha, String(ours.epoch), ours.iso], hookMarker);
   assert.equal(markerPath(root, SESSION).includes(`${path.sep}.claude${path.sep}`), false);
+  assert.equal(markerPath(root, SESSION), path.join(root, ".pi", `.session-${SESSION}.start`));
   fs.rmSync(root, { recursive: true, force: true });
 });
