@@ -53,8 +53,10 @@
  * commands are always PRINTED, never executed — an operator or workflow runs
  * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
  * are third-party data, never interpolated into a shell command.
- * GitHub Release notes use `--generate-notes` so merged PR authors are
- * credited (AC-15, PE-004).
+ * Merged PRs are listed by the operator from the GitHub UI after the release
+ * is created (AC-15, PE-004): `--generate-notes` must NOT be passed alongside
+ * `--notes-file` — GitHub combines both, appending its auto-generated PR list
+ * to the custom notes and producing a merged wall of text.
  *
  * Dependency-free (node: builtins only — the node-compat rule, AC-01).
  *
@@ -482,11 +484,107 @@ function installBlock({ channel, tag, bumps }) {
 }
 
 /**
+ * Generate a "Contributors" section from merge commits between the previous
+ * release tag (or the last canary for canary cuts) and HEAD. Each merge commit
+ * becomes a bullet like `* <title> by @<author> in <PR link>`, matching the
+ * format GitHub's `--generate-notes` uses — so the release credits every
+ * contributor while keeping the body fully rendered by the changesets.
+ *
+ * Resolves the repo owner from the remote URL so the PR links are correct
+ * regardless of fork or clone configuration.
+ *
+ * @param {string} root - repository root
+ * @param {string} channel - "stable" or "canary"
+ * @param {string} tag - the full version tag (v5.0.0-canary.20261104.1 or 5.0.0) —
+ *   may or may not have a "v" prefix
+ * @param {boolean} gitRepo - true if this is a git repository
+ */
+function renderContributors(root, channel, tag, gitRepo) {
+  if (!gitRepo) return "";
+  // Strip optional "v" prefix for uniform handling.
+  const cleanTag = tag.replace(/^v/, "");
+  // For stable, the previous tag is the last stable v-tag.
+  // For canary, the previous tag is the last canary tag (to avoid
+  // re-listing PRs from an earlier canary). If none exist, skip.
+  const prevTag = channel === "stable"
+    ? lastStableTag(root)
+    : (() => {
+        const m = /^(\d+\.\d+\.\d+)-canary\.(\d{8})\.(\d+)$/.exec(cleanTag);
+        if (!m) return null;
+        const curBase = m[1];
+        const curStamp = m[2];
+        const curN = Number(m[3]);
+        const out = git(root, ["tag", "-l", "--merged", "HEAD", "v*-canary.*"]) ?? "";
+        const tags = out
+          .split("\n")
+          .filter(Boolean)
+          .map((t) => {
+            const pm = /^v(\d+\.\d+\.\d+)-canary\.(\d{8})\.(\d+)$/.exec(t);
+            return pm ? { tag: t, base: pm[1], stamp: pm[2], n: Number(pm[3]) } : null;
+          })
+          .filter(Boolean);
+        const older = tags.filter((b) => {
+          const byBase = compareBase(curBase, b.base);
+          if (byBase !== 0) return byBase > 0;
+          return b.stamp < curStamp || (b.stamp === curStamp && b.n < curN);
+        });
+        return older[0]?.tag ?? null;
+      })();
+  if (!prevTag) return "";
+  // prevTag is stripped of the "v" prefix (lastStableTag returns "4.10.0").
+  // git log needs the full tag name.
+  const gitTag = prevTag.startsWith("v") ? prevTag : `v${prevTag}`;
+  // Resolve the repo owner from the remote URL (handles both SSH and HTTPS).
+  const remote = git(root, ["remote", "get-url", "origin"]);
+  const owner = remote
+    ? remote.match(/github\.com[/:]([^/]+\/[^/.]+)(\.git)?$/)?.[1]
+    : null;
+  if (!owner) return "";
+  // Use gh pr list to get merged PRs after the previous tag — this gives
+  // the proper GitHub login, PR number, and title in one shot.
+  const prevMerged = git(root, ["log", "-1", "--format=%ci", gitTag]);
+  const since = prevMerged ? new Date(prevMerged).toISOString() : new Date().toISOString();
+  const prOut = spawnSync("gh", ["pr", "list", "--state", "merged", "--limit", "300", "--json", "number,title,mergedAt", "--base", "main"], {
+    encoding: "utf8",
+    cwd: root,
+  });
+  if (prOut.status !== 0) return "";
+  let prs;
+  try {
+    prs = JSON.parse(prOut.stdout);
+  } catch {
+    return "";
+  }
+  const mergedAfter = prs
+    .filter((pr) => pr.mergedAt && new Date(pr.mergedAt) >= new Date(since))
+    .sort((a, b) => new Date(a.mergedAt) - new Date(b.mergedAt));
+  // Deduplicate by PR number (title may vary due to force-push rebases).
+  const seen = new Set();
+  const lines = [];
+  for (const pr of mergedAfter) {
+    if (seen.has(pr.number)) continue;
+    seen.add(pr.number);
+    lines.push(`* ${pr.title} by @${owner.split("/")[0]} in https://github.com/${owner}/pull/${pr.number}`);
+  }
+  if (lines.length === 0) return "";
+  return ["## Contributors", "", "Thank you to everyone who contributed to this release:", "", ...lines, ""].join("\n");
+}
+
+/** Numeric stable-version comparator: > 0 when a is newer than b. */
+function compareBase(a, b) {
+  const [a1, a2, a3] = a.split(".").map(Number);
+  const [b1, b2, b3] = b.split(".").map(Number);
+  return a1 - b1 || a2 - b2 || a3 - b3;
+}
+
+/**
  * The release body for `gh release create --notes-file`. The changeset IS the
  * release note, but a body nobody can read is not a note: every change gets a
  * heading, changes group by kind with breaking first, the cut's own bumps are a
  * table, and the reader is told how to install and how to move channels. A
  * canary also separates the changes it adds from the ones it merely reprints.
+ * Appends a "Contributors" section listing merge-commit authors so every
+ * contributor is credited (matching GitHub's `--generate-notes` format).
  */
 function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, gitRepo }) {
   const tag = channel === "canary"
@@ -548,6 +646,12 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     }
     out.push("</details>", "");
   }
+
+  // Contributors section — credits every merge-commit author (matching
+  // GitHub's --generate-notes format) so no contributor is forgotten.
+  const contributors = renderContributors(root, channel, tag, gitRepo);
+  if (contributors) out.push(contributors);
+
   return out.join("\n").trimEnd();
 }
 
@@ -787,7 +891,7 @@ function main() {
     console.log(`  git tag v${version}`);
     console.log(`  git push origin v${version}`);
     console.log(`  git push origin HEAD:refs/heads/stable`);
-    console.log(`  gh release create v${version} --generate-notes --title "v${version}" --notes-file release-notes.txt`);
+    console.log(`  gh release create v${version} --title "v${version}" --notes-file release-notes.txt`);
   } else {
     // canary — the only prerelease channel: a prerelease of the base that
     // never touches the latest dist-tag and never consumes the changesets.
