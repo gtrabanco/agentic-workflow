@@ -267,11 +267,12 @@ test("a forced version is marked in the release body (AC-10)", () => {
   assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
 });
 
-test("the release command uses --generate-notes so PR authors are credited (AC-15)", () => {
+test("the release command does NOT use --generate-notes with --notes-file (AC-15, PE-004)", () => {
   const root = fixture();
   const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /gh release create v1\.0\.1 --generate-notes/);
+  assert.doesNotMatch(result.stdout, /--generate-notes/);
+  assert.match(result.stdout, /gh release create v1\.0\.1.*--notes-file/);
 });
 
 // Third-party changeset bodies are DATA, never command text: the printed gh
@@ -289,7 +290,7 @@ test("the printed release command hands the notes over as a file, never inline",
   const ghLines = result.stdout.split("\n").filter((l) => l.includes("gh release create"));
   assert.equal(ghLines.length, 1, "exactly one gh command");
   assert.match(ghLines[0], /--notes-file/);
-  assert.match(ghLines[0], /--generate-notes/, "contributors stay credited (AC-15)");
+  assert.doesNotMatch(ghLines[0], /--generate-notes/, "no --generate-notes with --notes-file");
   assert.doesNotMatch(ghLines[0], /--notes "/, "no inline notes: bodies are data, not command text");
   assert.doesNotMatch(ghLines[0], /curl|evil|sh;|echo/, "no body content inside the command line");
 });
