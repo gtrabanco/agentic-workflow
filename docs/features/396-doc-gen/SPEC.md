@@ -122,6 +122,7 @@ change's own diff (the tier is the classifier's, never this document's):
 | The generated tree is regenerated in the change that moves its sources, and `bun scripts/docs-generate.mjs --check` is what proves it | every future unit touching `docs/ROADMAP.md`, a unit doc, a package manifest or a skill; owner `skills/unit-lane/references/DOCS.md`, gate `scripts/docs-generate.test.mjs` |
 | A declared format is a project-level choice; changing it changes the generated file extension, and the previous format's pages are deleted by the same run | whoever edits the `Docs site` block; owner `template/AGENTS.md` §Docs site, interview `skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` |
 | No generated file is ever hand-edited: a hand edit is drift the `--check` reports, and the next run overwrites it | every session; owner this unit doc §Non-goals |
+| The generator runs where the runner crate's source is reachable — this repository, the same reach `scripts/needs-input.mjs` and `scripts/diff-guard.mjs` have — so a target project's generated output arrives with row 91's crate migration | whoever lands row 91, and any unit extending #396 before it |
 
 ## Applicable tests
 
@@ -320,7 +321,11 @@ proves it. Frozen at cut.
   migration of ceremony operations into it; adding a repo gate to the crate would
   ship a generator to target projects before the crate migration decides its
   module boundary. The script uses only `node:` builtins plus the crate's
-  committed readers, so it moves into the crate when row 91 lands.
+  committed readers, so it moves into the crate when row 91 lands. The
+  consequence, stated rather than hidden: today the command runs in a tree
+  that carries the crate's source, so S8's format choice reaches a target
+  project's generated output through that migration, not before it — the same
+  reach `scripts/needs-input.mjs` and `scripts/diff-guard.mjs` already have.
 - **D4** — 2026-11-04, decision at cut: generated output lives in a dedicated
   projection directory — `<content-dir>/generated/` when the project declares one,
   otherwise `docs/generated/` — so an authored page and a generated page can never
