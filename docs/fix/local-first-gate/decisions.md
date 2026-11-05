@@ -80,7 +80,24 @@ of one fact. The manifest is now the only owner; the README's floor sentence and
 `packages/pi-agentic-workflow/test/verified-baseline.test.mjs` already read the
 same entry, so the three cannot drift apart without a test saying so.
 
-## D4 — Frozen tests: the trigger contract, the advisory carrier, and the new suite
+## D4 — The Contributors window is the release immediately before the cut
+
+**Decision.** `renderContributors()` windows from the release that immediately
+precedes the cut: the nearest canary tag for a canary cut, the newest stable tag
+for a stable cut, and the newest stable tag again when the canary is the first of
+its train (nothing older exists, and the stable release is what that canary
+carries). Each bullet credits the PR's own author (`author.login`), falling back
+to the repository owner only when the account is gone.
+
+**Why.** The first implementation took `older[0]` from a `git tag -l` listing —
+ascending by refname — which is the *earliest* older canary, not the nearest. A
+cut that followed several canaries therefore re-listed every PR the earlier ones
+had already handed out: the section grew on every cut, repeated the same names,
+and contradicted the body, which collapses the carried changes on purpose. The
+listing order is also unsafe to rely on (`v10…` sorts before `v9…`), so the
+window is chosen with the same version comparator the rest of the pipeline uses.
+
+## D5 — Frozen tests: the trigger contract, the advisory carrier, and the new suite
 
 The workflow's trigger is pinned by tests, and removing the push/PR triggers is
 a deliberate contract change, not a relaxation: `release-workflows.test.mjs` now
@@ -98,4 +115,5 @@ kind | paths | phase | date | authority | justification
 justification | scripts/local-gate.test.mjs | P1 | 2026-11-04 | execute-phase | New sibling suite for scripts/local-gate.mjs, required by the repository rule that a new script ships its suite. It pins the step table (one row per former remote check), fail-fast, --dry-run selection and the pre-push installer; it never invokes a heavy step.
 justification | scripts/release-workflows.test.mjs | P2 | 2026-11-04 | execute-phase | The root gate's trigger contract changes from every-push to manual-only (D1). The two trigger cases are replaced by stronger ones: the workflow carries no push/pull_request trigger, it runs scripts/local-gate.mjs rather than a second transcription, and every former job survives as a named step in that script. Nothing is relaxed or removed.
 justification | scripts/dependency-advisory-pass.test.mjs | P3 | 2026-11-04 | execute-phase | The advisory pass moves from the dependency-pin-gate job body into scripts/local-gate.mjs (D1). The case still binds the two facts it bound before — the gate runs the pass, and the pass is report-only — through the new owner of the step list.
+justification | scripts/release.test.mjs | P4 | 2026-11-04 | execute-phase | The Contributors section gets the coverage it never had (D4): the window is pinned to the nearest previous release — nearest canary, newest stable as the fallback for the first canary of a train — and every bullet to the PR's author rather than the repository owner. Cases run against the two pure helpers the fix extracts; no existing assertion is relaxed, removed or skipped.
 ```
