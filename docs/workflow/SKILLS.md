@@ -70,7 +70,11 @@ the retired fixed pipeline (`design-feature` → `review-spec` → `plan-feature
 `docs/fix/<issue>-<topic>/` for a fix (`/unit-lane --fix <n>`).
 
 `execute-phase` executes a unit that is already triaged (`implement`/`tests`/
-`evidence` steps); docs-only units run entirely inside `unit-lane`. Every step
+`evidence` steps); docs-only units run entirely inside `unit-lane`. When a
+pi-web session is present the same hand-off runs as Relay legs — one
+fresh-context leg per phase plus a fresh-context coherence reviewer as the
+pre-PR gate — and `references/RELAY.md` owns that packet and leg contract;
+without pi-web the per-phase hand-off is unchanged. Every step
 boundary is also a memory boundary: `unit-lane`'s `references/MEMORY.md` is the
 single home of the Engram protocol — the bounded probe
 (`agentic-workflow memory probe`) before a session's first read, the saves at

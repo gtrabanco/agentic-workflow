@@ -41,3 +41,10 @@ justification | scripts/release-workflows.test.mjs | P4 | 2026-11-05 | execute-p
 - **D6** — 2026-11-05, the driver runs bun-first with a node fallback inside the
   installed line, so an armed checkout works under either runtime without the
   install having to guess which one the contributor uses.
+- **D7** — 2026-11-05, the integration repairs one row it does not own: merging `main`
+  brought `relay-status-grammar` into `AGENTS.md#normative-surfaces@1` with no
+  claiming inventory row, and only this branch's gate can see that
+  (`uncited-surface`), so the row lands here rather than being deferred to a
+  follow-up. Deferring would have shipped the gate red for every session after
+  the merge; the row is data, not behaviour, and its carrier is already pinned by
+  `scripts/relay-packet.test.mjs`.

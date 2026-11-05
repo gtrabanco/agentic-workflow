@@ -1,8 +1,9 @@
 ---
-# Uncomment and set both keys; until you do, the readers fall back to the folder
+# Uncomment and set the keys the unit needs; until type/scope are set, the readers fall back to the folder
 # (type) and to the requirement count (scope).
 # type: feature | fix | docs | chore
 # scope: trivial | xs | small | standard | medium | large | xlarge
+# ac-hash: <sha256 of the ## Acceptance criteria section — the design step writes it>
 ---
 
 # NN — <unit-slug>
