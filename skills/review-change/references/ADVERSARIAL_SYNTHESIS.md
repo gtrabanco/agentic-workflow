@@ -29,6 +29,19 @@ tables — each already in the reviewer contract's fixed format above
 Prompts use **synthesize/fuse** language, never repository merge terminology —
 this contract fuses review tables; it performs no repository merge.
 
+**Where the verdict layer sits relative to this step.** The arbitration is
+upstream of fusion and the reflector is downstream of it, so neither is a second
+fusion rule: each candidate is first arbitrated (`kill | confirm`) with its
+evidence and stability-checked per `ADVERSARIAL_SETUP.md`; the survivors are
+fused here (dedupe, `Reviewers n/N`, threshold ≥1); the diff-only reflector then
+answers `keep | drop` per synthesized row; and the whole pass's record
+(`adversarial-verdict@1`) is checked by
+`bun scripts/adversarial-verdict.mjs --record <record.json> --diff <diff.patch>`
+before anything is persisted. A `kill` or a reflector `drop` is therefore a
+**recorded verdict with its evidence and its reason** — reported in the same
+report, never a silent removal — and the forbidden list above still binds every
+row that reaches fusion and every row that leaves it.
+
 **`--synthesize` mode.** `/review-change --synthesize` is the direct entry
 point for the synthesis contract above — it starts **at the fusion step**,
 skipping the N-reviewer spawn: pass it N pasted findings tables (each already
