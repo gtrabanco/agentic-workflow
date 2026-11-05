@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 139 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -65,6 +65,7 @@ Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scr
 | 29-bounded-implementation-discovery | feature | done · [#175](https://github.com/gtrabanco/agentic-workflow/pull/175) | 29 — bounded-implementation-discovery |
 | 30-repair-receipt-delta-review | feature | done · [#188](https://github.com/gtrabanco/agentic-workflow/pull/188) | 30 — repair-receipt-delta-review |
 | 303-investigate-orient-ask | fix | — | fix/303-investigate-orient-ask |
+| 307-odd-hybrid-direction | feature | idea | Draft — scope is set by triage, not by this draft. |
 | 31-planning-review-materiality | feature | done · [#243](https://github.com/gtrabanco/agentic-workflow/pull/243) | 31 — planning-review-materiality |
 | 316-roadmap-settle | fix | — | fix/316-roadmap-settle |
 | 318-class-escalation-forward-closure | fix | — | fix/318-class-escalation-forward-closure |
