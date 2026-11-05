@@ -4372,3 +4372,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 104: parallel root gate and the impact-gated pre-push hook
 - **Decisions:** Two latency fixes: (1) The bun leg of run-root-suite.mjs became a bounded worker pool (one worker per CPU by default, --jobs cap, --bail kills in-flight suites; measured 207s → ~124s on 6 cores, all 80 suites green). (2) The pre-push hook reads push refs from stdin, resolves a base, and passes --push-base to local-gate.mjs: a test-impact verdict of empty skips only the steps marked tests: true; a targeted verdict/refusal/absent script runs the full gate — never a silent skip. (3) CI needs no workflow edit — root-suite.yml delegates to local-gate.mjs (pinned by release-workflows.test.mjs) so the node leg parallelizes through the same pool.
 - **Next:** Owner merge PR #415; every checkout with the old pre-push hook reinstalls it with bun scripts/local-gate.mjs --install-hook --force (the old body never matched the marker, so --force is required)
+
+## 2026-11-05T13:32:14Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Auditoría de dependencias entre issues abiertas — verificadas y añadidas las relaciones blocked-by en GitHub
+- **Decisions:** Verificar dependencias declaradas en bodies de issues vs GitHub's blocked-by: todas coinciden excepto #405→#374, que fue añadida. El grafo de dependencias entre issues abiertas es: #374, #406, #407, #408 → raíces base; #410, #411, #413 → nivel 1 (dependen de raíces); #412, #414 → nivel 2 (dependen de nivel 1); #405 → sibling (depende de #374).
+- **Next:** Ninguna acción inmediata — las dependencias están completas.
