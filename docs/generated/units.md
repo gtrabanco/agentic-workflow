@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 136 unit docs, 106 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -142,3 +142,4 @@ Generated from 136 unit docs, 106 roadmap rows, 3 packages, 28 skills and 47 scr
 | 84-published-vocabulary-sweep-gate | feature | done · [#330](https://github.com/gtrabanco/agentic-workflow/pull/330) | the fold **survivors** rule becomes bytes — published closed |
 | 86-triage-open-unit-awareness | fix | — | fix/86-triage-open-unit-awareness |
 | 93-ship-roadmap-cadence-triggers | fix | — | fix/93-ship-roadmap-cadence-triggers |
+| 96-prose-gate-inventory | feature | in-progress | every gate the workflow runs gets one committed row naming its |
