@@ -4428,3 +4428,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Unit 82 (issue #294): Relay-orchestrated lane execution — 9 commits, PR #419 opened
 - **Decisions:** Abrió la PR mientras la review estaba pendiente (instrucción explícita del owner, logeada como L2): el orden de cierre del lane (/review-change receipt → /audit-pr) sigue pendiente. Root cause del pi-compat-guard: el pin 4.10.0 no incluye src/log/* que se añadió después del publish del 4.10.0 — se cura al subir tren.
 - **Next:** /review-change 82-relay-lane-execution, luego /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/419
+## 2026-11-05T21:40:46Z — feat/294-relay-orchestrated-lane — manual
+- **Commits:** 9 (`0a1cfef9…b8f8e5f2`)
+- **Files:** 39 files
+- **Summary:** Implemented Relay lane execution (issue #294): built the packet system (relay-packet.mjs with 544 lines), the route system (relay-route.mjs), unit-lane relay integration (RELAY.md reference), execute-phase integration, and full test suites (relay-packet.test.mjs, relay-route.test.mjs, lane-era-lineage.test.mjs). Created the feature SPEC with planning evidence, decisions, and obligations. Opened PR #419 and settled the roadmap row.
+- **Decisions:** Built a new npm package 'relay' from scratch: packets (charter/status/log/baton), routes (router + stage dispatch), and lane integration (unit-lane reads Relay context to give a fresh context a coherence review). Used red-green development with 4 red commits and 4 green commits. The package uses bun-first like the rest of the repo and ships with sibling tests as required by the workflow invariants.
+- **Next:** PR #419 is open; run the remote gate (root-suite.yml) to verify all 40+ new tests pass, then request review from the owner for merge. Post-merge: update CHANGELOG.md with the feature entry and run release.mjs.
