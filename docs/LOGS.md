@@ -4241,3 +4241,17 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Issue #358: PR 399 opened (base `main`, head `fix/358-adversarial-kill-mandate`, 7 branch commits, 25 files, +1475/−11). Merged from main (a single `LOGS.md` conflict resolved by keeping both append-only entries) and pushed. All local gates green: root-suite 1536/1535 pass, check-skill-context 28 skills + 3 documents, skill-lint 0 findings. CI jobs queued behind a runner backlog. No `review-change` has run on the branch yet — that is the intended next step before `/audit-pr`.
 - **Decisions:** PR title set as `fix(358): adversarial pass verifies instead of enumerating — kill mandate, diff-only reflector, stability check`; the PR body was written from the template's fix section with the full evidence pack, rollback, and honest disclosures (pre-existing red on --documents gate, D1 narrowed validators, no review-change receipt yet).
 - **Next:** `/review-change` on the branch from a fresh context, then `/audit-pr 399`
+
+## 2026-11-04T17:12:48Z — fix/release-notes-rendering — manual
+- **Commits:** 1 (`e9c1a72e…e9c1a72e`)
+- **Files:** .github/workflows/publish.yml, scripts/release-workflows.test.mjs, scripts/release.mjs, scripts/release.test.mjs
+- **Summary:** Fix: release notes were combining --generate-notes + --notes-file, producing a merged wall of text on GitHub releases
+- **Decisions:** Removed --generate-notes from gh release create (both stable and canary channels) because GitHub appends its auto-generated PR list when both flags are present. Replaced with a renderContributors() function that queries gh pr list for merged PRs since the previous tag, producing a clean Contributors section at the end of the release body.
+- **Next:** Wait for PR #404 to be reviewed and merged; after merge, the next canary cut will render clean release notes with contributor credits.
+
+## 2026-11-05T01:19:24Z — fix/release-notes-rendering — manual
+- **Commits:** 7 (`e9c1a72e…5e4e1293`)
+- **Files:** 14 files
+- **Summary:** local-first CI gate + release contributors fix
+- **Decisions:** The root gate now runs locally with --bail; the remote workflow is manual-only and delegates to scripts/local-gate.mjs (one owner, two drift). Contributors section windows from the nearest previous release (not the earliest tag listing), and credits each PR's own author instead of attributing all entries to the repository owner.
+- **Next:** Owner to review and merge PR #404 (fix/release-notes-rendering). The fix also fixes a pre-push hook leak: 10,958 leaked release-fixture-* dirs in /tmp from scripts/release.test.mjs not cleaning its fixtures (not addressed in this PR).

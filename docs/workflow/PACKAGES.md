@@ -39,7 +39,9 @@ member's version resolves from the registry and fails).
   "Companion npm packages" table in `CHANGELOG.md` in the same PR — or, since
   feature 40, ship a valid `.changeset/*.md` declaring the package (the
   release train applies it at cut time). The rule is no longer prose-only:
-  `root-suite.yml` runs `scripts/version-parity-gate.mjs` on every PR with two
+  `scripts/local-gate.mjs` runs `scripts/version-parity-gate.mjs` — locally on
+  every pre-merge run, and remotely when the manual gate is dispatched (the
+  local-first rule is [`AGENTS.md`](../../AGENTS.md) → Verification) — with two
   halves — the **content** half (offline, deterministic) fails any change
   under the trigger set of **every package under `packages/` (derived from the
   tree at runtime — a new package inherits the gate by existing; nothing to
