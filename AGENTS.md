@@ -124,7 +124,7 @@ under [Working rules](#working-rules)).
   Step owner: [`skills/unit-lane/references/DOCS.md`](skills/unit-lane/references/DOCS.md);
   `audit-docs` check 15 audits it.
 - **One PR per unit of work, always against `main`.** Never work on `main`
-  directly; never stack PRs (a PR's base is always `main`).
+  directly; never stack PRs.
 - **Published history is owner-written.** Work in short branches off `main`;
   `main` only advances through a PR. When `main` moves and the PR conflicts, the
   branch is brought up to date by integrating `main` and resolving the conflicted

@@ -288,10 +288,10 @@ These files must be loaded when their topic is active:
 - Never execute a step the triage skipped — the catalog is authoritative.
 - Never edit the unit doc's Acceptance criteria (that is re-triage with user consent).
 - Never write to `docs/LOGS.md` (S9 4b): LOGS.md must be pure code output —
-  no model writes it. The interim rule (until feature 41's
-  `autoLogSession: mechanical`) is append-only: a wrong past line gets a *new
-  correcting line*, never an edit. Machine-authored git-facts entries also
-  kill the "hand-tallied figure" class.
+  no model writes it. The journal is append-only: a wrong past line gets a
+  *new correcting line*, never an edit. Machine-authored git-facts entries
+  (the extension's `autoLogSession: mechanical`, #394) also kill the
+  "hand-tallied figure" class.
 - Self-audit box (S9 d): before committing, re-derive every claim the step's
   persist introduces with pasted output. The turn does not end with unreproduced
   claims.

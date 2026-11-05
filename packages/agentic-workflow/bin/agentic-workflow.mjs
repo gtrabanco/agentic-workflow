@@ -10,6 +10,7 @@
  *   agentic-workflow manifest <op> [args...]
  *   agentic-workflow doc (--sync | --query <term> | --status | --rebuild) [--json-only]
  *   agentic-workflow memory probe [--json]
+ *   agentic-workflow log render --facts <path|-> [--raw]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -19,6 +20,12 @@
  * `memory probe` is a sensor, not an editor: it writes nothing and always
  * exits 0. Its `degraded` verdict is an answer to report, never a failure
  * that blocks the caller (feature 66, AC2).
+ *
+ * `log render` (feature #394) is a pure renderer with no session behind it: it
+ * reads a `log-facts@1` payload and prints the journal entry, so a human, a test
+ * or a CI job can regenerate an entry and byte-diff it. It writes nothing, prints
+ * JSON on stdout (the entry alone with `--raw`), and refuses a malformed payload
+ * with exit 2 and "LOG REFUSAL — <reason>".
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -41,6 +48,7 @@ import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { runDocOp } from "../src/doc/retrieval.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
+import { renderReceipt } from "../src/log/render.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -59,8 +67,14 @@ function parseArgs(args) {
     if (args[i] === "--json") {
       result.json = true;
       i++;
+    } else if (args[i] === "--raw") {
+      result.raw = true;
+      i++;
     } else if (args[i] === "--dir") {
       result.dir = args[i + 1];
+      i += 2;
+    } else if (args[i] === "--facts") {
+      result.facts = args[i + 1];
       i += 2;
     } else {
       positions.push(args[i]);
@@ -73,6 +87,17 @@ function parseArgs(args) {
 
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
+  process.exit(2);
+}
+
+/**
+ * A `log` refusal: the renderer writes nothing, so the line says what it is and
+ * the receipt still reaches stdout — a machine caller parses the JSON, not the
+ * message. Exit 2, the crate's refusal code.
+ */
+function logRefuse(reason, receipt) {
+  process.stderr.write(`LOG REFUSAL — ${reason}\n`);
+  if (receipt) process.stdout.write(`${JSON.stringify(receipt)}\n`);
   process.exit(2);
 }
 
@@ -117,7 +142,7 @@ function findUpIndex(docPath, relativeIndex) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory|log> ...");
   process.exit(1);
 }
 
@@ -184,6 +209,30 @@ switch (command) {
     }
     // A sensor that exits non-zero for a healthy machine's degraded layer
     // would block the very units it exists to protect (AC2 non-goal).
+    break;
+  }
+
+  // ── log — the mechanical journal entry (feature #394) ────────────────
+  case "log": {
+    const op = rawArgs[0];
+    if (op !== "render") logRefuse(`log requires the \`render\` operation, got "${op ?? ""}"`);
+    const factsPath = parsed.facts;
+    if (typeof factsPath !== "string" || factsPath === "") logRefuse("log render requires --facts <path|->");
+    let text;
+    try {
+      text = factsPath === "-" ? readFileSync(0, "utf8") : readFileSync(resolve(factsPath), "utf8");
+    } catch (error) {
+      logRefuse(`cannot read the facts payload (${factsPath}): ${error.message}`);
+    }
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (error) {
+      logRefuse(`the facts payload is not JSON: ${error.message}`);
+    }
+    const receipt = renderReceipt(payload);
+    if (!receipt.ok) logRefuse(receipt.error, receipt);
+    process.stdout.write(parsed.raw ? receipt.entry : `${JSON.stringify(receipt)}\n`);
     break;
   }
 
