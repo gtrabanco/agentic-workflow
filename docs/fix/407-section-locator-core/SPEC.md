@@ -150,6 +150,11 @@ none
   heading. **Does not affect this unit** (S14 keeps the migration out) — it is the
   defect class S2 exists to keep out of the new primitive, and it is pinned as a
   reproducer in the new suite's corpus.
+- **The derived docs tree is stale at the cut head.** `node scripts/docs-generate.mjs --check`
+  on a `caee2502` archive reports `3 stale` before this change touches anything
+  (the committed pages predate later roadmap rows, not this unit's). **Affects
+  this unit only as a gate obligation**: the tree is regenerated here, so the
+  live-tree suite passes at the head.
 - **Roadmap row 106 says `depends on 105`, the issue's `Dependencies` says `None`**
   (S12), and #406 is open with no unit folder. **Does not affect this unit**: the
   in-scope list consumes no #406 type; the row's cell is sequencing, and the owner
@@ -241,6 +246,11 @@ task list above; the deterministic routers still judge the document.
   This is a local, unpublished workflow for changing agentic-workflow itself. The failure it prevents: the workflow judging its own surgery (unit fix-258 burned 12 review→fold cycles that way). Follow this order, every step: … Work inline — never run this repo's own machinery on its own surgery. No `review-change`, no `audit-pr`, no fold cycle, no self-granted gate exceptions on this change. Direct application: plan briefly, implement, hand the diff to me. The one exception is the repo's deterministic gates (tests, lints) — run those always.
   ```
 
+
+- **L3** — 2026-11-05, correction: the differential base is `caee2502` (this
+  branch's cut), not `6fbfa115` as first written in the regression scope; the
+  generated-docs staleness was measured on a `caee2502` archive.
+
 ## Next
 
 P1 — the RED library suite first (`doc.section-locator.test.mjs` observed failing on the missing module), then the implementation observed green.
@@ -268,7 +278,7 @@ no artifact of #406 (roadmap row 105); see §Known pre-existing issues.
 
 | Scenario | Verifying command |
 |---|---|
-| Every pre-existing CLI command behaves as at the base commit | differential run of `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `doc`, `memory`, `log` against a base-commit copy (`6fbfa115`) — same stdout/stderr/exit |
+| Every pre-existing CLI command behaves as at the base commit | differential run of `unit-doc`, `roadmap`, `changelog`, `budgets`, `manifest`, `doc`, `memory`, `log` against a base-commit copy (`caee2502`) — same stdout/stderr/exit |
 | The retrieval chunker and its suites keep their behaviour | `bun run test` in `packages/agentic-workflow` (chunks/query/sync suites unchanged) |
 | The schema package stays dependency-free and green | `bun run test` in `packages/agentic-workflow-schema`; `rg -c '"dependencies"' packages/agentic-workflow-schema/package.json` matches 0 |
 | The root suites keep passing | `bun scripts/run-root-suite.mjs --bail` exits 0 |
