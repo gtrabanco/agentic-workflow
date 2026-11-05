@@ -4422,3 +4422,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merged feat/366-doc-cli (3ff41f6c) into main, pushed main (6fbfa115..3ff41f6c), deleted branch. No code written.
 - **Decisions:** Owner chose #407 before #366: roadmap row 106 must land first, then the doc read/edit/index CLI. Locator implementation to be decided in #407's SPEC (mdast vs native fail-closed; D8 re-trigger unmet, 730/730 files byte-identical roundtrip). Durable record posted on issue #366. Scratch in /tmp/docprobe removed.
 - **Next:** #407 (section-locator-core, roadmap row 106): settle its upstream dependency row 105 (projection-manifest-vocabulary, #406), then decide locator implementation (mdast or native fail-closed) and write the SPEC.
+## 2026-11-05T21:15:03Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 9 (`0a60994e…e250d031`)
+- **Files:** 18 files
+- **Summary:** Investigated Serena false-positive notice on fix/359-prose-gate-inventory worktree — confirmed .serena/project.yml exists, is versioned in git, is YAML-valid, has correct permissions, and is tracked in the worktree index. No actual provisioning needed.
+- **Decisions:** (1) The .serena/project.yml already exists and is identical to the repo base — no provisioning required. (2) The notice is a false positive: Serena displays a one-time warning on new worktree detection but the file is present and valid.
+- **Next:** None — the worktree is correctly configured; Serena notice should resolve on its own reload
