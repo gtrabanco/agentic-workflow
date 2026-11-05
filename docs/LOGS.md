@@ -4402,3 +4402,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fixed ugly release notes by switching from custom release.mjs rendering to GitHub's --generate-notes
 - **Decisions:** Used --generate-notes instead of --notes-file with custom release.mjs output because the custom format was 429 lines with huge sections (Breaking changes, Package bumps) and awkward line breaks; GitHub's What's Changed format is clean: one line per PR, with author and link
 - **Next:** Verify the next release looks clean on GitHub
+
+## 2026-11-05T14:20:44Z — main — manual
+- **Commits:** 4 (`b308e2e4…f892e6a4`)
+- **Files:** 6 files
+- **Summary:** Updated release notes generation to use custom release.mjs rendering and refined output format. Fixed publish.yml to use --notes-file instead of --generate-notes. Updated release.mjs to use Breaking changes / Features / Fixes sections, Contributions section, and Full Changelog link.
+- **Decisions:** Switched from GitHub's --generate-notes to release.mjs release-notes for structured release notes. Removed Performance/Documentation/Maintenance sections. Renamed Contributors to Contributions. Added Full Changelog link.
+- **Next:** Fix release-workflows.test.mjs assertions that expect the old --generate-notes pattern
