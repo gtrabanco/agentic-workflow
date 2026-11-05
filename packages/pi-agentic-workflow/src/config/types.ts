@@ -98,6 +98,8 @@ export interface ConfigFile {
   memory?: MemoryConfigFile;
   /** Issue #383: the per-unit cost sample. */
   telemetry?: TelemetryConfigFile;
+  /** #394: automatic session logging on exit. */
+  autoLogSession?: AutoLogSessionConfigFile;
   /** Named user profiles keyed by profile name (feature 63, AC5). */
   profiles?: Record<string, ProfileFile>;
   /** Ordered list of profile names to probe; empty means ["default"] only
@@ -130,6 +132,46 @@ export interface MemoryConfig {
   engram: boolean;
 }
 
+/**
+ * The modes `autoLogSession` accepts (#394). Two states, not three: a rich,
+ * narrative entry stays `/log-session`'s job (the issue's non-goals), so the
+ * extension only ever writes the mechanical, git-facts block.
+ */
+export const AUTO_LOG_SESSION_MODES = ["off", "mechanical"] as const;
+
+export type AutoLogSessionMode = (typeof AUTO_LOG_SESSION_MODES)[number];
+
+/** The bound a declared publisher's argv may reach, and its timeout window. */
+export const AUTO_LOG_SESSION_MAX_ARGV = 32;
+export const AUTO_LOG_SESSION_MAX_TIMEOUT_MS = 60_000;
+
+/**
+ * A publisher an operator declares in config (#394, S3). The *interface* ships
+ * here; the backend is whatever the argv runs (`curl`, `tee`, a queue CLI), so a
+ * project can publish to an HTTP endpoint, a path outside the repo or a log sink
+ * without this package carrying a client for it.
+ */
+export interface AutoLogSessionPublisherFile {
+  /** The argv to run; the frozen facts payload arrives as JSON on stdin. */
+  command?: string[];
+  /** How long the command may take before it is abandoned. Default: 5000. */
+  timeoutMs?: number;
+}
+
+/** What an operator WRITES under `autoLogSession` (#394). */
+export interface AutoLogSessionConfigFile {
+  /** Which level of automatic logging to enable. Default: "off". */
+  mode?: AutoLogSessionMode;
+  /** A second strategy besides the local `docs/LOGS.md` append (S3). */
+  publisher?: AutoLogSessionPublisherFile;
+}
+
+/** What the extension READS: the switch resolved, and the publisher normalized. */
+export interface AutoLogSessionConfig {
+  mode: AutoLogSessionMode;
+  publisher: { command: string[]; timeoutMs: number } | null;
+}
+
 /** What an operator WRITES under `telemetry` (issue #383). */
 export interface TelemetryConfigFile {
   /** Opt in to the per-unit cost sample. Absent or `false` measures nothing. */
@@ -149,6 +191,15 @@ export interface ConfigIssue {
 export const UNAVAILABLE_ROUTE_POLICIES: readonly UnavailableRoutePolicy[] = ["stop", "inherit"];
 
 export const SETTLE_POLICIES: readonly SettlePolicy[] = ["keep", "restore"];
+
+/** Default for autoLogSession (issue #394): off, and no declared publisher. */
+export const DEFAULT_AUTO_LOG_SESSION: Readonly<AutoLogSessionConfig> = {
+  mode: "off",
+  publisher: null,
+};
+
+/** Default timeout for a declared publisher (#394), milliseconds. */
+export const DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS = 5000;
 
 export interface EffectiveConfig {
   default: Route;
@@ -174,6 +225,8 @@ export interface EffectiveConfig {
   memory: MemoryConfig;
   /** Issue #383: the measured acceptance is opt-in, like every other runtime cost. */
   telemetry: TelemetryConfig;
+  /** #394: automatic session logging mode, resolved. */
+  autoLogSession: AutoLogSessionConfig;
   /** Feature 63: declaredness of the implicit `default` profile. */
   declared: { default: RouteDeclaration; commands: Record<string, RouteDeclaration> };
 }

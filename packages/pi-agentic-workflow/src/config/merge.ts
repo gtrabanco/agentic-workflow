@@ -1,7 +1,12 @@
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "./defaults.js";
 import { SHIPPED_PATH_POLICY, intersectPathPolicy, mergePathProtectionOverrides } from "./path-policy.js";
-import { DEFAULT_ADVANCE_CONFIG, DEFAULT_PROFILE_FALLBACK } from "./types.js";
-import type { AdvanceConfig, ConfigFile, EffectiveConfig, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
+import {
+  DEFAULT_ADVANCE_CONFIG,
+  DEFAULT_AUTO_LOG_SESSION,
+  DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS,
+  DEFAULT_PROFILE_FALLBACK,
+} from "./types.js";
+import type { AdvanceConfig, AutoLogSessionConfig, AutoLogSessionPublisherFile, ConfigFile, EffectiveConfig, ProfileFile, ProfileFallbackConfig, Route, RouteDeclaration, RouteFile } from "./types.js";
 
 /**
  * Project-over-global merge (SPEC S5, S6).
@@ -19,6 +24,24 @@ import type { AdvanceConfig, ConfigFile, EffectiveConfig, ProfileFile, ProfileFa
 function pick<T>(fallback: T, ...values: (T | undefined)[]): T {
   for (const value of values) if (value !== undefined) return value;
   return fallback;
+}
+
+/**
+ * The declared publisher, resolved per field (#394): the project's argv wins over
+ * the global one, each falling back on its own, and an absent timeout takes the
+ * shipped 5 s. `null` — the shipped value — means the local journal is the only
+ * strategy.
+ */
+function mergeAutoLogPublisher(
+  project: AutoLogSessionPublisherFile | undefined,
+  global: AutoLogSessionPublisherFile | undefined,
+): AutoLogSessionConfig["publisher"] {
+  const command = pick(undefined, project?.command, global?.command);
+  if (command === undefined) return null;
+  return {
+    command: [...command],
+    timeoutMs: pick(DEFAULT_AUTO_LOG_SESSION_TIMEOUT_MS, project?.timeoutMs, global?.timeoutMs),
+  };
 }
 
 /** Merge two RouteFiles key-by-key (used for profile routes). */
@@ -161,6 +184,14 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     // shipped "no".
     telemetry: {
       enabled: pick(false, projectFile.telemetry?.enabled, globalFile.telemetry?.enabled) === true,
+    },
+    // #394 — auto log-session: project wins, then global, then "off". The
+    // publisher resolves field by field for the same reason the mode does: a
+    // project that only turns the log off must not silently drop the publisher
+    // the global file declares — it simply never runs while the mode is off.
+    autoLogSession: {
+      mode: pick(DEFAULT_AUTO_LOG_SESSION.mode, projectFile.autoLogSession?.mode, globalFile.autoLogSession?.mode),
+      publisher: mergeAutoLogPublisher(projectFile.autoLogSession?.publisher, globalFile.autoLogSession?.publisher),
     },
     profiles: mergeProfiles(globalFile.profiles, projectFile.profiles),
     profileOrder: pick([], projectFile.profileOrder, globalFile.profileOrder),

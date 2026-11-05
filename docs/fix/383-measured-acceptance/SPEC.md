@@ -294,3 +294,5 @@ None. `360a` is merged (`b1ec9240`); `#394` depends on this unit, not the revers
 | the `/log-session` skill writes nothing new and no hook exists yet (`#394` is not this unit) | `rg -c 'session_shutdown\|autoLogSession' packages/pi-agentic-workflow/src` → 0 |
 | the package's existing extension behaviour (routing, receipt guard, restore-after-settle) is unchanged with telemetry off | `cd packages/pi-agentic-workflow && bun run test` exits 0 |
 | the whole root gate stays green | `node scripts/run-root-suite.mjs` exits 0 with `fail 0` |
+
+> Reconciled 2026-11-04: the `rg` pin above recorded this unit's state at its cut; feature [#394](https://github.com/gtrabanco/agentic-workflow/issues/394) now ships the journal wiring, so the same command answers 2 at head. This table stays frozen at its cut.

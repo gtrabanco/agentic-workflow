@@ -1,5 +1,28 @@
-import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES, PROFILE_FALLBACK_APPLY_TO, PROFILE_FALLBACK_RESUME, } from "./types.js";
-import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy, ProfileFile, MemoryConfigFile, TelemetryConfigFile, } from "./types.js";
+import {
+  MAX_MODEL_CHAIN,
+  SETTLE_POLICIES,
+  THINKING_LEVELS,
+  UNAVAILABLE_ROUTE_POLICIES,
+  PROFILE_FALLBACK_APPLY_TO,
+  PROFILE_FALLBACK_RESUME,
+  AUTO_LOG_SESSION_MODES,
+  AUTO_LOG_SESSION_MAX_ARGV,
+  AUTO_LOG_SESSION_MAX_TIMEOUT_MS,
+} from "./types.js";
+import type {
+  ConfigFile,
+  ConfigIssue,
+  ModelRef,
+  RouteFile,
+  SettlePolicy,
+  ThinkingSetting,
+  UnavailableRoutePolicy,
+  ProfileFile,
+  MemoryConfigFile,
+  TelemetryConfigFile,
+  AutoLogSessionConfigFile,
+  AutoLogSessionPublisherFile,
+} from "./types.js";
 import { OPERATIONS, PATH_GLOB_MAX_LENGTH, PHASE_STATES, REQUIREMENTS } from "./path-policy.js";
 import type { PathOperation, PathPhaseState, PathProtectionOverride, PathRequirement } from "./path-policy.js";
 
@@ -26,6 +49,7 @@ const ROOT_KEYS = new Set([
   "profileFallback",
   "memory",
   "telemetry",
+  "autoLogSession",
 ]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
@@ -427,6 +451,10 @@ function validateConfig(value: unknown): ParseResult {
     const memory = checkMemory(value.memory, "$.memory", issues);
     if (memory) config.memory = memory;
   }
+  if (value.autoLogSession !== undefined) {
+    const autoLogSession = checkAutoLogSession(value.autoLogSession, "$.autoLogSession", issues);
+    if (autoLogSession) config.autoLogSession = autoLogSession;
+  }
 
   if (value.profiles !== undefined) {
     if (!isRecord(value.profiles)) {
@@ -506,6 +534,86 @@ function checkMemory(value: unknown, path: string, issues: ConfigIssue[]): Memor
       issues.push({ path: `${path}.engram`, message: `must be a boolean, got ${describe(value.engram)}` });
     } else {
       out.engram = value.engram;
+    }
+  }
+  return unknown ? undefined : out;
+}
+
+/**
+ * Strict validator for the `autoLogSession` block (#394): a mode and, when the
+ * operator declares one, a publisher argv.
+ *
+ * The argv is validated here rather than at session shutdown on purpose: a
+ * malformed command discovered while a session tears down is a failure the
+ * operator can neither see nor fix at that moment.
+ */
+function checkAutoLogSession(value: unknown, path: string, issues: ConfigIssue[]): AutoLogSessionConfigFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let unknown = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "mode" && key !== "publisher") {
+      unknown = true;
+      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown autoLogSession key "${key}" (allowed: mode, publisher)` });
+    }
+  }
+  const out: AutoLogSessionConfigFile = {};
+  if (value.mode !== undefined) {
+    if (!(AUTO_LOG_SESSION_MODES as readonly string[]).includes(value.mode as string)) {
+      issues.push({ path: `${path}.mode`, message: `must be one of ${AUTO_LOG_SESSION_MODES.join(", ")}, got ${describe(value.mode)}` });
+    } else {
+      out.mode = value.mode as AutoLogSessionConfigFile["mode"];
+    }
+  }
+  if (value.publisher !== undefined) {
+    const publisher = checkAutoLogPublisher(value.publisher, `${path}.publisher`, issues);
+    if (publisher) out.publisher = publisher;
+    else unknown = true;
+  }
+  return unknown ? undefined : out;
+}
+
+/** The declared publisher's argv and timeout (#394, S3). */
+function checkAutoLogPublisher(value: unknown, path: string, issues: ConfigIssue[]): AutoLogSessionPublisherFile | undefined {
+  if (!isRecord(value)) {
+    issues.push({ path, message: `must be a JSON object, got ${describe(value)}` });
+    return undefined;
+  }
+  let unknown = false;
+  for (const key of Object.keys(value)) {
+    if (key !== "command" && key !== "timeoutMs") {
+      unknown = true;
+      issues.push({ path: `${path}.${displayKey(key)}`, message: `unknown publisher key "${key}" (allowed: command, timeoutMs)` });
+    }
+  }
+  const out: AutoLogSessionPublisherFile = {};
+  if (value.command === undefined) {
+    issues.push({ path: `${path}.command`, message: "is required — a publisher with no command publishes nothing" });
+    unknown = true;
+  } else if (!Array.isArray(value.command)) {
+    issues.push({ path: `${path}.command`, message: `must be an array of strings, got ${describe(value.command)}` });
+    unknown = true;
+  } else if (value.command.length === 0 || value.command.length > AUTO_LOG_SESSION_MAX_ARGV) {
+    issues.push({ path: `${path}.command`, message: `must carry 1 to ${AUTO_LOG_SESSION_MAX_ARGV} elements, got ${value.command.length}` });
+    unknown = true;
+  } else if (value.command.some((part) => typeof part !== "string" || part.trim() === "")) {
+    issues.push({ path: `${path}.command`, message: "every element must be a non-empty string" });
+    unknown = true;
+  } else {
+    out.command = value.command as string[];
+  }
+  if (value.timeoutMs !== undefined) {
+    const timeout = value.timeoutMs;
+    if (!Number.isInteger(timeout) || (timeout as number) < 1 || (timeout as number) > AUTO_LOG_SESSION_MAX_TIMEOUT_MS) {
+      issues.push({
+        path: `${path}.timeoutMs`,
+        message: `must be an integer between 1 and ${AUTO_LOG_SESSION_MAX_TIMEOUT_MS}, got ${describe(timeout)}`,
+      });
+      unknown = true;
+    } else {
+      out.timeoutMs = timeout as number;
     }
   }
   return unknown ? undefined : out;

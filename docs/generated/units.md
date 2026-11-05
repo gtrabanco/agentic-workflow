@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 132 unit docs, 104 roadmap rows, 3 packages, 28 skills and 46 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -94,6 +94,7 @@ Generated from 132 unit docs, 104 roadmap rows, 3 packages, 28 skills and 46 scr
 | 382-red-first-commits | fix | — | fix/382-red-first-commits |
 | 383-measured-acceptance | fix | done · [#395](https://github.com/gtrabanco/agentic-workflow/pull/395) | fix/383-measured-acceptance |
 | 39-publish-schema-oidc-403 | fix | — | fix/39-publish-schema-oidc-403 |
+| 394-auto-log-session | feature | done · [#401](https://github.com/gtrabanco/agentic-workflow/pull/401) | opt-in automatic journal entries from the pi extension — one switch that is off by default, one pure renderer that is the only owner of the entry shape, a deterministic CLI that reproduces an entry without a session, and a publisher Strategy whose second backend is declared in config. |
 | 396-doc-gen | feature | done · [#400](https://github.com/gtrabanco/agentic-workflow/pull/400) | a unit that ships code cannot close without an explicit documentation task, and one deterministic command renders the repository's own artifacts — unit docs, roadmap rows and the shipped code — into the project's declared output format. |
 | 40-bump-skill-internal-only | fix | — | fix/40-bump-skill-internal-only |
 | 40-versioned-skills-releases | feature | done · [#335](https://github.com/gtrabanco/agentic-workflow/pull/335) | 40 — versioned-skills-releases |
