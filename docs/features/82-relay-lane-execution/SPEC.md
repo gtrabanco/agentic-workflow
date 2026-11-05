@@ -1,6 +1,7 @@
 ---
 type: feature
 scope: medium
+ac-hash: 5f1c456946c81ccd3b7eb1efe1d18f473f32b6f27fb31f04d373807232d18206
 ---
 
 # 82 — relay-lane-execution
@@ -256,6 +257,8 @@ Budget: strong
 - **G5** — 2026-11-05, `git push -u origin feat/294-relay-orchestrated-lane` · pre-push hook `local-gate: PASS — 7 step(s) in 102s`. `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS`.
 - **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 · 7 steps PASS in 106s (workspace install, schema build, both crate suites, root suite, content parity, dependency pins). The full run stops at `pi-compat-guard` — the recorded pre-existing registry/source-resolution failure above, whose input set is byte-identical to the base.
 - **G3** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · 83 suites PASS. `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS`, 32 claims checked. `bun scripts/vocabulary-probe.mjs` · exit 0 · 0 violations. `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` 14 routes; `--documents` 3 documents.
+- **D7** — 2026-11-05, owner (external-verify correction): the coherence checklist's item (d) named an "AC-section hash recorded at triage" that no surface wrote — a dangling contract. The design step now freezes the section at record time: `ac-hash:` in the unit doc's frontmatter, computed with the section parser's own semantics (the command lives once, in `DESIGN.md` §Fixed output contract; `REVIEW.md` and `RELAY.md` item (d) point at it), and this doc records its own value. No requirement, gate or validator changed; the impact set is prose, the template comment and this frontmatter line — no executable path — so the test-impact verdict is `empty`.
+- **G6** — 2026-11-05, after the correction: `bun test` over the ten impacted suites (relay-packet, relay-route, unit-route, catalog, lane-era-lineage, knowledge-honesty-contract, residue-dimensions, spec-by-reference, scaffold-parity, golden-fixture) · exit 0 · 235 pass / 0 fail. `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` · exit 0; `--documents` · exit 0. `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` · exit 0 · fingerprint unchanged. The re-recorded `ac-hash:` recomputes to the recorded value at this head. `bun scripts/promise-coherence.mjs` · exit 0 · 29 checked / 16 skipped (row 82 is `done` · [#419], so this unit is closed evidence — the `32 checked` in `G3` was its in-flight scan before the settle).
 
 ## Next
 
