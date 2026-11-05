@@ -27,6 +27,7 @@ import path from "node:path";
 import { createAutoLogSessionWiring } from "../dist/extension/auto-log-session-wiring.js";
 import { createTelemetryWiring } from "../dist/extension/telemetry-wiring.js";
 import { markerPath, readMarker } from "../dist/auto-log-session.js";
+import { sandboxGitEnv } from "./git-sandbox.mjs";
 import { renderEntry } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 
 /** A `pi` double: it records handlers so the test can fire them. */
@@ -46,7 +47,7 @@ function fakePi() {
 /** A throwaway git project with a journal, a seeded commit and a ledger. */
 function project({ journal = true, ledger = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-wiring-"));
-  const run = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  const run = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   run(["init", "-q", "-b", "main"]);
   run(["config", "user.email", "suite@example.test"]);
   run(["config", "user.name", "suite"]);

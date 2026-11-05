@@ -61,6 +61,33 @@ export function markerPath(root: string, sessionId: string): string {
 }
 
 /**
+ * Ambient git location variables, stripped from every child `git` this module
+ * spawns. When the host process runs inside a tooling checkout (a git worktree
+ * whose harness exports `GIT_DIR`/`GIT_WORK_TREE`), a bare `git -C <root>`
+ * still resolves the repository from the environment — the `-C` only moves the
+ * working directory — so facts (and, in the worst case, writes) would land in
+ * the outer repository instead of the project. The project root is the only
+ * authority: the `-C` argument decides, never the caller's environment.
+ */
+const GIT_LOCATION_VARS = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_COMMON_DIR",
+  "GIT_NAMESPACE",
+  "GIT_CEILING_DIRECTORIES",
+] as const;
+
+/** The process environment with the ambient git location variables removed. */
+export function sandboxGitEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const clean = { ...env };
+  for (const name of GIT_LOCATION_VARS) delete clean[name];
+  return clean;
+}
+
+/**
  * `git` in the project, or `null` when the command failed.
  *
  * The output is returned **untrimmed**: `git status --porcelain` puts meaning in
@@ -70,7 +97,7 @@ export function markerPath(root: string, sessionId: string): string {
 function gitIn(root: string): GitReader {
   return (args) => {
     try {
-      return execFileSync("git", ["-C", root, ...args], { encoding: "utf8" });
+      return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", env: sandboxGitEnv() });
     } catch {
       return null;
     }

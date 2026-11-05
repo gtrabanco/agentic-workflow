@@ -23,6 +23,8 @@ import { fileURLToPath } from "node:url";
 import { buildFacts, createMarker, markerPath } from "../dist/auto-log-session.js";
 import { isRenderedEntry, renderEntry } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 
+import { sandboxGitEnv } from "./git-sandbox.mjs";
+
 const PKG_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const HOOKS = path.resolve(PKG_DIR, "..", "..", "template", ".claude", "hooks");
 const CLI = path.resolve(PKG_DIR, "..", "agentic-workflow", "bin", "agentic-workflow.mjs");
@@ -33,7 +35,7 @@ const INITIAL = "# Session log\n\n";
 /** A throwaway repository with the journal the hooks append to. */
 function repo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-parity-"));
-  const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: sandboxGitEnv() });
   git(["init", "-q", "-b", "main"]);
   git(["config", "user.email", "suite@example.test"]);
   git(["config", "user.name", "suite"]);
@@ -52,6 +54,7 @@ function hook(root, name, payload) {
     cwd: root,
     input: JSON.stringify(payload),
     encoding: "utf8",
+    env: sandboxGitEnv(),
   });
   assert.equal(result.status, 0, `${name} exited ${result.status}: ${result.stderr}`);
 }
@@ -112,6 +115,7 @@ test("AP-03 the CLI reproduces the extension's entry from the same payload", () 
     cwd: root,
     input: JSON.stringify(facts),
     encoding: "utf8",
+    env: sandboxGitEnv(),
   });
   assert.equal(run.status, 0, run.stderr);
   assert.equal(run.stdout, renderEntry(facts));
