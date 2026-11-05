@@ -96,7 +96,12 @@ function session(wiring, { id = SESSION, reason = "quit", start = {}, shutdown =
   wiring.register(pi.pi);
   const ctx = { sessionManager: { getSessionId: () => id } };
   pi.fire("session_start", start, ctx);
-  return { pi, ctx, shutdown: () => pi.fire("session_shutdown", { reason }, ctx) };
+  return {
+    pi,
+    ctx,
+    shutdown: (overrides = {}) =>
+      pi.fire("session_shutdown", { reason, ...shutdown, ...overrides }, ctx),
+  };
 }
 
 test("AW-01 off registers no listener at all and writes nothing", () => {
@@ -127,6 +132,23 @@ test("AW-02 one session writes the marker on start and exactly one entry on shut
     files: [],
   })}`);
   assert.equal(fs.existsSync(markerPath(root, SESSION)), false, "the marker is removed with the entry");
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AW-02b a shutdown reason outside the entry grammar is normalized, never dropped", () => {
+  const { root, run } = project();
+  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const driven = session(wiring);
+  const marker = readMarker(root, SESSION);
+  driven.shutdown({ reason: "session_shutdown" });
+  const journal = fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
+  assert.equal(journal, `# Session log\n\n\n${renderEntry({
+    timestamp: "2026-11-04T15:12Z",
+    branch: "main",
+    reason: "unknown",
+    commits: { count: 0, range: `${marker.sha}…${marker.sha}` },
+    files: [],
+  })}`);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
