@@ -41,6 +41,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { scrubGitLocator } from "./git-env.mjs";
+
 const SCRIPT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BUN = process.env.AGENTIC_WORKFLOW_BUN ?? "bun";
 const NODE = process.env.AGENTIC_WORKFLOW_NODE ?? "node";
@@ -247,10 +249,10 @@ function piCompatGuard({ root }) {
           `${PI_PEER}@${leg}`,
           `${PI_TUI}@${leg}`,
         ],
-        { cwd: tmp, stdio: "inherit" },
+        { cwd: tmp, stdio: "inherit", env: stepEnv() },
       );
       if (install.status !== 0) return install.status ?? 1;
-      const tsc = spawnSync(path.join(tmp, "node_modules", ".bin", "tsc"), ["--noEmit"], { cwd: tmp, stdio: "inherit" });
+      const tsc = spawnSync(path.join(tmp, "node_modules", ".bin", "tsc"), ["--noEmit"], { cwd: tmp, stdio: "inherit", env: stepEnv() });
       if (tsc.status !== 0) return tsc.status ?? 1;
       process.stdout.write(`    pi leg ${leg}: tsc --noEmit clean\n`);
     } finally {
@@ -325,11 +327,22 @@ function selectSteps(options) {
   return STEPS;
 }
 
+/**
+ * The environment a step inherits. The `pre-push` hook runs this gate with
+ * `GIT_DIR` exported, and a suite that `git init`s a fixture directory under it
+ * re-initializes the caller's repository instead (see `scripts/git-env.mjs`);
+ * the locator variables are stripped once, here, so no fixture has to know.
+ */
+export function stepEnv() {
+  return scrubGitLocator();
+}
+
 function runStep(step, root) {
   if (step.run) return step.run({ root });
   const result = spawnSync(step.argv[0], step.argv.slice(1), {
     cwd: path.join(root, step.cwd ?? "."),
     stdio: "inherit",
+    env: stepEnv(),
   });
   if (result.error) {
     process.stderr.write(`local-gate: could not run ${step.argv[0]}: ${result.error.message}\n`);
