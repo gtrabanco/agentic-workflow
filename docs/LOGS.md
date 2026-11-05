@@ -4352,3 +4352,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/356-test-targeting: merge main, resolve conflicts, push fast-forward
 - **Decisions:** merge (not rebase) to preserve branch timeline; both normative-surfaces additions kept (358 adversarial rows + 356 test-impact row); LOGS.md entries interleaved chronologically; skill-context ceilings re-basis #12 from merged-tree measurement with declared growth sources
 - **Next:** human merge PR #402 (mergeable=CLEAN). Post-merge: verify CI parity locally.
+
+## 2026-11-05T11:43:04Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Multi-unit session: resolved PR #404 merge conflict, merged PR #404 (release notes + local-first gate), and advanced PRs #394 (auto log-session), #396 (doc-gen), #356 (test-targeting), #398 (retired carriers)
+- **Decisions:** (1) PR #404 conflict in LOGS.md resolved by keeping both append-only entries from main (#358) and the release branch; merged with --merge preserving full git history. (2) Ran extensive unit-lanes and execute-phase across 4 units: auto log-session (#394), doc-gen (#396), test-targeting (#356), retired-carriers (#398); all PRs merged. (3) Fixed pre-existing test failures: guide-split ceiling (AGENTS.md 395 lines exceeded 393 limit — trimmed duplicated example in guide), check-skill-context.
+- **Next:** Continue with remaining issues in the roadmap; run /workflow-status to discover next available unit
