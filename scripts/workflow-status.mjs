@@ -1755,13 +1755,18 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
 
 function dependencyBuildOrder(unit, dependencies) {
   const order = [];
-  const seen = new Set();
+  // The unit itself is marked before the walk starts, and each dependency is
+  // marked before the recursion: `seen` is the cycle guard. Marking after the
+  // recursive call (the pre-#396 shape) let a declared cycle A -> B -> A re-enter
+  // A and overflow the stack, so the sensor died instead of reporting the
+  // planning defect `computeDependencies` already detects.
+  const seen = new Set([unit.id]);
   const walk = (current) => {
     for (const depId of dependencies.directDeps(current)) {
       if (seen.has(depId)) continue;
+      seen.add(depId);
       const dep = dependencies.byId?.get(depId);
       if (dep && dependencies.unmetFor(dep).length > 0) walk(dep);
-      seen.add(depId);
       order.push(depId);
     }
   };

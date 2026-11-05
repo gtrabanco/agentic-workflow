@@ -1,0 +1,55 @@
+{
+  "contract": "adversarial-verdict@1",
+  "head": "c8b64d0b7a1f4c2e9d3b5a6f8c0e2d4b6a8c1e3f",
+  "cycle": 1,
+  "findings": [
+    {
+      "id": "F1",
+      "file": "skills/review-change/references/ADVERSARIAL_SETUP.md",
+      "line": 41,
+      "axis": "code",
+      "origin": "finder",
+      "verdict": "kill",
+      "evidence_kind": "falsifying",
+      "evidence": "the added line only restates the role header; the pass already arbitrates every candidate at step 6, so the claimed missing mandate is not missing",
+      "stability": "stable",
+      "scope": "as-reported",
+      "reflector": {
+        "verdict": "drop",
+        "reason": "the claim cites a line this diff does not add a contract on; the arbitration step it calls absent is present earlier in the file"
+      }
+    },
+    {
+      "id": "F2",
+      "file": "skills/review-change/references/ADVERSARIAL_SETUP.md",
+      "line": 42,
+      "axis": "code",
+      "origin": "finder",
+      "verdict": "confirm",
+      "evidence_kind": "supporting",
+      "evidence": "attempted to falsify: made the kill path accept a report-only evidence kind and re-ran the fixture; the record was accepted, so the requirement is not enforced by the diff as written",
+      "stability": "stable",
+      "scope": "as-reported",
+      "reflector": {
+        "verdict": "keep",
+        "reason": "the cited line is a line this diff adds, and the reproduction is a command against that same line"
+      }
+    },
+    {
+      "id": "F3",
+      "file": "skills/review-change/references/ADVERSARIAL_SETUP.md",
+      "line": 43,
+      "axis": "security",
+      "origin": "new",
+      "verdict": "confirm",
+      "evidence_kind": "falsifying",
+      "evidence": "wrote the reflector input with a tool transcript and the checker accepted it: the reflector is not diff-only yet",
+      "stability": "stable",
+      "scope": "as-reported",
+      "reflector": {
+        "verdict": "keep",
+        "reason": "grounded in the added sentence that bounds the reflector's input"
+      }
+    }
+  ]
+}

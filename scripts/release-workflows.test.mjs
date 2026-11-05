@@ -29,6 +29,8 @@ import test from "node:test";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLISH = ".github/workflows/publish.yml";
+const ROOT_SUITE = ".github/workflows/root-suite.yml";
+const LOCAL_GATE = "scripts/local-gate.mjs";
 
 const read = (rel) => fs.readFileSync(path.join(repoRoot, rel), "utf8");
 
@@ -83,7 +85,8 @@ test("cut + stable applies the train, adds one commit, tags and releases — nev
   assert.match(block, /git commit -m "chore\(release\)/);
   assert.match(block, /git tag "v\$VERSION"/);
   assert.match(block, /refs\/heads\/stable/);
-  assert.match(block, /gh release create "v\$VERSION" --generate-notes/);
+  assert.doesNotMatch(block, /--generate-notes/);
+  assert.match(block, /gh release create "v\$VERSION" --title "v\$VERSION" --notes-file/);
   assert.doesNotMatch(block, /npm publish/, "the push fires the publish jobs, this job never touches npm");
 });
 
@@ -212,12 +215,12 @@ test("publish jobs chain in dependency order: pi waits for schema AND crate (D-4
 test("each package has its own node-compat leg and version gate (never publish red)", () => {
   const text = read(PUBLISH);
   // The runtime legs validate the tree, not the release, so they live with the
-  // rest of the gate in root-suite.yml — on push AND on pull requests, which
-  // the release workflow never was.
-  const gate = read(".github/workflows/root-suite.yml");
-  for (const job of ["schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
-    assert.match(gate, new RegExp(`^\\s{2}${job}:`, "m"), `${job} belongs to the root gate`);
-    assert.doesNotMatch(text, new RegExp(`^\\s{2}${job}:`, "m"), `${job} must not stay in the release workflow`);
+  // rest of the gate — now one local-first step list (owner decision
+  // 2026-11-04: the remote workflow delegates instead of transcribing it).
+  const localGate = read(LOCAL_GATE);
+  for (const id of ["schema-node-compat", "crate-suite-node", "pi-node-compat"]) {
+    assert.match(localGate, new RegExp(`id: "${id}"`), `${id} belongs to the local gate`);
+    assert.doesNotMatch(text, new RegExp(`^\\s{2}${id}:`, "m"), `${id} must not stay in the release workflow`);
   }
   assert.equal([...text.matchAll(/npm-version-gate\.mjs/g)].length, 4, "3 publish jobs + the cut-prerelease loop");
 });
@@ -274,13 +277,17 @@ test("least privilege: each job elevates only the permissions it needs", () => {
     assert.doesNotMatch(b, /contents: write/, `${job} never mutates the repo`);
   }
   // The runtime legs validate the tree rather than publishing, and they live in
-  // the root gate now: still read-only there, and still no OIDC token.
-  const gateText = read(".github/workflows/root-suite.yml");
-  for (const job of ["schema-node-compat", "crate-node-compat", "pi-node-compat"]) {
-    const b = jobBlock(gateText, job);
-    assert.doesNotMatch(b, /id-token/, `${job} is a test gate, not a publisher`);
-    assert.match(b, /contents: read/, `${job} reads the tree and nothing else`);
+  // the local-first gate now: still read-only there, and still no OIDC token.
+  const gateText = read(LOCAL_GATE);
+  for (const id of ["schema-node-compat", "crate-suite-node", "pi-node-compat"]) {
+    const step = gateText.slice(gateText.indexOf(`id: "${id}"`), gateText.indexOf("},", gateText.indexOf(`id: "${id}"`)));
+    assert.ok(step.length > 0, `${id} is a local-gate step`);
+    assert.doesNotMatch(step, /npm publish|id-token/, `${id} is a test gate, not a publisher`);
   }
+  // The workflow itself keeps the least-privilege baseline it had as five jobs.
+  const gateWorkflow = read(ROOT_SUITE);
+  assert.match(gateWorkflow, /^permissions:\n  contents: read$/m, "the manual gate reads the tree and nothing else");
+  assert.doesNotMatch(gateWorkflow, /id-token/, "the gate never carries an OIDC identity");
 });
 
 
@@ -305,64 +312,55 @@ test("the dispatch version input is shape-checked and never expanded unquoted in
 });
 
 // ---------------------------------------------------------------------------
-// The root gate's trigger — the same contract class, one workflow over:
-// `paths-ignore` decides whether ANY of the root suites run, so an entry there
-// is a claim that no suite reads that path from this checkout. On 2026-11-03
-// the claim was false (`docs/fix/**`, `docs/features/**`, `.claude-plugin/**`
-// were ignored while `ledger-ownership`, `residue-dimensions` and
-// `pre-execution-quality` read them), so the drift gates were skipped exactly
-// when the surfaces they police changed.
+// The root gate's trigger — the same contract class, one workflow over.
+// Owner decision 2026-11-04: the gate is local-first, so the workflow carries
+// no push and no pull-request trigger and no path filter, and it delegates to
+// `scripts/local-gate.mjs` instead of transcribing the step list. The cases
+// below bind the two facts that matter: nothing runs on a push, and no check
+// that a job used to carry disappears with it. The rule itself lives in
+// `AGENTS.md` → Verification → "Where the gate runs".
 // ---------------------------------------------------------------------------
 
-const ROOT_SUITE = ".github/workflows/root-suite.yml";
-
-/** Journal, notes, prose, toolchain state, changeset intents — no real-tree reader. */
-const ROOT_SUITE_IGNORED = Object.freeze([
-  ".changeset/**",
-  ".engram/**",
-  ".pi-web/**",
-  ".pi/**",
-  ".serena/**",
-  "LICENSE",
-  "README.md",
-  "docs/LOGS.md",
-  "docs/design/**",
-  "docs/research/**",
-]);
-
-/** A path a root suite reads from THIS checkout, with the reader that reads it. */
-const ROOT_SUITE_TRIGGERING = Object.freeze([
-  { glob: "docs/features/**", reader: "scripts/ledger-ownership.test.mjs", needle: "docs/features/" },
-  { glob: "docs/fix/**", reader: "scripts/residue-dimensions.test.mjs", needle: "docs/fix/" },
-  { glob: ".claude-plugin/**", reader: "scripts/pre-execution-quality.test.mjs", needle: ".claude-plugin/" },
-  { glob: ".node-version", reader: ROOT_SUITE, needle: ".node-version" },
-  { glob: ".bun-version", reader: "scripts/setup-env.test.mjs", needle: ".bun-version" },
-]);
-
-/** The list one trigger block carries, as GitHub reads it. */
-function ignoredBy(event) {
+test("the root gate is manual-only: nothing here runs on a push or a pull request", () => {
   const on = read(ROOT_SUITE).slice(read(ROOT_SUITE).indexOf("\non:"), read(ROOT_SUITE).indexOf("\npermissions:"));
-  const rest = on.slice(on.indexOf(`${event}:`) + event.length + 1);
-  const next = rest.slice(1).search(/\n {2}[a-z_]+:/);
-  const block = next === -1 ? rest : rest.slice(0, next + 1);
-  return [...block.slice(block.indexOf("paths-ignore:")).matchAll(/^\s+- '([^']+)'/gm)].map((m) => m[1]);
-}
-
-test("the root gate's ignore list is closed, and both trigger blocks carry it", () => {
-  const push = ignoredBy("push");
-  assert.deepEqual([...push].sort(), [...ROOT_SUITE_IGNORED].sort(), "the ignored set changed — decide, then update this list and the workflow's rule");
-  assert.deepEqual(ignoredBy("pull_request"), push, "a push-only prune leaves the PR red and the merge green (or the reverse)");
+  assert.match(on, /workflow_dispatch:/, "a branch is checked by dispatching the gate on it");
+  assert.doesNotMatch(on, /^\s{2}(push|pull_request):/m, "a push/PR trigger spends runner minutes on a tree the author could check for free");
+  assert.doesNotMatch(on, /paths-ignore|paths:/, "a manual dispatch has no path filter to keep in sync");
 });
 
-test("no path a root suite reads from this checkout is ignored", () => {
-  for (const { glob, reader, needle } of ROOT_SUITE_TRIGGERING) {
-    assert.ok(read(reader).includes(needle), `${reader} no longer reads ${needle} — retire the exemption or restore the read`);
-    assert.ok(!ROOT_SUITE_IGNORED.includes(glob), `${glob} is ignored, so ${reader} would be skipped exactly when its subject changes`);
+test("the remote gate delegates to the local one instead of transcribing it", () => {
+  const gate = read(ROOT_SUITE);
+  assert.match(gate, /node scripts\/local-gate\.mjs/, "the job runs the same script a contributor runs");
+  // A second copy of the step list is the drift the decision exists to prevent.
+  const job = jobBlock(gate, "local-gate");
+  assert.doesNotMatch(job, /bun run test|run-root-suite\.mjs|version-parity-gate\.mjs|dependency-advisory-pass\.mjs/,
+    "the workflow carries no step of its own — it calls the local gate");
+});
+
+test("every former remote check survives as a step of the local gate", () => {
+  const local = read(LOCAL_GATE);
+  const ids = [...local.matchAll(/^\s{4}id: "([a-z-]+)",$/gm)].map((match) => match[1]);
+  assert.deepEqual(ids, [
+    "workspace-install",
+    "schema-build",
+    "crate-suite-bun",
+    "crate-suite-node",
+    "root-suite",
+    "version-parity-content",
+    "schema-node-compat",
+    "pi-node-compat",
+    "pi-compat-guard",
+    "dependency-pin-gate",
+    "dependency-advisories",
+  ], "a check that disappears with the job that carried it is the defect this list prevents");
+  for (const needle of ["--frozen-lockfile", "run-root-suite.mjs", "version-parity-gate.mjs", "--content", "--pins", "dependency-advisory-pass.mjs"]) {
+    assert.ok(local.includes(needle), `${LOCAL_GATE} still runs ${needle}`);
   }
 });
 
-test("the root gate's workflow states the rule its ignore list obeys", () => {
+test("the local-first decision names its owner in the workflow and the guide", () => {
   const header = read(ROOT_SUITE).slice(0, read(ROOT_SUITE).indexOf("\non:"));
-  assert.match(header, /no root suite reads it from this tree/i, "the rule that bounds the list must be written where the list lives");
-  assert.match(header, /release-workflows\.test\.mjs/, "the header names the suite that pins it");
+  assert.match(header, /AGENTS\.md/, "the rule's owner is named where the wiring lives");
+  assert.match(header, /pre-push|local-gate\.mjs/, "the header says how a branch is checked before a merge");
+  assert.match(read("AGENTS.md"), /### Where the gate runs/, "the guide owns the rule");
 });
