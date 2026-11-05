@@ -19,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { STEPS, hookBody, peerFloor, stepEnv } from "./local-gate.mjs";
+import { STEPS, hookBody, parseImpactVerdict, peerFloor, stepEnv } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -270,4 +270,144 @@ test("--install-hook outside a git checkout is a usage error", () => {
 test("the hook body never carries a hard-coded checkout path", () => {
   const body = hookBody();
   assert.doesNotMatch(body, new RegExp(ROOT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "the hook resolves its root at run time");
+});
+
+/* ------------------------------------------------- impact-gated test steps */
+
+/** The step ids a prose-only push must skip — the suites and the build their suites resolve. */
+const TEST_STEP_IDS = [
+  "schema-build",
+  "crate-suite-bun",
+  "crate-suite-node",
+  "root-suite",
+  "schema-node-compat",
+  "pi-node-compat",
+];
+
+test("the test-bearing steps are exactly the suites and the build their suites resolve", () => {
+  const marked = STEPS.filter((step) => step.tests).map((step) => step.id);
+  assert.deepEqual(marked, TEST_STEP_IDS);
+  for (const step of STEPS.filter((step) => !step.network)) {
+    assert.equal(typeof step.tests, "boolean", `${step.id} declares its tests marker`);
+  }
+});
+
+test("parseImpactVerdict reads the fixed TEST IMPACT block and nothing else", () => {
+  assert.equal(
+    parseImpactVerdict([
+      "TEST IMPACT — empty",
+      "verdict: empty",
+      "tier: rg",
+      "changed: 1",
+      "executable: 0",
+      "suites (0):",
+      "symbols:",
+      "reason: no executable path changed — record this verdict, run no TDD ceremony, invent no test",
+    ].join("\n")),
+    "empty",
+  );
+  assert.equal(parseImpactVerdict("TEST IMPACT — targeted\nverdict: targeted\ntier: rg\n"), "targeted");
+  assert.equal(parseImpactVerdict("some other tool's stdout\nverdict: maybe"), "maybe");
+  assert.equal(parseImpactVerdict(""), null, "no block, no verdict");
+  assert.equal(parseImpactVerdict("TEST IMPACT —\nverdict:\n"), null, "an empty value is not a verdict");
+});
+
+/** A fixture checkout whose optional stub test-impact answers with a scripted verdict. */
+function impactSandbox(stubBody) {
+  const dir = sandbox();
+  if (stubBody !== null) {
+    fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "scripts", "test-impact.mjs"), stubBody);
+  }
+  return dir;
+}
+
+const plannedSteps = (stdout) =>
+  stdout
+    .split("\n")
+    .filter((line) => line.startsWith("plan: "))
+    .map((line) => line.replace(/^plan: ([\w-]+).*/, "$1"));
+
+test("--push-base with an empty verdict plans the gate without the test steps", () => {
+  const dir = impactSandbox("process.stdout.write('TEST IMPACT — empty\\nverdict: empty\\n');\n");
+  try {
+    const result = gate([
+      "--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network",
+    ]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(plannedSteps(result.stdout), ["version-parity-content"],
+      "only the offline non-test step survives an empty impact set");
+    assert.match(result.stdout, /skipping .*test step/, "the skip names what it skipped and why");
+    assert.match(result.stdout, /test-impact/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("--push-base with a targeted verdict (or any non-empty answer) runs every step", () => {
+  const offlineIds = STEPS.filter((step) => !step.network).map((step) => step.id);
+  for (const verdict of ["targeted", "something-else"]) {
+    const dir = impactSandbox(`process.stdout.write('verdict: ${verdict}\\n');\n`);
+    try {
+      const result = gate(["--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network"]);
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(plannedSteps(result.stdout), offlineIds);
+      assert.match(result.stdout, /test step/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("a refusing test-impact (non-zero exit) degrades to the full gate — never to a silent skip", () => {
+  const dir = impactSandbox("process.exit(1);\n");
+  try {
+    const result = gate(["--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(
+      plannedSteps(result.stdout),
+      STEPS.filter((step) => !step.network).map((step) => step.id),
+    );
+    assert.match(result.stdout, /could not be proven empty/, "the degrade says why the full gate ran");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a checkout with no test-impact script at all degrades to the full gate", () => {
+  const dir = impactSandbox(null);
+  try {
+    const result = gate(["--repo", dir, "--push-base", "HEAD", "--dry-run", "--skip-network"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(
+      plannedSteps(result.stdout),
+      STEPS.filter((step) => !step.network).map((step) => step.id),
+    );
+    assert.match(result.stdout, /could not be proven empty/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("without --push-base no impact check runs and every offline step is planned", () => {
+  const dir = impactSandbox("process.stdout.write('verdict: empty\\n');\n");
+  try {
+    const result = gate(["--repo", dir, "--dry-run", "--skip-network"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(
+      plannedSteps(result.stdout),
+      STEPS.filter((step) => !step.network).map((step) => step.id),
+      "the optimization only exists when a base proves it",
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the hook reads the push refs from stdin and passes a proven base to the gate", () => {
+  const body = hookBody();
+  assert.match(body, /while read/, "pre-push delivers the refs on stdin");
+  assert.match(body, /if \[ -n "\$base" \]/, "the gate gets --push-base only when a base was proven");
+  assert.match(body, /--push-base "\$base"/);
+  assert.match(body, /merge-base/, "a new branch falls back to the remote default branch");
 });
