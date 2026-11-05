@@ -1,12 +1,12 @@
 # agentic-workflow-repo
 
-Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 134 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## What this project ships
 
-- 133 delivered unit docs (features and fixes)
+- 134 delivered unit docs (features and fixes)
 - 105 roadmap rows
-- 3 packages, 28 skills, 46 scripts
+- 3 packages, 28 skills, 47 scripts
 
 ## Reference
 

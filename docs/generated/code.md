@@ -1,6 +1,6 @@
 # agentic-workflow-repo — code
 
-Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 134 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Packages
 
@@ -83,6 +83,7 @@ Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scr
 | setup-env.mjs |
 | skill-lint.mjs |
 | structural-sibling-pins.mjs |
+| test-impact.mjs |
 | test-route.mjs |
 | tier-cost.mjs |
 | unit-cycle.mjs |

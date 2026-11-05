@@ -140,6 +140,14 @@ under [Working rules](#working-rules)).
   the discipline lives here, in review and in the owner's merge.
 - **Commit format:** conventional commits, e.g. `feat(skills): add execute-phase`,
   `docs(workflow): clarify replicate steps`, `chore(template): add brand stub`.
+- **Tests first for a non-empty test impact set.** A change derives the tests
+  it can affect instead of guessing them — `bun scripts/test-impact.mjs --base
+  <rev>` answers the set from the touched symbols, the paths its tests name, the
+  suite beside each change and any LSP-resolved references — and runs that set
+  plus the project gate. A prose-only change answers `empty`: the verdict is
+  recorded in the phase's evidence, the ceremony is skipped, and no test is
+  invented. The mechanism and the block belong to
+  [`skills/execute-phase/references/TEST_IMPACT.md`](skills/execute-phase/references/TEST_IMPACT.md).
 - **A new script ships its sibling suite — red commit before green — and a
   test is never edited to pass.** Every `scripts/x.mjs` arrives with `scripts/x.test.mjs`
   as two commits: the suite lands alone, observed failing on the missing
@@ -329,6 +337,7 @@ adversarial-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabulari
 adversarial-reflector-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_REFLECTOR_VERDICTS | adversarial-reflector-verdict | no
 adversarial-stability-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_STABILITY_VERDICTS | adversarial-stability | no
 adversarial-verdict-grammar | skills/review-change/references/ADVERSARIAL_SETUP.md | block:adversarial-verdict@1 | adversarial-verdict+adversarial-reflector-verdict+adversarial-stability | no
+test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
