@@ -45,6 +45,14 @@ The request is issue [#396](https://github.com/gtrabanco/agentic-workflow/issues
 **S8 — `init-workspace` carries the format choice, additively and with consent.**
 > `init-workspace` carries the choice: a project initialized with a format gets that format's output; an existing project is offered it additively and with consent.
 
+**S9 — The sensor's cycle failure is repaired in this unit, not in a separate PR.**
+> arreglalo en esta unidad, no hace falta una nueva pr para ese fix
+
+The failure it answers, as reported in the same exchange: `scripts/workflow-status.mjs`
+dies with `Maximum call stack size exceeded` under both runtimes, on unmodified
+`main` too, because `dependencyBuildOrder`'s walk marks a node after recursing
+and the roadmap declared rows 98 ↔ 100 as mutual dependencies.
+
 ## Impact
 
 - **Consumes:** the guide's `## Docs site` block (`template/AGENTS.md:48-61` — `format`, `content-dir`, `build`, `map`), the crate's index readers (`readRoadmapIndex`, `readFixIndexTable`, `packages/agentic-workflow/src/index-document.mjs`), the unit-doc grammar reader (`scripts/unit-doc-phases.mjs`), the package manifests (`packages/*/package.json`), the skill frontmatter (`skills/*/SKILL.md`), and the lane's docs step (`skills/unit-lane/references/DOCS.md`).
@@ -154,17 +162,13 @@ change's own diff (the tier is the classifier's, never this document's):
   cells where the pinned header has nine.** **Does not affect** this unit (the
   gate reads the status column as the last cell, which still resolves); recorded
   so a later sweep does not read it as this unit's drift.
-- **`scripts/workflow-status.mjs` fails with `Maximum call stack size exceeded`
-  under both runtimes** (`bun scripts/workflow-status.mjs` and
+- **`scripts/workflow-status.mjs` died with `Maximum call stack size exceeded`**
+  under both runtimes (`bun scripts/workflow-status.mjs` and
   `node scripts/workflow-status.mjs`), identically on an unmodified `main`
-  worktree (`92715797`) and on this branch's base (`c8b64d0b`). The cause is a
-  missing cycle guard in `dependencyBuildOrder`'s `walk` (`scripts/workflow-status.mjs`,
-  `seen.add(depId)` after the recursive call), which recurses forever on the
-  roadmap's circular dependency between rows 98 and 100. **Does not affect** this
-  unit: the sensor is not in this change's verification set and no root suite
-  calls it on the live tree (its suite runs fixtures). Recorded so a later
-  session does not read it as regression, and routed to `triage-issue` as its own
-  unit.
+  worktree (`92715797`) and on this branch's base (`c8b64d0b`). **Repaired here**
+  under S9 at the owner's instruction: the missing cycle guard in
+  `dependencyBuildOrder` and the impossible roadmap dependency (rows 98 ↔ 100,
+  where a `done` row depended on an `idea` row).
 
 ## Tasks
 
@@ -229,6 +233,19 @@ change's own diff (the tier is the classifier's, never this document's):
 - P13 — Verification over the whole change (validator:
   `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
+- P14 — Guard the dependency walk so a declared cycle terminates and is reported
+  (validator: `bun test scripts/workflow-status-sensor.test.mjs --timeout=60000`
+  exits 0 with the `declared dependency cycle` case passing)
+  (Implements: S9)
+  Relevant files: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs
+- P15 — Drop the impossible direction of the roadmap cycle: row 98 is `done` and
+  cannot depend on the `idea` row 100 (validator: `bun scripts/workflow-status.mjs`
+  exits 0 and its envelope carries no `dependency cycle` blocker)
+  (Implements: S9)
+  Relevant files: docs/ROADMAP.md
+- P16 — Verification over the whole change after S9 (validator:
+  `bun scripts/run-root-suite.mjs` exits 0)
+  (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9)
 
 ## Triaged steps
 
@@ -290,6 +307,7 @@ proves it. Frozen at cut.
 | S6 | two consecutive runs are byte-identical, and `--check` exits 1 naming every missing, stale and orphaned file | the determinism case and the three drift cases pass |
 | S7 | a page whose source unit is gone is deleted by the next write, and `--check` reports it as orphaned before that | the orphan-removal case passes |
 | S8 | `init-workspace` asks for the format, writes it for a new project, and offers it additively with consent to an existing one | `rg -c "format" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` names the slots and `BOOTSTRAP_WRITE.md` states the consent path |
+| S9 | the sensor terminates on a declared dependency cycle, reports it as a substrate blocker, and the live tree carries no cycle | `bun test scripts/workflow-status-sensor.test.mjs --timeout=60000` exits 0 with the cycle case, and `bun scripts/workflow-status.mjs` exits 0 with no `dependency cycle` blocker |
 
 ## Findings
 
@@ -369,6 +387,12 @@ proves it. Frozen at cut.
 - **G8** — 2026-11-04, `bun scripts/docs-generate.mjs` · exit 0 · `1 written · 0 deleted · 2 unchanged` (the units page carries the settled row); `bun scripts/roadmap-settle.mjs` · exit 0 · 131 unit docs, `verdict: PASS`, 0 violations.
 - **D8** — 2026-11-04, owner correction: every manual invocation in `E1`–`G8` was written as `node …`, which violates the guide's bun-first rule (`bun` was present and already checked). Each one was re-run in its bun form with identical output — `bun scripts/unit-route.mjs --triage`, `bun scripts/unit-lineage.mjs`, `bun scripts/lint-changeset.mjs`, `bun scripts/version-parity-gate.mjs`, `bun scripts/docs-generate.mjs` — and `G9` records the gate under bun. The earlier lines are not rewritten (append-only), and the forward-looking surfaces (`## Applicable tests`, the P11–P13 validators, the `Derived by` line) now carry the bun form.
 - **G9** — 2026-11-04, `bun scripts/run-root-suite.mjs` · exit 0 · `1541 pass · 1 skip · 0 fail` (1542 tests across 76 files; the bun leg counts per test rather than per node assertion, which is the adaptation `scripts/run-root-suite.mjs` documents).
+- **E10** — 2026-11-04, `bun test scripts/workflow-status-sensor.test.mjs --test-name-pattern "declared dependency cycle"` before the guard · exit 1 · `1 fail` — `a cycle is reported, not a crash: workflow-status failed: Maximum call stack size exceeded` (the S9 reproducer, red on the real defect).
+- **E11** — 2026-11-04, the same case after the guard, then the whole suite · exit 0 · `1 pass` then `78 pass · 0 fail` (`--timeout=60000`, the budget `scripts/run-root-suite.mjs` gives the bun leg; bun's 5-second default is what makes the two 10-second forge-timeout cases fail when the file is run without it).
+- **E12** — 2026-11-04, live tree: `bun scripts/workflow-status.mjs` · exit 0 · envelope parsed and valid, `114 unit(s), 6 startable` — before the roadmap cell edit it carried `blockers: dependency cycle involving 98-finding-severity-ladder`; after `P15` the string `dependency cycle` appears nowhere in the envelope. `node scripts/workflow-status.mjs` gives the same exit and the same absence.
+- **G10** — 2026-11-04, after `P15`: `bun scripts/roadmap-settle.mjs` · exit 0 · 131 unit docs, 0 violations; `bun scripts/docs-generate.mjs --check` · exit 0 · `3 checked · 0 missing · 0 stale · 0 orphaned`.
+- **G11** — 2026-11-04, `bun scripts/run-root-suite.mjs` · exit 0 · `1543 pass · 1 skip · 0 fail` (1544 tests); the same script under `node` (CI's form): `1545 pass · 0 fail · 1 skip`.
+- **P8** — 2026-11-04, `S9` landed in this unit at the owner's instruction (`D9`): the cycle case cut red, the guard, the roadmap cell, the ledgers.
 - **L3** — 2026-11-04, the external verify's correction, verbatim: "Arregla los advisories que tenga sentido arreglar" — the verify round reported 0 blockers and three advisories against `7e0b81c9`.
 - **D9** — 2026-11-04, decision: of the three advisories, two are repaired and one is `n/a`. Advisory 1 (the docs step commands a generator path a skills-only tree does not have) is repaired as a reach caveat in the docs step. Advisory 3 (a legacy unit doc's first template quote surfaced as the "What it shipped" cell) is repaired in the generator. Advisory 2 (task P12's frozen validator no longer reproduces) is `n/a`: its supersession is already evidenced as `D6`, and the frozen task text is not rewritten — the Log is the append-only carrier of the supersession.
 - **P8** — 2026-11-04, the generator's one-line repair: the frozen corpus gained the legacy case alone and observed red (`64dc8858` · `20 pass · 1 fail`), then the one-line became the `> One-line:` quote — the unit-doc grammar's only declared carrier — with the title as the legacy fallback (`3ec8d1d7` · `21 pass · 0 fail` under bun and node), and the projection regenerated (`1 written · 0 deleted · 2 unchanged`; `--check` exit 0).
