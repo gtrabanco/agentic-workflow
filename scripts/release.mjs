@@ -388,17 +388,58 @@ function canaryTags(root) {
  * The canary this cut follows: the highest one below it. Nothing consumes
  * changesets until a stable cut, so every prerelease reprints the whole
  * backlog; this is what separates the news from what an earlier prerelease
- * already handed out. Null on the first cut of a train.
+ * already handed out. Null on the first cut of a train — the delta is only
+ * about what an earlier PRERELEASE carried, never about the stable release.
  */
 function previousCanaryTag(root, version) {
-  const current = parseCanaryTag(`v${version}`);
-  if (!current) return null;
-  const older = canaryTags(root).filter(({ parsed }) => {
-    const byBase = compareStable(current.base, parsed.base);
-    if (byBase !== 0) return byBase > 0;
-    return parsed.stamp < current.stamp || (parsed.stamp === current.stamp && parsed.n < current.n);
+  return previousReleaseTag({
+    channel: "canary",
+    tag: version,
+    canaryTags: canaryTags(root).map((entry) => entry.tag),
   });
-  return older[0]?.tag ?? null;
+}
+
+/** Canary ordering: > 0 when `a` is newer than `b`. The counter is numeric. */
+function compareCanary(a, b) {
+  return compareStable(a.base, b.base) || a.stamp.localeCompare(b.stamp) || a.n - b.n;
+}
+
+/** The newest stable tag of a list (tags keep their `v` prefix), or null. */
+function newestStableTag(tags) {
+  const ordered = [...tags].sort((a, b) => compareStable(a.replace(/^v/, ""), b.replace(/^v/, "")));
+  return ordered.at(-1) ?? null;
+}
+
+/**
+ * The release immediately before the cut — where the Contributors window
+ * starts, so a section never re-lists what an earlier cut already handed out:
+ *
+ *   stable cut   the newest stable tag;
+ *   canary cut   the nearest canary tag that predates it, and the newest stable
+ *                tag when the canary is the first of its train (nothing older
+ *                exists, and the stable release is what that canary carries).
+ *
+ * Nearest means nearest by version, never by the `git tag -l` listing order:
+ * that order is the refname, where `v10…` precedes `v9…` and `…20261101.10`
+ * precedes `…20261101.9`. The tag being released is excluded defensively —
+ * notes are rendered before the tag exists, and a present tag would empty the
+ * window.
+ *
+ * @param {{channel: string, tag: string, canaryTags?: string[], stableTags?: string[]}} input
+ * @returns {string|null} the tag as listed, or null when there is no previous release
+ */
+export function previousReleaseTag({ channel, tag, canaryTags: cans = [], stableTags: stables = [] }) {
+  const current = `v${String(tag).replace(/^v/, "")}`;
+  const previousStable = newestStableTag(stables.filter((name) => name !== current));
+  const cut = parseCanaryTag(current);
+  if (channel !== "canary" || !cut) return previousStable;
+  const nearest = cans
+    .filter((name) => name !== current)
+    .map((name) => ({ tag: name, parsed: parseCanaryTag(name) }))
+    .filter((entry) => entry.parsed)
+    .filter((entry) => compareCanary(cut, entry.parsed) > 0)
+    .sort((a, b) => compareCanary(b.parsed, a.parsed))[0];
+  return nearest?.tag ?? previousStable;
 }
 
 /** The `.changeset/` file names that existed at a tag — the carried backlog. */
@@ -485,22 +526,15 @@ function installBlock({ channel, tag, bumps }) {
 }
 
 /**
- * The "Contributors" section: the PRs merged since the previous release, in the
- * shape GitHub's `--generate-notes` produces — `* <title> by @<handle> in <PR
- * link>` — so the body stays rendered from the changesets and still names the
- * work that landed.
- *
- * Where the window starts: the newest stable tag for a stable cut, the earliest
- * canary tag that predates the cut for a canary one (a canary chain carries the
- * train it pre-releases, so its own tags are the record of what an earlier cut
- * already handed out).
- *
- * The handle is the GitHub owner parsed from the `origin` remote (SSH or HTTPS),
- * not the PR's author: `gh pr list` is queried for `number,title,mergedAt` only.
+ * The "Contributors" section: the PRs merged since the release immediately
+ * before the cut, in the shape GitHub's `--generate-notes` produces — `*
+ * <title> by @<handle> in <PR link>` — so the body stays rendered from the
+ * changesets and still names the work that landed.
  *
  * Degrades to an empty string — no section at all — when the tree is not a git
- * repository, the channel has no previous tag, `gh` is missing or fails, its
- * output is not JSON, or the remote names no GitHub repository.
+ * repository, there is no previous release, `gh` is missing or fails, its
+ * output is not JSON, the remote names no GitHub repository, or nothing was
+ * merged since that release.
  *
  * @param {string} root - repository root
  * @param {string} channel - "stable" or "canary"
@@ -510,53 +544,29 @@ function installBlock({ channel, tag, bumps }) {
  */
 function renderContributors(root, channel, tag, gitRepo) {
   if (!gitRepo) return "";
-  // Strip optional "v" prefix for uniform handling.
-  const cleanTag = tag.replace(/^v/, "");
-  // For stable, the previous tag is the last stable v-tag.
-  // For canary, the previous tag is the last canary tag (to avoid
-  // re-listing PRs from an earlier canary). If none exist, skip.
-  const prevTag = channel === "stable"
-    ? lastStableTag(root)
-    : (() => {
-        const m = /^(\d+\.\d+\.\d+)-canary\.(\d{8})\.(\d+)$/.exec(cleanTag);
-        if (!m) return null;
-        const curBase = m[1];
-        const curStamp = m[2];
-        const curN = Number(m[3]);
-        const out = git(root, ["tag", "-l", "--merged", "HEAD", "v*-canary.*"]) ?? "";
-        const tags = out
-          .split("\n")
-          .filter(Boolean)
-          .map((t) => {
-            const pm = /^v(\d+\.\d+\.\d+)-canary\.(\d{8})\.(\d+)$/.exec(t);
-            return pm ? { tag: t, base: pm[1], stamp: pm[2], n: Number(pm[3]) } : null;
-          })
-          .filter(Boolean);
-        const older = tags.filter((b) => {
-          const byBase = compareBase(curBase, b.base);
-          if (byBase !== 0) return byBase > 0;
-          return b.stamp < curStamp || (b.stamp === curStamp && b.n < curN);
-        });
-        return older[0]?.tag ?? null;
-      })();
-  if (!prevTag) return "";
-  // prevTag is stripped of the "v" prefix (lastStableTag returns "4.10.0").
-  // git log needs the full tag name.
-  const gitTag = prevTag.startsWith("v") ? prevTag : `v${prevTag}`;
-  // Resolve the repo owner from the remote URL (handles both SSH and HTTPS).
-  const remote = git(root, ["remote", "get-url", "origin"]);
-  const owner = remote
-    ? remote.match(/github\.com[/:]([^/]+\/[^/.]+)(\.git)?$/)?.[1]
-    : null;
-  if (!owner) return "";
-  // Use gh pr list to get merged PRs after the previous tag — this gives
-  // the proper GitHub login, PR number, and title in one shot.
-  const prevMerged = git(root, ["log", "-1", "--format=%ci", gitTag]);
-  const since = prevMerged ? new Date(prevMerged).toISOString() : new Date().toISOString();
-  const prOut = spawnSync("gh", ["pr", "list", "--state", "merged", "--limit", "300", "--json", "number,title,mergedAt", "--base", "main"], {
-    encoding: "utf8",
-    cwd: root,
+  const previous = previousReleaseTag({
+    channel,
+    tag,
+    canaryTags: canaryTags(root).map((entry) => entry.tag),
+    stableTags: stableTags(root),
   });
+  if (!previous) return "";
+  const gitTag = previous.startsWith("v") ? previous : `v${previous}`;
+  const repoSlug = githubSlug(git(root, ["remote", "get-url", "origin"]));
+  if (!repoSlug) return "";
+  const previousCommit = git(root, ["log", "-1", "--format=%ci", gitTag]);
+  if (!previousCommit) return "";
+  const prOut = spawnSync(
+    "gh",
+    [
+      "pr", "list",
+      "--state", "merged",
+      "--limit", "300",
+      "--base", "main",
+      "--json", "number,title,mergedAt,author",
+    ],
+    { encoding: "utf8", cwd: root },
+  );
   if (prOut.status !== 0) return "";
   let prs;
   try {
@@ -564,19 +574,40 @@ function renderContributors(root, channel, tag, gitRepo) {
   } catch {
     return "";
   }
-  const mergedAfter = prs
-    .filter((pr) => pr.mergedAt && new Date(pr.mergedAt) >= new Date(since))
-    .sort((a, b) => new Date(a.mergedAt) - new Date(b.mergedAt));
-  // Deduplicate by PR number (title may vary due to force-push rebases).
-  const seen = new Set();
-  const lines = [];
-  for (const pr of mergedAfter) {
-    if (seen.has(pr.number)) continue;
-    seen.add(pr.number);
-    lines.push(`* ${pr.title} by @${owner.split("/")[0]} in https://github.com/${owner}/pull/${pr.number}`);
-  }
+  const lines = contributorLines(prs, repoSlug, new Date(previousCommit).toISOString());
   if (lines.length === 0) return "";
   return ["## Contributors", "", "Thank you to everyone who contributed to this release:", "", ...lines, ""].join("\n");
+}
+
+/** `owner/name` of the GitHub repository the `origin` remote names, or null. */
+function githubSlug(remote) {
+  const match = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(remote ?? "");
+  return match ? `${match[1]}/${match[2]}` : null;
+}
+
+/**
+ * The bullets of the Contributors section: the merged PRs since `since`, oldest
+ * first, deduplicated by number (a rebased PR keeps one entry), each credited to
+ * the PR's own author and falling back to the repository owner only when the
+ * account is gone.
+ *
+ * @param {Array<{number: number, title: string, mergedAt: string, author: {login: string}|null}>} prs
+ * @param {string} repoSlug `owner/name`
+ * @param {string} since ISO timestamp of the previous release's commit
+ * @returns {string[]}
+ */
+export function contributorLines(prs, repoSlug, since) {
+  const sinceMs = new Date(since).getTime();
+  const owner = repoSlug.split("/")[0];
+  const seen = new Set();
+  return prs
+    .filter((pr) => pr?.mergedAt && new Date(pr.mergedAt).getTime() >= sinceMs)
+    .sort((a, b) => new Date(a.mergedAt) - new Date(b.mergedAt))
+    .filter((pr) => (seen.has(pr.number) ? false : (seen.add(pr.number), true)))
+    .map(
+      (pr) =>
+        `* ${pr.title} by @${pr.author?.login ?? owner} in https://github.com/${repoSlug}/pull/${pr.number}`,
+    );
 }
 
 /** Numeric stable-version comparator: > 0 when a is newer than b. */
@@ -937,4 +968,6 @@ function main() {
   process.exit(0);
 }
 
-main();
+// Run only as a program: the sibling suite imports the two pure helpers that
+// decide the Contributors window and render its bullets.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
