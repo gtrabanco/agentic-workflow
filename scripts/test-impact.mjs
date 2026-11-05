@@ -29,8 +29,9 @@
  * it searched" never masquerades as "what it found".
  *
  * Fail closed, never wide: no path in scope, no matcher installed, an unknown
- * flag, a bare `--base`, a `--paths` entry that exists nowhere and a
- * `--references` entry that does not exist all exit 1. The one thing this never
+ * flag, a bare `--base`, a `--paths` entry that exists nowhere, a `--paths`
+ * entry that names a directory (the hint scopes files, never a directory's
+ * bare name) and a `--references` entry that does not exist all exit 1. The one thing this never
  * does is answer `empty` because it could not look.
  *
  * Usage
@@ -442,7 +443,11 @@ function main(argv) {
     if (requested && paths.length === 0) refuse(`--base ${options.base} and --paths name no common path`);
   } else {
     for (const candidate of paths) {
-      if (!fs.existsSync(path.join(root, candidate))) refuse(`--paths entry does not exist: ${candidate}`);
+      const entry = path.join(root, candidate);
+      if (!fs.existsSync(entry)) refuse(`--paths entry does not exist: ${candidate}`);
+      if (fs.statSync(entry).isDirectory()) {
+        refuse(`--paths entry is a directory: ${candidate} — the hint scopes files, never a directory's bare name`);
+      }
     }
   }
   if (paths.length === 0) {
