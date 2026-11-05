@@ -152,6 +152,14 @@ export const STEPS = [
     mirrors: "root-suite job — Pi package version-parity gate",
   },
   {
+    id: "docs-generated-projection",
+    title: "Generated docs projection is current (offline)",
+    cwd: ".",
+    argv: [NODE, "scripts/docs-generate.mjs", "--check"],
+    tests: false,
+    mirrors: "no former remote job — the projection staleness has no remote twin",
+  },
+  {
     id: "schema-node-compat",
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
@@ -208,6 +216,7 @@ export const DEPS = {
   "crate-suite-node": ["workspace-install", "schema-build"],
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
+  "docs-generated-projection": [],
   "schema-node-compat": ["workspace-install", "schema-build"],
   "pi-node-compat": ["workspace-install"],
   "pi-compat-guard": [],

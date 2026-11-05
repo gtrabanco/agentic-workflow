@@ -45,9 +45,10 @@
         "machineBlocks": [
           "prose-gate-inventory@1"
         ],
-        "machineLines": 54,
+        "machineLines": 55,
         "sources": {
-          "issue #359 (unit 96-prose-gate-inventory)": "the carrier table is a machine region a gate parses, so it is counted separately from the prose that explains it. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 146 lines / 4,522 est / 54 machine-region lines; ceilings ceil(146 x 1.10) = 161 and ceil(4522 x 1.10) = 4,975, and `machineLines` is pinned exactly because the table is the contract `scripts/prose-gate-inventory.mjs` reads."
+          "issue #359 (unit 96-prose-gate-inventory)": "the carrier table is a machine region a gate parses, so it is counted separately from the prose that explains it. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 146 lines / 4,522 est / 54 machine-region lines; ceilings ceil(146 x 1.10) = 161 and ceil(4522 x 1.10) = 4,975, and `machineLines` is pinned exactly because the table is the contract `scripts/prose-gate-inventory.mjs` reads.",
+          "issue #420 (unit 420-docs-generated-merge-driver)": "the inventory gains one row, `docs-projection-current`, binding the projection staleness gate this unit's local-gate step runs (`scripts/docs-generate.test.mjs` carries the token). The machine region moves 54 -> 55 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 147 lines / 4,575 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {
