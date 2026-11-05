@@ -82,6 +82,15 @@ consumer disappears. An empty retirement list is the honest answer here, and the
 reason is the issue's own non-goal ("no behavior change to gates that stay prose
 beyond recording them").
 
+### Path-protection plan
+
+```text
+path-protection-plan@1
+freeze-after: none
+kind | path | justification
+created | scripts/prose-gate-inventory.test.mjs | the inventory's only test: it landed red on the missing module before the validator existed (commit 0a60994e) and carries one reproducer per refusal the gate must make
+```
+
 ## Non-goals
 
 The issue's non-goals, verbatim:
