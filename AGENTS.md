@@ -232,8 +232,14 @@ This repo has no application build. "Green" means:
 ### Where the gate runs
 
 The gate is local-first (owner decision 2026-11-04): `bun scripts/local-gate.mjs`
-runs every check the remote gate runs, in the same order, and stops at the first
-failing step (`--no-bail` keeps going). `--install-hook` writes a `pre-push` hook
+runs every check the remote gate runs, in the same order. Independent steps run
+concurrently in a bounded worker pool (`--jobs`, one worker per CPU capped at 4
+by default) under a dependency graph that holds apart the steps that would race
+on the same bytes (`schema-build`'s dist and every step that reads or rebuilds
+it); with bail — the default — the first red stops the dispatch, in-flight
+steps finish, and dependents of the red never run (`--no-bail` keeps going and
+skips a failed step's transitive dependents instead). `--install-hook` writes a
+`pre-push` hook
 that runs the offline subset, so a push never waits on the registry. That hook
 also spends the push range before running it: it passes the remote tip to the
 gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable

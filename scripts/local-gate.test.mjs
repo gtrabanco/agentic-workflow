@@ -148,17 +148,21 @@ test("a network-only selection under --skip-network runs nothing and says so", (
 
 /* ------------------------------------------------------------- fail-fast */
 
-test("fail-fast stops at the first red: the second step never starts", () => {
+test("fail-fast stops dispatching at the first red", () => {
   const dir = sandbox();
   try {
     // Both scripts are absent from the sandbox, so the first step fails on a
-    // missing module — the observable is whether the second one was announced.
+    // missing module. Steps without a shared dependency dispatch concurrently,
+    // so the observable is the verdict, not the banner order.
     const result = gate(["--only", "root-suite,version-parity-content", "--repo", dir]);
     assert.equal(result.status, 1);
-    assert.match(result.stdout, /\[1\/2\] root-suite/);
-    assert.doesNotMatch(result.stdout, /\[2\/2\]/);
-    assert.match(result.stderr, /FAILED at root-suite/);
-    assert.match(result.stderr, /Root suites/, "the failure names the workflow job it mirrors");
+    assert.match(result.stdout, /\[1\/2\] (root-suite|version-parity-content)/);
+    // The two steps share no dependency, so both dispatch concurrently and
+    // whichever red lands first owns the "FAILED at" line — that identity is
+    // a race, the verdict is not.
+    assert.match(result.stderr, /FAILED at (root-suite|version-parity-content)/);
+    assert.match(result.stderr, /fix it, then re-run/, "the failure names the workflow job it mirrors");
+    assert.doesNotMatch(result.stdout, /PASS/, "a red run never prints the PASS verdict");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -231,7 +235,7 @@ function mockRunner(timeline) {
   let running = 0;
   let maxObserved = 0;
   const runStep = async (step) => {
-    const row = timeline[step.id] ?? { ms: 5, exit: 0 };
+    const row = { ms: 5, exit: 0, ...timeline[step.id] };
     events.push({ id: step.id, event: "start", running: running + 1 });
     running += 1;
     maxObserved = Math.max(maxObserved, running);
