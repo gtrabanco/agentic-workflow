@@ -271,19 +271,28 @@ export function listGlob(root, pattern) {
   return { files };
 }
 
-/** Every document in the guide layer that carries the marker, repository-relative. */
-function findHomes(root) {
-  const candidates = ["AGENTS.md"];
-  const workflow = path.join(root, "docs/workflow");
-  if (fs.existsSync(workflow)) {
-    for (const name of fs.readdirSync(workflow).sort()) {
-      if (name.endsWith(".md")) candidates.push(`docs/workflow/${name}`);
+/** Every document in the tree whose bytes carry the marker as a block-header
+ *  line, repository-relative and sorted. The walk covers the whole tree (skipping
+ *  `.git` and `node_modules`), so a second fenced copy anywhere — a unit doc, the
+ *  template scaffold — is refused like a copy inside the guide layer; an inline
+ *  mention in prose or backticks is a citation, not a home, and never matches.
+ *  Symlinks are not followed. */
+export function findHomes(root) {
+  const skip = new Set([".git", "node_modules"]);
+  const marker = /^prose-gate-inventory@1[ \t]*$/m;
+  const homes = [];
+  const walk = (absolute, relative) => {
+    for (const entry of fs.readdirSync(absolute, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+      if (entry.isDirectory()) {
+        if (!skip.has(entry.name)) walk(path.join(absolute, entry.name), relative ? `${relative}/${entry.name}` : entry.name);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        const relativePath = relative ? `${relative}/${entry.name}` : entry.name;
+        if (marker.test(fs.readFileSync(path.join(absolute, entry.name), "utf8"))) homes.push(relativePath);
+      }
     }
-  }
-  return candidates.filter((relative) => {
-    const absolute = path.join(root, relative);
-    return fs.existsSync(absolute) && fs.readFileSync(absolute, "utf8").includes(MARKER);
-  });
+  };
+  if (fs.existsSync(root)) walk(root, "");
+  return homes;
 }
 
 /** The declared gate-suite patterns, `+`-joined directives flattened. */
