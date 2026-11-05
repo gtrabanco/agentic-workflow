@@ -29,7 +29,7 @@ export type SectionSelector =
   | { headingRegex: RegExp | RegexSource }
   | LineSelector;
 
-/** The selector after normalization, as it appears in a receipt. */
+/** The selector after normalization, JSON-serializable for the CLI envelope. */
 export type NormalizedSelector =
   | { kind: "title"; title: string }
   | { kind: "path"; path: string[] }

@@ -43,7 +43,7 @@ export class SectionLocatorError extends Error {
     this.code = code;
     /** Sections (or lines) that matched; `0` for a malformed selector. */
     this.matches = details.matches ?? 0;
-    /** The normalized selector that failed, as it appears in a receipt. */
+    /** The normalized selector that failed, JSON-serializable for the CLI envelope. */
     this.selector = details.selector ?? null;
   }
 }
