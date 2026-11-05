@@ -41,6 +41,8 @@ import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { sectionText } from "./unit-doc-phases.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** Re-pointable so the suite can be run red against an injected tree. */
 const root = process.env.LEDGER_OWNERSHIP_REPO ? path.resolve(process.env.LEDGER_OWNERSHIP_REPO) : repoRoot;
@@ -778,4 +780,50 @@ test("#308 one truth class owns both carriers, and the template cites that row",
     assert.match(read(template), /`review-findings` truth\s+class of the ownership map/,
       `${template}: ## Findings cites no machine row`);
   }
+});
+
+// --- Issue #359 S2/S5: one findings carrier per unit ------------------------
+
+/**
+ * `LEDGERS.md` states that a unit carries one findings carrier — the unit doc's
+ * `## Findings` table once it is migrated, or the legacy `review-findings.md`
+ * side ledger, never both — and until #359 nothing could tell. The scan is a
+ * pure function over unit descriptions so the seeded defect and the live tree go
+ * through one code path; the section probe is the shared fence-aware reader, not
+ * a second heading grammar.
+ */
+export function dualCarrierUnits(units) {
+  return units.filter((unit) => unit.hasFindingsSection && unit.hasSideLedger).map((unit) => unit.directory);
+}
+
+function unitDirectories(base) {
+  if (!fs.existsSync(base)) return [];
+  return fs.readdirSync(base, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const directory = `${base}/${entry.name}`;
+      const spec = path.join(root, directory, "SPEC.md");
+      const text = fs.existsSync(spec) ? fs.readFileSync(spec, "utf8") : "";
+      return {
+        directory,
+        hasFindingsSection: sectionText(text, "Findings") !== null,
+        hasSideLedger: fs.existsSync(path.join(root, directory, "review-findings.md")),
+      };
+    });
+}
+
+test("#359 one findings carrier: no unit directory carries both a Findings table and a review-findings.md", () => {
+  const units = [...unitDirectories("docs/features"), ...unitDirectories("docs/fix")];
+  assert.ok(units.length > 40, `the scan found ${units.length} unit directories — the assertion would be vacuous`);
+  assert.deepEqual(dualCarrierUnits(units), [], "these units read from two findings ledgers");
+});
+
+test("#359 the dual-carrier scan bites on the seeded defect", () => {
+  const seeded = [
+    { directory: "docs/fix/1-migrated", hasFindingsSection: true, hasSideLedger: false },
+    { directory: "docs/fix/2-legacy", hasFindingsSection: false, hasSideLedger: true },
+    { directory: "docs/fix/3-both", hasFindingsSection: true, hasSideLedger: true },
+  ];
+  assert.deepEqual(dualCarrierUnits(seeded), ["docs/fix/3-both"]);
+  assert.deepEqual(dualCarrierUnits([]), [], "no units means no violation, not a vacuous pass");
 });

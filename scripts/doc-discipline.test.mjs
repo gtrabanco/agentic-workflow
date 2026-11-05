@@ -312,3 +312,61 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
     }
   });
 });
+
+/**
+ * Issue #359 S2/S5 — two top-tier prose gates from
+ * `docs/workflow/GATE_INVENTORY.md` move into this suite.
+ *
+ * Both rules were stated only in prose and enforced only by accident (a
+ * `.gitignore` entry, a guide sentence): a compaction or a `git add -f` left
+ * nothing behind to fail. Each case asserts the rule over the real tree, and a
+ * second case proves the assertion bites on a fixture, so neither is vacuous.
+ */
+
+/** The ceremony module owns the rule; this suite runs it, never copies it. */
+const { checkDocsLanguage } = await import("./ceremony/docs.mjs");
+
+/**
+ * Paths the working-copy activation surface may never occupy in the index.
+ * `.claude-plugin/` is a different surface (the published plugin manifest) and is
+ * deliberately out of scope: the rule protects the *local opt-in mount*.
+ */
+function committedActivationMounts(files) {
+  return files.filter((file) => file === ".claude/skills" || file.startsWith(".claude/skills/")
+    || file === ".claude/pre-execution-gates" || file.startsWith(".claude/pre-execution-gates/"));
+}
+
+describe("#359 the documentation-language gate runs over the head", () => {
+  it("no committed .es.md sibling survives the head", () => {
+    const body = checkDocsLanguage(REPO_ROOT);
+    strictEqual(body.valid, true, `committed .es.md files: ${JSON.stringify(body["es-files"])}`);
+  });
+
+  it("the same check blocks a tree that carries one", () => {
+    const dir = mkdtempSync(join(tmpdir(), "docs-language-"));
+    try {
+      mkdirSync(join(dir, "docs"), { recursive: true });
+      writeFileSync(join(dir, "docs", "translated.es.md"), "x\n");
+      const body = checkDocsLanguage(dir);
+      strictEqual(body.valid, false, "the check passed over a translated sibling");
+      ok(body["es-files"].includes("docs/translated.es.md"), JSON.stringify(body["es-files"]));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("#359 the activation mount is a local mount, never a committed surface", () => {
+  it("the working-copy activation mount is never committed", () => {
+    const tracked = execFileSync("git", ["ls-files"], { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+      .split("\n").map((entry) => entry.trim()).filter(Boolean);
+    strictEqual(committedActivationMounts(tracked).length, 0,
+      `committed activation surface: ${committedActivationMounts(tracked).join(", ")}`);
+  });
+
+  it("a force-added mount is refused by the same assertion", () => {
+    const seeded = [".claude/skills/execute-phase/SKILL.md", ".claude-plugin/plugin.json", "skills/unit-lane/SKILL.md"];
+    strictEqual(committedActivationMounts(seeded).length, 1, "the plugin manifest or a real skill was miscounted");
+    strictEqual(committedActivationMounts(seeded)[0], ".claude/skills/execute-phase/SKILL.md");
+  });
+});
