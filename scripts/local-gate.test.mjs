@@ -19,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { STEPS, hookBody, parseImpactVerdict, peerFloor, stepEnv } from "./local-gate.mjs";
+import { DEPS, STEPS, hookBody, parseImpactVerdict, peerFloor, scheduleSteps, stepEnv } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -176,6 +176,129 @@ test("--no-bail runs the whole selection and reports every red", () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+/* ------------------------------------------------------------- parallel steps */
+
+/* The gate runs its steps in a bounded worker pool (one worker per CPU by
+ * default, `--jobs` caps it), with a dependency graph that keeps the steps
+ * whose outputs race apart from ever running at the same time. The heavy steps
+ * are still never run here: these cases drive the exported scheduler with a
+ * mock runner, so no suite, install or registry read happens. */
+
+test("the dependency map is closed over the step table, acyclic and self-free", () => {
+  const ids = new Set(STEPS.map((step) => step.id));
+  for (const [id, deps] of Object.entries(DEPS)) {
+    assert.ok(ids.has(id), `DEPS names ${id}, which is not a declared step`);
+    for (const dep of deps) {
+      assert.ok(ids.has(dep), `${id} depends on ${dep}, which is not a declared step`);
+      assert.notEqual(dep, id, `${id} cannot depend on itself`);
+    }
+  }
+  for (const step of STEPS) {
+    assert.ok(Array.isArray(DEPS[step.id]), `${step.id} is missing from DEPS — the map is closed`);
+  }
+  // DFS from every id: no cycle may come back.
+  const visiting = new Set();
+  const done = new Set();
+  const visit = (id) => {
+    if (done.has(id)) return;
+    assert.ok(!visiting.has(id), `the dependency graph has a cycle through ${id}`);
+    visiting.add(id);
+    for (const dep of DEPS[id] ?? []) visit(dep);
+    visiting.delete(id);
+    done.add(id);
+  };
+  for (const id of ids) visit(id);
+});
+
+test("the dist producer and every step that reads or rebuilds dist depend on schema-build", () => {
+  // schema-build's tsc writes dist/; schema-node-compat's own tsc writes the
+  // same tree, and the suites resolve dist at import time. Concurrent runs
+  // would race on the same bytes — the graph is what keeps them apart.
+  for (const consumer of ["schema-node-compat", "crate-suite-bun", "crate-suite-node", "root-suite"]) {
+    assert.ok(DEPS[consumer].includes("schema-build"), `${consumer} must wait for schema-build`);
+  }
+  assert.deepEqual(DEPS["schema-build"], ["workspace-install"], "the build itself waits only for the install");
+  for (const consumer of ["schema-build", "crate-suite-bun", "crate-suite-node", "schema-node-compat", "pi-node-compat"]) {
+    assert.ok(DEPS[consumer].includes("workspace-install"), `${consumer} must wait for the frozen-lockfile install`);
+  }
+});
+
+/** A mock runner: each step's duration and exit status come from its row. */
+function mockRunner(timeline) {
+  const events = [];
+  let running = 0;
+  let maxObserved = 0;
+  const runStep = async (step) => {
+    const row = timeline[step.id] ?? { ms: 5, exit: 0 };
+    events.push({ id: step.id, event: "start", running: running + 1 });
+    running += 1;
+    maxObserved = Math.max(maxObserved, running);
+    await new Promise((resolve) => setTimeout(resolve, row.ms));
+    running -= 1;
+    events.push({ id: step.id, event: "end", exit: row.exit });
+    return row.exit;
+  };
+  return { runStep, events, peak: () => maxObserved };
+}
+
+const stepsOf = (...ids) => ids.map((id) => ({ id, title: id, argv: ["mock"] }));
+
+test("scheduleSteps never starts a step before its dependencies passed", async () => {
+  const graph = { a: [], b: ["a"], c: [] };
+  const mock = mockRunner({ a: { ms: 30 }, b: { ms: 5 }, c: { ms: 5 } });
+  const result = await scheduleSteps(stepsOf("c", "b", "a"), mock.runStep, { jobs: 3, deps: graph });
+  assert.equal(result.failures.length, 0);
+  const bStart = mock.events.findIndex((e) => e.id === "b" && e.event === "start");
+  const aEnd = mock.events.findIndex((e) => e.id === "a" && e.event === "end");
+  assert.ok(bStart > aEnd, "b started before its dependency a finished");
+});
+
+test("scheduleSteps caps concurrency at the worker count", async () => {
+  const graph = { a: [], b: [], c: [], d: [] };
+  const mock = mockRunner({});
+  await scheduleSteps(stepsOf("a", "b", "c", "d"), mock.runStep, { jobs: 2, deps: graph });
+  assert.ok(mock.peak() <= 2, `observed ${mock.peak()} concurrent steps with jobs=2`);
+});
+
+test("scheduleSteps with bail stops dispatching after the first red", async () => {
+  const graph = { a: [], b: [], c: ["b"] };
+  const mock = mockRunner({ a: { ms: 5 }, b: { ms: 10, exit: 1 }, c: { ms: 5 } });
+  const result = await scheduleSteps(stepsOf("a", "b", "c"), mock.runStep, { jobs: 3, deps: graph, bail: true });
+  assert.equal(result.status, 1);
+  assert.ok(result.failures.some((step) => step.id === "b"));
+  assert.equal(mock.events.some((e) => e.id === "c"), false, "the dependent of a failed step started under bail");
+});
+
+test("without bail a failed step's dependents are skipped, transitively, and the rest still run", async () => {
+  const graph = { a: [], b: ["a"], c: ["b"], d: [] };
+  const mock = mockRunner({ a: { ms: 5, exit: 1 }, b: { ms: 5 }, c: { ms: 5 }, d: { ms: 5 } });
+  const result = await scheduleSteps(stepsOf("a", "b", "c", "d"), mock.runStep, { jobs: 2, deps: graph, bail: false });
+  assert.equal(result.status, 1);
+  assert.deepEqual(result.skipped.map((step) => step.id), ["b", "c"], "skipped = the failed step's transitive dependents");
+  assert.ok(result.failures.some((step) => step.id === "a"));
+  assert.ok(mock.events.some((e) => e.id === "d"), "an unrelated step was skipped too");
+});
+
+test("a dependency outside the selection is satisfied, never a deadlock", async () => {
+  // --only and --skip-network remove steps from the selection; a step whose
+  // prerequisite was filtered out cannot wait for it forever.
+  const graph = { a: ["missing"], b: [] };
+  const mock = mockRunner({});
+  const result = await scheduleSteps(stepsOf("a", "b"), mock.runStep, { jobs: 2, deps: graph });
+  assert.equal(result.failures.length, 0);
+  assert.ok(mock.events.some((e) => e.id === "a"));
+});
+
+test("--jobs accepts a positive integer and refuses everything else", () => {
+  assert.equal(gate(["--only", "version-parity-content", "--jobs", "2", "--skip-network"]).status, 0);
+  const zero = gate(["--jobs", "0"]);
+  assert.equal(zero.status, 2);
+  assert.match(zero.stderr, /--jobs needs a positive integer/);
+  const junk = gate(["--jobs", "four"]);
+  assert.equal(junk.status, 2);
+  assert.match(junk.stderr, /--jobs needs a positive integer/);
 });
 
 /* ------------------------------------------------------------ pi floor */
