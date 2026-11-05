@@ -101,7 +101,7 @@ Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 47 scr
 | 398-retired-carriers | fix | done · [#403](https://github.com/gtrabanco/agentic-workflow/pull/403) | fix/398-retired-carriers |
 | 40-bump-skill-internal-only | fix | — | fix/40-bump-skill-internal-only |
 | 40-versioned-skills-releases | feature | done · [#335](https://github.com/gtrabanco/agentic-workflow/pull/335) | 40 — versioned-skills-releases |
-| 407-section-locator-core | fix | in-progress | fix/407-section-locator-core |
+| 407-section-locator-core | fix | done · [#417](https://github.com/gtrabanco/agentic-workflow/pull/417) | fix/407-section-locator-core |
 | 51-plan-feature-replan-loop | fix | — | fix/51-plan-feature-replan-loop |
 | 52-machine-checked-turn-contract | feature | done · [#236](https://github.com/gtrabanco/agentic-workflow/pull/236) | 52 — machine-checked-turn-contract |
 | 52-workflow-status-envelope-hardening | fix | — | fix/52-workflow-status-envelope-hardening |

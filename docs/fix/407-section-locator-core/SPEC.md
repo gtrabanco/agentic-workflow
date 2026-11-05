@@ -282,13 +282,14 @@ task list above; the deterministic routers still judge the document.
 - **P3** — 2026-11-05, the `section` subcommand landed over the same primitive · `68cef865` (suite red at `80468c09`).
 - **P4** — 2026-11-05, the crate reference and the release intent landed · `61bff0aa`.
 - **P5** — 2026-11-05, the deterministic gate ran over both crate runtimes · `d8800892` (`G4`); the owner's verdict is pending, so the roadmap rows stay `in-progress`.
+- **P6** — 2026-11-05, pull request opened: [#417](https://github.com/gtrabanco/agentic-workflow/pull/417) · roadmap row 106 and the fix index row settle to `done · [#417]`, and the derived tree is regenerated in the settle commit.
 ## Next
 
-P1 — the RED library suite first (`doc.section-locator.test.mjs` observed failing on the missing module), then the implementation observed green.
+The owner's verdict on pull request [#417](https://github.com/gtrabanco/agentic-workflow/pull/417). Its head is the settle commit: the roadmap row settled to `done · [#417]`, the derived tree regenerated, and the deterministic gate green at that head. Merge authority stays with the owner (`merge state lives in the forge`).
 
 ## References
 
-- Issue [#407](https://github.com/gtrabanco/agentic-workflow/issues/407) — this unit.
+- Issue [#407](https://github.com/gtrabanco/agentic-workflow/issues/407) — this unit; pull request [#417](https://github.com/gtrabanco/agentic-workflow/pull/417) carries it (`Closes #407`).
 - Roadmap row 106 `section-locator-core` (`docs/ROADMAP.md`).
 - Issue [#366](https://github.com/gtrabanco/agentic-workflow/issues/366) (doc read/edit/index) and feature 71 `doc-cli` — first consumer.
 - Issue [#410](https://github.com/gtrabanco/agentic-workflow/issues/410) (pi-bundle stripper) — second consumer.
