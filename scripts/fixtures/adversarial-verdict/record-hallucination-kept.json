@@ -1,0 +1,23 @@
+{
+  "contract": "adversarial-verdict@1",
+  "head": "c8b64d0b7a1f4c2e9d3b5a6f8c0e2d4b6a8c1e3f",
+  "cycle": 1,
+  "findings": [
+    {
+      "id": "F1",
+      "file": "skills/review-change/SKILL.md",
+      "line": 88,
+      "axis": "code",
+      "origin": "finder",
+      "verdict": "confirm",
+      "evidence_kind": "supporting",
+      "evidence": "the section header is missing its closing paragraph",
+      "stability": "stable",
+      "scope": "as-reported",
+      "reflector": {
+        "verdict": "keep",
+        "reason": "reads like a real gap"
+      }
+    }
+  ]
+}

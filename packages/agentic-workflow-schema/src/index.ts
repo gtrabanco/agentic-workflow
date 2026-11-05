@@ -4079,6 +4079,9 @@ export {
   RISK_TIER_SIGNAL_KINDS,
   RISK_TIER_REASONS,
   SIZE_TIER_KINDS,
+  ADVERSARIAL_VERDICTS,
+  ADVERSARIAL_REFLECTOR_VERDICTS,
+  ADVERSARIAL_STABILITY_VERDICTS,
 } from "./vocabularies.js";
 export type {
   FutureStatus,
@@ -4091,4 +4094,7 @@ export type {
   RiskTierSignal,
   RiskTierReason,
   SizeTier,
+  AdversarialVerdict,
+  AdversarialReflectorVerdict,
+  AdversarialStabilityVerdict,
 } from "./vocabularies.js";
