@@ -84,3 +84,77 @@ turn-contract box still applies to the orchestrator):
 3. **Neither** (inline fallback) → **N sequential fresh conversations** —
    slower, the documented floor-of-last-resort so no agent is blocked from
    using this mode.
+
+## Verdict layer — the pass verifies, it does not enumerate
+
+A finder's table entry is a **candidate**, never a finding. On this route the
+pass has a second half, and it is the half that decides what survives.
+
+1. **Kill mandate.** Every candidate is arbitrated `kill | confirm`. A `kill`
+   carries **falsifying evidence**: the run that shows the claim is not a defect,
+   or the citation showing the rule it says is missing already holds. A `confirm`
+   carries **supporting evidence**: the disproof attempt that failed, with the
+   command and its output. A verdict with no evidence is an opinion. Context
+   asymmetry is the point — the arbiter sees the claim and its evidence, never
+   the producer's reasoning, so it cannot inherit the assumption it is meant to
+   attack. The reviewer anti-invention rule binds **from cycle 1 of the pass**,
+   not only from a second review cycle: a finding the pass raises itself
+   (`origin: new`) must bring its own falsifying evidence in the first
+   arbitration as much as in any later one. That is deliberately stricter than
+   `SKILL.md`'s always-loaded *after cycle 1* wording, which keeps governing the
+   default route — on this route the stricter rule wins.
+2. **Diff-only reflector — the last precision filter.** An independent pass sees
+   the diff and each surviving claim — its `file:line`, axis and own words. It is
+   handed no exploration transcript, no tool notes and no reviewer prose, and a
+   record that hands it one is refused. It answers `keep | drop` per finding with
+   a reason, and it cannot keep what the diff does not ground: a location no hunk
+   changes is a hallucination, and the reflector's answer to it is `drop`.
+3. **Stability check (CIVER).** A reproducer that also fires on untouched
+   adjacent code is a **misattribution** — the change is not what causes it. The
+   row's stability is `unstable` and it is re-scoped to the surface that actually
+   fails (`rescoped:<file>:<line>`) before it persists, never persisted
+   as-reported.
+
+The report names, per finding, what was killed and on what evidence. **The
+operator owns the rescue**: kill mandates optimize precision, so a wrongly killed
+finding is a false negative this pass will not detect itself — the falsifying
+evidence is printed beside the kill so a human can overturn it. No recall-side
+machinery exists on this route: nothing auto-resurrects a killed finding, and the
+documented risk is accepted here rather than engineered around.
+
+**Cross-model-family reviewers** stay the recommendation they already are; the
+configurable half — which model families a pass uses — resolves through issue
+`#201`'s `passes` config, linked here and not built in this skill. Until it
+lands, an agent with one family runs N same-family reviewers and says so.
+
+**The record is checked, not trusted.** The pass writes one record for the whole
+arbitration and the conductor runs one command over it and the reviewed diff:
+
+```text
+bun scripts/adversarial-verdict.mjs --record <record.json> --diff <diff.patch>
+```
+
+It prints the persist set — `| id | claim | verdict | evidence | stability |
+reflector | destination |` — and refuses every violation: an unsupported verdict,
+a verdict with no evidence, a kill whose evidence is not a disproof, a
+self-raised finding without its own reproducer, a reflector handed a transcript,
+a reflector verdict with no reason, a `keep` on a line the diff does not change,
+and an `unstable` row still claiming `as-reported`. Exit 0 is `PASS` and 1 is
+`FAIL`; a refused row is never persisted, and the report states why.
+
+The verdicts are published machine vocabulary (`ADVERSARIAL_VERDICTS`,
+`ADVERSARIAL_REFLECTOR_VERDICTS`, `ADVERSARIAL_STABILITY_VERDICTS` in
+`@gtrabanco/agentic-workflow-schema`); this block is the surface that orders
+them, and adding or renaming a token is a schema-const + block + parity change in
+one PR.
+
+```text
+adversarial-verdict@1
+kind | token | vocabulary | what it orders
+mandate-verdict | kill | adversarial-verdict:kill | the claim is disproved by falsifying evidence, so the row never persists
+mandate-verdict | confirm | adversarial-verdict:confirm | the disproof attempt failed and supporting evidence is required, so the row survives
+reflector-verdict | keep | adversarial-reflector-verdict:keep | the claim is grounded in a line this diff changes
+reflector-verdict | drop | adversarial-reflector-verdict:drop | the claim cannot be grounded in the diff or the reason refutes it, and a reason is required
+stability-verdict | stable | adversarial-stability:stable | the reproducer fires on the changed code alone
+stability-verdict | unstable | adversarial-stability:unstable | the reproducer also fires on untouched adjacent code, so the row is re-scoped before it persists
+```

@@ -113,6 +113,12 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 ## Guardrails
 
+- **The docs-site format is a declared choice.** The `Docs site` block's
+  `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,
+  `latex`/`tex`) decides what `bun scripts/docs-generate.mjs` renders, so a new
+  project is asked for it and an existing one is offered it additively, with
+  consent, in upgrade mode. Declining writes nothing; no format means markdown
+  with the degradation reported, never a silent default.
 - **Never overwrite an existing agent guide (`AGENTS.md`, or a legacy
   `CLAUDE.md`) or `docs/` without explicit consent.**
 - **One guide, one name.** `AGENTS.md` is the guide; a legacy `CLAUDE.md` is

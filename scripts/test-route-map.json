@@ -24,6 +24,17 @@
       ]
     },
     {
+      "name": "docs-generate",
+      "globs": [
+        "scripts/docs-generate.mjs",
+        "scripts/docs-generate.test.mjs",
+        "docs/generated/**"
+      ],
+      "suites": [
+        "scripts/docs-generate.test.mjs"
+      ]
+    },
+    {
       "name": "test-route",
       "globs": [
         "scripts/test-route.mjs",

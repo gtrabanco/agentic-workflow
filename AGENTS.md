@@ -1,8 +1,7 @@
 # AGENTS.md
 
-> **This is the repository's single agent guide** — exactly one copy of these
-> rules. Older Claude Code releases only read `CLAUDE.md`; if yours is one of
-> them, point it at this file rather than re-creating that one (the
+> **The repository's single agent guide** — one copy of these rules. A host that
+> reads only `CLAUDE.md` points at this file instead of duplicating it (the
 > `init-workspace` skill applies the same rule to target projects).
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
@@ -184,9 +183,8 @@ This repo has no application build. "Green" means:
 - The `skills` CLI discovers every skill: `npx skills add . --list` lists them all.
 - Markdown is well-formed; cross-references between docs resolve.
 - Context budgets pass: `bun scripts/check-skill-context.mjs` (every skill's
-  `SKILL.md` is within its enforced line/token budget, and the guide layer —
-  this file plus its `docs/workflow/` references — is within the budgets
-  `bun scripts/check-skill-context.mjs --documents` reads from the same manifest).
+  `SKILL.md`) and its `--documents` mode (this guide plus the `docs/workflow/`
+  references it indexes) are within the ceilings the same manifest declares.
 - No stack/real-project references leaked into the skills or shared docs.
 - Root suites pass: `node scripts/run-root-suite.mjs` (the same
   `scripts/*.test.mjs` with git signing neutralized for the throwaway fixture
@@ -206,12 +204,20 @@ This repo has no application build. "Green" means:
   `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
   trees; the staged one is always rebuilt first, so it is never stale.
 
+### Where the gate runs
+
+The gate is local-first (owner decision 2026-11-04): `bun scripts/local-gate.mjs`
+runs every check the remote gate runs, in the same order, and stops at the first
+failing step (`--no-bail` keeps going). `--install-hook` writes a `pre-push` hook
+that runs the offline subset, so a push never waits on the registry. The remote
+gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
+branch you cannot run locally.
+
 **Runtime convention — bun runs scripts and tests; the root gate runs under either
-runtime.** Two
-scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
+runtime.** Two scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
 set. Outside that override: (a) **manual invocation** of repo scripts is bun-first
 (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as
-the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage
+the guaranteed fallback, enforced by the gate's node-compat steps — skill prose and usage
 strings show the bun form, and skills running in user projects resolve
 bun-else-node at invocation (`npm_config_user_agent` starting with `bun/` pins
 bun); (b) **package-spawned children of `@gtrabanco/pi-agentic-workflow`** run
@@ -226,14 +232,10 @@ guaranteed fallback — and the whole gate runs under either runtime:
 `scripts/run-root-suite.mjs` adapts the invocation per runtime (`bun test`
 subcommand vs `node --test` flag) and budgets a 60s per-test timeout on the bun leg
 (bun→bun spawn overhead plus the full-history git walks; node keeps its no-default
-timeout model). CI still runs `node scripts/run-root-suite.mjs`. Before the
-adaptation `bun scripts/run-root-suite.mjs` failed by construction
-(`Cannot use test outside of the test runner` — bun only enters a runner through its
-`test` subcommand) and `bun test scripts/` was not equivalent (unit 329's Log `E19`:
-bun's 5-second default timeout, and an echoed error frame carrying
-`ERR_MODULE_NOT_FOUND`); issue #329's sweep had pinned the node-only carve-out and
-both failure classes are now closed. `scripts/invocation-drift.mjs` still pins this
-paragraph's facts, so they cannot be dropped silently.
+timeout model). CI still runs `node scripts/run-root-suite.mjs`; the node-only
+carve-out issue #329 pinned is gone (`bun scripts/run-root-suite.mjs` died with
+`Cannot use test outside of the test runner`), and `scripts/invocation-drift.mjs`
+pins this paragraph's facts.
 
 **Tool choice is re-decided every turn.**
 Manual invocation runs `bun` before `node` and search runs `rg` before `grep`;
@@ -323,6 +325,10 @@ risk-tier-reasons | packages/agentic-workflow-schema/src/vocabularies.ts | schem
 size-tier-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:SIZE_TIER_KINDS | size-tier | yes
 risk-tier-verdict | skills/execute-phase/references/risk-tiers.md | block:risk-tier-verdict@1 | n/a | no
 passive-record | skills/execute-phase/references/risk-tiers.md | block:passive-record@1 | n/a | no
+adversarial-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_VERDICTS | adversarial-verdict | no
+adversarial-reflector-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_REFLECTOR_VERDICTS | adversarial-reflector-verdict | no
+adversarial-stability-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_STABILITY_VERDICTS | adversarial-stability | no
+adversarial-verdict-grammar | skills/review-change/references/ADVERSARIAL_SETUP.md | block:adversarial-verdict@1 | adversarial-verdict+adversarial-reflector-verdict+adversarial-stability | no
 ```
 
 ### Rendered facts (prose that restates a machine value)
@@ -344,11 +350,9 @@ CHANGELOG.md | package-versions | package:version | equals-each
 
 ```
 
-The two schema generators are the clean example of the split the rule turns on: the
-same script rewrites a projection or reports on it, and only the reporting mode may
-run after a freeze. `bundle:skills` stages a gitignored build artifact that the
-package's own lifecycle stages and removes again. No script or skill may keep a
-second copy of this list.
+The two schema generators show the split: one script rewrites a projection or
+reports on it, and only the reporting mode may run after a freeze. No script or
+skill may keep a second copy of this list.
 
 ## Conventions
 
@@ -362,8 +366,8 @@ second copy of this list.
 
 ## Skills available in this repo
 
-When repeated searches or repeated documentation lookups happen while working
-here, prefer creating or refining a skill over re-deriving the knowledge. Store
+When repeated searches or documentation lookups happen here,
+prefer creating or refining a skill over re-deriving the knowledge. Store
 reusable operational knowledge as a skill under `skills/`; the authoring contract
 is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
@@ -371,7 +375,7 @@ is [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md).
 
 - **`skill-lint`** (was `bump-skill` — renamed when the per-skill bump ledger
   retired, D-40-14) — after editing any SKILL.md, run this before committing.
-  It lints the repo's authoring rules, and runs the content checks
+  It lints the repo's authoring rules and runs the content checks
   (`bun scripts/skill-lint.mjs`), and reports; it repairs nothing and
   bumps nothing — the train version is stamped by `scripts/release.mjs apply`
   at cut time, and a skill change ships via a `.changeset/` intent file.

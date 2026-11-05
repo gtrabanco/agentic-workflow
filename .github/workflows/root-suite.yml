@@ -1,62 +1,24 @@
 name: Root suite
 
-# The repository's own suites — `scripts/*.test.mjs`: the normative-drift gate,
-# the pre-execution contract/sensor/timeline suites, the golden fixture, phase
-# lint, the skill-context budgets, the receipt and hand-off contracts — ran only
-# by hand until this workflow existed. Nothing enforced them.
+# MANUAL ONLY (owner decision 2026-11-04). The rule — and why the gate is
+# local-first — lives in `AGENTS.md` → Verification → "Where the gate runs";
+# this file carries the wiring, never a second copy of the rule.
 #
-# That gap is not theoretical. A package version bump shipped without its
-# `CHANGELOG.md` row, which is exactly what `normative-drift.test.mjs` exists to
-# refuse, and it reached `main`: the publish workflows run the *package* suites,
-# which cannot see a repository-wide drift gate.
+# Run it on a branch before merging:
 #
-# WHEN IT RUNS: on every path except the ones listed under `paths-ignore`, and a
-# path may be listed only when NO root suite reads it from this tree. The trigger
-# is therefore part of the gate: a suite that starts reading one of these files
-# turns the ignore into a silent hole, so `scripts/release-workflows.test.mjs`
-# pins the list and names the reader that keeps each unignored path unignored.
-# `docs/features/**` and `docs/fix/**` stay triggering — `ledger-ownership`
-# walks both trees and `residue-dimensions` reads a real unit doc; `.claude-plugin/`
-# stays because `pre-execution-quality` parses its `plugin.json`; the two
-# toolchain pins stay because they decide the runtime the gate itself uses.
+#   gh workflow run root-suite.yml --ref <branch>
 #
-# The workspace root installs once: `packages/*` are members of a private root
-# `package.json`, so a sibling dependency resolves from the folder and no package
-# carries a lock of its own. The one prerequisite beyond that install is the
-# schema package's build output, which `scripts/schema-runtime.mjs` resolves as
-# `packages/agentic-workflow-schema/dist` and which is gitignored — the
-# pre-execution fixtures symlink `packages/` into a temp repo and require it, so
-# without the build those suites fail on a missing module rather than on a defect.
+# The job runs `scripts/local-gate.mjs` — the same ordered list, fail-fast, that
+# a contributor runs with `bun scripts/local-gate.mjs`. There is deliberately no
+# step list here: a check that lived only in this file would drift from the
+# local gate, and a check that lived only in the local gate would be invisible
+# to a contributor whose checkout cannot run it. `scripts/release-workflows.test.mjs`
+# pins that this workflow delegates instead of transcribing.
+#
+# A fork's pull request cannot be dispatched by branch name (its branch is not a
+# ref in this repository): check it out and run the gate locally.
 
 on:
-  push:
-    branches: [main]
-    # Journal entries, research/design notes, prose, toolchain state and changeset
-    # intents: no root suite reads any of them from this tree (their cases build
-    # temp repositories), so a change confined to them cannot redden the gate.
-    paths-ignore:
-      - 'docs/LOGS.md'
-      - 'docs/research/**'
-      - 'docs/design/**'
-      - '.changeset/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.pi/**'
-      - '.pi-web/**'
-      - '.serena/**'
-      - '.engram/**'
-  pull_request:
-    paths-ignore:
-      - 'docs/LOGS.md'
-      - 'docs/research/**'
-      - 'docs/design/**'
-      - '.changeset/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.pi/**'
-      - '.pi-web/**'
-      - '.serena/**'
-      - '.engram/**'
   workflow_dispatch: {}
 
 permissions:
@@ -67,22 +29,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  root-suite:
+  local-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.0
         with:
           # Full history, not the default shallow clone: the ledger-provenance
-          # suite resolves which commit ticked a fold row by walking git log, so
-          # a one-commit clone attributes every row to HEAD and reports all of
-          # them unproven — a false red that says nothing about the change.
+          # suite resolves which commit ticked a fold row by walking git log, and
+          # the content half of the version-parity gate diffs against main. A
+          # one-commit clone turns both into false results.
           fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6.4.0
         with:
           node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2.2.0
@@ -91,211 +54,5 @@ jobs:
           # version 2, which an older bun cannot parse.
           bun-version: 1.4.0
 
-      - name: Build the schema package (the suites resolve its dist/)
-        run: bun install --frozen-lockfile && bun run build
-        working-directory: packages/agentic-workflow-schema
-
-      - name: Install the crate
-        run: bun install --frozen-lockfile
-        working-directory: packages/agentic-workflow
-
-      - name: Crate suite (bun runtime)
-        run: bun run test
-        working-directory: packages/agentic-workflow
-
-      - name: Crate suite (node runtime)
-        run: bun run test:node
-        working-directory: packages/agentic-workflow
-
-      - name: Root suites
-        run: node scripts/run-root-suite.mjs
-
-      # Version-parity gate, content half (feature 75, issue #292 — the #164
-      # option-4 gate): root `skills/` is the Pi package's shipped content but
-      # lives outside `packages/pi-agentic-workflow/**`, so a skills-only merge
-      # bumps nothing and npm ships stale skills (verified live 2026-10-15:
-      # registry 0.19.1's bundle 5 files behind main's skills/). Offline and
-      # deterministic: a three-dot diff vs origin/main over the closed trigger
-      # set (skills/** + packages/pi-agentic-workflow/**); any hit requires a
-      # package version bump + the CHANGELOG companion row. On main pushes the
-      # diff vs origin/main is empty, so this passes trivially there — the PR is
-      # where it bites. The registry half is the separate dependency-pin-gate
-      # job below (clearly-degraded-when-unreachable, AC3).
-      - name: Pi package version-parity gate (content — offline)
-        run: node scripts/version-parity-gate.mjs --content
-
-  # ────────────── node runtime legs (moved from publish.yml) ────────────────
-  # These validated the committed tree on every push to main only because the
-  # publish workflow owned the push event. Publishing is manual now, so the legs
-  # they carry — schema and pi under the node runtime, plus the crate's plain
-  # `node --test` — live with the rest of the gate. Nothing about them publishes.
-
-  schema-node-compat:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/agentic-workflow-schema
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Install (bun as installer only — frozen lockfile)
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Build + test (node runtime — the guaranteed fallback)
-        run: bun run test:node
-
-
-  crate-node-compat:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/agentic-workflow
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - name: Install deps (node-compat — typebox is a pinned dependency)
-        run: bun install --frozen-lockfile
-      - name: Test (node runtime — the guaranteed fallback)
-        run: node --test
-
-
-  pi-node-compat:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: packages/pi-agentic-workflow
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-      - name: Install (bun as installer only — frozen lockfile)
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Build + test (node runtime — the guaranteed fallback)
-        run: bun run test:node
-
-  # Compatibility guard for @gtrabanco/pi-agentic-workflow (issue #283): the
-  # package's own tsc only runs in publish.yml (D-40-12, consolidated from
-  # publish-pi-package.yml) — post-merge, and
-  # against the pi version the frozen workspace lock pins — so a pi API change could
-  # reach main unseen. This job type-checks src/ against TWO pi legs, both
-  # installed OUTSIDE the lockfile path (temp copy + `npm install --no-save
-  # --no-package-lock`; an npm lockfile under packages/ is refused by
-  # test/lockfile-policy.test.mjs): (a) the peer floor 0.99.1 — keep this pin
-  # in lockstep with the peerDependencies floor in
-  # packages/pi-agentic-workflow/package.json; (b) `latest` — the npm dist-tag
-  # by design, so a breaking pi release trips this PR red here first. The two
-  # sibling pins resolve to their checked-out working copies (built for the
-  # schema package's dist/), per the workspace rule in docs/workflow/PACKAGES.md:
-  # a sibling pin may name a version the merge has not published yet.
-  pi-compat-guard:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 1.4.0
-
-      - name: Build the schema package working copy (sibling source of truth)
-        run: bun install --frozen-lockfile && bun run build
-        working-directory: packages/agentic-workflow-schema
-
-      - name: Type-check src against the peer floor and latest pi (temp copy, no lockfile)
-        run: |
-          set -euo pipefail
-          for leg in 0.99.1 latest; do
-            tmp="$(mktemp -d)"
-            cp -r packages/pi-agentic-workflow/src "$tmp/src"
-            cp packages/pi-agentic-workflow/tsconfig.json packages/pi-agentic-workflow/package.json "$tmp/"
-            echo "::group::pi leg $leg"
-            (
-              cd "$tmp"
-              npm install --ignore-scripts --no-save --no-package-lock \
-                "@earendil-works/pi-coding-agent@$leg" \
-                "@earendil-works/pi-tui@$leg" >/dev/null
-              # Sibling pins resolve to the local working copy, per the
-              # workspace rule in docs/workflow/PACKAGES.md: the pin may name
-              # a version the merge has not published yet, so the registry
-              # bytes of a pinned sibling version are superseded by the
-              # checked-out package for any package under packages/.
-              rm -rf "$tmp/node_modules/@gtrabanco/agentic-workflow" \
-                     "$tmp/node_modules/@gtrabanco/agentic-workflow-schema"
-              cp -r packages/agentic-workflow \
-                "$tmp/node_modules/@gtrabanco/agentic-workflow"
-              rm -rf "$tmp/node_modules/@gtrabanco/agentic-workflow/node_modules"
-              cp -r packages/agentic-workflow-schema \
-                "$tmp/node_modules/@gtrabanco/agentic-workflow-schema"
-              rm -rf "$tmp/node_modules/@gtrabanco/agentic-workflow-schema/node_modules"
-              ./node_modules/.bin/tsc --noEmit
-            )
-            echo "::endgroup::"
-            rm -rf "$tmp"
-            echo "pi leg $leg: tsc --noEmit clean"
-          done
-
-  # Version-parity gate, registry half (feature 75, issue #292): fails any PR
-  # where a pinned dependency has published a newer version than the exact pin
-  # (live 2026-10-15: schema 4.6.0 on the registry, 4.5.0 pinned). The only
-  # online half of the gate and deliberately a separate job: when the registry
-  # cannot be reached it degrades to a visible ::warning:: and exits 0 (AC3) —
-  # a network blip must never redden a PR no commit caused. Both jobs of this
-  # gate share scripts/version-parity-gate.mjs; the pins half watches the
-  # exact dependency versions; the content half's trigger set is derived from
-  # the tree (every package under packages/ + skills/ as the Pi package's
-  # content source).
-  dependency-pin-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.0
-
-      - name: Setup Node
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version-file: .node-version
-
-      - name: Dependency-pin gate (registry — degraded when unreachable)
-        run: node scripts/version-parity-gate.mjs --pins
-
-      # Dependency advisories (issue #365): the resolved tree queried against OSV
-      # — every package the committed lock states, by its resolved version, never
-      # a manifest range. **Report-only by design** (owner decision S6): the pass
-      # exits 0 whatever it finds, so a pre-existing advisory on a dependency no
-      # commit touched cannot redden a PR — the review scopes a `blocking` row to
-      # the dependencies a change adds or updates. Degraded, not failed, when OSV
-      # is unreachable: the same contract as the `--pins` step above.
-      - name: Dependency advisories (OSV — report-only, never fails)
-        run: node scripts/dependency-advisory-pass.mjs
+      - name: Gate (every check, fail-fast)
+        run: node scripts/local-gate.mjs
