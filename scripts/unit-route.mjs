@@ -29,6 +29,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
+import { batonOf } from "./relay-packet.mjs";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,
@@ -507,6 +508,114 @@ script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
 
 
 // ---------------------------------------------------------------------------
+// Relay hint — issue #294. The lane composes with pi-web's Relay when a pi-web
+// session is present: one leg per triaged phase plus one coherence-review leg.
+// The hint is an addendum printed after the machine block; it never changes a
+// route, a command, a read-set or the fingerprint, so an environment without
+// pi-web sees the byte-identical block it always saw.
+// ---------------------------------------------------------------------------
+
+/** pi-web's Relay packet root, relative to the workspace. */
+export const RELAY_ROOT = ".pi-web/relays";
+/** The exact wording pi-web's dispatch tool fails with when the host cannot dispatch. */
+export const RELAY_BRIDGE = "dispatch_relay requires PI WEB's session dispatch bridge";
+/** The coherence-review leg the lane always owes; legs = phases + this one. */
+export const RELAY_REVIEW_LEGS = 1;
+
+/** A pi-web session is the only deterministic presence marker this process can read. */
+const piWebPresent = () => process.env.PI_WEB_SESSION === "1";
+
+/** A docs unit has no execution leg: `implement` never applies to it (catalog). */
+function emitsLegs(doc) {
+  const match = /^---\n([\s\S]*?)\n---/u.exec(String(doc ?? ""));
+  const type = match === null ? null : /^type:[ \t]*(\S+)[ \t]*$/mu.exec(match[1])?.[1] ?? null;
+  return type !== "docs";
+}
+
+/** The leg tiers, read from the catalog's `budget_tier` rows — one source, no copy. */
+function relayTiers(catalog) {
+  const legs = catalog.relay?.legs;
+  const tiers = { execute: null, "coherence-review": null };
+  for (const leg of Object.keys(tiers)) {
+    const step = legs?.[leg]?.step;
+    const tier = typeof step === "string" ? catalog.catalog?.[step]?.budget_tier : null;
+    if (tier === "cheap" || tier === "strong") tiers[leg] = tier;
+  }
+  return tiers.execute === null || tiers["coherence-review"] === null ? null : tiers;
+}
+
+/**
+ * What the router can honestly say about the Relay seam:
+ * `unavailable` (no pi-web session), `bootstrap-needed` (no packet yet),
+ * `draft` (awaiting approval), `active` (a next leg is recorded),
+ * `complete`, `needs-help`, or `unreadable` (a state outside pi-web's set).
+ */
+export function relayAnswer(unitDir, slug, { catalog = null, phases = 0, command = null } = {}) {
+  const packet = `${RELAY_ROOT}/${slug}`;
+  const tiers = catalog === null ? null : relayTiers(catalog);
+  const answer = { kind: null, packet: null, unitDoc: `${unitDir}/SPEC.md`, legs: null, tiers, next: command };
+  if (!piWebPresent()) {
+    answer.kind = "unavailable";
+    answer.reason = RELAY_BRIDGE;
+    return answer;
+  }
+  answer.packet = packet;
+  const status = readProject(`${packet}/status.md`);
+  if (status === null) {
+    answer.kind = "bootstrap-needed";
+    answer.legs = phases + RELAY_REVIEW_LEGS;
+    answer.next = `create ${packet}/ (charter → ${unitDir}/SPEC.md) then dispatch_relay(packet: "${packet}", leg: "1") · legs: ${answer.legs} = ${phases} phases + ${RELAY_REVIEW_LEGS} coherence review`;
+    return answer;
+  }
+  const baton = batonOf(status);
+  if (baton.state === null) {
+    answer.kind = "unreadable";
+    answer.reason = `state \`${sanitize(baton.stateCell).slice(0, 40)}\` is outside the closed set`;
+    return answer;
+  }
+  if (baton.state === "Draft — awaiting approval") {
+    answer.kind = "draft";
+    answer.legs = phases + RELAY_REVIEW_LEGS;
+    answer.next = `obtain approval, set \`State: Active\` in ${packet}/status.md, then dispatch leg "1"`;
+    return answer;
+  }
+  if (baton.state === "Complete") {
+    answer.kind = "complete";
+    return answer;
+  }
+  if (baton.state === "Needs help") {
+    answer.kind = "needs-help";
+    answer.reason = "the baton records a human-dependent blocker";
+    return answer;
+  }
+  answer.kind = "active";
+  answer.leg = baton.nextLeg;
+  return answer;
+}
+
+/** The hint as stdout lines: the state first, then the next action when there is one. */
+export function relayLines(answer) {
+  if (answer.kind === "unavailable") {
+    // The fallback command is already the block's `next:` line: say why relay is
+    // absent, never restate the command beside it.
+    return [`relay: unavailable — ${answer.reason}`];
+  }
+  if (answer.kind === "bootstrap-needed") return [`relay: bootstrap-needed — no packet at ${answer.packet}`, `relay-next: ${answer.next}`];
+  if (answer.kind === "draft") return [`relay: draft — awaiting approval`, `relay-next: ${answer.next}`];
+  if (answer.kind === "active") return [`relay: active (leg ${sanitize(answer.leg)})`];
+  if (answer.kind === "complete") return ["relay: complete"];
+  if (answer.kind === "needs-help") return [`relay: needs-help — ${answer.reason}`];
+  return [`relay: unreadable — ${answer.reason}`];
+}
+
+/** The phase count a bootstrap hint states (the unit doc's `## Tasks` bullets). */
+function phaseCountOf(unitDir) {
+  const doc = readProject(`${unitDir}/SPEC.md`);
+  if (doc === null) return 0;
+  return parseUnitDocPhases(doc).phases.length;
+}
+
+// ---------------------------------------------------------------------------
 // Triage mode (--triage <unit>) — feature 61 P3: the closed catalog decides
 // which steps a unit needs. Deterministic over the unit doc's observable
 // facts; the model never re-derives the step list, it consumes this block.
@@ -834,6 +943,11 @@ function runTriage(token, { json = false } = {}) {
   const facts = unitFacts(doc, unitDir);
   const result = triageSteps(catalog, facts);
   const unitLabel = clean;
+  // #294: the Relay answer is an addendum to the triage block. It is computed
+  // from the packet's own state and the catalog's tiers, never inferred.
+  const relay = emitsLegs(doc)
+    ? relayAnswer(unitDir, matches[0].slug, { catalog, phases: phaseCountOf(unitDir) })
+    : null;
   const skippedText = result.skipped.length === 0
     ? "none"
     : result.skipped.map((entry) => `${entry.step}: ${entry.reason}`).join(", ");
@@ -843,10 +957,11 @@ function runTriage(token, { json = false } = {}) {
       `Steps: ${result.steps.join(", ")}\n` +
       `Tiers: ${result.steps.map((step) => `${step}: ${result.tiers[step]}`).join(", ")}\n` +
       `Skipped: ${skippedText}\n` +
-      `Budget: ${result.budget}\n`,
+      `Budget: ${result.budget}\n` +
+      (relay === null ? "" : `${relayLines(relay).join("\n")}\n`),
     );
   }
-  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget };
+  return { unit: unitLabel, type: facts.type, steps: result.steps, skipped: result.skipped, tiers: result.tiers, budget: result.budget, relay };
 }
 
 function main(argv) {
@@ -994,6 +1109,12 @@ function main(argv) {
   // Ledger size (S9 5): the carrier the fold queue actually reads — the doc
   // itself for a migrated unit, the legacy side ledger otherwise.
   const ledgerSize = Buffer.byteLength(docOwnsLedger || !exists(ledgerPath) ? doc : ledger, "utf8");
+  // #294: the execute hand-off names the Relay bootstrap when a pi-web session
+  // is present, and the per-phase command stays printed in both cases — Relay
+  // is an enhancement of the seam, never a hard dependency.
+  const relay = route === "execute" && emitsLegs(doc)
+    ? relayAnswer(unit.dir, unit.slug, { catalog: loadCatalog(), phases: phaseCountOf(unit.dir), command })
+    : null;
   print({
     unit: unit.slug,
     status,
@@ -1004,10 +1125,11 @@ function main(argv) {
     readSet,
     reviewCycles,
     ledgerSize,
+    relay,
   });
 }
 
-function print({ unit, status, route, command, openCount, rows, readSet, reviewCycles, ledgerSize }) {
+function print({ unit, status, route, command, openCount, rows, readSet, reviewCycles, ledgerSize, relay = null }) {
   if (!ROUTES.includes(route)) fail(1, `internal error: unknown route ${sanitize(route)}`);
   const shown = readSet.slice(0, READ_SET_MAX);
   const remainder = readSet.length - shown.length;
@@ -1026,6 +1148,7 @@ function print({ unit, status, route, command, openCount, rows, readSet, reviewC
     ...(shown.length ? shown.map((entry) => `  ${sanitize(entry)}`) : ["  (none)"]),
     ...(remainder > 0 ? [`  … and ${remainder} more`] : []),
     `fingerprint: ${fingerprint(record)}`,
+    ...(relay === null ? [] : relayLines(relay)),
   ];
   process.stdout.write(`${lines.join("\n")}\n`);
 }

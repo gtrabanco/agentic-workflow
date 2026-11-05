@@ -160,12 +160,12 @@ test("check: a well-formed REVIEW-VERDICT in the unit doc passes", () => {
 
 const faults = [
   ["a charter that restates the plan's tasks", "charter.md", "charter-restates-tasks.md", /charter restates the plan/],
-  ["a charter that names a unit doc that does not exist", "charter.md", "charter-missing-unit-doc.md", /charter names no existing unit doc/],
+  ["a charter that names a unit doc that does not exist", "charter.md", "charter-missing-unit-doc.md", /names no existing unit doc/],
   ["a baton whose state is outside the closed set", "status.md", "status-unknown-state.md", /state must be one of/],
   ["a baton that duplicates an evidence row", "status.md", "status-duplicates-evidence.md", /baton duplicates the unit doc's evidence/],
   ["a baton whose leg cursor is malformed", "status.md", "status-bad-cursor.md", /leg cursor/],
   ["a baton with no phase cursor", "status.md", "status-no-phase.md", /phase cursor/],
-  ["a log with no leg entry", "log.md", "log-no-legs.md", /log carries no leg entry/],
+  ["a log with no leg entry", "log.md", "log-no-legs.md", /carries no leg entry/],
 ];
 
 for (const [what, document, fixture, expected] of faults) {
@@ -311,7 +311,7 @@ test("obligations: every row verified passes with the tally", () => {
   write(root, "docs/features/82-obligation-unit/SPEC.md", "# 82 — obligation-unit\n\n## Tasks\n\n- P1 — work (validator: `true` exits 0)\n");
   write(root, "docs/features/82-obligation-unit/planning-obligations.md", obligations([
     "| O1 | S1 | one behaviour | P1 | P1 | execute-phase | `true` exits 0 | the run | verified |",
-    "| O2 | S1 | a second behaviour | P1 | P1 | execute-phase | `true` exits 0 | the run | n/a — covered by O1 |",
+    "| O2 | S1 | a second behaviour | P1 | P1 | execute-phase | `true` exits 0 | covered by O1 at `docs/features/82-obligation-unit/SPEC.md:5` | n/a |",
   ]));
   const result = run(["obligations", "82-obligation-unit"], { root });
   assert.equal(result.status, 0, result.stderr || result.stdout);

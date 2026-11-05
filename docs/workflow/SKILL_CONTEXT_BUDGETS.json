@@ -1,6 +1,14 @@
 {
   "schemaVersion": 1,
   "metric": "ceil(UTF-8 bytes / 4); deterministic proxy, not provider billing tokens",
+  "relays": {
+    "note": "The leg-handover ceiling: a Relay leg reads the charter (goal, pointer-shaped) and the baton (state, leg cursor, phase cursor, pointers and one progress line) before it acts, so those two documents are the handover. The unit doc, the evidence table and the skill references are read on demand, never embedded — the pointer rule is published in skills/unit-lane/references/RELAY.md and this ceiling is what keeps a live packet from turning the baton into a plan.",
+    "legHandoverEstimateMax": 1200,
+    "legHandoverLinesMax": 120,
+    "sources": {
+      "issue #294 (unit 82 relay-lane-execution)": "derived from the pointer-only shape (charter + baton carry pointers, never the plan or the evidence rows); no live packet existed at cut, so this is the declared assumption recorded as PE-014 and re-based from the first real packet's `budget` measurement."
+    }
+  },
   "referenceDepth": 1,
   "defaults": {
     "mainEstimateMax": 2800,

@@ -89,16 +89,16 @@ scope: medium
 One observable criterion per requirement; each names the check that demonstrates it. `bun test scripts/<file>.test.mjs exits 0` means that suite is the demonstration; the prose criteria name a `rg` count over the surface that must carry the fact.
 
 1. **AC1 (S1)** — `bun test scripts/relay-route.test.mjs` exits 0, and `rg -c 'dispatch_relay' skills/unit-lane/references/RELAY.md` matches **≥ 1**.
-2. **AC2 (S2)** — `bun scripts/relay-packet.mjs tiers docs/features/82-relay-lane-execution` exits 0 and prints `execute: cheap` and `coherence-review: strong`.
+2. **AC2 (S2)** — `bun scripts/relay-packet.mjs tiers 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 and prints `execute: cheap` and `coherence-review: strong`.
 3. **AC3 (S3)** — `rg -c 'Ownership' skills/unit-lane/references/RELAY.md` matches **1**.
-4. **AC4 (S4)** — `bun scripts/relay-packet.mjs check docs/features/82-relay-lane-execution` exits 1 on a fixture charter that restates a `P<n> —` task bullet and exits 0 on the pointer-shaped charter (`scripts/fixtures/relay-packet/`).
+4. **AC4 (S4)** — `bun scripts/relay-packet.mjs check 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 on the pointer-shaped charter, and the same command over a tree in which `rejected/charter-restates-tasks.md` replaces it exits 1 (case pinned by `bun test scripts/relay-packet.test.mjs`).
 5. **AC5 (S5)** — `bun test scripts/relay-packet.test.mjs` exits 0, including the case where the baton duplicates an `| AC |` evidence row.
 6. **AC6 (S6)** — `rg -c 'decisions.md' skills/unit-lane/references/RELAY.md` matches **≥ 1**, and the checker accepts an absent `decisions.md` (packet still passes).
-7. **AC7 (S7)** — `bun scripts/relay-packet.mjs budget docs/features/82-relay-lane-execution` exits 0 naming `measured` and `ceiling`, and `bun scripts/check-skill-context.mjs --routes` exits 0.
+7. **AC7 (S7)** — `bun scripts/relay-packet.mjs budget 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 naming `measured` and `ceiling`, and `bun scripts/check-skill-context.mjs --routes` exits 0.
 8. **AC8 (S8)** — `rg -c 'Human approval|human approval' skills/unit-lane/references/RELAY.md` matches **≥ 1**.
 9. **AC9 (S9)** — `bun test scripts/relay-packet.test.mjs` exits 0, including the `Draft — awaiting approval` state check and the `Active` transition fixture.
 10. **AC10 (S10)** — `rg -c 'final operational action' skills/unit-lane/references/RELAY.md` matches **1**, and AC12's checker proves the review legs are bounded.
-11. **AC11 (S11)** — `bun scripts/relay-packet.mjs tiers docs/features/82-relay-lane-execution` exits 0 reading `scripts/catalog.json` only.
+11. **AC11 (S11)** — `bun scripts/relay-packet.mjs tiers 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0; the printed `source:` line names `scripts/catalog.json` as the only tier source.
 12. **AC12 (S12)** — `bun test scripts/relay-packet.test.mjs` exits 0 on a `REVIEW-VERDICT` block that matches the owned grammar and fails closed on each malformed variant.
 13. **AC13 (S13)** — `rg -c 'review-change' skills/unit-lane/references/RELAY.md` matches **≥ 1** and `rg -c 'REVIEW-VERDICT' skills/unit-lane/references/RELAY.md` matches **≥ 1** with `references/REVIEW.md` named as the owner.
 14. **AC14 (S14)** — `bun test scripts/relay-route.test.mjs` exits 0, including the case that with `PI_WEB_SESSION` unset the route prints `next: /execute-phase <unit> P<k>` and no relay line.
@@ -112,7 +112,7 @@ One observable criterion per requirement; each names the check that demonstrates
 22. **AC22 (S22)** — every named surface is in the diff: `git diff --name-only` contains `skills/unit-lane/SKILL.md`, `skills/unit-lane/references/RELAY.md`, `skills/execute-phase/SKILL.md`, `scripts/unit-route.mjs`, `scripts/catalog.json`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `README.md`, `CHANGELOG.md`.
 23. **AC23 (S23)** — `bun test scripts/relay-packet.test.mjs` exits 0, covering a charter pointing at a missing unit doc, a malformed phase cursor and a malformed `REVIEW-VERDICT`.
 24. **AC24 (S24)** — `bun test scripts/relay-route.test.mjs` exits 0 on the two fixtures (`PI_WEB_SESSION` set/unset) and on the absent-packet case.
-25. **AC25 (S25)** — `bun scripts/relay-packet.mjs budget docs/features/82-relay-lane-execution` exits 0 with `measured < ceiling`, and a fixture above the ceiling exits 1.
+25. **AC25 (S25)** — `bun scripts/relay-packet.mjs budget 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 with `measured < ceiling`, and the same command over a padded baton exits 1 (case pinned by `bun test scripts/relay-packet.test.mjs`).
 
 ## Impact
 
@@ -186,7 +186,7 @@ Verdict produced at cut with `bun scripts/ceremony.mjs tier classify` over the b
 - P6 — Ship the documentation and release surface: README, CHANGELOG companion row, changeset, regenerated projections, roadmap row (validator: `bun scripts/version-parity-gate.mjs --content` exits 0)
   (Implements: S22)
   Relevant files: README.md, CHANGELOG.md, .changeset/82-relay-lane-execution.md, docs/generated/
-- P7 — Close the obligations ledger and re-run the declared verification at the head (validator: `bun scripts/relay-packet.mjs obligations docs/features/82-relay-lane-execution` exits 0)
+- P7 — Close the obligations ledger and re-run the declared verification at the head (validator: `bun scripts/relay-packet.mjs obligations 82-relay-lane-execution` exits 0)
   (Implements: S23, S24, S25)
 
 ### Planning evidence
@@ -222,9 +222,17 @@ Budget: strong
   Compose the lane with pi-web Relays: after triage (`unit-lane --from-issue` / `plan-feature`), each triaged phase becomes a Relay leg dispatched via pi-web's `dispatch_relay`, with the unit doc as the durable plan and a fresh-context coherence reviewer as the lane's pre-PR gate.
   ```
 
+- **D2** — 2026-11-05, owner (plan repair): the ledger and acceptance validators moved from an
+  env-prefixed fixture invocation (`RELAY_PACKET_REPO=…`) to the checker's own `--repo <dir>` flag,
+  so every declared validator is one backticked command a reviewer can re-run. No requirement,
+  scope or threshold changed.
+- **E1** — 2026-11-05, red run before the implementation: `bun test scripts/relay-packet.test.mjs` · exit 1 · 0 pass / 30 fail (module missing). `bun test scripts/relay-route.test.mjs` · exit 1 · 1 pass / 12 fail.
+- **E2** — 2026-11-05, green run after the implementation: `bun test scripts/relay-packet.test.mjs` · exit 0 · 30 pass / 0 fail. `bun test scripts/relay-route.test.mjs` · exit 0 · 13 pass / 0 fail.
+- **E3** — 2026-11-05, compatibility run: `bun test scripts/unit-route.test.mjs scripts/catalog.test.mjs` · exit 0 · 80 pass / 0 fail.
+
 ## Next
 
-P1 — freeze the ledgers, then the red suites.
+P5 — publish the relay leg contract in the lane skill, then the docs and release surface.
 
 ## References
 

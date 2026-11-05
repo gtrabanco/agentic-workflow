@@ -127,7 +127,8 @@ test("router, pi-web absent: the per-phase fallback is printed and unchanged", (
   assert.equal(result.status, 0, result.stderr);
   assert.equal(field(result.stdout, "route"), "execute");
   assert.equal(field(result.stdout, "next"), "/execute-phase 20-relay-unit P1 (tier: cheap)");
-  assert.match(result.stdout, new RegExp(`^relay: unavailable — ${BRIDGE}; next: /execute-phase 20-relay-unit P1 \\(tier: cheap\\)$`, "m"));
+  assert.match(result.stdout, new RegExp(`^relay: unavailable — ${BRIDGE}$`, "m"), "the reason is named once");
+  assert.equal((result.stdout.match(new RegExp(BRIDGE.replace(/[']/g, "."), "g")) ?? []).length, 1);
 });
 
 test("router, pi-web present: the hint is an addendum, the machine block is identical", () => {
@@ -171,7 +172,9 @@ test("triage JSON carries the relay answer as data", () => {
   assert.equal(json.relay.unitDoc, "docs/features/20-relay-unit/SPEC.md");
   assert.equal(json.relay.legs, 3);
   assert.deepEqual(json.relay.tiers, { execute: "cheap", "coherence-review": "strong" });
-  assert.deepEqual(json.steps, ["implement", "evidence"], "the step list is untouched");
+  const withoutMarker = JSON.parse(run(["--triage", "20-relay-unit", "--json"], { piWeb: false }).stdout);
+  assert.deepEqual(json.steps, withoutMarker.steps, "the step list is untouched");
+  assert.deepEqual(json.tiers, withoutMarker.tiers, "the per-step tiers are untouched");
 });
 
 test("triage JSON reports the degradation without a packet path", () => {
