@@ -330,14 +330,15 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
  * run a *copy* of `workflow-status.mjs`, so every module it imports must be there
  * or the sandbox fails with `ERR_MODULE_NOT_FOUND` instead of the behaviour the
  * test asserts. #291 added the phase parser on the router's graph; #319 the
- * published index paths; #360 the risk classifier.
+ * published index paths; #360 the risk classifier; #294 the baton reader the
+ * router shares with the packet checker.
  */
 function mirrorSensorGraph(tmp) {
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "src"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
   for (const file of ["workflow-status.mjs", "schema-runtime.mjs", "pre-execution-contract.mjs", "unit-route.mjs",
-    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs"]) {
+    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs", "relay-packet.mjs"]) {
     fs.copyFileSync(path.join(repoRoot, "scripts", file), path.join(tmp, "scripts", file));
   }
   fs.copyFileSync(
