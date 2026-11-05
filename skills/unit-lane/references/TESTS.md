@@ -12,6 +12,9 @@ never inline.
 
 - The unit's Applicable tests section (filled by triage)
 - The project's test runner command from Workflow conventions
+- The change's **test impact set** — the tests it can affect, derived before the
+  first run (owner: `skills/execute-phase/references/TEST_IMPACT.md`; this
+  repository's implementation is `bun scripts/test-impact.mjs --base <rev>`)
 
 ## Fixed output contract
 
@@ -24,6 +27,8 @@ Each test run is recorded in the Evidence section:
 ## Checklist (pass only if)
 
 - [ ] All applicable tests ran (the project's gate command executed)
+- [ ] The run's set came from the impact block, and an `empty` verdict is
+      recorded as the evidence for a prose-only change — never a silent skip
 - [ ] Every test passed — no test was weakened to pass
 - [ ] Results recorded in the Evidence section with command, exit, output
 - [ ] If no tests step for this unit: `n/a — no tests step for this unit`

@@ -24,6 +24,17 @@
       ]
     },
     {
+      "name": "docs-generate",
+      "globs": [
+        "scripts/docs-generate.mjs",
+        "scripts/docs-generate.test.mjs",
+        "docs/generated/**"
+      ],
+      "suites": [
+        "scripts/docs-generate.test.mjs"
+      ]
+    },
+    {
       "name": "test-route",
       "globs": [
         "scripts/test-route.mjs",
@@ -213,6 +224,16 @@
       ],
       "suites": [
         "scripts/red-first.test.mjs"
+      ]
+    },
+    {
+      "name": "test-impact",
+      "globs": [
+        "scripts/test-impact.mjs",
+        "scripts/test-impact.test.mjs"
+      ],
+      "suites": [
+        "scripts/test-impact.test.mjs"
       ]
     }
   ]
