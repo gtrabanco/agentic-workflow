@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 136 unit docs, 106 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -139,6 +139,7 @@ Generated from 136 unit docs, 106 roadmap rows, 3 packages, 28 skills and 47 scr
 | 80-plan-fix-multi-issue-semantics | fix | — | fix/80-plan-fix-multi-issue-semantics |
 | 81-legacy-spec-phase-lint-carveout | fix | — | fix/81-legacy-spec-phase-lint-carveout |
 | 82-phase-lint-heading-wrap | fix | — | fix/82-phase-lint-heading-wrap |
+| 82-relay-lane-execution | feature | in-progress | run each triaged phase as a pi-web Relay leg from the lane, with the unit doc as the durable plan and a fresh-context coherence reviewer as the pre-PR gate. |
 | 84-published-vocabulary-sweep-gate | feature | done · [#330](https://github.com/gtrabanco/agentic-workflow/pull/330) | the fold **survivors** rule becomes bytes — published closed |
 | 86-triage-open-unit-awareness | fix | — | fix/86-triage-open-unit-awareness |
 | 93-ship-roadmap-cadence-triggers | fix | — | fix/93-ship-roadmap-cadence-triggers |
