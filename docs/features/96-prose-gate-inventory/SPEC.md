@@ -375,6 +375,27 @@ yet. A folded row leaves this table and becomes a `## Log` line.
 - **E18** — 2026-11-05, `bun scripts/check-skill-context.mjs --documents` after the manifest's text was restored (the earlier edit had escaped 145 unrelated lines through a serializer; the file now differs from the base by 15 added and 3 deleted lines, all of them this unit's) · exit 0 · `PASS context documents: 4 budgeted documents`.
 - **G2** — 2026-11-05, final gate run at `30b121e8` (`bun scripts/run-root-suite.mjs`, `bun scripts/check-skill-context.mjs --documents`, `bun scripts/phase-lint.mjs`, `bun scripts/unit-lineage.mjs`, `bun scripts/prose-gate-inventory.mjs`) · 82/82 suites PASS, 0 FAIL. The only later change is this ledger line.
 - **G1** — 2026-11-05, gate run at `65d4582b` (`bun scripts/run-root-suite.mjs`, `bun scripts/check-skill-context.mjs --documents`, `bun scripts/check-skill-context.mjs`, `--routes`, `bun scripts/phase-lint.mjs`, `bun scripts/unit-lineage.mjs`, `bun scripts/roadmap-settle.mjs`, `bun scripts/promise-coherence.mjs`, `bun scripts/red-first.mjs`, `bun scripts/skill-lint.mjs`, `bun scripts/changeset-create.mjs`, `bun scripts/lint-changeset.mjs`, `bun scripts/prose-gate-inventory.mjs`) · every exit as recorded above · 82/82 root suites PASS. This Log line is the next commit and carries no code.
+- **L2** — 2026-11-05, the correction (external verify of this branch, verbatim):
+  "Arregla los advisories" — the verifier's three advisories, fixed as one batch:
+  the one-home scan reads the whole tree (`findHomes` walks every `.md` outside
+  `.git`/`node_modules`, matching the marker as a block-header line, so a second
+  fenced copy in a unit doc or the template scaffold is refused — an inline
+  mention stays a citation), the test reads the validator's own `findHomes`
+  instead of a second hardcoded candidate list, and the activation-mount gate
+  bites end-to-end (a throwaway git repo, `.gitignore`d mount, force-add, same
+  `git ls-files` scan the live assertion runs). Red first: `407de360` observed
+  failing (`Export named 'findHomes' not found`), green at `ad45dff5`. The same
+  batch replaced the AC25 per-file `grep` spawns with one process per set — the
+  suite sat on bun's 5s per-test edge and an unrelated untracked file tipped it
+  over; assertions unchanged, suite 8.6s → 1.3s.
+- **G3** — 2026-11-05, gate run at `ad45dff5` plus this doc edit (`node scripts/run-root-suite.mjs`,
+  `check-skill-context` with `--documents`/`--routes`, `phase-lint`, `red-first`,
+  `roadmap-settle`, `promise-coherence`, `skill-lint`, `prose-gate-inventory`,
+  `lint-changeset`) · exit 0 on every command · 82/82 root suites PASS, 21+21+14
+  tests in the three touched suites. `local-gate.mjs` stops at `pi-compat-guard`
+  with the same three `TS2307` errors at the pre-batch head `7540bd40` — the
+  feat-394 submodules the guard type-checks against the published peer are not
+  on npm yet; pre-existing on this branch, outside this batch's scope.
 
 ## Next
 
