@@ -48,3 +48,13 @@ justification | scripts/release-workflows.test.mjs | P4 | 2026-11-05 | execute-p
   follow-up. Deferring would have shipped the gate red for every session after
   the merge; the row is data, not behaviour, and its carrier is already pinned by
   `scripts/relay-packet.test.mjs`.
+- **D8** — 2026-11-05, owner correction (S7): the fix moves to the **source**, not to
+  the merge. The counts line is deleted from the generator because it is the whole
+  measured conflict surface (4 hunks in 3 files, in both replays), and a merge
+  driver cannot be the answer while it lives in each checkout's own git config —
+  a clone nobody armed keeps conflicting. With the line gone, `docs/generated/`
+  merges as plain text and the driver is demoted to a net for the residual case
+  (two branches inserting a row at the same position in one sorted table).
+  Rejected alternatives: keeping the counts in `index` only (still one conflict per
+  PR), `merge=union` (duplicates rows), and a release-stamped counts file (stale
+  between cuts, and `--check` would refuse it).
