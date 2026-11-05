@@ -148,10 +148,24 @@ Budget: strong
   delegates to `scripts/local-gate.mjs` (pinned by `release-workflows.test.mjs`),
   so the pool covers CI's node leg through the same script; editing the workflow
   would duplicate the wiring the delegation pin exists to prevent.
+- **P2** — 2026-11-05, the worker pool in `scripts/run-root-suite.mjs` · `f17b7b94`.
+- **P3** — 2026-11-05, the `tests:` markers, `--push-base` and the regenerated
+  hook body in `scripts/local-gate.mjs` · `f17b7b94`.
+- **P4** — 2026-11-05, `AGENTS.md` §Verification, both script headers, hook
+  reinstalled with `--force` (the old body never matched the marker either) · `f17b7b94`.
+- **G1** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · all 80 suites
+  green in parallel; the only two `FAIL`s ever observed were the staged-rename
+  artifact of the renumbering, gone once the tree was committed.
+- **G2** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 ·
+  PASS — 7 step(s) in 124s (the pre-unit full bun leg measured 207s alone).
+- **E4** — 2026-11-05, `bun scripts/local-gate.mjs --push-base <rev> --dry-run`
+  · exit 0 · `targeted` verdict keeps every step planned; the stub-driven empty
+  case plans only `version-parity-content` (suite-asserted).
 
 ## Next
 
-P1 — write the red tests.
+Owner merges the PR; every checkout carrying the old hook reinstalls it with
+`bun scripts/local-gate.mjs --install-hook --force`.
 
 ## References
 
