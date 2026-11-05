@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 134 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -79,6 +79,7 @@ Generated from 133 unit docs, 105 roadmap rows, 3 packages, 28 skills and 46 scr
 | 35-single-pass-closeout-phase | fix | — | fix/35-single-pass-closeout-phase |
 | 353-residue-shadow-copies | fix | — | fix/353-residue-shadow-copies |
 | 355-scaffold-parity-routes | fix | done | fix/355-scaffold-parity-routes |
+| 356-test-targeting | fix | done · [#402](https://github.com/gtrabanco/agentic-workflow/pull/402) | fix/356-test-targeting |
 | 357-skill-lint-smells-supply-chain | fix | done · [#377](https://github.com/gtrabanco/agentic-workflow/pull/377) | fix/357-skill-lint-smells-supply-chain |
 | 358-adversarial-kill-mandate | fix | in-progress | fix/358-adversarial-kill-mandate |
 | 36-verification-contract-hygiene | feature | done · [#304](https://github.com/gtrabanco/agentic-workflow/pull/304) | 36 — verification-contract-hygiene |

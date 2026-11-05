@@ -4263,6 +4263,14 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/394: external-verification fixes landed, PR #401 is ready (OPEN) but not yet merged
 - **Decisions:** Fixed Serena worktree registration — added 394-auto-log-session and 396-doc-gen to serena_config.yml projects list so Serena recognizes both worktrees. Previously only 356, 358, 398 worktrees were registered.
 - **Next:** Push this branch and its 3 extra commits to origin, then merge PR #401 (still OPEN)
+
+## 2026-11-04T17:12:17Z — fix/356-test-targeting — manual
+- **Commits:** 10 (`16069246…b686e675`)
+- **Files:** 14 files
+- **Summary:** fix/356-test-targeting: implement test-impact.mjs and wire the test-impact rule into AGENTS.md + execute-phase + verification-contract + unit-lane; open PR #402 (mergeable, CI green); add diff-guard exception record and two late-case mutation receipts
+- **Decisions:** E11: replace P5 unverifiable 'observed failing' clause with reproducible mutation receipt — dropping MARKED_PATTERNS line reddens exactly 2 cases (18p/2f) and nothing else; D6: record path + sibling as deliberate design decisions so every line of the hint has authority; G3: attribute 1771 lines / 14 files to frozen obligations — budget attributed, never raised; E10: CI defect caught (tier: rg asserted instead of behaviour), fixed to portable tier with gate re-run
+- **Next:** PR #402 mergeable and CI green — ready for your merge. Post-merge: run local gate once to confirm CI parity; if you want, review the pre-push hook that blocks push (local-gate.mjs not in tree).
+
 ## 2026-11-04T17:12:48Z — fix/release-notes-rendering — manual
 - **Commits:** 1 (`e9c1a72e…e9c1a72e`)
 - **Files:** .github/workflows/publish.yml, scripts/release-workflows.test.mjs, scripts/release.mjs, scripts/release.test.mjs
@@ -4276,6 +4284,20 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verification of PR #400 (feat/396-doc-gen) against base `c8b64d0b`. Read the diff against each `S#` / acceptance criterion, re-ran all declared gates (`docs-generate.test.mjs` 20→21 pass, root suite 1542 pass · 1 skip · 0 fail, skill-lint PASS, check-skill-context PASS × 2, phase-lint PASS, roadmap-settle PASS, changeset lint PASS, red-first PASS). No blockers found. Three advisories reported: two repaired (the generator's one-line became the explicit `> One-line:` quote — legacy docs now fall back to their title instead of surfacing template boilerplate; the docs step gained the generator reach caveat), one `n/a` (superseded by `D6`). Repairs committed as `64dc8858` (red), `3ec8d1d7` (green), `530d81af` (log caveat) and pushed to origin.
 - **Decisions:** The generator's one-line field is now parsed as `> One-line:` exclusively, dropping the filter-and-skip approach that surfaced any blockquote line. A legacy unit doc without a One-line quote now falls back to its title in the units page. The reach caveat is stack-agnostic prose in the docs step, matching the guide's own policy on tool-choice per turn.
 - **Next:** External-verify round complete. PR #400 is open on `main`; the owner is the external verifier.
+
+## 2026-11-05T00:41:02Z — fix/356-test-targeting — manual
+- **Commits:** 11 (`16069246…1a721335`)
+- **Files:** 15 files
+- **Summary:** fix/356-test-targeting: fixed Serena LSP initialization on worktree (libicu76 resolved markdown LS crash, health check passing)
+- **Decisions:** Serena's markdown language server (.NET/F# based) was crashing on worktree activation due to missing libicu dependency (ICU internationalization library required by .NET globalization); installing libicu76 resolved the LanguageServerTerminatedException that prevented all Serena tools from working
+- **Next:** Continue work on fix/356-test-targeting — Serena is now fully operational in this worktree
+
+## 2026-11-05T00:51:25Z — fix/356-test-targeting — manual
+- **Commits:** 15 (`16069246…ae1dc9e6`)
+- **Files:** 17 files
+- **Summary:** fix/356-test-targeting: external-verify of fix/356-test-targeting on base feat/356-test-targeting — verdict VERIFIED, zero blockers, four advisories folded as a correction batch (E10 figure corrected 1543→1541, directory --paths refusal behavior change with red-first case, empty+references grammar note in TEST_IMPACT.md, SKILLS.md narration qualifier) — all gates green
+- **Decisions:** External-verify returned VERIFIED with zero blockers; advisories 2 (directory --paths) was a behavior fix committed red-first per unit's own O11; advisory 1 (E10 gate count 1543→1541) was a receipt-precision slip confirmed by reproducing the rg-less gate run; the unit-doc Log got an E12 receipt recording the entire batch
+- **Next:** PR #402 — merge this branch onto main (fix/356-test-targeting). Post-merge: run bun scripts/run-root-suite.mjs once to confirm CI parity (1542 pass · 1 skip · 0 fail)
 
 ## 2026-11-05T01:19:24Z — fix/release-notes-rendering — manual
 - **Commits:** 7 (`e9c1a72e…5e4e1293`)
@@ -4308,3 +4330,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge main (54 commits) and fix external-verifier advisories for PR #401
 - **Decisions:** 1) The verifier found two advisories: a stale-sweep match in the journal itself (C2 correcting line appended, not rewritten) and a shutdown-reason normalization gap (reason outside the renderer grammar was refused, costing the entry). 2) Both fixed red-first: red test then green fix for the reason. 3) Main merged with union of both journals and both roadmap rows — no rebase, preserving the branch timeline. 4) Rebuilt stale schema dist/ (12 tests) and re-rendered generated docs (396) — both were pre-existing build output gaps opened by the merge.
 - **Next:** Push to origin/feat/394-auto-log-session and update PR #401 (local gate already passed via --no-verify during this session); after the push, the branch is ready for the human merge
+
+## 2026-11-05T10:58:03Z — fix/356-test-targeting — manual
+- **Commits:** 17 (`16069246…2ad28bb9`)
+- **Files:** 20 files
+- **Summary:** fix/356-test-targeting: merge main, resolve conflicts, push fast-forward
+- **Decisions:** merge (not rebase) to preserve branch timeline; both normative-surfaces additions kept (358 adversarial rows + 356 test-impact row); LOGS.md entries interleaved chronologically; skill-context ceilings re-basis #12 from merged-tree measurement with declared growth sources
+- **Next:** human merge PR #402 (mergeable=CLEAN). Post-merge: verify CI parity locally.

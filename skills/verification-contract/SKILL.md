@@ -97,6 +97,29 @@ Legacy unit with no manifest mention: fingerprint committed `SPEC.md` and record
 `Manifest: legacy SPEC.md`. A new plan or any plan naming the manifest fails
 closed when it is missing.
 
+## Which tests, and which layer
+
+The acceptance artifact names the tests that judge a change; it never says "the
+suite". A change derives its **test impact set** — the tests it can affect, from
+the touched symbols, the paths its tests name, the suite beside each change and
+any LSP-resolved references (the block and its sources belong to
+`skills/execute-phase/references/TEST_IMPACT.md`) — and that set plus the
+project gate is what the receipt records.
+
+Two verdicts, one receipt:
+
+- **targeted** — the set is non-empty and every criterion points at the tests in
+  it. A whole-gate run standing in for the set is a weaker receipt, not a
+  stronger one: it does not say what judged the change.
+- **empty** — only prose and assets changed, so no test can be affected. The
+  recorded empty verdict *is* the evidence for that phase. It is never a missing
+  row, and it never justifies an invented test.
+
+The layer follows the change, not the runner: a plan/spec-only unit's evidence is
+its document checks; a domain or orchestration change's evidence is its derived
+tests. A phase that cannot name the tests it ran has not recorded a receipt, and
+a phase that ran everything has not recorded which tests judge the change.
+
 ## Validation ladder
 
 Evaluate every row plus the normal project gate:
