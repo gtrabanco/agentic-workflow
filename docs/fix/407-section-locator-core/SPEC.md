@@ -175,19 +175,19 @@ none
 
 ## Tasks
 
-- P1 — Locate sections through the mdast node positions with typed selector resolution and lossless splice (validator: `bun test test/doc.section-locator.test.mjs` exits 0)
+- [x] P1 — Locate sections through the mdast node positions with typed selector resolution and lossless splice (validator: `bun test test/doc.section-locator.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S7, S8, S9, S10, S13, S14)
   Relevant files: packages/agentic-workflow/src/doc/section-locator.mjs, packages/agentic-workflow/test/doc.section-locator.test.mjs
-- P2 — Pin the parser dependency and publish the library type projection (validator: `rg -c '"mdast-util-from-markdown": "2\.1\.0"' packages/agentic-workflow/package.json` matches 1)
+- [x] P2 — Pin the parser dependency and publish the library type projection (validator: `rg -c '"mdast-util-from-markdown": "2\.1\.0"' packages/agentic-workflow/package.json` matches 1)
   (Implements: S3, S5, S6, S11)
   Relevant files: packages/agentic-workflow/package.json, packages/agentic-workflow/src/doc/section-locator.d.mts, bun.lock
-- P3 — Add the `section` CLI subcommand over the same primitive (validator: `bun test test/section.cli.test.mjs` exits 0)
+- [x] P3 — Add the `section` CLI subcommand over the same primitive (validator: `bun test test/section.cli.test.mjs` exits 0)
   (Implements: S5, S10)
   Relevant files: packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/src/doc/section-grammar.mjs, packages/agentic-workflow/test/section.cli.test.mjs
-- P4 — Correct the crate reference and record the release intent (validator: `rg -c 'section locate' packages/agentic-workflow/README.md` matches 1)
+- [x] P4 — Correct the crate reference and record the release intent (validator: `rg -c 'section locate' packages/agentic-workflow/README.md` matches 1)
   (Implements: S5, S6, S11)
   Relevant files: packages/agentic-workflow/README.md, .changeset/407-section-locator-core.md
-- P5 — Run the full offline gate over both runtimes (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
+- [x] P5 — Run the full offline gate over both runtimes (validator: `bun scripts/local-gate.mjs --skip-network` exits 0)
   (Implements: S11, S12)
 
 ### Planning evidence
@@ -277,6 +277,11 @@ task list above; the deterministic routers still judge the document.
 
 - **G3** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` at `83edb7bb` · exit 1 · only `schema-node-compat` red, on the load-sensitive F99 bound (`200,000 commands refused in 57.48 ms (bound 50 ms)`); `node --test test/verification-preflight.test.mjs` in isolation · exit 0 · `8 pass / 0 fail`, 3/3 runs — the flake is recorded as pre-existing, never excused by widening the bound.
 - **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network --jobs 1` at `d8800892` · exit 0 · `PASS — 7 step(s) in 139s`: the same seven steps, scheduled sequentially so the load-sensitive F99 bound is measured without the pool's contention. The parallel run's red is recorded as G3 and never explained away by relaxing the bound.
+- **P1** — 2026-11-05, the library primitive landed with its red-first suite · `6bcebbd0` (suite red at `c3af3d6d`).
+- **P2** — 2026-11-05, the parser pin, the lockfile resolution and the type projection landed with P1 · `6bcebbd0`.
+- **P3** — 2026-11-05, the `section` subcommand landed over the same primitive · `68cef865` (suite red at `80468c09`).
+- **P4** — 2026-11-05, the crate reference and the release intent landed · `61bff0aa`.
+- **P5** — 2026-11-05, the deterministic gate ran over both crate runtimes · `d8800892` (`G4`); the owner's verdict is pending, so the roadmap rows stay `in-progress`.
 ## Next
 
 P1 — the RED library suite first (`doc.section-locator.test.mjs` observed failing on the missing module), then the implementation observed green.
