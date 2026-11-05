@@ -53,10 +53,11 @@
  * commands are always PRINTED, never executed — an operator or workflow runs
  * them, with changeset bodies handed over as a `--notes-file` FILE: bodies
  * are third-party data, never interpolated into a shell command.
- * Merged PRs are listed by the operator from the GitHub UI after the release
- * is created (AC-15, PE-004): `--generate-notes` must NOT be passed alongside
- * `--notes-file` — GitHub combines both, appending its auto-generated PR list
- * to the custom notes and producing a merged wall of text.
+ * The release body is rendered here in full (AC-15, PE-004): `--generate-notes`
+ * must NOT be passed alongside `--notes-file`, because GitHub combines both and
+ * appends its own PR list to the rendered notes. `renderContributors()` writes
+ * that list itself, at the end of the body, in the shape `--generate-notes`
+ * produced.
  *
  * Dependency-free (node: builtins only — the node-compat rule, AC-01).
  *
@@ -484,19 +485,27 @@ function installBlock({ channel, tag, bumps }) {
 }
 
 /**
- * Generate a "Contributors" section from merge commits between the previous
- * release tag (or the last canary for canary cuts) and HEAD. Each merge commit
- * becomes a bullet like `* <title> by @<author> in <PR link>`, matching the
- * format GitHub's `--generate-notes` uses — so the release credits every
- * contributor while keeping the body fully rendered by the changesets.
+ * The "Contributors" section: the PRs merged since the previous release, in the
+ * shape GitHub's `--generate-notes` produces — `* <title> by @<handle> in <PR
+ * link>` — so the body stays rendered from the changesets and still names the
+ * work that landed.
  *
- * Resolves the repo owner from the remote URL so the PR links are correct
- * regardless of fork or clone configuration.
+ * Where the window starts: the newest stable tag for a stable cut, the earliest
+ * canary tag that predates the cut for a canary one (a canary chain carries the
+ * train it pre-releases, so its own tags are the record of what an earlier cut
+ * already handed out).
+ *
+ * The handle is the GitHub owner parsed from the `origin` remote (SSH or HTTPS),
+ * not the PR's author: `gh pr list` is queried for `number,title,mergedAt` only.
+ *
+ * Degrades to an empty string — no section at all — when the tree is not a git
+ * repository, the channel has no previous tag, `gh` is missing or fails, its
+ * output is not JSON, or the remote names no GitHub repository.
  *
  * @param {string} root - repository root
  * @param {string} channel - "stable" or "canary"
- * @param {string} tag - the full version tag (v5.0.0-canary.20261104.1 or 5.0.0) —
- *   may or may not have a "v" prefix
+ * @param {string} tag - the tag being released (v5.0.0-canary.20261104.1 or 5.0.0);
+ *   the leading "v" is optional
  * @param {boolean} gitRepo - true if this is a git repository
  */
 function renderContributors(root, channel, tag, gitRepo) {
@@ -583,8 +592,8 @@ function compareBase(a, b) {
  * heading, changes group by kind with breaking first, the cut's own bumps are a
  * table, and the reader is told how to install and how to move channels. A
  * canary also separates the changes it adds from the ones it merely reprints.
- * Appends a "Contributors" section listing merge-commit authors so every
- * contributor is credited (matching GitHub's `--generate-notes` format).
+ * The body ends with the "Contributors" section `renderContributors()` builds
+ * from the PRs merged since the previous release.
  */
 function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, gitRepo }) {
   const tag = channel === "canary"
@@ -647,8 +656,9 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     out.push("</details>", "");
   }
 
-  // Contributors section — credits every merge-commit author (matching
-  // GitHub's --generate-notes format) so no contributor is forgotten.
+  // Contributors section — the PRs merged since the previous release, in the
+  // shape `--generate-notes` produced; appended last so the rendered body keeps
+  // its own structure.
   const contributors = renderContributors(root, channel, tag, gitRepo);
   if (contributors) out.push(contributors);
 
