@@ -4379,3 +4379,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Auditoría de dependencias entre issues abiertas — verificadas y añadidas las relaciones blocked-by en GitHub
 - **Decisions:** Verificar dependencias declaradas en bodies de issues vs GitHub's blocked-by: todas coinciden excepto #405→#374, que fue añadida. El grafo de dependencias entre issues abiertas es: #374, #406, #407, #408 → raíces base; #410, #411, #413 → nivel 1 (dependen de raíces); #412, #414 → nivel 2 (dependen de nivel 1); #405 → sibling (depende de #374).
 - **Next:** Ninguna acción inmediata — las dependencias están completas.
+- **Summary:** Opened 9 roadmap issues and wired dependencies for the projection/hooks architecture, plus a #366 dependency note
+- **Decisions:** Mecanización prosa→CLI (no hooks) como palanca de ahorro; enforcement hace el recorte seguro; proyecciones de build desde fuente única; mdast+byte-splice para el stripper lossless; hashes de binding para re-verificación; native GitHub blocked-by relationships en vez de solo prose
+- **Next:** Triage de #366, luego camino crítico 406→407→410→412
