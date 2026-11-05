@@ -244,8 +244,14 @@ function compileAndRun(index, block) {
   // double quotes and trailing commas. Both carry the same proof, so match the
   // semantic tokens (freshness, the reasonCode, the review binding) across
   // whitespace/quote variation instead of node's exact formatting.
+  // The child inherits the caller's terminal color settings, so its captured
+  // stdout can carry ANSI escapes between the semantic tokens (justification
+  // recorded in the unit's path-protection records, 2026-11-05, owner-approved).
+  // Strip them before matching: the proof is the freshness/revocation sequence,
+  // not its formatting; tokens, order and failure message are unchanged.
+  const rendered = out.replace(/\x1B\[[0-9;]*m/g, "");
   assert.match(
-    out,
+    rendered,
     /review bound \d+ [a-f0-9]{12}[\n ]*\{[\s\S]*?fresh:\s*true[\s\S]*?fresh:\s*false[\s\S]*?reasonCode:\s*["']stale-artifact-revision["']/,
     "the example must actually demonstrate freshness and revocation, not just compile",
   );
