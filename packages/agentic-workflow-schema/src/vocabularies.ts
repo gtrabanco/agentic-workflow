@@ -91,3 +91,28 @@ export const RISK_TIER_REASONS = Object.freeze([
   "empty-change",
 ]);
 export type RiskTierReason = (typeof RISK_TIER_REASONS)[number];
+
+/** The kill mandate's verdict (`adversarial-verdict`, issue #358), published by
+ *  the `adversarial-verdict@1` block (owner:
+ *  `skills/review-change/references/ADVERSARIAL_SETUP.md`): a candidate is
+ *  either disproved (`kill`, with falsifying evidence) or survives the disproof
+ *  attempt (`confirm`, with supporting evidence). There is no third answer, and
+ *  a kill with no disproof attempt is refused by `scripts/adversarial-verdict.mjs`
+ *  — precision is the mandate's whole point. */
+export const ADVERSARIAL_VERDICTS = Object.freeze(["kill", "confirm"]);
+export type AdversarialVerdict = (typeof ADVERSARIAL_VERDICTS)[number];
+
+/** The diff-only reflector's verdict (`adversarial-reflector-verdict`, issue
+ *  #358): it sees the diff and the finding's claim, never the pass's transcript,
+ *  and answers `keep` or `drop` with a reason. A claim the diff does not ground
+ *  cannot be kept — the reflector is the last precision filter, not a second
+ *  finder. */
+export const ADVERSARIAL_REFLECTOR_VERDICTS = Object.freeze(["keep", "drop"]);
+export type AdversarialReflectorVerdict = (typeof ADVERSARIAL_REFLECTOR_VERDICTS)[number];
+
+/** The stability verdict (`adversarial-stability`, issue #358): `unstable` marks
+ *  a reproducer that also fires on untouched adjacent code, which is a
+ *  misattribution — the finding is re-scoped before it persists, never persisted
+ *  as-is (CIVER, arXiv 2610.36010). */
+export const ADVERSARIAL_STABILITY_VERDICTS = Object.freeze(["stable", "unstable"]);
+export type AdversarialStabilityVerdict = (typeof ADVERSARIAL_STABILITY_VERDICTS)[number];
