@@ -207,6 +207,11 @@ survives only as an explicit operator choice. When the last phase's turn
 closes, `execute-phase` resumes the lane and the remaining judgment steps
 (evidence, review, docs, release) run here.
 
+When a pi-web session is present the same hand-off is a Relay leg: the router
+prints `relay: bootstrap-needed` (with the packet path and the leg count) and
+[relay legs](references/RELAY.md) owns the rest — the packet, one phase per leg,
+the leg tier from `scripts/catalog.json` and the fresh-context coherence review.
+
 ### 5. Diff-size guard (after each implement step)
 
 Run `bun scripts/diff-guard.mjs --base <last-reviewed-ref> --unit <NN>`. Paste
@@ -242,7 +247,8 @@ follow [the memory protocol](references/MEMORY.md).
 When all triaged steps are done, in order:
 
 1. Run the review step (the in-doc `REVIEW-VERDICT` per
-   [review](references/REVIEW.md)).
+   [review](references/REVIEW.md)); a unit that ran as Relay legs already had it
+   performed by a fresh leg ([relay legs](references/RELAY.md) §Coherence review).
 2. Resolve every `## Future` row with the user (planned now — registered on
    explicit request only —, kept deferred, or discarded, dated).
 3. Update the unit doc's status and the index row (release step: branch
