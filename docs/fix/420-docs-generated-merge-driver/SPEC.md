@@ -168,6 +168,7 @@ none
 | PE-005 | known | git hands a merge driver a shell-quoted `%P`, which a naive driver reads as part of the path | the suite's scratch-repository case at the first green run: `'docs/generated/index.md' is outside docs/generated/` | current | O4 |
 | PE-006 | assumption | An unarmed checkout silently keeps the old behaviour instead of resolving by accident, because git only runs a driver it finds in the local config | basis: the suite's unarmed case (`without the install the same merge keeps its conflict`) | current | O5 |
 | PE-007 | known | Two suites pin the gate's closed step-id set, so adding a step is a two-file contract change, not a local edit | `scripts/local-gate.test.mjs:62`; `scripts/release-workflows.test.mjs:335` | current | O6 |
+| PE-008 | known | The collision is a property of *concurrent regeneration*, not of a changed count: every regeneration rewrites the same counts line, so any two PRs that each regenerate conflict. Measured on #419's integration — `git merge` of `88248ccf` into `b8f8e5f2` (base `caee2502`), driver unarmed and `rerere` disabled — **3 files, 4 hunks**, all on that line: `index.md` ×2 (the header and the `- 3 packages, 28 skills, 48 scripts` bullet), `units.md` ×1, `code.md` ×1; `docs/LOGS.md` and `docs/ROADMAP.md` did not conflict | merge reproduced in a detached worktree at `b8f8e5f2`; with the driver armed the same merge resolves all three (`git merge-tree --write-tree` exits 0) | current | O1 |
 
 ### Obligations
 
@@ -228,6 +229,7 @@ Budget: strong
 - **G3** — 2026-11-05, `bun scripts/local-gate.mjs --only docs-generated-projection --skip-network` · exit 0 after `bun scripts/docs-generate.mjs` · `verdict: PASS`, 1 step in 0s.
 - **E4** — 2026-11-05, `bun scripts/phase-lint.mjs docs/fix/420-docs-generated-merge-driver/SPEC.md` · exit 0 · `verdict PASS`, 8/8 phases; `bun scripts/unit-lineage.mjs --unit 420-docs-generated-merge-driver` · `LINEAGE OK — lane-era`, obligations closed (7).
 - **E5** — 2026-11-05, `bun scripts/docs-generated-merge.mjs --install` on this checkout · exit 0 · `name — written`, `driver — written` (relocatable form).
+- **E6** — 2026-11-05, `git merge 88248ccf` in a detached worktree at `b8f8e5f2` (the #419 integration), driver unarmed, `rerere` disabled · exit 1 · 3 files / 4 hunks, every one the shared counts line; with the driver armed, `git merge-tree --write-tree b8f8e5f2 88248ccf` exits 0 and resolves all three. The collision is systemic: two concurrent regenerations always rewrite that same line.
 
 ## Next
 
