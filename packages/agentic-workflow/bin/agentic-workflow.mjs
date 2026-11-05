@@ -9,6 +9,7 @@
  *   agentic-workflow budgets <op> [args...]
  *   agentic-workflow manifest <op> [args...]
  *   agentic-workflow doc (--sync | --query <term> | --status | --rebuild) [--json-only]
+ *   agentic-workflow section <locate|remove|replace> --file <path|-> --selector <json> [--replacement <path|->] [--write] [--json]
  *   agentic-workflow memory probe [--json]
  *   agentic-workflow log render --facts <path|-> [--raw]
  *
@@ -21,6 +22,11 @@
  * exits 0. Its `degraded` verdict is an answer to report, never a failure
  * that blocks the caller (feature 66, AC2).
  *
+ * `section` (issue #407) is the AST-based section/range locator over one
+ * document: `locate` prints the range receipt, `remove`/`replace` print the
+ * transformed document (or persist it with `--write`), and a selector that
+ * resolves to nothing or to several sections is a refusal (exit 2).
+ *
  * `log render` (feature #394) is a pure renderer with no session behind it: it
  * reads a `log-facts@1` payload and prints the journal entry, so a human, a test
  * or a CI job can regenerate an entry and byte-diff it. It writes nothing, prints
@@ -28,7 +34,8 @@
  * with exit 2 and "LOG REFUSAL — <reason>".
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, renameSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, resolve, basename, dirname } from "node:path";
 
 // Import SDK modules
@@ -47,6 +54,13 @@ import { ceilingRebase } from "../src/edit/Budgets.mjs";
 import { skillAdd, skillRemove } from "../src/edit/Manifest.mjs";
 import { parseDocArgs } from "../src/doc/grammar.mjs";
 import { runDocOp } from "../src/doc/retrieval.mjs";
+import { parseSectionArgs } from "../src/doc/section-grammar.mjs";
+import {
+  SectionLocatorError,
+  locate as locateSection,
+  remove as removeSection,
+  replace as replaceSection,
+} from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
 
@@ -88,6 +102,11 @@ function parseArgs(args) {
 function refuse(reason) {
   process.stderr.write(`EDIT REFUSAL — ${reason}\n`);
   process.exit(2);
+}
+
+/** The 8-hex digest the receipt blocks report. */
+function digest(text) {
+  return createHash("sha256").update(text, "utf8").digest("hex").slice(0, 8);
 }
 
 /**
@@ -142,7 +161,7 @@ function findUpIndex(docPath, relativeIndex) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory|log> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|memory|log> ...");
   process.exit(1);
 }
 
@@ -479,6 +498,79 @@ switch (command) {
       }
     } else {
       refuse(`Unknown manifest operation: ${op}`);
+    }
+    break;
+  }
+
+  // ── section — AST section/range locator + lossless splice (issue #407) ──
+  case "section": {
+    let args;
+    try {
+      args = parseSectionArgs(restArgs);
+    } catch (e) {
+      process.stderr.write(`section: ${e.message}\n`);
+      process.exit(1);
+    }
+    const readTarget = (target) => (target === "-" ? readFileSync(0, "utf8") : readFileSync(target, "utf8"));
+    let markdown;
+    let replacement = null;
+    try {
+      markdown = readTarget(args.file);
+      if (args.op === "replace") replacement = readTarget(args.replacement);
+    } catch (e) {
+      process.stderr.write(`section: ${e.message}\n`);
+      process.exit(1);
+    }
+
+    let outcome;
+    try {
+      if (args.op === "locate") outcome = { text: markdown, range: locateSection(markdown, args.selector) };
+      else if (args.op === "remove") outcome = removeSection(markdown, args.selector);
+      else outcome = replaceSection(markdown, args.selector, replacement);
+    } catch (e) {
+      if (!(e instanceof SectionLocatorError)) throw e;
+      if (e.code === "BAD_SELECTOR") {
+        process.stderr.write(`section: ${e.message}\n`);
+        process.exit(1);
+      }
+      process.stderr.write(`SECTION REFUSAL — ${e.code} — ${e.message}\n`);
+      if (args.json) {
+        process.stdout.write(
+          `${JSON.stringify({ ok: false, service: "section", op: args.op, path: args.file, code: e.code, matches: e.matches, selector: e.selector, message: e.message })}\n`,
+        );
+      }
+      process.exit(2);
+    }
+
+    const written = args.op !== "locate" && args.write;
+    if (written) {
+      const target = resolve(args.file);
+      const temporary = join(dirname(target), `.${Math.random().toString(36).slice(2)}.tmp`);
+      writeFileSync(temporary, outcome.text, "utf8");
+      renameSync(temporary, target);
+    }
+
+    const range = outcome.range;
+    const receipt = {
+      ok: true,
+      service: "section",
+      op: args.op,
+      path: args.file,
+      schema: "section-splice@1",
+      before: digest(markdown),
+      after: digest(outcome.text),
+      written,
+      range,
+    };
+    if (args.json) {
+      process.stdout.write(`${JSON.stringify(receipt)}\n`);
+    } else if (args.op === "locate" || written) {
+      console.log(`EDIT section.${args.op} — ${args.file}`);
+      console.log("Schema: section-splice@1 · Receipt: pass");
+      console.log(`Before: ${receipt.before} · After: ${receipt.after}`);
+      console.log(`Range: ${range.kind} · offsets ${range.start}-${range.end} · bytes ${range.byteStart}-${range.byteEnd} · lines ${range.lines[0]}-${range.lines[1]}`);
+    } else {
+      process.stdout.write(outcome.text);
     }
     break;
   }
