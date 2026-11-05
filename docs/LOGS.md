@@ -4224,3 +4224,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Fix: release notes were combining --generate-notes + --notes-file, producing a merged wall of text on GitHub releases
 - **Decisions:** Removed --generate-notes from gh release create (both stable and canary channels) because GitHub appends its auto-generated PR list when both flags are present. Replaced with a renderContributors() function that queries gh pr list for merged PRs since the previous tag, producing a clean Contributors section at the end of the release body.
 - **Next:** Wait for PR #404 to be reviewed and merged; after merge, the next canary cut will render clean release notes with contributor credits.
+
+## 2026-11-05T01:19:24Z — fix/release-notes-rendering — manual
+- **Commits:** 7 (`e9c1a72e…5e4e1293`)
+- **Files:** 14 files
+- **Summary:** local-first CI gate + release contributors fix
+- **Decisions:** The root gate now runs locally with --bail; the remote workflow is manual-only and delegates to scripts/local-gate.mjs (one owner, two drift). Contributors section windows from the nearest previous release (not the earliest tag listing), and credits each PR's own author instead of attributing all entries to the repository owner.
+- **Next:** Owner to review and merge PR #404 (fix/release-notes-rendering). The fix also fixes a pre-push hook leak: 10,958 leaked release-fixture-* dirs in /tmp from scripts/release.test.mjs not cleaning its fixtures (not addressed in this PR).
