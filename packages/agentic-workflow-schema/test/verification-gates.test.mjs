@@ -7,7 +7,17 @@
 // against the manifest instead of the two locks against each other.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  readFileSync,
+  mkdtempSync,
+  rmSync,
+  readdirSync,
+  writeFileSync,
+  lstatSync,
+  mkdirSync,
+  readlinkSync,
+  symlinkSync,
+} from "node:fs";
 
 const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const manifest = JSON.parse(read("../package.json"));
@@ -160,11 +170,47 @@ test("F94: a non-numeric flag exits 2 with an echoed argument error", () => {
 // F112 — the package gate is path-portable (behavioral, spawned)
 // ---------------------------------------------------------------------------
 
-import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const packageDir = fileURLToPath(new URL("..", import.meta.url));
+
+/**
+ * Minimal recursive copy: files + symlinks, skips node_modules.
+ * Replaces `cpSync` because Node 26's `cpSync` can throw ENOENT on `lstatSync`
+ * for symlinks that target paths with special characters inside node_modules.
+ */
+function copyRecursive(src, dest) {
+  let st;
+  try {
+    st = lstatSync(src);
+  } catch {
+    return; // skip entries that can't be stat'd
+  }
+  if (st.isDirectory()) {
+    mkdirSync(dest, { recursive: true });
+    let entries;
+    try {
+      entries = readdirSync(src);
+    } catch {
+      return; // skip entries we can't read
+    }
+    for (const name of entries) {
+      if (name === "node_modules") continue;
+      copyRecursive(join(src, name), join(dest, name));
+    }
+    return;
+  }
+  const link = st.isSymbolicLink() ? readlinkSync(src) : null;
+  if (link) {
+    if (link.includes("node_modules")) return;
+    symlinkSync(link, dest);
+  } else {
+    writeFileSync(dest, readFileSync(src));
+  }
+}
+
+
 
 test("F112: the package gate passes from a checkout path with a space and a non-ASCII character", () => {
   // PACKAGE_ROOT used to be `new URL("..", import.meta.url).pathname`, which
@@ -174,10 +220,7 @@ test("F112: the package gate passes from a checkout path with a space and a non-
   const tempRoot = mkdtempSync(join(tmpdir(), "awlspace gate ñ-"));
   const checkout = join(tempRoot, "package");
   try {
-    cpSync(packageDir, checkout, {
-      recursive: true,
-      filter: (source) => !source.split("/").includes("node_modules"),
-    });
+    copyRecursive(packageDir, checkout);
     const run = spawnSync(process.execPath, [join(checkout, "scripts", "check-verification-package.mjs")], {
       encoding: "utf8",
     });
