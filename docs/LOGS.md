@@ -4261,3 +4261,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Repair external-verify advisories on the 398 PR
 - **Decisions:** No version-compat floor: manifest already carried >=1.1.0 (0b9b6c5f); bun.lock just needed regenerating against it. Prose that referenced TASKS.md/progress.md as universal carriers re-pointed at audit-docs check 11's discriminator, since feature 61 retired those files for post-lane units.
 - **Next:** Review PR #403 at https://github.com/gtrabanco/agentic-workflow/pull/403 — the PR body will need to mention these 3 advisory-fix commits.
+
+## 2026-11-05T01:04:20Z — feat/398-retired-carriers — manual
+- **Commits:** 23 (`b80fdb79…b336e34f`)
+- **Files:** 26 files
+- **Summary:** Resolved git merge conflict in PR #403 (feat/398-retired-carriers) — docs/LOGS.md had a conflict between main and the feature branch entries during rebase on origin/main
+- **Decisions:** The conflict was between an append-only main entry (triage of issues 394/396/398, feat/358 log entries) and the branch's own Serena repair log. Both kept — append-only semantics for LOGS.md. Rebase completed successfully, `git push --force-with-lease` applied; PR #403 now shows `mergeable: MERGEABLE`.
+- **Next:** Push the rebased branch (`git push --force-with-lease origin feat/398-retired-carriers`) if not already done; review and merge PR #403
