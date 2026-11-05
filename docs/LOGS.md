@@ -4209,6 +4209,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Main branch: merged PR #397 (feat/103-doc-currency) and PR #395 (feat/383 measured-acceptance), plus Serena monorepo config, README repairs, and session-close buffer fix
 - **Decisions:** Serena is a root-level monorepo tool: removed sub-package .serena dirs and configured cross-package workspace folders via project.yml; merged PR #397 required conflict resolution because 103's SPEC moved from docs/features/103/ to docs/fix/103/; the README Session section must show workflow-status and log-session skills, not an auto-log entry that doesn't exist yet
 - **Next:** Close the unit-lane for #394 (auto log-session) in the .worktrees/issue-394 worktree: rebasing on main, correcting the 12 verified-but-unimplemented obligations to planned, and implementing the auto-log wiring
+
 ## 2026-11-04T15:25:58Z — main — manual
 - **Commits:** 0
 - **Files:** —
@@ -4249,9 +4250,23 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Removed --generate-notes from gh release create (both stable and canary channels) because GitHub appends its auto-generated PR list when both flags are present. Replaced with a renderContributors() function that queries gh pr list for merged PRs since the previous tag, producing a clean Contributors section at the end of the release body.
 - **Next:** Wait for PR #404 to be reviewed and merged; after merge, the next canary cut will render clean release notes with contributor credits.
 
+## 2026-11-05T00:35:17Z — feat/396-doc-gen — external verify
+- **Commits:** 21 (`15d23a3c…530d81af`)
+- **Files:** 18 files
+- **Summary:** External verification of PR #400 (feat/396-doc-gen) against base `c8b64d0b`. Read the diff against each `S#` / acceptance criterion, re-ran all declared gates (`docs-generate.test.mjs` 20→21 pass, root suite 1542 pass · 1 skip · 0 fail, skill-lint PASS, check-skill-context PASS × 2, phase-lint PASS, roadmap-settle PASS, changeset lint PASS, red-first PASS). No blockers found. Three advisories reported: two repaired (the generator's one-line became the explicit `> One-line:` quote — legacy docs now fall back to their title instead of surfacing template boilerplate; the docs step gained the generator reach caveat), one `n/a` (superseded by `D6`). Repairs committed as `64dc8858` (red), `3ec8d1d7` (green), `530d81af` (log caveat) and pushed to origin.
+- **Decisions:** The generator's one-line field is now parsed as `> One-line:` exclusively, dropping the filter-and-skip approach that surfaced any blockquote line. A legacy unit doc without a One-line quote now falls back to its title in the units page. The reach caveat is stack-agnostic prose in the docs step, matching the guide's own policy on tool-choice per turn.
+- **Next:** External-verify round complete. PR #400 is open on `main`; the owner is the external verifier.
+
 ## 2026-11-05T01:19:24Z — fix/release-notes-rendering — manual
 - **Commits:** 7 (`e9c1a72e…5e4e1293`)
 - **Files:** 14 files
 - **Summary:** local-first CI gate + release contributors fix
 - **Decisions:** The root gate now runs locally with --bail; the remote workflow is manual-only and delegates to scripts/local-gate.mjs (one owner, two drift). Contributors section windows from the nearest previous release (not the earliest tag listing), and credits each PR's own author instead of attributing all entries to the repository owner.
 - **Next:** Owner to review and merge PR #404 (fix/release-notes-rendering). The fix also fixes a pre-push hook leak: 10,958 leaked release-fixture-* dirs in /tmp from scripts/release.test.mjs not cleaning its fixtures (not addressed in this PR).
+
+## 2026-11-05T02:37:59Z — feat/396-doc-gen — manual
+- **Commits:** 28 (`15d23a3c…5565f98c`)
+- **Files:** 26 files
+- **Summary:** Applied issue #396 as unit 396-doc-gen under the local, no-review-machinery instruction: re-cut the unit doc (verbatim S1..S10, frozen planning ledgers, per-S# acceptance criteria), cut the docs-generate corpus red-first, shipped scripts/docs-generate.mjs (declared-format rendering for md/mdx/html/latex, --check drift receipt, orphan deletion), made the lane's docs step carry an explicit documentation task, taught init-workspace the format choice, and repaired two pre-existing reds — the guide's context-budget overrun and workflow-status's dependency-cycle stack overflow. Opened PR #400, integrated main twice by merge, and fixed the pre-push hook's GIT_DIR leak that had clobbered this checkout's branch pointer; 26 files (+2273/-36) against main, local gate 11 steps PASS, CI success.
+- **Decisions:** D3 generator home is scripts/docs-generate.mjs, not a crate subcommand (row 91 owns the crate migration); D5 undeclared format degrades to markdown with the degradation printed, an unknown declared value refuses (exit 2); D6 the release note is the changeset, never a CHANGELOG row (release.mjs owns those tables); D7 repaired main's guide-budget red inside the unchanged ceiling, because the gate could not be green otherwise; D9/D10 owner instructions: the sensor fix lands in this unit (no second PR) and no force-push — integration by merge with a fast-forward push; the GIT_DIR leak is fixed at the two entry points that spawn suites (GIT_CONFIG_*/identity vars survive), not in every fixture; roadmap row is issue-keyed 396, because renaming the unit dir would move the branch and every receipt; tool-choice correction: every manual invocation re-ran under bun (D8).
+- **Next:** PR #400 open and mergeable=clean at 5565f98c, awaiting the human merge (gh pr view 400); on merge it closes #396. If it needs another round: the undici advisories are transitives classified blocking-but-report-only by policy (pre-existing, not this change's), and scripts/workflow-status.mjs is green again — its 98/100 cycle was removed by the S9 repair.
