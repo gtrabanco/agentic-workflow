@@ -7,10 +7,16 @@
  * Why a driver: `docs/generated/**` is a pure function of the tree
  * (`scripts/docs-generate.mjs`, feature 396), so a line-level merge of two
  * regenerations is never a real conflict — each side is *some* tree's
- * rendering, and neither is the merged tree's. A human resolving it by hand
- * pays a conflict per concurrent PR and still cannot make the bytes right in
- * the same edit; the header line every regeneration rewrites collides in
- * every pair of concurrent PRs that changed a count.
+ * rendering, and neither is the merged tree's.
+ *
+ * The **100 % surface is gone at the source**: the pages no longer carry a count
+ * that every regeneration rewrites (unit 420 S7), which is what made two
+ * concurrent regenerations collide every single time (4 hunks in each measured
+ * merge, #418 and #419). What remains is the residual case — two branches that
+ * insert a row at the same position in the same sorted table — and this driver
+ * is the net for it. It is therefore optional: `docs/generated/` merges cleanly
+ * on an unarmed clone, and the gate's `docs-generated-projection` step keeps a
+ * mechanically-resolved projection from lying either way.
  *
  * What the driver answers: the incoming side, byte for byte — the same answer
  * `git checkout --theirs` gives for a generated file, said once instead of in

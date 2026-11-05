@@ -41,6 +41,9 @@ same missing carrier.
 **S6 — The defect this removes.**
 > The defect: `docs/generated/**` is a generated projection committed to the tree, so two PRs that regenerate it conflict on bytes neither author wrote — the header line every regeneration rewrites is the same line for both sides. A line-level merge of two regenerations is never a real conflict, so the resolution is mechanical; whether the bytes are *right* is the generator's question, answered by the local gate's `docs-generated-projection` step.
 
+**S7 — The projection stays committed and carries no per-regeneration line.**
+> Esos archivos `docs/generated/*` deben estar en el repositorio, no quiero lidiar con conflictos en cada pr
+
 ## Impact
 
 - **Consumers of the projection directory**: `scripts/docs-generate.mjs` owns it
@@ -54,19 +57,26 @@ same missing carrier.
   edits are recorded in `decisions.md` as `path-protection-records@1`
   justifications: the sets grow by an id, nothing is relaxed.
 - **Every contributor's checkout**: `.gitattributes` names a driver that git
-  resolves from the checkout's own config, so an unarmed clone keeps today's
-  conflict — by design, pinned by the suite's unarmed case — and the guide names
+  resolves from the checkout's own config, so an unarmed clone never arms it.
+  That is why the driver is **not** the answer to S7 and S7 is a generator
+  change: with the counts line gone, an unarmed clone merges the three pages as
+  plain text, and the driver only covers the residual case (two branches
+  inserting a row at the same position in the same sorted table). The guide names
   the one command that arms it.
 - **Not touched**: the generator, the projection's sources, any skill, any
   template, and the `Docs site` declaration.
 
 ## Retirements
 
-None — the unit only adds a carrier. The reason it retires nothing: the surface
-it answers (a hand-resolved `docs/generated/` conflict) has no artifact to
-delete; the pre-existing habit of merging those three pages by hand is not a
-file. `rg -c 'merge=docs-generated' --glob '!.gitattributes' .` → 0 before this
-change, so there was no earlier carrier to supersede.
+- **The counts line** — `Generated from <n> unit docs, <n> roadmap rows, <n> packages,
+  <n> skills and <n> scripts` in all three pages, plus `index`'s three count
+  bullets. Retired with its replacement named: the tables are the inventory, and
+  `bun scripts/docs-generate.mjs --dry-run` still prints the source counts
+  (`Sources: 141 units · 117 roadmap rows · 3 packages · 28 skills · 50 scripts`).
+  Negative-capability pin: `rg -c 'Generated from [0-9]' docs/generated/` → 0.
+  This is the unit's one real retirement — before S7 the fix only added a
+  carrier, and the measured merges (#418, #419: 4 hunks each, all counts) are
+  the evidence that the line, not the tables, was the collision.
 
 ## Non-goals
 
@@ -159,6 +169,9 @@ none
 - [x] P8 — the full gate and the non-goal sweep (validator: `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6)
   Relevant files: all changed files
+- [x] P9 — S7: the generator stops emitting the counts line and `index`'s count bullets; the two measured merges replay with the driver unarmed and `docs/generated/` merges as plain text (validator: `rg -c 'Generated from [0-9]' docs/generated/` exits 1 and the replays report 0 hunks in `docs/generated/`)
+  (Implements: S7)
+  Relevant files: scripts/docs-generate.mjs, docs/generated/, .gitattributes, scripts/docs-generated-merge.mjs
 
 ### Planning evidence
 
@@ -171,6 +184,7 @@ none
 | PE-005 | known | git hands a merge driver a shell-quoted `%P`, which a naive driver reads as part of the path | the suite's scratch-repository case at the first green run: `'docs/generated/index.md' is outside docs/generated/` | current | O4 |
 | PE-006 | assumption | An unarmed checkout silently keeps the old behaviour instead of resolving by accident, because git only runs a driver it finds in the local config | basis: the suite's unarmed case (`without the install the same merge keeps its conflict`) | current | O5 |
 | PE-007 | known | Two suites pin the gate's closed step-id set, so adding a step is a two-file contract change, not a local edit | `scripts/local-gate.test.mjs:62`; `scripts/release-workflows.test.mjs:335` | current | O6 |
+| PE-009 | known | Removing the counts line removes the whole measured surface: replaying both integrations with the number-free generator, the driver unarmed and `rerere` disabled yields **0 hunks** in `docs/generated/` for #419 (the merge completes) and only the append-only `docs/LOGS.md` conflict for #418 — the tables merged cleanly in all four measurements, before and after | replays at `/tmp/sim*` worktrees of `b8f8e5f2`/`a2aa236b` against `88248ccf`, each side regenerated with the new generator | current | O8 |
 | PE-008 | known | The collision is a property of *concurrent regeneration*, not of a changed count: every regeneration rewrites the same counts line, so any two PRs that each regenerate conflict. Measured on #419's integration — `git merge` of `88248ccf` into `b8f8e5f2` (base `caee2502`), driver unarmed and `rerere` disabled — **3 files, 4 hunks**, all on that line: `index.md` ×2 (the header and the `- 3 packages, 28 skills, 48 scripts` bullet), `units.md` ×1, `code.md` ×1; `docs/LOGS.md` and `docs/ROADMAP.md` did not conflict | merge reproduced in a detached worktree at `b8f8e5f2`; with the driver armed the same merge resolves all three (`git merge-tree --write-tree` exits 0) | current | O1 |
 
 ### Obligations
@@ -184,6 +198,7 @@ none
 | O5 | S2 (P2) | an unarmed checkout keeps its conflict: the arming is what resolves it, never an accident | P2 | P2 | execute-phase | `bun test scripts/docs-generated-merge.test.mjs` exits 0 with the unarmed case asserting exit 1 and a marker | the unarmed case | verified |
 | O6 | S3 (P4) | the gate's closed step-id set stays a closed set, extended by one id in both pins | P4 | P4 | execute-phase | `bun test scripts/local-gate.test.mjs scripts/release-workflows.test.mjs` exits 0 | both suites green + the `path-protection-records@1` rows in `decisions.md` | verified |
 | O7 | S4 (P6) | the guide names the arming command and the inventory carries the gate's carrier row | P6 | P6 | execute-phase | `bun scripts/prose-gate-inventory.mjs` exits 0 with `docs-projection-current — script` resolved | the inventory run in `## Log` | verified |
+| O8 | S7 (P9) | no page carries a line that changes on every regeneration, so two concurrent regenerations merge as plain text on an unarmed clone | P9 | P9 | execute-phase | `rg -c 'Generated from [0-9]' docs/generated/` exits 1, and the replayed #418/#419 merges report zero hunks in `docs/generated/` | the two replays in `## Log` (E8, E9) | verified |
 
 ## Triaged steps
 
@@ -203,6 +218,7 @@ Budget: strong
 - [x] **S4** — `AGENTS.md` names `bun scripts/docs-generated-merge.mjs --install` beside `--install-hook`, and `docs/workflow/GATE_INVENTORY.md` resolves the `docs-projection-current` row (`bun scripts/prose-gate-inventory.mjs`).
 - [x] **S5** — the suite lands red before the implementation and green after (`bun scripts/red-first.mjs` → PASS, the two commits named in `## Log`).
 - [x] **S6** — the driver is the only new carrier: the generator, the projection's sources and every skill are untouched (`git diff --name-only` names no `skills/`, no `docs/generated/**` source and no generator change).
+- [x] **S7** — the pages stay committed and carry no per-regeneration count: `rg -c 'Generated from [0-9]' docs/generated/` exits 1, and replaying the two measured merges with the driver unarmed leaves zero hunks in `docs/generated/` (only the append-only journal conflicts).
 
 ## Findings
 
@@ -236,6 +252,11 @@ Budget: strong
 - **E7** — 2026-11-05, `git merge origin/main` on this branch with the driver armed · exit 1 on `docs/LOGS.md` only · the driver resolved `docs/generated/index.md` and `docs/generated/code.md` at merge time and `units.md` auto-merged; the journal kept both appended entries in timestamp order, then `bun scripts/docs-generate.mjs` re-emitted the three pages (141 units · 50 scripts).
 - **F2** — 2026-11-05, folded: merging `main` surfaced one semantic conflict no driver can settle — `AGENTS.md#normative-surfaces@1` gained `relay-status-grammar` (unit 82) and no inventory row claimed it, so `prose-gate-inventory.mjs` answered `uncited-surface`. The integration adds the claiming row (`script`, pinned by `scripts/relay-packet.test.mjs`) and re-pins the machine region 55 → 56; a surface only this branch's gate can see would otherwise turn `main` red at merge.
 - **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network --no-bail --jobs 1` · exit 0 · 8 steps in 126s; `bun scripts/run-root-suite.mjs` · 0 FAIL. The parallel pool's `schema-node-compat` flake is the known load-sensitive class, green sequentially.
+- **L2** — 2026-11-05, the owner's correction, verbatim: `Esos archivos docs/generated/* deben estar en el repositorio, no quiero lidiar con conflictos en cada pr` — the projection stays committed; the per-checkout driver is not an acceptable answer on its own.
+- **E10** — 2026-11-05, replay of the #419 integration (`b8f8e5f2` vs `88248ccf`, both sides regenerated with the number-free generator, driver unarmed, `rerere` disabled) · exit 0 · 0 hunks in `docs/generated/`, 0 conflicts anywhere; the same merge produced 4 hunks in 3 files before S7.
+- **E11** — 2026-11-05, replay of the #418 integration (`a2aa236b` vs `88248ccf`, same method) · exit 1 · the only conflict is `docs/LOGS.md` (append-only journal, roadmap row 114's defect); `docs/generated/code.md` and `units.md` auto-merged, `index.md` unchanged.
+- **G5** — 2026-11-05, `rg -c 'Generated from [0-9]' docs/generated/` · exit 1 (no match) · the counts line survives nowhere in the projection.
+- **P9** — 2026-11-05, S7 landed: `provenance()` lost the counts, `index` lost its count bullets, the three pages re-emitted and the two integrations replayed clean — each replay is E10/E11, the negative pin is G5.
 
 ## Next
 
