@@ -4422,3 +4422,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merged feat/366-doc-cli (3ff41f6c) into main, pushed main (6fbfa115..3ff41f6c), deleted branch. No code written.
 - **Decisions:** Owner chose #407 before #366: roadmap row 106 must land first, then the doc read/edit/index CLI. Locator implementation to be decided in #407's SPEC (mdast vs native fail-closed; D8 re-trigger unmet, 730/730 files byte-identical roundtrip). Durable record posted on issue #366. Scratch in /tmp/docprobe removed.
 - **Next:** #407 (section-locator-core, roadmap row 106): settle its upstream dependency row 105 (projection-manifest-vocabulary, #406), then decide locator implementation (mdast or native fail-closed) and write the SPEC.
+
+## 2026-11-05T21:26:50Z — feat/407-section-locator-core — manual
+- **Commits:** 15 (`91392b3f…f0ee2ed0`)
+- **Files:** 17 files
+- **Summary:** Applied issue #407 (shared section locator + lossless splicer core) to this repository: created the mdast-based section locator library, the agentic-workflow section CLI subcommand, two red-first test suites, the unit doc with both planning ledgers, and PR #417 (Closes #407); settled roadmap rows and gate receipts; three pre-existing red surfaces confirmed.
+- **Decisions:** Chose mdast-util-from-markdown over the native fence-aware path (D8's re-trigger never met but the request's correctness argument required an AST locator); fenced ## lines in code blocks are never headings; multi-byte UTF-16 offsets from mdast require byteStart/byteEnd splice; three red surfaces (pi-compat-guard, docs/stale, F99 timing) reproduced on base commit and confirmed pre-existing.
+- **Next:** Owner's merge verdict on PR #417; after merge, delete row #407 from the Fixes table.
