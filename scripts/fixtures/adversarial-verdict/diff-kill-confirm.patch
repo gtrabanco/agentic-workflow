@@ -1,0 +1,9 @@
+diff --git a/skills/review-change/references/ADVERSARIAL_SETUP.md b/skills/review-change/references/ADVERSARIAL_SETUP.md
+--- a/skills/review-change/references/ADVERSARIAL_SETUP.md
++++ b/skills/review-change/references/ADVERSARIAL_SETUP.md
+@@ -40,2 +40,5 @@ the reviewer contract
+ unchanged context line
++The pass arbitrates every candidate it receives.
++A kill needs falsifying evidence; a confirm needs supporting evidence.
++The reflector sees the diff and the claim only.
+ unchanged context line
