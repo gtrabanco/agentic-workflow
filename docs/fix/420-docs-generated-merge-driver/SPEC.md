@@ -122,10 +122,13 @@ none
 
 ## Known pre-existing issues
 
-- `docs/features/307-odd-hybrid-direction/SPEC.md` has no roadmap row, so
-  `bun scripts/roadmap-settle.mjs` reports `row-missing` on the live tree —
-  `does-not-affect` this unit: reproduced on `origin/main` before this branch's
-  integration, and it names another unit.
+- RESOLVED on this branch — `docs/features/307-odd-hybrid-direction/SPEC.md`
+  had no roadmap row (`row-missing` on the live tree, reproduced on
+  `origin/main` before this branch's integration): the draft carried its issue
+  number instead of its roadmap row. Renumbered to
+  `docs/features/83-odd-hybrid-direction` (roadmap row 83,
+  `odd-hybrid-direction`), title re-cut to the same convention, projection
+  re-emitted; `bun scripts/roadmap-settle.mjs` is green on the live tree.
 - `scripts/pi-compat-guard` fails offline against the resolved peer range —
   `does-not-affect`: a network step, reproduced on the base commit by the
   section-locator unit (#407) before this change.

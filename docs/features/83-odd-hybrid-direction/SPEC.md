@@ -4,7 +4,7 @@ type: feature
 # scope: pending triage (unit-route)
 ---
 
-# 307 — odd-hybrid-direction
+# 83 — odd-hybrid-direction
 
 > **DRAFT SPEC — direction contract.** Pre-triage: this document carries the
 > direction and its invariants only. No phases, tasks, tests or gates are
