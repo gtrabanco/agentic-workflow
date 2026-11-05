@@ -17,6 +17,7 @@ import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../setti
 import { createHintStore, createSerenaReadinessStore, stateFilePath } from "../routing/state.js";
 import { createSerenaReadinessGate, readInitWorkspaceRevision } from "../routing/serena-readiness.js";
 import { createTelemetryWiring, type TelemetryWiring } from "./telemetry-wiring.js";
+import { createAutoLogSessionWiring, type AutoLogSessionWiring } from "./auto-log-session-wiring.js";
 import { provisionEngram, readDeclaredServerNamesFrom, resolveEngramBinary, declaredMcpServerPaths } from "./engram.js";
 import type { EngramServerConfig } from "./engram.js";
 import { runSettingsConsole } from "../settings/console.js";
@@ -264,6 +265,10 @@ export default function extension(pi: ExtensionAPI): void {
   // per session (its runtime factory rebuilds the services, and the resource
   // loader re-runs every factory), so one instance owns one session's sample.
   let telemetry: TelemetryWiring | null = null;
+  // Issue #394 — the journal writer, a second and independent wiring (S4):
+  // turning the log off never stops the measurement, and turning telemetry off
+  // never costs the entry. Nothing is registered while the switch says `off`.
+  let autoLog: AutoLogSessionWiring | null = null;
   const noteCommand = (name: string, args: readonly string[]): void => telemetry?.noteCommand(name, args);
 
   const { router, guards } = createExtension<PiModel>({
@@ -321,6 +326,17 @@ export default function extension(pi: ExtensionAPI): void {
       const sessionId = ctx.sessionManager.getSessionId();
       telemetry = createTelemetryWiring({ root: ctx.cwd, enabled: true, sessionId: () => sessionId });
       telemetry.register(pi);
+    }
+    // Issue #394 — the same first chance, a separate switch: `off` registers no
+    // listener at all, and an opted-in project gets the journal writer whether
+    // or not telemetry is enabled (S1, S4).
+    if (loaded.config.autoLogSession.mode !== "off" && autoLog === null) {
+      autoLog = createAutoLogSessionWiring({
+        root: ctx.cwd,
+        mode: loaded.config.autoLogSession.mode,
+        publisher: loaded.config.autoLogSession.publisher,
+      });
+      autoLog.register(pi);
     }
     const report = provisionEngram({
       consented: loaded.config.memory?.engram === true,

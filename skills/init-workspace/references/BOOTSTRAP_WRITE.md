@@ -1,15 +1,22 @@
 ## Write and verify the bootstrap
 
 4. **Write the adapted scaffold.** Fill the `AGENTS.md` placeholders (commands,
-   the documentation map rows, architecture); write the **adaptive lane
-   conventions** (unit document, triage, catalog steps, guards, evidence rows,
-   dated progress log, closed commit format `type(scope): description`); keep
-   the documentation templates it ships — `features/_TEMPLATE` beside
-   `features/ROADMAP.md`, and `fix/_TEMPLATE` beside `fix/README.md` — and the
-   `.github/` templates; keep `.agentic-workflow/hooks/` and activate only the
-   adapters explicitly accepted in the interview; prune unused doc folders and
-   map rows. Leave honest placeholders where the user hasn't decided — never
-   invent values.
+   the documentation map rows, architecture, and the `Docs site` block when the
+   interview answered it — `format`, `content-dir`, `build`, `map`, with
+   `format` written as exactly one of the values the generator accepts); write
+   the **adaptive lane conventions** (unit document, triage, catalog steps,
+   guards, evidence rows, dated progress log, closed commit format
+   `type(scope): description`); keep the documentation templates it ships —
+   `features/_TEMPLATE` beside `features/ROADMAP.md`, and `fix/_TEMPLATE`
+   beside `fix/README.md` — and the `.github/` templates; keep
+   `.agentic-workflow/hooks/` and activate only the adapters explicitly accepted
+   in the interview; prune unused doc folders and map rows. Leave honest
+   placeholders where the user hasn't decided — never invent values.
+   The `Docs site` write is **additive**: on a fresh scaffold the block is
+   filled in place, and on an existing install it is offered with its consent
+   question first and left untouched on a refusal. A declared format is
+   rendered by `bun scripts/docs-generate.mjs`; the project's first unit's docs
+   step cites the same command, so never hand-write a generated page.
 5. **Verify the capability inventory before calling it seeded.** `docs/CAPABILITIES.md`
    is the one written file whose raw form is wrong in both directions — a
    placeholder claims a subsystem the project does not have, and a missing row
