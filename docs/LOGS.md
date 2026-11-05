@@ -4389,3 +4389,16 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Repaired F112 test — the package gate path-portability test that failed on Node 26. The root cause was `cpSync` from Node throwing ENOTDIR when trying to `readdirSync` on a broken/non-regular path (`.docex/example-0/example.ts` symlink or special path). Replaced `cpSync` with a manual `copyRecursive` that catches lstat/readdir errors per-entry, handles symlinks by re-symlinking (not following), and skips node_modules.
 - **Decisions:** Manual copy over cpSync because Node 26's cpSync is stricter with special filesystem entries; try/catch around every lstat and readdir call to fail-closed gracefully; excluded node_modules symlinks from copy (they're not needed for npm pack).
 - **Next:** N/A — F112 test passes (12/12), both commits pushed to origin/main.
+
+## 2026-11-05T14:19:29Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Fixed schema AC8 runnable-example test: ANSI escape sensitivity in captured child stdout regex match
+- **Decisions:** The pre-execution-docs AC8 test spawns the README example as a child process and asserts its stdout proves freshness+revocation with a semantic regex. Terminal color escapes in the child's captured output broke the regex match (tokens like `fresh: true` became `fresh: \x1B[33mtrue\x1B[39m`), so the fix strips ANSI escapes before matching — assertion vocabulary, order and failure message unchanged. The test file is path-protected (post-freeze): registered justification row in feature 28's path-protection records with P8, execute-phase, owner-authorized 2026-11-05.
+- **Next:** Continue the local-gate worker-pool PR — the working tree has staged changes to scripts/local-gate.mjs, scripts/local-gate.test.mjs, scripts/release.mjs, and .github/workflows/publish.yml that need to be committed and pushed.
+## 2026-11-05T14:19:49Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Fixed ugly release notes by switching from custom release.mjs rendering to GitHub's --generate-notes
+- **Decisions:** Used --generate-notes instead of --notes-file with custom release.mjs output because the custom format was 429 lines with huge sections (Breaking changes, Package bumps) and awkward line breaks; GitHub's What's Changed format is clean: one line per PR, with author and link
+- **Next:** Verify the next release looks clean on GitHub
