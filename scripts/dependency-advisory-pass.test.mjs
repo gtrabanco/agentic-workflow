@@ -453,9 +453,17 @@ test("the review pack names the carrier, not a self-report", () => {
   assert.ok(!/bun\.lock|packages\/\*/u.test(skill), "the skill stays stack-agnostic: no lockfile or workspace layout");
 });
 
-test("the root gate runs the pass in the degraded-not-failed job", () => {
+test("the local gate runs the pass in the degraded-not-failed step", () => {
+  // The remote workflow delegates to the local gate (owner decision 2026-11-04),
+  // so the carrier of the step list is `scripts/local-gate.mjs`.
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/root-suite.yml"), "utf8");
-  const job = workflow.slice(workflow.indexOf("dependency-pin-gate:"));
-  assert.match(job, /scripts\/dependency-advisory-pass\.mjs/u, "the registry job carries the advisory pass");
-  assert.match(job, /Report-only/u, "the step says the pass cannot fail the job");
+  assert.match(workflow, /node scripts\/local-gate\.mjs/u, "the manual gate runs the local gate");
+
+  const gate = fs.readFileSync(path.join(ROOT, "scripts/local-gate.mjs"), "utf8");
+  const step = gate.slice(gate.indexOf(`id: "dependency-advisories"`));
+  const block = step.slice(0, step.indexOf("},"));
+  assert.match(block, /scripts\/dependency-advisory-pass\.mjs/u, "the registry step carries the advisory pass");
+  assert.match(block, /report-only/iu, "the step says the pass cannot fail the gate");
+  assert.match(block, /never fails/iu, "the degraded-not-failed contract is stated in the step");
+  assert.match(block, /network: true/u, "the pass is the online half, so the pre-push subset skips it");
 });

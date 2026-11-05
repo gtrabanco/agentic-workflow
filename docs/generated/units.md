@@ -1,0 +1,142 @@
+# agentic-workflow-repo — units
+
+Generated from 134 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+
+## Delivered units
+
+| Unit | Kind | Status | What it shipped |
+|---|---|---|---|
+| 01-generate-docs | feature | done · [#8](https://github.com/gtrabanco/agentic-workflow/pull/8) | 01 — generate-docs |
+| 02-measured-perf-review | feature | done · [#9](https://github.com/gtrabanco/agentic-workflow/pull/9) | 02 — measured-perf-review |
+| 03-orchestrator-crash-recovery | feature | done · [#10](https://github.com/gtrabanco/agentic-workflow/pull/10) | 03 — orchestrator-crash-recovery |
+| 04-running-economically | feature | done · [#22](https://github.com/gtrabanco/agentic-workflow/pull/22) | 04 — running-economically |
+| 05-adversarial-context-clean-review | feature | done · [#23](https://github.com/gtrabanco/agentic-workflow/pull/23) | 05 — adversarial-context-clean-review |
+| 06-design-feature | feature | done · [#24](https://github.com/gtrabanco/agentic-workflow/pull/24) | 06 — design-feature |
+| 07-roadmap-status-machine | feature | done · [#25](https://github.com/gtrabanco/agentic-workflow/pull/25) | 07 — roadmap-status-machine |
+| 08-phase-economics | feature | done · [#26](https://github.com/gtrabanco/agentic-workflow/pull/26) | 08 — phase-economics |
+| 09-product-audit-tooling-sweep | feature | done · [#27](https://github.com/gtrabanco/agentic-workflow/pull/27) | 09 — product-audit-tooling-sweep |
+| 10-envelope-orchestrator-only | feature | done · [#28](https://github.com/gtrabanco/agentic-workflow/pull/28) | 10 — envelope-orchestrator-only |
+| 100-stale-fix-index-rows | fix | — | fix/100-stale-fix-index-rows |
+| 101-stale-roadmap-merge-order-note | fix | — | fix/101-stale-roadmap-merge-order-note |
+| 103-doc-currency | feature | done · [#397](https://github.com/gtrabanco/agentic-workflow/pull/397) | the READMEs are repaired against what the tree actually ships, and documentation currency becomes a guide rule, a required docs step and an audit check. |
+| 11-adversarial-multi-reviewer | feature | done · [#29](https://github.com/gtrabanco/agentic-workflow/pull/29) | 11 — adversarial-multi-reviewer |
+| 117-amendment-linkage | fix | — | fix/117-amendment-linkage |
+| 119-progressive-planning-docs-adapters | fix | — | fix/119-progressive-planning-docs-adapters |
+| 12-golden-fixture-procedure | feature | done · [#30](https://github.com/gtrabanco/agentic-workflow/pull/30) | 12 — golden-fixture-procedure |
+| 13-init-workspace-upgrade-mode | feature | done · [#31](https://github.com/gtrabanco/agentic-workflow/pull/31) | 13 — init-workspace-upgrade-mode |
+| 134-machine-contract | fix | — | fix/134-machine-contract |
+| 14-final-docs-batch | feature | done · [#32](https://github.com/gtrabanco/agentic-workflow/pull/32) | 14 — final-docs-batch |
+| 147-audit-evidence-provenance | fix | — | fix/147-audit-evidence-provenance |
+| 15-injection-safe-urgency | feature | done · [#47](https://github.com/gtrabanco/agentic-workflow/pull/47) | 15 — injection-safe-urgency |
+| 154-settings-picker-search-bulk-chain | fix | — | fix/154-settings-picker-search-bulk-chain |
+| 157-claude-skills-self-mount | fix | — | fix/157-claude-skills-self-mount |
+| 159-review-fold-loop-bounds | fix | — | SPEC — fix-159-review-fold-loop-bounds |
+| 16-nan-model-guidance | feature | done · [#56](https://github.com/gtrabanco/agentic-workflow/pull/56) | 16 — nan-model-guidance |
+| 161-finding-verification-loop-removal | fix | — | fix/161-finding-verification-loop-removal |
+| 162-verdict-receipt-roadmap-desync | fix | — | fix/162-verdict-receipt-roadmap-desync |
+| 165-folded-yaml-description | fix | — | fix/165-folded-yaml-description |
+| 166-pi-0850-baseline-refresh | fix | — | fix/166-pi-0850-baseline-refresh |
+| 17-finding-severity-routing | feature | done · [#57](https://github.com/gtrabanco/agentic-workflow/pull/57) | 17 — finding-severity-routing |
+| 179-declared-ledger-delta-receipts | fix | — | fix/179-declared-ledger-delta-receipts |
+| 18-normalized-repository-state | feature | done · [#114](https://github.com/gtrabanco/agentic-workflow/pull/114) | 18 — normalized-repository-state |
+| 181-pi-server-devdep-obsolete | fix | — | fix/181-pi-server-devdep-obsolete |
+| 182-deterministic-receipts-and-pr-hygiene | fix | — | fix/182-deterministic-receipts-and-pr-hygiene |
+| 19-architectural-invariants | feature | done · [#115](https://github.com/gtrabanco/agentic-workflow/pull/115) | 19 — architectural-invariants |
+| 191-handoff-review-fold-order | fix | — | fix/191-handoff-review-fold-order |
+| 20-runtime-guardrails-progressive-skills | feature | done · [#116](https://github.com/gtrabanco/agentic-workflow/pull/116) | 20 — runtime-guardrails-progressive-skills |
+| 200-over-budget-fixture-stale-guard | fix | — | fix/200-over-budget-fixture-stale-guard |
+| 21-workflow-contract-consolidation | feature | done · [#121](https://github.com/gtrabanco/agentic-workflow/pull/121) | 21 — workflow-contract-consolidation |
+| 214-model-selection-over-24-options | fix | — | fix/214-model-selection-over-24-options |
+| 22-bounded-delivery-loops | feature | done · [#122](https://github.com/gtrabanco/agentic-workflow/pull/122) | 22 — bounded-delivery-loops |
+| 221-sensor-null-parent-receipt | fix | — | fix/221-sensor-null-parent-receipt |
+| 224-deterministic-replan-routing | fix | — | fix/224-deterministic-replan-routing |
+| 23-workflow-skill-capability-profiles | feature | done · [#140](https://github.com/gtrabanco/agentic-workflow/pull/140) | 23 — workflow-skill-capability-profiles |
+| 24-workflow-transition-decider | feature | done · [#143](https://github.com/gtrabanco/agentic-workflow/pull/143) | 24 — workflow-transition-decider |
+| 244-freeze-batch-planner-consumer | fix | — | fix/244-freeze-batch-planner-consumer |
+| 25-content-bound-review-receipts | feature | done · [#144](https://github.com/gtrabanco/agentic-workflow/pull/144) | 25 — content-bound-review-receipts |
+| 258-harden-needs-input-contracts | fix | — | fix/258-harden-needs-input-contracts |
+| 26-staged-verification-contracts | feature | done · [#145](https://github.com/gtrabanco/agentic-workflow/pull/145) | 26 — staged-verification-contracts |
+| 27-pi-agentic-workflow | feature | done · [#150](https://github.com/gtrabanco/agentic-workflow/pull/150) | 27 — pi-agentic-workflow |
+| 272-phase-lint-unit-doc-grammar | fix | — | teach `phase-lint` the lane's unit-doc task grammar (the |
+| 28-evidence-grounded-spec-plan-review | feature | done · [#155](https://github.com/gtrabanco/agentic-workflow/pull/155) | 28 — evidence-grounded-spec-plan-review |
+| 285-pre-execution-lineage-gate | fix | — | the pre-execution lineage gate stops demanding retired pre-lane |
+| 286-affecting-path-receipt-binding | fix | — | review receipts freeze the affecting-path scope manifest beside the |
+| 29-bounded-implementation-discovery | feature | done · [#175](https://github.com/gtrabanco/agentic-workflow/pull/175) | 29 — bounded-implementation-discovery |
+| 30-repair-receipt-delta-review | feature | done · [#188](https://github.com/gtrabanco/agentic-workflow/pull/188) | 30 — repair-receipt-delta-review |
+| 303-investigate-orient-ask | fix | — | fix/303-investigate-orient-ask |
+| 31-planning-review-materiality | feature | done · [#243](https://github.com/gtrabanco/agentic-workflow/pull/243) | 31 — planning-review-materiality |
+| 316-roadmap-settle | fix | — | fix/316-roadmap-settle |
+| 318-class-escalation-forward-closure | fix | — | fix/318-class-escalation-forward-closure |
+| 319-location-index-consolidation | fix | done · [#351](https://github.com/gtrabanco/agentic-workflow/pull/351) | fix/319-location-index-consolidation |
+| 32-review-consistency-pack | feature | done · [#249](https://github.com/gtrabanco/agentic-workflow/pull/249) | 32 — review-consistency-pack |
+| 329-runtime-invocation-drift | fix | done · [#380](https://github.com/gtrabanco/agentic-workflow/pull/380) | fix/329-runtime-invocation-drift |
+| 33-stale-envelope-contract | fix | — | fix/33-stale-envelope-contract |
+| 331-authoring-setup | fix | — | fix/331-authoring-setup |
+| 332-agents-md-split | fix | — | fix/332-agents-md-split |
+| 333-capabilities | fix | done | fix/333-capabilities |
+| 338-closed-ceremony-cli | fix | — | fix/338-closed-ceremony-cli |
+| 340-deletion-reuse-obligations | fix | — | fix/340-deletion-reuse-obligations |
+| 35-single-pass-closeout-phase | fix | — | fix/35-single-pass-closeout-phase |
+| 353-residue-shadow-copies | fix | — | fix/353-residue-shadow-copies |
+| 355-scaffold-parity-routes | fix | done | fix/355-scaffold-parity-routes |
+| 356-test-targeting | fix | done · [#402](https://github.com/gtrabanco/agentic-workflow/pull/402) | fix/356-test-targeting |
+| 357-skill-lint-smells-supply-chain | fix | done · [#377](https://github.com/gtrabanco/agentic-workflow/pull/377) | fix/357-skill-lint-smells-supply-chain |
+| 358-adversarial-kill-mandate | fix | in-progress | fix/358-adversarial-kill-mandate |
+| 36-verification-contract-hygiene | feature | done · [#304](https://github.com/gtrabanco/agentic-workflow/pull/304) | 36 — verification-contract-hygiene |
+| 360-risk-tiered-ceremony | fix | in-progress | fix/360-risk-tiered-ceremony |
+| 361-finding-severity-ladder | fix | done · [#381](https://github.com/gtrabanco/agentic-workflow/pull/381) | fix/361-finding-severity-ladder |
+| 365-manifest-vulnerability-pass | fix | — | fix/365-manifest-vulnerability-pass |
+| 37-bilingual-human-docs | fix | — | fix/37-bilingual-human-docs |
+| 37-phase-lint-script | feature | done · [#212](https://github.com/gtrabanco/agentic-workflow/pull/212) | 37 — phase-lint-script |
+| 370-pi-150-compat-reverification | fix | done · [#372](https://github.com/gtrabanco/agentic-workflow/pull/372) | fix/370-pi-150-compat-reverification |
+| 375-release-notes-rendering | fix | done · [#376](https://github.com/gtrabanco/agentic-workflow/pull/376) | fix/375-release-notes-rendering |
+| 38-schema-package-republish | fix | — | fix/38-schema-package-republish |
+| 38-workflow-status-sensor-script | feature | done · [#213](https://github.com/gtrabanco/agentic-workflow/pull/213) | 38 — workflow-status-sensor-script |
+| 382-red-first-commits | fix | — | fix/382-red-first-commits |
+| 383-measured-acceptance | fix | done · [#395](https://github.com/gtrabanco/agentic-workflow/pull/395) | fix/383-measured-acceptance |
+| 39-publish-schema-oidc-403 | fix | — | fix/39-publish-schema-oidc-403 |
+| 394-auto-log-session | feature | done · [#401](https://github.com/gtrabanco/agentic-workflow/pull/401) | opt-in automatic journal entries from the pi extension — one switch that is off by default, one pure renderer that is the only owner of the entry shape, a deterministic CLI that reproduces an entry without a session, and a publisher Strategy whose second backend is declared in config. |
+| 396-doc-gen | feature | done · [#400](https://github.com/gtrabanco/agentic-workflow/pull/400) | a unit that ships code cannot close without an explicit documentation task, and one deterministic command renders the repository's own artifacts — unit docs, roadmap rows and the shipped code — into the project's declared output format. |
+| 40-bump-skill-internal-only | fix | — | fix/40-bump-skill-internal-only |
+| 40-versioned-skills-releases | feature | done · [#335](https://github.com/gtrabanco/agentic-workflow/pull/335) | 40 — versioned-skills-releases |
+| 51-plan-feature-replan-loop | fix | — | fix/51-plan-feature-replan-loop |
+| 52-machine-checked-turn-contract | feature | done · [#236](https://github.com/gtrabanco/agentic-workflow/pull/236) | 52 — machine-checked-turn-contract |
+| 52-workflow-status-envelope-hardening | fix | — | fix/52-workflow-status-envelope-hardening |
+| 54-triage-disposition-labels | fix | — | fix/54-triage-disposition-labels |
+| 55-executable-golden-fixture | feature | done · [#240](https://github.com/gtrabanco/agentic-workflow/pull/240) | 55 — executable-golden-fixture |
+| 59-executable-continuations | feature | done · [#238](https://github.com/gtrabanco/agentic-workflow/pull/238) | 59 — executable-continuations |
+| 60-path-protection-guards | feature | done · [#245](https://github.com/gtrabanco/agentic-workflow/pull/245) | 60 — path-protection-guards |
+| 61-adaptive-unit-lane | feature | done · [#251](https://github.com/gtrabanco/agentic-workflow/pull/251) | Feature 61 — Adaptive unit lane |
+| 62-pi-native-conductor | feature | done · [#254](https://github.com/gtrabanco/agentic-workflow/pull/254) | 62 — pi-native-conductor |
+| 63-model-profiles | feature | done · [#259](https://github.com/gtrabanco/agentic-workflow/pull/259) | zero-config model recommendations for the `nan` provider and a user-defined profile system with ordered fallback, manual rotation, and a retry timer — both shipped in one unit. |
+| 63-next-block-verdict-branching | fix | — | fix/63-next-block-verdict-branching |
+| 64-nan-mimo-v26-catalog-refresh | feature | done · [#265](https://github.com/gtrabanco/agentic-workflow/pull/265) | refresh the NaN catalog surface — README guidance + the built-in `nan` |
+| 64-phase-atomicity-lint | fix | — | fix/64-phase-atomicity-lint |
+| 65-doc-toolchain | feature | done · [#282](https://github.com/gtrabanco/agentic-workflow/pull/282) | Markdown stays the single source of truth — half A a deterministic |
+| 65-fold-findings-skill | fix | — | fix/65-fold-findings-skill |
+| 66-engram-memory-substrate | feature | done · [#312](https://github.com/gtrabanco/agentic-workflow/pull/312) | Engram becomes required memory substrate — a save/recall protocol at |
+| 66-scope-bleed-guardrail | fix | — | fix/66-scope-bleed-guardrail |
+| 67-nan-ladder-design-feature-row | fix | — | fix/67-nan-ladder-design-feature-row |
+| 67-serena-provisioning | feature | done · [#313](https://github.com/gtrabanco/agentic-workflow/pull/313) | 67 — serena-provisioning |
+| 69-review-conformance | feature | done · [#280](https://github.com/gtrabanco/agentic-workflow/pull/280) | ship the two 2026-09-29 owner decisions as contracts and wording — |
+| 71-doc-cli | feature | defined · [#366](https://github.com/gtrabanco/agentic-workflow/issues/366) | half A of issue #192, re-homed here by 65's D6 split — a |
+| 71-skill-registration-parity | fix | — | fix/71-skill-registration-parity |
+| 72-pi-100-compat-guard | feature | done · [#290](https://github.com/gtrabanco/agentic-workflow/pull/290) | re-verify the pi 1.0.0 compatibility baseline, add a PR-time two-leg |
+| 73-lane-closeout-handoffs | feature | done · [#297](https://github.com/gtrabanco/agentic-workflow/pull/297) | close the four close-out gaps in the `unit-lane` conductor — review |
+| 74-bump-skill-discovery-exclusion | fix | — | fix/74-bump-skill-discovery-exclusion |
+| 74-post-merge-reconciliation | feature | done · [#298](https://github.com/gtrabanco/agentic-workflow/pull/298) | post-merge reconciliation of issues #270 (PR #280) and #272 (PR #276) — one review pass over the union plus repair of whatever the combination breaks. |
+| 75-pi-package-version-gate | feature | done · [#299](https://github.com/gtrabanco/agentic-workflow/pull/299) | a PR-triggered CI gate that refuses any change to what `@gtrabanco/pi-agentic-workflow` ships — root `skills/**` or the package tree — without a package version bump + CHANGELOG companion row, and refuses a dependency pin whose target has published a newer version. |
+| 76-adversarial-weak-fleet-usability | fix | — | fix/76-adversarial-weak-fleet-usability |
+| 76-lane-product-route | feature | done · [#300](https://github.com/gtrabanco/agentic-workflow/pull/300) | 76 — lane-product-route |
+| 77-promise-coherence-guard | feature | done · [#309](https://github.com/gtrabanco/agentic-workflow/pull/309) | a promise whose text is executable must reproduce at the head — one |
+| 77-review-checkpoint-cadence-triggers | fix | — | fix/77-review-checkpoint-cadence-triggers |
+| 78-audit-pr-closure-integrity | fix | — | fix/78-audit-pr-closure-integrity |
+| 78-unit-cycle | feature | done · [#314](https://github.com/gtrabanco/agentic-workflow/pull/314) | the delivery cycle as **code** — a deterministic control loop that |
+| 79-spec-by-reference | feature | done · [#311](https://github.com/gtrabanco/agentic-workflow/pull/311) | the unit document re-cut to spec-by-reference — requirements as |
+| 79-workflow-status-driver-signals | fix | — | fix/79-workflow-status-driver-signals |
+| 80-plan-fix-multi-issue-semantics | fix | — | fix/80-plan-fix-multi-issue-semantics |
+| 81-legacy-spec-phase-lint-carveout | fix | — | fix/81-legacy-spec-phase-lint-carveout |
+| 82-phase-lint-heading-wrap | fix | — | fix/82-phase-lint-heading-wrap |
+| 84-published-vocabulary-sweep-gate | feature | done · [#330](https://github.com/gtrabanco/agentic-workflow/pull/330) | the fold **survivors** rule becomes bytes — published closed |
+| 86-triage-open-unit-awareness | fix | — | fix/86-triage-open-unit-awareness |
+| 93-ship-roadmap-cadence-triggers | fix | — | fix/93-ship-roadmap-cadence-triggers |

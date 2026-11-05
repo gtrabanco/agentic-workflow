@@ -51,14 +51,23 @@ Delete this section when the project does not manage a documentation website.
 Fill the slots in place; nothing here is commented out, so a copy of this file
 stays readable as it was written.
 
+The `format` slot is the project's declared output format, and it is what the
+documentation generator renders — never a hand-written page:
+
 ```
-- format: starlight | docusaurus | markdown
+- format: starlight        # one of: markdown | md | mdx | starlight | docusaurus | html | latex | tex
 - content-dir: src/content/docs/
 - build: npx astro check   # or `none`
 - map: npm run docs:graph  # a script emitting a nodes[]/edges[] JSON via
                            # deterministic tooling (dependency-cruiser, madge,
                            # TypeDoc, tree-sitter, LSP…); or `none`
 ```
+
+`bun scripts/docs-generate.mjs` writes the projection into
+`<content-dir>/generated/` (`docs/generated/` without a content dir), and
+`bun scripts/docs-generate.mjs --check` is the drift receipt a verification
+gate can call. A project that declares no format gets markdown **and a
+reported degradation**; the generator never guesses a format silently.
 
 ---
 

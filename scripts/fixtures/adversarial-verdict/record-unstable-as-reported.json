@@ -1,0 +1,23 @@
+{
+  "contract": "adversarial-verdict@1",
+  "head": "c8b64d0b7a1f4c2e9d3b5a6f8c0e2d4b6a8c1e3f",
+  "cycle": 1,
+  "findings": [
+    {
+      "id": "F1",
+      "file": "scripts/review-state.mjs",
+      "line": 19,
+      "axis": "code",
+      "origin": "finder",
+      "verdict": "confirm",
+      "evidence_kind": "supporting",
+      "evidence": "attempted to falsify with an empty state file; the guard returns null and the caller still throws, so the claim holds",
+      "stability": "unstable",
+      "scope": "as-reported",
+      "reflector": {
+        "verdict": "keep",
+        "reason": "the cited line is one this diff adds"
+      }
+    }
+  ]
+}

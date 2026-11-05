@@ -24,7 +24,14 @@
  *
  * Usage
  *   bun scripts/run-root-suite.mjs            # the whole root gate
+ *   bun scripts/run-root-suite.mjs --bail     # stop at the first failing suite
  *   bun scripts/run-root-suite.mjs -- <args>  # forward args to `bun test`
+ *
+ * `--bail` is the local gate's flag (`scripts/local-gate.mjs`): bun's runner
+ * carries `--bail=1` natively, while node's has no equivalent, so the node leg
+ * runs one file per process and stops on the first non-zero exit. Running this
+ * script by hand without the flag keeps the original behaviour: every suite
+ * runs and every failure is reported.
  *
  * Exit: whatever the test runner returns, the exit status is forwarded verbatim.
  */
@@ -34,6 +41,8 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+
+import { scrubGitLocator } from "./git-env.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -46,7 +55,9 @@ function suites() {
     .map((name) => path.join("scripts", name));
 }
 
-const forwarded = process.argv.slice(2);
+const args = process.argv.slice(2);
+const bail = args.includes("--bail");
+const forwarded = args.filter((arg) => arg !== "--bail");
 const selected = forwarded.length > 0 ? forwarded : suites();
 
 // `-c commit.gpgsign=false` applies to commands this process spawns only; the
@@ -57,16 +68,28 @@ const selected = forwarded.length > 0 ? forwarded : suites();
 // overhead and the full-history git walks on tests that are fast in node but slow
 // under bun (node keeps its no-default timeout model).
 const isBun = process.execPath.includes("bun");
-const testOpts = isBun ? ["test", "--timeout=60000", ...selected] : ["--test", ...selected];
-const result = spawnSync(process.execPath, testOpts, {
-  cwd: REPO_ROOT,
-  stdio: "inherit",
-  env: {
-    ...process.env,
-    GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
-    [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
-    [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
-  },
+const env = scrubGitLocator({
+  ...process.env,
+  GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
+  [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
+  [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
 });
+const run = (argv) => spawnSync(process.execPath, argv, { cwd: REPO_ROOT, stdio: "inherit", env }).status ?? 1;
 
-process.exit(result.status ?? 1);
+if (isBun) {
+  process.exit(run(["test", "--timeout=60000", ...(bail ? ["--bail=1"] : []), ...selected]));
+}
+
+if (!bail || selected.length === 1) {
+  process.exit(run(["--test", ...selected]));
+}
+
+// node's test runner has no bail: one file per process, stop at the first red.
+for (const file of selected) {
+  const status = run(["--test", file]);
+  if (status !== 0) {
+    process.stderr.write(`root gate: stopping at the first failing suite (${file})\n`);
+    process.exit(status);
+  }
+}
+process.exit(0);
