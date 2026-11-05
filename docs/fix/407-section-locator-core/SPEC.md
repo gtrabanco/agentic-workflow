@@ -150,6 +150,12 @@ none
   heading. **Does not affect this unit** (S14 keeps the migration out) — it is the
   defect class S2 exists to keep out of the new primitive, and it is pinned as a
   reproducer in the new suite's corpus.
+- **`verification-preflight.test.mjs` F99's 50 ms bound is load-sensitive.**
+  One gate run measured `57.48 ms` for the 200,000-command refusal while the
+  gate's 4-worker pool was busy; the same code passes the case 3/3 in isolation
+  and passed it in the two earlier full gate runs. **Does not affect this unit**:
+  no file under `packages/agentic-workflow-schema` is touched, and the bound is
+  never relaxed here.
 - **`pi-compat-guard` is red at the cut head.** It type-checks the pi package
   against the published `@gtrabanco/agentic-workflow` tarball, which does not
   carry the `src/log/render.d.mts` / `packages/agentic-workflow/src/log/publish.d.mts`
@@ -269,6 +275,7 @@ task list above; the deterministic routers still judge the document.
 - **G1** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 · `PASS — 7 step(s) in 115s` (root suite 81/81, crate bun + node, schema node, version parity).
 - **G2** — 2026-11-05, `bun scripts/local-gate.mjs` · exit 1 · bails at `pi-compat-guard` (three `TS2307` for `src/log/*` against the published tarball) — reproduced identically on the `caee2502` archive, so pre-existing (see §Known pre-existing issues); every other executed step passed, and `--only dependency-advisories` exits 0 report-only with no advisory on the added parser.
 
+- **G3** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` at `83edb7bb` · exit 1 · only `schema-node-compat` red, on the load-sensitive F99 bound (`200,000 commands refused in 57.48 ms (bound 50 ms)`); `node --test test/verification-preflight.test.mjs` in isolation · exit 0 · `8 pass / 0 fail`, 3/3 runs — the flake is recorded as pre-existing, never excused by widening the bound.
 ## Next
 
 P1 — the RED library suite first (`doc.section-locator.test.mjs` observed failing on the missing module), then the implementation observed green.
