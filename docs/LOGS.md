@@ -4254,3 +4254,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** apply fix #398 — audit-docs checks 10-11 and unit-route's scope fallback still read retired carriers
 - **Decisions:** A: trim a duplicated example in AGENTS.md (the pre-existing guide-budget overflow 6884>6881 landed by PR#397 merge) rather than raising estimateMax, following the unit-360 precedent; bun-first for the suite run (3m07s vs node's 99s, same output, runner adapts per runtime); parseSpecs from unit-doc-phases.mjs for the scope fallback instead of a private regex to avoid two grammar drift, fixing emphasis-in-title and fenced-quote false-positives; n/a answer shape (no valid key) for ceremony check-tasks-ticks/check-progress-entry/check-phase-labels on a legacy carrier, with check-all treating n/a as passing so the aggregate and sub-checks tell one story; Triaged steps slot placed after Task sub-blocks, in both exported template twins (scaffold-parity read the repo heading list) — AGENTS.md fallback not needed.
 - **Next:** review PR #403 (open, mergeable) at https://github.com/gtrabanco/agentic-workflow/pull/403 — verify the PR body's AC↔evidence table, accept the bun-first leg (E26), note that CI on the branch shows no checks yet (will report after mergeable); after approval, merge main into the branch and the owner merges
+
+## 2026-11-05T00:45:15Z — feat/398-retired-carriers — manual
+- **Commits:** 22 (`77a68992…45430812`)
+- **Files:** 26 files
+- **Summary:** Repair external-verify advisories on the 398 PR
+- **Decisions:** No version-compat floor: manifest already carried >=1.1.0 (0b9b6c5f); bun.lock just needed regenerating against it. Prose that referenced TASKS.md/progress.md as universal carriers re-pointed at audit-docs check 11's discriminator, since feature 61 retired those files for post-lane units.
+- **Next:** Review PR #403 at https://github.com/gtrabanco/agentic-workflow/pull/403 — the PR body will need to mention these 3 advisory-fix commits.
