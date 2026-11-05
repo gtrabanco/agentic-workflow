@@ -252,7 +252,7 @@ jobs:
           git tag "v$VERSION"
           git push origin "v$VERSION"
           git push origin "HEAD:refs/heads/stable"
-          gh release create "v$VERSION" --generate-notes --title "v$VERSION" --notes-file "$RUNNER_TEMP/release-notes.txt"
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file "$RUNNER_TEMP/release-notes.txt"
 
       # One manual action per release. Publishing stays its own run (its own
       # gates, its own retry), the push trigger is gone, so the cut requests the
@@ -412,7 +412,7 @@ jobs:
               git push origin "v$V"
             fi
             gh release view "v$V" >/dev/null 2>&1 \
-              || gh release create "v$V" --prerelease --verify-tag --generate-notes --title "v$V" --notes-file "$RUNNER_TEMP/canary-notes.txt"
+              || gh release create "v$V" --prerelease --verify-tag --title "v$V" --notes-file "$RUNNER_TEMP/canary-notes.txt"
             echo "recorded cut v$V ($CHANNEL)"
           else
             echo "nothing declared — no tag"
