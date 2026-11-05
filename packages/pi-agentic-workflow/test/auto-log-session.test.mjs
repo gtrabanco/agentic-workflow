@@ -20,6 +20,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { sandboxGitEnv } from "./git-sandbox.mjs";
 import {
   JOURNAL_PATH,
   MARKER_DIR,
@@ -38,7 +39,7 @@ import { normalizeFacts } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 /** A throwaway git repository; `root` is the project root. */
 function repo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-session-"));
-  const run = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" });
+  const run = (args, cwd = root) => execFileSync("git", args, { cwd, encoding: "utf8", env: sandboxGitEnv() });
   run(["init", "-q", "-b", "main"]);
   run(["config", "user.email", "suite@example.test"]);
   run(["config", "user.name", "suite"]);
@@ -165,6 +166,29 @@ test("AM-10 the journal check is a real check, not a promise about the config", 
   fs.rmSync(path.join(root, JOURNAL_PATH));
   assert.equal(hasJournal(root), false);
   fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AM-12 the git reader ignores ambient GIT_DIR-style environment, so a run inside a tooling worktree cannot leak facts out of the project", () => {
+  const { root, run } = repo();
+  const decoy = fs.mkdtempSync(path.join(os.tmpdir(), "auto-log-decoy-"));
+  run(["init", "-q", "-b", "decoy"], decoy);
+  const leakVars = {
+    GIT_DIR: path.join(decoy, ".git"),
+    GIT_WORK_TREE: decoy,
+    GIT_INDEX_FILE: path.join(decoy, ".git", "index"),
+    GIT_OBJECT_DIRECTORY: path.join(decoy, ".git", "objects"),
+    GIT_COMMON_DIR: path.join(decoy, ".git"),
+  };
+  const saved = { ...process.env };
+  Object.assign(process.env, leakVars);
+  try {
+    const facts = buildFacts({ root, marker: null, reason: "quit", now: () => 0 });
+    assert.equal(facts.branch, "main");
+  } finally {
+    process.env = saved;
+    fs.rmSync(decoy, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("AM-11 the timestamp is a UTC minute stamp, the hook's own precision", () => {
