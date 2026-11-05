@@ -350,10 +350,10 @@ function resolveReleasePlan({ root, args, packages, changesets }) {
 // --- release notes ---------------------------------------------------------
 
 // The closed set of release-note sections, in the order they render. A change
-// lands in exactly one: breaking first (whatever its type), then its own type,
-// and everything without a first-class section under `Maintenance`.
-const NOTE_GROUPS = [["feat", "Features"], ["fix", "Fixes"], ["perf", "Performance"], ["docs", "Documentation"]];
-const NOTE_REST = "Maintenance";
+// lands in exactly one: breaking first, then features, then fixes. No
+// Performance/Documentation/Maintenance — anything not feat or fix falls
+// into Fixes.
+const NOTE_GROUPS = [["feat", "Features"], ["fix", "Fixes"]];
 const LEVEL_RANK = { patch: 0, minor: 1, major: 2 };
 const CONVENTIONAL_TITLE_RE = /^([a-zA-Z]+)(\([^)]*\))?(!)?:\s+\S/;
 const PI_PACKAGE = "npm:@gtrabanco/pi-agentic-workflow";
@@ -411,7 +411,7 @@ function newestStableTag(tags) {
 }
 
 /**
- * The release immediately before the cut — where the Contributors window
+ * The release immediately before the cut — where the Contributions window
  * starts, so a section never re-lists what an earlier cut already handed out:
  *
  *   stable cut   the newest stable tag;
@@ -526,7 +526,7 @@ function installBlock({ channel, tag, bumps }) {
 }
 
 /**
- * The "Contributors" section: the PRs merged since the release immediately
+ * The "Contributions" section: the PRs merged since the release immediately
  * before the cut, in the shape GitHub's `--generate-notes` produces — `*
  * <title> by @<handle> in <PR link>` — so the body stays rendered from the
  * changesets and still names the work that landed.
@@ -576,7 +576,7 @@ function renderContributors(root, channel, tag, gitRepo) {
   }
   const lines = contributorLines(prs, repoSlug, new Date(previousCommit).toISOString());
   if (lines.length === 0) return "";
-  return ["## Contributors", "", "Thank you to everyone who contributed to this release:", "", ...lines, ""].join("\n");
+  return ["## Contributions", "", ...lines, ""].join("\n");
 }
 
 /** `owner/name` of the GitHub repository the `origin` remote names, or null. */
@@ -586,7 +586,7 @@ function githubSlug(remote) {
 }
 
 /**
- * The bullets of the Contributors section: the merged PRs since `since`, oldest
+ * The bullets of the Contributions section: the merged PRs since `since`, oldest
  * first, deduplicated by number (a rebased PR keeps one entry), each credited to
  * the PR's own author and falling back to the repository owner only when the
  * account is gone.
@@ -623,7 +623,7 @@ function compareBase(a, b) {
  * heading, changes group by kind with breaking first, the cut's own bumps are a
  * table, and the reader is told how to install and how to move channels. A
  * canary also separates the changes it adds from the ones it merely reprints.
- * The body ends with the "Contributors" section `renderContributors()` builds
+ * The body ends with the "Contributions" section `renderContributors()` builds
  * from the PRs merged since the previous release.
  */
 function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, gitRepo }) {
@@ -670,11 +670,15 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     }
   };
   section("Breaking changes", news.filter((change) => change.breaking));
+  // "anything not feat or fix falls into Fixes" (NOTE_GROUPS above): a change
+  // whose body carries no conventional title (type "other") is a change all
+  // the same — dropping it would publish a release body that hides real work.
   for (const [type, title] of NOTE_GROUPS) {
-    section(title, news.filter((change) => !change.breaking && change.type === type));
+    const rows = type === "fix"
+      ? news.filter((change) => !change.breaking && change.type !== "feat")
+      : news.filter((change) => !change.breaking && change.type === type);
+    section(title, rows);
   }
-  section(NOTE_REST, news.filter((change) =>
-    !change.breaking && !NOTE_GROUPS.some(([type]) => type === change.type)));
 
   if (earlier.length > 0) {
     out.push("## Also in this prerelease", "",
@@ -687,11 +691,30 @@ function renderReleaseNotes({ root, packages, changesets, plan, channel, stamp, 
     out.push("</details>", "");
   }
 
-  // Contributors section — the PRs merged since the previous release, in the
+  // Contributions section — the PRs merged since the previous release, in the
   // shape `--generate-notes` produced; appended last so the rendered body keeps
   // its own structure.
-  const contributors = renderContributors(root, channel, tag, gitRepo);
-  if (contributors) out.push(contributors);
+  const contributions = renderContributors(root, channel, tag, gitRepo);
+  if (contributions) out.push(contributions);
+
+  // Full Changelog link — the range that `--generate-notes` appends by default.
+  const prev = channel === "canary"
+    ? previousCanaryTag(root, tag)
+    : previousReleaseTag({
+        channel,
+        tag,
+        canaryTags: canaryTags(root).map((e) => e.tag),
+        stableTags: stableTags(root),
+      });
+  if (prev) {
+    const prevTag = prev.startsWith("v") ? prev : `v${prev}`;
+    const remote = git(root, ["remote", "get-url", "origin"]);
+    const slug = githubSlug(remote);
+    if (slug) {
+      out.push("Thank you to all contributors for your support.");
+      out.push(`**Full Changelog**: https://github.com/${slug}/compare/${prevTag}...${tag.startsWith("v") ? tag : `v${tag}`}`);
+    }
+  }
 
   return out.join("\n").trimEnd();
 }
@@ -969,5 +992,5 @@ function main() {
 }
 
 // Run only as a program: the sibling suite imports the two pure helpers that
-// decide the Contributors window and render its bullets.
+// decide the Contributions window and render its bullets.
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

@@ -85,9 +85,10 @@ test("cut + stable applies the train, adds one commit, tags and releases — nev
   assert.match(block, /git commit -m "chore\(release\)/);
   assert.match(block, /git tag "v\$VERSION"/);
   assert.match(block, /refs\/heads\/stable/);
-  assert.match(block, /--generate-notes/, "uses GitHub's generated notes — clean 'What's Changed' format");
-  assert.doesNotMatch(block, /--notes-file/, "no custom notes-file: --generate-notes handles it");
-  assert.match(block, /gh release create "v\$VERSION" --title "v\$VERSION" --generate-notes/);
+  assert.match(block, /release\.mjs release-notes > release-notes\.txt/,
+    "the release body is the custom-rendered changesets, not GitHub's diff notes");
+  assert.doesNotMatch(block, /--generate-notes/, "no generated diff notes: the renderer owns the body");
+  assert.match(block, /gh release create "v\$VERSION" --title "v\$VERSION" --notes-file release-notes\.txt/);
   assert.doesNotMatch(block, /npm publish/, "the push fires the publish jobs, this job never touches npm");
 });
 
@@ -161,13 +162,13 @@ test("the canary promotion is gated on the publish decision", () => {
   }
 });
 
-// The canary release body is now the GitHub-generated "What's Changed": clean,
-// one-line-per-PR, with a "Full Changelog" link at the end.
-test("cut + canary opens the GitHub pre-release with generated notes", () => {
+// The canary release body is the rendered changesets (release.mjs
+// release-notes), uploaded with the pre-release — never GitHub's diff notes.
+test("cut + canary opens the GitHub pre-release with the rendered notes", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
-  assert.match(block, /gh release create "v\$V" --prerelease --verify-tag --title "v\$V" --generate-notes/);
-  assert.doesNotMatch(block, /--notes-file/);
-  assert.doesNotMatch(block, /release\.mjs release-notes/);
+  assert.match(block, /gh release create "v\$V" --prerelease --verify-tag --title "v\$V" --notes-file release-notes\.txt/);
+  assert.match(block, /release\.mjs release-notes/);
+  assert.doesNotMatch(block, /--generate-notes/);
   const create = block.indexOf("gh release create");
   assert.ok(create !== -1, "opens the pre-release");
 });
@@ -236,15 +237,14 @@ test("the pi job keeps its mutation and tarball gates (the #164 publish-time gua
   assert.match(block, /Tarball carries the skill bundle/);
 });
 
-// The workflow no longer assembles release notes from changeset bodies;
-// GitHub's --generate-notes handles it natively with the "What's Changed"
-// format. The cut job still applies the train, but never touches notes.
-test("the cut job never assembles release notes — GitHub generates them", () => {
+// The workflow renders the release body itself (release.mjs release-notes —
+// the changesets, grouped and headed) and uploads it with --notes-file;
+// GitHub's diff-generated "What's Changed" is gone.
+test("the cut job renders the release body from the changesets", () => {
   const cut = jobBlock(read(PUBLISH), "cut");
+  assert.match(cut, /node scripts\/release\.mjs release-notes > release-notes\.txt/);
   assert.doesNotMatch(cut, /release-notes --channel/);
-  assert.doesNotMatch(cut, /--notes-file/);
-  assert.doesNotMatch(cut, /RUNNER_TEMP\/release-notes/);
-  assert.match(cut, /--generate-notes/);
+  assert.doesNotMatch(cut, /--generate-notes/);
 });
 
 // Least privilege: the workflow baseline is contents: read and each job
