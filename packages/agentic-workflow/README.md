@@ -50,6 +50,32 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
 
+## `section` — locate a Markdown range and splice it losslessly (issue #407)
+
+One primitive for every section-splice surface: the document is parsed with
+`mdast-util-from-markdown`, section bounds come from node positions — a fenced
+`## `-like line is never a heading — and a mutation slices the original string,
+so every byte outside the reported range is carried through untouched.
+
+```sh
+agentic-workflow section locate  --file spec.md --selector '"Objective"'
+agentic-workflow section remove  --file spec.md --selector '["Specs","Retirements"]' --write
+agentic-workflow section replace --file spec.md --selector '{"headingRegex":{"source":"^S\\d+ —"}}' \
+  --replacement body.md --write
+```
+
+`locate` prints the range block; `remove`/`replace` print the transformed
+document on stdout and persist it with `--write`; `--json` emits one receipt.
+`--file -` reads the document from stdin, `--replacement -` reads the
+replacement from stdin.
+
+Selector forms (JSON): a title string, a path array (depth-aware), or an object
+carrying `heading`, `path`, `headingRegex` (`{source, flags}`), or `line`
+(exact string or `{source, flags}`, optionally scoped by `within`). A selector
+resolving to zero or several sections refuses with exit 2
+(`SECTION REFUSAL — <code>`, codes `NO_MATCH` and `AMBIGUOUS_MATCH`); a
+malformed invocation is exit 1 and the caller decides the policy.
+
 ## `memory probe` — bounded memory-substrate health (feature 66)
 
 One command answers "can this session trust the Engram memory layer?" before

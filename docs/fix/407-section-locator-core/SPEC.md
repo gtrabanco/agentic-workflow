@@ -76,10 +76,10 @@ Requirements, each numbered `S#` and quoting the requester's own words verbatim.
 - **The CLI router gains a `section` command** and its hardcoded `usage:` line is
   extended; every pre-existing command keeps its own branch untouched.
 - **The schema package is untouched** and stays dependency-free (S6).
-- **The retrieval chunker (`src/doc/chunks.mjs`) is untouched.** It stays the
+- **The retrieval chunker (`packages/agentic-workflow/src/doc/chunks.mjs`) is untouched.** It stays the
   fence-aware line scanner for the FTS store; the locator is the AST-based
   section/range primitive. Two consumers, two contracts, no shared rewrite.
-- **Nothing about `src/edit/UnitDoc.mjs` changes** (S14): its `indexOf`-based
+- **Nothing about `packages/agentic-workflow/src/edit/UnitDoc.mjs` changes** (S14): its `indexOf`-based
   editors keep working and keep their defect; a later unit may migrate them.
 
 ## Retirements
@@ -88,7 +88,7 @@ Nothing is retired: this unit only adds a primitive.
 
 - No existing surface is superseded — `rg -c 'section-locator' packages/ scripts/` → 0
   at the cut head, so there is no predecessor to delete.
-- `src/doc/chunks.mjs` is not superseded: it answers a different question (chunks
+- `packages/agentic-workflow/src/doc/chunks.mjs` is not superseded: it answers a different question (chunks
   for the retrieval index, 1-based inclusive lines) and its suites stay green.
 - The crate's dependency *claim* is corrected, not retired: the word "one" becomes
   the real inventory (S6).
@@ -144,12 +144,19 @@ none
 
 ## Known pre-existing issues
 
-- **`src/edit/UnitDoc.mjs:setSection` is fence-blind** (`content.indexOf("\n## ")`).
+- **`packages/agentic-workflow/src/edit/UnitDoc.mjs:setSection` is fence-blind** (`content.indexOf("\n## ")`).
   Observed: a unit doc whose Evidence body carries a fenced `## Non-goals` example
   is spliced at that fenced line, producing a dangling fence and a promoted
   heading. **Does not affect this unit** (S14 keeps the migration out) — it is the
   defect class S2 exists to keep out of the new primitive, and it is pinned as a
   reproducer in the new suite's corpus.
+- **`pi-compat-guard` is red at the cut head.** It type-checks the pi package
+  against the published `@gtrabanco/agentic-workflow` tarball, which does not
+  carry the `src/log/render.d.mts` / `packages/agentic-workflow/src/log/publish.d.mts`
+  projections the pi sources import (three `TS2307` errors). Reproduced on a
+  `caee2502` archive with the identical output, so it is not this change's.
+  **Does not affect this unit**: no pi source and no `src/log` module is touched;
+  the offline gate subset is green.
 - **The derived docs tree is stale at the cut head.** `node scripts/docs-generate.mjs --check`
   on a `caee2502` archive reports `3 stale` before this change touches anything
   (the committed pages predate later roadmap rows, not this unit's). **Affects
@@ -250,6 +257,17 @@ task list above; the deterministic routers still judge the document.
 - **L3** — 2026-11-05, correction: the differential base is `caee2502` (this
   branch's cut), not `6fbfa115` as first written in the regression scope; the
   generated-docs staleness was measured on a `caee2502` archive.
+
+- **E1** — 2026-11-05, `bun test test/doc.section-locator.test.mjs` at `c3af3d6d` · exit 1 · `Cannot find module '../src/doc/section-locator.mjs'` (node leg exit 1 too — the RED suite landed before the module).
+- **E2** — 2026-11-05, `bun test test/doc.section-locator.test.mjs` · exit 0 · `29 pass / 0 fail`; `node --test test/doc.section-locator.test.mjs` · exit 0 · `29 pass / 0 fail` (C1, C2, C3, C4, C6, C7, C8, C9 cases green).
+- **E3** — 2026-11-05, `bun test test/section.cli.test.mjs` at `80468c09` · exit 1 · `12 fail` (node leg exit 1 too — the RED CLI corpus before the subcommand existed).
+- **E4** — 2026-11-05, `bun test test/section.cli.test.mjs` · exit 0 · `12 pass / 0 fail`; `node --test test/section.cli.test.mjs test/doc.section-locator.test.mjs` · exit 0 · `41 pass / 0 fail`.
+- **E5** — 2026-11-05, `bun run test` in `packages/agentic-workflow` · exit 0 · `329 pass / 0 fail` (17 files); `node --test` · exit 0 · `330 pass / 0 fail` (57 suites).
+- **E6** — 2026-11-05, `rg -c 'section locate' packages/agentic-workflow/README.md` → `1`; `rg -c '"mdast-util-from-markdown": "2.1.0"' packages/agentic-workflow/package.json` → `1`; `rg -c '"dependencies"' packages/agentic-workflow-schema/package.json` → `0`; `bun scripts/lint-changeset.mjs .changeset/407-section-locator-core.md` · exit 0 · `ok`; `node scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS`.
+- **E7** — 2026-11-05, differential run of the CLI against a `caee2502` archive and the head archive · exit 0 · `12 identical · 2 intended · 0 regressions` — the two intended are the usage line gaining `section` and the new command answering instead of `Unknown service: section`.
+- **E8** — 2026-11-05, `bun scripts/phase-lint.mjs docs/fix/407-section-locator-core/SPEC.md` · exit 0 · `PASS (6/6)` per bullet; `bun scripts/roadmap-settle.mjs` · exit 0 · `137 unit docs checked · 0 violations`; `bun scripts/unit-route.mjs 407-section-locator-core` · exit 0 · `route: execute`; `bun scripts/promise-coherence.mjs docs/fix/407-section-locator-core/SPEC.md docs/fix/407-section-locator-core/planning-obligations.md` · exit 0 · `PASS · claims: 2 checked · 3 skipped` (the three `bun test`/`local-gate` cells are disclosed skips: not reader commands).
+- **G1** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 · `PASS — 7 step(s) in 115s` (root suite 81/81, crate bun + node, schema node, version parity).
+- **G2** — 2026-11-05, `bun scripts/local-gate.mjs` · exit 1 · bails at `pi-compat-guard` (three `TS2307` for `src/log/*` against the published tarball) — reproduced identically on the `caee2502` archive, so pre-existing (see §Known pre-existing issues); every other executed step passed, and `--only dependency-advisories` exits 0 report-only with no advisory on the added parser.
 
 ## Next
 
