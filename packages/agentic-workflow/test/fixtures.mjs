@@ -19,14 +19,37 @@ export const SHIM = path.join(REPO_ROOT, "template/.agentic-workflow/hooks/turn-
 
 const GIT_CONFIG = ["-c", "user.email=t@example.com", "-c", "user.name=test", "-c", "commit.gpgsign=false"];
 
+// The git location variables a fixture's child `git` must never inherit: the
+// host process may sit inside a tooling checkout whose harness exports
+// `GIT_DIR`/`GIT_WORK_TREE`, and `git -C <tmp>` then resolves the outer
+// repository from the environment — the fixture commits land in the real repo.
+// Test-side twin of `sandboxGitEnv` in packages/pi-agentic-workflow's
+// src/auto-log-session.ts — the same list, kept in step.
+const GIT_LOCATION_VARS = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_COMMON_DIR",
+  "GIT_NAMESPACE",
+  "GIT_CEILING_DIRECTORIES",
+];
+
+export function sandboxGitEnv(env = process.env) {
+  const clean = { ...env };
+  for (const name of GIT_LOCATION_VARS) delete clean[name];
+  return clean;
+}
+
 export function git(cwd, ...args) {
-  const r = spawnSync("git", [...GIT_CONFIG, "-C", cwd, ...args], { encoding: "utf8" });
+  const r = spawnSync("git", [...GIT_CONFIG, "-C", cwd, ...args], { encoding: "utf8", env: sandboxGitEnv() });
   if (r.status !== 0) throw new Error(`git ${args.join(" ")} in ${cwd} failed: ${r.stderr}`);
   return r.stdout.trimEnd();
 }
 
 function gitInit(dir, branch) {
-  const r = spawnSync("git", ["init", "-q", "-b", branch, dir], { encoding: "utf8" });
+  const r = spawnSync("git", ["init", "-q", "-b", branch, dir], { encoding: "utf8", env: sandboxGitEnv() });
   if (r.status !== 0) throw new Error(`git init ${dir} failed: ${r.stderr}`);
 }
 
@@ -51,7 +74,7 @@ function commitFile(dir, rel, content) {
 
 function bareRemote(root, dir, branch) {
   const bare = path.join(root, `${path.basename(dir)}-remote.git`);
-  const r = spawnSync("git", ["init", "-q", "--bare", bare], { encoding: "utf8" });
+  const r = spawnSync("git", ["init", "-q", "--bare", bare], { encoding: "utf8", env: sandboxGitEnv() });
   if (r.status !== 0) throw new Error(`git init --bare failed: ${r.stderr}`);
   git(dir, "remote", "add", "origin", bare);
   git(dir, "push", "-qu", "origin", branch);
@@ -196,7 +219,7 @@ function buildFixtures(root) {
 
 function baseEnv(ghDir) {
   return {
-    ...process.env,
+    ...sandboxGitEnv(),
     PATH: `${ghDir}:${process.env.PATH}`,
     AGENTIC_WORKFLOW_RUNTIME: "node",
   };

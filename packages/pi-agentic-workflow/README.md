@@ -250,6 +250,73 @@ instead of failing the session. The workflow-side protocol — when units save,
 the recall order, the degraded path — lives in `unit-lane`'s memory reference,
 not here.
 
+## Session journal — auto log-session (optional)
+
+One mechanical entry in the project's `docs/LOGS.md` when a session ends: the
+branch, how many commits the session made, and the paths it touched. No model
+runs, nothing is summarised, and no prompt text, model output or file content
+ever enters the entry — the same git facts the template's Claude Code hook
+writes, byte for byte (a test runs that hook and diffs the bytes).
+
+**Off by default, and it never creates the journal.** A project participates by
+carrying `docs/LOGS.md`; enable the writer in either config file
+(`.pi/pi-agentic-workflow.json`; the project file wins over the global one):
+
+```json
+{ "autoLogSession": { "mode": "mechanical" } }
+```
+
+Two cases write nothing at all, on purpose: a project that is not a git
+repository (there are no facts to record), and a session that started before
+the journal existed — the journal's presence at session start is the opt-in,
+so creating `docs/LOGS.md` mid-session opts in the *next* session, not the
+running one. Both refusals are silent because a refusal note would itself be
+the residue a non-participating project must not carry.
+
+What it does per session, all of it git:
+
+- on start, records `.pi/.session-<id>.start` (`HEAD` sha, epoch, timestamp);
+- on shutdown, appends **one** entry and removes that marker. A marker left by a
+  crashed session is never adopted — each session only ever reads its own, and
+  two sessions in one workspace stay two sessions.
+
+The marker is this package's own bookkeeping, so add it to your ignore file (git
+tracks nothing while a session runs; a crash can leave the file behind):
+
+```gitignore
+.pi/.session-*.start
+```
+
+**Publishers.** The local append is one strategy. Declare a second one and it
+receives the same frozen payload (`timestamp`, `branch`, `reason`,
+`commits{count,range}`, `files[]`) as JSON on stdin — an HTTP endpoint, a queue,
+a path outside the repo, a log sink, whatever the argv runs:
+
+```json
+{
+  "autoLogSession": {
+    "mode": "mechanical",
+    "publisher": { "command": ["curl", "-sS", "-X", "POST", "--data-binary", "@-", "https://example.test/journal"], "timeoutMs": 5000 }
+  }
+}
+```
+
+The local entry is written first and always kept: a publisher that fails, times
+out or cannot be spawned is dropped — never retried, never blocking the
+shutdown, and never costing the entry that is already on disk. **Paths travel**
+in the payload; the destination is the one you declared.
+
+**Independent of telemetry.** Turning this off keeps the per-unit cost sample;
+turning telemetry off keeps the entry. Rich, narrative entries stay
+`/log-session`'s job — this writer only ever produces the mechanical block.
+
+Regenerate an entry without a session (a CI job, a test, a byte diff):
+
+```sh
+printf '%s' '{"timestamp":"2026-11-04T15:12Z","branch":"main","reason":"quit","commits":{"count":0,"range":null},"files":[]}' \
+  | npx @gtrabanco/agentic-workflow log render --facts -
+```
+
 ## When a configured model is unavailable
 
 Default: the command **refuses to start** and tells you why — the model is not in

@@ -26,6 +26,8 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   // Issue #383 — the measured acceptance is opt-in: a fresh install measures
   // nothing until an operator turns it on.
   telemetry: { enabled: false },
+  // #394 — automatic logging is opt-in: off by default, and no publisher named.
+  autoLogSession: { mode: "off", publisher: null },
   profiles: {},
   profileOrder: [],
   profileFallback: { ...DEFAULT_PROFILE_FALLBACK },
