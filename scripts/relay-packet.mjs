@@ -159,8 +159,6 @@ function readManifest(file, what) {
 
 const sha256 = (text) => createHash("sha256").update(text).digest("hex");
 
-const ignoredExcerpt = (text, pattern) => pattern.test(text);
-
 /* -------------------------------------------------------------------- baton */
 
 /**

@@ -500,6 +500,15 @@ carrier the fold queue reads — the unit doc for a migrated unit, the legacy
 review-findings.md otherwise), route, next, rows, read-set (at most
 ${READ_SET_MAX} paths, then an explicit remainder line), fingerprint.
 
+An addendum follows the fingerprint only when a pi-web session is present
+(PI_WEB_SESSION=1): \`relay: <state>\` names the unit's Relay packet state
+(bootstrap-needed, draft, active, complete, needs-help, unreadable) and
+\`relay-next:\` carries the bootstrap instruction when one is due. Without that
+marker the block says \`relay: unavailable — …\` and the per-phase /execute-phase
+hand-off stays printed: relay is an enhancement of the seam, never a dependency
+(owner: skills/unit-lane/references/RELAY.md). \`--triage\` prints the same
+addendum after its Budget line, and carries it as \`relay\` in --json mode.
+
 Exit codes: 0 a route was printed; 1 an unknown unit or an argument count other
 than one; 2 an ambiguous unit token (a number matching both a feature and a fix
 folder). The last two print no route at all. Diagnostics go to stderr, the
