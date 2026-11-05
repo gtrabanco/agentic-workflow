@@ -4382,3 +4382,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Opened 9 roadmap issues and wired dependencies for the projection/hooks architecture, plus a #366 dependency note
 - **Decisions:** Mecanización prosa→CLI (no hooks) como palanca de ahorro; enforcement hace el recorte seguro; proyecciones de build desde fuente única; mdast+byte-splice para el stripper lossless; hashes de binding para re-verificación; native GitHub blocked-by relationships en vez de solo prose
 - **Next:** Triage de #366, luego camino crítico 406→407→410→412
+
+## 2026-11-05T14:00:00Z — main — F112 fix
+- **Commits:** 1 (`960fa739`)
+- **Files:** 1 file (`packages/agentic-workflow-schema/test/verification-gates.test.mjs`)
+- **Summary:** Repaired F112 test — the package gate path-portability test that failed on Node 26. The root cause was `cpSync` from Node throwing ENOTDIR when trying to `readdirSync` on a broken/non-regular path (`.docex/example-0/example.ts` symlink or special path). Replaced `cpSync` with a manual `copyRecursive` that catches lstat/readdir errors per-entry, handles symlinks by re-symlinking (not following), and skips node_modules.
+- **Decisions:** Manual copy over cpSync because Node 26's cpSync is stricter with special filesystem entries; try/catch around every lstat and readdir call to fail-closed gracefully; excluded node_modules symlinks from copy (they're not needed for npm pack).
+- **Next:** N/A — F112 test passes (12/12), both commits pushed to origin/main.
