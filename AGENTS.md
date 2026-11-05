@@ -1,8 +1,7 @@
 # AGENTS.md
 
-> **This is the repository's single agent guide** — exactly one copy of these
-> rules. Older Claude Code releases only read `CLAUDE.md`; if yours is one of
-> them, point it at this file rather than re-creating that one (the
+> **The repository's single agent guide** — one copy of these rules. A host that
+> reads only `CLAUDE.md` points at this file instead of duplicating it (the
 > `init-workspace` skill applies the same rule to target projects).
 
 Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
@@ -206,12 +205,21 @@ This repo has no application build. "Green" means:
   `test/alias-coverage.test.mjs` and `test/skill-parity.test.mjs` read both
   trees; the staged one is always rebuilt first, so it is never stale.
 
+### Where the gate runs
+
+The gate is local-first (owner decision 2026-11-04): `bun scripts/local-gate.mjs`
+runs every check the remote gate runs, in the same order, and stops at the first
+failing step (`--no-bail` keeps going). `--install-hook` writes a `pre-push` hook
+that runs the offline subset, so a push never waits on the registry. The remote
+gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
+branch you cannot run locally; nothing here spends runner minutes on a push.
+
 **Runtime convention — bun runs scripts and tests; the root gate runs under either
 runtime.** Two
 scopes, one override. `AGENTIC_WORKFLOW_RUNTIME=bun|node` wins everywhere it is
 set. Outside that override: (a) **manual invocation** of repo scripts is bun-first
 (`bun scripts/x.mjs`, `bun run <pkg-script>`), with the same command under node as
-the guaranteed fallback, enforced by a node-compat CI job — skill prose and usage
+the guaranteed fallback, enforced by the gate's node-compat steps — skill prose and usage
 strings show the bun form, and skills running in user projects resolve
 bun-else-node at invocation (`npm_config_user_agent` starting with `bun/` pins
 bun); (b) **package-spawned children of `@gtrabanco/pi-agentic-workflow`** run
@@ -226,14 +234,10 @@ guaranteed fallback — and the whole gate runs under either runtime:
 `scripts/run-root-suite.mjs` adapts the invocation per runtime (`bun test`
 subcommand vs `node --test` flag) and budgets a 60s per-test timeout on the bun leg
 (bun→bun spawn overhead plus the full-history git walks; node keeps its no-default
-timeout model). CI still runs `node scripts/run-root-suite.mjs`. Before the
-adaptation `bun scripts/run-root-suite.mjs` failed by construction
-(`Cannot use test outside of the test runner` — bun only enters a runner through its
-`test` subcommand) and `bun test scripts/` was not equivalent (unit 329's Log `E19`:
-bun's 5-second default timeout, and an echoed error frame carrying
-`ERR_MODULE_NOT_FOUND`); issue #329's sweep had pinned the node-only carve-out and
-both failure classes are now closed. `scripts/invocation-drift.mjs` still pins this
-paragraph's facts, so they cannot be dropped silently.
+timeout model). CI still runs `node scripts/run-root-suite.mjs`; the node-only
+carve-out issue #329 pinned is gone (`bun scripts/run-root-suite.mjs` died with
+`Cannot use test outside of the test runner`), and `scripts/invocation-drift.mjs`
+pins this paragraph's facts.
 
 **Tool choice is re-decided every turn.**
 Manual invocation runs `bun` before `node` and search runs `rg` before `grep`;
@@ -348,11 +352,9 @@ CHANGELOG.md | package-versions | package:version | equals-each
 
 ```
 
-The two schema generators are the clean example of the split the rule turns on: the
-same script rewrites a projection or reports on it, and only the reporting mode may
-run after a freeze. `bundle:skills` stages a gitignored build artifact that the
-package's own lifecycle stages and removes again. No script or skill may keep a
-second copy of this list.
+The two schema generators show the split: one script rewrites a projection or
+reports on it, and only the reporting mode may run after a freeze. No script or
+skill may keep a second copy of this list.
 
 ## Conventions
 
