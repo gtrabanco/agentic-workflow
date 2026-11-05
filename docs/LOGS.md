@@ -4210,6 +4210,39 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Serena is a root-level monorepo tool: removed sub-package .serena dirs and configured cross-package workspace folders via project.yml; merged PR #397 required conflict resolution because 103's SPEC moved from docs/features/103/ to docs/fix/103/; the README Session section must show workflow-status and log-session skills, not an auto-log entry that doesn't exist yet
 - **Next:** Close the unit-lane for #394 (auto log-session) in the .worktrees/issue-394 worktree: rebasing on main, correcting the 12 verified-but-unimplemented obligations to planned, and implementing the auto-log wiring
 
+## 2026-11-04T15:25:58Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Triage issues 394, 396, 398: all three are new features — #394 (auto log-session) and #396 (doc-gen) promote to feature; #398 (retired carriers) is fix-now high severity. Created 5 worktrees (394, 396, 398, 356, 358). Launched 3 subsessions in parallel that all got stuck or halted — 394 looped on unused vars, 398 half-done on template frontmatter, 396 created SPEC but triaged trivial scope due to broken templates. Stopped all subsessions manually.
+- **Decisions:** 1) 394/396 promoted, 398 fix-now high — applied promoted/fix-next labels and posted dated comments. 2) Created 5 worktrees for parallel lanes, but subsessions failed: broken templates (#398's own bug) caused #396 to derive trivial scope and skip review/tests; #394 got stuck in unused-var loops; #398 was interrupted mid-template edit.
+- **Next:** Triage remaining issues from the worktree batch (356, 358) and restart the lanes after fixing template frontmatter first — that fix should land before any of the other units.
+
+## 2026-11-04T15:47:03Z — feat/358-adversarial-review — manual
+- **Commits:** 4 (`0fe253dd…06014ed9`) plus this close commit
+- **Files:** 24 files
+- **Summary:** Issue #358 applied as a local unit (`docs/fix/358-adversarial-kill-mandate/`): `review-change --adversarial N` verifies instead of enumerating — `kill | confirm` with falsifying/supporting evidence bound from cycle 1 of the pass, a diff-only reflector as the final precision filter, and the CIVER stability check that re-scopes a misattributed reproducer before it persists. The three closed sets are published in the schema package and bound by the `adversarial-verdict@1` block (`AGENTS.md` inventory + parity pin), and `scripts/adversarial-verdict.mjs` is the conductor's one added step: it validates the pass record against the reviewed diff and prints the persist set.
+- **Decisions:** (1) The verdict layer lands in the two mode references, not in `REVIEW_PROCESS.md` — that file is loaded by every route, so the default and single-reviewer routes pay 0 est (measured, `E10`). (2) `origin: finder | new` is a record field, not a fourth published set: the three vocabularies the issue names are the ones published. (3) The stability verdict stays two-valued with the re-scope carried in `scope`, so an `unstable` row that still claims `as-reported` is refused rather than silently reinterpreted. (4) The token-delta acceptance is satisfied by the measured contract channel (`review-change:adversarial` 21,955 → 23,372 est, default routes 0) with the live-model delta stated as unmeasurable here, which `A1`/`PE-012` record instead of implying. (5) Two ledger validators were narrowed at cut before they ran (repo-wide word bans would have failed on pre-existing unrelated hits) — disclosed as `D1`.
+- **Next:** `/review-change` on a fresh context (external verification this unit does not self-grant), then `/audit-pr`; `docs/LOGS.md` for this session is this entry, written before the session close.
+## 2026-11-04T16:55:57Z — feat/358-adversarial-review — manual
+- **Commits:** 10 (`0fe253dd…42fc3a58`)
+- **Files:** 27 files
+- **Summary:** fix/358-adversarial-kill-mandate — deliver the adversarial kill-mandate layer: published vocabulary, deterministic checker, and verdict grammar
+- **Decisions:** O9/O14 validators narrowed at cut to avoid self-harm on pre-existing unrelated hits (D1); the diff parser bound to hunk extents (21fc20e0) after a red-first case; SKILLS.md row updated to narrate the verdict layer; O16 ledger cell corrected to the pre-existing 1 skip; E14 recorded the green advisory-fold re-run (12 pass, root gate 0 fail, schema 732 pass)
+- **Next:** push feat/358-adversarial-review and open/refresh the PR — add 'Closes #358' to the PR description; then /review-change on a fresh context for external verification
+## 2026-11-04T16:55:59Z — feat/358-adversarial-review — manual
+- **Commits:** 10 (`0fe253dd…42fc3a58`)
+- **Files:** 27 files
+- **Summary:** Fix Serena marksman language server crash (missing libicu)
+- **Decisions:** Replaced broken marksman binary with DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 wrapper and patched marksman.py to set the env var at runtime
+- **Next:** Run serena project health-check to verify; monitor for Serena upgrades that may reinstall the binary
+
+## 2026-11-04T16:56:06Z — feat/358-adversarial-review — manual
+- **Commits:** 10 (`0fe253dd…42fc3a58`) plus this close commit
+- **Files:** 27 files
+- **Summary:** Issue #358: PR 399 opened (base `main`, head `fix/358-adversarial-kill-mandate`, 7 branch commits, 25 files, +1475/−11). Merged from main (a single `LOGS.md` conflict resolved by keeping both append-only entries) and pushed. All local gates green: root-suite 1536/1535 pass, check-skill-context 28 skills + 3 documents, skill-lint 0 findings. CI jobs queued behind a runner backlog. No `review-change` has run on the branch yet — that is the intended next step before `/audit-pr`.
+- **Decisions:** PR title set as `fix(358): adversarial pass verifies instead of enumerating — kill mandate, diff-only reflector, stability check`; the PR body was written from the template's fix section with the full evidence pack, rollback, and honest disclosures (pre-existing red on --documents gate, D1 narrowed validators, no review-change receipt yet).
+- **Next:** `/review-change` on the branch from a fresh context, then `/audit-pr 399`
+
 ## 2026-11-05T00:35:17Z — feat/396-doc-gen — external verify
 - **Commits:** 21 (`15d23a3c…530d81af`)
 - **Files:** 18 files

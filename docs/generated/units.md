@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 131 unit docs, 104 roadmap rows, 3 packages, 28 skills and 43 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 132 unit docs, 104 roadmap rows, 3 packages, 28 skills and 44 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -80,6 +80,7 @@ Generated from 131 unit docs, 104 roadmap rows, 3 packages, 28 skills and 43 scr
 | 353-residue-shadow-copies | fix | — | fix/353-residue-shadow-copies |
 | 355-scaffold-parity-routes | fix | done | fix/355-scaffold-parity-routes |
 | 357-skill-lint-smells-supply-chain | fix | done · [#377](https://github.com/gtrabanco/agentic-workflow/pull/377) | fix/357-skill-lint-smells-supply-chain |
+| 358-adversarial-kill-mandate | fix | in-progress | fix/358-adversarial-kill-mandate |
 | 36-verification-contract-hygiene | feature | done · [#304](https://github.com/gtrabanco/agentic-workflow/pull/304) | 36 — verification-contract-hygiene |
 | 360-risk-tiered-ceremony | fix | in-progress | fix/360-risk-tiered-ceremony |
 | 361-finding-severity-ladder | fix | done · [#381](https://github.com/gtrabanco/agentic-workflow/pull/381) | fix/361-finding-severity-ladder |
