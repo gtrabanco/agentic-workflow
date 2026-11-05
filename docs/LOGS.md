@@ -4429,3 +4429,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #407 (shared section locator + lossless splicer core) to this repository: created the mdast-based section locator library, the agentic-workflow section CLI subcommand, two red-first test suites, the unit doc with both planning ledgers, and PR #417 (Closes #407); settled roadmap rows and gate receipts; three pre-existing red surfaces confirmed.
 - **Decisions:** Chose mdast-util-from-markdown over the native fence-aware path (D8's re-trigger never met but the request's correctness argument required an AST locator); fenced ## lines in code blocks are never headings; multi-byte UTF-16 offsets from mdast require byteStart/byteEnd splice; three red surfaces (pi-compat-guard, docs/stale, F99 timing) reproduced on base commit and confirmed pre-existing.
 - **Next:** Owner's merge verdict on PR #417; after merge, delete row #407 from the Fixes table.
+
+## 2026-11-05T21:41:14Z — feat/407-section-locator-core — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Read-only external verification of issue #407 (section-locator-core) on branch feat/407-section-locator-core (base: caee2502 → head: 051a2035). Ran every declared verification command and 17 independent behavioral probes (fence safety, CRLF, multi-byte offsets, nested same-title paths, stateless regexes, post-splice idempotence, heading-only docs). Re-ran all 16 obligations: bun test doc.section-locator (29 pass), section.cli (12 pass), full crate (329 pass both runtimes), differential CLI vs base (18 commands identical), bun scripts/local-gate --skip-network (PASS 7 steps / 104s), bun install --frozen-lockfile, docs-tree, version-parity, changeset lint. Verdict: VERIFIED — 0 blockers, 4 advisories (pre-existing).
+- **Next:** Owner merge verdict on PR #417.
