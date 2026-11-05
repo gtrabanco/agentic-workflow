@@ -27,6 +27,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import { contributorLines, previousReleaseTag } from "./release.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const script = path.join(repoRoot, "scripts/release.mjs");
 
@@ -267,11 +269,12 @@ test("a forced version is marked in the release body (AC-10)", () => {
   assert.match(result.stdout, /Version forced by operator: 5\.0\.0/);
 });
 
-test("the release command uses --generate-notes so PR authors are credited (AC-15)", () => {
+test("the release command does NOT use --generate-notes with --notes-file (AC-15, PE-004)", () => {
   const root = fixture();
   const result = run(["plan", "--root", root, "--base", "1.0.0", "--channel", "stable"]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  assert.match(result.stdout, /gh release create v1\.0\.1 --generate-notes/);
+  assert.doesNotMatch(result.stdout, /--generate-notes/);
+  assert.match(result.stdout, /gh release create v1\.0\.1.*--notes-file/);
 });
 
 // Third-party changeset bodies are DATA, never command text: the printed gh
@@ -289,7 +292,7 @@ test("the printed release command hands the notes over as a file, never inline",
   const ghLines = result.stdout.split("\n").filter((l) => l.includes("gh release create"));
   assert.equal(ghLines.length, 1, "exactly one gh command");
   assert.match(ghLines[0], /--notes-file/);
-  assert.match(ghLines[0], /--generate-notes/, "contributors stay credited (AC-15)");
+  assert.doesNotMatch(ghLines[0], /--generate-notes/, "no --generate-notes with --notes-file");
   assert.doesNotMatch(ghLines[0], /--notes "/, "no inline notes: bodies are data, not command text");
   assert.doesNotMatch(ghLines[0], /curl|evil|sh;|echo/, "no body content inside the command line");
 });
@@ -521,6 +524,88 @@ test("release-notes refuses to render a stable cut with no release intent", () =
   const result = run(["release-notes", "--root", root, "--channel", "stable"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr || result.stdout, /no release intent/i);
+});
+
+// ---------------------------------------------------------------------------
+// The Contributors section: the window is the release immediately BEFORE the
+// cut — never the first one of the series — and every bullet credits the PR's
+// own author.
+// ---------------------------------------------------------------------------
+
+test("the contributors window starts at the canary immediately before the cut", () => {
+  const window = previousReleaseTag({
+    channel: "canary",
+    tag: "v5.0.0-canary.20261104.2",
+    canaryTags: [
+      "v5.0.0-canary.20261001.1",
+      "v5.0.0-canary.20261002.1",
+      "v5.0.0-canary.20261003.1",
+    ],
+    stableTags: ["v4.10.0"],
+  });
+  assert.equal(window, "v5.0.0-canary.20261003.1", "an earlier canary already handed its PRs out");
+});
+
+test("the nearest canary wins even where the tag listing order disagrees", () => {
+  // `git tag -l` sorts refnames, so `v10…` precedes `v9…` and `…20261101.10`
+  // precedes `…20261101.9`. The window follows the version comparator instead.
+  const window = previousReleaseTag({
+    channel: "canary",
+    tag: "v10.0.0-canary.20261104.1",
+    canaryTags: [
+      "v9.0.0-canary.20261001.1",
+      "v10.0.0-canary.20261101.9",
+      "v10.0.0-canary.20261101.10",
+    ].sort(),
+    stableTags: ["v9.5.0"],
+  });
+  assert.equal(window, "v10.0.0-canary.20261101.10", "the counter is numeric, not lexical");
+});
+
+test("the first canary of a train windows from the newest stable tag", () => {
+  const window = previousReleaseTag({
+    channel: "canary",
+    tag: "v5.0.0-canary.20261104.1",
+    canaryTags: [],
+    stableTags: ["v4.9.3", "v4.10.0"],
+  });
+  assert.equal(window, "v4.10.0", "that canary carries exactly what the stable release left");
+});
+
+test("a stable cut windows from the newest stable tag, ignoring the canaries", () => {
+  const window = previousReleaseTag({
+    channel: "stable",
+    tag: "v5.0.0",
+    canaryTags: ["v5.0.0-canary.20261001.1"],
+    stableTags: ["v4.9.3", "v4.10.0"],
+  });
+  assert.equal(window, "v4.10.0");
+});
+
+test("every bullet credits the PR's own author, deduplicated and in merge order", () => {
+  const lines = contributorLines(
+    [
+      { number: 12, title: "late", mergedAt: "2026-11-02T10:00:00Z", author: { login: "ana" } },
+      { number: 10, title: "early", mergedAt: "2026-11-01T10:00:00Z", author: { login: "bo" } },
+      { number: 10, title: "early (rebased)", mergedAt: "2026-11-01T11:00:00Z", author: { login: "bo" } },
+      { number: 9, title: "older cut", mergedAt: "2026-10-30T10:00:00Z", author: { login: "cy" } },
+    ],
+    "gtrabanco/agentic-workflow",
+    "2026-11-01T00:00:00Z",
+  );
+  assert.deepEqual(lines, [
+    "* early by @bo in https://github.com/gtrabanco/agentic-workflow/pull/10",
+    "* late by @ana in https://github.com/gtrabanco/agentic-workflow/pull/12",
+  ]);
+});
+
+test("a deleted account falls back to the repository owner instead of printing undefined", () => {
+  const lines = contributorLines(
+    [{ number: 3, title: "gone", mergedAt: "2026-11-02T10:00:00Z", author: null }],
+    "gtrabanco/agentic-workflow",
+    "2026-11-01T00:00:00Z",
+  );
+  assert.deepEqual(lines, ["* gone by @gtrabanco in https://github.com/gtrabanco/agentic-workflow/pull/3"]);
 });
 
 test("publish-plan prints per-package TSV lines for the declared packages (the channel publish job's input)", () => {

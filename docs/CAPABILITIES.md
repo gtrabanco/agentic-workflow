@@ -53,4 +53,4 @@ inspected and found absent.
 | Public API / integrations | yes | Three published npm packages, the skills manifest | `packages/agentic-workflow/package.json`, `packages/agentic-workflow-schema/package.json` and `packages/pi-agentic-workflow/package.json`; `skills.sh.json` plus `.claude-plugin/plugin.json` publish the skills surface |
 | Skills distribution | yes | `npx skills add gtrabanco/agentic-workflow` | `skills/` is the installable source, `skills.sh.json` its manifest, and `packages/pi-agentic-workflow/package.json` the packaged copy |
 | Scaffold export | yes | `npx degit gtrabanco/agentic-workflow/template` | `template/`, copied verbatim by `skills/init-workspace/SKILL.md`; a bootstrapped project is born on it |
-| Deterministic gates | yes | `node scripts/run-root-suite.mjs` | `scripts/`, where every gate ships its sibling suite, wired into CI by `.github/workflows/root-suite.yml` |
+| Deterministic gates | yes | `bun scripts/local-gate.mjs` | `scripts/`, where every gate ships its sibling suite; one ordered step list runs locally and through the manual `.github/workflows/root-suite.yml` |
