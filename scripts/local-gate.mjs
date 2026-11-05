@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 /**
  * The gate, run locally — the same checks the remote workflow runs, in the same
- * order, stopping at the first failing step.
+ * order, with independent steps running concurrently in a bounded worker pool.
  *
  * Owner decision (AGENTS.md → Verification → "Where the gate runs"): the gate
  * is local-first. `.github/workflows/root-suite.yml` is manual only and runs
  * this script, so a push spends no runner minutes and the command a contributor
  * runs before pushing is byte-for-byte the command CI runs.
+ *
+ * Concurrency: `jobs` workers (one per CPU capped at 4 by default, `--jobs`
+ * overrides) pull the next step whose prerequisites — the `DEPS` graph — have
+ * all passed. The graph exists because table order no longer serializes the
+ * steps: `schema-build`'s tsc writes dist/, and both the schema node-compat
+ * step (its own tsc writes the same tree) and every suite that resolves dist
+ * at import time depend on it. With bail — the default — the first red stops
+ * the dispatch: in-flight steps finish and nothing new starts, so a red never
+ * sends dependents against a broken prerequisite. `--no-bail` runs every
+ * runnable step and reports the failed ones plus their skipped dependents.
  *
  * Fail-fast is the default because that is what a local run is for: the first
  * red is the one to fix, and every later step would test a tree already known
@@ -32,6 +42,7 @@
  *   bun scripts/local-gate.mjs --only a,b        # a subset, in table order
  *   bun scripts/local-gate.mjs --skip-network    # the offline subset
  *   bun scripts/local-gate.mjs --push-base <rev> # skip test steps on an empty impact verdict
+ *   bun scripts/local-gate.mjs --jobs 2          # cap the worker count
  *   bun scripts/local-gate.mjs --no-bail         # run everything, report all
  *   bun scripts/local-gate.mjs --dry-run         # print the plan, run nothing
  *   bun scripts/local-gate.mjs --install-hook    # write .git/hooks/pre-push
@@ -43,7 +54,7 @@
  * Its sibling suite is `scripts/local-gate.test.mjs`.
  */
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -181,9 +192,168 @@ export const STEPS = [
   },
 ];
 
+/**
+ * The prerequisite ids per step id. The gate runs its steps in a bounded worker
+ * pool, so steps that would race on the same bytes are held apart by the graph
+ * instead of by table order: `schema-build`'s tsc writes dist/, and both the
+ * schema node-compat step (its own tsc writes the same tree) and every suite
+ * that resolves dist at import time depend on it. Every id must name a declared
+ * step, the map is closed over STEPS, and the graph is acyclic — all pinned by
+ * `scripts/local-gate.test.mjs`.
+ */
+export const DEPS = {
+  "workspace-install": [],
+  "schema-build": ["workspace-install"],
+  "crate-suite-bun": ["workspace-install", "schema-build"],
+  "crate-suite-node": ["workspace-install", "schema-build"],
+  "root-suite": ["workspace-install", "schema-build"],
+  "version-parity-content": [],
+  "schema-node-compat": ["workspace-install", "schema-build"],
+  "pi-node-compat": ["workspace-install"],
+  "pi-compat-guard": [],
+  "dependency-pin-gate": [],
+  "dependency-advisories": [],
+};
+
+/** The default worker count: one per CPU, capped at 4 — the steps are full
+ * suites that already parallelize internally, so more workers than that mainly
+ * adds memory pressure on a laptop. */
+export function defaultJobs() {
+  return Math.min(4, Math.max(1, os.availableParallelism?.() ?? os.cpus().length));
+}
+
+/**
+ * The dependency-aware worker pool: `jobs` workers pull the next step whose
+ * prerequisites have all passed, so independent steps overlap while a step's
+ * dependents wait. A prerequisite that is not in the selection (filtered out by
+ * `--only` or `--skip-network`) counts as satisfied — a filtered step can never
+ * be a deadlock.
+ *
+ * `bail` (the default) stops dispatching after the first red — in-flight steps
+ * finish, nothing new starts, dependents of the red are never run. Without it,
+ * every runnable step is attempted and a failed step's transitive dependents
+ * are skipped and reported, never run against a broken prerequisite.
+ *
+ * `runStep` is `async (step) => exit`. Note for in-tree callers: the one `run:`
+ * step (`pi-compat-guard`) shells out synchronously and blocks the event loop
+ * for its duration — workers stall behind it, which is why it stays a network
+ * step the push hook skips.
+ */
+export async function scheduleSteps(runnable, runStep, { jobs = defaultJobs(), bail = true, deps = DEPS } = {}) {
+  const byId = new Map(runnable.map((step) => [step.id, step]));
+  const statuses = new Map(); // id -> "passed" | "failed" | "skipped"
+  const running = new Set();
+  const failures = [];
+  const skipped = [];
+  let stop = false;
+  let firstExit = null;
+  let waiters = [];
+  const notify = () => {
+    const pending = waiters;
+    waiters = [];
+    for (const resolve of pending) resolve();
+  };
+  const wait = () => new Promise((resolve) => {
+    waiters.push(resolve);
+  });
+
+  const prerequisites = (step) => (deps[step.id] ?? []).filter((id) => byId.has(id));
+  const pickReady = () =>
+    runnable.find(
+      (step) =>
+        !statuses.has(step.id) &&
+        !running.has(step.id) &&
+        prerequisites(step).every((id) => statuses.get(id) === "passed"),
+    );
+
+  const skipDependents = (failedId) => {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const step of runnable) {
+        if (statuses.has(step.id)) continue;
+        const blocked = prerequisites(step).some((id) => {
+          const status = statuses.get(id);
+          return status === "failed" || status === "skipped";
+        });
+        if (blocked) {
+          statuses.set(step.id, "skipped");
+          skipped.push(step);
+          changed = true;
+        }
+      }
+    }
+  };
+
+  const worker = async () => {
+    for (;;) {
+      if (stop) return;
+      const step = pickReady();
+      if (!step) {
+        if (running.size === 0) return;
+        await wait();
+        continue;
+      }
+      // The worker owns its step: it awaits the run, so the number of
+      // in-flight steps never exceeds the worker count and the pool cannot
+      // resolve while a dispatched step is still in flight.
+      running.add(step.id);
+      let exit;
+      try {
+        exit = await runStep(step);
+      } catch {
+        exit = 1;
+      }
+      running.delete(step.id);
+      if (exit === 0) {
+        statuses.set(step.id, "passed");
+      } else {
+        statuses.set(step.id, "failed");
+        failures.push(step);
+        if (firstExit === null) firstExit = 1;
+        if (bail) stop = true;
+        else skipDependents(step.id);
+      }
+      notify();
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.max(1, jobs) }, worker));
+  return { failures, skipped, statuses, status: failures.length > 0 ? 1 : 0 };
+}
+
+/**
+ * One step as a promise: command steps spawn asynchronously and capture their
+ * output, so parallel steps never interleave bytes mid-line — each step's
+ * output prints atomically after its completion line. `run:` steps execute in
+ * process and stream directly (they manage their own output).
+ */
+async function runStepAsync(step, root, onSpawnOutput) {
+  if (step.run) return step.run({ root });
+  return await new Promise((resolve) => {
+    const child = spawn(step.argv[0], step.argv.slice(1), {
+      cwd: path.join(root, step.cwd ?? "."),
+      stdio: ["ignore", "pipe", "pipe"],
+      env: stepEnv(),
+    });
+    const out = [];
+    const err = [];
+    child.stdout.on("data", (chunk) => out.push(chunk));
+    child.stderr.on("data", (chunk) => err.push(chunk));
+    child.on("error", (error) => {
+      onSpawnOutput(Buffer.from(`local-gate: could not run ${step.argv[0]}: ${error.message}\n`), Buffer.alloc(0));
+      resolve(1);
+    });
+    child.on("close", (code) => {
+      onSpawnOutput(Buffer.concat(out), Buffer.concat(err));
+      resolve(code ?? 1);
+    });
+  });
+}
+
 const USAGE = [
   "usage: bun scripts/local-gate.mjs [--list] [--only <id,id>] [--skip-network]",
-  "                                    [--push-base <rev>] [--no-bail] [--dry-run]",
+  "                                    [--push-base <rev>] [--no-bail] [--jobs <n>] [--dry-run]",
   "                                    [--install-hook [--force]] [--repo <dir>]",
   "       (node fallback, same argv)",
 ].join("\n");
@@ -200,6 +370,7 @@ function parseArgs(argv) {
     skipNetwork: false,
     pushBase: null,
     bail: true,
+    jobs: null,
     dryRun: false,
     list: false,
     installHook: false,
@@ -226,6 +397,13 @@ function parseArgs(argv) {
       options.skipNetwork = true;
     } else if (arg === "--no-bail") {
       options.bail = false;
+    } else if (arg === "--jobs") {
+      const value = argv[index + 1];
+      if (value === undefined || !/^\d+$/.test(value) || Number(value) < 1) {
+        usage(`--jobs needs a positive integer${value === undefined ? "" : `, got ${JSON.stringify(value)}`}`);
+      }
+      options.jobs = Number(value);
+      index += 1;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
     } else if (arg === "--list") {
@@ -420,21 +598,7 @@ export function stepEnv() {
   return scrubGitLocator();
 }
 
-function runStep(step, root) {
-  if (step.run) return step.run({ root });
-  const result = spawnSync(step.argv[0], step.argv.slice(1), {
-    cwd: path.join(root, step.cwd ?? "."),
-    stdio: "inherit",
-    env: stepEnv(),
-  });
-  if (result.error) {
-    process.stderr.write(`local-gate: could not run ${step.argv[0]}: ${result.error.message}\n`);
-    return 1;
-  }
-  return result.status ?? 1;
-}
-
-function main(argv) {
+async function main(argv) {
   const options = parseArgs(argv);
 
   if (options.list) {
@@ -475,7 +639,9 @@ function main(argv) {
     return 0;
   }
 
-  process.stdout.write(`local-gate: ${runnable.length} step(s) · fail-fast ${options.bail ? "on" : "off"}\n`);
+  process.stdout.write(
+    `local-gate: ${runnable.length} step(s) · jobs ${options.jobs ?? defaultJobs()} · fail-fast ${options.bail ? "on" : "off"}\n`,
+  );
   if (skipped.length > 0) {
     process.stdout.write(`local-gate: skipping ${skipped.length} network step(s): ${skipped.map((step) => step.id).join(", ")}\n`);
   }
@@ -486,29 +652,54 @@ function main(argv) {
   }
 
   const started = Date.now();
-  const failures = [];
-  for (const [index, step] of runnable.entries()) {
-    process.stdout.write(`\n[${index + 1}/${runnable.length}] ${step.id} — ${step.title}\n`);
-    const status = runStep(step, options.root);
-    if (status === 0) continue;
-    failures.push(step);
-    if (options.bail) {
-      process.stderr.write(`\nlocal-gate: FAILED at ${step.id} (${step.mirrors})\n`);
-      process.stderr.write(`local-gate: fix it, then re-run \`bun scripts/local-gate.mjs\`\n`);
-      return 1;
-    }
-  }
+  const total = runnable.length;
+  let dispatched = 0;
+  const onSpawnOutput = (stdout, stderr) => {
+    if (stdout.length > 0) process.stdout.write(stdout);
+    if (stderr.length > 0) process.stderr.write(stderr);
+  };
+  const result = await scheduleSteps(
+    runnable,
+    async (step) => {
+      dispatched += 1;
+      const stepStarted = Date.now();
+      process.stdout.write(`\n[${total - runnable.length + dispatched}/${total}] ${step.id} — ${step.title}\n`);
+      const exit = await runStepAsync(step, options.root, onSpawnOutput);
+      const verdict = exit === 0 ? "exit 0" : `exit ${exit}`;
+      process.stdout.write(`${step.id}: ${verdict} in ${Math.round((Date.now() - stepStarted) / 1000)}s\n`);
+      return exit;
+    },
+    { jobs: options.jobs ?? defaultJobs(), bail: options.bail },
+  );
 
   const seconds = Math.round((Date.now() - started) / 1000);
-  if (failures.length > 0) {
-    for (const step of failures) process.stderr.write(`local-gate: FAILED ${step.id} (${step.mirrors})\n`);
+  if (result.failures.length > 0) {
+    const failed = result.failures.map((step) => step.id).join(", ");
+    if (options.bail) {
+      const first = result.failures[0];
+      process.stderr.write(`\nlocal-gate: FAILED at ${first.id} (${first.mirrors})\n`);
+      process.stderr.write(`local-gate: fix it, then re-run \`bun scripts/local-gate.mjs\`\n`);
+    } else {
+      for (const step of result.failures) {
+        process.stderr.write(`local-gate: FAILED ${step.id} (${step.mirrors})\n`);
+      }
+      if (result.skipped.length > 0) {
+        process.stderr.write(
+          `local-gate: skipped ${result.skipped.length} dependent step(s): ${result.skipped.map((step) => step.id).join(", ")}\n`,
+        );
+      }
+    }
     return 1;
   }
-  process.stdout.write(`\nlocal-gate: PASS — ${runnable.length} step(s) in ${seconds}s\n`);
+  if (dispatched < total) {
+    process.stderr.write(`local-gate: not run: ${runnable.filter((step) => !result.statuses.has(step.id)).map((step) => step.id).join(", ")}\n`);
+    return 1;
+  }
+  process.stdout.write(`\nlocal-gate: PASS — ${total} step(s) in ${seconds}s\n`);
   return 0;
 }
 
 // Run only as a program: the sibling suite imports the step table.
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then((code) => process.exit(code));
 }
