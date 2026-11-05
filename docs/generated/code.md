@@ -1,6 +1,6 @@
 # agentic-workflow-repo — code
 
-Generated from 140 unit docs, 117 roadmap rows, 3 packages, 28 skills and 49 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 141 unit docs, 117 roadmap rows, 3 packages, 28 skills and 50 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Packages
 
@@ -72,6 +72,7 @@ Generated from 140 unit docs, 117 roadmap rows, 3 packages, 28 skills and 49 scr
 | promise-coherence.mjs |
 | prose-gate-inventory.mjs |
 | red-first.mjs |
+| relay-packet.mjs |
 | release.mjs |
 | review-receipt.mjs |
 | review-state.mjs |

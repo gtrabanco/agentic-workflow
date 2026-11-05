@@ -233,6 +233,9 @@ Budget: strong
 - **E4** — 2026-11-05, `bun scripts/phase-lint.mjs docs/fix/420-docs-generated-merge-driver/SPEC.md` · exit 0 · `verdict PASS`, 8/8 phases; `bun scripts/unit-lineage.mjs --unit 420-docs-generated-merge-driver` · `LINEAGE OK — lane-era`, obligations closed (7).
 - **E5** — 2026-11-05, `bun scripts/docs-generated-merge.mjs --install` on this checkout · exit 0 · `name — written`, `driver — written` (relocatable form).
 - **E6** — 2026-11-05, `git merge 88248ccf` in a detached worktree at `b8f8e5f2` (the #419 integration), driver unarmed, `rerere` disabled · exit 1 · 3 files / 4 hunks, every one the shared counts line; with the driver armed, `git merge-tree --write-tree b8f8e5f2 88248ccf` exits 0 and resolves all three. The collision is systemic: two concurrent regenerations always rewrite that same line.
+- **E7** — 2026-11-05, `git merge origin/main` on this branch with the driver armed · exit 1 on `docs/LOGS.md` only · the driver resolved `docs/generated/index.md` and `docs/generated/code.md` at merge time and `units.md` auto-merged; the journal kept both appended entries in timestamp order, then `bun scripts/docs-generate.mjs` re-emitted the three pages (141 units · 50 scripts).
+- **F2** — 2026-11-05, folded: merging `main` surfaced one semantic conflict no driver can settle — `AGENTS.md#normative-surfaces@1` gained `relay-status-grammar` (unit 82) and no inventory row claimed it, so `prose-gate-inventory.mjs` answered `uncited-surface`. The integration adds the claiming row (`script`, pinned by `scripts/relay-packet.test.mjs`) and re-pins the machine region 55 → 56; a surface only this branch's gate can see would otherwise turn `main` red at merge.
+- **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network --no-bail --jobs 1` · exit 0 · 8 steps in 126s; `bun scripts/run-root-suite.mjs` · 0 FAIL. The parallel pool's `schema-node-compat` flake is the known load-sensitive class, green sequentially.
 
 ## Next
 

@@ -11,6 +11,12 @@
     "docs",
     "release"
   ],
+  "relay": {
+    "legs": {
+      "execute": { "step": "implement" },
+      "coherence-review": { "step": "review" }
+    }
+  },
   "catalog": {
     "research": {
       "applies_when": "unit_type == 'feature' && scope != 'trivial'",
