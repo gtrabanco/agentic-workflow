@@ -149,8 +149,9 @@ not hunt for faults:
   command, its exit code, its output. A row that does not reproduce is the
   finding.
 - **(d) AC-section hash unchanged from triage** — the acceptance-criteria
-  section's hash still matches the one recorded at triage. A changed AC is a
-  plan repair, never a review edit.
+  section's hash still matches the `ac-hash:` frontmatter line the design step
+  recorded at triage (owner: `DESIGN.md` §Fixed output contract). A changed AC
+  is a plan repair, never a review edit.
 
 Output is the **existing** `REVIEW-VERDICT` block in the unit doc, whose grammar
 and meaning are owned by [`REVIEW.md`](REVIEW.md) — this file never restates the
