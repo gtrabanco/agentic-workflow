@@ -3,7 +3,7 @@ type: feature
 scope: small
 ---
 
-# 100 — parallel-gate-impact-hook
+# 104 — parallel-gate-impact-hook
 
 > The root gate's bun leg runs one worker per CPU by default, and the pre-push
 > hook skips the test steps when `test-impact` proves the push range changes no
@@ -87,6 +87,12 @@ Computed with `bun scripts/ceremony.mjs tier classify` (2026-11-05):
 - `scripts/workflow-status-sensor.test.mjs` takes ~80s standalone (78
   subprocess-spawning tests) — `does-not-affect` correctness; it caps the
   parallel gate's wall time at that suite's duration.
+- `scripts/version-parity-gate.test.mjs`'s `gitPorcelain` helper mis-parses a
+  staged rename (`R  old -> new` stays one entry, while
+  `changedFilesSince`'s `porcelainPaths` correctly lists both sides), so its
+  equality assertion fails on a working tree with staged renames —
+  `affects` only trees holding a rename uncommitted (this unit held one during
+  P2's renumbering); the committed gate is unaffected.
 
 ## Tasks
 
@@ -104,7 +110,7 @@ Computed with `bun scripts/ceremony.mjs tier classify` (2026-11-05):
 ## Triaged steps
 
 ```
-TRIAGE — 100-parallel-gate-impact-hook (feature)
+TRIAGE — 104-parallel-gate-impact-hook (feature)
 Steps: research, design, plan, implement, tests, evidence, review, docs
 Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
 Skipped: release: small scope
@@ -132,6 +138,16 @@ Budget: strong
   bun leg is parallel by default.
 - **E1** — 2026-11-05, `bun scripts/ceremony.mjs tier classify` · exit 0 ·
   `standard` / `contained`, no signals.
+- **E2** — 2026-11-05, `bun test scripts/run-root-suite.test.mjs scripts/local-gate.test.mjs`
+  at `352ae5e5` · both suites red (0 pass: the exports and flags under test do
+  not exist yet) — the red commit of P1.
+- **E3** — 2026-11-05, after P2+P3 · 13/13 pool cases, 29/29 gate cases, and the
+  path-derived impact set (`git-env`, `invocation-drift`, `risk-tier-ceremony`,
+  `release-workflows`) all green.
+- **D2** — 2026-11-05, S2 resolved without a workflow edit: `root-suite.yml`
+  delegates to `scripts/local-gate.mjs` (pinned by `release-workflows.test.mjs`),
+  so the pool covers CI's node leg through the same script; editing the workflow
+  would duplicate the wiring the delegation pin exists to prevent.
 
 ## Next
 
@@ -139,5 +155,5 @@ P1 — write the red tests.
 
 ## References
 
-- Roadmap row 100 (`## Features`).
+- Roadmap row 104 (`## Features`).
 - `scripts/test-impact.mjs` (issue #356) — the impact map the hook consumes.

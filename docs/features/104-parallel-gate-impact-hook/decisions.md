@@ -1,4 +1,4 @@
-# Decisions — unit 100 (parallel-gate-impact-hook)
+# Decisions — unit 104 (parallel-gate-impact-hook)
 
 Decisions taken while delivering the unit, and the path-protection records the
 Tier 1 guard reads. Append-only.
