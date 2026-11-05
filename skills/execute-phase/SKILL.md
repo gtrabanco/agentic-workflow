@@ -311,7 +311,11 @@ These files must be loaded when their topic is active:
 execution off **one phase per turn** (`<NN-slug> P<k>` with the catalog tier);
 this executes the named phase — or, as an explicit operator choice only, all
 remaining steps. The closing hand-off names exactly one phase and the tier
-while phases remain, and resumes the lane after the last one.
+while phases remain, and resumes the lane after the last one. A phase run as a
+pi-web Relay leg is this same contract and nothing more (owner:
+[`unit-lane/references/RELAY.md`](../unit-lane/references/RELAY.md)): it runs
+one named phase, records the same evidence and progress lines, then hands the
+packet's baton to the next leg instead of resuming the lane.
 `fold-findings` handles review finding repairs. The review pack axes
 (`review-implementation`, `review-code`, `review-security`, `review-perf`,
 `review-a11y`, `review-debt`) compose the review step; `workflow-status` routes
