@@ -4422,3 +4422,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merged feat/366-doc-cli (3ff41f6c) into main, pushed main (6fbfa115..3ff41f6c), deleted branch. No code written.
 - **Decisions:** Owner chose #407 before #366: roadmap row 106 must land first, then the doc read/edit/index CLI. Locator implementation to be decided in #407's SPEC (mdast vs native fail-closed; D8 re-trigger unmet, 730/730 files byte-identical roundtrip). Durable record posted on issue #366. Scratch in /tmp/docprobe removed.
 - **Next:** #407 (section-locator-core, roadmap row 106): settle its upstream dependency row 105 (projection-manifest-vocabulary, #406), then decide locator implementation (mdast or native fail-closed) and write the SPEC.
+## 2026-11-05T21:40:30Z — feat/294-relay-orchestrated-lane — manual
+- **Commits:** 9 (`0a1cfef9…b8f8e5f2`)
+- **Files:** 39 files
+- **Summary:** Unit 82 (issue #294): Relay-orchestrated lane execution — 9 commits, PR #419 opened
+- **Decisions:** Abrió la PR mientras la review estaba pendiente (instrucción explícita del owner, logeada como L2): el orden de cierre del lane (/review-change receipt → /audit-pr) sigue pendiente. Root cause del pi-compat-guard: el pin 4.10.0 no incluye src/log/* que se añadió después del publish del 4.10.0 — se cura al subir tren.
+- **Next:** /review-change 82-relay-lane-execution, luego /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/419
