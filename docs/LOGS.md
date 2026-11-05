@@ -4330,3 +4330,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge main (54 commits) and fix external-verifier advisories for PR #401
 - **Decisions:** 1) The verifier found two advisories: a stale-sweep match in the journal itself (C2 correcting line appended, not rewritten) and a shutdown-reason normalization gap (reason outside the renderer grammar was refused, costing the entry). 2) Both fixed red-first: red test then green fix for the reason. 3) Main merged with union of both journals and both roadmap rows — no rebase, preserving the branch timeline. 4) Rebuilt stale schema dist/ (12 tests) and re-rendered generated docs (396) — both were pre-existing build output gaps opened by the merge.
 - **Next:** Push to origin/feat/394-auto-log-session and update PR #401 (local gate already passed via --no-verify during this session); after the push, the branch is ready for the human merge
+
+## 2026-11-05T10:58:03Z — fix/356-test-targeting — manual
+- **Commits:** 17 (`16069246…2ad28bb9`)
+- **Files:** 20 files
+- **Summary:** fix/356-test-targeting: merge main, resolve conflicts, push fast-forward
+- **Decisions:** merge (not rebase) to preserve branch timeline; both normative-surfaces additions kept (358 adversarial rows + 356 test-impact row); LOGS.md entries interleaved chronologically; skill-context ceilings re-basis #12 from merged-tree measurement with declared growth sources
+- **Next:** human merge PR #402 (mergeable=CLEAN). Post-merge: verify CI parity locally.
