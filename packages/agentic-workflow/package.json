@@ -27,6 +27,7 @@
     "README.md"
   ],
   "dependencies": {
+    "mdast-util-from-markdown": "2.1.0",
     "typebox": "1.4.3"
   }
 }
