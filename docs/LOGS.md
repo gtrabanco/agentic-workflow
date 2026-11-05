@@ -4428,3 +4428,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Investigated Serena false-positive notice on fix/359-prose-gate-inventory worktree — confirmed .serena/project.yml exists, is versioned in git, is YAML-valid, has correct permissions, and is tracked in the worktree index. No actual provisioning needed.
 - **Decisions:** (1) The .serena/project.yml already exists and is identical to the repo base — no provisioning required. (2) The notice is a false positive: Serena displays a one-time warning on new worktree detection but the file is present and valid.
 - **Next:** None — the worktree is correctly configured; Serena notice should resolve on its own reload
+
+## 2026-11-05T21:26:32Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 10 (`0a60994e…afe5a336`)
+- **Files:** 19 files
+- **Summary:** Applied issue #359: carrier inventory for prose-gate gates (S1–S7, D1–D7)
+- **Decisions:** Roadmap row 96 is a feature (+triage promote-to-feature), so unit lives in docs/features/96- not docs/fix/ (D1). No changeset created: repo's changeset-create rejects empty intent (D7). Only the owner can merge; this was delivered as a standalone diff with full evidence.
+- **Next:** review the diff on fix/359-prose-gate-inventory (afe5a336..HEAD — 9 commits, 18 files, +1667/−12), decide on merge or corrections
