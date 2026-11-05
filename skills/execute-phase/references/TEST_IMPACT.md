@@ -45,7 +45,10 @@ lsp: available (typescript, markdown) — pass --references with find_referencin
 
 - `verdict: empty` — only prose and assets changed. Record this block in the
   phase's evidence, run no ceremony, and invent no test. That recorded verdict
-  **is** the receipt; a silent skip is the defect.
+  **is** the receipt; a silent skip is the defect. A non-empty `suites` list
+  under `empty` can only come from the caller's `--references` — record those
+  entries as advisory context; no ceremony is owed, because no executable path
+  changed.
 - `verdict: targeted` — at least one executable path changed. `suites` is what
   that change can affect.
 - `suites (0)` under `targeted` — a code change no suite matches. Fall back to

@@ -381,7 +381,7 @@ leaves this table and becomes a `## Log` line.
   `'grep' !== 'rg'` at `scripts/test-impact.test.mjs:207`. Green side, and the
   proof the assertion was the defect rather than the behaviour: the whole gate
   re-run with a PATH carrying every binary on this machine **except `rg`** ·
-  exit 0 · `1543 pass · 1 skip · 0 fail`, and the repaired case asserts a
+  exit 0 · `1541 pass · 1 skip · 0 fail`, and the repaired case asserts a
   portable tier answered while still pinning the exact suite list and the
   exclusion of the unrelated suite. The degradation case that owns the matcher
   question is untouched.
@@ -407,6 +407,21 @@ leaves this table and becomes a `## Log` line.
   one the tree can lose, not one they merely restate. The pair ordering itself
   was never the deviation — `22a6680d` precedes `8daf7087` (O11) — and it is
   what `scripts/red-first.mjs` enforces.
+- **E12** — 2026-11-04, the four external-verify advisories folded as one
+  correction batch (D-356-15 in `decisions.md`, which also carries the two
+  `path-protection-records@1` justification rows):
+  (1) E10's recorded rg-less gate figure corrected 1543 → 1541 — the external
+  verifier reproduced the run (every binary on PATH except `rg`) and observed
+  `exit 0 · 1541 pass · 1 skip · 0 fail`, the same count as G1's normal run;
+  (2) a `--paths` entry that names a directory is now refused (exit 1,
+  `--paths entry is a directory: …`) instead of silently searching the
+  directory's bare name as a fixed word — red commit `3d26afe7` (suite case
+  observed failing on the current behaviour), green commit `1d5a87cb`,
+  `bun test scripts/test-impact.test.mjs` · exit 0 · `21 pass · 0 fail`;
+  (3) TEST_IMPACT.md states that a non-empty `suites` list under `empty` can
+  only come from the caller's `--references`;
+  (4) SKILLS.md's `execute-phase` narration names the derived test impact set.
+  The advisory fixes change no verdict vocabulary and no obligation row.
 - **G3** — 2026-11-04, the diff-size guard re-run on the final diff, with the
   attribution `D4` now asks for: `bun scripts/diff-guard.mjs --base c8b64d0b
   --unit 356-test-targeting` · BREACH · `1771 > 400 lines`, `14 > 8 files`
