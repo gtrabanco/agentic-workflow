@@ -85,8 +85,9 @@ test("cut + stable applies the train, adds one commit, tags and releases — nev
   assert.match(block, /git commit -m "chore\(release\)/);
   assert.match(block, /git tag "v\$VERSION"/);
   assert.match(block, /refs\/heads\/stable/);
-  assert.doesNotMatch(block, /--generate-notes/);
-  assert.match(block, /gh release create "v\$VERSION" --title "v\$VERSION" --notes-file/);
+  assert.match(block, /--generate-notes/, "uses GitHub's generated notes — clean 'What's Changed' format");
+  assert.doesNotMatch(block, /--notes-file/, "no custom notes-file: --generate-notes handles it");
+  assert.match(block, /gh release create "v\$VERSION" --title "v\$VERSION" --generate-notes/);
   assert.doesNotMatch(block, /npm publish/, "the push fires the publish jobs, this job never touches npm");
 });
 
@@ -160,18 +161,15 @@ test("the canary promotion is gated on the publish decision", () => {
   }
 });
 
-// The canary release body is the BACKLOG: the pending changeset bodies — the
-// same ones the next stable cut consumes — so the pre-release says what it
-// carries. Canaries are grouped by the operator; the pre-release is where the
-// group is readable.
-test("cut + canary opens the GitHub pre-release with the changeset backlog as notes", () => {
+// The canary release body is now the GitHub-generated "What's Changed": clean,
+// one-line-per-PR, with a "Full Changelog" link at the end.
+test("cut + canary opens the GitHub pre-release with generated notes", () => {
   const block = jobBlock(read(PUBLISH), "cut-prerelease");
-  assert.match(block, /release\.mjs release-notes --channel "\$CHANNEL" --date "\$CUT_DATE"/, "the same renderer, naming the channel and the pinned cut date");
-  assert.match(block, /--date "\$CUT_DATE"/, "the body names the exact tag this cut publishes — the same pinned date the stage reads");
-  assert.match(block, /--notes-file "\$RUNNER_TEMP\/canary-notes\.txt"/);
-  const notes = block.indexOf("release-notes");
+  assert.match(block, /gh release create "v\$V" --prerelease --verify-tag --title "v\$V" --generate-notes/);
+  assert.doesNotMatch(block, /--notes-file/);
+  assert.doesNotMatch(block, /release\.mjs release-notes/);
   const create = block.indexOf("gh release create");
-  assert.ok(notes !== -1 && create !== -1 && notes < create, "the backlog is assembled before the release opens");
+  assert.ok(create !== -1, "opens the pre-release");
 });
 
 test("the publish jobs run only on mode: publish (no push publishes anything)", () => {
@@ -238,21 +236,15 @@ test("the pi job keeps its mutation and tarball gates (the #164 publish-time gua
   assert.match(block, /Tarball carries the skill bundle/);
 });
 
-// The notes are assembled from the accumulated changeset bodies — and apply
-// CONSUMES those files (the release commit records the consumption), so a
-// notes file generated after apply is empty and the release body loses them.
-test("the release notes are assembled BEFORE apply consumes the changesets, outside the commit", () => {
+// The workflow no longer assembles release notes from changeset bodies;
+// GitHub's --generate-notes handles it natively with the "What's Changed"
+// format. The cut job still applies the train, but never touches notes.
+test("the cut job never assembles release notes — GitHub generates them", () => {
   const cut = jobBlock(read(PUBLISH), "cut");
-  const notes = cut.indexOf("release-notes --channel stable");
-  const apply = cut.indexOf("release.mjs apply");
-  assert.ok(notes !== -1, "the cut job assembles the notes file");
-  assert.ok(apply !== -1, "the cut job applies the train");
-  assert.ok(notes < apply, "notes must be assembled before apply deletes the consumed changesets");
-  // the notes file lives outside the worktree — git add -A must never commit it
-  // (the command names its channel: the same renderer serves both channels and
-  // renders the install block and the version the channel is about to ship)
-  assert.match(cut, /release-notes --channel stable[^\n]*> "\$RUNNER_TEMP\/release-notes\.txt"/);
-  assert.match(cut, /--notes-file "\$RUNNER_TEMP\/release-notes\.txt"/);
+  assert.doesNotMatch(cut, /release-notes --channel/);
+  assert.doesNotMatch(cut, /--notes-file/);
+  assert.doesNotMatch(cut, /RUNNER_TEMP\/release-notes/);
+  assert.match(cut, /--generate-notes/);
 });
 
 // Least privilege: the workflow baseline is contents: read and each job
