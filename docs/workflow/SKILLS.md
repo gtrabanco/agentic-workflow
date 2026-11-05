@@ -112,7 +112,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | With only a feature/fix target, executes **all remaining phases** through a bounded unit loop; an explicit `P<k>` remains atomic. Each phase gets a fresh worker context and compact receipt, tests-first implementation, a three-attempt default repair budget, no-progress detection, and no intermediate review ceremony. Acceptance is frozen before code. Findings inside the current unit are fixed there; unrelated findings remain proposals and never create issues automatically. A completed unit opens its PR and flips to `done` |
+| `execute-phase` | With only a feature/fix target, executes **all remaining phases** through a bounded unit loop; an explicit `P<k>` remains atomic. Each phase gets a fresh worker context and compact receipt, tests-first implementation over the change's derived test impact set, a three-attempt default repair budget, no-progress detection, and no intermediate review ceremony. Acceptance is frozen before code. Findings inside the current unit are fixed there; unrelated findings remain proposals and never create issues automatically. A completed unit opens its PR and flips to `done` |
 
 ## Review & audit — *change → PR → product*
 
