@@ -35,6 +35,9 @@ const {
   RISK_TIER_SIGNAL_KINDS,
   RISK_TIER_REASONS,
   SIZE_TIER_KINDS,
+  ADVERSARIAL_VERDICTS,
+  ADVERSARIAL_REFLECTOR_VERDICTS,
+  ADVERSARIAL_STABILITY_VERDICTS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -241,4 +244,60 @@ test("#361 skill-lint names the two published sets in its new rule", () => {
   assert.ok(lint.includes("FINDINGS_TABLE_SEVERITIES"), "the rule cites the canonical severity const");
   assert.ok(lint.includes("FINDINGS_TABLE_IMPACTS"), "the rule cites the canonical impact const");
   assert.match(read("skills/skill-lint/SKILL.md"), /eight/i, "the lint's own rule count moves with the rule");
+});
+
+// ---------------------------------------------------------------------------
+// #358 — the adversarial pass's three verdicts
+// ---------------------------------------------------------------------------
+
+/** The published adversarial sets, in the order the contract states them. */
+const ADVERSARIAL_SETS = {
+  "adversarial-verdict": ADVERSARIAL_VERDICTS,
+  "adversarial-reflector-verdict": ADVERSARIAL_REFLECTOR_VERDICTS,
+  "adversarial-stability": ADVERSARIAL_STABILITY_VERDICTS,
+};
+
+/** The `adversarial-verdict@1` block, as its `kind | token | vocabulary` cells. */
+const adversarialBlockRows = () => {
+  const fenced = /```text\nadversarial-verdict@1\n([\s\S]*?)```/.exec(read("skills/review-change/references/ADVERSARIAL_SETUP.md"));
+  assert.ok(fenced, "the adversarial verdict grammar is fenced and versioned");
+  const rows = fenced[1].trim().split("\n").map((line) => line.split("|").map((cell) => cell.trim()));
+  assert.deepEqual(rows[0], ["kind", "token", "vocabulary", "what it orders"], "the block declares its four cells");
+  return rows.slice(1).map(([kind, token, vocabulary]) => ({ kind, token, vocabulary }));
+};
+
+test("#358 the three adversarial sets are published and closed", () => {
+  assert.deepEqual([...ADVERSARIAL_VERDICTS], ["kill", "confirm"], "the kill mandate answers kill or confirm");
+  assert.deepEqual([...ADVERSARIAL_REFLECTOR_VERDICTS], ["keep", "drop"], "the reflector answers keep or drop");
+  assert.deepEqual([...ADVERSARIAL_STABILITY_VERDICTS], ["stable", "unstable"], "the stability check answers stable or unstable");
+});
+
+test("#358 the grammar block orders exactly the published tokens, in both directions", () => {
+  const rows = adversarialBlockRows();
+  const referenced = rows.map((row) => {
+    const match = /^([a-z0-9-]+):([A-Za-z0-9_-]+)$/.exec(row.vocabulary);
+    assert.ok(match, `the vocabulary cell '${row.vocabulary}' is a vocab:token reference`);
+    assert.ok(ADVERSARIAL_SETS[match[1]], `'${match[1]}' is a published adversarial set`);
+    assert.equal(match[2], row.token, `row '${row.token}' references its own token`);
+    return `${match[1]}:${match[2]}`;
+  });
+  for (const [vocabulary, values] of Object.entries(ADVERSARIAL_SETS)) {
+    for (const value of values) {
+      assert.ok(referenced.includes(`${vocabulary}:${value}`),
+        `${vocabulary}:${value} is published by the machine and ordered by the block`);
+    }
+  }
+  assert.equal(referenced.length, Object.values(ADVERSARIAL_SETS).flat().length,
+    "the block declares no token the machine does not publish");
+});
+
+test("#358 the checker reads the published sets instead of a local copy", () => {
+  const checker = read("scripts/adversarial-verdict.mjs");
+  assert.match(checker, /loadSchemaRuntime/, "the checker loads the schema runtime");
+  for (const name of ["ADVERSARIAL_VERDICTS", "ADVERSARIAL_REFLECTOR_VERDICTS", "ADVERSARIAL_STABILITY_VERDICTS"]) {
+    assert.ok(checker.includes(`runtime.${name}`), `the checker reads ${name} from the built package`);
+  }
+  for (const literal of ["[\"kill\", \"confirm\"]", "[\"keep\", \"drop\"]", "[\"stable\", \"unstable\"]"]) {
+    assert.ok(!checker.includes(literal), `the checker declares no local ${literal} list`);
+  }
 });
