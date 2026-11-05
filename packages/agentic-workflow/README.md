@@ -5,10 +5,12 @@ created it as the vehicle the roadmap mandated (rows 37/38/42/45, declined 43):
 the first producer feature creates the crate, later producers land their scripts
 as subcommands of it.
 
-- **Shipped via `@gtrabanco/pi-agentic-workflow` (the pi package), one pinned pure-JS dependency, no native deps, no build step.**
+- **Shipped via `@gtrabanco/pi-agentic-workflow` (the pi package), two pinned pure-JS dependencies, no native deps, no build step.**
   Repository tooling runs with bun first and node as the guaranteed fallback
   (`AGENTS.md` §Verification); `typebox` is exact-pinned and carries the `doc`
-  entry point's envelope validation. The retrieval store lives in a gitignored
+  entry point's envelope validation, and `mdast-util-from-markdown` is
+  exact-pinned and carries the `section` locator's node positions. The retrieval
+  store lives in a gitignored
   SQLite database under `.agentic-workflow/index/` — disposable build output,
   regenerated, never committed.
 - **Scratch convention:** `.agentic-workflow/tmp/` at the repository root holds
@@ -22,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory|log> ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|memory|log> ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -37,6 +39,7 @@ writing anything**.
 | `budgets [file] <json>` | Re-bases one context-budget ceiling with its growth source; a ceiling shrinkage without a growth source is refused |
 | `manifest [plugin.json] <op>` | `skillAdd` / `skillRemove` on the plugin manifest — the alphabetical machine-surface registration |
 | `doc (--sync \| --query <term> \| --status \| --rebuild) [--json-only]` | The **retrieval index** (feature 65): one gitignored SQLite store under `.agentic-workflow/index/`, freshness checked on every query, `--query` answering over FTS5 keyword search and — when `AGENTIC_WORKFLOW_DOC_EMBEDDINGS_BASE_URL` / `_MODEL` / `_API_KEY` are set — a hybrid pass over stored vectors. Degradations are declared, never silent: `unavailable-embeddings-not-configured`, `unavailable-embeddings-not-indexed`, `embeddings-model-mismatch`, `unavailable-embeddings-provider-down`. Discovery only: no gate reads it. Positional doc ops (`read`/`edit`/`index`) ship with unit 71 and are refused by name until then |
+| `section <locate|remove|replace> --file <path\|-> --selector <json> [--replacement <path\|->] [--write] [--json]` | The **section locator** (issue #407): one Markdown document parsed with `mdast-util-from-markdown`, section bounds from node positions (a fenced `##`-like line is never a heading), and a byte-offset splice of the original string. Selectors: heading title, depth-aware heading path, heading regex, and line-in-scope exact/regex. `locate` prints the range receipt, `remove`/`replace` print the transformed document (or persist it with `--write`), `--json` emits one receipt, a selector resolving to 0 or >1 sections refuses with exit 2 (`SECTION REFUSAL — <code>`), a malformed invocation is exit 1 |
 | `memory probe [--json]` | The five-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
 | `log render --facts <path\|-> [--raw]` | The **journal entry renderer** (feature 394): reads a frozen `log-facts@1` payload (`timestamp`, `branch`, `reason`, `commits{count,range}`, `files[]`) and prints the `docs/LOGS.md` block the pi extension writes at session shutdown. JSON on stdout (`--raw` for the entry alone, so `diff` needs no parsing); exit 0 rendered, exit 2 refused with `LOG REFUSAL — <reason>`. Pure: no clock, no git, no session, so a test or a CI job regenerates and byte-diffs an entry. One owner for the shape — `src/log/render.mjs` — which the extension imports and the parity suite compares against `template/.claude/hooks/log-session-end.sh` |
 
