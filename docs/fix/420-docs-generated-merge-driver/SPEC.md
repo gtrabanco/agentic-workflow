@@ -193,12 +193,12 @@ Budget: strong
 
 ## Acceptance criteria
 
-- [ ] **S1** — `.gitattributes` carries exactly `docs/generated/** merge=docs-generated`, and the suite refuses any entry that disagrees with `projectionDir` (`bun test scripts/docs-generated-merge.test.mjs`).
-- [ ] **S2** — the driver writes the incoming bytes over the local side, exits 1 and leaves the conflict for a path outside the projection or an unreadable input, and `--install` writes `merge.docs-generated.name`/`.driver` idempotently (`bun test scripts/docs-generated-merge.test.mjs`).
-- [ ] **S3** — `bun scripts/local-gate.mjs --only docs-generated-projection --skip-network` exits 1 with `verdict: DRIFT` on a stale projection and 0 on a current one, and the step carries `tests: false` so a prose-only range still runs it (`bun test scripts/local-gate.test.mjs`).
-- [ ] **S4** — `AGENTS.md` names `bun scripts/docs-generated-merge.mjs --install` beside `--install-hook`, and `docs/workflow/GATE_INVENTORY.md` resolves the `docs-projection-current` row (`bun scripts/prose-gate-inventory.mjs`).
-- [ ] **S5** — the suite lands red before the implementation and green after (`bun scripts/red-first.mjs` → PASS, the two commits named in `## Log`).
-- [ ] **S6** — the driver is the only new carrier: the generator, the projection's sources and every skill are untouched (`git diff --name-only` names no `skills/`, no `docs/generated/**` source and no generator change).
+- [x] **S1** — `.gitattributes` carries exactly `docs/generated/** merge=docs-generated`, and the suite refuses any entry that disagrees with `projectionDir` (`bun test scripts/docs-generated-merge.test.mjs`).
+- [x] **S2** — the driver writes the incoming bytes over the local side, exits 1 and leaves the conflict for a path outside the projection or an unreadable input, and `--install` writes `merge.docs-generated.name`/`.driver` idempotently (`bun test scripts/docs-generated-merge.test.mjs`).
+- [x] **S3** — `bun scripts/local-gate.mjs --only docs-generated-projection --skip-network` exits 1 with `verdict: DRIFT` on a stale projection and 0 on a current one, and the step carries `tests: false` so a prose-only range still runs it (`bun test scripts/local-gate.test.mjs`).
+- [x] **S4** — `AGENTS.md` names `bun scripts/docs-generated-merge.mjs --install` beside `--install-hook`, and `docs/workflow/GATE_INVENTORY.md` resolves the `docs-projection-current` row (`bun scripts/prose-gate-inventory.mjs`).
+- [x] **S5** — the suite lands red before the implementation and green after (`bun scripts/red-first.mjs` → PASS, the two commits named in `## Log`).
+- [x] **S6** — the driver is the only new carrier: the generator, the projection's sources and every skill are untouched (`git diff --name-only` names no `skills/`, no `docs/generated/**` source and no generator change).
 
 ## Findings
 
@@ -217,6 +217,17 @@ Budget: strong
 - **E3** — 2026-11-05, `bun test scripts/docs-generated-merge.test.mjs` · exit 0 · 13 pass / 0 fail.
 - **G1** — 2026-11-05, `bun scripts/local-gate.mjs --only docs-generated-projection --skip-network` · exit 1 on the stale tree · `docs/generated/{code,index,units}.md: stale` → `verdict: DRIFT`.
 - **G2** — 2026-11-05, `bun scripts/prose-gate-inventory.mjs` · exit 0 · 49 rows, `docs-projection-current — script · scripts/docs-generate.test.mjs:393`.
+- **P1** — 2026-11-05, the suite landed alone and observed red on the missing module · `08102aa`.
+- **P2** — 2026-11-05, the driver (`--install`, the resolution, the path guard, the import guard) and `.gitattributes` landed · `674648a`.
+- **P3** — 2026-11-05, the quoted-`%P` case was added after the scratch-repository run exposed it; the driver unwraps git's quoting · `674648a`.
+- **P4** — 2026-11-05, the `docs-generated-projection` step and its `DEPS` row; both pinned id sets extended by one id, justified in `decisions.md` · `674648a`.
+- **P5** — 2026-11-05, `.gitattributes` carries one entry and the suite pins it against `projectionDir` · `674648a`.
+- **P6** — 2026-11-05, the guide's arming line, the inventory row, the roadmap row and the projection re-emit (140 units · 49 scripts) · `674648a`.
+- **P7** — 2026-11-05, the step bit on the stale tree before the re-emit and passed after it · G1, G3.
+- **P8** — 2026-11-05, `bun scripts/run-root-suite.mjs` on `674648a` · exit 1 · every suite green except `roadmap-settle` (the pre-existing 307 row-missing recorded above).
+- **G3** — 2026-11-05, `bun scripts/local-gate.mjs --only docs-generated-projection --skip-network` · exit 0 after `bun scripts/docs-generate.mjs` · `verdict: PASS`, 1 step in 0s.
+- **E4** — 2026-11-05, `bun scripts/phase-lint.mjs docs/fix/420-docs-generated-merge-driver/SPEC.md` · exit 0 · `verdict PASS`, 8/8 phases; `bun scripts/unit-lineage.mjs --unit 420-docs-generated-merge-driver` · `LINEAGE OK — lane-era`, obligations closed (7).
+- **E5** — 2026-11-05, `bun scripts/docs-generated-merge.mjs --install` on this checkout · exit 0 · `name — written`, `driver — written` (relocatable form).
 
 ## Next
 
