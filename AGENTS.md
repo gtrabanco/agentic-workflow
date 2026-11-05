@@ -210,6 +210,14 @@ This repo has no application build. "Green" means:
   identical suite bun-first (`node --test scripts/<file>.test.mjs` is the
   fallback) — including `scripts/golden-fixture.test.mjs`, which asserts the
   golden fixture's deterministic half.
+- The root gate is a bounded worker pool, one worker per CPU by default
+  (`--jobs <n>` caps it, `--jobs 1` runs one suite at a time): each worker runs
+  the identical per-file invocation, so a suite is isolated in its own process
+  exactly as the per-file rule runs it, `--bail` stops the dispatch at the
+  first red and kills the suites still in flight, and the first failing status
+  is forwarded verbatim (unit 100). CI needs no workflow edit — the manual
+  `root-suite.yml` delegates to this script, so the node leg parallelizes the
+  same way.
 - If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
   there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
@@ -226,7 +234,13 @@ This repo has no application build. "Green" means:
 The gate is local-first (owner decision 2026-11-04): `bun scripts/local-gate.mjs`
 runs every check the remote gate runs, in the same order, and stops at the first
 failing step (`--no-bail` keeps going). `--install-hook` writes a `pre-push` hook
-that runs the offline subset, so a push never waits on the registry. The remote
+that runs the offline subset, so a push never waits on the registry. That hook
+also spends the push range before running it: it passes the remote tip to the
+gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
+path changed — prose and assets only) skips the test-bearing steps; a `targeted`
+verdict, a refusal or an absent script runs the full gate, never a silent skip.
+A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`.
+The remote
 gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
 branch you cannot run locally.
 

@@ -14,15 +14,24 @@
  *
  * A step marked `network: true` reads the registry (pin drift, advisories) or
  * installs a third-party tarball (`pi-compat-guard`). The `pre-push` hook runs
- * with `--skip-network`: a checkout whose registry is unreachable must not
+ * with `--skip-network`: a registry that happens to be unreachable must not
  * block a push over a fact no commit changed. A full run before a merge keeps
  * them.
+ *
+ * A step marked `tests: true` runs a test suite (or the build the suites
+ * resolve). The pre-push hook passes `--push-base <rev>`: the gate then runs
+ * `scripts/test-impact.mjs` against the push range and, when the verdict is
+ * `empty` (no executable path changed — prose and assets only), skips exactly
+ * those steps. A `targeted` verdict, a refusal, or an absent test-impact
+ * script all run the full gate — a skip is never inferred from a failed look
+ * (unit 100).
  *
  * Usage
  *   bun scripts/local-gate.mjs                   # every step, fail-fast
  *   bun scripts/local-gate.mjs --list            # step ids, one per line
  *   bun scripts/local-gate.mjs --only a,b        # a subset, in table order
  *   bun scripts/local-gate.mjs --skip-network    # the offline subset
+ *   bun scripts/local-gate.mjs --push-base <rev> # skip test steps on an empty impact verdict
  *   bun scripts/local-gate.mjs --no-bail         # run everything, report all
  *   bun scripts/local-gate.mjs --dry-run         # print the plan, run nothing
  *   bun scripts/local-gate.mjs --install-hook    # write .git/hooks/pre-push
@@ -96,6 +105,7 @@ export const STEPS = [
     title: "Build the schema package (the suites resolve its dist/)",
     cwd: "packages/agentic-workflow-schema",
     argv: [BUN, "run", "build"],
+    tests: true,
     mirrors: "root-suite job — Build the schema package",
   },
   {
@@ -103,6 +113,7 @@ export const STEPS = [
     title: "Crate suite (bun runtime)",
     cwd: "packages/agentic-workflow",
     argv: [BUN, "run", "test"],
+    tests: true,
     mirrors: "root-suite job — Crate suite (bun runtime)",
   },
   {
@@ -110,6 +121,7 @@ export const STEPS = [
     title: "Crate suite (node runtime)",
     cwd: "packages/agentic-workflow",
     argv: [BUN, "run", "test:node"],
+    tests: true,
     mirrors: "root-suite job — Crate suite (node runtime) and crate-node-compat",
   },
   {
@@ -117,6 +129,7 @@ export const STEPS = [
     title: "Root suites (scripts/*.test.mjs)",
     cwd: ".",
     argv: [process.execPath, "scripts/run-root-suite.mjs", "--bail"],
+    tests: true,
     mirrors: "root-suite job — Root suites",
   },
   {
@@ -124,6 +137,7 @@ export const STEPS = [
     title: "Pi package version-parity gate (content — offline)",
     cwd: ".",
     argv: [NODE, "scripts/version-parity-gate.mjs", "--content"],
+    tests: false,
     mirrors: "root-suite job — Pi package version-parity gate",
   },
   {
@@ -131,6 +145,7 @@ export const STEPS = [
     title: "Schema package (node runtime — the guaranteed fallback)",
     cwd: "packages/agentic-workflow-schema",
     argv: [BUN, "run", "test:node"],
+    tests: true,
     mirrors: "schema-node-compat job",
   },
   {
@@ -138,6 +153,7 @@ export const STEPS = [
     title: "Pi package (node runtime — the guaranteed fallback)",
     cwd: "packages/pi-agentic-workflow",
     argv: [BUN, "run", "test:node"],
+    tests: true,
     mirrors: "pi-node-compat job",
   },
   {
@@ -167,8 +183,8 @@ export const STEPS = [
 
 const USAGE = [
   "usage: bun scripts/local-gate.mjs [--list] [--only <id,id>] [--skip-network]",
-  "                                    [--no-bail] [--dry-run] [--install-hook [--force]]",
-  "                                    [--repo <dir>]",
+  "                                    [--push-base <rev>] [--no-bail] [--dry-run]",
+  "                                    [--install-hook [--force]] [--repo <dir>]",
   "       (node fallback, same argv)",
 ].join("\n");
 
@@ -182,6 +198,7 @@ function parseArgs(argv) {
     root: SCRIPT_ROOT,
     only: null,
     skipNetwork: false,
+    pushBase: null,
     bail: true,
     dryRun: false,
     list: false,
@@ -199,6 +216,11 @@ function parseArgs(argv) {
       const value = argv[index + 1];
       if (!value) usage("--only needs a comma-separated step list");
       options.only = value.split(",").map((id) => id.trim()).filter(Boolean);
+      index += 1;
+    } else if (arg === "--push-base") {
+      const value = argv[index + 1];
+      if (!value) usage("--push-base needs a revision");
+      options.pushBase = value;
       index += 1;
     } else if (arg === "--skip-network") {
       options.skipNetwork = true;
@@ -262,6 +284,37 @@ function piCompatGuard({ root }) {
   return 0;
 }
 
+/**
+ * The `verdict:` line of the fixed `TEST IMPACT —` block `scripts/test-impact.mjs`
+ * prints. Anything else — no block, an empty value — is not a verdict, and no
+ * verdict never means skip.
+ */
+export function parseImpactVerdict(stdout) {
+  const match = /^verdict:\s*(\S.*?)\s*$/m.exec(String(stdout ?? ""));
+  return match ? match[1] : null;
+}
+
+/**
+ * The impact half of `--push-base`: run the gated checkout's own test-impact
+ * script against the base and read its verdict. A missing script, a non-zero
+ * exit or an unreadable block all answer `null` — the caller then runs the
+ * full gate, because a skip is only ever earned by a proven `empty`.
+ */
+function checkImpact(root, base) {
+  const script = path.join(root, "scripts", "test-impact.mjs");
+  if (!fs.existsSync(script)) {
+    return { verdict: null, detail: `scripts/test-impact.mjs is absent from ${root}` };
+  }
+  const result = spawnSync(process.execPath, [script, "--base", base], {
+    cwd: root,
+    encoding: "utf8",
+    env: stepEnv(),
+  });
+  const verdict = result.status === 0 ? parseImpactVerdict(result.stdout) : null;
+  const firstLine = (result.stdout || result.stderr || "").split("\n").find((line) => line.trim()) ?? "";
+  return { verdict, detail: result.status === 0 ? firstLine : `${script} exited ${result.status ?? "?"}: ${firstLine}` };
+}
+
 /** The hook body: banner, escape hatch, then the offline subset of this gate. */
 export function hookBody() {
   return `#!/usr/bin/env bash
@@ -270,6 +323,10 @@ export function hookBody() {
 #
 # Runs the offline subset: a registry that happens to be unreachable must not
 # block a push over a fact no commit changed. Run the full gate before merging.
+#
+# The push range is also checked with scripts/test-impact.mjs: when no
+# executable path changed (prose and assets only), the test steps are skipped —
+# anything unprovable runs the full gate. Unit 100.
 #
 # Escape hatch (record why in the PR): AGENTIC_WORKFLOW_SKIP_LOCAL_GATE=1
 
@@ -282,8 +339,34 @@ fi
 
 root="\$(git rev-parse --show-toplevel)" || exit 1
 
+# One base per push: the remote tip of the single non-delete ref being pushed.
+# A new branch (zero remote sha) falls back to the merge-base with the remote
+# default branch; several refs, or anything unresolvable, leaves base empty and
+# the gate runs every step.
+base=""
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  case "\$local_sha" in *[!0]*) ;; *) continue ;; esac
+  case "\$remote_sha" in *[!0]*) ;; *) continue ;; esac
+  if [ -z "\$base" ]; then
+    base="\$remote_sha"
+  else
+    base=""
+    break
+  fi
+done
+if [ -z "\$base" ]; then
+  default_branch="\$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"
+  base="\$(git merge-base HEAD "\$default_branch" 2>/dev/null || true)"
+fi
+
 if command -v bun >/dev/null 2>&1; then
+  if [ -n "\$base" ]; then
+    exec bun "\$root/scripts/local-gate.mjs" --skip-network --push-base "\$base"
+  fi
   exec bun "\$root/scripts/local-gate.mjs" --skip-network
+fi
+if [ -n "\$base" ]; then
+  exec node "\$root/scripts/local-gate.mjs" --skip-network --push-base "\$base"
 fi
 exec node "\$root/scripts/local-gate.mjs" --skip-network
 `;
@@ -361,11 +444,34 @@ function main(argv) {
   if (options.installHook) return installHook(options);
 
   const selected = selectSteps(options);
+
+  // The impact gate (unit 100): a proven-empty push range skips the test
+  // steps; every other answer — targeted, a refusal, an absent script — runs
+  // the full selection.
+  const skippedByImpact = [];
+  if (options.pushBase) {
+    const impact = checkImpact(options.root, options.pushBase);
+    if (impact.verdict === "empty") {
+      skippedByImpact.push(...selected.filter((step) => step.tests));
+      process.stdout.write(
+        `local-gate: skipping ${skippedByImpact.length} test step(s) — test-impact: empty since ${options.pushBase}` +
+          `: ${skippedByImpact.map((step) => step.id).join(", ")}\n`,
+      );
+    } else {
+      const detail = impact.verdict === null ? "could not be proven empty" : `verdict ${impact.verdict}`;
+      process.stdout.write(
+        `local-gate: the push range ${detail} (${impact.detail}) — the test step(s) run\n`,
+      );
+    }
+  }
+
   const skipped = selected.filter((step) => options.skipNetwork && step.network);
-  const runnable = selected.filter((step) => !(options.skipNetwork && step.network));
+  const runnable = selected.filter(
+    (step) => !(options.skipNetwork && step.network) && !skippedByImpact.includes(step),
+  );
 
   if (runnable.length === 0) {
-    process.stdout.write("local-gate: nothing to run — every selected step is network-only\n");
+    process.stdout.write("local-gate: nothing to run — every selected step is skipped\n");
     return 0;
   }
 
