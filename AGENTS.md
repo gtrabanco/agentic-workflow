@@ -247,6 +247,13 @@ gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip.
 A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`.
+**The generated projection is armed once per checkout**: `.gitattributes` names
+`docs/generated/** merge=docs-generated`, and `bun scripts/docs-generated-merge.mjs
+--install` writes the driver git config a clone never inherits. With it armed, a
+concurrent regeneration is resolved mechanically (the incoming projection wins)
+instead of by hand; with or without it, the gate's `docs-generated-projection`
+step runs `docs-generate --check` on every push — offline and not test-gated,
+because a prose-only push is exactly the push that stales the projection.
 The remote
 gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
 branch you cannot run locally.

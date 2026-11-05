@@ -339,6 +339,7 @@ test("every former remote check survives as a step of the local gate", () => {
     "crate-suite-node",
     "root-suite",
     "version-parity-content",
+    "docs-generated-projection",
     "schema-node-compat",
     "pi-node-compat",
     "pi-compat-guard",

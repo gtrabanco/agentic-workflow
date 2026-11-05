@@ -1,0 +1,8 @@
+# The generated projection is a function of the tree, never a hand-merged
+# surface: `docs/generated/**` is rendered by scripts/docs-generate.mjs, so two
+# regenerations never have a real line-level conflict. Git resolves this one
+# mechanically; the local gate's `docs-generated-projection` step refuses a
+# projection that no longer matches its sources.
+#
+# Arm the driver once per checkout: bun scripts/docs-generated-merge.mjs --install
+docs/generated/** merge=docs-generated

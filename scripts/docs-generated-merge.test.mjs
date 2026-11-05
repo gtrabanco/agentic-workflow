@@ -142,6 +142,22 @@ test("the driver answers the incoming side, byte for byte", () => {
   }
 });
 
+test("the path git quotes is still recognized as the projection", () => {
+  const repo = scratch("quoted");
+  try {
+    const base = repo.write("base.md", "Generated from 137 unit docs\n");
+    const ours = repo.write(`${PREFIX}/code.md`, "Generated from 139 unit docs\n");
+    const theirs = repo.write("theirs.md", "Generated from 141 unit docs\n");
+    // Git hands `%P` shell-quoted: the driver must not read the quotes as part
+    // of the path and refuse its own file.
+    const result = driver([base, ours, theirs, "7", `'${PREFIX}/code.md'`], repo.dir);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.readFileSync(ours, "utf8"), "Generated from 141 unit docs\n");
+  } finally {
+    repo.cleanup();
+  }
+});
+
 test("a path outside the projection fails closed and keeps the local bytes", () => {
   const repo = scratch("outside");
   try {
