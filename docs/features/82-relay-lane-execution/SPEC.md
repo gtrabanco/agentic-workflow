@@ -162,6 +162,8 @@ Verdict produced at cut with `bun scripts/ceremony.mjs tier classify` over the b
 
 ## Known pre-existing issues
 
+- **`local-gate.mjs`'s `pi-compat-guard` step fails in this checkout** (`src/auto-log-session.ts(32,31): error TS2307: Cannot find module '@gtrabanco/agentic-workflow/src/log/render.mjs'`): the step copies `packages/pi-agentic-workflow/{src,tsconfig.json,package.json}` into a temp dir and installs the registry pin, which ships `dist/` only (`files: ["dist", "skills", …]`), so the sibling `src/…` import the package's own source uses cannot resolve outside the workspace. **does-not-affect this unit**: `git diff --stat caee2502 -- packages/` is empty, so the step's whole input set is byte-identical to the base; the offline subset of the same gate passes.
+- **`workflow-status-sensor.test.mjs`'s two forge-timeout cases are load-sensitive** (`P2: a forge that never answers times out and degrades`, `F19: a slow-but-alive forge costs one shared bound`): they fail identically at the cut head and at the base when the machine is busy (both sides hit the 5 s bound), and pass in the idle root-suite run at the head. **does-not-affect**: no forge path is touched by this unit.
 - **`scripts/docs-generate.test.mjs` is red at the base** (`docs/generated/{code,index,units}.md: stale`, 3 of 3): the committed projection was not regenerated after its sources moved. **affects this unit** — this unit's own sources (a new unit doc, a changed roadmap row) require the docs step to regenerate the projection, which settles the pre-existing drift in the same commit.
 - **The checkout arrived with an empty worktree and an empty index** (all 1,363 tracked files staged as deleted, no `node_modules`, no `dist/`). **does-not-affect** this unit's behaviour: `git reset --hard HEAD` plus `bun install --frozen-lockfile` plus the schema package's `bun run build` restored the documented baseline.
 - **`docs/features/71-doc-cli` and `docs/features/72-pi-100-compat-guard` remain `defined`/`done` without a matching roadmap status change in this unit's area.** **does-not-affect**: no shared file is edited.
@@ -248,11 +250,13 @@ Budget: strong
 - **E6** — 2026-11-05, the differential run: the router at `caee2502` and at the head, over every fixture unit with `PI_WEB_SESSION` unset — byte-identical stdout and exit codes except one added `relay: unavailable — …` line in the units that take an execution hand-off.
 - **G2** — 2026-11-05, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (changeset route). `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` · exit 0 · `verdict PASS`.
 - **P7** — 2026-11-05 16:10 — obligations O1–O23 verified with their evidence recorded above; the two fixture mirrors (`lane-era-lineage`, `workflow-status-sensor`) gained the router's new import, the obligations parser fails closed on a malformed row, and the `## Future` rows follow the published `status`-first shape the vocabulary probe reads.
+- **D6** — 2026-11-05, `bun scripts/ceremony.mjs tier classify` → `risk-tier-verdict@1`: `tier: standard`, `reason_kind: executable-content` (9 executable paths), `task_size.ceremony: unit-doc`, `task_size.contained_risk: contained` — copied verbatim into `## Risk tier`.
+- **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 · 7 steps PASS in 106s (workspace install, schema build, both crate suites, root suite, content parity, dependency pins). The full run stops at `pi-compat-guard` — the recorded pre-existing registry/source-resolution failure above, whose input set is byte-identical to the base.
 - **G3** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · 83 suites PASS. `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS`, 32 claims checked. `bun scripts/vocabulary-probe.mjs` · exit 0 · 0 violations. `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` 14 routes; `--documents` 3 documents.
 
 ## Next
 
-P5 — publish the relay leg contract in the lane skill, then the docs and release surface.
+Owner verification: read the seven commits, re-run the verification block below, and give the verdict. After the verdict and with a PR open, the lane's ordered close-out is unchanged — `/review-change 82-relay-lane-execution` posts the SHA-bound receipt, then `/audit-pr <PR-url>` is the merge gate.
 
 ## References
 
