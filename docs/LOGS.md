@@ -4223,3 +4223,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Serena's markdown language server (.NET/F# based) was crashing on worktree activation due to missing libicu dependency (ICU internationalization library required by .NET globalization); installing libicu76 resolved the LanguageServerTerminatedException that prevented all Serena tools from working
 - **Next:** Continue work on fix/356-test-targeting — Serena is now fully operational in this worktree
 
+## 2026-11-05T00:51:25Z — fix/356-test-targeting — manual
+- **Commits:** 15 (`16069246…ae1dc9e6`)
+- **Files:** 17 files
+- **Summary:** fix/356-test-targeting: external-verify of fix/356-test-targeting on base feat/356-test-targeting — verdict VERIFIED, zero blockers, four advisories folded as a correction batch (E10 figure corrected 1543→1541, directory --paths refusal behavior change with red-first case, empty+references grammar note in TEST_IMPACT.md, SKILLS.md narration qualifier) — all gates green
+- **Decisions:** External-verify returned VERIFIED with zero blockers; advisories 2 (directory --paths) was a behavior fix committed red-first per unit's own O11; advisory 1 (E10 gate count 1543→1541) was a receipt-precision slip confirmed by reproducing the rg-less gate run; the unit-doc Log got an E12 receipt recording the entire batch
+- **Next:** PR #402 — merge this branch onto main (fix/356-test-targeting). Post-merge: run bun scripts/run-root-suite.mjs once to confirm CI parity (1542 pass · 1 skip · 0 fail)
