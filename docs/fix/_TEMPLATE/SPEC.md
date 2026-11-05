@@ -1,3 +1,10 @@
+---
+# Uncomment and set both keys; until you do, the readers fall back to the folder
+# (type) and to the requirement count (scope).
+# type: feature | fix | docs | chore
+# scope: trivial | xs | small | standard | medium | large | xlarge
+---
+
 # fix/<issue-number>-<topic>
 
 > Fix specification — one single unit document. Copy this folder to
@@ -150,6 +157,12 @@ implementation-owner | validator | required-evidence | status` — shape owned b
 units; for M/L the ledger lives in the unit folder's `planning-obligations.md`
 and this section names it — never both. Before the unit ships, every row is
 `verified` (or an evidenced `n/a`).
+
+## Triaged steps
+
+> Paste the `## Triaged steps` block from `bun scripts/unit-route.mjs --triage <slug>`
+> here verbatim. This block is the machine's authoritative step list; the lane
+> never re-derives or reorders it (owner: `skills/unit-lane/SKILL.md` §Turn contract).
 
 ## Findings
 
