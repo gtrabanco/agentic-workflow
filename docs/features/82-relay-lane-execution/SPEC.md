@@ -251,6 +251,9 @@ Budget: strong
 - **G2** — 2026-11-05, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (changeset route). `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` · exit 0 · `verdict PASS`.
 - **P7** — 2026-11-05 16:10 — obligations O1–O23 verified with their evidence recorded above; the two fixture mirrors (`lane-era-lineage`, `workflow-status-sensor`) gained the router's new import, the obligations parser fails closed on a malformed row, and the `## Future` rows follow the published `status`-first shape the vocabulary probe reads.
 - **D6** — 2026-11-05, `bun scripts/ceremony.mjs tier classify` → `risk-tier-verdict@1`: `tier: standard`, `reason_kind: executable-content` (9 executable paths), `task_size.ceremony: unit-doc`, `task_size.contained_risk: contained` — copied verbatim into `## Risk tier`.
+- **L2** — 2026-11-05, the owner's instruction, verbatim: "Abre la PR mientras se completa la review" — the PR opens before the review rather than after it: the branch is pushed, PR [#419](https://github.com/gtrabanco/agentic-workflow/pull/419) is open, and the lane's ordered close-out (`/review-change` receipt → `/audit-pr`) still applies and is still owed.
+- **P8** — 2026-11-05 18:40 — branch pushed (`feat/294-relay-orchestrated-lane`, 8 commits) with the pre-push gate PASS, PR #419 opened against `main`, roadmap row 82 settled `done · [#419]` through the crate's writer.
+- **G5** — 2026-11-05, `git push -u origin feat/294-relay-orchestrated-lane` · pre-push hook `local-gate: PASS — 7 step(s) in 102s`. `bun scripts/roadmap-settle.mjs` · exit 0 · `verdict: PASS`.
 - **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` · exit 0 · 7 steps PASS in 106s (workspace install, schema build, both crate suites, root suite, content parity, dependency pins). The full run stops at `pi-compat-guard` — the recorded pre-existing registry/source-resolution failure above, whose input set is byte-identical to the base.
 - **G3** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · 83 suites PASS. `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS`, 32 claims checked. `bun scripts/vocabulary-probe.mjs` · exit 0 · 0 violations. `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` 14 routes; `--documents` 3 documents.
 
@@ -264,3 +267,4 @@ Owner verification: read the seven commits, re-run the verification block below,
 - Roadmap row 82 (`docs/ROADMAP.md` §Features).
 - Issue [#293](https://github.com/gtrabanco/agentic-workflow/issues/293) — the D1/D3/D4 seam this unit closes structurally; [#291](https://github.com/gtrabanco/agentic-workflow/issues/291) (per-phase hand-off and `budget_tier`) shipped as feature 73.
 - pi-web Relay package `@jmfederico/pi-relay` (`relay`, `relay-runner`, `dispatch_relay`) — anchor documents and dispatch bounds verified from the shipped source.
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/419
