@@ -192,21 +192,6 @@ jobs:
         with:
           bun-version: 1.4.0
 
-      # The notes are RENDERED, not concatenated: one heading per change, grouped
-      # by kind with breaking first, the train's bumps as a table, and the install
-      # commands for the stable channel. Rendered BEFORE apply because apply
-      # consumes the changesets, and outside the worktree so `git add -A` never
-      # commits it.
-      - name: Assemble the release notes (BEFORE apply — apply consumes the changesets; outside the worktree so git add -A never commits it)
-        env:
-          FORCE_VERSION: ${{ inputs.version }}
-        run: |
-          if [ -n "$FORCE_VERSION" ]; then
-            node scripts/release.mjs release-notes --channel stable --version "$FORCE_VERSION" > "$RUNNER_TEMP/release-notes.txt"
-          else
-            node scripts/release.mjs release-notes --channel stable > "$RUNNER_TEMP/release-notes.txt"
-          fi
-
       - name: Apply the train (versions + pins + changelog rows)
         env:
           FORCE_VERSION: ${{ inputs.version }}
@@ -252,7 +237,7 @@ jobs:
           git tag "v$VERSION"
           git push origin "v$VERSION"
           git push origin "HEAD:refs/heads/stable"
-          gh release create "v$VERSION" --title "v$VERSION" --notes-file "$RUNNER_TEMP/release-notes.txt"
+          gh release create "v$VERSION" --title "v$VERSION" --generate-notes
 
       # One manual action per release. Publishing stays its own run (its own
       # gates, its own retry), the push trigger is gone, so the cut requests the
@@ -374,27 +359,6 @@ jobs:
         if: always()
         run: git checkout -- packages/*/package.json
 
-      # The canary release body is the BACKLOG: the pending changesets — the same
-      # ones the next stable cut consumes — so the pre-release says what it
-      # carries. Canaries are grouped by the operator; the pre-release is where
-      # the group is readable, and the changesets stay pending. The renderer
-      # separates what THIS cut adds (the files the previous canary did not have)
-      # from what an earlier canary already handed out, which otherwise grows
-      # into the same wall of text on every cut.
-      - name: Assemble the backlog notes (the rendered changesets are the release body)
-        env:
-          CHANNEL: ${{ inputs.channel }}
-          VERSION: ${{ inputs.version }}
-        run: |
-          args=()
-          if [ -n "$VERSION" ]; then args+=(--version "$VERSION"); fi
-          node scripts/release.mjs release-notes --channel "$CHANNEL" --date "$CUT_DATE" "${args[@]}" > "$RUNNER_TEMP/canary-notes.txt"
-
-      # The cut is recorded as a tag — that tag IS the canary counter's input
-      # (v<base>-canary.<date>.*), so the next cut increments. The pre-release
-      # makes the channel cut visible on the forge without touching `latest`:
-      # GitHub assigns `latest` only to the newest NON-prerelease release, and
-      # npm keeps the canary dist-tag separate from `latest` by construction.
       - name: Record the cut as a tag and a GitHub pre-release
         if: hashFiles('publish-plan.tsv') != ''
         env:
@@ -412,7 +376,7 @@ jobs:
               git push origin "v$V"
             fi
             gh release view "v$V" >/dev/null 2>&1 \
-              || gh release create "v$V" --prerelease --verify-tag --title "v$V" --notes-file "$RUNNER_TEMP/canary-notes.txt"
+              || gh release create "v$V" --prerelease --verify-tag --title "v$V" --generate-notes
             echo "recorded cut v$V ($CHANNEL)"
           else
             echo "nothing declared — no tag"
