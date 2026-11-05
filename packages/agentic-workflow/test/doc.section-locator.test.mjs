@@ -206,7 +206,7 @@ describe("selector resolution (C4, C6, S4, S10)", () => {
   });
 
   it("rejects a malformed selector with the typed BAD_SELECTOR code (C4)", () => {
-    const malformed = [undefined, null, 42, {}, [], { heading: "A", path: ["A"] }, { headingRegex: "not-a-regexp" }, { line: 5 }, { within: "A" }, { line: "x", heading: "A" }];
+    const malformed = [undefined, null, 42, {}, [], { heading: "A", path: ["A"] }, { headingRegex: "not-a-regexp" }, { line: 5 }, { within: "A" }, { line: "x", heading: "A" }, { line: "x", within: { line: "y" } }];
     for (const selector of malformed) {
       assert.throws(() => locate(FENCE_TRAP, selector), (error) => error instanceof SectionLocatorError && error.code === "BAD_SELECTOR", `selector ${JSON.stringify(selector)}`);
     }

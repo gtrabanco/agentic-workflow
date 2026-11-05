@@ -26,6 +26,9 @@
  *   - A selector resolving to zero sections raises `NO_MATCH`; more than one
  *     raises `AMBIGUOUS_MATCH`. Callers decide the policy — this module never
  *     guesses which duplicate was meant.
+ *   - A line range covers each matched line **with its terminator**, so removing
+ *     a line leaves no blank residue and a replacement carries its own newline
+ *     (adjacent matches join into one range; disjoint matches are ambiguous).
  *
  * No normalization, no reformatting, no clock: same input, same output.
  */
@@ -177,8 +180,11 @@ function normalizeSelector(selector) {
   if (form === "heading") return { kind: "title", title: headingTitle(selector.heading, "heading") };
   if (form === "path") return { kind: "path", path: headingPath(selector.path, "path") };
   if (form === "headingRegex") return { kind: "heading-regex", ...toRegex(selector.headingRegex, "headingRegex") };
-  const within =
-    selector.within === undefined || selector.within === null ? null : normalizeSelector(selector.within);
+  let within = null;
+  if (selector.within !== undefined && selector.within !== null) {
+    within = normalizeSelector(selector.within);
+    if (within.kind === "line") badSelector("within scopes a line selector to a section, not to another line selector");
+  }
   if (typeof selector.line === "string") return { kind: "line", within, match: { kind: "exact", text: selector.line } };
   return { kind: "line", within, match: { kind: "regex", ...toRegex(selector.line, "line") } };
 }
