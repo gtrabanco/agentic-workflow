@@ -6,7 +6,13 @@
 *.swp
 *~
 .vscode/
-.pi-web/
+# pi-web's runtime data dir, and only at the workspace root: an unanchored rule
+# also swallowed the fixtures that mirror a packet's path (scripts/fixtures/**).
+/.pi-web/
+# Fixtures mirror a packet's real relative path (the checker resolves it), so the
+# corpus is re-included even when a global excludes file ignores `.pi-web` anywhere.
+!scripts/fixtures/**/.pi-web/
+!scripts/fixtures/**/.pi-web/**
 
 # Logs / temp
 *.log
