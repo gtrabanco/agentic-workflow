@@ -4435,3 +4435,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #359: carrier inventory for prose-gate gates (S1–S7, D1–D7)
 - **Decisions:** Roadmap row 96 is a feature (+triage promote-to-feature), so unit lives in docs/features/96- not docs/fix/ (D1). No changeset created: repo's changeset-create rejects empty intent (D7). Only the owner can merge; this was delivered as a standalone diff with full evidence.
 - **Next:** review the diff on fix/359-prose-gate-inventory (afe5a336..HEAD — 9 commits, 18 files, +1667/−12), decide on merge or corrections
+
+## 2026-11-05T21:45:26Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 14 (`0a60994e…7e26646d`)
+- **Files:** 19 files
+- **Summary:** 359 prose-gate-inventory — external verification and advisory correction
+- **Decisions:** Three advisory fixes as one batch: (1) findHomes walks the whole tree (not guide layer) so a second fenced copy anywhere is refused; (2) the activation-mount fixture runs end-to-end on a scratch git repo instead of a seeded array; (3) the test imports findHomes instead of a hardcoded list — no second copy. Extra: AC25 grep batched (1 spawn per set vs per-file) — 8.6s→1.3s. pi-compat-guard failure confirmed pre-existing from feat 394.
+- **Next:** Owner merges PR #359; after merge: #394 (auto log-session) awaits, consuming the accumulator sink from #383/#394
