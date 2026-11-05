@@ -36,6 +36,18 @@ export interface PiLike {
 /** The events this wiring listens to. */
 export const AUTO_LOG_SESSION_EVENTS = Object.freeze(["session_start", "session_shutdown"] as const);
 
+/**
+ * The renderer's reason grammar is a lowercase token (the hook's `exit`/`clear`/
+ * `other`, pi's `quit`/`new`/`resume`/`fork`). A reason outside it — an event
+ * name, a host-specific string — is normalized to `unknown` so the entry still
+ * lands instead of being refused at the renderer (the local write must never be
+ * lost to a reason the grammar does not know).
+ */
+const REASON_TOKEN = /^[a-z][a-z0-9-]*$/u;
+export function normalizeShutdownReason(reason: unknown): string {
+  return typeof reason === "string" && REASON_TOKEN.test(reason) ? reason : "unknown";
+}
+
 export interface AutoLogSessionWiringOptions {
   readonly root: string;
   /** The resolved switch: `off` registers nothing. */
@@ -105,11 +117,11 @@ export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions)
         const { sessionId, marker } = marked;
         marked = null;
         try {
-          const reason = (event as { reason?: unknown } | undefined)?.reason;
+          const reason = normalizeShutdownReason((event as { reason?: unknown } | undefined)?.reason);
           const facts = buildFacts({
             root: options.root,
             marker,
-            reason: typeof reason === "string" && reason !== "" ? reason : "unknown",
+            reason,
             now: options.now,
             git: options.git,
           });
