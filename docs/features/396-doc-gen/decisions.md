@@ -16,6 +16,7 @@ observed failing before the implementation exists.
 path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/docs-generate.test.mjs | P1 | 2026-11-04 | execute-phase | the suite is new — the frozen corpus of issue #396 S2–S7, cut red-first against the absent generator; nothing existing is modified
+justification | scripts/workflow-status-sensor.test.mjs | P14 | 2026-11-04 | execute-phase | one case is appended for S9 (the declared-cycle case that reproduces the live stack overflow); no existing assertion is edited, relaxed or removed
 ```
 
 ## Decisions
@@ -53,3 +54,12 @@ justification | scripts/docs-generate.test.mjs | P1 | 2026-11-04 | execute-phase
   the root gate (and the two suites reading the manifest) cannot be green while it
   stands, so `O11` would be unverifiable. Three sentences were tightened inside
   the unchanged ceiling — no rule, owner link or pinned phrase removed.
+- **D9 — S9 is added at the owner's instruction, inside this unit.** Verbatim:
+  "arreglalo en esta unidad, no hace falta una nueva pr para ese fix". The sensor
+  failure had been recorded as pre-existing and routed elsewhere; the owner
+  ordered it repaired here, so the unit gains `S9`, tasks `P14`–`P16` and
+  obligations `O12`/`O13` rather than a second PR. Two defects are repaired: the
+  missing cycle guard in `dependencyBuildOrder` (the walk marked a node after
+  recursing, so A→B→A never terminated) and the roadmap cell that declared it —
+  row 98 (`done`) depended on row 100 (`idea`), which cannot be a hard
+  dependency; row 100 keeps its true direction, `98 (done)`.

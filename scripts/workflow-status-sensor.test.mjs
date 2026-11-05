@@ -1039,6 +1039,29 @@ test("F27: dependencies.build_order and blocked_units[].build_order are one deri
   assert.deepEqual(blocked.build_order, ["90-shipped", "91-missing", "92-blocked"], "the chain closes on the blocked unit");
 });
 
+test("declared dependency cycle: the sensor reports it and terminates", () => {
+  // A cycle in the roadmap's `Depends on` column is a planning defect the sensor
+  // must report, never a hang: the build-order walk marks a node before it
+  // recurses, so A -> B -> A cannot re-enter A. Before the guard the child died
+  // with a stack overflow and printed no envelope at all.
+  const fixture = makeFixture({
+    roadmapRows: [
+      "| 90 | `alpha` | idea | 91 | first |",
+      "| 91 | `beta` | idea | 90 | second |",
+    ],
+  });
+  const result = fixture.run();
+  assert.equal(result.status, 0, `a cycle is reported, not a crash: ${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /Maximum call stack size exceeded/, "the walk terminates");
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
+  const cycle = (envelope.blockers ?? []).filter((row) => /dependency cycle/.test(row.detail ?? ""));
+  assert.ok(cycle.length > 0, `the cycle is named as a blocker: ${JSON.stringify(envelope.blockers)}`);
+  for (const row of cycle) assert.match(row.id, /^(90-alpha|91-beta)$/);
+  const order = envelope.dependencies.build_order ?? [];
+  assert.equal(new Set(order).size, order.length, `the walk visits each unit once: ${JSON.stringify(order)}`);
+});
+
 // Feature 61 P8b — pre-execution verifier spawns are retired (no more subprocess
 // to re-derive bound digests); the spawn cap constant PRE_EXECUTION_MAX_SENSES
 // and the cap logic are deleted. Lane rows always carry boundDigest: null.
