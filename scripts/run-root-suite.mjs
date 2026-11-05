@@ -42,6 +42,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { scrubGitLocator } from "./git-env.mjs";
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Every root suite, discovered the same way the shell glob does. */
@@ -66,12 +68,12 @@ const selected = forwarded.length > 0 ? forwarded : suites();
 // overhead and the full-history git walks on tests that are fast in node but slow
 // under bun (node keeps its no-default timeout model).
 const isBun = process.execPath.includes("bun");
-const env = {
+const env = scrubGitLocator({
   ...process.env,
   GIT_CONFIG_COUNT: String(Number(process.env.GIT_CONFIG_COUNT ?? 0) + 1),
   [`GIT_CONFIG_KEY_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "commit.gpgsign",
   [`GIT_CONFIG_VALUE_${process.env.GIT_CONFIG_COUNT ?? 0}`]: "false",
-};
+});
 const run = (argv) => spawnSync(process.execPath, argv, { cwd: REPO_ROOT, stdio: "inherit", env }).status ?? 1;
 
 if (isBun) {

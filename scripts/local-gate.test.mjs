@@ -19,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { STEPS, hookBody, peerFloor } from "./local-gate.mjs";
+import { STEPS, hookBody, peerFloor, stepEnv } from "./local-gate.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = path.join(ROOT, "scripts", "local-gate.mjs");
@@ -33,6 +33,26 @@ function sandbox() {
   fs.mkdirSync(path.join(dir, ".git", "hooks"), { recursive: true });
   return dir;
 }
+
+test("a step never inherits the caller's repository locator", () => {
+  // `git push` exports GIT_DIR to its pre-push hook; a fixture that `git init`s
+  // a throwaway directory then re-initializes the caller's repository. The gate
+  // strips the locator variables once, for every step.
+  const saved = { ...process.env };
+  try {
+    process.env.GIT_DIR = "/real/.git";
+    process.env.GIT_WORK_TREE = "/real";
+    process.env.GIT_INDEX_FILE = "/real/.git/index";
+    const env = stepEnv();
+    assert.equal(env.GIT_DIR, undefined, "GIT_DIR must not reach a step");
+    assert.equal(env.GIT_WORK_TREE, undefined, "GIT_WORK_TREE must not reach a step");
+    assert.equal(env.GIT_INDEX_FILE, undefined, "GIT_INDEX_FILE must not reach a step");
+    assert.equal(env.PATH, process.env.PATH, "the rest of the environment is inherited");
+  } finally {
+    for (const name of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"]) delete process.env[name];
+    Object.assign(process.env, saved);
+  }
+});
 
 /* ------------------------------------------------------------------ table */
 
