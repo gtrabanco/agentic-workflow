@@ -276,6 +276,7 @@ task list above; the deterministic routers still judge the document.
 - **G2** — 2026-11-05, `bun scripts/local-gate.mjs` · exit 1 · bails at `pi-compat-guard` (three `TS2307` for `src/log/*` against the published tarball) — reproduced identically on the `caee2502` archive, so pre-existing (see §Known pre-existing issues); every other executed step passed, and `--only dependency-advisories` exits 0 report-only with no advisory on the added parser.
 
 - **G3** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network` at `83edb7bb` · exit 1 · only `schema-node-compat` red, on the load-sensitive F99 bound (`200,000 commands refused in 57.48 ms (bound 50 ms)`); `node --test test/verification-preflight.test.mjs` in isolation · exit 0 · `8 pass / 0 fail`, 3/3 runs — the flake is recorded as pre-existing, never excused by widening the bound.
+- **G4** — 2026-11-05, `bun scripts/local-gate.mjs --skip-network --jobs 1` at `d8800892` · exit 0 · `PASS — 7 step(s) in 139s`: the same seven steps, scheduled sequentially so the load-sensitive F99 bound is measured without the pool's contention. The parallel run's red is recorded as G3 and never explained away by relaxing the bound.
 ## Next
 
 P1 — the RED library suite first (`doc.section-locator.test.mjs` observed failing on the missing module), then the implementation observed green.
