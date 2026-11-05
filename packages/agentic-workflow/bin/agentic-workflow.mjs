@@ -12,6 +12,7 @@
  *   agentic-workflow section <locate|remove|replace> --file <path|-> --selector <json> [--replacement <path|->] [--write] [--json]
  *   agentic-workflow memory probe [--json]
  *   agentic-workflow log render --facts <path|-> [--raw]
+ *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *
  * --json prints the operation receipt as JSON.
  * Every operation prints a fixed receipt block to stdout.
@@ -26,6 +27,13 @@
  * document: `locate` prints the range receipt, `remove`/`replace` print the
  * transformed document (or persist it with `--write`), and a selector that
  * resolves to nothing or to several sections is a refusal (exit 2).
+ *
+ * `relay` (unit 82) is the lane's offline half of pi-web's Relay packet
+ * contract: `check` validates the packet, `budget` measures the leg handover
+ * against the declared ceiling, `tiers` reads each leg's tier from the catalog
+ * and `obligations` verifies the unit's obligations ledger is closed. It is the
+ * same module `scripts/relay-packet.mjs` runs, so a project that carries only
+ * the crate gets the identical block. Read-only: it writes nothing.
  *
  * `log render` (feature #394) is a pure renderer with no session behind it: it
  * reads a `log-facts@1` payload and prints the journal entry, so a human, a test
@@ -63,6 +71,7 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
+import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -120,6 +129,16 @@ function logRefuse(reason, receipt) {
   process.exit(2);
 }
 
+const RELAY_USAGE = `usage: agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
+  check        validate the packet: documents, charter pointer, baton grammar, verdict grammar
+  budget       measure the leg handover (charter + baton) against the declared ceiling
+  tiers        print each leg's tier from scripts/catalog.json
+  obligations  verify the unit's obligations ledger is closed
+  <unit>       an NN-slug unit token, or a unit directory path
+  --repo       read the workspace from this directory (default: this project)
+  --packet     read the packet from this directory instead of .pi-web/relays/<slug>
+`;
+
 /**
  * Walk up from a unit doc to the repo root until the default index exists; null
  * when no ancestor carries it.
@@ -161,7 +180,7 @@ function findUpIndex(docPath, relativeIndex) {
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|memory|log> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log> ...");
   process.exit(1);
 }
 
@@ -170,6 +189,37 @@ const parsed = parseArgs(restArgs);
 const rawArgs = parsed.args;
 
 switch (command) {
+  // ── relay — the lane's offline half of pi-web's packet contract ──────
+  case "relay": {
+    const rootDir = resolve(process.cwd());
+    let argv;
+    try {
+      argv = parseRelayArgs(restArgs, { defaultWorkspace: rootDir });
+    } catch (e) {
+      if (!(e instanceof RelayUsageError)) throw e;
+      process.stderr.write(`RELAY REFUSAL — ${e.message}\n`);
+      process.stderr.write(RELAY_USAGE);
+      process.exit(2);
+    }
+    let result;
+    try {
+      result = runRelayMode({
+        ...argv,
+        catalogPath: join(rootDir, "scripts", "catalog.json"),
+        catalogLabel: "scripts/catalog.json",
+        budgetsPath: join(rootDir, "docs", "workflow", "SKILL_CONTEXT_BUDGETS.json"),
+        budgetsLabel: "docs/workflow/SKILL_CONTEXT_BUDGETS.json",
+      });
+    } catch (e) {
+      if (!(e instanceof RelayUsageError)) throw e;
+      process.stderr.write(`RELAY REFUSAL — ${e.message}\n`);
+      process.exit(2);
+    }
+    process.stdout.write(`${result.lines.join("\n")}\n`);
+    process.exit(result.exit);
+    break;
+  }
+
   // ── doc — retrieval entry point (unit 65, D2) ────────────────────────
   case "doc": {
     let grammar;
