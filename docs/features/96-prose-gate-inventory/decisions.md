@@ -52,6 +52,17 @@ legacy shapes) and a branch-delta assertion is not stable inside a fixture suite
 The row records `checkability: 2`, which is the ceiling every stay row must
 respect — no `checkability: 3` row may stay prose without failing the validator.
 
+## D7 — no changeset, because the repo's own rule refuses an empty one
+
+The issue's acceptance criterion says "changeset per repo rule". The rule is
+`scripts/changeset-create.mjs` (D-40-16): the affected packages and skills are
+derived from the change, and "a change that touches no package or skill is
+refused — an empty changeset would be silent intent". This change adds a
+reference document, a read-only repo script, a test and three assertions; it
+touches no `packages/` source and no `skills/` file. Running the producer is
+therefore the answer, and its refusal is recorded as evidence instead of a
+hand-written intent for a surface that did not change.
+
 ## Path-protection records
 
 ```text

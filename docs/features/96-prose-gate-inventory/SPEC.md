@@ -139,6 +139,13 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
   ceremony and ledger families, and S2's list is exemplary ("the existing producer
   families"), not exhaustive. Recorded so the choice is auditable rather than
   silent.
+- `docs/generated/` was already stale at the base commit: the committed
+  projection said 106 roadmap rows of 117 and 136 unit docs of 137, so
+  `scripts/docs-generate.test.mjs` ("the committed projection matches its
+  sources") was red on `main` before this unit's first line (`verdict: DRIFT`
+  at `caee2502`). `affects` this unit: the root suite cannot be green without it,
+  so the generator was run and its 8-line diff is committed as generated output;
+  no authored content is in it.
 - `scripts/ceremony/docs.mjs`'s `check-commit-format` cannot be an automatic
   root-suite assertion: 151 of 3,524 historical subjects are merge commits and
   legacy shapes, so a whole-history assertion is impossible and a branch-delta one
@@ -202,25 +209,31 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
       Relevant files: scripts/ledger-ownership.test.mjs, docs/workflow/GATE_INVENTORY.md
 
 - [ ] P7 — Verification at the head: every obligation validator re-run in the
-      foreground, the root suite green, the guide-layer budgets green, phase-lint on
-      this doc green, and the changeset accepted.
+      foreground, the root suite green, the guide-layer budgets green, and
+      phase-lint on this doc green.
       (validator: `bun scripts/run-root-suite.mjs` exits 0 and
       `bun scripts/check-skill-context.mjs --documents` exits 0)
       (Implements: S1, S2, S3, S4, S5, S6, S7)
-      Relevant files: docs/features/96-prose-gate-inventory/SPEC.md, .changeset/
+      Relevant files: docs/features/96-prose-gate-inventory/SPEC.md
 
 ## Triaged steps
 
-<!-- cut by the substituted plan step (this unit's process contract §5); the
-     authoritative step list of the lane is not invoked on this change -->
+<!-- pasted verbatim from `bun scripts/unit-route.mjs --triage 96-prose-gate-inventory` -->
 
 ```text
 TRIAGE — 96-prose-gate-inventory (feature)
-Steps: plan, implement, tests, evidence, review, docs
-Tiers: plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap
-Skipped: research: the issue carries the research (arXiv 2606.22528) · design: mechanism follows normalizer-inventory@1 · release: settles at PR
+Steps: research, design, plan, implement, tests, evidence, review, docs, release
+Tiers: research: cheap, design: strong, plan: cheap, implement: cheap, tests: strong, evidence: strong, review: strong, docs: cheap, release: strong
+Skipped: none
 Budget: strong
 ```
+
+The authoring turn covered research, design and plan (this doc, the frozen
+planning ledgers, `decisions.md`); implement, tests, evidence and docs landed as
+P1–P7 in the same hand-off. Review and release are the owner's: this change is
+handed over as a diff under the local process contract that forbids running the
+repository's own review machinery on its own surgery, and no PR is opened here,
+so the roadmap row stays `in-progress` until the owner's verdict.
 
 ### Planning evidence
 
@@ -269,9 +282,13 @@ One observable criterion per `S#`, each naming the check that proves it.
   contradicts its own scores. Proof: the `stay-reason` fixtures and the head run's
   tally printing `stay: <n>`.
 - [ ] **S7** — the guide layer stays inside its declared ceilings with the new
-  reference budgeted, and the unit carries a changeset. Proof:
-  `bun scripts/check-skill-context.mjs --documents` exits 0 and
-  `bun scripts/lint-changeset.mjs .changeset/96-prose-gate-inventory.md` matches `ok`.
+  reference budgeted, and the release-intent question is answered by the repo's
+  own rule rather than assumed: the change touches no package and no skill, so
+  `scripts/changeset-create.mjs` refuses an empty intent (`nothing to declare`),
+  and the decision is recorded instead of shipping a silent one. Proof:
+  `bun scripts/check-skill-context.mjs --documents` exits 0,
+  `bun scripts/changeset-create.mjs` exits 1 naming the refusal, and
+  `bun scripts/lint-changeset.mjs` exits 0 over the existing intents.
 
 ## Findings
 
@@ -315,11 +332,44 @@ yet. A folded row leaves this table and becomes a `## Log` line.
   branch keeps its `fix/359-…` name), S1–S7 quoted verbatim from issue #359,
   planning evidence and obligations frozen, roadmap row 96 → `in-progress` — next:
   P1 (frozen-failure corpus, red).
+- **P2** — 2026-11-05 20:55, P1 frozen-failure corpus: `scripts/prose-gate-inventory.test.mjs`
+  landed alone and observed red on the missing module (`0a60994e`) — the base tree
+  carries no inventory at all, which is the failure issue #359 names. The suite
+  carries one reproducer per refusal, never an assertion added after the fact.
+- **P3** — 2026-11-05 21:10, P2/P3 mechanism and carrier: `docs/workflow/GATE_INVENTORY.md`
+  publishes the 48-row `prose-gate-inventory@1` block, the guide indexes it in one
+  hop with declared ceilings, and `scripts/unit-doc-phases.mjs` gains
+  `headingBoundsAll` so an anchor names a section at any level without a second
+  heading grammar · `5c662f07`, `09e706cf`. The validator refuses three rows at
+  first because their migration pins do not exist yet — the tier is doing its job.
+- **P4** — 2026-11-05 21:25, P4–P6 migrations: documentation language wired over the
+  head, the activation mount asserted against the index, the one-findings-carrier
+  rule asserted over every unit directory; each with a fixture proving it bites ·
+  `308328b3`.
+- **E1** — 2026-11-05, `bun scripts/prose-gate-inventory.mjs` · exit 0 · `48 row(s) · script 25 · cli 10 · prose 13 · migrate 0`, `verdict: PASS`.
+- **E2** — 2026-11-05, `bun test scripts/prose-gate-inventory.test.mjs` · exit 0 · `20 pass / 0 fail` (one reproducer per refusal, plus the live head and the one-home check).
+- **E3** — 2026-11-05, `bun scripts/prose-gate-inventory.mjs --repo <base checkout at caee2502>` · exit 1 · `missing-inventory — docs/workflow/GATE_INVENTORY.md does not exist` — the frozen failure reproduced against the pre-change tree.
+- **E4** — 2026-11-05, `bun test scripts/doc-discipline.test.mjs` · exit 0 · `20 pass / 0 fail` — the `.es.md` fixture and the seeded activation-mount list both bite.
+- **E5** — 2026-11-05, `bun test scripts/ledger-ownership.test.mjs` · exit 0 · `14 pass / 0 fail` — the seeded dual-carrier unit is refused by the same scan.
+- **E6** — 2026-11-05, `bun test scripts/workflow-docs-index.test.mjs` · exit 0 · `5 pass / 0 fail`.
+- **E7** — 2026-11-05, `bun scripts/check-skill-context.mjs --documents` · exit 0 · `PASS context documents: 4 budgeted documents` (AGENTS.md 433 lines / 7,756 est inside 477 / 8,532; GATE_INVENTORY.md 146 lines / 4,522 est / 54 machine lines inside 161 / 4,975 / 54).
+- **E8** — 2026-11-05, `bun scripts/check-skill-context.mjs` and `--routes` · exit 0 · `PASS context budgets: 28 skills`, `PASS route budgets: 14 routes`.
+- **E9** — 2026-11-05, `bun scripts/changeset-create.mjs` · exit 1 · `no package or skill is touched by the 15 changed file(s) vs origin/main — nothing to declare`; `bun scripts/lint-changeset.mjs` · exit 0 · every existing intent `ok` (decision D7: no intent is due).
+- **E10** — 2026-11-05, `bun scripts/unit-lineage.mjs --unit 96-prose-gate-inventory --json` · verdict `unblocked` · lane-era path, pasted triage block re-derives, every obligation row closed.
+- **E11** — 2026-11-05, `bun scripts/phase-lint.mjs docs/features/96-prose-gate-inventory/SPEC.md` · exit 0 · `verdict PASS`, 7/7 phases.
+- **E12** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · `82` suites PASS, `0` FAIL.
+- **E13** — 2026-11-05, `bun scripts/promise-coherence.mjs docs/features/96-prose-gate-inventory/SPEC.md` · exit 0 · `verdict PASS` · `claims: 1 checked · 6 skipped` (each skip names why: a suite runner or a command outside the reader allowlist).
+- **E14** — 2026-11-05, differential run against a `caee2502` copy: `phase-lint` on four unit docs, `unit-route --triage` on three, `promise-coherence`, `vocabulary-probe`, `ceremony docs check-docs-language`, `check-skill-context`, `workflow-docs-index.test.mjs` and `normative-drift.test.mjs` · every exit identical · output byte-identical except the two suites' per-test timing lines, and the guide's own row is the only content change those two suites observe.
+- **E15** — 2026-11-05, `bun scripts/roadmap-settle.mjs` · exit 0 · `137 unit docs checked`, `violations: 0`.
+- **E16** — 2026-11-05, `bun scripts/skill-lint.mjs` · exit 0 · `0 finding(s)`, `verdict: PASS` (no skill changed).
 
 ## Next
 
-P1 — land `scripts/prose-gate-inventory.test.mjs` red (the base tree has no
-inventory block), then P2/P3.
+Hand the diff to the owner: the obligations ledger is closed, the root gate is
+green, and the change ships no PR from here (the local process contract forbids
+running the repository's review machinery on its own surgery). The owner's
+verdict decides the correction batch; the roadmap row stays `in-progress` until
+the PR exists.
 
 ## References
 
