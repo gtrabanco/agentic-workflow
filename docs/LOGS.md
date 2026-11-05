@@ -4216,3 +4216,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/356-test-targeting: implement test-impact.mjs and wire the test-impact rule into AGENTS.md + execute-phase + verification-contract + unit-lane; open PR #402 (mergeable, CI green); add diff-guard exception record and two late-case mutation receipts
 - **Decisions:** E11: replace P5 unverifiable 'observed failing' clause with reproducible mutation receipt — dropping MARKED_PATTERNS line reddens exactly 2 cases (18p/2f) and nothing else; D6: record path + sibling as deliberate design decisions so every line of the hint has authority; G3: attribute 1771 lines / 14 files to frozen obligations — budget attributed, never raised; E10: CI defect caught (tier: rg asserted instead of behaviour), fixed to portable tier with gate re-run
 - **Next:** PR #402 mergeable and CI green — ready for your merge. Post-merge: run local gate once to confirm CI parity; if you want, review the pre-push hook that blocks push (local-gate.mjs not in tree).
+## 2026-11-05T00:41:02Z — fix/356-test-targeting — manual
+- **Commits:** 11 (`16069246…1a721335`)
+- **Files:** 15 files
+- **Summary:** fix/356-test-targeting: fixed Serena LSP initialization on worktree (libicu76 resolved markdown LS crash, health check passing)
+- **Decisions:** Serena's markdown language server (.NET/F# based) was crashing on worktree activation due to missing libicu dependency (ICU internationalization library required by .NET globalization); installing libicu76 resolved the LanguageServerTerminatedException that prevented all Serena tools from working
+- **Next:** Continue work on fix/356-test-targeting — Serena is now fully operational in this worktree
+
