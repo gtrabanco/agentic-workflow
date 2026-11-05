@@ -65,7 +65,7 @@ process.on("exit", () => {
 
 /** A thead + one row, in the block's own grammar, built from an object. */
 const row = (overrides = {}) => ({
-  "gate-id": "G-fixture",
+  "gate-id": "gate-fixture",
   statement: "a fixture gate",
   carrier: "script",
   file: "scripts/pin.test.mjs",
@@ -74,7 +74,7 @@ const row = (overrides = {}) => ({
   surfaces: "-",
   safety: "2",
   recurrence: "2",
-  checkability: "3",
+  checkability: "2",
   tier: "script",
   "stay-reason": "-",
   rederive: "-",
@@ -122,7 +122,7 @@ test("the report prints the resolved file:line and a PASS verdict", () => {
   const text = report(inspect(root));
   assert.match(text, /^verdict: PASS$/m);
   assert.match(text, /prose-gate-inventory — \d+ row\(s\)/);
-  assert.match(text, /file:\d+/m, "an anchor is reported at a line, not as a remembered path");
+  assert.match(text, /[A-Za-z0-9_./-]+\.(?:mjs|md):\d+ · priority/m, "an anchor is reported at a line, not as a remembered path");
 });
 
 test("the block has exactly one home in the tree", () => {
@@ -186,7 +186,7 @@ test("a stay row whose re-derivation pointer does not resolve fails as missing-r
 
 test("a gate suite in a declared family with no row fails as uncited-gate-suite", () => {
   const result = inspectFixture(
-    [row({ "gate-id": "G-other", file: "scripts/pin.test.mjs" })],
+    [row({ "gate-id": "gate-other", file: "scripts/pin.test.mjs" })],
     { "gate-suites": "scripts/*-discipline.test.mjs" },
   );
   assert.deepEqual(reasons(result), ["uncited-gate-suite"]);
@@ -233,13 +233,15 @@ test("a tier cell that disagrees with safety x recurrence x checkability fails a
     [row({ carrier: "prose", tier: "prose", "stay-reason": "judgment-needed", file: "docs/owner.md", section: "Rules", token: "the rule", rederive: "docs/owner.md#Rules", safety: "3", recurrence: "3", checkability: "3" })],
     { "gate-suites": "-" },
   );
-  assert.deepEqual(reasons(result), ["tier-mismatch"], "priority 9 with checkability 3 is migrate, never prose");
+  // An under-claimed tier also makes its stay reason untrue: the same row that
+  // should have migrated cannot keep `judgment-needed` at checkability 3.
+  assert.deepEqual(reasons(result), ["stay-reason-mismatch", "tier-mismatch"], "priority 9 with checkability 3 is migrate, never prose");
   assert.equal(deriveTier({ safety: 3, recurrence: 3, checkability: 3, carrier: "prose" }), "migrate");
 });
 
 test("a top-tier gate still unmigrated at the head fails as unmigrated-gate", () => {
   const result = inspectFixture(
-    [row({ carrier: "prose", tier: "migrate", "stay-reason": "-", file: "docs/owner.md", section: "Rules", token: "the rule", rederive: "docs/owner.md#Rules" })],
+    [row({ carrier: "prose", tier: "migrate", "stay-reason": "-", file: "docs/owner.md", section: "Rules", token: "the rule", rederive: "docs/owner.md#Rules", safety: "3", recurrence: "3", checkability: "3" })],
     { "gate-suites": "-" },
   );
   assert.deepEqual(reasons(result), ["unmigrated-gate"]);
