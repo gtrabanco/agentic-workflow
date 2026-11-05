@@ -125,6 +125,15 @@ under [Working rules](#working-rules)).
   `audit-docs` check 15 audits it.
 - **One PR per unit of work, always against `main`.** Never work on `main`
   directly; never stack PRs.
+- **Forge issue dependencies are declared twice and must agree.** An issue that
+  depends on others carries a `## Dependencies` section (prose, for triage) AND
+  the native GitHub `blocked-by` relationship (machine; GraphQL mutation
+  `addBlockedBy`) — the relationship is authoritative: update it, not just the
+  prose, when a blocker is re-scoped, superseded or resolved early. A PR that
+  resolves an issue never merges while any of that issue's `blocked-by`
+  relationships is still open — merging out of order ships a unit whose
+  prerequisites are absent; `review-change`/`audit-pr` treat an open blocker of
+  the closed issue as a delivery blocker.
 - **Published history is owner-written.** Work in short branches off `main`;
   `main` only advances through a PR. When `main` moves and the PR conflicts, the
   branch is brought up to date by integrating `main` and resolving the conflicted
