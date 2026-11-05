@@ -20,7 +20,9 @@ The in-doc `REVIEW-VERDICT` is prose evidence, **not** the machine receipt
 ## Inputs
 
 - The unit's Evidence section (reviewer re-runs it)
-- The unit's Acceptance criteria (to compare AC section hash with triage time)
+- The unit's Acceptance criteria and the `ac-hash:` frontmatter line the design
+  step recorded at triage (owner: `DESIGN.md`) — to compare the AC section hash
+  with triage time
 - The review-pack axes from the project's Workflow conventions
 
 ## Fixed output contract
@@ -37,7 +39,7 @@ REVIEW-VERDICT: PASS | FAIL
 ## Checklist (pass only if)
 
 - [ ] Reviewer re-runs each evidence row and confirms reproducibility
-- [ ] AC section hash compared with the one recorded at triage — unaltered
+- [ ] AC section hash compared with the `ac-hash:` the design step recorded at triage — unaltered
 - [ ] Every finding classified: material (blocks) or report-note (informational)
 - [ ] Wording/cosmetic notes are report-notes, never a cycle restart reason
 - [ ] Verdict uses only the closed set: PASS or FAIL

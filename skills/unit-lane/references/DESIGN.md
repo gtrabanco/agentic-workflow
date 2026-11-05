@@ -208,7 +208,19 @@ area.
 <!-- deferred:end -->
 
 <!-- acceptance:start -->
-The unit doc's **Acceptance criteria** section, numbered and command-verified.
+The unit doc's **Acceptance criteria** section, numbered and command-verified —
+then frozen: record the section's SHA-256 in the unit doc's frontmatter as
+`ac-hash: <64-hex>`, the at-triage value the review checklist (owner:
+`REVIEW.md`) and the relay coherence checklist's item (d) compare against.
+Recompute it with the section parser's own semantics (`sectionText` — the
+heading excluded, the next `## ` heading excluded):
+
+```sh
+bun -e 'const {sectionText} = await import("./scripts/unit-doc-phases.mjs"), {createHash} = await import("node:crypto"); console.log(createHash("sha256").update(sectionText(await Bun.file("<unit-doc>/SPEC.md").text(), "Acceptance criteria")).digest("hex"))'
+```
+
+An AC change after the freeze is a plan repair: this step recomputes and
+rewrites `ac-hash:` — review never edits either side.
 <!-- acceptance:end -->
 
 ## Checklist (pass only if)
@@ -217,6 +229,7 @@ The unit doc's **Acceptance criteria** section, numbered and command-verified.
 - [ ] Every claim (objective, why, every AC, non-goals) cites its source or an owner answer in `sources.md`, and none lacks one
 - [ ] Every claim carries a certainty (`confirmed` / `inferred` / `unknown`); an `unknown` claim became a question
 - [ ] Every acceptance criterion (AC1, AC2, …) is induced from a user scenario and cites what induced it
+- [ ] The AC section's hash is recorded in the unit doc's frontmatter (`ac-hash:`)
 - [ ] The orient tiers ran in order: provenance before research before ask
 - [ ] Every question asked was recorded with its resolution — or the questions pane says `none` explicitly
 - [ ] No expensive-to-undo blocking claim remains unanswered

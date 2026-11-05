@@ -4430,8 +4430,29 @@ out to do, what was decided and *why*, and where to resume.
 - **Decisions:** Chose mdast-util-from-markdown over the native fence-aware path (D8's re-trigger never met but the request's correctness argument required an AST locator); fenced ## lines in code blocks are never headings; multi-byte UTF-16 offsets from mdast require byteStart/byteEnd splice; three red surfaces (pi-compat-guard, docs/stale, F99 timing) reproduced on base commit and confirmed pre-existing.
 - **Next:** Owner's merge verdict on PR #417; after merge, delete row #407 from the Fixes table.
 
+## 2026-11-05T21:40:30Z — feat/294-relay-orchestrated-lane — manual
+- **Commits:** 9 (`0a1cfef9…b8f8e5f2`)
+- **Files:** 39 files
+- **Summary:** Unit 82 (issue #294): Relay-orchestrated lane execution — 9 commits, PR #419 opened
+- **Decisions:** Abrió la PR mientras la review estaba pendiente (instrucción explícita del owner, logeada como L2): el orden de cierre del lane (/review-change receipt → /audit-pr) sigue pendiente. Root cause del pi-compat-guard: el pin 4.10.0 no incluye src/log/* que se añadió después del publish del 4.10.0 — se cura al subir tren.
+- **Next:** /review-change 82-relay-lane-execution, luego /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/419
+
+## 2026-11-05T21:40:46Z — feat/294-relay-orchestrated-lane — manual
+- **Commits:** 9 (`0a1cfef9…b8f8e5f2`)
+- **Files:** 39 files
+- **Summary:** Implemented Relay lane execution (issue #294): built the packet system (relay-packet.mjs with 544 lines), the route system (relay-route.mjs), unit-lane relay integration (RELAY.md reference), execute-phase integration, and full test suites (relay-packet.test.mjs, relay-route.test.mjs, lane-era-lineage.test.mjs). Created the feature SPEC with planning evidence, decisions, and obligations. Opened PR #419 and settled the roadmap row.
+- **Decisions:** Built a new npm package 'relay' from scratch: packets (charter/status/log/baton), routes (router + stage dispatch), and lane integration (unit-lane reads Relay context to give a fresh context a coherence review). Used red-green development with 4 red commits and 4 green commits. The package uses bun-first like the rest of the repo and ships with sibling tests as required by the workflow invariants.
+- **Next:** PR #419 is open; run the remote gate (root-suite.yml) to verify all 40+ new tests pass, then request review from the owner for merge. Post-merge: update CHANGELOG.md with the feature entry and run release.mjs.
+
 ## 2026-11-05T21:41:14Z — feat/407-section-locator-core — manual
 - **Commits:** 0
 - **Files:** —
 - **Summary:** Read-only external verification of issue #407 (section-locator-core) on branch feat/407-section-locator-core (base: caee2502 → head: 051a2035). Ran every declared verification command and 17 independent behavioral probes (fence safety, CRLF, multi-byte offsets, nested same-title paths, stateless regexes, post-splice idempotence, heading-only docs). Re-ran all 16 obligations: bun test doc.section-locator (29 pass), section.cli (12 pass), full crate (329 pass both runtimes), differential CLI vs base (18 commands identical), bun scripts/local-gate --skip-network (PASS 7 steps / 104s), bun install --frozen-lockfile, docs-tree, version-parity, changeset lint. Verdict: VERIFIED — 0 blockers, 4 advisories (pre-existing).
 - **Next:** Owner merge verdict on PR #417.
+
+## 2026-11-05T22:03:41Z — feat/294-relay-orchestrated-lane — manual
+- **Commits:** 12 (`0a1cfef9…784390df`)
+- **Files:** 46 files
+- **Summary:** External verify of unit 82 (relay-lane-execution, PR #419) — read-only diff review of the Relay-orchestrated lane against base caee2502. Blockers: 0, Advisories: 3 (dangling AC hash contract, unmeasured ceiling at cut, pre-existing gate failures). Verified every AC, all 23 obligations, all test suites (32+13+80+38=163+), negative cases in scratch, base-vs-head router differential, and shipped pi-web dispatch bounds. The branch advanced mid-session to 7adb6e47 (PR opened, row 82 settled done·#419) — claims delta 32→29 explained (unit became closed evidence). Then repaired the dangling AC hash contract: DESIGN.md records the hash at triage, REVIEW.md and RELAY.md item (d) point at it, four templates updated in paridad, SPEC 82 dogfooded with its own value + D7/G6 evidence. Fix commited 784390df — test impact empty (prose-only).
+- **Decisions:** (1) The dangling AC hash: RELAY.md item (d) and REVIEW.md checklist both required comparing against an AC-section hash never written by any surface. Fixed by having DESIGN.md freeze the section at record time — ac-hash: in frontmatter, computed with the section parser's own semantics. One command, one owner (DESIGN.md §Fixed output contract). (2) The unmeasured ceiling 1200 est at cut: honestly declared as ASSUMPTION-UNVERIFIED (PE-014) with re-trigger condition — no repair needed yet, the checker fails closed above it. (3) Pre-existing failures (pi-compat-guard, load-sensitive tests): reproduced as unaffected by the change — input set byte-identical to base, separate fix unit.
+- **Next:** /review-change 82-relay-lane-execution (if not yet done), then /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/419 for the merge gate; the external verify is complete and the fix landed.
