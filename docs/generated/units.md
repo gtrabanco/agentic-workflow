@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 139 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -65,6 +65,7 @@ Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scr
 | 29-bounded-implementation-discovery | feature | done · [#175](https://github.com/gtrabanco/agentic-workflow/pull/175) | 29 — bounded-implementation-discovery |
 | 30-repair-receipt-delta-review | feature | done · [#188](https://github.com/gtrabanco/agentic-workflow/pull/188) | 30 — repair-receipt-delta-review |
 | 303-investigate-orient-ask | fix | — | fix/303-investigate-orient-ask |
+| 307-odd-hybrid-direction | feature | idea | Draft — scope is set by triage, not by this draft. |
 | 31-planning-review-materiality | feature | done · [#243](https://github.com/gtrabanco/agentic-workflow/pull/243) | 31 — planning-review-materiality |
 | 316-roadmap-settle | fix | — | fix/316-roadmap-settle |
 | 318-class-escalation-forward-closure | fix | — | fix/318-class-escalation-forward-closure |
@@ -101,6 +102,7 @@ Generated from 137 unit docs, 117 roadmap rows, 3 packages, 28 skills and 48 scr
 | 398-retired-carriers | fix | done · [#403](https://github.com/gtrabanco/agentic-workflow/pull/403) | fix/398-retired-carriers |
 | 40-bump-skill-internal-only | fix | — | fix/40-bump-skill-internal-only |
 | 40-versioned-skills-releases | feature | done · [#335](https://github.com/gtrabanco/agentic-workflow/pull/335) | 40 — versioned-skills-releases |
+| 407-section-locator-core | fix | done · [#417](https://github.com/gtrabanco/agentic-workflow/pull/417) | fix/407-section-locator-core |
 | 51-plan-feature-replan-loop | fix | — | fix/51-plan-feature-replan-loop |
 | 52-machine-checked-turn-contract | feature | done · [#236](https://github.com/gtrabanco/agentic-workflow/pull/236) | 52 — machine-checked-turn-contract |
 | 52-workflow-status-envelope-hardening | fix | — | fix/52-workflow-status-envelope-hardening |
