@@ -411,6 +411,28 @@ function runTiers(unit) {
 /* --------------------------------------------------------------- obligations */
 
 const OBLIGATION_HEADER = /^\|\s*obligation-id\s*\|/u;
+/** The 9-column row shape `skills/pre-execution-review/references/LEDGERS.md` publishes. */
+const OBLIGATION_CELLS = 9;
+
+/** Split a Markdown table row on pipes that are not escaped (`\|`). */
+function cellsOfRow(line) {
+  const cells = [];
+  let current = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      current += "|";
+      index += 1;
+    } else if (char === "|") {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  cells.push(current.trim());
+  return cells;
+}
 
 function obligationRows(text) {
   const rows = [];
@@ -427,8 +449,14 @@ function obligationRows(text) {
       continue;
     }
     if (/^\|[\s|:-]+\|$/u.test(line.trim())) continue;
-    const cells = line.trim().replace(/^\|/u, "").replace(/\|$/u, "").split("|").map((cell) => cell.trim());
-    if (cells.length !== 9) continue;
+    const cells = cellsOfRow(line.trim()).slice(1, -1);
+    // Fail closed: a row that does not carry the declared columns is a malformed
+    // ledger, never a row this reader silently drops (a dropped row is an
+    // unverified obligation hiding behind a PASS).
+    if (cells.length !== OBLIGATION_CELLS) {
+      rows.push({ malformed: cells.length });
+      continue;
+    }
     rows.push({ id: cells[0], evidence: cells[7], status: cells[8] });
   }
   return rows;
@@ -446,6 +474,10 @@ function runObligations(unit) {
   let verified = 0;
   let notApplicable = 0;
   for (const row of rows) {
+    if (row.malformed !== undefined) {
+      open.push(`a table row carries ${row.malformed} cells; the declared shape has ${OBLIGATION_CELLS} (escape a literal pipe as \\|)`);
+      continue;
+    }
     if (row.status === "verified") {
       verified += 1;
     } else if (row.status === "n/a") {

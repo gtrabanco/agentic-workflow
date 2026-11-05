@@ -144,8 +144,8 @@ Verdict produced at cut with `bun scripts/ceremony.mjs tier classify` over the b
 
 ## Future
 
-- **2026-11-05, owner-verbatim from the issue:** "No packet schema changes in pi-web required for v1 (charter/status/log as-is)." — status `open`: v2 packet shapes stay pi-web's decision.
-- **2026-11-05, owner-verbatim from the issue:** "#201 (pass model routing): the `passes` table governs models of passes spawned inside a leg; `dispatch_relay`'s per-leg `model` governs the leg itself." — status `open`: the `passes` config remains #201's scope, never this unit's.
+- `open` — 2026-11-05, owner-verbatim from the issue: "No packet schema changes in pi-web required for v1 (charter/status/log as-is)." The v2 packet shapes stay pi-web's decision.
+- `open` — 2026-11-05, owner-verbatim from the issue: "#201 (pass model routing): the `passes` table governs models of passes spawned inside a leg; `dispatch_relay`'s per-leg `model` governs the leg itself." The `passes` configuration remains #201's scope, never this unit's.
 
 ## Future cost
 
@@ -242,6 +242,13 @@ Budget: strong
 - **G1** — 2026-11-05, `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills. `--routes` · exit 0 · 14 routes. `--documents` · exit 0 · AGENTS.md 432 lines / 98 machine / 334 prose / 7,709 est.
 - **D4** — 2026-11-05, owner (release-surface repair): S22 names `CHANGELOG` in the same commit, but the per-skill history is a frozen archive (`CHANGELOG.md` §Per-skill version history — D-40-14) and the companion row is written by `scripts/release.mjs apply` (`scripts/release.mjs:924-943`). The unit ships the changeset instead — the route `scripts/version-parity-gate.mjs --content` accepts — and AC22 pins that file. No requirement removed; the CHANGELOG row still lands, at release.
 - **P6** — 2026-11-05 14:20 — README lane row, the `SKILLS.md` lane section, the changeset, the regenerated projections (which settle the pre-existing `docs/generated` drift: 106 → 117 roadmap rows).
+- **D5** — 2026-11-05, owner (validator precision repair, before the closure run): O17 declared `rg -c review-receipt … REVIEW.md` matches 1; the file carries the receipt contract three times (emit, verify, the close-out refusal), so the row now pins 3. The invariant is unchanged — REVIEW.md is not edited by this unit, and the count drops if the receipt contract is ever removed from it.
+- **E4** — 2026-11-05, the packet checker at the head: `bun scripts/relay-packet.mjs tiers 20-relay-unit --repo scripts/fixtures/relay-packet` · exit 0 · `execute: cheap`, `coherence-review: strong`, `source: scripts/catalog.json`. `budget 20-relay-unit --repo scripts/fixtures/relay-packet` · exit 0 · `measured: 241 est`, `lines: 29`, `ceiling: 1200 est`.
+- **E5** — 2026-11-05, the surface counts at the head: `rg -c '^## Ownership'` 1 · `rg -c 'Human approval'` 1 · `rg -c 'final operational action'` 1 · `rg -c 'emits no receipt'` 1 · `rg -c review-change` 2 · `rg -c '#260|#201|#174'` 3, all over `skills/unit-lane/references/RELAY.md`. `rg -c 'subscriptions|websocket|dispatchThroughHost' scripts/relay-packet.mjs` · exit 1 · no match (the checker carries no dispatch engine).
+- **E6** — 2026-11-05, the differential run: the router at `caee2502` and at the head, over every fixture unit with `PI_WEB_SESSION` unset — byte-identical stdout and exit codes except one added `relay: unavailable — …` line in the units that take an execution hand-off.
+- **G2** — 2026-11-05, `bun scripts/version-parity-gate.mjs --content` · exit 0 · `VERDICT: PASS` (changeset route). `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` · exit 0 · `verdict PASS`.
+- **P7** — 2026-11-05 16:10 — obligations O1–O23 verified with their evidence recorded above; the two fixture mirrors (`lane-era-lineage`, `workflow-status-sensor`) gained the router's new import, the obligations parser fails closed on a malformed row, and the `## Future` rows follow the published `status`-first shape the vocabulary probe reads.
+- **G3** — 2026-11-05, `bun scripts/run-root-suite.mjs` · exit 0 · 83 suites PASS. `bun scripts/promise-coherence.mjs` · exit 0 · `verdict PASS`, 32 claims checked. `bun scripts/vocabulary-probe.mjs` · exit 0 · 0 violations. `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills; `--routes` 14 routes; `--documents` 3 documents.
 
 ## Next
 

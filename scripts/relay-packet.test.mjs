@@ -353,3 +353,26 @@ test("obligations: a unit with no ledger is a defect, never an empty pass", () =
   assert.equal(result.status, 2);
   assert.match(result.stderr, /planning-obligations\.md is missing/);
 });
+
+test("obligations: a row that does not carry the nine declared columns fails closed", () => {
+  const root = tree();
+  write(root, "docs/features/85-malformed-unit/SPEC.md", "# 85 — malformed-unit\n\n## Tasks\n\n- P1 — work (validator: `true` exits 0)\n");
+  write(root, "docs/features/85-malformed-unit/planning-obligations.md", obligations([
+    "| O1 | S1 | one behaviour | P1 | P1 | execute-phase | `true` exits 0 | the run | verified |",
+    "| O2 | S1 | a row whose validator cell carries an unescaped pipe | P1 | P1 | execute-phase | `rg -c 'a|b' x` matches 0 | the run | verified |",
+  ]));
+  const result = run(["obligations", "85-malformed-unit"], { root });
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stdout, /escape a literal pipe/);
+});
+
+test("obligations: an escaped pipe inside a cell is one cell, not a malformed row", () => {
+  const root = tree();
+  write(root, "docs/features/86-escaped-unit/SPEC.md", "# 86 — escaped-unit\n\n## Tasks\n\n- P1 — work (validator: `true` exits 0)\n");
+  write(root, "docs/features/86-escaped-unit/planning-obligations.md", obligations([
+    "| O1 | S1 | one behaviour | P1 | P1 | execute-phase | `rg -c 'a\\|b' x` matches 0 | the run | verified |",
+  ]));
+  const result = run(["obligations", "86-escaped-unit"], { root });
+  assert.equal(result.status, 0, result.stdout);
+  assert.equal(line(result.stdout, "rows"), "1");
+});
