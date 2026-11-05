@@ -88,26 +88,26 @@ scope: medium
 
 One observable criterion per requirement; each names the check that demonstrates it. `bun test scripts/<file>.test.mjs exits 0` means that suite is the demonstration; the prose criteria name a `rg` count over the surface that must carry the fact.
 
-1. **AC1 (S1)** — `bun test scripts/relay-route.test.mjs` exits 0, and `rg -c 'dispatch_relay' skills/unit-lane/references/RELAY.md` matches **≥ 1**.
+1. **AC1 (S1)** — `bun test scripts/relay-route.test.mjs` exits 0, and `rg -c dispatch_relay skills/unit-lane/references/RELAY.md` matches 1.
 2. **AC2 (S2)** — `bun scripts/relay-packet.mjs tiers 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 and prints `execute: cheap` and `coherence-review: strong`.
-3. **AC3 (S3)** — `rg -c 'Ownership' skills/unit-lane/references/RELAY.md` matches **1**.
+3. **AC3 (S3)** — `rg -c '^## Ownership' skills/unit-lane/references/RELAY.md` matches 1.
 4. **AC4 (S4)** — `bun scripts/relay-packet.mjs check 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 on the pointer-shaped charter, and the same command over a tree in which `rejected/charter-restates-tasks.md` replaces it exits 1 (case pinned by `bun test scripts/relay-packet.test.mjs`).
 5. **AC5 (S5)** — `bun test scripts/relay-packet.test.mjs` exits 0, including the case where the baton duplicates an `| AC |` evidence row.
-6. **AC6 (S6)** — `rg -c 'decisions.md' skills/unit-lane/references/RELAY.md` matches **≥ 1**, and the checker accepts an absent `decisions.md` (packet still passes).
+6. **AC6 (S6)** — `rg -c decisions.md skills/unit-lane/references/RELAY.md` matches 3, and the checker accepts an absent `decisions.md` (packet still passes).
 7. **AC7 (S7)** — `bun scripts/relay-packet.mjs budget 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0 naming `measured` and `ceiling`, and `bun scripts/check-skill-context.mjs --routes` exits 0.
-8. **AC8 (S8)** — `rg -c 'Human approval|human approval' skills/unit-lane/references/RELAY.md` matches **≥ 1**.
+8. **AC8 (S8)** — `rg -c 'Human approval' skills/unit-lane/references/RELAY.md` matches 1.
 9. **AC9 (S9)** — `bun test scripts/relay-packet.test.mjs` exits 0, including the `Draft — awaiting approval` state check and the `Active` transition fixture.
 10. **AC10 (S10)** — `rg -c 'final operational action' skills/unit-lane/references/RELAY.md` matches **1**, and AC12's checker proves the review legs are bounded.
 11. **AC11 (S11)** — `bun scripts/relay-packet.mjs tiers 20-relay-unit --repo scripts/fixtures/relay-packet` exits 0; the printed `source:` line names `scripts/catalog.json` as the only tier source.
 12. **AC12 (S12)** — `bun test scripts/relay-packet.test.mjs` exits 0 on a `REVIEW-VERDICT` block that matches the owned grammar and fails closed on each malformed variant.
-13. **AC13 (S13)** — `rg -c 'review-change' skills/unit-lane/references/RELAY.md` matches **≥ 1** and `rg -c 'REVIEW-VERDICT' skills/unit-lane/references/RELAY.md` matches **≥ 1** with `references/REVIEW.md` named as the owner.
+13. **AC13 (S13)** — `rg -c review-change skills/unit-lane/references/RELAY.md` matches 2 and `rg -c REVIEW-VERDICT skills/unit-lane/references/RELAY.md` matches 2, with `references/REVIEW.md` named as the block's owner.
 14. **AC14 (S14)** — `bun test scripts/relay-route.test.mjs` exits 0, including the case that with `PI_WEB_SESSION` unset the route prints `next: /execute-phase <unit> P<k>` and no relay line.
-15. **AC15 (S15)** — `rg -c 'audit-pr' skills/unit-lane/references/RELAY.md` matches **≥ 1**; the pre-PR gate is stated as receipt-free.
+15. **AC15 (S15)** — `rg -c audit-pr skills/unit-lane/references/RELAY.md` matches 3; the pre-PR gate is stated as receipt-free.
 16. **AC16 (S16)** — `rg -c '#260' skills/unit-lane/references/RELAY.md` matches **1**.
 17. **AC17 (S17)** — `rg -c '#201' skills/unit-lane/references/RELAY.md` matches **1**.
 18. **AC18 (S18)** — `rg -c '#174' skills/unit-lane/references/RELAY.md` matches **1**.
 19. **AC19 (S19)** — `git diff --name-only` for this unit names no relay engine module; the only new executable is `scripts/relay-packet.mjs` (read-only checker).
-20. **AC20 (S20)** — `rg -c 'receipt' skills/unit-lane/references/RELAY.md` matches **≥ 1** and the same file names `/review-change` as the receipt owner.
+20. **AC20 (S20)** — `rg -c 'emits no receipt' skills/unit-lane/references/RELAY.md` matches 1, and the same file names `/review-change` as the receipt owner.
 21. **AC21 (S21)** — the unit reads the packet with pi-web's own anchors (`charter.md`, `status.md`, `log.md`) and adds no packet field requirement: `rg -c 'packet schema' skills/unit-lane/references/RELAY.md` matches **0**.
 22. **AC22 (S22)** — every named surface is in the diff: `git diff --name-only` contains `skills/unit-lane/SKILL.md`, `skills/unit-lane/references/RELAY.md`, `skills/execute-phase/SKILL.md`, `scripts/unit-route.mjs`, `scripts/catalog.json`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `README.md`, `CHANGELOG.md`.
 23. **AC23 (S23)** — `bun test scripts/relay-packet.test.mjs` exits 0, covering a charter pointing at a missing unit doc, a malformed phase cursor and a malformed `REVIEW-VERDICT`.
@@ -226,9 +226,20 @@ Budget: strong
   env-prefixed fixture invocation (`RELAY_PACKET_REPO=…`) to the checker's own `--repo <dir>` flag,
   so every declared validator is one backticked command a reviewer can re-run. No requirement,
   scope or threshold changed.
+- **D3** — 2026-11-05, owner (measurement repair, before any P5 run): the acceptance criteria were
+  cut before `RELAY.md` existed, so their count claims read `≥ 1`. Each is now the exact count the
+  file carries (`dispatch_relay` 1, `decisions.md` 3, `review-change` 2, `REVIEW-VERDICT` 2,
+  `audit-pr` 3, `emits no receipt` 1), so `bun scripts/promise-coherence.mjs` can re-run them
+  instead of skipping an unparseable claim. No requirement changed.
 - **E1** — 2026-11-05, red run before the implementation: `bun test scripts/relay-packet.test.mjs` · exit 1 · 0 pass / 30 fail (module missing). `bun test scripts/relay-route.test.mjs` · exit 1 · 1 pass / 12 fail.
 - **E2** — 2026-11-05, green run after the implementation: `bun test scripts/relay-packet.test.mjs` · exit 0 · 30 pass / 0 fail. `bun test scripts/relay-route.test.mjs` · exit 0 · 13 pass / 0 fail.
 - **E3** — 2026-11-05, compatibility run: `bun test scripts/unit-route.test.mjs scripts/catalog.test.mjs` · exit 0 · 80 pass / 0 fail.
+- **P1** — 2026-11-05 11:10 — unit doc, the two planning ledgers, the roadmap row at `in-progress` · 0a1cfef9.
+- **P2** — 2026-11-05 11:40 — the red suites and the packet corpus (observed 0/30 and 1/13) · c09055d8.
+- **P3** — 2026-11-05 12:20 — the packet checker: four modes, pi-web's bounds, the pointer-shaped charter, the baton grammar, the verdict grammar, the handover ceiling · 83fd61e8.
+- **P4** — 2026-11-05 12:20 — the router's relay hint and its degradation, the catalog leg mapping, the handover ceiling in the budgets manifest · 83fd61e8.
+- **P5** — 2026-11-05 13:30 — `RELAY.md` (ownership, packet, bootstrap, leg contract, coherence review, routing, degradation), the lane's hand-off pointer and close-out note, the executor's parity sentence, the budgets re-basis and the inventory row.
+- **G1** — 2026-11-05, `bun scripts/check-skill-context.mjs` · exit 0 · 28 skills. `--routes` · exit 0 · 14 routes. `--documents` · exit 0 · AGENTS.md 432 lines / 98 machine / 334 prose / 7,709 est.
 
 ## Next
 

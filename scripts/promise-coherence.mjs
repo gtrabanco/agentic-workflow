@@ -166,6 +166,10 @@ const REPORT_VALIDATORS = new Set([
   "scripts/roadmap-settle.mjs",
   "scripts/vocabulary-probe.mjs",
   "scripts/structural-sibling-pins.mjs",
+  // #294: the packet checker's four modes are read-only verdicts over the unit
+  // and its packet — no shell, no forge, no writes — so an obligation row that
+  // names one is re-run instead of skipped.
+  "scripts/relay-packet.mjs",
 ]);
 const VALIDATOR_SCRIPT = /^scripts\/[A-Za-z0-9._/-]+\.mjs$/;
 /** Never a test file: executing the suite from inside the suite recurses. */
