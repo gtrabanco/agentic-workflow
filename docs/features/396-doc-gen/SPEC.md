@@ -53,6 +53,14 @@ dies with `Maximum call stack size exceeded` under both runtimes, on unmodified
 `main` too, because `dependencyBuildOrder`'s walk marks a node after recursing
 and the roadmap declared rows 98 ↔ 100 as mutual dependencies.
 
+**S10 — Clear the pending blocker and integrate `main` without rewriting history.**
+> Arregla lo que está pendiente y cuando acabes sin romper el historial de git resuelve el conflicto que hay en la PR, trata de evitar forzar el push de historial si es posible y si lo tienes que hacer hazlo tratando de preservar toda la historia de commits
+
+What was pending when it was issued: the `pre-push` hook runs
+`bun scripts/local-gate.mjs`, whose spawned suites inherited the hook's `GIT_DIR`
+and re-initialized the caller's repository, so a push clobbered the working
+checkout's branch pointer; and the PR had gone `dirty` against a moved `main`.
+
 ## Impact
 
 - **Consumes:** the guide's `## Docs site` block (`template/AGENTS.md:48-61` — `format`, `content-dir`, `build`, `map`), the crate's index readers (`readRoadmapIndex`, `readFixIndexTable`, `packages/agentic-workflow/src/index-document.mjs`), the unit-doc grammar reader (`scripts/unit-doc-phases.mjs`), the package manifests (`packages/*/package.json`), the skill frontmatter (`skills/*/SKILL.md`), and the lane's docs step (`skills/unit-lane/references/DOCS.md`).
@@ -246,6 +254,22 @@ change's own diff (the tier is the classifier's, never this document's):
 - P16 — Verification over the whole change after S9 (validator:
   `bun scripts/run-root-suite.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9)
+- P17 — Strip the repository-locator variables from every gate step, one
+  definition used by both entry points (validator: `bun test scripts/git-env.test.mjs`
+  exits 0, and the crate suite run with `GIT_DIR` exported leaves the checkout's
+  branch and head unchanged)
+  (Implements: S10)
+  Relevant files: scripts/git-env.mjs, scripts/git-env.test.mjs, scripts/local-gate.mjs, scripts/run-root-suite.mjs
+- P18 — Integrate `origin/main` by merge — the append-only journal resolved as a
+  timestamp-ordered union — and publish it as a fast-forward of the branch, never
+  a rewritten history (validator: `git merge-base --is-ancestor 0c45d08e HEAD`
+  exits 0 after the push, and `git rev-parse HEAD` equals
+  `git rev-parse origin/feat/396-doc-gen`)
+  (Implements: S10)
+  Relevant files: docs/LOGS.md, AGENTS.md
+- P19 — Verification over the whole change after S10 (validator:
+  `bun scripts/local-gate.mjs` exits 0 — the repository's own gate)
+  (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10)
 
 ## Triaged steps
 
@@ -308,6 +332,7 @@ proves it. Frozen at cut.
 | S7 | a page whose source unit is gone is deleted by the next write, and `--check` reports it as orphaned before that | the orphan-removal case passes |
 | S8 | `init-workspace` asks for the format, writes it for a new project, and offers it additively with consent to an existing one | `rg -c "format" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` names the slots and `BOOTSTRAP_WRITE.md` states the consent path |
 | S9 | the sensor terminates on a declared dependency cycle, reports it as a substrate blocker, and the live tree carries no cycle | `bun test scripts/workflow-status-sensor.test.mjs --timeout=60000` exits 0 with the cycle case, and `bun scripts/workflow-status.mjs` exits 0 with no `dependency cycle` blocker |
+| S10 | a gate step never inherits the caller's repository locator, `main` is integrated with a merge, and the branch is published without rewriting any commit | `bun test scripts/git-env.test.mjs` and `bun test scripts/local-gate.test.mjs` exit 0; `git merge-base --is-ancestor 0c45d08e HEAD` exits 0 after the push, with `origin/feat/396-doc-gen` equal to `HEAD` |
 
 ## Findings
 
