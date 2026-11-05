@@ -36,6 +36,7 @@ import {
   MARKER,
   STAY_REASONS,
   deriveTier,
+  findHomes,
   inspect,
   renderBlock,
   report,
@@ -126,14 +127,20 @@ test("the report prints the resolved file:line and a PASS verdict", () => {
 });
 
 test("the block has exactly one home in the tree", () => {
-  const homes = ["AGENTS.md", "docs/workflow"]
-    .flatMap((entry) => {
-      const absolute = path.join(root, entry);
-      if (absolute.endsWith(".md")) return [entry];
-      return fs.readdirSync(absolute).filter((name) => name.endsWith(".md")).map((name) => `docs/workflow/${name}`);
-    })
-    .filter((relative) => fs.readFileSync(path.join(root, relative), "utf8").includes(MARKER));
-  assert.deepEqual(homes, [INVENTORY_REL], "the inventory is declared once");
+  // The validator's own scan, not a second candidate list: the scope of the
+  // one-home check lives in one place and this case reads it.
+  assert.deepEqual(findHomes(root), [INVENTORY_REL], "the inventory is declared once, wherever in the tree a copy lands");
+});
+
+test("a second copy of the block anywhere in the tree fails as multiple-homes", () => {
+  const dir = fixture({
+    ...baseFiles([row()]),
+    // A unit doc quoting the grammar as a fenced block is a second home, not a
+    // citation — the same defect the guide layer is already checked for.
+    "docs/features/96-x/SPEC.md": `# X\n\n${block([row()])}\n`,
+  });
+  assert.ok(reasons(inspect(dir)).includes("multiple-homes"),
+    "a copy outside the guide layer is refused like any other");
 });
 
 // --- The frozen failure: no inventory at all ---------------------------------
