@@ -42,6 +42,13 @@ documents on dispatch with its own bounds (a non-empty UTF-8 regular file of at
 most 262,144 bytes each), so a packet the checker passes is a packet the tool can
 read.
 
+The checker has one owner — `packages/agentic-workflow/src/relay/Packet.mjs` —
+and two entry points that print the identical block: the workspace's script
+(`bun scripts/relay-packet.mjs …`, present in a project that adopted the
+workflow) and the crate (`agentic-workflow relay …`, present wherever
+`@gtrabanco/agentic-workflow` is installed). A project carrying only the crate
+runs the same four modes and needs no `scripts/` at all.
+
 ### Charter — a pointer, never a copy
 
 The charter names `docs/features/<NN>-<slug>/SPEC.md` (a named unit doc must

@@ -29,7 +29,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parseUnitDocPhases, loggedPhases, parseLog, parseSpecs, sectionText, sectionBounds } from "./unit-doc-phases.mjs";
-import { batonOf } from "./relay-packet.mjs";
+import { batonOf } from "../packages/agentic-workflow/src/relay/Packet.mjs";
 import {
   FIX_INDEX_DOCUMENT,
   ROADMAP_DOCUMENT,

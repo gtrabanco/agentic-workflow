@@ -331,24 +331,27 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
  * or the sandbox fails with `ERR_MODULE_NOT_FOUND` instead of the behaviour the
  * test asserts. #291 added the phase parser on the router's graph; #319 the
  * published index paths; #360 the risk classifier; #294 the baton reader the
- * router shares with the packet checker.
+ * router shares with the packet checker — which now lives in the crate module
+ * `packages/agentic-workflow/src/relay/Packet.mjs`, not in a script.
  */
 function mirrorSensorGraph(tmp) {
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "src"), { recursive: true });
-  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src"), { recursive: true });
+  fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow", "src", "relay"), { recursive: true });
   for (const file of ["workflow-status.mjs", "schema-runtime.mjs", "pre-execution-contract.mjs", "unit-route.mjs",
-    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs", "relay-packet.mjs"]) {
+    "phase-lint.mjs", "unit-doc-phases.mjs", "risk-tiers.mjs"]) {
     fs.copyFileSync(path.join(repoRoot, "scripts", file), path.join(tmp, "scripts", file));
   }
   fs.copyFileSync(
     path.join(repoRoot, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
     path.join(tmp, "packages", "agentic-workflow-schema", "src", "vocabularies.ts"),
   );
-  fs.copyFileSync(
-    path.join(repoRoot, "packages", "agentic-workflow", "src", "index-document.mjs"),
-    path.join(tmp, "packages", "agentic-workflow", "src", "index-document.mjs"),
-  );
+  for (const file of ["index-document.mjs", "relay/Packet.mjs"]) {
+    fs.copyFileSync(
+      path.join(repoRoot, "packages", "agentic-workflow", "src", file),
+      path.join(tmp, "packages", "agentic-workflow", "src", file),
+    );
+  }
 }
 
 test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope printed, exit 0 (E-38-1)", () => {
