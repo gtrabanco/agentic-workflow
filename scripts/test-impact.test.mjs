@@ -342,6 +342,18 @@ test("a --paths entry that exists nowhere is refused when no diff justifies it (
   }
 });
 
+test("a --paths entry that names a directory is refused, never silently searched (O7)", () => {
+  const root = fixture({ "src/math.mjs": MATH, "src/math.test.mjs": MATH_SUITE });
+  try {
+    const result = run(["--paths", "src"], { cwd: root });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /--paths entry is a directory: src/);
+    assert.equal(result.stdout.includes("verdict: targeted"), false, "a directory is never a searched scope");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("an unknown flag and a bare --base are usage errors (O7)", () => {
   const root = fixture({ "src/math.mjs": MATH });
   try {
