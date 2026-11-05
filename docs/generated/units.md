@@ -1,6 +1,6 @@
 # agentic-workflow-repo — units
 
-Generated from 135 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
+Generated from 136 unit docs, 106 roadmap rows, 3 packages, 28 skills and 47 scripts by `scripts/docs-generate.mjs`; edit the sources, never this page.
 
 ## Delivered units
 
@@ -19,6 +19,7 @@ Generated from 135 unit docs, 105 roadmap rows, 3 packages, 28 skills and 47 scr
 | 100-stale-fix-index-rows | fix | — | fix/100-stale-fix-index-rows |
 | 101-stale-roadmap-merge-order-note | fix | — | fix/101-stale-roadmap-merge-order-note |
 | 103-doc-currency | feature | done · [#397](https://github.com/gtrabanco/agentic-workflow/pull/397) | the READMEs are repaired against what the tree actually ships, and documentation currency becomes a guide rule, a required docs step and an audit check. |
+| 104-parallel-gate-impact-hook | feature | in-progress | 104 — parallel-gate-impact-hook |
 | 11-adversarial-multi-reviewer | feature | done · [#29](https://github.com/gtrabanco/agentic-workflow/pull/29) | 11 — adversarial-multi-reviewer |
 | 117-amendment-linkage | fix | — | fix/117-amendment-linkage |
 | 119-progressive-planning-docs-adapters | fix | — | fix/119-progressive-planning-docs-adapters |
