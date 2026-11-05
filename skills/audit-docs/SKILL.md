@@ -78,15 +78,36 @@ Run these and collect findings (cite paths/lines/issue numbers each):
 write time; this audit verifies they actually held. Each check is mechanical:
 run the command shown, don't infer.
 
-10. **Phase naming.** `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
-    must return nothing — plans use `P1, P2, …` ("phases") only. Any hit: LOW
-    (rename), plus check the executor argument still resolves.
-11. **Per-phase doc discipline.** For every M/L feature `in-progress`/`done`:
-    completed phases are ticked in `TASKS.md`, `progress.md` has one entry per
-    completed phase, and (features planned under the current template) the
-    final phase ends with the literal close-out tasks (open PR + print URL,
-    link roadmap row, push the link commit). A `done` feature with unticked
-    tasks or a phase missing from `progress.md`: HIGH.
+10. **Phase naming — keyed on the carrier, like check 11.**
+    - **lane-era** — `bun scripts/phase-lint.mjs <unit-doc>` (owner
+      `skills/phase-contract/SKILL.md`) must print `verdict PASS`, and
+      `bun scripts/ceremony.mjs docs check-phase-labels --slug <slug>` must
+      answer `valid: true`. A `S#` hit in a lane-era doc is not a phase label:
+      since #308 `S#` is the requirement id.
+    - **legacy carriers only** — `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
+      must return nothing: plans use `P1, P2, …` ("phases") only. Any hit: LOW
+      (rename), plus check the executor argument still resolves. Today's 22 hits
+      are all literal `Step 0 — Discover the project` citations; the grep is the
+      legacy carrier's, so a lane-era `S#` is never read through it.
+11. **Per-phase doc discipline — keyed on the unit's own carrier.** Pick the
+    carrier mechanically, never by guess: `TASKS.md` in the unit folder means
+    legacy carriage; its absence means the unit doc's `## Tasks`/`## Log`.
+    - **lane-era** — `bun scripts/ceremony.mjs docs check-tasks-ticks --slug <slug>`
+      and `bun scripts/ceremony.mjs docs check-progress-entry --slug <slug>`
+      must both report `valid: true`: every `- [x] P<n>` has its `P<n>` line in
+      `## Log`, and no task lacks one. Cite those two fields, never `check-all`
+      (its `commit-format`/`docs-language` fields are checks 14 and 7). A doc
+      with no `## Tasks` section answers `n/a` — `no ## Tasks section — legacy
+      carrier` — so the vacuous case routes to the legacy branch, never to a
+      silent pass.
+    - **legacy** — the original assertions on that unit's own files: completed
+      phases ticked in `TASKS.md`, one `progress.md` entry per completed phase,
+      the literal close-out tasks in the final phase.
+    - **Severity** — a `done` unit whose ledger disagrees with its tasks: HIGH.
+      The same on an `in-progress` unit: LOW (it may still be settling). Only
+      `high`/`low` exist in this report's legend.
+    - **Close-out** is `audit-pr`'s contract (receipt + ordered gates): cite its
+      verdict, never re-derive the retired literal tasks here.
 12. **Branch & PR discipline vs the forge.** For every `done` unit: its PR
     exists, targets the default branch, has a non-empty body, and carries
     `Closes #<n>` when the unit is issue-born (SPEC references an issue).

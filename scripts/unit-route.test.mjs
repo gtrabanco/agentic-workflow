@@ -1003,3 +1003,51 @@ test("#319 F8: one status lookup reads the index once, not once per probe", () =
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+// ===========================================================================
+// #398 — scope fallback reads ## Specs S# lines (not just ## Objective / ## Acceptance criteria)
+// ===========================================================================
+
+/** The triage answer for one fixture slug, parsed from the machine envelope. */
+const triageOf = (slug) => {
+  const result = run(["--triage", slug, "--json"]);
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+};
+
+const standardFeature = ["research", "design", "plan", "implement", "evidence", "review", "docs"];
+const trivialFeature = ["implement", "evidence"];
+
+test("#398 B1: a spec-by-reference doc with 3 S# requirements and no frontmatter derives standard", () => {
+  // R1 reproducer: unitFacts read only ## Objective / ## Acceptance criteria, so a
+  // doc carrying neither derived trivial and silently skipped design, plan, tests,
+  // review and docs.
+  assert.deepEqual(triageOf("50-specbyref-many").steps, standardFeature);
+});
+
+test("#398 B1: a spec-by-reference doc with 1 S# requirement still derives trivial", () => {
+  // The threshold is the published rule (>= 3 requirements), not "has a ## Specs".
+  assert.deepEqual(triageOf("51-specbyref-few").steps, trivialFeature);
+});
+
+test("#398 B1: an explicit scope: frontmatter wins over both shapes", () => {
+  assert.deepEqual(triageOf("52-explicit-scope").steps, [...standardFeature, "release"]);
+});
+
+test("#398 B1: a requirement title keeps counting when it carries emphasis", () => {
+  // The grammar reads the title to the bold close (scripts/unit-doc-phases.mjs
+  // SPEC_REQUIREMENT), so `**S1 — the *notes* command.**` is one requirement.
+  assert.deepEqual(triageOf("54-specbyref-emphasis").steps, standardFeature);
+});
+
+test("#398 B1: a fenced quote of the grammar is not a requirement", () => {
+  // A fenced block is quoted text: three `**S#**` example lines inside one must
+  // not inflate a one-requirement doc into standard scope.
+  assert.deepEqual(triageOf("55-specbyref-fenced-example").steps, trivialFeature);
+});
+
+test("#398 B1 regression: the legacy Objective / Acceptance criteria pair keeps its derivation", () => {
+  // The fallback was ADDED to, never replaced: a legacy doc still derives from
+  // its own pair exactly as before.
+  assert.deepEqual(triageOf("56-legacy-pair").steps, trivialFeature);
+});

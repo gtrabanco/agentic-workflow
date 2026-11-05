@@ -176,9 +176,9 @@ enables:
 - Complements the `template/`'s **SessionEnd hook** (free, mechanical, automatic
   on `/clear` and exit) and the **opt-in SessionStart restore hook** (re-injects
   the last entry to resume context). This skill is the rich, manual entry.
-- Pairs with `execute-phase`'s per-feature `progress.md`: that tracks progress
-  *within* a feature; the session log is *cross-cutting* — whatever you touched
-  this session, across features/fixes.
+- Pairs with `execute-phase`'s unit doc `## Progress log`: that tracks progress
+  *within* a unit; the session log is *cross-cutting* — whatever you touched
+  this session, across units.
 - Not part of the PR gate — it's a working-memory aid, not a merge artifact.
 
 ## Done when

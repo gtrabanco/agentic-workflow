@@ -4244,7 +4244,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Issue #358: PR 399 opened (base `main`, head `fix/358-adversarial-kill-mandate`, 7 branch commits, 25 files, +1475/−11). Merged from main (a single `LOGS.md` conflict resolved by keeping both append-only entries) and pushed. All local gates green: root-suite 1536/1535 pass, check-skill-context 28 skills + 3 documents, skill-lint 0 findings. CI jobs queued behind a runner backlog. No `review-change` has run on the branch yet — that is the intended next step before `/audit-pr`.
 - **Decisions:** PR title set as `fix(358): adversarial pass verifies instead of enumerating — kill mandate, diff-only reflector, stability check`; the PR body was written from the template's fix section with the full evidence pack, rollback, and honest disclosures (pre-existing red on --documents gate, D1 narrowed validators, no review-change receipt yet).
 - **Next:** `/review-change` on the branch from a fresh context, then `/audit-pr 399`
-
 ## 2026-11-04T16:56:40Z — feat/394-auto-log-session — manual
 - **Commits:** 12 (`956a31dc…7b470456`)
 - **Files:** 33 files
@@ -4263,49 +4262,66 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** feat/394: external-verification fixes landed, PR #401 is ready (OPEN) but not yet merged
 - **Decisions:** Fixed Serena worktree registration — added 394-auto-log-session and 396-doc-gen to serena_config.yml projects list so Serena recognizes both worktrees. Previously only 356, 358, 398 worktrees were registered.
 - **Next:** Push this branch and its 3 extra commits to origin, then merge PR #401 (still OPEN)
-
+## 2026-11-04T17:07:47Z — feat/398-retired-carriers — manual
+- **Commits:** 17 (`77a68992…989aa2d7`)
+- **Files:** 20 files
+- **Summary:** Repaired Serena: installed libicu76 to fix marksman (markdown LSP) startup failure
+- **Decisions:** System package libicu76 required by the .NET-based marksman binary; no code changes, just system dependency
+- **Next:** No pending items — Serena now passes health check
+## 2026-11-04T17:08:01Z — feat/398-retired-carriers — manual
+- **Commits:** 18 (`77a68992…989aa2d7`)
+- **Files:** 21 files
+- **Summary:** apply fix #398 — audit-docs checks 10-11 and unit-route's scope fallback still read retired carriers
+- **Decisions:** A: trim a duplicated example in AGENTS.md (the pre-existing guide-budget overflow 6884>6881 landed by PR#397 merge) rather than raising estimateMax, following the unit-360 precedent; bun-first for the suite run (3m07s vs node's 99s, same output, runner adapts per runtime); parseSpecs from unit-doc-phases.mjs for the scope fallback instead of a private regex to avoid two grammar drift, fixing emphasis-in-title and fenced-quote false-positives; n/a answer shape (no valid key) for ceremony check-tasks-ticks/check-progress-entry/check-phase-labels on a legacy carrier, with check-all treating n/a as passing so the aggregate and sub-checks tell one story; Triaged steps slot placed after Task sub-blocks, in both exported template twins (scaffold-parity read the repo heading list) — AGENTS.md fallback not needed.
+- **Next:** review PR #403 (open, mergeable) at https://github.com/gtrabanco/agentic-workflow/pull/403 — verify the PR body's AC↔evidence table, accept the bun-first leg (E26), note that CI on the branch shows no checks yet (will report after mergeable); after approval, merge main into the branch and the owner merges
 ## 2026-11-04T17:12:17Z — fix/356-test-targeting — manual
 - **Commits:** 10 (`16069246…b686e675`)
 - **Files:** 14 files
 - **Summary:** fix/356-test-targeting: implement test-impact.mjs and wire the test-impact rule into AGENTS.md + execute-phase + verification-contract + unit-lane; open PR #402 (mergeable, CI green); add diff-guard exception record and two late-case mutation receipts
 - **Decisions:** E11: replace P5 unverifiable 'observed failing' clause with reproducible mutation receipt — dropping MARKED_PATTERNS line reddens exactly 2 cases (18p/2f) and nothing else; D6: record path + sibling as deliberate design decisions so every line of the hint has authority; G3: attribute 1771 lines / 14 files to frozen obligations — budget attributed, never raised; E10: CI defect caught (tier: rg asserted instead of behaviour), fixed to portable tier with gate re-run
 - **Next:** PR #402 mergeable and CI green — ready for your merge. Post-merge: run local gate once to confirm CI parity; if you want, review the pre-push hook that blocks push (local-gate.mjs not in tree).
-
 ## 2026-11-04T17:12:48Z — fix/release-notes-rendering — manual
 - **Commits:** 1 (`e9c1a72e…e9c1a72e`)
 - **Files:** .github/workflows/publish.yml, scripts/release-workflows.test.mjs, scripts/release.mjs, scripts/release.test.mjs
 - **Summary:** Fix: release notes were combining --generate-notes + --notes-file, producing a merged wall of text on GitHub releases
 - **Decisions:** Removed --generate-notes from gh release create (both stable and canary channels) because GitHub appends its auto-generated PR list when both flags are present. Replaced with a renderContributors() function that queries gh pr list for merged PRs since the previous tag, producing a clean Contributors section at the end of the release body.
 - **Next:** Wait for PR #404 to be reviewed and merged; after merge, the next canary cut will render clean release notes with contributor credits.
-
 ## 2026-11-05T00:35:17Z — feat/396-doc-gen — external verify
 - **Commits:** 21 (`15d23a3c…530d81af`)
 - **Files:** 18 files
 - **Summary:** External verification of PR #400 (feat/396-doc-gen) against base `c8b64d0b`. Read the diff against each `S#` / acceptance criterion, re-ran all declared gates (`docs-generate.test.mjs` 20→21 pass, root suite 1542 pass · 1 skip · 0 fail, skill-lint PASS, check-skill-context PASS × 2, phase-lint PASS, roadmap-settle PASS, changeset lint PASS, red-first PASS). No blockers found. Three advisories reported: two repaired (the generator's one-line became the explicit `> One-line:` quote — legacy docs now fall back to their title instead of surfacing template boilerplate; the docs step gained the generator reach caveat), one `n/a` (superseded by `D6`). Repairs committed as `64dc8858` (red), `3ec8d1d7` (green), `530d81af` (log caveat) and pushed to origin.
 - **Decisions:** The generator's one-line field is now parsed as `> One-line:` exclusively, dropping the filter-and-skip approach that surfaced any blockquote line. A legacy unit doc without a One-line quote now falls back to its title in the units page. The reach caveat is stack-agnostic prose in the docs step, matching the guide's own policy on tool-choice per turn.
 - **Next:** External-verify round complete. PR #400 is open on `main`; the owner is the external verifier.
-
 ## 2026-11-05T00:41:02Z — fix/356-test-targeting — manual
 - **Commits:** 11 (`16069246…1a721335`)
 - **Files:** 15 files
 - **Summary:** fix/356-test-targeting: fixed Serena LSP initialization on worktree (libicu76 resolved markdown LS crash, health check passing)
 - **Decisions:** Serena's markdown language server (.NET/F# based) was crashing on worktree activation due to missing libicu dependency (ICU internationalization library required by .NET globalization); installing libicu76 resolved the LanguageServerTerminatedException that prevented all Serena tools from working
 - **Next:** Continue work on fix/356-test-targeting — Serena is now fully operational in this worktree
-
+## 2026-11-05T00:45:15Z — feat/398-retired-carriers — manual
+- **Commits:** 22 (`77a68992…45430812`)
+- **Files:** 26 files
+- **Summary:** Repair external-verify advisories on the 398 PR
+- **Decisions:** No version-compat floor: manifest already carried >=1.1.0 (0b9b6c5f); bun.lock just needed regenerating against it. Prose that referenced TASKS.md/progress.md as universal carriers re-pointed at audit-docs check 11's discriminator, since feature 61 retired those files for post-lane units.
+- **Next:** Review PR #403 at https://github.com/gtrabanco/agentic-workflow/pull/403 — the PR body will need to mention these 3 advisory-fix commits.
 ## 2026-11-05T00:51:25Z — fix/356-test-targeting — manual
 - **Commits:** 15 (`16069246…ae1dc9e6`)
 - **Files:** 17 files
 - **Summary:** fix/356-test-targeting: external-verify of fix/356-test-targeting on base feat/356-test-targeting — verdict VERIFIED, zero blockers, four advisories folded as a correction batch (E10 figure corrected 1543→1541, directory --paths refusal behavior change with red-first case, empty+references grammar note in TEST_IMPACT.md, SKILLS.md narration qualifier) — all gates green
 - **Decisions:** External-verify returned VERIFIED with zero blockers; advisories 2 (directory --paths) was a behavior fix committed red-first per unit's own O11; advisory 1 (E10 gate count 1543→1541) was a receipt-precision slip confirmed by reproducing the rg-less gate run; the unit-doc Log got an E12 receipt recording the entire batch
 - **Next:** PR #402 — merge this branch onto main (fix/356-test-targeting). Post-merge: run bun scripts/run-root-suite.mjs once to confirm CI parity (1542 pass · 1 skip · 0 fail)
-
+## 2026-11-05T01:04:20Z — feat/398-retired-carriers — manual
+- **Commits:** 23 (`b80fdb79…b336e34f`)
+- **Files:** 26 files
+- **Summary:** Resolved git merge conflict in PR #403 (feat/398-retired-carriers) — docs/LOGS.md had a conflict between main and the feature branch entries during rebase on origin/main
+- **Decisions:** The conflict was between an append-only main entry (triage of issues 394/396/398, feat/358 log entries) and the branch's own Serena repair log. Both kept — append-only semantics for LOGS.md. Rebase completed successfully, `git push --force-with-lease` applied; PR #403 now shows `mergeable: MERGEABLE`.
+- **Next:** Push the rebased branch (`git push --force-with-lease origin feat/398-retired-carriers`) if not already done; review and merge PR #403
 ## 2026-11-05T01:19:24Z — fix/release-notes-rendering — manual
 - **Commits:** 7 (`e9c1a72e…5e4e1293`)
 - **Files:** 14 files
 - **Summary:** local-first CI gate + release contributors fix
 - **Decisions:** The root gate now runs locally with --bail; the remote workflow is manual-only and delegates to scripts/local-gate.mjs (one owner, two drift). Contributors section windows from the nearest previous release (not the earliest tag listing), and credits each PR's own author instead of attributing all entries to the repository owner.
 - **Next:** Owner to review and merge PR #404 (fix/release-notes-rendering). The fix also fixes a pre-push hook leak: 10,958 leaked release-fixture-* dirs in /tmp from scripts/release.test.mjs not cleaning its fixtures (not addressed in this PR).
-
 ## 2026-11-05T02:32:17Z — feat/394-auto-log-session — manual
 - **Commits:** 16 (`956a31dc…6eb468bf`)
 - **Files:** 34 files
@@ -4330,7 +4346,6 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merge main (54 commits) and fix external-verifier advisories for PR #401
 - **Decisions:** 1) The verifier found two advisories: a stale-sweep match in the journal itself (C2 correcting line appended, not rewritten) and a shutdown-reason normalization gap (reason outside the renderer grammar was refused, costing the entry). 2) Both fixed red-first: red test then green fix for the reason. 3) Main merged with union of both journals and both roadmap rows — no rebase, preserving the branch timeline. 4) Rebuilt stale schema dist/ (12 tests) and re-rendered generated docs (396) — both were pre-existing build output gaps opened by the merge.
 - **Next:** Push to origin/feat/394-auto-log-session and update PR #401 (local gate already passed via --no-verify during this session); after the push, the branch is ready for the human merge
-
 ## 2026-11-05T10:58:03Z — fix/356-test-targeting — manual
 - **Commits:** 17 (`16069246…2ad28bb9`)
 - **Files:** 20 files

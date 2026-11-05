@@ -12,7 +12,8 @@ import path from "node:path";
 import { sectionText } from "../unit-doc-phases.mjs";
 import {
   git, out, block, fail, parseFlags, resolveUnit, parseTasks,
-  parseLog, walk, CONVENTIONAL_RE,
+  parseLog,
+  readSection, walk, CONVENTIONAL_RE,
 } from "./lib.mjs";
 
 /** Lines of the unit doc's `## Tasks` section with their 1-based line numbers.
@@ -26,7 +27,19 @@ function taskLines(specPath, displayPath) {
   return body.split("\n").map((text, i) => ({ line: startLine + i, text }));
 }
 
+/** The legacy-carrier answer (#398 S6): a doc with no `## Tasks` has nothing
+ *  for a Tasks-keyed check to judge, and a silent `valid: true` would claim a
+ *  judgement nobody made. `n/a: <reason>` is the repository's passing row. */
+const NO_TASKS = "no ## Tasks section — legacy carrier";
+
+/** The n/a envelope, or null when the doc carries a `## Tasks` section. */
+function noTasksAnswer(md) {
+  return readSection(md, "tasks") === null ? { "n/a": NO_TASKS } : null;
+}
+
 function checkPhaseLabels(specPath, displayPath) {
+  const na = noTasksAnswer(fs.readFileSync(specPath, "utf8"));
+  if (na !== null) return na;
   const invalid = taskLines(specPath, displayPath)
     .filter((l) => /^- (?:\[.\] )?(?:Step \d+|S\d+\b)/.test(l.text.trim()))
     .map((l) => ({ file: displayPath, line: l.line, content: l.text.trim() }));
@@ -45,9 +58,10 @@ function branchSlug(cwd) {
   if (!match) fail("missing-flag", { flag: "--slug", branch, note: "this branch names no unit — pass --slug" });
   return match[1];
 }
-
 function checkTasksTicks(specPath) {
   const md = fs.readFileSync(specPath, "utf8");
+  const na = noTasksAnswer(md);
+  if (na !== null) return na;
   const logged = new Set(parseLog(md).filter((m) => m.kind === "P").map((m) => m.n));
   const mismatched = parseTasks(md)
     .filter((t) => t.ticked !== logged.has(t.n))
@@ -57,6 +71,8 @@ function checkTasksTicks(specPath) {
 
 function checkProgressEntry(specPath) {
   const md = fs.readFileSync(specPath, "utf8");
+  const na = noTasksAnswer(md);
+  if (na !== null) return na;
   const logged = new Set(parseLog(md).filter((m) => m.kind === "P").map((m) => m.n));
   const missing = parseTasks(md).filter((t) => !logged.has(t.n)).map((t) => `P${t.n}`);
   return { valid: missing.length === 0, missing };
@@ -92,13 +108,13 @@ export function docs(op, argv, cwd = process.cwd()) {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
       const unit = resolveUnit(flags.slug, cwd);
       const result = checkPhaseLabels(unit.specPath, path.relative(cwd, unit.specPath));
-      if (!result.valid) block({ check: "check-phase-labels", ...result });
+      if (result.valid === false) block({ check: "check-phase-labels", ...result });
       out(result);
     }
     case "check-tasks-ticks": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
       const result = checkTasksTicks(resolveUnit(flags.slug, cwd).specPath);
-      if (!result.valid) block({ check: "check-tasks-ticks", ...result });
+      if (result.valid === false) block({ check: "check-tasks-ticks", ...result });
       out(result);
     }
     case "check-docs-language": {
@@ -110,7 +126,7 @@ export function docs(op, argv, cwd = process.cwd()) {
     case "check-progress-entry": {
       const flags = parseFlags(argv, ["slug"], ["slug"]);
       const result = checkProgressEntry(resolveUnit(flags.slug, cwd).specPath);
-      if (!result.valid) block({ check: "check-progress-entry", ...result });
+      if (result.valid === false) block({ check: "check-progress-entry", ...result });
       out(result);
     }
     case "check-all": {
@@ -124,7 +140,11 @@ export function docs(op, argv, cwd = process.cwd()) {
       const docsLanguage = checkDocsLanguage(cwd);
       const progress = checkProgressEntry(unit.specPath);
       const results = { "commit-format": commitFormat, "phase-labels": phaseLabels, "tasks-ticks": tasksTicks, "docs-language": docsLanguage, progress };
-      const overall = Object.values(results).every((r) => r.valid) ? "PASS" : "FAIL";
+      // #398 S6/D1: an `n/a: <reason>` row is a passing row (skills/audit-pr
+      // §closure gates), so a legacy unit's aggregate tells the same story as
+      // its own sub-checks instead of erroring `missing-section`.
+      const passes = (r) => r.valid === true || typeof r["n/a"] === "string";
+      const overall = Object.values(results).every(passes) ? "PASS" : "FAIL";
       if (overall === "FAIL") block({ check: "check-all", ...results, overall });
       out({ ...results, overall });
     }
