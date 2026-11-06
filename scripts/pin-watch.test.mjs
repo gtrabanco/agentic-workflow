@@ -490,6 +490,15 @@ test("the workflow may write issues and runs the filing path", async () => {
   assert.match(workflow, /GH_TOKEN:/u, "gh needs a token in the step's environment");
 });
 
+test("the workflow wires the pr mode with the write it needs and a commit identity", () => {
+  const workflow = readFileSync(WORKFLOW, "utf8");
+
+  assert.match(workflow, /pin-watch\.mjs\s+--file-pr/u, "the bump PR path is dispatched, never wired to the cron");
+  assert.match(workflow, /^\s*contents:\s*write\s*(?:#.*)?$/mu, "pushing the bump commit and its lock refresh needs contents: write");
+  assert.match(workflow, /git config user\.name /u, "actions/checkout configures no commit identity — the bump commit needs one");
+  assert.match(workflow, /MODE=\$\{\{ inputs\.mode \|\| 'issues' \}\}/u, "the schedule and the default dispatch run the issues mode — bumping is dispatch-only (PE-005)");
+});
+
 test("the watch discovers the shipped packages and their exact pins", () => {
   const packages = watchedPackages();
 

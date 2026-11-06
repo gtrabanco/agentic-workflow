@@ -60,9 +60,9 @@ on:
           - pr         # open a PR that bumps all drifted exact pins
 
 permissions:
-  contents: read
+  contents: write # the pr mode pushes the bump commit and its lockfile refresh
   issues: write # tracking issues (issues mode)
-  pull-requests: write # PR bump (pr mode)
+  pull-requests: write # the pr-mode PR — Actions permissions are static per workflow file, so a dispatch-only grant rides every run
 
 concurrency:
   group: pin-watch
@@ -90,6 +90,10 @@ jobs:
         run: |
           MODE=${{ inputs.mode || 'issues' }}
           if [ "$MODE" = "pr" ]; then
+            # actions/checkout configures no commit identity; the bump commit
+            # needs one, and the repo must allow Actions to create PRs.
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             node scripts/pin-watch.mjs --file-pr
           else
             node scripts/pin-watch.mjs --file-issues
