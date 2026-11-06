@@ -1,0 +1,50 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "diff-guard-prose",
+      "op": "remove",
+      "source": "skills/execute-phase/references/PREFLIGHT.md",
+      "selector": { "path": ["Preflight", "Diff guard"] },
+      "except": [["Preflight", "Diff guard", "Exemptions"]],
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "id": "checkpoint-pointer",
+      "op": "pointerize",
+      "source": "skills/unit-lane/references/EXECUTE.md",
+      "selector": { "headingRegex": { "source": "^Checkpoint$", "flags": "i" } },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "id": "workflow-status-prereq",
+      "op": "prereq",
+      "source": "skills/workflow-status/SKILL.md",
+      "selector": {
+        "line": { "source": "^Run `bun scripts/workflow-status.mjs`", "flags": "" },
+        "within": { "heading": "Step 1" }
+      },
+      "enforcingCommand": "agentic-workflow workflow-status",
+      "contentHash": "sha256:2123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "id": "exact-line-remove",
+      "op": "remove",
+      "source": "skills/review-change/references/CLASSIFY.md",
+      "selector": { "line": "Every finding cites its file:line." },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:3123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "id": "whole-section-remove",
+      "op": "remove",
+      "source": "skills/fold-findings/references/BATCH.md",
+      "selector": { "heading": "Repair order" },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:4123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ]
+}

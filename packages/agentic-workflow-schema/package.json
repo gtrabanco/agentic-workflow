@@ -34,7 +34,9 @@
     "./verification-receipt.schema.json": "./verification-receipt.schema.json",
     "./verification-plan.schema.json": "./verification-plan.schema.json",
     "./pre-execution-artifact-snapshot.schema.json": "./pre-execution-artifact-snapshot.schema.json",
-    "./pre-execution-review-receipt.schema.json": "./pre-execution-review-receipt.schema.json"
+    "./pre-execution-review-receipt.schema.json": "./pre-execution-review-receipt.schema.json",
+    "./projection-manifest.schema.json": "./projection-manifest.schema.json",
+    "./guard-verdict.schema.json": "./guard-verdict.schema.json"
   },
   "files": [
     "dist",
@@ -47,6 +49,8 @@
     "verification-plan.schema.json",
     "pre-execution-artifact-snapshot.schema.json",
     "pre-execution-review-receipt.schema.json",
+    "projection-manifest.schema.json",
+    "guard-verdict.schema.json",
     "README.md",
     "LICENSE"
   ],

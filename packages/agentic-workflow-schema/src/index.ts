@@ -4098,3 +4098,47 @@ export type {
   AdversarialReflectorVerdict,
   AdversarialStabilityVerdict,
 } from "./vocabularies.js";
+
+// ── The workflow-projection contract (issue #406) ───────────────────────────
+export {
+  PROJECTION_SEAMS,
+  PROJECTION_OPS,
+  PROJECTION_SELECTOR_KINDS,
+  PROJECTION_HASH_ALGORITHMS,
+  GUARD_VERDICTS,
+  GUARD_REJECTION_REASONS,
+} from "./vocabularies.js";
+export type {
+  ProjectionSeam,
+  ProjectionOp,
+  ProjectionSelectorKind,
+  ProjectionHashAlgorithm,
+  GuardVerdictKind,
+  GuardRejectionReason,
+} from "./vocabularies.js";
+export {
+  PROJECTION_MANIFEST_CONTRACT_ID,
+  PROJECTION_MANIFEST_VERSION,
+  GUARD_VERDICT_CONTRACT_ID,
+  GUARD_VERDICT_VERSION,
+  PROJECTION_CONTENT_HASH_PATTERN,
+  validateProjectionManifestV1,
+  validateGuardVerdictV1,
+  isProjectionSeam,
+} from "./projection.js";
+export type {
+  RegexSourceV1,
+  ProjectionSelector,
+  ProjectionHeadingSelector,
+  ProjectionPathSelector,
+  ProjectionHeadingRegexSelector,
+  ProjectionLineSelector,
+  ProjectionRule,
+  ProjectionManifestV1,
+  ProjectionManifestValidation,
+  GuardVerdictV1,
+  GuardAllowVerdict,
+  GuardBlockVerdict,
+  GuardDegradeVerdict,
+  GuardVerdictValidation,
+} from "./projection.js";

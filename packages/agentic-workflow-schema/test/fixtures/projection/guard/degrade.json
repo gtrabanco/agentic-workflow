@@ -1,0 +1,8 @@
+{
+  "contract": "agentic-workflow/guard-verdict",
+  "version": 1,
+  "guard": "diff-guard",
+  "verdict": "degrade",
+  "reason": "guard-unavailable",
+  "message": "The guard could not load; run `agentic-workflow guard diff` manually."
+}
