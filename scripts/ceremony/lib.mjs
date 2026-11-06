@@ -44,6 +44,22 @@ export function fail(error, extra = {}) {
   process.exit(1);
 }
 
+/**
+ * Read a repo-relative path under `root`, or `null` when it is absent or escapes
+ * the root — a repository fact never leaves the project. Two ceremony modules
+ * share it (`tier` and `passive`), so it lives here rather than twice.
+ */
+export function readRepoFile(root, rel) {
+  const abs = path.resolve(root, rel);
+  const prefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  if (!abs.startsWith(prefix)) return null;
+  try {
+    return fs.readFileSync(abs, "utf8");
+  } catch {
+    return null;
+  }
+}
+
 /** Ceremonial block (a discipline check failed) → JSON, exit 2. */
 export function block(obj) {
   process.stdout.write(JSON.stringify({ blocked: true, ...obj }, null, 2) + "\n");
