@@ -25,8 +25,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-import { renderEntry } from "./render.mjs";
-import { writeFragment } from "../journal/fragment.mjs";
+import { factsToEntry } from "../journal/entry.mjs";
+import { createMarkdownDriver } from "../journal/drivers/markdown.mjs";
 
 /** The project's journal, relative to the project root (the hook's own default). */
 export const DEFAULT_JOURNAL = "docs/LOGS.md";
@@ -41,11 +41,15 @@ export const DEFAULT_PUBLISH_TIMEOUT_MS = 5000;
  * A missing journal is a project that did not opt in — the file is never created
  * (S9), and the result says so instead of pretending a delivery happened.
  *
- * **Fragment routing (issue #405, AC1).** When `fragmentDir` is set and the
- * carrier directory `.agentic-workflow/journal/` exists, the entry goes to a
- * *fragment file* instead of the journal — the merge-to-main aggregator is the
- * only writer of `docs/LOGS.md` there. The carrier's presence is the opt-in:
- * without it, this publisher appends exactly as before, byte for byte.
+ * **The write goes through the default store driver (issue #374, AC3).** The
+ * publisher is the mechanical writer's seam, not the writer itself: the entry
+ * becomes a canonical `journal-entry@1` (`factsToEntry`) and the Markdown
+ * driver decides the transport — a fragment when the carrier directory exists
+ * (issue #405, AC1), the same byte-for-byte append otherwise. The options API,
+ * the result shapes and the presence-skip are unchanged; `fragmentDir: null`
+ * disables the fragment routing explicitly (a project whose wiring passes no
+ * `fragmentDir` keeps today's direct append even if a carrier directory
+ * exists).
  */
 export function createJournalPublisher(options) {
   const journalPath = options?.journalPath;
@@ -53,35 +57,14 @@ export function createJournalPublisher(options) {
     throw new Error("createJournalPublisher: journalPath is required");
   }
   const fragmentDir = options?.fragmentDir;
-  const kind = options?.kind ?? "mechanical";
   const now = options?.now ?? (() => Date.now());
+  const driverRoot =
+    typeof fragmentDir === "string" && fragmentDir !== ""
+      ? path.dirname(fragmentDir)
+      : path.dirname(path.dirname(journalPath));
   return {
     name: "journal",
     publish(facts) {
-      if (typeof fragmentDir === "string" && fragmentDir !== "") {
-        let carrier = false;
-        try {
-          carrier = fs.statSync(fragmentDir).isDirectory();
-        } catch {
-          carrier = false;
-        }
-        if (carrier) {
-          const sessionId = typeof options?.sessionId === "function" ? options.sessionId() : options?.sessionId;
-          try {
-            const fragment = writeFragment({
-              root: path.dirname(fragmentDir),
-              dir: path.basename(fragmentDir),
-              facts,
-              kind,
-              sessionId: sessionId ?? "local",
-              now,
-            });
-            return { ok: true, written: true, target: "fragment", fragment: fragment.name };
-          } catch (error) {
-            return { ok: false, error: error instanceof Error ? error.message : String(error) };
-          }
-        }
-      }
       let present = true;
       try {
         fs.accessSync(journalPath, fs.constants.W_OK);
@@ -89,8 +72,20 @@ export function createJournalPublisher(options) {
         present = false;
       }
       if (!present) return { ok: true, written: false, skipped: "no-journal" };
-      fs.appendFileSync(journalPath, `\n${renderEntry(facts)}`);
-      return { ok: true, written: true, target: "journal" };
+      const carrier = typeof fragmentDir === "string" && fragmentDir !== "";
+      const driver = createMarkdownDriver({
+        root: driverRoot,
+        journalPath,
+        fragmentDir: carrier ? fragmentDir : null,
+        sessionId: options?.sessionId,
+        kind: options?.kind,
+        now,
+      });
+      const result = driver.append(factsToEntry(facts));
+      if (!result.ok) return { ok: false, error: result.error };
+      return result.target === "fragment"
+        ? { ok: true, written: true, target: "fragment", fragment: result.name }
+        : { ok: true, written: true, target: "journal" };
     },
   };
 }
