@@ -557,6 +557,11 @@ function scanSource(file, text, language) {
   const effects = [];
   for (const invocation of invocations) {
     const { provider, member } = resolveInvocation(invocation);
+    // A dotted call on a name no import resolves (`items.remove(x)` mutating a
+    // list) names no provider: its member is a value's own method, not the
+    // filesystem, and claiming it would be guessing — the one direction the
+    // fail-closed rule forbids. A provider binding or a bare call is required.
+    if (language === "py" && provider === null && invocation.head !== invocation.chain) continue;
     const granted = capabilitiesOf(provider);
     const capability = CAPABILITY_KINDS.find((kind) => CAPABILITY_MEMBERS[kind]?.[language]?.includes(member))
       ?? (granted.includes(REMOVAL) && REMOVAL_MEMBERS.has(member) ? REMOVAL : null);
@@ -580,7 +585,26 @@ function scanSource(file, text, language) {
   for (const program of programs) for (const kind of capabilitiesOf(program.program)) capabilities.add(kind);
   for (const effect of effects) capabilities.add(effect.capability);
 
-  return { language, imports, declarations, programs, effects, capabilities };
+  // The module-level edge: a bare call, made outside every declaration, whose
+  // head names a declaration of this same module that performs an unguarded
+  // removal — the module runs that removal at import time. Bounded to one file
+  // and to names, like the rest of the analysis; a misattribution can only
+  // raise a tier, never lower one.
+  const removingDeclarations = new Set(
+    effects
+      .filter((entry) => entry.capability === REMOVAL && !entry.guarded && entry.declaration !== null)
+      .map((entry) => entry.declaration),
+  );
+  const owns = (position) => declarations.find((entry) => position >= entry.start && position < entry.end) ?? null;
+  const entryCall = removingDeclarations.size === 0
+    ? null
+    : invocations.find((invocation) =>
+      invocation.head === invocation.member
+      && owns(invocation.position) === null
+      && removingDeclarations.has(invocation.head));
+  const moduleEntry = entryCall === undefined || entryCall === null ? null : { name: entryCall.head, line: entryCall.line };
+
+  return { language, imports, declarations, programs, effects, capabilities, moduleEntry };
 }
 
 /**
@@ -643,7 +667,9 @@ export function analyseSource(file, text, options = {}) {
     (effect) => effect.capability === REMOVAL && !effect.guarded && effect.declaration === null,
   ) ?? null;
   const destructive = moduleRemoval === null
-    ? shellRemoval(scan.programs) ?? statementRemoval(noComments)
+    ? (scan.moduleEntry !== null
+        ? { member: scan.moduleEntry.name, provider: null, line: scan.moduleEntry.line, via: "call" }
+        : null) ?? shellRemoval(scan.programs) ?? statementRemoval(noComments)
     : {
       member: moduleRemoval.member,
       provider: moduleRemoval.provider ?? importsProviderOf(scan.imports, moduleRemoval.member),
