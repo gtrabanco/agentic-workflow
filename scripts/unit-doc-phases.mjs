@@ -336,6 +336,69 @@ export function sectionText(text, name) {
   return start === null ? null : text.slice(start);
 }
 
+/* --------------------------------------------- any-level heading anchors */
+
+/**
+ * Every section a heading title opens, at any level from 2 to 6, fence-aware.
+ *
+ * `sectionBounds` is the unit-doc reader and matches level 2 by exact name; the
+ * prose-gate inventory anchors rules that live under `###`/`####` headings in
+ * `AGENTS.md` and the policy references, and those anchors need the same two
+ * properties: the grammar has one home (here) and a heading inside a fenced
+ * example never bounds anything. Returns `{ start, end, line }` where `start`
+ * is the heading's own offset, `end` the next heading of equal-or-higher level
+ * (or EOF) and `line` the 1-based heading line.
+ */
+export function headingBoundsAll(text, title) {
+  const escaped = title.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const heading = new RegExp(`^(#{2,6})[ \\t]+${escaped}[ \\t]*$`);
+  const lines = text.split("\n");
+  const offsets = [];
+  let offset = 0;
+  for (const line of lines) {
+    offsets.push(offset);
+    offset += line.length + 1;
+  }
+  const bounds = [];
+  let fence = null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const trimmed = lines[index].trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    const match = heading.exec(trimmed);
+    if (!match) continue;
+    const level = match[1].length;
+    let end = text.length;
+    let inner = null;
+    for (let next = index + 1; next < lines.length; next += 1) {
+      const candidate = lines[next].trim();
+      if (inner) {
+        if (closesFence(candidate, inner)) inner = null;
+        continue;
+      }
+      const innerOpen = openFence(candidate);
+      if (innerOpen) {
+        inner = innerOpen;
+        continue;
+      }
+      const nextHeading = /^(#{2,6})[ \t]+/.exec(candidate);
+      if (nextHeading && nextHeading[1].length <= level) {
+        end = offsets[next];
+        break;
+      }
+    }
+    bounds.push({ start: offsets[index], end, line: index + 1 });
+  }
+  return bounds;
+}
+
 /** The `[from, to)` range of one level-2 section, its heading included, or null.
  * Fence-aware: fenced blocks inside the section body are skipped so a line
  * like `## Status` inside a code block does not truncate the section. The

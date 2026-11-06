@@ -46,13 +46,25 @@ function grepOut(args) {
   }
 }
 
-/** Grep a file set for the pattern; returns matching repo-relative paths. */
+/** Grep a file set for the pattern in one process; returns matching paths.
+ *  One spawn for the whole set (cwd REPO_ROOT, repo-relative paths): a
+ *  per-file spawn put these cases on the edge of bun's per-test timeout
+ *  whenever an untracked file joined the set, without changing what is
+ *  asserted. */
 function filesMatching(files, pattern) {
-  const matches = [];
-  for (const rel of files) {
-    if (grepOut(["-lE", pattern, join(REPO_ROOT, rel)]).trim() !== "") matches.push(rel);
+  if (files.length === 0) return [];
+  let out;
+  try {
+    out = execFileSync("grep", ["-lE", pattern, "--", ...files], {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch (e) {
+    if (e.status === 1) return []; // no match
+    throw e;
   }
-  return matches;
+  return out.split("\n").map((s) => s.trim()).filter((s) => s !== "");
 }
 
 // ── AC25 — single entry point, mechanically enforced ────────────────────
@@ -309,6 +321,90 @@ describe("AC24: the entry point runs in a target-project-shaped temp dir", () =>
       strictEqual(status.trim(), "", "a configured store dirtied the working tree");
     } finally {
       rmSync(cfgDir, { recursive: true, force: true });
+    }
+  });
+});
+
+/**
+ * Issue #359 S2/S5 — two top-tier prose gates from
+ * `docs/workflow/GATE_INVENTORY.md` move into this suite.
+ *
+ * Both rules were stated only in prose and enforced only by accident (a
+ * `.gitignore` entry, a guide sentence): a compaction or a `git add -f` left
+ * nothing behind to fail. Each case asserts the rule over the real tree, and a
+ * second case proves the assertion bites on a fixture, so neither is vacuous.
+ */
+
+/** The ceremony module owns the rule; this suite runs it, never copies it. */
+const { checkDocsLanguage } = await import("./ceremony/docs.mjs");
+
+/**
+ * Paths the working-copy activation surface may never occupy in the index.
+ * `.claude-plugin/` is a different surface (the published plugin manifest) and is
+ * deliberately out of scope: the rule protects the *local opt-in mount*.
+ */
+function committedActivationMounts(files) {
+  return files.filter((file) => file === ".claude/skills" || file.startsWith(".claude/skills/")
+    || file === ".claude/pre-execution-gates" || file.startsWith(".claude/pre-execution-gates/"));
+}
+
+/** The scan the live assertion runs, over any git work tree's index. */
+function committedActivationMountsIn(cwd) {
+  const tracked = execFileSync("git", ["ls-files"], { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+    .split("\n").map((entry) => entry.trim()).filter(Boolean);
+  return committedActivationMounts(tracked);
+}
+
+describe("#359 the documentation-language gate runs over the head", () => {
+  it("no committed .es.md sibling survives the head", () => {
+    const body = checkDocsLanguage(REPO_ROOT);
+    strictEqual(body.valid, true, `committed .es.md files: ${JSON.stringify(body["es-files"])}`);
+  });
+
+  it("the same check blocks a tree that carries one", () => {
+    const dir = mkdtempSync(join(tmpdir(), "docs-language-"));
+    try {
+      mkdirSync(join(dir, "docs"), { recursive: true });
+      writeFileSync(join(dir, "docs", "translated.es.md"), "x\n");
+      const body = checkDocsLanguage(dir);
+      strictEqual(body.valid, false, "the check passed over a translated sibling");
+      ok(body["es-files"].includes("docs/translated.es.md"), JSON.stringify(body["es-files"]));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("#359 the activation mount is a local mount, never a committed surface", () => {
+  it("the working-copy activation mount is never committed", () => {
+    const mounts = committedActivationMountsIn(REPO_ROOT);
+    strictEqual(mounts.length, 0, `committed activation surface: ${mounts.join(", ")}`);
+  });
+
+  it("a force-added mount is refused by the same scan", () => {
+    const seeded = [".claude/skills/execute-phase/SKILL.md", ".claude-plugin/plugin.json", "skills/unit-lane/SKILL.md"];
+    strictEqual(committedActivationMounts(seeded).length, 1, "the plugin manifest or a real skill was miscounted");
+    strictEqual(committedActivationMounts(seeded)[0], ".claude/skills/execute-phase/SKILL.md");
+  });
+
+  it("the scan bites on a real index that carries one", () => {
+    const dir = mkdtempSync(join(tmpdir(), "activation-mount-"));
+    const run = (args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+    try {
+      mkdirSync(join(dir, ".claude", "skills", "execute-phase"), { recursive: true });
+      writeFileSync(join(dir, ".claude", "skills", "execute-phase", "SKILL.md"), "x\n");
+      strictEqual(run(["init", "-q"]).status, 0, `git init: ${run(["init"]).stderr}`);
+      // The accident this gate exists for: the mount is gitignored, so only a
+      // force-add can land it in the index — and the scan must see exactly that.
+      writeFileSync(join(dir, ".gitignore"), ".claude/\n");
+      ok(run(["add", ".claude/skills"]).status !== 0, "the ignored mount must need a force-add");
+      strictEqual(committedActivationMountsIn(dir).length, 0, "the ignored mount is not in the index yet");
+      strictEqual(run(["add", "-f", ".claude/skills"]).status, 0);
+      const mounts = committedActivationMountsIn(dir);
+      strictEqual(mounts.length, 1, `index entries: ${mounts.join(", ")}`);
+      strictEqual(mounts[0], ".claude/skills/execute-phase/SKILL.md");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

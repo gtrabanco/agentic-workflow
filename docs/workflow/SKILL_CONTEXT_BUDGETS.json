@@ -26,9 +26,9 @@
     ],
     "files": {
       "AGENTS.md": {
-        "linesMax": 438,
-        "proseLinesMax": 336,
-        "estimateMax": 7774,
+        "linesMax": 477,
+        "proseLinesMax": 370,
+        "estimateMax": 8532,
         "machineBlocks": [
           "normalizer-inventory@1",
           "normative-surfaces@1",
@@ -36,6 +36,7 @@
         ],
         "machineLines": 98,
         "sources": {
+          "issue #359 (unit 96-prose-gate-inventory)": "the guide gains the two index rows that budget a new deep reference (the documentation map and the Deep-references index), because a budgeted reference must be reachable in one hop and a doc that owns a task joins the map. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 433 lines / 7,756 est / 336 prose lines inside the unchanged ceilings, so only those two rows are new; the ceilings were re-based on the same measurement to ceil(433 x 1.10) = 477, ceil(336 x 1.10) = 370 and ceil(7756 x 1.10) = 8,532, and `machineLines` stays 97 because no versioned block moved.",
           "issue #332 (unit 332-agents-md-split)": "the split moved the authoring rules and the packages guidance into docs/workflow/ and added the Deep-references index, the documentation map, the precedence ladder, the testing and ownership rules and the measured runtime carve-out. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 357 lines, 6,255 est, 83 machine-region lines, 274 prose lines. Ceilings re-based to ceil(357 x 1.10) = 393, ceil(274 x 1.10) = 302 and ceil(6255 x 1.10) = 6881. Reason declared: S7 pins the guide's size, and A4 records that the issue's literal 120-line target is unreachable while the three machine blocks stay (S3) — the prose core is pinned instead, so any growth still fails the gate.",
           "external verify of fix/360 (correction batch E16)": "the size tier joins the three risk-tier sets in the inventory: one `size-tier-vocabulary` row (schema-export:SIZE_TIER_KINDS, machine size-tier, must-name yes) added to `normative-surfaces@1` by the external-verify correction batch; measured with `bun scripts/check-skill-context.mjs --documents` at this re-base: 89 machine-region lines, 363 lines / 6,436 est, inside the unchanged ceilings 393 / 302 / 6881",
           "merge of fix/360 with issue #361": "the two change sets each add rows to `normative-surfaces@1` and each re-pinned `machineLines` for its own tree; merged, both row sets stand, so the machine region is 91 lines — fix/360's five risk-tier and size-tier rows plus #361's two review rows — and the merged guide measures 384 lines / 6,817 est inside the unchanged ceilings 393 / 302 / 6881. Only `machineLines` is re-pinned; no line, prose or estimate ceiling moves.",
@@ -45,6 +46,19 @@
           "merge of fix/356-test-targeting with main (issue #358)": "the two change sets each add rows to `normative-surfaces@1` and each re-pinned `machineLines` for its own tree; merged, both row sets stand — #358's four adversarial rows plus #356's `test-impact-verdict` row — so the machine region is 97 lines and the merged guide measures 402 lines / 7,182 est / 305 prose inside the ceilings 438 / 336 / 7,774. Only `machineLines` is re-pinned (96 -> 97); no line, prose or estimate ceiling moves. Measured at the merge with `bun scripts/check-skill-context.mjs --documents`.",
           "issue #358 (unit 358-adversarial-kill-mandate)": "the inventory gains four rows for the adversarial verdict layer: three `schema-export` rows for ADVERSARIAL_VERDICTS / ADVERSARIAL_REFLECTOR_VERDICTS / ADVERSARIAL_STABILITY_VERDICTS and one block row for `block:adversarial-verdict@1` in skills/review-change/references/ADVERSARIAL_SETUP.md. The machine region moves 92 -> 96 lines and the estimate 6,884 -> 7,054 (the base was already red by 3 units: `AGENTS.md: estimate 6884 > 6881` at c8b64d0b), so `machineLines` and the estimate ceiling are re-set (ceil(7054 x 1.10) = 7,760); the line and prose ceilings (393 / 302) do not move — measured at the change with `bun scripts/check-skill-context.mjs --documents`: 393 lines, 297 prose lines.",
           "issue #294 (unit 82 relay-lane-execution)": "the inventory gains one row, `relay-status-grammar`, binding the baton shape that skills/unit-lane/references/RELAY.md publishes (`block:relay-status@1`); the machine region moves 97 -> 98 lines and the guide measures 432 lines / 334 prose / 7,709 est inside the unchanged ceilings 438 / 336 / 7,774, so only `machineLines` is re-pinned. Measured at the change with `bun scripts/check-skill-context.mjs --documents`."
+        }
+      },
+      "docs/workflow/GATE_INVENTORY.md": {
+        "linesMax": 161,
+        "estimateMax": 4975,
+        "machineBlocks": [
+          "prose-gate-inventory@1"
+        ],
+        "machineLines": 56,
+        "sources": {
+          "issue #359 (unit 96-prose-gate-inventory)": "the carrier table is a machine region a gate parses, so it is counted separately from the prose that explains it. Measured at the change with `bun scripts/check-skill-context.mjs --documents`: 146 lines / 4,522 est / 54 machine-region lines; ceilings ceil(146 x 1.10) = 161 and ceil(4522 x 1.10) = 4,975, and `machineLines` is pinned exactly because the table is the contract `scripts/prose-gate-inventory.mjs` reads.",
+          "issue #420 (unit 420-docs-generated-merge-driver)": "the inventory gains one row, `docs-projection-current`, binding the projection staleness gate this unit's local-gate step runs (`scripts/docs-generate.test.mjs` carries the token). The machine region moves 54 -> 55 lines; measured at the change with `bun scripts/check-skill-context.mjs --documents`: 147 lines / 4,575 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned.",
+          "merge of fix/359 with issue #294 (unit 82 relay-lane-execution)": "the integration merges both row sets: this branch own projection row plus main relay-status-grammar row, whose binding AGENTS.md#normative-surfaces@1 declares and only this branch gate can see (uncited-surface). The machine region moves 55 -> 56 lines; measured at the merge with `bun scripts/check-skill-context.mjs --documents`: 148 lines / 4,614 est, inside the unchanged ceilings 161 / 4,975, so only `machineLines` is re-pinned."
         }
       },
       "docs/workflow/SKILL_AUTHORING.md": {

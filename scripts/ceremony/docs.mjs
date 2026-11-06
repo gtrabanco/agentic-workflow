@@ -78,7 +78,7 @@ function checkProgressEntry(specPath) {
   return { valid: missing.length === 0, missing };
 }
 
-function checkDocsLanguage(cwd) {
+export function checkDocsLanguage(cwd) {
   const esFiles = ["docs", "skills"]
     .filter((d) => fs.existsSync(path.join(cwd, d)))
     .flatMap((d) => walk(path.join(cwd, d), cwd))

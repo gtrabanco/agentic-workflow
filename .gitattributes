@@ -1,0 +1,10 @@
+# The generated projection is a function of the tree, never a hand-merged
+# surface. It no longer carries a count that every regeneration rewrites, so two
+# concurrent regenerations merge as plain text; what can still collide is a row
+# inserted at the same position in the same sorted table, which is what this
+# driver answers. It is a net, not a requirement: an unarmed clone merges the
+# projection by itself, and the local gate's `docs-generated-projection` step
+# refuses a projection that no longer matches its sources.
+#
+# Arm the driver once per checkout (optional): bun scripts/docs-generated-merge.mjs --install
+docs/generated/** merge=docs-generated

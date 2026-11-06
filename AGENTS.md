@@ -53,7 +53,7 @@ new doc takes ownership of a task:
 
 | Task | Required docs |
 |---|---|
-| Any change to these skills, gates or templates | this guide, then the owner each line below names |
+| Any change to these skills, gates or templates | this guide, then the owner each line below names; [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) owns which carrier each gate has |
 | Authoring or editing a skill | [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) |
 | Anything under `packages/` | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) |
 | Picking up work, sequencing a unit | [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/workflow/LANE_FLOW.md`](docs/workflow/LANE_FLOW.md) |
@@ -74,6 +74,7 @@ while doing one kind of work is one hop away and read on demand:
 | [`docs/workflow/SKILL_AUTHORING.md`](docs/workflow/SKILL_AUTHORING.md) | authoring or editing a skill: frontmatter contract, body sections, the closing `→ Next:` block, hand-off vs compose across a model/effort boundary |
 | [`docs/workflow/PACKAGES.md`](docs/workflow/PACKAGES.md) | touching `packages/`: the bun workspace, the single lockfile, pin rules, the version-parity gate, changesets, publish channels |
 | [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) | smoke-testing a wording change to an executor-path skill |
+| [`docs/workflow/GATE_INVENTORY.md`](docs/workflow/GATE_INVENTORY.md) | asking whether a gate survives a compaction, and where its carrier lives |
 | [`docs/workflow/SKILLS.md`](docs/workflow/SKILLS.md) | looking up what a skill does, or where it runs in the flow |
 | [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md) | replicating the workflow into another project |
 | [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) | landing a breaking surface, and needing the migration note beside it |
@@ -246,6 +247,15 @@ gate as `--push-base`, and a `test-impact` verdict of `empty` (no executable
 path changed — prose and assets only) skips the test-bearing steps; a `targeted`
 verdict, a refusal or an absent script runs the full gate, never a silent skip.
 A checkout carrying the old hook reinstalls it with `bun scripts/local-gate.mjs --install-hook`.
+**The generated projection carries no per-regeneration line**, so two concurrent
+regenerations merge as plain text and no checkout has to be armed for that. For
+the residual case — two branches inserting a row at the same position in one
+sorted table — `.gitattributes` names `docs/generated/** merge=docs-generated`
+and `bun scripts/docs-generated-merge.mjs --install` writes the driver config a
+clone never inherits; arming it is optional. Either way the gate's
+`docs-generated-projection` step runs `docs-generate --check` on every push —
+offline and not test-gated, because a prose-only push is exactly the push that
+stales the projection.
 The remote
 gate is manual only — `gh workflow run root-suite.yml --ref <branch>` — for a
 branch you cannot run locally.
