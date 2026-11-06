@@ -4490,3 +4490,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Resolve PR #418 conflicts (docs/generated merge driver), rebase to remove counts line, and push
 - **Decisions:** The counts line was the 100% surface: 4 hunks in 3 files on every concurrent regeneration (#418 and #419). Dropped it from provenance() and index bullets; generator changes fix it at source, driver is optional net. Push is fast-forward, no rewrites.
 - **Next:** Finish the PR if needed; /tmp/m418 worktree is stale — git worktree prune.
+
+## 2026-11-06T00:20:31Z — main — manual
+- **Commits:** 67 (`91392b3f…0f790f14`)
+- **Files:** 93 files (6399 additions, 138 deletions)
+- **Summary:** Three merged PRs + a direction draft: unit 82 (Relay lane execution, PR #419 merged 2026-11-05), unit 407 (section locator core, PR #417 merged 2026-11-05), prose-gate inventory (#418 merged 2026-11-06) plus generated projection merge driver (fix/420 merged 2026-11-05), and the 307 direction draft (roadmap row 83). 67 commits on main (93 files, 6399 additions, 138 deletions).
+- **Decisions:** (1) Unit 82: Relay-orchestrated lane execution — built the Packet crate (Packet.mjs, 511 lines) with lifecycle states, leg contract, packet-checker validation suite (10 fixtures). Lane gained RELAY.md reference. PR #419 merged by owner. (2) Unit 407: section locator with mdast-based position tracking, lossless splice, CLI subcommand (section-grammar.mjs, section-locator.mjs/d.mts), red-first test corpus, section-locator CLI. PR #417 merged by owner. (3) Prose-gate inventory: carrier inventory gate (prose-gate-inventory.mjs, 476 lines), one-home tree scan, generated-projection merge driver (docs-generated-merge.mjs/test.mjs), gate staleness check. PR #418 merged by owner. (4) 307 draft: ODD-hybrid direction SPEC saved as roadmap row 83 (not issue 307). (5) fix/420 (merged): docs-generated-merge-driver with conflict resolution for the generated projection.
+- **Next:** Review remaining open PRs and resolve merge queue; finish fix/359-advisory corrections on feature branch.
