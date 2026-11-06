@@ -52,9 +52,13 @@ function scopePaths(flags, cwd) {
   })();
   const raw = gitOrFail(["diff", "--name-only", "--no-renames", mergeBase, "HEAD"], cwd);
   const committed = raw.split("\n").filter(Boolean);
-  const dirty = gitOrFail(["status", "--porcelain=v1"], cwd)
+  // `-b` first: the porcelain body is read through a helper that trims the whole
+  // output, so without a header line the FIRST entry would lose its leading
+  // status column and its path would lose a character (issue #384 F17 — a mangled
+  // high-risk path is a fail-open tier). The header line is dropped here.
+  const dirty = gitOrFail(["status", "--porcelain=v1", "-b"], cwd)
     .split("\n")
-    .filter(Boolean)
+    .filter((line) => line !== "" && !line.startsWith("## "))
     .map((line) => line.slice(3).trim());
   return [...new Set([...committed, ...dirty])].filter(Boolean).sort();
 }
