@@ -3,7 +3,7 @@ type: feature
 scope: medium
 ---
 
-# 406 — projection-manifest-vocabulary
+# 105 — projection-manifest-vocabulary
 
 > The one machine home for the workflow-projection contract: closed vocabularies
 > (seams, ops, selector kinds, hash algorithms, guard verdicts), the
@@ -18,7 +18,8 @@ scope: medium
 Roadmap row: **105 `projection-manifest-vocabulary`** (first unit of the
 projection chain). This unit was cut locally, under the owner's direct-application
 workflow for changes to this repository itself, without the lane's own review
-machinery.
+machinery. The folder is feature-numbered (`105`) so it pairs with its roadmap row;
+the issue it closes is #406.
 
 ## Specs
 
@@ -270,7 +271,10 @@ machinery is deliberately not run on this unit.
 
 - **2026-11-07 — cut.** Requested `S1..S13` extracted verbatim from issue #406.
   Two ambiguities asked and answered: S7 → repository pattern (no TypeBox, owner
-  answer quoted in §S7 resolution); home → `docs/features/406-projection-manifest-vocabulary/`.
+  answer quoted in §S7 resolution); home → the features route. The folder is `docs/features/105-projection-manifest-vocabulary/`:
+  `roadmap-settle` pairs a feature folder's number with its `## Features` row,
+  and row 105 is the index entry this unit fills (the `96-prose-gate-inventory`
+  precedent — a feature number, not an issue number).
   Frozen: 13 acceptance criteria, 13 planning-evidence rows, 15 obligation rows.
 - **2026-11-07 — cut-time correction.** The obligations' O10/O11 validators named
   `bun scripts/<file>` for two `node:test` suites; the repository's invocation is
