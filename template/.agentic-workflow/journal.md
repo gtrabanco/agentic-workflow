@@ -26,7 +26,9 @@ Nothing here is on by default. Install with explicit consent, by hand or by
 asking for `init-workspace`:
 
 1. `mkdir -p .agentic-workflow/journal` (and commit it — a `.gitkeep` is fine).
-2. Copy this document beside it as `.agentic-workflow/journal/README.md`.
+2. Keep this document beside the carrier, as `.agentic-workflow/journal.md` —
+   **never inside it**: the aggregator refuses any file in the carrier whose
+   name is not a fragment, so a `README.md` there blocks every aggregation.
 3. Install one merge wiring (below). Without a wiring, fragments accumulate
    unconsumed — the writers never block on it.
 

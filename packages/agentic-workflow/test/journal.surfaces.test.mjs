@@ -22,6 +22,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseFragmentName } from "../src/journal/fragment.mjs";
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const read = (...parts) => fs.readFileSync(path.join(repoRoot, ...parts), "utf8");
 
@@ -95,4 +97,20 @@ test("AC9 the CI example and the post-receive example invoke the identical comma
   for (const file of hits) {
     assert.doesNotMatch(fs.readFileSync(path.join(dir, file), "utf8"), /github|gitlab|forge/iu, `${file} knows no forge`);
   }
+});
+
+// ── The repository's own carrier (S15): only fragments live there ─────────
+
+test("S15 the opted-in carrier holds only parseable fragments and its doc sits beside it", () => {
+  const carrier = path.join(repoRoot, ".agentic-workflow", "journal");
+  const entries = fs.readdirSync(carrier, { withFileTypes: true }).filter((entry) => entry.isFile());
+  for (const entry of entries) {
+    const parsed = parseFragmentName(entry.name);
+    assert.ok(parsed !== null, `${entry.name} is not a fragment — the aggregator refuses the whole set`);
+    const body = fs.readFileSync(path.join(carrier, entry.name), "utf8");
+    assert.ok(body.startsWith("## "), `${entry.name} is not an entry block`);
+    assert.ok(body.endsWith("\n") && !body.includes("\r"), `${entry.name} is not a newline-terminated CR-free block`);
+  }
+  assert.ok(fs.existsSync(path.join(repoRoot, ".agentic-workflow", "journal.md")), "the carrier's doc lives beside the carrier");
+  assert.equal(fs.existsSync(path.join(carrier, "README.md")), false, "never inside it — the aggregator would refuse every run");
 });
