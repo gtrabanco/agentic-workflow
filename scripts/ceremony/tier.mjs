@@ -111,8 +111,11 @@ export function tier(op, argv, cwd = process.cwd()) {
       const flags = parseFlags(argv, ["paths", "base"]);
       onlyFlags(flags, ["paths", "base"]);
       const paths = scopePaths(flags, cwd);
+      // The resolver is the same repo-rooted reader this module already uses, so
+      // a relative import is followed here exactly as the sensor follows it: two
+      // callers, one answer for the same scope (issue #384 S3).
       const files = new Map(paths.map((rel) => [rel, readInside(cwd, rel) ?? ""]));
-      const verdict = classifyTier(files);
+      const verdict = classifyTier(files, { resolve: (rel) => readInside(cwd, rel) });
       out({ contract: RISK_TIERS_CONTRACT_ID, ...verdict, paths: { ...verdict.paths, changed: paths } });
       return;
     }

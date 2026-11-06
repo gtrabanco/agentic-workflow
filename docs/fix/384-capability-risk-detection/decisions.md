@@ -36,3 +36,42 @@ kind | paths | phase | date | authority | justification
 justification | scripts/capabilities.test.mjs | P1 | 2026-11-06 | execute-phase | the new analyser's frozen corpus (F1-F16), authored before the module exists; no pre-existing assertion is touched
 justification | scripts/ceremony-passive.test.mjs | P3 | 2026-11-06 | execute-phase | the passive carrier writer's suite, authored before the module exists; no pre-existing assertion is touched
 ```
+
+## D5 — the frozen `F6b` dependency rule is corrected, not relaxed
+
+`scripts/risk-tier-classifier.test.mjs` `F6b` asserted "only `node:` builtins may
+be imported" by scanning **single-line** imports (`/^import .* from "…";$/m`).
+The classifier already imports the schema package's vocabulary source over a
+multi-line statement, so the assertion never saw it: it held by formatting, not
+by the invariant it names.
+
+This unit makes the classifier delegate its `destructive` signal to
+`scripts/capabilities.mjs` (S3, S8), a repository-relative module. The assertion
+is therefore corrected to the invariant that was always meant — **every import is
+a `node:` builtin or a repository-relative module; never a third-party package** —
+and it now checks the multi-line form as well, with two negative cases proving the
+rule bites. No behaviour expectation is relaxed: every other case in that frozen
+suite keeps its exact verdict, and none was edited for this unit.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/risk-tier-classifier.test.mjs | P2 | 2026-11-06 | execute-phase | F6b states the dependency invariant the classifier now needs (a repository-relative analyser module); the rule is widened to node:+repo-internal and made stricter about multi-line and third-party specifiers, and no verdict expectation changes
+```
+
+## D5b — the sensor's sandbox mirror gains the analyser module
+
+`mirrorSensorGraph()` in `scripts/workflow-status-sensor.test.mjs` copies the
+sensor's real import graph into a sandbox so the "no built schema runtime" cases
+fail for the reason they assert instead of `ERR_MODULE_NOT_FOUND`. Its own
+docblock lists every issue that grew the graph (#291, #319, #360, #294); this unit
+grows it by one module, so the list gains `capabilities.mjs` and the docblock
+gains #384. No assertion changes: the mirror's purpose is to stay identical to the
+real graph, and leaving it stale would make two unrelated cases fail for the wrong
+reason.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/workflow-status-sensor.test.mjs | P2 | 2026-11-06 | execute-phase | the sandbox mirror of the sensor's import graph gains the analyser module the classifier now imports; no assertion is changed
+```

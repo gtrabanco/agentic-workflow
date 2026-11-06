@@ -25,6 +25,9 @@ import {
   RISK_TIER_SIGNAL_KINDS,
   RISK_TIER_REASONS,
 } from "../packages/agentic-workflow-schema/src/vocabularies.ts";
+import { destructiveOf, CAPABILITY_CONTRACT_ID } from "./capabilities.mjs";
+
+export { CAPABILITY_CONTRACT_ID };
 
 export { RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS, RISK_TIER_REASONS };
 
@@ -58,29 +61,18 @@ const HIGH_RISK_PATHS = Object.freeze([
 ]);
 
 /**
- * The markers that make a change destructive — the operations that remove data a
- * user cannot get back. This signal is **content-only**: `docs/delete-a-row.md`
- * is prose about deleting, and `scripts/delete-unit.mjs` is a file remover whose
- * own name says what it does, so a path name raises nothing here. A guarded
- * `{ recursive: true, force: true }` is deletion hygiene, not a destructive
- * surface: a suite that cleans its own scratch directory must not raise `high`.
+ * The `destructive` signal — **capability, not spelling** (issue #384, unit
+ * `360c`). What a change can do is decided by `scripts/capabilities.mjs`, which
+ * resolves a file's imports and its effects per language family and follows a
+ * relative import into the declaring module. This module carries no operation
+ * name: the removal spellings live in the analyser's capability catalogue, so a
+ * delete under another name, behind an alias, in another language or one module
+ * away is caught by what it can do.
+ *
+ * The one residue that stays here is the analyser's own embedded-statement
+ * layer: a script carrying a shell command or a SQL statement is executing
+ * something a runtime will run, whatever the file's language.
  */
-const DESTRUCTIVE_CONTENT = new RegExp(
-  [
-    // A deletion call in code. A guarded one (`{ recursive: true, force: true }` —
-    // scratch cleanup) is not a destructive surface; the guard may sit anywhere in
-    // the call's arguments, so the lookahead spans the whole argument list and
-    // requires BOTH flags (`force` alone is how an unguarded delete is written).
-    "\\b(?:rm(?:dir)?Sync|unlinkSync|purge|purgeDir)\\s*\\((?![^()]*(?:\\brecursive:\\s*true[^()]*\\bforce:\\s*true|\\bforce:\\s*true[^()]*\\brecursive:\\s*true))[^()]*\\)",
-    // The operations no guard makes safe.
-    "\\brm\\s+(?:-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*|--recursive\\s+--force|--force\\s+--recursive)\\b",
-    "\\bdrop\\s+(?:table|database)\\b",
-    "\\bdelete\\s+from\\b",
-    "\\bTRUNCATE\\s+(?:TABLE\\b|[a-z_][a-z0-9_]*\\s*;)",
-    "\\bgit\\s+push\\s+--force\\b",
-  ].join("|"),
-  "i",
-);
 
 const CELL_RE = /\\\|/g;
 
@@ -130,29 +122,39 @@ function isCommentOnly(text) {
   return sawContent;
 }
 
-/** The named high-risk signal for a path and its contents, or `null`. */
-function namedSignalFor(file, text) {
+/**
+ * The named high-risk signal for a path and its contents, or `null`.
+ *
+ * @param {{ resolve?: (rel: string) => (string | null) }} [options]
+ *   handed to the capability analyser so a relative import can be followed; a
+ *   caller without one analyses the change set's own files only.
+ */
+function namedSignalFor(file, text, options = {}) {
   for (const { signal, pattern } of HIGH_RISK_PATHS) {
-    if (pattern.test(file)) return signal;
+    if (pattern.test(file)) return { signal, evidence: null };
   }
   // Prose *describes* operations and never executes one: a doc that warns about
   // destructive commands is a doc, not a destructive surface.
   if (PROSE_EXTENSIONS.has(extensionOf(file))) return null;
-  if (DESTRUCTIVE_CONTENT.test(text)) return "destructive";
-  return null;
+  const destructive = destructiveOf(file, text, options);
+  if (destructive === null) return null;
+  const spelling = destructive.provider === null || destructive.provider === undefined
+    ? destructive.member
+    : `${destructive.provider} · ${destructive.member}`;
+  return { signal: "destructive", evidence: spelling };
 }
 
 /**
  * One changed file → `{ path, effect, signal }` where `effect` is
  * `prose | comment-only | executable`.
  */
-function classifyPath(file, text) {
+function classifyPath(file, text, options = {}) {
   const extension = extensionOf(file);
   const content = String(text ?? "");
   const body = content.replace(CELL_RE, "|");
 
-  const signal = namedSignalFor(file, body);
-  if (signal !== null) return { path: file, effect: "executable", signal };
+  const named = namedSignalFor(file, body, options);
+  if (named !== null) return { path: file, effect: "executable", signal: named.signal, evidence: named.evidence };
 
   if (PROSE_EXTENSIONS.has(extension)) return { path: file, effect: "prose", signal: null };
   if (EXECUTABLE_EXTENSIONS.has(extension)) {
@@ -257,7 +259,7 @@ export function classifyTier(files, options = {}) {
   }
 
   const contents = new Map(entries);
-  const kinds = changed.map((file) => classifyPath(file, contents.get(file) ?? ""));
+  const kinds = changed.map((file) => classifyPath(file, contents.get(file) ?? "", options));
 
   const named = kinds.filter((k) => k.signal !== null && k.signal !== "content");
   const executable = kinds.filter((k) => k.effect === "executable");
@@ -265,13 +267,16 @@ export function classifyTier(files, options = {}) {
 
   if (named.length > 0) {
     const signals = [];
+    const described = [];
     for (const kind of named) {
       if (signals.some((s) => s.signal === kind.signal)) continue;
       signals.push({ path: kind.path, signal: kind.signal });
+      const evidence = kind.evidence === null || kind.evidence === undefined ? "" : ` · ${kind.evidence}`;
+      described.push(`${kind.signal} (${kind.path}${evidence})`);
     }
     return {
       tier: "high",
-      reason: `${named.length} path(s) touch a named high-risk surface: ${signals.map((s) => `${s.signal} (${s.path})`).join(", ")}`,
+      reason: `${named.length} path(s) touch a named high-risk surface: ${described.join(", ")}`,
       reason_kind: "named-high-risk",
       task_size: taskSizeOf("high"),
       signals,

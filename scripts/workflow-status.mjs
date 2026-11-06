@@ -1677,7 +1677,9 @@ export async function buildEnvelope({ lastEnvelope = null, compact = false } = {
       return [...new Set([...committed, ...dirty])].sort();
     })();
     const files = new Map(scoped.map((rel) => [rel, readProject(rel) ?? ""]));
-    const verdict = classifyTier(files);
+    // The same repo-rooted resolver `ceremony tier classify` passes, so both
+    // callers answer identically for the same scope (issue #384 S3).
+    const verdict = classifyTier(files, { resolve: (rel) => readProject(rel) });
     return {
       tier: verdict.tier,
       reason: verdict.reason,
