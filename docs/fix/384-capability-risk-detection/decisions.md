@@ -21,3 +21,18 @@ the passive ceremony, and what it refuses is writing a record that claims
 passivity for an executable change. The refusal is exit 2 (the CLI's existing
 ceremonial-block channel) and it leaves the tree untouched; nothing else in the
 repository gains a tier check. `O6` pins the difference.
+
+## Path-protection records
+
+The two suites this unit's corpus lives in are protected paths (`**/*.test.*`).
+Both are **new files added by this unit**; the records below are the policy's own
+justification channel, and neither row weakens an existing assertion — the 360
+frozen corpus (`scripts/risk-tier-classifier.test.mjs`) is deliberately **not**
+edited by this change, so no precondition it froze can move.
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/capabilities.test.mjs | P1 | 2026-11-06 | execute-phase | the new analyser's frozen corpus (F1-F16), authored before the module exists; no pre-existing assertion is touched
+justification | scripts/ceremony-passive.test.mjs | P3 | 2026-11-06 | execute-phase | the passive carrier writer's suite, authored before the module exists; no pre-existing assertion is touched
+```
