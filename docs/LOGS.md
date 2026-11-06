@@ -4510,3 +4510,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verify of unit 384 (capability-based risk detection) and repair of two post-verify advisories
 - **Decisions:** The external verify returned VERIFIED with 0 blockers and 2 advisories: (1) a Python dotted call on an unimported value (items.remove) falsely resolved ambient to filesystem-remove, raising high. (2) A module-level call into a same-file destructive declaration (clean() → shutil.rmtree) was not followed, yielding standard instead of high. Both are bounded edges of the syntactic analyser — no AST, no real parser.
 - **Next:** If the owner wants, a second verify on ae862a85..HEAD to confirm the advisory repairs are clean before merge.
+## 2026-11-06T10:59:44Z — main — manual
+- **Commits:** 0
+- **Files:** —
+- **Summary:** Created issue #424 for universal CLI feedback system; configured embeddings provider; triaged issue #424
+- **Decisions:** (1) Feedback tiers: regular (progress/timing), debug (--debug, all details), profiling (--profile, timing per stage). Core infrastructure under scripts/ with a consistent API; apply doc CLI first, then scripts one by one. (2) Severity: medium by scope of touch (~60 scripts + CLIs), not by technical complexity. (3) Embeddings: provider configured in .agentic-workflow/index.json (OpenAI-compatible baseUrl + model); system uses JS cosine kNN over float32-LE BLOBs (no sqlite-vec needed).
+- **Next:** Unit-lane #424: start with the feedback core (scripts/feedback.mjs), apply to doc CLI, then propagate to all scripts
