@@ -9,10 +9,10 @@ created | packages/agentic-workflow-schema/test/projection.test.mjs | the contra
 created | packages/agentic-workflow-schema/projection-manifest.schema.json | the published Draft-07 projection
 created | packages/agentic-workflow-schema/guard-verdict.schema.json | the published Draft-07 projection
 created | packages/agentic-workflow-schema/test/fixtures/projection/** | the contract's valid/malformed fixture corpus
-created | docs/features/406-projection-manifest-vocabulary/SPEC.md | the unit document
-created | docs/features/406-projection-manifest-vocabulary/planning-evidence.md | the frozen evidence ledger
-created | docs/features/406-projection-manifest-vocabulary/planning-obligations.md | the frozen obligations ledger
-created | docs/features/406-projection-manifest-vocabulary/decisions.md | this record
+created | docs/features/105-projection-manifest-vocabulary/SPEC.md | the unit document
+created | docs/features/105-projection-manifest-vocabulary/planning-evidence.md | the frozen evidence ledger
+created | docs/features/105-projection-manifest-vocabulary/planning-obligations.md | the frozen obligations ledger
+created | docs/features/105-projection-manifest-vocabulary/decisions.md | this record
 ```
 
 ```text
