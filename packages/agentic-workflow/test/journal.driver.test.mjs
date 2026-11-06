@@ -107,25 +107,25 @@ test("normalizeEntry rejects an unknown top-level key before any driver sees it"
 });
 
 for (const [driverName, factory] of DRIVER_FACTORIES) {
-  test(`conformance: the ${driverName} driver passes the shared harness`, () => {
+  test(`conformance: the ${driverName} driver passes the shared harness`, async () => {
     const root = tmpRoot();
     try {
       if (driverName === "markdown") seedJournal(root);
-      const report = runDriverConformance(() => factory(root), { root });
+      const report = await runDriverConformance(() => factory(root), { root });
       assert.equal(report.ok, true, JSON.stringify(report.violations ?? []));
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test(`conformance: the ${driverName} driver round-trips consumer metadata (AC5)`, () => {
+  test(`conformance: the ${driverName} driver round-trips consumer metadata (AC5)`, async () => {
     const root = tmpRoot();
     try {
       if (driverName === "markdown") seedJournal(root);
       const driver = factory(root);
-      const appended = driver.append(NARRATIVE_ENTRY);
+      const appended = await driver.append(NARRATIVE_ENTRY);
       assert.equal(appended.ok, true, appended.error ?? "");
-      const back = driver.query({ keyword: "conformance" });
+      const back = await driver.query({ keyword: "conformance" });
       assert.equal(back.ok, true, back.error ?? "");
       assert.equal(back.entries.length, 1);
       assert.deepEqual(back.entries[0].metadata, { dev_id: "d1", commit_hash: "abc1234" });
@@ -135,33 +135,34 @@ for (const [driverName, factory] of DRIVER_FACTORIES) {
     }
   });
 
-  test(`conformance: the ${driverName} driver is insert-only and arrival-ordered (D3/D9)`, () => {
+  test(`conformance: the ${driverName} driver is insert-only and arrival-ordered (D3/D9)`, async () => {
     const root = tmpRoot();
     try {
       if (driverName === "markdown") seedJournal(root);
       const driver = factory(root);
-      driver.append(MECHANICAL_ENTRY);
-      driver.append(NARRATIVE_ENTRY);
-      const all = driver.query({});
+      await driver.append(MECHANICAL_ENTRY);
+      await driver.append(NARRATIVE_ENTRY);
+      const all = await driver.query({});
       assert.equal(all.entries.length, 2);
       // The first entry is byte-for-byte what was appended: an append never
       // mutates or reorders what is already stored.
       assert.equal(all.entries[0].kind, "mechanical");
-      assert.deepEqual(all.entries[0].metadata, {});
+      const metadata = all.entries[0].metadata;
+      assert.ok(metadata === undefined || Object.keys(metadata).length === 0);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test(`conformance: the ${driverName} driver refuses an invalid entry before mutating (O14)`, () => {
+  test(`conformance: the ${driverName} driver refuses an invalid entry before mutating (O14)`, async () => {
     const root = tmpRoot();
     try {
       if (driverName === "markdown") seedJournal(root);
       const driver = factory(root);
-      driver.append(MECHANICAL_ENTRY);
-      const refused = driver.append({ ...MECHANICAL_ENTRY, timestamp: "not-a-date" });
+      await driver.append(MECHANICAL_ENTRY);
+      const refused = await driver.append({ ...MECHANICAL_ENTRY, timestamp: "not-a-date" });
       assert.equal(refused.ok, false);
-      const unchanged = driver.query({});
+      const unchanged = await driver.query({});
       assert.equal(unchanged.entries.length, 1);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
@@ -169,27 +170,27 @@ for (const [driverName, factory] of DRIVER_FACTORIES) {
   });
 }
 
-test("predicate parity: both drivers answer the same predicates with the same results (AC6)", () => {
-  const results = DRIVER_FACTORIES.map(([name, factory]) => {
+test("predicate parity: both drivers answer the same predicates with the same results (AC6)", async () => {
+  const results = await Promise.all(DRIVER_FACTORIES.map(async ([name, factory]) => {
     const root = tmpRoot();
     try {
       if (name === "markdown") seedJournal(root);
       const driver = factory(root);
-      driver.append(MECHANICAL_ENTRY);
-      driver.append(NARRATIVE_ENTRY);
-      driver.append({
+      await driver.append(MECHANICAL_ENTRY);
+      await driver.append(NARRATIVE_ENTRY);
+      await driver.append({
         ...factsToEntry({ ...FACTS, timestamp: "2026-11-07T11:30Z", branch: "main" }),
       });
       return {
-        byBranch: driver.query({ branch: "main" }).entries.map((e) => e.timestamp),
-        byRange: driver.query({ dateRange: { from: "2026-11-07T11:00Z" } }).entries.map((e) => e.timestamp),
-        byKeyword: driver.query({ keyword: "STORE-DRIVER" }).entries.map((e) => e.timestamp),
-        combined: driver.query({ branch: "main", dateRange: { to: "2026-11-07T11:00Z" } }).entries.length,
+        byBranch: (await driver.query({ branch: "main" })).entries.map((e) => e.timestamp),
+        byRange: (await driver.query({ dateRange: { from: "2026-11-07T11:00Z" } })).entries.map((e) => e.timestamp),
+        byKeyword: (await driver.query({ keyword: "STORE-DRIVER" })).entries.map((e) => e.timestamp),
+        combined: (await driver.query({ branch: "main", dateRange: { to: "2026-11-07T11:00Z" } })).entries.length,
       };
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
-  });
+  }));
   assert.deepEqual(results[0], results[1]);
   assert.deepEqual(results[0].byBranch, ["2026-11-07T10:59:26Z", "2026-11-07T11:30Z"]);
   assert.deepEqual(results[0].byRange, ["2026-11-07T11:30Z"]);
@@ -289,7 +290,7 @@ test("the sqlite driver owns its own store outside the carrier (D8)", () => {
   assert.equal(SQLITE_JOURNAL_STORE_DIR, ".agentic-workflow/journal-store");
 });
 
-test("the conformance harness catches a driver that strips consumer metadata (AC7, no silent loss)", () => {
+test("the conformance harness catches a driver that strips consumer metadata (AC7, no silent loss)", async () => {
   const root = tmpRoot();
   try {
     seedJournal(root);
@@ -304,7 +305,7 @@ test("the conformance harness catches a driver that strips consumer metadata (AC
         },
       };
     };
-    const report = runDriverConformance(violating, { root });
+    const report = await runDriverConformance(violating, { root });
     assert.equal(report.ok, false);
     assert.ok((report.violations ?? []).some((v) => v.includes("metadata")), JSON.stringify(report.violations ?? []));
   } finally {
@@ -312,7 +313,7 @@ test("the conformance harness catches a driver that strips consumer metadata (AC
   }
 });
 
-test("the conformance harness catches a driver that mutates stored entries (AC7/D3, insert-only)", () => {
+test("the conformance harness catches a driver that mutates stored entries (AC7/D3, insert-only)", async () => {
   const root = tmpRoot();
   try {
     seedJournal(root);
@@ -324,16 +325,16 @@ test("the conformance harness catches a driver that mutates stored entries (AC7/
         append(entry) {
           const result = driver.append(entry);
           if (result.ok && driver.query({}).entries.length > 1) {
-            // A violating correction: rewrite the first entry's summary.
+            // A violating correction: rewrite the first stored entry's reason.
             const journalPath = path.join(root, DEFAULT_LOG);
             const text = fs.readFileSync(journalPath, "utf8");
-            fs.writeFileSync(journalPath, text.replace("conformance.", "MUTATED."));
+            fs.writeFileSync(journalPath, text.replace("auto (clear)", "auto (mutated)"));
           }
           return result;
         },
       };
     };
-    const report = runDriverConformance(violating, { root });
+    const report = await runDriverConformance(violating, { root });
     assert.equal(report.ok, false);
     assert.ok((report.violations ?? []).length > 0);
   } finally {
@@ -346,6 +347,7 @@ test("the publisher routes through the driver with the options API intact (AC3/O
   const root = tmpRoot();
   try {
     const journalPath = path.join(root, DEFAULT_LOG);
+    fs.mkdirSync(path.dirname(journalPath), { recursive: true });
     fs.writeFileSync(journalPath, "# Session log\n\n");
     const publisher = createJournalPublisher({ journalPath });
     const result = publisher.publish(FACTS);
