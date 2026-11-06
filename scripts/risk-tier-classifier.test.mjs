@@ -243,9 +243,30 @@ test("F6 the same tree yields byte-identical output (the classifier is determini
   assert.equal(JSON.stringify(classifyTier(reordered)), a, "input order never changes the verdict");
 });
 
+/**
+ * The dependency rule the classifier's purity rests on: every import is a
+ * `node:` builtin or a repository-relative module, never a third-party package.
+ *
+ * The original form of this case asserted `node:` only, over *single-line*
+ * imports — and the schema-vocabulary import is multi-line, so the rule held by
+ * formatting rather than by the invariant it names (unit 384). It is checked in
+ * both forms now, and a repository-relative module is allowed because the
+ * capability analysis lives beside the classifier (issue #384 S3, S8).
+ */
+const FOREIGN_SPECIFIER = /from\s+"([^"]+)"/g;
+
+function foreignSpecifiers(source) {
+  return [...source.matchAll(FOREIGN_SPECIFIER)]
+    .map((match) => match[1])
+    .filter((specifier) => !specifier.startsWith("node:") && !specifier.startsWith("."));
+}
+
 test("F6b there is no wall-clock, no environment and no network in the verdict", () => {
   const source = fs.readFileSync(MODULE, "utf8");
-  const imports = [...source.matchAll(/^import .* from "([^"]+)";$/gm)].map((m) => m[1]);
-  for (const specifier of imports) assert.match(specifier, /^node:/, `only node: builtins may be imported (saw ${specifier})`);
+  assert.deepEqual(foreignSpecifiers(source), [],
+    "every import is a node: builtin or a repository-relative module");
   assert.doesNotMatch(source, /Date\.now|new Date\(|process\.env|fetch\(/, "no clock, environment read or network call");
+  // Not vacuous: a third-party specifier is refused in either form.
+  assert.deepEqual(foreignSpecifiers('import { x } from "lodash";\n'), ["lodash"]);
+  assert.deepEqual(foreignSpecifiers('import {\n  y,\n} from "@scope/pkg";\n'), ["@scope/pkg"]);
 });

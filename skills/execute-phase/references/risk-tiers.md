@@ -63,6 +63,11 @@ A caller that wants the sensor's answer passes the sensor's scope; a caller that
 wants "what am I about to touch" passes `--paths`. Neither may report the other's
 answer as its own.
 
+Both callers pass the same **repo-rooted resolver**, so a relative import is
+followed identically on either route — the resolver is what keeps the two answers
+byte-identical for one scope. A caller that supplies none analyses the change
+set's own files only and never guesses a capability.
+
 ## The three tiers
 
 | Tier | What it owes | Verification |
@@ -74,6 +79,21 @@ answer as its own.
 `high` is never bare: the verdict carries at least one `signals[]` entry, and the
 unit doc repeats it verbatim. A `high` with no named item is a classifier bug, not
 a tier.
+
+## What makes a change destructive (capability, not spelling)
+
+`destructive` is the one signal that is not path-shaped, and it is decided by
+what a file **can do**, never by a list of operation names:
+`scripts/capabilities.mjs` reads the imports a file declares and the effects they
+enable — per language family (`js`, `py`, `sh`), resolved through a catalogue
+keyed by provider (`node:fs/promises` *can* remove entries), with a relative
+import followed one module deep — and the classifier asks it. A removal is caught
+by its capability, so an unlisted spelling, an alias, a namespace member, a
+destructured `require`, a language the table never had, or a helper one module
+away all raise the signal. A guarded scratch cleanup (`recursive` **and** `force`)
+is hygiene, not a removal; a script that embeds a shell command or a SQL statement
+is a destructive surface whatever its own language. The catalogue is that rule's
+one home: this file names no operation.
 
 ## The passive carrier
 
@@ -94,6 +114,14 @@ The readback is *structural*: every changed path is read and classified against
 the classifier's own table, and the sentence says what it showed. A passive unit
 that turns out to touch executable content is not passive — it is routed to the
 standard ceremony, never patched into passivity.
+
+The record's **only writer** is `ceremony passive add` (`scripts/ceremony/passive.mjs`):
+never `echo`, `sed -i` or a hand edit. The id is the file name, so a second `add`
+on a taken id is a ceremonial block (exit 2) and two passive units cannot collide;
+`add` records the tier the classifier computed for the record's own `--paths`, and
+refuses a scope it does not call `passive` (exit 2, `route: standard-ceremony`)
+rather than recording a false claim. `passive read --id <id>` answers one record
+and `passive list` enumerates them, both as JSON on stdout.
 
 ## Where the tier is read
 

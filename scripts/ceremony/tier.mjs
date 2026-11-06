@@ -21,7 +21,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { out, fail, onlyFlags, parseFlags, gitOrFail, resolveUnit } from "./lib.mjs";
+import { out, fail, onlyFlags, parseFlags, gitOrFail, resolveUnit, readRepoFile } from "./lib.mjs";
 import { classifyTier, RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS, RISK_TIERS_CONTRACT_ID } from "../risk-tiers.mjs";
 
 export { RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS };
@@ -29,20 +29,7 @@ export { RISK_TIER_KINDS, RISK_TIER_SIGNAL_KINDS };
 /** Separator the `classify --paths` cell uses; a comma keeps the arg shell-safe. */
 const PATH_SEPARATOR = /,/;
 
-/**
- * Read a path under the repo root, or `null` when it is absent (a deletion) or
- * escapes the root (a repository fact never leaves the project).
- */
-function readInside(root, rel) {
-  const abs = path.resolve(root, rel);
-  const prefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
-  if (!abs.startsWith(prefix)) return null;
-  try {
-    return fs.readFileSync(abs, "utf8");
-  } catch {
-    return null;
-  }
-}
+
 
 /**
  * The diff in scope: `--paths` names the change explicitly, otherwise the merge
@@ -65,9 +52,13 @@ function scopePaths(flags, cwd) {
   })();
   const raw = gitOrFail(["diff", "--name-only", "--no-renames", mergeBase, "HEAD"], cwd);
   const committed = raw.split("\n").filter(Boolean);
-  const dirty = gitOrFail(["status", "--porcelain=v1"], cwd)
+  // `-b` first: the porcelain body is read through a helper that trims the whole
+  // output, so without a header line the FIRST entry would lose its leading
+  // status column and its path would lose a character (issue #384 F1 — a mangled
+  // high-risk path is a fail-open tier). The header line is dropped here.
+  const dirty = gitOrFail(["status", "--porcelain=v1", "-b"], cwd)
     .split("\n")
-    .filter(Boolean)
+    .filter((line) => line !== "" && !line.startsWith("## "))
     .map((line) => line.slice(3).trim());
   return [...new Set([...committed, ...dirty])].filter(Boolean).sort();
 }
@@ -111,8 +102,11 @@ export function tier(op, argv, cwd = process.cwd()) {
       const flags = parseFlags(argv, ["paths", "base"]);
       onlyFlags(flags, ["paths", "base"]);
       const paths = scopePaths(flags, cwd);
-      const files = new Map(paths.map((rel) => [rel, readInside(cwd, rel) ?? ""]));
-      const verdict = classifyTier(files);
+      // The resolver is the same repo-rooted reader this module already uses, so
+      // a relative import is followed here exactly as the sensor follows it: two
+      // callers, one answer for the same scope (issue #384 S3).
+      const files = new Map(paths.map((rel) => [rel, readRepoFile(cwd, rel) ?? ""]));
+      const verdict = classifyTier(files, { resolve: (rel) => readRepoFile(cwd, rel) });
       out({ contract: RISK_TIERS_CONTRACT_ID, ...verdict, paths: { ...verdict.paths, changed: paths } });
       return;
     }

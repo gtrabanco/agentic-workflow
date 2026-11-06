@@ -131,10 +131,10 @@ the per-tier ceremony are stated once in `execute-phase`'s
 
 - **`passive`** — documentation, images, comments, prose with no executable
   effect. **Zero ceremony**: no unit doc, no phases, no evidence table, no
-  review pass. Record the structural readback in `docs/passive/<id>.md` — the
-  five-field record that file owns (block `passive-record@1`) — run the
-  project's deterministic gate, and stop. A docs-only request never opens a
-  unit folder.
+  review pass. Read every changed file, then let `ceremony passive add` write
+  the record (`docs/passive/<id>.md`, block `passive-record@1`) — that CLI is
+  its only writer, never `echo` or an editor — run the project's deterministic
+  gate, and stop. A docs-only request never opens a unit folder.
 - **`standard`** — continue with step 1: the current unit-doc ceremony.
 - **`high`** — continue with step 1 **and** copy the verdict's named
   `signals[]` entry verbatim into the unit doc's `## Impact`; the full review

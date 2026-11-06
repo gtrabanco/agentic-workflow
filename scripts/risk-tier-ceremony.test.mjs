@@ -98,6 +98,31 @@ test("C1b ceremony: the diff scope classifies HEAD against the merge base, no fl
   assert.deepEqual(payload.paths.changed.sort(), ["GUIDE.md", "README.md"].filter((p) => payload.paths.changed.includes(p)));
 });
 
+test("C1d ceremony: the first uncommitted path is read whole, so a dirty CI workflow is high", () => {
+  // Issue #384 F1: `scopePaths()` trimmed the porcelain listing before slicing
+  // the status columns, so the FIRST dirty entry lost its first character
+  // (`?? .github/x` → `github/x`). A mangled high-risk path is a fail-open tier:
+  // the change classified `standard` and skipped the ceremony it owed.
+  const repo = fixtureRepo();
+  fs.mkdirSync(path.join(repo, ".github", "workflows"), { recursive: true });
+  fs.writeFileSync(path.join(repo, ".github", "workflows", "root-suite.yml"), "name: suite\n");
+  git(repo, ["add", "."]);
+  git(repo, ["commit", "-q", "-m", "ci: seed the suite"]);
+  // The modified file is the FIRST (and only) porcelain entry — that column is
+  // where the off-by-one bit.
+  fs.writeFileSync(path.join(repo, ".github", "workflows", "root-suite.yml"), "name: suite\non: push\n");
+  const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--base", "main"], {
+    cwd: repo,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, `stderr: ${result.stderr}`);
+  const payload = JSON.parse(result.stdout);
+  assert.ok(payload.paths.changed.includes(".github/workflows/root-suite.yml"),
+    `the dirty path is reported whole (saw ${JSON.stringify(payload.paths.changed)})`);
+  assert.equal(payload.tier, "high", "a dirty CI surface is high whatever column it occupies");
+  assert.deepEqual(payload.signals.map((s) => s.signal), ["ci"]);
+});
+
 test("C1c ceremony: `tier read --unit` answers the recorded tier of a unit, and refuses an unknown unit", () => {
   const repo = fixtureRepo();
   fs.mkdirSync(path.join(repo, "docs", "fix", "900-fixture"), { recursive: true });
