@@ -6,6 +6,14 @@
 > mechanical git-facts block; `/log-session` appends the narrative one. A wrong
 > past line gets a *new correcting line*, never an edit. Machine-authored
 > git-facts entries kill the "hand-tallied figure" class.
+>
+> **Fragment rule (#405, opted in here):** with `.agentic-workflow/journal/`
+> present, those three writers write **fragments** there instead, and
+> `agentic-workflow journal aggregate` (`.github/workflows/agentic-workflow-journal.yml`)
+> is the **only** writer of this file: it appends the consumed fragments
+> newest-first and deletes them. A direct append is refused by
+> `session-close close` in carrier mode. Without the carrier directory the
+> direct append above is unchanged.
 
 Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set

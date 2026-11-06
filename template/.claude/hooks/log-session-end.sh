@@ -17,10 +17,16 @@ reason="$(printf '%s' "$payload" | sed -n 's/.*"reason"[[:space:]]*:[[:space:]]*
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
 
 log_file="docs/LOGS.md"
-[ -f "$log_file" ] || exit 0   # only log if the project opted in with a log file
+# The session-log fragment carrier (issue #405): when it exists, the entry goes
+# to a fragment file and the merge-to-main aggregator is the only writer of
+# docs/LOGS.md. Its presence is the opt-in — without it, this hook appends
+# exactly as before.
+fragment_dir=".agentic-workflow/journal"
+[ -f "$log_file" ] || [ -d "$fragment_dir" ] || exit 0   # only log if the project opted in
 
 branch="$(git branch --show-current 2>/dev/null || echo "detached")"
 now_iso="$(date -u +%Y-%m-%dT%H:%MZ)"
+now_second="$(date -u +%Y%m%dT%H%M%SZ)"
 
 marker=".claude/.session-${session_id}.start"
 if [ -f "$marker" ]; then
@@ -44,11 +50,26 @@ fi
 
 [ -n "$files" ] || files="—"
 
-{
-  printf '\n## %s — %s — auto (%s)\n' "$now_iso" "$branch" "$reason"
-  printf -- '- **Commits:** %s %s\n' "$n_commits" "$range_label"
-  printf -- '- **Files:** %s\n' "$files"
-} >> "$log_file"
+entry="$(printf '\n## %s — %s — auto (%s)\n- **Commits:** %s %s\n- **Files:** %s' "$now_iso" "$branch" "$reason" "$n_commits" "$range_label" "$files")"
+
+# The slug twin of the crate's grammar (journal-fragment-grammar@1, owned by
+# @gtrabanco/agentic-workflow's src/journal/fragment.mjs): runs of characters
+# outside [A-Za-z0-9._-] become one '-', trimmed, capped at 64, empty -> x.
+slug_it() {
+  printf '%s' "$1" | sed -e 's/[^A-Za-z0-9._-][^A-Za-z0-9._-]*/-/g' -e 's/^-*//' -e 's/-*$//' | cut -c1-64 | sed -e 's/-*$//' -e 's/^-*//'
+}
+branch_slug="$(slug_it "$branch")"; [ -n "$branch_slug" ] || branch_slug="x"
+session_slug="$(slug_it "$session_id")"; [ -n "$session_slug" ] || session_slug="x"
+
+if [ -d "$fragment_dir" ]; then
+  # Fragment mode: one file per entry, the name parsed back by the aggregator.
+  # The file IS the entry block (no leading separator newline; the aggregator
+  # adds one when it appends), newline-terminated like the direct append's bytes.
+  mkdir -p "$fragment_dir"
+  printf '%s\n' "${entry#?}" > "$fragment_dir/${now_second}-${branch_slug}-mechanical-${session_slug}.md" || exit 0
+else
+  printf '%s\n' "$entry" >> "$log_file"
+fi
 
 rm -f "$marker" 2>/dev/null || true
 exit 0

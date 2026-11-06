@@ -205,6 +205,10 @@ const USAGE = `usage: session-close <command> [options]
   close   [--log <path>] [--base <ref>]
           Refuse unless the log was appended to (never rewritten), commit it
           alone, then report what is still uncommitted.
+          In a fragment-carrier project (issue #405), refuse unless new
+          fragments were added under .agentic-workflow/journal/ and
+          docs/LOGS.md was NOT touched — the aggregator owns the journal there.
+          --log names the journal that guard protects (docs/LOGS.md by default).
           Exit 0 clean · 2 leftovers (named) · 1 refused.
 `;
 
@@ -262,6 +266,93 @@ function relativeToRoot(logPath) {
   return path.relative(top, logPath).split(path.sep).join("/");
 }
 
+/** The session-log fragment carrier, relative to the project root (issue #405). */
+export const FRAGMENT_DIR = ".agentic-workflow/journal";
+
+/**
+ * Whether the project opted into the fragment carrier: the directory's presence
+ * is the opt-in, and it flips `close` from "the log grew" to "fragments were
+ * added and the journal was not touched" (AC1).
+ */
+function carrierMode(top) {
+  try {
+    return fs.statSync(path.join(top, FRAGMENT_DIR)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/** The names HEAD tracks under the carrier, sorted — an uncommitted carrier is an empty baseline. */
+function committedFragments(rel) {
+  if (git(["rev-parse", "--verify", "--quiet", "HEAD"]).status !== 0) {
+    throw new Error(`cannot establish the ${rel} baseline: HEAD does not resolve`);
+  }
+  const result = git(["ls-tree", "-r", "--name-only", "HEAD", "--", rel]);
+  if (result.status !== 0) {
+    throw new Error(`git could not list the committed fragments: ${(result.stderr || "").trim() || "unknown error"}`);
+  }
+  // ls-tree answers full paths; the carrier's namespace is the directory itself.
+  return result.stdout
+    .split("\n")
+    .filter(Boolean)
+    .map((entry) => (entry.startsWith(`${rel}/`) ? entry.slice(rel.length + 1) : entry))
+    .sort();
+}
+
+/** The fragment close: new fragments committed alone, the journal file untouchable.
+ * `journalRel` is the file the guard protects — `--log` when the caller names one,
+ * so the explicit flag selects which journal must stay untouched, never ignored. */
+function closeFragments(rel, journalRel) {
+  const dir = path.join(mustGit(["rev-parse", "--show-toplevel"]).trim(), rel);
+  const committed = committedFragments(rel);
+  const working = fs.readdirSync(dir).filter((name) => fs.statSync(path.join(dir, name)).isFile()).sort();
+
+  const deleted = committed.filter((name) => !working.includes(name));
+  if (deleted.length > 0) {
+    throw new Error(`committed fragment(s) were deleted (${deleted.join(", ")}) — a deletion is a lost entry, not a session entry`);
+  }
+  const modified = committed.filter((name) => baselineOf(`${rel}/${name}`) !== fs.readFileSync(path.join(dir, name), "utf8"));
+  if (modified.length > 0) {
+    throw new Error(`committed fragment(s) were edited (${modified.join(", ")}) — append-only holds at fragment level too`);
+  }
+  const added = working.filter((name) => !committed.includes(name));
+  if (added.length === 0) {
+    throw new Error(`no new fragment under ${rel} — write the entry first (a fragment per session), then re-run close`);
+  }
+
+  // The carrier's contract (AC1): in fragment mode nothing may touch the
+  // journal directly — the merge-to-main aggregator is its only writer.
+  const logStatus = git(["status", "--porcelain", "--", journalRel]);
+  if (logStatus.stdout.trim() !== "") {
+    throw new Error(
+      `${journalRel} was modified while the fragment carrier is opted in (${rel}) — write a fragment instead; the aggregator owns the journal`,
+    );
+  }
+
+  const first = fs.readFileSync(path.join(dir, added[0]), "utf8");
+  // The commit subject is the entry's own Summary when it has one, else the heading.
+  const summary = /^- \*\*Summary:\*\* (.*)$/mu.exec(first)?.[1];
+  const heading = /^## (.*)$/mu.exec(first)?.[1];
+  const subject = commitSubject(summary ?? heading ?? "", "journal fragment");
+  const preDirty = parsePorcelain(git(["status", "--porcelain"]).stdout);
+  mustGit(["add", "--", ...added.map((name) => `${rel}/${name}`)]);
+  mustGit(["commit", "-m", `docs(log): ${subject}`, "--", rel]);
+  const sha = mustGit(["rev-parse", "HEAD"]).trim();
+
+  const leftovers = parsePorcelain(git(["status", "--porcelain"]).stdout).map((item) => `${item.status} ${item.path}`);
+  return {
+    committed: true,
+    sha: sha.slice(0, 8),
+    carrier: rel,
+    log: journalRel,
+    fragments: added.length,
+    subject,
+    preExistingDirty: preDirty.map((item) => item.path),
+    leftovers,
+    clean: leftovers.length === 0,
+  };
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const command = argv[0];
@@ -307,6 +398,16 @@ function main() {
   }
 
   // close
+  const top = mustGit(["rev-parse", "--show-toplevel"]).trim();
+  if (carrierMode(top)) {
+    // `--log` stays meaningful in carrier mode: it names the journal the guard
+    // protects, so an explicit path is honored instead of silently ignored.
+    const journalRel = opts.log === undefined ? DEFAULT_LOG : relativeToRoot(path.resolve(opts.log));
+    const report = closeFragments(FRAGMENT_DIR, journalRel);
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    process.exitCode = report.clean ? 0 : 2;
+    return;
+  }
   const logPath = path.resolve(opts.log ?? DEFAULT_LOG);
   if (!fs.existsSync(logPath)) {
     throw new Error(`no session log at ${logPath} — create it (see template/docs/LOGS.md) or pass --log`);

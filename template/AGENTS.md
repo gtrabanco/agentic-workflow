@@ -453,6 +453,17 @@ memory. Compact only mid-step, for unpersisted state you can't afford to
 lose, and prefer committing WIP + updating the unit's Progress log instead.
 Details: `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost*.
 
+**Optional fragment carrier (opt-in, off by default):**
+concurrent journal appends are the log's recurring merge conflict; the
+fragment carrier removes it by construction. With `.agentic-workflow/journal/`
+present, every writer produces one fragment file per entry and a
+merge-to-main step (`agentic-workflow journal aggregate`, forge-free) is the
+only writer of `docs/LOGS.md`. The naming grammar has one owner —
+`journal-fragment-grammar@1` in `@gtrabanco/agentic-workflow`'s README; never
+hand-roll it. Install is consent-gated via `/init-workspace`; without the
+directory, direct append is the behaviour. Full contract:
+`.agentic-workflow/journal.md`.
+
 **The two memory surfaces are a recorded split, not a duplication.**
 `docs/LOGS.md` (this section) is the journal that **travels with git** — written
 for people, read by anyone who clones the repo. Engram holds the **local,

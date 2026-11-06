@@ -35,6 +35,13 @@ import type { LogFacts } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
 export const JOURNAL_PATH = "docs/LOGS.md";
 
 /**
+ * The session-log fragment carrier, relative to the project root (issue #405).
+ * Its presence is the opt-in: writers then produce fragments and the
+ * merge-to-main aggregator is the only writer of `docs/LOGS.md` (AC1).
+ */
+export const FRAGMENT_DIR = ".agentic-workflow/journal";
+
+/**
  * Where the session marker lives: the package's own project directory, which is
  * `.pi/` for every other project-scoped file this package writes
  * (`config/load.ts`). `.claude/` belongs to the Claude Code hook — sharing it
@@ -126,9 +133,17 @@ function currentBranch(git: GitReader): string {
   return branch !== "" ? branch : "detached";
 }
 
-/** A project opted in by carrying a journal; nothing is created on its behalf. */
+/**
+ * A project opted in by carrying a journal — either the journal file itself or
+ * the fragment carrier directory (issue #405); nothing is created on its behalf.
+ */
 export function hasJournal(root: string): boolean {
-  return fs.existsSync(path.join(root, JOURNAL_PATH));
+  if (fs.existsSync(path.join(root, JOURNAL_PATH))) return true;
+  try {
+    return fs.statSync(path.join(root, FRAGMENT_DIR)).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 /**

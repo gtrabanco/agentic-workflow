@@ -24,7 +24,7 @@ project invokes one pinned CLI instead of a tree of loose scripts.
 ## Commands
 
 ```text
-usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log> ...
+usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal> ...
 ```
 
 Every operation prints one fixed receipt block (with `--json` the same receipt
@@ -43,6 +43,8 @@ writing anything**.
 | `memory probe [--json]` | The five-check memory-substrate health sensor (below) — writes nothing, always exits 0 |
 | `relay <check\|budget\|tiers\|obligations> <unit> [--repo <dir>] [--packet <dir>]` | The **Relay packet checker** (unit 82): the lane's offline half of pi-web's Relay contract. `check` validates the three documents pi-web dispatches (pointer-shaped charter, baton with a closed state, leg and phase cursor, one log entry per leg); `budget` measures the leg handover against the manifest's `relays` ceiling; `tiers` reads each leg's tier from the catalog; `obligations` verifies the unit's ledger is closed. Read-only, stdout is one fixed block ending in `verdict: PASS\|FAIL`, exit 0 pass · 1 fail · 2 usage. One owner for the grammar — `src/relay/Packet.mjs` — which `scripts/relay-packet.mjs` also runs, so both entry points print the identical block |
 | `log render --facts <path\|-> [--raw]` | The **journal entry renderer** (feature 394): reads a frozen `log-facts@1` payload (`timestamp`, `branch`, `reason`, `commits{count,range}`, `files[]`) and prints the `docs/LOGS.md` block the pi extension writes at session shutdown. JSON on stdout (`--raw` for the entry alone, so `diff` needs no parsing); exit 0 rendered, exit 2 refused with `LOG REFUSAL — <reason>`. Pure: no clock, no git, no session, so a test or a CI job regenerates and byte-diffs an entry. One owner for the shape — `src/log/render.mjs` — which the extension imports and the parity suite compares against `template/.claude/hooks/log-session-end.sh` |
+| `journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--json]` | The **merge-to-main aggregator** (issue #405): appends the pending fragments under `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch, kind, session ascending), deletes the consumed fragments, consumes already-present bytes without appending (a crash between append and delete re-runs as a no-op), and refuses anything ambiguous before the first byte moves — exit 2, `JOURNAL REFUSAL — <reason>`. Forge-free by contract (AC5): the example GitHub workflow and the documented `post-receive` hook call this command unchanged |
+| `journal name --kind <mechanical\|narrative> [--dir <root>] [--branch <b>] [--session <id>]` | Prints the deterministic fragment name for a writer to use — the grammar below, computed, never hand-rolled. Writes nothing; a missing `--kind` is exit 2 |
 
 Two sibling binaries ship in the same package and are invoked by the skills:
 
@@ -50,6 +52,33 @@ Two sibling binaries ship in the same package and are invoked by the skills:
 |---|---|
 | `bin/path-guard.mjs` | Tier 1 path-protection gate (feature 60): `path-guard --unit <unit-dir> --phase <P<n>> [--base <ref>]`, read-only and offline, printing `PATH-GUARD <pass\|fail> — <code>` · exit 0 pass, 1 fail, 2 usage |
 | `bin/turn-contract.mjs` | Verifies the canonical turn contract's mechanical boxes: prints `TURN-CONTRACT ok` or `TURN-CONTRACT fail box<N>: <code>`; `--finished` also requires the pushed branch with its open pull request |
+
+## `journal` — the session-log fragment carrier (issue #405)
+
+One file per journal entry under `.agentic-workflow/journal/`, written by the
+session instead of a direct `docs/LOGS.md` append; one forge-free aggregator
+that runs on merge to `main`, appends the fragments newest-first, deletes them
+and bot-commits (the commit belongs to the wiring, not to this CLI). The
+carrier directory's presence is the opt-in: without it every writer appends to
+`docs/LOGS.md` exactly as before. The naming grammar is normative — every
+consumer-facing prose surface names this block instead of restating it:
+
+```text
+journal-fragment-grammar@1
+kind | shape | what it orders
+fragment-name | <utc-second>-<branch-slug>-<kind>-<session-slug>.md | one journal entry per file; the name is the identity, parsed back, never free text
+utc-second | YYYYMMDDTHHMMSSZ | the writer's clock at write time, UTC, second precision — a real date, validated on parse
+branch-slug | the git branch, sanitized | runs of characters outside [A-Za-z0-9._-] become one "-", trimmed, capped at 64, empty falls back to "x"
+kind | mechanical | narrative | mechanical = rendered from log-facts@1 by log render; narrative = written by /log-session
+session-slug | the session id, sanitized | the same sanitizer; "local" when a writer has no session id
+fragment-content | one entry block | mechanical: exactly log render's bytes; narrative: one "## "-headed entry; always newline-terminated, never CR
+aggregate | journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] | appends the pending fragments to the journal at its end, newest-first (ties: branch, kind, session, ascending), deletes the consumed fragments, consumes already-present bytes without appending; refuses anything ambiguous with exit 2 "JOURNAL REFUSAL — <reason>" before the first byte moves
+```
+
+One owner: `src/journal/fragment.mjs` (naming, content) and
+`src/journal/aggregate.mjs` (consumption). A collision — a target name that
+already exists — is refused, never overwritten (two sessions on one branch
+differ by session slug, so concurrent names cannot collide by construction).
 
 ## `section` — locate a Markdown range and splice it losslessly (issue #407)
 

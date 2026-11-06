@@ -23,8 +23,9 @@
 
 import { createPublisherFromConfig, publishAll, DEFAULT_JOURNAL } from "@gtrabanco/agentic-workflow/src/log/publish.mjs";
 import type { Publisher } from "@gtrabanco/agentic-workflow/src/log/publish.mjs";
+import { JOURNAL_DIR } from "@gtrabanco/agentic-workflow/src/journal/fragment.mjs";
 
-import { JOURNAL_PATH, buildFacts, createMarker, hasJournal, removeMarker } from "../auto-log-session.js";
+import { FRAGMENT_DIR, JOURNAL_PATH, buildFacts, createMarker, hasJournal, removeMarker } from "../auto-log-session.js";
 import type { GitReader, Marker } from "../auto-log-session.js";
 import type { AutoLogSessionConfig } from "../config/types.js";
 
@@ -85,9 +86,12 @@ function sessionIdOf(ctx: unknown): string | undefined {
  */
 export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions): AutoLogSessionWiring {
   const journalPath = `${options.root}/${options.journalPath ?? JOURNAL_PATH}`;
+  const fragmentDir = `${options.root}/${FRAGMENT_DIR}`;
+  /** This session's id, captured at `session_start` — the fragment name's session slug (issue #405). */
+  let currentSessionId: string | undefined;
   const publishers = createPublisherFromConfig(
     { publisher: options.publisher ?? null },
-    { journalPath, cwd: options.root },
+    { journalPath, cwd: options.root, fragmentDir, kind: "mechanical", sessionId: () => currentSessionId, now: options.now },
   );
   const all = options.extraPublishers ? [...publishers, ...options.extraPublishers] : publishers;
 
@@ -103,6 +107,7 @@ export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions)
         if (!hasJournal(options.root)) return;
         const sessionId = sessionIdOf(ctx);
         if (sessionId === undefined) return;
+        currentSessionId = sessionId;
         try {
           const marker = createMarker({ root: options.root, sessionId, now: options.now, git: options.git });
           marked = marker === null ? null : { sessionId, marker };
@@ -140,4 +145,4 @@ export function createAutoLogSessionWiring(options: AutoLogSessionWiringOptions)
 }
 
 /** Re-exported so a caller names the shipped journal without importing the crate. */
-export { DEFAULT_JOURNAL };
+export { DEFAULT_JOURNAL, JOURNAL_DIR };
