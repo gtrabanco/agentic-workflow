@@ -106,10 +106,14 @@ test("S15 the opted-in carrier holds only parseable fragments and its doc sits b
   const entries = fs.readdirSync(carrier, { withFileTypes: true }).filter((entry) => entry.isFile());
   for (const entry of entries) {
     // The carrier's ONE declared placeholder (issue #374 D13): git cannot
-    // track an empty directory, so the opted-in carrier keeps a content-free
-    // .gitkeep — the aggregator skips it, never consumes it. Anything else
-    // that is not a fragment still fails this probe.
-    if (entry.name === ".gitkeep") continue;
+    // track an empty directory, so the opted-in carrier keeps a zero-byte
+    // .gitkeep — the aggregator skips it, never consumes it. Notes belong in
+    // the carrier's doc beside it (`journal.md`), never inside the carrier.
+    // Anything else that is not a fragment still fails this probe.
+    if (entry.name === ".gitkeep") {
+      assert.equal(fs.readFileSync(path.join(carrier, entry.name), "utf8"), "", ".gitkeep is an empty placeholder, not a readme");
+      continue;
+    }
     const parsed = parseFragmentName(entry.name);
     assert.ok(parsed !== null, `${entry.name} is not a fragment — the aggregator refuses the whole set`);
     const body = fs.readFileSync(path.join(carrier, entry.name), "utf8");

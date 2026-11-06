@@ -358,3 +358,85 @@ test("the publisher routes through the driver with the options API intact (AC3/O
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+// ── The carrier outranks the journal's presence (#405 AC1 through the driver) ──
+
+/** An opted-in project whose journal file has never been created. */
+function carrierWithoutJournal() {
+  const root = tmpRoot();
+  fs.mkdirSync(path.join(root, JOURNAL_DIR), { recursive: true });
+  return root;
+}
+
+test("a carrier-opted-in project writes the fragment even when the journal does not exist (O3)", async () => {
+  const { createJournalPublisher } = await import("../src/log/publish.mjs");
+  const root = carrierWithoutJournal();
+  try {
+    const journalPath = path.join(root, DEFAULT_LOG);
+    const publisher = createJournalPublisher({
+      journalPath,
+      fragmentDir: path.join(root, JOURNAL_DIR),
+      sessionId: "s1",
+      now: () => Date.parse("2026-11-07T10:00:00Z"),
+    });
+    const result = publisher.publish(FACTS);
+    assert.equal(result.ok, true, result.error ?? "");
+    assert.equal(result.written, true, "a fragment needs no journal file — the carrier is the opt-in");
+    assert.equal(result.target, "fragment");
+    assert.equal(fs.readdirSync(path.join(root, JOURNAL_DIR)).length, 1);
+    assert.equal(fs.existsSync(journalPath), false, "the publisher never creates the journal");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a relative carrier path resolves against the caller's cwd, never against itself (O3)", async () => {
+  const { createJournalPublisher } = await import("../src/log/publish.mjs");
+  const root = tmpRoot();
+  const cwd = process.cwd();
+  try {
+    const journalPath = seedJournal(root);
+    const carrier = path.join(root, JOURNAL_DIR);
+    fs.mkdirSync(carrier, { recursive: true });
+    // The shipped constants are relative (DEFAULT_JOURNAL, JOURNAL_DIR), so a
+    // caller that runs from the project root passes them as documented.
+    process.chdir(root);
+    const publisher = createJournalPublisher({
+      journalPath: DEFAULT_LOG,
+      fragmentDir: JOURNAL_DIR,
+      sessionId: "s1",
+      now: () => Date.parse("2026-11-07T10:00:00Z"),
+    });
+    const result = publisher.publish(FACTS);
+    assert.equal(result.ok, true, result.error ?? "");
+    assert.equal(result.target, "fragment", "a relative carrier path is the same opt-in as an absolute one");
+    assert.equal(fs.readdirSync(carrier).length, 1);
+    assert.equal(fs.readFileSync(journalPath, "utf8"), "# Session log\n\n<!-- append-only -->\n");
+  } finally {
+    process.chdir(cwd);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a declared kind the mechanical writer cannot produce is a refusal, never a silent mechanical fragment (O3)", async () => {
+  const { createJournalPublisher } = await import("../src/log/publish.mjs");
+  const root = tmpRoot();
+  try {
+    seedJournal(root);
+    const carrier = path.join(root, JOURNAL_DIR);
+    fs.mkdirSync(carrier, { recursive: true });
+    const base = { journalPath: path.join(root, DEFAULT_LOG), fragmentDir: carrier, sessionId: "s1", now: () => Date.parse("2026-11-07T10:00:00Z") };
+    const unknown = createJournalPublisher({ ...base, kind: "banana" }).publish(FACTS);
+    assert.equal(unknown.ok, false, "an unknown kind is refused, not silently ignored");
+    assert.match(unknown.error, /mechanical, narrative/u);
+    const narrative = createJournalPublisher({ ...base, kind: "narrative" }).publish(FACTS);
+    assert.equal(narrative.ok, false, "this writer produces a mechanical entry; narrative is another writer");
+    assert.match(narrative.error, /narrative/u);
+    assert.equal(fs.readdirSync(carrier).length, 0, "a refusal writes nothing");
+    const declared = createJournalPublisher({ ...base, kind: "mechanical" }).publish(FACTS);
+    assert.equal(declared.ok, true, declared.error ?? "");
+    assert.equal(declared.target, "fragment");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
