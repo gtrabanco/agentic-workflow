@@ -1,0 +1,9 @@
+{
+  "contract": "agentic-workflow/guard-verdict",
+  "version": 1,
+  "guard": "diff-guard",
+  "verdict": "block",
+  "reason": "guard-error",
+  "requirement": "The guard must run.",
+  "message": "The guard failed."
+}

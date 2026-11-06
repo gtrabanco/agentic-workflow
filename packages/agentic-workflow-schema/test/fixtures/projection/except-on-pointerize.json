@@ -1,0 +1,15 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "keep-child",
+      "op": "pointerize",
+      "source": "skills/unit-lane/SKILL.md",
+      "selector": { "heading": "Checkpoint" },
+      "except": [["Checkpoint", "Exemptions"]],
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ]
+}

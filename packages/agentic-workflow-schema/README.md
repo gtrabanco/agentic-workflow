@@ -789,3 +789,93 @@ An AWL dialect, runner or adapter that emits plans and executes them is **not pa
 of this package**, and no issue tracks it: this schema owns the contracts, the
 canonical forms and the digests only. It becomes independent future work once AWL
 consumes the released package.
+
+## The workflow-projection contract (issue #406)
+
+The pi bundle is a *projection* of the standalone skills: the same source, minus
+the prose a deterministic command already enforces, plus the results a command
+would have been asked to compute. This package owns that contract's types and
+vocabularies so the four consumers — the bundle stripper, the in-process guards,
+the seam-hooks dispatcher and the prereq injection — consume one grammar instead
+of each renegotiating it. It is types and validation only: no transform, no hook,
+no projection runs here.
+
+### Projection manifest
+
+`projection-manifest@1` is a rule list. A rule names an operation, the repo-relative
+source it reads, a selector, the command that enforces the removed prose, and a
+digest of the exact bytes it removes. The selector is the JSON object form of the
+shipped section locator's selector (`packages/agentic-workflow/src/doc/section-locator.mjs`,
+issue #407), so a rule is handed to the locator as data: `heading`, `path`
+(depth-aware), `headingRegex`, or `line` (a whole line, exact or regex, optionally
+scoped with `within` — the line-in-scope form). A `remove` rule may carry an
+`except` keep-list of child heading paths.
+
+```text
+projection-manifest@1
+field | presence | shape | meaning
+contract | required | const:agentic-workflow/projection-manifest | the contract identity this rule list carries
+version | required | 1 | the manifest grammar version
+rules | required | array, possibly empty | the declared projections; an empty list is the legal no-op
+id | required | kebab-case, unique in the manifest | the rule's stable identity
+op | required | one projection operation | what the projection does with the matched bytes
+source | required | repo-relative path | the standalone document the rule reads
+selector | required | exactly one locator form | which section or line range the rule matches
+except | remove only | non-empty array of heading paths | child sections kept when their parent is removed
+enforcingCommand | required | non-empty command | the command a pointer names, and the command a prereq pre-runs
+contentHash | required | sha256 over the removed UTF-8 bytes | binds the rule to the bytes it projected
+```
+
+Structural validity is `validateProjectionManifestV1` and the shipped
+`projection-manifest.schema.json`. Two questions are deliberately not schema
+questions: a selector resolving to zero or to several sections is the locator's
+runtime answer (callers choose the policy), and a digest matching the bytes is the
+stripper's check.
+
+### Guard verdict
+
+`guard-verdict@1` is the fail-closed answer a guard returns. `allow` means the
+guarded rule holds; `block` means it is violated — or that the guard could not
+prove it holds, because a guard that fails to load or throws blocks by default;
+`degrade` is the declared fallback for the one case a hard block would be wrong,
+and it names that fallback instead of passing silently.
+
+```text
+guard-verdict@1
+field | presence | shape | meaning
+contract | required | const:agentic-workflow/guard-verdict | the contract identity this verdict carries
+version | required | 1 | the verdict grammar version
+guard | required | kebab-case | which guard answered
+verdict | required | one guard verdict | allow, block or degrade
+reason | block and degrade | one rejection reason | rule-violation, guard-unavailable, guard-error or config-invalid
+requirement | block | non-empty text | the rule being enforced, restated at the point of failure
+enforcingCommand | block | non-empty command | the command that enforces the rule
+message | block and degrade | non-empty text | the teaching message; for a degrade, the declared fallback
+```
+
+### Public entries
+
+| Entry | Contract |
+| --- | --- |
+| `validateProjectionManifestV1(value)` | `{ ok, manifest?, errors }` — structural validation of `projection-manifest@1` |
+| `validateGuardVerdictV1(value)` | `{ ok, verdict?, errors }` — the fail-closed message contract |
+| `isProjectionSeam(value)` | type guard over the closed seam vocabulary |
+| `PROJECTION_MANIFEST_CONTRACT_ID`, `PROJECTION_MANIFEST_VERSION` | the manifest contract identity and version |
+| `GUARD_VERDICT_CONTRACT_ID`, `GUARD_VERDICT_VERSION` | the verdict contract identity and version |
+| `PROJECTION_CONTENT_HASH_PATTERN` | `sha256:<64 lowercase hex>`, derived from the published algorithm set |
+
+### Closed vocabularies
+
+Every set is published by `src/vocabularies.ts` and registered in
+`normative-surfaces@1`; growing one is a schema-const change plus an inventory row
+in the same PR, never a prose edit. The table below is pinned to the consts by
+`test/projection.test.mjs`, so the two cannot drift.
+
+| Export | Values | Meaning |
+| --- | --- | --- |
+| `PROJECTION_SEAMS` | `session:start` · `session:end` · `unit:start` · `unit:end` · `phase:start` · `phase:end` · `pre:commit` · `post:commit` · `pre:push` | The workflow seams a project hook or a projected rule may attach to |
+| `PROJECTION_OPS` | `remove` · `pointerize` · `prereq` | What a manifest rule does with the matched bytes |
+| `PROJECTION_SELECTOR_KINDS` | `heading` · `path` · `headingRegex` · `line` | The locator's selector forms, carried as data |
+| `PROJECTION_HASH_ALGORITHMS` | `sha256` | The digest algorithm a rule's content hash uses |
+| `GUARD_VERDICTS` | `allow` · `block` · `degrade` | The fail-closed guard answers |
+| `GUARD_REJECTION_REASONS` | `rule-violation` · `guard-unavailable` · `guard-error` · `config-invalid` | Why a guard blocked or degraded |
