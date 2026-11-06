@@ -4,9 +4,9 @@
  * Reads the pending fragments under `.agentic-workflow/journal/`, appends them
  * to `docs/LOGS.md` newest-first with a declared tie-break, deletes the
  * consumed fragments, and refuses anything ambiguous instead of guessing. The
- * module knows no forge and no CI: the GitHub Actions example and the
- * documented `post-receive` hook both run the same `journal aggregate` command
- * unchanged (AC5).
+ * module carries no hosting-platform dependency: the example
+ * push-to-default-branch workflow and the documented `post-receive` hook both
+ * run the same `journal aggregate` command unchanged (AC5).
  *
  * The decisions worth knowing, each pinned by `test/journal.test.mjs`:
  *

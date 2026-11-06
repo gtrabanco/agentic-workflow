@@ -1,0 +1,62 @@
+# Session-log fragment aggregator (issue #405) — shipped as an EXAMPLE only.
+# Install it (rename to agentic-workflow-journal.yml) only with explicit
+# consent; a repo that opts out writes nothing and keeps the direct-append
+# journal. The command it runs is forge-free: the documented post-receive
+# example in template/.agentic-workflow/journal.md runs the same argv.
+#
+# Supported merge strategies: squash, merge-commit and rebase all deliver the
+# branch's added fragment files into the default branch's tree, and the
+# aggregator consumes the tip's working tree — no strategy switch needed.
+
+name: journal-aggregate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".agentic-workflow/journal/**"
+
+# Two PRs merged seconds apart fire two runs; the group serializes them so the
+# second always sees the first's consumed state (issue #405, open question 2).
+concurrency:
+  group: journal-aggregate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The bot commit pushes on top of the merged tip.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # The runner crate is forge-free; the same command a post-receive hook runs.
+      - name: Aggregate pending journal fragments
+        run: npx --yes @gtrabanco/agentic-workflow journal aggregate
+
+      - name: Bot-commit the aggregated journal
+        run: |
+          git config user.name "journal-bot"
+          git config user.email "journal-bot@users.noreply.github.com"
+          git add .agentic-workflow/journal docs/LOGS.md
+          if git diff --cached --quiet; then
+            echo "nothing to aggregate"
+            exit 0
+          fi
+          git commit -m "docs(log): aggregate journal fragments"
+          # A concurrent run may have landed between aggregate and push; rebase
+          # once and re-run the (idempotent) aggregation before giving up.
+          git pull --rebase origin main || {
+            npx --yes @gtrabanco/agentic-workflow journal aggregate
+            git add .agentic-workflow/journal docs/LOGS.md
+            git commit -m "docs(log): aggregate journal fragments"
+          }
+          git push
