@@ -1,4 +1,4 @@
-# Session-log fragment aggregator (issue #405) — shipped as an EXAMPLE only.
+# Session-log fragment aggregator — shipped as an EXAMPLE only.
 # Install it (rename to agentic-workflow-journal.yml) only with explicit
 # consent; a repo that opts out writes nothing and keeps the direct-append
 # journal. The command it runs is forge-free: the documented post-receive
@@ -17,7 +17,7 @@ on:
       - ".agentic-workflow/journal/**"
 
 # Two PRs merged seconds apart fire two runs; the group serializes them so the
-# second always sees the first's consumed state (issue #405, open question 2).
+# second always sees the first's consumed state.
 concurrency:
   group: journal-aggregate
   cancel-in-progress: false

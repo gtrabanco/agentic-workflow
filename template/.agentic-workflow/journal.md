@@ -1,6 +1,6 @@
 # Session-log fragment carrier
 
-> Opt-in merge-conflict insurance for the session journal (issue #405). The
+> Opt-in merge-conflict insurance for the session journal. The
 > journal `docs/LOGS.md` is the workflow's largest recurring source of merge
 > conflicts: every session appends to the same git file from a different
 > branch. This carrier removes the conflict **by construction** — each entry
@@ -84,10 +84,10 @@ The naming grammar and the content rules have **one owner**:
 per session per kind; an existing target is refused, never overwritten; the
 narrative rules (append-only, git-facts, refusal) hold at fragment level.
 
-## Where this slots into #374
+## Where this slots into the pluggable journal contract
 
-When [#374](https://github.com/gtrabanco/agentic-workflow/issues/374)'s
-store-driver contract lands, this layout becomes just another driver:
-`append()` writes one fragment, `render(range)` is the aggregator's
-append-in-order step. Nothing here is rework; #374 is not a blocker for this
-carrier, and this carrier does not depend on #374 shipping first.
+When the workflow's pluggable store-driver contract for the journal lands,
+this layout becomes just another driver: `append()` writes one fragment,
+`render(range)` is the aggregator's append-in-order step. Nothing here is
+rework; that contract is not a blocker for this carrier, and this carrier
+does not depend on it shipping first.
