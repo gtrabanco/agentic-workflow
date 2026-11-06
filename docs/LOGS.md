@@ -4422,6 +4422,19 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Merged feat/366-doc-cli (3ff41f6c) into main, pushed main (6fbfa115..3ff41f6c), deleted branch. No code written.
 - **Decisions:** Owner chose #407 before #366: roadmap row 106 must land first, then the doc read/edit/index CLI. Locator implementation to be decided in #407's SPEC (mdast vs native fail-closed; D8 re-trigger unmet, 730/730 files byte-identical roundtrip). Durable record posted on issue #366. Scratch in /tmp/docprobe removed.
 - **Next:** #407 (section-locator-core, roadmap row 106): settle its upstream dependency row 105 (projection-manifest-vocabulary, #406), then decide locator implementation (mdast or native fail-closed) and write the SPEC.
+## 2026-11-05T21:15:03Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 9 (`0a60994e…e250d031`)
+- **Files:** 18 files
+- **Summary:** Investigated Serena false-positive notice on fix/359-prose-gate-inventory worktree — confirmed .serena/project.yml exists, is versioned in git, is YAML-valid, has correct permissions, and is tracked in the worktree index. No actual provisioning needed.
+- **Decisions:** (1) The .serena/project.yml already exists and is identical to the repo base — no provisioning required. (2) The notice is a false positive: Serena displays a one-time warning on new worktree detection but the file is present and valid.
+- **Next:** None — the worktree is correctly configured; Serena notice should resolve on its own reload
+
+## 2026-11-05T21:26:32Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 10 (`0a60994e…afe5a336`)
+- **Files:** 19 files
+- **Summary:** Applied issue #359: carrier inventory for prose-gate gates (S1–S7, D1–D7)
+- **Decisions:** Roadmap row 96 is a feature (+triage promote-to-feature), so unit lives in docs/features/96- not docs/fix/ (D1). No changeset created: repo's changeset-create rejects empty intent (D7). Only the owner can merge; this was delivered as a standalone diff with full evidence.
+- **Next:** review the diff on fix/359-prose-gate-inventory (afe5a336..HEAD — 9 commits, 18 files, +1667/−12), decide on merge or corrections
 
 ## 2026-11-05T21:26:50Z — feat/407-section-locator-core — manual
 - **Commits:** 15 (`91392b3f…f0ee2ed0`)
@@ -4450,9 +4463,30 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Read-only external verification of issue #407 (section-locator-core) on branch feat/407-section-locator-core (base: caee2502 → head: 051a2035). Ran every declared verification command and 17 independent behavioral probes (fence safety, CRLF, multi-byte offsets, nested same-title paths, stateless regexes, post-splice idempotence, heading-only docs). Re-ran all 16 obligations: bun test doc.section-locator (29 pass), section.cli (12 pass), full crate (329 pass both runtimes), differential CLI vs base (18 commands identical), bun scripts/local-gate --skip-network (PASS 7 steps / 104s), bun install --frozen-lockfile, docs-tree, version-parity, changeset lint. Verdict: VERIFIED — 0 blockers, 4 advisories (pre-existing).
 - **Next:** Owner merge verdict on PR #417.
 
+## 2026-11-05T21:45:26Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 14 (`0a60994e…7e26646d`)
+- **Files:** 19 files
+- **Summary:** 359 prose-gate-inventory — external verification and advisory correction
+- **Decisions:** Three advisory fixes as one batch: (1) findHomes walks the whole tree (not guide layer) so a second fenced copy anywhere is refused; (2) the activation-mount fixture runs end-to-end on a scratch git repo instead of a seeded array; (3) the test imports findHomes instead of a hardcoded list — no second copy. Extra: AC25 grep batched (1 spawn per set vs per-file) — 8.6s→1.3s. pi-compat-guard failure confirmed pre-existing from feat 394.
+- **Next:** Owner merges PR #359; after merge: #394 (auto log-session) awaits, consuming the accumulator sink from #383/#394
+
 ## 2026-11-05T22:03:41Z — feat/294-relay-orchestrated-lane — manual
 - **Commits:** 12 (`0a1cfef9…784390df`)
 - **Files:** 46 files
 - **Summary:** External verify of unit 82 (relay-lane-execution, PR #419) — read-only diff review of the Relay-orchestrated lane against base caee2502. Blockers: 0, Advisories: 3 (dangling AC hash contract, unmeasured ceiling at cut, pre-existing gate failures). Verified every AC, all 23 obligations, all test suites (32+13+80+38=163+), negative cases in scratch, base-vs-head router differential, and shipped pi-web dispatch bounds. The branch advanced mid-session to 7adb6e47 (PR opened, row 82 settled done·#419) — claims delta 32→29 explained (unit became closed evidence). Then repaired the dangling AC hash contract: DESIGN.md records the hash at triage, REVIEW.md and RELAY.md item (d) point at it, four templates updated in paridad, SPEC 82 dogfooded with its own value + D7/G6 evidence. Fix commited 784390df — test impact empty (prose-only).
 - **Decisions:** (1) The dangling AC hash: RELAY.md item (d) and REVIEW.md checklist both required comparing against an AC-section hash never written by any surface. Fixed by having DESIGN.md freeze the section at record time — ac-hash: in frontmatter, computed with the section parser's own semantics. One command, one owner (DESIGN.md §Fixed output contract). (2) The unmeasured ceiling 1200 est at cut: honestly declared as ASSUMPTION-UNVERIFIED (PE-014) with re-trigger condition — no repair needed yet, the checker fails closed above it. (3) Pre-existing failures (pi-compat-guard, load-sensitive tests): reproduced as unaffected by the change — input set byte-identical to base, separate fix unit.
 - **Next:** /review-change 82-relay-lane-execution (if not yet done), then /audit-pr https://github.com/gtrabanco/agentic-workflow/pull/419 for the merge gate; the external verify is complete and the fix landed.
+
+## 2026-11-06T00:02:48Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 1 (`3f9813d9`)
+- **Files:** `docs/features/{307-odd-hybrid-direction → 83-odd-hybrid-direction}/SPEC.md`, `docs/fix/420-docs-generated-merge-driver/SPEC.md`, `docs/generated/units.md`
+- **Summary:** fix/359-prose-gate-inventory push blocked by pre-existing roadmap-settle red: the 307 ODD-hybrid direction draft numbered by issue instead of roadmap row caused a row-missing error. Renumbered to 83-odd-hybrid-direction (roadmap row 83), projection re-emitted, fix-420 SPEC known-issue updated to RESOLVED. Push then passed the full gate (8 steps, root-suite 83 suites green).
+- **Decisions:** Chose the fix-307 route over the hook escape hatch because the drift was small, deterministic, and in a unit already recorded by fix 420 (known pre-existing issue P8). Renumbered via `git mv` to preserve history, title re-cut to the `# 83 — odd-hybrid-direction` convention used by siblings (`# 96 — prose-gate-inventory`), issue references #307 kept intact.
+- **Next:** Owner can merge PR #359 now (push succeeded, gate green). The broader fix/359-prose-gate-inventory sandbox has further commits ahead (unit 420 merge-driver work) on the detached worktree; coordinate before merging.
+
+## 2026-11-06T00:05:55Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 24 (`0a60994e…470c4a24`)
+- **Files:** 28 files
+- **Summary:** Resolve PR #418 conflicts (docs/generated merge driver), rebase to remove counts line, and push
+- **Decisions:** The counts line was the 100% surface: 4 hunks in 3 files on every concurrent regeneration (#418 and #419). Dropped it from provenance() and index bullets; generator changes fix it at source, driver is optional net. Push is fast-forward, no rewrites.
+- **Next:** Finish the PR if needed; /tmp/m418 worktree is stale — git worktree prune.
