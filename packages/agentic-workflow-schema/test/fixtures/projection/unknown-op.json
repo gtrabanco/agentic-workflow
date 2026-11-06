@@ -1,0 +1,14 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "strip-prose",
+      "op": "strip",
+      "source": "skills/execute-phase/SKILL.md",
+      "selector": { "heading": "Preflight" },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ]
+}

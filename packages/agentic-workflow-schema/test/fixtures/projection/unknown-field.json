@@ -1,0 +1,15 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "extra-field",
+      "op": "remove",
+      "source": "skills/execute-phase/SKILL.md",
+      "selector": { "heading": "Preflight" },
+      "pointer": "Run the guard",
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "contract": "agentic-workflow/projection-manifest",
+  "version": 1,
+  "rules": [
+    {
+      "id": "same-id",
+      "op": "remove",
+      "source": "skills/execute-phase/SKILL.md",
+      "selector": { "heading": "Preflight" },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    },
+    {
+      "id": "same-id",
+      "op": "pointerize",
+      "source": "skills/unit-lane/SKILL.md",
+      "selector": { "heading": "Checkpoint" },
+      "enforcingCommand": "agentic-workflow guard diff",
+      "contentHash": "sha256:1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ]
+}
