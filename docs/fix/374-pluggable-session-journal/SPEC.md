@@ -208,6 +208,19 @@ discharged by S8's foreground evidence run.
 
 ## Known pre-existing issues
 
+- **Found during P1 (2026-11-07), repaired in this unit's diff with its own
+  commit:** a narrative fragment the #405 merge shipped on `main`
+  (`20261106T170132Z-…`) was committed without its trailing newline, so the
+  carrier's own aggregator refused the whole pending set — `journal aggregate`
+  exits 2 `JOURNAL REFUSAL — fragment … is not a newline-terminated entry
+  block` — and the merge wiring never consumed the three fragments the merge
+  carried. This is why the S15 surfaces test was red on base `b8e4d15a`
+  (observed on a clean checkout of it). Repair: the pending fragment's missing
+  terminator was added (content bytes unchanged — the grammar `writeFragment`
+  itself enforces), and the aggregation ran once locally on this branch (the
+  same command the merge wiring runs): 3 entries appended, carrier empty,
+  re-run a no-op. `affects` O11 (the differential suite could not be green
+  with it) — the repair is a data fix, never a test edit; S15 stays unmodified.
 - `docs/LOGS.md` is not strictly chronological in its existing entries (the
   two newest are swapped, recorded by fix/405) — `does-not-affect` the driver
   contract: D9 defines the monotonic guarantee as arrival-order ids, never
