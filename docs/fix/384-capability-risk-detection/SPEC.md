@@ -116,6 +116,8 @@ Callers and consumers of what this unit ships:
 | `skills/unit-lane/SKILL.md` | the passive route names the CLI instead of "write the record" | every lane run |
 | `docs/ROADMAP.md` | row 97 records 360c as delivered; the `## Fixes` table gains this unit's row | `audit-docs`, `workflow-status`, `docs-generate` |
 | `docs/passive/` | the carrier's home; absent at the cut head, created by the first `add` | the writer, the reader, the templates that already name it |
+| `scripts/risk-tier-classifier.test.mjs` | one frozen pin corrected, on the record: `F6b` now states the dependency rule it always meant (`node:` **or** repository-relative, multi-line included) because the classifier delegates to `scripts/capabilities.mjs`; every verdict expectation is untouched (`decisions.md` D5) | the root suite |
+| `scripts/workflow-status-sensor.test.mjs` | the sandbox mirror of the sensor's import graph gains the analyser module, so its two "no built runtime" cases still fail for the reason they assert; no assertion changes (`decisions.md` D5b) | the root suite |
 
 **Named high-risk item** (the unit's own computed verdict at cut, recomputed at
 head in `## Log`): the corpus files carry real removal fixtures — see
@@ -219,9 +221,11 @@ was rewritten to lower the computed tier.
 
 - `scripts/capabilities.test.mjs` — the new analyser's frozen corpus (mechanic A
   reproducers, the language matrix, fail-closed cases, the transitive case).
-- `scripts/risk-tier-classifier.test.mjs` — the 360 corpus stays green and gains
-  the capability-integration cases (the tier rises through an import, never
-  through a spelling).
+- `scripts/risk-tier-classifier.test.mjs` — the 360 corpus stays green: every
+  verdict expectation is unchanged, and only `F6b`'s dependency rule is corrected
+  (`decisions.md` D5). The capability-integration cases live in
+  `scripts/capabilities.test.mjs` (`F15`/`F16`) — beside the fixtures they are
+  about, so the frozen corpus is never edited to make an integration pass.
 - `scripts/ceremony-passive.test.mjs` — the new `passive` module: write, collide,
   refuse a non-passive scope, read back, list, and the exit contract.
 - `scripts/risk-tier-ceremony.test.mjs`, `scripts/ceremony.test.mjs`,
@@ -254,7 +258,8 @@ was rewritten to lower the computed tier.
 - P2 — Bind the capability layer into the tier: `scripts/risk-tiers.mjs` deletes
   the operation-name regex, delegates the `destructive` signal to the analyser,
   and accepts the resolver `classifyTier` needs; `scripts/ceremony/tier.mjs` and
-  `scripts/workflow-status.mjs` pass the same repo-rooted resolver (validator:
+  `scripts/workflow-status.mjs` pass the same repo-rooted resolver, and the two
+  frozen pins the new import touches are corrected on the record (validator:
   `node --test scripts/risk-tier-classifier.test.mjs` exits 0 and
   `node --test scripts/workflow-status-sensor.test.mjs` exits 0)
   (Implements: S1, S3, S9)
@@ -320,7 +325,7 @@ One observable criterion per `S#`, each naming the check that proves it.
 |---|---|---|
 | AC-1 | The unit replaces the operation-name list and gives the passive tier a writer: the regex's JS spellings are gone from `risk-tiers.mjs` and `docs/passive/` gains a writer (S1) | `rg -n 'rmSync\|unlinkSync' scripts/risk-tiers.mjs` matches 0; `node scripts/ceremony.mjs passive list` exits 0 |
 | AC-2 | The `destructive` signal is no longer decided by a list of operation names: the catalogue is keyed by provider and the analysis resolves the file's own imports (S2) | `node --test scripts/capabilities.test.mjs` — the alias/namespace/destructured-`require` cases pass, and the catalogue is `PROVIDERS`, not a call-name regex |
-| AC-3 | What a file *can do* decides: imports and effects per language family, and a removal spelling the table never carried is caught by its capability (S3) | `node --test scripts/capabilities.test.mjs` — the `js`/`py`/`sh` matrix; `node --test scripts/risk-tier-classifier.test.mjs` — the capability-integration cases name `destructive` |
+| AC-3 | What a file *can do* decides: imports and effects per language family, and a removal spelling the table never carried is caught by its capability (S3) | `node --test scripts/capabilities.test.mjs` — the `js`/`py`/`sh` matrix and its `F15`/`F16` integration cases, which name `destructive` through the classifier; `node --test scripts/risk-tier-classifier.test.mjs` exits 0 with every 360 fixture verdict unchanged |
 | AC-4 | Nothing is blocked: `fold-findings`/`log-session` and every executor route keep running, and no command refuses because of a tier or capability verdict (S4) | `node --test scripts/ceremony-passive.test.mjs` — the module adds no tier check to any other object; `node --test scripts/ceremony.test.mjs` exits 0; `rg -n 'risk_tier\|classifyTier' skills/fold-findings/SKILL.md skills/log-session/SKILL.md` matches 0 |
 | AC-5 | The analyser informs the tier and never commands: the verdict is read, and a false positive costs ceremony only (S5) | `node --test scripts/risk-tier-classifier.test.mjs` — every pre-existing 360 fixture keeps its verdict; the new ones only *raise* a tier |
 | AC-6 | `docs/passive/<id>.md` is written by the CLI and by nothing else: `add` writes the `passive-record@1` five-field shape and refuses a collision (S6) | `node --test scripts/ceremony-passive.test.mjs` — the write/round-trip/collision cases; `scripts/risk-tier-ceremony.test.mjs` `C5b` parses the written record back to exactly its five fields |
