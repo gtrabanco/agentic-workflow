@@ -4504,3 +4504,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #384: replaced the destructive content list in the risk-tier ceremony with a bounded syntactic analyser (one analyser per language family, resolving imports to effects to capabilities) and added the passive carrier only writer via the ceremony CLI. 10 commits on fix/384-capability-risk-detection: RED corpus then green for both capabilities.mjs and ceremony/passive.mjs, the destructive signal delegates to the analyser, one pre-existing fail-open porcelain defect in scopePaths() was found and folded, published vocabularies unchanged, PR #423 opened.
 - **Decisions:** D1 (S10): bounded syntactic analyser, not an AST parser, anchored to D360-3 owner shape and F6b pinned dependency exclusion; D3: carrier refusal boundary; D5: F6b correction never saw multi-line import; D6: fold F1 porcelain defect where scopePaths() lost first character of first dirty path.
 - **Next:** Owner reviews PR #423 (https://github.com/gtrabanco/agentic-workflow/pull/423), paying attention to D1 and the F1 fix. After merge: verify PR merged, log close.
+## 2026-11-06T09:29:22Z — fix/384-capability-risk-detection — manual
+- **Commits:** 14 (`02820bae…c86097e8`)
+- **Files:** 23 files
+- **Summary:** External verify of unit 384 (capability-based risk detection) and repair of two post-verify advisories
+- **Decisions:** The external verify returned VERIFIED with 0 blockers and 2 advisories: (1) a Python dotted call on an unimported value (items.remove) falsely resolved ambient to filesystem-remove, raising high. (2) A module-level call into a same-file destructive declaration (clean() → shutil.rmtree) was not followed, yielding standard instead of high. Both are bounded edges of the syntactic analyser — no AST, no real parser.
+- **Next:** If the owner wants, a second verify on ae862a85..HEAD to confirm the advisory repairs are clean before merge.
