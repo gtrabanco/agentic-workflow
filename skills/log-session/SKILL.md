@@ -31,7 +31,7 @@ expensive model.
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The entry was APPENDED to docs/LOGS.md (file edited, not just drafted) with accurate git facts
+✓ The entry was WRITTEN with accurate git facts: appended to docs/LOGS.md, or — when the fragment carrier `.agentic-workflow/journal/` exists (issue #405) — written as a new fragment there (the aggregator owns the journal; a direct append is refused)
 ✓ `bun scripts/session-close.mjs close` RAN and exited 0 (or 2, with the leftover paths named) — the entry is committed, not left riding along
 ✓ No past entry was edited
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
@@ -105,9 +105,21 @@ the HEAD sha and start time at session open.
      --decisions "<key choices + why>" --next "<the concrete next step>"
    ```
 
-   It writes nothing: append its output to the **end** of `docs/LOGS.md`
-   (append-only, chronological) with your editing tool. Omit `--decisions` /
-   `--next` when there is nothing real to record — the script drops the line
+   It writes nothing: apply its output where the project opted in —
+
+   - **No fragment carrier** (the default): append to the **end** of
+     `docs/LOGS.md` (append-only, chronological) with your editing tool.
+   - **Fragment carrier** (`.agentic-workflow/journal/` exists — issue #405):
+     write a **fragment file** there instead and never touch `docs/LOGS.md`
+     (the merge-to-main aggregator is its only writer). Compute the name with
+     the carrier's CLI — `agentic-workflow journal name --kind narrative
+     [--session <session id>]` — and save the entry bytes unchanged as that
+     file. The name grammar has one owner
+     (`journal-fragment-grammar@1` in `@gtrabanco/agentic-workflow`); never
+     hand-roll it. One fragment per session; a refused name is a collision,
+     not a cue to invent another.
+
+   Omit `--decisions` / `--next` when there is nothing real to record — the script drops the line
    rather than emitting an empty one. A user-supplied note is prepended to the
    Summary.
 
@@ -117,8 +129,11 @@ the HEAD sha and start time at session open.
    bun scripts/session-close.mjs close
    ```
 
-   It refuses unless `docs/LOGS.md` was **appended to** (a rewritten or truncated
-   log is not a session entry), commits that one file as
+   It refuses unless the entry was written the way the project opted in —
+   `docs/LOGS.md` appended to (a rewritten or truncated log is not a session
+   entry), or, in fragment mode, new fragments added under
+   `.agentic-workflow/journal/` with `docs/LOGS.md` untouched — commits that
+   surface alone as
    `docs(log): <the appended summary>`, and reports every path still uncommitted:
    exit `0` clean, `2` the named leftovers are still dirty, `1` refused. Do not
    open a PR just for a log entry, and never `git add -A` here — a concurrent
@@ -183,7 +198,7 @@ enables:
 
 ## Done when
 
-- A new entry is appended to `docs/LOGS.md` with at least Summary and Next.
+- A new entry is written the way the project opted in — appended to `docs/LOGS.md`, or added as a fragment under `.agentic-workflow/journal/` — with at least Summary and Next.
 - The mechanical facts (branch, commits, files) are accurate to git.
 - **The closing `→ Next:` block is printed:**
 
