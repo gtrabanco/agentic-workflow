@@ -93,8 +93,9 @@ export function aggregateJournal(options) {
   // empty directory, and an opted-in project's carrier IS empty between
   // aggregations — without the placeholder the directory would vanish from
   // the tree and the opt-in ("the directory's presence is the opt-in") would
-  // silently evaporate after every full aggregation. `.gitkeep` holds no
-  // content, so it is skipped, never consumed; any other non-fragment name is
+  // silently evaporate after every full aggregation. The placeholder is
+  // zero-byte and stays zero-byte (notes live in `journal.md` beside the
+  // carrier), so it is skipped, never consumed; any other non-fragment name is
   // still refused (issue #374's differential found the gap, D13).
   const pending = names.filter((name) => name !== ".gitkeep");
   if (pending.length === 0) {

@@ -150,6 +150,7 @@ function carrierDir(options) {
 }
 
 function carrierPresent(dir) {
+  if (dir === null) return false; // fragment routing explicitly disabled
   try {
     return fs.statSync(dir).isDirectory();
   } catch {
