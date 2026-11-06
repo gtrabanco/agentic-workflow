@@ -171,13 +171,18 @@ test("F1 the analyser exists and loads (base commit: absent; the base classifier
   assert.match(probe.stderr, /ERR_MODULE_NOT_FOUND/, "the base refusal is the issue's own reproducer");
 
   // The base classifier really did miss these: that is what made the corpus red.
+  // Exactly one reproducer is already caught — the literal `rm -rf`, which is the
+  // spelling the operation-name list did carry (and why it survived as long as it
+  // did). The other eight are the miss this unit closes.
   const baseTiers = await import(pathToFileURL(path.join(base, "scripts", "risk-tiers.mjs")).href);
   const missed = CORPUS.filter(({ files }) => {
     const verdict = baseTiers.classifyTier(new Map(Object.entries(files)));
     return !verdict.signals.some((s) => s.signal === "destructive");
   });
-  assert.equal(missed.length, CORPUS.length,
-    `every reproducer must be missed at the base commit (missed ${missed.length}/${CORPUS.length})`);
+  assert.equal(missed.length, CORPUS.length - 1,
+    `every reproducer but the one spelling the old list carried is missed at the base commit (missed ${missed.length}/${CORPUS.length})`);
+  assert.ok(!missed.some(({ id }) => id === "rm -rf (a shell program)"),
+    "the one the base caught by name is the literal rm -rf");
 });
 
 // ---------------------------------------------------------------------------

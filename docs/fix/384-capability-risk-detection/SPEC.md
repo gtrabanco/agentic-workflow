@@ -167,26 +167,29 @@ What this unit removes:
 
 ## Risk tier
 
-Computed at cut over the planned path list — never chosen:
+Computed, never chosen. At cut (over the planned path list, whose files do not
+exist yet) the answer was `standard`; at head the same command over the real diff
+answers:
 
 ```json
-{"tier": "standard", "reason_kind": "executable-content", "changed_paths": 15}
+{"tier": "high", "reason_kind": "named-high-risk",
+ "reason": "1 path(s) touch a named high-risk surface: destructive (scripts/capabilities.test.mjs · rm)",
+ "task_size": {"understood": true, "contained_risk": "named", "resumable_from_diff": true,
+               "ceremony": "unit-doc+review-change", "verification": "review-change"}}
 ```
 
-`standard` at cut because a planned path has no contents yet. At head the same
-command, over the real diff, answers `high` with the named item
-`destructive (scripts/capabilities.test.mjs)` — the frozen corpus carries real
-removal calls, which is exactly what a corpus of removals looks like. The named
-item is therefore **`destructive`**, quoted here per the tier contract:
+`high` because the frozen corpus carries real removal calls — which is exactly
+what a corpus of removals looks like, and the analyser reports it honestly rather
+than being formatted around. Per the tier contract the named item is quoted here:
 
-- **Tier** — `high` (recomputed at head; see `## Log` `E`-lines)
-- **Task Size** — `{understood: true, contained_risk: "named", resumable_from_diff: true, ceremony: "unit-doc+review-change", verification: "review-change"}`
-- **Named high-risk item** — `destructive` · `scripts/capabilities.test.mjs`
+- **Tier** — `high` · **Task Size** — `named`
+- **Named high-risk item** — `destructive` · `scripts/capabilities.test.mjs` · `rm`
 
-The owner's local workflow for this change substitutes direct application plus
-the deterministic gates for the `review-change`/`audit-pr` pass (an explicit
-instruction, not a gate exception this unit grants itself); no *published* fixture
-was rewritten to lower the computed tier.
+The owner's local workflow for this change substitutes direct application plus the
+deterministic gates for the `review-change`/`audit-pr` pass — an explicit
+instruction from the owner, recorded here rather than presented as a decision this
+unit took about itself. Nothing that could lower the computed tier was done to the
+tree: no fixture was reformatted, no assertion relaxed.
 
 ## Future
 
@@ -349,10 +352,88 @@ One observable criterion per `S#`, each naming the check that proves it.
   [#384](https://github.com/gtrabanco/agentic-workflow/issues/384) as quoted in
   `## Specs` (`S1`…`S10`); the issue's own words are the requirement text and
   are not restated here.
+- **D1** — 2026-11-06, S10 settled by [`decisions.md`](decisions.md) `D1`: a
+  bounded syntactic analyser per language family, on two authorities — `D360-3`'s
+  recorded owner shape ("one mini-analyser per language family") and the pinned
+  dependency rule that excludes an AST parser from the classifier path (`D2`
+  keeps its capability ids internal; `D3` states the carrier's refusal boundary).
+- **E1** — 2026-11-06, `node --test scripts/capabilities.test.mjs` at `8f07802a`
+  (the corpus commit, no analyser) · 14 tests, `pass 0`, `fail 14` (O1, O2, O3,
+  O4, O5, O16 red).
+- **E2** — 2026-11-06, `CAPABILITY_BASE=/tmp/base-384 node --test
+  scripts/capabilities.test.mjs` against a throwaway worktree of the base commit
+  `91a7f39` · exit 0 · 14/14 pass: the base tree has no analyser
+  (`ERR_MODULE_NOT_FOUND`) and its classifier misses **8 of 9** reproducers — the
+  ninth is the literal `rm -rf` the old name list already carried (O2).
+- **E3** — 2026-11-06, `node --test scripts/capabilities.test.mjs` at `49a3c92d`
+  · exit 0 · 14/14 pass (O1, O3, O4, O5, O16).
+- **E4** — 2026-11-06, `node --test scripts/risk-tier-classifier.test.mjs` after
+  the delegation · exit 0 · 13/13 pass: every 360 fixture keeps its verdict
+  (`passive`/`standard`/`high`, the guarded cleanup, the SQL and shell
+  spellings), and `F6b` is the one corrected case (`decisions.md` D5) (O5, O7,
+  O16).
+- **E5** — 2026-11-06, `node --test scripts/ceremony-passive.test.mjs` at
+  `7b83ec67` (the corpus commit, no module) · 9 tests, `pass 0`, `fail 9` (O8, O9,
+  O10, O11 red).
+- **E6** — 2026-11-06, `node --test scripts/ceremony-passive.test.mjs` and
+  `node --test scripts/risk-tier-ceremony.test.mjs` at `474df374` · exit 0 ·
+  9/9 and 16/16: `add` writes the five-field record, a taken id is exit 2
+  `record-exists`, a non-passive scope is exit 2 `not-passive` +
+  `route: standard-ceremony`, `--tier` is `unknown-flag`, `list` is sorted and
+  reports a malformed record, `read` round-trips, and `C5b` parses the written
+  record back to exactly the grammar's five fields (O8, O9, O10, O11).
+- **F1** — 2026-11-06, **found by this unit's own differential, folded in it**:
+  `ceremony tier classify --base main` reported an uncommitted
+  `.github/workflows/root-suite.yml` as `github/workflows/root-suite.yml` and
+  classified the change `standard` where it owed `high` — `scopePaths()` read a
+  trimmed porcelain listing, so the first dirty entry lost its leading status
+  column. Red at `210865d9` (`C1d` fails), folded at `2bef883c` (the listing asks
+  for the `-b` header the way the sensor already did); verified by
+  `node --test scripts/risk-tier-ceremony.test.mjs` · 16/16 and by re-running the
+  fixture, which now prints the whole path (`decisions.md` D6).
+- **E7** — 2026-11-06, the **differential**, base copy `/tmp/base-384` (`91a7f39`,
+  its gitignored `dist/` copied in) vs head, same fixture repository: `tier
+  classify --paths` (prose, executable, publish path, prose named for deletion),
+  `tier read`, `workspace clean-check`, `unit read`, `findings read`,
+  `docs check`, `plan` and an unknown object are **byte-identical** (stdout and
+  exit) at both heads. The only differences are the ones this unit asks for: the
+  registry listing gains `passive`, `ceremony passive list` answers where the base
+  said `unknown-object`, and the three capability reproducers
+  (`node:fs/promises` `unlink`, `shutil.rmtree`, `find -delete`) move `standard`
+  → `high` with the capability named (O15, O17).
+- **E8** — 2026-11-06, the sensor's own differential on the same fixture:
+  `node scripts/workflow-status.mjs` prints a byte-identical
+  `detail.risk_tier` / `detail.size_tier` / `next.tier` block at both heads, and
+  the two callers agree on a transitive fixture — `ceremony tier classify
+  --paths scripts/maintenance.mjs` and the sensor both answer `high`
+  (`destructive`), each through its own repo-rooted resolver (O12, O15).
+- **E9** — 2026-11-06, `node --test scripts/vocabulary-parity.test.mjs` and
+  `node --test scripts/normative-drift.test.mjs` · exit 0; `git diff main..HEAD --
+  packages/agentic-workflow-schema/src/vocabularies.ts` is **0 lines**: the
+  published tier vocabularies and the envelope's detail shape do not move (O7).
+- **E10** — 2026-11-06, `rg -c 'rmSync|unlinkSync|rmdirSync' scripts/risk-tiers.mjs`
+  matches **0** and `rg -c 'risk_tier|classifyTier|ceremony tier'
+  skills/fold-findings/SKILL.md skills/log-session/SKILL.md` matches **0**: the
+  operation-name spellings are gone from the classifier and no executor route
+  gained a tier check (O6, O16).
+- **E11** — 2026-11-06, `rg -c '384-capability-risk-detection' docs/ROADMAP.md`
+  matches **2** (row 97 and this unit's `## Fixes` row) and
+  `node scripts/docs-generate.mjs --check` · exit 0 · `0 missing · 0 stale · 0
+  orphaned` (O14).
+- **E12** — 2026-11-06, `bun scripts/check-skill-context.mjs`, `--routes` and
+  `--documents` · exit 0 · `PASS context budgets: 28 skills`, `PASS route
+  budgets: 14 routes`, `PASS context documents: 4 budgeted documents` (O13).
+- **G1** — 2026-11-06, `bun scripts/local-gate.mjs --skip-network` · exit 0 ·
+  `local-gate: PASS — 8 step(s) in 102s` (the four network steps skipped by the
+  flag, not by a failure); `node scripts/run-root-suite.mjs` within it · exit 0 ·
+  **87 suites PASS, 0 FAIL** (85 before this unit + the two new suites) (O13).
 
 ## Next
 
-P1 — write `scripts/capabilities.test.mjs` as the RED commit, then the analyser.
+External verification by the owner: read the diff, the two ledgers and the `## Log`
+runs, then decide. Every obligation row is `verified` against a run recorded here;
+nothing is merged and no review pass was run on this change (the owner's own
+instruction for this unit).
 
 ## References
 
