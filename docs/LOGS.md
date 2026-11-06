@@ -4538,7 +4538,9 @@ out to do, what was decided and *why*, and where to resume.
 - **Incident (disclosed):** while verifying, the verification harness ran `node scripts/pin-watch.mjs --file-pr --json` in the live repository with the implementation already in the working tree — the newly implemented pr mode is NOT read-only, so it applied real registry bumps, created branch `fix/deps-pin-bump-202611061240` and commit `06e82d57` (bump of the drifted pin + lock), and attempted a push/PR. The push failed and NO PR was opened (forge still carried only PR #426); the implementation commit had also landed on the accidental branch. Cleaned: the feat branch was restored (`51aa93f1` on top of the owner's `548bbee2`), the implementation cherry-picked as `68326b7e`, and the accidental branch with the unreviewed bump commit deleted — the real registry drift it found remains unapplied on purpose and still awaits its deliberate human `fix(deps)` PR.
 - **Next:** run `gh workflow run pin-watch.yml -f mode=pr` on a branch that needs the bump. The drift the accidental run found (`packages/agentic-workflow`'s typebox 1.4.3 → 1.4.5) was incorporated on the owner's order as the deliberate `fix(deps)` commit with its release-intent patch changeset and `Closes #425` (the watch's tracking issue; registry confirmed 1.4.5 still latest, tarball diff recorded in the changeset); PR #426 review and merge.
 
-## 2026-11-06T13:19:10Z — feat/105-projection-manifest-vocabulary — manual
-- **Commits:** 17 (`4d2b9ece…0baa9f73`)
+## 2026-11-06T13:20:17Z — feat/105-projection-manifest-vocabulary — manual
+- **Commits:** 18 (`4d2b9ece…caf7528c`)
 - **Files:** 48 files
-- **Summary:** Consulta sobre dependencias del proyecto — sin cambios
+- **Summary:** External verification of feat/105-projection-manifest-vocabulary against the PR, correction of all findings
+- **Decisions:** --file-pr implemented red-first (planBumps/applyBumps/prFor/refreshLockfile/publishPr with full offline suite; two filing modes refuse each other; pr mode dispatch-only, never schedule) · local-gate serialized schema dist writer behind root-suite reader (tsc re-emit race) · CI workflow granted contents:write + commit identity for pr mode · typebox 1.4.3→1.4.5 incorporated as deliberate fix(deps) Closes #425 · concurrent agent session on shared worktree detected · accidental --file-pr run on live repo disclosed and cleaned · dependabot renamed and newline repaired
+- **Next:** PR #426 review and merge; after merge run pin-watch -f mode=pr for remaining drift; proceed to #407 (section-locator) once 105 is merged
