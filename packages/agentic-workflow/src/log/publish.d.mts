@@ -15,6 +15,10 @@ export interface PublisherResult {
   written?: boolean;
   /** Why a journal append was skipped (`no-journal`). */
   skipped?: string;
+  /** Where the entry went (`fragment` when the carrier routed it, `journal` for the direct append). */
+  target?: string;
+  /** The fragment name, when `target` is `"fragment"`. */
+  fragment?: string;
 }
 
 /** One destination for the frozen facts. The journal and the argv both speak it. */
@@ -39,7 +43,18 @@ export interface PublisherOutcome {
 export declare const DEFAULT_JOURNAL: string;
 export declare const DEFAULT_PUBLISH_TIMEOUT_MS: number;
 
-export declare function createJournalPublisher(options: { journalPath: string }): Publisher;
+/**
+ * The local strategy's options. `fragmentDir` opts a project into the session-log
+ * fragment carrier (issue #405): when the directory exists, the entry goes to a
+ * fragment and the merge-to-main aggregator owns `docs/LOGS.md` (AC1).
+ */
+export declare function createJournalPublisher(options: {
+  journalPath: string;
+  fragmentDir?: string;
+  kind?: string;
+  sessionId?: string | (() => string | undefined);
+  now?: () => number;
+}): Publisher;
 export declare function createCommandPublisher(options: {
   command: string[];
   cwd: string;
@@ -48,7 +63,7 @@ export declare function createCommandPublisher(options: {
 }): Publisher;
 export declare function createPublisherFromConfig(
   config: { publisher?: DeclaredPublisher | null } | undefined,
-  context: { journalPath: string; cwd: string },
+  context: { journalPath: string; cwd: string; fragmentDir?: string; kind?: string; sessionId?: string | (() => string | undefined); now?: () => number },
 ): Publisher[];
 export declare function publishAll(
   publishers: readonly Publisher[],

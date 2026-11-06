@@ -34,6 +34,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 import { renderEntry } from "../src/log/render.mjs";
 import { createJournalPublisher } from "../src/log/publish.mjs";
@@ -362,4 +363,47 @@ test("the local publisher appends to docs/LOGS.md when the carrier is absent —
   const log = fs.readFileSync(path.join(repo, "docs/LOGS.md"), "utf8");
   assert.equal(log, `# Session log\n\nheader\n\n${MECHANICAL_ENTRY}`);
   assert.equal(fs.existsSync(path.join(repo, JOURNAL_DIR)), false, "no carrier residue");
+});
+
+// ── The CLI — the same module, exit codes included (S11/AC5) ─────────────
+
+const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "bin", "agentic-workflow.mjs");
+
+function runCli(args, cwd) {
+  return spawnSync(process.execPath, [CLI, ...args], { encoding: "utf8", cwd, env: sandboxGitEnv() });
+}
+
+test("journal aggregate: the CLI aggregates, deletes and answers a receipt; a no-op re-run exits 0", () => {
+  const repo = newRepo("cli");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, "20261105T100000Z-main-mechanical-s1.md"), MECHANICAL_ENTRY);
+  const first = runCli(["journal", "aggregate", "--dir", repo]);
+  assert.equal(first.status, 0, first.stderr);
+  const receipt = JSON.parse(first.stdout);
+  assert.equal(receipt.ok, true);
+  assert.deepEqual(receipt.appended, ["20261105T100000Z-main-mechanical-s1.md"]);
+  const second = runCli(["journal", "aggregate", "--dir", repo]);
+  assert.equal(second.status, 0);
+  assert.equal(JSON.parse(second.stdout).fragments, 0);
+});
+
+test("journal aggregate: ambiguity is exit 2 with JOURNAL REFUSAL on stderr", () => {
+  const repo = newRepo("cli-refusal");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, "notes.md"), "## stray\n");
+  const run = runCli(["journal", "aggregate", "--dir", repo]);
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^JOURNAL REFUSAL — /);
+  assert.match(run.stderr, /notes\.md/);
+});
+
+test("journal name: prints the deterministic fragment path, writes nothing", () => {
+  const repo = newRepo("cli-name");
+  const run = runCli(["journal", "name", "--kind", "narrative", "--branch", "feat/405-x", "--session", "s1"], repo);
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /^\.agentic-workflow\/journal\/\d{8}T\d{6}Z-feat-405-x-narrative-s1\.md\n$/);
+  assert.equal(fs.readdirSync(repo).includes(".agentic-workflow"), false, "nothing was written");
+  const refused = runCli(["journal", "name"], repo);
+  assert.equal(refused.status, 2);
+  assert.match(refused.stderr, /--kind/);
 });
