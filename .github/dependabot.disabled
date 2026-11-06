@@ -1,0 +1,80 @@
+# Dependabot configuration for agentic-workflow.
+# Monorepo (bun workspaces) + GitHub Actions.
+#
+# Uses bun ecosystem (GA since 2025-02-13) to read package.json and update
+# bun.lock.  Each workspace package is monitored separately so that real
+# external dependencies (typebox, ajv, typescript…) generate their own PRs,
+# while cross-references to other workspace packages are ignored — those
+# versions are controlled by publish.yml, which bumps all three together.
+#
+# STATUS: DISABLED — pin-watch --file-pr is the preferred path.
+# Keep this file commented out so it can be recovered if needed.
+# version: 2
+# enable-beta-ecosystems: true
+#
+# updates:
+#   # ── Root workspace (dev dependencies only) ──────────────────────────
+#   - package-ecosystem: "bun"
+#     directory: "/"
+#     schedule:
+#       interval: "weekly"
+#       day: "monday"
+#       time: "06:00"
+#       timezone: "UTC"
+#     open-pull-requests-limit: 5
+#     labels:
+#       - "dependencies"
+#       - "npm"
+#     groups:
+#       dev-dependencies:
+#         patterns:
+#           - "*"
+#         update-types:
+#           - "minor"
+#           - "patch"
+#
+#   # ── Each package under packages/ ────────────────────────────────────
+#   - package-ecosystem: "bun"
+#     directory: "/packages"
+#     schedule:
+#       interval: "weekly"
+#       day: "monday"
+#       time: "06:00"
+#       timezone: "UTC"
+#     open-pull-requests-limit: 5
+#     labels:
+#       - "dependencies"
+#       - "npm"
+#     ignore:
+#       - dependency-name: "@gtrabanco/agentic-workflow"
+#       - dependency-name: "@gtrabanco/agentic-workflow-schema"
+#       - dependency-name: "@gtrabanco/pi-agentic-workflow"
+#     groups:
+#       dev-dependencies:
+#         patterns:
+#           - "*"
+#         update-types:
+#           - "minor"
+#           - "patch"
+#
+#   # ── GitHub Actions ──────────────────────────────────────────────────
+#   - package-ecosystem: "github-actions"
+#     directory: "/"
+#     schedule:
+#       interval: "weekly"
+#       day: "monday"
+#       time: "06:00"
+#       timezone: "UTC"
+#     open-pull-requests-limit: 3
+#     labels:
+#       - "ci"
+#       - "github-actions"
+#     allow:
+#       - dependency-type: "direct"
+#     groups:
+#       github-actions:
+#         patterns:
+#           - "*"
+#         update-types:
+#           - "minor"
+#           - "patch"

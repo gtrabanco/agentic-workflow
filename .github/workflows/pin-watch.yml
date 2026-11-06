@@ -7,9 +7,9 @@ name: Pin watch
 # `packages/` — is supposed to match what the registry offers, and a pin that has
 # fallen behind is invisible until someone opens a PR: `version-parity-gate.mjs
 # --pins` only runs there, and it verifies exact pins only. So this job asks the
-# registry once a week and, when a pin is behind, files ONE tracking issue naming
-# the package, the version the lock resolved and the version the registry has —
-# reusing the issue already open for that dependency instead of filing a second.
+# registry once a week and, when one has drifted, takes the action selected at
+# dispatch time (issues or pr). On schedule, always files tracking issues so
+# the operator sees drift even when they don't manually run it.
 #
 # Three spec kinds, three answers:
 #   exact (`6.0.3`)   the registry's latest is above the pin  ⇒ drift.
@@ -21,34 +21,48 @@ name: Pin watch
 #                     watched, and it must not pass in silence either.
 # Nightlies never count as news: the report compares against released versions.
 #
-# The issue points at the dependency's release notes and asks the reader to
-# record which changes matter here before bumping — the watch names the version
+# The issue / PR points at the dependency's release notes and asks the reader
+# to record which changes matter before bumping — the watch names the version
 # that moved, not what it changed.
 #
-# It never bumps anything. Dependency upgrades stay deliberate human
-# `fix(deps)` PRs on a cadence; a bot that edits pins would turn them into side
-# effects of a cron, which is exactly what the rule forbids (PE-005).
+# It bumps nothing by default (schedule runs issues only). When dispatched
+# with `mode: pr` it bumps all drifted exact pins, commits, pushes and opens
+# a single PR — the operator reviews and merges; `unit-lane` can be applied
+# to the PR for code adaptation if needed.
 #
-# Exit semantics of `scripts/pin-watch.mjs --file-issues`:
-#   0 — no drift, or every drifted dependency already has its open issue
+# Exit semantics of `scripts/pin-watch.mjs` (both modes):
+#   0 — no drift, or all drifted dependencies already have their tracking issue
 #       (a weekly job that re-files a known drift must stay green, or the alert
 #       becomes the noise it was meant to avoid)
 #   0 — the registry was unreachable: degraded, never failed (a network blip
-#       must not redden a run no commit caused — the same rule `--pins` follows)
-#   1 — a NEW issue was opened, which is what makes the red run worth reading
+#       must not redden a scheduled run no commit caused — the same rule
+#       `--pins` follows)
+#   1 — new tracking issue opened (issues mode), or new PR opened (pr mode)
 #
-# Run it by hand any time: gh workflow run pin-watch.yml
+# Run it by hand any time:
+#   gh workflow run pin-watch.yml          # issues (default)
+#   gh workflow run pin-watch.yml -f mode=pr  # open a bump PR
 
 on:
   schedule:
     # Mondays 06:17 UTC. Off the top of the hour on purpose: GitHub's scheduler
     # queues the :00 stampede first, and a delayed run reads as a broken one.
     - cron: "17 6 * * 1"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Action to take on drift"
+        required: true
+        default: "issues"
+        type: choice
+        options:
+          - issues     # open tracking issues only
+          - pr         # open a PR that bumps all drifted exact pins
 
 permissions:
-  contents: read
-  issues: write # the only write this workflow performs: the tracking issue
+  contents: write # the pr mode pushes the bump commit and its lockfile refresh
+  issues: write # tracking issues (issues mode)
+  pull-requests: write # the pr-mode PR — Actions permissions are static per workflow file, so a dispatch-only grant rides every run
 
 concurrency:
   group: pin-watch
@@ -68,9 +82,19 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       # The watch reads each package's manifest directly and spawns `npm view`
-      # for the registry and `gh` for the issues — no install step, because it
-      # imports nothing outside node builtins (and the pin gate's own evaluator).
+      # for the registry and `gh` for the issues / PR — no install step,
+      # because it imports nothing outside node builtins.
       - name: Watch every dependency pin (runtime and development)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/pin-watch.mjs --file-issues
+        run: |
+          MODE=${{ inputs.mode || 'issues' }}
+          if [ "$MODE" = "pr" ]; then
+            # actions/checkout configures no commit identity; the bump commit
+            # needs one, and the repo must allow Actions to create PRs.
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            node scripts/pin-watch.mjs --file-pr
+          else
+            node scripts/pin-watch.mjs --file-issues
+          fi

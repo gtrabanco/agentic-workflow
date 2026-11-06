@@ -116,3 +116,76 @@ export type AdversarialReflectorVerdict = (typeof ADVERSARIAL_REFLECTOR_VERDICTS
  *  as-is (CIVER, arXiv 2610.36010). */
 export const ADVERSARIAL_STABILITY_VERDICTS = Object.freeze(["stable", "unstable"]);
 export type AdversarialStabilityVerdict = (typeof ADVERSARIAL_STABILITY_VERDICTS)[number];
+
+// ── The workflow-projection contract (issue #406) ─────────────────────────
+// The four consumers of the projection chain (#410 stripper, #412 guards, #413
+// seam hooks, #414 prereq) type their inputs from these sets instead of
+// renegotiating grammar. Every set is closed: growing one is a schema-const
+// change plus a `normative-surfaces@1` row in the same PR, never a prose edit.
+
+/** The workflow seams a project hook or a projected rule may attach to
+ *  (`projection-seam`). Every member is an existing lifecycle point in this
+ *  workflow, not an invented event: the pi session boundary (#394's
+ *  `session_start`/`session_shutdown`), the lane's unit boundary, the executor's
+ *  phase boundary, and git's commit/push seams (the repo installs a `pre-push`
+ *  gate hook). #413's dispatcher consumes this set; it never extends it by
+ *  prose (issue #406 S13). */
+export const PROJECTION_SEAMS = Object.freeze([
+  "session:start",
+  "session:end",
+  "unit:start",
+  "unit:end",
+  "phase:start",
+  "phase:end",
+  "pre:commit",
+  "post:commit",
+  "pre:push",
+]);
+export type ProjectionSeam = (typeof PROJECTION_SEAMS)[number];
+
+/** The three projection operations a manifest rule may declare
+ *  (`projection-op`): remove a section or line range, replace it with a one-line
+ *  pointer naming the enforcing command, or do that and pre-run the command so
+ *  its result is injected instead of recomputed (issue #410, #414). */
+export const PROJECTION_OPS = Object.freeze(["remove", "pointerize", "prereq"]);
+export type ProjectionOp = (typeof PROJECTION_OPS)[number];
+
+/** The selector forms a manifest rule may carry (`projection-selector-kind`).
+ *  They are the shipped section locator's own forms
+ *  (`packages/agentic-workflow/src/doc/section-locator.mjs`, issue #407), so a
+ *  rule is handed to the locator as data instead of being translated:
+ *  `heading` (one root heading), `path` (a depth-aware heading path),
+ *  `headingRegex`, and `line` (an exact line or a regex, optionally scoped with
+ *  `within` — the "line-in-scope" form). A selector carries exactly one of the
+ *  four. */
+export const PROJECTION_SELECTOR_KINDS = Object.freeze(["heading", "path", "headingRegex", "line"]);
+export type ProjectionSelectorKind = (typeof PROJECTION_SELECTOR_KINDS)[number];
+
+/** The digest algorithms a rule's `contentHash` may use
+ *  (`projection-hash-algorithm`). One member today on purpose: the hash is over
+ *  the exact UTF-8 bytes the rule removes (the locator's `byteStart`/`byteEnd`,
+ *  never its UTF-16 offsets), and a second algorithm is a deliberate schema
+ *  bump, not a per-rule choice. */
+export const PROJECTION_HASH_ALGORITHMS = Object.freeze(["sha256"]);
+export type ProjectionHashAlgorithm = (typeof PROJECTION_HASH_ALGORITHMS)[number];
+
+/** The fail-closed guard verdicts (`guard-verdict`): `allow` — the guarded rule
+ *  holds; `block` — the rule is violated, or the guard could not prove it holds
+ *  (a guard that fails to load or throws blocks by default, never passes); and
+ *  `degrade` — a declared, named fallback for the one case a hard block would be
+ *  wrong. A degrade is never silent: it carries the same message contract. */
+export const GUARD_VERDICTS = Object.freeze(["allow", "block", "degrade"]);
+export type GuardVerdictKind = (typeof GUARD_VERDICTS)[number];
+
+/** The closed reason a guard rejects or degrades (`guard-rejection-reason`), so
+ *  the teaching message is grammar rather than prose a reader has to trust:
+ *  `rule-violation` (the guard proved a violation), `guard-unavailable` (the
+ *  enforcing module or command is absent), `guard-error` (the guard threw), and
+ *  `config-invalid` (the declared guard configuration cannot be honoured). */
+export const GUARD_REJECTION_REASONS = Object.freeze([
+  "rule-violation",
+  "guard-unavailable",
+  "guard-error",
+  "config-invalid",
+]);
+export type GuardRejectionReason = (typeof GUARD_REJECTION_REASONS)[number];

@@ -1,0 +1,10 @@
+{
+  "contract": "agentic-workflow/guard-verdict",
+  "version": 1,
+  "guard": "diff-guard",
+  "verdict": "block",
+  "reason": "rule-violation",
+  "requirement": "The unreviewed diff is over the checkpoint budget.",
+  "enforcingCommand": "agentic-workflow guard diff",
+  "message": "Run `agentic-workflow guard diff` before continuing."
+}

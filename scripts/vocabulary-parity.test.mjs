@@ -38,6 +38,12 @@ const {
   ADVERSARIAL_VERDICTS,
   ADVERSARIAL_REFLECTOR_VERDICTS,
   ADVERSARIAL_STABILITY_VERDICTS,
+  PROJECTION_SEAMS,
+  PROJECTION_OPS,
+  PROJECTION_SELECTOR_KINDS,
+  PROJECTION_HASH_ALGORITHMS,
+  GUARD_VERDICTS,
+  GUARD_REJECTION_REASONS,
 } = await import(schemaRuntimePath);
 
 const read = (relative) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -69,6 +75,12 @@ test("the schema package publishes every canonical set, non-empty", () => {
     ["RISK_TIER_SIGNAL_KINDS", RISK_TIER_SIGNAL_KINDS],
     ["RISK_TIER_REASONS", RISK_TIER_REASONS],
     ["SIZE_TIER_KINDS", SIZE_TIER_KINDS],
+    ["PROJECTION_SEAMS", PROJECTION_SEAMS],
+    ["PROJECTION_OPS", PROJECTION_OPS],
+    ["PROJECTION_SELECTOR_KINDS", PROJECTION_SELECTOR_KINDS],
+    ["PROJECTION_HASH_ALGORITHMS", PROJECTION_HASH_ALGORITHMS],
+    ["GUARD_VERDICTS", GUARD_VERDICTS],
+    ["GUARD_REJECTION_REASONS", GUARD_REJECTION_REASONS],
   ]) {
     assert.ok(Array.isArray(set) && set.length > 0, `${name} is a published const array`);
   }

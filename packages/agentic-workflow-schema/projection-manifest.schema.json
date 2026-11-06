@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/projection-manifest.schema.json",
+  "title": "agentic-workflow projection manifest v1",
+  "description": "The declared projection from the standalone skill sources to the pi bundle: per-rule op, selector, enforcing command and content hash. Source of truth: @gtrabanco/agentic-workflow-schema. Structural only — whether a selector resolves to exactly one section, whether a digest matches the removed bytes, and whether rule ids are unique are runtime checks the canonical validator and its consumers own.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "rules"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/projection-manifest" },
+    "version": { "const": 1 },
+    "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } }
+  },
+  "definitions": {
+    "regex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "flags": { "type": "string", "pattern": "^[dgimsuvy]*$" }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading"],
+          "properties": { "heading": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {
+            "path": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["headingRegex"],
+          "properties": { "headingRegex": { "$ref": "#/definitions/regex" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["line"],
+          "properties": {
+            "line": { "oneOf": [{ "type": "string" }, { "$ref": "#/definitions/regex" }] },
+            "within": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/selector" }] }
+          }
+        }
+      ]
+    },
+    "headingPath": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "op", "source", "selector", "enforcingCommand", "contentHash"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "op": { "enum": ["remove", "pointerize", "prereq"] },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.(?:/|$)).*$"
+        },
+        "selector": { "$ref": "#/definitions/selector" },
+        "except": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/headingPath" } },
+        "enforcingCommand": { "type": "string", "minLength": 1 },
+        "contentHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "dependencies": {
+        "except": { "type": "object", "required": ["op"], "properties": { "op": { "const": "remove" } } }
+      }
+    }
+  }
+}

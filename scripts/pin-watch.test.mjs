@@ -2,12 +2,16 @@
  * pin-watch.test.mjs — offline suite for scripts/pin-watch.mjs (feature 67 P3,
  * AC2, obligation O3, issue #219 decision D1's addendum).
  *
- * The watch reports dependency-pin drift on a schedule. It may only report:
- * upgrading a pin stays a deliberate human `fix(deps)` PR (`docs/workflow/PACKAGES.md`,
- * PE-005), so nothing here writes a manifest.
+ * The watch reports dependency-pin drift on a schedule; the scheduled report
+ * may only report — upgrading a pin stays a deliberate human `fix(deps)` PR
+ * (`docs/workflow/PACKAGES.md`, PE-005). The `--file-pr` half is the same
+ * deliberate PR, executed on an explicit dispatch: every test here that edits
+ * a manifest does it inside a `mkdtemp` fixture with an injected `git`/`gh`, so
+ * nothing outside a temp dir is ever written.
  *
- * No network: the registry fetcher is injected everywhere, and the issue plan
- * is a pure function over an already-fetched open-issue list.
+ * No network: the registry fetcher, the git runner and the gh runner are
+ * injected everywhere, and the issue plan is a pure function over an
+ * already-fetched open-issue list.
  *
  * Run: node --test scripts/pin-watch.test.mjs
  */
@@ -19,14 +23,20 @@ import path from "node:path";
 import { test } from "node:test";
 
 import {
+  applyBumps,
   collectDrift,
   collectPyPIDrift,
   driftMarker,
   installedVersion,
+  parseArgs,
+  planBumps,
   planIssues,
+  prFor,
+  publishPr,
   parsePypiLatest,
   pypiIssueFor,
   pypiLatest,
+  refreshLockfile,
   renderReport,
   watchedPackages,
   watchedPyPI,
@@ -480,6 +490,15 @@ test("the workflow may write issues and runs the filing path", async () => {
   assert.match(workflow, /GH_TOKEN:/u, "gh needs a token in the step's environment");
 });
 
+test("the workflow wires the pr mode with the write it needs and a commit identity", () => {
+  const workflow = readFileSync(WORKFLOW, "utf8");
+
+  assert.match(workflow, /pin-watch\.mjs\s+--file-pr/u, "the bump PR path is dispatched, never wired to the cron");
+  assert.match(workflow, /^\s*contents:\s*write\s*(?:#.*)?$/mu, "pushing the bump commit and its lock refresh needs contents: write");
+  assert.match(workflow, /git config user\.name /u, "actions/checkout configures no commit identity — the bump commit needs one");
+  assert.match(workflow, /MODE=\$\{\{ inputs\.mode \|\| 'issues' \}\}/u, "the schedule and the default dispatch run the issues mode — bumping is dispatch-only (PE-005)");
+});
+
 test("the watch discovers the shipped packages and their exact pins", () => {
   const packages = watchedPackages();
 
@@ -709,4 +728,182 @@ test("pypi json payload: the API's info.version parses; junk and empty degrade t
   assert.equal(parsePypiLatest('{"info":{"version":"2.1.0"}}'), "2.1.0");
   assert.equal(parsePypiLatest('{"info":{}}'), null, "no version field is not a version");
   assert.equal(parsePypiLatest("not json"), null, "a non-JSON body is not a version");
+});
+
+// ---------------------------------------------------------------------------
+// the `--file-pr` half: the deliberate bump PR, executed on an explicit
+// dispatch. The bumps are planned from already-collected findings, applied to
+// manifests with their own shape, and published as ONE PR through injected
+// `git`/`gh` runners — offline like every other case in this suite.
+// ---------------------------------------------------------------------------
+
+const PR_FINDINGS = [
+  // Exact pin behind the registry: the bumpable case.
+  { package: PI, dir: "packages/pi-agentic-workflow", dependency: "left-pad", pin: "1.3.0", latest: "1.3.1" },
+  // Pin behind its local sibling: the bump target is the local version.
+  { package: RUNNER, dir: "packages/agentic-workflow", dependency: "chalk", pin: "5.0.0", localVersion: "5.1.0" },
+  // Partial pin: the fix is a lock refresh (`bun install`), not a spec edit.
+  { package: PI, dir: "packages/pi-agentic-workflow", dependency: "zod", pin: "7", resolved: "7.0.0", latest: "7.1.0", kind: "partial" },
+  // PyPI drift: an installed tool, addressable only by the operator's installer.
+  { name: "serena-agent", registry: "pypi.org", installed: "2.0.0", latest: "2.1.0" },
+];
+
+test("parseArgs reads three modes, refuses --file-pr beside --file-issues, and keeps the unknown/usage contract", () => {
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs"]).mode, "check");
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs", "--check"]).mode, "check");
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs", "--file-issues"]).mode, "issues");
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs", "--file-pr"]).mode, "pr");
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs", "--repo", "o/r"]).repo, "o/r");
+  assert.equal(parseArgs(["node", "scripts/pin-watch.mjs"]).repo, "gtrabanco/agentic-workflow");
+
+  const conflict = parseArgs(["node", "scripts/pin-watch.mjs", "--file-issues", "--file-pr"]);
+  assert.match(conflict.error, /--file-issues and --file-pr/u, "both filing modes at once is a usage error, never a silent preference");
+  assert.equal(conflict.exit, 2);
+  const unknown = parseArgs(["node", "scripts/pin-watch.mjs", "--nonsense"]);
+  assert.deepEqual(unknown.unknown, ["--nonsense"]);
+  const positional = parseArgs(["node", "scripts/pin-watch.mjs", "--repo", "o/r", "--stray"]);
+  assert.deepEqual(positional.unknown, ["--stray"], "the value of --repo is never mistaken for an unknown flag");
+});
+
+test("planBumps turns exact-pin findings into manifest bumps and everything else into body notes", () => {
+  const { bumps, notes } = planBumps({ findings: PR_FINDINGS });
+
+  assert.deepEqual(bumps, [
+    { package: PI, dir: "packages/pi-agentic-workflow", dependency: "left-pad", from: "1.3.0", to: "1.3.1" },
+    { package: RUNNER, dir: "packages/agentic-workflow", dependency: "chalk", from: "5.0.0", to: "5.1.0" },
+  ]);
+  assert.equal(notes.length, 2, "the partial pin and the PyPI drift are carried, never dropped");
+  assert.match(notes[0], /zod/u);
+  assert.match(notes[0], /bun install/u, "a partial pin's fix is the lock refresh, which this PR does not invent");
+  assert.match(notes[1], /serena-agent/u);
+  assert.match(notes[1], /uv tool upgrade/u, "a PyPI drift names its installer, not a manifest edit");
+});
+
+test("applyBumps rewrites only the drifted field, in the manifest's own shape, at the named dir", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "pin-watch-pr-"));
+  try {
+    const dir = path.join(root, "packages", "demo");
+    mkdirSync(dir, { recursive: true });
+    const original = `${JSON.stringify(
+      { name: "demo", version: "1.0.0", dependencies: { kept: "2.0.0" }, devDependencies: { stale: "1.0.0" } },
+      null,
+      2,
+    )}\n`;
+    writeFileSync(path.join(dir, "package.json"), original);
+
+    const changed = applyBumps({
+      root,
+      bumps: [{ package: "demo", dir: "packages/demo", dependency: "stale", from: "1.0.0", to: "1.2.0" }],
+    });
+
+    assert.deepEqual(changed, ["packages/demo/package.json"]);
+    const text = readFileSync(path.join(dir, "package.json"), "utf8");
+    assert.match(text, /"stale": "1\.2\.0"/u, "the drift is bumped where it was pinned");
+    assert.match(text, /"kept": "2\.0\.0"/u, "a sibling pin is untouched");
+    assert.match(text, /"version": "1\.0\.0"/u, "the package version is never bumped by the watch — that is the release train's decision");
+    assert.ok(text.endsWith("}\n"), "the manifest keeps its trailing newline");
+    assert.equal(text, original.replace('"stale": "1.0.0"', '"stale": "1.2.0"'), "the rewrite touches exactly the one spec value");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("applyBumps refuses a bump whose manifest no longer carries the dependency, before any write", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "pin-watch-pr-"));
+  try {
+    const dir = path.join(root, "packages", "demo");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, "package.json"), '{"name":"demo","dependencies":{}}\n');
+    assert.throws(
+      () => applyBumps({ root, bumps: [{ package: "demo", dir: "packages/demo", dependency: "gone", from: "1.0.0", to: "1.1.0" }] }),
+      /no longer carries/u,
+      "stale drift is a fail-closed usage error, not a silent no-op",
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("prFor is one PR: it names every bump from → to and carries the non-bumpable drift as notes", () => {
+  const { bumps, notes } = planBumps({ findings: PR_FINDINGS });
+  const { title, body } = prFor({ bumps, notes, repo: "o/r" });
+
+  assert.match(title, /^fix\(deps\): /u, "the PR is a dependency fix commit, conventionally named");
+  assert.match(body, /left-pad`: 1\.3\.0 → 1\.3\.1/u);
+  assert.match(body, /chalk`: 5\.0\.0 → 5\.1\.0/u);
+  assert.match(body, /zod/u, "the partial-pin note lands in the body");
+  assert.match(body, /serena-agent/u, "the PyPI note lands in the body");
+  assert.match(body, /Automated writed using a AI/u, "a body published on GitHub carries the required sign");
+});
+
+test("prFor with no bumps opens nothing — an empty PR is never the answer", () => {
+  const { title, body } = prFor({ bumps: [], notes: [], repo: "o/r" });
+  assert.equal(title, null, "no bumps, no title — the caller must not open a PR");
+  assert.equal(body, null);
+});
+
+test("publishPr adds exactly the changed files, commits, pushes and opens one PR through gh", () => {
+  const calls = [];
+  const git = (args) => {
+    calls.push(["git", ...args]);
+    return { status: 0, stdout: "", stderr: "" };
+  };
+  const gh = (args) => {
+    calls.push(["gh", ...args]);
+    return { status: 0, stdout: "https://github.com/o/r/pull/9\n", stderr: "" };
+  };
+
+  const url = publishPr({
+    repo: "o/r",
+    title: "fix(deps): bump drifted pins",
+    body: "body",
+    changes: ["packages/demo/package.json", "bun.lock"],
+    branch: "fix/deps-pin-bump-test",
+    git,
+    gh,
+  });
+
+  assert.equal(url, "https://github.com/o/r/pull/9");
+  assert.deepEqual(
+    calls.map(([bin, ...args]) => `${bin} ${args.join(" ")}`),
+    [
+      "git checkout -b fix/deps-pin-bump-test",
+      "git add packages/demo/package.json bun.lock",
+      "git commit -m fix(deps): bump drifted pins",
+      "git push -u origin fix/deps-pin-bump-test",
+      "gh pr create --repo o/r --base main --title fix(deps): bump drifted pins --body body",
+    ],
+    "one branch, one commit, one push, one PR — in that order",
+  );
+});
+
+test("publishPr fails closed on a git failure, carrying the stderr — the run reddens instead of shipping half a PR", () => {
+  const git = (args) =>
+    args[0] === "commit" ? { status: 1, stdout: "", stderr: "nothing to commit\n" } : { status: 0, stdout: "", stderr: "" };
+  const gh = () => {
+    throw new Error("gh must not run after a failed commit");
+  };
+
+  assert.throws(
+    () =>
+      publishPr({
+        repo: "o/r",
+        title: "t",
+        body: "b",
+        changes: ["packages/demo/package.json"],
+        branch: "br",
+        git,
+        gh,
+      }),
+    /nothing to commit/u,
+  );
+});
+
+test("refreshLockfile regenerates the lock without installing, and a failure is reported, never thrown", () => {
+  const ok = refreshLockfile({ runner: () => ({ status: 0, stdout: "", stderr: "" }) });
+  assert.deepEqual(ok, { ok: true });
+
+  const failed = refreshLockfile({ runner: () => ({ status: 1, stdout: "", stderr: "error: lockfile had changes\n" }) });
+  assert.equal(failed.ok, false);
+  assert.match(failed.message, /lockfile had changes/u);
 });

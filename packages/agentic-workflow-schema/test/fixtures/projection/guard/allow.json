@@ -1,0 +1,6 @@
+{
+  "contract": "agentic-workflow/guard-verdict",
+  "version": 1,
+  "guard": "diff-guard",
+  "verdict": "allow"
+}

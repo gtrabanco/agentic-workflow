@@ -32,26 +32,41 @@
  * see is the install route this repo documents. A machine without it
  * contributes a skipped entry, never an error.
  *
- * What it deliberately does NOT do: it never bumps a pin, never edits a
- * manifest, never opens a PR. The upgrade cadence is a human decision (PE-005).
+ * What it deliberately does NOT do: it never bumps a pin on the schedule, and
+ * it never edits a manifest outside an explicit `--file-pr` dispatch — the
+ * upgrade cadence stays a human decision (PE-005), which is why the bump PR is
+ * dispatched by hand and not wired to the cron.
  *
- * Two entry shapes, one core:
+ * Two filing shapes, one core — both deliberate actions, never schedule work:
  *   --check        print the report; exit 1 on drift, 0 clean or degraded.
  *   --file-issues  as --check, then open (or reuse) the tracking issue per
  *                  drifted dependency. Exits 1 only when a NEW issue was
  *                  opened — a weekly job that re-files a known drift must stay
  *                  green, or the alert becomes the noise it was meant to avoid.
+ *   --file-pr      as --check, then turn the drifted exact pins into ONE
+ *                  commit on ONE branch and open ONE PR (`fix(deps): ...`) for
+ *                  the operator to review and merge. A partial pin is noted,
+ *                  never rewritten — its fix is the lock refresh, not a spec
+ *                  edit — and a PyPI drift is noted too: an installed tool is
+ *                  the installer's decision. The lockfile is refreshed with
+ *                  `bun install --lockfile-only` (no lifecycle scripts run) and
+ *                  rides the same commit; a failure there only warns, and the
+ *                  PR opens without it. Exits 1 when the PR was opened — the
+ *                  operator must look — and both filing flags refuse each
+ *                  other. The SCHEDULE never runs this mode: a cron that edits
+ *                  manifests would turn deliberate pins into side effects
+ *                  (PE-005); `pr` exists only behind an explicit dispatch.
  *
  * Degraded, never failed, when the registry cannot be reached: a network blip
  * must not redden a scheduled run no commit caused (the same rule the PR-time
  * gate's `--pins` half follows).
  *
- * Exit codes: 0 = PASS (clean or degraded), 1 = drift, 2 = usage/IO error.
- * Read-only apart from the issues it files. Node builtins only; `npm` and `gh`
- * are spawned CLIs, and both are injectable for the offline suite.
+ * Exit codes: 0 = PASS (clean or degraded), 1 = drift actioned or pending, 2 =
+ * usage/IO error. Node builtins only; `npm`, `gh`, `git` and `bun` are spawned
+ * CLIs, and all are injectable for the offline suite.
  *
  * Usage:
- *   node scripts/pin-watch.mjs [--check|--file-issues] [--json] [--repo <owner/name>]
+ *   node scripts/pin-watch.mjs [--check|--file-issues|--file-pr] [--json] [--repo <owner/name>]
  */
 
 import { spawnSync } from "node:child_process";
@@ -372,6 +387,162 @@ export function planIssues({ findings, openIssues = [] }) {
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
+/**
+ * The dispatch-time bump plan. Only exact pins are bumpable from a manifest:
+ * a partial pin's fix is the lock refresh the operator runs by hand, and a
+ * PyPI finding names an installed tool, not a manifest entry — both are
+ * carried as body notes so the single PR states what it deliberately does
+ * NOT do. A local-sibling drift bumps to the local version (the merge
+ * publishes it); a registry drift bumps to the registry's latest.
+ */
+export function planBumps({ findings }) {
+  const bumps = [];
+  const notes = [];
+  for (const finding of findings ?? []) {
+    if (finding.registry === "pypi.org") {
+      notes.push(
+        `${finding.name} (PyPI): installed ${finding.installed}, latest ${finding.latest} — an installed tool, bumped with the operator's installer (\`uv tool upgrade\`), never from a manifest.`,
+      );
+      continue;
+    }
+    if (finding.kind === "partial") {
+      notes.push(
+        `${finding.dependency} carries the deliberate partial pin \`${finding.pin}\` and the lock (\`${finding.resolved}\`) fell behind the range (newest inside it: ${finding.latest}) — refresh the lock with \`bun install\` and commit it; the spec stays a deliberate range.`,
+      );
+      continue;
+    }
+    const to = finding.latest ?? finding.localVersion;
+    if (!to) {
+      notes.push(`${finding.package}/${finding.dependency}: drift detected without a target version — bump it by hand.`);
+      continue;
+    }
+    bumps.push({ package: finding.package, dir: finding.dir, dependency: finding.dependency, from: finding.pin, to });
+  }
+  return { bumps, notes };
+}
+
+/**
+ * The manifest fields a pin may live in, in the order `watchedPackages` merges
+ * them — the bump rewrites exactly the field that carries the dependency.
+ */
+const PIN_FIELDS = ["dependencies", "optionalDependencies", "devDependencies"];
+
+/**
+ * Apply the bumps to the manifests under `root`, writing each file back in its
+ * own shape (2-space JSON, trailing newline — the shape every package.json in
+ * this repository carries). Returns the repo-relative paths that changed. A
+ * bump whose manifest no longer carries the dependency throws before any
+ * write: drift collected minutes ago may name a pin a newer commit moved, and
+ * shipping half a bump is not an option.
+ */
+export function applyBumps({ root, bumps }) {
+  const changed = [];
+  for (const bump of bumps ?? []) {
+    const file = path.join(root, bump.dir, "package.json");
+    const text = fs.readFileSync(file, "utf8");
+    const manifest = JSON.parse(text);
+    const field = PIN_FIELDS.find((name) => manifest[name] && bump.dependency in manifest[name]);
+    if (!field) {
+      throw new Error(`pin-watch: ${bump.dir}/package.json no longer carries ${bump.dependency} — the drift is stale, bump it by hand`);
+    }
+    if (manifest[field][bump.dependency] === bump.to) continue;
+    manifest[field][bump.dependency] = bump.to;
+    fs.writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
+    changed.push(`${bump.dir}/package.json`);
+  }
+  return changed;
+}
+
+/**
+ * The single PR the bump opens: every bump named `from → to`, the notes after
+ * it, and the working order for the reviewer. `null` both ways when there is
+ * nothing to open — an empty PR is never the answer.
+ */
+export function prFor({ bumps, notes, repo = REPO }) {
+  if ((bumps ?? []).length === 0) return { title: null, body: null };
+  const title = `fix(deps): bump drifted pins watched by pin-watch`;
+  const body = [
+    "The scheduled pin watch found pins behind their target. This PR bumps every",
+    "drifted **exact** pin it can address from a manifest; it changes nothing else.",
+    "",
+    ...bumps.map(
+      (bump) => `- \`${bump.package}/${bump.dependency}\`: ${bump.from} → ${bump.to} (\`${bump.dir}/package.json\`)`,
+    ),
+    "",
+    ...notes.map((note) => `- ${note}`),
+    "",
+    "The lockfile rides the same commit (refreshed with `bun install --lockfile-only`,",
+    "no lifecycle scripts run); the package versions themselves move on the release",
+    "train, never here. Review, then merge — or apply `unit-lane` to the PR if the",
+    "upgrade needs code adaptation.",
+    "",
+    "---",
+    "Automated writed using a AI",
+    `Repository: ${repo}`,
+  ].join("\n");
+  return { title, body };
+}
+
+/**
+ * Refresh the lockfile without installing: `bun install --lockfile-only`
+ * regenerates `bun.lock` and runs no lifecycle script, so build scripts cannot
+ * touch unrelated files. A failure is reported, never thrown — the PR opens
+ * without a lock refresh and the body's note tells the reviewer why.
+ */
+export function refreshLockfile({ cwd = REPO_ROOT, runner = spawnLockfileRunner } = {}) {
+  const result = runner(["install", "--lockfile-only"], { cwd });
+  if (!result || result.status !== 0) {
+    const message = (result?.stderr || result?.error?.message || "bun install --lockfile-only failed").trim().split("\n")[0];
+    return { ok: false, message: lockfileFallback(message) };
+  }
+  return { ok: true };
+}
+
+/** An absent `bun` degrades to a reproducible instruction instead of an error code. */
+function lockfileFallback(message) {
+  if (/spawn|ENOENT/u.test(message)) return "bun is not on PATH — run `bun install --lockfile-only` by hand and commit the lock";
+  return message;
+}
+
+function spawnLockfileRunner(args, { cwd }) {
+  return spawnSync("bun", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 120_000 });
+}
+
+function spawnGit(args) {
+  return spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 60_000 });
+}
+
+function spawnGh(args) {
+  return spawnSync("gh", args, { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 60_000 });
+}
+
+/**
+ * Open the bump PR: one branch, one commit carrying exactly the changed
+ * files, one push, one `gh pr create`. Every spawned runner is injectable so
+ * the offline suite proves the sequence without touching a repository.
+ */
+export function publishPr({ repo, title, body, changes, branch, base = "main", git = spawnGit, gh = spawnGh }) {
+  const run = (runner, args) => {
+    const result = runner(args);
+    if (!result || result.status !== 0) {
+      throw new Error((result?.stderr || result?.error?.message || `git ${args[0]} failed`).trim().split("\n")[0]);
+    }
+    return result;
+  };
+  run(git, ["checkout", "-b", branch]);
+  run(git, ["add", ...changes]);
+  run(git, ["commit", "-m", title]);
+  run(git, ["push", "-u", "origin", branch]);
+  const created = run(gh, ["pr", "create", "--repo", repo, "--base", base, "--title", title, "--body", body]);
+  return (created.stdout ?? "").trim().split("\n")[0];
+}
+
+/** A branch name two runs an hour apart cannot collide on. */
+function bumpBranch() {
+  const stamp = new Date().toISOString().replace(/[-:TZ]/gu, "").slice(0, 12); // yyyymmddhhmm
+  return `fix/deps-pin-bump-${stamp}`;
+}
+
 /** The fixed human report. */
 export function renderReport(result, { repo = REPO } = {}) {
   const lines = [`PIN-WATCH — ${repo}`, `pins checked: ${result.checked}`];
@@ -641,21 +812,46 @@ function createIssue(repo, issue) {
   return (result.stdout ?? "").trim();
 }
 
-function main(argv) {
+/**
+ * The argument contract, parsed once and testable without spawning anything.
+ * A rejection carries the exit code `main` must return (2 — usage), and the
+ * two filing modes refuse each other: an invocation that asks for both a
+ * tracking issue and a bump PR asked one question twice, and guessing a
+ * preference would be a silent choice.
+ */
+export function parseArgs(argv) {
   const args = argv.slice(2);
   const fileIssues = args.includes("--file-issues");
+  const filePr = args.includes("--file-pr");
   const json = args.includes("--json");
   const repoIndex = args.indexOf("--repo");
   const repo = repoIndex === -1 ? REPO : (args[repoIndex + 1] ?? REPO);
   const unknown = args.filter(
     (arg, index) =>
-      !["--check", "--file-issues", "--json", "--repo"].includes(arg) && args[index - 1] !== "--repo",
+      !["--check", "--file-issues", "--file-pr", "--json", "--repo"].includes(arg) && args[index - 1] !== "--repo",
   );
-  if (unknown.length > 0) {
-    process.stderr.write(`pin-watch: unknown argument: ${unknown[0]}\n`);
-    process.stderr.write("usage: bun scripts/pin-watch.mjs [--check|--file-issues] [--json] [--repo <owner/name>]\n");
+  if (fileIssues && filePr) {
+    return { error: "--file-issues and --file-pr are mutually exclusive — one invocation, one filing mode", exit: 2 };
+  }
+  if (unknown.length > 0) return { unknown };
+  return { mode: filePr ? "pr" : fileIssues ? "issues" : "check", json, repo };
+}
+
+function main(argv) {
+  const parsed = parseArgs(argv);
+  if (parsed.error) {
+    process.stderr.write(`pin-watch: ${parsed.error}\n`);
+    process.stderr.write("usage: bun scripts/pin-watch.mjs [--check|--file-issues|--file-pr] [--json] [--repo <owner/name>]\n");
+    return parsed.exit;
+  }
+  if ((parsed.unknown?.length ?? 0) > 0) {
+    process.stderr.write(`pin-watch: unknown argument: ${parsed.unknown[0]}\n`);
+    process.stderr.write("usage: bun scripts/pin-watch.mjs [--check|--file-issues|--file-pr] [--json] [--repo <owner/name>]\n");
     return 2;
   }
+  const { mode, json, repo } = parsed;
+  const fileIssues = mode === "issues";
+  const filePr = mode === "pr";
 
   const npmResult = collectDrift({
     packages: watchedPackages(),
@@ -674,7 +870,39 @@ function main(argv) {
   if (json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   else process.stdout.write(`${renderReport(result, { repo })}\n`);
 
-  if (!fileIssues) return result.ok ? 0 : 1;
+  if (!fileIssues && !filePr) return result.ok ? 0 : 1;
+
+  if (filePr) {
+    // The bump PR: successful registry reads only — a degraded run cannot say
+    // what the registry publishes, so it never edits a manifest on a guess.
+    if (allDegraded.length > 0) {
+      process.stdout.write(`::warning::registry degraded (${allDegraded.length} entr${allDegraded.length === 1 ? "y" : "ies"}) — pr mode bumps nothing on a partial read; re-run when the registry answers\n`);
+      return result.ok ? 0 : 1;
+    }
+    const { bumps, notes } = planBumps({ findings: result.findings });
+    if (bumps.length === 0) {
+      if (notes.length > 0) {
+        process.stdout.write(`::warning::drift present but nothing is bumpable from a manifest (${notes.length} note${notes.length === 1 ? "" : "s"}) — use issues mode for the non-manifest drift\n`);
+        return 1;
+      }
+      return 0;
+    }
+    try {
+      const changes = applyBumps({ root: REPO_ROOT, bumps });
+      const lock = refreshLockfile();
+      const full = lock.ok ? [...changes, "bun.lock"] : changes;
+      if (!lock.ok) process.stdout.write(`::warning::${lock.message} — the PR opens without a lock refresh\n`);
+      const pr = prFor({ bumps, notes, repo });
+      const url = publishPr({ repo, title: pr.title, body: pr.body, changes: full, branch: bumpBranch() });
+      process.stdout.write(`opened ${url}\n`);
+    } catch (error) {
+      process.stdout.write(`::warning::bump PR failed: ${error.message}\n`);
+      return 1;
+    }
+    // A new PR is the actionable signal — the operator must look, the same
+    // rule that makes a freshly filed issue worth a red run.
+    return 1;
+  }
 
   // A finding names the version that moved; where it moved from is what the
   // reader needs next, so the issue carries the release-notes URL when the
