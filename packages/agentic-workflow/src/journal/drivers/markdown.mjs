@@ -144,7 +144,9 @@ function blockToEntry(heading, body, line) {
 }
 
 function carrierDir(options) {
-  return options?.fragmentDir ?? path.join(options?.root ?? "", JOURNAL_DIR);
+  if (options?.fragmentDir === null) return null; // fragment routing explicitly disabled
+  const base = options?.fragmentDir ?? JOURNAL_DIR;
+  return path.isAbsolute(base) ? base : path.join(options?.root ?? "", base);
 }
 
 function carrierPresent(dir) {
@@ -166,7 +168,8 @@ function carrierPresent(dir) {
 export function createMarkdownDriver(options) {
   const root = options?.root;
   if (typeof root !== "string" || root === "") throw new DriverError("createMarkdownDriver: root is required");
-  const journalPath = path.join(root, options?.journalPath ?? DEFAULT_LOG);
+  const journalPathArg = options?.journalPath ?? DEFAULT_LOG;
+  const journalPath = path.isAbsolute(journalPathArg) ? journalPathArg : path.join(root, journalPathArg);
   const fragmentDir = carrierDir({ root, fragmentDir: options?.fragmentDir });
   const sessionId = typeof options?.sessionId === "function" ? options.sessionId : () => options?.sessionId ?? "local";
   const now = options?.now ?? (() => Date.now());
