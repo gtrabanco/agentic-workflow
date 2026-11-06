@@ -230,6 +230,19 @@ test("the dist producer and every step that reads or rebuilds dist depend on sch
   }
 });
 
+test("the schema dist writer waits for the root-suite reader that spawns the crate CLI", () => {
+  // schema-node-compat's tsc rewrites packages/agentic-workflow-schema/dist;
+  // the root suites spawn the crate CLI, whose workspace import resolves that
+  // same dist. Under the worker pool the two steps would overlap, and a reader
+  // between two tsc emissions sees a half-written dist
+  // ('does not provide an export named ...') — observed, intermittent. The
+  // writer therefore waits for the reader.
+  assert.ok(
+    DEPS["schema-node-compat"].includes("root-suite"),
+    "schema-node-compat must run after root-suite, or a root suite can import a half-written dist",
+  );
+});
+
 /** A mock runner: each step's duration and exit status come from its row. */
 function mockRunner(timeline) {
   const events = [];
