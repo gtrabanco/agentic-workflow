@@ -114,7 +114,7 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > stamped by code: `scripts/release.mjs apply` writes every `version:` line at
 > cut time from the accumulated changesets, and the per-skill bump ledger
 > (per-skill semver, per-skill CHANGELOG rows) is retired — the per-skill
-> tables in [`CHANGELOG.md`](CHANGELOG.md) are a frozen archive. A change to a
+> tables in [`CHANGELOG.md`](../../CHANGELOG.md) are a frozen archive. A change to a
 > skill ships with a `.changeset/*.md` intent file (or the parity gate fails
 > the PR); renames and other breaking surfaces still need a note in
 > `docs/workflow/MIGRATION.md`.
@@ -134,7 +134,7 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
 > `plan-feature-from-issue`, `design-feature`, or a `review-*` skill, run the
 > manual procedure in
-> [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) — it
+> [`docs/workflow/GOLDEN_FIXTURE.md`](GOLDEN_FIXTURE.md) — it
 > drives a fixed toy fixture through the changed skill with the weakest model
 > in your fleet to catch wording a frontier model absorbs silently but a weak
 > model misreads.

@@ -60,7 +60,7 @@ Rules that compose with this ledger:
 | 2026-09 | [@llblab/pi-state-flow](https://github.com/llblab/pi-state-flow) | Backend idea for the opt-in state-flow lifecycle (episode start/stop commands) | idea adapted | [#174](https://github.com/gtrabanco/agentic-workflow/issues/174) (soft optional integration; never a hard dependency) |
 | 2026-09 | [Engram](https://github.com/Gentleman-Programming/engram) (owner-adjacent project) | Cross-session memory substrate and save/recall protocol at unit boundaries | integration | feature 66 (merged, PR #312) |
 | 2026-09 | [@bacnh85/pi-serena](https://github.com/bacnh85/pi-serena) (Serena LSP) | LSP-backed verification provisioning | dependency | feature 67 (merged, PR #313) |
-| 2026-08 | [gentle-ai v2.5.0-rc.2](docs/research/gentle-ai-v2.5.0-rc.2-contracts.md) | Contracts/lifecycle patterns studied; transferable ideas noted (transition schema, persist-then-stop, refusal ratchet). No bytes copied | studied | research artifact only |
+| 2026-08 | gentle-ai v2.5.0-rc.2 (source read; no artifact committed) | Contracts/lifecycle patterns studied; transferable ideas noted (transition schema, persist-then-stop, refusal ratchet). No bytes copied | studied | studied only — the study is recorded here and nothing was adopted |
 | 2025–2026 | Anthropic Agent Skills posts; Cognition "Don't Build Multi-Agents"; Anthropic multi-agent research post; Claude Code / Aider / Devin / OpenHands harness writeups | Progressive disclosure, code-as-docs, single-threaded agents + compression, token-usage variance | evidence only | 2026-09-15 token audit (bureaucracy-reduction order) |
 
 ## Maintenance

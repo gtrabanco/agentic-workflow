@@ -136,39 +136,39 @@ Nothing else was deferred. This unit implements nothing above.
 
 ## Tasks
 
-- P1 — Cut this unit doc: `S1`–`S6` verbatim, the two ledgers, the acceptance
+- [x] P1 — Cut this unit doc: `S1`–`S6` verbatim, the two ledgers, the acceptance
   criteria, and the frozen-failure corpus (`CR-1`, `CR-2`) in the Log (validator:
   `bun scripts/phase-lint.mjs docs/fix/370-pi-150-compat-reverification/SPEC.md`
   exits 0 and its final line before the fingerprint reads `verdict PASS`)
   (Implements: S1, S2, S3, S4, S5, S6)
   Relevant files: docs/fix/370-pi-150-compat-reverification/SPEC.md
-- P2 — Tests first: add `test/verified-baseline.test.mjs`, the parity pin between
+- [x] P2 — Tests first: add `test/verified-baseline.test.mjs`, the parity pin between
   the README's `Also verified against Pi …` baseline (and its peer-floor
   sentence) and `package.json`'s `peerDependencies` floor (validator:
   `cd packages/pi-agentic-workflow && bun test test/verified-baseline.test.mjs`
   exits 0 with 3 cases)
   (Implements: S2, S3)
   Relevant files: packages/pi-agentic-workflow/test/verified-baseline.test.mjs
-- P3 — Re-run the two legs exactly as `root-suite.yml`'s `pi-compat-guard` job
+- [x] P3 — Re-run the two legs exactly as `root-suite.yml`'s `pi-compat-guard` job
   does — temp copy, `npm install --no-save --no-package-lock` for `0.99.1` and
   `latest`, `tsc --noEmit` — and record both legs' verbatim result (validator:
   the two-leg sequence exits 0 on both legs and prints
   `pi leg <leg>: tsc --noEmit clean` twice)
   (Implements: S1, S3)
   Relevant files: docs/fix/370-pi-150-compat-reverification/SPEC.md
-- P4 — README `## Notes`: baseline becomes `Pi 1.5.0 (2026-11-02)`, the floor
+- [x] P4 — README `## Notes`: baseline becomes `Pi 1.5.0 (2026-11-02)`, the floor
   sentence keeps `Pi 0.99.1` and the `latest`-is-a-tripwire clause (validator:
   `rg -c 'Also verified against Pi 1\.5\.0 \(2026-11-02\)' packages/pi-agentic-workflow/README.md`
   matches 1 and the P2 suite still exits 0)
   (Implements: S2, S3)
   Relevant files: packages/pi-agentic-workflow/README.md
-- P5 — `@types/node` `24.13.3` → `26.6.6` with the release-notes read recorded
+- [x] P5 — `@types/node` `24.13.3` → `26.6.6` with the release-notes read recorded
   (what moved, what does not matter here) and the workspace lock refreshed
   (validator: `node scripts/pin-watch.mjs --check` exits 0 with `VERDICT: PASS`
   and `bun install --frozen-lockfile` exits 0)
   (Implements: S4)
   Relevant files: packages/pi-agentic-workflow/package.json, bun.lock
-- P6 — Ship the release intent: `.changeset/370-pi-150-compat-reverification.md`
+- [x] P6 — Ship the release intent: `.changeset/370-pi-150-compat-reverification.md`
   declaring the package name `@gtrabanco/pi-agentic-workflow` at `patch` with the
   audit in its body
   (validator: `bun scripts/lint-changeset.mjs` exits 0 and
@@ -176,7 +176,7 @@ Nothing else was deferred. This unit implements nothing above.
   `VERDICT: PASS` naming the changeset as the pi package's route)
   (Implements: S5)
   Relevant files: .changeset/370-pi-150-compat-reverification.md, docs/ROADMAP.md
-- P7 — Verification: package suite, root suite, `phase-lint`, `unit-lineage` all
+- [x] P7 — Verification: package suite, root suite, `phase-lint`, `unit-lineage` all
   green on the full diff, and every obligation row closed (validator:
   `cd packages/pi-agentic-workflow && bun run test` exits 0,
   `node scripts/run-root-suite.mjs` exits 0, and
@@ -184,7 +184,7 @@ Nothing else was deferred. This unit implements nothing above.
   `LINEAGE OK`)
   (Implements: S1, S4, S5)
   Relevant files: packages/pi-agentic-workflow/, scripts/
-- P8 — Hand off the diff as the `fix(deps)` PR: audit table in the body (what was
+- [x] P8 — Hand off the diff as the `fix(deps)` PR: audit table in the body (what was
   checked, why nothing changed), `Closes #370` and `Closes #367` footers
   (validator: `gh pr view --json body` matches the six audit rows and both
   `Closes` footers, and `gh pr checks` exits 0)

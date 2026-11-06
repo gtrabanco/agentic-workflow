@@ -158,31 +158,31 @@ the new suite with no registration step.
 
 ## Tasks
 
-- P1 — Cut this unit doc and its two ledgers, and register roadmap row 93 plus
+- [x] P1 — Cut this unit doc and its two ledgers, and register roadmap row 93 plus
   the `## Fixes` row (validator: `bun scripts/phase-lint.mjs
   docs/fix/356-test-targeting/SPEC.md` exits 0 and prints `verdict PASS`)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8)
   Relevant files: docs/fix/356-test-targeting/SPEC.md, docs/ROADMAP.md
-- P2 — Commit the fixture corpus alone — the red commit: the suite with one
+- [x] P2 — Commit the fixture corpus alone — the red commit: the suite with one
   case per required behaviour and per required failure state, every case
   failing on the missing module (validator: `bun test
   scripts/test-impact.test.mjs` exits non-zero, every case failing on the
   missing module)
   (Implements: S1, S4, S7)
   Relevant files: scripts/test-impact.test.mjs
-- P3 — Implement the hint: path classification, the touched-symbol extraction,
+- [x] P3 — Implement the hint: path classification, the touched-symbol extraction,
   the three suite sources, the two matcher tiers, the fixed block and the
   fail-closed refusals (validator: `bun test scripts/test-impact.test.mjs`
   exits 0)
   (Implements: S1, S3, S4, S7)
   Relevant files: scripts/test-impact.mjs
-- P4 — Wire the surfaces: the route-map row, the `AGENTS.md` rule and its
+- [x] P4 — Wire the surfaces: the route-map row, the `AGENTS.md` rule and its
   inventory row, the new reference, and the two executor wiring paragraphs
   (validator: `bun scripts/check-skill-context.mjs --routes` exits 0 and
   `bun scripts/normative-drift.test.mjs` exits 0)
   (Implements: S1, S2, S3, S5, S8)
   Relevant files: scripts/test-route-map.json, AGENTS.md, skills/execute-phase/references/TEST_IMPACT.md, skills/execute-phase/SKILL.md, skills/verification-contract/SKILL.md, skills/unit-lane/references/TESTS.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
-- P5 — Verification and the release intent: the four acceptance fixtures, the
+- [x] P5 — Verification and the release intent: the four acceptance fixtures, the
   gates, the changeset and the roadmap status (validator: `bun
   scripts/run-root-suite.mjs` exits 0 and `bun scripts/lint-changeset.mjs`
   exits 0)

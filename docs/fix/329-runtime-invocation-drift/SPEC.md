@@ -147,7 +147,7 @@ skip), `scripts/unit-route.test.mjs` (the swept usage literal),
 
 ## Tasks
 
-- P1 — Cut this unit doc, the two planning ledgers, the frozen-failure corpus
+- [x] P1 — Cut this unit doc, the two planning ledgers, the frozen-failure corpus
   (`CR-1`…`CR-5`) and the acceptance criteria (validator:
   `bun scripts/phase-lint.mjs docs/fix/329-runtime-invocation-drift/SPEC.md` exits 0
   with `verdict PASS`)
@@ -155,35 +155,35 @@ skip), `scripts/unit-route.test.mjs` (the swept usage literal),
   Relevant files: docs/fix/329-runtime-invocation-drift/SPEC.md,
   docs/fix/329-runtime-invocation-drift/planning-evidence.md,
   docs/fix/329-runtime-invocation-drift/planning-obligations.md
-- P2 — Tests first: the `invocation-drift` gate and its sibling suite, proven red
+- [x] P2 — Tests first: the `invocation-drift` gate and its sibling suite, proven red
   on the base tree and on one fixture per rule, green on a compliant toy tree
   (validator: `bun test scripts/invocation-drift.test.mjs` exits 0 with the
   fixture and live-tree cases, and the RED run is recorded in the Log)
   (Implements: S3, S6, S9)
   Relevant files: scripts/invocation-drift.mjs, scripts/invocation-drift.test.mjs
-- P3 — Sweep the seventeen script usage strings to the bun form and move the one
+- [x] P3 — Sweep the seventeen script usage strings to the bun form and move the one
   test that pins the old literal (validator:
   `bun scripts/invocation-drift.mjs` exits 0 with zero `usage-node` violations)
   (Implements: S3, S6)
-- P4 — Move the five skill literals that teach `node scripts/…` to the bun form
+- [x] P4 — Move the five skill literals that teach `node scripts/…` to the bun form
   and the two SPEC templates' `node --test` validator example to the bun form,
   leaving the lines that declare the fallback (validator:
   `bun scripts/invocation-drift.mjs` exits 0 with zero `node-command-literal` violations)
   (Implements: S3, S4, S11)
-- P5 — Land the normative tool-discipline line in both guides and the per-turn
+- [x] P5 — Land the normative tool-discipline line in both guides and the per-turn
   choice box in both skills, citing `setup-env.mjs --check` for availability and
   keeping the suite carve-out (validator: `bun scripts/invocation-drift.mjs`
   exits 0 with `verdict: PASS` and `bun scripts/check-skill-context.mjs` exits 0)
   (Implements: S1, S2, S4, S5, S7, S10, S11)
   Relevant files: AGENTS.md, template/AGENTS.md, skills/unit-lane/SKILL.md,
   skills/execute-phase/SKILL.md
-- P6 — Replace the silent `process.exit(0)` guard with a registered skip so the
+- [x] P6 — Replace the silent `process.exit(0)` guard with a registered skip so the
   runner reports it, keeping every existing assertion behind the same guard
   (validator: `bun test scripts/pre-execution-quality.test.mjs` exits 0 and
   prints `skipped 1`)
   (Implements: S8)
   Relevant files: scripts/pre-execution-quality.test.mjs
-- P7 — Verification: full root suite, guide and skill budgets, phase-lint,
+- [x] P7 — Verification: full root suite, guide and skill budgets, phase-lint,
   lineage, the release intent and the differential run against a base-commit
   copy (validator: `node scripts/run-root-suite.mjs` exits 0 and
   `bun scripts/check-skill-context.mjs` exits 0)

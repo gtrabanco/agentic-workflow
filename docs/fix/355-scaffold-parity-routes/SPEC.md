@@ -193,14 +193,14 @@ retirement rows above.
 
 ## Tasks
 
-- P1 — Write the red corpus: a fixture reproducing today's two exported
+- [x] P1 — Write the red corpus: a fixture reproducing today's two exported
   templates' pre-#308 shape plus a retired-artifact seed, and a green fixture with
   the aligned pair, so `scripts/scaffold-parity.test.mjs` is red before any
   scaffold or prose file changes (validator: `node --test scripts/scaffold-parity.test.mjs` exits 1 naming the red fixture before P2 and exits 0 after P3)
   (Implements: S2, S6)
   Relevant files: scripts/scaffold-parity.test.mjs, scripts/fixtures/scaffold-parity/
 
-- P2 — Audit the scaffold's residue: sweep `template/` for the four artifacts
+- [x] P2 — Audit the scaffold's residue: sweep `template/` for the four artifacts
   the issue names, confirm each surviving mention marks its own token legacy, and
   keep the legacy sentences so a pre-#308 project stays readable (validator:
   `rg -c -e 'ACCEPTANCE\.md' -e 'generate-docs' -e '^## Phases' template/` matches
@@ -208,7 +208,7 @@ retirement rows above.
   (Implements: S1, S5)
   Relevant files: template/AGENTS.md, template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md
 
-- P3 — Bind the scaffold to the contract: append the two exported template paths
+- [x] P3 — Bind the scaffold to the contract: append the two exported template paths
   to `scripts/unit-doc-contract.test.mjs`'s re-cut list and ship the parity suite
   green over the aligned scaffold (validator: `node --test
   scripts/unit-doc-contract.test.mjs` exits 0 and `node --test
@@ -216,20 +216,20 @@ retirement rows above.
   (Implements: S1, S2, S5, S6)
   Relevant files: scripts/unit-doc-contract.test.mjs, scripts/scaffold-parity.test.mjs
 
-- P4 — Carry `route:` at flight in the audit: the finding-line contract gains the
+- [x] P4 — Carry `route:` at flight in the audit: the finding-line contract gains the
   cell, the progressive-loading rule is stated once, the "never executes it"
   guarantee and the report-file-only mutation stay (validator: `node --test
   scripts/scaffold-parity.test.mjs` exits 0 and its `route:` case passes)
   (Implements: S3, S7, S11, S12)
   Relevant files: skills/product-audit/SKILL.md, skills/product-audit/references/AUDIT_PROCESS.md
 
-- P5 — Route a half-planned unit to replan: the classifier's residue row
+- [x] P5 — Route a half-planned unit to replan: the classifier's residue row
   distinguishes `replan-in-unit` from `fold into phase` (validator: `node --test
   scripts/scaffold-parity.test.mjs` exits 0 and its classifier case passes)
   (Implements: S4, S8, S11)
   Relevant files: skills/review-implementation/references/CLASSIFY.md
 
-- P6 — Register the unit, close the ledgers and run the whole gate (validator: `bun
+- [x] P6 — Register the unit, close the ledgers and run the whole gate (validator: `bun
   scripts/check-skill-context.mjs` exits 0, `node scripts/unit-route.mjs 355`
   prints `route: close-out`, and `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S9, S10, S11, S13, S14, S15)

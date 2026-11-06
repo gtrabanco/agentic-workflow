@@ -120,13 +120,13 @@ discovers the new suite with no registration step.
 
 ## Tasks
 
-- P1 — Cut this unit doc and its two ledgers; register roadmap row 102 and
+- [x] P1 — Cut this unit doc and its two ledgers; register roadmap row 102 and
   freeze the requirements before any code (validator:
   `bun scripts/phase-lint.mjs docs/fix/382-red-first-commits/SPEC.md` exits 0
   and its verdict line reads `verdict: PASS`)
   (Implements: S1, S2, S3, S4, S5, S6)
   Relevant files: docs/fix/382-red-first-commits/SPEC.md, docs/ROADMAP.md
-- P2 — Commit the fixture corpus alone — the red commit: the suite
+- [x] P2 — Commit the fixture corpus alone — the red commit: the suite
   `scripts/red-first.test.mjs` with its fixture cases (the two required
   failure states, the passing order, the grandfathering, the no-pair skip and
   the shipped-tree pin), every case failing on `MODULE_NOT_FOUND` for the
@@ -134,13 +134,13 @@ discovers the new suite with no registration step.
   exits non-zero, every case failing on the missing module)
   (Implements: S2, S6)
   Relevant files: scripts/red-first.test.mjs
-- P3 — Implement the gate `scripts/red-first.mjs`: the pair discovery, the
+- [x] P3 — Implement the gate `scripts/red-first.mjs`: the pair discovery, the
   cutoff from its own introducing commit, the ancestor ordering check, the
   byte-stable report and the PASS/FAIL exit code (validator:
   `node --test scripts/red-first.test.mjs` exits 0 and prints `verdict: PASS`)
   (Implements: S2, S6)
   Relevant files: scripts/red-first.mjs
-- P4 — Wire the surfaces: the test-route-map row, the `AGENTS.md`
+- [x] P4 — Wire the surfaces: the test-route-map row, the `AGENTS.md`
   sibling-rule bullet, `docs/workflow/FEATURE_WORKFLOW.md`'s execution-order
   section, `unit-lane`'s TESTS/IMPLEMENT references (the red commit in the
   checklist, the sanctioned exception to "Never commit red") and
@@ -149,7 +149,7 @@ discovers the new suite with no registration step.
   exits 0)
   (Implements: S1, S3, S4, S6)
   Relevant files: scripts/test-route-map.json, AGENTS.md, docs/workflow/FEATURE_WORKFLOW.md, skills/unit-lane/references/TESTS.md, skills/unit-lane/references/IMPLEMENT.md, skills/execute-phase/SKILL.md
-- P5 — Verification and the release intent: the root gate, the changeset, the
+- [x] P5 — Verification and the release intent: the root gate, the changeset, the
   roadmap status and the PR that closes #382 (validator:
   `node scripts/run-root-suite.mjs` exits 0 and
   `bun scripts/lint-changeset.mjs` exits 0)

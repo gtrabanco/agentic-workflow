@@ -19,7 +19,7 @@ classify one report. **Findings only; never edit or refactor.**
 
 ## Turn contract
 
-Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (receipt closeout, isolation rule, applicability) live here and in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
+Load and verify the **canonical** [Turn contract](../orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (receipt closeout, isolation rule, applicability) live here and in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
 
 For a final PR review, the turn is incomplete until this additional box passes:
 

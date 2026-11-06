@@ -78,31 +78,31 @@ none
 
 ## Tasks
 
-- P1 — Vocabulary census + canonical declarations: cut the dated inventory (published-but-unpinned vocabularies and reader/echo-path patterns in the tree), declare the canonical sets as schema-package consts the prose surfaces cite, add the `normative-surfaces@1` inventory rows in `AGENTS.md`, and land the parity tests pinning every second copy (LOG_KINDS/F22 pattern; fixtures-first — a deliberately off-vocabulary token in a fixture unit doc is committed before the probe exists) (validator: `node --test scripts/*.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0)
+- [x] P1 — Vocabulary census + canonical declarations: cut the dated inventory (published-but-unpinned vocabularies and reader/echo-path patterns in the tree), declare the canonical sets as schema-package consts the prose surfaces cite, add the `normative-surfaces@1` inventory rows in `AGENTS.md`, and land the parity tests pinning every second copy (LOG_KINDS/F22 pattern; fixtures-first — a deliberately off-vocabulary token in a fixture unit doc is committed before the probe exists) (validator: `node --test scripts/*.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0)
   (Implements: S1, S4)
   Relevant files: packages/agentic-workflow-schema/src/, scripts/unit-doc-phases.mjs, AGENTS.md, docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, packages/agentic-workflow/src/edit/UnitDoc.mjs, scripts/fixtures/
 
-- P2 — Vocabulary validator probe: one deterministic script (root-suite wired) that applies every declared vocabulary across open unit docs' `## Future` rows and the other inventory-declared sections, fails closed naming `file:line` and the offending token, and rejects the P1 fixture (validator: `node --test scripts/vocabulary-probe.test.mjs` exits 0 — suite name settled at cut time if the owning file differs)
+- [x] P2 — Vocabulary validator probe: one deterministic script (root-suite wired) that applies every declared vocabulary across open unit docs' `## Future` rows and the other inventory-declared sections, fails closed naming `file:line` and the offending token, and rejects the P1 fixture (validator: `node --test scripts/vocabulary-probe.test.mjs` exits 0 — suite name settled at cut time if the owning file differs)
   (Implements: S1)
   Relevant files: scripts/ (new probe + test), scripts/fixtures/
 
-- P3 — Sweep-receipt claim kind in `promise-coherence.mjs`: `CLAIM_KINDS` gains `sweep`, `REASON_CODES` gains its fail-closed reason, the `swept: <regex> → expected <n>` grammar is parsed from a fold's log entry, each declared grep is re-run and compared, and a seeded stale survivor in a fixture fails with `file:line`, regex and observed count; schema package mirrors the new vocabulary (types + `envelope.schema.json` + version bump, same PR) (validator: `node --test scripts/promise-coherence.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0)
+- [x] P3 — Sweep-receipt claim kind in `promise-coherence.mjs`: `CLAIM_KINDS` gains `sweep`, `REASON_CODES` gains its fail-closed reason, the `swept: <regex> → expected <n>` grammar is parsed from a fold's log entry, each declared grep is re-run and compared, and a seeded stale survivor in a fixture fails with `file:line`, regex and observed count; schema package mirrors the new vocabulary (types + `envelope.schema.json` + version bump, same PR) (validator: `node --test scripts/promise-coherence.test.mjs` exits 0 and `cd packages/agentic-workflow-schema && bun run test` exits 0)
   (Implements: S2)
   Relevant files: scripts/promise-coherence.mjs, scripts/promise-coherence.test.mjs, packages/agentic-workflow-schema/src/, packages/agentic-workflow-schema/envelope.schema.json
 
-- P4 — Fold-side wiring: the `FOLDING.md` checklist and `fold-findings`' guardrail gain the sweep-declaration box (fixed grammar, fixed output, no judgment calls — same bar as `log-kind@1`), a fold without a declaration for a token/claim-shaped change is named a `workflow` finding in the review-pack wording, and every touched skill bumps via `bump-skill` (validator: `bun scripts/check-skill-context.mjs --routes` exits 0 and `node --test scripts/*.test.mjs` exits 0)
+- [x] P4 — Fold-side wiring: the `FOLDING.md` checklist and `fold-findings`' guardrail gain the sweep-declaration box (fixed grammar, fixed output, no judgment calls — same bar as `log-kind@1`), a fold without a declaration for a token/claim-shaped change is named a `workflow` finding in the review-pack wording, and every touched skill bumps via `bump-skill` (validator: `bun scripts/check-skill-context.mjs --routes` exits 0 and `node --test scripts/*.test.mjs` exits 0)
   (Implements: S2)
   Relevant files: skills/execute-phase/references/FOLDING.md, skills/fold-findings/SKILL.md, skills/review-code/SKILL.md, CHANGELOG.md, README.md
 
-- P5 — Negative-capability pins: no inline `## `-heading search outside the shared reader, every echo path of carrier cells routes through the one flatten class — each pin in its owning suite with a corpus case naming the motivating finding (F37/F38/F39), each failing on a fixture that reintroduces the pattern (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P5 — Negative-capability pins: no inline `## `-heading search outside the shared reader, every echo path of carrier cells routes through the one flatten class — each pin in its owning suite with a corpus case naming the motivating finding (F37/F38/F39), each failing on a fixture that reintroduces the pattern (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S3)
   Relevant files: scripts/workflow-status.mjs, scripts/unit-doc-phases.mjs, scripts/*.test.mjs, scripts/fixtures/
 
-- P6 — Verification sweep at the head: root suite, both package suites, context + route budgets, phase-lint on this document, promise-coherence at the head, and every Evidence line re-run (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P6 — Verification sweep at the head: root suite, both package suites, context + route budgets, phase-lint on this document, promise-coherence at the head, and every Evidence line re-run (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4)
   Relevant files: docs/features/84-published-vocabulary-sweep-gate/SPEC.md
 
-- P7 — Release settle: after the PR exists, settle the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`, status `done · [#N](<pr-url>)`, every other cell preserved) (validator: `bun scripts/roadmap-settle.mjs` exits 0)
+- [x] P7 — Release settle: after the PR exists, settle the roadmap row via the crate's writer (`agentic-workflow roadmap rowUpsert`, status `done · [#N](<pr-url>)`, every other cell preserved) (validator: `bun scripts/roadmap-settle.mjs` exits 0)
   (Implements: S1, S2, S3, S4)
   Relevant files: docs/features/ROADMAP.md
 

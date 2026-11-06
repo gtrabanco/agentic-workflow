@@ -231,16 +231,16 @@ none
 
 ## Tasks
 
-- P1 — Freeze the unit doc and its sibling ledgers; register the unit in the
+- [x] P1 — Freeze the unit doc and its sibling ledgers; register the unit in the
   roadmap and add the changeset (validator: `bun scripts/lint-changeset.mjs` exits 0)
   (Implements: S7, S12)
   Relevant files: docs/fix/358-adversarial-kill-mandate, docs/ROADMAP.md, .changeset
-- P2 — Land the RED suite and its fixtures: the three acceptance fixtures plus
+- [x] P2 — Land the RED suite and its fixtures: the three acceptance fixtures plus
   the anti-invention, transcript-leak and evidence-kind cases, all failing on the
   missing module (validator: `bun test scripts/adversarial-verdict.test.mjs` exits 1 before P3)
   (Implements: S8, S9, S10)
   Relevant files: scripts/adversarial-verdict.test.mjs, scripts/fixtures/adversarial-verdict
-- P3 — Implement the deterministic checker `scripts/adversarial-verdict.mjs`
+- [x] P3 — Implement the deterministic checker `scripts/adversarial-verdict.mjs`
   (validator: `bun test scripts/adversarial-verdict.test.mjs` exits 0)
   (Implements: S1, S2, S3, S8, S9, S10)
   Relevant files: scripts/adversarial-verdict.mjs
