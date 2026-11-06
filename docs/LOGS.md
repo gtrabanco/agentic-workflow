@@ -4483,3 +4483,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** fix/359-prose-gate-inventory push blocked by pre-existing roadmap-settle red: the 307 ODD-hybrid direction draft numbered by issue instead of roadmap row caused a row-missing error. Renumbered to 83-odd-hybrid-direction (roadmap row 83), projection re-emitted, fix-420 SPEC known-issue updated to RESOLVED. Push then passed the full gate (8 steps, root-suite 83 suites green).
 - **Decisions:** Chose the fix-307 route over the hook escape hatch because the drift was small, deterministic, and in a unit already recorded by fix 420 (known pre-existing issue P8). Renumbered via `git mv` to preserve history, title re-cut to the `# 83 — odd-hybrid-direction` convention used by siblings (`# 96 — prose-gate-inventory`), issue references #307 kept intact.
 - **Next:** Owner can merge PR #359 now (push succeeded, gate green). The broader fix/359-prose-gate-inventory sandbox has further commits ahead (unit 420 merge-driver work) on the detached worktree; coordinate before merging.
+
+## 2026-11-06T00:05:55Z — fix/359-prose-gate-inventory — manual
+- **Commits:** 24 (`0a60994e…470c4a24`)
+- **Files:** 28 files
+- **Summary:** Resolve PR #418 conflicts (docs/generated merge driver), rebase to remove counts line, and push
+- **Decisions:** The counts line was the 100% surface: 4 hunks in 3 files on every concurrent regeneration (#418 and #419). Dropped it from provenance() and index bullets; generator changes fix it at source, driver is optional net. Push is fast-forward, no rewrites.
+- **Next:** Finish the PR if needed; /tmp/m418 worktree is stale — git worktree prune.
