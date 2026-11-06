@@ -205,7 +205,10 @@ export const STEPS = [
  * pool, so steps that would race on the same bytes are held apart by the graph
  * instead of by table order: `schema-build`'s tsc writes dist/, and both the
  * schema node-compat step (its own tsc writes the same tree) and every suite
- * that resolves dist at import time depend on it. Every id must name a declared
+ * that resolves dist at import time depend on it. `schema-node-compat` also
+ * waits for `root-suite`: its tsc re-emits the dist the root suites read
+ * through the spawned crate CLI, and a reader between two emissions imports a
+ * half-written module. Every id must name a declared
  * step, the map is closed over STEPS, and the graph is acyclic — all pinned by
  * `scripts/local-gate.test.mjs`.
  */
@@ -217,7 +220,7 @@ export const DEPS = {
   "root-suite": ["workspace-install", "schema-build"],
   "version-parity-content": [],
   "docs-generated-projection": [],
-  "schema-node-compat": ["workspace-install", "schema-build"],
+  "schema-node-compat": ["workspace-install", "schema-build", "root-suite"],
   "pi-node-compat": ["workspace-install"],
   "pi-compat-guard": [],
   "dependency-pin-gate": [],
