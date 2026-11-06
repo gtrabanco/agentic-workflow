@@ -1,5 +1,9 @@
 {
   "version": 1,
   "store": { "path": ".agentic-workflow/index/index.db" },
-  "provider": null
+  "provider": {
+    "baseUrl": "https://api.nan.builders/v1",
+    "model": "qwen3-embedding",
+    "envVar": "NAN_API_KEY"
+  }
 }
