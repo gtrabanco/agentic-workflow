@@ -89,12 +89,21 @@ export function aggregateJournal(options) {
   }
 
   const names = fs.readdirSync(dir).filter((name) => fs.statSync(path.join(dir, name)).isFile());
-  if (names.length === 0) {
+  // The carrier's one declared placeholder: a git repository cannot track an
+  // empty directory, and an opted-in project's carrier IS empty between
+  // aggregations — without the placeholder the directory would vanish from
+  // the tree and the opt-in ("the directory's presence is the opt-in") would
+  // silently evaporate after every full aggregation. The placeholder is
+  // zero-byte and stays zero-byte (notes live in `journal.md` beside the
+  // carrier), so it is skipped, never consumed; any other non-fragment name is
+  // still refused (issue #374's differential found the gap, D13).
+  const pending = names.filter((name) => name !== ".gitkeep");
+  if (pending.length === 0) {
     return { ok: true, appended: [], alreadyPresent: [], removed: [], log: options?.logPath ?? DEFAULT_LOG, fragments: 0 };
   }
 
   // Validate everything before the first byte moves.
-  const fragments = names
+  const fragments = pending
     .map((name) => loadFragment(dir, name))
     .sort((a, b) => {
       // Newest first; ties break branch, then kind, then session, ascending.
