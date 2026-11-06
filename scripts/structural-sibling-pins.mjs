@@ -36,6 +36,10 @@ const HEADING_SEARCH = /\/\^##\s?/;
  */
 export const HEADING_READER_ALLOWLIST = new Map([
   [
+    "scripts/session-close.mjs",
+    "the fragment close reads an entry heading out of a fragment's own bytes to build a commit subject — it never bounds a document section; the fragment grammar's one-entry-per-file shape is enforced by the crate's journal module (#405)",
+  ],
+  [
     "scripts/unit-doc-phases.mjs",
     "the shared fence-aware reader owns the grammar — sectionText, sectionBounds and H2_HEADING are the one definition (#308 F28/F39); every other reader cites it",
   ],
