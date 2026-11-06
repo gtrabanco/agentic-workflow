@@ -218,6 +218,13 @@ $ bun scripts/ceremony.mjs tier classify
 - The schema package's five hand-maintained schemas have no `--check` drift
   guard, unlike the four generated projections; this unit joins that pattern
   deliberately. **does-not-affect** (recorded as a future cost).
+- The full local gate's `pi-compat-guard` step is red at `origin/main` too: its
+  peer-floor install pulls the published `@gtrabanco/agentic-workflow` 1.x, whose
+  `src/` has no `log/render.mjs` / `log/publish.mjs`, so the type-check fails
+  before this change can reach it. Re-produced in a detached `origin/main`
+  worktree with the same three `TS2307` errors. **does-not-affect** this unit: the
+  offline subset (`--skip-network`) is the unit's gate, and no file this unit
+  touches participates in that step.
 
 ## Tasks
 
@@ -280,6 +287,20 @@ machinery is deliberately not run on this unit.
   `bun scripts/<file>` for two `node:test` suites; the repository's invocation is
   `bun test scripts/<file>`. Corrected before any status flip (no validator had
   run yet), and the same spelling corrected in the acceptance criteria.
+- **E1** — 2026-11-07, `bun test packages/agentic-workflow-schema/test/projection.test.mjs` — exit 0, 11 pass / 0 fail (the six-vocabulary set, the unknown-seam refusal, the valid and empty manifest, unknown op, the malformed-selector trio, the regex and hash refusals, the undeclared-field/duplicate-id/except cases, the three guard verdicts plus the missing-command refusal, the schema↔validator enum parity, and the README vocabulary parity).
+- **E2** — 2026-11-07, `cd packages/agentic-workflow-schema && bun run test` — exit 0, 743 pass / 0 fail across 39 files.
+- **E3** — 2026-11-07, `cd packages/agentic-workflow-schema && bun run test:node` — exit 0, 743 pass / 0 fail.
+- **E4** — 2026-11-07, `cd packages/agentic-workflow-schema && npm pack --dry-run --json` — exit 0, the packed file list carries `projection-manifest.schema.json` and `guard-verdict.schema.json`.
+- **E5** — 2026-11-07, `bun install --frozen-lockfile` — exit 0 ("Checked 167 installs across 184 packages (no changes)"); `grep -c '"dependencies"' packages/agentic-workflow-schema/package.json` → 0.
+- **E6** — 2026-11-07, `bun test scripts/normative-drift.test.mjs` — exit 0, 21 pass / 0 fail; the six `schema-export:` rows resolve and the two `block:` rows are read from the package README.
+- **E7** — 2026-11-07, `bun test scripts/vocabulary-parity.test.mjs` — exit 0, 20 pass / 0 fail; the six imported sets are non-empty published arrays.
+- **E8** — 2026-11-07, `bun scripts/lint-changeset.mjs .changeset/406-projection-manifest-vocabulary.md` — exit 0 (`ok 406-projection-manifest-vocabulary.md`).
+- **E9** — 2026-11-07, `rg -c '105-projection-manifest-vocabulary' docs/ROADMAP.md` → 1.
+- **E10** — 2026-11-07, `git diff --name-only origin/main...HEAD -- packages/agentic-workflow packages/pi-agentic-workflow skills` — empty (zero runtime surface outside the schema package).
+- **G1** — 2026-11-07, `bun scripts/local-gate.mjs --skip-network` — exit 0, "PASS — 8 step(s) in 105s" (root-suite 104s, crate suites both runtimes, schema-build, docs projection, version parity).
+- **D1** — 2026-11-07, owner decision recorded in §S7 resolution: the schema package keeps its own pattern (no TypeBox, no dependency); the release intent is the changeset.
+- **D2** — 2026-11-07, the folder key is `105` (feature-numbered) because `roadmap-settle` pairs a feature folder's number with its `## Features` row; the closing issue stays #406. Recorded here and in `decisions.md`.
+- **D3** — 2026-11-07, O14's validator narrowed to `--skip-network`: the full gate's `pi-compat-guard` step fails identically at `origin/main` (see §Known pre-existing issues), so the offline subset is the unit's gate; the network step was run separately and its pre-existing failure disclosed.
 
 ## Next
 
