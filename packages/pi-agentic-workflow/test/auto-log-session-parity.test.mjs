@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildFacts, createMarker, markerPath } from "../dist/auto-log-session.js";
 import { isRenderedEntry, renderEntry } from "@gtrabanco/agentic-workflow/src/log/render.mjs";
+import { parseFragmentName } from "@gtrabanco/agentic-workflow/src/journal/fragment.mjs";
 
 import { sandboxGitEnv } from "./git-sandbox.mjs";
 
@@ -134,5 +135,40 @@ test("AP-04 the marker holds the hook's fields, in its own directory", () => {
   assert.deepEqual([ours.sha, String(ours.epoch), ours.iso], hookMarker);
   assert.equal(markerPath(root, SESSION).includes(`${path.sep}.claude${path.sep}`), false);
   assert.equal(markerPath(root, SESSION), path.join(root, ".pi", `.session-${SESSION}.start`));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test("AP-05 in a carrier project the hook writes a fragment with the crate's name and the crate's bytes (issue #405, O6)", () => {
+  const { root, git } = repo();
+  fs.mkdirSync(path.join(root, ".agentic-workflow", "journal"), { recursive: true });
+  hook(root, "log-session-start.sh", { session_id: SESSION });
+  const startSha = git(["rev-parse", "--short", "HEAD"]).trim();
+  fs.writeFileSync(path.join(root, "work.txt"), "work\n");
+  git(["add", "."]);
+  git(["commit", "-q", "-m", "work"]);
+  hook(root, "log-session-end.sh", { session_id: SESSION, reason: "exit" });
+
+  // The journal is untouched — the aggregator is its only writer there.
+  assert.equal(fs.readFileSync(path.join(root, JOURNAL), "utf8"), INITIAL);
+
+  // The fragment: the crate grammar's name (slug, kind, session slug), the
+  // renderer's bytes — the bash slug twin is compared, never assumed.
+  const fragments = fs.readdirSync(path.join(root, ".agentic-workflow", "journal"));
+  assert.equal(fragments.length, 1, `expected one fragment, got ${JSON.stringify(fragments)}`);
+  const parsed = parseFragmentName(fragments[0]);
+  assert.ok(parsed, `the hook's fragment name does not parse: ${fragments[0]}`);
+  assert.equal(parsed.kind, "mechanical");
+  assert.equal(parsed.branch, "main");
+  assert.equal(parsed.sessionId, SESSION);
+
+  const content = fs.readFileSync(path.join(root, ".agentic-workflow", "journal", fragments[0]), "utf8");
+  const timestamp = /^## (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z) — /u.exec(content)?.[1];
+  assert.ok(timestamp, `the fragment carries no readable timestamp: ${JSON.stringify(content)}`);
+  // Undo the fragment write before re-collecting the session's own facts: the
+  // hook computed its path list before it wrote the fragment, so the comparison
+  // needs the tree back in the state the hook saw (same rule as hookedSession).
+  fs.rmSync(path.join(root, ".agentic-workflow", "journal", fragments[0]));
+  const facts = buildFacts({ root, marker: { sha: startSha, epoch: 0, iso: "1970-01-01T00:00Z" }, reason: "exit", now: () => Date.parse(timestamp) });
+  assert.equal(content, renderEntry(facts));
   fs.rmSync(root, { recursive: true, force: true });
 });

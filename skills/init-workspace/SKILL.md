@@ -113,6 +113,15 @@ loads exactly upgrade and skips bootstrap plus portability.
 
 ## Guardrails
 
+- **The session-log fragment carrier is opt-in, off by default (issue #405).**
+  The template ships the documentation (`template/.agentic-workflow/journal.md`)
+  and the CI example (`*.yml.example`) — never the carrier directory itself, so
+  a wholesale scaffold copy opts nobody in. Offer it as one consented question
+  (bootstrap or upgrade): a yes creates `.agentic-workflow/journal/` and
+  installs one merge wiring; a no writes nothing — no directory, no workflow,
+  no config — and the project keeps today's direct-append journal. The naming
+  grammar has one owner (`journal-fragment-grammar@1` in
+  `@gtrabanco/agentic-workflow`'s README); this skill never restates it.
 - **The docs-site format is a declared choice.** The `Docs site` block's
   `format` slot (`markdown`/`md`, `mdx`/`starlight`/`docusaurus`, `html`,
   `latex`/`tex`) decides what `bun scripts/docs-generate.mjs` renders, so a new

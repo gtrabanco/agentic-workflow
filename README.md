@@ -140,7 +140,7 @@ Projects that do not declare the document remain compatible.
 
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
+| `log-session` | Writes a structured entry — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold: appended to `docs/LOGS.md`, or written as one fragment under `.agentic-workflow/journal/` when the project opted in to the fragment carrier (#405). Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
 
 ### Session
 
@@ -482,7 +482,7 @@ See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY
 ### Resume across sessions
 
 ```
-/log-session                    # before /clear or closing: append what you did + the next step to docs/LOGS.md
+/log-session                    # before /clear or closing: log what you did + the next step (docs/LOGS.md, or a fragment when the carrier is on)
 ```
 
 The `template/` ships free, opt-in Claude Code hooks (`template/.claude/`) that

@@ -1,0 +1,74 @@
+# Session-log fragment aggregation for this repository (issue #405, S15).
+#
+# This repository opted in to its own carrier: sessions write fragments under
+# .agentic-workflow/journal/, and THIS workflow is the only writer of
+# docs/LOGS.md after merge. It runs the crate from the tree (no registry
+# dependency) — the same forge-free command the template's example ships.
+
+name: journal-aggregate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".agentic-workflow/journal/**"
+
+# Two PRs merged seconds apart fire two runs; the group serializes them so the
+# second always sees the first's consumed state. The bot commit itself touches
+# journal/** (the deletions), so it re-triggers one extra run that aggregates
+# nothing and pushes nothing — the loop converges.
+concurrency:
+  group: journal-aggregate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          # Lockstep with the other workflows: 1.4.0 writes lockfile version 2.
+          bun-version: 1.4.0
+
+      - name: Install workspace
+        run: bun install --frozen-lockfile
+
+      # The forge-free aggregator: appends the pending fragments to
+      # docs/LOGS.md newest-first, deletes the consumed fragments, refuses
+      # anything ambiguous with exit 2 (and a refusal leaves everything in
+      # place — fragments are never lost, only delayed).
+      - name: Aggregate pending journal fragments
+        run: node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
+
+      - name: Bot-commit the aggregated journal
+        run: |
+          git config user.name "journal-bot"
+          git config user.email "journal-bot@users.noreply.github.com"
+          git add .agentic-workflow/journal docs/LOGS.md
+          if git diff --cached --quiet; then
+            echo "nothing to aggregate"
+            exit 0
+          fi
+          git commit -m "docs(log): aggregate journal fragments"
+          # A concurrent run may have landed between aggregate and push; rebase
+          # once and re-run the (idempotent) aggregation before giving up.
+          git pull --rebase origin main || {
+            node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate
+            git add .agentic-workflow/journal docs/LOGS.md
+            git commit -m "docs(log): aggregate journal fragments"
+          }
+          git push

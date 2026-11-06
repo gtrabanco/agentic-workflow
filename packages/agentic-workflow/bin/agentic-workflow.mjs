@@ -12,6 +12,8 @@
  *   agentic-workflow section <locate|remove|replace> --file <path|-> --selector <json> [--replacement <path|->] [--write] [--json]
  *   agentic-workflow memory probe [--json]
  *   agentic-workflow log render --facts <path|-> [--raw]
+ *   agentic-workflow journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] [--json]
+ *   agentic-workflow journal name --kind <mechanical|narrative> [--dir <root>] [--branch <b>] [--session <id>]
  *   agentic-workflow relay <check|budget|tiers|obligations> <unit> [--repo <dir>] [--packet <dir>]
  *
  * --json prints the operation receipt as JSON.
@@ -40,6 +42,15 @@
  * or a CI job can regenerate an entry and byte-diff it. It writes nothing, prints
  * JSON on stdout (the entry alone with `--raw`), and refuses a malformed payload
  * with exit 2 and "LOG REFUSAL — <reason>".
+ *
+ * `journal` (issue #405) is the session-log fragment carrier's CLI, forge-free
+ * by contract (AC5): `aggregate` appends the pending fragments under
+ * `.agentic-workflow/journal/` to `docs/LOGS.md` newest-first (ties: branch,
+ * kind, session ascending), deletes the consumed fragments and refuses anything
+ * ambiguous with exit 2 and "JOURNAL REFUSAL — <reason>" — re-running on an
+ * aggregated set is a no-op. `name` prints the deterministic fragment name for
+ * a writer to use, never writing anything. The example GitHub workflow and the
+ * documented `post-receive` hook both call `journal aggregate` unchanged.
  */
 
 import { readFileSync, existsSync, writeFileSync, renameSync } from "node:fs";
@@ -71,6 +82,9 @@ import {
 } from "../src/doc/section-locator.mjs";
 import { runProbe } from "../src/memory/probe.mjs";
 import { renderReceipt } from "../src/log/render.mjs";
+import { JournalAggregateError, aggregateJournal } from "../src/journal/aggregate.mjs";
+import { FragmentError, JOURNAL_DIR, fragmentName } from "../src/journal/fragment.mjs";
+import { spawnSync } from "node:child_process";
 import { RelayUsageError, parseRelayArgs, runRelayMode } from "../src/relay/Packet.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -176,11 +190,33 @@ function findUpIndex(docPath, relativeIndex) {
   }
 }
 
+// ── journal — the fragment carrier's forge-free CLI (issue #405) ─────────
+
+function journalRefuse(reason) {
+  process.stderr.write(`JOURNAL REFUSAL — ${reason}\n`);
+  process.exit(2);
+}
+
+/** The journal flags, parsed locally: parseArgs stays untouched for the other commands. */
+function parseJournalArgs(args) {
+  const flags = {};
+  const positions = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i].startsWith("--") && i + 1 < args.length && !args[i + 1].startsWith("--")) {
+      flags[args[i].slice(2)] = args[i + 1];
+      i += 1;
+    } else {
+      positions.push(args[i]);
+    }
+  }
+  return { flags, positions };
+}
+
 // ── Router ───────────────────────────────────────────────────────────────
 
 const command = process.argv[2];
 if (!command) {
-  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log> ...");
+  console.error("usage: agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log|journal> ...");
   process.exit(1);
 }
 
@@ -302,6 +338,52 @@ switch (command) {
     const receipt = renderReceipt(payload);
     if (!receipt.ok) logRefuse(receipt.error, receipt);
     process.stdout.write(parsed.raw ? receipt.entry : `${JSON.stringify(receipt)}\n`);
+    break;
+  }
+
+  // ── journal — the fragment carrier's forge-free CLI (issue #405) ─────
+  case "journal": {
+    const op = rawArgs[0] ?? parseJournalArgs(restArgs).positions[0];
+    const rootDir = parsed.dir ? resolve(parsed.dir) : process.cwd();
+    if (op === "aggregate") {
+      const { flags } = parseJournalArgs(restArgs);
+      let receipt;
+      try {
+        receipt = aggregateJournal({
+          root: rootDir,
+          journalDir: flags["journal-dir"],
+          logPath: flags.log,
+        });
+      } catch (error) {
+        if (error instanceof JournalAggregateError) journalRefuse(error.message);
+        throw error;
+      }
+      process.stdout.write(`${JSON.stringify(receipt, null, parsed.json ? 2 : 0)}\n`);
+      break;
+    }
+    if (op === "name") {
+      const { flags } = parseJournalArgs(restArgs);
+      const kind = flags.kind;
+      if (kind !== "mechanical" && kind !== "narrative") {
+        journalRefuse(`journal name requires --kind <mechanical|narrative>, got "${kind ?? ""}"`);
+      }
+      let branch = flags.branch;
+      if (typeof branch !== "string" || branch === "") {
+        const probe = spawnSync("git", ["-C", rootDir, "branch", "--show-current"], { encoding: "utf8" });
+        branch = probe.status === 0 && probe.stdout.trim() !== "" ? probe.stdout.trim() : "detached";
+      }
+      const timestamp = Date.now();
+      let name;
+      try {
+        name = fragmentName({ timestamp, branch, kind, sessionId: flags.session ?? "local" });
+      } catch (error) {
+        if (error instanceof FragmentError) journalRefuse(error.message);
+        throw error;
+      }
+      process.stdout.write(`${flags["journal-dir"] ?? JOURNAL_DIR}/${name}\n`);
+      break;
+    }
+    journalRefuse(`journal requires the \`aggregate\` or \`name\` operation, got "${op ?? ""}"`);
     break;
   }
 
