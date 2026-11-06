@@ -3,10 +3,14 @@
 # journal entries, not store output).
 # Last matching pattern wins: `/*` ignores all entries, then `!index.json`
 # re-includes the committed config, `!.gitignore` re-includes this rule
-# file itself, and `!journal/` re-includes the opted-in fragment carrier.
+# file itself, `!journal/` re-includes the opted-in fragment carrier, and
+# `!journal.md` re-includes the carrier's contract document — which lives
+# BESIDE the carrier, never inside it (the aggregator refuses any file there
+# that is not a fragment).
 # The store subdirectories (index/, custom/) and the files inside
 # them stay ignored — D12 constrains store.path to this dir.
 /*
 !index.json
 !.gitignore
 !journal/
+!journal.md

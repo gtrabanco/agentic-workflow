@@ -1,5 +1,4 @@
-# 2026-11-06T15:49:09Z — feat/405-journal-fragments — manual
-
+## 2026-11-06T15:49:09Z — feat/405-journal-fragments — manual
 - **Commits:** 9 (`805a2618…74cb1de1`)
 - **Files:** 37 files
 - **Summary:** fix(journal): revert the autoLogSession config switch that broke /log-session (SPEC D8)
