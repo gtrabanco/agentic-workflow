@@ -122,73 +122,73 @@ Standing obligations this fix imposes on future work. Each row: the rule + who i
 
 ## Tasks
 
-- P1 — Freeze the planning ledgers: unit doc (this file), `planning-evidence.md`, `planning-obligations.md`; register the row in `docs/fix/README.md` (validator: `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` exits 0)
+- [x] P1 — Freeze the planning ledgers: unit doc (this file), `planning-evidence.md`, `planning-obligations.md`; register the row in `docs/fix/README.md` (validator: `bun scripts/phase-lint.mjs docs/fix/331-authoring-setup/SPEC.md` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7)
   Relevant files: docs/fix/331-authoring-setup/
-- P2 — RED tests for setup-env: plan/idempotency, --check read-only + exit codes, `.engram/` byte-identity guard, `.serena/project.yml` verification, unresolvable-prerequisite failure, win32 refusal, engram install route per platform, CI workflow assertions, doc-coverage assertions (validator: `node --test scripts/setup-env.test.mjs` fails RED before P3, exits 0 after)
+- [x] P2 — RED tests for setup-env: plan/idempotency, --check read-only + exit codes, `.engram/` byte-identity guard, `.serena/project.yml` verification, unresolvable-prerequisite failure, win32 refusal, engram install route per platform, CI workflow assertions, doc-coverage assertions (validator: `node --test scripts/setup-env.test.mjs` fails RED before P3, exits 0 after)
   (Implements: S2, S4, S6, S7)
   Relevant files: scripts/setup-env.test.mjs
-- P3 — Implement `scripts/setup-env.mjs` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P3 — Implement `scripts/setup-env.mjs` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S2, S6, S7)
   Relevant files: scripts/setup-env.mjs
-- P4 — RED tests then implement `scripts/update-tools.mjs` reusing pin-watch detection (validator: `node --test scripts/update-tools.test.mjs` exits 0)
+- [x] P4 — RED tests then implement `scripts/update-tools.mjs` reusing pin-watch detection (validator: `node --test scripts/update-tools.test.mjs` exits 0)
   (Implements: S3, S6)
   Relevant files: scripts/update-tools.test.mjs, scripts/update-tools.mjs
-- P5 — Write `docs/workflow/SETUP.md` covering every automated step, committed vs local state, and the WSL note (validator: `node --test scripts/setup-env.test.mjs` doc-coverage assertions exit 0)
+- [x] P5 — Write `docs/workflow/SETUP.md` covering every automated step, committed vs local state, and the WSL note (validator: `node --test scripts/setup-env.test.mjs` doc-coverage assertions exit 0)
   (Implements: S1, S7)
   Relevant files: docs/workflow/SETUP.md
-- P6 — Add the README Setup-area pointer to `docs/workflow/SETUP.md` (validator: `grep -n "docs/workflow/SETUP.md" README.md` exits 0)
+- [x] P6 — Add the README Setup-area pointer to `docs/workflow/SETUP.md` (validator: `grep -n "docs/workflow/SETUP.md" README.md` exits 0)
   (Implements: S5)
   Relevant files: README.md
-- P7 — Add `.github/workflows/setup-check.yml` (macos + ubuntu; provision then `node scripts/setup-env.mjs --check`) (validator: `node --test scripts/setup-env.test.mjs` workflow assertions exit 0)
+- [x] P7 — Add `.github/workflows/setup-check.yml` (macos + ubuntu; provision then `node scripts/setup-env.mjs --check`) (validator: `node --test scripts/setup-env.test.mjs` workflow assertions exit 0)
   (Implements: S4)
   Relevant files: .github/workflows/setup-check.yml
-- P8 — Whole-unit verification: full root gate + both scripts in the foreground, close the obligations ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P8 — Whole-unit verification: full root gate + both scripts in the foreground, close the obligations ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S2, S3, S6)
-- P9 — RED tests for the progressive pipeline: stepwise stop-on-failure, bounded convergence, config verification (committed read-only, local state rebuilt when missing), worktree-shaped fixture, PATH augmentation after installer runs (validator: `node --test scripts/setup-env.test.mjs` fails RED before P10, exits 0 after)
+- [x] P9 — RED tests for the progressive pipeline: stepwise stop-on-failure, bounded convergence, config verification (committed read-only, local state rebuilt when missing), worktree-shaped fixture, PATH augmentation after installer runs (validator: `node --test scripts/setup-env.test.mjs` fails RED before P10, exits 0 after)
   (Implements: S8, S9)
   Relevant files: scripts/setup-env.test.mjs
-- P10 — Implement the progressive pipeline in `scripts/setup-env.mjs`: config steps (`.serena/cache`, schema dist build, pi-crate modules), verify→fix loop with max 3 passes, PATH augmentation, stop-on-first-failure (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P10 — Implement the progressive pipeline in `scripts/setup-env.mjs`: config steps (`.serena/cache`, schema dist build, pi-crate modules), verify→fix loop with max 3 passes, PATH augmentation, stop-on-first-failure (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S8, S9)
   Relevant files: scripts/setup-env.mjs
-- P11 — Update `docs/workflow/SETUP.md` with the progressive pipeline, the local-state steps and the worktree resetup note, + doc-coverage assertions (validator: `node --test scripts/setup-env.test.mjs` doc-coverage assertions exit 0)
+- [x] P11 — Update `docs/workflow/SETUP.md` with the progressive pipeline, the local-state steps and the worktree resetup note, + doc-coverage assertions (validator: `node --test scripts/setup-env.test.mjs` doc-coverage assertions exit 0)
   (Implements: S1, S8, S9)
   Relevant files: docs/workflow/SETUP.md, scripts/setup-env.test.mjs
-- P12 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P12 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S8, S9)
-- P13 — RED tests for the bun pin: `.bun-version` read, minimum verification, pinned install/repair command, doc-coverage (validator: `node --test scripts/setup-env.test.mjs` fails RED before P14, exits 0 after)
+- [x] P13 — RED tests for the bun pin: `.bun-version` read, minimum verification, pinned install/repair command, doc-coverage (validator: `node --test scripts/setup-env.test.mjs` fails RED before P14, exits 0 after)
   (Implements: S2a)
   Relevant files: scripts/setup-env.test.mjs
-- P14 — Implement the bun pin in `scripts/setup-env.mjs` + commit `.bun-version` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P14 — Implement the bun pin in `scripts/setup-env.mjs` + commit `.bun-version` (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S2a)
   Relevant files: scripts/setup-env.mjs, .bun-version
-- P15 — Update `docs/workflow/SETUP.md` (`.bun-version` in the tool table and the committed-state list), re-verify and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P15 — Update `docs/workflow/SETUP.md` (`.bun-version` in the tool table and the committed-state list), re-verify and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S2a, S1)
   Relevant files: docs/workflow/SETUP.md
-- P16 — RED tests for the minimum semantics (S2b): ≥ comparison, behind-row, repair-only-when-behind (validator: `node --test scripts/setup-env.test.mjs` fails RED before P17, exits 0 after)
+- [x] P16 — RED tests for the minimum semantics (S2b): ≥ comparison, behind-row, repair-only-when-behind (validator: `node --test scripts/setup-env.test.mjs` fails RED before P17, exits 0 after)
   (Implements: S2b)
   Relevant files: scripts/setup-env.test.mjs
-- P17 — Implement the minimum semantics in `scripts/setup-env.mjs` and amend SETUP.md (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P17 — Implement the minimum semantics in `scripts/setup-env.mjs` and amend SETUP.md (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S2b)
   Relevant files: scripts/setup-env.mjs, docs/workflow/SETUP.md
-- P18 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P18 — Re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S2b)
-- P19 — RED tests for the S10 override row, including the AC3 guard scanning the write payload (validator: `node --test scripts/setup-env.test.mjs` fails RED before P20, exits 0 after)
+- [x] P19 — RED tests for the S10 override row, including the AC3 guard scanning the write payload (validator: `node --test scripts/setup-env.test.mjs` fails RED before P20, exits 0 after)
   (Implements: S10)
   Relevant files: scripts/setup-env.test.mjs
-- P20 — Plan the machine-local `.serena/project.local.yml` override in `scripts/setup-env.mjs`, never overwriting an existing one (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P20 — Plan the machine-local `.serena/project.local.yml` override in `scripts/setup-env.mjs`, never overwriting an existing one (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S10)
   Relevant files: scripts/setup-env.mjs
-- P21 — Reproduce PE-010 in a fresh worktree and record the fix in `docs/workflow/SETUP.md` (validator: `node scripts/setup-env.mjs` in a fresh `git worktree` exits 0 and the `--check` after it exits 0)
+- [x] P21 — Reproduce PE-010 in a fresh worktree and record the fix in `docs/workflow/SETUP.md` (validator: `node scripts/setup-env.mjs` in a fresh `git worktree` exits 0 and the `--check` after it exits 0)
   (Implements: S10)
   Relevant files: docs/workflow/SETUP.md, scripts/setup-env.test.mjs
-- P22 — RED tests for the S11 amendment, then implement it: node gone from verify/plan, bun opt-in via interactive question (`parseYesNo`, `bunOptInNote`), warn rows that never fail `--check`, bun-built local steps skipped while bun is absent (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P22 — RED tests for the S11 amendment, then implement it: node gone from verify/plan, bun opt-in via interactive question (`parseYesNo`, `bunOptInNote`), warn rows that never fail `--check`, bun-built local steps skipped while bun is absent (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S11)
   Relevant files: scripts/setup-env.mjs, scripts/setup-env.test.mjs
-- P23 — Remove `.github/workflows/setup-check.yml` and its suite assertions; add the S12 absence assertions (validator: `node --test scripts/setup-env.test.mjs` exits 0)
+- [x] P23 — Remove `.github/workflows/setup-check.yml` and its suite assertions; add the S12 absence assertions (validator: `node --test scripts/setup-env.test.mjs` exits 0)
   (Implements: S12)
   Relevant files: .github/workflows/setup-check.yml, scripts/setup-env.test.mjs
-- P24 — Update `docs/workflow/SETUP.md` (node/bun prerequisites, bun opt-in, warn semantics, CI section removed), re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
+- [x] P24 — Update `docs/workflow/SETUP.md` (node/bun prerequisites, bun opt-in, warn semantics, CI section removed), re-verify the whole unit and close the amended ledger (validator: `node --test scripts/*.test.mjs` exits 0)
   (Implements: S11, S12)
 
 ### Planning evidence

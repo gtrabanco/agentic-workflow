@@ -164,36 +164,36 @@ R1–R5 are O1, O2, O5, O6, O9's validators below.
 
 ## Tasks
 
-- P1 — Cut the unit doc, ledgers, and the index registration.
+- [x] P1 — Cut the unit doc, ledgers, and the index registration.
   (validator: `node scripts/phase-lint.mjs docs/fix/319-location-index-consolidation/SPEC.md` exits 0)
   (Implements: S3, S5, S10)
   Relevant files: docs/fix/319-location-index-consolidation/SPEC.md
-- P2 — Publish the path constants + the tolerant/closed reader in the crate, and migrate every live consumer to it.
+- [x] P2 — Publish the path constants + the tolerant/closed reader in the crate, and migrate every live consumer to it.
   (validator: `node --test scripts/index-document.test.mjs` exits 0)
   (Implements: S6, S7, S8)
   Relevant files: packages/agentic-workflow/src/index-document.mjs
-- P3 — Mirror the constants in the schema package and read the consolidated document in `compileWorkflowSnapshot`.
+- [x] P3 — Mirror the constants in the schema package and read the consolidated document in `compileWorkflowSnapshot`.
   (validator: `cd packages/agentic-workflow-schema && bun run test` exits 0)
   (Implements: S7, S8, S12)
   Relevant files: packages/agentic-workflow-schema/src/paths.ts
-- P4 — Move and consolidate the index; reduce `docs/fix/README.md` to the stub.
+- [x] P4 — Move and consolidate the index; reduce `docs/fix/README.md` to the stub.
   (validator: `node --test scripts/index-document.test.mjs` exits 0)
   (Implements: S1, S2, S5, S11)
   Relevant files: docs/ROADMAP.md
-- P5 — Re-pin the fixture trees and the golden fixture to the consolidated layout.
+- [x] P5 — Re-pin the fixture trees and the golden fixture to the consolidated layout.
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S8, S10)
   Relevant files: scripts/fixtures
-- P6 — Migrate the skills, `template/` substrate and live `docs/workflow/` pages.
+- [x] P6 — Migrate the skills, `template/` substrate and live `docs/workflow/` pages.
   (validator: `rg -n 'docs/features/ROADMAP' docs/workflow skills template` exits 0)
   (Implements: S8, S9, S10, S7)
   Relevant files: skills/unit-lane/SKILL.md
-- P7 — Verification: declaration, receipt and the changeset intent.
+- [x] P7 — Verification: declaration, receipt and the changeset intent.
   (validator: `node scripts/run-root-suite.mjs` exits 0)
   (Implements: S4, S10, S12)
   Relevant files: .changeset
 
-- P8 — Close the migration window: every deterministic consumer resolves the published path only and refuses a pre-move tree with a `roadmap-moved` pointer.
+- [x] P8 — Close the migration window: every deterministic consumer resolves the published path only and refuses a pre-move tree with a `roadmap-moved` pointer.
   (validator: `node --test scripts/roadmap-moved.test.mjs` exits 0)
   (Implements: S6a)
   Relevant files: scripts/roadmap-moved.test.mjs

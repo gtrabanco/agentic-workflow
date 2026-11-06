@@ -222,7 +222,7 @@ Context-clean `/review-change` in a conversation that did not implement this cha
 
 ## References
 
-- Roadmap row [`103 doc-currency`](../ROADMAP.md) (added by P7).
+- Roadmap row [`103 doc-currency`](../../ROADMAP.md) (added by P7).
 - Issue [#396](https://github.com/gtrabanco/agentic-workflow/issues/396) — the automation half this unit defers (S5, `## Future`).
 - `docs/features/103-doc-currency/decisions.md` — the `path-protection-records@1` justification + approval, and decisions D1–D3.
 - Owner surfaces: `AGENTS.md` §Working rules, `skills/unit-lane/references/DOCS.md`, `skills/audit-docs/SKILL.md` check 15, `skills/execute-phase/references/risk-tiers.md`.

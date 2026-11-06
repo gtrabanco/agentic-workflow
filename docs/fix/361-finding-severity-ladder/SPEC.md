@@ -194,7 +194,7 @@ and `S4` keeps `decision-required`, so neither is retired either.
 
 ## Tasks
 
-- P1 — Extract the frozen-failure corpus as failing checks before any machine,
+- [x] P1 — Extract the frozen-failure corpus as failing checks before any machine,
   grammar and prose change: the two live rows from unit 79 (F5, a functional
   defect graded `high`; F12, a docs-only drift graded `med`) reproduced as
   fixture rows that today read as identical, plus a row with the retired
@@ -204,21 +204,21 @@ and `S4` keeps `decision-required`, so neither is retired either.
   (Implements: S1, S2, S9)
   Relevant files: scripts/vocabulary-probe.test.mjs, scripts/fixtures/vocabulary-probe/tree/
 
-- P2 — Publish the two closed sets in the schema package and export them: the
+- [x] P2 — Publish the two closed sets in the schema package and export them: the
   ladder replaces `FINDINGS_TABLE_SEVERITIES`, `FINDINGS_TABLE_IMPACTS` joins it,
   and `index.ts` re-exports both (validator: `(cd packages/agentic-workflow-schema
   && bun run build && bun run test)` exits 0)
   (Implements: S1, S2)
   Relevant files: packages/agentic-workflow-schema/src/vocabularies.ts, packages/agentic-workflow-schema/src/index.ts
 
-- P3 — Carry the grammar into the four templates and the skeleton: both repo
+- [x] P3 — Carry the grammar into the four templates and the skeleton: both repo
   `_TEMPLATE/SPEC.md` docs, both exported twins and `UnitDoc.mjs` publish the
   seven-column row with the impact cell (validator: `node --test
   scripts/vocabulary-parity.test.mjs` exits 0 with its five-surface case)
   (Implements: S1, S2)
   Relevant files: docs/features/_TEMPLATE/SPEC.md, docs/fix/_TEMPLATE/SPEC.md, template/docs/features/_TEMPLATE/SPEC.md, template/docs/fix/_TEMPLATE/SPEC.md, packages/agentic-workflow/src/edit/UnitDoc.mjs
 
-- P4 — Carry the grammar into the readers and writers: `ceremony lib` parses and
+- [x] P4 — Carry the grammar into the readers and writers: `ceremony lib` parses and
   renders the impact cell, `ceremony findings` gains `--impact` and refuses an
   unpublished token, `unit-route` steps over the cell, and the sensor projects
   the ladder onto the envelope (validator: `node --test
@@ -226,7 +226,7 @@ and `S4` keeps `decision-required`, so neither is retired either.
   (Implements: S1, S2, S3)
   Relevant files: scripts/ceremony/lib.mjs, scripts/ceremony/findings.mjs, scripts/unit-route.mjs, scripts/workflow-status.mjs
 
-- P5 — Gate the grammar: the probe gains the `finding-impact` dimension and the
+- [x] P5 — Gate the grammar: the probe gains the `finding-impact` dimension and the
   ladder severity set, the parity suite pins both sets across the templates and
   the nine finder tables, and the drift inventory declares the two new grammar
   cells (validator: `node --test scripts/vocabulary-probe.test.mjs
@@ -234,7 +234,7 @@ and `S4` keeps `decision-required`, so neither is retired either.
   (Implements: S1, S2, S5, S9)
   Relevant files: scripts/vocabulary-probe.mjs, scripts/vocabulary-parity.test.mjs, scripts/normative-drift.test.mjs, AGENTS.md
 
-- P6 — Own the meanings in one place: `CLASSIFY.md` publishes the ladder, the
+- [x] P6 — Own the meanings in one place: `CLASSIFY.md` publishes the ladder, the
   baseline-advisory rule, the total conversion table (never a `BLOCKER` target)
   and the `decision-required` escalation (validator: `node --test
   scripts/vocabulary-parity.test.mjs` exits 0 including the one-home and
@@ -242,21 +242,21 @@ and `S4` keeps `decision-required`, so neither is retired either.
   (Implements: S3, S4, S8)
   Relevant files: skills/review-implementation/references/CLASSIFY.md, skills/review-implementation/SKILL.md
 
-- P7 — Carry the vocabulary into the nine finder output contracts, so each
+- [x] P7 — Carry the vocabulary into the nine finder output contracts, so each
   publishes the ladder and the impact set in its own fixed table (validator:
   `node --test scripts/vocabulary-parity.test.mjs` exits 0 with its nine-finder
   loop, and `rg -c 'critical\|major\|minor' skills/review-*` matches 0)
   (Implements: S1, S2)
   Relevant files: skills/review-code/SKILL.md, skills/review-security/SKILL.md, skills/review-verify/SKILL.md, skills/review-perf/SKILL.md, skills/review-design/SKILL.md, skills/review-a11y/SKILL.md, skills/review-brand/SKILL.md, skills/review-seo/SKILL.md, skills/review-debt/SKILL.md
 
-- P8 — Carry the vocabulary into `review-change`'s synthesis, report and persist
+- [x] P8 — Carry the vocabulary into `review-change`'s synthesis, report and persist
   contracts, so the fused table and the report block carry both cells
   (validator: `node --test scripts/vocabulary-parity.test.mjs
   scripts/ledger-ownership.test.mjs` exits 0)
   (Implements: S1, S2, S6, S8)
   Relevant files: skills/review-change/SKILL.md, skills/review-change/references/ADVERSARIAL_SYNTHESIS.md, skills/review-change/references/OUTPUT_AND_GUARDRAILS.md, skills/review-change/references/PERSIST_AND_DECIDE.md
 
-- P9 — Carry the vocabulary into the audit, fold and ledger contracts:
+- [x] P9 — Carry the vocabulary into the audit, fold and ledger contracts:
   `product-audit`'s finding line, `audit-pr`'s blocker row, `fold-findings`'s
   frozen-severity branch, `triage-issue`'s ledger append, `LEDGERS.md`'s carrier
   map and `SENSOR_CORE.md`'s tier projection (validator: `node --test
@@ -264,14 +264,14 @@ and `S4` keeps `decision-required`, so neither is retired either.
   (Implements: S1, S2, S6, S8)
   Relevant files: skills/product-audit/SKILL.md, skills/audit-pr/references/03_AUDIT_PROCESS.md, skills/fold-findings/SKILL.md, skills/triage-issue/references/FOLD_LEDGER.md, skills/pre-execution-review/references/LEDGERS.md, skills/workflow-status/references/SENSOR_CORE.md
 
-- P10 — Add `skill-lint`'s eighth rule for the two published sets and publish the
+- [x] P10 — Add `skill-lint`'s eighth rule for the two published sets and publish the
   migration note for the six- to seven-column move (validator: `rg -n
   'FINDINGS_TABLE_IMPACTS' skills/skill-lint/references/DISCOVERY_AND_LINT.md`
   matches 1 and `rg -n 'findings-table@1' docs/workflow/MIGRATION.md` matches 1)
   (Implements: S6)
   Relevant files: skills/skill-lint/SKILL.md, skills/skill-lint/references/DISCOVERY_AND_LINT.md, docs/workflow/MIGRATION.md
 
-- P11 — Register the unit, record the decisions, re-base any budget the growth
+- [x] P11 — Register the unit, record the decisions, re-base any budget the growth
   moves and run the whole gate (validator: `node scripts/run-root-suite.mjs`
   exits 0, `bun scripts/check-skill-context.mjs` exits 0, `bun
   scripts/lint-changeset.mjs` exits 0, and `node scripts/unit-route.mjs 361`

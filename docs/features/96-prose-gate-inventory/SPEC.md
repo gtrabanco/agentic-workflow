@@ -164,7 +164,7 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
 
 ## Tasks
 
-- [ ] P1 — Frozen-failure corpus first: the validator suite lands RED before the
+- [x] P1 — Frozen-failure corpus first: the validator suite lands RED before the
       validator exists, with one reproducer per failure mode — a prose anchor whose
       sentence moved, a script pin whose token vanished, an uncited discipline
       suite, an unmigrated `migrate` tier, a stay row with no reason, a tier cell
@@ -174,7 +174,7 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
       (Implements: S1, S4)
       Relevant files: scripts/prose-gate-inventory.test.mjs, scripts/fixtures/prose-gate-inventory/
 
-- [ ] P2 — The inventory carrier: `docs/workflow/GATE_INVENTORY.md` publishes the
+- [x] P2 — The inventory carrier: `docs/workflow/GATE_INVENTORY.md` publishes the
       `prose-gate-inventory@1` block (gate id, statement, carrier, anchor file,
       section, token, three scores, derived tier, stay reason, re-derivation
       pointer) and the prose that explains the ranking, the closed vocabularies and
@@ -184,7 +184,7 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
       (Implements: S1, S3, S6)
       Relevant files: docs/workflow/GATE_INVENTORY.md, AGENTS.md, docs/workflow/README.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json
 
-- [ ] P3 — The validator: one read-only script parses the block strictly, resolves
+- [x] P3 — The validator: one read-only script parses the block strictly, resolves
       every script pin and prose anchor, recomputes `safety × recurrence` and the
       derived tier, refuses any `migrate` row left at the head, and fails closed on
       an uncited gate suite. Its report prints each resolved `file:line`.
@@ -193,7 +193,7 @@ migrations touch: `scripts/doc-discipline.test.mjs`,
       (Implements: S1, S4)
       Relevant files: scripts/prose-gate-inventory.mjs
 
-- [ ] P4 — Migration 1, documentation language: `check-docs-language` becomes an
+- [x] P4 — Migration 1, documentation language: `check-docs-language` becomes an
       automatic assertion over the repository head (it exists as a ceremony op and
       nothing re-runs it on a push), so a committed `.es.md` fails the root suite.
       (validator: `bun test scripts/doc-discipline.test.mjs` exits 0; a fixture

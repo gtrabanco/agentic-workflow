@@ -162,39 +162,39 @@ with no registration step.
 
 ## Tasks
 
-- P1 — Create this unit doc and its two ledgers; freeze the requirements, the
+- [x] P1 — Create this unit doc and its two ledgers; freeze the requirements, the
   acceptance criteria and the failure corpus before any code (validator:
   `bun scripts/phase-lint.mjs docs/fix/357-skill-lint-smells-supply-chain/SPEC.md`
   exits 0 and its verdict line reads `verdict: PASS`)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14)
   Relevant files: docs/fix/357-skill-lint-smells-supply-chain/SPEC.md
-- P2 — Tests first: `scripts/skill-lint.test.mjs` with one red fixture per check
+- [x] P2 — Tests first: `scripts/skill-lint.test.mjs` with one red fixture per check
   (SL-01…SL-07), the two allowance cases, the ablation cases and the
   shipped-tree pin (validator: `node --test scripts/skill-lint.test.mjs` exits
   non-zero before the scanner exists, every case failing on the missing module)
   (Implements: S11, S2, S3, S4, S5, S6, S7, S8)
   Relevant files: scripts/skill-lint.test.mjs
-- P3 — Implement `scripts/skill-lint.mjs`: the seven checks, the declared marker
+- [x] P3 — Implement `scripts/skill-lint.mjs`: the seven checks, the declared marker
   shape, the pinned-URL rule, the scan of `skills/**/*.md`, `--skill` subsetting,
   `--json`, the byte-stable report and the PASS/FAIL exit code (validator:
   `node --test scripts/skill-lint.test.mjs` exits 0)
   (Implements: S1, S2, S3, S4, S5, S6, S7, S8, S10, S11)
   Relevant files: scripts/skill-lint.mjs
-- P4 — Wire the linter: the new reference `references/CHECKS.md` (the checks, the
+- [x] P4 — Wire the linter: the new reference `references/CHECKS.md` (the checks, the
   declared allowances, the recorded skips of S9), and `SKILL.md` runs the scanner
   in its Turn contract and process without losing the seven authoring rules
   (validator: `node scripts/skill-lint.mjs` exits 0 and
   `rg -c 'CHECKS.md' skills/skill-lint/SKILL.md` matches 3)
   (Implements: S1, S9, S10, S13)
   Relevant files: skills/skill-lint/SKILL.md, skills/skill-lint/references/CHECKS.md
-- P5 — The sweep, the docs and the release intent: run the full scan, triage what
+- [x] P5 — The sweep, the docs and the release intent: run the full scan, triage what
   it reports (D1/D2), update `docs/workflow/SKILLS.md`, the roadmap rows, the two
   attribution landing cells, the change→suite route and the changeset
   (validator: `bun scripts/check-skill-context.mjs` exits 0 and
   `bun scripts/lint-changeset.mjs` exits 0)
   (Implements: S9, S12, S13, S14)
   Relevant files: docs/workflow/SKILLS.md, docs/ROADMAP.md, docs/research/ATTRIBUTION.md, scripts/test-route-map.json, .changeset
-- P6 — Verification on the full diff and the hand-off: every obligation row
+- [x] P6 — Verification on the full diff and the hand-off: every obligation row
   closed, the root gate green, the differential run recorded, and the diff handed
   to the owner for the verdict; the branch was pushed and [PR
   #377](https://github.com/gtrabanco/agentic-workflow/pull/377) opened when the

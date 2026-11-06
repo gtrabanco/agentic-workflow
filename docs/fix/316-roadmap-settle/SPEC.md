@@ -111,26 +111,26 @@ none
 
 ## Tasks
 
-- P1 — crate: `roadmap check <doc-path>` subcommand with `checkUnitDoc` /
+- [x] P1 — crate: `roadmap check <doc-path>` subcommand with `checkUnitDoc` /
   `findRow`, closed code set `ROADMAP_CHECK_CODES`
   (`row-missing`, `slug-mismatch`, `pr-url-unsettled`), exit contract 0
   consistent · 1 violations · 2 usage, and the separator-detection fix
   (validator: `node --test packages/agentic-workflow/test/roadmap-check.test.mjs` exits 0)
   (Implements: S2, S4)
   Relevant files: packages/agentic-workflow/src/edit/Roadmap.mjs, packages/agentic-workflow/bin/agentic-workflow.mjs, packages/agentic-workflow/test/roadmap-check.test.mjs
-- P2 — repo wiring: root gate `scripts/roadmap-settle.mjs` (offline, fails
+- [x] P2 — repo wiring: root gate `scripts/roadmap-settle.mjs` (offline, fails
   closed, named codes) + frozen-failure corpus under
   `scripts/fixtures/roadmap-settle/` + case in the root suite
   (validator: `bun test scripts/roadmap-settle.test.mjs` exits 0)
   (Implements: S2, S4)
   Relevant files: scripts/roadmap-settle.mjs, scripts/roadmap-settle.test.mjs, scripts/fixtures/roadmap-settle/
-- P3 — `scripts/unit-cycle.mjs` writes the settle itself: `settleRoadmapRow()` /
+- [x] P3 — `scripts/unit-cycle.mjs` writes the settle itself: `settleRoadmapRow()` /
   `parsePrUrl()` and a `settle-roadmap` state-machine action between release
   and the receipt chain, via the crate's `rowUpsert`, every cell preserved
   (validator: `bun test scripts/unit-cycle.test.mjs` exits 0)
   (Implements: S1)
   Relevant files: scripts/unit-cycle.mjs, scripts/unit-cycle.test.mjs
-- P4 — skill call sites: `unit-lane` RELEASE.md checklist calls the writer,
+- [x] P4 — skill call sites: `unit-lane` RELEASE.md checklist calls the writer,
   PLAN.md emits the release-settle task P<n+1>, `execute-phase` close-out step
   invokes it; README + `docs/workflow/LANE_FLOW.md` API table
   (validator: `bun scripts/check-skill-context.mjs` exits 0)

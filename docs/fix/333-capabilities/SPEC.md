@@ -265,17 +265,17 @@ carries its no-consumer evidence.
 
 ## Tasks
 
-- P1 — Freeze the unit: this SPEC, the two planning ledgers, the § Fixes row, the
+- [x] P1 — Freeze the unit: this SPEC, the two planning ledgers, the § Fixes row, the
   release intent. (validator: `node scripts/phase-lint.mjs docs/fix/333-capabilities/SPEC.md` exits 0 printing `PASS`)
   (Implements: S1, S6, S7, S8, S9, S10, S11)
-- P2 — The red corpus first: `scripts/capability-inventory.test.mjs` with its pure
+- [x] P2 — The red corpus first: `scripts/capability-inventory.test.mjs` with its pure
   readers and its fixture half (the shipped template as the refused seed, a settled
   copy as the passing one), validated on a throwaway tree before it points at the
   real files. (validator: `node --test scripts/capability-inventory.test.mjs` exits
   1 naming the placeholder cells of `docs/CAPABILITIES.md` before P3, exits 0 after
   P7)
   (Implements: S5, S16, S19)
-- P3 — Rewrite the discovery route: the `Capability inventory` bullet plus
+- [x] P3 — Rewrite the discovery route: the `Capability inventory` bullet plus
   `capability-inventory@1` and `capability-evidence@1`. (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 with the six-move, ask-order and forbid cases passing)
   (Implements: S1, S2, S3, S4, S7, S12, S13, S14)
 - P4 — Add the post-write gate to the write route. (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 with the write-gate case passing, and the same case fails when the gate paragraph is removed)
@@ -288,7 +288,7 @@ carries its no-consumer evidence.
 - P7 — Repair this repository's inventory under the corrected rule.
   (validator: `node --test scripts/capability-inventory.test.mjs` exits 0 with the placeholder-cell, evidence-path and structural cases passing)
   (Implements: S11, S13, S14, S15, S17, S20)
-- P8 — Verification and close-out: every obligation flips with its validator's
+- [x] P8 — Verification and close-out: every obligation flips with its validator's
   run recorded; the root gate and the context budgets are green.
   (validator: `node scripts/run-root-suite.mjs` exits 0 with `fail 0`)
   (Implements: S12, S16, S17)

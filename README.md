@@ -28,7 +28,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ```
 skills/                  28 source skills (13 user-facing + 14 workflow internals + 1 metadata-internal; 27 discoverable — skill-lint is repo-only)
 packages/                three companion npm packages: @gtrabanco/agentic-workflow (the runner crate —
-                         `agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|memory>`, typed file
+                         `agentic-workflow <unit-doc|roadmap|changelog|budgets|manifest|doc|section|relay|memory|log>`, typed file
                          services, guards and the `doc` retrieval index), @gtrabanco/agentic-workflow-schema
                          (machine contracts) and @gtrabanco/pi-agentic-workflow (one-command install for Pi —
                          see Install)

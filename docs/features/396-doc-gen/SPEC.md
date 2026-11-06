@@ -180,48 +180,48 @@ change's own diff (the tier is the classifier's, never this document's):
 
 ## Tasks
 
-- P1 — Cut the frozen corpus as a failing suite, alone and observed red on the
+- [x] P1 — Cut the frozen corpus as a failing suite, alone and observed red on the
   absent module (validator: `bun test scripts/docs-generate.test.mjs` exits 1
   with `ERR_MODULE_NOT_FOUND` naming `docs-generate.mjs`)
   (Implements: S2, S3, S4, S5, S6, S7)
   Relevant files: scripts/docs-generate.test.mjs
-- P2 — Implement the generator: `Docs site` discovery, the four emitters,
+- [x] P2 — Implement the generator: `Docs site` discovery, the four emitters,
   `--check` / `--dry-run` / projection, and orphan deletion (validator:
   `bun test scripts/docs-generate.test.mjs` exits 0)
   (Implements: S2, S3, S4, S5, S6, S7)
   Relevant files: scripts/docs-generate.mjs
-- P3 — Register the new suite in the path→suite map (validator:
+- [x] P3 — Register the new suite in the path→suite map (validator:
   `bun test scripts/test-route.test.mjs` exits 0)
   (Implements: S2)
   Relevant files: scripts/test-route-map.json
-- P4 — Make the documentation task required and named in the lane's docs step —
+- [x] P4 — Make the documentation task required and named in the lane's docs step —
   what was documented and in which declared format, with the `--check` receipt
   (validator: `bun scripts/skill-lint.mjs` exits 0 with `verdict: PASS`)
   (Implements: S1)
   Relevant files: skills/unit-lane/references/DOCS.md
-- P5 — Carry the format question in the init interview, naming the four targets
+- [x] P5 — Carry the format question in the init interview, naming the four targets
   and the additive-with-consent path (validator:
   `rg -c "format" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`
   matches ≥ 1)
   (Implements: S8)
   Relevant files: skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md
-- P6 — State the write step: the block is filled for a new project and offered
+- [x] P6 — State the write step: the block is filled for a new project and offered
   additively, with explicit consent, to an existing one (validator:
   `rg -c "Docs site" skills/init-workspace/references/BOOTSTRAP_WRITE.md`
   matches ≥ 1)
   (Implements: S8)
   Relevant files: skills/init-workspace/references/BOOTSTRAP_WRITE.md
-- P7 — Point the skill's own body at the format choice and the generator
+- [x] P7 — Point the skill's own body at the format choice and the generator
   (validator: `rg -c "docs-generate" skills/init-workspace/SKILL.md` matches 1)
   (Implements: S8)
   Relevant files: skills/init-workspace/SKILL.md
-- P8 — Widen the exported `Docs site` block to the four output targets and name
+- [x] P8 — Widen the exported `Docs site` block to the four output targets and name
   the generator beside it (validator:
   `rg -c "docs-generate" template/AGENTS.md` matches 1 and
   `bun test scripts/scaffold-guide.test.mjs` exits 0)
   (Implements: S3, S8)
   Relevant files: template/AGENTS.md
-- P9 — Index the unit on the roadmap (validator: `bun scripts/roadmap-settle.mjs`
+- [x] P9 — Index the unit on the roadmap (validator: `bun scripts/roadmap-settle.mjs`
   exits 0)
   (Implements: S2)
   Relevant files: docs/ROADMAP.md

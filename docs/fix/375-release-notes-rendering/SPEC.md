@@ -87,7 +87,7 @@ channel (same intent: the notes file is written outside the worktree, before
 
 ## Tasks
 
-- P1 — pin the rendered body: per-change headings, kind grouping with breaking first, the bumps table, the install block per channel, the canary delta, the stable "no release intent" refusal (validator: `node --test scripts/release.test.mjs` exits non-zero, every new assertion failing on the concatenated output) (Implements: S1, S2, S3)
+- [x] P1 — pin the rendered body: per-change headings, kind grouping with breaking first, the bumps table, the install block per channel, the canary delta, the stable "no release intent" refusal (validator: `node --test scripts/release.test.mjs` exits non-zero, every new assertion failing on the concatenated output) (Implements: S1, S2, S3)
   Relevant files: scripts/release.test.mjs
 - P2 — render the body: `resolveReleasePlan` shared by plan/apply/release-notes, `splitChange`, `bumpRows`, `installBlock`, `previousCanaryTag` + `changesetsAtTag` for the canary delta (validator: `node --test scripts/release.test.mjs` exits 0) (Implements: S1, S2, S3)
   Relevant files: scripts/release.mjs

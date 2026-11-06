@@ -129,10 +129,10 @@ Run gates in order; any fails → STOP (see [PREFLIGHT.md](references/PREFLIGHT.
    (not PLAN.md/TASKS.md). Exit 1 → STOP. If the script is absent, apply the
    eight `phase-contract` rules by hand, label weaker, and disclose.
 3. **Pre-write mapper** — for `implement` steps, settle the pre-write mapper
-   contract before branch creation, planning commit, or source/test edit:
-   ([implementation-discovery](../implementation-discovery/SKILL.md)): it closes
-   the seven evidence questions and routes `READY | REPLAN | NEEDS-DESIGN |
-   BLOCKED`; only `READY` authorizes the first write.
+   contract before branch creation, planning commit, or source/test edit
+   (`references/PRE_EXECUTION_GATE.md`): it closes the seven evidence questions
+   and routes `READY | REPLAN | NEEDS-DESIGN | BLOCKED`; only `READY`
+   authorizes the first write.
 4. **Dependency/invariant checks** — per unit-lane's triage catalog rules:
    ensure required dependencies are merged; architectural invariants preserved
    or backed by an explicit recorded decision (block `violates`/`introduces`/

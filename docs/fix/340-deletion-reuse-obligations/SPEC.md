@@ -231,14 +231,14 @@ validator — the gate that was red at base is green at head:
 
 ## Tasks
 
-- P1 — Declare the residue dimension sweeps (duplicate content incl. prose,
+- [x] P1 — Declare the residue dimension sweeps (duplicate content incl. prose,
   unused code two ways, obsolete + missing docs, features-preserved) in
   `product-audit`'s dimension table with pass-only-if checklists, and run them
   from the audit process (validator: `node --test scripts/residue-dimensions.test.mjs`
   exits 0 — dimension-sweep section)
   (Implements: S1, S2, S3, S4)
   Relevant files: skills/product-audit/references/AUDIT_DIMENSIONS.md, skills/product-audit/references/AUDIT_PROCESS.md
-- P2 — Ship the deterministic seeded-fixture generator (four seeds + clean
+- [x] P2 — Ship the deterministic seeded-fixture generator (four seeds + clean
   twin, written on demand outside the tree) and pin it (validator:
   `node scripts/product-audit-residue-fixture.mjs <dir>` exits 0 and yields
   the four seed files plus the clean tree; pinned by

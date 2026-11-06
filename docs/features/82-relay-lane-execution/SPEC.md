@@ -171,25 +171,25 @@ Verdict produced at cut with `bun scripts/ceremony.mjs tier classify` over the b
 
 ## Tasks
 
-- P1 — Freeze the unit doc, the two planning ledgers and the roadmap row for issue #294 (validator: `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` exits 0)
+- [x] P1 — Freeze the unit doc, the two planning ledgers and the roadmap row for issue #294 (validator: `bun scripts/phase-lint.mjs docs/features/82-relay-lane-execution/SPEC.md` exits 0)
   (Implements: S8, S22)
   Relevant files: docs/features/82-relay-lane-execution/SPEC.md, docs/features/82-relay-lane-execution/planning-evidence.md, docs/features/82-relay-lane-execution/planning-obligations.md, docs/ROADMAP.md
-- P2 — Land the red suites for the packet checker and the relay route, with their committed fixtures, before any implementation (validator: `bun test scripts/relay-packet.test.mjs scripts/relay-route.test.mjs` exits 1 naming the missing module)
+- [x] P2 — Land the red suites for the packet checker and the relay route, with their committed fixtures, before any implementation (validator: `bun test scripts/relay-packet.test.mjs scripts/relay-route.test.mjs` exits 1 naming the missing module)
   (Implements: S23, S24, S25)
   Relevant files: scripts/relay-packet.test.mjs, scripts/relay-route.test.mjs, scripts/fixtures/relay-packet/
-- P3 — Implement the read-only packet checker: packet layout, charter pointer, baton grammar, leg budget, tier mapping, `REVIEW-VERDICT` grammar (validator: `bun test scripts/relay-packet.test.mjs` exits 0)
+- [x] P3 — Implement the read-only packet checker: packet layout, charter pointer, baton grammar, leg budget, tier mapping, `REVIEW-VERDICT` grammar (validator: `bun test scripts/relay-packet.test.mjs` exits 0)
   (Implements: S4, S5, S6, S7, S9, S11, S12, S25)
   Relevant files: scripts/relay-packet.mjs
-- P4 — Emit the relay bootstrap hint and the per-phase fallback from the router, reading the leg tier from the catalog (validator: `bun test scripts/relay-route.test.mjs scripts/unit-route.test.mjs scripts/catalog.test.mjs` exits 0)
+- [x] P4 — Emit the relay bootstrap hint and the per-phase fallback from the router, reading the leg tier from the catalog (validator: `bun test scripts/relay-route.test.mjs scripts/unit-route.test.mjs scripts/catalog.test.mjs` exits 0)
   (Implements: S1, S2, S14, S24)
   Relevant files: scripts/unit-route.mjs, scripts/catalog.json, scripts/fixtures/
-- P5 — Publish the relay leg contract in the lane skill and give the executor its one-phase parity sentence (validator: `bun scripts/check-skill-context.mjs --routes` exits 0)
+- [x] P5 — Publish the relay leg contract in the lane skill and give the executor its one-phase parity sentence (validator: `bun scripts/check-skill-context.mjs --routes` exits 0)
   (Implements: S3, S10, S12, S13, S15, S16, S17, S18, S19, S20, S21)
   Relevant files: skills/unit-lane/references/RELAY.md, skills/unit-lane/SKILL.md, skills/execute-phase/SKILL.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json, AGENTS.md
-- P6 — Ship the documentation and release surface: README, CHANGELOG companion row, changeset, regenerated projections, roadmap row (validator: `bun scripts/version-parity-gate.mjs --content` exits 0)
+- [x] P6 — Ship the documentation and release surface: README, CHANGELOG companion row, changeset, regenerated projections, roadmap row (validator: `bun scripts/version-parity-gate.mjs --content` exits 0)
   (Implements: S22)
   Relevant files: README.md, CHANGELOG.md, .changeset/82-relay-lane-execution.md, docs/generated/
-- P7 — Close the obligations ledger and re-run the declared verification at the head (validator: `bun scripts/relay-packet.mjs obligations 82-relay-lane-execution` exits 0)
+- [x] P7 — Close the obligations ledger and re-run the declared verification at the head (validator: `bun scripts/relay-packet.mjs obligations 82-relay-lane-execution` exits 0)
   (Implements: S23, S24, S25)
 
 ### Planning evidence

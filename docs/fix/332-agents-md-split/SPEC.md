@@ -229,35 +229,35 @@ revision comment's discarded list, not here.
 
 ## Tasks
 
-- P1 — Freeze this unit doc and its two planning ledgers (validator: `test -f docs/fix/332-agents-md-split/planning-obligations.md` exits 0)
+- [x] P1 — Freeze this unit doc and its two planning ledgers (validator: `test -f docs/fix/332-agents-md-split/planning-obligations.md` exits 0)
 (Implements: S1, S2, S9, S26)
 - Relevant files: docs/fix/332-agents-md-split/
 
-- P2 — Red-first: the guide contract and its three refusal cases (validator: `node --test scripts/guide-split.test.mjs` exits 1 before P3)
+- [x] P2 — Red-first: the guide contract and its three refusal cases (validator: `node --test scripts/guide-split.test.mjs` exits 1 before P3)
 (Implements: S1, S4, S7)
 - Relevant files: scripts/guide-split.test.mjs
 
-- P3 — Extract the authoring and packages prose into `docs/workflow/`, leaving the pointers and the Deep-references index (validator: `node --test scripts/guide-split.test.mjs` exits 0)
+- [x] P3 — Extract the authoring and packages prose into `docs/workflow/`, leaving the pointers and the Deep-references index (validator: `node --test scripts/guide-split.test.mjs` exits 0)
 (Implements: S1, S2, S3, S5, S6, S8, S12)
 - Relevant files: AGENTS.md
 
-- P4 — State the eight core rules: documentation map, instruction precedence, completed layout, measured runtime split, testing line, `docs/LOGS.md` hand-off, restatement-ownership and the `template/` scope boundary (validator: `node --test scripts/guide-split.test.mjs` exits 0)
+- [x] P4 — State the eight core rules: documentation map, instruction precedence, completed layout, measured runtime split, testing line, `docs/LOGS.md` hand-off, restatement-ownership and the `template/` scope boundary (validator: `node --test scripts/guide-split.test.mjs` exits 0)
 (Implements: S10, S11, S13, S14, S15, S16, S17, S18)
 - Relevant files: AGENTS.md
 
-- P5 — Extend the context gate with the `--documents` mode and declare the guide layer in the manifest (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
+- [x] P5 — Extend the context gate with the `--documents` mode and declare the guide layer in the manifest (validator: `bun scripts/check-skill-context.mjs --documents` exits 0)
 (Implements: S5, S7)
 - Relevant files: scripts/check-skill-context.mjs
 
-- P6 — Repair `template/AGENTS.md`: one `## Docs site` section, no tombstone row, a platform-neutral session log, generic versioned internals (validator: `node --test scripts/scaffold-guide.test.mjs` exits 0)
+- [x] P6 — Repair `template/AGENTS.md`: one `## Docs site` section, no tombstone row, a platform-neutral session log, generic versioned internals (validator: `node --test scripts/scaffold-guide.test.mjs` exits 0)
 (Implements: S19, S20, S21, S24)
 - Relevant files: template/AGENTS.md
 
-- P7 — Bring the two unit templates to the re-cut shape, retarget `init-workspace`, and bind `template/docs/` in both gates (validator: `node --test scripts/unit-doc-contract.test.mjs` exits 0)
+- [x] P7 — Bring the two unit templates to the re-cut shape, retarget `init-workspace`, and bind `template/docs/` in both gates (validator: `node --test scripts/unit-doc-contract.test.mjs` exits 0)
 (Implements: S22, S23, S25)
 - Relevant files: template/docs/
 
-- P8 — Verification and close-out: release intent, root suite, context budgets, version parity and the differential run (validator: `node scripts/run-root-suite.mjs` exits 0)
+- [x] P8 — Verification and close-out: release intent, root suite, context budgets, version parity and the differential run (validator: `node scripts/run-root-suite.mjs` exits 0)
 (Implements: S5, S7)
 - Relevant files: .changeset/
 

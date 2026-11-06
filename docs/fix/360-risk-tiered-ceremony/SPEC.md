@@ -159,13 +159,13 @@ cannot show its measured delta).
 
 ## Tasks
 
-- P1 — Publish the tier vocabularies and the classifier's pure module: `RISK_TIER_KINDS`, `RISK_TIER_SIGNAL_KINDS` and `RISK_TIER_REASONS` in the schema package; `scripts/risk-tiers.mjs` exporting `classifyTier(changedPaths)` and `taskSizeOf(tier)` over repo evidence only (path class + content class: executable vs prose), fail-closed upward (validator: `node --test scripts/risk-tier-classifier.test.mjs` exits 0)
+- [x] P1 — Publish the tier vocabularies and the classifier's pure module: `RISK_TIER_KINDS`, `RISK_TIER_SIGNAL_KINDS` and `RISK_TIER_REASONS` in the schema package; `scripts/risk-tiers.mjs` exporting `classifyTier(changedPaths)` and `taskSizeOf(tier)` over repo evidence only (path class + content class: executable vs prose), fail-closed upward (validator: `node --test scripts/risk-tier-classifier.test.mjs` exits 0)
   (Implements: S2, S3, S4, S5, S7)
   Relevant files: packages/agentic-workflow-schema/src/vocabularies.ts, packages/agentic-workflow-schema/src/index.ts, scripts/risk-tiers.mjs, scripts/risk-tier-classifier.test.mjs
-- P2 — Emit the tier from the closed ceremony CLI: `scripts/ceremony/tier.mjs` + the `tier` registry entry (`classify --paths <a,b>` and `read --unit <slug>`), JSON on stdout, the CLI's exit contract unchanged (validator: `node --test scripts/risk-tier-ceremony.test.mjs` exits 0 and `node scripts/ceremony.mjs tier classify --paths docs/a.md` exits 0)
+- [x] P2 — Emit the tier from the closed ceremony CLI: `scripts/ceremony/tier.mjs` + the `tier` registry entry (`classify --paths <a,b>` and `read --unit <slug>`), JSON on stdout, the CLI's exit contract unchanged (validator: `node --test scripts/risk-tier-ceremony.test.mjs` exits 0 and `node scripts/ceremony.mjs tier classify --paths docs/a.md` exits 0)
   (Implements: S7, S8, S10)
   Relevant files: scripts/ceremony.mjs, scripts/ceremony/tier.mjs
-- P3 — Project the tier in the sensor: the envelope's `detail.tier` object for the in-flight/next unit and the `sensor-fields@1` rows that declare it (validator: `node --test scripts/workflow-status-sensor.test.mjs` exits 0 and `node --test scripts/risk-tier-ceremony.test.mjs` exits 0)
+- [x] P3 — Project the tier in the sensor: the envelope's `detail.tier` object for the in-flight/next unit and the `sensor-fields@1` rows that declare it (validator: `node --test scripts/workflow-status-sensor.test.mjs` exits 0 and `node --test scripts/risk-tier-ceremony.test.mjs` exits 0)
   (Implements: S8)
   Relevant files: scripts/workflow-status.mjs, skills/workflow-status/references/SENSOR_CORE.md, packages/agentic-workflow-schema/src/index.ts
 - P4 — Bind the tier into the normative inventory and the two skills: one `normative-surfaces@1` row per published surface (the schema export and the CLI's tier block), the lane's Task Size signals and the executor's per-tier ceremony (validator: `node --test scripts/normative-drift.test.mjs` exits 0 and `node --test scripts/risk-tier-ceremony.test.mjs` exits 0)
