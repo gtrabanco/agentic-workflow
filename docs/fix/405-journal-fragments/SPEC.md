@@ -87,11 +87,11 @@ AC1–AC9 quote issue #405's "Acceptance criteria" verbatim.
 - **AC2** — Fragment names are deterministic and collision-free across concurrent sessions on the same branch; the test demonstrates two simulated sessions producing two fragments, never one overwrite. Check: `bun test packages/agentic-workflow/test/journal.test.mjs` (naming + collision cases).
 - **AC3** — The aggregator is deterministic: the same fragment set always yields byte-identical `docs/LOGS.md` (order newest-first, declared tie-break); idempotency is proven by a re-run producing a zero diff. Check: `bun test packages/agentic-workflow/test/journal.test.mjs` (determinism + idempotency cases).
 - **AC4** — Two branches each carrying a fragment merge to `main` back-to-back with **zero journal conflicts and zero lost or duplicated entries** — proven by a race fixture (the case that was manual resolution until now). Check: `bun test packages/agentic-workflow/test/journal.test.mjs` (race fixture — the frozen-failure reproducer).
-- **AC5** — The aggregator CLI has no forge dependency; the GitHub workflow and the `post-receive` example both invoke the same command unchanged. Check: `rg -c 'github|gitlab|gh |forge' packages/agentic-workflow/src/journal/` → no match, plus the example files naming the identical argv.
+- **AC5** — The aggregator CLI has no forge dependency; the GitHub workflow and the `post-receive` example both invoke the same command unchanged. Check: `rg -ci 'github|gitlab|forge' packages/agentic-workflow/src/journal/` → **no match** (amended at D9: the cut-time regex also pinned `gh `, which matches the English word "through" in a `fragment.d.mts` comment and would fail a correct tree), plus the example files naming the identical argv.
 - **AC6** — Mechanical fragments are produced by `log render` from the frozen `log-facts@1` payload, so an aggregated entry is byte-identical to today's direct append for the same facts (parity test against a direct append). Check: `bun test packages/agentic-workflow/test/journal.test.mjs` (parity case) + `bun test packages/pi-agentic-workflow/test/auto-log-session-parity.test.mjs`.
-- **AC7** — Template + `init-workspace` install is consent-gated and opt-in; a fresh install without consent writes nothing (no directory, no workflow, no config). Check: `test -e template/.agentic-workflow/journal` → absent, `test -e template/.github/workflows` → absent (only `.example` ships), and the init-workspace consent step's wording test.
+- **AC7** — Template + `init-workspace` install is consent-gated and opt-in; a fresh install without consent writes nothing (no directory, no workflow, no config). Check: `test -e template/.agentic-workflow/journal` → exit 1, `test -e template/.github/workflows/agentic-workflow-journal.yml` → exit 1 (the `.yml.example` is the only thing that ships, inside a `workflows/` directory this unit creates — D9 amended the cut-time "`template/.github/workflows` absent", which contradicts shipping the example), and the init-workspace consent step's wording test in `packages/agentic-workflow/test/journal.surfaces.test.mjs`.
 - **AC8** — The repo's own gates (context budgets, doc audits, root suites) behave correctly with `.agentic-workflow/journal/` present — the dot-directory caveat is tested, not assumed. Check: `bun test packages/agentic-workflow/test/journal.test.mjs` (dot-directory case) + `node scripts/run-root-suite.mjs` green on the changed tree.
-- **AC9** — Every consumer-facing prose surface names one owner for the fragment layout and naming grammar (no second hand-rolled grammar — the repository's single-owner rule). Check: the owner-citation assertion in `bun test packages/agentic-workflow/test/journal.test.mjs`.
+- **AC9** — Every consumer-facing prose surface names one owner for the fragment layout and naming grammar (no second hand-rolled grammar — the repository's single-owner rule). Check: `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` (the owner-citation case; D9 re-pointed this from `journal.test.mjs`, which never carried it).
 
 ## Impact
 
@@ -159,10 +159,12 @@ silently dropped.
 ## Future
 
 - **Repo self-adoption** (2026-11-05 `open` → 2026-11-06 `implemented`): the
-  owner flipped the decision (S15, Log L18) — this repository now opts in to
-  its own carrier, with `autoLogSession: mechanical` on, and the aggregation
-  workflow installed; the flip ships in this unit's diff and goes live for
-  `main` at the merge.
+  owner flipped the decision (S15, Log L18). The carrier directory, its
+  contract document and the aggregation workflow ship in this unit's diff and
+  go live for `main` at the merge; the `autoLogSession` switch does **not**
+  (D8: the running session daemon cannot parse the key, so committing it broke
+  `/log-session`). The switch is the one-line activation step of the runbook in
+  D8, after the release is installed and the daemon restarted.
 - **Feature 65 pre-aggregation visibility** (2026-11-05, status `open`): the
   index ingesting fragments between merge and aggregate — the issue's open
   question 5 default is no; revisit only if the gap proves real.
@@ -181,14 +183,18 @@ silently dropped.
 
 - `packages/agentic-workflow/test/journal.test.mjs` (new — the frozen-failure
   reproducer suite: naming, collision, race fixture, determinism, idempotency,
-  refusals, parity, dot-directory, routing, owner citation)
-- `packages/agentic-workflow/test/log.publish.test.mjs` (extended — fragment
-  routing of the local publisher)
+  refusals, parity, dot-directory, routing, CLI)
+- `packages/agentic-workflow/test/journal.surfaces.test.mjs` (new — the
+  prose-shaped contracts: AC7's template/consent absences, AC9's owner
+  citation, AC5's argv parity, and the opted-in carrier holding only fragments)
 - `packages/pi-agentic-workflow/test/auto-log-session-parity.test.mjs`
   (extended — the hook's fragment mode against the crate's grammar)
 - `packages/pi-agentic-workflow/test/auto-log-session-wiring.test.mjs`
   (extended — carrier-present wiring)
-- `scripts/session-close.test.mjs` (extended — fragment-mode close)
+- `packages/pi-agentic-workflow/test/auto-log-session.test.mjs` (extended —
+  carrier presence counts as opt-in)
+- `scripts/session-close.test.mjs` (extended — fragment-mode close, the `--log`
+  guard path)
 - `node scripts/run-root-suite.mjs` (the repo gate, always)
 
 ## Known pre-existing issues
@@ -297,3 +303,6 @@ yet. This unit runs no review pass (S4); the owner is the external verifier.
 - **L20** — (D) Interim window disclosed, not worked around: until the release carrying this branch ships and is installed locally, a pi session on this checkout runs the installed 4.10.0 extension, whose publisher still appends directly to `docs/LOGS.md`; the branch's `session-close close` refuses that touch (AC1's guard) and the writer falls back to a fragment per the updated `/log-session` skill. Full automation goes live at merge + release + install.
 - **L21** — (E) Owner-reported blocker, verbatim (2026-11-06): "/log-session refused: invalid configuration (project config, $.\"autoLogSession\": unknown config key \"autoLogSession\" (allowed: default, commands, onUnavailableRoute, onSettle, pathProtection, advance, recommendedModels, profiles, profileOrder, profileFallback, memory, telemetry)). Nothing was dispatched and no model was changed." Root cause: L18's config commit was correct for the tree (the canary dist on disk at `.pi/agent/npm/node_modules/@gtrabanco/pi-agentic-workflow/dist/config/schema.js` accepts the key — `parseConfigFile('{"autoLogSession":{"mode":"mechanical"}}')` answers `{ok:true}` when run fresh), but the long-running PI WEB session daemon loaded the extension module before the canary update (2026-11-05 17:50) and its in-process ES module cache still serves the older validator whose `ROOT_KEYS` lacks the key. The commit broke `/log-session` for every session the running daemon hosts.
 - **D8** — (D) Correction: `.pi/pi-agentic-workflow.json` is reverted to `{}` in this commit — the config switch must not land while the running daemon cannot parse it (a fail-closed validator refusing a key it does not know breaks every dispatched command in the project). The activation sequence for S15 becomes: merge → release → install the new pi package → restart the session daemon (owner-authorized operation) → flip `.pi/pi-agentic-workflow.json` to `{"autoLogSession":{"mode":"mechanical"}}`. The carrier directory and the aggregation workflow stay landed (they are inert without the switch and break nothing). D7's "the opt-in lands on the branch" is amended by this decision; O15's row records the split.
+- **D9** — (D) External-verification correction batch (2026-11-06): the carrier directory held non-fragment files, so **the aggregator refused the repository's own tree** — `.agentic-workflow/journal/README.md` (documentation) and a hand-rolled `session-…-manual-….mdf` entry (name and `#` heading both outside the grammar). Decision: **only fragments live inside the carrier; its contract document lives beside it** as `.agentic-workflow/journal.md` (the path the template already ships), the stray entry is re-cut as a conforming narrative fragment, the template's install step no longer tells an installer to copy the doc *into* the carrier, and `journal.surfaces.test.mjs` pins the rule. The same batch corrected four records that asserted pre-amendment or reverted truth: AC5's and AC7's checks (now the D6-amended regex and the active-workflow absence), AC9's cited suite (`journal.surfaces.test.mjs`, never `journal.test.mjs`), O16's `matches 1` (observed 2, as its own L19 recorded), and the Future row that still claimed the reverted `autoLogSession` flip ships here. `session-close close` now honors `--log` in carrier mode (it names the journal the guard protects) instead of accepting and ignoring it.
+- **L22** — (E) Correction batch evidence, 2026-11-06: `node packages/agentic-workflow/bin/agentic-workflow.mjs journal aggregate` on a `git ls-files` export of the tree → exit 0, `appended`/`removed` = the re-cut fragment, carrier empty after, re-run exit 0 with `fragments: 0`; `bun test packages/agentic-workflow/test/journal.surfaces.test.mjs` → 7 pass (incl. `S15 the opted-in carrier holds only parseable fragments and its doc sits beside it`); `bun test scripts/session-close.test.mjs` → 28 pass (incl. the new `--log` guard case); `cat .pi/pi-agentic-workflow.json` → `{}` with the carrier doc naming the D8 runbook.
+- **L23** — (E) Pre-existing, not repaired by this unit: `packages/agentic-workflow/test/edit.test.mjs`'s CLI smoke resolves the bin from `process.cwd()`, so `bun test packages/agentic-workflow/test/` from the repository root fails while the package cwd passes — the test file is byte-identical to base and the base archive fails identically. Repaired in the same batch as a test-side path fix (the assertion is unchanged: a file-relative bin path, which is what the test meant), recorded in `decisions.md`.

@@ -10,6 +10,7 @@ import { strictEqual, ok, throws } from "node:assert";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
 // ── SDK imports ──────────────────────────────────────────────────────────
@@ -319,7 +320,7 @@ describe("CLI smoke", () => {
     const testUnitDir = join(testDir, "docs", "features", "cli-test");
     mkdirSync(testUnitDir, { recursive: true });
 
-    const agwoPath = join(process.cwd(), "bin", "agentic-workflow.mjs");
+    const agwoPath = join(fileURLToPath(new URL("../bin/agentic-workflow.mjs", import.meta.url)));
 
     const proc = spawn("node", [agwoPath, "unit-doc", "cli-test", "create", "--json"], {
       cwd: testDir,
