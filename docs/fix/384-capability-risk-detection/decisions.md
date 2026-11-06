@@ -75,3 +75,24 @@ path-protection-records@1
 kind | paths | phase | date | authority | justification
 justification | scripts/workflow-status-sensor.test.mjs | P2 | 2026-11-06 | execute-phase | the sandbox mirror of the sensor's import graph gains the analyser module the classifier now imports; no assertion is changed
 ```
+
+## D6 — a fail-open defect in the touched classifier is repaired, not shipped
+
+While proving this unit's differential, `ceremony tier classify --base main`
+printed `github/workflows/root-suite.yml` for an uncommitted
+`.github/workflows/root-suite.yml` — `scopePaths()` reads a trimmed
+`git status --porcelain=v1`, and the trim eats the leading status column of the
+first line, so the first dirty path loses its first character. It is a fail-open
+tier: a CI, auth or publish surface in that position does not match its named
+pattern, and the change classifies `standard` where it owes `high`. Pre-existing
+(the 360 branch hit its symptom as a "dirty-file count" note), and squarely in
+this unit's own command, so it is repaired here and pinned by
+`risk-tier-ceremony.test.mjs` `C1d` — the sensor already asks git for the `-b`
+header, which is why only the CLI was affected (`scripts/workflow-status.mjs`
+reads the same listing with its header line intact).
+
+```text
+path-protection-records@1
+kind | paths | phase | date | authority | justification
+justification | scripts/risk-tier-ceremony.test.mjs | P5 | 2026-11-06 | execute-phase | new case C1d pins the pre-existing porcelain off-by-one the touched command carried; no existing assertion changes
+```
