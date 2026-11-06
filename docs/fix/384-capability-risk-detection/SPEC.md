@@ -341,6 +341,9 @@ One observable criterion per `S#`, each naming the check that proves it.
 
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| FV-1 | scripts/capabilities.mjs (py ambient member match) | correctness | low | a module-level `items.remove(x)` in a `.py` change (a list mutation, no import) resolved ambient to `filesystem-remove` and raised a false `destructive` `high` | fix-now | folded — `F17`, green at `ae862a85` |
+| FV-2 | scripts/capabilities.mjs (module-level entry edge) | correctness | low | `def clean(): shutil.rmtree(b)` plus a module-level `clean()` classified `standard` — the removal was owned by the declaration and the same-file call edge was not followed | fix-now | folded — `F18`, green at `ae862a85` |
+| FV-3 | verification provenance | process | info | the branch tip moved mid-verify (owner log commit `1bb0d8ec`) and the verifier's base scratch worktree was removed externally; no tree defect, re-created and re-verified | ignore | none |
 
 ## Log
 
@@ -423,6 +426,28 @@ One observable criterion per `S#`, each naming the check that proves it.
 - **E12** — 2026-11-06, `bun scripts/check-skill-context.mjs`, `--routes` and
   `--documents` · exit 0 · `PASS context budgets: 28 skills`, `PASS route
   budgets: 14 routes`, `PASS context documents: 4 budgeted documents` (O13).
+- **F2** — 2026-11-06, **found by the external verifier** (fresh eyes on this branch): a module-level
+  `items.remove(x)` in a `.py` change — a value's own method, no import — resolved ambient to
+  `filesystem-remove` and raised a false `destructive` `high`. Folded in this batch: a dotted python
+  call on a name no import resolves claims no provider effect (`F17`); an imported provider or a
+  bare ambient call still resolves. Red at `26d382d8`, green at `ae862a85`.
+- **F3** — 2026-11-06, **found by the external verifier**: `def clean(): shutil.rmtree(b)` plus a
+  module-level `clean()` classified `standard` — the removal was owned by the declaration and the
+  same-file call edge was not followed, so the module's own import-time removal was missed. Folded
+  in this batch: a bare module-level call whose head names a same-file declaration carrying an
+  unguarded removal raises `destructive` with `via: "call"`; a guarded declaration stays hygiene and
+  a call into a harmless declaration claims nothing (`F18`). Red at `26d382d8`, green at `ae862a85`.
+- **F4** — 2026-11-06, verification provenance, no action: during the external verify the branch tip
+  moved (owner log commit `1bb0d8ec`, `docs/LOGS.md` only) and the verifier's base scratch worktree
+  was removed externally; both were re-created and every run re-observed.
+- **E13** — 2026-11-06, `node --test scripts/capabilities.test.mjs` at `26d382d8` (F17/F18 added, the
+  analyser unchanged) · 16 tests, `pass 14`, `fail 2` (F17, F18) — the red half of the repair batch.
+- **E14** — 2026-11-06, at `ae862a85`: `node --test scripts/capabilities.test.mjs` · 16/16;
+  `risk-tier-classifier` 13/13, `ceremony-passive`, `ceremony`, `risk-tier-ceremony` 16/16,
+  `workflow-status-sensor` 78/78, `vocabulary-parity`, `normative-drift` · all exit 0. End-to-end
+  through the CLI: a module-level `items.remove` answers `standard` where it answered `high`, and
+  `clean.py` (`clean()` at module level) answers `high` `destructive (clean.py · clean)` where it
+  answered `standard`.
 - **G1** — 2026-11-06, `bun scripts/local-gate.mjs --skip-network` · exit 0 ·
   `local-gate: PASS — 8 step(s) in 102s` (the four network steps skipped by the
   flag, not by a failure); `node scripts/run-root-suite.mjs` within it · exit 0 ·
