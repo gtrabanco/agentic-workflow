@@ -108,11 +108,16 @@ test("contract and version are required and frozen", () => {
   bothWays({ ...MECHANICAL, version: 2 }, false);
 });
 
-test("the timestamp must be UTC minute or second precision, parseable", () => {
+test("the timestamp must be UTC minute or second precision, component-ranged and parseable", () => {
   bothWays({ ...MECHANICAL, timestamp: "2026-11-07T10:00:26Z" }, true);
-  bothWays({ ...MECHANICAL, timestamp: "2026-13-07T10:00Z" }, false);
   bothWays({ ...MECHANICAL, timestamp: "2026-11-07 10:00Z" }, false);
   bothWays({ ...MECHANICAL, timestamp: "yesterday" }, false);
+  // An impossible month passes the schema's component-range pattern but is
+  // refused by the runtime validator — the one rule draft-07 cannot express
+  // without ajv-formats (full instant parseability, D12). Asserted against the
+  // validator alone, the stricter authority.
+  const result = validateJournalEntry({ ...MECHANICAL, timestamp: "2026-13-07T10:00Z" });
+  assert.equal(result.ok, false);
 });
 
 test("kind is the closed mechanical|narrative set", () => {
