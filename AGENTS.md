@@ -377,6 +377,14 @@ adversarial-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabulari
 adversarial-reflector-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_REFLECTOR_VERDICTS | adversarial-reflector-verdict | no
 adversarial-stability-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:ADVERSARIAL_STABILITY_VERDICTS | adversarial-stability | no
 adversarial-verdict-grammar | skills/review-change/references/ADVERSARIAL_SETUP.md | block:adversarial-verdict@1 | adversarial-verdict+adversarial-reflector-verdict+adversarial-stability | no
+projection-seam-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PROJECTION_SEAMS | projection-seam | yes
+projection-op-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PROJECTION_OPS | projection-op | yes
+projection-selector-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PROJECTION_SELECTOR_KINDS | projection-selector-kind | yes
+projection-hash-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:PROJECTION_HASH_ALGORITHMS | projection-hash-algorithm | yes
+guard-verdict-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:GUARD_VERDICTS | guard-verdict | yes
+guard-rejection-reason-vocabulary | packages/agentic-workflow-schema/src/vocabularies.ts | schema-export:GUARD_REJECTION_REASONS | guard-rejection-reason | yes
+projection-manifest-grammar | packages/agentic-workflow-schema/README.md | block:projection-manifest@1 | n/a | no
+guard-verdict-grammar | packages/agentic-workflow-schema/README.md | block:guard-verdict@1 | n/a | no
 test-impact-verdict | skills/execute-phase/references/TEST_IMPACT.md | fenced:TEST IMPACT — | n/a | no
 ```
 

@@ -28,12 +28,14 @@
  *     would make a drift gate depend on a build and fail a fresh clone.
  *   * The closed set for the machine → text direction is exactly the vocabularies
  *     marked `must-name: yes` in that inventory: `gate-rejection-type`,
- *     `pre-execution-verdict` and the `next` object of the envelope. Those three
- *     are what an agent chooses between at the end of a turn. Internal constants
- *     (`SKILL_*` capability classes, `PRE_EXECUTION_LIMITS`, the sense/stop/invoke
- *     reason codes, the 11 envelope states) are deliberately excluded: nothing in
- *     the inventoried surfaces orders an action with them, so demanding prose for
- *     them would be a second definition of a machine detail.
+ *     `pre-execution-verdict`, the `next` object of the envelope, the four
+ *     risk/size-tier sets and the six workflow-projection sets. They are what an
+ *     agent chooses between at the end of a turn and what a projection consumer
+ *     reads as grammar. Internal constants (`SKILL_*` capability classes,
+ *     `PRE_EXECUTION_LIMITS`, the sense/stop/invoke reason codes, the 11 envelope
+ *     states) are deliberately excluded: nothing in the inventoried surfaces
+ *     orders an action with them, so demanding prose for them would be a second
+ *     definition of a machine detail.
  *
  * Every refusal is a fixture, never an edit: `buildSurfaceModel()` reads the
  * repository into plain arrays and `runDriftChecks()` is pure, so the three
@@ -923,6 +925,8 @@ test("machine → text: every value of the must-name vocabularies is ordered by 
   const vocabularies = live.surfaces.filter((s) => s.mustName).flatMap((s) => s.machine);
   assert.deepEqual(uniq(vocabularies).sort(), [
     "continuation-refusal-type", "envelope-field:next", "gate-rejection-type",
+    "guard-rejection-reason", "guard-verdict", "projection-hash-algorithm",
+    "projection-op", "projection-seam", "projection-selector-kind",
     "risk-tier", "risk-tier-reason", "risk-tier-signal", "size-tier",
   ], "the closed set the second direction covers is declared in the file header");
   const fieldKeys = [...live.machine.fields.keys()];
