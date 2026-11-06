@@ -4516,3 +4516,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Created issue #424 for universal CLI feedback system; configured embeddings provider; triaged issue #424
 - **Decisions:** (1) Feedback tiers: regular (progress/timing), debug (--debug, all details), profiling (--profile, timing per stage). Core infrastructure under scripts/ with a consistent API; apply doc CLI first, then scripts one by one. (2) Severity: medium by scope of touch (~60 scripts + CLIs), not by technical complexity. (3) Embeddings: provider configured in .agentic-workflow/index.json (OpenAI-compatible baseUrl + model); system uses JS cosine kNN over float32-LE BLOBs (no sqlite-vec needed).
 - **Next:** Unit-lane #424: start with the feedback core (scripts/feedback.mjs), apply to doc CLI, then propagate to all scripts
+
+## 2026-11-06T10:59:26Z — main — manual
+- **Commits:** 1 (2ecd49e8)
+- **Files:** 33 files (207 insertions, 209 deletions)
+- **Summary:** audit-docs --fix: settle the roadmap against the forge and repair dead references. The `## Fixes` table carried 16 stale rows (all merged+closed) — replaced by the empty index per its own legend. Seven feature rows flipped to `done · [#pr]` with reconciliation notes (89→#371, 90→#379, 92→#373, 95→#399, 97→#387, 101→#378, 102→#385, 104→#415). Row 102 restored from a truncation by 5eac0940. Five broken references repaired. 148 tasks ticked across 24 unit docs. Unit 394 re-tokenized to closed log-kind vocabulary.
+- **Decisions:** Fix index: row leaves after the merge, never after the issue closes. Unit docs with `## Log` but no tick in `## Tasks` — only the executor writes the tick, so back-filling is forbidden; they stay as a finding. The `check-progress-entry` check lacks an `n/a` answer for legacy units without a `## Log` section — a checker fix, not a doc fix.
+- **Next:** Re-run `/audit-docs` to confirm clean. Open the `check-progress-entry` n/a fix for legacy carriers as unit 359 follow-up.
