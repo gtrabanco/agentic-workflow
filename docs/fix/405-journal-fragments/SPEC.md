@@ -158,11 +158,11 @@ silently dropped.
 
 ## Future
 
-- **Repo self-adoption** (2026-11-05, status `open`): this repository could
-  opt in to its own carrier and retire the direct-append conflicts for real;
-  deferred because opting in is an owner decision about this repo's own
-  workflow, not part of shipping the capability (the unit ships the carrier,
-  not the flip).
+- **Repo self-adoption** (2026-11-05 `open` → 2026-11-06 `implemented`): the
+  owner flipped the decision (S15, Log L18) — this repository now opts in to
+  its own carrier, with `autoLogSession: mechanical` on, and the aggregation
+  workflow installed; the flip ships in this unit's diff and goes live for
+  `main` at the merge.
 - **Feature 65 pre-aggregation visibility** (2026-11-05, status `open`): the
   index ingesting fragments between merge and aggregate — the issue's open
   question 5 default is no; revisit only if the gap proves real.
@@ -291,3 +291,7 @@ yet. This unit runs no review pass (S4); the owner is the external verifier.
 - **L16** — (E) Foreground validators: `rg -ci 'github|gitlab|forge' packages/agentic-workflow/src/journal/` → zero matches (O5); `test -e template/.agentic-workflow/journal` → exit 1 and `test -e template/.github/workflows/agentic-workflow-journal.yml` → exit 1 with only `agentic-workflow-journal.yml.example` shipping (O7); `rg -c 'concurrency:'` → 1 and `rg -c 'journal aggregate'` → 2 (workflow) + 3 (carrier doc) (O12); `rg -c 'pluggable|driver' template/.agentic-workflow/journal.md` → 3 (O13); `rg -c 'agentic-workflow/journal' packages/agentic-workflow/src/log/publish.mjs` → 1 (O1 grep half); `bash template/.agentic-workflow/hooks/tests/test-init-workspace-contract.sh` exit 0.
 - **D6** — (D) Two cut-time validator cells were amended at close, each with its reason recorded in the row: O5's regex dropped the `gh ` token (it matched the English word "through" inside a comment — the scan's intent, no forge names, is what the amended regex preserves); O7's check pins no *active* workflow file rather than no `workflows/` directory, because shipping the inert `.yml.example` requires the directory (the `.github/hooks/…example` precedent). Both amendments are visible in the ledger rows, not silent edits.
 - **L17** — (E) S3 fixture hygiene: the toy race repo (`/tmp/j405-…`), the differential tree (`/tmp/j405-diff-…`) and the compat legs were all removed after use; no scratch remains.
+- **L18** — (S15) Owner correction, verbatim (2026-11-06): "Vale, pero este repo si quiero que se active a sí mismo tras el merge y quiero que configures el auto log-session para que funcione automático tras el merge" — this repository opts in to its own carrier (the Future row "Repo self-adoption" moves to implemented) and the pi extension's `autoLogSession` is switched to `mechanical` in the project config, so the mechanical entry pipeline runs automatically once the branch merges.
+- **D7** — (D) The opt-in lands on the branch, not post-merge: the carrier directory, the config switch and the aggregation workflow are part of this unit's diff, so the pipeline is exercised and gated before it merges; it becomes live for `main` at the merge itself, which is what S15 asks for. The mechanical fragment pipeline is the only automation enabled — the narrative entry stays `/log-session`'s manual job (the feature-394 non-goal holds).
+- **L19** — (E) S15 validators in the foreground: `test -d .agentic-workflow/journal` exit 0; `rg -c '"mode": "mechanical"' .pi/pi-agentic-workflow.json` → 1; `test -f .github/workflows/agentic-workflow-journal.yml` exit 0 with `rg -c 'journal aggregate'` → 2; `node scripts/run-root-suite.mjs` exit 0 (87/87) on the amended tree; the nested `.agentic-workflow/.gitignore` whitelist gained `!journal/` (the fragments are committed entries, not store output — F38's probe suite stays green).
+- **L20** — (D) Interim window disclosed, not worked around: until the release carrying this branch ships and is installed locally, a pi session on this checkout runs the installed 4.10.0 extension, whose publisher still appends directly to `docs/LOGS.md`; the branch's `session-close close` refuses that touch (AC1's guard) and the writer falls back to a fragment per the updated `/log-session` skill. Full automation goes live at merge + release + install.
