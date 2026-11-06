@@ -208,6 +208,7 @@ const USAGE = `usage: session-close <command> [options]
           In a fragment-carrier project (issue #405), refuse unless new
           fragments were added under .agentic-workflow/journal/ and
           docs/LOGS.md was NOT touched — the aggregator owns the journal there.
+          --log names the journal that guard protects (docs/LOGS.md by default).
           Exit 0 clean · 2 leftovers (named) · 1 refused.
 `;
 
@@ -298,8 +299,10 @@ function committedFragments(rel) {
     .sort();
 }
 
-/** The fragment close: new fragments committed alone, the journal file untouchable. */
-function closeFragments(rel) {
+/** The fragment close: new fragments committed alone, the journal file untouchable.
+ * `journalRel` is the file the guard protects — `--log` when the caller names one,
+ * so the explicit flag selects which journal must stay untouched, never ignored. */
+function closeFragments(rel, journalRel) {
   const dir = path.join(mustGit(["rev-parse", "--show-toplevel"]).trim(), rel);
   const committed = committedFragments(rel);
   const working = fs.readdirSync(dir).filter((name) => fs.statSync(path.join(dir, name)).isFile()).sort();
@@ -319,10 +322,10 @@ function closeFragments(rel) {
 
   // The carrier's contract (AC1): in fragment mode nothing may touch the
   // journal directly — the merge-to-main aggregator is its only writer.
-  const logStatus = git(["status", "--porcelain", "--", DEFAULT_LOG]);
+  const logStatus = git(["status", "--porcelain", "--", journalRel]);
   if (logStatus.stdout.trim() !== "") {
     throw new Error(
-      `${DEFAULT_LOG} was modified while the fragment carrier is opted in (${rel}) — write a fragment instead; the aggregator owns the journal`,
+      `${journalRel} was modified while the fragment carrier is opted in (${rel}) — write a fragment instead; the aggregator owns the journal`,
     );
   }
 
@@ -340,7 +343,8 @@ function closeFragments(rel) {
   return {
     committed: true,
     sha: sha.slice(0, 8),
-    log: rel,
+    carrier: rel,
+    log: journalRel,
     fragments: added.length,
     subject,
     preExistingDirty: preDirty.map((item) => item.path),
@@ -396,7 +400,10 @@ function main() {
   // close
   const top = mustGit(["rev-parse", "--show-toplevel"]).trim();
   if (carrierMode(top)) {
-    const report = closeFragments(FRAGMENT_DIR);
+    // `--log` stays meaningful in carrier mode: it names the journal the guard
+    // protects, so an explicit path is honored instead of silently ignored.
+    const journalRel = opts.log === undefined ? DEFAULT_LOG : relativeToRoot(path.resolve(opts.log));
+    const report = closeFragments(FRAGMENT_DIR, journalRel);
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     process.exitCode = report.clean ? 0 : 2;
     return;
