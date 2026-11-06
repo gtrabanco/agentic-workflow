@@ -22,9 +22,11 @@
  */
 
 import fs from "node:fs";
+import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { renderEntry } from "./render.mjs";
+import { writeFragment } from "../journal/fragment.mjs";
 
 /** The project's journal, relative to the project root (the hook's own default). */
 export const DEFAULT_JOURNAL = "docs/LOGS.md";
@@ -38,15 +40,48 @@ export const DEFAULT_PUBLISH_TIMEOUT_MS = 5000;
  *
  * A missing journal is a project that did not opt in — the file is never created
  * (S9), and the result says so instead of pretending a delivery happened.
+ *
+ * **Fragment routing (issue #405, AC1).** When `fragmentDir` is set and the
+ * carrier directory `.agentic-workflow/journal/` exists, the entry goes to a
+ * *fragment file* instead of the journal — the merge-to-main aggregator is the
+ * only writer of `docs/LOGS.md` there. The carrier's presence is the opt-in:
+ * without it, this publisher appends exactly as before, byte for byte.
  */
 export function createJournalPublisher(options) {
   const journalPath = options?.journalPath;
   if (typeof journalPath !== "string" || journalPath === "") {
     throw new Error("createJournalPublisher: journalPath is required");
   }
+  const fragmentDir = options?.fragmentDir;
+  const kind = options?.kind ?? "mechanical";
+  const now = options?.now ?? (() => Date.now());
   return {
     name: "journal",
     publish(facts) {
+      if (typeof fragmentDir === "string" && fragmentDir !== "") {
+        let carrier = false;
+        try {
+          carrier = fs.statSync(fragmentDir).isDirectory();
+        } catch {
+          carrier = false;
+        }
+        if (carrier) {
+          const sessionId = typeof options?.sessionId === "function" ? options.sessionId() : options?.sessionId;
+          try {
+            const fragment = writeFragment({
+              root: path.dirname(fragmentDir),
+              dir: path.basename(fragmentDir),
+              facts,
+              kind,
+              sessionId: sessionId ?? "local",
+              now,
+            });
+            return { ok: true, written: true, target: "fragment", fragment: fragment.name };
+          } catch (error) {
+            return { ok: false, error: error instanceof Error ? error.message : String(error) };
+          }
+        }
+      }
       let present = true;
       try {
         fs.accessSync(journalPath, fs.constants.W_OK);
@@ -55,7 +90,7 @@ export function createJournalPublisher(options) {
       }
       if (!present) return { ok: true, written: false, skipped: "no-journal" };
       fs.appendFileSync(journalPath, `\n${renderEntry(facts)}`);
-      return { ok: true, written: true };
+      return { ok: true, written: true, target: "journal" };
     },
   };
 }
@@ -120,7 +155,15 @@ export function createCommandPublisher(options) {
 export function createPublisherFromConfig(config, context) {
   const journalPath = context?.journalPath;
   const cwd = context?.cwd;
-  const publishers = [createJournalPublisher({ journalPath })];
+  const publishers = [
+    createJournalPublisher({
+      journalPath,
+      fragmentDir: context?.fragmentDir,
+      kind: context?.kind,
+      sessionId: context?.sessionId,
+      now: context?.now,
+    }),
+  ];
   const declared = config?.publisher;
   if (declared && declared.command !== undefined) {
     publishers.push(createCommandPublisher({ command: declared.command, cwd, timeoutMs: declared.timeoutMs }));
