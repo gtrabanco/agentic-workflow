@@ -138,9 +138,11 @@ function namedSignalFor(file, text, options = {}) {
   if (PROSE_EXTENSIONS.has(extensionOf(file))) return null;
   const destructive = destructiveOf(file, text, options);
   if (destructive === null) return null;
-  const spelling = destructive.provider === null || destructive.provider === undefined
+  // A shell program is its own provider, so naming it twice says nothing.
+  const provider = destructive.provider ?? null;
+  const spelling = provider === null || provider === destructive.member
     ? destructive.member
-    : `${destructive.provider} · ${destructive.member}`;
+    : `${provider} · ${destructive.member}`;
   return { signal: "destructive", evidence: spelling };
 }
 

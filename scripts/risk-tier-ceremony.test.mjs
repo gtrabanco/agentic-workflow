@@ -99,7 +99,7 @@ test("C1b ceremony: the diff scope classifies HEAD against the merge base, no fl
 });
 
 test("C1d ceremony: the first uncommitted path is read whole, so a dirty CI workflow is high", () => {
-  // Issue #384 F17: `scopePaths()` trimmed the porcelain listing before slicing
+  // Issue #384 F1: `scopePaths()` trimmed the porcelain listing before slicing
   // the status columns, so the FIRST dirty entry lost its first character
   // (`?? .github/x` → `github/x`). A mangled high-risk path is a fail-open tier:
   // the change classified `standard` and skipped the ceremony it owed.
