@@ -21,3 +21,14 @@ unit SPEC's `## Log` (S7).
 | O12 | S12 (issue open questions 2–3) — the example workflow carries a concurrency group, states its supported merge strategies, and the post-receive example invokes the identical command | Simultaneous merges on the forge; squash vs merge-commit | P6 | Example workflow + post-receive doc | execute-phase | `rg -c 'concurrency:' template/.github/workflows/agentic-workflow-journal.yml.example` matches 1 and `rg -c 'journal aggregate' template/.github/workflows/agentic-workflow-journal.yml.example template/.agentic-workflow/journal.md` matches ≥2 | Command outputs in the verification block | verified |
 | O13 | S14 — a documented note of how the layout slots into #374's driver contract | The sibling composition | P7 | Forward-path note | execute-phase | `rg -c 'pluggable|driver' template/.agentic-workflow/journal.md` matches ≥1 — the note names the driver slotting; the validator originally pinned `#374` verbatim, but the scaffold guide's T6 gate (template text carries no dated repository internals) refuses issue numbers in `template/`, so the note names the contract and the unit SPEC carries the issue link | Command output in the verification block; SPEC `## Log` D-line records the validator amendment | verified |
 | O14 | Non-goal (entry shape unchanged) — `log render` remains the single owner of the mechanical entry's bytes | Feature 394's renderer contract | P8 | Renderer untouched | execute-phase | `bun test packages/agentic-workflow/test/log.render.test.mjs` exits 0 unmodified | Suite output in the verification block | verified |
+
+## Amendment (2026-11-06, owner S15)
+
+Two rows appended by the owner's correction (SPEC `## Log` L18); every row above keeps its `verified` status.
+
+| obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status |
+|---|---|---|---|---|---|---|---|---|
+
+
+| O15 | S15 — this repository opts in to its own carrier and `autoLogSession` runs mechanical entries automatically after the merge | This repository's own journal writers | P9 | Carrier directory + project config switch | execute-phase | `test -d .agentic-workflow/journal` exits 0 and `rg -c '"mode": "mechanical"' .pi/pi-agentic-workflow.json` matches 1 | Command outputs in the verification block; SPEC `## Log` L18/D7 | verified |
+| O16 | S15 — the fragments the repo's sessions write are consumed automatically, not left to accumulate | The merge-to-main aggregation on this repository | P9 | The repository's aggregation workflow | execute-phase | `test -f .github/workflows/agentic-workflow-journal.yml` exits 0 and `rg -c 'journal aggregate' .github/workflows/agentic-workflow-journal.yml` matches 1 | Command outputs in the verification block | verified |
