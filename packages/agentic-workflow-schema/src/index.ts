@@ -4142,3 +4142,15 @@ export type {
   GuardDegradeVerdict,
   GuardVerdictValidation,
 } from "./projection.js";
+export {
+  JOURNAL_ENTRY_CONTRACT_ID,
+  JOURNAL_ENTRY_VERSION,
+  JOURNAL_ENTRY_KINDS,
+  validateJournalEntry,
+} from "./journal.js";
+export type {
+  JournalEntryKind,
+  JournalEntryCommits,
+  JournalEntry,
+  JournalEntryResult,
+} from "./journal.js";

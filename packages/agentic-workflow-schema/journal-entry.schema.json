@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/journal-entry.schema.json",
+  "title": "agentic-workflow canonical journal entry v1",
+  "description": "The versioned structured session-journal entry (issue #374): closed core fields, an open metadata map validated for shape only. Source of truth: @gtrabanco/agentic-workflow-schema (src/journal.ts).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "timestamp", "branch", "kind"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/journal-entry" },
+    "version": { "const": 1 },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?Z$",
+      "description": "UTC minute precision (the mechanical form log-facts@1 froze) or UTC second precision (the narrative form). Component ranges are schema-expressible; full instant parseability (a real day-of-month) is the runtime validator's stricter rule."
+    },
+    "branch": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "kind": { "enum": ["mechanical", "narrative"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "commits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "range"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "range": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[0-9a-f]{4,40}…[0-9a-f]{4,40}$" }
+          ]
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "type": "string", "minLength": 1, "maxLength": 1024 }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "The open map: consumer-specific fields (dev_id, commit_hash, team, ticket, …). Validated for shape only, never for keys; no core writer strips one."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "narrative" } }, "required": ["kind"] },
+      "then": {
+        "required": ["summary"],
+        "properties": { "summary": { "type": "string", "minLength": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "mechanical" } }, "required": ["kind"] },
+      "then": {
+        "required": ["reason"],
+        "properties": { "reason": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" } }
+      }
+    }
+  ]
+}
