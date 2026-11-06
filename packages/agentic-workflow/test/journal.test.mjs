@@ -407,3 +407,31 @@ test("journal name: prints the deterministic fragment path, writes nothing", () 
   assert.equal(refused.status, 2);
   assert.match(refused.stderr, /--kind/);
 });
+
+// ── The carrier's placeholder (issue #374 D13: the opt-in outlives a full aggregation) ──
+
+test("a .gitkeep in the carrier is skipped, never consumed — the empty-carrier opt-in persists", () => {
+  const repo = newRepo("gitkeep-inert");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, ".gitkeep"), "");
+  const receipt = aggregateJournal({ root: repo });
+  assert.equal(receipt.ok, true, receipt.reason);
+  assert.equal(receipt.fragments, 0);
+  assert.equal(fs.existsSync(path.join(repo, JOURNAL_DIR, ".gitkeep")), true, "the placeholder is not consumed");
+  // And it does not block a real fragment behind it.
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, "20261105T100000Z-main-mechanical-s1.md"), MECHANICAL_ENTRY);
+  const next = aggregateJournal({ root: repo });
+  assert.equal(next.ok, true, next.reason);
+  assert.equal(next.appended.length, 1);
+  assert.equal(fs.existsSync(path.join(repo, JOURNAL_DIR, ".gitkeep")), true);
+});
+
+test("any other non-fragment file in the carrier is still refused", () => {
+  const repo = newRepo("gitkeep-not-a-wildcard");
+  fs.mkdirSync(path.join(repo, JOURNAL_DIR), { recursive: true });
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, "README.md"), "docs");
+  assert.throws(() => aggregateJournal({ root: repo }), /unparseable fragment name/u);
+  fs.rmSync(path.join(repo, JOURNAL_DIR, "README.md"));
+  fs.writeFileSync(path.join(repo, JOURNAL_DIR, ".keep"), "");
+  assert.throws(() => aggregateJournal({ root: repo }), /unparseable fragment name/u, "the placeholder set is exactly .gitkeep");
+});

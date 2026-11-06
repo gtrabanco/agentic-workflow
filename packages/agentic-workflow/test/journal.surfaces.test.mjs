@@ -105,6 +105,11 @@ test("S15 the opted-in carrier holds only parseable fragments and its doc sits b
   const carrier = path.join(repoRoot, ".agentic-workflow", "journal");
   const entries = fs.readdirSync(carrier, { withFileTypes: true }).filter((entry) => entry.isFile());
   for (const entry of entries) {
+    // The carrier's ONE declared placeholder (issue #374 D13): git cannot
+    // track an empty directory, so the opted-in carrier keeps a content-free
+    // .gitkeep — the aggregator skips it, never consumes it. Anything else
+    // that is not a fragment still fails this probe.
+    if (entry.name === ".gitkeep") continue;
     const parsed = parseFragmentName(entry.name);
     assert.ok(parsed !== null, `${entry.name} is not a fragment — the aggregator refuses the whole set`);
     const body = fs.readFileSync(path.join(carrier, entry.name), "utf8");
@@ -119,7 +124,7 @@ test("S15 the opted-in carrier holds only parseable fragments and its doc sits b
 
 test("374 AC9 the entry contract's owner is the schema package, declared as a normative surface", () => {
   const agents = read("AGENTS.md");
-  assert.match(agents, /journal-entry-contract \| packages\/agentic-workflow-schema\/src\/journal\.ts \| schema-export:JOURNAL_ENTRY_CONTRACT_ID\+JOURNAL_ENTRY_VERSION\+JOURNAL_ENTRY_KINDS \| journal-entry/u);
+  assert.match(agents, /journal-entry-contract \| packages\/agentic-workflow-schema\/src\/journal\.ts \| schema-export:JOURNAL_ENTRY_KINDS \| journal-entry/u);
   assert.match(agents, /journal-driver-contract \| packages\/agentic-workflow\/README\.md \| block:journal-driver-contract@1/u);
 });
 
