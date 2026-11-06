@@ -287,5 +287,72 @@ test("#318: the render refuses a contradicted narrative, and prints why", () => 
   assert.match(result.stderr, /PULL_REQUEST_TEMPLATE\.md/);
 });
 
+// ---
+// Fragment-carrier mode (issue #405, unit docs/fix/405-journal-fragments/)
+// ---
+
+test("end to end (carrier): new fragments are committed alone and the tree ends clean", () => {
+  const { dir, git } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: carrier");
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Commits:** 0\n- **Files:** —\n- **Summary:** Closed the loop.\n",
+  );
+  const result = run(dir, ["close"]);
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.fragments, 1);
+  assert.equal(report.clean, true);
+  assert.match(report.subject, /Closed the loop/);
+  assert.match(git("log", "--format=%s", "-1").stdout, /^docs\(log\): /);
+});
+
+test("end to end (carrier): a touched docs/LOGS.md is refused — the aggregator owns the journal (AC1)", () => {
+  const { dir, log } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Summary:** x\n",
+  );
+  fs.writeFileSync(log, `${HEADER}\n## direct append\n`);
+  const result = run(dir, ["close"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /aggregator owns the journal/);
+});
+
+test("end to end (carrier): no new fragment, an edited fragment and a deleted fragment are each refused", () => {
+  const { dir, git } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Summary:** old\n",
+  );
+  git("add", "-A");
+  git("commit", "-q", "-m", "chore: carrier");
+
+  const none = run(dir, ["close"]);
+  assert.equal(none.status, 1);
+  assert.match(none.stderr, /no new fragment/);
+
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Summary:** rewritten\n",
+  );
+  const edited = run(dir, ["close"]);
+  assert.equal(edited.status, 1);
+  assert.match(edited.stderr, /append-only holds at fragment level/);
+
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Summary:** old\n",
+  );
+  fs.rmSync(path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"));
+  const deleted = run(dir, ["close"]);
+  assert.equal(deleted.status, 1);
+  assert.match(deleted.stderr, /deletion is a lost entry/);
+});
+
 console.log("PASS session-close: facts computed, entry committed alone, leftovers named not swept");
 
