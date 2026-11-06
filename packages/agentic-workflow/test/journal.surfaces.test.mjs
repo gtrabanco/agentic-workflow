@@ -105,6 +105,15 @@ test("S15 the opted-in carrier holds only parseable fragments and its doc sits b
   const carrier = path.join(repoRoot, ".agentic-workflow", "journal");
   const entries = fs.readdirSync(carrier, { withFileTypes: true }).filter((entry) => entry.isFile());
   for (const entry of entries) {
+    // The carrier's ONE declared placeholder (issue #374 D13): git cannot
+    // track an empty directory, so the opted-in carrier keeps a zero-byte
+    // .gitkeep — the aggregator skips it, never consumes it. Notes belong in
+    // the carrier's doc beside it (`journal.md`), never inside the carrier.
+    // Anything else that is not a fragment still fails this probe.
+    if (entry.name === ".gitkeep") {
+      assert.equal(fs.readFileSync(path.join(carrier, entry.name), "utf8"), "", ".gitkeep is an empty placeholder, not a readme");
+      continue;
+    }
     const parsed = parseFragmentName(entry.name);
     assert.ok(parsed !== null, `${entry.name} is not a fragment — the aggregator refuses the whole set`);
     const body = fs.readFileSync(path.join(carrier, entry.name), "utf8");
@@ -113,4 +122,36 @@ test("S15 the opted-in carrier holds only parseable fragments and its doc sits b
   }
   assert.ok(fs.existsSync(path.join(repoRoot, ".agentic-workflow", "journal.md")), "the carrier's doc lives beside the carrier");
   assert.equal(fs.existsSync(path.join(carrier, "README.md")), false, "never inside it — the aggregator would refuse every run");
+});
+
+// ── issue #374 — the canonical entry + the driver contract's owner ────────
+
+test("374 AC9 the entry contract's owner is the schema package, declared as a normative surface", () => {
+  const agents = read("AGENTS.md");
+  assert.match(agents, /journal-entry-contract \| packages\/agentic-workflow-schema\/src\/journal\.ts \| schema-export:JOURNAL_ENTRY_KINDS \| journal-entry/u);
+  assert.match(agents, /journal-driver-contract \| packages\/agentic-workflow\/README\.md \| block:journal-driver-contract@1/u);
+});
+
+test("374 AC9 the driver-contract block exists in the crate README and names the entry type's owner", () => {
+  const readme = read("packages", "agentic-workflow", "README.md");
+  const fenced = /```text\njournal-driver-contract@1\n([\s\S]*?)```/u.exec(readme);
+  assert.ok(fenced, "the owner block exists as a versioned grammar");
+  for (const row of ["append |", "query |", "render |", "guarantee |", "metadata-line |", "driver |", "conformance |"]) {
+    assert.match(fenced[1], new RegExp(row.replace(/\|/gu, "\\|")), `the block orders ${row.trim()}`);
+  }
+  assert.match(readme, /@gtrabanco\/agentic-workflow-schema/u, "the crate README names the schema package as the entry type's owner");
+});
+
+test("374 AC9 the carrier doc's forward note names the landed owner, not the future tense", () => {
+  const doc = read("template", ".agentic-workflow", "journal.md");
+  assert.match(doc, /journal-driver-contract@1/u, "the forward note names the contract's owner");
+  assert.doesNotMatch(doc, /When the workflow's pluggable store-driver contract for the journal lands/u, "the landed contract is not described as pending");
+});
+
+test("374 the crate's entry codec carries the schema package's contract ids verbatim", async () => {
+  const schema = await import("../../agentic-workflow-schema/dist/index.js");
+  const crate = await import("../src/journal/entry.mjs");
+  assert.equal(crate.JOURNAL_ENTRY_CONTRACT_ID, schema.JOURNAL_ENTRY_CONTRACT_ID);
+  assert.equal(crate.JOURNAL_ENTRY_VERSION, schema.JOURNAL_ENTRY_VERSION);
+  assert.deepEqual(crate.JOURNAL_ENTRY_KINDS, schema.JOURNAL_ENTRY_KINDS);
 });

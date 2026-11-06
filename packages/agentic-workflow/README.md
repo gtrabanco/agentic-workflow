@@ -72,13 +72,49 @@ branch-slug | the git branch, sanitized | runs of characters outside [A-Za-z0-9.
 kind | mechanical | narrative | mechanical = rendered from log-facts@1 by log render; narrative = written by /log-session
 session-slug | the session id, sanitized | the same sanitizer; "local" when a writer has no session id
 fragment-content | one entry block | mechanical: exactly log render's bytes; narrative: one "## "-headed entry; always newline-terminated, never CR
-aggregate | journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] | appends the pending fragments to the journal at its end, newest-first (ties: branch, kind, session, ascending), deletes the consumed fragments, consumes already-present bytes without appending; refuses anything ambiguous with exit 2 "JOURNAL REFUSAL — <reason>" before the first byte moves
+aggregate | journal aggregate [--dir <root>] [--journal-dir <p>] [--log <p>] | appends the pending fragments to the journal at its end, newest-first (ties: branch, kind, session, ascending), deletes the consumed fragments, consumes already-present bytes without appending; refuses anything ambiguous with exit 2 "JOURNAL REFUSAL — <reason>" before the first byte moves; a zero-byte .gitkeep is the ONE declared placeholder — skipped, never consumed, because git cannot track an empty directory and an opted-in carrier is empty between aggregations (the opt-in must outlive a full aggregation)
 ```
 
 One owner: `src/journal/fragment.mjs` (naming, content) and
 `src/journal/aggregate.mjs` (consumption). A collision — a target name that
 already exists — is refused, never overwritten (two sessions on one branch
 differ by session slug, so concurrent names cannot collide by construction).
+
+## Store drivers — where a journal entry lives (issue #374)
+
+The journal's *storage* is pluggable; the Markdown file is the default
+driver's render target, never its only option. A store driver owns a canonical
+`journal-entry@1` stream (the type is owned by `@gtrabanco/agentic-workflow-schema`:
+`src/journal.ts` + `journal-entry.schema.json`, runtime-mirrored in
+`src/journal/entry.mjs`) behind three methods — `append(entry)`,
+`query(predicate)`, `render(range)` — and every answer is `{ ok: true, … }` or
+`{ ok: false, error }`: a refusal is a value, given before the first byte
+moves, never a thrown error. The contract is normative — every prose surface
+names this block instead of restating it:
+
+```text
+journal-driver-contract@1
+kind | shape | what it orders
+append | append(entry) -> { ok, target?, name? } | insert-only: an append never mutates, rewrites or reorders what is stored; a correction is a NEW correcting entry (owner decision D3, the journal's own "never an edit" rule)
+query | query(predicate) -> { ok, entries } | the ONE predicate grammar: { dateRange: {from?, to?}, branch?, keyword? }, normalized by normalizePredicate, filtered by the shared matchesPredicate — never a per-driver re-parse
+render | render(range) -> { ok, rendered } | the human journal blocks for a date range, through renderEntryBlock — the render target, not the storage
+guarantee | insert-only · arrival-order monotonic · no silent loss · predictable failure | an append preserves arrival order (ids/offsets never go backwards); entry timestamps are NOT required monotonic; every metadata key survives a round trip; an invalid entry or an unusable store is a refusal before mutation
+metadata-line | - **Metadata:** <json> | the Markdown transport's consumer-field carrier: ONE trailing line, key-sorted JSON, only when the entry carries metadata — a metadata-free entry renders without it, so the default path stays byte-identical
+driver | markdown · sqlite | markdown = the committed docs/LOGS.md, carrier-composed (a fragment when .agentic-workflow/journal/ exists, the same O_APPEND append otherwise); sqlite = the reference store at .agentic-workflow/journal-store/entries.db, insert-only, reusing feature 65's runtime adapter
+conformance | runDriverConformance(factory, { root }) | the single shared suite every driver passes before it ships — and a driver that strips metadata, mutates stored entries or accepts invalid entries fails it
+selection | programmatic factory | no project-config key: a consumer selects a driver in code (the issue's open question 6 — no second configuration surface)
+```
+
+**Authoring a driver** (the documented path, AC7): implement the three methods
+over your store; keep the four guarantees (insert-only, arrival-order
+monotonic, no silent loss, predictable failure); render every human-readable
+block through `renderEntryBlock` — never a hand-rolled grammar; run your
+driver through `runDriverConformance` in your suite (a violating driver must
+fail it — the shipped fixtures prove the harness catches a metadata stripper
+and a stored-entry rewriter). Register nothing: the driver is a factory your
+code calls. The shipped drivers (`src/journal/drivers/markdown.mjs`,
+`src/journal/drivers/sqlite.mjs`) are the reference implementations; an
+enterprise's Postgres+pgvector driver is the consumer's, not this package's.
 
 ## `section` — locate a Markdown range and splice it losslessly (issue #407)
 

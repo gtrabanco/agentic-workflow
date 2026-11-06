@@ -25,7 +25,11 @@ A repo that opts out keeps today's direct-append behaviour with zero residue.
 Nothing here is on by default. Install with explicit consent, by hand or by
 asking for `init-workspace`:
 
-1. `mkdir -p .agentic-workflow/journal` (and commit it — a `.gitkeep` is fine).
+1. `mkdir -p .agentic-workflow/journal` (and commit it — a zero-byte
+   `.gitkeep` placeholder is what keeps the directory tracked while it is
+   empty; the aggregator skips it by name, never consumes it, and refuses any
+   other non-fragment file. Leave it empty: notes about the carrier belong in
+   this document beside it, never in a file inside the carrier).
 2. Keep this document beside the carrier, as `.agentic-workflow/journal.md` —
    **never inside it**: the aggregator refuses any file in the carrier whose
    name is not a fragment, so a `README.md` there blocks every aggregation.
@@ -88,8 +92,15 @@ narrative rules (append-only, git-facts, refusal) hold at fragment level.
 
 ## Where this slots into the pluggable journal contract
 
-When the workflow's pluggable store-driver contract for the journal lands,
-this layout becomes just another driver: `append()` writes one fragment,
-`render(range)` is the aggregator's append-in-order step. Nothing here is
-rework; that contract is not a blocker for this carrier, and this carrier
-does not depend on it shipping first.
+The contract has landed: the journal's storage is pluggable behind the
+store-driver contract (`journal-driver-contract@1` in
+`@gtrabanco/agentic-workflow`'s README — one owner, no second grammar), and
+canonical entries are `journal-entry@1` (owned by
+`@gtrabanco/agentic-workflow-schema`). This layout is the default Markdown
+driver's opted-in transport, not a driver of its own: `append()` writes one
+fragment, `render(range)` is the aggregator's append-in-order step, and
+`query()` answers from the aggregated journal — the fragments are consumed and
+deleted at merge, so nothing durable is queried here. Nothing here is rework;
+a project that wants a database-backed journal implements the three methods
+and passes the shared conformance suite (the crate README's driver-authoring
+path).

@@ -4552,3 +4552,30 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** External verification of feat/105-projection-manifest-vocabulary against the PR, correction of all findings
 - **Decisions:** --file-pr implemented red-first (planBumps/applyBumps/prFor/refreshLockfile/publishPr with full offline suite; two filing modes refuse each other; pr mode dispatch-only, never schedule) · local-gate serialized schema dist writer behind root-suite reader (tsc re-emit race) · CI workflow granted contents:write + commit identity for pr mode · typebox 1.4.3→1.4.5 incorporated as deliberate fix(deps) Closes #425 · concurrent agent session on shared worktree detected · accidental --file-pr run on live repo disclosed and cleaned · dependabot renamed and newline repaired
 - **Next:** PR #426 review and merge; after merge run pin-watch -f mode=pr for remaining drift; proceed to #407 (section-locator) once 105 is merged
+
+## 2026-11-06T17:10:39Z — feat/405-journal-fragments — manual
+- **Commits:** 16 (`805a2618…9f1f66a8`)
+- **Files:** 43 files
+- **Summary:** Owner directed a /log-session invocation and the model read it and narrated about it instead of executing its flow. Structural cause confirmed: pi skills are prose injection, no executor. Diagnosed fix as pi.registerCommand extension command (the #383 precedent). Opened issue #429 with origin/goal/ACs/dependencies. Added owner's note: unit-lane is prime suspect, full audit of 14 workflow skills needed — fits #408 mechanization taxonomy. Roadmap row 429 added, PR #430 pushed (prose-only, gate pass). Corrected the external-verify batch for branch 405: carrier fragment-only, --log honor, AC5/AC7/AC9/O9/O16/L14/L20 corrections, 4 commits on reviewed head, all suites green.
+- **Decisions:** Installed extension 5.0.0-canary.20261105.2 predates the 405 branch — expected; working tree's copy is correct. Fix is pi.registerCommand with invocation marking and close-time detection. All 14 workflow commands are prose dispatch; unit-lane is the prime suspect.
+- **Next:** Owner verdict on the corrected 405 branch: re-verify the 7 blockers, then push and merge
+
+## 2026-11-06T17:01:32Z — feat/405-journal-fragments — manual
+- **Commits:** 14 (`805a2618…e6a6616b`)
+- **Files:** 42 files
+- **Summary:** External verification of the 405 branch against base b180892c, then one correction batch fixing its 7 blockers and 6 advisories
+- **Decisions:** Only fragments live inside the carrier; its contract doc moved beside it (.agentic-workflow/journal.md) because the aggregator refuses any non-fragment there; carrier close now honors --log as the journal the guard protects; records (AC5/AC7/AC9, O9/O16, Future row, LOGS header, L20's installed-version fact) corrected to the amended truth
+- **Next:** Owner verdict on the corrected branch: re-verify the 7 blockers, then push and merge
+
+## 2026-11-06T15:49:09Z — feat/405-journal-fragments — manual
+- **Commits:** 9 (`805a2618…74cb1de1`)
+- **Files:** 37 files
+- **Summary:** fix(journal): revert the autoLogSession config switch that broke /log-session (SPEC D8)
+- **Decisions:** autoLogSession config was reverted because the running PI session daemon cached an older config validator that rejected the key (the on-disk canary accepts it, but the daemon module cache didn't reload)
+- **Next:** wait for external verdict on the 405 branch, then push and merge
+## 2026-11-06T19:49:42Z — feat/374-pluggable-session-journal — manual
+- **Commits:** 12 (`bcd0830c…9363b856`)
+- **Files:** 33 files
+- **Summary:** Applied issue #374: pluggable session-journal storage — canonical entry schema, store-driver contract, two reference drivers (Markdown, SQLite)
+- **Decisions:** D1 full slice (schema + contract + both drivers + conformance tests + docs); D2 single PR; D3 insert-only contract (corrections are new entries, never edits); D5 reason as core field (byte-parity with AC4's markdown render); D9 monotonic arrival-order ids; D10 programmatic driver selection, no config key; D12 both UTC timestamp precisions accepted
+- **Next:** PR #431 opened against main — review the diff, ledgers at docs/fix/374-pluggable-session-journal/, then either approve merge or request changes
