@@ -388,3 +388,43 @@ test("F16 the classifier follows a relative import only through the resolver it 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------
+// F17 / F18 — the external verify's two bounds, folded: a value's method is not
+// a provider, and a module-level call into a destructive declaration is caught
+// ---------------------------------------------------------------------------
+
+test("F17 a python method call on a value claims no provider capability", () => {
+  // `list.remove` mutates a value; only an imported provider (`os`, `shutil`,
+  // `pathlib`) or a bare ambient call names the filesystem. A dotted call on a
+  // name no import resolves is not evidence of a removal — claiming it would be
+  // guessing (the opposite direction of the fail-closed rule).
+  const value = analyze("scripts/tidy.py", "items = load()\nitems.remove(first)\n");
+  assert.equal(value.destructive, null, "a value's own method is not a filesystem removal");
+  assert.ok(!value.effects.some((effect) => effect.capability === "filesystem-remove"),
+    "no removal is claimed for a dotted call on an unimported name");
+
+  const imported = analyze("scripts/clean.py", "import os\n\nos.remove(target)\n");
+  assert.ok(imported.destructive, "an imported provider still resolves");
+  assert.equal(imported.destructive.provider, "os");
+
+  const bare = analyze("scripts/clean.py", "remove(target)\n");
+  assert.ok(bare.destructive, "a bare ambient removal call is still claimed (fail closed)");
+});
+
+test("F18 a module-level call into a same-file destructive declaration is caught", () => {
+  const py = analyze("scripts/clean.py", "import shutil\n\ndef clean():\n    shutil.rmtree(build)\n\nclean()\n");
+  assert.ok(py.destructive, "the module runs the removal at import time");
+  assert.equal(py.destructive.via, "call", "the effect arrives through the module-level call");
+  assert.equal(py.destructive.member, "clean", "the entered declaration is named");
+
+  const js = analyze("scripts/tidy.mjs", 'import { rmSync } from "node:fs";\n\nfunction tidy() {\n  rmSync(buildDir);\n}\n\ntidy();\n');
+  assert.ok(js.destructive, "the same edge in the js family");
+  assert.equal(js.destructive.member, "tidy");
+
+  const guarded = analyze("scripts/scratch.mjs", 'import { rmSync } from "node:fs";\n\nfunction scrub() {\n  rmSync(scratch, { recursive: true, force: true });\n}\n\nscrub();\n');
+  assert.equal(guarded.destructive, null, "a guarded declaration stays hygiene");
+
+  const inert = analyze("scripts/report.mjs", 'function describe() {\n  return "no effect";\n}\n\ndescribe();\n');
+  assert.equal(inert.destructive, null, "a call into a harmless declaration claims nothing");
+});
