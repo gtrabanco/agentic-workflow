@@ -289,3 +289,27 @@ test("AW-11 the log on with telemetry off writes the entry and no ledger row", (
   assert.equal(fs.readFileSync(path.join(root, "docs/workflow/TIER_COST.md"), "utf8"), TIER_COST_LEDGER, "telemetry is off");
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test("AW-12 in a carrier project the entry goes to a fragment and docs/LOGS.md is untouched (issue #405, AC1)", () => {
+  const { root, run } = project();
+  fs.mkdirSync(path.join(root, ".agentic-workflow", "journal"), { recursive: true });
+  const wiring = createAutoLogSessionWiring({ root, mode: "mechanical", now: NOW });
+  const driven = session(wiring);
+  const marker = readMarker(root, SESSION);
+  assert.ok(marker, "session_start must record the marker");
+  driven.shutdown();
+
+  const journal = fs.readFileSync(path.join(root, "docs/LOGS.md"), "utf8");
+  assert.equal(journal, "# Session log\n\n", "the merge-to-main aggregator is the only writer of the journal");
+  const fragments = fs.readdirSync(path.join(root, ".agentic-workflow", "journal"));
+  assert.deepEqual(fragments, ["20261104T151243Z-main-mechanical-s-394.md"], "the name is the grammar's identity, session slug included");
+  const fragment = fs.readFileSync(path.join(root, ".agentic-workflow", "journal", fragments[0]), "utf8");
+  assert.equal(fragment, renderEntry({
+    timestamp: "2026-11-04T15:12Z",
+    branch: "main",
+    reason: "quit",
+    commits: { count: 0, range: `${marker.sha}…${marker.sha}` },
+    files: [],
+  }));
+  fs.rmSync(root, { recursive: true, force: true });
+});

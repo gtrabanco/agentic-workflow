@@ -165,6 +165,10 @@ test("AM-10 the journal check is a real check, not a promise about the config", 
   assert.equal(hasJournal(root), true);
   fs.rmSync(path.join(root, JOURNAL_PATH));
   assert.equal(hasJournal(root), false);
+  // The fragment carrier's presence is the opt-in too (issue #405): a project
+  // that opted in without a journal file yet still writes its fragments.
+  fs.mkdirSync(path.join(root, ".agentic-workflow", "journal"), { recursive: true });
+  assert.equal(hasJournal(root), true);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
