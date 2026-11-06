@@ -322,6 +322,27 @@ test("end to end (carrier): a touched docs/LOGS.md is refused — the aggregator
   assert.match(result.stderr, /aggregator owns the journal/);
 });
 
+test("end to end (carrier): --log names the journal the guard protects, never a silent no-op", () => {
+  const { dir, log } = makeRepo();
+  fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, ".agentic-workflow", "journal", "20261105T100000Z-main-narrative-s1.md"),
+    "## 2026-11-05T10:00Z — main — manual\n- **Summary:** x\n",
+  );
+  const other = path.join(dir, "docs", "OTHER.md");
+  fs.writeFileSync(other, "## other\n");
+  fs.appendFileSync(other, "## touched\n");
+  const refused = run(dir, ["close", "--log", "docs/OTHER.md"]);
+  assert.equal(refused.status, 1, refused.stdout);
+  assert.match(refused.stderr, /docs\/OTHER\.md was modified while the fragment carrier/);
+
+  fs.writeFileSync(other, "## other\n");
+  fs.appendFileSync(log, "## untouched journal\n");
+  const clean = run(dir, ["close"]);
+  assert.equal(clean.status, 1, "the default guard still refuses a touched docs/LOGS.md");
+  assert.match(clean.stderr, /docs\/LOGS\.md was modified while the fragment carrier/);
+});
+
 test("end to end (carrier): no new fragment, an edited fragment and a deleted fragment are each refused", () => {
   const { dir, git } = makeRepo();
   fs.mkdirSync(path.join(dir, ".agentic-workflow", "journal"), { recursive: true });
