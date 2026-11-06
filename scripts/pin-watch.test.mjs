@@ -820,8 +820,8 @@ test("prFor is one PR: it names every bump from → to and carries the non-bumpa
   const { title, body } = prFor({ bumps, notes, repo: "o/r" });
 
   assert.match(title, /^fix\(deps\): /u, "the PR is a dependency fix commit, conventionally named");
-  assert.match(body, /left-pad 1\.3\.0 → 1\.3\.1/u);
-  assert.match(body, /chalk 5\.0\.0 → 5\.1\.0/u);
+  assert.match(body, /left-pad`: 1\.3\.0 → 1\.3\.1/u);
+  assert.match(body, /chalk`: 5\.0\.0 → 5\.1\.0/u);
   assert.match(body, /zod/u, "the partial-pin note lands in the body");
   assert.match(body, /serena-agent/u, "the PyPI note lands in the body");
   assert.match(body, /Automated writed using a AI/u, "a body published on GitHub carries the required sign");
