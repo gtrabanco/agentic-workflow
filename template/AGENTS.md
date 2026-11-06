@@ -453,7 +453,7 @@ memory. Compact only mid-step, for unpersisted state you can't afford to
 lose, and prefer committing WIP + updating the unit's Progress log instead.
 Details: `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost*.
 
-**Optional fragment carrier (opt-in, off by default — issue #405):**
+**Optional fragment carrier (opt-in, off by default):**
 concurrent journal appends are the log's recurring merge conflict; the
 fragment carrier removes it by construction. With `.agentic-workflow/journal/`
 present, every writer produces one fragment file per entry and a
