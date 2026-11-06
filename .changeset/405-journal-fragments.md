@@ -1,7 +1,6 @@
 ---
 "@gtrabanco/agentic-workflow": minor
 "@gtrabanco/pi-agentic-workflow": minor
-"audit-docs": patch
 "log-session": patch
 "init-workspace": patch
 ---
@@ -28,4 +27,6 @@ shape `.changeset/` uses for release notes.
 - The carrier ships in `template/` consent-gated and off by default
   (`.agentic-workflow/journal.md` + a concurrency-grouped GitHub Actions
   example and a documented `post-receive` hook); the fragment layout slots
-  into #374's future store-driver contract as one more driver.
+  into #374's future store-driver contract as one more driver. Only fragments
+  live inside the carrier directory — the contract document sits beside it, so
+  the aggregator never meets a file it cannot parse.
