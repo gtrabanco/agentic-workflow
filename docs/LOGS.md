@@ -4523,3 +4523,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** audit-docs --fix: settle the roadmap against the forge and repair dead references. The `## Fixes` table carried 16 stale rows (all merged+closed) — replaced by the empty index per its own legend. Seven feature rows flipped to `done · [#pr]` with reconciliation notes (89→#371, 90→#379, 92→#373, 95→#399, 97→#387, 101→#378, 102→#385, 104→#415). Row 102 restored from a truncation by 5eac0940. Five broken references repaired. 148 tasks ticked across 24 unit docs. Unit 394 re-tokenized to closed log-kind vocabulary.
 - **Decisions:** Fix index: row leaves after the merge, never after the issue closes. Unit docs with `## Log` but no tick in `## Tasks` — only the executor writes the tick, so back-filling is forbidden; they stay as a finding. The `check-progress-entry` check lacks an `n/a` answer for legacy units without a `## Log` section — a checker fix, not a doc fix.
 - **Next:** Re-run `/audit-docs` to confirm clean. Open the `check-progress-entry` n/a fix for legacy carriers as unit 359 follow-up.
+
+## 2026-11-06T11:51:40Z — feat/105-projection-manifest-vocabulary — manual
+- **Commits:** 5 (`4d2b9ece…85a20a43`)
+- **Files:** 38 files
+- **Summary:** feat(schema): publish the workflow-projection contract (#406) — schema package types, vocabularies, Draft-07 projections, normative-surfaces registrations and unit documentation
+- **Decisions:** S7 resolved by owner: no TypeBox — schema package keeps its own descriptor/validator/Draft-07 pattern (dependency-free); unit lives under docs/features/; selector grammar is #407's SectionSelector subset; contentHash = sha256 over removed bytes; remove carries except keep-list for #410
+- **Next:** Review and merge PR #426 (feat/105-projection-manifest-vocabulary); open remote gate if desired: gh workflow run root-suite.yml --ref feat/105-projection-manifest-vocabulary; proceed to #407 (section-locator) once 105 is merged
