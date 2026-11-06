@@ -25,7 +25,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-import { factsToEntry } from "../journal/entry.mjs";
+import { factsToEntry, JOURNAL_ENTRY_KINDS } from "../journal/entry.mjs";
 import { createMarkdownDriver } from "../journal/drivers/markdown.mjs";
 
 /** The project's journal, relative to the project root (the hook's own default). */
@@ -39,53 +39,74 @@ export const DEFAULT_PUBLISH_TIMEOUT_MS = 5000;
  * the rendered entry.
  *
  * A missing journal is a project that did not opt in — the file is never created
- * (S9), and the result says so instead of pretending a delivery happened.
+ * (S9), and the result says so instead of pretending a delivery happened. The
+ * carrier directory outranks that check: when `fragmentDir` names an existing
+ * directory the entry travels as a fragment and needs no journal file at all
+ * (fix/405 AC1 — the carrier IS the opt-in).
  *
  * **The write goes through the default store driver (issue #374, AC3).** The
  * publisher is the mechanical writer's seam, not the writer itself: the entry
  * becomes a canonical `journal-entry@1` (`factsToEntry`) and the Markdown
  * driver decides the transport — a fragment when the carrier directory exists
- * (issue #405, AC1), the same byte-for-byte append otherwise. The options API,
- * the result shapes and the presence-skip are unchanged; `fragmentDir: null`
- * disables the fragment routing explicitly (a project whose wiring passes no
- * `fragmentDir` keeps today's direct append even if a carrier directory
- * exists).
+ * (issue #405, AC1), the same byte-for-byte append otherwise. Every path is
+ * resolved once, against the caller's cwd, so a relative `fragmentDir` (the
+ * shipped `JOURNAL_DIR`) is the same opt-in as an absolute one.
+ *
+ * `kind` is the writer's own declaration, never a second entry grammar: this
+ * publisher renders the mechanical entry from a frozen `log-facts@1` payload,
+ * so `undefined` and `"mechanical"` are the only accepted values. Anything
+ * else is a declared refusal before a byte moves — silently writing a
+ * mechanical fragment for a caller that asked for another kind would be the
+ * one failure the contract exists to prevent.
  */
 export function createJournalPublisher(options) {
-  const journalPath = options?.journalPath;
-  if (typeof journalPath !== "string" || journalPath === "") {
+  const journalPathArg = options?.journalPath;
+  if (typeof journalPathArg !== "string" || journalPathArg === "") {
     throw new Error("createJournalPublisher: journalPath is required");
   }
-  const fragmentDir = options?.fragmentDir;
+  const fragmentDirArg = options?.fragmentDir;
   const now = options?.now ?? (() => Date.now());
-  const driverRoot =
-    typeof fragmentDir === "string" && fragmentDir !== ""
-      ? path.dirname(fragmentDir)
-      : path.dirname(path.dirname(journalPath));
+  const declaredKind = options?.kind;
   return {
     name: "journal",
     publish(facts) {
-      let present = true;
       try {
-        fs.accessSync(journalPath, fs.constants.W_OK);
-      } catch {
-        present = false;
+        const kind = declaredKind ?? "mechanical";
+        if (!JOURNAL_ENTRY_KINDS.includes(kind)) {
+          return { ok: false, error: `kind must be one of ${JOURNAL_ENTRY_KINDS.join(", ")}, got ${JSON.stringify(kind)}` };
+        }
+        if (kind !== "mechanical") {
+          return { ok: false, error: `createJournalPublisher writes the mechanical entry (log-facts@1) — kind ${JSON.stringify(kind)} is another writer's entry` };
+        }
+        // One resolution, before either transport reads a path.
+        const journalPath = path.resolve(journalPathArg);
+        const carrier = typeof fragmentDirArg === "string" && fragmentDirArg !== "" ? path.resolve(fragmentDirArg) : null;
+        const carrierPresent = carrier !== null && isDirectory(carrier);
+        if (!carrierPresent) {
+          let present = true;
+          try {
+            fs.accessSync(journalPath, fs.constants.W_OK);
+          } catch {
+            present = false;
+          }
+          if (!present) return { ok: true, written: false, skipped: "no-journal" };
+        }
+        const driver = createMarkdownDriver({
+          root: path.dirname(carrierPresent ? carrier : journalPath),
+          journalPath,
+          fragmentDir: carrierPresent ? carrier : null,
+          sessionId: options?.sessionId,
+          now,
+        });
+        const result = driver.append(factsToEntry(facts));
+        if (!result.ok) return { ok: false, error: result.error };
+        return result.target === "fragment"
+          ? { ok: true, written: true, target: "fragment", fragment: result.name }
+          : { ok: true, written: true, target: "journal" };
+      } catch (error) {
+        // A refusal is a value: the shutdown path has no caller to catch a throw.
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
       }
-      if (!present) return { ok: true, written: false, skipped: "no-journal" };
-      const carrier = typeof fragmentDir === "string" && fragmentDir !== "";
-      const driver = createMarkdownDriver({
-        root: driverRoot,
-        journalPath,
-        fragmentDir: carrier ? fragmentDir : null,
-        sessionId: options?.sessionId,
-        kind: options?.kind,
-        now,
-      });
-      const result = driver.append(factsToEntry(facts));
-      if (!result.ok) return { ok: false, error: result.error };
-      return result.target === "fragment"
-        ? { ok: true, written: true, target: "fragment", fragment: result.name }
-        : { ok: true, written: true, target: "journal" };
     },
   };
 }
@@ -101,6 +122,15 @@ function commandOf(command) {
     }
   }
   return [...command];
+}
+
+/** `statSync().isDirectory()`, never a throw: a missing carrier is "not opted in". */
+function isDirectory(target) {
+  try {
+    return fs.statSync(target).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 /**

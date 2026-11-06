@@ -46,7 +46,14 @@ export declare const DEFAULT_PUBLISH_TIMEOUT_MS: number;
 /**
  * The local strategy's options. `fragmentDir` opts a project into the session-log
  * fragment carrier (issue #405): when the directory exists, the entry goes to a
- * fragment and the merge-to-main aggregator owns `docs/LOGS.md` (AC1).
+ * fragment and the merge-to-main aggregator owns `docs/LOGS.md` (AC1). Both
+ * paths are resolved against the caller's cwd, so the relative defaults below
+ * are the documented way to pass them.
+ *
+ * `kind` is the writer's own declaration. This publisher renders the mechanical
+ * entry from a frozen `log-facts@1` payload, so `undefined` and `"mechanical"`
+ * are the accepted values and every other one is a declared refusal (issue #374
+ * D14) — it is never silently downgraded to a mechanical fragment.
  */
 export declare function createJournalPublisher(options: {
   journalPath: string;

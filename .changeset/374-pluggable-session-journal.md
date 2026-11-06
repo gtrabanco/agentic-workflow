@@ -27,7 +27,11 @@ no journal diff beyond the entries it writes.
   suite (`runDriverConformance`) both pass — and a driver that strips
   metadata or mutates stored entries fails it (the failing-driver fixture).
 - The mechanical writer (`createJournalPublisher`) now appends through the
-  default driver — the options API and both result shapes are unchanged.
+  default driver: the options API and both result shapes are unchanged, the
+  carrier's presence outranks the journal's (an opted-in project needs no
+  `docs/LOGS.md` to write a fragment), both paths resolve against the caller's
+  cwd, and a declared `kind` the mechanical writer cannot produce is a refusal
+  instead of a silently mechanical fragment.
 - The driver-authoring path is documented in the crate README (the four
   guarantees, the conformance obligation, no second configuration surface —
   drivers are selected programmatically).

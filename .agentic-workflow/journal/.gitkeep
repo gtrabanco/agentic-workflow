@@ -1,5 +1,0 @@
-# The opted-in fragment carrier (journal-fragment-grammar@1).
-# One journal entry per file; any other file here blocks every aggregation.
-# This placeholder keeps the directory tracked when it is empty between
-# aggregations — the aggregator skips it by name, never consumes it
-# (issue #374 D13: the opt-in must outlive a full aggregation).
