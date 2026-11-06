@@ -106,6 +106,11 @@ test("C1d ceremony: the first uncommitted path is read whole, so a dirty CI work
   const repo = fixtureRepo();
   fs.mkdirSync(path.join(repo, ".github", "workflows"), { recursive: true });
   fs.writeFileSync(path.join(repo, ".github", "workflows", "root-suite.yml"), "name: suite\n");
+  git(repo, ["add", "."]);
+  git(repo, ["commit", "-q", "-m", "ci: seed the suite"]);
+  // The modified file is the FIRST (and only) porcelain entry — that column is
+  // where the off-by-one bit.
+  fs.writeFileSync(path.join(repo, ".github", "workflows", "root-suite.yml"), "name: suite\non: push\n");
   const result = spawnSync(process.execPath, [path.join(ROOT, "scripts", "ceremony.mjs"), "tier", "classify", "--base", "main"], {
     cwd: repo,
     encoding: "utf8",
