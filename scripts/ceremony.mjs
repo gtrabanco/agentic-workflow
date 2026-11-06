@@ -7,7 +7,7 @@
  *
  * Usage
  *   node scripts/ceremony.mjs <object> <subcommand> [flags...]
- *   objects: workspace | docs | findings | ledger | unit | plan | tier
+ *   objects: workspace | docs | findings | ledger | unit | plan | tier | passive
  *
  * Closed world (S8): an operation that is not in the registry is a JSON usage
  * error — the CLI never falls back to invented shell commands. The P1/P2
@@ -26,6 +26,7 @@ import { ledger } from "./ceremony/ledger.mjs";
 import { unit } from "./ceremony/unit.mjs";
 import { plan } from "./ceremony/plan.mjs";
 import { tier } from "./ceremony/tier.mjs";
+import { passive } from "./ceremony/passive.mjs";
 import { fail, DEFERRED_MODULES } from "./ceremony/lib.mjs";
 
 const REGISTRY = {
@@ -36,6 +37,7 @@ const REGISTRY = {
   unit,
   plan,
   tier,
+  passive,
 };
 
 const P0_PENDING = [];

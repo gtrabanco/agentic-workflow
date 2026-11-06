@@ -169,15 +169,15 @@ test("C4b the tier is not an input: a --tier flag is an unknown flag, not an ove
 
 test("C5 the written record is the one #383's cost instrument resolves a tier from", async () => {
   const dir = proseRepo();
-  assert.equal(cer(addArgs("222-prose"), dir).code, 0);
+  assert.equal(cer(addArgs("2026-11-06-prose"), dir).code, 0);
   const { resolveTier, ceremonyOf } = await import(path.join(ROOT, "scripts", "tier-cost.mjs"));
-  assert.equal(resolveTier(dir, "222-prose"), "passive", "tier-cost reads the record's tier field");
-  assert.deepEqual(ceremonyOf(dir, "222-prose"), { recorded: 0, skipped: 4 },
+  assert.equal(resolveTier(dir, "2026-11-06-prose"), "passive", "tier-cost reads the record's tier field");
+  assert.deepEqual(ceremonyOf(dir, "2026-11-06-prose"), { recorded: 0, skipped: 4 },
     "and counts the four ceremony steps a passive unit skips");
 
   const listed = cer(["passive", "list"], dir);
   assert.equal(listed.code, 0);
-  assert.deepEqual(listed.json.records.map((record) => record.id), ["222-prose"]);
+  assert.deepEqual(listed.json.records.map((record) => record.id), ["2026-11-06-prose"]);
   assert.deepEqual(listed.json.records[0].paths, ["docs/workflow/SETUP.md", "README.md"]);
 });
 
