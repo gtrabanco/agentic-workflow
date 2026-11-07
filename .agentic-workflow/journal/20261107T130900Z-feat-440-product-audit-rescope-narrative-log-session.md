@@ -1,4 +1,4 @@
-# Fragment: 2026-11-07 product-audit rescope — external verify, correction batch, round-3 gates
+## 2026-11-07T13:09:00Z — feat/440-product-audit-rescope — manual
 
 ## What happened
 
