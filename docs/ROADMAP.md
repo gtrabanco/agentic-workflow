@@ -156,7 +156,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| none | — | — | No fix is in flight. A fix gets its row when `/unit-lane --fix <n>` opens its unit doc, and the row is removed after its PR merges. |
+| [#435](https://github.com/gtrabanco/agentic-workflow/issues/435) | project-charter | in-progress | Project charter in `init-workspace`: two-layer owner interrogation (identity layer blocking, domain layer open-with-defaults as dated assumptions), answers land in the agent guide + registered docs (charter section, `VERIFICATION_CRITERIA.md` catalogue with per-criterion provenance), `audit-docs` check 16 computes coverage; mechanics reuse `needs-input.mjs`/`open-questions@1`, no new grammar, all consent gates preserved. Unit doc `docs/fix/435-project-charter/`. Ceremony-profile machine grammar is #436's (soft dep #366) |
 
 ## Bureaucracy-reduction execution order (2026-09-15)
 
