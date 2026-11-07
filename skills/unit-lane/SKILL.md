@@ -160,7 +160,9 @@ The two steps that own this are their reference files, not this conductor —
   constraints in force; sideways: callers and consumers of what changes;
   forward: every promise coined, behind the **ask-don't-infer**
   (owner: `references/DESIGN.md`, block `ask-dont-infer@1`) and
-  **document-or-don't-coin** gates) and the **retirements** the unit declares.
+  **document-or-don't-coin** gates), the **precondition closure** (operational
+  prerequisites as receipted tier-0 claims; a confirmed-absent one routes to
+  the four-option ask) and the **retirements** the unit declares.
 - the **plan** step turns every declared retirement into its own task carrying
   the negative-capability pin, the sweep grep and the before/after reference
   count.
