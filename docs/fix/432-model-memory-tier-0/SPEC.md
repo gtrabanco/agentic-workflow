@@ -237,6 +237,7 @@ OPEN rows only. None at cut — the first review is the owner's external verify.
 - **P4** — 2026-11-07 01:53, attribution rows + changeset · `dacf767c`.
 - **D1** — 2026-11-07, owner decision recorded ahead of the external verify: the golden-fixture smoke run (GOLDEN_FIXTURE.md §When-to-run — optional for a wording edit) is **skipped**, not passed: it needs a fleet weak-model session this change cannot run itself. The owner runs it before merge if wanted.
 - **D2** — 2026-11-07, owner decision recorded ahead of the external verify: the issue's second slice (scripted checks as lane steps) stays `open` in `## Future` — no measured acceptance exists yet (#260 rule), so it is not built here.
+- **D3** — 2026-11-07, the owner's external verify returned approval ("Okey") with no findings — §9 earned no correction batch. The PR was opened closing #432 per the plan's next step.
 
 ## Next
 
