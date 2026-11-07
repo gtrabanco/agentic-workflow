@@ -193,8 +193,26 @@ it. This is the anchor the owner's external verdict reads per criterion.
 
 ## Findings
 
+Rows appended from the 2026-11-08 `EXTERNAL VERIFY` receipt
+(`external-verify.md`, 3 blockers + 10 advisories), triaged on 2026-11-08 and
+folded in the P9 correction batch. `class` uses the review vocabulary
+(`fix-now` / `not-a-defect`); `route` names the surface the correction landed
+in, or the gate that proves the finding was misattributed.
+
 | id | S# / file:line | axis | severity | impact | class | route |
 |---|---|---|---|---|---|---|
+| F1 | B1 · `packages/pi-agentic-workflow/src/hooks/runner.ts:122-192` | correctness | blocker | a hook command that cannot spawn threw an unhandled `'error'` event: the host dies (pi interactive `exit(1)`) or the seam hangs; the config accepted the command as valid | fix-now | `src/hooks/runner.ts` — `'error'` handler settles as `block` naming the spawn failure (O15) |
+| F2 | B2 · `src/extension/hooks-wiring.ts:108-114` + `src/extension/index.ts:356,397` | correctness | blocker | a failing `session:start`/`session:end` hook produced a `block` verdict that was discarded one layer up: no block, no notice, no output | fix-now | `src/extension/hooks-wiring.ts` — session seams notify their teaching message (O16) |
+| F3 | B3 · `src/extension/hooks-wiring.ts:63-75` | correctness | medium | `git -C <p> commit`, `git -c k=v commit`, `git --git-dir=<p> commit`, `GIT_DIR=x git commit` skipped the declared `pre:commit`/`pre:push` gate silently (a real commit landed with its check never run) | fix-now | `src/extension/hooks-wiring.ts` — option-value and env-prefix aware matcher (O17) |
+| F4 | A5 · `src/hooks/runner.ts:139-141,162` | correctness | medium | reaching the 32 KiB cap SIGTERM'd the hook, so a verbose-but-passing check blocked the seam | fix-now | `src/hooks/runner.ts` — truncate and drain, verdict from the exit code (O19) |
+| F5 | A8 · `src/hooks/dispatcher.ts:91` | observability | medium | an `enabled` group with no consent entry was completely silent: a valid config produced nothing, forever | fix-now | `dispatcher.ts` info notice + `hooks-wiring.ts` one-time announce (O20) |
+| F6 | A6 · `src/hooks/runner.ts:233` | correctness | low | the teaching message re-joined the argv, so a declaration carrying its own quoting was reported unquoted | fix-now | `seamBlockMessage` takes the declared string (O21) |
+| F7 | A2 · `skills/init-workspace/SKILL.md:148` + `packages/pi-agentic-workflow/README.md:380,387` | docs | medium | `<agentDir>` was never resolved, and the consent entry is the only activation path | fix-now | skill + README name `~/.pi/agent` / `getAgentDir()` (O23) |
+| F8 | A3 · `SPEC.md` frontmatter → `docs/generated/units.md:109` | docs | low | the projected 413 row published the template's commented frontmatter note as the unit title (`docs-generate` reads the first `/^# /` line, PE-011) | fix-now | comment lines dropped, projection re-rendered (O24) |
+| F9 | A9 · `src/hooks/dispatcher.ts:91` | tests | info | the consent read bypassed the injected reader, so one suite read the real filesystem | fix-now | `readSeamHooksConsent(…, deps.readFile)` (O22) |
+| F10 | A7 · `packages/pi-agentic-workflow/test/hooks-dispatcher.test.mjs:132` | tests | info | the "git sandbox" case created no git repository and ran no commit; the real-commit proof lives in the wiring suite | fix-now | dispatcher case renamed; `hooks-wiring.test.mjs` gains the real-repo commit case (O17) |
+| F11 | A1 · `SPEC.md:218,220` | docs | low | G1/E3 recorded 87 PASS and 11/0 where the tree yields 88 and 12/0 | fix-now | the `## Log` receipts are corrected against a re-run (O24) |
+| F12 | A4 · `docs/ROADMAP.md:131` + the `## Fixes` row | docs | low | `done · [#456]` before merge looked like state written ahead of the event | not-a-defect | `bun scripts/roadmap-settle.mjs` requires exactly that settle whenever the unit doc carries its PR URL (`pr-url-unsettled`, PE-012): reverting it fails the gate |
 
 ## Log
 
@@ -215,13 +233,18 @@ it. This is the anchor the owner's external verdict reads per criterion.
 - **P1** — 2026-11-08, unit doc + planning ledgers cut · commit `0d2cf6a6`.
 - **P2** — 2026-11-08, green: `src/hooks/config.ts` + `runner.ts` + `dispatcher.ts` + `extension/hooks-wiring.ts` wired into the entry, all four suites green · commit `8544887f`. Slice size 899 authored lines — over the ~400 guidance because the four modules are one red-first suite's subject and the wiring is inert without the dispatcher; splitting further would have separated a suite from the code it pins mid-cycle (governing request §6, stated-reason clause).
 - **P3** — 2026-11-08, docs + indexes: init-workspace consent step, package README (feature + compatibility table), `docs/workflow/SEAM_HOOKS.md` + pages index, roadmap row 112 → `in-progress`, Fixes row appended, generated projection re-rendered by `docs-generate` · commit `dbc30279`.
-- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs` · exit 0 · 87 PASS / 0 FAIL.
+- **G1** — 2026-11-08, `node scripts/run-root-suite.mjs` · exit 0 · **88 PASS / 0 FAIL** (recorded as 87 at the time — a miscount: `scripts/` carries 88 `*.test.mjs` at base, at `dbc30279` and at the head; corrected on the 2026-11-08 verify, F11).
 - **E2** — 2026-11-08, `bun run test` (packages/pi-agentic-workflow, full) · exit 0 · 596 pass / 0 fail — the differential proof: every pre-existing suite untouched and green; the one intentional delta is `test/alias-coverage.test.mjs`'s event inventory, which documents the entry's two new listeners (`session_shutdown`, `tool_result`) exactly as feature 66's precedent did.
-- **E3** — 2026-11-08, foreground validators, one run each: `bun test test/hooks-config.test.mjs` 11/0 · `bun test test/hooks-runner.test.mjs` 9/0 · `bun test test/hooks-dispatcher.test.mjs` 13/0 · `bun test test/hooks-wiring.test.mjs` 8/0 · `rg -c 'writeFile|writeFileSync|appendFile' packages/pi-agentic-workflow/src/hooks/` → **zero matches** (O13).
+- **E3** — 2026-11-08, foreground validators, one run each: `bun test test/hooks-config.test.mjs` **12/0** (11/0 as recorded before E6 pinned the real-filesystem case — F11) · `bun test test/hooks-runner.test.mjs` 9/0 · `bun test test/hooks-dispatcher.test.mjs` 13/0 · `bun test test/hooks-wiring.test.mjs` 8/0 · `rg -c 'writeFile|writeFileSync|appendFile' packages/pi-agentic-workflow/src/hooks/` → **zero matches** (O13).
 - **E4** — 2026-11-08, `bun scripts/docs-generate.mjs --check` · exit 0 (0 stale) · `bun scripts/check-skill-context.mjs` + `--routes` · PASS (28 skills, 14 routes) · `bun scripts/skill-lint.mjs` · PASS (0 findings in 92 files).
 - **G2** — 2026-11-08, `bun scripts/local-gate.mjs --only version-parity-content` · **exit 1** — the pi package ships changed content without a version bump; fixed by adding `.changeset/413-pi-seam-hooks.md` (the declared route), re-run · **exit 0 / PASS**. The first root-suite run predated the changeset; the same local-gate step is the one that caught it.
 - **E5** — 2026-11-08, `bun scripts/ceremony.mjs tier classify` on the real paths · tier `high` (named-high-risk: the runner suite's own tmp-fixture `rm`) — verdict quoted verbatim in `## Risk tier`; the full review pass it names is the owner's external verdict (§4/§8).
 - **E6** — 2026-11-08, the pre-push hook (installed at the repo level) went red at `pi-node-compat`: under node, `readIfExists`'s lazy `require("node:fs")` inside ESM throws `ReferenceError`, which `loadHooksConfig` swallowed as "unreadable" and `readSeamHooksConsent` as `false` — a real portability bug bun's ESM `require` tolerance had hidden from every bun-first run. Root-caused, fixed (top-level `import { readFileSync }`, the `../config/load.ts` contract) and pinned (new real-filesystem no-injected-reader case; the node leg itself is the runtime pin). Package suite after the fix: **597 pass / 0 fail**; the touched suites 20/0 under `node --test`.
+
+- **L2** — 2026-11-08, the correction request, verbatim: `Apply to this repository: arregla todos los findings` (governing workflow §0–§9 as received; the operative asks: one correction batch over the receipt, ledgers frozen first, RED before the fix, fixtures before the real tree, docs and state in the same change, no self-review machinery).
+- **D4** — 2026-11-08, triage of the receipt (`external-verify.md` §Triage): the three blockers and eight advisories are `fix-now`; **F12 (A4) is `not-a-defect`** — `scripts/roadmap-settle.mjs` refuses `pr-url-unsettled` while a unit doc carries its PR URL without the row reading `done · [#N](<same url>)` (PE-012), so the row stays as the gate requires. **F11 (A1) is a receipt-accuracy defect, not a behaviour one** — corrected against this batch's re-run. The batch is `P9` in the obligation ledger (O15–O25, `planned` at this freeze).
+- **D5** — 2026-11-08, §3 fixtures before the real tree: the four new mechanics were spiked on `mktemp -d` scratch first — the `'error'`-settles-the-round solver (including the double-settle guard when `'close'` also fires), the drain-and-truncate capture, the quote-aware git matcher, and the inert-notice path — then removed; nothing ran against the live tree.
+- **P9-F** — 2026-11-08, ledgers frozen: O15–O25 `planned`, PE-009–PE-012 recorded, the receipt's findings persisted in `## Findings`.
 
 ## Next
 
