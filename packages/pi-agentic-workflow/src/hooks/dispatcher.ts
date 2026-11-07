@@ -3,7 +3,7 @@ import type { ProjectionSeam } from "@gtrabanco/agentic-workflow-schema";
 import { loadHooksConfig, readSeamHooksConsent } from "./config.js";
 import { consentFilePath } from "./config.js";
 import type { LoadedHooksConfig, ResolvedHookEntry } from "./config.js";
-import { runArgv, seamBlockMessage, tokenizeHookCommand } from "./runner.js";
+import { DEFAULT_HOOK_TIMEOUT_MS, runArgv, seamBlockMessage, tokenizeHookCommand } from "./runner.js";
 import type { HookRunResult } from "./runner.js";
 
 /**
@@ -65,6 +65,10 @@ export interface SeamDeps {
   spawnHook?: (argv: string[], options: { cwd: string; timeoutMs?: number }) => Promise<InjectedOutcome>;
   /** Overrides the auto commit/push git executions. */
   runGit?: (argv: string[]) => Promise<InjectedOutcome>;
+  /** Caps every hook at this seam, whatever the declaration asks for. The
+   *  shutdown seam sets it: the process is about to exit, so a slow hook must
+   *  fail closed inside a bound rather than outlive the session (N3). */
+  budgetMs?: number;
 }
 
 const allowed = (seam: ProjectionSeam): SeamRunResult => ({ seam, verdict: "allow", notices: [], blocks: [], ran: [] });
@@ -138,7 +142,8 @@ async function runEnabledEntries(seam: ProjectionSeam, entries: ResolvedHookEntr
         blocks.push(`seam-hooks: blocked at ${seam} — the project's declared requirement \`${hook.command}\` cannot run: ${tokenized.detail}`);
         return { seam, verdict: "block", notices: [], blocks, ran };
       }
-      const timeoutMs = hook.timeout !== undefined ? hook.timeout * 1000 : undefined;
+      const declaredMs = hook.timeout !== undefined ? hook.timeout * 1000 : DEFAULT_HOOK_TIMEOUT_MS;
+      const timeoutMs = deps.budgetMs !== undefined ? Math.min(declaredMs, deps.budgetMs) : declaredMs;
       const proceed = await execute(tokenized.argv, hook.command, timeoutMs, entry.source);
       if (!proceed) return { seam, verdict: "block", notices: [], blocks, ran };
     }
