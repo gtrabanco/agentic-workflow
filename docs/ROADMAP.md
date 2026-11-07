@@ -156,7 +156,7 @@ PR merges — history lives in git log + the closed issue, never in this table.
 
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
-| 429 | `log-session-command` | in-progress | branch `fix/429-log-session-extension` open; unit doc `docs/fix/429-log-session-command/`, ledgers cut at the base commit; awaits the owner's external verification |
+| [#429](https://github.com/gtrabanco/agentic-workflow/issues/429) | `log-session-command` | in-progress | branch `fix/429-log-session-extension` open; unit doc `docs/fix/429-log-session-command/`, ledgers cut at the base commit; awaits the owner's external verification |
 
 A fix gets its row when `/unit-lane --fix <n>` opens its unit doc (or when the
 owner's own command cuts the ledgers for it), and the row is removed after its PR
