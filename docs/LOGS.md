@@ -1869,7 +1869,7 @@ out to do, what was decided and *why*, and where to resume.
 
 ## 2026-09-19T00:00Z — fix/244-freeze-batch-planner-consumer — manual
 - **Commits:** 15 (`7d4ec6d4…8b5a1c1d`)
-- **Files:** 15 files
+- **Files:** 18 files
 - **Summary:** Ran /review-change cycle 3 on PR 247 (fix/244-freeze-batch-planner-consumer) — LOOP CAP reached at cycle 2, user-initiated re-review. All 6 acceptance criteria verified green. 13 minor findings (2 medium: path-traversal in check-changelog-row.mjs line 34, CHANGELOG 1.5.1 format) classified as fix-now or proposal, zero blockers. REVIEW-PASS emitted with review-receipt posted to PR 247.
 - **Decisions:** (1) Cycle 3 at LOOP CAP: the review-process limits review-fold to 2 cycles; this third review was user-directed. The turn contract requires a fresh review on a new HEAD, so this is a post-convergence diagnostic rather than a standard fold cycle. (2) Path-traversal medium finding: check-changelog-row.mjs line 34 accepts arbitrary file paths via argv, enabling file-existence probing. Classified as fix-now with low implementation risk but high long-term impact — recommended as first item in /fold-findings. (3) CHANGELOG 1.5.1 format: fold-findings row uses lowercase bold-title instead of the established Title Case noun-phrase convention — medium severity brand violation, trivial fix. (4) All 13 findings are non-blocking: no decision-required, no replan-in-unit. The unit is ready for merge pending the fold batch.
 - **Next:** PR 247 merge: human merge after /fold-findings repairs the 10 fix-now items. Before merge: golden-fixture smoke of fold-findings 1.5.1 and pi mirror 0.11.2 wording. After merge: /plan-feature --next or /triage-issue. Manual check: verify weak-model downstream behavior with the new freeze-batch consumer wording (the primary fix goal).
@@ -3612,7 +3612,7 @@ out to do, what was decided and *why*, and where to resume.
 
 ## 2026-10-28T22:21:58Z — feature/331-authoring-repo-setup — manual
 - **Commits:** 15 (`e685d7fe…d8cf81b8`)
-- **Files:** 15 files
+- **Files:** 18 files
 - **Summary:** S11 + S12 amendments: node/bun user prerequisites, bun opt-in, setup CI deleted
 - **Decisions:** S11: script no longer verifies node (user prerequisite for pi) and never installs bun unasked — opt-in question in TTY (y/yes installs pinned version), non-TTY prints note and stays ok, warn rows never fail --check; bun behind pin still auto-repaired. S12: setup-check.yml deleted (owner: quita los dos ci de las gha); D8 operating rule recorded in decisions.md (CI never without explicit permission). catalog.test.mjs and unit-route.mjs left uncommitted (parallel session).
 - **Next:** git push origin feature/331-authoring-repo-setup and open PR
@@ -4003,7 +4003,7 @@ out to do, what was decided and *why*, and where to resume.
 
 ## 2026-11-03T00:57:00Z — feat-357-skill-smells — manual
 - **Commits:** 12 (`e006b3fb…7ea79273`)
-- **Files:** 15 files
+- **Files:** 18 files
 - **Summary:** Issue #357 applied end-to-end: skill-lint gained its mechanical half — 7 SKILL.md smell and supply-chain checks (hidden HTML comments, frontmatter XML/HTML tags, invisible codepoints, unpinned URLs, credential/exfiltration shapes, backslash paths, dated currency claims/expiry). Unit doc cut with two planning ledgers (13 PE rows, 15 obligations), all 15 verified. PR #377 opened, all three checks green (root-suite 1m46s, pi-compat-guard 25s, dependency-pin-gate 11s). diff-guard exception recorded (14 files, 1150+ lines).
 - **Decisions:** S2 is marker-shape rule (prose body flags, namespace-field admitted — bans only hidden prose, not repo receipt contract). S8 needs both date AND currency word so provenance dates stay clean. S3 scoped to description only — 17 placeholder argument hints would false-positive. Full-scope includes references/ because skills add ships the folder. One recorded exception: diff-guard BREACH 1150+ lines / 14 files — mandatory unit doc + scanner + reference, stacking forbidden by AGENTS.md.
 - **Next:** Owner PR #377 verdict — merge gate is you. The template/AGENTS.md rider is open in the unit doc's Future.
@@ -4104,7 +4104,7 @@ out to do, what was decided and *why*, and where to resume.
 
 ## 2026-11-03T11:30:16Z — fix/382-red-first-commits — manual
 - **Commits:** 14 (`acc1735f…7f031169`)
-- **Files:** 15 files
+- **Files:** 18 files
 - **Summary:** External verify of fix/382-red-first-commits: verified the red-first gate, its fixture suite, the E8 correction round, and the full obligation ledger. The unit passes every declared validator (gate 9/9, root suite 1438 tests, budgets, changeset). Found one blocker: the SPEC declares a ## Fixes Active row that does not exist in ROADMAP.md, violating the repo's own registration rule and the unit doc's own claims.
 - **Decisions:** The implementer's fix (introduced() using commits[0] instead of commits[commits.length-1]) correctly discriminates the re-added-together regression. The gate's own pair dogfoods red-first. Blocker: the missing ## Fixes row in ROADMAP.md — the SPEC says it exists and that the merge removes it, but it was never registered in the Active table (siblings #329 and #355 both have the row).
 - **Next:** Implementer adds #382 to the ## Fixes Active table in docs/ROADMAP.md (or issues a corrective changeset), then re-runs the full verify
@@ -4302,7 +4302,7 @@ out to do, what was decided and *why*, and where to resume.
 - **Next:** External-verify round complete. PR #400 is open on `main`; the owner is the external verifier.
 ## 2026-11-05T00:41:02Z — fix/356-test-targeting — manual
 - **Commits:** 11 (`16069246…1a721335`)
-- **Files:** 15 files
+- **Files:** 18 files
 - **Summary:** fix/356-test-targeting: fixed Serena LSP initialization on worktree (libicu76 resolved markdown LS crash, health check passing)
 - **Decisions:** Serena's markdown language server (.NET/F# based) was crashing on worktree activation due to missing libicu dependency (ICU internationalization library required by .NET globalization); installing libicu76 resolved the LanguageServerTerminatedException that prevented all Serena tools from working
 - **Next:** Continue work on fix/356-test-targeting — Serena is now fully operational in this worktree
@@ -4579,3 +4579,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Applied issue #374: pluggable session-journal storage — canonical entry schema, store-driver contract, two reference drivers (Markdown, SQLite)
 - **Decisions:** D1 full slice (schema + contract + both drivers + conformance tests + docs); D2 single PR; D3 insert-only contract (corrections are new entries, never edits); D5 reason as core field (byte-parity with AC4's markdown render); D9 monotonic arrival-order ids; D10 programmatic driver selection, no config key; D12 both UTC timestamp precisions accepted
 - **Next:** PR #431 opened against main — review the diff, ledgers at docs/fix/374-pluggable-session-journal/, then either approve merge or request changes
+## 2026-11-07T02:30:00Z — feat/440-product-audit-rescope — manual
+- **Commits:** 6 on top of `e1d94057` (`8dbc9e76…33926913`)
+- **Files:** 18
+- **Summary:** Applied issue #440 (product-audit re-scope) with the owner's local unpublished workflow: ledgers frozen first (docs/fix/440-product-audit-rescope/ with planning-evidence + planning-obligations), 14 pins written RED before any implementation (12 fail on the unmodified skill), then the skill re-scope: measured triggers replace the periodic cadence (audit-trigger@1 + the insufficient-corpus verdict), deterministic-producer pre-pass column + profile-aware n/a scope in AUDIT_DIMENSIONS.md, findings typed 1:1 with review's vocabulary and the finding-route@1 resolver-verb route cell, both grammars declared as normative surfaces and claimed in GATE_INVENTORY.md. Root suite 88/88 green sequential; all differential checks against a base-copy scratch clean.
+- **Decisions:** route cell becomes the note-7 single-input verb hand-off, never a command (the scaffold-parity pin moved with the spec change, recorded in the unit doc); ceremony context ceilings re-based at the declared ceil(measured × 1.10) formula with the growth source named (3876/288 lines, 2493 ref); machineLines 109→111 for the two declared rows; pi-compat-guard left red — differential-proven pre-existing at main (guard type-checks a published package predating the unpublished journal modules), never fixed inside this unit; committed journal fragment with a contract-violating name renamed in place (bytes untouched) because the aggregator refuses the whole set — writer-side validation gap reported to the owner.
+- **Incident (disclosed):** the container's /tmp tmpfs was at 99% inodes with ~900k inode waste from days-old suite-fixture scratch (release-fixture-*, diff-guard-corpus-*, etc., dead sessions Nov 2–6). Cleaned to 3% to unblock the gate's fixture repos; no tracked or current-session content removed, and the parallel root-suite pool showed random unrelated reds both at head and at the base copy in this environment (each suite green standalone) — the sequential --jobs 1 run is the recorded verdict.
+- **Next:** owner external verification of feat/440-product-audit-rescope (diff + validators, then merge decision); the two owner findings above (pi-compat-guard at main; fragment-name writer-side validation) await triage.
