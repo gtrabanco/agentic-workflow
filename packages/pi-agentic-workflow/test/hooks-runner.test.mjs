@@ -97,12 +97,46 @@ test("O9: children spawn through the runtime module — shell:false and the runt
 test("O7: output is bounded at the cap with a truncation marker", async () => {
   const dir = mkdtempSync(join(tmpdir(), "hooks-runner-"));
   try {
-    writeFileSync(join(dir, "loud"), `#!/bin/sh\nyes ${"x".repeat(100)}\n`);
-    chmodSync(join(dir, "loud"), 0o755);
-    const result = await runHookCommand({ type: "command", command: join(dir, "loud") }, { cwd: dir });
+    const loud = writeLoudScript(dir, 4 * HOOK_OUTPUT_CAP_BYTES);
+    const result = await runHookCommand({ type: "command", command: loud }, { cwd: dir });
     assert.ok(result.output.length <= HOOK_OUTPUT_CAP_BYTES + 200, `output length ${result.output.length}`);
     assert.equal(result.truncated, true);
     assert.ok(result.output.includes("[truncated]"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("O19: output volume never changes the verdict — a loud hook that exits 0 allows", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "hooks-runner-"));
+  try {
+    const loud = writeLoudScript(dir, 4 * HOOK_OUTPUT_CAP_BYTES);
+    const result = await runHookCommand({ type: "command", command: loud }, { cwd: dir });
+    assert.equal(result.verdict, "allow");
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.truncated, true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("O15: a declared command that cannot spawn is a block, never an unhandled error", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "hooks-runner-"));
+  try {
+    const missing = await runHookCommand(
+      { type: "command", command: "definitely-not-a-binary-xyz --check" },
+      { cwd: dir },
+    );
+    assert.equal(missing.verdict, "block");
+    assert.equal(missing.exitCode, null);
+    assert.ok(/spawn|ENOENT|not found/i.test(missing.output), missing.output);
+
+    // A present-but-not-executable declaration is the same failure class.
+    writeFileSync(join(dir, "noexec"), "#!/bin/sh\nexit 0\n");
+    const denied = await runHookCommand({ type: "command", command: join(dir, "noexec") }, { cwd: dir });
+    assert.equal(denied.verdict, "block");
+    assert.equal(denied.exitCode, null);
+    assert.ok(/EACCES|permission/i.test(denied.output), denied.output);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -129,8 +163,19 @@ test("timeout bounds: default 60s, hard cap 600s", () => {
   assert.equal(MAX_HOOK_TIMEOUT_MS, 600_000);
 });
 
+test("O21: the teaching message quotes the declaration exactly as written", () => {
+  const message = seamBlockMessage("pre:commit", 'node "my check.mjs" --strict', {
+    exitCode: 1,
+    output: "boom",
+    truncated: false,
+    timedOut: false,
+  });
+  // The declaration carries its own quoting; the message must not re-join an argv.
+  assert.ok(message.includes('`node "my check.mjs" --strict`'), message);
+});
+
 test("O8: the teaching message quotes the declared requirement at the named seam", () => {
-  const message = seamBlockMessage("pre:commit", ["bun", "run", "lint"], {
+  const message = seamBlockMessage("pre:commit", "bun run lint", {
     exitCode: 1,
     output: "ESLint found 2 problems",
     truncated: false,
@@ -143,6 +188,15 @@ test("O8: the teaching message quotes the declared requirement at the named seam
   // The declared requirement is quoted as declared, not paraphrased by a model.
   assert.ok(message.includes("declared requirement"));
 });
+
+/** A fixture script that writes `bytes` of output and exits 0. */
+function writeLoudScript(dir, bytes) {
+  const file = join(dir, "loud.mjs");
+  // The pause makes the old kill-at-cap path deterministic: the signal lands
+  // before the script's own exit, so a volume-driven kill is observable.
+  writeFileSync(file, `process.stdout.write("z".repeat(${bytes})); setTimeout(() => process.exit(0), 400);\n`);
+  return `${process.execPath} ${file}`;
+}
 
 function fakeChild(exitCode, output) {
   return {

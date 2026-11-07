@@ -204,3 +204,143 @@ test("no consent: the wiring never spawns and never blocks", async () => {
     fixture.cleanup();
   }
 });
+
+test("O16: a failing session:start hook reports its teaching message — a session seam cannot block, never silent", async () => {
+  const fixture = fixtureProject({ consent: true, failing: true });
+  const { ctx, notices } = makeCtx(fixture.dir, fixture.agentDir);
+  const wiring = createHooksWiring({ agentDir: fixture.agentDir });
+  try {
+    writeFileSync(
+      join(fixture.dir, ".pi", "hooks.json"),
+      JSON.stringify({
+        hooks: {
+          "session:start": [{ enabled: true, hooks: [{ type: "command", command: join(fixture.dir, "check.sh") }] }],
+          "session:end": [{ enabled: true, hooks: [{ type: "command", command: join(fixture.dir, "check.sh") }] }],
+        },
+      }),
+    );
+    await wiring.onSessionStart(ctx);
+    await wiring.onSessionShutdown(ctx);
+    assert.equal(notices.length, 2);
+    assert.ok(notices[0].includes("session:start"));
+    assert.ok(notices[0].includes("declared requirement"));
+    assert.ok(notices[1].includes("session:end"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("O17: the git matcher sees option values and environment prefixes, and only real git calls", async () => {
+  const fixture = fixtureProject({ consent: true });
+  const { ctx } = makeCtx(fixture.dir, fixture.agentDir);
+  const runs = [];
+  const wiring = createHooksWiring({
+    agentDir: fixture.agentDir,
+    spawnHook: async (argv) => {
+      runs.push(argv.join(" "));
+      return { exitCode: 0, output: "", truncated: false, timedOut: false };
+    },
+  });
+  try {
+    writeFileSync(
+      join(fixture.dir, ".pi", "hooks.json"),
+      JSON.stringify({
+        hooks: {
+          "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "commit-check" }] }],
+          "pre:push": [{ enabled: true, hooks: [{ type: "command", command: "push-check" }] }],
+        },
+      }),
+    );
+    const firing = {
+      "git commit -m x": ["commit-check"],
+      "git -C . commit -m x": ["commit-check"],
+      "git -C /abs/path commit -m x": ["commit-check"],
+      "git -c user.email=a@b commit -m x": ["commit-check"],
+      "git -c core.hooksPath=/dev/null commit -m x": ["commit-check"],
+      "git --git-dir=.git commit -m x": ["commit-check"],
+      "git --git-dir .git commit -m x": ["commit-check"],
+      "GIT_DIR=.git GIT_WORK_TREE=. git commit -m x": ["commit-check"],
+      "cd sub && git commit -m x": ["commit-check"],
+      "git --no-pager -C . commit -m x": ["commit-check"],
+      "git -C . push origin main": ["push-check"],
+      "git push origin main": ["push-check"],
+    };
+    for (const [command, expected] of Object.entries(firing)) {
+      runs.length = 0;
+      await wiring.onToolCall(bashEvent(command), ctx);
+      assert.deepEqual(runs, expected, command);
+    }
+    const quiet = [
+      "git status",
+      "git log --grep commit",
+      "git -C . status",
+      "git commit-tree abc",
+      "echo git commit",
+      "ls -C . commit",
+    ];
+    for (const command of quiet) {
+      runs.length = 0;
+      assert.equal(await wiring.onToolCall(bashEvent(command), ctx), undefined, command);
+      assert.deepEqual(runs, [], command);
+    }
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("O18: a separator inside a quoted argument never creates a phantom segment", async () => {
+  const fixture = fixtureProject({ consent: true });
+  const { ctx } = makeCtx(fixture.dir, fixture.agentDir);
+  const runs = [];
+  const wiring = createHooksWiring({
+    agentDir: fixture.agentDir,
+    spawnHook: async (argv) => {
+      runs.push(argv.join(" "));
+      return { exitCode: 0, output: "", truncated: false, timedOut: false };
+    },
+  });
+  try {
+    writeFileSync(
+      join(fixture.dir, ".pi", "hooks.json"),
+      JSON.stringify({
+        hooks: {
+          "pre:commit": [{ enabled: true, hooks: [{ type: "command", command: "commit-check" }] }],
+          "pre:push": [{ enabled: true, hooks: [{ type: "command", command: "push-check" }] }],
+        },
+      }),
+    );
+    await wiring.onToolCall(bashEvent('git commit -m "docs: sync | git push next"'), ctx);
+    assert.deepEqual(runs, ["commit-check"]);
+    runs.length = 0;
+    await wiring.onToolCall(bashEvent('git commit -m "a ; git push b" && git push'), ctx);
+    assert.deepEqual(runs, ["commit-check", "push-check"]);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("O20: enabled without consent announces itself once and still spawns nothing", async () => {
+  const fixture = fixtureProject({ failing: true });
+  const { ctx, notices } = makeCtx(fixture.dir, fixture.agentDir);
+  const runs = [];
+  const wiring = createHooksWiring({
+    agentDir: fixture.agentDir,
+    spawnHook: async (argv) => {
+      runs.push(argv.join(" "));
+      return { exitCode: 0, output: "", truncated: false, timedOut: false };
+    },
+  });
+  try {
+    writeFileSync(join(fixture.dir, ".pi", "hooks.json"), enabledPreCommit("check pass"));
+    await wiring.onSessionStart(ctx);
+    await wiring.onToolCall(bashEvent("git commit -m x"), ctx);
+    assert.deepEqual(runs, []);
+    assert.equal(notices.length, 1);
+    assert.ok(notices[0].includes("inert"), notices[0]);
+    assert.ok(notices[0].includes("seam-hooks-consent.json"), notices[0]);
+    await wiring.onSessionStart(ctx); // latched: one announce per project session
+    assert.equal(notices.length, 1);
+  } finally {
+    fixture.cleanup();
+  }
+});

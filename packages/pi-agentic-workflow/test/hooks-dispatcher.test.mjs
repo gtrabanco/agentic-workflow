@@ -129,7 +129,7 @@ test("missing config is a quiet no-op (the startup notice is the wiring's one-ti
   assert.deepEqual(result.notices, []);
 });
 
-test("O12 (S8 fixture proof): a git sandbox with a declared pre:commit check sees it run and block on failure", async () => {
+test("O12 (S8 fixture proof): a project fixture with a declared pre:commit check sees it run and block on failure (real spawn; the git interception half lives at test/hooks-wiring.test.mjs)", async () => {
   const dir = mkdtempSync(join(tmpdir(), "hooks-sandbox-"));
   try {
     mkdirSync(join(dir, ".pi"), { recursive: true });
@@ -152,6 +152,29 @@ test("O12 (S8 fixture proof): a git sandbox with a declared pre:commit check see
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("O20: an enabled group without consent announces inertness and spawns nothing", async () => {
+  const { base, spawns } = deps({ readConsent: () => false });
+  const result = await runSeam("pre:commit", { ...base, readFile: readProject(enabledPreCommit) });
+  assert.deepEqual(spawns, []);
+  assert.equal(result.verdict, "allow");
+  assert.equal(result.notices.length, 1);
+  assert.equal(result.notices[0].kind, "info");
+  assert.ok(result.notices[0].message.includes("inert"));
+  assert.ok(result.notices[0].message.includes("seam-hooks-consent.json"));
+});
+
+test("O22: the injected reader serves the consent store too — one seam for config and consent", async () => {
+  const { base, spawns } = deps();
+  const { readConsent: _ignored, ...withoutConsentReader } = base;
+  const files = {
+    [join(cwd, ".pi", "hooks.json")]: enabledPreCommit,
+    [join(agentDir, "seam-hooks-consent.json")]: consentFile(),
+  };
+  const result = await runSeam("pre:commit", { ...withoutConsentReader, readFile: (path) => files[path] ?? null });
+  assert.equal(result.verdict, "allow");
+  assert.deepEqual(spawns.map(([argv]) => argv.join(" ")), ["check pass"]);
 });
 
 test("O11: phase:end autoCommit runs git add+commit with the declared message only when hooks allow", async () => {
