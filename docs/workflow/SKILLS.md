@@ -125,7 +125,7 @@ roadmap registration are the lane's `plan` catalog step, reached from
 | `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | manual `fold-findings` → re-run `review-change` (recommended on failure) |
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges | `execute-phase` / `unit-lane` / `triage-issue` |
-| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `unit-lane` |
+| `product-audit` | the **product** | Measured-trigger full-spectrum health check (`audit-trigger@1`: drift signal, threshold debt, or explicit owner request — under-threshold invocation returns `insufficient-corpus`); every dimension starts at its deterministic producer's receipt, only the non-mechanizable remainder is model-swept; dimensions the project's ceremony profile does not declare are `n/a` (#436, consumption-side); mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); findings typed 1:1 with review's vocabulary, route cells are resolver hand-offs (`finding-route@1`); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `unit-lane` |
 | `audit-docs` | the **docs** | Audit docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
@@ -168,7 +168,7 @@ with no arguments uses the default stated here.
 | `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs the complete pending fix-now queue, grouping only compatible corrections. IDs restrict the queue. Every member still receives its own `FOLDED \| DISPUTED \| BLOCKED` result. |
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (additive: proposes only the new/missing template blocks), which also reconciles and retires a legacy `CLAUDE.md` into `AGENTS.md` — with consent only. |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
-| `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
+| `product-audit` | `/product-audit [path-or-area]` | Measured triggers (`audit-trigger@1`) or explicit owner request; an under-threshold invocation returns `insufficient-corpus`. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean adversarial reviewers in parallel; the pass **verifies instead of enumerating**: every candidate is arbitrated `kill \| confirm` with evidence, a diff-only reflector drops what the diff does not ground, and a misattributed reproducer is re-scoped — then the survivors are merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
 | `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Issue batches produce independent verdicts plus one summary table; review-finding mode attempts every unresolved finding now and routes oversized work to `/unit-lane` plus new manual phases. |
@@ -214,7 +214,7 @@ review-change ── runs the applicable read-only reviews + classifies a change
                  fix-now ─▶ folds into the open phase · replan-in-unit ─▶ new user-confirmed phases
                  decision-required ─▶ surface, block · proposals ─▶ user routes to triage-issue
 audit-pr ─────── PR-level merge gate (merge-ready or blockers)
-product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
+product-audit ── measured-trigger product-wide sweep (deterministic-producer pre-pass) → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ READMEs ↔ roadmap ↔ code ↔ fix index, anytime
 
 # The conductor is the companion pi package's `advance` command (feature 62):
