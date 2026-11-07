@@ -313,6 +313,66 @@ describe("doc edit CLI (S4)", () => {
   });
 });
 
+describe("doc edit text spellings (S20)", () => {
+  it("splices --set text over the located section, byte-lossless outside", () => {
+    const file = fixture(UNIQUE_DOC);
+    const start = UNIQUE_DOC.indexOf("## Objective");
+    const end = UNIQUE_DOC.indexOf("## Next 步骤 🚀");
+    const res = run(["doc", "edit", "--file", file, "--section", "Objective", "--set", "## Objective\n\nset body\n"]);
+    assert.equal(res.status, 0, `stderr: ${res.stderr}`);
+    assert.equal(fs.readFileSync(file, "utf8"), UNIQUE_DOC.slice(0, start) + "## Objective\n\nset body\n" + UNIQUE_DOC.slice(end));
+  });
+
+  it("appends --append text to the section body, on its own block before the next heading", () => {
+    const file = fixture(UNIQUE_DOC);
+    const start = UNIQUE_DOC.indexOf("## Objective");
+    const end = UNIQUE_DOC.indexOf("## Next 步骤 🚀");
+    const res = run(["doc", "edit", "--file", file, "--section", "Objective", "--append", "- appended line"]);
+    assert.equal(res.status, 0, `stderr: ${res.stderr}`);
+    const expected = UNIQUE_DOC.slice(0, start) + UNIQUE_DOC.slice(start, end) + "- appended line\n" + UNIQUE_DOC.slice(end);
+    assert.equal(fs.readFileSync(file, "utf8"), expected);
+    assert.ok(fs.readFileSync(file, "utf8").includes("- appended line\n## Next 步骤 🚀"));
+  });
+
+  it("reads --set and --append text from stdin with `-`", () => {
+    const file = fixture(UNIQUE_DOC);
+    const res = run(["doc", "edit", "--file", file, "--section", "Objective", "--set", "-"], { stdin: "## Objective\n\nstdin set\n" });
+    assert.equal(res.status, 0, `stderr: ${res.stderr}`);
+    assert.ok(fs.readFileSync(file, "utf8").includes("## Objective\n\nstdin set\n"));
+  });
+
+  it("refuses more than one body source as a usage error", () => {
+    const file = fixture(UNIQUE_DOC);
+    const before = fs.readFileSync(file, "utf8");
+    for (const argv of [
+      ["--replacement", "-", "--set", "x"],
+      ["--set", "x", "--append", "y"],
+    ]) {
+      const res = run(["doc", "edit", "--file", file, "--section", "Objective", ...argv], { stdin: "z" });
+      assert.equal(res.status, 1, `argv ${argv.join(" ")}: ${res.stderr}`);
+      assert.match(res.stderr, /exactly one of --replacement, --set, --append/);
+    }
+    assert.equal(fs.readFileSync(file, "utf8"), before);
+  });
+});
+
+describe("stdin selectors (S21)", () => {
+  it("refuses a path-qualified id on stdin by name, never `NO_MATCH`", () => {
+    const res = run(["doc", "read", "--file", "-", "--section", "some/doc.md#guide-objective"], { stdin: UNIQUE_DOC });
+    assert.equal(res.status, 1, `stderr: ${res.stderr}`);
+    assert.match(res.stderr, /path-qualified section id needs a real document path/);
+    assert.doesNotMatch(res.stderr, /NO_MATCH/);
+  });
+
+  it("still resolves a bare slug and a title from stdin", () => {
+    for (const ref of ["guide-objective", "Objective"]) {
+      const res = run(["doc", "read", "--file", "-", "--section", ref], { stdin: UNIQUE_DOC });
+      assert.equal(res.status, 0, `${ref}: ${res.stderr}`);
+      assert.equal(res.stdout, objectiveSection(UNIQUE_DOC));
+    }
+  });
+});
+
 describe("retrieval branch unchanged (S8)", () => {
   it("still parses the retrieval flag spellings into the retrieval branch", () => {
     for (const [argv, op] of [
