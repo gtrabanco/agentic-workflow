@@ -379,8 +379,9 @@ test:
 1. **Consent** — `/init-workspace` writes your project's entry into the global
    consent store (`<agentDir>/seam-hooks-consent.json`, keyed by absolute
    project path) after you say yes. No entry, no execution — ever. An `enabled`
-   group without that entry announces itself on the first seam and does not run
-   again until you consent.
+   group without that entry announces itself on the first seam **once per
+   project session** (a new session hears it again) and does not run until you
+   consent.
 2. **Opt-in per seam** — every matcher group in your `.pi/hooks.json` must set
    `"enabled": true`. Declaring a hook is not consent.
 
@@ -455,8 +456,9 @@ rather than silently dropping the declaration.
   seam's hooks all allow (`git add -A` → `git commit -m <declared>` → `git
   push`). Refused anywhere else.
 - **Degradation is declared.** Missing config → quiet no-op. Present-but-broken
-  config → the hooks announce the problem **once** per project session and then
-  behave as a no-op — never a silent pass, never a throw into your session.
+  config → the hooks announce the problem **once** per project session (and the
+  next session hears it again) and then behave as a no-op — never a silent
+  pass, never a throw into your session.
 - **What it does not cover.** The matcher sees the bash command the model runs.
   A git call it cannot see — inside a script, behind `bash -c`, from another
   tool — is not intercepted: this is a guardrail on the agent's own commands,

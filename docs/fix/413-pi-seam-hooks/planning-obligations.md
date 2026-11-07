@@ -33,6 +33,8 @@ the foreground (governing request §8).
 | O23 | S6 · S10 | The docs state the corrected contracts: spawn failure is a block, cap truncates without changing the verdict, enabled-without-consent announces once, the interception residual is named, and `<agentDir>` resolves | P9 | P9 | `README.md` · `docs/workflow/SEAM_HOOKS.md` · `skills/init-workspace/SKILL.md` · `.changeset/413-pi-seam-hooks.md` | `bun scripts/docs-generate.mjs --check` exits 0 and `bun scripts/skill-lint.mjs` reports 0 findings | E-line in `## Log` | verified |
 | O24 | S10 | The receipts reproduce: the unit doc's run counts are the observed ones, and the generated projection's 413 row carries the unit's title rather than template prose | P9 | P9 | `SPEC.md` · `docs/generated/units.md` | `bun scripts/docs-generate.mjs --check` exits 0 with the 413 row reading `fix/413-pi-seam-hooks` | E-line in `## Log` | verified |
 | O25 | S1 · S10 | Every finding of the 2026-11-08 external receipt is dispositioned — fixed with its validator, or recorded as not-a-defect with the gate that proves it | P9 | P9 | `SPEC.md` `## Findings` | `sed -n '/^## Findings/,/^## Log/p' docs/fix/413-pi-seam-hooks/SPEC.md` matches 12 finding rows, none classed `fix-now` while open | E-line in `## Log` | verified |
+| O26 | DA1 · S6 | The announce latch is per project session: a NEW session (`session_start`) re-announces a broken-config or inert-notice that the previous session already heard, while the seams within one session stay latched | P11 | P11 | `src/extension/hooks-wiring.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` exits 0 with the `O25 (DA1)` re-announce case passing | E-line in `## Log` | verified |
+| O27 | DA2 · S6 | Git's value-less-legal options are absent from `GIT_VALUE_OPTIONS`: a bare option consumes nothing, and no option in the set can swallow a subcommand that git would otherwise run | P11 | P11 | `src/extension/hooks-wiring.ts` | `bun test packages/pi-agentic-workflow/test/hooks-wiring.test.mjs` exits 0 with the `O26 (DA2)` exec-path case passing (`--exec-path=<p> commit` fires, both bare forms quiet) | E-line in `## Log` | verified |
 
 Evidence map (2026-11-08, the P9 batch re-ran every row of this batch in the
 foreground and recorded it as `P9-V` in the unit doc): O15, O16, O17, O18, O19,
@@ -43,6 +45,15 @@ prose lands in `README.md`, `docs/workflow/SEAM_HOOKS.md`,
 `docs-generate --check` green; O24 → `docs-generate --check` exit 0 with the 413
 row reading `fix/413-pi-seam-hooks`; O25 → `## Findings` carries 12 rows, F1–F11
 folded and F12 `not-a-defect` on `roadmap-settle`'s own word.
+
+Evidence map for the P11 batch (2026-11-08, both rows closed in the same
+foreground session, recorded as `P11-V` in the unit doc): O26 → the `O25 (DA1)`
+case in `test/hooks-wiring.test.mjs` (a second `onSessionStart` re-announces,
+the same-session seam run stays latched), suite 14/0 under bun and `node
+--test`; O27 → the `O26 (DA2)` case (`git --exec-path=<p> commit` fires, `git
+--exec-path` and `git --exec-path <p> commit` stay quiet), same suite — resting
+on PE-013's git probe (the value-less form exits before any subcommand). Red
+run: `10555db8` · 12 pass / 2 fail; green: `5c8e3f98` · 14/0, package 608/0.
 
 Evidence map for the first batch (2026-11-08, all rows closed in the same
 foreground session): O1,

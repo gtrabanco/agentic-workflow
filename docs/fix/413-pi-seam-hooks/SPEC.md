@@ -220,6 +220,8 @@ in, or the gate that proves the finding was misattributed.
 | F12 | A4 · `docs/ROADMAP.md:131` + the `## Fixes` row | docs | low | `done · [#456]` before merge looked like state written ahead of the event | not-a-defect | `bun scripts/roadmap-settle.mjs` requires exactly that settle whenever the unit doc carries its PR URL (`pr-url-unsettled`, PE-012): reverting it fails the gate |
 
 | F13 | A3's root cause · `scripts/docs-generate.mjs:199` | docs | medium | `unitFacts` took the first `/^# /` line as the unit title, and every SPEC template opens with `# Uncomment and set the keys …` inside the frontmatter — so a unit that keeps the block publishes template prose as its description (#432 still did; found at triage, not in the receipt) | fix-now | `unitFacts` skips the frontmatter before either scan: both rows read their H1 after the render, closed docs untouched (P10) |
+| F14 | DA1 · `src/extension/hooks-wiring.ts:93-97` + `src/extension/index.ts:299` | correctness | low | the announce latch lived for the extension instance, so a second project session in the same process never re-heard a broken-config or inert notice — the README's "once per project session" was really once per extension instance (delta receipt, 2026-11-08) | fix-now | the latch clears at every `session_start` (O26) |
+| F15 | DA2 · `src/extension/hooks-wiring.ts:132-141` | correctness | low | `--exec-path` sat in `GIT_VALUE_OPTIONS`, but git's value-less `--exec-path` prints the exec path and exits before running any subcommand (PE-013) — the matcher could mis-skip, never falsely block (delta receipt, 2026-11-08) | fix-now | `--exec-path` removed from the value options: the `=<p>` form fires the seam, both bare forms stay quiet (O27) |
 
 F1–F11 are folded in the P9 batch (each row's `route` names the surface and the
 obligation that pins it); F12 stays `not-a-defect` on the gate's own word. No
@@ -266,13 +268,21 @@ row remains open.
 - **P10-R/G** — 2026-11-08, F13 red first (`930f4542`: `bun test scripts/docs-generate.test.mjs` · 21 pass / 1 fail) then the root fix (`cefc95f5`: **22 pass / 0 fail**): `unitFacts` skips the frontmatter, so a commented note can never be the projected title; `docs/generated/units.md` regenerated and now reads `fix/413-pi-seam-hooks` and `fix/432-model-memory-tier-0`.
 - **P10-V** — 2026-11-08, foreground verification of the merged head: `bun test scripts/docs-generate.test.mjs` 22/0; `node scripts/run-root-suite.mjs` exit 0 · **89 PASS / 0 FAIL** (main's new suite included); `bun run test` (packages/pi-agentic-workflow) exit 0 · **606 pass / 0 fail**; `bun scripts/docs-generate.mjs --check` exit 0 (0 stale); `bun scripts/skill-lint.mjs` PASS; `check-skill-context` PASS 28 skills + `--routes` PASS 14 routes; `roadmap-settle` PASS (0 violations); `unit-route --triage 413-pi-seam-hooks` exit 0; `local-gate --only version-parity-content,docs-generated-projection,pi-node-compat` PASS 3/3.
 
+- **L3** — 2026-11-08, the delta verify's own close-out and the owner's follow-up, verbatim: `Verify the change on this repository` (read-only external verify; verdict: `VERIFIED`, 0 blockers, advisories DA1–DA2) then `Arregla DA1 y DA2` — the owner orders the two advisories fixed.
+- **D6** — 2026-11-08, the delta receipt's two advisories become the correction batch's row set: **DA1 → reset the announce latch per session** (the README's per-session promise is the contract; index.ts:281-283 documents that a fresh pi extension instance is built per session, so the reset is also the no-op there — the wiring-side fix is what holds the contract when that is not true); **DA2 → remove `--exec-path` from `GIT_VALUE_OPTIONS`** after the PE-013 git probe proved the value-less form exits before any subcommand, so a following token can never name a subcommand git would run. Both are the quieter direction — no notice ever stops, no seam ever fires falsely.
+- **P11-R** — 2026-11-08, red commit `10555db8`: `bun test test/hooks-wiring.test.mjs` · exit 1 · **12 pass / 2 fail** — exactly the `O25 (DA1)` re-announce case and the `O26 (DA2)` exec-path case; every pre-existing case green.
+- **P11-G** — 2026-11-08, green: `announced.clear()` at each `onSessionStart` (per-session latch, O26) and `--exec-path` out of `GIT_VALUE_OPTIONS` (O27) · `bun test test/hooks-wiring.test.mjs` **14/0** and the same suite under `node --test` **14 pass / 0 fail** · `bun run test` (packages/pi-agentic-workflow) exit 0 · **608 pass / 0 fail** of 608 (52 files) — the two new cases are the only delta over 606.
+- **P11-D** — 2026-11-08, docs in the same change: package README (the consent bullet and the degradation bullet now say "once per project session — a new session hears it again"), `docs/workflow/SEAM_HOOKS.md` (same wording in its execution guarantees), the unit doc (F14/F15, O26/O27, this batch) and PE-013 (the git probe's recorded evidence).
+- **P11-V** — 2026-11-08, foreground verification of this head: `bun run test` (packages/pi-agentic-workflow) exit 0 · **608 pass / 0 fail**; `bun test test/hooks-wiring.test.mjs` **14/0** + `node --test` **14/0**; `node scripts/run-root-suite.mjs` exit 0 · **89 PASS / 0 FAIL**; `bun scripts/docs-generate.mjs --check` exit 0 (0 stale); `bun scripts/skill-lint.mjs` PASS (0 findings in 92 files); `bun scripts/check-skill-context.mjs` PASS 28 skills.
+
 ## Next
 
-The owner's re-verify of the P9 correction batch at this head. The unit is
-implementation-complete, the receipt's three blockers and eight advisories are
-folded, and PR #456 is open against `main` (`Closes #413`) with the roadmap row
-settled as `roadmap-settle` requires. Nothing is pending in this unit: merging
-PR #456 on the owner's verdict closes #413.
+The owner's re-verify of the P11 batch (DA1/DA2) at this head. The unit is
+implementation-complete, the first receipt's three blockers and eight advisories
+are folded, the delta receipt's two advisories are folded in P11, and PR #456 is
+open against `main` (`Closes #413`) with the roadmap row settled as
+`roadmap-settle` requires. Nothing is pending in this unit: merging PR #456 on
+the owner's verdict closes #413.
 
 ## References
 
