@@ -20,6 +20,9 @@
  *   5. the unique surfaces survive (bug hunt, security research,
  *      broken-version investigation) and #438's four residual states are
  *      reused by reference, never a second vocabulary (S1, issue triage note)
+ *   6. the retired cadence leaves every live instruction surface — the sweep
+ *      that closes the external verify's F51/F53 class (sibling mentions of a
+ *      truth retired in one surface), with dated records exempt by declaration
  *
  * Run: `bun test scripts/product-audit-rescope.test.mjs`
  * (fallback `node --test scripts/product-audit-rescope.test.mjs`).
@@ -64,6 +67,69 @@ test("an under-threshold invocation returns the insufficient-corpus verdict (S4)
 
 test("the trigger grammar is a declared normative surface in AGENTS.md (S4)", () => {
   assert.match(agents(), /product-audit-trigger \| skills\/product-audit\/SKILL\.md \| block:audit-trigger@1/);
+});
+
+// ── 1b. The retired cadence leaves every live instruction surface (F51/F53) ──
+
+// The external verify (2026-11-07) found the class this closes: the cadence was
+// retired in `skills/product-audit/SKILL.md` while its surviving mentions kept
+// asserting the old truth. A literal sweep over the surfaces that ORDER current
+// behaviour (the skills + the tutorial + the root README), never a sentence
+// parse: the phrasings below are the exact retired-cadence claims the sweep
+// found, so an unrelated `periodic` (an `audit-docs` run cadence, a deferred
+// tradeoff re-confirmation, another skill's own hygiene note) stays quiet.
+const RETIRED_CADENCE_LITERALS = [
+  "product-wide, periodic",
+  "the periodic, product-wide full sweep",
+  "is the periodic sweep",
+  "then — periodically — the whole product",
+  "roadmap proposals (periodic)",
+  "periodic product-wide health check",
+  "run every few features",
+  "periodically (every few features)",
+];
+
+// Dated historical records are exempt: the row states what was true at its date,
+// never current behaviour (the same exemption class the invocation-drift gate
+// gives `REPOSITORY_STATE.md` — frozen receipts, evidence of what ran).
+const CADENCE_SWEEP_EXEMPT = ["docs/workflow/MIGRATION.md"];
+
+const sweepFiles = () => {
+  const found = new Set();
+  for (const skillDir of fs.readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })) {
+    if (!skillDir.isDirectory()) continue;
+    const base = path.join("skills", skillDir.name);
+    for (const rel of [path.join(base, "SKILL.md"), path.join(base, "references")]) {
+      const abs = path.join(repoRoot, rel);
+      if (!fs.existsSync(abs)) continue;
+      if (fs.statSync(abs).isDirectory()) {
+        for (const f of fs.readdirSync(abs)) {
+          if (f.endsWith(".md")) found.add(`${rel}/${f}`);
+        }
+      } else {
+        found.add(rel);
+      }
+    }
+  }
+  for (const f of fs.readdirSync(path.join(repoRoot, "docs", "workflow"))) {
+    if (f.endsWith(".md")) found.add(`docs/workflow/${f}`);
+  }
+  found.add("README.md");
+  return [...found].filter((rel) => !CADENCE_SWEEP_EXEMPT.includes(rel) && fs.existsSync(path.join(repoRoot, rel)));
+};
+
+test("no live instruction surface keeps the retired periodic cadence (S4, the F51/F53 class)", () => {
+  const survivors = [];
+  for (const rel of sweepFiles()) {
+    const lines = read(rel).split("\n");
+    lines.forEach((line, i) => {
+      const lower = line.toLowerCase();
+      for (const literal of RETIRED_CADENCE_LITERALS) {
+        if (lower.includes(literal)) survivors.push(`${rel}:${i + 1}: ${line.trim()} (${literal})`);
+      }
+    });
+  }
+  assert.deepEqual(survivors, [], "the cadence retired by S4 must leave every live surface — a surviving mention asserts the old truth");
 });
 
 // ── 2. Deterministic-producer pre-pass (S2, FF2) ────────────────────────────
