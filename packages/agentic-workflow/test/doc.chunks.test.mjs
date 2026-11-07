@@ -56,6 +56,30 @@ describe("doc chunker (D5)", () => {
     ok(chunks[0].body.includes("# not a heading"));
   });
 
+  it("never closes a fence on a shorter one, so a nested example is never a heading (S14/A6)", () => {
+    const md = [
+      "# Real",
+      "````markdown",
+      "## example inside a four-backtick block",
+      "```",
+      "## still quoted after the inner fence",
+      "````",
+      "tail",
+      "",
+      "## After",
+      "",
+      "after body",
+    ].join("\n");
+    const chunks = scanChunks(md, "nested.md");
+    deepStrictEqual(
+      chunks.filter((chunk) => chunk.section !== null).map((chunk) => chunk.section),
+      ["Real", "Real > After"],
+    );
+    ok(chunks[0].body.includes("## example inside a four-backtick block"));
+    ok(chunks[0].body.includes("## still quoted after the inner fence"));
+    strictEqual(chunks[1].id, "nested.md#real-after");
+  });
+
   it("handles tilde fences and indented fences the same way", () => {
     const md = ["# T", "~~~", "# fenced", "~~~", "end"].join("\n");
     const chunks = scanChunks(md, "t.md");

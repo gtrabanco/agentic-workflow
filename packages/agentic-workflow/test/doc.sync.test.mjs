@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
-import { syncIndex, ensureFresh, storedManifest, storeStats } from "../src/doc/sync.mjs";
+import { syncIndex, ensureFresh, storedManifest, storeStats, CHUNKER_VERSION } from "../src/doc/sync.mjs";
 import { storePath, storePresent, manifestExportPath } from "../src/doc/store.mjs";
 import { canonicalJson } from "../src/doc/manifest.mjs";
 import { openDatabase } from "../src/doc/sqlite.mjs";
@@ -54,6 +54,18 @@ after(() => {
 });
 
 describe("doc sync engine", () => {
+  it("re-scans a store stamped by an older chunker instead of answering fresh (S14/A6)", async () => {
+    await syncIndex(root);
+    const { db } = await openDatabase(storePath(root));
+    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('chunker', '1')").run();
+    db.close();
+    deepStrictEqual(await ensureFresh(root), { fresh: false, synced: true });
+    const after = await openDatabase(storePath(root));
+    const stamped = after.prepare("select value from meta where key = 'chunker'").get();
+    after.close();
+    strictEqual(stamped.value, String(CHUNKER_VERSION));
+  });
+
   it("first sync scans everything and creates the store + manifest export (AC7's half)", async () => {
     const r = await syncIndex(root);
     deepStrictEqual(
